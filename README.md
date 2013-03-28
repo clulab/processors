@@ -5,7 +5,7 @@ We currently provide a Scala API for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) 
 but plan to add more in the future, including tools developed in house.
 
-This software requires Java 1.6 and Scala 2.9.*.
+This software requires Java 1.6, Scala 2.9.*, and CoreNLP 1.3.4 or higher.
 
 This code is licensed under GPL v2 or higher.
 
