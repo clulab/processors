@@ -20,7 +20,7 @@ is configured for Scala 2.9.2 through the following dependencies:
         <scope>test</scope>
     </dependency>
 
-If you want to compile this code using Scala 2.10, please change the above the dependencies to the ones below and 
+If you want to compile this code using Scala 2.10, please change the above dependencies to the ones below and 
 run `mvn clean package`:
 
     <dependency>
