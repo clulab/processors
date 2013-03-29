@@ -5,7 +5,35 @@ We currently provide a Scala API for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) 
 but plan to add more in the future, including tools developed in house.
 
-This software requires Java 1.6, Scala 2.9.*, and CoreNLP 1.3.4 or higher.
+This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. Note that currently the pom.xml file
+is configured for Scala 2.9.2 through the following dependencies:
+
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>2.9.2</version>
+    </dependency>
+    <dependency>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest_2.9.2</artifactId>
+        <version>1.9.1</version>
+        <scope>test</scope>
+    </dependency>
+
+If you want to compile this code using Scala 2.10, please change the above the dependencies to the ones below and 
+run `mvn clean package`:
+
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>2.10.1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest_2.10.0</artifactId>
+        <version>2.0.M5</version>
+        <scope>test</scope>
+    </dependency>
 
 This code is licensed under GPL v2 or higher.
 
