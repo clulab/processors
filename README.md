@@ -157,8 +157,8 @@ the following code:
 
     val doc = proc.mkDocument("John Smith went to China. He visited Beijing, on January 10th, 2013.")
     proc.tagPartsOfSpeech(doc)
-    lemmatize(doc)
-    recognizeNamedEntities(doc)
+    proc.lemmatize(doc)
+    proc.recognizeNamedEntities(doc)
     doc.clear()
     
 Note that the last method called (`doc.clear()`) clears the internal structures created by the actual CoreNLP annotators. 
