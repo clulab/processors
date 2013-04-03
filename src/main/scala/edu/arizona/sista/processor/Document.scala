@@ -156,7 +156,7 @@ object CorefChains {
       // if found, we keep the previous, which is guaranteed to be longer due to sorting criterion
       if (prevMention != null &&
         prevMention.sentenceIndex == m.sentenceIndex &&
-        prevMention.headIndex == m.sentenceIndex) {
+        prevMention.headIndex == m.headIndex) {
         assert(prevMention.length >= m.length)
       } else {
         mentionMap += (m.sentenceIndex, m.headIndex) -> m
