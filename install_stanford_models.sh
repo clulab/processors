@@ -10,4 +10,4 @@
 
 CORENLP_VER=1.3.4
 
-mvn install:install-file -DartifactId=stanford-corenlp-models -DgroupId=edu.stanford.nlp -Dversion=$CORENLP_VER -Dpackaging=jar -Dfile=lib/stanford-corenlp-$CORENLP_VER-models.jar
+mvn install:install-file -DartifactId=stanford-corenlp-models -DgroupId=edu.stanford.nlp -Dversion=$CORENLP_VER -Dpackaging=jar -Dfile=./stanford-corenlp-$CORENLP_VER-models.jar
