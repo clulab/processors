@@ -5,7 +5,30 @@ We currently provide a Scala API for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) 
 but plan to add more in the future, including tools developed in house.
 
-This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. Note that currently the pom.xml file
+This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. 
+
+This code is licensed under GPL v2 or higher.
+
+(c) Mihai Surdeanu, 2013 - 
+
+# Why you should use this code
++ **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
++ **Memory efficient** - arrays are more memory efficient than hash maps. Furthermore, we used our own implementation to intern strings (i.e., avoiding to store duplicated strings multiple times). Due to these changes, I measured up to 99% decrease in memory for the annotations corresponding to a typical natural language text, when compared to the original CoreNLP code. (Note: this reduction takes effect only _after_ CoreNLP finishes its work.)
++ **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
++ **Tool-independent API** - we plan to support multiple NL tools in the future. However, if you use this code, you will have to change your code only minimally (i.e., the constructor for the `Processor` object).
+
+# How to compile 
+
+This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory.
+Add the generated jar file to your $CLASSPATH, along with the jar files for CoreNLP.
+
+Note that this code has two Maven dependencies to Stanford code: one on `stanford-corenlp` and one on `stanford-corenlp-models`,
+but the latter is not on Maven (yet). To install it locally in the format required by Maven, please follow these instructions:
+- Download CoreNLP from here: http://nlp.stanford.edu/software/corenlp.shtml;
+- Copy the `stanford-corenlp-X.Y.Z-models.jar` in this directory;
+- Run the `install_stanford_models.sh` script.
+
+Note that currently the pom.xml file
 is configured for Scala 2.9.2 through the following dependencies:
 
     <dependency>
@@ -34,21 +57,6 @@ run `mvn clean package`:
         <version>2.0.M5</version>
         <scope>test</scope>
     </dependency>
-
-This code is licensed under GPL v2 or higher.
-
-(c) Mihai Surdeanu, 2013 - 
-
-# Why you should use this code
-+ **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
-+ **Memory efficient** - arrays are more memory efficient than hash maps. Furthermore, we used our own implementation to intern strings (i.e., avoiding to store duplicated strings multiple times). Due to these changes, I measured up to 99% decrease in memory for the annotations corresponding to a typical natural language text, when compared to the original CoreNLP code. (Note: this reduction takes effect only _after_ CoreNLP finishes its work.)
-+ **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
-+ **Tool-independent API** - we plan to support multiple NL tools in the future. However, if you use this code, you will have to change your code only minimally (i.e., the constructor for the `Processor` object).
-
-# How to compile 
-
-This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory.
-Add the generated jar file to your $CLASSPATH, along with the jar files for CoreNLP.
 
 # How to use it
 
