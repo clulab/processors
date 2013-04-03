@@ -1,6 +1,6 @@
 package edu.arizona.sista.processor
 
-import edu.arizona.sista.utils.DirectedGraph
+import edu.arizona.sista.utils.{Tree, DirectedGraph}
 import collection.mutable
 import collection.mutable.ListBuffer
 
@@ -39,6 +39,8 @@ class Sentence(
   var norms:Option[Array[String]],
   /** Shallow parsing labels */
   var chunks:Option[Array[String]],
+  /** Constituent tree of this sentence; includes head words */
+  var syntacticTree:Option[Tree[String]],
   /** DAG of syntactic dependencies; word offsets start at 0 */
   var dependencies:Option[DirectedGraph[String]]) {
 
@@ -47,7 +49,7 @@ class Sentence(
     startOffsets:Array[Int],
     endOffsets:Array[Int]) =
     this(words, startOffsets, endOffsets,
-      None, None, None, None, None, None)
+      None, None, None, None, None, None, None)
 
   def size:Int = words.length
 

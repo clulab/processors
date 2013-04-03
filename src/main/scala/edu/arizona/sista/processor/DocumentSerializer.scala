@@ -1,7 +1,7 @@
 package edu.arizona.sista.processor
 
 import java.io._
-import edu.arizona.sista.utils.{DirectedGraphEdgeIterator, DirectedGraph}
+import edu.arizona.sista.utils.{MutableNumber, Tree, DirectedGraphEdgeIterator, DirectedGraph}
 import edu.arizona.sista.processor.DocumentSerializer._
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import collection.mutable
@@ -18,7 +18,7 @@ class DocumentSerializer {
   def load(is:InputStream): Document = {
     val r = new BufferedReader(new InputStreamReader(is))
     var bits = read(r)
-    assert(bits(0) == "S")
+    assert(bits(0) == START_SENTENCES)
     val sentCount = bits(1).toInt
     val sents = new ArrayBuffer[Sentence]
     var offset = 0
@@ -29,7 +29,7 @@ class DocumentSerializer {
     var coref:Option[CorefChains] = None
     do {
       bits = read(r)
-      if (bits(0) == "C") {
+      if (bits(0) == START_COREF) {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
     } while(bits(0) != END_OF_DOCUMENT)
@@ -53,7 +53,7 @@ class DocumentSerializer {
 
   private def loadSentence(r:BufferedReader): Sentence = {
     var bits = read(r)
-    assert(bits(0) == "T")
+    assert(bits(0) == START_TOKENS)
     val tokenCount = bits(1).toInt
     val wordBuffer = new ArrayBuffer[String]
     val startOffsetBuffer = new ArrayBuffer[Int]
@@ -98,10 +98,15 @@ class DocumentSerializer {
     assert(chunkBuffer.size == 0 || chunkBuffer.size == tokenCount)
 
     var deps:Option[DirectedGraph[String]] = None
+    var tree:Option[Tree[String]] = None
     do {
       bits = read(r)
-      if (bits(0) == "D") {
+      if (bits(0) == START_DEPENDENCIES) {
         deps = Some(loadDependencies(r))
+      } else if (bits(0) == START_CONSTITUENTS) {
+        val position = new MutableNumber[Int](0)
+        bits = read(r)
+        tree = Some(loadTree(bits, position))
       }
     } while(bits(0) != END_OF_SENTENCE)
 
@@ -114,7 +119,7 @@ class DocumentSerializer {
       bufferOption(entityBuffer, nilEntities),
       bufferOption(normBuffer, nilNorms),
       bufferOption(chunkBuffer, nilChunks),
-      deps
+      tree, deps
     )
   }
 
@@ -147,13 +152,13 @@ class DocumentSerializer {
   }
 
   def save(doc:Document, os:PrintWriter) {
-    os.println("S" + SEP + doc.sentences.length)
+    os.println(START_SENTENCES + SEP + doc.sentences.length)
     for (s <- doc.sentences) {
       saveSentence(s, os)
     }
     if (! doc.coreferenceChains.isEmpty) {
       val mentionCount = doc.coreferenceChains.get.getMentions.size
-      os.println("C" + SEP + mentionCount)
+      os.println(START_COREF + SEP + mentionCount)
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
     }
     os.println(END_OF_DOCUMENT)
@@ -170,17 +175,53 @@ class DocumentSerializer {
   }
 
   private def saveSentence(sent:Sentence, os:PrintWriter) {
-    os.println("T" + SEP + sent.size)
+    os.println(START_TOKENS + SEP + sent.size)
     var offset = 0
     while(offset < sent.size) {
       saveToken(sent, offset, os)
       offset += 1
     }
     if (! sent.dependencies.isEmpty) {
-      os.println("D" + SEP + sent.dependencies.size)
+      os.println(START_DEPENDENCIES + SEP + sent.dependencies.size)
       sent.dependencies.foreach(g => saveDependencies(g, os))
     }
+    if (! sent.syntacticTree.isEmpty) {
+      os.println(START_CONSTITUENTS + SEP + "1")
+      sent.syntacticTree.foreach(t => { saveTree(t, os); os.println() })
+    }
     os.println(END_OF_SENTENCE)
+  }
+
+  private def saveTree(tree:Tree[String], os:PrintWriter) {
+    os.print(tree.value + SEP + tree.head + SEP + tree.startOffset + SEP + tree.endOffset + SEP)
+    if (tree.children == None) os.print(0)
+    else os.print(tree.children.get.length)
+    if (! tree.isLeaf) {
+      for(c <- tree.children.get) {
+        os.print(SEP)
+        saveTree(c, os)
+      }
+    }
+  }
+
+  private def loadTree(bits:Array[String], position:MutableNumber[Int]):Tree[String] = {
+    val value = bits(position.value)
+    val head = bits(position.value + 1).toInt
+    val startOffset = bits(position.value + 2).toInt
+    val endOffset = bits(position.value + 3).toInt
+    val numChildren = bits(position.value + 4).toInt
+    position.value += 5
+
+    if (numChildren == 0) {
+      return new Tree[String](value, None, head, startOffset, endOffset)
+    }
+
+    val children = new Array[Tree[String]](numChildren)
+    for (i <- 0 until numChildren) {
+      children(i) = loadTree(bits, position)
+    }
+
+    new Tree[String](value, Some(children), head, startOffset, endOffset)
   }
 
   private def saveToken(sent:Sentence, offset:Int, os:PrintWriter) {
@@ -251,6 +292,13 @@ class DocumentSerializer {
 object DocumentSerializer {
   val NIL = "_"
   val SEP = "\t"
+
+  val START_SENTENCES = "S"
+  val START_TOKENS = "T"
+  val START_COREF = "C"
+  val START_DEPENDENCIES = "D"
+  val START_CONSTITUENTS = "Y"
+
   val END_OF_SENTENCE = "EOS"
   val END_OF_DOCUMENT = "EOD"
   val END_OF_DEPENDENCIES = "EOX"

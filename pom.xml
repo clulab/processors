@@ -49,6 +49,7 @@
           <argLine>-Xmx2048m</argLine>
           <excludes>
             <exclude>**/*ManualTest*.java</exclude>
+	    <exclude>**/*Test*$*.class</exclude>
           </excludes>
         </configuration>
       </plugin>

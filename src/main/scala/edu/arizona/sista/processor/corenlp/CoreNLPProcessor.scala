@@ -11,10 +11,12 @@ import edu.stanford.nlp.ling.CoreLabel
 import java.util
 import scala.Some
 import edu.stanford.nlp.trees.semgraph.{SemanticGraphCoreAnnotations,SemanticGraph}
-import edu.arizona.sista.utils.DirectedGraph
+import edu.arizona.sista.utils.{MutableNumber, Tree, DirectedGraph}
 import collection.mutable
 import edu.stanford.nlp.dcoref.CorefChain
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
+import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
+import edu.stanford.nlp.trees.SemanticHeadFinder
 
 /**
  * API for Stanford's CoreNLP tools
@@ -29,6 +31,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
   lazy val ner = mkNer
   lazy val parser = mkParser
   lazy val coref = mkCoref
+  lazy val headFinder = new SemanticHeadFinder()
 
   def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -293,6 +296,18 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     val sas = annotation.get.get[java.util.List[CoreMap],SentencesAnnotation](classOf[SentencesAnnotation])
     var offset = 0
     for (sa <- sas) {
+      //
+      // save the constituent tree, including head word information
+      //
+      val stanfordTree = sa.get[edu.stanford.nlp.trees.Tree, TreeAnnotation](classOf[TreeAnnotation])
+      if (stanfordTree != null) {
+        val position = new MutableNumber[Int](0)
+        doc.sentences(offset).syntacticTree = Some(toTree(stanfordTree, position))
+      }
+
+      //
+      // save syntactic dependencies
+      //
       val edgeBuffer = new ListBuffer[(Int, Int, String)]
       val da = sa.get[SemanticGraph, SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation](classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
       val edges = da.getEdgeSet
@@ -315,6 +330,43 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       doc.sentences(offset).dependencies = Some(dg)
       offset += 1
     }
+  }
+
+  private def toTree(
+    stanfordTree:edu.stanford.nlp.trees.Tree,
+    position:MutableNumber[Int]):Tree[String] = {
+    assert(stanfordTree != null)
+
+    if (stanfordTree.isLeaf) {
+      val tree = new Tree[String](
+        stanfordTree.label.value(),
+        None, 0,
+        position.value,
+        position.value + 1)
+      position.value += 1
+      return tree
+    }
+
+    // println("Converting tree: " + stanfordTree.toString)
+    val children = new Array[Tree[String]](stanfordTree.numChildren())
+    for (i <- 0 until stanfordTree.numChildren()) {
+      children(i) = toTree(stanfordTree.getChild(i), position)
+    }
+    val value = stanfordTree.label.value()
+    val start = children(0).startOffset
+    val end = children(children.length - 1).endOffset
+
+    val headDaughter = headFinder.determineHead(stanfordTree)
+    var head = -1
+    var i = 0
+    while(i < stanfordTree.numChildren() && head == -1) {
+      if (headDaughter == stanfordTree.getChild(i)) {
+        head = i
+      }
+      i += 1
+    }
+
+    new Tree[String](value, Some(children), head, start, end)
   }
 
   def chunking(doc:Document) {

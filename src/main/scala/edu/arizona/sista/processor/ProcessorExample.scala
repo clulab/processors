@@ -40,6 +40,11 @@ object ProcessorExample {
           println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
         }
       })
+      sentence.syntacticTree.foreach(tree => {
+        println("Constituent tree: " + tree)
+        // see the edu.arizona.sista.utils.Tree class for more information
+        // on syntactic trees, including access to head phrases/words
+      })
 
       sentenceCount += 1
       println("\n")

@@ -94,6 +94,11 @@ run `mvn clean package`:
           println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
         }
       })
+      sentence.syntacticTree.foreach(tree => {
+        println("Constituent tree: " + tree)
+        // see the edu.arizona.sista.utils.Tree class for more information
+        // on syntactic trees, including access to head phrases/words
+      })
 
       sentenceCount += 1
       println("\n")
@@ -128,6 +133,7 @@ The above code generates the following output:
       head:1 modifier:0 label:nn
       head:2 modifier:1 label:nsubj
       head:2 modifier:4 label:prep_to
+    Constituent tree: (ROOT (S (NP (NNP John) (NNP Smith)) (VP (VBD went) (PP (TO to) (NP (NNP China)))) (. .)))
 
 
     Sentence #1:
@@ -144,6 +150,7 @@ The above code generates the following output:
       head:1 modifier:8 label:tmod
       head:2 modifier:5 label:prep_on
       head:5 modifier:6 label:amod
+    Constituent tree: (ROOT (S (NP (PRP He)) (VP (VBD visited) (NP (NP (NNP Beijing)) (, ,) (PP (IN on) (NP (NNP January) (JJ 10th))) (, ,)) (NP-TMP (CD 2013))) (. .)))
 
 
     Found one coreference chain containing the following mentions:
