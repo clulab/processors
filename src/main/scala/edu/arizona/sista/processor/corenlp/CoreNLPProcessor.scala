@@ -10,13 +10,14 @@ import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.CoreLabel
 import java.util
 import scala.Some
-import edu.stanford.nlp.trees.semgraph.{SemanticGraphCoreAnnotations,SemanticGraph}
 import edu.arizona.sista.utils.{MutableNumber, Tree, DirectedGraph}
 import collection.mutable
 import edu.stanford.nlp.dcoref.CorefChain
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 import edu.stanford.nlp.trees.SemanticHeadFinder
+import edu.stanford.nlp.semgraph.SemanticGraph
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 
 /**
  * API for Stanford's CoreNLP tools
@@ -78,7 +79,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
   def mkDocument(text:String): Document = {
     val annotation = new Annotation(text)
     tokenizerWithSentenceSplitting.annotate(annotation)
-    val sas = annotation.get[java.util.List[CoreMap],SentencesAnnotation](classOf[SentencesAnnotation])
+    val sas = annotation.get(classOf[SentencesAnnotation])
     val sentences = new Array[Sentence](sas.size())
     var offset = 0
     for (sa <- sas) {
@@ -89,7 +90,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   def mkSentence(annotation:CoreMap): Sentence = {
-    val tas = annotation.get[java.util.List[CoreLabel], TokensAnnotation](classOf[TokensAnnotation])
+    val tas = annotation.get(classOf[TokensAnnotation])
 
     val wordBuffer = new ArrayBuffer[String]
     val startOffsetBuffer = new ArrayBuffer[Int]
@@ -131,7 +132,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       val tmpAnnotation = new Annotation(sentence)
       tokenizerWithoutSentenceSplitting.annotate(tmpAnnotation)
       val crtTokens:java.util.List[CoreLabel] =
-        tmpAnnotation.get[java.util.List[CoreLabel], TokensAnnotation](classOf[TokensAnnotation])
+        tmpAnnotation.get(classOf[TokensAnnotation])
 
       // construct a proper sentence, with token and character offsets adjusted to make the entire document consistent
       val crtSent = new Annotation(sentence)
@@ -224,11 +225,11 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     posTagger.annotate(annotation.get)
 
     // convert CoreNLP Annotations to our data structures
-    val sas = annotation.get.get[java.util.List[CoreMap],SentencesAnnotation](classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation])
     var offset = 0
     for (sa <- sas) {
       val tb = new ArrayBuffer[String]
-      val tas = sa.get[java.util.List[CoreLabel], TokensAnnotation](classOf[TokensAnnotation])
+      val tas = sa.get(classOf[TokensAnnotation])
       for (ta <- tas) {
         tb += in(ta.tag())
       }
@@ -245,11 +246,11 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
 
     lemmatizer.annotate(annotation.get)
 
-    val sas = annotation.get.get[java.util.List[CoreMap],SentencesAnnotation](classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation])
     var offset = 0
     for (sa <- sas) {
       val tb = new ArrayBuffer[String]
-      val tas = sa.get[java.util.List[CoreLabel], TokensAnnotation](classOf[TokensAnnotation])
+      val tas = sa.get(classOf[TokensAnnotation])
       for (ta <- tas) {
         tb += in(ta.lemma())
       }
@@ -269,15 +270,15 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     ner.annotate(annotation.get)
 
     // convert CoreNLP Annotations to our data structures
-    val sas = annotation.get.get[java.util.List[CoreMap],SentencesAnnotation](classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation])
     var offset = 0
     for (sa <- sas) {
       val tb = new ArrayBuffer[String]
       val nb = new ArrayBuffer[String]
-      val tas = sa.get[java.util.List[CoreLabel], TokensAnnotation](classOf[TokensAnnotation])
+      val tas = sa.get(classOf[TokensAnnotation])
       for (ta <- tas) {
         tb += in(ta.ner())
-        val n = ta.get[String, NormalizedNamedEntityTagAnnotation](classOf[NormalizedNamedEntityTagAnnotation])
+        val n = ta.get(classOf[NormalizedNamedEntityTagAnnotation])
         if (n != null) nb += in(n)
         else nb += in("O")
       }
@@ -293,13 +294,13 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
 
     parser.annotate(annotation.get)
 
-    val sas = annotation.get.get[java.util.List[CoreMap],SentencesAnnotation](classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation])
     var offset = 0
     for (sa <- sas) {
       //
       // save the constituent tree, including head word information
       //
-      val stanfordTree = sa.get[edu.stanford.nlp.trees.Tree, TreeAnnotation](classOf[TreeAnnotation])
+      val stanfordTree = sa.get(classOf[TreeAnnotation])
       if (stanfordTree != null) {
         val position = new MutableNumber[Int](0)
         doc.sentences(offset).syntacticTree = Some(toTree(stanfordTree, position))
@@ -309,11 +310,11 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       // save syntactic dependencies
       //
       val edgeBuffer = new ListBuffer[(Int, Int, String)]
-      val da = sa.get[SemanticGraph, SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation](classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
+      val da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
       val edges = da.getEdgeSet
       for (edge <- edges) {
-        val head:Int = edge.getGovernor.get[java.lang.Integer, IndexAnnotation](classOf[IndexAnnotation])
-        val modifier:Int = edge.getDependent.get[java.lang.Integer, IndexAnnotation](classOf[IndexAnnotation])
+        val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
+        val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
         var label = edge.getRelation.getShortName
         val spec = edge.getRelation.getSpecific
         if (spec != null) label = label + "_" + spec
@@ -322,7 +323,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
 
       val roots = new mutable.HashSet[Int]
       for (iw <- da.getRoots) {
-        roots.add(iw.get[java.lang.Integer, IndexAnnotation](classOf[IndexAnnotation]) - 1)
+        roots.add(iw.get(classOf[IndexAnnotation]) - 1)
       }
 
       val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
@@ -392,7 +393,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
 
     coref.annotate(annotation.get)
 
-    val chains = annotation.get.get[java.util.Map[java.lang.Integer, CorefChain], CorefChainAnnotation](classOf[CorefChainAnnotation])
+    val chains = annotation.get.get(classOf[CorefChainAnnotation])
     val mentions = new ListBuffer[CorefMention]
 
     for (cid <- chains.keySet()) {
