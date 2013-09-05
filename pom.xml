@@ -19,6 +19,11 @@
       </developer>
     </developers>
 
+    <scm>
+      <url>https://github.com/sistanlp/processors</url>
+      <connection>https://github.com/sistanlp/processors</connection>
+    </scm>
+
     <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
