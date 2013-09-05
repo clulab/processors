@@ -8,12 +8,29 @@
     <packaging>jar</packaging>
     <version>1.4</version>
     <name>processors</name>
+    <description>NLP tools</description>
     <url>https://github.com/sistanlp/processors</url>
+
+    <developers>
+      <developer>
+        <id>mihai.surdeanu</id>
+        <name>Mihai Surdeanu</name>
+        <email>mihai@surdeanu.info</email>
+      </developer>
+    </developers>
 
     <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     </properties>
+
+    <licenses>
+      <license>
+        <name>GNU General Public License, version 2</name>
+        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
 
     <repositories>
         <repository>
@@ -63,7 +80,7 @@
         </configuration>
       </plugin>
       <plugin>
-	<groupId>org.scala-tools</groupId>
+	      <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
         <executions>
           <execution>
@@ -128,23 +145,23 @@
           <artifactId>jollyday</artifactId>
           <version>0.4.7</version>
         </dependency>
-	      <dependency>
+        <dependency>
           <groupId>com.googlecode.efficient-java-matrix-library</groupId>
           <artifactId>ejml</artifactId>
           <version>0.19</version>
         </dependency>
-    	 <dependency>
-	       <groupId>edu.stanford.nlp</groupId>
-	       <artifactId>stanford-corenlp</artifactId>
-	       <version>3.2.0</version>
-	     </dependency>
-       <dependency>
-         <groupId>edu.stanford.nlp</groupId>
-         <artifactId>stanford-corenlp</artifactId>
-         <version>3.2.0</version>
-         <classifier>models</classifier>
-       </dependency>
-       <dependency> 
+        <dependency>
+          <groupId>edu.stanford.nlp</groupId>
+          <artifactId>stanford-corenlp</artifactId>
+          <version>3.2.0</version>
+        </dependency>
+        <dependency>
+          <groupId>edu.stanford.nlp</groupId>
+          <artifactId>stanford-corenlp</artifactId>
+          <version>3.2.0</version>
+          <classifier>models</classifier>
+        </dependency>
+        <dependency> 
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
           <version>1.0.10</version>
