@@ -1,10 +1,10 @@
 package edu.arizona.sista.processor
 
 import java.io._
-import edu.arizona.sista.utils.{MutableNumber, Tree, DirectedGraphEdgeIterator, DirectedGraph}
 import edu.arizona.sista.processor.DocumentSerializer._
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import collection.mutable
+import edu.arizona.sista.processor.struct.{Tree, MutableNumber, DirectedGraphEdgeIterator, DirectedGraph}
 
 /**
  * Saves/loads a Document to/from a stream

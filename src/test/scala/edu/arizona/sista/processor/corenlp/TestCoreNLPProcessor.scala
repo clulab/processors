@@ -5,6 +5,7 @@ import org.junit.Assert._
 import org.junit.{Before, Test}
 import edu.arizona.sista.processor.{CorefMention, Processor}
 import collection.JavaConversions.asJavaCollection
+import edu.arizona.sista.processor.struct.Trees
 
 /**
  * 
@@ -195,6 +196,23 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
     assertTrue(doc.sentences.head.dependencies.get.hasEdge(2, 4, "prep_to"))
     assertFalse(doc.sentences.head.dependencies.get.hasEdge(2, 3, "obj"))
 
+    doc.sentences.head.syntacticTree.foreach(t => {
+      println("Constituent parse tree: " + t)
+      assertTrue(t.isUnary)
+      assertTrue(t.value == "ROOT")
+      val s = t.children.get(0)
+      assertTrue(s.children.get.length == 2)
+      assertTrue(s.head == 1)
+      assertTrue(s.startOffset == 0)
+      assertTrue(s.endOffset == 5)
+
+      val vp = s.children.get(1)
+      assertTrue(vp.value == "VP")
+      assertTrue(vp.children.get.length == 2)
+      assertTrue(vp.head == 0)
+      assertTrue(vp.startOffset == 2)
+      assertTrue(vp.endOffset == 5)
+    })
   }
 
   @Test def testCoreference() {
@@ -220,5 +238,47 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
 
     val beijing = new CorefMention(1, 2, 2, 3, -1)
     assertTrue(mentions.contains(beijing))
+  }
+
+  @Test def testBaseNPs() {
+    val doc = proc.mkDocumentFromSentences(List("John Doe, the president of IBM, went to China"))
+    proc.parse(doc)
+    doc.clear()
+
+    doc.sentences.head.syntacticTree.foreach(t => {
+      val bnps = Trees.findBaseNounPhrases(t).toArray
+      println(bnps.toList)
+      assertTrue(bnps.length == 4)
+      val np1 = bnps(0)
+      assertTrue(np1.startOffset == 0)
+      assertTrue(np1.endOffset == 2)
+      val np2 = bnps(1)
+      assertTrue(np2.startOffset == 3)
+      assertTrue(np2.endOffset == 5)
+      val np3 = bnps(2)
+      assertTrue(np3.startOffset == 6)
+      assertTrue(np3.endOffset == 7)
+      val np4 = bnps(3)
+      assertTrue(np4.startOffset == 10)
+      assertTrue(np4.endOffset == 11)
+    })
+  }
+
+  @Test def testHeadWords() {
+    val doc = proc.mkDocumentFromSentences(List("John Doe went to China"))
+    proc.parse(doc)
+    doc.clear()
+
+    doc.sentences.head.syntacticTree.foreach(t => {
+      val s = t.children.get.head
+      println("S constituent is: " + s)
+      assertTrue(s.head == 1)
+      val np = s.children.get.head
+      println("NP constituent is: " + np)
+      assertTrue(np.head == 1)
+      val vp = s.children.get(1)
+      println("VP constituent is: " + vp)
+      assertTrue(vp.head == 0)
+    })
   }
 }

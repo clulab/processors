@@ -1,7 +1,7 @@
 package edu.arizona.sista.processor
 
 import corenlp.CoreNLPProcessor
-import edu.arizona.sista.utils.DirectedGraphEdgeIterator
+import edu.arizona.sista.processor.struct.DirectedGraphEdgeIterator
 
 /**
  * 
@@ -42,7 +42,7 @@ object ProcessorExample {
       })
       sentence.syntacticTree.foreach(tree => {
         println("Constituent tree: " + tree)
-        // see the edu.arizona.sista.utils.Tree class for more information
+        // see the edu.arizona.sista.struct.Tree class for more information
         // on syntactic trees, including access to head phrases/words
       })
 

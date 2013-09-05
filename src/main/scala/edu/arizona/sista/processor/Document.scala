@@ -1,8 +1,9 @@
 package edu.arizona.sista.processor
 
-import edu.arizona.sista.utils.{Tree, DirectedGraph}
 import collection.mutable
 import collection.mutable.ListBuffer
+import java.lang.StringBuilder
+import edu.arizona.sista.processor.struct.{Tree, DirectedGraph}
 
 /**
  * Stores all annotations for one document
@@ -10,8 +11,8 @@ import collection.mutable.ListBuffer
  * Date: 3/1/13
  */
 class Document(
-  val sentences:Array[Sentence],
-  var coreferenceChains:Option[CorefChains]) {
+                val sentences:Array[Sentence],
+                var coreferenceChains:Option[CorefChains]) extends Serializable {
 
   def this(sa: Array[Sentence]) {
     this(sa, None)
@@ -23,50 +24,59 @@ class Document(
 
 /** Stores the annotations for a single sentence */
 class Sentence(
-  /** Actual tokens in this sentence */
-  val words:Array[String],
-  /** Start character offsets for the words; start at 0 */
-  val startOffsets:Array[Int],
-  /** End character offsets for the words; start at 0 */
-  val endOffsets:Array[Int],
-  /** POS tags for words */
-  var tags:Option[Array[String]],
-  /** Lemmas */
-  var lemmas:Option[Array[String]],
-  /** NE labels */
-  var entities:Option[Array[String]],
-  /** Normalized values of named/numeric entities, such as dates */
-  var norms:Option[Array[String]],
-  /** Shallow parsing labels */
-  var chunks:Option[Array[String]],
-  /** Constituent tree of this sentence; includes head words */
-  var syntacticTree:Option[Tree[String]],
-  /** DAG of syntactic dependencies; word offsets start at 0 */
-  var dependencies:Option[DirectedGraph[String]]) {
+                /** Actual tokens in this sentence */
+                val words:Array[String],
+                /** Start character offsets for the words; start at 0 */
+                val startOffsets:Array[Int],
+                /** End character offsets for the words; start at 0 */
+                val endOffsets:Array[Int],
+                /** POS tags for words */
+                var tags:Option[Array[String]],
+                /** Lemmas */
+                var lemmas:Option[Array[String]],
+                /** NE labels */
+                var entities:Option[Array[String]],
+                /** Normalized values of named/numeric entities, such as dates */
+                var norms:Option[Array[String]],
+                /** Shallow parsing labels */
+                var chunks:Option[Array[String]],
+                /** Constituent tree of this sentence; includes head words */
+                var syntacticTree:Option[Tree[String]],
+                /** DAG of syntactic dependencies; word offsets start at 0 */
+                var dependencies:Option[DirectedGraph[String]]) extends Serializable {
 
   def this(
-    words:Array[String],
-    startOffsets:Array[Int],
-    endOffsets:Array[Int]) =
+            words:Array[String],
+            startOffsets:Array[Int],
+            endOffsets:Array[Int]) =
     this(words, startOffsets, endOffsets,
       None, None, None, None, None, None, None)
 
   def size:Int = words.length
 
+  def getSentenceText():String = {
+    var text:String = ""
+    for (i <- 0 until words.size) {
+      text += words(i)
+      if (i < words.size-1) text += " "
+    }
+    text
+  }
+
 }
 
 /** Stores a single coreference mention */
 class CorefMention (
-  /** Index of the sentence containing this mentions; starts at 0 */
-  val sentenceIndex:Int,
-  /** Token index for the mention head word; starts at 0 */
-  val headIndex:Int,
-  /** Start token offset in the sentence; starts at 0 */
-  val startOffset:Int,
-  /** Offset of token immediately after this mention; starts at 0 */
-  val endOffset:Int,
-  /** Id of the coreference chain containing this mention; -1 if singleton mention */
-  val chainId:Int) {
+                     /** Index of the sentence containing this mentions; starts at 0 */
+                     val sentenceIndex:Int,
+                     /** Token index for the mention head word; starts at 0 */
+                     val headIndex:Int,
+                     /** Start token offset in the sentence; starts at 0 */
+                     val startOffset:Int,
+                     /** Offset of token immediately after this mention; starts at 0 */
+                     val endOffset:Int,
+                     /** Id of the coreference chain containing this mention; -1 if singleton mention */
+                     val chainId:Int) extends Serializable {
 
   def length = (endOffset - startOffset)
 
@@ -82,14 +92,28 @@ class CorefMention (
 
   override def hashCode = {
     41 * (41 * (41 * (41 + sentenceIndex))) +
-    41 * (41 * (41 + headIndex)) +
-    41 * (41 + startOffset) +
-    endOffset
+      41 * (41 * (41 + headIndex)) +
+      41 * (41 + startOffset) +
+      endOffset
+  }
+
+  override def toString:String = {
+    val os = new StringBuilder
+    os.append("(")
+    os.append(sentenceIndex)
+    os.append(", ")
+    os.append(headIndex)
+    os.append(", ")
+    os.append(startOffset)
+    os.append(", ")
+    os.append(endOffset)
+    os.append(")")
+    os.toString
   }
 }
 
 /** Stores all the coreference chains extracted in one document */
-class CorefChains (rawMentions:Iterable[CorefMention]) {
+class CorefChains (rawMentions:Iterable[CorefMention]) extends Serializable {
 
   /**
    * Indexes all mentions in a document by sentence index (starting at 0) and head index (starting at 0)

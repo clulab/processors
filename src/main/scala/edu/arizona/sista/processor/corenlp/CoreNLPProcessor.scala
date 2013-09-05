@@ -10,14 +10,12 @@ import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.CoreLabel
 import java.util
 import scala.Some
-import edu.arizona.sista.utils.{MutableNumber, Tree, DirectedGraph}
 import collection.mutable
-import edu.stanford.nlp.dcoref.CorefChain
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 import edu.stanford.nlp.trees.SemanticHeadFinder
-import edu.stanford.nlp.semgraph.SemanticGraph
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
+import edu.arizona.sista.processor.struct.{Tree, MutableNumber, DirectedGraph}
 
 /**
  * API for Stanford's CoreNLP tools

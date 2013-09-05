@@ -1,4 +1,4 @@
-package edu.arizona.sista.utils
+package edu.arizona.sista.processor.struct
 
 import collection.mutable
 import java.text.DecimalFormat

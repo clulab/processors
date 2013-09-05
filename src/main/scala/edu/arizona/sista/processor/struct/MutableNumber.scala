@@ -1,4 +1,4 @@
-package edu.arizona.sista.utils
+package edu.arizona.sista.processor.struct
 
 /**
  * Stores a mutable number of type T
@@ -14,4 +14,6 @@ class MutableNumber[T](var value:T) {
       case _ => false
     }
   }
+
+  override def toString:String = value.toString
 }

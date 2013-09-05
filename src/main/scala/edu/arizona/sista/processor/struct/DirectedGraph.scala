@@ -1,4 +1,4 @@
-package edu.arizona.sista.utils
+package edu.arizona.sista.processor.struct
 
 import collection.mutable.{ListBuffer, ArrayBuffer}
 
@@ -9,7 +9,7 @@ import collection.mutable.{ListBuffer, ArrayBuffer}
  * User: mihais
  * Date: 3/5/13
  */
-class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable.Set[Int]) {
+class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable.Set[Int]) extends Serializable {
   val outgoingEdges:Array[Array[(Int, E)]] = mkOutgoing(edges)
   val incomingEdges:Array[Array[(Int, E)]] = mkIncoming(edges)
 
