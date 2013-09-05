@@ -4,6 +4,7 @@
 .idea/*
 *.iml
 core/*.iml
+.DS_Store
 
 # sbt specific
 dist/*
