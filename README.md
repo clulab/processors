@@ -12,6 +12,7 @@ This code is licensed under GPL v2 or higher.
 (c) Mihai Surdeanu, 2013 - 
 
 # Changes
++ **1.3** - Reverted back to the `1.x` version numbers, since we will add other software here not just CoreNLP. Added correct mvn dependencies for the CoreNLP jars. Removed the `install*.sh` scripts, which are no longer needed.
 + **3.2.0** - Updated to Scala 2.10.1 and CoreNLP 3.2.0. Changed versioning system to be identical to CoreNLP's, so it's clear which CoreNLP version is used.
 + **1.0** - Initial release
 
@@ -25,42 +26,6 @@ This code is licensed under GPL v2 or higher.
 
 This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory.
 Add the generated jar file to your $CLASSPATH, along with the jar files for CoreNLP.
-
-Note that this code has two Maven dependencies to Stanford code: one on `stanford-corenlp` and one on `stanford-corenlp-models`,
-but the latter is not on Maven (yet). To install it locally in the format required by Maven, please follow these instructions:
-- Download CoreNLP from here: http://nlp.stanford.edu/software/corenlp.shtml;
-- Copy the `stanford-corenlp-X.Y.Z-models.jar` in this directory;
-- Run the `install_stanford_models.sh` script.
-
-Note that currently the pom.xml file
-is configured for Scala 2.9.2 through the following dependencies:
-
-    <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>2.9.2</version>
-    </dependency>
-    <dependency>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest_2.9.2</artifactId>
-        <version>1.9.1</version>
-        <scope>test</scope>
-    </dependency>
-
-If you want to compile this code using Scala 2.10, please change the above dependencies to the ones below and 
-run `mvn clean package`:
-
-    <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>2.10.1</version>
-    </dependency>
-    <dependency>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest_2.10.0</artifactId>
-        <version>2.0.M5</version>
-        <scope>test</scope>
-    </dependency>
 
 # How to use it
 
