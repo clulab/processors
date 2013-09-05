@@ -10,7 +10,7 @@ class MutableNumber[T](var value:T) {
 
   override def equals(other:Any):Boolean = {
     other match {
-      case that:T => value == that
+      case that:MutableNumber[T] => value == that.value
       case _ => false
     }
   }
