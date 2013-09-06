@@ -17,6 +17,15 @@ This code is licensed under GPL v2 or higher.
 + **3.2.0** - Updated to Scala 2.10.1 and CoreNLP 3.2.0. Changed versioning system to be identical to CoreNLP's, so it's clear which CoreNLP version is used.
 + **1.0** - Initial release
 
+# Maven
+This software is available on maven as well. Add this dependency to your `pom.xml` to use it:
+
+    <dependency>
+       <groupId>edu.arizona.sista</groupId>
+       <artifactId>processors</artifactId>
+       <version>1.4</version>
+    </dependency>
+
 # Why you should use this code
 + **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
 + **Memory efficient** - arrays are more memory efficient than hash maps. Furthermore, we used our own implementation to intern strings (i.e., avoiding to store duplicated strings multiple times). Due to these changes, I measured up to 99% decrease in memory for the annotations corresponding to a typical natural language text, when compared to the original CoreNLP code. (Note: this reduction takes effect only _after_ CoreNLP finishes its work.)
