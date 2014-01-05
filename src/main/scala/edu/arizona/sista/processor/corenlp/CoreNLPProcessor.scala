@@ -107,7 +107,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   def in(s:String):String = {
-    if (internStrings) Processor.in.intern(s)
+    if (internStrings) Processor.internString(s)
     else s
   }
 

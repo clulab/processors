@@ -75,6 +75,14 @@ trait Processor {
 }
 
 object Processor {
-  /** Used to (optionally) intern all the strings generated during annotation */
-  val in = new Internalizer[String]
+  /**
+   * Used to (optionally) intern all the strings generated during annotation
+   * This is now local to each thread to avoid concurrency issues in multi-threaded programs
+   */
+  private val in = new ThreadLocal[Internalizer[String]]
+
+  def internString(s:String):String = {
+    if(in.get() == null) in.set(new Internalizer[String])
+    in.get.intern(s)
+  }
 }
