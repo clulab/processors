@@ -2,7 +2,8 @@ package edu.arizona.sista.processor.struct
 
 import org.slf4j.LoggerFactory
 import Lexicon.logger
-import java.io.{BufferedReader, PrintWriter}
+import java.io._
+import scala.Serializable
 
 /**
  * Generic lexicon: maps objects of type T to Ints, both ways
@@ -62,11 +63,18 @@ class Lexicon[T] extends Serializable {
     logger.info("Stored objects: " + index.size)
     logger.info(" Saved objects: " + savedMemory + " (" + (100.0 * savedMemory / (savedMemory + lexicon.size)) + "%)")
   }
+
+  def saveTo[F](fileName:String) {
+    val os = new ObjectOutputStream(new FileOutputStream(fileName))
+    os.writeObject(this)
+    os.close()
+  }
 }
 
 object Lexicon {
   val logger = LoggerFactory.getLogger(classOf[Lexicon[String]])
 
+  /** Copy constructor for Lexicon */
   def apply[T](other:Lexicon[T]):Lexicon[T] = {
     val lex = new Lexicon[T]
     for(w <- other.lexicon.keySet)
@@ -74,6 +82,14 @@ object Lexicon {
     for(i <- 0 until other.index.size)
       lex.index += other.index(i)
     lex
+  }
+
+  /** Loads a lexicon saved by Lexicon.saveTo */
+  def loadFrom[F](fileName:String):Lexicon[F] = {
+    val is = new ObjectInputStream(new FileInputStream(fileName))
+    val c = is.readObject().asInstanceOf[Lexicon[F]]
+    is.close()
+    c
   }
 }
 
