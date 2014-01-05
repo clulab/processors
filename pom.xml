@@ -187,5 +187,22 @@
           <artifactId>logback-classic</artifactId>
           <version>1.0.10</version>
         </dependency>
+
+        <!-- dependencies required by malt -->
+        <dependency>
+          <groupId>de.bwaldvogel</groupId>
+          <artifactId>liblinear</artifactId>
+          <version>1.94</version>
+        </dependency>
+        <dependency>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+          <version>1.2.17</version>
+        </dependency>
+        <dependency>
+          <groupId>tw.edu.ntu.csie</groupId>
+          <artifactId>libsvm</artifactId>
+          <version>3.17</version>
+        </dependency>
     </dependencies>
 </project>

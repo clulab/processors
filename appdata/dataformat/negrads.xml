@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="negrads" datastructure="dependency" reader="tab" writer="tab">
+	<column name="WORD" category="INPUT" type="STRING"/>
+	<column name="LEMMA" category="INPUT" type="STRING"/>
+	<column name="POS" category="INPUT" type="STRING"/>
+	<column name="MORPH" category="INPUT" type="STRING"/>
+	<column name="HEAD" category="HEAD" type="INTEGER"/>
+	<column name="DEPREL" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
+	<column name="HEADREL" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
+	<column name="PHRASE" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
+	<column name="ATTACH" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
+</dataformat>

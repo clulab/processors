@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="gramexds" datastructure="dependency" reader="tab" writer="tab">
+	<column name="ID" category="INPUT" type="STRING"/>
+	<column name="MAMBALEX" category="INPUT" type="STRING"/>
+	<column name="MORPH" category="INPUT" type="STRING"/>
+	<column name="PAROLE" category="INPUT" type="STRING"/>
+	<column name="POS" category="INPUT" type="STRING"/>
+	<column name="WORD" category="INPUT" type="STRING"/>
+	<column name="HEAD" category="HEAD" type="INTEGER"/>
+	<column name="DEPREL" category="OUTPUT" type="STRING"/>
+	<column name="HEADREL" category="OUTPUT" type="STRING"/>
+	<column name="PHRASE" category="OUTPUT" type="STRING"/>
+	<column name="ATTACH" category="OUTPUT" type="STRING"/>
+</dataformat>

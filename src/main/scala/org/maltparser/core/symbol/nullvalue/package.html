@@ -1,0 +1,28 @@
+<body>
+<p>MaltParser has the possibility of distinguishing between different kinds of null-values when extracting the feature
+vector. For input columns like <code>POSTAG</code> it is possible to differentiate two null-values:</p>
+
+<ul>
+<li><code>NO NODE</code>: There exists no corresponding dependency graph node (e.g., because the lookahead extend beyond the end of the string), 
+which means that the feature is really undefined.
+<li><code>ROOT NODE</code>: The dependency graph node is a root node, which means that it is not possible to extract an input column value 
+(for example, the word form or the part-of-speech). 
+</ul>
+<p>In addition to the two null value categories for input columns, there is one more for the output columns:</p>
+<ul>
+<li><code>NO VALUE</code>: The dependency graph node exists and is not the root, but has not yet been assigned a value for the output column
+requested (e.g., has not been assigned a head and therefore does not have a dependency type).
+</ul>
+			
+With the option <code>--singlemalt-null_value</code> it is possible to specify the degree of differentiation of null-values.
+<ul>
+<li><code>none</code>: Excludes all kinds of null-values when extracting the feature vector, this option value is not possible for learning
+methods that have symbolic feature vector encoding.
+<li><code>one</code>: Maps all kinds of null values to one symbol.
+<li><code>rootlabel</code>: Maps all kinds of null values to one symbol and for output columns this symbol is the same as the root 
+label (used to emulate MaltParser 0.4)
+<li><code>rootnode</code>: Distinguishes between <code>NO NODE</code> and <code>ROOT NODE</code>, and the <code>NO VALUE</code> null-value case is mapped 
+to the <code>ROOT NODE</code> null-value for output columns. 
+<li><code>novalue</code>: Distinguishes between <code>NO NODE</code> and <code>ROOT NODE</code> for both input and output columns, and <code>NO VALUE</code> for output columns. 
+</ul>
+</body>

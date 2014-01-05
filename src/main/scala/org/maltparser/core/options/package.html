@@ -1,0 +1,62 @@
+<body>
+<p>Classes for management of all options used in the application and its plugins.</p>
+<p>All options are described in <code>options.xml</code> under the <code>appdata</code> directory  
+ and in <code>plugin.xml</code> under the root directory in the <code>plugin</code> directory for each plugin. 
+ The <code>options.xml</code> file have following format:</p>
+<pre>
+	&lt;options&gt;
+		&lt;optiongroup groupname="%groupname"&gt;
+			&lt;option type="%type" name="%optionname" flag="%flag" default="%default" usage="%usage"&gt;
+				&lt;desc&gt;%desc&lt;/desc&gt;
+ 				&lt;shortdesc&gt;%shortdesc&lt;/shortdesc&gt;
+				&lt;legalvalue name="%legalvaluename" class="%class"&gt;%legalvaluedesc&lt;/legalvalue&gt;
+				&lt;/option&gt;
+			...
+		&lt;/optiongroup&gt;
+		...
+	&lt;/options&gt;
+</pre>
+<p>One or many <code>optiongroup</code> elements are enclosed by the <code>options</code>. The <code>optiongroup</code> element
+ enclose one or more <code>option</code>. Each option contains at least two description elements: <code>desc</code> and <code>shortdesc</code>.
+ The attributes used by the <code>optiongroup</code> element and the <code>options</code> element are descibed below:</p>
+ 
+ <table border="1">
+ <tr><th>Attribute</th><th>Description</th></tr>
+ <tr><td align="left" style="font-weight:bold">groupname</td><td align="left">The name of the option group that categorize a group of options.</td></tr>
+ <tr><td align="left" style="font-weight:bold">name</td><td align="left">The name of the option</td></tr>
+ <tr><td align="left" style="font-weight:bold">type</td><td align="left">
+ 		There are following option types:
+ 		<table>
+ 		<tr><td width="20%">unary</td><td>The option has no value, this type is only used by the <b>help</b> option to indicate that help should be displayed.</td></tr>
+ 		<tr><td width="20%">bool</td><td>Boolean option, can take either <b>true</b> or <b>false</b> value.</td></tr>
+ 		<tr><td width="20%">integer</td><td>Integer option, can take an integer value.</td></tr>
+ 		<tr><td width="20%">string</td><td>String option, can take a string value.</td></tr>
+ 		<tr><td width="20%">enum</td><td>Enum option, can only take a predefined value.</td></tr>
+ 		<tr><td width="20%">stringenum</td><td>StringEnum option, can either take a string value or a predefined value.</td></tr>
+ 		<tr><td width="20%">class</td><td>Class option, can take a predefined value that corresponds to a class in the MaltParser distribution. </td></tr>
+ 		</table>
+ </td></tr>
+ <tr><td align="left" style="font-weight:bold">flag</td><td align="left">
+ 		A short version option indicator. 
+ </td></tr>
+ <tr><td align="left" style="font-weight:bold">default</td><td align="left">
+ 		If there is a default value it is specified by this attribute.
+ </td></tr>
+ <tr><td align="left" style="font-weight:bold">usage</td><td align="left">
+ 		Indicates the usage of the option:
+ 		<table>
+ 		<tr><td width="20%">train</td><td>The option is only relevant during learning.</td></tr>
+ 		<tr><td width="20%">process</td><td>The option is only relevant during processing (parsing)</td></tr>
+ 		<tr><td width="20%">both</td><td>The option is relevant both during learning and processing (parsing)</td></tr>
+ 		<tr><td width="20%">save</td><td>The option is saved during learning and cannot be overloaded during processing (parsing)</td></tr>
+ 		</table>	
+ </td></tr>
+ </table>
+ <p>An option of one the types: <code>enum</code>, <code>stringenum</code> and <code>class</code>, should at least contain one <code>legalvalue</code>
+ element. Common for the three types is that they should contain an identifier specified by the <code>name</code> attribute and a short description of the
+ legal value. For the <code>stringenum</code> type there should also be a <code>mapto</code> element that specifies what the identifier should be mapped to.
+ The <code>class</code> type should contain a <code>class</code> attribute that specifies what class should be loaded.</p>
+ 
+ <p>All options are described in a <a href="../../../../../options.html" target="_top">short version</a> and a <a href="../../../../../optiondesc.html" target="_top">long version</a>.
+ The option value can be specified in different ways (see the user guide: <a href="../../../../../userguide.html#control" target="_top">Controlling MaltParser</a>.</p>
+</body>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="conll2009">
+	<column name="ID" category="INPUT" type="INTEGER"/>
+	<column name="FORM" category="INPUT" type="STRING"/>
+	<column name="LEMMA" category="INPUT" type="STRING"/>
+	<column name="PLEMMA" category="IGNORE" type="STRING" default="_"/>
+	<column name="POSTAG" category="INPUT" type="STRING"/>
+	<column name="PPOSTAG" category="IGNORE" type="STRING" default="_"/>>
+	<column name="FEATS" category="INPUT" type="STRING"/>
+	<column name="PFEATS" category="IGNORE" type="STRING" default="_"/>
+	<column name="HEAD" category="HEAD" type="INTEGER"/>
+	<column name="PHEAD" category="IGNORE" type="INTEGER" default="_"/>
+	<column name="DEPREL" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
+	<column name="PDEPREL" category="IGNORE" type="STRING" default="_"/>
+	<column name="FILLPRED" category="IGNORE" type="STRING" default="_"/>
+	<column name="PRED" category="IGNORE" type="STRING" default="_"/>
+	<!--<column name="APREDS" category="INPUT" type="STRING"/>-->
+</dataformat>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="negraps" datastructure="phrase" reader="negra" writer="negra">
+	<column name="WORD" category="INPUT" type="STRING"/>
+	<column name="LEMMA" category="INPUT" type="STRING"/>
+	<column name="POS" category="INPUT" type="STRING"/>
+	<column name="MORPH" category="INPUT" type="STRING"/>
+	<column name="LABEL" category="PHRASE_STRUCTURE_EDGE_LABEL" type="STRING"/>
+	<column name="CAT" category="PHRASE_STRUCTURE_NODE_LABEL" type="STRING"/>
+	<column name="SECEDGELABEL" category="SECONDARY_EDGE_LABEL" type="STRING"/>
+	<dependencies>
+		<dependency name="negrads" url="/appdata/dataformat/negrads.xml"/>
+	</dependencies>
+</dataformat>
