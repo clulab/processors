@@ -24,7 +24,7 @@ This software is available on maven as well. Add this dependency to your `pom.xm
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>1.4</version>
+       <version>1.5</version>
     </dependency>
 
 # Why you should use this code
