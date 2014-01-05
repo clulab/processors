@@ -11,6 +11,12 @@
     <description>NLP tools</description>
     <url>https://github.com/sistanlp/processors</url>
 
+    <parent>
+      <groupId>org.sonatype.oss</groupId>
+      <artifactId>oss-parent</artifactId>
+      <version>7</version>
+    </parent>
+
     <developers>
       <developer>
         <id>mihai.surdeanu</id>
@@ -20,8 +26,9 @@
     </developers>
 
     <scm>
-      <url>https://github.com/sistanlp/processors</url>
-      <connection>https://github.com/sistanlp/processors</connection>
+      <url>git@github.com:sistanlp/processors.git</url>
+      <connection>scm:git:git@github.com:sistanlp/processors.git</connection>
+      <developerConnection>scm:git:git@github.com:sistanlp/processors.git</developerConnection>
     </scm>
 
     <properties>
@@ -37,13 +44,6 @@
       </license>
     </licenses>
 
-    <repositories>
-        <repository>
-            <id>scala-tools.org</id>
-            <name>Scala-tools Maven2 Repository</name>
-            <url>http://scala-tools.org/repo-releases</url>
-        </repository>
-    </repositories>
     <pluginRepositories>
         <pluginRepository>
             <id>scala-tools.org</id>
@@ -53,6 +53,7 @@
     </pluginRepositories>
 
     <build>  
+    <sourceDirectory>src/main/scala</sourceDirectory>
     <plugins>  
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -84,6 +85,7 @@
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
+
       <plugin>
 	      <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
@@ -114,6 +116,20 @@
           </platforms>
           </configuration>  
       </plugin>  
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>  
     </build>  
 

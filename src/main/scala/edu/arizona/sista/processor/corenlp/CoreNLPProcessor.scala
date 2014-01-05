@@ -265,7 +265,15 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     if (doc.sentences.head.lemmas == None)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
 
-    ner.annotate(annotation.get)
+    try {
+      ner.annotate(annotation.get)
+    } catch {
+      case e:Exception => {
+        println("Caught NER exception!")
+        println("Document:\n" + doc)
+        throw e
+      }
+    }
 
     // convert CoreNLP Annotations to our data structures
     val sas = annotation.get.get(classOf[SentencesAnnotation])

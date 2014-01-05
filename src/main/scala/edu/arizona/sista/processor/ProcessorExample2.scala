@@ -4,17 +4,19 @@ import corenlp.CoreNLPProcessor
 import edu.arizona.sista.processor.struct.DirectedGraphEdgeIterator
 
 /**
- * 
+ * An example on how to fully annotate text using the CoreNLP processor
  * User: mihais
  * Date: 3/28/13
  */
-object ProcessorExample {
+object ProcessorExample2 {
   def main(args:Array[String]) {
     // create the processor
     val proc:Processor = new CoreNLPProcessor()
 
     // the actual work is done here
-    val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
+    //val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
+    //val doc = proc.annotate("Animals take in air by breathing. They need oxygen, which is in the air.")
+    val doc = proc.annotate("Plants take in air through their leaves.")
 
     // you are basically done. the rest of this code simply prints out the annotations
 
