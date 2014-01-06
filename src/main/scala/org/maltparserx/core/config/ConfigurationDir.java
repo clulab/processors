@@ -54,7 +54,10 @@ public class ConfigurationDir  {
 	protected File configDirectory;
 	protected String name;
 	protected String type;
+  /** sista: make sure workingDirectory is unique per thread */
 	protected File workingDirectory;
+  /** sista: At parsing time this points to the directory where the .mco model files are stored */
+  protected File modelDirectory;
 	protected URL url;
 	protected int containerIndex;
 	protected BufferedWriter infoFile = null;
@@ -64,7 +67,15 @@ public class ConfigurationDir  {
 	private DataFormatManager dataFormatManager;
 	private HashMap<String,DataFormatInstance> dataFormatInstances;
 	private URL inputFormatURL; 
-	private URL outputFormatURL; 
+	private URL outputFormatURL;
+
+  /**
+   * Path for the .mco file, in the modelDirectory rather than workingDirectory
+   * Added by sista
+   */
+  private String mkMcoPath() {
+    return modelDirectory.getPath() + File.separator + getName() + ".mco";
+  }
 	
 	/**
 	 * Creates a configuration directory from a mco-file specified by an URL.
@@ -103,7 +114,8 @@ public class ConfigurationDir  {
 		String mode = OptionManager.instance().getOptionValue(containerIndex, "config", "flowchart").toString().trim();
 		if (mode.equals("parse")) {
 			// During parsing also search for the MaltParser configuration file in the class path
-			File mcoPath = new File(workingDirectory.getPath()+File.separator+getName()+".mco");
+			//File mcoPath = new File(workingDirectory.getPath()+File.separator+getName()+".mco");
+      File mcoPath = new File(mkMcoPath());
 			if (!mcoPath.exists()) {
 				String classpath = System.getProperty("java.class.path");
 				String[] items = classpath.split(System.getProperty("path.separator"));
@@ -802,7 +814,8 @@ public class ConfigurationDir  {
     	JarInputStream jis;
     	try {
 	    	if (url == null) {
-	    		jis = new JarInputStream(new FileInputStream(workingDirectory.getPath()+File.separator+getName()+".mco"));
+          //jis = new JarInputStream(new FileInputStream(workingDirectory.getPath()+File.separator+getName()+".mco"));
+	    		jis = new JarInputStream(new FileInputStream(mkMcoPath()));
 	    	} else {
 	    		jis = new JarInputStream(url.openConnection().getInputStream());
 	    	}
@@ -837,7 +850,10 @@ public class ConfigurationDir  {
     	JarInputStream jis;
     	try {
 	    	if (url == null) {
-	    		jis = new JarInputStream(new FileInputStream(workingDirectory.getPath()+File.separator+getName()+".mco"));
+	    		//jis = new JarInputStream(new FileInputStream(workingDirectory.getPath()+File.separator+getName()+".mco"));
+          String mcoPath = mkMcoPath();
+          // System.out.println("Unpacking config from: " + mcoPath);
+          jis = new JarInputStream(new FileInputStream(mcoPath));
 	    	} else {
 	    		jis = new JarInputStream(url.openConnection().getInputStream());
 	    	}
@@ -953,6 +969,17 @@ public class ConfigurationDir  {
 	public void initWorkingDirectory() throws MaltChainedException {
 		try {
 			initWorkingDirectory(OptionManager.instance().getOptionValue(containerIndex, "config", "workingdir").toString());
+
+      // sista: set modelDirectory
+      String modelDirPath = OptionManager.instance().getOptionValue(0, "config", "modeldir").toString();
+      // if unspecified, use workingDirectory (revert to original behavior)
+      if(modelDirPath == null || modelDirPath.length() == 0)
+        modelDirPath = workingDirectory.getAbsolutePath();
+      modelDirectory = new File(modelDirPath);
+      SystemLogger.logger().debug("Model directory set to: " + modelDirectory.getAbsolutePath());
+      SystemLogger.logger().debug("Working directory set to: " + workingDirectory.getAbsolutePath());
+      //System.out.println("Model directory set to: " + modelDirectory.getAbsolutePath());
+      //System.out.println("Working directory set to: " + workingDirectory.getAbsolutePath());
 		} catch (NullPointerException e) {
 			throw new ConfigurationException("The configuration cannot be found.", e);
 		}

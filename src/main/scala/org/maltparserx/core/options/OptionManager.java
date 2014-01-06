@@ -42,7 +42,9 @@ public class OptionManager {
 	public static final int DEFAULTVALUE = -1;
 	private OptionDescriptions optionDescriptions;
 	private OptionValues optionValues;
-	private static OptionManager uniqueInstance = new OptionManager();
+
+  // sista: made thread safe: we now have one OptionManager per thread
+	private static ThreadLocal<OptionManager> uniqueInstancePerThread = new ThreadLocal<OptionManager>(); // new OptionManager();
 	
 	/**
 	 * Creates the Option Manager
@@ -56,7 +58,9 @@ public class OptionManager {
 	* Returns a reference to the single instance.
 	*/
 	public static OptionManager instance() {
-		return uniqueInstance;
+    if(uniqueInstancePerThread.get() == null)
+      uniqueInstancePerThread.set(new OptionManager());
+		return uniqueInstancePerThread.get();
 	}
 	
 	/**

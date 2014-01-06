@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.zip.GZIPInputStream;
 
 import org.maltparserx.core.exception.MaltChainedException;
 import org.maltparserx.core.io.dataformat.ColumnDescription;
@@ -60,10 +61,15 @@ public class TabReader implements SyntaxGraphReader {
 		setFileName(fileName);
 		setCharsetName(charsetName);
 		try {
-			open(new FileInputStream(fileName), charsetName);
+      // sista: detect .gz files on the fly
+      InputStream is = new FileInputStream(fileName);
+      if(fileName.endsWith(".gz")) is = new GZIPInputStream(is);
+      open(is, charsetName);
 		} catch (FileNotFoundException e) {
 			throw new DataFormatException("The input file '"+fileName+"' cannot be found. ", e);
-		}
+		} catch(IOException e) {
+      throw new DataFormatException("The input file '"+fileName+"' cannot be gunzipped. ", e);
+    }
 	}
 	
 	public void open(URL url, String charsetName) throws MaltChainedException {

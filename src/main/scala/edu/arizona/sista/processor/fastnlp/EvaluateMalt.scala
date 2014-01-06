@@ -77,8 +77,18 @@ object EvaluateMalt {
     args += "-l"
     args += "liblinear"
 
-    args += "-c"
-    args += modelName
+    val lastSep = modelName.lastIndexOf(File.separator)
+    if(lastSep == -1) {
+      args += "-md"
+      args += "."
+      args += "-c"
+      args += trimMco(modelName)
+    } else {
+      args += "-md"
+      args += modelName.substring(0, lastSep)
+      args += "-c"
+      args += trimMco(modelName.substring(lastSep + 1))
+    }
 
     args += "-a"
     args += "nivreeager"
@@ -94,6 +104,12 @@ object EvaluateMalt {
 
     println("Using command line: " + args.toList)
     args.toArray
+  }
+
+  private def trimMco(s:String):String = {
+    if(s.endsWith(".mco"))
+      return s.substring(0, s.length - 4)
+    s
   }
 }
 

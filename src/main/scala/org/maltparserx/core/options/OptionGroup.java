@@ -16,7 +16,7 @@ import org.maltparserx.core.options.option.Option;
 public class OptionGroup {
 	private String name;
 	private HashMap<String, Option> options;
-	
+
 	public static int toStringSetting = 0;
 	public final static int WITHGROUPNAME = 0; 
 	public final static int NOGROUPNAME = 1; 

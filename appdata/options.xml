@@ -69,7 +69,11 @@ many single malt configurations. ]]></desc>
 			<desc><![CDATA[By default the working directory is the directory where MaltParser is started from, but it is possible to
 			specify another directory with the <b>workingdir</b> option. ]]></desc>
 			<shortdesc>Working directory</shortdesc>
-		</option>	
+		</option>
+        <option type="string" name="modeldir" flag="md" default="" usage="both">
+            <desc><![CDATA[Added by sista: directory that contains the .mco model files. If not set it is set to <b>workingdir</b>. ]]></desc>
+            <shortdesc>Model directory</shortdesc>
+        </option>
 		<option type="enum" name="logging" flag="cl" default="info" usage="both">
 			<desc><![CDATA[In contrast to the <b>system-verbosity</b> option, the <b>logging</b> option controls the level of verbosity of an
 			individual configuration. The different verbosity or logging levels are the same as for the <b>system-verbosity</b> option. ]]></desc>

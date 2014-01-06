@@ -26,7 +26,8 @@ import org.xml.sax.SAXException;
 * @author Johan Hall
 */
 public class FlowChartManager {
-	private static FlowChartManager uniqueInstance = new FlowChartManager();
+  // sista: removed for thread safety
+	// private static FlowChartManager uniqueInstance = new FlowChartManager();
 	private final FlowChartSystem flowChartSystem; 
 	private final HashMap<String,ChartSpecification> chartSpecifications;
 	
@@ -38,9 +39,11 @@ public class FlowChartManager {
 	/**
 	* Returns a reference to the single instance.
 	*/
+  /* // sista: removed for thread safety
 	public static FlowChartManager instance() {
 		return uniqueInstance;
 	}
+	*/
 	
 	public void load(String urlstring) throws MaltChainedException {
 		final URLFinder f = new URLFinder();
