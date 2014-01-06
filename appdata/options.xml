@@ -63,7 +63,7 @@
 			may contain additional configuration types. For example, one type could be an ensemble parser configuration containing 
 many single malt configurations. ]]></desc>
 			<shortdesc>Configuration type</shortdesc>
-			<legalvalue name="singlemalt" class="org.maltparser.parser.SingleMalt">Single Malt Parser configuration</legalvalue>
+			<legalvalue name="singlemalt" class="org.maltparserx.parser.SingleMalt">Single Malt Parser configuration</legalvalue>
 		</option>
 		<option type="string" name="workingdir" flag="w" default="user.dir" usage="both">
 			<desc><![CDATA[By default the working directory is the directory where MaltParser is started from, but it is possible to
@@ -102,21 +102,21 @@ many single malt configurations. ]]></desc>
 			the behavior of the algorithm, Covington's algorithms have a corresponding option group called <b>covington</b>. For more information about the
 			parsing algorithm see the user guide: <a href="userguide.html#parsingalg">Parsing Algorithms</a>.]]></desc>
 			<shortdesc>Parsing algorithm</shortdesc>
-			<legalvalue name="nivreeager" class="org.maltparser.parser.algorithm.nivre.NivreArcEagerFactory">Nivre arc-eager</legalvalue>
-			<legalvalue name="nivrestandard" class="org.maltparser.parser.algorithm.nivre.NivreArcStandardFactory">Nivre arc-standard</legalvalue>
-			<legalvalue name="covnonproj" class="org.maltparser.parser.algorithm.covington.CovingtonNonProjFactory">Covington non-projective</legalvalue>
-			<legalvalue name="covproj" class="org.maltparser.parser.algorithm.covington.CovingtonProjFactory">Covington projective</legalvalue>
-			<legalvalue name="stackproj" class="org.maltparser.parser.algorithm.stack.StackProjFactory">Stack projective</legalvalue>
-			<legalvalue name="stackeager" class="org.maltparser.parser.algorithm.stack.StackSwapEagerFactory">Stack eager</legalvalue>
-			<legalvalue name="stacklazy" class="org.maltparser.parser.algorithm.stack.StackSwapLazyFactory">Stack lazy</legalvalue>
-			<legalvalue name="planar" class="org.maltparser.parser.algorithm.planar.NivrePlanarArcEagerFactory">Planar eager</legalvalue>
-			<legalvalue name="2planar" class="org.maltparser.parser.algorithm.twoplanar.TwoPlanarArcEagerFactory">2-Planar eager</legalvalue>
+			<legalvalue name="nivreeager" class="org.maltparserx.parser.algorithm.nivre.NivreArcEagerFactory">Nivre arc-eager</legalvalue>
+			<legalvalue name="nivrestandard" class="org.maltparserx.parser.algorithm.nivre.NivreArcStandardFactory">Nivre arc-standard</legalvalue>
+			<legalvalue name="covnonproj" class="org.maltparserx.parser.algorithm.covington.CovingtonNonProjFactory">Covington non-projective</legalvalue>
+			<legalvalue name="covproj" class="org.maltparserx.parser.algorithm.covington.CovingtonProjFactory">Covington projective</legalvalue>
+			<legalvalue name="stackproj" class="org.maltparserx.parser.algorithm.stack.StackProjFactory">Stack projective</legalvalue>
+			<legalvalue name="stackeager" class="org.maltparserx.parser.algorithm.stack.StackSwapEagerFactory">Stack eager</legalvalue>
+			<legalvalue name="stacklazy" class="org.maltparserx.parser.algorithm.stack.StackSwapLazyFactory">Stack lazy</legalvalue>
+			<legalvalue name="planar" class="org.maltparserx.parser.algorithm.planar.NivrePlanarArcEagerFactory">Planar eager</legalvalue>
+			<legalvalue name="2planar" class="org.maltparserx.parser.algorithm.twoplanar.TwoPlanarArcEagerFactory">2-Planar eager</legalvalue>
 		</option>
 		<option type="class" name="guide_model" flag="gm" default="single" usage="save">
 			<desc><![CDATA[ MaltParser 1.7.2 has one available guide model type: <b>single</b>. Later releases 
 			may contain additional guide model types.  ]]></desc>
 			<shortdesc>Guide model type</shortdesc>
-			<legalvalue name="single" class="org.maltparser.parser.guide.SingleGuide">Classic guide</legalvalue>
+			<legalvalue name="single" class="org.maltparserx.parser.guide.SingleGuide">Classic guide</legalvalue>
 		</option>
 		<option type="enum" name="null_value" flag="nv" default="one" usage="save">
 			<desc><![CDATA[ MaltParser 1.7.2 and later versions (implemented in Java) have the possibility of distinguishing between 
@@ -198,7 +198,7 @@ many single malt configurations. ]]></desc>
 			<li><b>tab</b> reads tab-separated files and with columns defined by the input format.</a></li>
 			</ul> ]]></desc>
 			<shortdesc>Data reader</shortdesc>
-			<legalvalue name="tab" class="org.maltparser.core.syntaxgraph.reader.TabReader">Tab-separated reader</legalvalue>
+			<legalvalue name="tab" class="org.maltparserx.core.syntaxgraph.reader.TabReader">Tab-separated reader</legalvalue>
 		</option>
 		<option type="string" name="charset" flag="ic" default="UTF-8" usage="save">
 			<desc><![CDATA[ The <b>charset</b> option defines the character set of the input data file, for example, <code>UTF-8</code> or <code>ISO8858-1</code>.  ]]></desc>
@@ -240,7 +240,7 @@ many single malt configurations. ]]></desc>
 			<li><b>negra</b> reads line-oriented files similar to the Negra export format.</a></li>
 			</ul> ]]></desc>
 			<shortdesc>Data writer</shortdesc>
-			<legalvalue name="tab" class="org.maltparser.core.syntaxgraph.writer.TabWriter">Tab-separated writer</legalvalue>
+			<legalvalue name="tab" class="org.maltparserx.core.syntaxgraph.writer.TabWriter">Tab-separated writer</legalvalue>
 		</option>
 		<option type="string" name="charset" flag="oc" default="UTF-8" usage="save">
 			<desc><![CDATA[ The <b>charset</b> option defines the character set of the output data file, for example, <code>UTF-8</code> or <code>ISO8858-1</code>.   ]]></desc>
@@ -422,14 +422,14 @@ otherwise all tokens in Left must be inspected before the next token is shifted.
 		<option type="class" name="kbest_type" flag="kt" default="rank" usage="process">
 			<desc><![CDATA[ The classifier can produce a k-best list of predicted parser actions.    ]]></desc>
 			<shortdesc>Type of k-best list</shortdesc>
-			<legalvalue name="rank" class="org.maltparser.parser.history.kbest.KBestList">Only ranked list</legalvalue>
+			<legalvalue name="rank" class="org.maltparserx.parser.history.kbest.KBestList">Only ranked list</legalvalue>
 		</option>
 		<option type="class" name="learner" flag="l" default="liblinear"  usage="save">
 			<desc><![CDATA[ This option specifies the learning method (learner package). MaltParser 1.7.2 includes
 			the LIBSVM learner and the LIBLINEAR learner. ]]></desc>
 			<shortdesc>Learner</shortdesc>
-			<legalvalue name="libsvm" class="org.maltparser.ml.lib.LibSvm">LIBSVM learner</legalvalue>
-			<legalvalue name="liblinear" class="org.maltparser.ml.lib.LibLinear">LIBLINEAR learner</legalvalue>
+			<legalvalue name="libsvm" class="org.maltparserx.ml.lib.LibSvm">LIBSVM learner</legalvalue>
+			<legalvalue name="liblinear" class="org.maltparserx.ml.lib.LibLinear">LIBLINEAR learner</legalvalue>
 		</option>
 		<option type="string" name="decision_settings" flag="gds" default="T.TRANS+A.DEPREL" usage="save">
 			<desc><![CDATA[ This option specifies how a parser action is combined or divided. By default, arc label(s) and transition are combined into

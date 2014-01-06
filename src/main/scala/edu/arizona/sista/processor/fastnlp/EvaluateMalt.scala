@@ -1,6 +1,6 @@
 package edu.arizona.sista.processor.fastnlp
 
-import org.maltparser.MaltConsoleEngine
+import org.maltparserx.MaltConsoleEngine
 import scala.collection.mutable.ArrayBuffer
 import java.io.File
 
