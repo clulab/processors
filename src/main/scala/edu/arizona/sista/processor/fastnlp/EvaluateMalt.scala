@@ -90,6 +90,8 @@ object EvaluateMalt {
       args += trimMco(modelName.substring(lastSep + 1))
     }
 
+    // if multi-threaded, add a unique working dir per thread (with -w)!
+
     args += "-a"
     args += "nivreeager"
 
