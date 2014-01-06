@@ -89,6 +89,9 @@ object EvaluateMalt {
     args += "-o"
     args += outFile
 
+    args += "-v"
+    args += "error"
+
     println("Using command line: " + args.toList)
     args.toArray
   }
