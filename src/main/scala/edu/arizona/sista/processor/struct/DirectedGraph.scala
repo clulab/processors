@@ -81,7 +81,9 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     val fromEdges = outgoingEdges(from)
     var offset = 0
     while(offset < fromEdges.length) {
+      //println("checking edge: " + from + " " + fromEdges(offset)._1 + " " + fromEdges(offset)._2 + " against " + to + " " + v)
       if (fromEdges(offset)._1 == to && fromEdges(offset)._2 == v) {
+        //println("\t\tTRUE")
         return true
       }
       offset += 1

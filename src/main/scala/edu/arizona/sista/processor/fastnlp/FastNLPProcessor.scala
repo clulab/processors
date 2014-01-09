@@ -4,8 +4,10 @@ import edu.arizona.sista.processor.corenlp.CoreNLPProcessor
 import edu.arizona.sista.processor.{Sentence, Document}
 import org.maltparserx.MaltParserService
 import FastNLPProcessor._
-import scala.collection.mutable.ArrayBuffer
-import java.io.{IOException, File}
+import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import edu.arizona.sista.processor.utils.Files
+import scala.collection.mutable
+import edu.arizona.sista.processor.struct.DirectedGraph
 
 /**
  * Fast NLP tools
@@ -31,12 +33,13 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
 
     // parse each individual sentence
     for(sentence <- doc.sentences) {
-      parseSentence(sentence)
+      val dg = parseSentence(sentence)
+      sentence.dependencies = Some(dg)
     }
   }
 
   /** Parses one sentence and stores the dependency graph in the sentence object */
-  private def parseSentence(sentence:Sentence) {
+  private def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val tokens = new Array[String](sentence.words.length)
     for(i <- 0 until tokens.length) {
@@ -47,15 +50,31 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
     val output = maltService.parseTokens(tokens)
 
     // convert malt's output into our dependency graph
-    for(o <- output) println(o)
-    // TODO
+    val edgeBuffer = new ListBuffer[(Int, Int, String)]
+    val roots = new mutable.HashSet[Int]
+    for(o <- output) {
+      //println(o)
+      val tokens = o.split("\\s+")
+      if(tokens.length < 8)
+        throw new RuntimeException("ERROR: Invalid malt output line: " + o)
+      // malt indexes tokens from 1; we index from 0
+      val modifier = tokens(0).toInt - 1
+      val head = tokens(6).toInt - 1
+      val label = tokens(7).toLowerCase()
+      if(label == "root" && head == -1) {
+        roots += modifier
+      } else {
+        edgeBuffer += new Tuple3(head, modifier, in(label))
+      }
+    }
+    new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
   }
 
   private def initializeService() {
     if(! serviceInitialized) {
       maltService.initializeParserModel(mkArgs(
         DEFAULT_MODEL_DIR, DEFAULT_MODEL_NAME,
-        mkWorkDir("maltwdir", true)))
+        Files.mkTmpDir("maltwdir", true)))
       serviceInitialized = true
     }
   }
@@ -78,25 +97,6 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
     args += "error"
 
     args.mkString(" ")
-  }
-
-  private def mkWorkDir(prefix:String, deleteOnExit:Boolean):String = {
-    val TEMP_DIR_ATTEMPTS = 100
-    val baseDir = new File(System.getProperty("java.io.tmpdir"))
-    val baseName = prefix + "-" + System.nanoTime().toString + "-"
-
-    for(counter <- 0 until TEMP_DIR_ATTEMPTS) {
-      val tempDir = new File(baseDir, baseName + counter.toString)
-      if (tempDir.mkdir()) {
-        if(deleteOnExit) tempDir.deleteOnExit()
-        // println("work dir: " + tempDir.getAbsolutePath)
-        return tempDir.getAbsolutePath
-      }
-    }
-
-    throw new IllegalStateException("ERROR: Failed to create directory within "
-      + TEMP_DIR_ATTEMPTS + " attempts (tried "
-      + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')');
   }
 
   override def resolveCoreference(doc:Document) {
