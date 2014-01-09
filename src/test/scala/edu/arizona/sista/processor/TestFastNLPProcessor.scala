@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor.fastnlp
+package edu.arizona.sista.processor
 
 import org.scalatest.junit.AssertionsForJUnit
 import edu.arizona.sista.processor.Processor
@@ -6,6 +6,7 @@ import org.junit.{Test, Before}
 import org.junit.Assert._
 import edu.arizona.sista.processor.corenlp.CoreNLPProcessor
 import edu.arizona.sista.processor.struct.DirectedGraphEdgeIterator
+import edu.arizona.sista.processor.fastnlp.FastNLPProcessor
 
 /**
  *
