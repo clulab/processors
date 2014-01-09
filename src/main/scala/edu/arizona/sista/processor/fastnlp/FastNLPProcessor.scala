@@ -14,6 +14,7 @@ import org.maltparserx
  * Fast NLP tools
  * Uses most of CoreNLP but replaces its parser with maltparser
  * This means that constituent trees and coreference, which depends on that, are not available
+ * Also, malt produces Stanford "basic" dependencies, rather than "collapsed" ones
  * User: mihais
  * Date: 1/4/14
  */

@@ -12,7 +12,9 @@ object Files {
 
   def mkTmpDir(prefix:String, deleteOnExit:Boolean):String = {
     val baseDir = new File(System.getProperty("java.io.tmpdir"))
-    val baseName = prefix + "-" + System.nanoTime().toString + "-"
+
+    // to minimize collisions, the dir name contains the time and the thread id
+    val baseName = prefix + "-" + System.nanoTime().toString + "-" + Thread.currentThread().getId + "-"
 
     for(counter <- 0 until TEMP_DIR_ATTEMPTS) {
       val tempDir = new File(baseDir, baseName + counter.toString)
