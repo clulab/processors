@@ -8,6 +8,8 @@ import java.util.concurrent.{TimeUnit, Executors}
 import java.lang.Long
 import junit.framework.Assert
 import edu.arizona.sista.processor.fastnlp.FastNLPProcessor
+import TestProcessorThreading._
+import edu.arizona.sista.processor.struct.DirectedGraphEdgeIterator
 
 /**
  * Tests that CoreNLPProcessor (and other processors) work in multi-threading mode
@@ -47,16 +49,18 @@ class TestProcessorThreading extends AssertionsForJUnit {
 
     // now measure actual ellapsed time
     val startTime = System.currentTimeMillis()
-    procs(0).annotate(text)
+    val doc = procs(0).annotate(text)
     val estimatedSeqTime = System.currentTimeMillis() - startTime
     println(s"Sequential time: $estimatedSeqTime ms")
+    val goldDeps = getDependencies(doc)
 
     // now annotate the same text in two threads
     val noThreads = procs.length - 1
     val estimatedTimes = new Array[Double](noThreads)
+    val dependencies = new Array[String](noThreads)
     val executor = Executors.newFixedThreadPool(2) // we assume any machine nowadays has at least two cores
     for(i <- 0 until noThreads) {
-      val worker = new MyThread(estimatedTimes, i, procs(i + 1), text)
+      val worker = new MyThread(estimatedTimes, i, procs(i + 1), text, dependencies)
       executor.execute(worker)
     }
     executor.shutdown()
@@ -69,20 +73,43 @@ class TestProcessorThreading extends AssertionsForJUnit {
       // estimated times should not be too slow compared with the sequential one
       Assert.assertTrue(estimatedTimes(i) < estimatedSeqTime * 1.5)
     }
+
+    // make sure each thread produced the same output as the sequential job
+    for(i <- 0 until noThreads) {
+      Assert.assertTrue(goldDeps == dependencies(i))
+    }
+  }
+}
+
+object TestProcessorThreading {
+  def getDependencies(doc:Document):String = {
+    val os = new StringBuilder
+    for(s <- doc.sentences) {
+      assert(s.dependencies.isDefined)
+      val it = new DirectedGraphEdgeIterator[String](s.dependencies.get)
+      while(it.hasNext) {
+        val d = it.next()
+        os.append(s"${d._1} ${d._2} ${d._3}\n")
+      }
+    }
+    os.toString()
   }
 }
 
 class MyThread (val estimatedTimes:Array[Double],
                 val index:Int,
                 val proc:Processor,
-                val text:String) extends Runnable  {
+                val text:String,
+                val dependencies:Array[String]) extends Runnable  {
   override def run() {
     // run the annotation pipeline once to load all models in memory
     proc.annotate("This is a simple sentence.")
 
     // the actual job
     val startTime = System.currentTimeMillis()
-    proc.annotate(text)
+    val doc = proc.annotate(text)
     estimatedTimes(index) = System.currentTimeMillis() - startTime
+
+    dependencies(index) = getDependencies(doc)
   }
 }
