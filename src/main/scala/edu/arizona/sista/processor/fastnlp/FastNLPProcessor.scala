@@ -8,6 +8,7 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import edu.arizona.sista.processor.utils.Files
 import scala.collection.mutable
 import edu.arizona.sista.processor.struct.DirectedGraph
+import org.maltparserx
 
 /**
  * Fast NLP tools
@@ -17,8 +18,13 @@ import edu.arizona.sista.processor.struct.DirectedGraph
  * Date: 1/4/14
  */
 class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(internStrings) {
-  private lazy val maltService = new MaltParserService()
-  private var serviceInitialized = false
+  /**
+   * One maltparser instance for each thread
+   * MUST have one separate malt instance per thread!
+   * malt uses a working directory which is written at runtime
+   * using ThreadLocal variables guarantees that each thread gets its own working directory
+   */
+  private val maltService = new ThreadLocal[MaltParserService]
 
   override def parse(doc:Document) {
     val annotation = basicSanityCheck(doc)
@@ -27,9 +33,6 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
       throw new RuntimeException("ERROR: you have to run the POS tagger before NER!")
     if (doc.sentences.head.lemmas == None)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
-
-    // load models if not done already
-    initializeService()
 
     // parse each individual sentence
     for(sentence <- doc.sentences) {
@@ -47,7 +50,7 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
     }
 
     // the actual parsing
-    val output = maltService.parseTokens(tokens)
+    val output = getService().parseTokens(tokens)
 
     // convert malt's output into our dependency graph
     val edgeBuffer = new ListBuffer[(Int, Int, String)]
@@ -70,13 +73,15 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
   }
 
-  private def initializeService() {
-    if(! serviceInitialized) {
-      maltService.initializeParserModel(mkArgs(
+  private def getService():MaltParserService = {
+    if(maltService.get() == null) {
+      val service = new maltparserx.MaltParserService()
+      service.initializeParserModel(mkArgs(
         DEFAULT_MODEL_DIR, DEFAULT_MODEL_NAME,
         Files.mkTmpDir("maltwdir", true)))
-      serviceInitialized = true
+      maltService.set(service)
     }
+    maltService.get()
   }
 
   private def mkArgs(modelDir:String, modelName:String, workDir:String):String = {
