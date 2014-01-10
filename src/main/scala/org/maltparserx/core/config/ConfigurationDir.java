@@ -117,7 +117,7 @@ public class ConfigurationDir  {
 		if (mode.equals("parse")) {
 			// During parsing also search for the MaltParser configuration file in the class path
 			//File mcoPath = new File(workingDirectory.getPath()+File.separator+getName()+".mco");
-      File mcoPath = new File(mkMcoPath()); // sista: include modelDirectory in the path
+      File mcoPath = new File(mkMcoPath()); // sista: use modelDirectory in the path not workingDirectory!
       if(v) System.out.println("MCOPATH: " + mcoPath);
 			if (!mcoPath.exists()) {
 				String classpath = System.getProperty("java.class.path");

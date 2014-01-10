@@ -1,7 +1,7 @@
-package edu.arizona.sista.processor
+package edu.arizona.sista.processors
 
 import corenlp.CoreNLPProcessor
-import edu.arizona.sista.processor.struct.DirectedGraphEdgeIterator
+import edu.arizona.sista.processors.struct.DirectedGraphEdgeIterator
 
 /**
  * An example on how to fully annotate text using the CoreNLP processor

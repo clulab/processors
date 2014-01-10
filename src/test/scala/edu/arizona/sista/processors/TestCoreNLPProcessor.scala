@@ -1,11 +1,11 @@
-package edu.arizona.sista.processor
+package edu.arizona.sista.processors
 
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.Assert._
 import org.junit.{Before, Test}
 import collection.JavaConversions.asJavaCollection
-import edu.arizona.sista.processor.struct.Trees
-import edu.arizona.sista.processor.corenlp.CoreNLPProcessor
+import edu.arizona.sista.processors.struct.Trees
+import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
 /**
  * 

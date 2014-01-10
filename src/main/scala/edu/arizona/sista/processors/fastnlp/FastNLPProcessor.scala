@@ -1,13 +1,13 @@
-package edu.arizona.sista.processor.fastnlp
+package edu.arizona.sista.processors.fastnlp
 
-import edu.arizona.sista.processor.corenlp.CoreNLPProcessor
-import edu.arizona.sista.processor.{Sentence, Document}
+import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import edu.arizona.sista.processors.{Sentence, Document}
 import org.maltparserx.MaltParserService
 import FastNLPProcessor._
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import edu.arizona.sista.processor.utils.Files
+import edu.arizona.sista.processors.utils.Files
 import scala.collection.mutable
-import edu.arizona.sista.processor.struct.DirectedGraph
+import edu.arizona.sista.processors.struct.DirectedGraph
 import org.maltparserx
 
 /**

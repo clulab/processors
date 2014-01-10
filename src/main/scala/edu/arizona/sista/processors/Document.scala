@@ -1,9 +1,9 @@
-package edu.arizona.sista.processor
+package edu.arizona.sista.processors
 
 import collection.mutable
 import collection.mutable.ListBuffer
 import java.lang.StringBuilder
-import edu.arizona.sista.processor.struct.{Tree, DirectedGraph}
+import edu.arizona.sista.processors.struct.{Tree, DirectedGraph}
 
 /**
  * Stores all annotations for one document

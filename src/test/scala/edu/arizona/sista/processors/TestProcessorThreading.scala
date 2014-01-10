@@ -1,15 +1,15 @@
-package edu.arizona.sista.processor
+package edu.arizona.sista.processors
 
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.{Before, Test}
-import edu.arizona.sista.processor.corenlp.CoreNLPProcessor
+import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import scala.io.Source
 import java.util.concurrent.{TimeUnit, Executors}
 import java.lang.Long
 import junit.framework.Assert
-import edu.arizona.sista.processor.fastnlp.FastNLPProcessor
+import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import TestProcessorThreading._
-import edu.arizona.sista.processor.struct.DirectedGraphEdgeIterator
+import edu.arizona.sista.processors.struct.DirectedGraphEdgeIterator
 
 /**
  * Tests that CoreNLPProcessor (and other processors) work in multi-threading mode
@@ -42,7 +42,7 @@ class TestProcessorThreading extends AssertionsForJUnit {
   }
 
   private def runTwoThreads(procs:Array[Processor]) {
-    val text = Source.fromFile("src/main/resources/edu/arizona/sista/processor/raw_text.txt").getLines.mkString(" ")
+    val text = Source.fromFile("src/main/resources/edu/arizona/sista/processors/raw_text.txt").getLines.mkString(" ")
     println(s"Read a text with ${text.length} characters:\n${text}")
     // run the annotation pipeline once to load all models in memory
     procs(0).annotate("This is a simple sentence.")

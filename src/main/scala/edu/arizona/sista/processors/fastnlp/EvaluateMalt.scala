@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor.fastnlp
+package edu.arizona.sista.processors.fastnlp
 
 import org.maltparserx.MaltConsoleEngine
 import scala.collection.mutable.ArrayBuffer

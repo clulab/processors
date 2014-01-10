@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor.struct
+package edu.arizona.sista.processors.struct
 
 /**
  * Stores a mutable number of type T

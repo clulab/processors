@@ -1,6 +1,6 @@
-package edu.arizona.sista.processor.corenlp
+package edu.arizona.sista.processors.corenlp
 
-import edu.arizona.sista.processor.{CorefChains, Sentence, Document}
+import edu.arizona.sista.processors.{CorefChains, Sentence, Document}
 import edu.stanford.nlp.pipeline.Annotation
 
 

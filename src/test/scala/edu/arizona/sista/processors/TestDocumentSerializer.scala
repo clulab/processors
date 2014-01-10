@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor
+package edu.arizona.sista.processors
 
 import corenlp.CoreNLPProcessor
 import org.scalatest.junit.AssertionsForJUnit

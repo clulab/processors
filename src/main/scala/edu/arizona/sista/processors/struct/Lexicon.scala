@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor.struct
+package edu.arizona.sista.processors.struct
 
 import org.slf4j.LoggerFactory
 import Lexicon.logger

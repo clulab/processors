@@ -1,6 +1,6 @@
-package edu.arizona.sista.processor
+package edu.arizona.sista.processors
 
-import edu.arizona.sista.processor.corenlp.CoreNLPProcessor
+import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import scala.io.Source
 import scala.collection.mutable.ListBuffer
 

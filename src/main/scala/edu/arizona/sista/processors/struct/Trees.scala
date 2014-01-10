@@ -1,7 +1,7 @@
-package edu.arizona.sista.processor.struct
+package edu.arizona.sista.processors.struct
 
 import scala.collection.mutable.ListBuffer
-import edu.arizona.sista.processor.ling.TreebankLabels
+import edu.arizona.sista.processors.ling.TreebankLabels
 
 /**
  * Tree utilities

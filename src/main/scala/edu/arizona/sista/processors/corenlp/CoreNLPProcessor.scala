@@ -1,6 +1,6 @@
-package edu.arizona.sista.processor.corenlp
+package edu.arizona.sista.processors.corenlp
 
-import edu.arizona.sista.processor._
+import edu.arizona.sista.processors._
 import edu.stanford.nlp.pipeline.{StanfordCoreNLP,Annotation}
 import java.util.Properties
 import collection.mutable.{ListBuffer, ArrayBuffer}
@@ -15,7 +15,7 @@ import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 import edu.stanford.nlp.trees.SemanticHeadFinder
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
-import edu.arizona.sista.processor.struct.{Tree, MutableNumber, DirectedGraph}
+import edu.arizona.sista.processors.struct.{Tree, MutableNumber, DirectedGraph}
 
 /**
  * API for Stanford's CoreNLP tools

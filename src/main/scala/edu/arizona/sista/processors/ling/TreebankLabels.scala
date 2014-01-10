@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor.ling
+package edu.arizona.sista.processors.ling
 
 /**
  *

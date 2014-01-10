@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor.struct
+package edu.arizona.sista.processors.struct
 
 /**
  * Stores a tree structure; used generally to store constituent trees

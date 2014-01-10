@@ -1,4 +1,4 @@
-package edu.arizona.sista.processor.utils
+package edu.arizona.sista.processors.utils
 
 import java.io.File
 
