@@ -3,7 +3,6 @@ package edu.arizona.sista.processor
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.Assert._
 import org.junit.{Before, Test}
-import edu.arizona.sista.processor.{CorefMention, Processor}
 import collection.JavaConversions.asJavaCollection
 import edu.arizona.sista.processor.struct.Trees
 import edu.arizona.sista.processor.corenlp.CoreNLPProcessor

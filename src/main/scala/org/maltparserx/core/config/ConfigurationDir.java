@@ -99,6 +99,7 @@ public class ConfigurationDir  {
 	 * @throws MaltChainedException
 	 */
 	public ConfigurationDir(String name, String type, int containerIndex) throws MaltChainedException {
+    boolean v = false;
 		setContainerIndex(containerIndex);
 
 		initWorkingDirectory();
@@ -110,23 +111,40 @@ public class ConfigurationDir  {
 		}
 
 		setConfigDirectory(new File(workingDirectory.getPath()+File.separator+getName()));
+    if(v) System.out.println("CONFIG DIR: " + workingDirectory.getPath()+File.separator+getName());
 		
 		String mode = OptionManager.instance().getOptionValue(containerIndex, "config", "flowchart").toString().trim();
 		if (mode.equals("parse")) {
 			// During parsing also search for the MaltParser configuration file in the class path
 			//File mcoPath = new File(workingDirectory.getPath()+File.separator+getName()+".mco");
-      File mcoPath = new File(mkMcoPath());
+      File mcoPath = new File(mkMcoPath()); // sista: include modelDirectory in the path
+      if(v) System.out.println("MCOPATH: " + mcoPath);
 			if (!mcoPath.exists()) {
 				String classpath = System.getProperty("java.class.path");
+        // if the above property is not set, read CLASSPATH from the system environment
+        if(classpath == null || classpath.trim().length() == 0 || classpath.trim() == "\"\"");
+          classpath = System.getenv("CLASSPATH");
+        if(v) System.out.println("CLASSPATH: " + classpath);
 				String[] items = classpath.split(System.getProperty("path.separator"));
+        if(v) for(String item: items) System.out.println("\tCLASSPATH ITEM: " + item);
 				boolean found = false;
 				for (String item : items) {
 					File candidateDir = new File(item);
 					if (candidateDir.exists() && candidateDir.isDirectory()) {
-						File candidateConfigFile = new File(candidateDir.getPath()+File.separator+getName()+".mco");
+						File candidateConfigFile = new File(candidateDir.getPath()+ File.separator + modelDirectory + File.separator+getName()+".mco");
+            if(v) System.out.println("CHECKING FOR MODEL FILE: " + candidateConfigFile);
 						if (candidateConfigFile.exists()) {
-							initWorkingDirectory(candidateDir.getPath());
-							setConfigDirectory(new File(workingDirectory.getPath()+File.separator+getName()));
+              // sista: always use the working dir from the properties. that's configured to be unique per thread!
+							// initWorkingDirectory(candidateDir.getPath());
+
+              // sista: no need to set the config dir again. it was set above to the same value...
+              // setConfigDirectory(new File(workingDirectory.getPath()+File.separator+getName()));
+              // if(v) System.out.println("CONFIG DIR SET TO: " + workingDirectory.getPath()+File.separator+getName());
+
+              // sista: set the mco path to the place where we found it in the classpath
+              mcoPath = candidateConfigFile;
+              if(v) System.out.println("FOUND VALID MCO PATH: " + mcoPath);
+
 							found = true;
 							break;
 						}
@@ -136,12 +154,13 @@ public class ConfigurationDir  {
 					throw new ConfigurationException("Couldn't find the MaltParser configuration file: " + getName()+".mco");
 				}
 			}
-	        try {
-	        	url = mcoPath.toURI().toURL();
-	        } catch (MalformedURLException e) {
-	        	// should never happen
-	        	throw new ConfigurationException("File path could not be represented as a URL.");
-	        }
+      try {
+        url = mcoPath.toURI().toURL();
+        if(v) System.out.println("URL: " + url);
+      } catch (MalformedURLException e) {
+        // should never happen
+        throw new ConfigurationException("File path could not be represented as a URL.");
+      }
 		}
 	}
 	
@@ -588,9 +607,11 @@ public class ConfigurationDir  {
 	 * 
 	 * @return a file handler object for the configuration directory
 	 */
+  /* // sista: this is never used so let's remove it for safety
 	public File getConfigDirectory() {
 		return configDirectory;
 	}
+	*/
 
 	protected void setConfigDirectory(File dir) {
 		this.configDirectory = dir;
@@ -966,7 +987,7 @@ public class ConfigurationDir  {
 	 * 
 	 * @throws MaltChainedException
 	 */
-	public void initWorkingDirectory() throws MaltChainedException {
+	private void initWorkingDirectory() throws MaltChainedException {
 		try {
 			initWorkingDirectory(OptionManager.instance().getOptionValue(containerIndex, "config", "workingdir").toString());
 
@@ -992,7 +1013,7 @@ public class ConfigurationDir  {
 	 * @param pathPrefixString	the path to the working directory
 	 * @throws MaltChainedException
 	 */
-	public void initWorkingDirectory(String pathPrefixString) throws MaltChainedException {
+	private void initWorkingDirectory(String pathPrefixString) throws MaltChainedException {
 		if (pathPrefixString == null || pathPrefixString.equalsIgnoreCase("user.dir") || pathPrefixString.equalsIgnoreCase(".")) {
 			workingDirectory = new File(System.getProperty("user.dir"));
 		} else {

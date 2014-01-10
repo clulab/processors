@@ -71,7 +71,7 @@ class TestProcessorThreading extends AssertionsForJUnit {
     for(i <- 0 until noThreads) {
       println(s"Thread #$i: " + estimatedTimes(i))
       // estimated times should not be too slow compared with the sequential one
-      Assert.assertTrue(estimatedTimes(i) < estimatedSeqTime * 1.5)
+      Assert.assertTrue(estimatedTimes(i) < estimatedSeqTime * 2.0)
     }
 
     // make sure each thread produced the same output as the sequential job

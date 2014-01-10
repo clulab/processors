@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="tal05ps" datastructure="phrase" reader="tiger" writer="tiger">
+	<column name="WORD" category="INPUT" type="STRING"/>
+	<column name="POS" category="INPUT" type="STRING"/>
+	<column name="LABEL" category="PHRASE_STRUCTURE_EDGE_LABEL" type="STRING"/>
+	<column name="CAT" category="PHRASE_STRUCTURE_NODE_LABEL" type="STRING"/>
+	<dependencies>
+		<dependency name="tal05ds" url="/appdata/dataformat/tal05ds.xml" map="tal05ps_tal05ds" urlmap="/appdata/dataformat/map/tal05ps_tal05ds.xml"/>
+	</dependencies>
+</dataformat>

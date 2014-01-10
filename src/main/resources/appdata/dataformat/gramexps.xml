@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="gramexps" datastructure="phrase" reader="tiger" writer="tiger">
+	<column name="ID" category="INPUT" type="STRING"/>
+	<column name="MAMBALEX" category="INPUT" type="STRING"/>
+	<column name="MORPH" category="INPUT" type="STRING"/>
+	<column name="PAROLE" category="INPUT" type="STRING"/>
+	<column name="POS" category="INPUT" type="STRING"/>
+	<column name="WORD" category="INPUT" type="STRING"/>
+	<column name="EDGELABEL" category="OUTPUT" type="STRING"/>
+	<column name="CAT" category="OUTPUT" type="STRING"/>
+	<dependencies>
+		<dependency name="gramexds" url="/appdata/dataformat/gramexds.xml" map="gramexps_gramexds" urlmap="/appdata/dataformat/map/gramexps_gramexds.xml"/>
+	</dependencies>
+</dataformat>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="tigerps" datastructure="phrase" reader="tiger" writer="tiger">
+	<column name="WORD" category="INPUT" type="STRING"/>
+	<column name="LEMMA" category="INPUT" type="STRING"/>
+	<column name="POS" category="INPUT" type="STRING"/>
+	<column name="MORPH" category="INPUT" type="STRING"/>
+	<column name="CASE" category="INPUT" type="STRING"/>
+	<column name="NUMBER" category="INPUT" type="STRING"/>
+	<column name="GENDER" category="INPUT" type="STRING"/>
+	<column name="PERSON" category="INPUT" type="STRING"/>
+	<column name="DEGREE" category="INPUT" type="STRING"/>
+	<column name="TENSE" category="INPUT" type="STRING"/>
+	<column name="MOOD" category="INPUT" type="STRING"/>
+	<column name="LABEL" category="PHRASE_STRUCTURE_EDGE_LABEL" type="STRING"/>
+	<column name="CAT" category="PHRASE_STRUCTURE_NODE_LABEL" type="STRING"/>
+	<column name="SECEDGELABEL" category="SECONDARY_EDGE_LABEL" type="STRING"/>
+	<dependencies>
+		<dependency name="tigerds" url="/appdata/dataformat/tigerds.xml"/>
+	</dependencies>
+</dataformat>

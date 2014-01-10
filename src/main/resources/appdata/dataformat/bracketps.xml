@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="bracketps" datastructure="phrase" reader="bracket" writer="bracket">
+	<column name="POS" category="INPUT" type="STRING"/>
+	<column name="WORD" category="INPUT" type="STRING"/>
+	<column name="CAT" category="PHRASE_STRUCTURE_NODE_LABEL" type="STRING"/>
+	<column name="EDGELABEL" category="PHRASE_STRUCTURE_EDGE_LABEL" type="STRING"/>
+	<dependencies>
+		<dependency name="bracketds" url="/appdata/dataformat/bracketds.xml"/>
+	</dependencies>
+</dataformat>

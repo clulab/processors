@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flowcharts>
+	<flowchart name="info">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="info"/>
+		</preprocess>
+	</flowchart>
+	
+	<flowchart name="unpack">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="unpack"/>
+		</preprocess>
+	</flowchart>
+	
+	<flowchart name="learn">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="createdir"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="gold"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="init"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="init" source="gold" target="system"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="singlemalt" target="gold"/>
+			<chartitem item="copy" id="singlemalt" task="terminals" source="gold" target="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="proj" source="gold" target="gold"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="process" source="gold" target="system"/>
+		</process>
+		<postprocess>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="train"/>
+			<chartitem item="configdir" id="singlemalt" task="savesymboltables"/>
+			<chartitem item="configdir" id="singlemalt" task="createfile"/>
+			<chartitem item="configdir" id="singlemalt" task="deletedir"/>
+		</postprocess>
+	</flowchart>
+	
+	<flowchart name="learnwo">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="createdir"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="gold"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="init"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="init" source="gold" target="system"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="singlemalt" target="gold"/>
+			<chartitem item="copy" id="singlemalt"  task="terminals" source="gold" target="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="proj" source="gold" target="gold"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="process" source="gold" target="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="deproj" source="system" target="system"/>
+			<chartitem item="write" id="singlemalt" source="system"/>
+		</process>
+		<postprocess>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="train"/>
+			<chartitem item="configdir" id="singlemalt" task="savesymboltables"/>
+			<chartitem item="configdir" id="singlemalt" task="createfile"/>
+			<chartitem item="configdir" id="singlemalt" task="deletedir"/>
+		</postprocess>
+	</flowchart>
+	
+	<flowchart name="parse">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="loadsavedoptions"/>
+			<chartitem item="configdir" id="singlemalt" task="loadsymboltables"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="gold"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="init"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="parse" task="init" source="gold" target="system"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="singlemalt" target="gold"/>
+			<chartitem item="copy" id="singlemalt"  task="terminals" source="gold" target="system"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="parse" task="process"  source="system" target="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="deproj" source="system" target="system"/>
+			<chartitem item="write" id="singlemalt" source="system"/>
+		</process>
+	</flowchart>
+	<flowchart name="testdata">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="unpack"/>
+			<chartitem item="configdir" id="singlemalt" task="loadsavedoptions"/>
+			<chartitem item="configdir" id="singlemalt" task="loadsymboltables"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="gold"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="init"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="init" source="gold" target="system"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="singlemalt" target="gold"/>
+			<chartitem item="copy" id="singlemalt"  task="terminals" source="gold" target="system"/>
+			<chartitem item="pseudoproj" id="singlemalt" task="proj" source="gold" target="gold"/>
+			<chartitem item="singlemalt" id="singlemalt" mode="learn" task="process" source="gold" target="system"/>
+		</process>
+	</flowchart>
+	
+	<flowchart name="convert">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="createdir"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="input"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="singlemalt" target="input"/>
+			<chartitem item="write" id="singlemalt" source="input"/>
+		</process>
+		<postprocess>
+			<chartitem item="configdir" id="singlemalt" task="deletedir"/>
+		</postprocess>
+	</flowchart>
+	
+	<flowchart name="analyze">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="createdir"/>
+			<chartitem item="graph" id="singlemalt" task="create" structure="input"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="singlemalt" target="input"/>
+			<chartitem item="analyzer" id="singlemalt" source="input"/>
+		</process>
+		<postprocess>
+			<chartitem item="configdir" id="singlemalt" task="deletedir"/>
+		</postprocess>
+	</flowchart>
+	
+	<flowchart name="proj">
+		<preprocess>
+			<chartitem item="configdir" id="pseudo" task="createdir"/>
+			<chartitem item="graph" id="pseudo" task="create" structure="system"/>
+			<chartitem item="pseudoproj" id="pseudo" task="init"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="pseudo" target="system"/>
+			<chartitem item="pseudoproj" id="pseudo" task="proj" source="system" target="system"/>
+			<chartitem item="pseudoproj" id="pseudo" task="merge" source="system" target="system"/>
+			<chartitem item="write" id="pseudo" source="system"/>
+		</process>
+		<postprocess>
+			<chartitem item="configdir" id="pseudo" task="savesymboltables"/>
+			<chartitem item="configdir" id="pseudo" task="createfile"/>
+			<chartitem item="configdir" id="pseudo" task="deletedir"/>
+		</postprocess>
+	</flowchart>
+	
+	<flowchart name="deproj">
+		<preprocess>
+			<chartitem item="configdir" id="pseudo" task="loadsavedoptions"/>
+			<chartitem item="configdir" id="pseudo" task="loadsymboltables"/>
+			<chartitem item="graph" id="pseudo" task="create" structure="system"/>
+			<chartitem item="pseudoproj" id="pseudo" task="init"/>
+		</preprocess>
+		<process>
+			<chartitem item="read" id="pseudo" target="system"/>
+			<chartitem item="pseudoproj" id="pseudo" task="split" source="system" target="system"/>
+			<chartitem item="pseudoproj" id="pseudo" task="deproj" source="system" target="system"/>
+			<chartitem item="write" id="pseudo" source="system"/>
+		</process>
+	</flowchart>
+	
+	<flowchart name="versioning">
+		<preprocess>
+			<chartitem item="configdir" id="singlemalt" task="versioning"/>
+		</preprocess>
+	</flowchart>
+</flowcharts>
