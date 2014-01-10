@@ -122,9 +122,10 @@ public class ConfigurationDir  {
 			if (!mcoPath.exists()) {
 				String classpath = System.getProperty("java.class.path");
         // if the above property is not set, read CLASSPATH from the system environment
-        if(classpath == null || classpath.trim().length() == 0 || classpath.trim() == "\"\"");
+        if(classpath == null || classpath.trim().length() == 0 || classpath.trim().equals("\"\""))
           classpath = System.getenv("CLASSPATH");
         if(v) System.out.println("CLASSPATH: " + classpath);
+
 				String[] items = classpath.split(System.getProperty("path.separator"));
         if(v) for(String item: items) System.out.println("\tCLASSPATH ITEM: " + item);
 				boolean found = false;
