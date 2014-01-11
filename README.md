@@ -282,7 +282,7 @@ CoreNLProcessor constructor, as such:
 
     val processor = new CoreNLPProcessor(internStrings = false)
 
-## Using `processors` from Java
+## Using processors from Java
 
 Scala is (largely) compatible with Java, so this library can be directly used from Java. Below is Java code that translates most of the functionality from the first Scala example in this document to Java:
 
