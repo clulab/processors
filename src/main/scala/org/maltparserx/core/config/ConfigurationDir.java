@@ -137,13 +137,33 @@ public class ConfigurationDir  {
 					}
 				}
 
+        // sista: it is possible that model files are included in a jar with a different name
+        // (this happens in the jar distribution of processors)
+        // inspect all jars in the classpath, to see if any contains our model files
         if(! found) {
-          // sista: it is possible that model files are included in a jar with a different
-          // (this happens in the jar distribution of processors)
-          // inspect all jars in the classpath, to see if any contains our model files
+          String infoFile = getName() + File.separator + getName() + "_singlemalt.info";
+          InputStreamReader inputReader
+            = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(infoFile));
+          if(inputReader != null) {
+            //System.out.println("FOUND in: " + this.getClass().getClassLoader().getResource(infoFile));
+            String path = this.getClass().getClassLoader().getResource(infoFile).toString();
+            int startFileName = path.indexOf("file:");
+            int endFileName = path.indexOf("!");
+            if(startFileName < 0 || endFileName < 0)
+              throw new RuntimeException("Invalid URL: " + path);
+            String jarFile = path.substring(startFileName + 5, endFileName);
+            //System.out.println("FOUND jar: " + jarFile);
 
-          // TODO
+            try {
+              url = new File(jarFile).toURI().toURL();
+              found = true;
+            } catch (MalformedURLException e) {
+              // should never happen
+              throw new ConfigurationException("File path could not be represented as a URL.");
+            }
+          }
         }
+        // end sista block
 
 				if (found == false) {
 					throw new ConfigurationException("Couldn't find the MaltParser configuration file: " + getName()+".mco");
