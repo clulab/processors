@@ -1,9 +1,9 @@
 # What is it
 
-The `edu.arizona.sista.processor` package aims to be a one-stop place for natural language (NL) processors.
-We currently provide a Scala API for 
-[Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) 
-but plan to add more in the future, including tools developed in house.
+The `edu.arizona.sista.processors` package aims to be a one-stop place for natural language (NL) processors.
+We currently provide two APIs: one for
+[Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), and one for a faster processor (`FastNLPProcessor`)
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)).
 
 This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. 
 
@@ -12,6 +12,7 @@ This code is licensed under GPL v2 or higher.
 (c) Mihai Surdeanu, 2013 - 
 
 # Changes
++ **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`.
 + **1.5** - Bug fixing. Made the string interning process (see `Processor.in`) local to each thread to avoid concurrency issues in multi-threaded programs. Added new unit tests. Added minor functionality to Lexicon.
 + **1.4** - Code cleanup. Added some minor new functionality such as finding base NPs in the Trees class.
 + **1.3** - Reverted back to the `1.x` version numbers, since we will add other software here not just CoreNLP. Added correct mvn dependencies for the CoreNLP jars. Removed the `install*.sh` scripts, which are no longer needed.
@@ -19,19 +20,25 @@ This code is licensed under GPL v2 or higher.
 + **1.0** - Initial release
 
 # Maven
-This software is available on maven as well. Add this dependency to your `pom.xml` to use it:
+This software is available on maven as well. Add the following dependencies to your `pom.xml` to use it:
 
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>1.5</version>
+       <version>2.0</version>
+    </dependency>
+    <dependency>
+       <groupId>edu.arizona.sista</groupId>
+       <artifactId>processors</artifactId>
+       <version>2.0</version>
+       <classifier>models</classifier>
     </dependency>
 
 # Why you should use this code
 + **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
 + **Memory efficient** - arrays are more memory efficient than hash maps. Furthermore, we used our own implementation to intern strings (i.e., avoiding to store duplicated strings multiple times). Due to these changes, I measured up to 99% decrease in memory for the annotations corresponding to a typical natural language text, when compared to the original CoreNLP code. (Note: this reduction takes effect only _after_ CoreNLP finishes its work.)
 + **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
-+ **Tool-independent API** - we plan to support multiple NL tools in the future. However, if you use this code, you will have to change your code only minimally (i.e., the constructor for the `Processor` object).
++ **Tool-independent API** - we support multiple NL tools in the future. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 
 # How to compile 
 
