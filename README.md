@@ -455,20 +455,17 @@ The output of this code is:
             (. .)
         )
     )
-
-
-
-Found one coreference chain containing the following mentions:
-	sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:7
-Found one coreference chain containing the following mentions:
-	sentenceIndex:0 headIndex:1 startTokenOffset:0 endTokenOffset:2
-	sentenceIndex:1 headIndex:0 startTokenOffset:0 endTokenOffset:1
-Found one coreference chain containing the following mentions:
-	sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:7
-Found one coreference chain containing the following mentions:
-	sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5
-Found one coreference chain containing the following mentions:
-	sentenceIndex:1 headIndex:8 startTokenOffset:8 endTokenOffset:9
-
-
+	
+	
+    Found one coreference chain containing the following mentions:
+		sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:7
+    Found one coreference chain containing the following mentions:
+		sentenceIndex:0 headIndex:1 startTokenOffset:0 endTokenOffset:2
+		sentenceIndex:1 headIndex:0 startTokenOffset:0 endTokenOffset:1
+    Found one coreference chain containing the following mentions:
+		sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:7
+    Found one coreference chain containing the following mentions:
+		sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5
+    Found one coreference chain containing the following mentions:
+		sentenceIndex:1 headIndex:8 startTokenOffset:8 endTokenOffset:9
 
