@@ -4,7 +4,7 @@
     <ul>
     <li>The code was changed to work with liblinear 1.94 instead of 1.8.</li>
     <li>We changed the top package name to org.maltparserx to avoid collisions with the vanilla malt (this involved changes to Strings in *.java and appdata/, where classes were loaded by reflection).</li>
-    <li>Made the code thread safe by creating a different OptionManager per thread and allowing the .mco files to be stored in a unique, read-only modelDirectory rather than workingDirectory, which must be unique per thread. Grep for "sista" to see changes in code.</li>
+    <li>Made the code thread safe by creating a different OptionManager per thread and a few other small changes. Grep for "sista" to see changes in code.</li>
     </ul>
 </p>
 </body>

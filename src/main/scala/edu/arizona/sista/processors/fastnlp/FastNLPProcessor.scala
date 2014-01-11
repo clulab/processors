@@ -78,26 +78,24 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
     if(maltService.get() == null) {
       val service = new maltparserx.MaltParserService()
       service.initializeParserModel(mkArgs(
-        DEFAULT_MODEL_DIR, DEFAULT_MODEL_NAME,
-        Files.mkTmpDir("maltwdir", true)))
+        Files.mkTmpDir("maltwdir", deleteOnExit = true),
+        DEFAULT_MODEL_NAME))
       maltService.set(service)
     }
     maltService.get()
   }
 
-  private def mkArgs(modelDir:String, modelName:String, workDir:String):String = {
+  private def mkArgs(workDir:String, modelName:String):String = {
     val args = new ArrayBuffer[String]()
 
     args += "-m"
     args += "parse"
 
-    args += "-md"
-    args += modelDir
-    args += "-c"
-    args += modelName
-
     args += "-w"
     args += workDir
+
+    args += "-c"
+    args += modelName
 
     args += "-v"
     args += "error"
@@ -111,6 +109,5 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
 }
 
 object FastNLPProcessor {
-  val DEFAULT_MODEL_DIR = "models/"
   val DEFAULT_MODEL_NAME = "nivreeager-en-crammer"
 }

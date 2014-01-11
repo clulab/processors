@@ -79,12 +79,12 @@ object EvaluateMalt {
 
     val lastSep = modelName.lastIndexOf(File.separator)
     if(lastSep == -1) {
-      args += "-md"
+      args += "-w"
       args += "."
       args += "-c"
       args += trimMco(modelName)
     } else {
-      args += "-md"
+      args += "-w"
       args += modelName.substring(0, lastSep)
       args += "-c"
       args += trimMco(modelName.substring(lastSep + 1))
