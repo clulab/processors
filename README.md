@@ -7,7 +7,7 @@ that cherry picks fast components from multiple sources (Stanford and [MaltParse
 
 This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. 
 
-This code is licensed under GPL v2 or higher.
+This code is licensed under Apache License Version 2.0. However, some of the libraries used here, most notably CoreNLP, are GPL.
 
 (c) Mihai Surdeanu, 2013 - 
 
