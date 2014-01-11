@@ -12,7 +12,7 @@ This code is licensed under GPL v2 or higher.
 (c) Mihai Surdeanu, 2013 - 
 
 # Changes
-+ **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`.
++ **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`. Added Java usage example to README.
 + **1.5** - Bug fixing. Made the string interning process (see `Processor.in`) local to each thread to avoid concurrency issues in multi-threaded programs. Added new unit tests. Added minor functionality to Lexicon.
 + **1.4** - Code cleanup. Added some minor new functionality such as finding base NPs in the Trees class.
 + **1.3** - Reverted back to the `1.x` version numbers, since we will add other software here not just CoreNLP. Added correct mvn dependencies for the CoreNLP jars. Removed the `install*.sh` scripts, which are no longer needed.
@@ -151,6 +151,48 @@ The above code generates the following output:
       sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
 
 For more details about the annotation data structures, please see the `edu/arizona/sista/processor/Document.scala` file.
+
+Changing processors is trivial: just replace the first line in the above example with:
+
+    val proc:Processor = new FastNLPProcessor()
+    // everything else stays the same
+
+FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces its parser with maltparser, trained to generated Stanford "basic" (rather than "collapsed") dependencies. This means that this annotator does not produce constituent trees and coreference chains. However, because of the faster parser, you should see a speedup increase of at least one order of magnitude. The output of the above code with `FastNLPProcessor` is:
+
+    Sentence #0:
+    Tokens: John Smith went to China .
+    Start character offsets: 0 5 11 16 19 24
+    End character offsets: 4 10 15 18 24 25
+    Lemmas: John Smith go to China .
+    POS tags: NNP NNP VBD TO NNP .
+    Named entities: PERSON PERSON O O LOCATION O
+    Normalized entities: O O O O O O
+    Syntactic dependencies:
+     head:1 modifier:0 label:nn
+     head:2 modifier:1 label:nsubj
+     head:2 modifier:3 label:prep
+     head:2 modifier:5 label:punct
+     head:3 modifier:4 label:pobj
+    
+    
+    Sentence #1:
+    Tokens: He visited Beijing , on January 10th , 2013 .
+    Start character offsets: 26 29 37 44 46 49 57 61 63 67
+    End character offsets: 28 36 44 45 48 56 61 62 67 68
+    Lemmas: he visit Beijing , on January 10th , 2013 .
+    POS tags: PRP VBD NNP , IN NNP JJ , CD .
+    Named entities: O O LOCATION O O DATE DATE DATE DATE O
+    Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
+    Syntactic dependencies:
+     head:1 modifier:0 label:nsubj
+     head:1 modifier:2 label:dobj
+     head:1 modifier:3 label:punct
+     head:1 modifier:4 label:prep
+     head:1 modifier:9 label:punct
+     head:4 modifier:5 label:pobj
+     head:5 modifier:6 label:amod
+     head:5 modifier:7 label:punct
+     head:5 modifier:8 label:num
 
 ### Annotating documents already split into sentences
 
