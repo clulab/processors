@@ -12,7 +12,7 @@ This code is licensed under GPL v2 or higher.
 (c) Mihai Surdeanu, 2013 - 
 
 # Changes
-+ **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`. Added Java usage example to README. Updated to CoreNLP 3.3.0.
++ **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`. Added Java usage example to README. Updated to CoreNLP 3.3.0. Added better unit tests to check for thread safetiness.
 + **1.5** - Bug fixing. Made the string interning process (see `Processor.in`) local to each thread to avoid concurrency issues in multi-threaded programs. Added new unit tests. Added minor functionality to Lexicon.
 + **1.4** - Code cleanup. Added some minor new functionality such as finding base NPs in the Trees class.
 + **1.3** - Reverted back to the `1.x` version numbers, since we will add other software here not just CoreNLP. Added correct mvn dependencies for the CoreNLP jars. Removed the `install*.sh` scripts, which are no longer needed.
@@ -379,6 +379,96 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
 
 The output of this code is:
 
+    Sentence #0:
+    Tokens: John Smith went to China .
+    Start character offsets: 0 5 11 16 19 24
+    End character offsets: 4 10 15 18 24 25
+    Lemmas: John Smith go to China .
+    POS tags: NNP NNP VBD TO NNP .
+    Named entities: PERSON PERSON O O LOCATION O
+    Normalized entities: O O O O O O
+    Syntactic dependencies:
+     head:1 modifier:0 label:nn
+     head:2 modifier:1 label:nsubj
+     head:2 modifier:4 label:prep_to
+    Constituent tree: 
+    (ROOT
+        (S
+            (NP
+                (NNP John)
+                (NNP Smith)
+            )
+            (VP
+                (VBD went)
+                (PP
+                    (TO to)
+                    (NP
+                        (NNP China)
+                    )
+                )
+            )
+            (. .)
+        )
+    )
     
+    
+    Sentence #1:
+    Tokens: He visited Beijing , on January 10th , 2013 .
+    Start character offsets: 26 29 37 44 46 49 57 61 63 67
+    End character offsets: 28 36 44 45 48 56 61 62 67 68
+    Lemmas: he visit Beijing , on January 10th , 2013 .
+    POS tags: PRP VBD NNP , IN NNP JJ , CD .
+    Named entities: O O LOCATION O O DATE DATE DATE DATE O
+    Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
+    Syntactic dependencies:
+     head:1 modifier:0 label:nsubj
+     head:1 modifier:2 label:dobj
+     head:1 modifier:8 label:tmod
+     head:2 modifier:5 label:prep_on
+     head:5 modifier:6 label:amod
+    Constituent tree: 
+    (ROOT
+        (S
+            (NP
+                (PRP He)
+            )
+            (VP
+                (VBD visited)
+                (NP
+                    (NP
+                        (NNP Beijing)
+                    )
+                    (, ,)
+                    (PP
+                        (IN on)
+                        (NP
+                            (NNP January)
+                            (JJ 10th)
+                        )
+                    )
+                    (, ,)
+                )
+                (NP-TMP
+                    (CD 2013)
+                )
+            )
+            (. .)
+        )
+    )
+
+
+
+Found one coreference chain containing the following mentions:
+	sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:7
+Found one coreference chain containing the following mentions:
+	sentenceIndex:0 headIndex:1 startTokenOffset:0 endTokenOffset:2
+	sentenceIndex:1 headIndex:0 startTokenOffset:0 endTokenOffset:1
+Found one coreference chain containing the following mentions:
+	sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:7
+Found one coreference chain containing the following mentions:
+	sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5
+Found one coreference chain containing the following mentions:
+	sentenceIndex:1 headIndex:8 startTokenOffset:8 endTokenOffset:9
+
 
 
