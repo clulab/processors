@@ -44,6 +44,10 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
 
   /** Parses one sentence and stores the dependency graph in the sentence object */
   private def parseSentence(sentence:Sentence):DirectedGraph[String] = {
+    //print("PARSING SENTENCE:")
+    //for(i <- 0 until sentence.size) print(" " + sentence.words(i))
+    //println()
+
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val tokens = new Array[String](sentence.words.length)
     for(i <- 0 until tokens.length) {
@@ -65,12 +69,17 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
       val modifier = tokens(0).toInt - 1
       val head = tokens(6).toInt - 1
       val label = tokens(7).toLowerCase()
-      if(label == "root" && head == -1) {
+
+      // sometimes malt generates dependencies from root with a different label than "root"
+      // not sure why this happens, but let's manage this: create a root node for all
+      // if(label == "root" && head == -1) {
+      if(head == -1) {
         roots += modifier
       } else {
         edgeBuffer += new Tuple3(head, modifier, in(label))
       }
     }
+
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
   }
 

@@ -12,6 +12,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 (c) Mihai Surdeanu, 2013 - 
 
 # Changes
++ **2.1** - Bug fix in FastNLPProcessor: better root detection algorithm, robust to malt inconsistencies.
 + **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`. Added Java usage example to README. Updated to CoreNLP 3.3.0. Added better unit tests to check for thread safetiness.
 + **1.5** - Bug fixing. Made the string interning process (see `Processor.in`) local to each thread to avoid concurrency issues in multi-threaded programs. Added new unit tests. Added minor functionality to Lexicon.
 + **1.4** - Code cleanup. Added some minor new functionality such as finding base NPs in the Trees class.

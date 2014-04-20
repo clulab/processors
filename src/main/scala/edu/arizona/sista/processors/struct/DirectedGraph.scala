@@ -23,6 +23,8 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
   }
 
   private def mkOutgoing(edges:List[(Int, Int, E)]): Array[Array[(Int, E)]] = {
+    //println("EDGES:")
+    //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
     val size = computeSize(edges)
     //println("size = " + size)
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)

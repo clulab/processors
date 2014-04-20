@@ -24,7 +24,10 @@ object ProcessorExample {
     val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
 
     // you are basically done. the rest of this code simply prints out the annotations
+    printDoc(doc)
+  }
 
+  def printDoc(doc:Document) {
     // let's print the sentence-level annotations
     var sentenceCount = 0
     for (sentence <- doc.sentences) {
