@@ -39,7 +39,7 @@ This software is available on maven as well. Add the following dependencies to y
 + **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
 + **Memory efficient** - arrays are more memory efficient than hash maps. Furthermore, we used our own implementation to intern strings (i.e., avoiding to store duplicated strings multiple times). Due to these changes, I measured up to 99% decrease in memory for the annotations corresponding to a typical natural language text, when compared to the original CoreNLP code. (Note: this reduction takes effect only _after_ CoreNLP finishes its work.)
 + **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
-+ **Tool-independent API** - we support multiple NL tools in the future. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
++ **Tool-independent API** - we support multiple NL tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 
 # How to compile 
 
