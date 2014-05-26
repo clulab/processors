@@ -5,7 +5,7 @@ package edu.arizona.sista.processors.struct
  * User: mihais
  * Date: 3/18/13
  */
-class MutableNumber[T](var value:T) {
+class MutableNumber[T](var value:T) extends Serializable {
   override def hashCode = value.hashCode
 
   override def equals(other:Any):Boolean = {

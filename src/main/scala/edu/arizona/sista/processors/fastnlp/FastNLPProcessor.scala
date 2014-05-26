@@ -36,18 +36,23 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
 
     // parse each individual sentence
+    val debug = false
     for(sentence <- doc.sentences) {
+      if(debug) {
+        print("PARSING SENTENCE:")
+        for(i <- 0 until sentence.size) print(" " + sentence.words(i))
+        println()
+      }
       val dg = parseSentence(sentence)
       sentence.dependencies = Some(dg)
+      if(debug) {
+        println("DONE.")
+      }
     }
   }
 
   /** Parses one sentence and stores the dependency graph in the sentence object */
   private def parseSentence(sentence:Sentence):DirectedGraph[String] = {
-    //print("PARSING SENTENCE:")
-    //for(i <- 0 until sentence.size) print(" " + sentence.words(i))
-    //println()
-
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val tokens = new Array[String](sentence.words.length)
     for(i <- 0 until tokens.length) {
