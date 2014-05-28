@@ -1,7 +1,7 @@
 package edu.arizona.sista.processors.corenlp
 
 import edu.arizona.sista.processors._
-import edu.stanford.nlp.pipeline.{StanfordCoreNLP,Annotation}
+import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import java.util.Properties
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import edu.stanford.nlp.ling.CoreAnnotations._
