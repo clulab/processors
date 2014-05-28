@@ -5,7 +5,7 @@
 # You need this to access the bleeding edge of processors from other projects
 #
 
-POM_VERSION=2.1
+POM_VERSION=2.2
 INSTALL_AS_VERSION=2.2
 
 mvn clean package; ./scripts/mk_model_jar $POM_VERSION

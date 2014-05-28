@@ -14,7 +14,7 @@ import collection.mutable
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 import edu.stanford.nlp.trees.SemanticHeadFinder
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
+import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
 import edu.arizona.sista.processors.struct.{Tree, MutableNumber, DirectedGraph}
 
 /**
@@ -22,7 +22,8 @@ import edu.arizona.sista.processors.struct.{Tree, MutableNumber, DirectedGraph}
  * User: mihais
  * Date: 3/1/13
  */
-class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
+class CoreNLPProcessor(val internStrings:Boolean = true,
+                       val basicDependencies:Boolean = false) extends Processor {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
   lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
   lazy val posTagger = mkPosTagger
@@ -316,7 +317,11 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       // save syntactic dependencies
       //
       val edgeBuffer = new ListBuffer[(Int, Int, String)]
-      val da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
+      var da:SemanticGraph = null
+      if(basicDependencies)
+        da = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
+      else
+        da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
       val edges = da.getEdgeSet
       for (edge <- edges) {
         val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
