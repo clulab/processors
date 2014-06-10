@@ -201,6 +201,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
       assertTrue(t.isUnary)
       assertTrue(t.value == "ROOT")
       val s = t.children.get(0)
+      assertTrue(s.headOffset == 2)
       assertTrue(s.children.get.length == 2)
       assertTrue(s.head == 1)
       assertTrue(s.startOffset == 0)
@@ -208,6 +209,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
 
       val vp = s.children.get(1)
       assertTrue(vp.value == "VP")
+      assertTrue(vp.headOffset == 2)
       assertTrue(vp.children.get.length == 2)
       assertTrue(vp.head == 0)
       assertTrue(vp.startOffset == 2)

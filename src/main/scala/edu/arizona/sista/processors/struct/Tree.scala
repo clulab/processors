@@ -17,6 +17,8 @@ class Tree[L](
                /** Offset of token immediately after this constituent; starts at 0 */
                val endOffset:Int) extends Serializable {
 
+  /** Offset of head token; starts at 0 */
+  val headOffset = findHeadPosition
 
   def isLeaf = (children == None)
   def isPreTerminal = (isUnary && children.get(0).isLeaf)
@@ -29,7 +31,7 @@ class Tree[L](
   }
 
   /** Finds the offset of the head token in the sentence; starts at 0 */
-  def findHeadPosition:Int = {
+  private def findHeadPosition:Int = {
     if(isLeaf) return startOffset
     children.get(head).findHeadPosition
   }

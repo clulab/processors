@@ -5,11 +5,10 @@
 # You need this to access the bleeding edge of processors from other projects
 #
 
-POM_VERSION=2.2
-INSTALL_AS_VERSION=2.2
+VERSION=2.2
 
-mvn clean package; ./scripts/mk_model_jar $POM_VERSION
+mvn clean package; ./scripts/mk_model_jar $VERSION
 
-mvn install:install-file --quiet -DartifactId=processors -DgroupId=edu.arizona.sista -Dversion=$INSTALL_AS_VERSION -Dpackaging=jar -Dfile=target/processors-$POM_VERSION-models.jar -Dclassifier=models
-mvn install:install-file --quiet -DartifactId=processors -DgroupId=edu.arizona.sista -Dversion=$INSTALL_AS_VERSION -Dpackaging=jar -Dfile=target/processors-$POM_VERSION.jar
+mvn install:install-file --quiet -DartifactId=processors -DgroupId=edu.arizona.sista -Dversion=$VERSION -Dpackaging=jar -Dfile=target/processors-$VERSION-models.jar -Dclassifier=models
+mvn install:install-file --quiet -DartifactId=processors -DgroupId=edu.arizona.sista -Dversion=$VERSION -Dpackaging=jar -Dfile=target/processors-$VERSION.jar
 
