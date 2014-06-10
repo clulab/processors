@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#
+# Runs a single unit test from the command line
+# Must be run from the sistanlp home directory, for example:
+#   ./scripts/run-unittest edu.arizona.sista.w2v.TestW2V
+#
+./scripts/run org.junit.runner.JUnitCore $1
