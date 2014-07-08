@@ -6,7 +6,7 @@
     <groupId>edu.arizona.sista</groupId>
     <artifactId>processors</artifactId>
     <packaging>jar</packaging>
-    <version>2.2</version>
+    <version>3.0</version>
     <name>processors</name>
     <description>NLP tools</description>
     <url>https://github.com/sistanlp/processors</url>
@@ -38,8 +38,8 @@
 
     <licenses>
       <license>
-        <name>GNU General Public License, version 2</name>
-        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+        <name>Apache License, version 2</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
         <distribution>repo</distribution>
       </license>
     </licenses>
@@ -72,7 +72,7 @@
           <argLine>-Xmx2048m</argLine>
           <excludes>
             <exclude>**/*ManualTest*.java</exclude>
-	    <exclude>**/*Test*$*.class</exclude>
+	        <exclude>**/*Test*$*.class</exclude>
           </excludes>
         </configuration>
       </plugin>
