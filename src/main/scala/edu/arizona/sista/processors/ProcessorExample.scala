@@ -2,7 +2,6 @@ package edu.arizona.sista.processors
 
 import corenlp.CoreNLPProcessor
 import edu.arizona.sista.processors.struct.DirectedGraphEdgeIterator
-import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 
 /**
  * An example on how to fully annotate text using the CoreNLP or FastNLP processors
@@ -13,6 +12,7 @@ object ProcessorExample {
   def main(args:Array[String]) {
     // create the processor
     val proc:Processor = new CoreNLPProcessor()
+    //val proc:Processor = new FastNLPProcessor()
 
     // for much faster processing, use FastNLPProcessor
     // this processor does not support constituent parsing and coreference resolution, and
@@ -25,6 +25,11 @@ object ProcessorExample {
 
     // you are basically done. the rest of this code simply prints out the annotations
     printDoc(doc)
+
+    // serialize the doc using our custom serializer
+    val ser = new DocumentSerializer
+    val out = ser.save(doc)
+    println("SERIALIZED DOC:\n" + out)
   }
 
   def printDoc(doc:Document) {
