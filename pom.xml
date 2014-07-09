@@ -6,7 +6,7 @@
     <groupId>edu.arizona.sista</groupId>
     <artifactId>processors</artifactId>
     <packaging>jar</packaging>
-    <version>3.0</version>
+    <version>2.2</version>
     <name>processors</name>
     <description>NLP tools</description>
     <url>https://github.com/sistanlp/processors</url>
