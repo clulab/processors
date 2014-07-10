@@ -1,6 +1,6 @@
-package edu.arizona.sista.processors.struct
+package edu.arizona.sista.struct
 
-import collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * A generic graph where the nodes have Int identifiers and edges have type E

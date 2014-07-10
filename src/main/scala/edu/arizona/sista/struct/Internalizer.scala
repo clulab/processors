@@ -1,7 +1,8 @@
-package edu.arizona.sista.processors.struct
+package edu.arizona.sista.struct
 
-import collection.mutable
 import java.text.DecimalFormat
+
+import scala.collection.mutable
 
 /**
  * Replicates the functionality of Java's String.intern() but using heap memory and any object type not just String

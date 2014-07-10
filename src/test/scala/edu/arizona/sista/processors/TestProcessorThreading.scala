@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors
 
+import edu.arizona.sista.struct.DirectedGraphEdgeIterator
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.{Before, Test}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
@@ -9,7 +10,6 @@ import java.lang.Long
 import junit.framework.Assert
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import TestProcessorThreading._
-import edu.arizona.sista.processors.struct.DirectedGraphEdgeIterator
 
 /**
  * Tests that CoreNLPProcessor (and other processors) work in multi-threading mode

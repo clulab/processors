@@ -1,6 +1,6 @@
 package edu.arizona.sista.processors
 
-import edu.arizona.sista.processors.struct.Internalizer
+import edu.arizona.sista.struct.Internalizer
 
 /**
  * 

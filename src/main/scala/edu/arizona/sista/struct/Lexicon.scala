@@ -1,8 +1,10 @@
-package edu.arizona.sista.processors.struct
+package edu.arizona.sista.struct
 
-import org.slf4j.LoggerFactory
-import Lexicon.logger
 import java.io._
+
+import edu.arizona.sista.struct.Lexicon.logger
+import org.slf4j.LoggerFactory
+
 import scala.Serializable
 
 /**
