@@ -1,7 +1,5 @@
 package edu.arizona.sista.struct
 
-import edu.arizona.sista.struct.MutableNumber
-
 import collection.mutable
 import scala.collection.mutable.ListBuffer
 import java.text.DecimalFormat

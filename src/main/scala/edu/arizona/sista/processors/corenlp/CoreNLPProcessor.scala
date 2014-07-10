@@ -10,13 +10,11 @@ import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.CoreLabel
 import java.util
-import scala.Some
 import collection.mutable
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 import edu.stanford.nlp.trees.SemanticHeadFinder
 import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
-import edu.arizona.sista.processors.struct.Tree
 
 /**
  * API for Stanford's CoreNLP tools
