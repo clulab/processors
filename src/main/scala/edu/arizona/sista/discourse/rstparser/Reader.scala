@@ -359,7 +359,7 @@ class Reader {
     val m = EOS.matcher(s)
     while(m.find()) {
       if(m.end() == s.length) {
-        println(s"FOUND EOS FOR EDU: [$s]")
+        // println(s"FOUND EOS FOR EDU: [$s]")
         return true
       }
     }
@@ -367,7 +367,7 @@ class Reader {
     // header text, ending with --, seems to be treated as EOS in this corpus
     if(s.length > 3 && s.trim.endsWith("--") &&
       (Character.isUpperCase(s.charAt(0)) || s.charAt(0) =='(')) {
-      println(s"FOUND HEADER EOS FOR EDU: [$s]")
+      // println(s"FOUND HEADER EOS FOR EDU: [$s]")
       return true
     }
 

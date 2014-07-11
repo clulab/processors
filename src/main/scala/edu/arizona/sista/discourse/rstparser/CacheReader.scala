@@ -29,6 +29,7 @@ object CacheReader {
   }
 
   def loadCache(path:String):List[(DiscourseTree, Document)] = {
+    logger.debug("Attempting to load cached documents from: " + path)
     val is = new ObjectInputStream(new FileInputStream(path))
     val output = is.readObject().asInstanceOf[List[(DiscourseTree, Document)]]
     is.close()
@@ -43,7 +44,8 @@ object CacheReader {
       logger.info("Data loaded from cache: " + path)
     } catch {
       case e:Exception => {
-        //e.printStackTrace()
+        logger.debug("WARNING: Could not load documents from cache. Error was:")
+        e.printStackTrace()
         logger.debug("Parsing documents online...")
         val reader = new Reader
         trees = reader.readDir(dir, proc)
