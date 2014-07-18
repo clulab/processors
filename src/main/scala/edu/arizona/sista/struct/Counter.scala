@@ -276,7 +276,9 @@ object Counter {
 
   def loadFrom[T](r:Reader):Counter[T] = {
     val reader = Files.toBufferedReader(r)
-    val bits = reader.readLine().split("\\s+")
+    val hline = reader.readLine()
+    //println("COUNTER HLINE: " + hline)
+    val bits = hline.split("\\s+")
     val defaultReturnValue = bits(0).toDouble
     val c = new Counter[T](defaultReturnValue)
     val size = bits(1).toInt

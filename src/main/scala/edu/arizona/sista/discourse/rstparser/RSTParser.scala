@@ -26,8 +26,8 @@ class RSTParser {
     val writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))
     corpusStats.saveTo(writer)
     eduModel.saveTo(writer)
-    relModel.saveTo(writer)
-    structModel.saveTo(writer)
+    structModel.saveTo(writer, saveCorpusStats = false)
+    relModel.saveTo(writer, saveCorpusStats = false)
     writer.close()
   }
 
@@ -196,8 +196,8 @@ object RSTParser {
     val reader = new BufferedReader(new FileReader(path))
     val corpusStats = CorpusStats.loadFrom[String](reader)
     val em = EDUClassifier.loadFrom(reader)
-    val rm = RelationClassifier.loadFrom(reader, corpusStats)
     val sm = StructureClassifier.loadFrom(reader, corpusStats)
+    val rm = RelationClassifier.loadFrom(reader, corpusStats)
     reader.close()
 
     val parser = new RSTParser

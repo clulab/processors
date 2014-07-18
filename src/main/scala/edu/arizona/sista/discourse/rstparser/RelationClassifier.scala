@@ -24,8 +24,8 @@ class RelationClassifier(var withNuclearity:Boolean = true) {
     val p = Files.toPrintWriter(w)
     p.println(withNuclearity)
     if(saveCorpusStats) corpusStats.saveTo(p)
-    classifier.saveTo(p)
     scaleRanges.saveTo(p)
+    classifier.saveTo(p)
   }
 
   /** Trains the relation classifier, assuming gold segmentation and structure */
@@ -214,8 +214,8 @@ object RelationClassifier {
     val wn = reader.readLine().toBoolean
     var cs = corpusStats
     if(cs == null) cs = CorpusStats.loadFrom[String](reader)
-    val c = LiblinearClassifier.loadFrom[String, String](reader)
     val sr = ScaleRange.loadFrom[String](reader)
+    val c = LiblinearClassifier.loadFrom[String, String](reader)
 
     val r = new RelationClassifier
     r.withNuclearity = wn
