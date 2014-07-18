@@ -1,14 +1,14 @@
 package edu.arizona.sista.discourse.rstparser
 
 import org.slf4j.LoggerFactory
-import edu.arizona.sista.utils.StringUtils
+import edu.arizona.sista.utils.{Files, StringUtils}
 import edu.arizona.sista.processors.Document
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
 import EDUClassifier._
 import edu.arizona.sista.struct.Counter
 import edu.arizona.sista.learning._
-import java.io.{FileInputStream, ObjectInputStream, FileOutputStream, ObjectOutputStream}
+import java.io._
 
 /**
  * Detects EDU boundaries
@@ -21,9 +21,9 @@ class EDUClassifier {
 
   def isTrained:Boolean = classifier != null
 
-  def saveTo(os:ObjectOutputStream) {
-    os.writeObject(classifier)
-    os.writeObject(scaleRanges)
+  def saveTo(w:Writer) {
+    classifier.saveTo(w)
+    scaleRanges.saveTo(w)
   }
 
   /**
@@ -339,7 +339,7 @@ object EDUClassifier {
       val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("train"))
       cls.train(trees, corpusStats)
       if(props.containsKey("model")) {
-        val os = new ObjectOutputStream(new FileOutputStream(props.getProperty("model")))
+        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
         cls.saveTo(os)
         os.close()
       }
@@ -347,7 +347,7 @@ object EDUClassifier {
     if(props.containsKey("test")) {
       val (trees, _) = RSTParser.mkTrees(props.getProperty("test"), makeStats = false)
       if(props.containsKey("model")) {
-        val is = new ObjectInputStream(new FileInputStream(props.getProperty("model")))
+        val is = new BufferedReader(new FileReader(props.getProperty("model")))
         cls = loadFrom(is)
         is.close()
       }
@@ -360,15 +360,16 @@ object EDUClassifier {
     }
   }
 
-  def loadFrom(is:ObjectInputStream):EDUClassifier = {
-    val sc = new EDUClassifier
+  def loadFrom(r:java.io.Reader):EDUClassifier = {
+    val edu = new EDUClassifier
+    val reader = Files.toBufferedReader(r)
 
-    val c = is.readObject().asInstanceOf[Classifier[String, String]]
-    val r = is.readObject().asInstanceOf[ScaleRange[String]]
+    val c = PerceptronClassifier.loadFrom[String, String](reader)
+    val sr = ScaleRange.loadFrom[String](reader)
 
-    sc.classifier = c
-    sc.scaleRanges = r
-    sc
+    edu.classifier = c
+    edu.scaleRanges = sr
+    edu
   }
 
 }

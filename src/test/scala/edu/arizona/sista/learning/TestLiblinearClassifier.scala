@@ -1,5 +1,7 @@
 package edu.arizona.sista.learning
 
+import java.io.File
+
 import org.scalatest.junit.AssertionsForJUnit
 import junit.framework.Assert._
 import org.junit.Test
@@ -36,6 +38,16 @@ class TestLiblinearClassifier extends AssertionsForJUnit {
     println("Probability for class ~: " + probs.getCount("~"))
     assertTrue(probs.getCount("+") > probs.getCount("-"))
     assertTrue(probs.getCount("-") > probs.getCount("~"))
+
+    // make sure scores are the same after saving/loading
+    val file = File.createTempFile("model", "dat")
+    println(s"Saving classifier to $file")
+    file.deleteOnExit()
+    classifier.saveTo(file.getAbsolutePath)
+    val loadedClassifier = LiblinearClassifier.loadFrom[String, String](file.getAbsolutePath)
+    val newProbs = loadedClassifier.scoresOf(dn)
+    assertTrue(probs.getCount("+") == newProbs.getCount("+"))
+    assertTrue(probs.getCount("-") == newProbs.getCount("-"))
   }
 
   @Test def testBVFClassifier() {

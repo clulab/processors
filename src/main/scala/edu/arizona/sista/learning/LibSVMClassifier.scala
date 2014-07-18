@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 import edu.arizona.sista.struct.Lexicon
 import org.slf4j.LoggerFactory
 import LibSVMClassifier.logger
-import java.io.{FileOutputStream, ObjectOutputStream, ObjectInputStream, FileInputStream}
+import java.io._
 
 class KernelType
 
@@ -134,8 +134,10 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
   }
 
   /** Saves the current model to a file */
-  override def saveTo(fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
+  override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
+
+  override def saveTo(fn:String) {
+    val os = new ObjectOutputStream(new FileOutputStream(fn))
     os.writeObject(this)
     os.close()
   }

@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors.corenlp
 
+import edu.arizona.sista.discourse.rstparser.RSTParser
 import edu.arizona.sista.processors._
 import edu.arizona.sista.struct.{Tree, MutableNumber, DirectedGraph}
 import edu.stanford.nlp.pipeline.{StanfordCoreNLP,Annotation}
@@ -22,7 +23,8 @@ import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
  * Date: 3/1/13
  */
 class CoreNLPProcessor(val internStrings:Boolean = true,
-                       val basicDependencies:Boolean = false) extends Processor {
+                       val basicDependencies:Boolean = false,
+                       val withDiscourse:Boolean = false) extends Processor {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
   lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
   lazy val posTagger = mkPosTagger
@@ -31,6 +33,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
   lazy val parser = mkParser
   lazy val coref = mkCoref
   lazy val headFinder = new SemanticHeadFinder()
+  lazy val rstParser = RSTParser(new Properties())
 
   def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -381,11 +384,11 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
   }
 
   def chunking(doc:Document) {
-    // CoreNLP does not have shallow parsing
+    // CoreNLP does not have shallow parsing yet
   }
 
   def labelSemanticRoles(doc:Document) {
-    // CoreNLP does not have SRL
+    // CoreNLP does not have SRL yet
   }
 
   def resolveCoreference(doc:Document) {
@@ -427,5 +430,25 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     }
 
     doc.coreferenceChains = Some(new CorefChains(mentions.toList))
+  }
+
+  def discourse(doc:Document) {
+    if(! withDiscourse) return
+    val annotation = basicSanityCheck(doc)
+    if (annotation.isEmpty) return
+
+    if (doc.sentences.head.tags == None)
+      throw new RuntimeException("ERROR: you have to run the POS tagger before coreference resolution!")
+    if (doc.sentences.head.lemmas == None)
+      throw new RuntimeException("ERROR: you have to run the lemmatizer before coreference resolution!")
+    if(doc.sentences.head.dependencies == None)
+      throw new RuntimeException("ERROR: you have to run the dependency parser before coreference resolution!")
+    if(doc.sentences.head.syntacticTree == None)
+      throw new RuntimeException("ERROR: you have to run the constituent parser before coreference resolution!")
+
+    val out = rstParser.parse(doc)
+    doc.discourseTree = Some(out._1)
+
+    println("FOUND DISCOURSE TREE:\n" + out._1)
   }
 }

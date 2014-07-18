@@ -15,7 +15,7 @@ class ConnectiveMatcher
 object ConnectiveMatcher {
   val logger = LoggerFactory.getLogger(classOf[ConnectiveMatcher])
 
-  lazy val CONNECTIVES = loadConnectives("src/main/resources/edu/arizona/sista/discourse/rstparser/connectives.txt")
+  lazy val CONNECTIVES = loadConnectives("src/main/resources/edu/arizona/sista/discourse/rstparser/discourse_connectives.txt")
 
   val NO_CONNECTIVE = "O"
   val BEGIN_CONNECTIVE = "B"

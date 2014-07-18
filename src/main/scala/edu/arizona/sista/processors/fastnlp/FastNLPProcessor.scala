@@ -120,6 +120,10 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
   override def resolveCoreference(doc:Document) {
     // FastNLP does not offer coreference resolution yet
   }
+
+  override def discourse(doc:Document) {
+    // FastNLP does not offer discourse parsing yet
+  }
 }
 
 object FastNLPProcessor {

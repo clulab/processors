@@ -10,7 +10,7 @@ import scala.collection.mutable.ListBuffer
 import hr.irb.fastRandomForest.FastRandomForest
 import org.slf4j.LoggerFactory
 import RandomForestClassifier.logger
-import java.io.{FileInputStream, ObjectInputStream, FileOutputStream, ObjectOutputStream}
+import java.io._
 
 /**
  * Wrapper for the fast-random-forest classifier
@@ -227,8 +227,10 @@ class RandomForestClassifier[L, F]( val numTrees:Int = 1000,
   }
 
   /** Saves the current model to a file */
-  override def saveTo(fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
+  override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
+
+  override def saveTo(fn:String) {
+    val os = new ObjectOutputStream(new FileOutputStream(fn))
     os.writeObject(this)
     os.close()
   }

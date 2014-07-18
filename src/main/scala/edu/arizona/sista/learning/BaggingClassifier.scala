@@ -4,7 +4,7 @@ import edu.arizona.sista.struct.Counter
 import scala.util.Random
 import org.slf4j.LoggerFactory
 import BaggingClassifier._
-import java.io.{FileInputStream, ObjectInputStream, FileOutputStream, ObjectOutputStream}
+import java.io._
 
 /**
  * Classifier that implements bagging over another Classifier
@@ -63,8 +63,10 @@ class BaggingClassifier[L, F] (val baseClassifierFactory: () => Classifier[L,F],
   }
 
   /** Saves the current model to a file */
-  override def saveTo(fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
+  override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
+
+  override def saveTo(fn:String) {
+    val os = new ObjectOutputStream(new FileOutputStream(fn))
     os.writeObject(this)
     os.close()
   }

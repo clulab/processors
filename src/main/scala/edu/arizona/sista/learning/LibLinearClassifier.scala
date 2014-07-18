@@ -1,5 +1,6 @@
 package edu.arizona.sista.learning
 
+import edu.arizona.sista.utils.Files
 import org.slf4j.LoggerFactory
 import de.bwaldvogel.liblinear._
 import edu.arizona.sista.struct.Counter
@@ -7,7 +8,7 @@ import edu.arizona.sista.struct.Lexicon
 import scala.collection.mutable.ArrayBuffer
 import LiblinearClassifier.logger
 import scala.collection.mutable
-import java.io.{FileInputStream, ObjectInputStream, FileOutputStream, ObjectOutputStream}
+import java.io._
 
 /**
  * Wrapper for liblinear classifiers, which includes LR and linear SVM
@@ -264,10 +265,12 @@ class LiblinearClassifier[L, F](
   }
 
   /** Saves the current model to a file */
-  override def saveTo(fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
-    os.writeObject(this)
-    os.close()
+  override def saveTo(w:Writer) {
+    val writer = Files.toPrintWriter(w)
+    featureLexicon.get.saveTo(writer)
+    labelLexicon.get.saveTo(writer)
+    writer.append(s"$bias $biasFeatureIndex\n")
+    Linear.saveModel(writer, model)
   }
 }
 
@@ -293,9 +296,24 @@ object LiblinearClassifier {
   val logger = LoggerFactory.getLogger(classOf[LiblinearClassifier[String, String]])
 
   def loadFrom[L, F](fileName:String):LiblinearClassifier[L, F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[LiblinearClassifier[L, F]]
-    is.close()
+    val r = new BufferedReader(new FileReader(fileName))
+    val c = loadFrom[L, F](r)
+    r.close()
+    c
+  }
+
+  def loadFrom[L, F](r:Reader):LiblinearClassifier[L, F] = {
+    val reader = Files.toBufferedReader(r)
+    val fl = Lexicon.loadFrom[F](reader)
+    val ll = Lexicon.loadFrom[L](reader)
+    val bits = reader.readLine().split("\\s+")
+    val bias = bits(0).toBoolean
+    val biasFeatureIndex = bits(1).toInt
+    val c = new LiblinearClassifier[L, F](SolverType.L2R_LR, 1.0, 0.01, bias) // only bias matters at prediction time
+    c.biasFeatureIndex = biasFeatureIndex
+    c.featureLexicon = Some(fl)
+    c.labelLexicon = Some(ll)
+    c.model = Linear.loadModel(reader)
     c
   }
 }

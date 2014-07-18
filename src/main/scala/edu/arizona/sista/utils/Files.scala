@@ -1,6 +1,7 @@
 package edu.arizona.sista.utils
 
-import java.io.File
+import java.io._
+import java.nio.charset.Charset
 
 /**
  * File utilities
@@ -28,5 +29,22 @@ object Files {
     throw new IllegalStateException("ERROR: Failed to create directory within "
       + TEMP_DIR_ATTEMPTS + " attempts (tried "
       + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')');
+  }
+
+  val FILE_CHARSET = Charset.forName("ISO-8859-1")
+
+  def toPrintWriter(w:Writer):PrintWriter = {
+    w match {
+      case pw:PrintWriter => pw
+      case bw:BufferedWriter => new PrintWriter(bw)
+      case _ => new PrintWriter(new BufferedWriter(w))
+    }
+  }
+
+  def toBufferedReader(r:Reader):BufferedReader = {
+    r match {
+      case br:BufferedReader => br
+      case _ => new BufferedReader(r)
+    }
   }
 }

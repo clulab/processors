@@ -79,5 +79,8 @@ object ProcessorExample {
         }
       }
     })
+
+    // let's print the discourse tree
+    doc.discourseTree.foreach(dt => dt.toString())
   }
 }

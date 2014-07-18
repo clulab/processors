@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors
 
+import edu.arizona.sista.discourse.rstparser.DiscourseTree
 import edu.arizona.sista.struct.{Tree, DirectedGraph}
 
 import collection.mutable
@@ -13,10 +14,11 @@ import java.lang.StringBuilder
  */
 class Document(
                 val sentences:Array[Sentence],
-                var coreferenceChains:Option[CorefChains]) extends Serializable {
+                var coreferenceChains:Option[CorefChains],
+                var discourseTree:Option[DiscourseTree]) extends Serializable {
 
   def this(sa: Array[Sentence]) {
-    this(sa, None)
+    this(sa, None, None)
   }
 
   /** Clears any internal state potentially constructed by the annotators */

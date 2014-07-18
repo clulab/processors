@@ -33,7 +33,10 @@ class DocumentSerializer {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
     } while(bits(0) != END_OF_DOCUMENT)
-    new Document(sents.toArray, coref)
+
+    // TODO: load discourse tree
+
+    new Document(sents.toArray, coref, None)
   }
 
   private def read(r:BufferedReader): Array[String] = {
@@ -161,6 +164,9 @@ class DocumentSerializer {
       os.println(START_COREF + SEP + mentionCount)
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
     }
+
+    // TODO: save discourse tree
+
     os.println(END_OF_DOCUMENT)
   }
 

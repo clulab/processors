@@ -1,5 +1,9 @@
 package edu.arizona.sista.learning
 
+import java.io._
+import java.nio.charset.Charset
+
+import de.bwaldvogel.liblinear.Linear
 import edu.arizona.sista.struct.Counter
 import edu.arizona.sista.learning.Datasets._
 
@@ -35,5 +39,13 @@ trait Classifier[L, F] {
   def scoresOf(d:Datum[L, F]): Counter[L]
 
   /** Saves the current model to a file */
-  def saveTo(fileName:String)
+  def saveTo(fileName:String) {
+    val bw = new BufferedWriter(new FileWriter(fileName))
+    saveTo(bw)
+    bw.close()
+  }
+
+  /** Saves to writer. Does NOT close the writer */
+  def saveTo(writer:Writer)
 }
+

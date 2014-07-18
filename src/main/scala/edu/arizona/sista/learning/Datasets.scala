@@ -1,5 +1,7 @@
 package edu.arizona.sista.learning
 
+import java.io.{Reader, Writer}
+
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import edu.arizona.sista.struct.Counter
 import scala.collection.mutable
@@ -465,8 +467,8 @@ object Datasets {
 }
 
 class ScaleRange[F] extends Serializable {
-  val mins = new Counter[F]()
-  val maxs = new Counter[F]()
+  var mins = new Counter[F]()
+  var maxs = new Counter[F]()
 
   def update(key:F, v:Double) {
     if(! mins.contains(key) || v < mins.getCount(key))
@@ -478,6 +480,20 @@ class ScaleRange[F] extends Serializable {
   def contains(key:F) = mins.contains(key)
   def min(key:F) = mins.getCount(key)
   def max(key:F) = maxs.getCount(key)
+
+  def saveTo(w:Writer) {
+    mins.saveTo(w)
+    maxs.saveTo(w)
+  }
+}
+
+object ScaleRange {
+  def loadFrom[F](r:Reader):ScaleRange[F] = {
+    val sc = new ScaleRange[F]
+    sc.mins = Counter.loadFrom[F](r)
+    sc.maxs = Counter.loadFrom[F](r)
+    sc
+  }
 }
 
 

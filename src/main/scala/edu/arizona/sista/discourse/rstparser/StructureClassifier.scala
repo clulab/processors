@@ -5,7 +5,7 @@ import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.Document
 import StructureClassifier._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import java.io.{ObjectInputStream, ObjectOutputStream}
+import java.io.{Writer, ObjectInputStream}
 import scala.collection.mutable
 import Utils._
 
@@ -20,10 +20,10 @@ class StructureClassifier {
   var scaleRanges:ScaleRange[String] = null
   var corpusStats:CorpusStats = null
 
-  def saveTo(os:ObjectOutputStream, saveCorpusStats:Boolean = false) {
-    if(saveCorpusStats) os.writeObject(corpusStats)
-    os.writeObject(classifier)
-    os.writeObject(scaleRanges)
+  def saveTo(w:Writer, saveCorpusStats:Boolean = false) {
+    if(saveCorpusStats) corpusStats.saveTo(w)
+    classifier.saveTo(w)
+    scaleRanges.saveTo(w)
   }
 
   /**
@@ -404,11 +404,11 @@ object StructureClassifier {
   val LOWER = -1.0
   val UPPER = +1.0
 
-  def loadFrom(is:ObjectInputStream, corpusStats:CorpusStats):StructureClassifier = {
+  def loadFrom(r:java.io.Reader, corpusStats:CorpusStats):StructureClassifier = {
     var cs = corpusStats
-    if(cs == null) cs = is.readObject().asInstanceOf[CorpusStats]
-    val sc = is.readObject().asInstanceOf[Classifier[String, String]]
-    val sr = is.readObject().asInstanceOf[ScaleRange[String]]
+    if(cs == null) cs = CorpusStats.loadFrom[String](r)
+    val sc = PerceptronClassifier.loadFrom[String, String](r)
+    val sr = ScaleRange.loadFrom[String](r)
 
     val c = new StructureClassifier
     c.classifier = sc

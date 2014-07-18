@@ -1,6 +1,6 @@
 package edu.arizona.sista.discourse.rstparser
 
-import java.io.{FileOutputStream, ObjectOutputStream, FileInputStream, ObjectInputStream}
+import java.io._
 import java.util.Properties
 
 import edu.arizona.sista.discourse.rstparser.Utils._
@@ -23,12 +23,12 @@ class RSTParser {
   private var relModel:RelationClassifier = null
 
   def saveTo(path:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(path))
-    os.writeObject(corpusStats)
-    eduModel.saveTo(os)
-    relModel.saveTo(os)
-    structModel.saveTo(os)
-    os.close()
+    val writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))
+    corpusStats.saveTo(writer)
+    eduModel.saveTo(writer)
+    relModel.saveTo(writer)
+    structModel.saveTo(writer)
+    writer.close()
   }
 
   def train(trainDirName:String) {
@@ -188,19 +188,17 @@ object RSTParser {
   }
 
   def apply(props:Properties):RSTParser = {
-    loadFrom(props.getProperty("model"))
+    loadFrom(props.getProperty("model", "./model.rst"))
   }
 
   def loadFrom(path:String):RSTParser = {
     logger.debug("Loading RST parsing model from: " + path)
-    val is = new ObjectInputStream(new FileInputStream(path))
-    val corpusStats = is.readObject().asInstanceOf[CorpusStats]
-
-    val em = EDUClassifier.loadFrom(is)
-    val rm = RelationClassifier.loadFrom(is, corpusStats)
-    val sm = StructureClassifier.loadFrom(is, corpusStats)
-
-    is.close()
+    val reader = new BufferedReader(new FileReader(path))
+    val corpusStats = CorpusStats.loadFrom[String](reader)
+    val em = EDUClassifier.loadFrom(reader)
+    val rm = RelationClassifier.loadFrom(reader, corpusStats)
+    val sm = StructureClassifier.loadFrom(reader, corpusStats)
+    reader.close()
 
     val parser = new RSTParser
     parser.eduModel = em

@@ -1,5 +1,9 @@
 package edu.arizona.sista.struct
 
+import java.io.{Reader, Writer}
+
+import edu.arizona.sista.utils.Files
+
 import collection.mutable
 import scala.collection.mutable.ListBuffer
 import java.text.DecimalFormat
@@ -208,6 +212,26 @@ class Counter[T](
     }
     (minKey, minValue)
   }
+
+  def saveTo(w:Writer) {
+    val writer = Files.toPrintWriter(w)
+    writer.println(s"$defaultReturnValue ${counts.size}")
+    if(counts.size > 0) {
+      val first = counts.keys.head
+      first match {
+        // TODO: kinda hacky, but don't know how to recover from type erasure in loadFrom()...
+        case i: Int => writer.println("I")
+        case d: Double => writer.println("D")
+        case s: String => writer.println("S")
+        case _ => throw new RuntimeException("ERROR: unknown type in lexicon!")
+      }
+    } else {
+      writer.println("S") // this does not matter
+    }
+    for(k <- counts.keySet) {
+      writer.println(s"${counts.get(k).get.value} $k")
+    }
+  }
 }
 
 object Counter {
@@ -248,5 +272,29 @@ object Counter {
 
   def binarize[S](xs: Counter[S]) = {
     withDefault(0)(xs.mapValues(_ => 1))
+  }
+
+  def loadFrom[T](r:Reader):Counter[T] = {
+    val reader = Files.toBufferedReader(r)
+    val bits = reader.readLine().split("\\s+")
+    val defaultReturnValue = bits(0).toDouble
+    val c = new Counter[T](defaultReturnValue)
+    val size = bits(1).toInt
+    assert(size >= 0)
+    val ftype = reader.readLine() // type of features in this counter
+    for(i <- 0 until size) {
+      val line = reader.readLine()
+      val space = line.indexOf(' ')
+      assert(space > 0)
+      val v = line.substring(0, space).toDouble
+      val f = line.substring(space + 1)
+      ftype match {
+        case "S" => c.setCount(f.asInstanceOf[T], v)
+        case "I" => c.setCount(f.toInt.asInstanceOf[T], v)
+        case "D" => c.setCount(f.toDouble.asInstanceOf[T], v)
+        case _ => throw new RuntimeException("ERROR: unknown type in Counter!")
+      }
+    }
+    c
   }
 }

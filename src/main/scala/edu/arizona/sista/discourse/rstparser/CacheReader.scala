@@ -14,7 +14,7 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 object CacheReader {
   val logger = LoggerFactory.getLogger(classOf[CacheReader])
 
-  lazy val PROCESSOR = new CoreNLPProcessor(basicDependencies = true)
+  lazy val PROCESSOR = new CoreNLPProcessor(basicDependencies = true, withDiscourse = false)
   //lazy val PROCESSOR = new FastNLPProcessor()
 
   def main(args:Array[String]) {

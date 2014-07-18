@@ -1,11 +1,11 @@
 package edu.arizona.sista.discourse.rstparser
 
-import java.io.{FileInputStream, ObjectInputStream, FileOutputStream, ObjectOutputStream}
+import java.io._
 
 import edu.arizona.sista.discourse.rstparser.Utils._
 import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.Document
-import edu.arizona.sista.utils.StringUtils
+import edu.arizona.sista.utils.{Files, StringUtils}
 import org.slf4j.LoggerFactory
 import RelationClassifier._
 
@@ -20,11 +20,12 @@ class RelationClassifier(var withNuclearity:Boolean = true) {
   var scaleRanges:ScaleRange[String] = null
   var corpusStats:CorpusStats = null
 
-  def saveTo(os:ObjectOutputStream, saveCorpusStats:Boolean = false) {
-    if(saveCorpusStats) os.writeObject(corpusStats)
-    os.writeObject(withNuclearity)
-    os.writeObject(classifier)
-    os.writeObject(scaleRanges)
+  def saveTo(w:Writer, saveCorpusStats:Boolean = false) {
+    val p = Files.toPrintWriter(w)
+    p.println(withNuclearity)
+    if(saveCorpusStats) corpusStats.saveTo(p)
+    classifier.saveTo(p)
+    scaleRanges.saveTo(p)
   }
 
   /** Trains the relation classifier, assuming gold segmentation and structure */
@@ -188,7 +189,7 @@ object RelationClassifier {
       val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("train"))
       cls.train(trees, corpusStats)
       if(props.containsKey("model")) {
-        val os = new ObjectOutputStream(new FileOutputStream(props.getProperty("model")))
+        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
         cls.saveTo(os, saveCorpusStats = true)
         os.close()
       }
@@ -196,7 +197,7 @@ object RelationClassifier {
     if(props.containsKey("test")) {
       val (trees, _) = RSTParser.mkTrees(props.getProperty("test"), makeStats = false)
       if(props.containsKey("model")) {
-        val is = new ObjectInputStream(new FileInputStream(props.getProperty("model")))
+        val is = new BufferedReader(new FileReader(props.getProperty("model")))
         cls = loadFrom(is, corpusStats = null)
         is.close()
       }
@@ -208,12 +209,13 @@ object RelationClassifier {
     }
   }
 
-  def loadFrom(is:ObjectInputStream, corpusStats:CorpusStats):RelationClassifier = {
+  def loadFrom(ir:java.io.Reader, corpusStats:CorpusStats):RelationClassifier = {
+    val reader = Files.toBufferedReader(ir)
+    val wn = reader.readLine().toBoolean
     var cs = corpusStats
-    if(cs == null) cs = is.readObject().asInstanceOf[CorpusStats]
-    val wn = is.readObject().asInstanceOf[Boolean]
-    val c = is.readObject().asInstanceOf[Classifier[String, String]]
-    val sr = is.readObject().asInstanceOf[ScaleRange[String]]
+    if(cs == null) cs = CorpusStats.loadFrom[String](reader)
+    val c = LiblinearClassifier.loadFrom[String, String](reader)
+    val sr = ScaleRange.loadFrom[String](reader)
 
     val r = new RelationClassifier
     r.withNuclearity = wn

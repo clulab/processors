@@ -4,7 +4,7 @@ import edu.arizona.sista.struct.Counter
 import java.io._
 import org.slf4j.LoggerFactory
 import java.util.{Random, Properties}
-import edu.arizona.sista.utils.{MathUtils, StringUtils}
+import edu.arizona.sista.utils.{Files, MathUtils, StringUtils}
 import edu.arizona.sista.struct.Lexicon
 import edu.arizona.sista.struct.Counters._
 import PerceptronClassifier.logger
@@ -237,10 +237,15 @@ class PerceptronClassifier[L, F] (
     sum
   }
 
-  def saveTo(fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
-    os.writeObject(this)
-    os.close()
+  def saveTo(w:Writer) {
+    // only need to save avgWeights and lexicons here!
+    val writer = Files.toPrintWriter(w)
+    featureLexicon.saveTo(writer)
+    labelLexicon.saveTo(writer)
+    writer.println(avgWeights.size)
+    for(i <- 0 until avgWeights.size) {
+      writer.println(avgWeights(i).mkString(" "))
+    }
   }
 
   def displayWeights(pw:PrintWriter) {
@@ -262,9 +267,22 @@ object PerceptronClassifier {
   val logger = LoggerFactory.getLogger(classOf[PerceptronClassifier[String, String]])
 
   def loadFrom[L, F](fileName:String):PerceptronClassifier[L, F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[PerceptronClassifier[L, F]]
-    is.close()
+    val r = new BufferedReader(new FileReader(fileName))
+    val c = loadFrom[L, F](r)
+    r.close()
+    c
+  }
+
+  def loadFrom[L, F](r:Reader):PerceptronClassifier[L, F] = {
+    val reader = Files.toBufferedReader(r)
+    val c = new PerceptronClassifier[L, F]()
+    c.featureLexicon = Lexicon.loadFrom[F](reader)
+    c.labelLexicon = Lexicon.loadFrom[L](reader)
+    val vectorCount = reader.readLine().toInt
+    c.avgWeights = new Array[Array[Double]](vectorCount)
+    for(i <- 0 until vectorCount) {
+      c.avgWeights(i) = reader.readLine().split("\\s+").map(_.toDouble)
+    }
     c
   }
 }

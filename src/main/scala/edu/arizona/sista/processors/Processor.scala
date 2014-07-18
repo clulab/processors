@@ -46,6 +46,9 @@ trait Processor {
   /** Coreference resolution; modifies the document in place */
   def resolveCoreference(doc:Document)
 
+  /** Discourse parsing; modifies the document in place */
+  def discourse(doc:Document)
+
   def annotate(text:String): Document = {
     val doc = mkDocument(text)
     annotate(doc)
@@ -69,6 +72,7 @@ trait Processor {
     chunking(doc)
     labelSemanticRoles(doc)
     resolveCoreference(doc)
+    discourse(doc)
     doc.clear()
     doc
   }

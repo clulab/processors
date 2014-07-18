@@ -3,6 +3,7 @@ package edu.arizona.sista.struct
 import java.io._
 
 import edu.arizona.sista.struct.Lexicon.logger
+import edu.arizona.sista.utils.Files
 import org.slf4j.LoggerFactory
 
 import scala.Serializable
@@ -21,8 +22,6 @@ class Lexicon[T] extends Serializable {
 
   /**
    * Adds a string to the lexicon without adding it twice if it already exists
-   * @param s
-   * @return
    */
   def add(s:T):Int = {
     if (lexicon.contains(s)) {
@@ -36,7 +35,7 @@ class Lexicon[T] extends Serializable {
     }
   }
 
-  def exists(i:Int):Boolean = (i < index.size)
+  def exists(i:Int):Boolean = i < index.size
 
   /**
    * Fetches the string with the given index from the lexicon
@@ -66,10 +65,30 @@ class Lexicon[T] extends Serializable {
     logger.info(" Saved objects: " + savedMemory + " (" + (100.0 * savedMemory / (savedMemory + lexicon.size)) + "%)")
   }
 
-  def saveTo[F](fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
-    os.writeObject(this)
-    os.close()
+  def saveTo(fileName:String) {
+    val w = new BufferedWriter(new FileWriter(fileName))
+    saveTo(w)
+    w.close()
+  }
+
+  def saveTo(w:Writer) {
+    val p = Files.toPrintWriter(w)
+    p.println(index.size)
+    if(index.size > 0) {
+      val first = index(0)
+      first match {
+        // TODO: kinda hacky, but don't know how to recover from type erasure in loadFrom()...
+        case i: Int => p.println("I")
+        case d: Double => p.println("D")
+        case s: String => p.println("S")
+        case _ => throw new RuntimeException("ERROR: unknown type in lexicon!")
+      }
+    } else {
+      p.println("S") // this does not matter
+    }
+    for(i <- 0 until index.size) {
+      p.println(s"$i ${index(i)}")
+    }
   }
 }
 
@@ -88,10 +107,36 @@ object Lexicon {
 
   /** Loads a lexicon saved by Lexicon.saveTo */
   def loadFrom[F](fileName:String):Lexicon[F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[Lexicon[F]]
+    val is = new BufferedReader(new FileReader(fileName))
+    val lex = loadFrom[F](is)
     is.close()
-    c
+    lex
+  }
+
+  def loadFrom[F](r:Reader):Lexicon[F] = {
+    val reader = Files.toBufferedReader(r)
+    val lex = new Lexicon[F]
+    var line = reader.readLine()
+    val size = line.trim.toInt
+    val ftype = reader.readLine() // type of features in lexicon
+    //println(s"SIZE = $size FTYPE = $ftype")
+    assert(size >= 0)
+    for(i <- 0 until size) {
+      line = reader.readLine().trim
+      //println("LEX LINE = " + line)
+      val space = line.indexOf(' ')
+      assert(space > 0)
+      val index = line.substring(0, space).toInt
+      assert(index == i)
+      val f = line.substring(space + 1)
+      ftype match {
+        case "S" => lex.add(f.asInstanceOf[F])
+        case "I" => lex.add(f.toInt.asInstanceOf[F])
+        case "D" => lex.add(f.toDouble.asInstanceOf[F])
+        case _ => throw new RuntimeException("ERROR: unknown type in lexicon!")
+      }
+    }
+    lex
   }
 }
 
