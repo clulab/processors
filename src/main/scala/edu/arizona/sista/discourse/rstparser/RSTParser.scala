@@ -188,7 +188,7 @@ object RSTParser {
   }
 
   def apply(props:Properties):RSTParser = {
-    loadFrom(props.getProperty("model", "./model.rst"))
+    loadFrom(props.getProperty("model", "src/main/resources/edu/arizona/sista/discourse/rstparser/model.rst"))
   }
 
   def loadFrom(path:String):RSTParser = {
