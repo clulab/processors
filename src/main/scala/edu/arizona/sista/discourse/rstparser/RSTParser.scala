@@ -7,7 +7,7 @@ import edu.arizona.sista.discourse.rstparser.Utils._
 import edu.arizona.sista.processors.{Processor, Document}
 import org.slf4j.LoggerFactory
 import scala.collection.mutable.ArrayBuffer
-import edu.arizona.sista.utils.StringUtils
+import edu.arizona.sista.utils.{Files, StringUtils}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.discourse.rstparser.RSTParser._
 
@@ -23,7 +23,7 @@ class RSTParser {
   private var relModel:RelationClassifier = null
 
   def saveTo(path:String) {
-    val writer = new PrintWriter(new BufferedWriter(new FileWriter(path)))
+    val writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path), Files.FILE_CHARSET)))
     corpusStats.saveTo(writer)
     eduModel.saveTo(writer)
     structModel.saveTo(writer, saveCorpusStats = false)
