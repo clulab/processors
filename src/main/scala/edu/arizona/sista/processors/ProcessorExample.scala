@@ -11,7 +11,7 @@ import edu.arizona.sista.struct.DirectedGraphEdgeIterator
 object ProcessorExample {
   def main(args:Array[String]) {
     // create the processor
-    val proc:Processor = new CoreNLPProcessor()
+    val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
     //val proc:Processor = new FastNLPProcessor()
 
     // for much faster processing, use FastNLPProcessor
@@ -81,6 +81,9 @@ object ProcessorExample {
     })
 
     // let's print the discourse tree
-    doc.discourseTree.foreach(dt => dt.toString())
+    doc.discourseTree.foreach(dt => {
+      println("Document-wide discourse tree:")
+      println(dt.toString())
+    })
   }
 }
