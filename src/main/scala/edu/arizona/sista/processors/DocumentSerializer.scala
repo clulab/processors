@@ -1,6 +1,7 @@
 package edu.arizona.sista.processors
 
 import java.io._
+import edu.arizona.sista.discourse.rstparser.DiscourseTree
 import edu.arizona.sista.processors.DocumentSerializer._
 import edu.arizona.sista.struct.{Tree, MutableNumber, DirectedGraphEdgeIterator, DirectedGraph}
 import collection.mutable.{ListBuffer, ArrayBuffer}
@@ -159,13 +160,17 @@ class DocumentSerializer {
     for (s <- doc.sentences) {
       saveSentence(s, os)
     }
-    if (! doc.coreferenceChains.isEmpty) {
+    if (doc.coreferenceChains.nonEmpty) {
       val mentionCount = doc.coreferenceChains.get.getMentions.size
       os.println(START_COREF + SEP + mentionCount)
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
     }
 
     // TODO: save discourse tree
+    if(doc.discourseTree.nonEmpty) {
+      os.println(START_DISCOURSE)
+      doc.discourseTree.foreach(d => saveDiscourse(d, os))
+    }
 
     os.println(END_OF_DOCUMENT)
   }
@@ -187,11 +192,11 @@ class DocumentSerializer {
       saveToken(sent, offset, os)
       offset += 1
     }
-    if (! sent.dependencies.isEmpty) {
+    if (sent.dependencies.nonEmpty) {
       os.println(START_DEPENDENCIES + SEP + sent.dependencies.size)
       sent.dependencies.foreach(g => saveDependencies(g, os))
     }
-    if (! sent.syntacticTree.isEmpty) {
+    if (sent.syntacticTree.nonEmpty) {
       os.println(START_CONSTITUENTS + SEP + "1")
       sent.syntacticTree.foreach(t => { saveTree(t, os); os.println() })
     }
@@ -268,6 +273,21 @@ class DocumentSerializer {
     os.println(END_OF_DEPENDENCIES)
   }
 
+  private def saveDiscourse(d:DiscourseTree, os:PrintWriter) {
+    var childrenCount = 0
+    if(! d.isTerminal) childrenCount = d.children.length
+    var label = d.relationLabel
+    if(label == "") label = "nil"
+    var text = d.rawText
+    if(text == null) text = "nil"
+    os.println(s"$label ${d.relationDirection} ${d.charOffsets._1} ${d.charOffsets._2} ${d.firstToken.sentence} ${d.firstToken.token} ${d.lastToken.sentence} ${d.lastToken.token} ${d.firstEDU} ${d.lastEDU} $childrenCount $text")
+    if(childrenCount > 0) {
+      for(c <- d.children) {
+        saveDiscourse(c, os)
+      }
+    }
+  }
+
   private def saveCoref(cg:CorefChains, os:PrintWriter) {
     val mentions = cg.getMentions
     for (m <- mentions) {
@@ -304,6 +324,7 @@ object DocumentSerializer {
   val START_COREF = "C"
   val START_DEPENDENCIES = "D"
   val START_CONSTITUENTS = "Y"
+  val START_DISCOURSE = "R"
 
   val END_OF_SENTENCE = "EOS"
   val END_OF_DOCUMENT = "EOD"
