@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors
 
+import edu.arizona.sista.discourse.rstparser.RelationDirection
 import edu.arizona.sista.struct.Trees
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.Assert._
@@ -16,7 +17,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   var proc:Processor = null
 
   @Before def constructProcessor() {
-    proc = new CoreNLPProcessor(internStrings = true)
+    proc = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
   }
 
   @Test def testTokenOffsets1() {
@@ -282,5 +283,15 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
       println("VP constituent is: " + vp)
       assertTrue(vp.head == 0)
     })
+  }
+
+  @Test def testDiscourse() {
+    val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
+    doc.clear()
+
+    val d = doc.discourseTree.get
+    assertTrue(d.relationLabel == "elaboration")
+    assertTrue(d.relationDirection == RelationDirection.LeftToRight)
+    assertTrue(! d.isTerminal && d.children.length == 2)
   }
 }

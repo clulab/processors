@@ -449,6 +449,6 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     val out = rstParser.parse(doc)
     doc.discourseTree = Some(out._1)
 
-    println("FOUND DISCOURSE TREE:\n" + out._1)
+    //println("FOUND DISCOURSE TREE:\n" + out._1)
   }
 }

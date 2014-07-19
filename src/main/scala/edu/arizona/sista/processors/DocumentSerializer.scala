@@ -1,7 +1,7 @@
 package edu.arizona.sista.processors
 
 import java.io._
-import edu.arizona.sista.discourse.rstparser.DiscourseTree
+import edu.arizona.sista.discourse.rstparser.{TreeKind, TokenOffset, RelationDirection, DiscourseTree}
 import edu.arizona.sista.processors.DocumentSerializer._
 import edu.arizona.sista.struct.{Tree, MutableNumber, DirectedGraphEdgeIterator, DirectedGraph}
 import collection.mutable.{ListBuffer, ArrayBuffer}
@@ -33,18 +33,21 @@ class DocumentSerializer {
       if (bits(0) == START_COREF) {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
-    } while(bits(0) != END_OF_DOCUMENT)
+    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE)
 
-    // TODO: load discourse tree
+    var discourse:Option[DiscourseTree] = None
+    if(bits(0) == START_DISCOURSE) {
+      discourse = Some(loadDiscourse(r))
+    }
 
-    new Document(sents.toArray, coref, None)
+    new Document(sents.toArray, coref, discourse)
   }
 
-  private def read(r:BufferedReader): Array[String] = {
+  private def read(r:BufferedReader, howManyTokens:Int = 0): Array[String] = {
     val line = r.readLine()
     // println("READ LINE: [" + line + "]")
     if (line.length == 0) return new Array[String](0)
-    line.split(SEP)
+    line.split(SEP, howManyTokens)
   }
 
   def load(s:String, encoding:String = "ISO-8859-1"): Document = {
@@ -166,7 +169,6 @@ class DocumentSerializer {
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
     }
 
-    // TODO: save discourse tree
     if(doc.discourseTree.nonEmpty) {
       os.println(START_DISCOURSE)
       doc.discourseTree.foreach(d => saveDiscourse(d, os))
@@ -273,6 +275,53 @@ class DocumentSerializer {
     os.println(END_OF_DEPENDENCIES)
   }
 
+  private def loadDiscourse(r:BufferedReader):DiscourseTree = {
+    val bits = read(r, 12)
+    if(bits.length != 12)
+      throw new RuntimeException(s"ERROR: found ${bits.length} tokens in invalid discourse tree line: " + bits.mkString(" "))
+    val label = bits(0) match {
+      case "nil" => ""
+      case _ => bits(0)
+    }
+    val dir = bits(1) match {
+      case "LeftToRight" => RelationDirection.LeftToRight
+      case "RightToLeft" => RelationDirection.RightToLeft
+      case "None" => RelationDirection.None
+      case _ => throw new RuntimeException("ERROR: unknown relation direction " + bits(1))
+    }
+    val charOffsets = (bits(2).toInt, bits(3).toInt)
+    val firstToken = new TokenOffset(bits(4).toInt, bits(5).toInt)
+    val lastToken = new TokenOffset(bits(6).toInt, bits(7).toInt)
+    val firstEDU = bits(8).toInt
+    val lastEDU = bits(9).toInt
+    val childrenCount = bits(10).toInt
+    val children:Array[DiscourseTree] = childrenCount match {
+      case 0 => null
+      case _ => new Array[DiscourseTree](childrenCount)
+    }
+    val text:String = bits(11) match {
+      case "nil" => null
+      case _ => bits(11)
+    }
+
+    val d = new DiscourseTree(
+      label, dir,
+      children,
+      TreeKind.Nucleus, // not used
+      text,
+      charOffsets,
+      firstToken,
+      lastToken,
+      firstEDU,
+      lastEDU)
+
+    for(i <- 0 until childrenCount) {
+      d.children(i) = loadDiscourse(r)
+    }
+
+    d
+  }
+
   private def saveDiscourse(d:DiscourseTree, os:PrintWriter) {
     var childrenCount = 0
     if(! d.isTerminal) childrenCount = d.children.length
@@ -280,7 +329,7 @@ class DocumentSerializer {
     if(label == "") label = "nil"
     var text = d.rawText
     if(text == null) text = "nil"
-    os.println(s"$label ${d.relationDirection} ${d.charOffsets._1} ${d.charOffsets._2} ${d.firstToken.sentence} ${d.firstToken.token} ${d.lastToken.sentence} ${d.lastToken.token} ${d.firstEDU} ${d.lastEDU} $childrenCount $text")
+    os.println(s"$label\t${d.relationDirection}\t${d.charOffsets._1}\t${d.charOffsets._2}\t${d.firstToken.sentence}\t${d.firstToken.token}\t${d.lastToken.sentence}\t${d.lastToken.token}\t${d.firstEDU}\t${d.lastEDU}\t$childrenCount\t$text")
     if(childrenCount > 0) {
       for(c <- d.children) {
         saveDiscourse(c, os)

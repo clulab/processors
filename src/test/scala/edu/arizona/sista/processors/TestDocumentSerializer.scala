@@ -8,7 +8,7 @@ import junit.framework.Assert._
 class TestDocumentSerializer extends AssertionsForJUnit {
   @Test def testSave() {
     val text = "John Doe went to China. There, he visited Beijing."
-    val proc:Processor = new CoreNLPProcessor
+    val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
     val doc1 = proc.annotate(text)
     println("Constructed a document with " + doc1.sentences.size + " sentences.")
 
