@@ -5,7 +5,7 @@ import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.Document
 import StructureClassifier._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import java.io.{Writer, ObjectInputStream}
+import java.io.Writer
 import scala.collection.mutable
 import Utils._
 

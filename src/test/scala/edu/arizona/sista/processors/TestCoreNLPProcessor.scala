@@ -14,11 +14,7 @@ import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
  * Date: 3/3/13
  */
 class TestCoreNLPProcessor extends AssertionsForJUnit {
-  var proc:Processor = null
-
-  @Before def constructProcessor() {
-    proc = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
-  }
+  var proc:Processor = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
 
   @Test def testTokenOffsets1() {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")

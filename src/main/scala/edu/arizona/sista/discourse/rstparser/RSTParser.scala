@@ -142,6 +142,8 @@ class RSTParser {
 object RSTParser {
   val logger = LoggerFactory.getLogger(classOf[RSTParser])
 
+  val DEFAULT_MODEL_PATH = "src/main/resources/edu/arizona/sista/discourse/rstparser/model.rst"
+
   def mkTrees(path:String, makeStats:Boolean = true): (List[(DiscourseTree, Document)], CorpusStats) = {
     logger.debug("Loading training trees...")
     val trees = CacheReader.load(path)
@@ -178,7 +180,7 @@ object RSTParser {
     }
     if(props.containsKey("shell")) {
       if(parser == null && props.containsKey("model")) {
-        parser = RSTParser(props)
+        parser = RSTParser.loadFrom(props.getProperty("model", RSTParser.DEFAULT_MODEL_PATH))
       } else {
         throw new RuntimeException("ERROR: property \"model\" or \"train\" must be specified!")
       }
@@ -187,11 +189,7 @@ object RSTParser {
     }
   }
 
-  def apply(props:Properties):RSTParser = {
-    loadFrom(props.getProperty("model", "src/main/resources/edu/arizona/sista/discourse/rstparser/model.rst"))
-  }
-
-  def loadFrom(path:String):RSTParser = {
+  def loadFrom(path:String = DEFAULT_MODEL_PATH):RSTParser = {
     logger.debug("Loading RST parsing model from: " + path)
     val reader = new BufferedReader(new FileReader(path))
     val corpusStats = CorpusStats.loadFrom[String](reader)

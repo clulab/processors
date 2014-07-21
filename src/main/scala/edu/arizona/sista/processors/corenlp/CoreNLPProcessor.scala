@@ -33,7 +33,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
   lazy val parser = mkParser
   lazy val coref = mkCoref
   lazy val headFinder = new SemanticHeadFinder()
-  lazy val rstParser = RSTParser(new Properties())
+  lazy val rstParser = CoreNLPProcessor.fetchParser
 
   def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -450,5 +450,16 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     doc.discourseTree = Some(out._1)
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)
+  }
+}
+
+object CoreNLPProcessor {
+  var rstParser:RSTParser = null
+
+  def fetchParser:RSTParser = {
+    this.synchronized {
+      if(rstParser == null) rstParser = RSTParser.loadFrom()
+      rstParser
+    }
   }
 }
