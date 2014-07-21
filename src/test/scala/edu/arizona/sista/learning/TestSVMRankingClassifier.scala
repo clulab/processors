@@ -79,13 +79,13 @@ class TestSVMRankingClassifier  extends AssertionsForJUnit {
 
   @Test def testClassifier2() {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
-      "src/main/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
+      "src/test/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
 
     val classifier = new SVMRankingClassifier[String](".", keepIntermediateFiles = true)
     classifier.train(dataset)
 
     val queries = RVFRankingDataset.mkDatumsFromSvmRankFormat(
-      "src/main/resources/edu/arizona/sista/learning/ranking_test.txt.gz")
+      "src/test/resources/edu/arizona/sista/learning/ranking_test.txt.gz")
     val queryScores = new ArrayBuffer[Array[Double]]()
     for(query <- queries) {
       val scores = classifier.scoresOf(query)

@@ -15,12 +15,12 @@ WDIR=target/model_tmp
 mkdir -p $WDIR
 
 # RST resources
-cp target/classes/edu/arizona/sista/discourse/rstparser/discourse_connectives.txt $WDIR/
-cp target/classes/edu/arizona/sista/discourse/rstparser/model.rst $WDIR/
+mkdir -p $WDIR/edu/arizona/sista/discourse
+cp -r target/test-classes/edu/arizona/sista/discourse/rstparser $WDIR/edu/arizona/sista/discourse/
 
 # maltparser resources
 cd $WDIR
-tar xvf ../classes/nivreeager-en-crammer.mco
+tar xvf ../test-classes/nivreeager-en-crammer.mco
 
 # create the actual model jar file
 jar cvf ../processors-$RNUM-models.jar *

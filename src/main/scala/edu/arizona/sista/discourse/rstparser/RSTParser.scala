@@ -1,7 +1,6 @@
 package edu.arizona.sista.discourse.rstparser
 
 import java.io._
-import java.util.Properties
 
 import edu.arizona.sista.discourse.rstparser.Utils._
 import edu.arizona.sista.processors.{Processor, Document}
@@ -142,7 +141,7 @@ class RSTParser {
 object RSTParser {
   val logger = LoggerFactory.getLogger(classOf[RSTParser])
 
-  val DEFAULT_MODEL_PATH = "src/main/resources/edu/arizona/sista/discourse/rstparser/model.rst"
+  val DEFAULT_MODEL_PATH = "edu/arizona/sista/discourse/rstparser/model.rst"
 
   def mkTrees(path:String, makeStats:Boolean = true): (List[(DiscourseTree, Document)], CorpusStats) = {
     logger.debug("Loading training trees...")
@@ -191,14 +190,15 @@ object RSTParser {
 
   def loadFrom(path:String = DEFAULT_MODEL_PATH):RSTParser = {
     logger.debug("Loading RST parsing model from: " + path)
-    val reader = new BufferedReader(new FileReader(path))
+    val parser = new RSTParser
+    val is = RSTParser.getClass.getClassLoader.getResourceAsStream(path)
+    val reader = new BufferedReader(new InputStreamReader(is))
     val corpusStats = CorpusStats.loadFrom[String](reader)
     val em = EDUClassifier.loadFrom(reader)
     val sm = StructureClassifier.loadFrom(reader, corpusStats)
     val rm = RelationClassifier.loadFrom(reader, corpusStats)
     reader.close()
 
-    val parser = new RSTParser
     parser.eduModel = em
     parser.relModel = rm
     parser.structModel = sm

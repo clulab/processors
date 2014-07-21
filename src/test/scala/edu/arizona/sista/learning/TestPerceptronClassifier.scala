@@ -16,10 +16,10 @@ class TestPerceptronClassifier extends AssertionsForJUnit {
     val classifier = new PerceptronClassifier[Int, String](
       epochs = 10,
       marginRatio = 1.0)
-    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/main/resources/edu/arizona/sista/learning/classification_train.txt.gz")
+    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
     classifier.train(dataset)
 
-    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/main/resources/edu/arizona/sista/learning/classification_test.txt.gz")
+    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_test.txt.gz")
     val acc = computeAcc(datums, classifier)
     println("Accuracy: " + acc)
     assertTrue(acc > 0.97)

@@ -180,9 +180,9 @@ class TestLiblinearClassifier extends AssertionsForJUnit {
 
   @Test def testLRClassifier() {
     val classifier = new LogisticRegressionClassifier[Int, String](bias = false)
-    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/main/resources/edu/arizona/sista/learning/classification_train.txt.gz")
+    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
     classifier.train(dataset)
-    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/main/resources/edu/arizona/sista/learning/classification_test.txt.gz")
+    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_test.txt.gz")
     var total = 0
     var correct = 0
     for(datum <- datums) {
@@ -198,9 +198,9 @@ class TestLiblinearClassifier extends AssertionsForJUnit {
 
   @Test def testSVMClassifier() {
     val classifier = new LinearSVMClassifier[Int, String](bias = false)
-    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/main/resources/edu/arizona/sista/learning/classification_train.txt.gz")
+    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
     classifier.train(dataset)
-    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/main/resources/edu/arizona/sista/learning/classification_test.txt.gz")
+    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_test.txt.gz")
     var total = 0
     var correct = 0
     for(datum <- datums) {

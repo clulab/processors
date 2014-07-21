@@ -1,5 +1,7 @@
 package edu.arizona.sista.discourse.rstparser
 
+import java.io.{InputStreamReader, BufferedReader}
+
 import org.slf4j.LoggerFactory
 import scala.collection.mutable.ArrayBuffer
 import java.util.regex.Pattern
@@ -15,16 +17,20 @@ class ConnectiveMatcher
 object ConnectiveMatcher {
   val logger = LoggerFactory.getLogger(classOf[ConnectiveMatcher])
 
-  lazy val CONNECTIVES = loadConnectives("src/main/resources/edu/arizona/sista/discourse/rstparser/discourse_connectives.txt")
+  val DEFAULT_CONNECTIVE_FILE = "edu/arizona/sista/discourse/rstparser/discourse_connectives.txt"
+
+  lazy val CONNECTIVES = loadConnectives(DEFAULT_CONNECTIVE_FILE)
 
   val NO_CONNECTIVE = "O"
   val BEGIN_CONNECTIVE = "B"
   val INSIDE_CONNECTIVE = "I"
 
-  def loadConnectives(fn:String):Iterable[Array[String]] = {
-    val lines = io.Source.fromFile(fn).getLines().toList.sortWith(desc)
+  def loadConnectives(path:String):Iterable[Array[String]] = {
+    val is = RSTParser.getClass.getClassLoader.getResourceAsStream(path)
+    val lines = io.Source.fromInputStream(is).getLines().toList.sortWith(desc)
     //println(lines)
     logger.debug("Loaded " + lines.length + " discourse connectives.")
+    is.close()
 
     val connectives = new ArrayBuffer[Array[String]]()
     for(line <- lines) {

@@ -42,7 +42,7 @@ class TestProcessorThreading extends AssertionsForJUnit {
   }
 
   private def runTwoThreads(procs:Array[Processor]) {
-    val text = Source.fromFile("src/main/resources/edu/arizona/sista/processors/raw_text.txt").getLines.mkString(" ")
+    val text = Source.fromFile("src/test/resources/edu/arizona/sista/processors/raw_text.txt").getLines.mkString(" ")
     println(s"Read a text with ${text.length} characters:\n${text}")
     // run the annotation pipeline once to load all models in memory
     procs(0).annotate("This is a simple sentence.")

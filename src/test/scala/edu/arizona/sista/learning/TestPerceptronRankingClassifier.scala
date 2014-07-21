@@ -14,7 +14,7 @@ import java.io.{OutputStreamWriter, PrintWriter}
 class TestPerceptronRankingClassifier extends AssertionsForJUnit {
   @Test def testClassifier() {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
-      "src/main/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
+      "src/test/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
 
     val classifier = new PerceptronRankingClassifier[String](epochs = 1)
     classifier.train(dataset)
@@ -24,7 +24,7 @@ class TestPerceptronRankingClassifier extends AssertionsForJUnit {
     pw.flush()
 
     val queries = RVFRankingDataset.mkDatumsFromSvmRankFormat(
-      "src/main/resources/edu/arizona/sista/learning/ranking_test.txt.gz")
+      "src/test/resources/edu/arizona/sista/learning/ranking_test.txt.gz")
     val queryScores = new ArrayBuffer[Array[Double]]()
     for(query <- queries) {
       val scores = classifier.scoresOf(query)

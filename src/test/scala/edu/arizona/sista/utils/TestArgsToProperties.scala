@@ -11,7 +11,7 @@ import junit.framework.Assert
  */
 class TestArgsToProperties extends AssertionsForJUnit {
   @Test def testArgsToProperties() {
-    val props = StringUtils.argsToProperties(List("-props", "src/main/resources/edu/arizona/sista/utils/test.properties").toArray)
+    val props = StringUtils.argsToProperties(List("-props", "src/test/resources/edu/arizona/sista/utils/test.properties").toArray)
 
     val p1 = props.getProperty("p1")
     val p2 = props.getProperty("p2")

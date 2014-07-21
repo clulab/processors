@@ -14,7 +14,7 @@ import junit.framework.Assert
 class TestJForestsRankingClassifier extends AssertionsForJUnit {
   @Test def testClassifier() {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
-      "src/main/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
+      "src/test/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
 
     val cls = new JForestsRankingClassifier[String](
       workingDir = ".",
@@ -23,7 +23,7 @@ class TestJForestsRankingClassifier extends AssertionsForJUnit {
     cls.train(dataset)
 
     val queries = RVFRankingDataset.mkDatumsFromSvmRankFormat(
-      "src/main/resources/edu/arizona/sista/learning/ranking_test.txt.gz")
+      "src/test/resources/edu/arizona/sista/learning/ranking_test.txt.gz")
 
     /*
     // this is only needed if offline evaluation is desired
