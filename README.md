@@ -51,7 +51,7 @@ This software is available on maven as well. Add the following dependencies to y
 # How to compile 
 
 This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory.
-Add the generated jar file to your $CLASSPATH, along with the jar files for CoreNLP.
+Add the generated jar file to your $CLASSPATH, along with the other necessary jars. Take a look at `scripts/run` to see which jars are necessary at runtime.
 
 # How to use it
 
@@ -62,7 +62,7 @@ Most of the examples here use Scala. However, this software can be used as is fr
 ### Annotating entire documents
 
     // create the processor
-    val proc:Processor = new CoreNLPProcessor()
+    val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
 
     // the actual work is done here
     val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
@@ -114,6 +114,12 @@ Most of the examples here use Scala. However, this software can be used as is fr
             " text: " + doc.sentences(mention.sentenceIndex).words.slice(mention.startOffset, mention.endOffset).mkString("[", " ", "]"))
         }
       }
+    })
+    
+    // let's print the discourse tree
+    doc.discourseTree.foreach(dt => {
+      println("Document-wide discourse tree:")
+      println(dt.toString())
     })
     
 The above code generates the following output:
