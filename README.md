@@ -165,6 +165,11 @@ The above code generates the following output:
       sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:9 text: [January 10th , 2013]
     Found one coreference chain containing the following mentions:
       sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
+      
+    Document-wide discourse tree:
+    elaboration (LeftToRight)
+      TEXT:John Smith went to China .
+      TEXT:He visited Beijing , on January 10th , 2013 .
 
 For more details about the annotation data structures, please see the `edu/arizona/sista/processor/Document.scala` file.
 
