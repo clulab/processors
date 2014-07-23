@@ -4,6 +4,8 @@ The `edu.arizona.sista.processors` package aims to be a one-stop place for natur
 We currently provide two APIs: one for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), and one for a faster processor (`FastNLPProcessor`)
 that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)).
+`CoreNLPProcessor` also includes a full-fledged Rhetorical Structure Theory (RST) discourse parser.
+Furthermore, this code contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 
 This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. 
 
@@ -11,7 +13,10 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 
 (c) Mihai Surdeanu, 2013 - 
 
+Contributors: Peter Jansen, Daniel Fried
+
 # Changes
++ **3.0** - Added RST parser to `CoreNLPProcessor`. Added the `edu.arizona.sista.learning` package. Utils classes are now under `edu.arizona.sista.utils` rather than `edu.arizona.sista.processors.utils`.
 + **2.2** - Various bug fixes. Added support for basic dependencies to `CoreNLPProcessor`.
 + **2.1** - Bug fix in FastNLPProcessor: better root detection algorithm, robust to malt inconsistencies.
 + **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`. Added Java usage example to README. Updated to CoreNLP 3.3.0. Added better unit tests to check for thread safetiness.
@@ -27,12 +32,12 @@ This software is available on maven as well. Add the following dependencies to y
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>2.0</version>
+       <version>3.0</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>2.0</version>
+       <version>3.0</version>
        <classifier>models</classifier>
     </dependency>
 
@@ -40,7 +45,8 @@ This software is available on maven as well. Add the following dependencies to y
 + **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
 + **Memory efficient** - arrays are more memory efficient than hash maps. Furthermore, we used our own implementation to intern strings (i.e., avoiding to store duplicated strings multiple times). Due to these changes, I measured up to 99% decrease in memory for the annotations corresponding to a typical natural language text, when compared to the original CoreNLP code. (Note: this reduction takes effect only _after_ CoreNLP finishes its work.)
 + **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
-+ **Tool-independent API** - we support multiple NL tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
++ **Tool-independent API** - we support multiple NL and machine learning tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
++ **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
 
 # How to compile 
 
