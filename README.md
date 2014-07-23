@@ -50,7 +50,7 @@ This software is available on maven as well. Add the following dependencies to y
 
 # How to compile 
 
-This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory,e.g., `target/mk_model_jar 3.0`. Run the `scripts/mk_model_jar` script to build the models jar file, which will stored under the same `target/` directory, e.g., `target/processors-3.0-models.jar`.
+This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory,e.g., `target/processors-3.0.jar`. Run the `scripts/mk_model_jar` script to build the models jar file, which will stored under the same `target/` directory, e.g., `target/processors-3.0-models.jar`.
 . 
 Add these generated jar files to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `scripts/run` to see which dependencies are necessary at runtime.
 
