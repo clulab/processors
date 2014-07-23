@@ -50,8 +50,8 @@ This software is available on maven as well. Add the following dependencies to y
 
 # How to compile 
 
-This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory.
-Add the generated jar file to your $CLASSPATH, along with the other necessary jars. Take a look at `scripts/run` to see which jars are necessary at runtime.
+This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory. Run the `scripts/mk_model_jar` script to build the models jar file. 
+Add these generated jar files to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `scripts/run` to see which dependencies are necessary at runtime.
 
 # How to use it
 
