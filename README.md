@@ -5,7 +5,7 @@ We currently provide two APIs: one for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), and one for a faster processor (`FastNLPProcessor`)
 that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)).
 `CoreNLPProcessor` also includes a full-fledged Rhetorical Structure Theory (RST) discourse parser.
-Furthermore, this code contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
+Furthermore, this code contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 
 This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. 
 
@@ -50,7 +50,8 @@ This software is available on maven as well. Add the following dependencies to y
 
 # How to compile 
 
-This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory. Run the `scripts/mk_model_jar` script to build the models jar file. 
+This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory,e.g., `target/mk_model_jar 3.0`. Run the `scripts/mk_model_jar` script to build the models jar file, which will stored under the same `target/` directory, e.g., `target/processors-3.0-models.jar`.
+. 
 Add these generated jar files to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `scripts/run` to see which dependencies are necessary at runtime.
 
 # How to use it
