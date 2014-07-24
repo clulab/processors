@@ -104,23 +104,22 @@ object StringUtils {
     throw new RuntimeException("ERROR: cannot instantiate variable \"" + name + "\" in properties!")
   }
 
-  def getInt(props:Properties, name:String, default:Int):Int = {
+  def getStringOption(props: Properties, name: String): Option[String] = {
     val s = props.getProperty(name)
-    if (s == null) return default
-    s.toInt
+    if (s == null) None else Some(s)
   }
 
-  def getBool(props:Properties, name:String, default:Boolean):Boolean = {
-    val s = props.getProperty(name)
-    if (s == null) return default
-    s.toBoolean
-  }
+  def getInt(props:Properties, name:String, default:Int):Int = getIntOption(props,name).getOrElse(default)
 
-  def getDouble(props:Properties, name:String, default:Double):Double = {
-    val s = props.getProperty(name)
-    if (s == null) return default
-    s.toDouble
-  }
+  def getIntOption(props:Properties, name: String):Option[Int] = getStringOption(props, name).map(_.toInt)
+
+  def getBool(props:Properties, name:String, default:Boolean):Boolean = getBoolOption(props, name).getOrElse(default)
+
+  def getBoolOption(props: Properties, name:String) = getStringOption(props, name).map(_.toBoolean)
+
+  def getDoubleOption(props:Properties, name:String) = getStringOption(props, name).map(_.toDouble)
+
+  def getDouble(props: Properties, name:String, default:Double) = getDoubleOption(props, name).getOrElse(default)
 
   def toIntArray(v:String, sep:String = " "):Array[Int] = {
     val bits = v.split(sep)

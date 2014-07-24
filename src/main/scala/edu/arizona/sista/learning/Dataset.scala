@@ -133,7 +133,7 @@ class RVFDataset[L, F] (
   fl:Lexicon[F],
   ls:ArrayBuffer[Int],
   fs:ArrayBuffer[Array[Int]],
-  val values:ArrayBuffer[Array[Double]]) extends BVFDataset[L, F](ll, fl, ls, fs) {
+  val values:ArrayBuffer[Array[Double]]) extends BVFDataset[L, F](ll, fl, ls, fs) with FeatureTraversable[F, Double]{
 
   def this() = this(
     new Lexicon[L], new Lexicon[F], new ArrayBuffer[Int],
@@ -172,6 +172,30 @@ class RVFDataset[L, F] (
 
   override def removeFeaturesByFrequency(threshold:Int) {
     throw new RuntimeException("Not supported yet!")
+  }
+
+  def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
+    def foreach[U](fn: ((F, Double)) => U): Unit = {
+      for(i <- 0 until RVFDataset.this.size) {
+        for(j <- 0 until features(i).size) {
+          val fi = features(i)(j)
+          val v = values(i)(j)
+          val f = featureLexicon.get(fi)
+          fn((f, v))
+        }
+      }
+    }
+
+    def updateAll(fn: ((F, Double)) => Double): Unit = {
+      for(i <- 0 until RVFDataset.this.size) {
+        for(j <- 0 until features(i).size) {
+          val fi = features(i)(j)
+          val v = values(i)(j)
+          val f = featureLexicon.get(fi)
+          values(i)(j) = fn((f, v))
+        }
+      }
+    }
   }
 
   override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {

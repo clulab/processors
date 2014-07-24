@@ -134,7 +134,7 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
   }
 }
 
-class RVFRankingDataset[F] extends BVFRankingDataset[F] {
+class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[F, Double] {
   val values = new ArrayBuffer[Array[Array[Double]]]
 
   override def += (queryDatums:Iterable[Datum[Int, F]]) {
@@ -241,6 +241,29 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] {
     datasetBootstrapped
   }
 
+  def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
+    def foreach[U](fn: ((F, Double)) => U): Unit = {
+      for(i <- 0 until RVFRankingDataset.this.size) // group
+        for(j <- 0 until features(i).size) // datum
+          for (k <- 0 until features(i)(j).size) { // feature
+            val fi = features(i)(j)(k)
+            val v = values(i)(j)(k)
+            val f = featureLexicon.get(fi)
+            fn((f, v))
+          }
+    }
+
+    def updateAll(fn: ((F, Double)) => Double): Unit = {
+      for(i <- 0 until RVFRankingDataset.this.size) // group
+        for(j <- 0 until features(i).size) // datum
+          for (k <- 0 until features(i)(j).size) { // feature
+          val fi = features(i)(j)(k)
+            val v = values(i)(j)(k)
+            val f = featureLexicon.get(fi)
+            values(i)(j)(k) = fn((f, v))
+          }
+    }
+  }
 }
 
 object RVFRankingDataset {
