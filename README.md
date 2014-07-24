@@ -16,7 +16,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 Contributors: Peter Jansen, Daniel Fried
 
 # Changes
-+ **3.0** - Added RST parser to `CoreNLPProcessor`. Added the `edu.arizona.sista.learning` package. Utils classes are now under `edu.arizona.sista.utils` rather than `edu.arizona.sista.processors.utils`.
++ **3.0** - Added a RST discourse parser to `CoreNLPProcessor`. Added the `edu.arizona.sista.learning` package. Utils classes are now under `edu.arizona.sista.utils` rather than `edu.arizona.sista.processors.utils`.
 + **2.2** - Various bug fixes. Added support for basic dependencies to `CoreNLPProcessor`.
 + **2.1** - Bug fix in FastNLPProcessor: better root detection algorithm, robust to malt inconsistencies.
 + **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`. Added Java usage example to README. Updated to CoreNLP 3.3.0. Added better unit tests to check for thread safetiness.
@@ -241,6 +241,7 @@ the `Processor.annotate()` method is implemented as follows:
       chunking(doc)
       labelSemanticRoles(doc)
       resolveCoreference(doc)
+      discourse(doc)
       doc.clear()
       doc
     }
@@ -491,8 +492,20 @@ The output of this code is:
 
 ## The discourse parser
 
-To do
+The discourse parser in `processors` is inspired by the parser of [Feng and Hirst](http://www.cs.toronto.edu/~weifeng/software.html) and the HILDA parser of [Hernault et al.](http://elanguage.net/journals/dad/article/view/591), but with a different feature set. 
+It is currently transparently integrated in `CoreNLPProcessor`: just instantiate it as `CoreNLPProcessor(withDiscourse = true)` (the integration with `FastNLPProcessor` is coming soon). If discourse is enabled, `Document.discourseTree` stores the discourse tree for the entire document as an instance of the `DiscourseTree` class. 
+
+Following the conventions from other modern discourse parsing work, the discourse tree:
++ Is represented as a binary tree, containing hypotactic relations (containing one nucleus and one satellite node) or paratactic relations (both nodes have equal importance).
++ Stores the relation labels in the parent node (in `DiscourseTree.relationLabel`) rather than the satellite nodes (like the RST corpus). We use the same 18 labels as Feng and Hirst.
++ Stores the relation direction in `DiscourseTree.relationDirection`. The direction can be `LeftToRight` (meaning the nucleus is the left child), `RightToLeft` (the right node is the nucleus), or `None` (for paratactic relations).
+
+If you end up using this discourse parser, I would appreciate it if you cited this work:
+
+Peter Jansen, Mihai Surdeanu, and Peter Clark. [Discourse Complements Lexical Semantics for Non-factoid Answer Reranking](http://www.surdeanu.info/mihai/papers/acl2014.pdf). In Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL), 2014. [[bib]](http://www.surdeanu.info/mihai/papers/acl2014.bib)
 
 ## The `edu.arizona.sista.learning` package
 
-To do
+`processors` now contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
+
+Description: to do
