@@ -6,7 +6,7 @@ import edu.arizona.sista.struct.Lexicon
 import scala.io.BufferedSource
 import org.slf4j.LoggerFactory
 import java.util.zip.GZIPInputStream
-import java.io.{FileWriter, PrintWriter, FileInputStream, BufferedInputStream}
+import java.io.{FileWriter, PrintWriter, FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream, BufferedInputStream}
 
 /**
  * Parent class for all datasets used for ranking problems
@@ -241,6 +241,12 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
     datasetBootstrapped
   }
 
+  def saveTo[F](fileName:String) {
+    val os = new ObjectOutputStream(new FileOutputStream(fileName))
+    os.writeObject(this)
+    os.close()
+  }
+
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
     def foreach[U](fn: ((F, Double)) => U): Unit = {
       for(i <- 0 until RVFRankingDataset.this.size) // group
@@ -425,6 +431,14 @@ object RVFRankingDataset {
     }
     os.close()
   }
+
+  def loadFrom[F](fileName:String):RVFRankingDataset[F] = {
+    val is = new ObjectInputStream(new FileInputStream(fileName))
+    val c = is.readObject().asInstanceOf[RVFRankingDataset[F]]
+    is.close()
+    c
+  }
+
 }
 
 class RVFKRankingDataset[F] extends RVFRankingDataset[F] {
