@@ -16,6 +16,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 Contributors: Peter Jansen, Daniel Fried
 
 # Changes
++ **3.1** - Minimal functionality added to the learning package. Changed to CoreNLP 3.3.1. 
 + **3.0** - Added a RST discourse parser to `CoreNLPProcessor`. Added the `edu.arizona.sista.learning` package. Utils classes are now under `edu.arizona.sista.utils` rather than `edu.arizona.sista.processors.utils`.
 + **2.2** - Various bug fixes. Added support for basic dependencies to `CoreNLPProcessor`.
 + **2.1** - Bug fix in FastNLPProcessor: better root detection algorithm, robust to malt inconsistencies.
