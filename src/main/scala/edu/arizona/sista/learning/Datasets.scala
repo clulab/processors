@@ -86,6 +86,27 @@ object Datasets {
     scaledFeatures
   }
 
+  /** Scales feature values using the svm-scale formula. Scaling is performed in place */
+  def svmScaleRankingDataset[L, F](dataset:RankingDataset[F], lower:Double = -1, upper:Double = 1): ScaleRange[F] = {
+    try {
+      svmScaleFeatureTraversable(dataset.asInstanceOf[FeatureTraversable[F, Double]], lower, upper)
+    } catch  {
+      case e:ClassCastException => throw new RuntimeException("Feature traverser not implemented! " + e.getMessage)
+    }
+  }
+
+  def svmScaleFeatureTraversable[F](dataset: FeatureTraversable[F, Double], lower: Double, upper: Double): ScaleRange[F] = {
+    val ranges = new ScaleRange[F]
+    // scan the dataset once and keep track of min/max for each feature
+    dataset.featureUpdater.foreach {
+      case (f, v) => ranges.update(f, v)
+    }
+    // scan again and update
+    dataset.featureUpdater.updateAll {
+      case (f, v) => scale(v, ranges.min(f), ranges.max(f), lower, upper)
+    }
+    ranges
+  }
   def svmScaleBVFDataset[L, F](dataset:BVFDataset[L, F], lower:Double, upper:Double):ScaleRange[F] = {
     throw new RuntimeException("ERROR: scaling of BVF datasets not implemented yet!")
   }

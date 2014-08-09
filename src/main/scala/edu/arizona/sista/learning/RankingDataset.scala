@@ -6,7 +6,7 @@ import edu.arizona.sista.struct.Lexicon
 import scala.io.BufferedSource
 import org.slf4j.LoggerFactory
 import java.util.zip.GZIPInputStream
-import java.io.{FileWriter, PrintWriter, FileInputStream, BufferedInputStream}
+import java.io.{FileWriter, PrintWriter, FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream, BufferedInputStream}
 
 /**
  * Parent class for all datasets used for ranking problems
@@ -134,7 +134,7 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
   }
 }
 
-class RVFRankingDataset[F] extends BVFRankingDataset[F] {
+class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[F, Double] {
   val values = new ArrayBuffer[Array[Array[Double]]]
 
   override def += (queryDatums:Iterable[Datum[Int, F]]) {
@@ -241,6 +241,35 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] {
     datasetBootstrapped
   }
 
+  def saveTo[F](fileName:String) {
+    val os = new ObjectOutputStream(new FileOutputStream(fileName))
+    os.writeObject(this)
+    os.close()
+  }
+
+  def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
+    def foreach[U](fn: ((F, Double)) => U): Unit = {
+      for(i <- 0 until RVFRankingDataset.this.size) // group
+        for(j <- 0 until features(i).size) // datum
+          for (k <- 0 until features(i)(j).size) { // feature
+            val fi = features(i)(j)(k)
+            val v = values(i)(j)(k)
+            val f = featureLexicon.get(fi)
+            fn((f, v))
+          }
+    }
+
+    def updateAll(fn: ((F, Double)) => Double): Unit = {
+      for(i <- 0 until RVFRankingDataset.this.size) // group
+        for(j <- 0 until features(i).size) // datum
+          for (k <- 0 until features(i)(j).size) { // feature
+          val fi = features(i)(j)(k)
+            val v = values(i)(j)(k)
+            val f = featureLexicon.get(fi)
+            values(i)(j)(k) = fn((f, v))
+          }
+    }
+  }
 }
 
 object RVFRankingDataset {
@@ -402,6 +431,14 @@ object RVFRankingDataset {
     }
     os.close()
   }
+
+  def loadFrom[F](fileName:String):RVFRankingDataset[F] = {
+    val is = new ObjectInputStream(new FileInputStream(fileName))
+    val c = is.readObject().asInstanceOf[RVFRankingDataset[F]]
+    is.close()
+    c
+  }
+
 }
 
 class RVFKRankingDataset[F] extends RVFRankingDataset[F] {
