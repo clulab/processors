@@ -203,12 +203,35 @@ object Utils {
     (null, null)
   }
 
-  /** Finds head words for this span, i.e., words whose head dependencies is outside of the given span */
-  def findSynDepHeads(deps:DirectedGraph[String],
-                      first:Int,
-                      last:Int):Iterable[Int] = {
-    null // TODO
+  def findSyntacticHeadFromDependencies( deps:DirectedGraph[String],
+                                         first:Int,
+                                         last:Int): (Int, Int, String) = {
+    // the head of this span is the token that is a root, or
+    // the head of this span is the left-most token whose syntactic head falls outside the given span
+    for(i <- first to last) {
+      if(deps.roots.contains(i)) { // found a root
+        return (i, -1, "")
+      }
+
+      val heads = deps.incomingEdges(i)
+      var outside = false
+      var p = -1
+      var l = ""
+      for(h <- heads if ! outside) {
+        if(h._1 < first || h._1 > last) {
+          outside = true
+          p = h._1
+          l = h._2
+        }
+      }
+      if(outside) { // found the head
+        return (i, p, l)
+      }
+    }
+
+    (-1, -1, "")
   }
+
 
   def findSyntacticHead( root:Tree[String],
                          parent:Tree[String],
@@ -247,6 +270,31 @@ object Utils {
     null
   }
 
+  def findCommonAncestorsFromDependencies( deps:DirectedGraph[String],
+                                           first:Int,
+                                           last:Int): Iterable[Int] = {
+    val ancestors = new ListBuffer[Int]
+    for(i <- first to last) {
+      if(deps.roots.contains(i)) { // found a root
+        ancestors += -1
+      }
+
+      assert(i >= 0)
+      if(i < deps.incomingEdges.size) {
+        // i >= size may happen for corenlp; not sure why
+        val heads = deps.incomingEdges(i)
+        if (heads != null) {
+          for (h <- heads) {
+            if (h._1 < first || h._1 > last) {
+              ancestors += h._1
+            }
+          }
+        }
+      }
+    }
+    ancestors.toList
+  }
+
   def toDecile(v:Int, max:Int):Int = {
     val dec = 10.0 * v.toDouble / max.toDouble
     for(i <- 1 to 10) {
@@ -255,9 +303,9 @@ object Utils {
     1
   }
 
-  def prefix(f:String):String = {
+  def prefix(f:String, sep:String):String = {
     var pref = f
-    val i = f.indexOf(":")
+    val i = f.indexOf(sep)
     if(i > 0) pref = f.substring(0, i)
     pref
   }
@@ -265,7 +313,7 @@ object Utils {
   def findFeatureGroups(sep:String, lexicon:Lexicon[String]):Map[String, Set[Int]] = {
     val groups = new mutable.HashMap[String, mutable.HashSet[Int]]()
     for(f <- lexicon.keySet) {
-      val pref = prefix(f)
+      val pref = prefix(f, sep)
 
       if(! groups.contains(pref))
         groups.put(pref, new mutable.HashSet[Int]())

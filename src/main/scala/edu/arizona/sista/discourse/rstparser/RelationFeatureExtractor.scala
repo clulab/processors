@@ -16,8 +16,9 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
 
   def f(fn:String, fv:Double = 1) {
     assert(features.isDefined)
-    if(filter == null || filter.contains(prefix(fn)))
+    if(filter == null || filter.contains(prefix(fn, ":"))) {
       features.get.incrementCount(fn, fv)
+    }
   }
 
   def printFeatures() {
@@ -46,7 +47,6 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
 
     writeDomSetFeatures(left, right, doc, edus, corpusStats)
     // TODO: dom set features for right-most and left-most nuclei, in left and right trees
-    writeSynDepFeatures(left, right, doc, edus, corpusStats)
 
     writeProdRuleFeatures(left, doc, 1, "L")
     writeProdRuleFeatures(right, doc, 1, "R")
@@ -90,22 +90,89 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
     // TODO: add last 4 from Table 1
   }
 
-  def writeSynDepFeatures(left:DiscourseTree,
-                          right:DiscourseTree,
-                          doc:Document,
-                          edus:Array[Array[(Int, Int)]],
-                          corpusStats:CorpusStats) {
+  def writeDomSetWithDepsFeatures(left:DiscourseTree,
+                                  right:DiscourseTree,
+                                  doc:Document,
+                                  edus:Array[Array[(Int, Int)]],
+                                  corpusStats:CorpusStats) {
     // this only works if syntactic dependencies are available
-    if(! doc.sentences(left.firstSentence).dependencies.isDefined)
+    if(! doc.sentences(left.firstSentence).dependencies.isDefined) {
       return
+    }
 
     if(left.firstToken.sentence == right.lastToken.sentence) {
       val words = doc.sentences(left.firstSentence).words
       val tags = doc.sentences(left.firstSentence).words
       val deps = doc.sentences(left.firstSentence).dependencies.get
-      val leftHeads = Utils.findSynDepHeads(deps, left.firstToken.token, left.lastToken.token)
-      val rightHeads = Utils.findSynDepHeads(deps, right.firstToken.token, right.lastToken.token)
-      val ancestors = Utils.findSynDepHeads(deps, left.firstToken.token, right.lastToken.token)
+      val (leftHead, leftHeadParent, leftParentRel) = Utils.findSyntacticHeadFromDependencies(deps, left.firstToken.token, left.lastToken.token)
+      val (rightHead, rightHeadParent, rightParentRel) = Utils.findSyntacticHeadFromDependencies(deps, right.firstToken.token, right.lastToken.token)
+      val commonAncestors = Utils.findCommonAncestorsFromDependencies(deps, left.firstToken.token, right.lastToken.token)
+
+      if(leftHead != -1 && rightHead != -1) {
+        var dominating:Int = -1
+        var dominated:Int = -1
+        var domRel:String = ""
+        var leftDominates = true
+
+        if(rightHeadParent != -1 &&
+           rightHeadParent >= left.firstToken.token &&
+           rightHeadParent <= left.lastToken.token) {
+          leftDominates = true
+          dominating = rightHeadParent
+          dominated = rightHead
+          domRel = rightParentRel
+        } else if(leftHeadParent != -1 &&
+                  leftHeadParent >= right.firstToken.token &&
+                  leftHeadParent <= right.lastToken.token) {
+          leftDominates = false
+          dominating = leftHeadParent
+          dominated = leftHead
+          domRel = leftParentRel
+        } else {
+          // TODO: case when neither dominates (happens for negative examples?)
+        }
+
+        if(leftHead != -1) {
+          val leftHeadPos = leftHead.toDouble / words.size.toDouble
+          f(s"deps-leftheadpos", leftHeadPos)
+        }
+        if(rightHead != -1) {
+          val rightHeadPos = rightHead.toDouble / words.size.toDouble
+          f(s"deps-rightheadpos", rightHeadPos)
+        }
+
+        if(dominating != -1 && dominated != -1) {
+          f("deps-dominates-" + leftDominates)
+
+          for(ancestor <- commonAncestors) {
+            if(ancestor == -1) {
+              f("deps-ancestorisroot")
+            } else {
+              val aw = words(ancestor)
+              f(s"deps-ancestorword:$aw")
+              val at = tags(ancestor)
+              f(s"deps-ancestortag:$at")
+              for (d <- deps.incomingEdges(ancestor)) {
+                f(s"deps-ancestor-inc:${d._2}")
+              }
+            }
+          }
+
+          f(s"deps-dominatingword:${words(dominating)}")
+          f(s"deps-dominatedword:${words(dominated)}")
+          f(s"deps-dominatingtag:${tags(dominating)}")
+          f(s"deps-dominatedtag:${tags(dominated)}")
+          f(s"deps-domrel:${domRel}")
+
+          f(s"$leftDominates-deps-dominatingword:${words(dominating)}")
+          f(s"$leftDominates-deps-dominatedword:${words(dominated)}")
+          f(s"$leftDominates-deps-dominatingtag:${tags(dominating)}")
+          f(s"$leftDominates-deps-dominatedtag:${tags(dominated)}")
+          f(s"$leftDominates-deps-domrel:${domRel}")
+        } else {
+          f("deps-samesent-dominates-unk")
+        }
+      }
     } else {
       f("dominates-unk")
     }
@@ -117,8 +184,15 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
                           edus:Array[Array[(Int, Int)]],
                           corpusStats:CorpusStats) {
     // this only works if constituent syntax is available
-    if(! doc.sentences(left.firstSentence).syntacticTree.isDefined)
-      return
+    if(! doc.sentences(left.firstSentence).syntacticTree.isDefined) {
+      // backoff to dependency-based features
+      if(doc.sentences(left.firstSentence).dependencies.isDefined) {
+        writeDomSetWithDepsFeatures(left, right, doc, edus, corpusStats)
+        return
+      } else {
+        throw new RuntimeException("ERROR: you need either constituent or dependency-based available for discourse parsing!")
+      }
+    }
 
     if(left.firstToken.sentence == right.lastToken.sentence) {
       val words = doc.sentences(left.firstSentence).words
@@ -259,6 +333,7 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
                             edus:Array[Array[(Int, Int)]],
                             corpusStats:CorpusStats) {
     val t = 100
+    assert(corpusStats != null)
     val leftWords = extractWords(left, doc, corpusStats.knownWords, threshold = t)
     val rightWords = extractWords(right, doc, corpusStats.knownWords, threshold = t)
     for(l <- leftWords) {

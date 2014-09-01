@@ -152,7 +152,6 @@ object Datasets {
     classifierFactory: () => Classifier[L, F],
     scoringMetric: (Iterable[(L, L)]) => Double,
     featureGroups:Map[String, Set[Int]],
-    addAllBetter:Boolean = true,
     minScore:Double = 0.0,
     numFolds:Int = 5,
     nCores:Int = 8):Set[String] = {
@@ -164,16 +163,14 @@ object Datasets {
     logger.info(s"Iteration #0: Using ${featureGroups.size} feature groups and ${dataset.featureLexicon.size} features.")
 
     val chosenGroups = new mutable.HashSet[String]()
+    val allBetterChosenGroups = new mutable.HashSet[String]()
     val chosenFeatures = new mutable.HashSet[Int]()
     var bestScore = Double.MinValue
-    var betterScore = Double.MinValue
     var iteration = 1
     var meatLeftOnTheBone = true
     while(meatLeftOnTheBone) {
       var bestGroup:String = null
       var bestFeatures:Set[Int] = null
-      val betterGroups = new mutable.HashSet[String]()
-      val betterFeatures = new mutable.HashSet[Int]()
 
       val workingGroups = featureGroups.keySet.filter(! chosenGroups.contains(_)).toSet.par
       workingGroups.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(nCores))
@@ -186,58 +183,31 @@ object Datasets {
         val group = gs._1
         val score = gs._2
 
-        if(! addAllBetter && score > bestScore) {
+        if(score > bestScore) {
           bestScore = score
           bestGroup = group
           bestFeatures = featureGroups.get(group).get
           logger.debug(s"Iteration #$iteration: found new best group [$bestGroup] with score $bestScore.")
-        }
-
-        if(addAllBetter && score > minScore && score > betterScore) {
-          betterGroups += group
-          betterFeatures ++= featureGroups.get(group).get
-          logger.debug(s"Iteration #$iteration: found new better group [$group] with score $score. betterGroups = $betterGroups")
+          if(iteration > 1) allBetterChosenGroups += bestGroup
         }
       }
 
-      if(addAllBetter) {
-        if(betterGroups.size == 0) {
-          meatLeftOnTheBone = false
-          logger.info(s"Iteration #$iteration: no better group found. Search complete.")
-        } else {
-          val chosenFeaturesTry = new mutable.HashSet[Int]()
-          chosenFeaturesTry ++= chosenFeatures
-          chosenFeaturesTry ++= betterFeatures
 
-          // we need to recompute the best score using all the feature groups found in this iteration
-          val betterScoreTry = scoreFeatures(dataset, chosenFeaturesTry, classifierFactory, numFolds, scoringMetric)
-
-          if (betterScoreTry > betterScore) {
-            chosenGroups ++= betterGroups
-            chosenFeatures ++= betterFeatures
-            betterScore = betterScoreTry
-            logger.info(s"Iteration #$iteration: found these better groups: $betterGroups. The new best score is: $betterScoreTry")
-          } else {
-            logger.info(s"Iteration #$iteration: the better groups found in this iteration decrease performance ($betterScoreTry <= $betterScore). Stopping here.")
-            meatLeftOnTheBone = false
-          }
-        }
+      if(bestGroup == null) {
+        meatLeftOnTheBone = false
+        logger.info(s"Iteration #$iteration: no better group found. Search complete.")
       } else {
-        if(bestGroup == null) {
-          meatLeftOnTheBone = false
-          logger.info(s"Iteration #$iteration: no better group found. Search complete.")
-        } else {
-          logger.info(s"Iteration #$iteration: best group found is [$bestGroup] with score $bestScore.")
-          chosenGroups += bestGroup
-          chosenFeatures ++= bestFeatures
-          logger.info(s"Iteration #$iteration: we now have ${chosenGroups.size} chosen groups and ${chosenFeatures.size} chosen features.")
-        }
+        logger.info(s"Iteration #$iteration: best group found is [$bestGroup] with score $bestScore.")
+        chosenGroups += bestGroup
+        chosenFeatures ++= bestFeatures
+        logger.info(s"Iteration #$iteration: we now have ${chosenGroups.size} chosen groups and ${chosenFeatures.size} chosen features.")
       }
 
       iteration += 1
     }
 
-    logger.info(s"Iteration #$iteration: process ended with score $betterScore using ${chosenGroups.size} chosen groups and ${chosenFeatures.size} chosen features.")
+    logger.info(s"Iteration #$iteration: process ended with score $bestScore using ${chosenGroups.size} chosen groups and ${chosenFeatures.size} chosen features.")
+    logger.info(s"Found ${allBetterChosenGroups.size} better groups: ${allBetterChosenGroups.toSet}")
     chosenGroups.toSet
   }
 
