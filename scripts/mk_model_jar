@@ -20,7 +20,7 @@ cp -r target/test-classes/edu/arizona/sista/discourse/rstparser $WDIR/edu/arizon
 
 # maltparser resources
 cd $WDIR
-tar xvf ../test-classes/nivreeager-en-crammer.mco
+unzip ../test-classes/nivreeager-en-crammer.mco
 
 # create the actual model jar file
 jar cvf ../processors-$RNUM-models.jar *

@@ -305,8 +305,7 @@ class EDUClassifier {
     }
 
     val chosenGroups = Datasets.incrementalFeatureSelection(
-      dataset, Utils.svmFactory, simpleF1, featureGroups,
-      addAllBetter = true, minScore = 0.4)
+      dataset, Utils.svmFactory, simpleF1, featureGroups)
     logger.info(s"Selected ${chosenGroups.size} feature groups: " + chosenGroups)
   }
 

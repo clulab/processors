@@ -14,14 +14,16 @@ import RelationClassifier._
  * User: mihais
  * Date: 6/12/14
  */
-class RelationClassifier(var withNuclearity:Boolean = true) {
-  val featureExtractor = new RelationFeatureExtractor(PREFIXES)
+class RelationClassifier( val prefixes:String,
+                          var withNuclearity:Boolean = true) {
+  val featureExtractor = new RelationFeatureExtractor(mkPrefixes(prefixes))
   var classifier:Classifier[String, String]  = null
   var scaleRanges:ScaleRange[String] = null
   var corpusStats:CorpusStats = null
 
   def saveTo(w:Writer, saveCorpusStats:Boolean = false) {
     val p = Files.toPrintWriter(w)
+    p.println(prefixes)
     p.println(withNuclearity)
     if(saveCorpusStats) corpusStats.saveTo(p)
     scaleRanges.saveTo(p)
@@ -180,10 +182,10 @@ object RelationClassifier {
   val LOWER = -1.0
   val UPPER = +1.0
 
-  // w/ corenlp
-  val PREFIXES = mkPrefixes("true-dominatinglabel, suffix_L, false-dominatedword, false-dominatingtag, Sentence_span_R, dominatedlabel, toprule, tprefix_R, false-dominatedlabel, prefix_L, tsuffix_L, Sentence_span_L, dominatingword, prefix_R, Sentence_tokens_cover_R, dominatinglabel, suffix_L, num_edus_diff, embedded, dominatedword, Sentence_EDUs_cover_L, true-ancestorlabel, false-dominatingword, false-ancestortag, dominatedlabel, false-dominatingtag, num_edus_diff, samesent-dominates-unk, dominatedtag, true-dominatedtag, dominates-true, false-dominatedtag")
-  // w/ fastnlp
-  //val PREFIXES = mkPrefixes("suffix_L, Num_edus_R, toprule, Embedded_in_subtree_with_other_EDU_L, Sentence_EDUs_cover_R, deps-dominatedword, tprefix_R, deps-domrel, prefix_L, false-deps-domrel, tsuffix_L, deps-ancestorisroot, Embedded_in_subtree_with_other_EDUL, prefix_R, false-deps-dominatingword, rule-R-d1, deps-ancestortag, Embedded_in_subtree_with_other_EDUR, true-deps-dominatingtag, tprefix_L, deps-domrel, Num_edus_R, true-deps-dominatingtag, deps-dominatedword, rule-L-d1, Num_edus_L, Embedded_in_subtree_with_other_EDUR, deps-dominatedword, tprefix_R, true-deps-domrel, Sentence_tokens_cover_L, rule-R-d1, true-deps-dominatedtag, Len_R, Len_L, deps-ancestorisroot, deps-dominatedtag, deps-dominatedword, Sentence_EDUs_cover_L, embedded, Sentence_tokens_cover_R, deps-dominatedtag, true-deps-dominatedtag, false-deps-dominatingword, false-deps-dominatingword, Inside_sentence_R, Sentence_EDUs_cover_L, Embedded_in_subtree_with_other_EDUL, Sentence_EDUs_cover_R, ")
+  // for corenlp
+  val CONSTITUENTSYNTAX_PREFIXES = "true-dominatinglabel, suffix_L, false-dominatedword, false-dominatingtag, Sentence_span_R, dominatedlabel, toprule, tprefix_R, false-dominatedlabel, prefix_L, tsuffix_L, Sentence_span_L, dominatingword, prefix_R, Sentence_tokens_cover_R, dominatinglabel, suffix_L, num_edus_diff, embedded, dominatedword, Sentence_EDUs_cover_L, true-ancestorlabel, false-dominatingword, false-ancestortag, dominatedlabel, false-dominatingtag, num_edus_diff, samesent-dominates-unk, dominatedtag, true-dominatedtag, dominates-true, false-dominatedtag"
+  // for fastnlp
+  val DEPENDENCYSYNTAX_PREFIXES = "suffix_L, Num_edus_R, toprule, Embedded_in_subtree_with_other_EDU_L, Sentence_EDUs_cover_R, deps-dominatedword, tprefix_R, deps-domrel, prefix_L, false-deps-domrel, tsuffix_L, deps-ancestorisroot, Embedded_in_subtree_with_other_EDUL, prefix_R, false-deps-dominatingword, rule-R-d1, deps-ancestortag, Embedded_in_subtree_with_other_EDUR, true-deps-dominatingtag, tprefix_L, deps-domrel, Num_edus_R, true-deps-dominatingtag, deps-dominatedword, rule-L-d1, Num_edus_L, Embedded_in_subtree_with_other_EDUR, deps-dominatedword, tprefix_R, true-deps-domrel, Sentence_tokens_cover_L, rule-R-d1, true-deps-dominatedtag, Len_R, Len_L, deps-ancestorisroot, deps-dominatedtag, deps-dominatedword, Sentence_EDUs_cover_L, embedded, Sentence_tokens_cover_R, deps-dominatedtag, true-deps-dominatedtag, false-deps-dominatingword, false-deps-dominatingword, Inside_sentence_R, Sentence_EDUs_cover_L, Embedded_in_subtree_with_other_EDUL, Sentence_EDUs_cover_R"
 
   def mkPrefixes(fs:String): Set[String] = fs.split(",\\s*").map(_.trim).toSet
 
@@ -192,8 +194,11 @@ object RelationClassifier {
 
     var cls:RelationClassifier = null
 
+    var prefixes = RelationClassifier.CONSTITUENTSYNTAX_PREFIXES
+    if(props.containsKey("dep")) prefixes = RelationClassifier.DEPENDENCYSYNTAX_PREFIXES
+
     if(props.containsKey("train")) {
-      cls = new RelationClassifier (withNuclearity = true)
+      cls = new RelationClassifier (prefixes, withNuclearity = true)
       val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("train"))
       cls.train(trees, corpusStats)
       if(props.containsKey("model")) {
@@ -212,7 +217,7 @@ object RelationClassifier {
       cls.test(trees)
     }
     if(props.containsKey("fsel")) {
-      cls = new RelationClassifier (withNuclearity = true)
+      cls = new RelationClassifier (null, withNuclearity = true)
       val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("fsel"))
       cls.featureSelectionIncremental(trees, corpusStats)
     }
@@ -220,14 +225,14 @@ object RelationClassifier {
 
   def loadFrom(ir:java.io.Reader, corpusStats:CorpusStats):RelationClassifier = {
     val reader = Files.toBufferedReader(ir)
+    val prefs = reader.readLine()
     val wn = reader.readLine().toBoolean
     var cs = corpusStats
     if(cs == null) cs = CorpusStats.loadFrom[String](reader)
     val sr = ScaleRange.loadFrom[String](reader)
     val c = LiblinearClassifier.loadFrom[String, String](reader)
 
-    val r = new RelationClassifier
-    r.withNuclearity = wn
+    val r = new RelationClassifier(prefs, withNuclearity = wn)
     r.corpusStats = cs
     r.classifier = c
     r.scaleRanges = sr

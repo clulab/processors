@@ -152,7 +152,6 @@ object Datasets {
     classifierFactory: () => Classifier[L, F],
     scoringMetric: (Iterable[(L, L)]) => Double,
     featureGroups:Map[String, Set[Int]],
-    minScore:Double = 0.0,
     numFolds:Int = 5,
     nCores:Int = 8):Set[String] = {
 

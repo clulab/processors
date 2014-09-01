@@ -31,7 +31,7 @@ class RSTParser {
     writer.close()
   }
 
-  def train(trainDirName:String) {
+  def train(trainDirName:String, dependencySyntax:Boolean) {
     val (trees, cs) = mkTrees(trainDirName)
     corpusStats = cs
 
@@ -40,7 +40,9 @@ class RSTParser {
     eduModel.train(trees, corpusStats)
 
     logger.debug("Training the RELATION model...")
-    relModel = new RelationClassifier(withNuclearity = true)
+    var prefixes = RelationClassifier.CONSTITUENTSYNTAX_PREFIXES
+    if(dependencySyntax) prefixes = RelationClassifier.DEPENDENCYSYNTAX_PREFIXES
+    relModel = new RelationClassifier(prefixes, withNuclearity = true)
     relModel.train(trees, corpusStats)
 
     logger.debug("Training the STRUCT model...")
@@ -142,7 +144,8 @@ class RSTParser {
 object RSTParser {
   val logger = LoggerFactory.getLogger(classOf[RSTParser])
 
-  val DEFAULT_MODEL_PATH = "edu/arizona/sista/discourse/rstparser/model.rst.gz"
+  val DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH = "edu/arizona/sista/discourse/rstparser/model.const.rst.gz"
+  val DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH = "edu/arizona/sista/discourse/rstparser/model.dep.rst.gz"
 
   def mkTrees(path:String, makeStats:Boolean = true): (List[(DiscourseTree, Document)], CorpusStats) = {
     logger.debug("Loading training trees...")
@@ -167,7 +170,7 @@ object RSTParser {
 
     if(props.containsKey("train")) {
       parser = new RSTParser
-      parser.train(props.getProperty("train"))
+      parser.train(props.getProperty("train"), props.containsKey("dep"))
       if(props.containsKey("model")) {
         parser.saveTo(props.getProperty("model"))
       }
@@ -179,8 +182,11 @@ object RSTParser {
       parser.test(props.getProperty("test"))
     }
     if(props.containsKey("shell")) {
+      var path = RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH
+      if(props.containsKey("dep")) path = RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH
+
       if(parser == null && props.containsKey("model")) {
-        parser = RSTParser.loadFrom(props.getProperty("model", RSTParser.DEFAULT_MODEL_PATH))
+        parser = RSTParser.loadFrom(props.getProperty("model", path))
       } else {
         throw new RuntimeException("ERROR: property \"model\" or \"train\" must be specified!")
       }
@@ -189,7 +195,7 @@ object RSTParser {
     }
   }
 
-  def loadFrom(path:String = DEFAULT_MODEL_PATH):RSTParser = {
+  def loadFrom(path:String):RSTParser = {
     logger.debug("Loading RST parsing model from: " + path)
     val parser = new RSTParser
     val is = RSTParser.getClass.getClassLoader.getResourceAsStream(path)

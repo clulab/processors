@@ -458,7 +458,7 @@ object CoreNLPProcessor {
 
   def fetchParser:RSTParser = {
     this.synchronized {
-      if(rstParser == null) rstParser = RSTParser.loadFrom()
+      if(rstParser == null) rstParser = RSTParser.loadFrom(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
       rstParser
     }
   }
