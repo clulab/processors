@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors
 
+import edu.arizona.sista.discourse.rstparser.RelationDirection
 import edu.arizona.sista.struct.DirectedGraphEdgeIterator
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.{Test, Before}
@@ -15,7 +16,7 @@ class TestFastNLPProcessor extends AssertionsForJUnit {
   var proc:Processor = null
 
   @Before def constructProcessor() {
-    proc = new FastNLPProcessor(internStrings = true)
+    proc = new FastNLPProcessor(internStrings = true, withDiscourse = true)
   }
 
   @Test def testParser1() {
@@ -50,5 +51,15 @@ class TestFastNLPProcessor extends AssertionsForJUnit {
       val d = it.next()
       println(d._1 + " " + d._2 + " " + d._3)
     }
+  }
+
+  @Test def testDiscourse() {
+    val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
+    doc.clear()
+
+    val d = doc.discourseTree.get
+    assertTrue(d.relationLabel == "elaboration")
+    assertTrue(d.relationDirection == RelationDirection.LeftToRight)
+    assertTrue(! d.isTerminal && d.children.length == 2)
   }
 }

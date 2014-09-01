@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors.fastnlp
 
+import edu.arizona.sista.discourse.rstparser.RSTParser
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.struct.DirectedGraph
@@ -18,7 +19,9 @@ import org.maltparserx
  * User: mihais
  * Date: 1/4/14
  */
-class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(internStrings) {
+class FastNLPProcessor(internStrings:Boolean = true,
+                       withDiscourse:Boolean = false)
+  extends CoreNLPProcessor(internStrings, basicDependencies = true, withDiscourse) {
   /**
    * One maltparser instance for each thread
    * MUST have one separate malt instance per thread!
@@ -26,6 +29,10 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
    * using ThreadLocal variables guarantees that each thread gets its own working directory
    */
   private val maltService = new ThreadLocal[MaltParserService]
+
+  /** RST discourse parser using only dependency based syntax */
+  lazy val rstDependencyParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)
+
 
   override def parse(doc:Document) {
     val annotation = basicSanityCheck(doc)
@@ -122,7 +129,21 @@ class FastNLPProcessor(internStrings:Boolean = true) extends CoreNLPProcessor(in
   }
 
   override def discourse(doc:Document) {
-    // FastNLP does not offer discourse parsing yet
+    if(! withDiscourse) return
+    val annotation = basicSanityCheck(doc)
+    if (annotation.isEmpty) return
+
+    if (doc.sentences.head.tags == None)
+      throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
+    if (doc.sentences.head.lemmas == None)
+      throw new RuntimeException("ERROR: you have to run the lemmatizer before discourse parsing!")
+    if(doc.sentences.head.dependencies == None)
+      throw new RuntimeException("ERROR: you have to run the dependency parser before discourse parsing!")
+
+    val out = rstDependencyParser.parse(doc)
+    doc.discourseTree = Some(out._1)
+
+    //println("FOUND DISCOURSE TREE:\n" + out._1)
   }
 }
 

@@ -33,7 +33,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
   lazy val parser = mkParser
   lazy val coref = mkCoref
   lazy val headFinder = new SemanticHeadFinder()
-  lazy val rstParser = CoreNLPProcessor.fetchParser
+  lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
 
   def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -438,15 +438,15 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     if (annotation.isEmpty) return
 
     if (doc.sentences.head.tags == None)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before coreference resolution!")
+      throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
     if (doc.sentences.head.lemmas == None)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before coreference resolution!")
+      throw new RuntimeException("ERROR: you have to run the lemmatizer before discourse parsing!")
     if(doc.sentences.head.dependencies == None)
-      throw new RuntimeException("ERROR: you have to run the dependency parser before coreference resolution!")
+      throw new RuntimeException("ERROR: you have to run the dependency parser before discourse parsing!")
     if(doc.sentences.head.syntacticTree == None)
-      throw new RuntimeException("ERROR: you have to run the constituent parser before coreference resolution!")
+      throw new RuntimeException("ERROR: you have to run the constituent parser before discourse parsing!")
 
-    val out = rstParser.parse(doc)
+    val out = rstConstituentParser.parse(doc)
     doc.discourseTree = Some(out._1)
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)
@@ -456,9 +456,9 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
 object CoreNLPProcessor {
   var rstParser:RSTParser = null
 
-  def fetchParser:RSTParser = {
+  def fetchParser(path:String):RSTParser = {
     this.synchronized {
-      if(rstParser == null) rstParser = RSTParser.loadFrom(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
+      if(rstParser == null) rstParser = RSTParser.loadFrom(path)
       rstParser
     }
   }
