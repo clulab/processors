@@ -4,7 +4,9 @@ The `edu.arizona.sista.processors` package aims to be a one-stop place for natur
 We currently provide two APIs: one for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), and one for a faster processor (`FastNLPProcessor`)
 that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)).
-`CoreNLPProcessor` also includes a full-fledged Rhetorical Structure Theory (RST) discourse parser.
+
+Both `CoreNLPProcessor` and `FastNLPProcessor` now include a full-fledged Rhetorical Structure Theory (RST) discourse parser. The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is two orders of magnitude faster.
+
 Furthermore, this code contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 
 This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. 
@@ -34,12 +36,12 @@ This software is available on maven as well. Add the following dependencies to y
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.0</version>
+       <version>3.2</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.0</version>
+       <version>3.2</version>
        <classifier>models</classifier>
     </dependency>
 
@@ -495,7 +497,7 @@ The output of this code is:
 ## The discourse parser
 
 The discourse parser in `processors` is inspired by the parser of [Feng and Hirst](http://www.cs.toronto.edu/~weifeng/software.html) and the HILDA parser of [Hernault et al.](http://elanguage.net/journals/dad/article/view/591), but with a different feature set. 
-It is currently transparently integrated in `CoreNLPProcessor`: just instantiate it as `CoreNLPProcessor(withDiscourse = true)` (the integration with `FastNLPProcessor` is coming soon). If discourse is enabled, `Document.discourseTree` stores the discourse tree for the entire document as an instance of the `DiscourseTree` class. 
+It is transparently integrated in both `CoreNLPProcessor` and `FastNLPProcessor`: just instantiate it as `CoreNLPProcessor(withDiscourse = true)` or `FastNLPProcessor(withDiscourse = true)`. If discourse is enabled, `Document.discourseTree` stores the discourse tree for the entire document as an instance of the `DiscourseTree` class. 
 
 Following the conventions from other modern discourse parsing work, the discourse tree:
 + Is represented as a binary tree, containing hypotactic relations (containing one nucleus and one satellite node) or paratactic relations (both nodes have equal importance).
