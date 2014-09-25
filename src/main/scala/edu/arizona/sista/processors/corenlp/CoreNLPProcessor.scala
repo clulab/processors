@@ -208,15 +208,20 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     new CoreNLPDocument(docSents, Some(docAnnotation))
   }
 
-  def basicSanityCheck(doc:Document): Option[Annotation] = {
+  def basicSanityCheck(doc:Document, checkAnnotation:Boolean = true): Option[Annotation] = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")
     if (doc.sentences.size == 0) return None
     if (doc.sentences(0).words == null)
       throw new RuntimeException("ERROR: Sentence.words == null!")
-    val annotation = doc.asInstanceOf[CoreNLPDocument].annotation.getOrElse(
-      throw new RuntimeException("ERROR: annotator called after Document.clear()!"))
-    Some(annotation)
+
+    if(checkAnnotation) {
+      val annotation = doc.asInstanceOf[CoreNLPDocument].annotation.getOrElse(
+        throw new RuntimeException("ERROR: annotator called after Document.clear()!"))
+      Some(annotation)
+    } else {
+      None
+    }
   }
 
   def tagPartsOfSpeech(doc:Document) {
@@ -434,8 +439,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
 
   def discourse(doc:Document) {
     if(! withDiscourse) return
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
+    basicSanityCheck(doc, checkAnnotation = false)
 
     if (doc.sentences.head.tags == None)
       throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
