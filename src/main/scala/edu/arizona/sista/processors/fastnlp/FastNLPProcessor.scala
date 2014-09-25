@@ -130,8 +130,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
 
   override def discourse(doc:Document) {
     if(! withDiscourse) return
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
+    basicSanityCheck(doc, checkAnnotation = false)
 
     if (doc.sentences.head.tags == None)
       throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
