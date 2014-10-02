@@ -5,7 +5,7 @@
 # You need this to access the bleeding edge of processors from other projects
 #
 
-VERSION=3.1
+VERSION=3.3
 
 mvn clean package; ./scripts/mk_model_jar $VERSION
 

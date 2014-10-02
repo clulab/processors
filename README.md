@@ -18,6 +18,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 Contributors: Peter Jansen, Daniel Fried
 
 # Changes
++ **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
 + **3.1** - Minimal functionality added to the learning package. Changed to CoreNLP 3.3.1. 
 + **3.0** - Added a RST discourse parser to `CoreNLPProcessor`. Added the `edu.arizona.sista.learning` package. Utils classes are now under `edu.arizona.sista.utils` rather than `edu.arizona.sista.processors.utils`.

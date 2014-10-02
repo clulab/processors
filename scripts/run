@@ -8,7 +8,7 @@
 PROCESSORS_HOME=$HOME/github/processors
 M2=$HOME/.m2/repository
 HEAP=6g
-VER=3.2
+VER=3.3
 
 PROCESSORS_CLASSES=$PROCESSORS_HOME/target/classes:$PROCESSORS_HOME/target/test-classes
 #PROCESSORS_CLASSES=$PROCESSORS_HOME/target/processors-$VER.jar:$PROCESSORS_HOME/target/processors-$VER-models.jar

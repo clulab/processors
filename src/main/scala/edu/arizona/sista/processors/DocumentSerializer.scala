@@ -16,9 +16,23 @@ import collection.mutable
  */
 class DocumentSerializer {
 
+  /**
+   * This is deprecated! Please use load(r:BufferedReader) instead!
+   * This does not work correctly when multiple documents are serialized to the same file; load(r:BufferedReader) does.
+   **/
   def load(is:InputStream): Document = {
     val r = new BufferedReader(new InputStreamReader(is))
-    var bits = read(r)
+    load(r)
+  }
+
+  def load(r:BufferedReader): Document = {
+    var bits:Array[String] = null
+    try {
+      bits = read(r)
+    } catch {
+      case e:NullPointerException => return null // reached the end of stream
+      case e:Exception => throw e // something else bad
+    }
     assert(bits(0) == START_SENTENCES)
     val sentCount = bits(1).toInt
     val sents = new ArrayBuffer[Sentence]
@@ -38,6 +52,8 @@ class DocumentSerializer {
     var discourse:Option[DiscourseTree] = None
     if(bits(0) == START_DISCOURSE) {
       discourse = Some(loadDiscourse(r))
+      bits = read(r)
+      assert(bits(0) == END_OF_DOCUMENT)
     }
 
     new Document(sents.toArray, coref, discourse)
@@ -53,8 +69,9 @@ class DocumentSerializer {
   def load(s:String, encoding:String = "ISO-8859-1"): Document = {
     // println("Parsing annotation:\n" + s)
     val is = new ByteArrayInputStream(s.getBytes(encoding))
-    val doc = load(is)
-    is.close()
+    val r = new BufferedReader(new InputStreamReader(is))
+    val doc = load(r)
+    r.close()
     doc
   }
 
