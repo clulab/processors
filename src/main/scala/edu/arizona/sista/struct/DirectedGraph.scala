@@ -1,6 +1,7 @@
 package edu.arizona.sista.struct
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable
+import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 
 /**
  * A generic graph where the nodes have Int identifiers and edges have type E
@@ -150,5 +151,56 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
       nodeEdgeOffset = 0
     }
     return (from, edge._1, edge._2)
+  }
+}
+
+object DirectedGraph {
+  /**
+   * Constructs a graph from Stanford dependencies
+   * Note: Stanford indices start at 1, so we will decrement all indices by 1
+   */
+  def mkGraph(dependencies: Array[String]): DirectedGraph[String] = {
+    val edges = new ListBuffer[(Int, Int, String)]
+    val roots = new mutable.HashSet[Int]()
+    for (depLine <- dependencies) {
+      parseDep(depLine).foreach(dep => {
+        edges += dep
+        if (dep._1 == -1) roots.add(dep._2)
+      })
+    }
+    new DirectedGraph[String](edges.toList, roots.toSet)
+  }
+
+  /** Parses a line of the form "nsubjpass(expressed-15, CDK6-13)" into a tuple(14, 12, nsubjpass) */
+  def parseDep(line: String): Option[(Int, Int, String)] = {
+    val endLabel = line.indexOf("(")
+    assert(endLabel > 0)
+    val label = line.substring(0, endLabel)
+    println("LABEL = " + label)
+    assert(line.last == ')')
+    val hm = line.substring(endLabel + 1, line.length - 1)
+    println("HM = " + hm)
+    val sep = hm.indexOf(", ")
+    assert(sep > 0)
+    val h = hm.substring(0, sep)
+    val m = hm.substring(sep + 2)
+    val hv = cleanNumber(h.substring(h.lastIndexOf("-") + 1)).toInt // remove appostrophies which indicate duplicated nodes, see http://nlp.stanford.edu/software/dependencies_manual.pdf#page=16
+    val mv = cleanNumber(m.substring(m.lastIndexOf("-") + 1)).toInt
+
+    if (hv == mv) {
+      // this simply indicates a duplicated node; not a real dependency
+      None
+    } else {
+      Some(hv, mv, label)
+    }
+  }
+
+  def cleanNumber(v: String): String = {
+    val b = new mutable.StringBuilder()
+    for (i <- 0 until v.length) {
+      if (Character.isDigit(v.charAt(i)))
+        b.append(v.charAt(i))
+    }
+    b.toString()
   }
 }

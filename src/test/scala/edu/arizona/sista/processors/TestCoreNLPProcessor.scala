@@ -1,7 +1,6 @@
 package edu.arizona.sista.processors
 
 import edu.arizona.sista.discourse.rstparser.RelationDirection
-import edu.arizona.sista.struct.Trees
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.Assert._
 import org.junit.{Before, Test}
@@ -237,30 +236,6 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
 
     val beijing = new CorefMention(1, 2, 2, 3, -1)
     assertTrue(mentions.contains(beijing))
-  }
-
-  @Test def testBaseNPs() {
-    val doc = proc.mkDocumentFromSentences(List("John Doe, the president of IBM, went to China"))
-    proc.parse(doc)
-    doc.clear()
-
-    doc.sentences.head.syntacticTree.foreach(t => {
-      val bnps = Trees.findBaseNounPhrases(t).toArray
-      println(bnps.toList)
-      assertTrue(bnps.length == 4)
-      val np1 = bnps(0)
-      assertTrue(np1.startOffset == 0)
-      assertTrue(np1.endOffset == 2)
-      val np2 = bnps(1)
-      assertTrue(np2.startOffset == 3)
-      assertTrue(np2.endOffset == 5)
-      val np3 = bnps(2)
-      assertTrue(np3.startOffset == 6)
-      assertTrue(np3.endOffset == 7)
-      val np4 = bnps(3)
-      assertTrue(np4.startOffset == 10)
-      assertTrue(np4.endOffset == 11)
-    })
   }
 
   @Test def testHeadWords() {

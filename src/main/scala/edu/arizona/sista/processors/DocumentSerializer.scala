@@ -95,6 +95,11 @@ class DocumentSerializer {
     var offset = 0
     while(offset < tokenCount) {
       bits = read(r)
+
+      if(bits.length != 8) {
+        throw new RuntimeException("ERROR: invalid line: " + bits.mkString(" "))
+      }
+
       assert(bits.length == 8)
       wordBuffer += bits(0)
       startOffsetBuffer += bits(1).toInt
