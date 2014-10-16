@@ -1,0 +1,115 @@
+CONFIGURATION
+Configuration name:   nivreeager-en-crammer
+Configuration type:   singlemalt
+Created:              Fri Jan 10 18:21:50 MST 2014
+
+SYSTEM
+Operating system architecture: x86_64
+Operating system name:         Mac OS X
+JRE vendor name:               Apple Inc.
+JRE version number:            1.6.0_65
+
+MALTPARSER
+Version:                       1.7.2
+Build date:                    September 25 2012
+
+SETTINGS
+2planar
+  reduceonswitch (-2pr)                 false
+config
+  workingdir (  -w)                     user.dir
+  name (  -c)                           nivreeager-en-crammer
+  logging ( -cl)                        info
+  flowchart (  -m)                      learn
+  type (  -t)                           singlemalt
+  modeldir ( -md)                       
+  logfile (-lfi)                        stdout
+  url (  -u)                            
+covington
+  allow_root ( -cr)                     true
+  allow_shift ( -cs)                    false
+graph
+  max_sentence_length (-gsl)            256
+  head_rules (-ghr)                     
+  root_label (-grl)                     ROOT
+guide
+  decision_settings (-gds)              T.TRANS+A.DEPREL
+  kbest_type ( -kt)                     rank
+  data_split_structure (  -s)           
+  learner (  -l)                        liblinear
+  kbest (  -k)                          -1
+  features (  -F)                       
+  classitem_separator (-gcs)            ~
+  data_split_column (  -d)              
+  data_split_threshold (  -T)           50
+input
+  infile (  -i)                         corpora/stanford/train.stanford
+  reader ( -ir)                         tab
+  iterations ( -it)                     1
+  charset ( -ic)                        UTF-8
+  reader_options (-iro)                 
+  format ( -if)                         /appdata/dataformat/conllx.xml
+lib
+  save_instance_files ( -li)            false
+  external ( -lx)                       
+  verbosity ( -lv)                      all
+  options ( -lo)                        -s_4_-e_0.1_-c_0.2_-B_1.0
+multiplanar
+  planar_root_handling (-prh)           normal
+nivre
+  allow_root ( -nr)                     true
+  allow_reduce ( -ne)                   false
+output
+  charset ( -oc)                        UTF-8
+  writer_options (-owo)                 
+  format ( -of)                         
+  writer ( -ow)                         tab
+  outfile (  -o)                        
+planar
+  no_covered_roots (-pcov)               false
+  connectedness (-pcon)                  none
+  acyclicity (-pacy)                     true
+pproj
+  covered_root (-pcr)                   none
+  marking_strategy ( -pp)               none
+  lifting_order (-plo)                  shortest
+singlemalt
+  parsing_algorithm (  -a)              nivreeager
+  null_value ( -nv)                     one
+  guide_model ( -gm)                    single
+  propagation ( -fp)                    
+  diagnostics ( -di)                    false
+  use_partial_tree ( -up)               false
+  diafile (-dif)                        stdout
+  mode ( -sm)                           parse
+
+DEPENDENCIES
+--guide-features (  -F)                 NivreEager.xml
+
+FEATURE MODEL
+MAIN
+InputColumn(FORM,Input[0])
+InputColumn(FORM,Input[1])
+InputColumn(FORM,Stack[0])
+InputColumn(FORM,head(Stack[0]))
+InputColumn(POSTAG,Input[0])
+InputColumn(POSTAG,Input[1])
+InputColumn(POSTAG,Input[2])
+InputColumn(POSTAG,Input[3])
+InputColumn(POSTAG,Stack[0])
+InputColumn(POSTAG,Stack[1])
+Merge(InputColumn(POSTAG,Input[0]),OutputColumn(DEPREL,ldep(Input[0])))
+Merge(InputColumn(POSTAG,Stack[0]),InputColumn(POSTAG,Input[0]))
+Merge(InputColumn(POSTAG,Stack[0]),OutputColumn(DEPREL,Stack[0]))
+Merge3(InputColumn(POSTAG,Input[0]),InputColumn(POSTAG,Input[1]),InputColumn(POSTAG,Input[2]))
+Merge3(InputColumn(POSTAG,Input[1]),InputColumn(POSTAG,Input[2]),InputColumn(POSTAG,Input[3]))
+Merge3(InputColumn(POSTAG,Stack[0]),InputColumn(POSTAG,Input[0]),InputColumn(POSTAG,Input[1]))
+Merge3(InputColumn(POSTAG,Stack[0]),OutputColumn(DEPREL,ldep(Stack[0])),OutputColumn(DEPREL,rdep(Stack[0])))
+Merge3(InputColumn(POSTAG,Stack[1]),InputColumn(POSTAG,Stack[0]),InputColumn(POSTAG,Input[0]))
+OutputColumn(DEPREL,Stack[0])
+OutputColumn(DEPREL,ldep(Input[0]))
+OutputColumn(DEPREL,ldep(Stack[0]))
+OutputColumn(DEPREL,rdep(Stack[0]))
+
+liblinear INTERFACE
+-s 4 -c 0.2 -e 0.1 -B 1.0 

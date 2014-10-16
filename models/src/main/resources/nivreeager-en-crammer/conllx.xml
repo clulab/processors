@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="conllx">
+	<column name="ID" category="INPUT" type="INTEGER"/>
+	<column name="FORM" category="INPUT" type="STRING"/>
+	<column name="LEMMA" category="INPUT" type="STRING"/>
+	<column name="CPOSTAG" category="INPUT" type="STRING"/>
+	<column name="POSTAG" category="INPUT" type="STRING"/>
+	<column name="FEATS" category="INPUT" type="STRING"/>
+	<column name="HEAD" category="HEAD" type="INTEGER"/>
+	<column name="DEPREL" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
+	<column name="PHEAD" category="IGNORE" type="INTEGER" default="_"/>
+	<column name="PDEPREL" category="IGNORE" type="STRING" default="_"/>
+</dataformat>
