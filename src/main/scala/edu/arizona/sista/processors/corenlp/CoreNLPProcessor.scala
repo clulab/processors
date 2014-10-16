@@ -2,7 +2,7 @@ package edu.arizona.sista.processors.corenlp
 
 import edu.arizona.sista.discourse.rstparser.RSTParser
 import edu.arizona.sista.processors._
-import edu.arizona.sista.struct.{Tree, MutableNumber, DirectedGraph}
+import edu.arizona.sista.struct._
 import edu.stanford.nlp.pipeline.{StanfordCoreNLP,Annotation}
 import java.util.Properties
 import collection.mutable.{ListBuffer, ArrayBuffer}
@@ -353,21 +353,18 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
 
   private def toTree(
     stanfordTree:edu.stanford.nlp.trees.Tree,
-    position:MutableNumber[Int]):Tree[String] = {
+    position:MutableNumber[Int]):Tree = {
     assert(stanfordTree != null)
 
     if (stanfordTree.isLeaf) {
-      val tree = new Tree[String](
-        stanfordTree.label.value(),
-        None, 0,
-        position.value,
-        position.value + 1)
+      val tree = Terminal(stanfordTree.label.value())
+      tree.setIndex(position.value)
       position.value += 1
       return tree
     }
 
     // println("Converting tree: " + stanfordTree.toString)
-    val children = new Array[Tree[String]](stanfordTree.numChildren())
+    val children = new Array[Tree](stanfordTree.numChildren())
     for (i <- 0 until stanfordTree.numChildren()) {
       children(i) = toTree(stanfordTree.getChild(i), position)
     }
@@ -385,7 +382,10 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
       i += 1
     }
 
-    new Tree[String](value, Some(children), head, start, end)
+    val nt = NonTerminal(value, children)
+    nt.setStartEndIndices(start, end)
+    nt.setHead(head)
+    nt
   }
 
   def chunking(doc:Document) {

@@ -44,7 +44,7 @@ class Sentence(
                 /** Shallow parsing labels */
                 var chunks:Option[Array[String]],
                 /** Constituent tree of this sentence; includes head words */
-                var syntacticTree:Option[Tree[String]],
+                var syntacticTree:Option[Tree],
                 /** DAG of syntactic dependencies; word offsets start at 0 */
                 var dependencies:Option[DirectedGraph[String]]) extends Serializable {
 

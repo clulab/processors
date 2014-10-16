@@ -38,11 +38,11 @@ object Utils {
     "E"
   }
 
-  def sameSubtree(t1:Tree[String], t2:Tree[String]) =
+  def sameSubtree(t1:Tree, t2:Tree) =
     if(t1 != null && t2 != null && t1.startOffset == t2.startOffset && t1.endOffset == t2.endOffset) true else false
 
   /** Finds the smallest subtree with label S* that includes this discourse fragment */
-  def findSubtree(tree:DiscourseTree, doc:Document):Tree[String] = {
+  def findSubtree(tree:DiscourseTree, doc:Document):Tree = {
     // this only makes sense if fragment in a single sentence
     if(tree.firstSentence != tree.lastSentence) return null
     // this can only be done if syntactic analysis provided
@@ -59,9 +59,9 @@ object Utils {
   }
 
   /** Finds the smallest subtree with label S* that includes this span */
-  def findSubtree(tree:Tree[String], start:Int, end:Int):Tree[String] = {
+  def findSubtree(tree:Tree, start:Int, end:Int):Tree = {
     if(! tree.isLeaf) {
-      var m:Tree[String] = null
+      var m:Tree = null
       for (c <- tree.children.get if m == null) {
         m = findSubtree(c, start, end)
       }
@@ -157,10 +157,10 @@ object Utils {
   }
 
   def findSyntacticParentWithRightSibling(
-                          root:Tree[String],
+                          root:Tree,
                           position:Int,
-                          parent:Tree[String] = null,
-                          right:Tree[String] = null):(Tree[String], Tree[String], Tree[String]) = {
+                          parent:Tree = null,
+                          right:Tree = null):(Tree, Tree, Tree) = {
     //println("inspecting tree " + root)
     if(root.headOffset == position && right != null) {
       return new Tuple3(root, parent, right)
@@ -171,7 +171,7 @@ object Utils {
       //println(s"found ${root.children.get.length} children.")
       for(i <- 0 until root.children.get.length) {
         val c = root.children.get(i)
-        var r:Tree[String] = null
+        var r:Tree = null
         if(i < root.children.get.length - 1) r = root.children.get(i + 1)
         val v = findSyntacticParentWithRightSibling(c, position, root, r)
         if(v._1 != null) return v
@@ -182,9 +182,9 @@ object Utils {
   }
 
   def findSyntacticParent(
-    root:Tree[String],
+    root:Tree,
     position:Int,
-    parent:Tree[String] = null):(Tree[String], Tree[String]) = {
+    parent:Tree = null):(Tree, Tree) = {
     //println("inspecting tree " + root)
     if(root.headOffset == position) {
       return new Tuple2(root, parent)
@@ -233,10 +233,10 @@ object Utils {
   }
 
 
-  def findSyntacticHead( root:Tree[String],
-                         parent:Tree[String],
+  def findSyntacticHead( root:Tree,
+                         parent:Tree,
                          first:Int,
-                         last:Int): (Tree[String], Tree[String]) = {
+                         last:Int): (Tree, Tree) = {
     if(root.headOffset >= first && root.headOffset <= last) {
       return new Tuple2(root, parent)
     }
@@ -252,9 +252,9 @@ object Utils {
     (null, null)
   }
 
-  def findSmallestCommonAncestor( root:Tree[String],
+  def findSmallestCommonAncestor( root:Tree,
                                   first:Int,
-                                  last:Int): Tree[String] = {
+                                  last:Int): Tree = {
     if(! root.isLeaf) {
       assert(root.children.isDefined)
       for(c <- root.children.get) {

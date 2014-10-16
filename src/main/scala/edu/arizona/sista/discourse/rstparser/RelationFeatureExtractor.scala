@@ -207,8 +207,8 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
         //println(s"For DT with span [${left.firstToken}, ${left.lastToken}] found this tree as head:\n$leftHead")
         //println(s"For DT with span [${right.firstToken}, ${right.lastToken}] found this tree as head:\n$rightHead")
 
-        var dominating:Tree[String] = null
-        var dominated:Tree[String] = null
+        var dominating:Tree = null
+        var dominated:Tree = null
         var leftDominates = true
 
         if (rightHeadParent != null &&
@@ -303,7 +303,7 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
   def writePositionFeatures(tree:DiscourseTree,
                             doc:Document,
                             edus:Array[Array[(Int, Int)]],
-                            subtree:Tree[String],
+                            subtree:Tree,
                             suffix:String) {
     if(tree.firstToken.sentence == tree.lastToken.sentence) {
       f("Inside_sentence_" + suffix, 1)

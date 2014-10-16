@@ -3,7 +3,7 @@ package edu.arizona.sista.processors
 import java.io._
 import edu.arizona.sista.discourse.rstparser.{TreeKind, TokenOffset, RelationDirection, DiscourseTree}
 import edu.arizona.sista.processors.DocumentSerializer._
-import edu.arizona.sista.struct.{Tree, MutableNumber, DirectedGraphEdgeIterator, DirectedGraph}
+import edu.arizona.sista.struct._
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import collection.mutable
 
@@ -127,7 +127,7 @@ class DocumentSerializer {
     assert(chunkBuffer.size == 0 || chunkBuffer.size == tokenCount)
 
     var deps:Option[DirectedGraph[String]] = None
-    var tree:Option[Tree[String]] = None
+    var tree:Option[Tree] = None
     do {
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
@@ -227,7 +227,7 @@ class DocumentSerializer {
     os.println(END_OF_SENTENCE)
   }
 
-  private def saveTree(tree:Tree[String], os:PrintWriter) {
+  private def saveTree(tree:Tree, os:PrintWriter) {
     os.print(tree.value + SEP + tree.head + SEP + tree.startOffset + SEP + tree.endOffset + SEP)
     if (tree.children == None) os.print(0)
     else os.print(tree.children.get.length)
@@ -239,7 +239,7 @@ class DocumentSerializer {
     }
   }
 
-  private def loadTree(bits:Array[String], position:MutableNumber[Int]):Tree[String] = {
+  private def loadTree(bits:Array[String], position:MutableNumber[Int]):Tree = {
     val value = bits(position.value)
     val head = bits(position.value + 1).toInt
     val startOffset = bits(position.value + 2).toInt
@@ -248,15 +248,22 @@ class DocumentSerializer {
     position.value += 5
 
     if (numChildren == 0) {
-      return new Tree[String](value, None, head, startOffset, endOffset)
+      val t = Terminal(value)
+      t.setIndex(startOffset)
+      return t
+      // return new Tree[String](value, None, head, startOffset, endOffset)
     }
 
-    val children = new Array[Tree[String]](numChildren)
+    val children = new Array[Tree](numChildren)
     for (i <- 0 until numChildren) {
       children(i) = loadTree(bits, position)
     }
 
-    new Tree[String](value, Some(children), head, startOffset, endOffset)
+    val n = new NonTerminal(value, children)
+    n.setStartEndIndices(startOffset, endOffset)
+    n.setHead(head)
+    n
+    // new Tree[String](value, Some(children), head, startOffset, endOffset)
   }
 
   private def saveToken(sent:Sentence, offset:Int, os:PrintWriter) {
