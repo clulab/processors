@@ -47,6 +47,7 @@ case class PathMatcher(lhs: Matcher, rhs: Matcher) extends Matcher {
 
 
 class DependencyMatcher(val pattern: String) {
+  private var triggerFieldName = "trigger"
   private var _trigger: Option[TriggerMatcher] = None
   private var _arguments: Option[Map[String, Matcher]] = None
 
@@ -62,8 +63,8 @@ class DependencyMatcher(val pattern: String) {
       case fieldPat(name, value) => (name -> value)
     }
     val fields = Map(it.toSeq: _*)
-    _trigger = Some(TriggerMatcher(fields("trigger")))
-    _arguments = Some(fields filterKeys (_ != "trigger") mapValues Parser.parse)
+    _trigger = Some(TriggerMatcher(fields(triggerFieldName)))
+    _arguments = Some(fields filterKeys (_ != triggerFieldName) mapValues Parser.parse)
   }
 
   private def getFieldValue[T](field: Option[T]) = field match {
