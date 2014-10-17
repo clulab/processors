@@ -63,9 +63,7 @@ class DependencyMatcher(val pattern: String) {
     }
     val fields = Map(it.toSeq: _*)
     _trigger = Some(TriggerMatcher(fields("trigger")))
-    _arguments = Some(fields filterNot {
-      case (k, v) => k == "trigger"
-    } mapValues Parser.parse)
+    _arguments = Some(fields filter { case (k, v) => k != "trigger" } mapValues Parser.parse)
   }
 
   private def getFieldValue[T](field: Option[T]) = field match {
@@ -88,23 +86,21 @@ class DependencyMatcher(val pattern: String) {
     else Some(matches.toMap)
   }
 
-}
+  private object Parser extends RegexParsers {
+    def parse(input: String): Matcher = parseAll(matcher, input).get
 
+    def token: Parser[String] = """(\w+)""".r
 
-object Parser extends RegexParsers {
-  def parse(input: String): Matcher = parseAll(matcher, input).get
+    def matcher: Parser[Matcher] = pathMatcher
 
-  def token: Parser[String] = """(\w+)""".r
+    def depMatcher: Parser[Matcher] = token ^^ {
+      DepMatcher(_)
+    }
 
-  def matcher: Parser[Matcher] = pathMatcher
-
-  def depMatcher: Parser[Matcher] = token ^^ {
-    DepMatcher(_)
-  }
-
-  def pathMatcher: Parser[Matcher] = depMatcher ~ rep(">" ~ depMatcher) ^^ {
-    case m ~ rest => (m /: rest) {
-      case (lhs, ">" ~ rhs) => PathMatcher(lhs, rhs)
+    def pathMatcher: Parser[Matcher] = depMatcher ~ rep(">" ~ depMatcher) ^^ {
+      case m ~ rest => (m /: rest) {
+        case (lhs, ">" ~ rhs) => PathMatcher(lhs, rhs)
+      }
     }
   }
 }
