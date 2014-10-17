@@ -4,17 +4,6 @@ import scala.util.parsing.combinator._
 import edu.arizona.sista.processors.Sentence
 
 
-/*
-name: phosphorylation
-priority: 1
-type: sista
-pattern: {{
-  trigger: token="phosphorylates"
-  theme: "dobj"
-  cause: "nsubj"
-}}
-*/
-
 case class TriggerMatcher(token: String) {
   def findAllIn(sentence: Sentence): Seq[Int] = {
     sentence.words.zipWithIndex filter (_._1 == token) map (_._2)
@@ -24,12 +13,19 @@ case class TriggerMatcher(token: String) {
 
 trait Matcher {
   def findIn(sentence: Sentence, from: Int): Option[Int]
+
+  // get dependencies for sentence if available
+  protected def dependencies(sentence: Sentence) = sentence.dependencies match {
+    case None => throw new Error("no dependencies in sentence")
+    case Some(deps) => deps
+  }
 }
 
 
 case class ExactOutgoingDepMatcher(dep: String) extends Matcher {
   def findIn(sentence: Sentence, from: Int): Option[Int] = {
-    val matches = sentence.dependencies.get.outgoingEdges(from) filter (_._2 == dep) map (_._1)
+    val deps = dependencies(sentence)
+    val matches = deps.outgoingEdges(from) filter (_._2 == dep) map (_._1)
     if (matches.size == 1) Some(matches.head)
     else None
   }
@@ -38,7 +34,8 @@ case class ExactOutgoingDepMatcher(dep: String) extends Matcher {
 
 case class ExactIncomingDepMatcher(dep: String) extends Matcher {
   def findIn(sentence: Sentence, from: Int): Option[Int] = {
-    val matches = sentence.dependencies.get.incomingEdges(from) filter (_._2 == dep) map (_._1)
+    val deps = dependencies(sentence)
+    val matches = deps.incomingEdges(from) filter (_._2 == dep) map (_._1)
     if (matches.size == 1) Some(matches.head)
     else None
   }
