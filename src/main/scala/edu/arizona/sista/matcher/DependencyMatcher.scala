@@ -63,7 +63,7 @@ class DependencyMatcher(val pattern: String) {
     }
     val fields = Map(it.toSeq: _*)
     _trigger = Some(TriggerMatcher(fields("trigger")))
-    _arguments = Some(fields filter { case (k, v) => k != "trigger" } mapValues Parser.parse)
+    _arguments = Some(fields filterKeys (_ != "trigger") mapValues Parser.parse)
   }
 
   private def getFieldValue[T](field: Option[T]) = field match {
