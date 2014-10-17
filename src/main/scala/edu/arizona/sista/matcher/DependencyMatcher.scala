@@ -27,9 +27,18 @@ trait Matcher {
 }
 
 
-case class DepMatcher(dep: String) extends Matcher {
+case class ExactOutgoingDepMatcher(dep: String) extends Matcher {
   def findIn(sentence: Sentence, from: Int): Option[Int] = {
     val matches = sentence.dependencies.get.outgoingEdges(from) filter (_._2 == dep) map (_._1)
+    if (matches.size == 1) Some(matches.head)
+    else None
+  }
+}
+
+
+case class ExactIncomingDepMatcher(dep: String) extends Matcher {
+  def findIn(sentence: Sentence, from: Int): Option[Int] = {
+    val matches = sentence.dependencies.get.incomingEdges(from) filter (_._2 == dep) map (_._1)
     if (matches.size == 1) Some(matches.head)
     else None
   }
@@ -90,17 +99,23 @@ class DependencyMatcher(val pattern: String) {
   private object Parser extends RegexParsers {
     def parse(input: String): Matcher = parseAll(matcher, input).get
 
-    def token: Parser[String] = """(\w+)""".r
+    def token: Parser[String] = """\w+""".r
 
     def matcher: Parser[Matcher] = pathMatcher
 
-    def depMatcher: Parser[Matcher] = token ^^ {
-      DepMatcher(_)
+    def outgoingDepMatcher: Parser[Matcher] = """>?""".r ~> token ^^ {
+      ExactOutgoingDepMatcher(_)
     }
 
-    def pathMatcher: Parser[Matcher] = depMatcher ~ rep(">" ~ depMatcher) ^^ {
+    def incomingDepMatcher: Parser[Matcher] = "<" ~> token ^^ {
+      ExactIncomingDepMatcher(_)
+    }
+
+    def depMatcher: Parser[Matcher] = outgoingDepMatcher | incomingDepMatcher
+
+    def pathMatcher: Parser[Matcher] = depMatcher ~ rep(depMatcher) ^^ {
       case m ~ rest => (m /: rest) {
-        case (lhs, ">" ~ rhs) => PathMatcher(lhs, rhs)
+        case (lhs, rhs) => PathMatcher(lhs, rhs)
       }
     }
   }
