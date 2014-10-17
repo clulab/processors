@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1" classifier "models",
   "ch.qos.logback" % "logback-classic" % "1.0.10",
+  "org.slf4j" % "slf4j-api" % "1.7.3",
   "nz.ac.waikato.cms.weka" % "weka-dev" % "3.7.10",
   "net.sf.jopt-simple" % "jopt-simple" % "4.5",
   "de.bwaldvogel" % "liblinear" % "1.94",
