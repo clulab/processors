@@ -19,7 +19,7 @@ object TestDependencyMatcher extends App {
      trigger: drove
      agent: nsubj
      patient: dobj
-     posstest: dobj > poss
+     posstest: /^d/ > poss
      destination: prep
      """) // Unfortunately, FastNLP doesn't return collapsed deps
   )

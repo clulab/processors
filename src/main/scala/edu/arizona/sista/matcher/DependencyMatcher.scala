@@ -1,5 +1,6 @@
 package edu.arizona.sista.matcher
 
+import scala.util.matching.Regex
 import scala.util.parsing.combinator._
 import edu.arizona.sista.processors.Sentence
 
@@ -11,7 +12,7 @@ case class TriggerMatcher(token: String) {
 }
 
 
-trait Matcher {
+trait DepMatcher {
   def findIn(sentence: Sentence, from: Int): Option[Int]
 
   // get dependencies for sentence if available
@@ -22,27 +23,43 @@ trait Matcher {
 }
 
 
-case class ExactOutgoingDepMatcher(dep: String) extends Matcher {
+trait NameMatcher {
+  def matches(edges: Seq[(Int, String)]): Seq[Int]
+}
+
+
+case class ExactNameMatcher(dep: String) extends NameMatcher {
+  def matches(edges: Seq[(Int, String)]): Seq[Int] = {
+    edges filter (_._2 == dep) map (_._1)
+  }
+}
+
+case class RegexNameMatcher(rx: Regex) extends NameMatcher {
+  def matches(edges: Seq[(Int, String)]): Seq[Int] = {
+    edges filter (e => rx.findFirstIn(e._2).nonEmpty) map (_._1)
+  }
+}
+
+case class IncomingDepMatcher(matcher: NameMatcher) extends DepMatcher {
   def findIn(sentence: Sentence, from: Int): Option[Int] = {
     val deps = dependencies(sentence)
-    val matches = deps.outgoingEdges(from) filter (_._2 == dep) map (_._1)
+    val matches = matcher matches deps.incomingEdges(from)
+    if (matches.size == 1) Some(matches.head)
+    else None
+  }
+}
+
+case class OutgoingDepMatcher(matcher: NameMatcher) extends DepMatcher {
+  def findIn(sentence: Sentence, from: Int): Option[Int] = {
+    val deps = dependencies(sentence)
+    val matches = matcher matches deps.outgoingEdges(from)
     if (matches.size == 1) Some(matches.head)
     else None
   }
 }
 
 
-case class ExactIncomingDepMatcher(dep: String) extends Matcher {
-  def findIn(sentence: Sentence, from: Int): Option[Int] = {
-    val deps = dependencies(sentence)
-    val matches = deps.incomingEdges(from) filter (_._2 == dep) map (_._1)
-    if (matches.size == 1) Some(matches.head)
-    else None
-  }
-}
-
-
-case class PathMatcher(lhs: Matcher, rhs: Matcher) extends Matcher {
+case class PathMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
   def findIn(sentence: Sentence, from: Int): Option[Int] = {
     lhs.findIn(sentence, from) match {
       case None => None
@@ -55,7 +72,7 @@ case class PathMatcher(lhs: Matcher, rhs: Matcher) extends Matcher {
 class DependencyMatcher(val pattern: String) {
   private var triggerFieldName = "trigger"
   private var _trigger: Option[TriggerMatcher] = None
-  private var _arguments: Option[Map[String, Matcher]] = None
+  private var _arguments: Option[Map[String, DepMatcher]] = None
 
   def trigger = getFieldValue(_trigger)
 
@@ -94,25 +111,50 @@ class DependencyMatcher(val pattern: String) {
   }
 
   private object Parser extends RegexParsers {
-    def parse(input: String): Matcher = parseAll(matcher, input).get
+    def parse(input: String): DepMatcher = parseAll(matcher, input).get
 
     def token: Parser[String] = """\w+""".r
 
-    def matcher: Parser[Matcher] = pathMatcher
+    def matcher: Parser[DepMatcher] = pathMatcher
 
-    def outgoingDepMatcher: Parser[Matcher] = """>?""".r ~> token ^^ {
-      ExactOutgoingDepMatcher(_)
+    def exactMatcher: Parser[NameMatcher] = token ^^ {
+      ExactNameMatcher(_)
     }
 
-    def incomingDepMatcher: Parser[Matcher] = "<" ~> token ^^ {
-      ExactIncomingDepMatcher(_)
+    def regexMatcher: Parser[NameMatcher] = regexMatch("""/(.*)/""".r) ^^ {
+      case m => RegexNameMatcher(m.group(1).r)
     }
 
-    def depMatcher: Parser[Matcher] = outgoingDepMatcher | incomingDepMatcher
+    def nameMatcher: Parser[NameMatcher] = exactMatcher | regexMatcher
 
-    def pathMatcher: Parser[Matcher] = depMatcher ~ rep(depMatcher) ^^ {
+    def outgoingMatcher: Parser[DepMatcher] = """>?""".r ~> nameMatcher ^^ {
+      OutgoingDepMatcher(_)
+    }
+
+    def incomingMatcher: Parser[DepMatcher] = "<" ~> nameMatcher ^^ {
+      IncomingDepMatcher(_)
+    }
+
+    def depMatcher: Parser[DepMatcher] = outgoingMatcher | incomingMatcher
+
+    def pathMatcher: Parser[DepMatcher] = depMatcher ~ rep(depMatcher) ^^ {
       case m ~ rest => (m /: rest) {
         case (lhs, rhs) => PathMatcher(lhs, rhs)
+      }
+    }
+
+    def regexMatch(r: Regex): Parser[Regex.Match] = new Parser[Regex.Match] {
+      def apply(in: Input) = {
+        val source = in.source
+        val offset = in.offset
+        val start = handleWhiteSpace(source, offset)
+        (r findPrefixMatchOf (source.subSequence(start, source.length))) match {
+          case Some(matched) =>
+            Success(matched, in.drop(start + matched.end - offset))
+          case None =>
+            val found = if (start == source.length()) "end of source" else "`"+source.charAt(start)+"'"
+            Failure("string matching regex `"+r+"' expected but "+found+" found", in.drop(start - offset))
+        }
       }
     }
   }
