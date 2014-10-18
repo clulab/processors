@@ -124,7 +124,7 @@ class DependencyMatcher(val pattern: String) {
 
     def nameMatcher: Parser[NameMatcher] = exactMatcher | regexMatcher
 
-    def outgoingMatcher: Parser[DepMatcher] = """>?""".r ~> nameMatcher ^^ {
+    def outgoingMatcher: Parser[DepMatcher] = opt(">") ~> nameMatcher ^^ {
       DirectedDepMatcher(_, Outgoing)
     }
 
