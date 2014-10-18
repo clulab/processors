@@ -103,7 +103,10 @@ class DependencyMatcher(val pattern: String) {
   }
 
   private object Parser extends RegexParsers {
-    def parse(input: String): DepMatcher = parseAll(matcher, input).get
+    def parse(input: String): DepMatcher = parseAll(matcher, input) match {
+      case Success(result, _) => result
+      case failure: NoSuccess => scala.sys.error(failure.msg)
+    }
 
     def token: Parser[String] = """\w+""".r
 
