@@ -40,19 +40,19 @@ case class RegexNameMatcher(rx: Regex) extends NameMatcher {
   }
 }
 
-case class IncomingDepMatcher(matcher: NameMatcher) extends DepMatcher {
-  def findIn(sentence: Sentence, from: Int): Option[Int] = {
-    val deps = dependencies(sentence)
-    val matches = matcher matches deps.incomingEdges(from)
-    if (matches.size == 1) Some(matches.head)
-    else None
-  }
-}
 
-case class OutgoingDepMatcher(matcher: NameMatcher) extends DepMatcher {
+object Direction extends Enumeration {
+  type Direction = Value
+  val Incoming, Outgoing = Value
+}
+import Direction._
+
+
+case class DirectedDepMatcher(matcher: NameMatcher, direction: Direction) extends DepMatcher {
   def findIn(sentence: Sentence, from: Int): Option[Int] = {
     val deps = dependencies(sentence)
-    val matches = matcher matches deps.outgoingEdges(from)
+    val edges = if (direction == Incoming) deps.incomingEdges else deps.outgoingEdges
+    val matches = matcher matches edges(from)
     if (matches.size == 1) Some(matches.head)
     else None
   }
@@ -128,11 +128,11 @@ class DependencyMatcher(val pattern: String) {
     def nameMatcher: Parser[NameMatcher] = exactMatcher | regexMatcher
 
     def outgoingMatcher: Parser[DepMatcher] = """>?""".r ~> nameMatcher ^^ {
-      OutgoingDepMatcher(_)
+      DirectedDepMatcher(_, Outgoing)
     }
 
     def incomingMatcher: Parser[DepMatcher] = "<" ~> nameMatcher ^^ {
-      IncomingDepMatcher(_)
+      DirectedDepMatcher(_, Incoming)
     }
 
     def depMatcher: Parser[DepMatcher] = outgoingMatcher | incomingMatcher
