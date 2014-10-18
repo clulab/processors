@@ -102,17 +102,15 @@ class DependencyMatcher(val pattern: String) {
     else Some(matches.toMap)
   }
 
-  private object Parser extends RegexParsers {
+  private object Parser extends JavaTokenParsers {
     def parse(input: String): DepMatcher = parseAll(matcher, input) match {
       case Success(result, _) => result
       case failure: NoSuccess => scala.sys.error(failure.msg)
     }
 
-    def token: Parser[String] = """\w+""".r
-
     def matcher: Parser[DepMatcher] = pathMatcher
 
-    def exactMatcher: Parser[NameMatcher] = token ^^ {
+    def exactMatcher: Parser[NameMatcher] = ident ^^ {
       ExactNameMatcher(_)
     }
 
