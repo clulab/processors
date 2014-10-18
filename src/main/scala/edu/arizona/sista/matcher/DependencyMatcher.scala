@@ -116,7 +116,7 @@ class DependencyMatcher(val pattern: String) {
 
     // match a perl style "/" delimited regular expression
     // "\" is the escape character, so "\/" becomes "/"
-    def regexLiteral: Parser[String] = """/([^\\/]*(?:\\.[^\\/]*)*)/""".r ^^ {
+    def regexLiteral: Parser[String] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
       case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/")
     }
 
