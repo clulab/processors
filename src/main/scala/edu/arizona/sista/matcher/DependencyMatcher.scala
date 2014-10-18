@@ -102,7 +102,7 @@ class DependencyMatcher(val pattern: String) {
     else Some(matches.toMap)
   }
 
-  private object Parser extends JavaTokenParsers {
+  private object Parser extends RegexParsers {
     def parse(input: String): DepMatcher = parseAll(matcher, input) match {
       case Success(result, _) => result
       case failure: NoSuccess => scala.sys.error(failure.msg)
@@ -110,14 +110,30 @@ class DependencyMatcher(val pattern: String) {
 
     def matcher: Parser[DepMatcher] = pathMatcher
 
-    def exactMatcher: Parser[NameMatcher] = ident ^^ {
-      ExactNameMatcher(_)
+    def ident: Parser[String] =
+      """\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*""".r
+
+    def stringLiteral: Parser[String] = """"[^\\"]*(?:\\.[^\\"]*)*"""".r ^^ {
+      case s =>
+        def unescape(m: Regex.Match) = m.group(1) match {
+          case "t" => "\t"
+          case "b" => "\b"
+          case "n" => "\n"
+          case "r" => "\r"
+          case "f" => "\f"
+          case c => c
+        }
+        """\\(.)""".r.replaceAllIn(s.drop(1).dropRight(1), unescape _)
     }
 
     // match a perl style "/" delimited regular expression
     // "\" is the escape character, so "\/" becomes "/"
     def regexLiteral: Parser[String] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
       case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/")
+    }
+
+    def exactMatcher: Parser[NameMatcher] = (ident | stringLiteral) ^^ {
+      ExactNameMatcher(_)
     }
 
     def regexMatcher: Parser[NameMatcher] = regexLiteral ^^ {
