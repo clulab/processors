@@ -21,7 +21,7 @@ object TestDependencyMatcher extends App {
      patient: dobj
      posstest: /^d/ > poss
      destination: prep_to
-     """) // Unfortunately, FastNLP doesn't return collapsed deps
+     """)
   )
 
   def processExamples(testPairs: Seq[(String, String)]) {
