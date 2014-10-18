@@ -20,6 +20,7 @@ object TestDependencyMatcher extends App {
      agent: nsubj
      patient: dobj
      posstest: /^d/ > poss
+     posstest2: /^d/ /po/
      destination: prep_to
      """)
   )

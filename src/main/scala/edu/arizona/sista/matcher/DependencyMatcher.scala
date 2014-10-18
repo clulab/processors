@@ -116,8 +116,8 @@ class DependencyMatcher(val pattern: String) {
       ExactNameMatcher(_)
     }
 
-    def regexMatcher: Parser[NameMatcher] = regexMatch("""/(.*)/""".r) ^^ {
-      case m => RegexNameMatcher(m.group(1).r)
+    def regexMatcher: Parser[NameMatcher] = regexMatch("""/([^\\/]*(?:\\.[^\\/]*)*)/""".r) ^^ {
+      case m => RegexNameMatcher(m.group(1).replaceAll("""\\/""", "/").r)
     }
 
     def nameMatcher: Parser[NameMatcher] = exactMatcher | regexMatcher
