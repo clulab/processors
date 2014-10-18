@@ -61,6 +61,13 @@ case class PathDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
 }
 
 
+case class OrDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
+  def findAllIn(sentence: Sentence, from: Int): Seq[Int] = {
+    lhs.findAllIn(sentence, from) ++ rhs.findAllIn(sentence, from)
+  }
+}
+
+
 class DependencyMatcher(val pattern: String) {
   private var triggerFieldName = "trigger"
   private var _trigger: Option[TriggerMatcher] = None
@@ -108,8 +115,6 @@ class DependencyMatcher(val pattern: String) {
       case failure: NoSuccess => scala.sys.error(failure.msg)
     }
 
-    def matcher: Parser[DepMatcher] = pathMatcher
-
     def ident: Parser[String] =
       """\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*""".r
 
@@ -126,13 +131,15 @@ class DependencyMatcher(val pattern: String) {
         """\\(.)""".r.replaceAllIn(s.drop(1).dropRight(1), unescape _)
     }
 
+    def exactLiteral: Parser[String] = ident | stringLiteral
+
     // match a perl style "/" delimited regular expression
     // "\" is the escape character, so "\/" becomes "/"
     def regexLiteral: Parser[String] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
       case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/")
     }
 
-    def exactMatcher: Parser[NameMatcher] = (ident | stringLiteral) ^^ {
+    def exactMatcher: Parser[NameMatcher] = exactLiteral ^^ {
       ExactNameMatcher(_)
     }
 
@@ -150,12 +157,21 @@ class DependencyMatcher(val pattern: String) {
       DirectedDepMatcher(_, Incoming)
     }
 
-    def depMatcher: Parser[DepMatcher] = outgoingMatcher | incomingMatcher
+    def depMatcher: Parser[DepMatcher] =
+      outgoingMatcher | incomingMatcher | "(" ~> orMatcher <~ ")"
 
     def pathMatcher: Parser[DepMatcher] = depMatcher ~ rep(depMatcher) ^^ {
-      case m ~ rest => (m /: rest) {
+      case first ~ rest => (first /: rest) {
         case (lhs, rhs) => PathDepMatcher(lhs, rhs)
       }
     }
+
+    def orMatcher: Parser[DepMatcher] = pathMatcher ~ rep("|" ~> pathMatcher) ^^ {
+      case first ~ rest => (first /: rest) {
+        case (lhs, rhs) => OrDepMatcher(lhs, rhs)
+      }
+    }
+
+    def matcher: Parser[DepMatcher] = orMatcher
   }
 }

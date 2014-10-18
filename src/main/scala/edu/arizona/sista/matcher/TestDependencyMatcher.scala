@@ -22,6 +22,7 @@ object TestDependencyMatcher extends App {
      posstest: /^d/ > "poss"
      posstest2: /^d/ /po/
      destination: prep_to
+     or_test: (nsubj | dobj) /^p/
      """)
   )
 
