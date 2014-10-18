@@ -1,11 +1,11 @@
 package edu.arizona.sista.matcher
 
 import edu.arizona.sista.processors.Document
-import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
+import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
 object TestDependencyMatcher extends App {
 
-  lazy val processor = new FastNLPProcessor()
+  lazy val processor = new CoreNLPProcessor()
   val examplesWithPatterns = Seq(
     ("My dog ate my homework.",
      """
@@ -14,13 +14,13 @@ object TestDependencyMatcher extends App {
      patient: dobj
      """),
 
-    ("My dog drove my mom to the store.",
+    ("My dog drove my mom to the store and the park.",
      """
      trigger: drove
      agent: nsubj
      patient: dobj
      posstest: /^d/ > poss
-     destination: prep
+     destination: prep_to
      """) // Unfortunately, FastNLP doesn't return collapsed deps
   )
 

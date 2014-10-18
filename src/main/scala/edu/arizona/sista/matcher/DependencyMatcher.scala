@@ -13,7 +13,7 @@ case class TriggerMatcher(token: String) {
 
 
 trait DepMatcher {
-  def findIn(sentence: Sentence, from: Int): Option[Int]
+  def findAllIn(sentence: Sentence, from: Int): Seq[Int]
 
   // get dependencies for sentence if available
   protected def dependencies(sentence: Sentence) = sentence.dependencies match {
@@ -49,22 +49,17 @@ import Direction._
 
 
 case class DirectedDepMatcher(matcher: NameMatcher, direction: Direction) extends DepMatcher {
-  def findIn(sentence: Sentence, from: Int): Option[Int] = {
+  def findAllIn(sentence: Sentence, from: Int): Seq[Int] = {
     val deps = dependencies(sentence)
     val edges = if (direction == Incoming) deps.incomingEdges else deps.outgoingEdges
-    val matches = matcher matches edges(from)
-    if (matches.size == 1) Some(matches.head)
-    else None
+    matcher matches edges(from)
   }
 }
 
 
-case class PathMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
-  def findIn(sentence: Sentence, from: Int): Option[Int] = {
-    lhs.findIn(sentence, from) match {
-      case None => None
-      case Some(i) => rhs.findIn(sentence, i)
-    }
+case class PathDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
+  def findAllIn(sentence: Sentence, from: Int): Seq[Int] = {
+    lhs.findAllIn(sentence, from) flatMap (i => rhs.findAllIn(sentence, i))
   }
 }
 
@@ -95,15 +90,15 @@ class DependencyMatcher(val pattern: String) {
     case Some(value) => value
   }
 
-  def findAllIn(sentence: Sentence): Seq[Map[String, Int]] = {
+  def findAllIn(sentence: Sentence): Seq[Map[String, Seq[Int]]] = {
     trigger findAllIn sentence flatMap (i => applyRules(sentence, i))
   }
 
-  def applyRules(sentence: Sentence, i: Int): Option[Map[String, Int]] = {
+  def applyRules(sentence: Sentence, i: Int): Option[Map[String, Seq[Int]]] = {
     val matches = arguments.keySet flatMap { name =>
-      arguments(name).findIn(sentence, i) match {
-        case None => None
-        case Some(i) => Some(name -> i)
+      arguments(name).findAllIn(sentence, i) match {
+        case Nil => None
+        case indices => Some(name -> indices)
       }
     }
     if (matches.isEmpty) None
@@ -139,7 +134,7 @@ class DependencyMatcher(val pattern: String) {
 
     def pathMatcher: Parser[DepMatcher] = depMatcher ~ rep(depMatcher) ^^ {
       case m ~ rest => (m /: rest) {
-        case (lhs, rhs) => PathMatcher(lhs, rhs)
+        case (lhs, rhs) => PathDepMatcher(lhs, rhs)
       }
     }
 
