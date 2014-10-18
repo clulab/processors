@@ -116,8 +116,12 @@ class DependencyMatcher(val pattern: String) {
 
     // match a perl style "/" delimited regular expression
     // "\" is the escape character, so "\/" becomes "/"
-    def regexMatcher: Parser[NameMatcher] = regexMatch("""/([^\\/]*(?:\\.[^\\/]*)*)/""".r) ^^ {
-      case m => RegexNameMatcher(m.group(1).replaceAll("""\\/""", "/").r)
+    def regexLiteral: Parser[String] = """/([^\\/]*(?:\\.[^\\/]*)*)/""".r ^^ {
+      case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/")
+    }
+
+    def regexMatcher: Parser[NameMatcher] = regexLiteral ^^ {
+      case pattern => RegexNameMatcher(pattern.r)
     }
 
     def nameMatcher: Parser[NameMatcher] = exactMatcher | regexMatcher
@@ -135,21 +139,6 @@ class DependencyMatcher(val pattern: String) {
     def pathMatcher: Parser[DepMatcher] = depMatcher ~ rep(depMatcher) ^^ {
       case m ~ rest => (m /: rest) {
         case (lhs, rhs) => PathDepMatcher(lhs, rhs)
-      }
-    }
-
-    def regexMatch(r: Regex): Parser[Regex.Match] = new Parser[Regex.Match] {
-      def apply(in: Input) = {
-        val source = in.source
-        val offset = in.offset
-        val start = handleWhiteSpace(source, offset)
-        (r findPrefixMatchOf (source.subSequence(start, source.length))) match {
-          case Some(matched) =>
-            Success(matched, in.drop(start + matched.end - offset))
-          case None =>
-            val found = if (start == source.length()) "end of source" else "`"+source.charAt(start)+"'"
-            Failure("string matching regex `"+r+"' expected but "+found+" found", in.drop(start - offset))
-        }
       }
     }
   }
