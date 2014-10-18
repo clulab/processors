@@ -14,12 +14,6 @@ case class TriggerMatcher(token: String) {
 
 trait DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int]
-
-  // get dependencies for sentence if available
-  protected def dependencies(sentence: Sentence) = sentence.dependencies match {
-    case None => throw new Error("no dependencies in sentence")
-    case Some(deps) => deps
-  }
 }
 
 
@@ -50,7 +44,10 @@ import Direction._
 
 case class DirectedDepMatcher(matcher: NameMatcher, direction: Direction) extends DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] = {
-    val deps = dependencies(sentence)
+    val deps = sentence.dependencies match {
+      case None => throw new Error("sentence has no dependencies")
+      case Some(deps) => deps
+    }
     val edges = if (direction == Incoming) deps.incomingEdges else deps.outgoingEdges
     matcher matches edges(from)
   }
