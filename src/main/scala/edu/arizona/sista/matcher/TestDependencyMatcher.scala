@@ -9,14 +9,14 @@ object TestDependencyMatcher extends App {
   val examplesWithPatterns = Seq(
     ("My dog ate my homework.",
      """
-     trigger: ate
+     trigger: [lemma=eat]
      agent: nsubj
      patient: dobj
      """),
 
     ("My dog drove my mom to the store and the park.",
      """
-     trigger: drove
+     trigger: [lemma=drive]
      agent: nsubj
      patient: dobj
      posstest: /^d/ > "poss"

@@ -5,9 +5,9 @@ import scala.util.parsing.combinator._
 import edu.arizona.sista.processors.Sentence
 
 
-case class TriggerMatcher(token: String) {
+case class TriggerMatcher(filterer: TokenFilter) {
   def findAllIn(sentence: Sentence): Seq[Int] =
-    sentence.words.zipWithIndex filter (_._1 == token) map (_._2)
+    filterer.filter(sentence, 0 until sentence.size)
 }
 
 
@@ -139,8 +139,8 @@ class DependencyMatcher(val pattern: String) {
       case fieldPat(name, value) => (name -> value)
     }
     val fields = Map(it.toSeq: _*)
-    _trigger = Some(TriggerMatcher(fields(triggerFieldName)))
-    _arguments = Some(fields filterKeys (_ != triggerFieldName) mapValues Parser.parse)
+    _trigger = Some(TriggerMatcher(Parser.parseFilter(fields(triggerFieldName))))
+    _arguments = Some(fields filterKeys (_ != triggerFieldName) mapValues Parser.parseMatcher)
   }
 
   private def getFieldValue[T](field: Option[T]) = field match {
@@ -164,7 +164,12 @@ class DependencyMatcher(val pattern: String) {
   }
 
   private object Parser extends RegexParsers {
-    def parse(input: String): DepMatcher = parseAll(orMatcher, input) match {
+    def parseMatcher(input: String): DepMatcher = parseAll(orMatcher, input) match {
+      case Success(result, _) => result
+      case failure: NoSuccess => scala.sys.error(failure.msg)
+    }
+
+    def parseFilter(input: String): TokenFilter = parseAll(tokenFilter, input) match {
       case Success(result, _) => result
       case failure: NoSuccess => scala.sys.error(failure.msg)
     }
