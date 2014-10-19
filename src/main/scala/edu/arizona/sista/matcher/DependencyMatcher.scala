@@ -174,18 +174,20 @@ class DependencyMatcher(val pattern: String) {
     def ident: Parser[String] =
       """\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*""".r
 
-    def stringLiteral: Parser[String] = """"[^\\"]*(?:\\.[^\\"]*)*"""".r ^^ {
-      case s =>
-        def unescape(m: Regex.Match) = m.group(1) match {
-          case "t" => "\t"
-          case "b" => "\b"
-          case "n" => "\n"
-          case "r" => "\r"
-          case "f" => "\f"
-          case c => c
-        }
-        """\\(.)""".r.replaceAllIn(s.drop(1).dropRight(1), unescape _)
-    }
+    // single- or double-quote delimited string literal
+    def stringLiteral: Parser[String] =
+      """"[^\\"]*(?:\\.[^\\"]*)*"|'[^\\']*(?:\\.[^\\']*)*'""".r ^^ {
+        case s =>
+          def unescape(m: Regex.Match) = m.group(1) match {
+            case "t" => "\t"
+            case "b" => "\b"
+            case "n" => "\n"
+            case "r" => "\r"
+            case "f" => "\f"
+            case c => c
+          }
+          """\\(.)""".r.replaceAllIn(s.drop(1).dropRight(1), unescape _)
+      }
 
     def exactLiteral: Parser[String] = ident | stringLiteral
 
