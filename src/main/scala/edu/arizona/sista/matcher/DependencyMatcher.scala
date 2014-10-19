@@ -5,7 +5,7 @@ import scala.util.parsing.combinator._
 import edu.arizona.sista.processors.Sentence
 
 
-case class TriggerMatcher(filterer: TokenFilter) {
+class TriggerMatcher(filterer: TokenFilter) {
   def findAllIn(sentence: Sentence): Seq[Int] =
     filterer.filter(sentence, 0 until sentence.size)
 }
@@ -40,81 +40,81 @@ trait TokenFilter {
 }
 
 
-case class ExactStringMatcher(dep: String) extends StringMatcher {
+class ExactStringMatcher(dep: String) extends StringMatcher {
   def matches(strings: Seq[(Int, String)]): Seq[Int] =
     strings filter (_._2 == dep) map (_._1)
 }
 
-case class RegexStringMatcher(rx: Regex) extends StringMatcher {
+class RegexStringMatcher(rx: Regex) extends StringMatcher {
   def matches(strings: Seq[(Int, String)]): Seq[Int] =
     strings filter (e => rx.findFirstIn(e._2).nonEmpty) map (_._1)
 }
 
 
-case class OutgoingDepMatcher(matcher: StringMatcher) extends DepMatcher {
+class OutgoingDepMatcher(matcher: StringMatcher) extends DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
     matcher matches dependencies(sentence).outgoingEdges(from)
 }
 
-case class IncomingDepMatcher(matcher: StringMatcher) extends DepMatcher {
+class IncomingDepMatcher(matcher: StringMatcher) extends DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
     matcher matches dependencies(sentence).incomingEdges(from)
 }
 
 
-case class PathDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
+class PathDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
     lhs.findAllIn(sentence, from) flatMap (i => rhs.findAllIn(sentence, i))
 }
 
 
-case class OrDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
+class OrDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
     (lhs.findAllIn(sentence, from) ++ rhs.findAllIn(sentence, from)).distinct
 }
 
-case class FilteredDepMatcher(matcher: DepMatcher, filterer: TokenFilter) extends DepMatcher {
+class FilteredDepMatcher(matcher: DepMatcher, filterer: TokenFilter) extends DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
     filterer.filter(sentence, matcher.findAllIn(sentence, from))
 }
 
 
-case class WordFilter(matcher: StringMatcher) extends TokenFilter {
+class WordFilter(matcher: StringMatcher) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.words)
 }
 
-case class LemmaFilter(matcher: StringMatcher) extends TokenFilter {
+class LemmaFilter(matcher: StringMatcher) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.lemmas, "sentence has no lemmas")
 }
 
-case class TagFilter(matcher: StringMatcher) extends TokenFilter {
+class TagFilter(matcher: StringMatcher) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.tags, "sentence has no tags")
 }
 
-case class EntityFilter(matcher: StringMatcher) extends TokenFilter {
+class EntityFilter(matcher: StringMatcher) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.entities, "sentence has no entities")
 }
 
-case class ChunkFilter(matcher: StringMatcher) extends TokenFilter {
+class ChunkFilter(matcher: StringMatcher) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.chunks, "sentence has no chunks")
 }
 
-case class AndFilter(lhs: TokenFilter, rhs: TokenFilter) extends TokenFilter {
+class AndFilter(lhs: TokenFilter, rhs: TokenFilter) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     lhs.filter(sentence, tokens) intersect rhs.filter(sentence, tokens)
 }
 
-case class OrFilter(lhs: TokenFilter, rhs: TokenFilter) extends TokenFilter {
+class OrFilter(lhs: TokenFilter, rhs: TokenFilter) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     (lhs.filter(sentence, tokens) ++ rhs.filter(sentence, tokens)).distinct
 }
 
-case class NotFilter(filterer: TokenFilter) extends TokenFilter {
+class NotFilter(filterer: TokenFilter) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     tokens diff filterer.filter(sentence, tokens)
 }
@@ -136,7 +136,7 @@ class DependencyMatcher(val pattern: String) {
       case fieldPat(name, value) => (name -> value)
     }
     val fields = Map(it.toSeq: _*)
-    _trigger = Some(TriggerMatcher(Parser.parseFilter(fields(triggerFieldName))))
+    _trigger = Some(new TriggerMatcher(Parser.parseFilter(fields(triggerFieldName))))
     _arguments = Some(fields filterKeys (_ != triggerFieldName) mapValues Parser.parseMatcher)
   }
 
@@ -198,21 +198,21 @@ class DependencyMatcher(val pattern: String) {
     }
 
     def exactMatcher: Parser[StringMatcher] = exactLiteral ^^ {
-      ExactStringMatcher(_)
+      new ExactStringMatcher(_)
     }
 
     def regexMatcher: Parser[StringMatcher] = regexLiteral ^^ {
-      case pattern => RegexStringMatcher(pattern.r)
+      case pattern => new RegexStringMatcher(pattern.r)
     }
 
     def stringMatcher: Parser[StringMatcher] = exactMatcher | regexMatcher
 
     def outgoingMatcher: Parser[DepMatcher] = opt(">") ~> stringMatcher ^^ {
-      OutgoingDepMatcher(_)
+      new OutgoingDepMatcher(_)
     }
 
     def incomingMatcher: Parser[DepMatcher] = "<" ~> stringMatcher ^^ {
-      IncomingDepMatcher(_)
+      new IncomingDepMatcher(_)
     }
 
     def atomMatcher: Parser[DepMatcher] =
@@ -220,47 +220,47 @@ class DependencyMatcher(val pattern: String) {
 
     def filteredMatcher: Parser[DepMatcher] = atomMatcher ~ opt(tokenFilter) ^^ {
       case matcher ~ None => matcher
-      case matcher ~ Some(filterer) => FilteredDepMatcher(matcher, filterer)
+      case matcher ~ Some(filterer) => new FilteredDepMatcher(matcher, filterer)
     }
 
     def pathMatcher: Parser[DepMatcher] = filteredMatcher ~ rep(filteredMatcher) ^^ {
       case first ~ rest => (first /: rest) {
-        case (lhs, rhs) => PathDepMatcher(lhs, rhs)
+        case (lhs, rhs) => new PathDepMatcher(lhs, rhs)
       }
     }
 
     def orMatcher: Parser[DepMatcher] = pathMatcher ~ rep("|" ~> pathMatcher) ^^ {
       case first ~ rest => (first /: rest) {
-        case (lhs, rhs) => OrDepMatcher(lhs, rhs)
+        case (lhs, rhs) => new OrDepMatcher(lhs, rhs)
       }
     }
 
     def filterName: Parser[String] = "word" | "lemma" | "tag" | "entity" | "chunk"
 
     def filterValue: Parser[TokenFilter] = filterName ~ "=" ~ stringMatcher ^^ {
-      case "word" ~ _ ~ matcher => WordFilter(matcher)
-      case "lemma" ~ _ ~ matcher => LemmaFilter(matcher)
-      case "tag" ~ _ ~ matcher => TagFilter(matcher)
-      case "entity" ~ _ ~ matcher => EntityFilter(matcher)
-      case "chunk" ~ _ ~ matcher => ChunkFilter(matcher)
+      case "word" ~ _ ~ matcher => new WordFilter(matcher)
+      case "lemma" ~ _ ~ matcher => new LemmaFilter(matcher)
+      case "tag" ~ _ ~ matcher => new TagFilter(matcher)
+      case "entity" ~ _ ~ matcher => new EntityFilter(matcher)
+      case "chunk" ~ _ ~ matcher => new ChunkFilter(matcher)
     }
 
     def filterAtom: Parser[TokenFilter] = filterValue | "(" ~> orFilter <~ ")"
 
     def notFilter: Parser[TokenFilter] = opt("!") ~ filterAtom ^^ {
       case None ~ filterer => filterer
-      case Some(_) ~ filterer => NotFilter(filterer)
+      case Some(_) ~ filterer => new NotFilter(filterer)
     }
 
     def andFilter: Parser[TokenFilter] = notFilter ~ rep("&" ~> notFilter) ^^ {
       case first ~ rest => (first /: rest) {
-        case (lhs, rhs) => AndFilter(lhs, rhs)
+        case (lhs, rhs) => new AndFilter(lhs, rhs)
       }
     }
 
     def orFilter: Parser[TokenFilter] = andFilter ~ rep("|" ~> andFilter) ^^ {
       case first ~ rest => (first /: rest) {
-        case (lhs, rhs) => OrFilter(lhs, rhs)
+        case (lhs, rhs) => new OrFilter(lhs, rhs)
       }
     }
 
