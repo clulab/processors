@@ -26,7 +26,9 @@ object TestDependencyMatcher extends App {
      destination3: prep_to [word=park | word=/^s/]
      destination4: prep_to [!word="park"]
      destination5: prep_to [word=park] < /^conj/
+     destination6: prep_to [word=park | word=/^p/]
      or_test: (nsubj | dobj) /^p/
+     or_test2: dobj | dobj
      """)
   )
 
@@ -44,7 +46,9 @@ object TestDependencyMatcher extends App {
       // What do we get?
       println("\nOutgoing deps:")
       val deps = s.dependencies.get
-      deps.outgoingEdges.zipWithIndex foreach { case (edges, i) => println(s"$i:\t${edges.mkString(" ")}") }
+      deps.outgoingEdges.zipWithIndex foreach {
+        case (edges, i) => println(s"$i:\t${edges.mkString(" ")}")
+      }
       println("\nAssigned labels:")
       myMap.flatten.foreach(pair => println(s"\t${pair._1} -> ${pair._2}"))
       println(s"\nRule:$rule\n")

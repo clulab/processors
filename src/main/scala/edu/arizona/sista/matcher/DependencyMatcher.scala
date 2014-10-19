@@ -73,7 +73,7 @@ case class PathDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
 
 case class OrDepMatcher(lhs: DepMatcher, rhs: DepMatcher) extends DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
-    lhs.findAllIn(sentence, from) ++ rhs.findAllIn(sentence, from)
+    (lhs.findAllIn(sentence, from) ++ rhs.findAllIn(sentence, from)).distinct
 }
 
 case class FilteredDepMatcher(matcher: DepMatcher, filterer: TokenFilter) extends DepMatcher {
@@ -114,7 +114,7 @@ case class AndFilter(lhs: TokenFilter, rhs: TokenFilter) extends TokenFilter {
 
 case class OrFilter(lhs: TokenFilter, rhs: TokenFilter) extends TokenFilter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
-    lhs.filter(sentence, tokens) ++ rhs.filter(sentence, tokens)
+    (lhs.filter(sentence, tokens) ++ rhs.filter(sentence, tokens)).distinct
 }
 
 case class NotFilter(filterer: TokenFilter) extends TokenFilter {
