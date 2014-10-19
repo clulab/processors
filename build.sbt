@@ -1,8 +1,12 @@
-name := "processors"
+name := Common.name
 
-version := "3.3"
+version := Common.version
 
 scalaVersion := "2.10.4"
+
+lazy val core = project in file(".") aggregate models dependsOn models
+
+lazy val models = project in file("models")
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-library" % "2.10.1",
@@ -23,7 +27,3 @@ libraryDependencies ++= Seq(
   "log4j" % "log4j" % "1.2.17",
   "tw.edu.ntu.csie" % "libsvm" % "3.17"
 )
-
-lazy val core = project in file(".") aggregate models dependsOn models
-
-lazy val models = project in file("models")
