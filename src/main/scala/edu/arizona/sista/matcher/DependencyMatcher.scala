@@ -13,6 +13,11 @@ case class TriggerMatcher(filterer: TokenFilter) {
 
 trait DepMatcher {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int]
+
+  protected def dependencies(sentence: Sentence) = sentence.dependencies match {
+    case None => scala.sys.error("sentence has no dependencies")
+    case Some(deps) => deps
+  }
 }
 
 
@@ -46,22 +51,14 @@ case class RegexStringMatcher(rx: Regex) extends StringMatcher {
 }
 
 
-object Direction extends Enumeration {
-  type Direction = Value
-  val Incoming, Outgoing = Value
+case class OutgoingDepMatcher(matcher: StringMatcher) extends DepMatcher {
+  def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
+    matcher matches dependencies(sentence).outgoingEdges(from)
 }
-import Direction._
 
-
-case class DirectedDepMatcher(matcher: StringMatcher, direction: Direction) extends DepMatcher {
-  def findAllIn(sentence: Sentence, from: Int): Seq[Int] = {
-    val deps = sentence.dependencies match {
-      case None => scala.sys.error("sentence has no dependencies")
-      case Some(deps) => deps
-    }
-    val edges = if (direction == Incoming) deps.incomingEdges else deps.outgoingEdges
-    matcher matches edges(from)
-  }
+case class IncomingDepMatcher(matcher: StringMatcher) extends DepMatcher {
+  def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
+    matcher matches dependencies(sentence).incomingEdges(from)
 }
 
 
@@ -209,11 +206,11 @@ class DependencyMatcher(val pattern: String) {
     def stringMatcher: Parser[StringMatcher] = exactMatcher | regexMatcher
 
     def outgoingMatcher: Parser[DepMatcher] = opt(">") ~> stringMatcher ^^ {
-      DirectedDepMatcher(_, Outgoing)
+      OutgoingDepMatcher(_)
     }
 
     def incomingMatcher: Parser[DepMatcher] = "<" ~> stringMatcher ^^ {
-      DirectedDepMatcher(_, Incoming)
+      IncomingDepMatcher(_)
     }
 
     def atomMatcher: Parser[DepMatcher] =
