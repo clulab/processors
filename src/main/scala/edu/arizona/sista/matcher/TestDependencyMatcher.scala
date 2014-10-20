@@ -2,6 +2,7 @@ package edu.arizona.sista.matcher
 
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import edu.arizona.sista.matcher.dependencies.DependencyMatcher
 
 object TestDependencyMatcher extends App {
 
