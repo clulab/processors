@@ -47,7 +47,7 @@ object DependencyMatcher {
   def apply(pattern: String) = new DependencyMatcher(pattern)
 }
 
-class TriggerMatcher(filterer: Filterer) {
+class TriggerMatcher(filter: Filter) {
   def findAllIn(sentence: Sentence): Seq[Int] =
-    filterer.filter(sentence, 0 until sentence.size)
+    filter.filter(sentence, 0 until sentence.size)
 }

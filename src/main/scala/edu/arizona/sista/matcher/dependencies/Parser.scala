@@ -51,14 +51,14 @@ class OrExtractor(lhs: Extractor, rhs: Extractor) extends Extractor {
     (lhs.findAllIn(sentence, from) ++ rhs.findAllIn(sentence, from)).distinct
 }
 
-class FilteredExtractor(matcher: Extractor, filterer: Filterer) extends Extractor {
+class FilteredExtractor(matcher: Extractor, filter: Filter) extends Extractor {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
-    filterer.filter(sentence, matcher.findAllIn(sentence, from))
+    filter.filter(sentence, matcher.findAllIn(sentence, from))
 }
 
 
 
-trait Filterer {
+trait Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int]
 
   protected def values(tokens: Seq[Int], strings: Seq[String]): Seq[(Int, String)] =
@@ -71,44 +71,44 @@ trait Filterer {
     }
 }
 
-class WordFilter(matcher: Matcher) extends Filterer {
+class WordFilter(matcher: Matcher) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.words)
 }
 
-class LemmaFilter(matcher: Matcher) extends Filterer {
+class LemmaFilter(matcher: Matcher) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.lemmas, "sentence has no lemmas")
 }
 
-class TagFilter(matcher: Matcher) extends Filterer {
+class TagFilter(matcher: Matcher) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.tags, "sentence has no tags")
 }
 
-class EntityFilter(matcher: Matcher) extends Filterer {
+class EntityFilter(matcher: Matcher) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.entities, "sentence has no entities")
 }
 
-class ChunkFilter(matcher: Matcher) extends Filterer {
+class ChunkFilter(matcher: Matcher) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.chunks, "sentence has no chunks")
 }
 
-class AndFilter(lhs: Filterer, rhs: Filterer) extends Filterer {
+class AndFilter(lhs: Filter, rhs: Filter) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     lhs.filter(sentence, tokens) intersect rhs.filter(sentence, tokens)
 }
 
-class OrFilter(lhs: Filterer, rhs: Filterer) extends Filterer {
+class OrFilter(lhs: Filter, rhs: Filter) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     (lhs.filter(sentence, tokens) ++ rhs.filter(sentence, tokens)).distinct
 }
 
-class NotFilter(filterer: Filterer) extends Filterer {
+class NotFilter(filter: Filter) extends Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
-    tokens diff filterer.filter(sentence, tokens)
+    tokens diff filter.filter(sentence, tokens)
 }
 
 
@@ -119,7 +119,7 @@ object Parser extends RegexParsers {
     case failure: NoSuccess => scala.sys.error(failure.msg)
   }
 
-  def parseFilter(input: String): Filterer = parseAll(tokenFilter, input) match {
+  def parseFilter(input: String): Filter = parseAll(tokenFilter, input) match {
     case Success(result, _) => result
     case failure: NoSuccess => scala.sys.error(failure.msg)
   }
@@ -173,7 +173,7 @@ object Parser extends RegexParsers {
 
   def filteredExtractor: Parser[Extractor] = atomExtractor ~ opt(tokenFilter) ^^ {
     case matcher ~ None => matcher
-    case matcher ~ Some(filterer) => new FilteredExtractor(matcher, filterer)
+    case matcher ~ Some(filter) => new FilteredExtractor(matcher, filter)
   }
 
   def pathExtractor: Parser[Extractor] = filteredExtractor ~ rep(filteredExtractor) ^^ {
@@ -190,7 +190,7 @@ object Parser extends RegexParsers {
 
   def filterName: Parser[String] = "word" | "lemma" | "tag" | "entity" | "chunk"
 
-  def filterValue: Parser[Filterer] = filterName ~ "=" ~ stringMatcher ^^ {
+  def filterValue: Parser[Filter] = filterName ~ "=" ~ stringMatcher ^^ {
     case "word" ~ _ ~ matcher => new WordFilter(matcher)
     case "lemma" ~ _ ~ matcher => new LemmaFilter(matcher)
     case "tag" ~ _ ~ matcher => new TagFilter(matcher)
@@ -198,24 +198,24 @@ object Parser extends RegexParsers {
     case "chunk" ~ _ ~ matcher => new ChunkFilter(matcher)
   }
 
-  def filterAtom: Parser[Filterer] = filterValue | "(" ~> orFilter <~ ")"
+  def filterAtom: Parser[Filter] = filterValue | "(" ~> orFilter <~ ")"
 
-  def notFilter: Parser[Filterer] = opt("!") ~ filterAtom ^^ {
-    case None ~ filterer => filterer
-    case Some(_) ~ filterer => new NotFilter(filterer)
+  def notFilter: Parser[Filter] = opt("!") ~ filterAtom ^^ {
+    case None ~ filter => filter
+    case Some(_) ~ filter => new NotFilter(filter)
   }
 
-  def andFilter: Parser[Filterer] = notFilter ~ rep("&" ~> notFilter) ^^ {
+  def andFilter: Parser[Filter] = notFilter ~ rep("&" ~> notFilter) ^^ {
     case first ~ rest => (first /: rest) {
       case (lhs, rhs) => new AndFilter(lhs, rhs)
     }
   }
 
-  def orFilter: Parser[Filterer] = andFilter ~ rep("|" ~> andFilter) ^^ {
+  def orFilter: Parser[Filter] = andFilter ~ rep("|" ~> andFilter) ^^ {
     case first ~ rest => (first /: rest) {
       case (lhs, rhs) => new OrFilter(lhs, rhs)
     }
   }
 
-  def tokenFilter: Parser[Filterer] = "[" ~> orFilter <~ "]"
+  def tokenFilter: Parser[Filter] = "[" ~> orFilter <~ "]"
 }
