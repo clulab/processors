@@ -114,7 +114,7 @@ class NotFilter(filterer: Filterer) extends Filterer {
 
 
 object Parser extends RegexParsers {
-  def parseMatcher(input: String): Extractor = parseAll(orMatcher, input) match {
+  def parseExtractor(input: String): Extractor = parseAll(orExtractor, input) match {
     case Success(result, _) => result
     case failure: NoSuccess => scala.sys.error(failure.msg)
   }
@@ -160,29 +160,29 @@ object Parser extends RegexParsers {
 
   def stringMatcher: Parser[Matcher] = exactMatcher | regexMatcher
 
-  def outgoingMatcher: Parser[Extractor] = opt(">") ~> stringMatcher ^^ {
+  def outgoingExtractor: Parser[Extractor] = opt(">") ~> stringMatcher ^^ {
     new OutgoingExtractor(_)
   }
 
-  def incomingMatcher: Parser[Extractor] = "<" ~> stringMatcher ^^ {
+  def incomingExtractor: Parser[Extractor] = "<" ~> stringMatcher ^^ {
     new IncomingExtractor(_)
   }
 
-  def atomMatcher: Parser[Extractor] =
-    outgoingMatcher | incomingMatcher | "(" ~> orMatcher <~ ")"
+  def atomExtractor: Parser[Extractor] =
+    outgoingExtractor | incomingExtractor | "(" ~> orExtractor <~ ")"
 
-  def filteredMatcher: Parser[Extractor] = atomMatcher ~ opt(tokenFilter) ^^ {
+  def filteredExtractor: Parser[Extractor] = atomExtractor ~ opt(tokenFilter) ^^ {
     case matcher ~ None => matcher
     case matcher ~ Some(filterer) => new FilteredExtractor(matcher, filterer)
   }
 
-  def pathMatcher: Parser[Extractor] = filteredMatcher ~ rep(filteredMatcher) ^^ {
+  def pathExtractor: Parser[Extractor] = filteredExtractor ~ rep(filteredExtractor) ^^ {
     case first ~ rest => (first /: rest) {
       case (lhs, rhs) => new PathExtractor(lhs, rhs)
     }
   }
 
-  def orMatcher: Parser[Extractor] = pathMatcher ~ rep("|" ~> pathMatcher) ^^ {
+  def orExtractor: Parser[Extractor] = pathExtractor ~ rep("|" ~> pathExtractor) ^^ {
     case first ~ rest => (first /: rest) {
       case (lhs, rhs) => new OrExtractor(lhs, rhs)
     }
