@@ -5,7 +5,7 @@ import edu.arizona.sista.processors.Sentence
 class DependencyMatcher(val pattern: String) {
   private var triggerFieldName = "trigger"
   private var _trigger: Option[TriggerMatcher] = None
-  private var _arguments: Option[Map[String, DepMatcher]] = None
+  private var _arguments: Option[Map[String, Extractor]] = None
 
   def trigger = getFieldValue(_trigger)
   def arguments = getFieldValue(_arguments)
@@ -23,7 +23,7 @@ class DependencyMatcher(val pattern: String) {
   }
 
   private def getFieldValue[T](field: Option[T]) = field match {
-    case None => throw new Error("object not initialized")
+    case None => scala.sys.error("object not initialized")
     case Some(value) => value
   }
 
@@ -47,7 +47,7 @@ object DependencyMatcher {
   def apply(pattern: String) = new DependencyMatcher(pattern)
 }
 
-class TriggerMatcher(filterer: TokenFilter) {
+class TriggerMatcher(filterer: Filterer) {
   def findAllIn(sentence: Sentence): Seq[Int] =
     filterer.filter(sentence, 0 until sentence.size)
 }
