@@ -1,7 +1,19 @@
 package edu.arizona.sista.matcher
 
-class State(val paperId: String, val section: String, val mentions: Seq[Mention]) {
-  val tokenToMention = mentions flatMap { m =>
-    m.tokenInterval.toRange map (i => (m.sentence, i) -> m)
-  } groupBy (_._1) mapValues (_.map(_._2).toSet)
+import scala.collection.mutable.{HashMap, ArrayBuffer}
+
+class State {
+  val tokenToMentions = new HashMap[(Int, Int), ArrayBuffer[Mention]]
+
+  def update(mention: Mention) {
+    for (i <- mention.tokenInterval.toRange) {
+      val key = (mention.sentence, i)
+      val mentions = tokenToMentions.getOrElseUpdate(key, new ArrayBuffer[Mention])
+      mentions += mention
+    }
+  }
+
+  def update(mentions: Seq[Mention]) {
+    mentions foreach update
+  }
 }
