@@ -2,9 +2,9 @@ package edu.arizona.sista.matcher
 
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
-import edu.arizona.sista.matcher.dependencies.DependencyMatcher
+import edu.arizona.sista.matcher.dependencies.DependencyExtractor
 
-object TestDependencyMatcher extends App {
+object TestDependencyExtractor extends App {
 
   lazy val processor = new CoreNLPProcessor()
   val examplesWithPatterns = Seq(
@@ -37,7 +37,7 @@ object TestDependencyMatcher extends App {
     for ((text, rule) <- testPairs) {
       val doc = processor.annotate(text)
       val s = doc.sentences(0)
-      val dm = new DependencyMatcher(rule)
+      val dm = new DependencyExtractor(rule)
 
       // Our sentence...
       println(s"\n\n${{0 until s.words.length}.mkString("\t")}\n${s.words.mkString("\t")}")

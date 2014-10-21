@@ -1,11 +1,12 @@
 package edu.arizona.sista.matcher.dependencies
 
 import edu.arizona.sista.processors.Sentence
+import edu.arizona.sista.matcher.Extractor
 import edu.arizona.sista.matcher.dependencies.parser.Parser
 import edu.arizona.sista.matcher.dependencies.parser.{Extractor => ExtractorRule}
 import edu.arizona.sista.matcher.dependencies.parser.{Filter => FilterRule}
 
-class DependencyMatcher(val pattern: String) {
+class DependencyExtractor(val pattern: String) extends Extractor {
   private var triggerFieldName = "trigger"
   private var _trigger: Option[TriggerMatcher] = None
   private var _arguments: Option[Map[String, ExtractorRule]] = None
@@ -46,8 +47,8 @@ class DependencyMatcher(val pattern: String) {
   }
 }
 
-object DependencyMatcher {
-  def apply(pattern: String) = new DependencyMatcher(pattern)
+object DependencyExtractor {
+  def apply(pattern: String) = new DependencyExtractor(pattern)
 }
 
 class TriggerMatcher(filter: FilterRule) {
