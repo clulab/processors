@@ -6,6 +6,28 @@ import edu.arizona.sista.processors.Sentence
 
 
 
+trait Values {
+  def values(tokens: Seq[Int], strings: Seq[String]): Seq[(Int, String)] =
+    tokens map (i => (i, strings(i)))
+
+  def values(tokens: Seq[Int], strings: Option[Array[String]], msg: String): Seq[(Int, String)] =
+    strings match {
+      case None => scala.sys.error(msg)
+      case Some(strings) => values(tokens, strings)
+    }
+}
+
+
+
+trait Dependencies {
+  def dependencies(sentence: Sentence) = sentence.dependencies match {
+    case None => scala.sys.error("sentence has no dependencies")
+    case Some(deps) => deps
+  }
+}
+
+
+
 trait Matcher {
   def matches(strings: Seq[(Int, String)]): Seq[Int]
 }
@@ -24,19 +46,14 @@ class RegexMatcher(rx: Regex) extends Matcher {
 
 trait Extractor {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int]
-
-  protected def dependencies(sentence: Sentence) = sentence.dependencies match {
-    case None => scala.sys.error("sentence has no dependencies")
-    case Some(deps) => deps
-  }
 }
 
-class OutgoingExtractor(matcher: Matcher) extends Extractor {
+class OutgoingExtractor(matcher: Matcher) extends Extractor with Dependencies {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
     matcher matches dependencies(sentence).outgoingEdges(from)
 }
 
-class IncomingExtractor(matcher: Matcher) extends Extractor {
+class IncomingExtractor(matcher: Matcher) extends Extractor with Dependencies {
   def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
     matcher matches dependencies(sentence).incomingEdges(from)
 }
@@ -60,38 +77,29 @@ class FilteredExtractor(matcher: Extractor, filter: Filter) extends Extractor {
 
 trait Filter {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int]
-
-  protected def values(tokens: Seq[Int], strings: Seq[String]): Seq[(Int, String)] =
-    tokens map (i => (i, strings(i)))
-
-  protected def values(tokens: Seq[Int], strings: Option[Array[String]], msg: String): Seq[(Int, String)] =
-    strings match {
-      case None => scala.sys.error(msg)
-      case Some(strings) => values(tokens, strings)
-    }
 }
 
-class WordFilter(matcher: Matcher) extends Filter {
+class WordFilter(matcher: Matcher) extends Filter with Values {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.words)
 }
 
-class LemmaFilter(matcher: Matcher) extends Filter {
+class LemmaFilter(matcher: Matcher) extends Filter with Values {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.lemmas, "sentence has no lemmas")
 }
 
-class TagFilter(matcher: Matcher) extends Filter {
+class TagFilter(matcher: Matcher) extends Filter with Values {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.tags, "sentence has no tags")
 }
 
-class EntityFilter(matcher: Matcher) extends Filter {
+class EntityFilter(matcher: Matcher) extends Filter with Values {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.entities, "sentence has no entities")
 }
 
-class ChunkFilter(matcher: Matcher) extends Filter {
+class ChunkFilter(matcher: Matcher) extends Filter with Values {
   def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.chunks, "sentence has no chunks")
 }
