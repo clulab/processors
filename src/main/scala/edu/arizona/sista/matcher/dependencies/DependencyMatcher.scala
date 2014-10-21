@@ -1,11 +1,14 @@
 package edu.arizona.sista.matcher.dependencies
 
 import edu.arizona.sista.processors.Sentence
+import edu.arizona.sista.matcher.dependencies.parser.Parser
+import edu.arizona.sista.matcher.dependencies.parser.{Extractor => ExtractorRule}
+import edu.arizona.sista.matcher.dependencies.parser.{Filter => FilterRule}
 
 class DependencyMatcher(val pattern: String) {
   private var triggerFieldName = "trigger"
   private var _trigger: Option[TriggerMatcher] = None
-  private var _arguments: Option[Map[String, Extractor]] = None
+  private var _arguments: Option[Map[String, ExtractorRule]] = None
 
   def trigger = getFieldValue(_trigger)
   def arguments = getFieldValue(_arguments)
@@ -47,7 +50,7 @@ object DependencyMatcher {
   def apply(pattern: String) = new DependencyMatcher(pattern)
 }
 
-class TriggerMatcher(filter: Filter) {
+class TriggerMatcher(filter: FilterRule) {
   def findAllIn(sentence: Sentence): Seq[Int] =
     filter.filter(sentence, 0 until sentence.size)
 }

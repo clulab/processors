@@ -1,4 +1,4 @@
-package edu.arizona.sista.matcher.dependencies
+package edu.arizona.sista.matcher.dependencies.parser
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
