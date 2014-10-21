@@ -1,18 +1,18 @@
 package edu.arizona.sista.matcher
 
-trait Priority {
+sealed trait Priority {
   def matches(i: Int): Boolean
 }
 
-class ExactPriority(val value: Int) extends Priority {
+case class ExactPriority(val value: Int) extends Priority {
   def matches(i: Int): Boolean = i == value
 }
 
-class IntervalPriority(val start: Int, val end: Int) extends Priority {
+case class IntervalPriority(val start: Int, val end: Int) extends Priority {
   def matches(i: Int): Boolean = i >= start && i <= end
 }
 
-class FromPriority(val from: Int) extends Priority {
+case class FromPriority(val from: Int) extends Priority {
   def matches(i: Int): Boolean = i >= from
 }
 

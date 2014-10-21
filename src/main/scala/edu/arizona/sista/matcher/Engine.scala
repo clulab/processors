@@ -1,50 +1,65 @@
 package edu.arizona.sista.matcher
 
+import scala.util.control.Breaks._
 import scala.collection.mutable.HashMap
+import edu.arizona.sista.processors.Sentence
+import edu.arizona.sista.matcher.dependencies.DependencyExtractor
+import ExtractorEngine.mkExtractor
 
-trait RuleMatcher
+class ExtractorEngine(val spec: String) {
+  // extractors defined in the spec, separated by at least one blank line
+  val extractors = spec split """(?m)^\s*$""" map (_.trim) filter (_ != "") map mkExtractor
 
-class SpecMatcher(val spec: String) {
-  private var _name: Option[String] = None
-  def name = getFieldValue(_name)
+  // the minimum number of iterations required for every rule to run at least once
+  val minIterations = extractors.map(_.startsAt).max
 
-  private var _priority: Option[Int] = None
-  def priority = getFieldValue(_priority)
-
-  private var _ruleType: Option[String] = None
-  def ruleType = getFieldValue(_ruleType)
-
-  private var _pattern: Option[String] = None
-  def pattern = getFieldValue(_pattern)
-
-  // initialize SpecMatcher objects
-  parse(spec)
-
-  private def parse(spec: String) {
-    val field = """(?s)(\w+)\s*:\s*(\w+|\{\{.*\}\})""".r
-    val it = for (field(name, value) <- field findAllIn spec) yield (name -> value)
-    val fields = Map(it.toSeq: _*)
-    _name = Some(fields("name"))
-    _priority = Some(fields("priority").toInt)
-    _ruleType = Some(fields("type"))
-    _pattern = Some(fields("pattern").drop(2).dropRight(2))
-  }
-
-  private def getFieldValue[T](field: Option[T]) = field match {
-    case None => throw new Error("object not initialized")
-    case Some(value) => value
+  def extractFrom(sentence: Sentence) = {
+    breakable {
+      for (iter <- Stream.from(1)) {
+        for (extractor <- extractors if extractor.priority matches iter) {
+          // do something
+        }
+      }
+    }
   }
 }
 
-object SpecMatcher {
-  type RuleMatcherConstructor = String => RuleMatcher
+object ExtractorEngine {
+  type ExtractorBuilder = String => Extractor
 
-  private val registeredMatchers = new HashMap[String, RuleMatcherConstructor]
+  // registered extractors go here
+  private val registeredExtractors = new HashMap[String, ExtractorBuilder]
 
-  def register(name: String, func: RuleMatcherConstructor) {
-    registeredMatchers += (name -> func)
+  // our extractor is the default
+  val defaultExtractorType = "arizona"
+  register(defaultExtractorType, DependencyExtractor.apply)
+
+  // register extractors to be used in our rules
+  def register(extractorType: String, extractorBuilder: ExtractorBuilder) {
+    registeredExtractors += (extractorType -> extractorBuilder)
   }
 
-  def mkRuleMatcher(name: String, pattern: String): RuleMatcher =
-    registeredMatchers(name)(pattern)
+  // regex to extract fields from rule
+  private val field = """(?s)(\w+)\s*:\s*(\w+|\{\{.*\}\})""".r
+
+  def mkExtractor(spec: String): NamedExtractor = {
+    val it = for (field(name, value) <- field findAllIn spec) yield (name -> value)
+    val fields = Map(it.toSeq: _*)
+    val name = fields("name")
+    val priority = Priority(fields("priority"))
+    val extractorType = fields.getOrElse("type", defaultExtractorType)
+    val pattern = fields("pattern").drop(2).dropRight(2)
+    val extractor = registeredExtractors(extractorType)(pattern)
+    new NamedExtractor(name, priority, extractor)
+  }
+}
+
+class NamedExtractor(val name: String, val priority: Priority, val extractor: Extractor) extends Extractor {
+  def findAllIn(sentence: Sentence): Seq[Map[String, Seq[Int]]] = extractor findAllIn sentence
+
+  def startsAt = priority match {
+    case ExactPriority(i) => i
+    case IntervalPriority(start, end) => start
+    case FromPriority(from) => from
+  }
 }

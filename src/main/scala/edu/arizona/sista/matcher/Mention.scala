@@ -1,9 +1,6 @@
 package edu.arizona.sista.matcher
 
-// annotated tokens in a BioDocument
-case class Annotation(paperId: String,
-                      section: String,
-                      sentence: Int,
-                      tokenInterval: Interval)
 
-abstract class Mention(val annotation: Annotation)
+abstract class Mention(val label: String, val sentence: Int, val tokenInterval: Interval)
+
+class EntityMention(label: String, sentence: Int, tokenInterval: Interval) extends Mention(label, sentence, tokenInterval)
