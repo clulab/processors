@@ -110,9 +110,9 @@ trait Tree {
     collect(List(this), Nil).reverse
   }
 
-  def terminals = preterminals map (_.children.head.asInstanceOf[Terminal])
+  def terminals = preterminals map (_._children.head.asInstanceOf[Terminal])
   def tokens = terminals map (_.token)
-  def posTags = preterminals map (n => (n.label, n.children.head.asInstanceOf[Terminal].token))
+  def posTags = preterminals map (n => (n.label, n._children.head.asInstanceOf[Terminal].token))
 
   /** returns ancestors sorted from near to far */
   def ancestors: List[NonTerminal] = parent match {
@@ -123,17 +123,17 @@ trait Tree {
   def leftSibling: Option[Tree] = parent match {
     case None => None
     case Some(node) =>
-      val i = node.children.get indexOf this
+      val i = node._children indexOf this
       if (i == 0) None
-      else Some(node.children.get(i - 1))
+      else Some(node._children(i - 1))
   }
 
   def rightSibling: Option[Tree] = parent match {
     case None => None
     case Some(node) =>
-      val i = node.children.get indexOf this
-      if (i + 1 == node.children.size) None
-      else Some(node.children.get(i + 1))
+      val i = node._children indexOf this
+      if (i + 1 == node._children.size) None
+      else Some(node._children(i + 1))
   }
 
   private def assignIndicesToTerminals() {
@@ -236,7 +236,10 @@ object Tree {
   }
 
   private object TreeParser extends RegexParsers {
-    def parse(input: String): Tree = parseAll(tree, input).get
+    def parse(input: String): Tree = parseAll(tree, input) match {
+      case Success(result, _) => result
+      case failure: NoSuccess => scala.sys.error(failure.msg)
+    }
     def tree: Parser[Tree] = terminal | nonTerminal
     def token: Parser[String] = """([^()\s]+)""".r
     def terminal: Parser[Terminal] = token ^^ { new Terminal(_) }
