@@ -9,7 +9,6 @@ lazy val core = project in file(".") aggregate models dependsOn models
 lazy val models = project in file("models")
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-library" % "2.10.1",
   "org.scalatest" %% "scalatest" % "2.0.M6-SNAP17",
   "junit" % "junit" % "4.10" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
