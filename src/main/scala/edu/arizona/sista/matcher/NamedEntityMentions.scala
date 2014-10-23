@@ -5,7 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import edu.arizona.sista.processors.{Document, Sentence}
 
 object NamedEntityExtractor {
-  def getMentions(document: Document): Seq[EntityMention] = for {
+  def getEntityMentions(document: Document): Seq[EntityMention] = for {
     (sentence, index) <- document.sentences.zipWithIndex
     (name, from, until) <- readLabels(entityLabels(sentence))
     tokenInterval = Interval(from, until)
@@ -62,7 +62,7 @@ object NamedEntityExtractor {
     var end: Option[Int] = None
 
     for ((label, idx) <- labels.zipWithIndex if label != "O") {
-      if (label startsWith "B") {
+      if (label startsWith "B-") {
         if (name.isDefined) {
           // a mention just ended
           val m = (name.get, start.get, end.get + 1)
@@ -72,7 +72,7 @@ object NamedEntityExtractor {
         name = Some(label.drop(2))
         start = Some(idx)
         end = Some(idx)
-      } else if (label startsWith "I") {
+      } else if (label startsWith "I-") {
         // the mention keeps growing
         end = Some(idx)
       } else {
