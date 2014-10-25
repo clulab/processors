@@ -180,8 +180,8 @@ object Parser extends RegexParsers {
     outgoingExtractor | incomingExtractor | "(" ~> orExtractor <~ ")"
 
   def filteredExtractor: Parser[Extractor] = atomExtractor ~ opt(tokenFilter) ^^ {
-    case matcher ~ None => matcher
-    case matcher ~ Some(filter) => new FilteredExtractor(matcher, filter)
+    case extractor ~ None => extractor
+    case extractor ~ Some(filter) => new FilteredExtractor(extractor, filter)
   }
 
   def pathExtractor: Parser[Extractor] = filteredExtractor ~ rep(filteredExtractor) ^^ {
