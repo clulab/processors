@@ -24,6 +24,9 @@ trait Dependencies {
     case None => scala.sys.error("sentence has no dependencies")
     case Some(deps) => deps
   }
+
+  def incomingEdges(sentence: Sentence) = dependencies(sentence).incomingEdges
+  def outgoingEdges(sentence: Sentence) = dependencies(sentence).outgoingEdges
 }
 
 
@@ -45,32 +48,36 @@ class RegexMatcher(rx: Regex) extends Matcher {
 
 
 trait Extractor {
-  def findAllIn(sentence: Sentence, from: Int): Seq[Int]
+  def findAllIn(sentence: Sentence, start: Int): Seq[Int]
 }
 
 class OutgoingExtractor(matcher: Matcher) extends Extractor with Dependencies {
-  def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
-    matcher matches dependencies(sentence).outgoingEdges(from)
+  def findAllIn(sentence: Sentence, start: Int): Seq[Int] = {
+    val edges = outgoingEdges(sentence)
+    if (edges isDefinedAt start) matcher.matches(edges(start)) else Nil
+  }
 }
 
 class IncomingExtractor(matcher: Matcher) extends Extractor with Dependencies {
-  def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
-    matcher matches dependencies(sentence).incomingEdges(from)
+  def findAllIn(sentence: Sentence, start: Int): Seq[Int] = {
+    val edges = incomingEdges(sentence)
+    if (edges isDefinedAt start) matcher.matches(edges(start)) else Nil
+  }
 }
 
 class PathExtractor(lhs: Extractor, rhs: Extractor) extends Extractor {
-  def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
-    lhs.findAllIn(sentence, from) flatMap (i => rhs.findAllIn(sentence, i))
+  def findAllIn(sentence: Sentence, start: Int): Seq[Int] =
+    lhs.findAllIn(sentence, start) flatMap (i => rhs.findAllIn(sentence, i))
 }
 
 class OrExtractor(lhs: Extractor, rhs: Extractor) extends Extractor {
-  def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
-    (lhs.findAllIn(sentence, from) ++ rhs.findAllIn(sentence, from)).distinct
+  def findAllIn(sentence: Sentence, start: Int): Seq[Int] =
+    (lhs.findAllIn(sentence, start) ++ rhs.findAllIn(sentence, start)).distinct
 }
 
-class FilteredExtractor(matcher: Extractor, filter: Filter) extends Extractor {
-  def findAllIn(sentence: Sentence, from: Int): Seq[Int] =
-    filter.filter(sentence, matcher.findAllIn(sentence, from))
+class FilteredExtractor(extractor: Extractor, filter: Filter) extends Extractor {
+  def findAllIn(sentence: Sentence, start: Int): Seq[Int] =
+    filter.filter(sentence, extractor.findAllIn(sentence, start))
 }
 
 
