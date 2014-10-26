@@ -3,9 +3,6 @@ package edu.arizona.sista.matcher
 case class Interval(start: Int, end: Int) {
   require(start < end, "invalid range")
 
-  // constructor for intervals with a single element
-  def this(idx: Int) = this(idx, idx + 1)
-
   override def toString = s"[$start,$end)"
 
   def toRange = start until end
@@ -17,4 +14,8 @@ case class Interval(start: Int, end: Int) {
 
   def before(other: Interval) = end <= other.start
   def after(other: Interval) = start >= other.end
+}
+
+object Interval {
+  def apply(idx: Int): Interval = Interval(idx, idx + 1)
 }

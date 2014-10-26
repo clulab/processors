@@ -43,7 +43,7 @@ class DependencyExtractor(val pattern: String) extends Extractor {
       }
     }
     if (matches.isEmpty) None
-    else Some(matches.toMap)
+    else Some(matches.toMap + ("trigger" -> Seq(i)))
   }
 }
 

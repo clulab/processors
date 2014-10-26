@@ -1,14 +1,15 @@
 package edu.arizona.sista.matcher
 
+import edu.arizona.sista.processors.Document
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
-class State {
-  val tokenToMentions = new HashMap[(Int, Int), ArrayBuffer[Mention]]
+class State(val document: Document) {
+  private val lookUpTable = new HashMap[(Int, Int), ArrayBuffer[Mention]]
 
   def update(mention: Mention) {
     for (i <- mention.tokenInterval.toRange) {
       val key = (mention.sentence, i)
-      val mentions = tokenToMentions.getOrElseUpdate(key, new ArrayBuffer[Mention])
+      val mentions = lookUpTable.getOrElseUpdate(key, new ArrayBuffer[Mention])
       mentions += mention
     }
   }
@@ -16,4 +17,8 @@ class State {
   def update(mentions: Seq[Mention]) {
     mentions foreach update
   }
+
+  def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
+
+  def mentionsFor(sentence: Int, token: Int): Seq[Mention] = lookUpTable((sentence, token))
 }
