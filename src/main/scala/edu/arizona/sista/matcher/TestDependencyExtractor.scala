@@ -29,7 +29,8 @@ object TestDependencyExtractor extends App {
      destination5: prep_to [word=park] < /^conj/
      destination6: prep_to [word=park | word=/^p/]
      or_test: (nsubj | dobj) /^p/
-     or_test2: dobj | dobj
+     or_test2?: dobj | dobj
+     opt_test?: XXX
      """)
   )
 
@@ -37,7 +38,7 @@ object TestDependencyExtractor extends App {
     for ((text, rule) <- testPairs) {
       val doc = processor.annotate(text)
       val s = doc.sentences(0)
-      val dm = new DependencyExtractor(rule)
+      val dm = DependencyExtractor(rule)
 
       // Our sentence...
       println(s"\n\n${{0 until s.words.length}.mkString("\t")}\n${s.words.mkString("\t")}")
