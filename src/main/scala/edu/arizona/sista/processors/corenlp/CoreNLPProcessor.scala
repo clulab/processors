@@ -77,6 +77,22 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     new StanfordCoreNLP(props, false)
   }
 
+  /**
+   * Hook to allow postprocessing of CoreNLP tokenization
+   * This is useful for domain-specific corrections, such as the ones in BioNLPProcessor
+   * If you change the tokens, make sure to store them back in the sentence!
+   * @param sentence Input CoreNLP sentence
+   * @return The modified tokens
+   */
+  def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
+    sentence.get(classOf[TokensAnnotation])
+
+    //
+    // Add postprocessing code here then:
+    // sentence.set(classOf[TokensAnnotation], modifiedTokens)
+    //
+  }
+
   def mkDocument(text:String): Document = {
     val annotation = new Annotation(text)
     tokenizerWithSentenceSplitting.annotate(annotation)
@@ -87,11 +103,21 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
       sentences(offset) = mkSentence(sa)
       offset += 1
     }
+
+    // just in case the postprocessing code changed token offsets, reset them
+    var tokenOffset = 0
+    for(sa <- sas) {
+      val crtTokens = sa.get(classOf[TokensAnnotation])
+      sa.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
+      tokenOffset += crtTokens.size()
+      sa.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
+    }
+
     new CoreNLPDocument(sentences, Some(annotation))
   }
 
   def mkSentence(annotation:CoreMap): Sentence = {
-    val tas = annotation.get(classOf[TokensAnnotation])
+    val tas = postprocessTokens(annotation)
 
     val wordBuffer = new ArrayBuffer[String]
     val startOffsetBuffer = new ArrayBuffer[Int]
@@ -132,8 +158,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     for(sentence <- sentences) {
       val tmpAnnotation = new Annotation(sentence)
       tokenizerWithoutSentenceSplitting.annotate(tmpAnnotation)
-      val crtTokens:java.util.List[CoreLabel] =
-        tmpAnnotation.get(classOf[TokensAnnotation])
+      val crtTokens:java.util.List[CoreLabel] = postprocessTokens(tmpAnnotation)
 
       // construct a proper sentence, with token and character offsets adjusted to make the entire document consistent
       val crtSent = new Annotation(sentence)
@@ -265,13 +290,19 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     }
   }
 
-  def recognizeNamedEntities(doc:Document) {
+  def namedEntitySanityCheck(doc:Document):Option[Annotation] = {
     val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
+    if (annotation.isEmpty) return None
     if (doc.sentences.head.tags == None)
       throw new RuntimeException("ERROR: you have to run the POS tagger before NER!")
     if (doc.sentences.head.lemmas == None)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
+    annotation
+  }
+
+  def recognizeNamedEntities(doc:Document) {
+    val annotation = namedEntitySanityCheck(doc)
+    if(annotation.isEmpty) return
 
     try {
       ner.annotate(annotation.get)
