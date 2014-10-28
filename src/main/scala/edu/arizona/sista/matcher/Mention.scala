@@ -11,6 +11,10 @@ trait Mention extends Equals {
   def tokenFrom: Int = tokenInterval.start
   def tokenUntil: Int = tokenInterval.end
 
+  // this method should be overriden by Mention subclases
+  // to return the label and all the relevant labels in some taxonomy
+  def allLabels: Seq[String] = Seq(label)
+
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
   override def equals(that: Any): Boolean = that match {

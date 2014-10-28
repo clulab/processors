@@ -79,7 +79,9 @@ object ExtractorEngine {
 class NamedExtractor(val name: String, val priority: Priority, val extractor: Extractor, val action: Action) {
   def extractFrom(document: Document, state: State): Seq[Mention] = {
     document.sentences.zipWithIndex flatMap {
-      case (sentence, i) => extractor.findAllIn(sentence) flatMap (x => action(document, i, state, x))
+      case (sentence, i) => extractor.findAllIn(sentence, state) flatMap {
+        x => action(document, i, state, x)
+      }
     }
   }
 
