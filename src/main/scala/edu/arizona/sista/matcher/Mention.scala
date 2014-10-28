@@ -15,6 +15,8 @@ trait Mention extends Equals {
   // to return the label and all the relevant labels in some taxonomy
   def allLabels: Seq[String] = Seq(label)
 
+  def matchesLabel(label: String): Boolean = allLabels exists (_ == label)
+
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
   override def equals(that: Any): Boolean = that match {

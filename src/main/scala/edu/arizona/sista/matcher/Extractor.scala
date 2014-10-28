@@ -10,7 +10,7 @@ class NamedExtractor(val name: String, val priority: Priority, val extractor: Ex
   def extractFrom(document: Document, state: State): Seq[Mention] = {
     document.sentences.zipWithIndex flatMap {
       case (sentence, i) => extractor.findAllIn(sentence, state) flatMap {
-        x => action(document, i, state, x)
+        x => action(i, state, x)
       }
     }
   }
