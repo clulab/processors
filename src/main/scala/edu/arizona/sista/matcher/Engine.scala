@@ -9,8 +9,7 @@ class ExtractorEngine(val spec: String, val actions: AnyRef) {
   // invokes actions through reflection
   val mirror = new ActionMirror(actions)
 
-  // extractors defined in the spec, separated by at least one blank line
-  val extractors = spec split """(?m)^\s*$""" map (_.trim) filter (_ != "") map mkExtractor
+  val extractors = parseSpec(spec)
 
   // the minimum number of iterations required for every rule to run at least once
   val minIterations = extractors.map(_.startsAt).max
@@ -35,6 +34,14 @@ class ExtractorEngine(val spec: String, val actions: AnyRef) {
     }
 
     state.allMentions
+  }
+
+  def parseSpec(spec: String): Seq[NamedExtractor] = {
+    // extractors defined in the spec, separated by at least one blank line
+    val extractors = spec split """(?m)^\s*$""" map (_.trim) filter (_ != "") map mkExtractor
+    val names = extractors map (_.name)
+    require(names.size == names.distinct.size, "rule names should be unique")
+    extractors
   }
 
   def mkExtractor(spec: String): NamedExtractor = {

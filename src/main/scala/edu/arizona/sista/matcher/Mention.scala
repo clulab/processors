@@ -8,6 +8,9 @@ trait Mention extends Equals {
   def sentence: Int
   def tokenInterval: Interval
 
+  // name of matching rule
+  var foundBy: Option[String] = None
+
   def tokenFrom: Int = tokenInterval.start
   def tokenUntil: Int = tokenInterval.end
 

@@ -2,7 +2,7 @@ package edu.arizona.sista.matcher.dependencies
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
-import edu.arizona.sista.matcher.{Extractor, State}
+import edu.arizona.sista.matcher.{Extractor, State, TriggerMention}
 import edu.arizona.sista.processors.Sentence
 
 
@@ -153,8 +153,15 @@ class NotFilter(filter: FilterNode) extends FilterNode {
 
 
 class TriggerFinder(filter: FilterNode) {
-  def findAllIn(sentence: Sentence, state: State): Seq[Int] =
-    filter.filter(sentence, state, 0 until sentence.size)
+  def findAllIn(sentence: Sentence, state: State, ruleName: String): Seq[Int] = {
+    val s = state.sentenceIndex(sentence)
+    filter.filter(sentence, state, 0 until sentence.size) filter { t =>
+      state.mentionsFor(s, t) forall {
+        case m: TriggerMention => m.foundBy.get != ruleName
+        case _ => true
+      }
+    }
+  }
 }
 
 
@@ -164,8 +171,8 @@ extends Extractor {
   private val required = arguments filter (_.required == true)
   private val optional = arguments filter (_.required == false)
 
-  def findAllIn(sentence: Sentence, state: State): Seq[Map[String, Seq[Int]]] =
-    trigger.findAllIn(sentence, state) flatMap (t => extractArgs(sentence, state, t))
+  def findAllIn(sentence: Sentence, state: State, ruleName: String): Seq[Map[String, Seq[Int]]] =
+    trigger.findAllIn(sentence, state, ruleName) flatMap (t => extractArgs(sentence, state, t))
 
   private def extractArgs(sent: Sentence, state: State, tok: Int) = {
     val req = extract(required, sent, state, tok)
