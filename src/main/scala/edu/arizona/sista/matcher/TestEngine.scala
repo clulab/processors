@@ -5,7 +5,7 @@ import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
 object actions {
   def mkPhosphorylation(doc: Document, sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
-    val trigger = new TriggerMention("Phosphorylation trigger", sent, Interval(found("trigger").head))
+    val trigger = new TriggerMention("trigger", sent, Interval(found("trigger").head))
 
     val themes = found("theme") flatMap { tok =>
       state.mentionsFor(sent, tok) filter {
@@ -24,12 +24,12 @@ object actions {
     for {
       theme <- themes
       cause <- causes
-    } yield new EventMention("Phosphorylation event", sent, Map("trigger" -> trigger, "theme" -> theme, "cause" -> cause))
+    } yield new EventMention("Phosphorylation", sent, Map("trigger" -> trigger, "theme" -> theme, "cause" -> cause))
 
   }
 
   def mkUbiquitination(doc: Document, sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
-    val trigger = new TriggerMention("Ubiquitination trigger", sent, Interval(found("trigger").head))
+    val trigger = new TriggerMention("trigger", sent, Interval(found("trigger").head))
 
     val themes = found("theme") flatMap { tok =>
       state.mentionsFor(sent, tok) filter {
@@ -38,11 +38,11 @@ object actions {
       }
     }
 
-    for (theme <- themes) yield new EventMention("Ubiquitination event", sent, Map("trigger" -> trigger, "theme" -> theme))
+    for (theme <- themes) yield new EventMention("Ubiquitination", sent, Map("trigger" -> trigger, "theme" -> theme))
   }
 
   def mkDownRegulation(doc: Document, sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
-    val trigger = new TriggerMention("DownRegulation trigger", sent, Interval(found("trigger").head))
+    val trigger = new TriggerMention("trigger", sent, Interval(found("trigger").head))
 
     val themes = found("theme") flatMap { tok =>
       state.mentionsFor(sent, tok) filter {
@@ -61,7 +61,7 @@ object actions {
     for {
       theme <- themes
       cause <- causes
-    } yield new EventMention("DownRegulation event", sent, Map("trigger" -> trigger, "theme" -> theme, "cause" -> cause))
+    } yield new EventMention("DownRegulation", sent, Map("trigger" -> trigger, "theme" -> theme, "cause" -> cause))
   }
 }
 
@@ -75,7 +75,7 @@ object TestEngine extends App {
     action: mkPhosphorylation
     pattern: {{
       trigger: [word=/^phospho/ & tag=/^VB/]
-      theme: dobj
+      theme: dobj [mention=Protein]
       cause: nsubj
     }}
 
@@ -92,7 +92,7 @@ object TestEngine extends App {
     action: mkDownRegulation
     pattern: {{
       trigger: [lemma=inhibit]
-      theme: dobj
+      theme: dobj [mention=/^Ubi/ & !mention=Phosphorylation]
       cause: nsubj
     }}
   """

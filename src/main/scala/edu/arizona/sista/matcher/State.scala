@@ -1,6 +1,6 @@
 package edu.arizona.sista.matcher
 
-import edu.arizona.sista.processors.Document
+import edu.arizona.sista.processors.{Document, Sentence}
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
 class State(val document: Document) {
@@ -17,6 +17,8 @@ class State(val document: Document) {
   def update(mentions: Seq[Mention]) {
     mentions foreach update
   }
+
+  def sentenceIndex(s: Sentence) = document.sentences.indexOf(s)
 
   def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
 

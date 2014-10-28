@@ -2,7 +2,7 @@ package edu.arizona.sista.matcher.dependencies
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
-import edu.arizona.sista.matcher.Extractor
+import edu.arizona.sista.matcher.{Extractor, State}
 import edu.arizona.sista.processors.Sentence
 
 
@@ -49,12 +49,12 @@ class RegexMatcher(rx: Regex) extends MatcherNode {
 
 
 sealed trait ExtractorNode {
-  def findAllIn(sentence: Sentence, start: Int): Seq[Int]
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int]
 }
 
 class OutgoingExtractor(matcher: MatcherNode)
 extends ExtractorNode with Dependencies {
-  def findAllIn(sentence: Sentence, start: Int): Seq[Int] = {
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] = {
     val edges = outgoingEdges(sentence)
     if (edges isDefinedAt start) matcher.matches(edges(start)) else Nil
   }
@@ -62,7 +62,7 @@ extends ExtractorNode with Dependencies {
 
 class IncomingExtractor(matcher: MatcherNode)
 extends ExtractorNode with Dependencies {
-  def findAllIn(sentence: Sentence, start: Int): Seq[Int] = {
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] = {
     val edges = incomingEdges(sentence)
     if (edges isDefinedAt start) matcher.matches(edges(start)) else Nil
   }
@@ -70,79 +70,91 @@ extends ExtractorNode with Dependencies {
 
 class PathExtractor(lhs: ExtractorNode, rhs: ExtractorNode)
 extends ExtractorNode {
-  def findAllIn(sentence: Sentence, start: Int): Seq[Int] =
-    lhs.findAllIn(sentence, start) flatMap (i => rhs.findAllIn(sentence, i))
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
+    lhs.findAllIn(sentence, state, start) flatMap (i => rhs.findAllIn(sentence, state, i))
 }
 
 class OrExtractor(lhs: ExtractorNode, rhs: ExtractorNode)
 extends ExtractorNode {
-  def findAllIn(sentence: Sentence, start: Int): Seq[Int] =
-    (lhs.findAllIn(sentence, start) ++ rhs.findAllIn(sentence, start)).distinct
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
+    (lhs.findAllIn(sentence, state, start) ++ rhs.findAllIn(sentence, state, start)).distinct
 }
 
 class FilteredExtractor(extractor: ExtractorNode, filter: FilterNode)
 extends ExtractorNode {
-  def findAllIn(sentence: Sentence, start: Int): Seq[Int] =
-    filter.filter(sentence, extractor.findAllIn(sentence, start))
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
+    filter.filter(sentence, state, extractor.findAllIn(sentence, state, start))
 }
 
 class ArgumentExtractor(val name: String, val required: Boolean, extractor: ExtractorNode)
 extends ExtractorNode {
-  def findAllIn(sentence: Sentence, start: Int): Seq[Int] =
-    extractor.findAllIn(sentence, start)
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
+    extractor.findAllIn(sentence, state, start)
 }
 
 
 
 sealed trait FilterNode {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int]
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int]
 }
 
 class WordFilter(matcher: MatcherNode) extends FilterNode with Values {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.words)
 }
 
 class LemmaFilter(matcher: MatcherNode) extends FilterNode with Values {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.lemmas, "sentence has no lemmas")
 }
 
 class TagFilter(matcher: MatcherNode) extends FilterNode with Values {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.tags, "sentence has no tags")
 }
 
 class EntityFilter(matcher: MatcherNode) extends FilterNode with Values {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.entities, "sentence has no entities")
 }
 
 class ChunkFilter(matcher: MatcherNode) extends FilterNode with Values {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
     matcher matches values(tokens, sentence.chunks, "sentence has no chunks")
 }
 
+class MentionFilter(matcher: MatcherNode) extends FilterNode {
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] = {
+    val s = state.sentenceIndex(sentence)
+    tokens filter { t =>
+      state.mentionsFor(s, t) exists { m =>
+        val indexsAndValues = m.allLabels.zipWithIndex map (li => (li._2, li._1))
+        matcher.matches(indexsAndValues).nonEmpty
+      }
+    }
+  }
+}
+
 class AndFilter(lhs: FilterNode, rhs: FilterNode) extends FilterNode {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
-    lhs.filter(sentence, tokens) intersect rhs.filter(sentence, tokens)
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
+    lhs.filter(sentence, state, tokens) intersect rhs.filter(sentence, state, tokens)
 }
 
 class OrFilter(lhs: FilterNode, rhs: FilterNode) extends FilterNode {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
-    (lhs.filter(sentence, tokens) ++ rhs.filter(sentence, tokens)).distinct
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
+    (lhs.filter(sentence, state, tokens) ++ rhs.filter(sentence, state, tokens)).distinct
 }
 
 class NotFilter(filter: FilterNode) extends FilterNode {
-  def filter(sentence: Sentence, tokens: Seq[Int]): Seq[Int] =
-    tokens diff filter.filter(sentence, tokens)
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
+    tokens diff filter.filter(sentence, state, tokens)
 }
 
 
 
 class TriggerFinder(filter: FilterNode) {
-  def findAllIn(sentence: Sentence): Seq[Int] =
-    filter.filter(sentence, 0 until sentence.size)
+  def findAllIn(sentence: Sentence, state: State): Seq[Int] =
+    filter.filter(sentence, state, 0 until sentence.size)
 }
 
 
@@ -152,17 +164,17 @@ extends Extractor {
   private val required = arguments filter (_.required == true)
   private val optional = arguments filter (_.required == false)
 
-  def findAllIn(sentence: Sentence): Seq[Map[String, Seq[Int]]] =
-    trigger findAllIn sentence flatMap (i => extractArgs(sentence, i))
+  def findAllIn(sentence: Sentence, state: State): Seq[Map[String, Seq[Int]]] =
+    trigger.findAllIn(sentence, state) flatMap (t => extractArgs(sentence, state, t))
 
-  private def extractArgs(s: Sentence, i: Int) = {
-    val req = extract(required, s, i)
+  private def extractArgs(sent: Sentence, state: State, tok: Int) = {
+    val req = extract(required, sent, state, tok)
     if (req.exists(kv => kv._2.isEmpty)) None
-    else Some(req ++ extract(optional, s, i) + ("trigger" -> Seq(i)))
+    else Some(req ++ extract(optional, sent, state, tok) + ("trigger" -> Seq(tok)))
   }
 
-  private def extract(args: Seq[ArgumentExtractor], s: Sentence, i: Int) =
-    args.map(a => (a.name -> a.findAllIn(s, i))).toMap
+  private def extract(args: Seq[ArgumentExtractor], sent: Sentence, state: State, i: Int) =
+    args.map(a => (a.name -> a.findAllIn(sent, state, i))).toMap
 }
 
 object DependencyExtractor {
@@ -244,7 +256,7 @@ object Parser extends RegexParsers {
     }
   }
 
-  def filterName: Parser[String] = "word" | "lemma" | "tag" | "entity" | "chunk"
+  def filterName: Parser[String] = "word" | "lemma" | "tag" | "entity" | "chunk" | "mention"
 
   def filterValue: Parser[FilterNode] = filterName ~ "=" ~ stringMatcher ^^ {
     case "word" ~ _ ~ matcher => new WordFilter(matcher)
@@ -252,6 +264,7 @@ object Parser extends RegexParsers {
     case "tag" ~ _ ~ matcher => new TagFilter(matcher)
     case "entity" ~ _ ~ matcher => new EntityFilter(matcher)
     case "chunk" ~ _ ~ matcher => new ChunkFilter(matcher)
+    case "mention" ~ _ ~ matcher => new MentionFilter(matcher)
   }
 
   def filterAtom: Parser[FilterNode] = filterValue | "(" ~> orFilter <~ ")"
