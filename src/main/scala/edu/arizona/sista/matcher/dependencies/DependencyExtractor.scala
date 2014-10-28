@@ -169,7 +169,7 @@ extends Extractor {
 
   private def extractArgs(sent: Sentence, state: State, tok: Int) = {
     val req = extract(required, sent, state, tok)
-    if (req.exists(kv => kv._2.isEmpty)) None
+    if (req.exists(_._2.isEmpty)) None
     else Some(req ++ extract(optional, sent, state, tok) + ("trigger" -> Seq(tok)))
   }
 
@@ -214,8 +214,8 @@ object Parser extends RegexParsers {
 
   // match a perl style "/" delimited regular expression
   // "\" is the escape character, so "\/" becomes "/"
-  def regexLiteral: Parser[String] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
-    case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/")
+  def regexLiteral: Parser[Regex] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
+    case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/").r
   }
 
   def exactMatcher: Parser[MatcherNode] = exactLiteral ^^ {
@@ -223,7 +223,7 @@ object Parser extends RegexParsers {
   }
 
   def regexMatcher: Parser[MatcherNode] = regexLiteral ^^ {
-    case pattern => new RegexMatcher(pattern.r)
+    case regex => new RegexMatcher(regex)
   }
 
   def stringMatcher: Parser[MatcherNode] = exactMatcher | regexMatcher
