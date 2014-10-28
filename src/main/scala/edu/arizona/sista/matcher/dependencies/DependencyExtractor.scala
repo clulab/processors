@@ -2,7 +2,7 @@ package edu.arizona.sista.matcher.dependencies
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
-import edu.arizona.sista.matcher.{Extractor, State}
+import edu.arizona.sista.matcher.{Extractor, State, TriggerMention}
 import edu.arizona.sista.processors.Sentence
 
 
@@ -153,8 +153,15 @@ class NotFilter(filter: FilterNode) extends FilterNode {
 
 
 class TriggerFinder(filter: FilterNode) {
-  def findAllIn(sentence: Sentence, state: State): Seq[Int] =
-    filter.filter(sentence, state, 0 until sentence.size)
+  def findAllIn(sentence: Sentence, state: State, ruleName: String): Seq[Int] = {
+    val s = state.sentenceIndex(sentence)
+    filter.filter(sentence, state, 0 until sentence.size) filter { t =>
+      state.mentionsFor(s, t) forall {
+        case m: TriggerMention => m.foundBy.get != ruleName
+        case _ => true
+      }
+    }
+  }
 }
 
 
@@ -164,12 +171,12 @@ extends Extractor {
   private val required = arguments filter (_.required == true)
   private val optional = arguments filter (_.required == false)
 
-  def findAllIn(sentence: Sentence, state: State): Seq[Map[String, Seq[Int]]] =
-    trigger.findAllIn(sentence, state) flatMap (t => extractArgs(sentence, state, t))
+  def findAllIn(sentence: Sentence, state: State, ruleName: String): Seq[Map[String, Seq[Int]]] =
+    trigger.findAllIn(sentence, state, ruleName) flatMap (t => extractArgs(sentence, state, t))
 
   private def extractArgs(sent: Sentence, state: State, tok: Int) = {
     val req = extract(required, sent, state, tok)
-    if (req.exists(kv => kv._2.isEmpty)) None
+    if (req.exists(_._2.isEmpty)) None
     else Some(req ++ extract(optional, sent, state, tok) + ("trigger" -> Seq(tok)))
   }
 
@@ -214,8 +221,8 @@ object Parser extends RegexParsers {
 
   // match a perl style "/" delimited regular expression
   // "\" is the escape character, so "\/" becomes "/"
-  def regexLiteral: Parser[String] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
-    case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/")
+  def regexLiteral: Parser[Regex] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
+    case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/").r
   }
 
   def exactMatcher: Parser[MatcherNode] = exactLiteral ^^ {
@@ -223,7 +230,7 @@ object Parser extends RegexParsers {
   }
 
   def regexMatcher: Parser[MatcherNode] = regexLiteral ^^ {
-    case pattern => new RegexMatcher(pattern.r)
+    case regex => new RegexMatcher(regex)
   }
 
   def stringMatcher: Parser[MatcherNode] = exactMatcher | regexMatcher

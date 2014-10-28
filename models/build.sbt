@@ -2,8 +2,6 @@ name := "models"
 
 version := Common.version
 
-scalaVersion := "2.10.4"
-
 exportJars := true
 
 exportJars in Test := false

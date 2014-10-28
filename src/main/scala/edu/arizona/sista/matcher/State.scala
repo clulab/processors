@@ -22,5 +22,12 @@ class State(val document: Document) {
 
   def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
 
-  def mentionsFor(sentence: Int, token: Int): Seq[Mention] = lookUpTable((sentence, token))
+  def mentionsFor(sent: Int, tok: Int): Seq[Mention] =
+    lookUpTable.getOrElse((sent, tok), Nil)
+
+  def mentionsFor(sent: Int, tok: Int, label: String): Seq[Mention] =
+    mentionsFor(sent, tok) filter (_ matchesLabel label)
+
+  def mentionsFor(sent: Int, toks: Seq[Int], label: String): Seq[Mention] =
+    toks flatMap (t => mentionsFor(sent, t, label))
 }

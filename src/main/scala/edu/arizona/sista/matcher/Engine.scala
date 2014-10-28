@@ -1,6 +1,5 @@
 package edu.arizona.sista.matcher
 
-import scala.util.control.Breaks._
 import scala.collection.mutable.HashMap
 import edu.arizona.sista.processors.{Document, Sentence}
 import edu.arizona.sista.matcher.dependencies.DependencyExtractor
@@ -10,8 +9,7 @@ class ExtractorEngine(val spec: String, val actions: AnyRef) {
   // invokes actions through reflection
   val mirror = new ActionMirror(actions)
 
-  // extractors defined in the spec, separated by at least one blank line
-  val extractors = spec split """(?m)^\s*$""" map (_.trim) filter (_ != "") map mkExtractor
+  val extractors = parseSpec(spec)
 
   // the minimum number of iterations required for every rule to run at least once
   val minIterations = extractors.map(_.startsAt).max
@@ -21,24 +19,29 @@ class ExtractorEngine(val spec: String, val actions: AnyRef) {
     state.update(getEntityMentions(document))
 
     var updated = true
+    var iter = 0
 
-    breakable {
-      for (iter <- Stream.from(1)) {
-        var updated = false
-
-        for (extractor <- extractors if extractor.priority matches iter) {
-          val mentions = extractor.extractFrom(document, state)
-          if (mentions.nonEmpty) {
-            state.update(mentions)
-            updated = true
-          }
+    while (updated || iter < minIterations) {
+      iter += 1
+      updated = false
+      for (extractor <- extractors if extractor.priority matches iter) {
+        val mentions = extractor.extractFrom(document, state)
+        if (mentions.nonEmpty) {
+          state.update(mentions)
+          updated = true
         }
-
-        if (!updated && iter >= minIterations) break
       }
     }
 
     state.allMentions
+  }
+
+  def parseSpec(spec: String): Seq[NamedExtractor] = {
+    // extractors defined in the spec, separated by at least one blank line
+    val extractors = spec split """(?m)^\s*$""" map (_.trim) filter (_ != "") map mkExtractor
+    val names = extractors map (_.name)
+    require(names.size == names.distinct.size, "rule names should be unique")
+    extractors
   }
 
   def mkExtractor(spec: String): NamedExtractor = {
@@ -74,20 +77,4 @@ object ExtractorEngine {
 
   // regex to extract fields from rule
   private val fieldPattern = """(?s)(\w+)\s*:\s*(\w+|\{\{.*\}\})""".r
-}
-
-class NamedExtractor(val name: String, val priority: Priority, val extractor: Extractor, val action: Action) {
-  def extractFrom(document: Document, state: State): Seq[Mention] = {
-    document.sentences.zipWithIndex flatMap {
-      case (sentence, i) => extractor.findAllIn(sentence, state) flatMap {
-        x => action(document, i, state, x)
-      }
-    }
-  }
-
-  def startsAt: Int = priority match {
-    case ExactPriority(i) => i
-    case IntervalPriority(start, end) => start
-    case FromPriority(from) => from
-  }
 }

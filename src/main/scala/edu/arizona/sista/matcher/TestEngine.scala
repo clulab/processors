@@ -4,22 +4,11 @@ import edu.arizona.sista.processors.{Document, Sentence}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
 object actions {
-  def mkPhosphorylation(doc: Document, sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
+  def mkPhosphorylation(sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
     val trigger = new TriggerMention("trigger", sent, Interval(found("trigger").head))
 
-    val themes = found("theme") flatMap { tok =>
-      state.mentionsFor(sent, tok) filter {
-        case mention: EntityMention => mention.label == "Protein"
-        case _ => false
-      }
-    }
-
-    val causes = found("cause") flatMap { tok =>
-      state.mentionsFor(sent, tok) filter {
-        case mention: EntityMention => mention.label == "Protein"
-        case _ => false
-      }
-    }
+    val themes = state.mentionsFor(sent, found("theme"), "Protein")
+    val causes = state.mentionsFor(sent, found("cause"), "Protein")
 
     for {
       theme <- themes
@@ -28,32 +17,21 @@ object actions {
 
   }
 
-  def mkUbiquitination(doc: Document, sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
+  def mkUbiquitination(sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
     val trigger = new TriggerMention("trigger", sent, Interval(found("trigger").head))
 
-    val themes = found("theme") flatMap { tok =>
-      state.mentionsFor(sent, tok) filter {
-        case mention: EntityMention => mention.label == "Protein"
-        case _ => false
-      }
-    }
+    val themes = state.mentionsFor(sent, found("theme"), "Protein")
 
     for (theme <- themes) yield new EventMention("Ubiquitination", sent, Map("trigger" -> trigger, "theme" -> theme))
   }
 
-  def mkDownRegulation(doc: Document, sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
+  def mkDownRegulation(sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
     val trigger = new TriggerMention("trigger", sent, Interval(found("trigger").head))
 
+    val causes = state.mentionsFor(sent, found("cause"), "Protein")
     val themes = found("theme") flatMap { tok =>
       state.mentionsFor(sent, tok) filter {
         case mention: EventMention => true
-        case _ => false
-      }
-    }
-
-    val causes = found("cause") flatMap { tok =>
-      state.mentionsFor(sent, tok) filter {
-        case mention: EntityMention => mention.label == "Protein"
         case _ => false
       }
     }

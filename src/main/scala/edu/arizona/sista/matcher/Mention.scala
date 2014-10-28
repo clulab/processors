@@ -8,12 +8,17 @@ trait Mention extends Equals {
   def sentence: Int
   def tokenInterval: Interval
 
+  // name of matching rule
+  var foundBy: Option[String] = None
+
   def tokenFrom: Int = tokenInterval.start
   def tokenUntil: Int = tokenInterval.end
 
   // this method should be overriden by Mention subclases
   // to return the label and all the relevant labels in some taxonomy
   def allLabels: Seq[String] = Seq(label)
+
+  def matchesLabel(label: String): Boolean = allLabels exists (_ == label)
 
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
