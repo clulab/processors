@@ -2,11 +2,20 @@ name := Common.name
 
 version := Common.version
 
+organization := Common.organization
+
 scalaVersion := "2.10.4"
 
-lazy val core = project in file(".") aggregate models dependsOn models
+lazy val core = project.in(file(".")).settings(
+  addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models).settings: _*
+) aggregate models dependsOn models
+
 
 lazy val models = project in file("models")
+
+publishArtifact in (Compile, packageSrc) := false
+
+publishArtifact in (Compile, packageDoc) := false
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % "2.10.4",
