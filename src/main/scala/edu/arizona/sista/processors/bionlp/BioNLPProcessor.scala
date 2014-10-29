@@ -90,6 +90,10 @@ class BioNLPProcessor (internStrings:Boolean = true,
    * @return an array of BIO labels
    */
   def runBioNer(sentence:Sentence):Array[String] = {
-    null // TODO: run Banner!
+    val labels = new Array[String](sentence.size)
+    for(i <- 0 until labels.size) labels(i) = "O"
+
+    // TODO: run Banner!
+    labels
   }
 }
