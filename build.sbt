@@ -6,24 +6,26 @@ organization := Common.organization
 
 scalaVersion := "2.10.4"
 
-lazy val core = project.in(file("."))
-  .settings(addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models).settings: _*)
-  .aggregate(models)
-  .dependsOn(models)
+lazy val core = project in file(".")
 
 lazy val models = project.in(file("models"))
   .settings(
     publish := {},
-    publishLocal := {}
+    publishLocal := {},
+    publishM2 := {}
   )
 
 publishArtifact in (Compile, packageSrc) := false
 
 publishArtifact in (Compile, packageDoc) := false
 
+addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models)
+
+unmanagedJars in Runtime += (modelsTask in models).value
+
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % "2.10.4",
-  "org.scalatest" %% "scalatest" % "2.0.M6-SNAP17",
+  "org.scalatest" %% "scalatest" % "2.0.M6-SNAP17" % "test",
   "junit" % "junit" % "4.10" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "xom" % "xom" % "1.2.5",
