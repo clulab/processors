@@ -6,12 +6,16 @@ organization := Common.organization
 
 scalaVersion := "2.10.4"
 
-lazy val core = project.in(file(".")).settings(
-  addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models).settings: _*
-) aggregate models dependsOn models
+lazy val core = project.in(file("."))
+  .settings(addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models).settings: _*)
+  .aggregate(models)
+  .dependsOn(models)
 
-
-lazy val models = project in file("models")
+lazy val models = project.in(file("models"))
+  .settings(
+    publish := {},
+    publishLocal := {}
+  )
 
 publishArtifact in (Compile, packageSrc) := false
 
