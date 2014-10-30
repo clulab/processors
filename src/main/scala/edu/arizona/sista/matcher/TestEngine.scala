@@ -49,10 +49,11 @@ object TestEngine extends App {
 
   val rules = """
     name: phosphorylation
-    priority: 1
+    priority: 1 # This is a comment!
     action: mkPhosphorylation
     pattern: {{
-      trigger: [word=/^phospho/ & tag=/^VB/]
+		  # this comment line should go away...
+      trigger: [word=/^phospho/ & tag=/^VB/] # Here's another comment!
       theme: dobj [mention=Protein]
       cause: nsubj
     }}
@@ -87,12 +88,9 @@ object TestEngine extends App {
 
   val mentions = extractor extractFrom doc
 
-  println
-  println
-  println(s"sentence = '$text'")
-  println
-  println("found:")
-  println
+  println(s"\n\nsentence = '$text'")
+  println("\nfound:\n")
+
   for (m <- mentions) {
     m match {
       case mention: EventMention =>

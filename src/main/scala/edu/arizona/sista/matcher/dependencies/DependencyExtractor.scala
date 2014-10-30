@@ -191,7 +191,11 @@ object DependencyExtractor {
 
 
 object Parser extends RegexParsers {
-  def parse(input: String): DependencyExtractor = parseAll(depExtractor, input.trim) match {
+
+	// remove comment lines and trim text
+	def cleanInput(input:String):String = input.replaceAll("^\\s*#.*?\\n", "").trim
+
+  def parse(input: String): DependencyExtractor = parseAll(depExtractor, cleanInput(input)) match {
     case Success(result, _) => result
     case failure: NoSuccess => sys.error(failure.msg)
   }
@@ -295,14 +299,14 @@ object Parser extends RegexParsers {
 
   def tokenFilter: Parser[FilterNode] = "[" ~> orFilter <~ "]"
 
-  def triggerFinder: Parser[TriggerFinder] = "trigger" ~> ":" ~> tokenFilter ^^ {
-    new TriggerFinder(_)
+  def triggerFinder: Parser[TriggerFinder] = "trigger" ~> ":" ~> tokenFilter ~ opt("#" ~ ".*".r) ^^ {
+		case filter ~ _  => new TriggerFinder(filter)
   }
 
-  def argExtractor: Parser[ArgumentExtractor] = ident ~ opt("?") ~ ":" ~ orExtractor ^^ {
-    case "trigger" ~ _ ~ _ ~ _ => sys.error("`trigger` is not a valid argument name")
-    case name ~ None ~ _ ~ extractor => new ArgumentExtractor(name, true, extractor)
-    case name ~ Some(_) ~ _ ~ extractor => new ArgumentExtractor(name, false, extractor)
+  def argExtractor: Parser[ArgumentExtractor] = ident ~ opt("?") ~ ":" ~ orExtractor ~ opt("#" ~ ".*".r) ^^ {
+    case "trigger" ~ _ ~ _ ~ _ ~ _ => sys.error("`trigger` is not a valid argument name")
+    case name ~ None ~ _ ~ extractor ~ _ => new ArgumentExtractor(name, true, extractor)
+    case name ~ Some(_) ~ _ ~ extractor ~ _ => new ArgumentExtractor(name, false, extractor)
   }
 
   def depExtractor: Parser[DependencyExtractor] =
