@@ -54,6 +54,7 @@ object TestEngine extends App {
     pattern: {{
 		  # this comment line should go away...
       trigger: [word=/^phospho/ & tag=/^VB/] # Here's another comment!
+      # this one should go away too
       theme: dobj [mention=Protein]
       cause: nsubj
     }}

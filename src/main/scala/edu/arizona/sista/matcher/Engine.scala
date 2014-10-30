@@ -52,7 +52,7 @@ class ExtractorEngine(val spec: String, val actions: AnyRef) {
     val priority = Priority(fields.getOrElse("priority", ExtractorEngine.defaultPriority))
     val action = mirror.reflect(fields("action"))
     val extractorType = fields.getOrElse("type", ExtractorEngine.defaultExtractorType)
-		val pattern = fields("pattern").drop(2).dropRight(2)
+    val pattern = fields("pattern").drop(2).dropRight(2)
     val extractor = ExtractorEngine.registeredExtractors(extractorType)(pattern)
     new NamedExtractor(name, priority, extractor, action)
   }

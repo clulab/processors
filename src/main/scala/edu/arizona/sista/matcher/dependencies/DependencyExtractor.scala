@@ -192,8 +192,8 @@ object DependencyExtractor {
 
 object Parser extends RegexParsers {
 
-	// remove comment lines and trim text
-	def cleanInput(input:String):String = input.replaceAll("^\\s*#.*?\\n", "").trim
+  // remove comment lines and trim text
+  def cleanInput(input:String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim
 
   def parse(input: String): DependencyExtractor = parseAll(depExtractor, cleanInput(input)) match {
     case Success(result, _) => result
@@ -299,11 +299,13 @@ object Parser extends RegexParsers {
 
   def tokenFilter: Parser[FilterNode] = "[" ~> orFilter <~ "]"
 
-  def triggerFinder: Parser[TriggerFinder] = "trigger" ~> ":" ~> tokenFilter ~ opt("#" ~ ".*".r) ^^ {
-		case filter ~ _  => new TriggerFinder(filter)
+  def comment: Parser[String] = "#.*".r
+
+  def triggerFinder: Parser[TriggerFinder] = "trigger" ~> ":" ~> tokenFilter ~ opt(comment) ^^ {
+    case filter ~ _  => new TriggerFinder(filter)
   }
 
-  def argExtractor: Parser[ArgumentExtractor] = ident ~ opt("?") ~ ":" ~ orExtractor ~ opt("#" ~ ".*".r) ^^ {
+  def argExtractor: Parser[ArgumentExtractor] = ident ~ opt("?") ~ ":" ~ orExtractor ~ opt(comment) ^^ {
     case "trigger" ~ _ ~ _ ~ _ ~ _ => sys.error("`trigger` is not a valid argument name")
     case name ~ None ~ _ ~ extractor ~ _ => new ArgumentExtractor(name, true, extractor)
     case name ~ Some(_) ~ _ ~ extractor ~ _ => new ArgumentExtractor(name, false, extractor)
