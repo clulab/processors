@@ -301,14 +301,14 @@ object Parser extends RegexParsers {
 
   def comment: Parser[String] = "#.*".r
 
-  def triggerFinder: Parser[TriggerFinder] = "trigger" ~> ":" ~> tokenFilter ~ opt(comment) ^^ {
-    case filter ~ _  => new TriggerFinder(filter)
+  def triggerFinder: Parser[TriggerFinder] = "trigger" ~> ":" ~> tokenFilter <~ opt(comment) ^^ {
+    new TriggerFinder(_)
   }
 
-  def argExtractor: Parser[ArgumentExtractor] = ident ~ opt("?") ~ ":" ~ orExtractor ~ opt(comment) ^^ {
-    case "trigger" ~ _ ~ _ ~ _ ~ _ => sys.error("`trigger` is not a valid argument name")
-    case name ~ None ~ _ ~ extractor ~ _ => new ArgumentExtractor(name, true, extractor)
-    case name ~ Some(_) ~ _ ~ extractor ~ _ => new ArgumentExtractor(name, false, extractor)
+  def argExtractor: Parser[ArgumentExtractor] = ident ~ opt("?") ~ ":" ~ orExtractor <~ opt(comment) ^^ {
+    case "trigger" ~ _ ~ _ ~ _ => sys.error("`trigger` is not a valid argument name")
+    case name ~ None ~ _ ~ extractor => new ArgumentExtractor(name, true, extractor)
+    case name ~ Some(_) ~ _ ~ extractor => new ArgumentExtractor(name, false, extractor)
   }
 
   def depExtractor: Parser[DependencyExtractor] =
