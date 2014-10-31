@@ -57,13 +57,22 @@ class Sentence(
 
   def size:Int = words.length
 
+  /**
+   * Recreates the text of the sentence, preserving the original number of white spaces between tokens
+   * @return the text of the sentence
+   */
   def getSentenceText():String = {
-    var text:String = ""
-    for (i <- 0 until words.size) {
-      text += words(i)
-      if (i < words.size-1) text += " "
+    val text = new mutable.StringBuilder()
+    for(i <- 0 until words.size) {
+      if(i > 0) {
+        // add as many white spaces as recorded between tokens
+        for (j <- 0 until (startOffsets(i) - endOffsets(i - 1))) {
+          text.append(" ")
+        }
+      }
+      text.append(words(i))
     }
-    text
+    text.toString()
   }
 
 }

@@ -44,5 +44,8 @@ libraryDependencies ++= Seq(
   "net.sf.jopt-simple" % "jopt-simple" % "4.5",
   "de.bwaldvogel" % "liblinear" % "1.94",
   "log4j" % "log4j" % "1.2.17",
-  "tw.edu.ntu.csie" % "libsvm" % "3.17"
+  "tw.edu.ntu.csie" % "libsvm" % "3.17",
+  "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT",
+  "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "dragontool",
+  "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "heptag"
 )

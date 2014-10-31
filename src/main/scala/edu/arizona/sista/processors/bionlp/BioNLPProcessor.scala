@@ -2,6 +2,8 @@ package edu.arizona.sista.processors.bionlp
 
 import java.util.Properties
 
+import banner.BannerWrapper
+import banner.tagging.Mention
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
@@ -19,6 +21,8 @@ import scala.collection.JavaConversions._
 class BioNLPProcessor (internStrings:Boolean = true,
                        withDiscourse:Boolean = false)
   extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse) {
+
+  lazy val banner = new BannerWrapper
 
   override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -90,10 +94,56 @@ class BioNLPProcessor (internStrings:Boolean = true,
    * @return an array of BIO labels
    */
   def runBioNer(sentence:Sentence):Array[String] = {
+    val mentions = banner.tag(sentence.getSentenceText())
+
     val labels = new Array[String](sentence.size)
     for(i <- 0 until labels.size) labels(i) = "O"
 
-    // TODO: run Banner!
+    for(mention <- mentions) {
+      alignMention(mention, sentence, labels)
+    }
+
     labels
   }
+
+  /**
+   * Aligns a Banner Mention with the tokens in our Sentence
+   * As a result, the labels get adjusted with the corresponding B- and I- labels from the Mention
+   */
+  private def alignMention(mention:Mention, sentence:Sentence, labels:Array[String]) {
+    val (start, end) = matchMentionToTokens(mention, sentence)
+    for(i <- start until end) {
+      labels(i) = i match {
+        case `start` => "B-" + mention.getType.toString
+        case _ => "I-" + mention.getType.toString
+      }
+    }
+  }
+
+  private def matchMentionToTokens(mention:Mention, sentence:Sentence): (Int, Int) = {
+    val start = mention.getStartChar + sentence.startOffsets.head
+    val end = mention.getEndChar + sentence.startOffsets.head
+
+    var startToken = -1
+    var endToken = -1
+
+    for(i <- 0 until sentence.size if endToken == -1) {
+      if(startToken == -1 && tokenContains(sentence, i, start)) {
+        startToken = i
+      }
+      if(startToken != -1 && tokenContains(sentence, i, end)) {
+        endToken = i + 1
+      }
+    }
+
+    if(startToken == -1 || endToken == -1) {
+      throw new RuntimeException(s"ERROR: failed to match mention ($start, $end) to sentence: " + sentence.words.zip(sentence.startOffsets).mkString(", "))
+    }
+
+    (startToken, endToken)
+  }
+
+  private def tokenContains(sentence:Sentence, token:Int, charOffset:Int):Boolean =
+    sentence.startOffsets(token) <= charOffset &&
+    sentence.endOffsets(token) >= charOffset
 }
