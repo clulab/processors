@@ -135,6 +135,20 @@ class MentionFilter(matcher: MatcherNode) extends FilterNode {
   }
 }
 
+class IncomingFilter(matcher: MatcherNode) extends FilterNode with Dependencies {
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] = {
+    val edges = incomingEdges(sentence)
+    tokens filter (tok => (edges.isDefinedAt(tok) && matcher.matches(edges(tok)).nonEmpty))
+  }
+}
+
+class OutgoingFilter(matcher: MatcherNode) extends FilterNode with Dependencies {
+  def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] = {
+    val edges = outgoingEdges(sentence)
+    tokens filter (tok => (edges.isDefinedAt(tok) && matcher.matches(edges(tok)).nonEmpty))
+  }
+}
+
 class AndFilter(lhs: FilterNode, rhs: FilterNode) extends FilterNode {
   def filter(sentence: Sentence, state: State, tokens: Seq[Int]): Seq[Int] =
     lhs.filter(sentence, state, tokens) intersect rhs.filter(sentence, state, tokens)
@@ -267,7 +281,8 @@ object Parser extends RegexParsers {
     }
   }
 
-  def filterName: Parser[String] = "word" | "lemma" | "tag" | "entity" | "chunk" | "mention"
+  def filterName: Parser[String] =
+    "word" | "lemma" | "tag" | "entity" | "chunk" | "mention" | "incoming" | "outgoing"
 
   def filterValue: Parser[FilterNode] = filterName ~ "=" ~ stringMatcher ^^ {
     case "word" ~ _ ~ matcher => new WordFilter(matcher)
@@ -276,6 +291,8 @@ object Parser extends RegexParsers {
     case "entity" ~ _ ~ matcher => new EntityFilter(matcher)
     case "chunk" ~ _ ~ matcher => new ChunkFilter(matcher)
     case "mention" ~ _ ~ matcher => new MentionFilter(matcher)
+    case "incoming" ~ _ ~ matcher => new IncomingFilter(matcher)
+    case "outgoing" ~ _ ~ matcher => new OutgoingFilter(matcher)
   }
 
   def filterAtom: Parser[FilterNode] = filterValue | "(" ~> orFilter <~ ")"
