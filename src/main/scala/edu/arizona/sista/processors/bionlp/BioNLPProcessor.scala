@@ -111,6 +111,39 @@ class BioNLPProcessor (internStrings:Boolean = true,
    * As a result, the labels get adjusted with the corresponding B- and I- labels from the Mention
    */
   private def alignMention(mention:Mention, sentence:Sentence, labels:Array[String]) {
-    // TODO: align!
+    val (start, end) = matchMentionToTokens(mention, sentence)
+    for(i <- start until end) {
+      labels(i) = i match {
+        case `start` => "B-" + mention.getType.toString
+        case _ => "I-" + mention.getType.toString
+      }
+    }
   }
+
+  private def matchMentionToTokens(mention:Mention, sentence:Sentence): (Int, Int) = {
+    val start = mention.getStartChar + sentence.startOffsets.head
+    val end = mention.getEndChar + sentence.startOffsets.head
+
+    var startToken = -1
+    var endToken = -1
+
+    for(i <- 0 until sentence.size if endToken == -1) {
+      if(startToken == -1 && tokenContains(sentence, i, start)) {
+        startToken = i
+      }
+      if(startToken != -1 && tokenContains(sentence, i, end)) {
+        endToken = i + 1
+      }
+    }
+
+    if(startToken == -1 || endToken == -1) {
+      throw new RuntimeException(s"ERROR: failed to match mention ($start, $end) to sentence: " + sentence.words.zip(sentence.startOffsets).mkString(", "))
+    }
+
+    (startToken, endToken)
+  }
+
+  private def tokenContains(sentence:Sentence, token:Int, charOffset:Int):Boolean =
+    sentence.startOffsets(token) <= charOffset &&
+    sentence.endOffsets(token) >= charOffset
 }

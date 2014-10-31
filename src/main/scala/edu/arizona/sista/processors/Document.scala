@@ -66,11 +66,11 @@ class Sentence(
     for(i <- 0 until words.size) {
       if(i > 0) {
         // add as many white spaces as recorded between tokens
-        for(j <- 0 until (startOffsets(i) - endOffsets(i - 1))) {
+        for (j <- 0 until (startOffsets(i) - endOffsets(i - 1))) {
           text.append(" ")
         }
-        text.append(words(i))
       }
+      text.append(words(i))
     }
     text.toString()
   }
