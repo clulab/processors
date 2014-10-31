@@ -9,11 +9,23 @@ case class Interval(start: Int, end: Int) {
 
   def contains(i: Int) = i >= start && i < end
 
-  def contains(other: Interval) = start < other.start && end > other.end
-  def isContainedBy(other: Interval) = other contains this
+  def intersects(that: Interval) =
+    !(this.precedes(that) || this.meets(that) || this.metBy(that) || this.precededBy(that))
 
-  def before(other: Interval) = end <= other.start
-  def after(other: Interval) = start >= other.end
+  // allen relations
+  def precedes(that: Interval) = this.end < that.start
+  def meets(that: Interval) = this.end == that.start
+  def overlaps(that: Interval) = this.start < that.start && this.end > that.start && this.end < that.end
+  def finishes(that: Interval) = this.start > that.start && this.end == that.end
+  def contains(that: Interval) = this.start < that.start && this.end > that.end
+  def starts(that: Interval) = this.start == that.start && this.end < that.end
+  def equals(that: Interval) = this.start == that.start && this.end == that.end
+  def startedBy(that: Interval) = that starts this
+  def containedBy(that: Interval) = that contains this
+  def finishedBy(that: Interval) = that finishes this
+  def overlappedBy(that: Interval) = that overlaps this
+  def metBy(that: Interval) = that meets this
+  def precededBy(that: Interval) = that precedes this
 }
 
 object Interval {
