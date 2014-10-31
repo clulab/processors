@@ -19,6 +19,7 @@ import scala.collection.JavaConversions._
  * Date: 10/27/14
  */
 class BioNLPProcessor (internStrings:Boolean = true,
+                       withNER:Boolean = true,
                        withDiscourse:Boolean = false)
   extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse) {
 
@@ -94,10 +95,11 @@ class BioNLPProcessor (internStrings:Boolean = true,
    * @return an array of BIO labels
    */
   def runBioNer(sentence:Sentence):Array[String] = {
-    val mentions = banner.tag(sentence.getSentenceText())
-
     val labels = new Array[String](sentence.size)
     for(i <- 0 until labels.size) labels(i) = "O"
+    if(! withNER) return labels // do not run the NER
+
+    val mentions = banner.tag(sentence.getSentenceText())
 
     for(mention <- mentions) {
       alignMention(mention, sentence, labels)
