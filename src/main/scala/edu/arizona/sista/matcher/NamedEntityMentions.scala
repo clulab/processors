@@ -3,6 +3,7 @@ package edu.arizona.sista.matcher
 import scala.util.control.Breaks._
 import scala.collection.mutable.ArrayBuffer
 import edu.arizona.sista.processors.{Document, Sentence}
+import edu.arizona.sista.struct.Interval
 
 object NamedEntityExtractor {
   def getEntityMentions(document: Document): Seq[EntityMention] = for {

@@ -1,5 +1,6 @@
 package edu.arizona.sista.matcher
 
+import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.{Document, Sentence}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 

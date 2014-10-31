@@ -2,6 +2,7 @@ package edu.arizona.sista.matcher
 
 import scala.Equals
 import scala.util.hashing.MurmurHash3._
+import edu.arizona.sista.struct.Interval
 
 trait Mention extends Equals {
   def label: String

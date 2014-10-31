@@ -1,4 +1,4 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.struct
 
 case class Interval(start: Int, end: Int) {
   require(start < end, "invalid range")
