@@ -71,7 +71,8 @@ public class BioNLPTokenizer {
     tokens = joinSigns(tokens);
 
     // convert parens to normalized forms, e.g., -LRB-. better for parsing
-    tokens = normalizeParens(tokens);
+    // MS: this messes up BANNER; do not do this!
+    // tokens = normalizeParens(tokens);
 
     return tokens;
   }
