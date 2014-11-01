@@ -68,7 +68,7 @@ extends ExtractorNode with Dependencies {
   }
 }
 
-class PathExtractor(lhs: ExtractorNode, rhs: ExtractorNode)
+class ConcatExtractor(lhs: ExtractorNode, rhs: ExtractorNode)
 extends ExtractorNode {
   def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
     lhs.findAllIn(sentence, state, start) flatMap (i => rhs.findAllIn(sentence, state, i))
@@ -84,6 +84,24 @@ class FilteredExtractor(extractor: ExtractorNode, filter: FilterNode)
 extends ExtractorNode {
   def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
     filter.filter(sentence, state, extractor.findAllIn(sentence, state, start))
+}
+
+class OptionalExtractor(extractor: ExtractorNode)
+extends ExtractorNode {
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
+    (start +: extractor.findAllIn(sentence, state, start)).distinct
+}
+
+class KleeneExtractor(extractor: ExtractorNode)
+extends ExtractorNode {
+  def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] = {
+    def collect(remaining: Seq[Int], results: Set[Int]): Seq[Int] = remaining match {
+      case Nil => results.toSeq
+      case t :: ts if results contains t => collect(ts, results)
+      case t :: ts => collect(ts ++ extractor.findAllIn(sentence, state, t), results + t)
+    }
+    collect(Seq(start), Set.empty)
+  }
 }
 
 class ArgumentExtractor(val name: String, val required: Boolean, extractor: ExtractorNode)
@@ -264,18 +282,25 @@ object Parser extends RegexParsers {
   def atomExtractor: Parser[ExtractorNode] =
     outgoingExtractor | incomingExtractor | "(" ~> orExtractor <~ ")"
 
-  def filteredExtractor: Parser[ExtractorNode] = atomExtractor ~ opt(tokenFilter) ^^ {
+  def quantifiedExtractor: Parser[ExtractorNode] = atomExtractor ~ opt("?"|"*"|"+") ^^ {
+    case extractor ~ None => extractor
+    case extractor ~ Some("?") => new OptionalExtractor(extractor)
+    case extractor ~ Some("*") => new KleeneExtractor(extractor)
+    case extractor ~ Some("+") => new ConcatExtractor(extractor, new KleeneExtractor(extractor))
+  }
+
+  def filteredExtractor: Parser[ExtractorNode] = quantifiedExtractor ~ opt(tokenFilter) ^^ {
     case extractor ~ None => extractor
     case extractor ~ Some(filter) => new FilteredExtractor(extractor, filter)
   }
 
-  def pathExtractor: Parser[ExtractorNode] = filteredExtractor ~ rep(filteredExtractor) ^^ {
+  def concatExtractor: Parser[ExtractorNode] = filteredExtractor ~ rep(filteredExtractor) ^^ {
     case first ~ rest => (first /: rest) {
-      case (lhs, rhs) => new PathExtractor(lhs, rhs)
+      case (lhs, rhs) => new ConcatExtractor(lhs, rhs)
     }
   }
 
-  def orExtractor: Parser[ExtractorNode] = pathExtractor ~ rep("|" ~> pathExtractor) ^^ {
+  def orExtractor: Parser[ExtractorNode] = concatExtractor ~ rep("|" ~> concatExtractor) ^^ {
     case first ~ rest => (first /: rest) {
       case (lhs, rhs) => new OrExtractor(lhs, rhs)
     }
