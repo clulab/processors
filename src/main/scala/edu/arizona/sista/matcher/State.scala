@@ -28,6 +28,12 @@ class State(val document: Document) {
   def mentionsFor(sent: Int, tok: Int, label: String): Seq[Mention] =
     mentionsFor(sent, tok) filter (_ matchesLabel label)
 
+  def mentionsFor(sent: Int, tok: Int, labels: Seq[String]): Seq[Mention] =
+    labels flatMap (l => mentionsFor(sent, tok, l))
+
   def mentionsFor(sent: Int, toks: Seq[Int], label: String): Seq[Mention] =
     toks flatMap (t => mentionsFor(sent, t, label))
+
+  def mentionsFor(sent: Int, toks: Seq[Int], labels: Seq[String]): Seq[Mention] =
+    toks flatMap (t => mentionsFor(sent, t, labels))
 }
