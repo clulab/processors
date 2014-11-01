@@ -187,11 +187,8 @@ class NotFilter(filter: FilterNode) extends FilterNode {
 class TriggerFinder(filter: FilterNode) {
   def findAllIn(sentence: Sentence, state: State, ruleName: String): Seq[Int] = {
     val s = state.sentenceIndex(sentence)
-    filter.filter(sentence, state, 0 until sentence.size) filter { t =>
-      state.mentionsFor(s, t) forall {
-        case m: TriggerMention => m.foundBy.get != ruleName
-        case _ => true
-      }
+    filter.filter(sentence, state, 0 until sentence.size) filter {
+      t => state.mentionsFor(s, t, ruleName).isEmpty
     }
   }
 }
