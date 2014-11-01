@@ -281,10 +281,7 @@ object Parser extends RegexParsers {
     }
   }
 
-  def filterName: Parser[String] =
-    "word" | "lemma" | "tag" | "entity" | "chunk" | "mention" | "incoming" | "outgoing"
-
-  def filterValue: Parser[FilterNode] = filterName ~ "=" ~ stringMatcher ^^ {
+  def filterValue: Parser[FilterNode] = ident ~ "=" ~ stringMatcher ^^ {
     case "word" ~ _ ~ matcher => new WordFilter(matcher)
     case "lemma" ~ _ ~ matcher => new LemmaFilter(matcher)
     case "tag" ~ _ ~ matcher => new TagFilter(matcher)
@@ -293,6 +290,7 @@ object Parser extends RegexParsers {
     case "mention" ~ _ ~ matcher => new MentionFilter(matcher)
     case "incoming" ~ _ ~ matcher => new IncomingFilter(matcher)
     case "outgoing" ~ _ ~ matcher => new OutgoingFilter(matcher)
+    case _ => sys.error("unrecognized filter")
   }
 
   def filterAtom: Parser[FilterNode] = filterValue | "(" ~> orFilter <~ ")"
