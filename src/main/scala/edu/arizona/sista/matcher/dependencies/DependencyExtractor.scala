@@ -95,12 +95,12 @@ extends ExtractorNode {
 class KleeneExtractor(extractor: ExtractorNode)
 extends ExtractorNode {
   def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] = {
-    def collect(remaining: Seq[Int], results: Set[Int]): Seq[Int] = remaining match {
+    def collect(results: Set[Int], remaining: Seq[Int]): Seq[Int] = remaining match {
       case Nil => results.toSeq
-      case t :: ts if results contains t => collect(ts, results)
-      case t :: ts => collect(ts ++ extractor.findAllIn(sentence, state, t), results + t)
+      case t :: ts if results contains t => collect(results, ts)
+      case t :: ts => collect(results + t, ts ++ extractor.findAllIn(sentence, state, t))
     }
-    collect(Seq(start), Set.empty)
+    collect(Set.empty, Seq(start))
   }
 }
 
