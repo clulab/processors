@@ -71,7 +71,7 @@ extends ExtractorNode with Dependencies {
 class ConcatExtractor(lhs: ExtractorNode, rhs: ExtractorNode)
 extends ExtractorNode {
   def findAllIn(sentence: Sentence, state: State, start: Int): Seq[Int] =
-    lhs.findAllIn(sentence, state, start) flatMap (i => rhs.findAllIn(sentence, state, i))
+    (lhs.findAllIn(sentence, state, start) flatMap (i => rhs.findAllIn(sentence, state, i))).distinct
 }
 
 class OrExtractor(lhs: ExtractorNode, rhs: ExtractorNode)
