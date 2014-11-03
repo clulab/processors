@@ -8,6 +8,7 @@ trait Mention extends Equals {
   def label: String
   def sentence: Int
   def tokenInterval: Interval
+  def id: String
 
   // name of matching rule
   var foundBy: Option[String] = None
@@ -37,11 +38,15 @@ trait Mention extends Equals {
   }
 }
 
+trait TextBoundMention extends Mention {
+  override def id: String = s"T$hashCode"
+}
+
 class TriggerMention(val label: String, val sentence: Int, val tokenInterval: Interval)
-extends Mention
+extends TextBoundMention
 
 class EntityMention(val label: String, val sentence: Int, val tokenInterval: Interval)
-extends Mention
+extends TextBoundMention
 
 class EventMention(val label: String, val sentence: Int, val arguments: Map[String, Mention])
 extends Mention {
@@ -50,4 +55,6 @@ extends Mention {
     val end = arguments.values.map(_.tokenUntil).max
     Interval(start, end)
   }
+
+  override def id: String = s"E$hashCode"
 }
