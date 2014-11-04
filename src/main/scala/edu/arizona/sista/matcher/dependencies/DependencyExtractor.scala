@@ -250,7 +250,7 @@ object Parser extends RegexParsers {
   }
 
   def exactMatcher: Parser[MatcherNode] = exactLiteral ^^ {
-    new ExactMatcher(_)
+    case string => new ExactMatcher(string)
   }
 
   def regexMatcher: Parser[MatcherNode] = regexLiteral ^^ {
@@ -260,11 +260,11 @@ object Parser extends RegexParsers {
   def stringMatcher: Parser[MatcherNode] = exactMatcher | regexMatcher
 
   def outgoingExtractor: Parser[ExtractorNode] = opt(">") ~> stringMatcher ^^ {
-    new OutgoingExtractor(_)
+    case matcher => new OutgoingExtractor(matcher)
   }
 
   def incomingExtractor: Parser[ExtractorNode] = "<" ~> stringMatcher ^^ {
-    new IncomingExtractor(_)
+    case matcher => new IncomingExtractor(matcher)
   }
 
   def atomExtractor: Parser[ExtractorNode] =
@@ -330,7 +330,7 @@ object Parser extends RegexParsers {
   def comment: Parser[String] = "#.*".r
 
   def triggerFinder: Parser[TriggerFinder] = "trigger" ~> ":" ~> tokenFilter <~ opt(comment) ^^ {
-    new TriggerFinder(_)
+    case filter => new TriggerFinder(filter)
   }
 
   def argExtractor: Parser[ArgumentExtractor] = ident ~ opt("?") ~ ":" ~ orExtractor <~ opt(comment) ^^ {
