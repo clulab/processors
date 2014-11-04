@@ -188,7 +188,7 @@ class TriggerFinder(filter: FilterNode) {
   def findAllIn(sentence: Sentence, state: State, ruleName: String): Seq[Int] = {
     val s = state.sentenceIndex(sentence)
     filter.filter(sentence, state, 0 until sentence.size) filter {
-      t => state.mentionsFor(s, t, ruleName).isEmpty
+      t => state.mentionsForRule(s, t, ruleName).isEmpty
     }
   }
 }

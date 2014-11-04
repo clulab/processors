@@ -26,6 +26,9 @@ class State(val document: Document) {
 
   def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
 
+  def mentionsForRule(sent: Int, tok: Int, ruleName: String): Seq[Mention] =
+    mentionsFor(sent, tok) filter (_.foundBy == Some(ruleName))
+
   def mentionsFor(sent: Int, tok: Int): Seq[Mention] =
     lookUpTable.getOrElse((sent, tok), Nil)
 
