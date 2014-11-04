@@ -8,7 +8,6 @@ trait Mention extends Equals {
   def label: String
   def sentence: Int
   def tokenInterval: Interval
-  def id: String
 
   // name of matching rule
   var foundBy: Option[String] = None
@@ -21,6 +20,9 @@ trait Mention extends Equals {
   def allLabels: Seq[String] = Seq(label)
 
   def matchesLabel(label: String): Boolean = allLabels exists (_ == label)
+
+  var num: Option[Int] = None
+  def bratId: String
 
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
@@ -39,7 +41,10 @@ trait Mention extends Equals {
 }
 
 trait TextBoundMention extends Mention {
-  override def id: String = s"T$hashCode"
+  override def bratId: String = num match {
+    case Some(n) => s"T$n"
+    case None => sys.error("num not set")
+  }
 }
 
 class TriggerMention(val label: String, val sentence: Int, val tokenInterval: Interval)
@@ -56,5 +61,8 @@ extends Mention {
     Interval(start, end)
   }
 
-  override def id: String = s"E$hashCode"
+  override def bratId: String = num match {
+    case Some(n) => s"E$n"
+    case None => sys.error("num not set")
+  }
 }

@@ -6,7 +6,11 @@ import scala.collection.mutable.{HashMap, ArrayBuffer}
 class State(val document: Document) {
   private val lookUpTable = new HashMap[(Int, Int), ArrayBuffer[Mention]]
 
+  private var numMentions = 0
+
   def update(mention: Mention) {
+    numMentions += 1
+    mention.num = Some(numMentions)
     for (i <- mention.tokenInterval.toRange) {
       val key = (mention.sentence, i)
       val mentions = lookUpTable.getOrElseUpdate(key, new ArrayBuffer[Mention])
