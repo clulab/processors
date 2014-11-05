@@ -8,7 +8,7 @@ import edu.arizona.sista.struct.Interval
 object NamedEntityExtractor {
   def getEntityMentions(document: Document): Seq[EntityMention] = for {
     (sentence, index) <- document.sentences.zipWithIndex
-    (name, from, until) <- readLabels(entityLabels(sentence))
+    (name, from, until) <- readLabelsIOB(entityLabels(sentence))
     tokenInterval = Interval(from, until)
   } yield new EntityMention(name, index, tokenInterval)
 
