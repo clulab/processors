@@ -29,7 +29,7 @@ public class BioNLPTokenizer {
   private static final HashSet<String> VALID_DASH_SUFFIXES = new HashSet<String>(
     Arrays.asList(new String[]{"\\w+ed", "\\w+ing", "(in)?dependent",
       "deficient", "response", "protein", "by", "specific", "like",
-      "inducible", "responsive", "gene", "mRNA", "transcription",
+      "inducible", "responsive", "gene", "mRNA", "transcription", "cytoplasmic",
       "sensitive", "bound", "driven", "positive", "negative", "dominant",
       "family", "resistant", "activity", "proximal", "defective"}));
   private static final Pattern dashSuffixes = mkDashSuffixes();
