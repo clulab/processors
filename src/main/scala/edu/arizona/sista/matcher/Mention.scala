@@ -37,8 +37,7 @@ trait Mention extends Equals {
   }
 }
 
-trait TextBoundMention extends Mention {
-}
+trait TextBoundMention extends Mention
 
 class TriggerMention(val label: String, val sentence: Int, val tokenInterval: Interval)
 extends TextBoundMention
@@ -46,11 +45,14 @@ extends TextBoundMention
 class EntityMention(val label: String, val sentence: Int, val tokenInterval: Interval)
 extends TextBoundMention
 
-class EventMention(val label: String, val sentence: Int, val arguments: Map[String, Mention])
+class EventMention(val label: String, val trigger: TextBoundMention, val arguments: Map[String, Seq[Mention]])
 extends Mention {
+  override def sentence: Int = trigger.sentence
+
+  // token interval that contains trigger and all matched arguments
   override def tokenInterval: Interval = {
-    val start = arguments.values.map(_.tokenFrom).min
-    val end = arguments.values.map(_.tokenUntil).max
-    Interval(start, end)
+    val allStarts = arguments.values.flatMap(_.map(_.tokenFrom)).toSeq :+ trigger.tokenFrom
+    val allEnds = arguments.values.flatMap(_.map(_.tokenUntil)).toSeq :+ trigger.tokenUntil
+    Interval(allStarts.min, allEnds.max)
   }
 }

@@ -5,7 +5,7 @@ import edu.arizona.sista.processors.{Document, Sentence}
 import edu.arizona.sista.matcher.dependencies.DependencyExtractor
 import NamedEntityExtractor.getEntityMentions
 
-class ExtractorEngine(val spec: String, val actions: AnyRef) {
+class ExtractorEngine(val spec: String, val actions: AnyRef, withIOB: Boolean = false) {
   // invokes actions through reflection
   val mirror = new ActionMirror(actions)
 
@@ -16,7 +16,7 @@ class ExtractorEngine(val spec: String, val actions: AnyRef) {
 
   def extractFrom(document: Document) = {
     val state = new State(document)
-    state.update(getEntityMentions(document))
+    state.update(getEntityMentions(document, withIOB))
 
     var updated = true
     var iter = 0

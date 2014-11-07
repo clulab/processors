@@ -14,7 +14,7 @@ object actions {
     for {
       theme <- themes
       cause <- causes
-    } yield new EventMention("Phosphorylation", sent, Map("trigger" -> trigger, "theme" -> theme, "cause" -> cause))
+    } yield new EventMention("Phosphorylation", trigger, Map("theme" -> Seq(theme), "cause" -> Seq(cause)))
 
   }
 
@@ -23,7 +23,7 @@ object actions {
 
     val themes = state.mentionsFor(sent, found("theme"), "Protein")
 
-    for (theme <- themes) yield new EventMention("Ubiquitination", sent, Map("trigger" -> trigger, "theme" -> theme))
+    for (theme <- themes) yield new EventMention("Ubiquitination", trigger, Map("theme" -> Seq(theme)))
   }
 
   def mkDownRegulation(sent: Int, state: State, found: Map[String, Seq[Int]]): Seq[Mention] = {
@@ -40,7 +40,7 @@ object actions {
     for {
       theme <- themes
       cause <- causes
-    } yield new EventMention("DownRegulation", sent, Map("trigger" -> trigger, "theme" -> theme, "cause" -> cause))
+    } yield new EventMention("DownRegulation", trigger, Map("theme" -> Seq(theme), "cause" -> Seq(cause)))
   }
 }
 
@@ -81,7 +81,7 @@ object TestEngine extends App {
   def words(sentence: Sentence, interval: Interval) =
     sentence.words.slice(interval.start, interval.end).mkString(" ")
 
-  val extractor = new ExtractorEngine(rules, actions)
+  val extractor = new ExtractorEngine(rules, actions, withIOB=false)
 
   val processor = new CoreNLPProcessor
 
@@ -102,8 +102,10 @@ object TestEngine extends App {
 
         println(s"string = '${words(doc.sentences(sent), m.tokenInterval)}'")
 
+        println(s"trigger = ${words(doc.sentences(sent), mention.trigger.tokenInterval)}")
+
         mention.arguments foreach {
-          case (k,v) => println(s"$k = '${words(doc.sentences(sent), v.tokenInterval)}'")
+          case (k,vs) => for (v <- vs) println(s"$k = '${words(doc.sentences(sent), v.tokenInterval)}'")
         }
 
         println("=" * 72)
