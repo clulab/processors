@@ -15,7 +15,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 
 (c) Mihai Surdeanu, 2013 - 
 
-Contributors: Peter Jansen, Daniel Fried
+Contributors: Peter Jansen, Marco Valenzuela, Gustave Hanh-Powell, Daniel Fried
 
 # Changes
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
