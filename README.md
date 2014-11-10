@@ -3,7 +3,7 @@
 The `edu.arizona.sista.processors` package aims to be a one-stop place for natural language (NL) processors.
 We currently provide three APIs: one for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts that integrate resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). 
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). 
 
 Both `CoreNLPProcessor` and `FastNLPProcessor` now include a full-fledged Rhetorical Structure Theory (RST) discourse parser. The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is two orders of magnitude faster.
 
