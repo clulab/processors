@@ -1,9 +1,9 @@
 # What is it
 
 The `edu.arizona.sista.processors` package aims to be a one-stop place for natural language (NL) processors.
-We currently provide two APIs: one for
-[Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), and one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)).
+We currently provide three APIs: one for
+[Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts that integrate resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). 
 
 Both `CoreNLPProcessor` and `FastNLPProcessor` now include a full-fledged Rhetorical Structure Theory (RST) discourse parser. The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is two orders of magnitude faster.
 
@@ -18,6 +18,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 Contributors: Peter Jansen, Daniel Fried
 
 # Changes
++ **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
 + **3.1** - Minimal functionality added to the learning package. Changed to CoreNLP 3.3.1. 
@@ -37,12 +38,12 @@ This software is available on maven as well. Add the following dependencies to y
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.2</version>
+       <version>3.3</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.2</version>
+       <version>3.3</version>
        <classifier>models</classifier>
     </dependency>
 
@@ -52,6 +53,7 @@ This software is available on maven as well. Add the following dependencies to y
 + **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
 + **Tool-independent API** - we support multiple NL and machine learning tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
++ **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface.
 
 # How to compile 
 
@@ -68,6 +70,7 @@ Most of the examples here use Scala. However, this software can be used as is fr
 ### Annotating entire documents
 
     // create the processor
+    // any processor works here! Try FastNLPProcessor or BioNLPProcessor.
     val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
 
     // the actual work is done here
