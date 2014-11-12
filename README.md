@@ -3,7 +3,7 @@
 The `edu.arizona.sista.processors` package aims to be a one-stop place for natural language (NL) processors.
 We currently provide three APIs: one for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). 
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). If you plan to use `BioNLPProcessor`, please install the data resources from [our fork of BANNER](https://github.com/sistanlp/banner) first!
 
 Both `CoreNLPProcessor` and `FastNLPProcessor` now include a full-fledged Rhetorical Structure Theory (RST) discourse parser. The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is two orders of magnitude faster.
 
@@ -33,7 +33,7 @@ Contributors: Peter Jansen, Marco Valenzuela, Gustave Hanh-Powell, Daniel Fried
 + **1.0** - Initial release
 
 # Maven
-This software is available on maven as well. Add the following dependencies to your `pom.xml` to use it:
+This software is available on Maven Central as well. Add the following dependencies to your `pom.xml` to use it:
 
     <dependency>
        <groupId>edu.arizona.sista</groupId>
@@ -55,11 +55,10 @@ This software is available on maven as well. Add the following dependencies to y
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
 + **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface.
 
-# How to compile 
+# How to compile the source code
 
-This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory,e.g., `target/processors-3.0.jar`. Run the `scripts/mk_model_jar` script to build the models jar file, which will stored under the same `target/` directory, e.g., `target/processors-3.0-models.jar`.
-. 
-Add these generated jar files to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `scripts/run` to see which dependencies are necessary at runtime.
+This is a standard sbt project, so use the usual commands, e.g., `sbt compile`, `sbt assembly`, to compile.
+Add the generated jar files under `target/` to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `build.sbt` to see which dependencies are necessary at runtime.
 
 # How to use it
 
