@@ -49,12 +49,16 @@ class ExtractorEngine(val spec: String, val actions: AnyRef, withIOB: Boolean = 
     val it = for (fieldPat(name, value) <- fieldPat findAllIn spec) yield (name -> value)
     val fields = Map(it.toSeq: _*)
     val name = fields("name")
-    val priority = Priority(fields.getOrElse("priority", ExtractorEngine.defaultPriority))
-    val action = mirror.reflect(fields("action"))
-    val extractorType = fields.getOrElse("type", ExtractorEngine.defaultExtractorType)
-    val pattern = fields("pattern").drop(2).dropRight(2)
-    val extractor = ExtractorEngine.registeredExtractors(extractorType)(pattern)
-    new NamedExtractor(name, priority, extractor, action)
+    try {
+      val priority = Priority(fields.getOrElse("priority", ExtractorEngine.defaultPriority))
+      val action = mirror.reflect(fields("action"))
+      val extractorType = fields.getOrElse("type", ExtractorEngine.defaultExtractorType)
+      val pattern = fields("pattern").drop(2).dropRight(2)
+      val extractor = ExtractorEngine.registeredExtractors(extractorType)(pattern)
+      new NamedExtractor(name, priority, extractor, action)
+    } catch {
+      case e: Exception => sys.error(s"""Error parsing rule "$name": $e""")
+    }
   }
 }
 
