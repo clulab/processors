@@ -8,6 +8,8 @@ scalaVersion := "2.10.4"
 
 scalacOptions += "-target:jvm-1.6"
 
+scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
+
 javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
 
 lazy val core = project in file(".")
