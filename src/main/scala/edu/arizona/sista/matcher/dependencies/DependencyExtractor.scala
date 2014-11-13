@@ -229,7 +229,7 @@ object Parser extends RegexParsers {
     case failure: NoSuccess => sys.error(failure.msg)
   }
 
-  override val whiteSpace = """[ \t]+""".r
+  override val whiteSpace = """[ \t\x0B\f\r]+""".r
   val eol = "\n"
 
   def ident: Parser[String] =
