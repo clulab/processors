@@ -1,9 +1,9 @@
 # What is it
 
 The `edu.arizona.sista.processors` package aims to be a one-stop place for natural language (NL) processors.
-We currently provide two APIs: one for
-[Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), and one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)).
+We currently provide three APIs: one for
+[Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). If you plan to use `BioNLPProcessor`, please install the data resources from [our fork of BANNER](https://github.com/sistanlp/banner) first!
 
 Both `CoreNLPProcessor` and `FastNLPProcessor` now include a full-fledged Rhetorical Structure Theory (RST) discourse parser. The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is two orders of magnitude faster.
 
@@ -15,9 +15,10 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 
 (c) Mihai Surdeanu, 2013 - 
 
-Contributors: Peter Jansen, Daniel Fried
+Contributors: Peter Jansen, Marco Valenzuela, Gustave Hanh-Powell, Daniel Fried
 
 # Changes
++ **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
 + **3.1** - Minimal functionality added to the learning package. Changed to CoreNLP 3.3.1. 
@@ -32,17 +33,17 @@ Contributors: Peter Jansen, Daniel Fried
 + **1.0** - Initial release
 
 # Maven
-This software is available on maven as well. Add the following dependencies to your `pom.xml` to use it:
+This software is available on Maven Central as well. Add the following dependencies to your `pom.xml` to use it:
 
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.2</version>
+       <version>3.3</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.2</version>
+       <version>3.3</version>
        <classifier>models</classifier>
     </dependency>
 
@@ -52,12 +53,12 @@ This software is available on maven as well. Add the following dependencies to y
 + **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
 + **Tool-independent API** - we support multiple NL and machine learning tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
++ **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface.
 
-# How to compile 
+# How to compile the source code
 
-This is a standard Maven project, so use the `mvn package` command to build the jar file, which will be stored in the `target/` directory,e.g., `target/processors-3.0.jar`. Run the `scripts/mk_model_jar` script to build the models jar file, which will stored under the same `target/` directory, e.g., `target/processors-3.0-models.jar`.
-. 
-Add these generated jar files to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `scripts/run` to see which dependencies are necessary at runtime.
+This is a standard sbt project, so use the usual commands, e.g., `sbt compile`, `sbt assembly`, to compile.
+Add the generated jar files under `target/` to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `build.sbt` to see which dependencies are necessary at runtime.
 
 # How to use it
 
@@ -68,6 +69,7 @@ Most of the examples here use Scala. However, this software can be used as is fr
 ### Annotating entire documents
 
     // create the processor
+    // any processor works here! Try FastNLPProcessor or BioNLPProcessor.
     val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
 
     // the actual work is done here
