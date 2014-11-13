@@ -420,7 +420,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
   @Override
   public Enumeration listOptions() {
 
-    Vector newVector = new Vector(2);
+    Vector<Option> newVector = new Vector<Option>(2);
 
     newVector.addElement(new Option(
       "\tSize of each bag, as a percentage of the\n"
@@ -432,7 +432,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
 
     Enumeration enu = super.listOptions();
     while (enu.hasMoreElements()) {
-      newVector.addElement(enu.nextElement());
+      newVector.addElement((Option)enu.nextElement());
     }
     return newVector.elements();
   }
@@ -598,7 +598,7 @@ class FastRfBagging extends RandomizableIteratedSingleClassifierEnhancer
    */
   public Enumeration enumerateMeasures() {
 
-    Vector newVector = new Vector(1);
+    Vector<String> newVector = new Vector<String>(1);
     newVector.addElement("measureOutOfBagError");
     return newVector.elements();
   }

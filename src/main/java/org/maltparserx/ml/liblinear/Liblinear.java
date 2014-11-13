@@ -143,6 +143,7 @@ public class Liblinear implements LearningMethod {
 		}
 	}
 	
+	@SuppressWarnings({"unchecked"})
 	private HashMap<Long,Integer> loadFeatureMap(InputStream is) throws MaltChainedException {
 		HashMap<Long,Integer> map = new HashMap<Long,Integer>();
 		try {
