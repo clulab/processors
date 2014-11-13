@@ -6,6 +6,7 @@ import edu.arizona.sista.processors.DocumentSerializer._
 import edu.arizona.sista.struct._
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import collection.mutable
+import scala.reflect.ClassTag
 
 /**
  * Saves/loads a Document to/from a stream
@@ -174,7 +175,7 @@ class DocumentSerializer {
     dg
   }
 
-  private def bufferOption[T: ClassManifest](b:ArrayBuffer[T], allNils:Boolean): Option[Array[T]] = {
+  private def bufferOption[T: ClassTag](b:ArrayBuffer[T], allNils:Boolean): Option[Array[T]] = {
     if (b.size == 0) return None
     if (allNils) return None
     Some(b.toArray)

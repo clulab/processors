@@ -8,6 +8,7 @@ import java.util.Properties
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import edu.stanford.nlp.ling.CoreAnnotations._
 import scala.collection.JavaConversions._
+import scala.reflect.ClassTag
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.CoreLabel
 import java.util
@@ -140,7 +141,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     else s
   }
 
-  def arrayOrNone[T: ClassManifest](b:ArrayBuffer[T]): Option[Array[T]] = {
+  def arrayOrNone[T: ClassTag](b:ArrayBuffer[T]): Option[Array[T]] = {
     if (b.size > 0) new Some[Array[T]](b.toArray)
     else None
   }

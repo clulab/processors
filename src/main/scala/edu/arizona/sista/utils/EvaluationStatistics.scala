@@ -1,5 +1,7 @@
 package edu.arizona.sista.utils
 
+import scala.language.postfixOps
+
 /**
  * Created by dfried on 5/22/14
  */
