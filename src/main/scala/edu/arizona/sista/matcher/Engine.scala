@@ -57,7 +57,7 @@ class ExtractorEngine(val spec: String, val actions: AnyRef, withIOB: Boolean = 
       val extractor = ExtractorEngine.registeredExtractors(extractorType)(pattern)
       new NamedExtractor(name, priority, extractor, action)
     } catch {
-      case e: Exception => sys.error(s"""Error parsing rule "$name": $e""")
+      case e: Exception => sys.error(s"""Error parsing rule "$name": ${e.getMessage}""")
     }
   }
 }
