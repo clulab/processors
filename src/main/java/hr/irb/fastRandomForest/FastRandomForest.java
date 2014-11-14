@@ -363,7 +363,7 @@ public class FastRandomForest
    */
   public Enumeration enumerateMeasures(){
 
-    Vector newVector = new Vector(1);
+    Vector<String> newVector = new Vector<String>(1);
     newVector.addElement("measureOutOfBagError");
     return newVector.elements();
   }
@@ -395,7 +395,7 @@ public class FastRandomForest
    */
   public Enumeration listOptions(){
 
-    Vector newVector = new Vector();
+    Vector<Option> newVector = new Vector<Option>();
 
     newVector.addElement(new Option(
       "\tNumber of trees to build.",
@@ -426,7 +426,7 @@ public class FastRandomForest
     
     Enumeration enu = super.listOptions();
     while(enu.hasMoreElements()){
-      newVector.addElement(enu.nextElement());
+      newVector.addElement((Option)enu.nextElement());
     }
 
     return newVector.elements();
@@ -438,11 +438,11 @@ public class FastRandomForest
    * @return an array of strings suitable for passing to setOptions()
    */
   public String[] getOptions(){
-    Vector result;
+    Vector<String> result;
     String[] options;
     int i;
 
-    result = new Vector();
+    result = new Vector<String>();
 
     result.add("-I");
     result.add("" + getNumTrees());
