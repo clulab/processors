@@ -158,7 +158,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
       }
     }
 
-    // build path from node to the source
+    // build path from source to node
     def mkPath(node: Int, prev: Map[Int, Int], path: Seq[Int]): Seq[Int] = {
       if (prev contains node) mkPath(prev(node), prev, node +: path)
       else node +: path
