@@ -124,7 +124,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
 
   // returns path from `start` to `end` as a string
   def path(start: Int, end: Int): String = {
-    val nodes = nodesPath(start, end)
+    val nodes = shortestPath(start, end)
     val pairs = (1 until nodes.length) map (i => (nodes(i-1), nodes(i)))
     val steps = for ((n1, n2) <- pairs) yield edge(n1, n2) match {
       case Some((`n1`, `n2`, dep)) => s">$dep"
@@ -141,25 +141,33 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     case _ => false
   }
 
-  private def neighborsFor(node: Int) =
-    (outgoingEdges(node) ++ incomingEdges(node)).map(_._1).distinct
+  private def shortestPath(start: Int, end: Int) = {
+    def neighborsFor(node: Int): Seq[Int] =
+      (outgoingEdges(node) ++ incomingEdges(node)).map(_._1).distinct
 
-  // returns the sequence of nodes in the path
-  private def nodesPath(start: Int, end: Int) = {
-    def mkPath(node: Int, neighbors: Seq[Int], scanned: Set[Int], path: Seq[Int]): Seq[Int] = {
-      (node, neighbors) match {
-        case (`end`, _) => path :+ node  // we reached the end, return path
-        case (_, Nil) => Nil  // no more neighbors, need to backtrack
-        case (_, Seq(next, rest @ _ *)) =>
-          if (scanned contains next) mkPath(node, rest, scanned, path)  // node already seen, skip it
-          else {
-            val p = mkPath(next, neighborsFor(next), scanned + next, path :+ node)  // try to finish path
-            if (p.isEmpty) mkPath(node, rest, scanned + next, path)  // backtrack
-            else p  // we found the one true path
-          }
+    // build table of pointers to previous node in shortest path to the source
+    def mkPrev(rest: Set[Int], dist: Map[Int, Double], prev: Map[Int, Int]): Map[Int, Int] = {
+      if (rest.isEmpty) prev
+      else {
+        val u = rest minBy dist
+        val (newDist, newPrev) = (neighborsFor(u) filter rest.contains flatMap { v =>
+          val d = dist(u) + 1
+          if (d < dist(v)) Some(((v -> d), (v -> u))) else None
+        }).unzip
+        mkPrev(rest - u, dist ++ newDist, prev ++ newPrev)
       }
     }
-    mkPath(start, neighborsFor(start), Set(start), Nil)
+
+    // build path from source to node
+    def mkPath(node: Int, prev: Map[Int, Int], path: Seq[Int]): Seq[Int] = {
+      if (prev contains node) mkPath(prev(node), prev, node +: path)
+      else node +: path
+    }
+
+    val nodes = (0 until size).toSet
+    val dist = Map(start -> 0.0) withDefaultValue Double.PositiveInfinity
+    val prev = mkPrev(nodes, dist, Map.empty)
+    mkPath(end, prev, Nil)
   }
 }
 
