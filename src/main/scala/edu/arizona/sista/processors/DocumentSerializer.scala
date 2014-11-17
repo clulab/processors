@@ -21,7 +21,8 @@ class DocumentSerializer {
    * This is deprecated! Please use load(r:BufferedReader) instead!
    * This does not work correctly when multiple documents are serialized to the same file; load(r:BufferedReader) does.
    **/
-  @deprecated def load(is:InputStream): Document = {
+  @deprecated ("This doesn't work when there are multiple docs serialized in the same file, sequentially", "4.0")
+  def load(is:InputStream): Document = {
     val r = new BufferedReader(new InputStreamReader(is))
     load(r)
   }

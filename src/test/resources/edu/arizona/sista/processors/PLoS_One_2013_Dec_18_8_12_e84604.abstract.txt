@@ -1,0 +1,7 @@
+To prospectively evaluate the usefulness of the BRAFV600E mutation detection in daily clinical practice in patients with metastatic Colorectal Cancer (mCRC).
+
+504 mCRC patients treated with systemic chemotherapy +/- biologics were analyzed.
+
+A statistically significant higher incidence of the BRAF mutation was observed in patients with ECOG-PS 2 (p=0.001), multiple metastatic sites (p=0.002),> 65 years old (p=0.004), primary tumors located in the colon (p<0.001), high-grade tumors (p=0.001) and in those with mucinous features (p=0.037). Patients with BRAFV600E mutated tumors had a statistically significantly reduced progression-free survival (PFS) compared to wild-type (wt) ones (4.1 and 11.6 months, respectively; p<0.001) and overall survival (OS) (14.0 vs. 34.6 months, respectively; p<0.001). In the multivariate analysis the BRAFV600E mutation emerged as an independent factor associated with reduced PFS (HR: 4.1, 95% CI 2.7-6.2; p<0.001) and OS (HR: 5.9, 95% CI 3.7-9.5; p<0.001). Among the 273 patients treated with salvage cetuximab or panitumumab, the BRAFV600E mutation was correlated with reduced PFS (2.2 vs. 6.0 months; p<0.0001) and OS (4.3 vs. 17.4 months; p<0.0001).
+
+The presence of BRAFV600E-mutation in mCRC characterizes a subgroup of patients with distinct biologic, clinical and pathological features and is associated with very poor patients' prognosis.

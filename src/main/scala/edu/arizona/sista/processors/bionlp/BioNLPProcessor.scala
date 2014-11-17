@@ -20,26 +20,27 @@ import scala.collection.JavaConversions._
  */
 class BioNLPProcessor (internStrings:Boolean = true,
                        withNER:Boolean = true,
-                       withDiscourse:Boolean = false)
-  extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse) {
+                       withDiscourse:Boolean = false,
+                       maxSentenceLength:Int = 100)
+  extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse, maxSentenceLength) {
 
   lazy val banner = new BannerWrapper
 
   override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "tokenize")
-    addBioOptions(props)
+    addBioTokenizerOptions(props)
     new StanfordCoreNLP(props)
   }
 
   override def mkTokenizerWithSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "tokenize, ssplit")
-    addBioOptions(props)
+    addBioTokenizerOptions(props)
     new StanfordCoreNLP(props)
   }
 
-  def addBioOptions(props:Properties) {
+  def addBioTokenizerOptions(props:Properties) {
     props.put("tokenize.options", "ptb3Escaping=false")
   }
 
@@ -67,8 +68,11 @@ class BioNLPProcessor (internStrings:Boolean = true,
     var sentenceOffset = 0
     for(sa:CoreMap <- sas) { // CoreNLP sentence annotation
       val s = doc.sentences(sentenceOffset) // our sentence
+
+      //println("Running NER on a sentence of length " + s.size)
       val bioLabels = runBioNer(s)
       assert(bioLabels.size == s.size)
+      //println("\t--> done.")
 
       // store labels in the CoreNLP annotation for the sentence
       val tas = sa.get(classOf[TokensAnnotation])
@@ -98,6 +102,8 @@ class BioNLPProcessor (internStrings:Boolean = true,
     val labels = new Array[String](sentence.size)
     for(i <- 0 until labels.size) labels(i) = "O"
     if(! withNER) return labels // do not run the NER
+
+    //println("RUNNING BANNER ON SENTENCE: " + sentence.words.mkString(" "))
 
     val mentions = banner.tag(sentence.getSentenceText())
 
@@ -148,4 +154,6 @@ class BioNLPProcessor (internStrings:Boolean = true,
   private def tokenContains(sentence:Sentence, token:Int, charOffset:Int):Boolean =
     sentence.startOffsets(token) <= charOffset &&
     sentence.endOffsets(token) >= charOffset
+
 }
+

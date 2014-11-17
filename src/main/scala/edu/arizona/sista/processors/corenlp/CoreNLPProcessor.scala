@@ -3,19 +3,20 @@ package edu.arizona.sista.processors.corenlp
 import edu.arizona.sista.discourse.rstparser.RSTParser
 import edu.arizona.sista.processors._
 import edu.arizona.sista.struct._
-import edu.stanford.nlp.pipeline.{StanfordCoreNLP,Annotation}
+import edu.stanford.nlp.parser.lexparser.{ParserAnnotations, LexicalizedParser}
+import edu.stanford.nlp.pipeline.{ParserAnnotatorUtils, StanfordCoreNLP, Annotation}
 import java.util.Properties
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import edu.stanford.nlp.ling.CoreAnnotations._
 import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
 import edu.stanford.nlp.util.CoreMap
-import edu.stanford.nlp.ling.CoreLabel
+import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import java.util
 import collection.mutable
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
-import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
-import edu.stanford.nlp.trees.SemanticHeadFinder
+import edu.stanford.nlp.trees.{GrammaticalStructureFactory, SemanticHeadFinder}
+import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
 
 /**
@@ -25,16 +26,34 @@ import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
  */
 class CoreNLPProcessor(val internStrings:Boolean = true,
                        val basicDependencies:Boolean = false,
-                       val withDiscourse:Boolean = false) extends Processor {
+                       val withDiscourse:Boolean = false,
+                       val maxSentenceLength:Int = 100) extends Processor {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
   lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
   lazy val posTagger = mkPosTagger
   lazy val lemmatizer = mkLemmatizer
   lazy val ner = mkNer
-  lazy val parser = mkParser
   lazy val coref = mkCoref
-  lazy val headFinder = new SemanticHeadFinder()
   lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
+
+  //
+  // we maintain our own copy of a LexicalizedParser to control which sentences are parsed
+  // the CoreNLP option parser.maxlen does not work well
+  //
+  lazy val stanfordParser = mkLexicalizedParser
+  lazy val gsf = mkGSF
+  lazy val headFinder = new SemanticHeadFinder()
+
+  def mkLexicalizedParser: LexicalizedParser = {
+    val parser = LexicalizedParser.loadModel()
+    parser
+  }
+
+  def mkGSF:GrammaticalStructureFactory = {
+    val tlp = stanfordParser.getTLPParams.treebankLanguagePack
+    val g = tlp.grammaticalStructureFactory(tlp.punctuationWordRejectFilter(), tlp.typedDependencyHeadFinder())
+    g
+  }
 
   def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -338,53 +357,97 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
-    parser.annotate(annotation.get)
-
     val sas = annotation.get.get(classOf[SentencesAnnotation])
     var offset = 0
     for (sa <- sas) {
-      //
-      // save the constituent tree, including head word information
-      //
-      val stanfordTree = sa.get(classOf[TreeAnnotation])
+      // run the actual parser here
+      val stanfordTree = stanfordParse(sa)
+
+      // store Stanford annotations; Stanford dependencies are created here!
+      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, stanfordTree)
+
+      // save our own structures
       if (stanfordTree != null) {
+        // save the constituent tree, including head word information
         val position = new MutableNumber[Int](0)
         doc.sentences(offset).syntacticTree = Some(toTree(stanfordTree, position))
-      }
 
-      //
-      // save syntactic dependencies
-      //
-      val edgeBuffer = new ListBuffer[(Int, Int, String)]
-      var da:SemanticGraph = null
-      if(basicDependencies)
-        da = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
-      else
-        da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
-      val edges = da.getEdgeSet
-      for (edge <- edges) {
-        val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
-        val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
-        var label = edge.getRelation.getShortName
-        val spec = edge.getRelation.getSpecific
-        if (spec != null) label = label + "_" + spec
-        edgeBuffer.add((head - 1, modifier - 1, in(label)))
+        // save syntactic dependencies
+        doc.sentences(offset).dependencies = Some(toDirectedGraph(sa))
+      } else {
+        doc.sentences(offset).syntacticTree = None
+        doc.sentences(offset).dependencies = None
       }
-
-      val roots = new mutable.HashSet[Int]
-      for (iw <- da.getRoots) {
-        roots.add(iw.get(classOf[IndexAnnotation]) - 1)
-      }
-
-      val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
-      //println(dg)
-      doc.sentences(offset).dependencies = Some(dg)
       offset += 1
     }
   }
 
-  private def toTree(
-    stanfordTree:edu.stanford.nlp.trees.Tree,
+  def stanfordParse(sentence:CoreMap):StanfordTree = {
+    val constraints = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
+    val words = sentence.get(classOf[CoreAnnotations.TokensAnnotation])
+    var tree:StanfordTree = null
+
+    //
+    // Do not parse sentences longer than this
+    // Those are likely coming from tables, so: (a) we don't know how to parse them anyway; (b) they would take forever
+    //
+    if(words.size < maxSentenceLength) {
+      // the actual parsing
+      val pq = stanfordParser.parserQuery()
+      pq.setConstraints(constraints)
+      pq.parse(words)
+
+      // fetch the best tree
+      try {
+        tree = pq.getBestParse
+        if (tree != null)
+          tree.setScore(pq.getPCFGScore % -10000.0)
+      } catch {
+        case e: Exception =>
+          System.err.println("WARNING: Parsing of sentence failed, possibly because of out of memory. " +
+            "Will ignore and continue: " + edu.stanford.nlp.ling.Sentence.listToString(words))
+      }
+    } else {
+      System.err.println("Skipping sentence of length " + words.size)
+    }
+
+    // create a fake tree if the actual parsing failed
+    if(tree == null)
+      tree = ParserAnnotatorUtils.xTree(words)
+
+    //println(tree)
+    tree
+  }
+
+  def toDirectedGraph(sa:CoreMap):DirectedGraph[String] = {
+    val edgeBuffer = new ListBuffer[(Int, Int, String)]
+    var da:SemanticGraph = null
+    if(basicDependencies)
+      da = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
+    else
+      da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
+    val edges = da.getEdgeSet
+    for (edge <- edges) {
+      val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
+      val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
+      var label = edge.getRelation.getShortName
+      val spec = edge.getRelation.getSpecific
+      if (spec != null) label = label + "_" + spec
+      edgeBuffer.add((head - 1, modifier - 1, in(label)))
+    }
+
+    val roots = new mutable.HashSet[Int]
+    for (iw <- da.getRoots) {
+      roots.add(iw.get(classOf[IndexAnnotation]) - 1)
+    }
+
+    val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
+    //println(dg)
+    dg
+  }
+
+  def toTree(
+    stanfordTree:StanfordTree,
     position:MutableNumber[Int]):Tree = {
     assert(stanfordTree != null)
 

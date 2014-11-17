@@ -21,7 +21,7 @@ import org.maltparserx
  */
 class FastNLPProcessor(internStrings:Boolean = true,
                        withDiscourse:Boolean = false)
-  extends CoreNLPProcessor(internStrings, basicDependencies = true, withDiscourse) {
+  extends CoreNLPProcessor(internStrings, basicDependencies = true, withDiscourse, maxSentenceLength = -1) {
   /**
    * One maltparser instance for each thread
    * MUST have one separate malt instance per thread!
@@ -67,7 +67,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
     }
 
     // the actual parsing
-    val output = getService().parseTokens(tokens)
+    val output = getService.parseTokens(tokens)
 
     // convert malt's output into our dependency graph
     val edgeBuffer = new ListBuffer[(Int, Int, String)]
@@ -80,7 +80,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
       // malt indexes tokens from 1; we index from 0
       val modifier = tokens(0).toInt - 1
       val head = tokens(6).toInt - 1
-      val label = tokens(7).toLowerCase()
+      val label = tokens(7).toLowerCase
 
       // sometimes malt generates dependencies from root with a different label than "root"
       // not sure why this happens, but let's manage this: create a root node for all
@@ -95,7 +95,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
   }
 
-  private def getService():MaltParserService = {
+  private def getService:MaltParserService = {
     if(maltService.get() == null) {
       val service = new maltparserx.MaltParserService()
       service.initializeParserModel(mkArgs(
