@@ -1,6 +1,5 @@
 package edu.arizona.sista.processors.bionlp;
 
-import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.process.CoreLabelTokenFactory;
 
@@ -154,6 +153,7 @@ public class BioNLPTokenizer {
     return false;
   }
 
+  /*
   private static List<CoreLabel> normalizeParens(List<CoreLabel> tokens) {
     for (int i = 0; i < tokens.size(); i++) {
       CoreLabel token = tokens.get(i);
@@ -165,6 +165,7 @@ public class BioNLPTokenizer {
     }
     return tokens;
   }
+  */
 
   private static List<CoreLabel> breakOnPattern(List<CoreLabel> tokens, Pattern pattern) {
     List<CoreLabel> output = new ArrayList<CoreLabel>();

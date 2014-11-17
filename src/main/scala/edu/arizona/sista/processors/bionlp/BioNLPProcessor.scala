@@ -11,6 +11,7 @@ import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.util.CoreMap
 
+import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 
 /**
@@ -25,6 +26,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
   extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse, maxSentenceLength) {
 
   lazy val banner = new BannerWrapper
+  lazy val postProcessor = new BioNLPTokenizerPostProcessor
 
   override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -52,7 +54,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
   override def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
     val originalTokens = sentence.get(classOf[TokensAnnotation])
 
-    val modifiedTokens = BioNLPTokenizer.postprocessSentence(originalTokens)
+    val modifiedTokens = postProcessor.process(originalTokens.asScala.toArray).toList.asJava
     sentence.set(classOf[TokensAnnotation], modifiedTokens)
 
     modifiedTokens
@@ -105,10 +107,17 @@ class BioNLPProcessor (internStrings:Boolean = true,
 
     //println("RUNNING BANNER ON SENTENCE: " + sentence.words.mkString(" "))
 
-    val mentions = banner.tag(sentence.getSentenceText())
+    try {
+      val mentions = banner.tag(sentence.getSentenceText())
 
-    for(mention <- mentions) {
-      alignMention(mention, sentence, labels)
+      for (mention <- mentions) {
+        alignMention(mention, sentence, labels)
+      }
+    } catch {
+      case e:MatchException =>
+        throw e // this is bad, so rethrow
+      case e:Throwable => // anything else is a bug in Banner
+        System.err.println(s"WARNING: BANNER failed with message ${e.getMessage}}. Continuing...")
     }
 
     labels
@@ -128,6 +137,8 @@ class BioNLPProcessor (internStrings:Boolean = true,
     }
   }
 
+  class MatchException(s:String) extends RuntimeException(s)
+
   private def matchMentionToTokens(mention:Mention, sentence:Sentence): (Int, Int) = {
     val start = mention.getStartChar + sentence.startOffsets.head
     val end = mention.getEndChar + sentence.startOffsets.head
@@ -145,7 +156,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
     }
 
     if(startToken == -1 || endToken == -1) {
-      throw new RuntimeException(s"ERROR: failed to match mention ($start, $end) to sentence: " + sentence.words.zip(sentence.startOffsets).mkString(", "))
+      throw new MatchException(s"ERROR: failed to match mention ($start, $end) to sentence: " + sentence.words.zip(sentence.startOffsets).mkString(", "))
     }
 
     (startToken, endToken)

@@ -31,7 +31,7 @@ unmanagedJars in Runtime += (modelsTask in models).value
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % "2.10.4",
-  "org.scalatest" %% "scalatest" % "2.0.M6-SNAP17" % "test",
+  "org.scalatest" %% "scalatest" % "2.0" % "test",
   "junit" % "junit" % "4.10" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "xom" % "xom" % "1.2.5",
