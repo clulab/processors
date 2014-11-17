@@ -57,7 +57,7 @@ public class BioNLPTokenizer {
   /**
    * Main postprocessing functionality
    */
-  public static List<CoreLabel> postprocess(List<CoreLabel> tokens) {
+  public static List<CoreLabel> postprocessSentence(List<CoreLabel> tokens) {
     // we can't use the regex "(anti)|(non)" since that will create an extra
     // group and confuse breakOnPattern, thus we do an extra pass
     tokens = breakOnPattern(tokens, Pattern.compile("(anti)(-)(\\w+)",

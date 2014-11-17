@@ -52,7 +52,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
   override def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
     val originalTokens = sentence.get(classOf[TokensAnnotation])
 
-    val modifiedTokens = BioNLPTokenizer.postprocess(originalTokens)
+    val modifiedTokens = BioNLPTokenizer.postprocessSentence(originalTokens)
     sentence.set(classOf[TokensAnnotation], modifiedTokens)
 
     modifiedTokens
