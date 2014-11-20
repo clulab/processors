@@ -1,6 +1,5 @@
 package edu.arizona.sista.matcher
 
-import scala.Equals
 import scala.util.hashing.MurmurHash3._
 import edu.arizona.sista.struct.Interval
 
@@ -55,4 +54,14 @@ extends Mention {
     val allEnds = arguments.values.flatMap(_.map(_.tokenUntil)).toSeq :+ trigger.tokenUntil
     Interval(allStarts.min, allEnds.max)
   }
+}
+
+class EquivMention(val mentions: Set[Mention]) extends Mention {
+  override val label = "Equiv"
+
+  override val sentence = mentions.map(_.sentence).min
+
+  // this feature doesn't really make sense for EquivMentions
+  // maybe add a way to sort mentions by sentence and tokens in Mention trait
+  override def tokenInterval: Interval = mentions.minBy(_.sentence).tokenInterval
 }
