@@ -81,7 +81,11 @@ object StringMatcherParser extends RegexParsers {
     case constraint => Frag(Match(constraint))
   }
 
-  def atomicPattern: Parser[Frag] = tokenPattern
+  def capturePattern: Parser[Frag] = "(?<" ~ ident ~ ">" ~ splitPattern ~ ")" ^^ {
+    case _ ~ name ~ _ ~ frag ~ _ => capture(name, frag)
+  }
+
+  def atomicPattern: Parser[Frag] = tokenPattern | capturePattern
 
   def repeatedPattern: Parser[Frag] = atomicPattern ~ opt("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
     case pattern ~ None => pattern
@@ -128,12 +132,17 @@ object StringMatcherParser extends RegexParsers {
   def pattern: Parser[Prog] = splitPattern ^^ {
     case frag =>
       val name = "--GLOBAL--"
-      val save1 = SaveStart(name)
-      save1.next = frag.in
-      val save2 = SaveEnd(name)
-      save2.next = Done
-      frag.setOut(save2)
-      new Prog(save1, -1)
+      val f = capture(name, frag)
+      f.setOut(Done)
+      new Prog(f.in, -1)
+  }
+
+  def capture(name: String, frag: Frag): Frag = {
+    val save1 = SaveStart(name)
+    save1.next = frag.in
+    val save2 = SaveEnd(name)
+    frag.setOut(save2)
+    Frag(save1, Seq(save2))
   }
 
   def greedyOptional(pattern: Frag): Frag = {
@@ -308,7 +317,7 @@ object ThompsonVM {
     case i: Jump => mkThreads(i.next, sub, tok)
     case Split(lhs, rhs) => mkThreads(lhs, sub, tok) ++ mkThreads(rhs, sub, tok)
     case i @ SaveStart(name) => mkThreads(i.next, sub + (name -> Interval(tok)), tok)
-    case i @ SaveEnd(name) => mkThreads(i.next, sub + (name -> Interval(sub(name).start, tok + 1)), tok)
+    case i @ SaveEnd(name) => mkThreads(i.next, sub + (name -> Interval(sub(name).start, tok)), tok)
     case _ => Seq(Thread(inst, sub))
   }
 
