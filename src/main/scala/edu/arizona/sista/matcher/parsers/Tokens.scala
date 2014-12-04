@@ -325,7 +325,7 @@ object ThompsonVM {
     def step(tok: Int, threads: Seq[Thread]): Either[Seq[Thread], Sub] =
     Left(threads.flatMap(t => t.inst match {
       case Done => return Right(t.sub)
-      case i @ Match(c) if c.matches(tok, sent, doc) => mkThreads(i.next, t.sub, tok)
+      case i @ Match(c) if c.matches(tok, sent, doc) => mkThreads(i.next, t.sub, tok + 1)
       case _ => Nil
     }).distinct)
 
