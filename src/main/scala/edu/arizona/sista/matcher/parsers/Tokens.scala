@@ -138,11 +138,11 @@ object StringMatcherParser extends RegexParsers {
   }
 
   def capture(name: String, frag: Frag): Frag = {
-    val save1 = SaveStart(name)
-    save1.next = frag.in
-    val save2 = SaveEnd(name)
-    frag.setOut(save2)
-    Frag(save1, Seq(save2))
+    val start = SaveStart(name)
+    val end = SaveEnd(name)
+    start.next = frag.in
+    frag.setOut(end)
+    Frag(start, Seq(end))
   }
 
   def greedyOptional(pattern: Frag): Frag = {
