@@ -131,10 +131,9 @@ object StringMatcherParser extends RegexParsers {
 
   def pattern: Parser[Prog] = splitPattern ^^ {
     case frag =>
-      val name = "--GLOBAL--"
-      val f = capture(name, frag)
+      val f = capture(Prog.GlobalCaptureName, frag)
       f.setOut(Done)
-      new Prog(f.in, -1)
+      new Prog(f.in)
   }
 
   def capture(name: String, frag: Frag): Frag = {
@@ -308,8 +307,25 @@ object Frag {
 }
 
 
+case class Result(start: Int, end: Int, groups: Map[String, Interval])
 
-class Prog(val start: Inst, val len: Int)
+
+class Prog(val start: Inst) {
+  def find(tok: Int, sent: Int, doc: Document): Option[Result] = {
+    ThompsonVM.evaluate(start, tok, sent, doc) map { m =>
+      val (start, end) = m(Prog.GlobalCaptureName)
+      Result(start, end, m - Prog.GlobalCaptureName mapValues {
+        case (from, until) => Interval(from, until)
+      })
+    }
+  }
+}
+
+
+object Prog {
+  val GlobalCaptureName = "--GLOBAL--"
+}
+
 
 sealed trait Inst {
   var next: Inst = null
@@ -378,7 +394,7 @@ object ThompsonVM {
     case _ => Seq(Thread(inst, sub))
   }
 
-  def execute(prog: Prog, tok: Int, sent: Int, doc: Document): Option[Sub] = {
+  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document): Option[Sub] = {
 
     def nextThreads(threads: Seq[Thread], tok: Int): Seq[Thread] = {
       threads.flatMap(t => t.inst match {
@@ -405,6 +421,6 @@ object ThompsonVM {
       }
     }
 
-    loop(tok, mkThreads(prog.start, Map.empty, tok), None)
+    loop(tok, mkThreads(start, Map.empty, tok), None)
   }
 }
