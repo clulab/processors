@@ -398,7 +398,8 @@ object ThompsonVM {
 
     def nextThreads(threads: Seq[Thread], tok: Int): Seq[Thread] = {
       threads.flatMap(t => t.inst match {
-        case i @ Match(c) if c.matches(tok, sent, doc) => mkThreads(i.next, t.sub, tok + 1)
+        case i @ Match(c) if tok < doc.sentences(sent).size && c.matches(tok, sent, doc) =>
+          mkThreads(i.next, t.sub, tok + 1)
         case _ => Nil
       }).distinct
     }
@@ -414,7 +415,6 @@ object ThompsonVM {
     @tailrec
     def loop(i: Int, threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
       if (threads.isEmpty) result
-      else if (i > doc.sentences(sent).size) result
       else {
         val (ts, res) = step(i, threads)
         loop(i + 1, ts, res)
