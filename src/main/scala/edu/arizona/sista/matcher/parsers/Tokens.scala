@@ -398,7 +398,7 @@ object ThompsonVM {
     @tailrec
     def loop(i: Int, threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
       if (threads.isEmpty) result
-      else if (i >= doc.sentences(sent).size) result
+      else if (i > doc.sentences(sent).size) result
       else {
         val (ts, res) = step(i, threads)
         loop(i + 1, ts, res)
