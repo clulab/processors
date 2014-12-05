@@ -87,14 +87,13 @@ object StringMatcherParser extends RegexParsers {
 
   def atomicPattern: Parser[Frag] = tokenPattern | capturePattern
 
-  def repeatedPattern: Parser[Frag] = atomicPattern ~ opt("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
-    case pattern ~ None => pattern
-    case pattern ~ Some("?") => greedyOptional(pattern)
-    case pattern ~ Some("??") => lazyOptional(pattern)
-    case pattern ~ Some("*") => greedyKleene(pattern)
-    case pattern ~ Some("*?") => lazyKleene(pattern)
-    case pattern ~ Some("+") => Frag(pattern, greedyKleene(pattern))
-    case pattern ~ Some("+?") => Frag(pattern, lazyKleene(pattern))
+  def repeatedPattern: Parser[Frag] = atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
+    case pattern ~ "?" => greedyOptional(pattern)
+    case pattern ~ "??" => lazyOptional(pattern)
+    case pattern ~ "*" => greedyKleene(pattern)
+    case pattern ~ "*?" => lazyKleene(pattern)
+    case pattern ~ "+" => Frag(pattern, greedyKleene(pattern))
+    case pattern ~ "+?" => Frag(pattern, lazyKleene(pattern))
   }
 
   def rangePattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "," ~ int ~ "}" ^^ {
@@ -113,7 +112,8 @@ object StringMatcherParser extends RegexParsers {
     case frag ~ _ ~ exact ~ _ => repeatPattern(frag, exact)
   }
 
-  def quantifiedPattern: Parser[Frag] = repeatedPattern | rangePattern | fromPattern | toPattern | exactPattern
+  def quantifiedPattern: Parser[Frag] =
+    repeatedPattern | rangePattern | fromPattern | toPattern | exactPattern | atomicPattern
 
   def concatPattern: Parser[Frag] = quantifiedPattern ~ rep(quantifiedPattern) ^^ {
     case first ~ rest => (first /: rest) {
@@ -176,10 +176,10 @@ object StringMatcherParser extends RegexParsers {
   }
 
   def greedyRange(pattern: Frag, from: Option[Int], to: Option[Int]): Frag = {
-    val required = for (i <- from) yield Seq.fill(i)(pattern)
+    val required = for (i <- from) yield pattern.repeat(i)
     val optional = for (i <- to) yield {
-      val opt = i - from.getOrElse(0)
-      Seq.fill(opt)(greedyOptional(pattern))
+      val n = i - from.getOrElse(0)
+      greedyOptional(pattern).repeat(n)
     }
     val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyKleene(pattern)))
     (fragments.head /: fragments.tail) {
@@ -188,7 +188,7 @@ object StringMatcherParser extends RegexParsers {
   }
 
   def repeatPattern(pattern: Frag, n: Int): Frag = {
-    val fragments = Seq.fill(n)(pattern)
+    val fragments = pattern.repeat(n)
     (fragments.head /: fragments.tail) {
       case (lhs, rhs) => Frag(lhs, rhs)
     }
@@ -281,6 +281,21 @@ class Frag(val in: Inst, val out: Seq[Inst]) {
       }
     }
   }
+
+  def findOut(i: Inst): Seq[Inst] = i match {
+    case Split(lhs, rhs) => findOut(lhs) ++ findOut(rhs)
+    case i if i.next == null => Seq(i)
+    case i => findOut(i.next)
+  }
+
+  def dup: Frag = {
+    val newIn = in.dup
+    Frag(newIn, findOut(newIn))
+  }
+
+  def repeat(n: Int): Seq[Frag] = {
+    for (i <- 0 until n) yield dup
+  }
 }
 
 object Frag {
@@ -297,47 +312,99 @@ object Frag {
 class Prog(val start: Inst, val len: Int)
 
 sealed trait Inst {
-  var next: Inst = _
+  var next: Inst = null
+  def dup: Inst
 }
 
-case class Match(c: TokenConstraint) extends Inst
-case class Split(var lhs: Inst, var rhs: Inst) extends Inst
-case class Jump() extends Inst
-case class SaveStart(name: String) extends Inst
-case class SaveEnd(name: String) extends Inst
-case object Done extends Inst
+case class Split(lhs: Inst, rhs: Inst) extends Inst {
+  def dup: Inst = Split(lhs.dup, rhs.dup)
+}
+
+case class Match(c: TokenConstraint) extends Inst {
+  def dup: Inst = {
+    val inst = this.copy()
+    if (inst.next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class Jump() extends Inst {
+  def dup: Inst = {
+    val inst = this.copy()
+    if (inst.next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class SaveStart(name: String) extends Inst {
+  def dup: Inst = {
+    val inst = this.copy()
+    if (inst.next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class SaveEnd(name: String) extends Inst {
+  def dup: Inst = {
+    val inst = this.copy()
+    if (inst.next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case object Done extends Inst {
+  def dup: Inst = this
+}
 
 object ThompsonVM {
-  type Sub = Map[String, Interval]
+  type Sub = Map[String, (Int, Int)]
 
-  // sub shouldn't count for Thread.equals
-  private case class Thread(inst: Inst, sub: Sub)
+  private case class Thread(inst: Inst) {
+    var sub: Sub = _
+  }
+  private object Thread {
+    def apply(inst: Inst, sub: Sub): Thread = {
+      val t = Thread(inst)
+      t.sub = sub
+      t
+    }
+  }
 
   private def mkThreads(inst: Inst, sub: Sub, tok: Int): Seq[Thread] = inst match {
     case i: Jump => mkThreads(i.next, sub, tok)
     case Split(lhs, rhs) => mkThreads(lhs, sub, tok) ++ mkThreads(rhs, sub, tok)
-    case i @ SaveStart(name) => mkThreads(i.next, sub + (name -> Interval(tok)), tok)
-    case i @ SaveEnd(name) => mkThreads(i.next, sub + (name -> Interval(sub(name).start, tok)), tok)
+    case i @ SaveStart(name) => mkThreads(i.next, sub + (name -> (tok, -1)), tok)
+    case i @ SaveEnd(name) => mkThreads(i.next, sub + (name -> (sub(name)._1, tok)), tok)
     case _ => Seq(Thread(inst, sub))
   }
 
   def execute(prog: Prog, tok: Int, sent: Int, doc: Document): Option[Sub] = {
-    def step(tok: Int, threads: Seq[Thread]): Either[Seq[Thread], Sub] =
-    Left(threads.flatMap(t => t.inst match {
-      case Done => return Right(t.sub)
-      case i @ Match(c) if c.matches(tok, sent, doc) => mkThreads(i.next, t.sub, tok + 1)
-      case _ => Nil
-    }).distinct)
+
+    def nextThreads(threads: Seq[Thread], tok: Int): Seq[Thread] = {
+      threads.flatMap(t => t.inst match {
+        case i @ Match(c) if c.matches(tok, sent, doc) => mkThreads(i.next, t.sub, tok + 1)
+        case _ => Nil
+      }).distinct
+    }
+
+    def step(tok: Int, threads: Seq[Thread]): (Seq[Thread], Option[Sub]) = {
+      val (validThreads, result) = threads.find(_.inst == Done) match {
+        case None => (threads, None)
+        case Some(t) => (threads.takeWhile(_ != t), Some(t.sub))
+      }
+      (nextThreads(validThreads, tok), result)
+    }
 
     @tailrec
-    def loop(i: Int, threads: Seq[Thread]): Option[Sub] = {
-      if (threads.isEmpty) None
-      else step(i, threads) match {
-        case Left(ts) => loop(i + 1, ts)
-        case Right(sub) => Some(sub)
+    def loop(i: Int, threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
+      if (threads.isEmpty) result
+      else if (i >= doc.sentences(sent).size) result
+      else {
+        val (ts, res) = step(i, threads)
+        loop(i + 1, ts, res)
       }
     }
 
-    loop(tok, mkThreads(prog.start, Map.empty, tok))
+    loop(tok, mkThreads(prog.start, Map.empty, tok), None)
   }
 }
