@@ -64,7 +64,7 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
 case class Match(c: TokenConstraint) extends Inst {
   def dup: Inst = {
     val inst = copy()
-    if (inst.next != null) inst.next = next.dup
+    if (next != null) inst.next = next.dup
     inst
   }
 }
@@ -72,7 +72,7 @@ case class Match(c: TokenConstraint) extends Inst {
 case class Jump() extends Inst {
   def dup: Inst = {
     val inst = copy()
-    if (inst.next != null) inst.next = next.dup
+    if (next != null) inst.next = next.dup
     inst
   }
 }
@@ -80,7 +80,7 @@ case class Jump() extends Inst {
 case class SaveStart(name: String) extends Inst {
   def dup: Inst = {
     val inst = copy()
-    if (inst.next != null) inst.next = next.dup
+    if (next != null) inst.next = next.dup
     inst
   }
 }
@@ -88,7 +88,7 @@ case class SaveStart(name: String) extends Inst {
 case class SaveEnd(name: String) extends Inst {
   def dup: Inst = {
     val inst = copy()
-    if (inst.next != null) inst.next = next.dup
+    if (next != null) inst.next = next.dup
     inst
   }
 }
