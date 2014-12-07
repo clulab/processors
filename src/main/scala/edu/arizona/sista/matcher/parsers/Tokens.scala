@@ -82,37 +82,37 @@ object StringMatcherParser extends RegexParsers {
   }
 
   def capturePattern: Parser[Frag] = "(?<" ~ ident ~ ">" ~ splitPattern ~ ")" ^^ {
-    case _ ~ name ~ _ ~ frag ~ _ => capture(name, frag)
+    case _ ~ name ~ _ ~ frag ~ _ => frag.capture(name)
   }
 
   def atomicPattern: Parser[Frag] = tokenPattern | capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[Frag] = atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
-    case pattern ~ "?" => greedyOptional(pattern)
-    case pattern ~ "??" => lazyOptional(pattern)
-    case pattern ~ "*" => greedyKleene(pattern)
-    case pattern ~ "*?" => lazyKleene(pattern)
-    case pattern ~ "+" => Frag(pattern, greedyKleene(pattern))
-    case pattern ~ "+?" => Frag(pattern, lazyKleene(pattern))
+    case frag ~ "?" => frag.greedyOptional
+    case frag ~ "??" => frag.lazyOptional
+    case frag ~ "*" => frag.greedyKleene
+    case frag ~ "*?" => frag.lazyKleene
+    case frag ~ "+" => frag.greedyPlus
+    case frag ~ "+?" => frag.lazyPlus
   }
 
   def rangePattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "," ~ int ~ ("}?"|"}") ^^ {
-    case frag ~ _ ~ from ~ _ ~ to ~ "}" => greedyRange(frag, Some(from), Some(to))
-    case frag ~ _ ~ from ~ _ ~ to ~ "}?" => lazyRange(frag, Some(from), Some(to))
+    case frag ~ _ ~ from ~ _ ~ to ~ "}" => frag.greedyRange(Some(from), Some(to))
+    case frag ~ _ ~ from ~ _ ~ to ~ "}?" => frag.lazyRange(Some(from), Some(to))
   }
 
   def fromPattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "," ~ ("}?"|"}") ^^ {
-    case frag ~ _ ~ from ~ _ ~ "}" => greedyRange(frag, Some(from), None)
-    case frag ~ _ ~ from ~ _ ~ "}?" => lazyRange(frag, Some(from), None)
+    case frag ~ _ ~ from ~ _ ~ "}" => frag.greedyRange(Some(from), None)
+    case frag ~ _ ~ from ~ _ ~ "}?" => frag.lazyRange(Some(from), None)
   }
 
   def toPattern: Parser[Frag] = atomicPattern ~ "{" ~ "," ~ int ~ ("}?"|"}") ^^ {
-    case frag ~ _ ~ _ ~ to ~ "}" => greedyRange(frag, None, Some(to))
-    case frag ~ _ ~ _ ~ to ~ "}?" => lazyRange(frag, None, Some(to))
+    case frag ~ _ ~ _ ~ to ~ "}" => frag.greedyRange(None, Some(to))
+    case frag ~ _ ~ _ ~ to ~ "}?" => frag.lazyRange(None, Some(to))
   }
 
   def exactPattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "}" ^^ {
-    case frag ~ _ ~ exact ~ _ => repeatPattern(frag, exact)
+    case frag ~ _ ~ n ~ _ => frag.repeatPattern(n)
   }
 
   def quantifiedPattern: Parser[Frag] =
@@ -134,78 +134,9 @@ object StringMatcherParser extends RegexParsers {
 
   def pattern: Parser[Prog] = splitPattern ^^ {
     case frag =>
-      val f = capture(Prog.GlobalCaptureName, frag)
+      val f = frag.capture(Prog.GlobalCaptureName)
       f.setOut(Done)
       new Prog(f.in)
-  }
-
-  def capture(name: String, frag: Frag): Frag = {
-    val start = SaveStart(name)
-    val end = SaveEnd(name)
-    start.next = frag.in
-    frag.setOut(end)
-    Frag(start, Seq(end))
-  }
-
-  def greedyOptional(pattern: Frag): Frag = {
-    val epsilon = Jump()
-    val split = Split(pattern.in, epsilon)
-    Frag(split, pattern.out :+ epsilon)
-  }
-
-  def lazyOptional(pattern: Frag): Frag = {
-    val epsilon = Jump()
-    val split = Split(epsilon, pattern.in)
-    Frag(split, epsilon +: pattern.out)
-  }
-
-  def greedyKleene(pattern: Frag): Frag = {
-    val epsilon = Jump()
-    val split = Split(pattern.in, epsilon)
-    val jump = Jump()
-    jump.next = split
-    pattern.setOut(jump)
-    Frag(split, Seq(epsilon))
-  }
-
-  def lazyKleene(pattern: Frag): Frag = {
-    val epsilon = Jump()
-    val split = Split(epsilon, pattern.in)
-    val jump = Jump()
-    jump.next = split
-    pattern.setOut(jump)
-    Frag(split, Seq(epsilon))
-  }
-
-  def greedyRange(pattern: Frag, from: Option[Int], to: Option[Int]): Frag = {
-    val required = for (i <- from) yield pattern.repeat(i)
-    val optional = for (i <- to) yield {
-      val n = i - from.getOrElse(0)
-      greedyOptional(pattern).repeat(n)
-    }
-    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyKleene(pattern)))
-    (fragments.head /: fragments.tail) {
-      case (lhs, rhs) => Frag(lhs, rhs)
-    }
-  }
-
-  def lazyRange(pattern: Frag, from: Option[Int], to: Option[Int]): Frag = {
-    val required = for (i <- from) yield pattern.repeat(i)
-    val optional = for (i <- to) yield {
-      val n = i - from.getOrElse(0)
-      lazyOptional(pattern).repeat(n)
-    }
-    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyKleene(pattern)))
-    (fragments.head /: fragments.tail) {
-      case (lhs, rhs) => Frag(lhs, rhs)
-    }
-  }
-
-  def repeatPattern(pattern: Frag, n: Int): Frag = {
-    val fragments = pattern.repeat(n)
-    (fragments.head /: fragments.tail) {
-      case (lhs, rhs) => Frag(lhs, rhs)
-    }
   }
 
  }
@@ -309,6 +240,79 @@ class Frag(val in: Inst, val out: Seq[Inst]) {
 
   def repeat(n: Int): Seq[Frag] = {
     for (i <- 0 until n) yield dup
+  }
+
+  def capture(name: String): Frag = {
+    val start = SaveStart(name)
+    val end = SaveEnd(name)
+    start.next = in
+    setOut(end)
+    Frag(start, Seq(end))
+  }
+
+  def greedyOptional: Frag = {
+    val epsilon = Jump()
+    val split = Split(in, epsilon)
+    Frag(split, epsilon +: out)
+  }
+
+  def lazyOptional: Frag = {
+    val epsilon = Jump()
+    val split = Split(epsilon, in)
+    Frag(split, epsilon +: out)
+  }
+
+  def greedyKleene: Frag = {
+    val epsilon = Jump()
+    val split = Split(in, epsilon)
+    val jump = Jump()
+    jump.next = split
+    setOut(jump)
+    Frag(split, Seq(epsilon))
+  }
+
+  def lazyKleene: Frag = {
+    val epsilon = Jump()
+    val split = Split(epsilon, in)
+    val jump = Jump()
+    jump.next = split
+    setOut(jump)
+    Frag(split, Seq(epsilon))
+  }
+
+  def greedyPlus: Frag = Frag(dup, greedyKleene)
+
+  def lazyPlus: Frag = Frag(dup, lazyKleene)
+
+  def greedyRange(from: Option[Int], to: Option[Int]): Frag = {
+    val required = for (i <- from) yield repeat(i)
+    val optional = for (i <- to) yield {
+      val n = i - from.getOrElse(0)
+      greedyOptional.repeat(n)
+    }
+    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyKleene))
+    (fragments.head /: fragments.tail) {
+      case (lhs, rhs) => Frag(lhs, rhs)
+    }
+  }
+
+  def lazyRange(from: Option[Int], to: Option[Int]): Frag = {
+    val required = for (i <- from) yield repeat(i)
+    val optional = for (i <- to) yield {
+      val n = i - from.getOrElse(0)
+      lazyOptional.repeat(n)
+    }
+    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyKleene))
+    (fragments.head /: fragments.tail) {
+      case (lhs, rhs) => Frag(lhs, rhs)
+    }
+  }
+
+  def repeatPattern(n: Int): Frag = {
+    val fragments = repeat(n)
+    (fragments.head /: fragments.tail) {
+      case (lhs, rhs) => Frag(lhs, rhs)
+    }
   }
 }
 
