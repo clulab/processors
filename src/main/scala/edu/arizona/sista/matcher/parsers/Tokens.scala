@@ -85,7 +85,7 @@ object StringMatcherParser extends RegexParsers {
     case _ ~ name ~ _ ~ frag ~ _ => capture(name, frag)
   }
 
-  def atomicPattern: Parser[Frag] = tokenPattern | capturePattern
+  def atomicPattern: Parser[Frag] = tokenPattern | capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[Frag] = atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
     case pattern ~ "?" => greedyOptional(pattern)
