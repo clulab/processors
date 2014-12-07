@@ -96,16 +96,19 @@ object StringMatcherParser extends RegexParsers {
     case pattern ~ "+?" => Frag(pattern, lazyKleene(pattern))
   }
 
-  def rangePattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "," ~ int ~ "}" ^^ {
-    case frag ~ _ ~ from ~ _ ~ to ~ _ => greedyRange(frag, Some(from), Some(to))
+  def rangePattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "," ~ int ~ ("}?"|"}") ^^ {
+    case frag ~ _ ~ from ~ _ ~ to ~ "}" => greedyRange(frag, Some(from), Some(to))
+    case frag ~ _ ~ from ~ _ ~ to ~ "}?" => lazyRange(frag, Some(from), Some(to))
   }
 
-  def fromPattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "," ~ "}" ^^ {
-    case frag ~ _ ~ from ~ _ ~ _ => greedyRange(frag, Some(from), None)
+  def fromPattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "," ~ ("}?"|"}") ^^ {
+    case frag ~ _ ~ from ~ _ ~ "}" => greedyRange(frag, Some(from), None)
+    case frag ~ _ ~ from ~ _ ~ "}?" => lazyRange(frag, Some(from), None)
   }
 
-  def toPattern: Parser[Frag] = atomicPattern ~ "{" ~ "," ~ int ~ "}" ^^ {
-    case frag ~ _ ~ _ ~ to ~ _ => greedyRange(frag, None, Some(to))
+  def toPattern: Parser[Frag] = atomicPattern ~ "{" ~ "," ~ int ~ ("}?"|"}") ^^ {
+    case frag ~ _ ~ _ ~ to ~ "}" => greedyRange(frag, None, Some(to))
+    case frag ~ _ ~ _ ~ to ~ "}?" => lazyRange(frag, None, Some(to))
   }
 
   def exactPattern: Parser[Frag] = atomicPattern ~ "{" ~ int ~ "}" ^^ {
@@ -181,6 +184,18 @@ object StringMatcherParser extends RegexParsers {
       greedyOptional(pattern).repeat(n)
     }
     val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyKleene(pattern)))
+    (fragments.head /: fragments.tail) {
+      case (lhs, rhs) => Frag(lhs, rhs)
+    }
+  }
+
+  def lazyRange(pattern: Frag, from: Option[Int], to: Option[Int]): Frag = {
+    val required = for (i <- from) yield pattern.repeat(i)
+    val optional = for (i <- to) yield {
+      val n = i - from.getOrElse(0)
+      lazyOptional(pattern).repeat(n)
+    }
+    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyKleene(pattern)))
     (fragments.head /: fragments.tail) {
       case (lhs, rhs) => Frag(lhs, rhs)
     }
