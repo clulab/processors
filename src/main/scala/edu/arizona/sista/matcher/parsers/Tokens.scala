@@ -311,13 +311,34 @@ case class Result(start: Int, end: Int, groups: Map[String, Interval])
 
 
 class Prog(val start: Inst) {
-  def find(tok: Int, sent: Int, doc: Document): Option[Result] = {
+  def findPrefixOf(sent: Int, doc: Document): Option[Result] = findPrefixOf(0, sent, doc)
+  def findFirstIn(sent: Int, doc: Document): Option[Result] = findFirstIn(0, sent, doc)
+  def findAllIn(sent: Int, doc: Document): Seq[Result] = findAllIn(0, sent, doc)
+
+  def findPrefixOf(tok: Int, sent: Int, doc: Document): Option[Result] = {
     ThompsonVM.evaluate(start, tok, sent, doc) map { m =>
       val (start, end) = m(Prog.GlobalCaptureName)
       Result(start, end, m - Prog.GlobalCaptureName mapValues {
         case (from, until) => Interval(from, until)
       })
     }
+  }
+
+  def findFirstIn(tok: Int, sent: Int, doc: Document): Option[Result] = {
+    val n = doc.sentences(sent).size
+    for (i <- tok until n) {
+      val r = findPrefixOf(i, sent, doc)
+      if (r.isDefined) return r
+    }
+    None
+  }
+
+  def findAllIn(tok: Int, sent: Int, doc: Document): Seq[Result] = {
+    def loop(i: Int): Stream[Result] = findFirstIn(i, sent, doc) match {
+      case None => Stream.empty
+      case Some(r) => r #:: loop(r.end)
+    }
+    loop(tok)
   }
 }
 
