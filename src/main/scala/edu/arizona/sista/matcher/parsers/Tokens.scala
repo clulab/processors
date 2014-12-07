@@ -364,4 +364,6 @@ class Prog(val start: Inst) {
 
 object Prog {
   val GlobalCaptureName = "--GLOBAL--"
+
+  def compile(input: String): Prog = StringMatcherParser.parse(input)
 }
