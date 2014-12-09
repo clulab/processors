@@ -152,7 +152,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
       else {
         val u = rest minBy dist
         val (newDist, newPrev) = (neighborsFor(u) filter rest.contains flatMap { v =>
-          val d = dist(u) + 1
+          val d = dist(u) + 1  // all edges have a cost of 1
           if (d < dist(v)) Some(((v -> d), (v -> u))) else None
         }).unzip
         mkPrev(rest - u, dist ++ newDist, prev ++ newPrev)
