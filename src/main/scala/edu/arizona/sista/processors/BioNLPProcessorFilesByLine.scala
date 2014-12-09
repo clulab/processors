@@ -1,6 +1,6 @@
 package edu.arizona.sista.processors
 
-import java.io.{FileReader, BufferedReader, PrintWriter, File}
+import java.io.{PrintWriter, File}
 
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.utils.Files
