@@ -29,14 +29,16 @@ object ThompsonVM {
     def stepThreads(tok: Int, threads: Seq[Thread]): Seq[Thread] =
       threads.flatMap(t => t.inst match {
         case i: Match if tok < doc.sentences(sent).size && i.c.matches(tok, sent, doc) =>
-          mkThreads(tok + 1, i.next, t.sub)
-        case _ => Nil
+          mkThreads(tok + 1, i.next, t.sub)  // token matched, return new threads
+        case _ => Nil  // thread died with no match
       }).distinct
 
     def handleMatch(tok: Int, threads: Seq[Thread]): (Seq[Thread], Option[Sub]) =
-      threads.find(_.inst == Done) match {
+      threads find (_.inst == Done) match {
+        // no thread has finished, return them all
         case None => (threads, None)
-        case Some(t) => (threads.takeWhile(_ != t), Some(t.sub))
+        // a thread finished, drop all threads to its right but keep the ones to its left
+        case Some(t) => (threads takeWhile (_ != t), Some(t.sub))
       }
 
     @annotation.tailrec
@@ -52,7 +54,7 @@ object ThompsonVM {
   }
 }
 
-sealed abstract class Inst {
+sealed trait Inst {
   var next: Inst = null
   def dup: Inst
 }
