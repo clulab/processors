@@ -146,6 +146,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
       (outgoingEdges(node) ++ incomingEdges(node)).map(_._1).distinct
 
     // build table of pointers to previous node in shortest path to the source
+    @annotation.tailrec
     def mkPrev(rest: Set[Int], dist: Map[Int, Double], prev: Map[Int, Int]): Map[Int, Int] = {
       if (rest.isEmpty) prev
       else {
@@ -159,6 +160,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     }
 
     // build path from source to node
+    @annotation.tailrec
     def mkPath(node: Int, prev: Map[Int, Int], path: Seq[Int]): Seq[Int] = {
       if (prev contains node) mkPath(prev(node), prev, node +: path)
       else node +: path
