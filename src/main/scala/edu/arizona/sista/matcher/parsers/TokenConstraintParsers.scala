@@ -10,17 +10,19 @@ trait TokenConstraintParsers extends LiteralParsers {
     case matcher => new WordConstraint(matcher)
   }
 
-  def disjunctiveConstraint: Parser[TokenConstraint] = conjunctiveConstraint ~ rep("|" ~> conjunctiveConstraint) ^^ {
-    case first ~ rest => (first /: rest) {
-      case (lhs, rhs) => new DisjunctiveConstraint(lhs, rhs)
+  def disjunctiveConstraint: Parser[TokenConstraint] =
+    conjunctiveConstraint ~ rep("|" ~> conjunctiveConstraint) ^^ {
+      case first ~ rest => (first /: rest) {
+        case (lhs, rhs) => new DisjunctiveConstraint(lhs, rhs)
+      }
     }
-  }
 
-  def conjunctiveConstraint: Parser[TokenConstraint] = negatedConstraint ~ rep("&" ~> negatedConstraint) ^^ {
-    case first ~ rest => (first /: rest) {
-      case (lhs, rhs) => new ConjunctiveConstraint(lhs, rhs)
+  def conjunctiveConstraint: Parser[TokenConstraint] =
+    negatedConstraint ~ rep("&" ~> negatedConstraint) ^^ {
+      case first ~ rest => (first /: rest) {
+        case (lhs, rhs) => new ConjunctiveConstraint(lhs, rhs)
+      }
     }
-  }
 
   def negatedConstraint: Parser[TokenConstraint] = opt("!") ~ atomicConstraint ^^ {
     case None ~ constraint => constraint
@@ -35,16 +37,26 @@ trait TokenConstraintParsers extends LiteralParsers {
     case "tag" ~ _ ~ matcher => new TagConstraint(matcher)
     case "entity" ~ _ ~ matcher => new EntityConstraint(matcher)
     case "chunk" ~ _ ~ matcher => new ChunkConstraint(matcher)
+    case "incoming" ~ _ ~ matcher => new IncomingConstraint(matcher)
+    case "outgoing" ~ _ ~ matcher => new OutgoingConstraint(matcher)
     case _ => sys.error("unrecognized token field")
   }
 }
 
-sealed trait Values {
+trait Values {
   def word(tok: Int, sent: Int, doc: Document): String = doc.sentences(sent).words(tok)
   def lemma(tok: Int, sent: Int, doc: Document): String = doc.sentences(sent).lemmas.get(tok)
   def tag(tok: Int, sent: Int, doc: Document): String = doc.sentences(sent).tags.get(tok)
   def entity(tok: Int, sent: Int, doc: Document): String = doc.sentences(sent).entities.get(tok)
   def chunk(tok: Int, sent: Int, doc: Document): String = doc.sentences(sent).chunks.get(tok)
+}
+
+trait Dependencies {
+  def incoming(tok: Int, sent: Int, doc: Document): Seq[String] =
+    doc.sentences(sent).dependencies.get.incomingEdges(tok).map(_._2)
+
+  def outgoing(tok: Int, sent: Int, doc: Document): Seq[String] =
+    doc.sentences(sent).dependencies.get.outgoingEdges(tok).map(_._2)
 }
 
 sealed trait TokenConstraint {
@@ -74,6 +86,16 @@ class EntityConstraint(matcher: StringMatcher) extends TokenConstraint with Valu
 class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document): Boolean =
     matcher.matches(chunk(tok, sent, doc))
+}
+
+class IncomingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
+  def matches(tok: Int, sent: Int, doc: Document): Boolean =
+    incoming(tok, sent, doc) exists matcher.matches
+}
+
+class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
+  def matches(tok: Int, sent: Int, doc: Document): Boolean =
+    outgoing(tok, sent, doc) exists matcher.matches
 }
 
 class NegatedConstraint(constraint: TokenConstraint) extends TokenConstraint {
