@@ -5,8 +5,6 @@ import edu.arizona.sista.processors.Document
 
 class TokenPattern(val start: Inst) {
   def findPrefixOf(sent: Int, doc: Document): Option[Result] = findPrefixOf(0, sent, doc)
-  def findFirstIn(sent: Int, doc: Document): Option[Result] = findFirstIn(0, sent, doc)
-  def findAllIn(sent: Int, doc: Document): Seq[Result] = findAllIn(0, sent, doc)
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document): Option[Result] = {
     ThompsonVM.evaluate(start, tok, sent, doc) map { m =>
@@ -17,6 +15,8 @@ class TokenPattern(val start: Inst) {
     }
   }
 
+  def findFirstIn(sent: Int, doc: Document): Option[Result] = findFirstIn(0, sent, doc)
+
   def findFirstIn(tok: Int, sent: Int, doc: Document): Option[Result] = {
     val n = doc.sentences(sent).size
     for (i <- tok until n) {
@@ -25,6 +25,14 @@ class TokenPattern(val start: Inst) {
     }
     None
   }
+
+  // returns results with sentence index
+  def findAllIn(doc: Document): Seq[(Result, Int)] = for {
+    s <- 0 until doc.sentences.size
+    r <- findAllIn(s, doc)
+  } yield (r, s)
+
+  def findAllIn(sent: Int, doc: Document): Seq[Result] = findAllIn(0, sent, doc)
 
   def findAllIn(tok: Int, sent: Int, doc: Document): Seq[Result] = {
     def loop(i: Int): Stream[Result] = findFirstIn(i, sent, doc) match {
