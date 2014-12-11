@@ -23,6 +23,7 @@ object BioNLPProcessorFilesByLine {
     val ser = new DocumentSerializer
     var count = 0
     for(file <- files) {
+      println(s"Starting to process file $file...")
       val sents = fileToSentences(file)
       val doc = proc.annotateFromSentences(sents)
       val os = new PrintWriter(file + ".ser")

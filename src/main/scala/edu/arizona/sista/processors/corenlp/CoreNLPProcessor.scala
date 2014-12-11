@@ -382,6 +382,17 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     }
   }
 
+  def parensToSymbols(words:java.util.List[CoreLabel]):java.util.List[CoreLabel] = {
+    val processedWords = new util.ArrayList[CoreLabel]()
+    for(w <- words) {
+      val nw = new CoreLabel(w)
+      if(nw.word() == "(") nw.setWord("-LRB-")
+      else if(nw.word() == ")") nw.setWord("-RRB-")
+      processedWords.add(nw)
+    }
+    processedWords
+  }
+
   def stanfordParse(sentence:CoreMap):StanfordTree = {
     val constraints = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
     val words = sentence.get(classOf[CoreAnnotations.TokensAnnotation])
