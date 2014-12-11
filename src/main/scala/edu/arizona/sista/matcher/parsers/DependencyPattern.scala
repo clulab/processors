@@ -3,6 +3,32 @@ package edu.arizona.sista.matcher
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 
+class DependencyPattern(trigger: TokenPattern, arguments: Seq[ArgumentPattern]) {
+  private val required = arguments filter (_.required == true)
+  private val optional = arguments filter (_.required == false)
+
+  def findAllIn(sent: Int, doc: Document, ruleName: String): Seq[Map[String, Seq[Interval]]] =
+    for {
+      r <- trigger.findAllIn(sent, doc)
+      args <- extractArguments(r.start, sent, doc)  // FIXME taking first token arbitrarily
+      trig = Interval(r.start, r.end)
+    } yield args + ("trigger" -> Seq(trig))
+
+
+  private def extractArguments(tok: Int, sent: Int, doc: Document): Option[Map[String, Seq[Interval]]] = {
+    val req = for (a <- required) yield a.findAllIn(tok, sent, doc) match {
+      case Nil => return None  // if a required arg is missing then we are done
+      case results => (a.name -> results)
+    }
+    val opt = for (a <- optional) yield (a.name -> a.findAllIn(tok, sent, doc))
+    Some((req ++ opt).toMap)
+  }
+}
+
+object DependencyPattern {
+  def compile(input: String): DependencyPattern = DependencyPatternCompiler.compile(input)
+}
+
 object DependencyPatternCompiler extends TokenPatternParsers {
   def compile(input: String): DependencyPattern = parseAll(dependencyPattern, input.trim) match {
     case Success(result, _) => result
@@ -62,32 +88,6 @@ object DependencyPatternCompiler extends TokenPatternParsers {
 
   def incomingDepPattern: Parser[DependencyPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
-}
-
-class DependencyPattern(trigger: TokenPattern, arguments: Seq[ArgumentPattern]) {
-  private val required = arguments filter (_.required == true)
-  private val optional = arguments filter (_.required == false)
-
-  def findAllIn(sent: Int, doc: Document, ruleName: String): Seq[Map[String, Seq[Interval]]] =
-    for {
-      r <- trigger.findAllIn(sent, doc)
-      args <- extractArguments(r.start, sent, doc)  // FIXME taking first token arbitrarily
-      trig = Interval(r.start, r.end)
-    } yield args + ("trigger" -> Seq(trig))
-
-
-  private def extractArguments(tok: Int, sent: Int, doc: Document): Option[Map[String, Seq[Interval]]] = {
-    val req = for (a <- required) yield a.findAllIn(tok, sent, doc) match {
-      case Nil => return None  // if a required arg is missing then we are done
-      case results => (a.name -> results)
-    }
-    val opt = for (a <- optional) yield (a.name -> a.findAllIn(tok, sent, doc))
-    Some((req ++ opt).toMap)
-  }
-}
-
-object DependencyPattern {
-  def compile(input: String): DependencyPattern = DependencyPatternCompiler.compile(input)
 }
 
 class ArgumentPattern(val name: String, pattern: DependencyPatternNode, val required: Boolean) {
