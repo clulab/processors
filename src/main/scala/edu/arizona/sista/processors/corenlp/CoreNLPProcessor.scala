@@ -395,7 +395,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
 
   def stanfordParse(sentence:CoreMap):StanfordTree = {
     val constraints = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
-    val words = sentence.get(classOf[CoreAnnotations.TokensAnnotation])
+    val words = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
     var tree:StanfordTree = null
 
     //
@@ -406,6 +406,11 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
       // the actual parsing
       val pq = stanfordParser.parserQuery()
       pq.setConstraints(constraints)
+
+      //print("Parsing sentence:")
+      //for(w <- words) print(s" ${w.word()}")
+      //println()
+
       pq.parse(words)
 
       // fetch the best tree
@@ -426,7 +431,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     if(tree == null)
       tree = ParserAnnotatorUtils.xTree(words)
 
-    //println(tree)
+    //println("TREE: " + tree)
     tree
   }
 
