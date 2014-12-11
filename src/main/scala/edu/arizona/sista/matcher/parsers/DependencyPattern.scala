@@ -7,7 +7,15 @@ class DependencyPattern(trigger: TokenPattern, arguments: Seq[ArgumentPattern]) 
   private val required = arguments filter (_.required == true)
   private val optional = arguments filter (_.required == false)
 
-  def findAllIn(sent: Int, doc: Document, ruleName: String): Seq[Map[String, Seq[Interval]]] =
+  type Match = Map[String, Seq[Interval]]
+
+  // returns matches with sentence id
+  def findAllIn(doc: Document): Seq[(Match, Int)] = for {
+    i <- 0 until doc.sentences.size
+    m <- findAllIn(i, doc)
+  } yield (m, i)
+
+  def findAllIn(sent: Int, doc: Document): Seq[Match] =
     for {
       r <- trigger.findAllIn(sent, doc)
       args <- extractArguments(r.start, sent, doc)  // FIXME taking first token arbitrarily
@@ -15,7 +23,7 @@ class DependencyPattern(trigger: TokenPattern, arguments: Seq[ArgumentPattern]) 
     } yield args + ("trigger" -> Seq(trig))
 
 
-  private def extractArguments(tok: Int, sent: Int, doc: Document): Option[Map[String, Seq[Interval]]] = {
+  private def extractArguments(tok: Int, sent: Int, doc: Document): Option[Match] = {
     val req = for (a <- required) yield a.findAllIn(tok, sent, doc) match {
       case Nil => return None  // if a required arg is missing then we are done
       case results => (a.name -> results)
