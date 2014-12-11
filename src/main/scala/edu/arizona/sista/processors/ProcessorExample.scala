@@ -56,7 +56,7 @@ object ProcessorExample {
         }
       })
       sentence.syntacticTree.foreach(tree => {
-        println("Constituent tree: " + tree)
+        println("Constituent tree: " + tree.toStringDepth(showHead = false))
         // see the edu.arizona.sista.struct.Tree class for more information
         // on syntactic trees, including access to head phrases/words
       })

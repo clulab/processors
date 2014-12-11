@@ -113,7 +113,26 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     //
   }
 
-  def mkDocument(text:String): Document = {
+  /**
+   * Hook to allow the preprocessing of input text to CoreNLP
+   * This is useful for domain-specific corrections, such as the ones in BioNLPProcessor, where we remove Table and Fig references
+   * @param origText The original input text
+   * @return The preprocessed text
+   */
+  def preprocessText(origText:String):String = {
+    origText
+  }
+
+  def preprocessSentences(origSentences:Iterable[String]):Iterable[String] = {
+    val sents = new ListBuffer[String]()
+    for(os <- origSentences)
+      sents += preprocessText(os)
+    sents.toList
+  }
+
+  def mkDocument(origText:String): Document = {
+    val text = preprocessText(origText)
+
     val annotation = new Annotation(text)
     tokenizerWithSentenceSplitting.annotate(annotation)
     val sas = annotation.get(classOf[SentencesAnnotation])
@@ -165,8 +184,9 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     else None
   }
 
-  def mkDocumentFromSentences(sentences:Iterable[String],
+  def mkDocumentFromSentences(origSentences:Iterable[String],
                               charactersBetweenSentences:Int = 1): Document = {
+    val sentences = preprocessSentences(origSentences)
     val docAnnotation = new Annotation(sentences.mkString(mkSep(charactersBetweenSentences)))
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
     docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
@@ -382,9 +402,20 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     }
   }
 
+  def parensToSymbols(words:java.util.List[CoreLabel]):java.util.List[CoreLabel] = {
+    val processedWords = new util.ArrayList[CoreLabel]()
+    for(w <- words) {
+      val nw = new CoreLabel(w)
+      if(nw.word() == "(") nw.setWord("-LRB-")
+      else if(nw.word() == ")") nw.setWord("-RRB-")
+      processedWords.add(nw)
+    }
+    processedWords
+  }
+
   def stanfordParse(sentence:CoreMap):StanfordTree = {
     val constraints = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
-    val words = sentence.get(classOf[CoreAnnotations.TokensAnnotation])
+    val words = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
     var tree:StanfordTree = null
 
     //
@@ -395,6 +426,11 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
       // the actual parsing
       val pq = stanfordParser.parserQuery()
       pq.setConstraints(constraints)
+
+      //print("Parsing sentence:")
+      //for(w <- words) print(s" ${w.word()}")
+      //println()
+
       pq.parse(words)
 
       // fetch the best tree
@@ -415,7 +451,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     if(tree == null)
       tree = ParserAnnotatorUtils.xTree(words)
 
-    //println(tree)
+    //println("TREE: " + tree)
     tree
   }
 
