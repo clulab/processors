@@ -113,7 +113,26 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     //
   }
 
-  def mkDocument(text:String): Document = {
+  /**
+   * Hook to allow the preprocessing of input text to CoreNLP
+   * This is useful for domain-specific corrections, such as the ones in BioNLPProcessor, where we remove Table and Fig references
+   * @param origText The original input text
+   * @return The preprocessed text
+   */
+  def preprocessText(origText:String):String = {
+    origText
+  }
+
+  def preprocessSentences(origSentences:Iterable[String]):Iterable[String] = {
+    val sents = new ListBuffer[String]()
+    for(os <- origSentences)
+      sents += preprocessText(os)
+    sents.toList
+  }
+
+  def mkDocument(origText:String): Document = {
+    val text = preprocessText(origText)
+
     val annotation = new Annotation(text)
     tokenizerWithSentenceSplitting.annotate(annotation)
     val sas = annotation.get(classOf[SentencesAnnotation])
@@ -165,8 +184,9 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     else None
   }
 
-  def mkDocumentFromSentences(sentences:Iterable[String],
+  def mkDocumentFromSentences(origSentences:Iterable[String],
                               charactersBetweenSentences:Int = 1): Document = {
+    val sentences = preprocessSentences(origSentences)
     val docAnnotation = new Annotation(sentences.mkString(mkSep(charactersBetweenSentences)))
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
     docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])

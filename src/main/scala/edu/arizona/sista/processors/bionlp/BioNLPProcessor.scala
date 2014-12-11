@@ -60,6 +60,15 @@ class BioNLPProcessor (internStrings:Boolean = true,
     modifiedTokens
   }
 
+  /**
+   * Removes Figure and Table references that appear within parentheses
+   * @param origText The original input text
+   * @return The preprocessed text
+   */
+  override def preprocessText(origText:String):String = {
+    origText // TODO
+  }
+
   override def recognizeNamedEntities(doc:Document) {
     val annotation = namedEntitySanityCheck(doc)
     if(annotation.isEmpty) return
