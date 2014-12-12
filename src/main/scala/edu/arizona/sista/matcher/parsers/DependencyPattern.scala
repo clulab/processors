@@ -3,9 +3,9 @@ package edu.arizona.sista.matcher
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 
-class DependencyPattern(trigger: TokenPattern, arguments: Seq[ArgumentPattern]) {
-  private val required = arguments filter (_.required == true)
-  private val optional = arguments filter (_.required == false)
+class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPattern]) {
+  // the labels of the required arguments
+  private val required = for (a <- arguments if a.required) yield a.name
 
   type Match = Map[String, Seq[Interval]]
 
@@ -18,18 +18,29 @@ class DependencyPattern(trigger: TokenPattern, arguments: Seq[ArgumentPattern]) 
   def findAllIn(sent: Int, doc: Document): Seq[Match] =
     for {
       r <- trigger.findAllIn(sent, doc)
-      args <- extractArguments(r.start, sent, doc)  // FIXME taking first token arbitrarily
       trig = Interval(r.start, r.end)
+      args <- extractArguments(trig, sent, doc)
     } yield args + ("trigger" -> Seq(trig))
 
-
-  private def extractArguments(tok: Int, sent: Int, doc: Document): Option[Match] = {
-    val req = for (a <- required) yield a.findAllIn(tok, sent, doc) match {
-      case Nil => return None  // if a required arg is missing then we are done
-      case results => (a.name -> results)
+  // extract the arguments of a trigger represented as a token interval
+  private def extractArguments(trig: Interval, sent: Int, doc: Document): Option[Match] = {
+    val matches = trig.toRange.map(tok => extractArguments(tok, sent, doc))
+    if (matches.isEmpty) None
+    else {
+      val result = matches reduce mergeMatches
+      if (required exists (arg => result.getOrElse(arg, Nil).isEmpty)) None
+      else Some(result)
     }
-    val opt = for (a <- optional) yield (a.name -> a.findAllIn(tok, sent, doc))
-    Some((req ++ opt).toMap)
+  }
+
+  // extract arguments for one of the tokens in the trigger
+  private def extractArguments(tok: Int, sent: Int, doc: Document): Match =
+    arguments.map(a => (a.name -> a.findAllIn(tok, sent, doc))).toMap
+
+  private def mergeMatches(lhs: Match, rhs: Match): Match = {
+    val keys = lhs.keySet ++ rhs.keySet
+    val args = keys map (k => (k -> (lhs.getOrElse(k, Nil) ++ rhs.getOrElse(k, Nil))))
+    args.toMap
   }
 }
 
