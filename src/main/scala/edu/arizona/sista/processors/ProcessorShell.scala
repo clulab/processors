@@ -1,7 +1,6 @@
 package edu.arizona.sista.processors
 
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
-import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
 /**
  * A simple interactive shell
@@ -12,7 +11,7 @@ object ProcessorShell {
   def main(args:Array[String]) {
     // create the processor
     // val proc:Processor = new CoreNLPProcessor()
-    val proc:Processor = new BioNLPProcessor()
+    val proc:Processor = new BioNLPProcessor(removeFigTabReferences = true)
 
     while(true) {
       print("> ")

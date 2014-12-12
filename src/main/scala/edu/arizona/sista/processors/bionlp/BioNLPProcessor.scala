@@ -1,6 +1,7 @@
 package edu.arizona.sista.processors.bionlp
 
 import java.util.Properties
+import java.util.regex.Pattern
 
 import banner.BannerWrapper
 import banner.tagging.Mention
@@ -22,7 +23,8 @@ import scala.collection.JavaConversions._
 class BioNLPProcessor (internStrings:Boolean = true,
                        withNER:Boolean = true,
                        withDiscourse:Boolean = false,
-                       maxSentenceLength:Int = 100)
+                       maxSentenceLength:Int = 100,
+                       removeFigTabReferences:Boolean = true)
   extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse, maxSentenceLength) {
 
   lazy val banner = new BannerWrapper
@@ -66,7 +68,20 @@ class BioNLPProcessor (internStrings:Boolean = true,
    * @return The preprocessed text
    */
   override def preprocessText(origText:String):String = {
-    origText // TODO
+    if(! removeFigTabReferences) return origText
+
+    val m = BioNLPProcessor.FIGTAB_REFERENCE.matcher(origText)
+    val b = new StringBuilder
+    var previousEnd = 0
+    while(m.find()) {
+      b.append(origText.substring(previousEnd, m.start()))
+      // white out the reference, keeping the same number of characters
+      for(i <- m.start() until m.end()) b.append(" ")
+      previousEnd = m.end()
+    }
+    if(previousEnd < origText.size)
+      b.append(origText.substring(previousEnd))
+    b.toString()
   }
 
   override def recognizeNamedEntities(doc:Document) {
@@ -175,5 +190,9 @@ class BioNLPProcessor (internStrings:Boolean = true,
     sentence.startOffsets(token) <= charOffset &&
     sentence.endOffsets(token) >= charOffset
 
+}
+
+object BioNLPProcessor {
+  val FIGTAB_REFERENCE = Pattern.compile("\\((\\s*see)?\\s*(figure|table|fig\\.|tab\\.)[^\\)]*\\)", Pattern.CASE_INSENSITIVE)
 }
 
