@@ -75,7 +75,7 @@ pomExtra := (
 //
 
 // we need this to find the snapshot releases for BANNER
-resolvers += 
+resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
@@ -96,6 +96,7 @@ libraryDependencies ++= Seq(
   "de.bwaldvogel" % "liblinear" % "1.94",
   "log4j" % "log4j" % "1.2.17",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
+  "org.yaml" % "snakeyaml" % "1.14",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "dragontool",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "heptag"

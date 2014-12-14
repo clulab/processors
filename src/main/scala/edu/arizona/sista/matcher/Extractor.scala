@@ -1,26 +1,49 @@
 package edu.arizona.sista.matcher
 
-import edu.arizona.sista.processors.{Document, Sentence}
+import edu.arizona.sista.struct.Interval
+import edu.arizona.sista.processors.Document
 
 trait Extractor {
-  def findAllIn(sentence: Sentence, state: State, ruleName: String): Seq[Map[String, Seq[Int]]]
-}
+  def name: String
+  def label: String
+  def priority: Priority
+  def action: Action
 
-class NamedExtractor(val name: String, val priority: Priority, val extractor: Extractor, val action: Action) {
-  def extractFrom(document: Document, state: State): Seq[Mention] = {
-    val mentions = document.sentences.zipWithIndex flatMap {
-      case (sentence, i) => extractor.findAllIn(sentence, state, name) flatMap {
-        x => action(i, state, x)
-      }
-    }
-    // remember who found this mention
-    mentions foreach (_.foundBy = Some(name))
-    mentions
-  }
+  def findAllIn(sent: Int, doc: Document): Seq[Mention]
+
+  def findAllIn(doc: Document): Seq[Mention] = for {
+    i <- 0 until doc.sentences.size
+    m <- findAllIn(i, doc)
+  } yield m
 
   def startsAt: Int = priority match {
     case ExactPriority(i) => i
     case IntervalPriority(start, end) => start
     case FromPriority(from) => from
   }
+}
+
+class TokenExtractor(val name: String,
+                     val label: String,
+                     val priority: Priority,
+                     val action: Action,
+                     val pattern: TokenPattern) extends Extractor {
+
+  def findAllIn(sent: Int, doc: Document): Seq[Mention] = for {
+    r <- pattern.findAllIn(sent, doc)
+    m = Map("--GLOBAL--" -> Seq(r.interval)) ++ r.groups.mapValues(Seq(_))
+    mention <- action(m)
+  } yield mention
+}
+
+class DependencyExtractor(val name: String,
+                          val label: String,
+                          val priority: Priority,
+                          val action: Action,
+                          val pattern: DependencyPattern) extends Extractor {
+
+  def findAllIn(sent: Int, doc: Document): Seq[Mention] = for {
+    m <- pattern.findAllIn(sent, doc)
+    mention <- action(m)
+  } yield mention
 }

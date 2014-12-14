@@ -4,12 +4,14 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 
 class TokenPattern(val start: Inst) {
+  import TokenPattern._
+
   def findPrefixOf(sent: Int, doc: Document): Option[Result] = findPrefixOf(0, sent, doc)
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document): Option[Result] = {
     ThompsonVM.evaluate(start, tok, sent, doc) map { m =>
-      val (start, end) = m(TokenPattern.GlobalCapture)
-      Result(start, end, m - TokenPattern.GlobalCapture mapValues {
+      val (start, end) = m(GlobalCapture)
+      Result(Interval(start, end), m - GlobalCapture mapValues {
         case (from, until) => Interval(from, until)
       })
     }
@@ -45,11 +47,12 @@ class TokenPattern(val start: Inst) {
 
 object TokenPattern {
   val GlobalCapture = "--GLOBAL--"
-
   def compile(input: String): TokenPattern = TokenPatternCompiler.compile(input)
+  case class Result(interval: Interval, groups: Map[String, Interval]) {
+    val start = interval.start
+    val end = interval.end
+  }
 }
-
-case class Result(start: Int, end: Int, groups: Map[String, Interval])
 
 object TokenPatternCompiler extends TokenPatternParsers {
   def compile(input: String): TokenPattern = parseAll(tokenPattern, input) match {

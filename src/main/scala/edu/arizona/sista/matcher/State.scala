@@ -29,7 +29,7 @@ class State(val document: Document) {
     lookUpTable.getOrElse((sent, tok), Nil)
 
   def mentionsFor(sent: Int, tok: Int, label: String): Seq[Mention] =
-    mentionsFor(sent, tok) filter (_ matchesLabel label)
+    mentionsFor(sent, tok) filter (_ matches label)
 
   def mentionsFor(sent: Int, tok: Int, labels: Seq[String]): Seq[Mention] =
     labels flatMap (l => mentionsFor(sent, tok, l))
