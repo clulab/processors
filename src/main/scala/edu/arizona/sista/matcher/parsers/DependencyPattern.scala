@@ -9,22 +9,34 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
 
   type Match = Map[String, Seq[Interval]]
 
+  def findAllIn(doc: Document): Seq[(Match, Int)] =
+    findAllIn(doc, None)
+
+  def findAllIn(doc: Document, state: State): Seq[(Match, Int)] =
+    findAllIn(doc, Some(state))
+
   // returns matches with sentence id
-  def findAllIn(doc: Document): Seq[(Match, Int)] = for {
+  def findAllIn(doc: Document, state: Option[State]): Seq[(Match, Int)] = for {
     i <- 0 until doc.sentences.size
-    m <- findAllIn(i, doc)
+    m <- findAllIn(i, doc, state)
   } yield (m, i)
 
   def findAllIn(sent: Int, doc: Document): Seq[Match] =
+    findAllIn(sent, doc, None)
+
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Match] =
+    findAllIn(sent, doc, Some(state))
+
+  def findAllIn(sent: Int, doc: Document, state: Option[State]): Seq[Match] =
     for {
-      r <- trigger.findAllIn(sent, doc)
+      r <- trigger.findAllIn(sent, doc, state)
       trig = Interval(r.start, r.end)
-      args <- extractArguments(trig, sent, doc)
+      args <- extractArguments(trig, sent, doc, state)
     } yield args + ("trigger" -> Seq(trig))
 
   // extract the arguments of a trigger represented as a token interval
-  private def extractArguments(trig: Interval, sent: Int, doc: Document): Option[Match] = {
-    val matches = trig.toRange.map(tok => extractArguments(tok, sent, doc))
+  private def extractArguments(trig: Interval, sent: Int, doc: Document, state: Option[State]): Option[Match] = {
+    val matches = trig.toRange.map(tok => extractArguments(tok, sent, doc, state))
     if (matches.isEmpty) None
     else {
       val result = matches reduce mergeMatches
@@ -34,8 +46,8 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
   }
 
   // extract arguments for one of the tokens in the trigger
-  private def extractArguments(tok: Int, sent: Int, doc: Document): Match =
-    arguments.map(a => (a.name -> a.findAllIn(tok, sent, doc))).toMap
+  private def extractArguments(tok: Int, sent: Int, doc: Document, state: Option[State]): Match =
+    arguments.map(a => (a.name -> a.findAllIn(tok, sent, doc, state))).toMap
 
   private def mergeMatches(lhs: Match, rhs: Match): Match = {
     val keys = lhs.keySet ++ rhs.keySet

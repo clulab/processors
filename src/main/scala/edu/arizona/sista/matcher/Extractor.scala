@@ -9,11 +9,11 @@ trait Extractor {
   def priority: Priority
   def action: Action
 
-  def findAllIn(sent: Int, doc: Document): Seq[Mention]
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention]
 
-  def findAllIn(doc: Document): Seq[Mention] = for {
+  def findAllIn(doc: Document, state: State): Seq[Mention] = for {
     i <- 0 until doc.sentences.size
-    m <- findAllIn(i, doc)
+    m <- findAllIn(i, doc, state)
   } yield m
 
   def startsAt: Int = priority match {
@@ -29,10 +29,10 @@ class TokenExtractor(val name: String,
                      val action: Action,
                      val pattern: TokenPattern) extends Extractor {
 
-  def findAllIn(sent: Int, doc: Document): Seq[Mention] = for {
-    r <- pattern.findAllIn(sent, doc)
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
+    r <- pattern.findAllIn(sent, doc, state)
     m = Map("--GLOBAL--" -> Seq(r.interval)) ++ r.groups.mapValues(Seq(_))
-    mention <- action(m, sent, doc, name)
+    mention <- action(m, sent, doc, name, state)
   } yield mention
 }
 
@@ -42,8 +42,8 @@ class DependencyExtractor(val name: String,
                           val action: Action,
                           val pattern: DependencyPattern) extends Extractor {
 
-  def findAllIn(sent: Int, doc: Document): Seq[Mention] = for {
-    m <- pattern.findAllIn(sent, doc)
-    mention <- action(m, sent, doc, name)
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
+    m <- pattern.findAllIn(sent, doc, state)
+    mention <- action(m, sent, doc, name, state)
   } yield mention
 }

@@ -17,7 +17,7 @@ object ThompsonVM {
     }
   }
 
-  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document): Option[Sub] = {
+  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Option[Sub] = {
     def mkThreads(tok: Int, inst: Inst, sub: Sub): Seq[Thread] = inst match {
       case i: Jump => mkThreads(tok, i.next, sub)
       case i: Split => mkThreads(tok, i.lhs, sub) ++ mkThreads(tok, i.rhs, sub)
@@ -28,7 +28,7 @@ object ThompsonVM {
 
     def stepThreads(tok: Int, threads: Seq[Thread]): Seq[Thread] =
       threads.flatMap(t => t.inst match {
-        case i: Match if tok < doc.sentences(sent).size && i.c.matches(tok, sent, doc) =>
+        case i: Match if tok < doc.sentences(sent).size && i.c.matches(tok, sent, doc, state) =>
           mkThreads(tok + 1, i.next, t.sub)  // token matched, return new threads
         case _ => Nil  // thread died with no match
       }).distinct

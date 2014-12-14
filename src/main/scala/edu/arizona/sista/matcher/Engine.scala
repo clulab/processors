@@ -20,7 +20,7 @@ class ExtractorEngine[T <: Actions](val spec: String, val actions: T) {
       iter += 1
       updated = false
       for (extractor <- extractors if extractor.priority matches iter) {
-        val mentions = extractor.findAllIn(document)
+        val mentions = extractor.findAllIn(document, state)
         if (mentions.nonEmpty) {
           state.update(mentions)
           updated = true

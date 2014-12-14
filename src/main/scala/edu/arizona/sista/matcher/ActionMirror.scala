@@ -15,6 +15,6 @@ class ActionMirror(obj: AnyRef) {
 }
 
 class Action(methodMirror: MethodMirror) {
-  def apply(mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String): Seq[Mention] =
-    methodMirror(mention, sent, doc, ruleName).asInstanceOf[Seq[Mention]]
+  def apply(mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State): Seq[Mention] =
+    methodMirror(mention, sent, doc, ruleName, state).asInstanceOf[Seq[Mention]]
 }
