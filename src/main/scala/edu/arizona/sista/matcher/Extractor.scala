@@ -32,7 +32,7 @@ class TokenExtractor(val name: String,
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
     r <- pattern.findAllIn(sent, doc, state)
     m = Map("--GLOBAL--" -> Seq(r.interval)) ++ r.groups.mapValues(Seq(_))
-    mention <- action(m, sent, doc, name, state)
+    mention <- action(label, m, sent, doc, name, state)
   } yield mention
 }
 
@@ -44,6 +44,6 @@ class DependencyExtractor(val name: String,
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
     m <- pattern.findAllIn(sent, doc, state)
-    mention <- action(m, sent, doc, name, state)
+    mention <- action(label, m, sent, doc, name, state)
   } yield mention
 }
