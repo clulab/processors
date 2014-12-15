@@ -4,7 +4,7 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 
-class MyActions extends Actions {
+object myActions extends Actions {
   def mkTextBoundMention(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State): Seq[Mention] = {
     Seq(new TextBoundMention(label, mention("--GLOBAL--").head, sent, doc, ruleName))
   }
@@ -70,7 +70,7 @@ object TestMatcher extends App {
                  |    cause: nsubj
                  |""".stripMargin
 
-  val extractor = new ExtractorEngine(rules, new MyActions)
+  val extractor = new ExtractorEngine(rules, myActions)
 
   val proc = new BioNLPProcessor
   val doc = proc annotate text
