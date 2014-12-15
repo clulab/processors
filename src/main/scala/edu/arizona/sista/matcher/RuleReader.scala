@@ -6,20 +6,20 @@ import scala.collection.JavaConverters._
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 
-class ExtractorLoader[T <: Actions](val actions: T) {
+class RuleReader[T <: Actions](val actions: T) {
   // invokes actions through reflection
-  val mirror = new ActionMirror(actions)
+  private val mirror = new ActionMirror(actions)
 
-  def load(input: String): Seq[Extractor] =
+  def read(input: String): Seq[Extractor] =
     readRules(input) map mkExtractor
 
-  def readRules(input: String): Seq[Map[String,String]] = {
+  private def readRules(input: String): Seq[Map[String,String]] = {
     val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String,Any]]]))
     val rules = yaml.load(input).asInstanceOf[Collection[JMap[String,Any]]]
     rules.asScala.toSeq.map(_.asScala.toMap.mapValues(_.toString))
   }
 
-  def mkExtractor(rule: Map[String,String]): Extractor = {
+  private def mkExtractor(rule: Map[String,String]): Extractor = {
     require(rule.contains("name"), "unnamed rule")
     val name = rule("name")
     try {
@@ -33,7 +33,7 @@ class ExtractorLoader[T <: Actions](val actions: T) {
     }
   }
 
-  def mkTokenExtractor(rule: Map[String,String]): TokenExtractor = {
+  private def mkTokenExtractor(rule: Map[String,String]): TokenExtractor = {
     val name = rule("name")
     val label = rule("label")
     val priority = Priority(rule.getOrElse("priority", "1+"))
@@ -42,7 +42,7 @@ class ExtractorLoader[T <: Actions](val actions: T) {
     new TokenExtractor(name, label, priority, action, pattern)
   }
 
-  def mkDependencyExtractor(rule: Map[String,String]): DependencyExtractor = {
+  private def mkDependencyExtractor(rule: Map[String,String]): DependencyExtractor = {
     val name = rule("name")
     val label = rule("label")
     val priority = Priority(rule.getOrElse("priority", "1+"))

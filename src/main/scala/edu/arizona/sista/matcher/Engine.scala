@@ -4,8 +4,8 @@ import scala.collection.mutable.HashMap
 import edu.arizona.sista.processors.{Document, Sentence}
 
 class ExtractorEngine[T <: Actions](val spec: String, val actions: T) {
-  val loader = new ExtractorLoader(actions)
-  val extractors = loader.load(spec)
+  val reader = new RuleReader(actions)
+  val extractors = reader.read(spec)
 
   // the minimum number of iterations required for every rule to run at least once
   val minIterations = extractors.map(_.startsAt).max
