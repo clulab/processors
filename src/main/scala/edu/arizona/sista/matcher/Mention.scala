@@ -23,6 +23,10 @@ trait Mention extends Equals {
   // a mention matches a label if the label is returned by allLabels
   def matches(label: String): Boolean = allLabels contains label
 
+  // returns all tokens in mention
+  def words: Seq[String] = document.sentences(sentence).words.slice(start, end)
+  def text: String = words.mkString(" ")
+
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
   override def equals(that: Any): Boolean = that match {

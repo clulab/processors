@@ -78,17 +78,14 @@ object TestMatcher extends App {
 
   val mentions = extractor extractFrom doc
 
-  def words(m: Mention) =
-    m.document.sentences(m.sentence).words.slice(m.tokenInterval.start, m.tokenInterval.end).mkString(" ")
-
   for (m <- mentions) {
     m match {
       case m: EventMention =>
         println(m.label)
-        println(s"string = ${words(m)}")
-        println(s"trigger = ${words(m.trigger)}")
+        println(s"string = ${m.text}")
+        println(s"trigger = ${m.trigger.text}")
         m.arguments foreach {
-          case (k,vs) => for (v <- vs) println(s"$k = '${words(v)}'")
+          case (k,vs) => for (v <- vs) println(s"$k = ${v.text}")
         }
         println("=" * 72)
       case _ => ()
