@@ -7,7 +7,7 @@ class State(val document: Document) {
   private val lookUpTable = new HashMap[(Int, Int), ArrayBuffer[Mention]]
 
   def update(mention: Mention) {
-    for (i <- mention.tokenInterval.toRange) {
+    for (i <- mention.tokenInterval.toSeq) {
       val key = (mention.sentence, i)
       val mentions = lookUpTable.getOrElseUpdate(key, new ArrayBuffer[Mention])
       mentions += mention

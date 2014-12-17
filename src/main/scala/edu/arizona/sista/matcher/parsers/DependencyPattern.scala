@@ -36,7 +36,7 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
 
   // extract the arguments of a trigger represented as a token interval
   private def extractArguments(trig: Interval, sent: Int, doc: Document, state: Option[State]): Option[Match] = {
-    val matches = trig.toRange.map(tok => extractArguments(tok, sent, doc, state))
+    val matches = trig.toSeq.map(tok => extractArguments(tok, sent, doc, state))
     if (matches.isEmpty) None
     else {
       val result = matches reduce mergeMatches
