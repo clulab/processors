@@ -3,7 +3,7 @@ package edu.arizona.sista.matcher
 import scala.util.parsing.combinator._
 import edu.arizona.sista.processors.Document
 
-trait TokenConstraintParsers extends LiteralParsers {
+trait TokenConstraintParsers extends StringMatcherParsers {
   def tokenConstraint: Parser[TokenConstraint] = "[" ~> disjunctiveConstraint <~ "]"
 
   def wordConstraint: Parser[TokenConstraint] = stringMatcher ^^ {

@@ -3,7 +3,7 @@ package edu.arizona.sista.matcher
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
 
-trait LiteralParsers extends RegexParsers {
+trait StringMatcherParsers extends RegexParsers {
   // positive integer
   def int: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
