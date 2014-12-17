@@ -4,7 +4,8 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 
 trait DependencyPatternParsers extends TokenPatternParsers {
-  override val whiteSpace = """[ \t\x0B\f\r]+""".r
+  // comments are considered whitespace
+  override val whiteSpace = """([ \t\x0B\f\r]|#.*)+""".r
   val eol = "\n"
 
   def dependencyPattern: Parser[DependencyPattern] =

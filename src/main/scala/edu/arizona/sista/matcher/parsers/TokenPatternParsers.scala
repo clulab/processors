@@ -1,6 +1,9 @@
 package edu.arizona.sista.matcher
 
 trait TokenPatternParsers extends TokenConstraintParsers {
+  // comments are considered whitespace
+  override val whiteSpace = """(\s|#.*)+""".r
+
   def tokenPattern: Parser[TokenPattern] = splitPattern ^^ {
     case frag =>
       val f = frag.capture(TokenPattern.GlobalCapture)
