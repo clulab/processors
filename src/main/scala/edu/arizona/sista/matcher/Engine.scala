@@ -11,7 +11,7 @@ class ExtractorEngine[T <: Actions](val spec: String, val actions: T) {
   val minIterations = extractors.map(_.startsAt).max
 
   def extractFrom(document: Document) = {
-    val state = new State(document)
+    val state = new State
 
     var updated = true
     var iter = 0

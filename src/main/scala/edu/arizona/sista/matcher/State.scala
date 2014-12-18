@@ -3,7 +3,7 @@ package edu.arizona.sista.matcher
 import edu.arizona.sista.processors.{Document, Sentence}
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
-class State(val document: Document) {
+class State {
   private val lookUpTable = new HashMap[(Int, Int), ArrayBuffer[Mention]]
 
   def update(mention: Mention) {
@@ -18,12 +18,12 @@ class State(val document: Document) {
     mentions foreach update
   }
 
-  def sentenceIndex(s: Sentence) = document.sentences.indexOf(s)
-
   def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
 
-  def mentionsForRule(sent: Int, tok: Int, ruleName: String): Seq[Mention] =
-    mentionsFor(sent, tok) filter (_.foundBy == Some(ruleName))
+  // checks if a mention is already contained in the state
+  // it checks if it is the same mention AND it was produced by the same rule
+  def contains(m: Mention): Boolean =
+    mentionsFor(m.sentence, m.start) exists (x => x == m && x.foundBy == m.foundBy)
 
   def mentionsFor(sent: Int, tok: Int): Seq[Mention] =
     lookUpTable.getOrElse((sent, tok), Nil)
