@@ -1,9 +1,10 @@
 package edu.arizona.sista.matcher
 
+import scala.reflect.ClassTag
 import scala.collection.mutable.HashMap
 import edu.arizona.sista.processors.{Document, Sentence}
 
-class ExtractorEngine[T <: Actions](val spec: String, val actions: T) {
+class ExtractorEngine[T <: Actions : ClassTag](val spec: String, val actions: T) {
   val reader = new RuleReader(actions)
   val extractors = reader.read(spec)
 

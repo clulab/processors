@@ -1,10 +1,11 @@
 package edu.arizona.sista.matcher
 
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 
-class ActionMirror(obj: AnyRef) {
+class ActionMirror[T <: Actions : ClassTag](obj: T) {
   private val instanceMirror = runtimeMirror(obj.getClass.getClassLoader).reflect(obj)
 
   def reflect(name: String): Action = {

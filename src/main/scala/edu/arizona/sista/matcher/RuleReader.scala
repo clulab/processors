@@ -1,12 +1,13 @@
 package edu.arizona.sista.matcher
 
 import java.util.{ Collection, Map => JMap }
+import scala.reflect.ClassTag
 import scala.reflect.BeanProperty
 import scala.collection.JavaConverters._
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 
-class RuleReader[T <: Actions](val actions: T) {
+class RuleReader[T <: Actions : ClassTag](val actions: T) {
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
 
