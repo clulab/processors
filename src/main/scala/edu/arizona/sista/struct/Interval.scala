@@ -3,8 +3,6 @@ package edu.arizona.sista.struct
 case class Interval(start: Int, end: Int) {
   require(start < end, "invalid range")
 
-  override def toString: String = s"[$start,$end)"
-
   def size: Int = end - start
 
   def toSeq: Seq[Int] = start until end
