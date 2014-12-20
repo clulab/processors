@@ -31,7 +31,7 @@ class TokenExtractor(val name: String,
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
     r <- pattern.findAllIn(sent, doc, state)
-    m = Map("--GLOBAL--" -> Seq(r.interval)) ++ r.groups.mapValues(Seq(_))
+    m = Map(TokenPattern.GlobalCapture -> Seq(r.interval)) ++ r.groups.mapValues(Seq(_))
     mention <- action(label, m, sent, doc, name, state)
     if !state.contains(mention)
   } yield mention
