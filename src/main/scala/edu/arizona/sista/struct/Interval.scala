@@ -10,22 +10,22 @@ case class Interval(start: Int, end: Int) {
   def contains(i: Int): Boolean = i >= start && i < end
 
   def intersects(that: Interval): Boolean =
-    !(this.precedes(that) || this.meets(that) || this.metBy(that) || this.precededBy(that))
+    !(this.allenPrecedes(that) || this.allenMeets(that) || this.allenMetBy(that) || this.allenPrecededBy(that))
 
   // allen relations
-  def precedes(that: Interval): Boolean = this.end < that.start
-  def meets(that: Interval): Boolean = this.end == that.start
-  def overlaps(that: Interval): Boolean = this.start < that.start && this.end > that.start && this.end < that.end
-  def finishes(that: Interval): Boolean = this.start > that.start && this.end == that.end
-  def contains(that: Interval): Boolean = this.start < that.start && this.end > that.end
-  def starts(that: Interval): Boolean = this.start == that.start && this.end < that.end
-  def equals(that: Interval): Boolean = this.start == that.start && this.end == that.end
-  def startedBy(that: Interval): Boolean = that starts this
-  def containedBy(that: Interval): Boolean = that contains this
-  def finishedBy(that: Interval): Boolean = that finishes this
-  def overlappedBy(that: Interval): Boolean = that overlaps this
-  def metBy(that: Interval): Boolean = that meets this
-  def precededBy(that: Interval): Boolean = that precedes this
+  def allenPrecedes(that: Interval): Boolean = this.end < that.start
+  def allenMeets(that: Interval): Boolean = this.end == that.start
+  def allenOverlaps(that: Interval): Boolean = this.start < that.start && this.end > that.start && this.end < that.end
+  def allenFinishes(that: Interval): Boolean = this.start > that.start && this.end == that.end
+  def allenContains(that: Interval): Boolean = this.start < that.start && this.end > that.end
+  def allenStarts(that: Interval): Boolean = this.start == that.start && this.end < that.end
+  def allenEquals(that: Interval): Boolean = this.start == that.start && this.end == that.end
+  def allenStartedBy(that: Interval): Boolean = that allenStarts this
+  def allenContainedBy(that: Interval): Boolean = that allenContains this
+  def allenFinishedBy(that: Interval): Boolean = that allenFinishes this
+  def allenOverlappedBy(that: Interval): Boolean = that allenOverlaps this
+  def allenMetBy(that: Interval): Boolean = that allenMeets this
+  def allenPrecededBy(that: Interval): Boolean = that allenPrecedes this
 }
 
 object Interval {
