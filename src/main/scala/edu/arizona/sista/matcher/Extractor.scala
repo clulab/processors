@@ -7,7 +7,7 @@ trait Extractor {
   def name: String
   def label: String
   def priority: Priority
-  def action: Action
+  def action: ReflectedAction
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention]
 
@@ -26,7 +26,7 @@ trait Extractor {
 class TokenExtractor(val name: String,
                      val label: String,
                      val priority: Priority,
-                     val action: Action,
+                     val action: ReflectedAction,
                      val pattern: TokenPattern) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
@@ -40,7 +40,7 @@ class TokenExtractor(val name: String,
 class DependencyExtractor(val name: String,
                           val label: String,
                           val priority: Priority,
-                          val action: Action,
+                          val action: ReflectedAction,
                           val pattern: DependencyPattern) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
