@@ -21,9 +21,8 @@ class State {
   def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
 
   // checks if a mention is already contained in the state
-  // it checks if it is the same mention AND it was produced by the same rule
   def contains(m: Mention): Boolean =
-    mentionsFor(m.sentence, m.start) exists (x => x == m && x.foundBy == m.foundBy)
+    mentionsFor(m.sentence, m.start) exists (_ == m)
 
   def mentionsFor(sent: Int, tok: Int): Seq[Mention] =
     lookUpTable.getOrElse((sent, tok), Nil)
