@@ -68,19 +68,27 @@ class BioNLPProcessor (internStrings:Boolean = true,
    * @return The preprocessed text
    */
   override def preprocessText(origText:String):String = {
-    if(! removeFigTabReferences) return origText
+    if (!removeFigTabReferences) return origText
 
-    val m = BioNLPProcessor.FIGTAB_REFERENCE.matcher(origText)
+    var noRefs = origText
+    // the pattern with parens must run first!
+    noRefs = removeFigTabRefs(BioNLPProcessor.FIGTAB_REFERENCE_WITH_PARENS, noRefs)
+    noRefs = removeFigTabRefs(BioNLPProcessor.FIGTAB_REFERENCE, noRefs)
+    noRefs
+  }
+
+  def removeFigTabRefs(pattern:Pattern, text:String):String = {
+    val m = pattern.matcher(text)
     val b = new StringBuilder
     var previousEnd = 0
     while(m.find()) {
-      b.append(origText.substring(previousEnd, m.start()))
+      b.append(text.substring(previousEnd, m.start()))
       // white out the reference, keeping the same number of characters
       for(i <- m.start() until m.end()) b.append(" ")
       previousEnd = m.end()
     }
-    if(previousEnd < origText.size)
-      b.append(origText.substring(previousEnd))
+    if(previousEnd < text.size)
+      b.append(text.substring(previousEnd))
     b.toString()
   }
 
@@ -193,6 +201,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
 }
 
 object BioNLPProcessor {
-  val FIGTAB_REFERENCE = Pattern.compile("\\((\\s*see)?\\s*(figure|table|fig\\.|tab\\.)[^\\)]*\\)", Pattern.CASE_INSENSITIVE)
+  val FIGTAB_REFERENCE_WITH_PARENS = Pattern.compile("\\((\\s*see)?\\s*(figure|table|fig\\.|tab\\.)[^\\)]*\\)", Pattern.CASE_INSENSITIVE)
+  val FIGTAB_REFERENCE = Pattern.compile("(\\s*see)?\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
 }
 
