@@ -33,6 +33,9 @@ class State {
   def mentionsFor(sent: Int, tok: Int, labels: Seq[String]): Seq[Mention] =
     labels flatMap (l => mentionsFor(sent, tok, l))
 
+  def mentionsFor(sent: Int, toks: Seq[Int]): Seq[Mention] =
+    toks flatMap (t => mentionsFor(sent, t))
+  
   def mentionsFor(sent: Int, toks: Seq[Int], label: String): Seq[Mention] =
     toks flatMap (t => mentionsFor(sent, t, label))
 
