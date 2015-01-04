@@ -44,7 +44,7 @@ trait StringMatcherParsers extends RegexParsers {
 sealed trait StringMatcher {
   def matches(s: String): Boolean
   def filter(strings: Seq[(Int, String)]): Seq[Int] =
-    strings filter (s => matches(s._2)) map (_._1)
+    for (s <- strings if matches(s._2)) yield s._1
 }
 
 class ExactStringMatcher(string: String) extends StringMatcher {
