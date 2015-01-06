@@ -402,12 +402,22 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     }
   }
 
+  def setWord(w:CoreLabel, label:String): Unit = {
+    w.setWord(label)
+    w.setLemma(label)
+    w.setValue(label)
+  }
+
   def parensToSymbols(words:java.util.List[CoreLabel]):java.util.List[CoreLabel] = {
     val processedWords = new util.ArrayList[CoreLabel]()
     for(w <- words) {
       val nw = new CoreLabel(w)
-      if(nw.word() == "(") nw.setWord("-LRB-")
-      else if(nw.word() == ")") nw.setWord("-RRB-")
+      if(nw.word() == "(") {
+        setWord(nw, "-LRB-")
+      }
+      else if(nw.word() == ")") {
+        setWord(nw, "-RRB-")
+      }
       processedWords.add(nw)
     }
     processedWords
@@ -416,6 +426,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
   def stanfordParse(sentence:CoreMap):StanfordTree = {
     val constraints = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
     val words = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
+
     var tree:StanfordTree = null
 
     //
@@ -428,7 +439,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
       pq.setConstraints(constraints)
 
       //print("Parsing sentence:")
-      //for(w <- words) print(s" ${w.word()}")
+      //for(w <- words) print(s" ${w.toString()}")
       //println()
 
       pq.parse(words)
@@ -443,6 +454,8 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
           System.err.println("WARNING: Parsing of sentence failed, possibly because of out of memory. " +
             "Will ignore and continue: " + edu.stanford.nlp.ling.Sentence.listToString(words))
       }
+
+      //println("SYNTACTIC TREE: " + tree)
     } else {
       System.err.println("Skipping sentence of length " + words.size)
     }

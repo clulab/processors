@@ -198,6 +198,10 @@ class BioNLPProcessor (internStrings:Boolean = true,
     sentence.startOffsets(token) <= charOffset &&
     sentence.endOffsets(token) >= charOffset
 
+  override def resolveCoreference(doc:Document): Unit = {
+    // TODO: add domain-specific coreference here!
+    doc.coreferenceChains = None
+  }
 }
 
 object BioNLPProcessor {
