@@ -9,6 +9,7 @@ trait Mention extends Equals {
   def tokenInterval: Interval
   def sentence: Int
   def document: Document
+  val arguments: Map[String, Seq[Mention]]
 
   // name of matching rule
   def foundBy: String
@@ -39,8 +40,9 @@ trait Mention extends Equals {
     val h1 = mix(h0, label.hashCode)
     val h2 = mix(h1, tokenInterval.hashCode)
     val h3 = mix(h2, sentence.hashCode)
-    val h4 = mixLast(h3, document.hashCode)
-    finalizeHash(h4, 4)
+    val h4 = mix(h3, document.hashCode)
+    val h5 = mixLast(h4, arguments.hashCode)
+    finalizeHash(h5, 5)
   }
 }
 
@@ -48,7 +50,11 @@ class TextBoundMention(val label: String,
                        val tokenInterval: Interval,
                        val sentence: Int,
                        val document: Document,
-                       val foundBy: String) extends Mention
+                       val foundBy: String) extends Mention {
+
+  // TextBoundMentions don't have arguments
+  val arguments: Map[String, Seq[Mention]] = Map.empty
+}
 
 class EventMention(val label: String,
                    val trigger: TextBoundMention,
