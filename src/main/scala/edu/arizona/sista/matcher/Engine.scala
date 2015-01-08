@@ -1,7 +1,7 @@
 package edu.arizona.sista.matcher
 
 import scala.reflect.ClassTag
-import edu.arizona.sista.processors.{Document, Sentence}
+import edu.arizona.sista.processors.Document
 
 class ExtractorEngine[T <: Actions : ClassTag](rules: String, actions: T, postprocess: PostProcessor = identity) {
   val reader = new RuleReader(actions)
