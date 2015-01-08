@@ -1,14 +1,11 @@
 package edu.arizona.sista.matcher
 
 import scala.reflect.ClassTag
-import scala.collection.mutable.HashMap
 import edu.arizona.sista.processors.{Document, Sentence}
 
-class ExtractorEngine[T <: Actions : ClassTag](val spec: String, val actions: T, postprocess: Seq[Mention] => Seq[Mention]) {
-  def this(spec: String, actions: T) = this(spec, actions, identity)
-
+class ExtractorEngine[T <: Actions : ClassTag](rules: String, actions: T, postprocess: PostProcessor = identity) {
   val reader = new RuleReader(actions)
-  val extractors = reader.read(spec)
+  val extractors = reader.read(rules)
 
   // the minimum number of iterations required for every rule to run at least once
   val minIterations = extractors.map(_.startsAt).max
@@ -16,7 +13,7 @@ class ExtractorEngine[T <: Actions : ClassTag](val spec: String, val actions: T,
   def extractFrom(document: Document): Seq[Mention] = {
     @annotation.tailrec
     def loop(i: Int, state: State): Seq[Mention] = iteration(i, state) match {
-      case Nil if minIterations <= i => state.allMentions
+      case Nil if i >= minIterations => state.allMentions  // we are done
       case Nil => loop(i + 1, state)
       case mentions => loop(i + 1, state.update(postprocess(mentions)))
     }

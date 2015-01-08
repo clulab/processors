@@ -2,12 +2,12 @@ package edu.arizona.sista.matcher
 
 import edu.arizona.sista.processors.{Document, Sentence}
 
-class State(val lookUpTable: Map[(Int, Int), Seq[Mention]]) {
+class State(val lookUpTable: MentionLUT) {
   def this() = this(Map.empty)
 
   def update(mentions: Seq[Mention]): State = new State(mergeLuts(mkLut(mentions)))
 
-  private def mkLut(mentions: Seq[Mention]): Map[(Int, Int), Seq[Mention]] = {
+  private def mkLut(mentions: Seq[Mention]): MentionLUT = {
     val pairs = for {
       m <- mentions
       i <- m.tokenInterval.toSeq
@@ -16,7 +16,7 @@ class State(val lookUpTable: Map[(Int, Int), Seq[Mention]]) {
     pairs groupBy (_._1) mapValues (_ map (_._2))
   }
 
-  private def mergeLuts(newLut: Map[(Int, Int), Seq[Mention]]): Map[(Int, Int), Seq[Mention]] = {
+  private def mergeLuts(newLut: MentionLUT): MentionLUT = {
     val merged = for {
       key <- lookUpTable.keySet ++ newLut.keySet
       mentions = lookUpTable.getOrElse(key, Nil) ++ newLut.getOrElse(key, Nil)
