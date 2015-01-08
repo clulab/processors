@@ -1,7 +1,5 @@
 package edu.arizona.sista.matcher
 
-import edu.arizona.sista.processors.{Document, Sentence}
-
 class State(val lookUpTable: MentionLUT) {
   def this() = this(Map.empty)
 
