@@ -3,19 +3,26 @@ package edu.arizona.sista.matcher
 import edu.arizona.sista.processors.{Document, Sentence}
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
-class State {
-  private val lookUpTable = new HashMap[(Int, Int), ArrayBuffer[Mention]]
+class State(val lookUpTable: Map[(Int, Int), Seq[Mention]]) {
+  def this() = this(Map.empty)
 
-  def update(mention: Mention) {
-    for (i <- mention.tokenInterval.toSeq) {
-      val key = (mention.sentence, i)
-      val mentions = lookUpTable.getOrElseUpdate(key, new ArrayBuffer[Mention])
-      mentions += mention
-    }
+  def update(mentions: Seq[Mention]): State = new State(mergeLuts(mkLut(mentions)))
+
+  private def mkLut(mentions: Seq[Mention]): Map[(Int, Int), Seq[Mention]] = {
+    val pairs = for {
+      m <- mentions
+      i <- m.tokenInterval.toSeq
+      key = (m.sentence, i)
+    } yield (key, m)
+    pairs groupBy (_._1) mapValues (_ map (_._2))
   }
 
-  def update(mentions: Seq[Mention]) {
-    mentions foreach update
+  private def mergeLuts(newLut: Map[(Int, Int), Seq[Mention]]): Map[(Int, Int), Seq[Mention]] = {
+    val merged = for {
+      key <- lookUpTable.keySet ++ newLut.keySet
+      mentions = lookUpTable.getOrElse(key, Nil) ++ newLut.getOrElse(key, Nil)
+    } yield (key -> mentions.distinct)
+    merged.toMap
   }
 
   def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
