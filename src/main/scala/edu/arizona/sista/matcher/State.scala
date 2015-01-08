@@ -1,8 +1,6 @@
 package edu.arizona.sista.matcher
 
-class State(val lookUpTable: MentionLUT) {
-  def this() = this(Map.empty)
-
+class State(val lookUpTable: MentionLUT = Map.empty) {
   def update(mentions: Seq[Mention]): State = new State(mergeLuts(mkLut(mentions)))
 
   private def mkLut(mentions: Seq[Mention]): MentionLUT = {
@@ -22,6 +20,7 @@ class State(val lookUpTable: MentionLUT) {
     merged.toMap
   }
 
+  // returns all mentions contained in the state
   def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
 
   // checks if a mention is already contained in the state
