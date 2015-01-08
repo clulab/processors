@@ -1,7 +1,6 @@
 package edu.arizona.sista.matcher
 
 import edu.arizona.sista.processors.{Document, Sentence}
-import scala.collection.mutable.{HashMap, ArrayBuffer}
 
 class State(val lookUpTable: Map[(Int, Int), Seq[Mention]]) {
   def this() = this(Map.empty)
