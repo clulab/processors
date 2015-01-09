@@ -1,6 +1,8 @@
 package edu.arizona.sista.processors
 
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
+import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 
 /**
  * A simple interactive shell
@@ -10,8 +12,9 @@ import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 object ProcessorShell {
   def main(args:Array[String]) {
     // create the processor
-    // val proc:Processor = new CoreNLPProcessor()
-    val proc:Processor = new BioNLPProcessor(removeFigTabReferences = true)
+    val proc:Processor = new CoreNLPProcessor() // this uses the slow but better discourse parser
+    // val proc:Processor = new FastNLPProcessor() // this uses the fast but slightly worse discourse parser
+    // val proc:Processor = new BioNLPProcessor(removeFigTabReferences = true)
 
     while(true) {
       print("> ")
