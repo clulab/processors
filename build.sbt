@@ -25,6 +25,8 @@ addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models)
 
 unmanagedJars in Runtime += (modelsTask in models).value
 
+unmanagedClasspath in Runtime += baseDirectory.value 
+
 //
 // publishing settings
 //

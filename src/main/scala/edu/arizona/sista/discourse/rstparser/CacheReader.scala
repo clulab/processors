@@ -14,13 +14,19 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 object CacheReader {
   val logger = LoggerFactory.getLogger(classOf[CacheReader])
 
-  lazy val PROCESSOR = new CoreNLPProcessor(basicDependencies = true, withDiscourse = false)
-  //lazy val PROCESSOR = new FastNLPProcessor()
+  lazy val CORENLP_PROCESSOR = new CoreNLPProcessor(basicDependencies = true, withDiscourse = false)
+  lazy val FASTNLP_PROCESSOR = new FastNLPProcessor(withDiscourse = false)
+
+  def getProcessor(dependencySyntax:Boolean):Processor =
+    dependencySyntax match {
+      case true => FASTNLP_PROCESSOR
+      case _ => CORENLP_PROCESSOR
+    }
 
   def main(args:Array[String]) {
     val dir = args(0)
     val reader = new Reader
-    val output = reader.readDir(dir, PROCESSOR)
+    val output = reader.readDir(dir, CORENLP_PROCESSOR)
     val path = new File(dir).getAbsolutePath + ".rcache"
     val os = new ObjectOutputStream(new FileOutputStream(path))
     os.writeObject(output)
@@ -28,7 +34,7 @@ object CacheReader {
     println("Cache saved in file: " + path)
   }
 
-  def loadCache(path:String):List[(DiscourseTree, Document)] = {
+  private def loadCache(path:String):List[(DiscourseTree, Document)] = {
     logger.debug("Attempting to load cached documents from: " + path)
     val is = new ObjectInputStream(new FileInputStream(path))
     val output = is.readObject().asInstanceOf[List[(DiscourseTree, Document)]]
@@ -36,7 +42,7 @@ object CacheReader {
     output
   }
 
-  def load(dir:String, proc:Processor = PROCESSOR):List[(DiscourseTree, Document)] = {
+  def load(dir:String, proc:Processor):List[(DiscourseTree, Document)] = {
     var trees:List[(DiscourseTree, Document)] = null
     try {
       val path = new File(dir).getAbsolutePath + ".rcache"

@@ -32,7 +32,7 @@ class RSTParser {
   }
 
   def train(trainDirName:String, dependencySyntax:Boolean) {
-    val (trees, cs) = mkTrees(trainDirName)
+    val (trees, cs) = mkTrees(trainDirName, CacheReader.getProcessor(dependencySyntax))
     corpusStats = cs
 
     logger.debug("Training the EDU model...")
@@ -50,8 +50,8 @@ class RSTParser {
     structModel.train(trees, corpusStats)
   }
 
-  def test(testDirName:String) {
-    val (trees, _) = mkTrees(testDirName, makeStats = false)
+  def test(testDirName:String, dependencySyntax:Boolean) {
+    val (trees, _) = mkTrees(testDirName, CacheReader.getProcessor(dependencySyntax), makeStats = false)
 
     logger.debug("Started parsing...")
     val scorer = new DiscourseScorer
@@ -147,9 +147,11 @@ object RSTParser {
   val DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH = "edu/arizona/sista/discourse/rstparser/model.const.rst.gz"
   val DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH = "edu/arizona/sista/discourse/rstparser/model.dep.rst.gz"
 
-  def mkTrees(path:String, makeStats:Boolean = true): (List[(DiscourseTree, Document)], CorpusStats) = {
+  def mkTrees(path:String,
+              processor:Processor,
+              makeStats:Boolean = true): (List[(DiscourseTree, Document)], CorpusStats) = {
     logger.debug("Loading training trees...")
-    val trees = CacheReader.load(path)
+    val trees = CacheReader.load(path, processor)
 
     if(makeStats) {
       logger.debug("Counting words...")
@@ -179,7 +181,7 @@ object RSTParser {
       if(props.containsKey("model")) {
         parser = loadFrom(props.getProperty("model"))
       }
-      parser.test(props.getProperty("test"))
+      parser.test(props.getProperty("test"), props.containsKey("dep"))
     }
     if(props.containsKey("shell")) {
       var path = RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH
@@ -199,6 +201,7 @@ object RSTParser {
     logger.debug("Loading RST parsing model from: " + path)
     val parser = new RSTParser
     val is = RSTParser.getClass.getClassLoader.getResourceAsStream(path)
+    assert(is != null, s"Failed to find model file $path in the classpath!")
     val reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(is)))
     val corpusStats = CorpusStats.loadFrom[String](reader)
     val em = EDUClassifier.loadFrom(reader)

@@ -199,7 +199,8 @@ object RelationClassifier {
 
     if(props.containsKey("train")) {
       cls = new RelationClassifier (prefixes, withNuclearity = true)
-      val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("train"))
+      val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("train"),
+        CacheReader.getProcessor(props.containsKey("dep")))
       cls.train(trees, corpusStats)
       if(props.containsKey("model")) {
         val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
@@ -208,7 +209,9 @@ object RelationClassifier {
       }
     }
     if(props.containsKey("test")) {
-      val (trees, _) = RSTParser.mkTrees(props.getProperty("test"), makeStats = false)
+      val (trees, _) = RSTParser.mkTrees(props.getProperty("test"),
+        CacheReader.getProcessor(props.containsKey("dep")),
+        makeStats = false)
       if(props.containsKey("model")) {
         val is = new BufferedReader(new FileReader(props.getProperty("model")))
         cls = loadFrom(is, corpusStats = null)
@@ -218,7 +221,8 @@ object RelationClassifier {
     }
     if(props.containsKey("fsel")) {
       cls = new RelationClassifier (null, withNuclearity = true)
-      val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("fsel"))
+      val (trees, corpusStats) = RSTParser.mkTrees(props.getProperty("fsel"),
+        CacheReader.getProcessor(props.containsKey("dep")))
       cls.featureSelectionIncremental(trees, corpusStats)
     }
   }
