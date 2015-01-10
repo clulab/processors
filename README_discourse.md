@@ -7,7 +7,7 @@ To regenerate the constituent-syntax model (slower but better), run this command
 
         sbt 'run-main edu.arizona.sista.discourse.rstparser.RSTParser -train /data/nlp/corpora/RST_cached_preprocessing/rst_train -test /data/nlp/corpora/RST_cached_preprocessing/rst_test -model model.const.rst.gz'
 
-This will generate the model file, `model.const.rst.gz` in the current directory.
+This will generate the model file, `model.const.rst.gz`, in the current directory.
 To regenerate the dependency-syntax model (faster but slightly worse), run this command:
 
         sbt 'run-main edu.arizona.sista.discourse.rstparser.RSTParser -train /data/nlp/corpora/RST_cached_preprocessing/rst_train -test /data/nlp/corpora/RST_cached_preprocessing/rst_test -model model.dep.rst.gz -dep'
