@@ -141,35 +141,36 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     case _ => false
   }
 
-  private def shortestPath(start: Int, end: Int) = {
-    def neighborsFor(node: Int): Seq[Int] =
+  // returns the shortest path between two nodes as a sequence of nodes
+  // each pair of nodes is guaranteed to have at least one edge, maybe several
+  private def shortestPath(start: Int, end: Int): Seq[Int] = {
+    def neighbors(node: Int): Seq[Int] =
       (outgoingEdges(node) ++ incomingEdges(node)).map(_._1).distinct
 
     // build table of pointers to previous node in shortest path to the source
     @annotation.tailrec
-    def mkPrev(rest: Set[Int], dist: Map[Int, Double], prev: Map[Int, Int]): Map[Int, Int] = {
+    def mkPrev(rest: Set[Int], dist: Map[Int, Double], prev: Map[Int, Int]): Map[Int, Int] =
       if (rest.isEmpty) prev
       else {
         val u = rest minBy dist
-        val (newDist, newPrev) = (neighborsFor(u) filter rest.contains flatMap { v =>
-          val d = dist(u) + 1  // all edges have a cost of 1
-          if (d < dist(v)) Some(((v -> d), (v -> u))) else None
-        }).unzip
+        val d = dist(u) + 1  // all edges have a cost of 1
+        val newDistPrev = for {
+          v <- neighbors(u)
+          if rest.contains(v) && d < dist(v)
+        } yield (v -> d, v -> u)
+        val (newDist, newPrev) = newDistPrev.unzip
         mkPrev(rest - u, dist ++ newDist, prev ++ newPrev)
       }
-    }
 
     // build path from source to node
     @annotation.tailrec
-    def mkPath(node: Int, prev: Map[Int, Int], path: Seq[Int]): Seq[Int] = {
-      if (prev contains node) mkPath(prev(node), prev, node +: path)
-      else node +: path
-    }
+    def mkPath(node: Int, prev: Map[Int, Int], path: Seq[Int]): Seq[Int] =
+      if (prev contains node) mkPath(prev(node), prev, node +: path) else path
 
     val nodes = (0 until size).toSet
     val dist = Map(start -> 0.0) withDefaultValue Double.PositiveInfinity
-    val prev = mkPrev(nodes, dist, Map.empty)
-    mkPath(end, prev, Nil)
+    val prev = Map(start -> -1)  // start has no previous node
+    mkPath(end, mkPrev(nodes, dist, prev), Nil)
   }
 }
 
