@@ -177,10 +177,10 @@ object RSTParser {
         parser.saveTo(props.getProperty("model"))
       }
     }
-    if(props.containsKey("test")) {
-      if(props.containsKey("model")) {
-        parser = loadFrom(props.getProperty("model"))
-      }
+    if (props.containsKey("test")) {
+      val defaultModelPath = RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH
+      val modelPath = if (props.containsKey("model")) props.getProperty("model") else defaultModelPath
+      parser = loadFrom(modelPath)
       parser.test(props.getProperty("test"), props.containsKey("dep"))
     }
     if(props.containsKey("shell")) {
