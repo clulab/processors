@@ -5,6 +5,7 @@ import edu.arizona.sista.processors.{Processor, Document}
 import org.slf4j.LoggerFactory
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
+import edu.arizona.sista.utils.ClassLoaderObjectInputStream
 
 /**
  * Caches the output of Reader.readDir, so we don't parse everything everytime
@@ -36,7 +37,7 @@ object CacheReader {
 
   private def loadCache(path:String):List[(DiscourseTree, Document)] = {
     logger.debug("Attempting to load cached documents from: " + path)
-    val is = new ObjectInputStream(new FileInputStream(path))
+    val is = new ClassLoaderObjectInputStream(DiscourseTree.getClass.getClassLoader, new FileInputStream(path))
     val output = is.readObject().asInstanceOf[List[(DiscourseTree, Document)]]
     is.close()
     output
