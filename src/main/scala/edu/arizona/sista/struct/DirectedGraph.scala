@@ -122,28 +122,16 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     os.toString()
   }
 
-  // returns path from `start` to `end` as a string
-  def path(start: Int, end: Int): String = {
-    val nodes = shortestPath(start, end, ignoreDirection = true)
-    val pairs = (1 until nodes.length) map (i => (nodes(i-1), nodes(i)))
-    val steps = for ((n1, n2) <- pairs) yield edge(n1, n2) match {
-      case Some((`n1`, `n2`, dep)) => s">$dep"
-      case Some((`n2`, `n1`, dep)) => s"<$dep"
-      case _ => sys.error("path error")
-    }
-    steps.mkString(" ")
-  }
-
-  // gets edge between nodes, ignoring direction
-  private def edge(n1: Int, n2: Int) = edges find {
+  // gets edges between nodes, optionally ignoring direction
+  def getEdges(n1: Int, n2: Int, ignoreDirection: Boolean = false): Seq[(Int, Int, E)] = edges filter {
     case (`n1`, `n2`, _) => true
-    case (`n2`, `n1`, _) => true
+    case (`n2`, `n1`, _) if ignoreDirection => true
     case _ => false
   }
 
   // returns the shortest path between two nodes as a sequence of nodes
   // each pair of nodes is guaranteed to have at least one edge, maybe several
-  private def shortestPath(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Int] = {
+  def shortestPath(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Int] = {
     def neighbors(node: Int): Seq[Int] = {
       val edges = outgoingEdges(node) ++ (if (ignoreDirection) incomingEdges(node) else Nil)
       edges.map(_._1).distinct
