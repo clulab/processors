@@ -124,7 +124,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
 
   // returns path from `start` to `end` as a string
   def path(start: Int, end: Int): String = {
-    val nodes = shortestPath(start, end)
+    val nodes = shortestPath(start, end, ignoreDirection = true)
     val pairs = (1 until nodes.length) map (i => (nodes(i-1), nodes(i)))
     val steps = for ((n1, n2) <- pairs) yield edge(n1, n2) match {
       case Some((`n1`, `n2`, dep)) => s">$dep"
@@ -143,9 +143,11 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
 
   // returns the shortest path between two nodes as a sequence of nodes
   // each pair of nodes is guaranteed to have at least one edge, maybe several
-  private def shortestPath(start: Int, end: Int): Seq[Int] = {
-    def neighbors(node: Int): Seq[Int] =
-      (outgoingEdges(node) ++ incomingEdges(node)).map(_._1).distinct
+  private def shortestPath(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Int] = {
+    def neighbors(node: Int): Seq[Int] = {
+      val edges = outgoingEdges(node) ++ (if (ignoreDirection) incomingEdges(node) else Nil)
+      edges.map(_._1).distinct
+    }
 
     // build table of pointers to previous node in shortest path to the source
     @annotation.tailrec
