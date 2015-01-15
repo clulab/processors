@@ -69,15 +69,15 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-  <url>https://github.com/sistanlp/processors</url>
-  <connection>https://github.com/sistanlp/processors</connection>
+    <url>https://github.com/sistanlp/processors</url>
+    <connection>https://github.com/sistanlp/processors</connection>
   </scm>
   <developers>
     <developer>
-    <id>mihai.surdeanu</id>
-    <name>Mihai Surdeanu</name>
-    <email>mihai@surdeanu.info</email>
-  </developer>
+      <id>mihai.surdeanu</id>
+      <name>Mihai Surdeanu</name>
+      <email>mihai@surdeanu.info</email>
+    </developer>
   </developers>)
 
 //
