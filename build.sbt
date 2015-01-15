@@ -6,11 +6,19 @@ organization := Common.organization
 
 scalaVersion := "2.10.4"
 
-scalacOptions += "-target:jvm-1.6"
-
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
-javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
+// fork jvm to separate process
+fork := true
+
+// options for forked jvm
+javaOptions += "-Xmx4G"
+
+// forward sbt's stdin to forked process
+connectInput in run := true
+
+// don't show output prefix
+outputStrategy := Some(StdoutOutput)
 
 lazy val core = project in file(".")
 
