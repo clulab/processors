@@ -289,11 +289,17 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
     }
   }
 
+  def postprocessTags(annotation:Annotation) {
+
+  }
+
   def tagPartsOfSpeech(doc:Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
     posTagger.annotate(annotation.get)
+
+    postprocessTags(annotation.get)
 
     // convert CoreNLP Annotations to our data structures
     val sas = annotation.get.get(classOf[SentencesAnnotation])

@@ -9,11 +9,12 @@ import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
-import edu.stanford.nlp.pipeline.StanfordCoreNLP
+import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * A processor for biomedical texts, based on CoreNLP, but with different tokenization and NER
@@ -201,6 +202,28 @@ class BioNLPProcessor (internStrings:Boolean = true,
   override def resolveCoreference(doc:Document): Unit = {
     // TODO: add domain-specific coreference here!
     doc.coreferenceChains = None
+  }
+
+  override def postprocessTags(annotation:Annotation) {
+    val sas = annotation.get(classOf[SentencesAnnotation])
+
+    sas.foreach{ sa =>
+      val tb = new ArrayBuffer[String]
+      val tas = sa.get(classOf[TokensAnnotation])
+      tas.foreach{ ta =>
+        val text = ta.originalText().toLowerCase
+        // some of our would-be verbs are mistagged...
+        text match {
+          case ubiq if ubiq.endsWith("ubiquitinates") => ta.setTag("VBZ")
+          case ubiqNom if ubiqNom.endsWith("ubiquitinate") => ta.setTag("VB")
+
+          case hydro if hydro.endsWith("hydrolyzes") => ta.setTag("VBZ")
+
+          case _ => ()
+        }
+      }
+
+    }
   }
 }
 
