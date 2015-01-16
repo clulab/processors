@@ -6,11 +6,19 @@ organization := Common.organization
 
 scalaVersion := "2.10.4"
 
-scalacOptions += "-target:jvm-1.6"
-
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
-javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
+// fork jvm to separate process
+fork := true
+
+// options for forked jvm
+javaOptions += "-Xmx4G"
+
+// forward sbt's stdin to forked process
+connectInput in run := true
+
+// don't show output prefix
+outputStrategy := Some(StdoutOutput)
 
 lazy val core = project in file(".")
 
@@ -24,6 +32,8 @@ lazy val models = project.in(file("models"))
 addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models)
 
 unmanagedJars in Runtime += (modelsTask in models).value
+
+unmanagedClasspath in Runtime += baseDirectory.value 
 
 //
 // publishing settings
@@ -59,15 +69,15 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-  <url>https://github.com/sistanlp/processors</url>
-  <connection>https://github.com/sistanlp/processors</connection>
+    <url>https://github.com/sistanlp/processors</url>
+    <connection>https://github.com/sistanlp/processors</connection>
   </scm>
   <developers>
     <developer>
-    <id>mihai.surdeanu</id>
-    <name>Mihai Surdeanu</name>
-    <email>mihai@surdeanu.info</email>
-  </developer>
+      <id>mihai.surdeanu</id>
+      <name>Mihai Surdeanu</name>
+      <email>mihai@surdeanu.info</email>
+    </developer>
   </developers>)
 
 //

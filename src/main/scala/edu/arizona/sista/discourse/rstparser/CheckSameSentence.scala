@@ -9,7 +9,7 @@ import edu.arizona.sista.processors.Document
  */
 object CheckSameSentence {
   def main(args:Array[String]) {
-    val trees = CacheReader.load(args(0))
+    val trees = CacheReader.load(args(0), CacheReader.CORENLP_PROCESSOR)
     var inc = 0
     var total = 0
     for(td <- trees) {
