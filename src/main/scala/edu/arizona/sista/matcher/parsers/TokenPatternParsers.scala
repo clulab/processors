@@ -36,7 +36,26 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case _ ~ name ~ _ ~ frag ~ _ => frag.capture(name)
   }
 
-  def atomicPattern: Parser[ProgramFragment] = singleTokenPattern | capturePattern | "(" ~> splitPattern <~ ")"
+  def mentionPattern: Parser[ProgramFragment] = "@" ~> exactStringMatcher ^^ {
+    case matcher =>
+      val start = new MentionStartConstraint(matcher)
+      val end = new MentionEndConstraint(matcher)
+      // [mention=X & !(mention_start=X | mention_end=X)]
+      val inside = new ConjunctiveConstraint(new MentionConstraint(matcher), new NegatedConstraint(new DisjunctiveConstraint(start, end)))
+      // [mention_start=X & mention_end=X]
+      val singleToken = ProgramFragment(Match(new ConjunctiveConstraint(start, end)))
+      // [mention_start=X & !mention_end=X]
+      val manyTokensStart = ProgramFragment(Match(new ConjunctiveConstraint(start, new NegatedConstraint(end))))
+      // [mention=X & !(mention_start=X | mention_end=X)]*?
+      val manyTokensInside = ProgramFragment(Match(inside)).lazyKleene
+      val manyTokensEnd = ProgramFragment(Match(end))
+      val manyTokens = ProgramFragment(manyTokensStart, ProgramFragment(manyTokensInside, manyTokensEnd))
+      val split = Split(singleToken.in, manyTokens.in)
+      ProgramFragment(split, singleToken.out ++ manyTokens.out)
+  }
+
+  def atomicPattern: Parser[ProgramFragment] =
+    singleTokenPattern | mentionPattern | capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[ProgramFragment] = atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
     case frag ~ "?" => frag.greedyOptional
