@@ -17,7 +17,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 
 (c) Mihai Surdeanu, 2013 - 
 
-Contributors: Peter Jansen, Marco Valenzuela, Gustave Hanh-Powell, Daniel Fried
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried
 
 # Changes
 + **4.0 SNAPSHOT** - added domain-independent event extraction framework, in the `edu.arizona.sista.matcher` package.
