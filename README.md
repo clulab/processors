@@ -1,5 +1,7 @@
 # What is it
 
+*We have released a preliminary version of our event extraction (EE) engine. Documentation and domain-specific models coming soon! For the impatient, please take a look at the `edu.arizona.sista.matcher.ExtractorEngine`, the entry point for the framework, or contact us for more information.*
+
 The `edu.arizona.sista.processors` package aims to be a one-stop place for natural language (NL) processors.
 We currently provide three APIs: one for
 [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
@@ -18,6 +20,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 Contributors: Peter Jansen, Marco Valenzuela, Gustave Hanh-Powell, Daniel Fried
 
 # Changes
++ **4.0 SNAPSHOT** - added domain-independent event extraction framework, in the `edu.arizona.sista.matcher` package.
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
@@ -520,3 +523,8 @@ The structure of this package is heavily inspired by Stanford's CoreNLP. Similar
 A similar structure exists for ranking problems, with `RankingDataset` used to store a corpus of ranking examples, and  `RankingClassifier` as the API to be implemented by all ranking classifiers. We currently support the following classifiers: ranking Perceptron (`PerceptronRankingClassifier`), ranking SVMs from [svm-rank](http://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html) (`SVMRankingClassifier`), and boosted decision trees from [jforests](https://code.google.com/p/jforests/) (`JForestsRankingClassifier`).
 
 For usage examples, including how to create datums and datasets from scratch or import them from the svm-light format, please take a look at the examples under `src/test/scala/edu/arizona/sista/learning`.
+
+## The event extraction framework
+
+*Coming soon*
+
