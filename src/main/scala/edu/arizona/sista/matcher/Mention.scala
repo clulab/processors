@@ -9,6 +9,7 @@ trait Mention extends Equals {
   def tokenInterval: Interval
   def sentence: Int
   def document: Document
+  def keep: Boolean
   val arguments: Map[String, Seq[Mention]]
 
   // name of matching rule
@@ -50,6 +51,7 @@ class TextBoundMention(val label: String,
                        val tokenInterval: Interval,
                        val sentence: Int,
                        val document: Document,
+                       val keep: Boolean,
                        val foundBy: String) extends Mention {
 
   // TextBoundMentions don't have arguments
@@ -61,6 +63,7 @@ class EventMention(val label: String,
                    val arguments: Map[String, Seq[Mention]],
                    val sentence: Int,
                    val document: Document,
+                   val keep: Boolean,
                    val foundBy: String) extends Mention {
   // token interval that contains trigger and all matched arguments
   override def tokenInterval: Interval = {

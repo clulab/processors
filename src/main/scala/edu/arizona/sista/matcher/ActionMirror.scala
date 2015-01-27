@@ -20,6 +20,6 @@ object ActionMirror {
 }
 
 class ReflectedAction(val name: String, methodMirror: MethodMirror) {
-  def apply(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State): Seq[Mention] =
-    methodMirror(label, mention, sent, doc, ruleName, state).asInstanceOf[Seq[Mention]]
+  def apply(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] =
+    methodMirror(label, mention, sent, doc, ruleName, state, keep).asInstanceOf[Seq[Mention]]
 }

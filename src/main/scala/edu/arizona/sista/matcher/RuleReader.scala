@@ -50,22 +50,31 @@ class RuleReader[T <: Actions : ClassTag](val actions: T) {
     val name = rule("name")
     val label = rule("label")
     val priority = Priority(rule.getOrElse("priority", DefaultPriority))
+    val keep = keepValue(rule.getOrElse("keep", DefaultKeep))
     val action = mirror.reflect(rule("action"))
     val pattern = TokenPattern.compile(rule("pattern"))
-    new TokenExtractor(name, label, priority, action, pattern)
+    new TokenExtractor(name, label, priority, keep, action, pattern)
   }
 
   private def mkDependencyExtractor(rule: Map[String,String]): DependencyExtractor = {
     val name = rule("name")
     val label = rule("label")
     val priority = Priority(rule.getOrElse("priority", DefaultPriority))
+    val keep = keepValue(rule.getOrElse("keep", DefaultKeep))
     val action = mirror.reflect(rule("action"))
     val pattern = DependencyPattern.compile(rule("pattern"))
-    new DependencyExtractor(name, label, priority, action, pattern)
+    new DependencyExtractor(name, label, priority, keep, action, pattern)
+  }
+
+  private def keepValue(s: String): Boolean = s match {
+    case "true" => true
+    case "false" => false
+    case _ => sys.error(s"invalid keep value '$s'")
   }
 }
 
 object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
+  val DefaultKeep = "true"
 }

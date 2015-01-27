@@ -21,7 +21,8 @@ class State(val lookUpTable: MentionLUT = Map.empty) {
   }
 
   // returns all mentions contained in the state
-  def allMentions: Seq[Mention] = lookUpTable.values.toSeq.flatten.distinct
+  def allMentions: Seq[Mention] =
+    lookUpTable.values.toSeq.flatten.distinct filter (_.keep)
 
   // checks if a mention is already contained in the state
   def contains(m: Mention): Boolean =
