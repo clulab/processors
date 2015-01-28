@@ -120,20 +120,16 @@ trait Tree {
     case Some(p) => p :: p.ancestors
   }
 
-  def leftSibling: Option[Tree] = parent match {
-    case None => None
-    case Some(node) =>
-      val i = node._children indexOf this
-      if (i == 0) None
-      else Some(node._children(i - 1))
+  def leftSibling: Option[Tree] = parent flatMap { node =>
+    val i = node._children indexOf this
+    if (i == 0) None
+    else Some(node._children(i - 1))
   }
 
-  def rightSibling: Option[Tree] = parent match {
-    case None => None
-    case Some(node) =>
-      val i = node._children indexOf this
-      if (i + 1 == node._children.size) None
-      else Some(node._children(i + 1))
+  def rightSibling: Option[Tree] = parent flatMap { node =>
+    val i = node._children indexOf this
+    if (i + 1 == node._children.size) None
+    else Some(node._children(i + 1))
   }
 
   private def assignIndicesToTerminals() {
@@ -238,7 +234,7 @@ object Tree {
   private object TreeParser extends RegexParsers {
     def parse(input: String): Tree = parseAll(tree, input) match {
       case Success(result, _) => result
-      case failure: NoSuccess => scala.sys.error(failure.msg)
+      case failure: NoSuccess => sys.error(failure.msg)
     }
     def tree: Parser[Tree] = terminal | nonTerminal
     def token: Parser[String] = """[^()\s]+""".r
