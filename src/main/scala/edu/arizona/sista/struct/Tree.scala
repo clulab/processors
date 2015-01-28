@@ -241,10 +241,10 @@ object Tree {
       case failure: NoSuccess => scala.sys.error(failure.msg)
     }
     def tree: Parser[Tree] = terminal | nonTerminal
-    def token: Parser[String] = """([^()\s]+)""".r
+    def token: Parser[String] = """[^()\s]+""".r
     def terminal: Parser[Terminal] = token ^^ { new Terminal(_) }
-    def nonTerminal: Parser[NonTerminal] = "(" ~ token ~ rep1(terminal|nonTerminal) ~ ")" ^^ {
-      case "(" ~ tag ~ children ~ ")" => new NonTerminal(tag, children.toArray)
+    def nonTerminal: Parser[NonTerminal] = "(" ~> token ~ rep1(tree) <~ ")" ^^ {
+      case tag ~ children => new NonTerminal(tag, children.toArray)
     }
   }
 }
