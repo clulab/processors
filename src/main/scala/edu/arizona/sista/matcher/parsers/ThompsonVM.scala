@@ -5,13 +5,13 @@ import edu.arizona.sista.processors.Document
 object ThompsonVM {
   type Sub = Map[String, (Int, Int)]
 
-  private case class Thread(inst: Inst) {
+  private case class Thread(tok: Int, inst: Inst) {
     var sub: Sub = _
   }
 
   private object Thread {
-    def apply(inst: Inst, sub: Sub): Thread = {
-      val t = Thread(inst)
+    def apply(tok: Int, inst: Inst, sub: Sub): Thread = {
+      val t = Thread(tok, inst)
       t.sub = sub
       t
     }
@@ -23,17 +23,17 @@ object ThompsonVM {
       case i: Split => mkThreads(tok, i.lhs, sub) ++ mkThreads(tok, i.rhs, sub)
       case i: SaveStart => mkThreads(tok, i.next, sub + (i.name -> (tok, -1)))
       case i: SaveEnd => mkThreads(tok, i.next, sub + (i.name -> (sub(i.name)._1, tok)))
-      case _ => Seq(Thread(inst, sub))
+      case _ => Seq(Thread(tok, inst, sub))
     }
 
-    def stepThreads(tok: Int, threads: Seq[Thread]): Seq[Thread] =
+    def stepThreads(threads: Seq[Thread]): Seq[Thread] =
       threads.flatMap(t => t.inst match {
-        case i: MatchToken if tok < doc.sentences(sent).size && i.c.matches(tok, sent, doc, state) =>
-          mkThreads(tok + 1, i.next, t.sub)  // token matched, return new threads
+        case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
+          mkThreads(t.tok + 1, i.next, t.sub)  // token matched, return new threads
         case _ => Nil  // thread died with no match
       }).distinct
 
-    def handleDone(tok: Int, threads: Seq[Thread]): (Seq[Thread], Option[Sub]) =
+    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Sub]) =
       threads find (_.inst == Done) match {
         // no thread has finished, return them all
         case None => (threads, None)
@@ -42,15 +42,15 @@ object ThompsonVM {
       }
 
     @annotation.tailrec
-    def loop(i: Int, threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
+    def loop(threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
       if (threads.isEmpty) result
       else {
-        val (ts, r) = handleDone(i, threads)
-        loop(i + 1, stepThreads(i, ts), r)
+        val (ts, r) = handleDone(threads)
+        loop(stepThreads(ts), r)
       }
     }
 
-    loop(tok, mkThreads(tok, start, Map.empty), None)
+    loop(mkThreads(tok, start, Map.empty), None)
   }
 }
 
