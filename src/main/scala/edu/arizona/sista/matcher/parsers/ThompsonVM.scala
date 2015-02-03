@@ -28,24 +28,24 @@ object ThompsonVM {
 
     def stepThreads(tok: Int, threads: Seq[Thread]): Seq[Thread] =
       threads.flatMap(t => t.inst match {
-        case i: Match if tok < doc.sentences(sent).size && i.c.matches(tok, sent, doc, state) =>
+        case i: MatchToken if tok < doc.sentences(sent).size && i.c.matches(tok, sent, doc, state) =>
           mkThreads(tok + 1, i.next, t.sub)  // token matched, return new threads
         case _ => Nil  // thread died with no match
       }).distinct
 
-    def handleMatch(tok: Int, threads: Seq[Thread]): (Seq[Thread], Option[Sub]) =
+    def handleDone(tok: Int, threads: Seq[Thread]): (Seq[Thread], Option[Sub]) =
       threads find (_.inst == Done) match {
         // no thread has finished, return them all
         case None => (threads, None)
         // a thread finished, drop all threads to its right but keep the ones to its left
-        case Some(t) => (threads takeWhile (_ != t), Some(t.sub))
+        case Some(t) => (threads.takeWhile(_ != t), Some(t.sub))
       }
 
     @annotation.tailrec
     def loop(i: Int, threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
       if (threads.isEmpty) result
       else {
-        val (ts, r) = handleMatch(i, threads)
+        val (ts, r) = handleDone(i, threads)
         loop(i + 1, stepThreads(i, ts), r)
       }
     }
@@ -63,7 +63,7 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup: Inst = Split(lhs.dup, rhs.dup)
 }
 
-case class Match(c: TokenConstraint) extends Inst {
+case class MatchToken(c: TokenConstraint) extends Inst {
   def dup: Inst = {
     val inst = copy()
     if (next != null) inst.next = next.dup

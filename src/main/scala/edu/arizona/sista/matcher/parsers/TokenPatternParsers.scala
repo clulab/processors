@@ -29,7 +29,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     repeatedPattern | rangePattern | fromPattern | toPattern | exactPattern | atomicPattern
 
   def singleTokenPattern: Parser[ProgramFragment] = (wordConstraint | tokenConstraint) ^^ {
-    case constraint => ProgramFragment(Match(constraint))
+    case constraint => ProgramFragment(MatchToken(constraint))
   }
 
   def capturePattern: Parser[ProgramFragment] = "(?<" ~ ident ~ ">" ~ splitPattern ~ ")" ^^ {
@@ -42,12 +42,12 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     // [mention=X & !(mention_start=X | mention_end=X)]
     val inside = new ConjunctiveConstraint(new MentionConstraint(matcher), new NegatedConstraint(new DisjunctiveConstraint(start, end)))
     // [mention_start=X & mention_end=X]
-    val singleToken = ProgramFragment(Match(new ConjunctiveConstraint(start, end)))
+    val singleToken = ProgramFragment(MatchToken(new ConjunctiveConstraint(start, end)))
     // [mention_start=X & !mention_end=X]
-    val manyTokensStart = ProgramFragment(Match(new ConjunctiveConstraint(start, new NegatedConstraint(end))))
+    val manyTokensStart = ProgramFragment(MatchToken(new ConjunctiveConstraint(start, new NegatedConstraint(end))))
     // [mention=X & !(mention_start=X | mention_end=X)]*?
-    val manyTokensInside = ProgramFragment(Match(inside)).lazyKleene
-    val manyTokensEnd = ProgramFragment(Match(end))
+    val manyTokensInside = ProgramFragment(MatchToken(inside)).lazyKleene
+    val manyTokensEnd = ProgramFragment(MatchToken(end))
     val manyTokens = ProgramFragment(manyTokensStart, ProgramFragment(manyTokensInside, manyTokensEnd))
     val split = Split(singleToken.in, manyTokens.in)
     ProgramFragment(split, singleToken.out ++ manyTokens.out)
@@ -89,7 +89,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     def setOut(inst: Inst) {
       out foreach { o =>
         o match {
-          case i: Match => i.next = inst
+          case i: MatchToken => i.next = inst
           case i: Jump => i.next = inst
           case i: SaveStart => i.next = inst
           case i: SaveEnd => i.next = inst
