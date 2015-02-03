@@ -32,6 +32,16 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case constraint => ProgramFragment(MatchToken(constraint))
   }
 
+  def sentenceStartAssertion: Parser[ProgramFragment] = "^" ^^ {
+    case "^" => ProgramFragment(MatchSentenceStart())
+  }
+
+  def sentenceEndAssertion: Parser[ProgramFragment] = "$" ^^ {
+    case "$" => ProgramFragment(MatchSentenceEnd())
+  }
+
+  def zeroWidthAssertion: Parser[ProgramFragment] = sentenceStartAssertion | sentenceEndAssertion
+
   def capturePattern: Parser[ProgramFragment] = "(?<" ~ ident ~ ">" ~ splitPattern ~ ")" ^^ {
     case _ ~ name ~ _ ~ frag ~ _ => frag.capture(name)
   }
@@ -54,7 +64,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
   }
 
   def atomicPattern: Parser[ProgramFragment] =
-    singleTokenPattern | mentionPattern | capturePattern | "(" ~> splitPattern <~ ")"
+    zeroWidthAssertion | singleTokenPattern | mentionPattern | capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[ProgramFragment] = atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
     case frag ~ "?" => frag.greedyOptional
@@ -90,6 +100,8 @@ trait TokenPatternParsers extends TokenConstraintParsers {
       out foreach { o =>
         o match {
           case i: MatchToken => i.next = inst
+          case i: MatchSentenceStart => i.next = inst
+          case i: MatchSentenceEnd => i.next = inst
           case i: Jump => i.next = inst
           case i: SaveStart => i.next = inst
           case i: SaveEnd => i.next = inst

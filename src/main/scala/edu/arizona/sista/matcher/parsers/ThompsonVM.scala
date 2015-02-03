@@ -30,6 +30,10 @@ object ThompsonVM {
       threads.flatMap(t => t.inst match {
         case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
           mkThreads(t.tok + 1, i.next, t.sub)  // token matched, return new threads
+        case i: MatchSentenceStart if t.tok == 0 =>
+          mkThreads(t.tok, i.next, t.sub)
+        case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
+          mkThreads(t.tok, i.next, t.sub)
         case _ => Nil  // thread died with no match
       }).distinct
 
@@ -64,6 +68,22 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
 }
 
 case class MatchToken(c: TokenConstraint) extends Inst {
+  def dup: Inst = {
+    val inst = copy()
+    if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class MatchSentenceStart() extends Inst {
+  def dup: Inst = {
+    val inst = copy()
+    if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class MatchSentenceEnd() extends Inst {
   def dup: Inst = {
     val inst = copy()
     if (next != null) inst.next = next.dup
