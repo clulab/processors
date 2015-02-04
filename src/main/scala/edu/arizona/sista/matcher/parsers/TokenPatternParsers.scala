@@ -32,15 +32,10 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case constraint => ProgramFragment(MatchToken(constraint))
   }
 
-  def sentenceStartAssertion: Parser[ProgramFragment] = "^" ^^ {
+  def zeroWidthAssertion: Parser[ProgramFragment] = ("^"|"$") ^^ {
     case "^" => ProgramFragment(MatchSentenceStart())
-  }
-
-  def sentenceEndAssertion: Parser[ProgramFragment] = "$" ^^ {
     case "$" => ProgramFragment(MatchSentenceEnd())
   }
-
-  def zeroWidthAssertion: Parser[ProgramFragment] = sentenceStartAssertion | sentenceEndAssertion
 
   def capturePattern: Parser[ProgramFragment] = "(?<" ~ ident ~ ">" ~ splitPattern ~ ")" ^^ {
     case _ ~ name ~ _ ~ frag ~ _ => frag.capture(name)
