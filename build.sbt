@@ -22,7 +22,7 @@ outputStrategy := Some(StdoutOutput)
 
 lazy val core = project in file(".")
 
-lazy val models = project.in(file("models"))
+lazy val models = (project in file("models"))
   .settings(
     publish := {},
     publishLocal := {},
@@ -31,7 +31,7 @@ lazy val models = project.in(file("models"))
 
 addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models)
 
-unmanagedJars in Runtime += (modelsTask in models).value
+unmanagedJars in Compile += (modelsTask in models).value
 
 unmanagedClasspath in Runtime += baseDirectory.value 
 
