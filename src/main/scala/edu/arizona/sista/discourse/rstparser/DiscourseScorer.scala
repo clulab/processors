@@ -75,6 +75,7 @@ class DiscourseScorer {
       if(scoreType == ScoreType.OnlyStructure) {
         // nothing to do; we're good
       } else if(scoreType == ScoreType.Full) {
+        // use direction of the nuclearity to assign labels to children!
         if (t.relationDirection == RelationDirection.LeftToRight) {
           labels(0) = "span"
           labels(1) = t.relationLabel
