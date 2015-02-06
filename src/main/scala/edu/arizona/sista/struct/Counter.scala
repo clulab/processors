@@ -19,8 +19,10 @@ class Counter[T](
 
   def this(elements:Iterable[T]) = this(Counter.mkCounts(elements), 0.0)
 
-  def this(defaultReturnValue:Double = 0.0) =
+  def this(defaultReturnValue:Double) =
     this(new mutable.HashMap[T, MutableNumber[Double]], defaultReturnValue)
+
+  def this() = this(0.0)
 
   def getCount(key:T):Double = {
     counts.get(key) match {
