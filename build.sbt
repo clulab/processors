@@ -4,7 +4,7 @@ version := Common.version
 
 organization := Common.organization
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.5"
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
@@ -89,9 +89,10 @@ resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % "2.10.4",
-  "org.scalatest" %% "scalatest" % "2.0" % "test",
-  "junit" % "junit" % "4.10" % "test",
+  "org.scala-lang" % "scala-reflect" % "2.11.5",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+  "junit" % "junit" % "4.12" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "xom" % "xom" % "1.2.5",
   "joda-time" % "joda-time" % "2.1",
