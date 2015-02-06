@@ -1,5 +1,6 @@
 package edu.arizona.sista.discourse.rstparser
 
+import scala.io.StdIn
 import edu.arizona.sista.processors.{Sentence, Document, Processor}
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 
@@ -15,7 +16,7 @@ object ShowDepPath {
 
     while(true) {
       print("> ")
-      var text = Console.readLine()
+      var text = StdIn.readLine()
       val doc = proc.annotate(text)
       showPaths(doc)
     }

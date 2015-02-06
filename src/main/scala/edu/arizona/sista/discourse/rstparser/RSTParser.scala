@@ -3,6 +3,7 @@ package edu.arizona.sista.discourse.rstparser
 import java.io._
 import java.util.zip.{GZIPOutputStream, GZIPInputStream}
 
+import scala.io.StdIn
 import edu.arizona.sista.discourse.rstparser.Utils._
 import edu.arizona.sista.processors.{Processor, Document}
 import org.slf4j.LoggerFactory
@@ -220,7 +221,7 @@ object RSTParser {
   def shell(parser:RSTParser, proc:Processor) {
     while(true) {
       print("> ")
-      val line = readLine()
+      val line = StdIn.readLine()
       if(line != null && line.trim.length > 0) {
         val doc = proc.annotate(line)
         val tree = parser.parse(doc)._1

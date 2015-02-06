@@ -1,5 +1,6 @@
 package edu.arizona.sista.discourse.rstparser
 
+import scala.io.StdIn
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 
 /**
@@ -12,9 +13,9 @@ object CheckDepHead {
     val proc = new FastNLPProcessor()
     while(true) {
       print("> ")
-      var text = Console.readLine()
+      var text = StdIn.readLine()
       val doc = proc.annotate(text)
-      val offsets = Console.readLine().split("\\s+")
+      val offsets = StdIn.readLine().split("\\s+")
       println(doc.sentences(0).dependencies.get)
 
       val start = offsets(0).toInt
