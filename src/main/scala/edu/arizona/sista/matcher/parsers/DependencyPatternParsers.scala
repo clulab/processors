@@ -37,18 +37,47 @@ trait DependencyPatternParsers extends TokenPatternParsers {
     }
 
   def filteredDepPattern: Parser[DependencyPatternNode] =
-    quantifiedDepPattern ~ opt(tokenConstraint) ^^ {
+    (repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern) ~ opt(tokenConstraint) ^^ {
       case pat ~ None => pat
       case pat ~ Some(constraint) => new FilteredDependencyPattern(pat, constraint)
     }
 
   def quantifiedDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ opt("?"|"*"|"+") ^^ {
-      case pat ~ None => pat
-      case pat ~ Some("?") => new OptionalDependencyPattern(pat)
-      case pat ~ Some("*") => new KleeneDependencyPattern(pat)
-      case pat ~ Some("+") => new ConcatDependencyPattern(pat, new KleeneDependencyPattern(pat))
+    atomicDepPattern ~ ("?"|"*"|"+") ^^ {
+      case pat ~ "?" => new OptionalDependencyPattern(pat)
+      case pat ~ "*" => new KleeneDependencyPattern(pat)
+      case pat ~ "+" => new ConcatDependencyPattern(pat, new KleeneDependencyPattern(pat))
     }
+
+  // helper function that repeats a pattern N times
+  private def repeatPattern(pattern: DependencyPatternNode, n: Int): DependencyPatternNode = {
+    require(n > 0, "'n' must be greater than zero")
+    (pattern /: Seq.fill(n - 1)(pattern)) {
+      case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
+    }
+  }
+
+  def repeatDepPattern: Parser[DependencyPatternNode] = atomicDepPattern ~ "{" ~ int ~ "}" ^^ {
+    case pat ~ _ ~ n ~ _ => repeatPattern(pat, n)
+  }
+
+  def rangeDepPattern: Parser[DependencyPatternNode] = atomicDepPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ "}" ^^ {
+    case pat ~ _ ~ from ~ _ ~ to ~ _ => (from, to) match {
+      case (None, None) =>
+        sys.error("invalid range")
+      case (None, Some(n)) =>
+        repeatPattern(new OptionalDependencyPattern(pat), n)
+      case (Some(m), None) =>
+        val req = repeatPattern(pat, m)
+        val kleene = new KleeneDependencyPattern(pat)
+        new ConcatDependencyPattern(req, kleene)
+      case (Some(m), Some(n)) =>
+        require(n > m, "'to' must be greater than 'from'")
+        val req = repeatPattern(pat, m)
+        val opt = repeatPattern(new OptionalDependencyPattern(pat), n - m)
+        new ConcatDependencyPattern(req, opt)
+    }
+  }
 
   def atomicDepPattern: Parser[DependencyPatternNode] =
     outgoingDepPattern | incomingDepPattern | "(" ~> disjunctiveDepPattern <~ ")"
