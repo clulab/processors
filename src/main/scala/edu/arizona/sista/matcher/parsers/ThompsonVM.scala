@@ -34,6 +34,14 @@ object ThompsonVM {
           mkThreads(t.tok, i.next, t.sub)
         case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
           mkThreads(t.tok, i.next, t.sub)
+        case i: MatchMention => state match {
+          case None => Nil  // should we throw an exception or fail silently?
+          case Some(s) => for {
+            mention <- s.mentionsFor(sent, t.tok)
+            if mention.start == t.tok && i.m.matches(mention.label)
+            thread <- mkThreads(mention.end, i.next, t.sub)
+          } yield thread
+        }
         case _ => Nil  // thread died with no match
       }).distinct
 
@@ -68,6 +76,14 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
 }
 
 case class MatchToken(c: TokenConstraint) extends Inst {
+  def dup: Inst = {
+    val inst = copy()
+    if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class MatchMention(m: StringMatcher) extends Inst {
   def dup: Inst = {
     val inst = copy()
     if (next != null) inst.next = next.dup

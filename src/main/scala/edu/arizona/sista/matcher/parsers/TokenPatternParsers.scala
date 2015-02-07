@@ -41,21 +41,8 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case _ ~ name ~ _ ~ frag ~ _ => frag.capture(name)
   }
 
-  def mentionPattern: Parser[ProgramFragment] = "@" ~> exactStringMatcher ^^ { matcher =>
-    val start = new MentionStartConstraint(matcher)
-    val end = new MentionEndConstraint(matcher)
-    // [mention=X & !(mention_start=X | mention_end=X)]
-    val inside = new ConjunctiveConstraint(new MentionConstraint(matcher), new NegatedConstraint(new DisjunctiveConstraint(start, end)))
-    // [mention_start=X & mention_end=X]
-    val singleToken = ProgramFragment(MatchToken(new ConjunctiveConstraint(start, end)))
-    // [mention_start=X & !mention_end=X]
-    val manyTokensStart = ProgramFragment(MatchToken(new ConjunctiveConstraint(start, new NegatedConstraint(end))))
-    // [mention=X & !(mention_start=X | mention_end=X)]*?
-    val manyTokensInside = ProgramFragment(MatchToken(inside)).lazyKleene
-    val manyTokensEnd = ProgramFragment(MatchToken(end))
-    val manyTokens = ProgramFragment(manyTokensStart, ProgramFragment(manyTokensInside, manyTokensEnd))
-    val split = Split(singleToken.in, manyTokens.in)
-    ProgramFragment(split, singleToken.out ++ manyTokens.out)
+  def mentionPattern: Parser[ProgramFragment] = "@" ~> exactStringMatcher ^^ {
+    case matcher => ProgramFragment(MatchMention(matcher))
   }
 
   def atomicPattern: Parser[ProgramFragment] =
@@ -91,19 +78,8 @@ trait TokenPatternParsers extends TokenConstraintParsers {
 
   // this class is only used while compiling a token pattern
   class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
-    def setOut(inst: Inst) {
-      out foreach { o =>
-        o match {
-          case i: MatchToken => i.next = inst
-          case i: MatchSentenceStart => i.next = inst
-          case i: MatchSentenceEnd => i.next = inst
-          case i: Jump => i.next = inst
-          case i: SaveStart => i.next = inst
-          case i: SaveEnd => i.next = inst
-          case _ => ()
-        }
-      }
-    }
+    def setOut(inst: Inst): Unit =
+      out foreach (_.next = inst)
 
     def findOut(i: Inst): Seq[Inst] = i match {
       case Split(lhs, rhs) => findOut(lhs) ++ findOut(rhs)
