@@ -8,15 +8,11 @@ import edu.arizona.sista.processors.Document
 class ActionMirror[T <: Actions : ClassTag](obj: T) {
   private val instanceMirror = runtimeMirror(obj.getClass.getClassLoader).reflect(obj)
 
-  def reflect(name: String): ReflectedAction = ActionMirror.Lock.synchronized {
+  def reflect(name: String): ReflectedAction = {
     val methodSymbol = instanceMirror.symbol.typeSignature.member(TermName(name)).asMethod
     val methodMirror = instanceMirror.reflectMethod(methodSymbol)
     new ReflectedAction(name, methodMirror)
   }
-}
-
-object ActionMirror {
-  private object Lock  // scala reflection isn't thread-safe :(
 }
 
 class ReflectedAction(val name: String, methodMirror: MethodMirror) {
