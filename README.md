@@ -20,6 +20,7 @@ This code is licensed under Apache License Version 2.0. However, some of the lib
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried
 
 # Changes
++ **5.0 (Coming soon!)** - switched to Java 8 and Scala 2.11. 
 + **4.0 SNAPSHOT** - added domain-independent event extraction framework, in the `edu.arizona.sista.matcher` package.
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.

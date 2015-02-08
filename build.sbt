@@ -1,10 +1,10 @@
-name := Common.name
+name := "processors"
 
-version := Common.version
+version := "4.0-SNAPSHOT"
 
-organization := Common.organization
+organization := "edu.arizona.sista"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.5"
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
@@ -29,7 +29,7 @@ lazy val models = (project in file("models"))
     publishM2 := {}
   )
 
-addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models)
+addArtifact(Artifact("processors", "models"), modelsTask in models)
 
 unmanagedJars in Compile += (modelsTask in models).value
 
@@ -89,9 +89,10 @@ resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % "2.10.4",
-  "org.scalatest" %% "scalatest" % "2.0" % "test",
-  "junit" % "junit" % "4.10" % "test",
+  "org.scala-lang" % "scala-reflect" % "2.11.5",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+  "junit" % "junit" % "4.12" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "xom" % "xom" % "1.2.5",
   "joda-time" % "joda-time" % "2.1",

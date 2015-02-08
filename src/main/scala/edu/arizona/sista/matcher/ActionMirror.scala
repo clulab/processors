@@ -9,7 +9,7 @@ class ActionMirror[T <: Actions : ClassTag](obj: T) {
   private val instanceMirror = runtimeMirror(obj.getClass.getClassLoader).reflect(obj)
 
   def reflect(name: String): ReflectedAction = ActionMirror.Lock.synchronized {
-    val methodSymbol = instanceMirror.symbol.typeSignature.member(newTermName(name)).asMethod
+    val methodSymbol = instanceMirror.symbol.typeSignature.member(TermName(name)).asMethod
     val methodMirror = instanceMirror.reflectMethod(methodSymbol)
     new ReflectedAction(name, methodMirror)
   }

@@ -2,7 +2,7 @@ package edu.arizona.sista.matcher
 
 import java.util.{ Collection, Map => JMap }
 import scala.reflect.ClassTag
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
