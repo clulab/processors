@@ -68,14 +68,9 @@ trait TokenPatternParsers extends TokenConstraintParsers {
 
   // this class is only used while compiling a token pattern
   class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
-    def setOut(inst: Inst): Unit =
-      out foreach (_.next = inst)
+    import ProgramFragment.findOut
 
-    def findOut(i: Inst): Seq[Inst] = i match {
-      case Split(lhs, rhs) => findOut(lhs) ++ findOut(rhs)
-      case i if i.next == null => Seq(i)
-      case i => findOut(i.next)
-    }
+    def setOut(inst: Inst): Unit = out.foreach(_.next = inst)
 
     def dup: ProgramFragment = {
       val newIn = in.dup
@@ -168,10 +163,16 @@ trait TokenPatternParsers extends TokenConstraintParsers {
 
   object ProgramFragment {
     def apply(in: Inst, out: Seq[Inst]): ProgramFragment = new ProgramFragment(in, out)
-    def apply(in: Inst): ProgramFragment = new ProgramFragment(in, Seq(in))
+    def apply(in: Inst): ProgramFragment = new ProgramFragment(in, findOut(in))
     def apply(f1: ProgramFragment, f2: ProgramFragment): ProgramFragment = {
       f1.setOut(f2.in)
       ProgramFragment(f1.in, f2.out)
+    }
+
+    def findOut(i: Inst): Seq[Inst] = i match {
+      case Split(lhs, rhs) => findOut(lhs) ++ findOut(rhs)
+      case i if i.next == null => Seq(i)
+      case i => findOut(i.next)
     }
   }
 }
