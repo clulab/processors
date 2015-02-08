@@ -31,14 +31,8 @@ abstract class Dataset[L, F](
 
   def featuresCounter(datumOffset:Int):Counter[Int]
 
-  def mkDatum(row:Int):Datum[L, F] = {
-    val intFeats = featuresCounter(row)
-    val feats = new Counter[F]
-    for(f <- intFeats.keySet) {
-      feats.setCount(featureLexicon.get(f), intFeats.getCount(f))
-    }
-    new RVFDatum[L, F](labelLexicon.get(labels(row)), feats)
-  }
+  /** Returns Datum for given row */
+  def mkDatum(row:Int): Datum[L, F]
 
   /** Removes features that appear less than threshold times in this dataset. Works in place. */
   def removeFeaturesByFrequency(threshold:Int)
@@ -77,6 +71,11 @@ class BVFDataset[L, F] (
     val fb = new ListBuffer[Int]
     for(f <- fs) fb += featureLexicon.add(f)
     fb.toList.sorted.toArray
+  }
+
+  override def mkDatum(row:Int): Datum[L, F] = {
+    val feats = for (f <- features(row)) yield featureLexicon.get(f)
+    new BVFDatum[L, F](labelLexicon.get(labels(row)), feats)
   }
 
   override def featuresCounter(datumOffset:Int):Counter[Int] = {
@@ -172,6 +171,15 @@ class RVFDataset[L, F] (
 
   override def removeFeaturesByFrequency(threshold:Int) {
     throw new RuntimeException("Not supported yet!")
+  }
+
+  override def mkDatum(row:Int): Datum[L, F] = {
+    val intFeats = featuresCounter(row)
+    val feats = new Counter[F]
+    for (f <- intFeats.keySet) {
+      feats.setCount(featureLexicon.get(f), intFeats.getCount(f))
+    }
+    new RVFDatum[L, F](labelLexicon.get(labels(row)), feats)
   }
 
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
