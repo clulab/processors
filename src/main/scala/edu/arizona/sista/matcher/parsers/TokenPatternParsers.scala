@@ -26,7 +26,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
   }
 
   def quantifiedPattern: Parser[ProgramFragment] =
-    repeatedPattern | rangePattern | fromPattern | toPattern | exactPattern | atomicPattern
+    repeatedPattern | rangePattern | exactPattern | atomicPattern
 
   def singleTokenPattern: Parser[ProgramFragment] = (wordConstraint | tokenConstraint) ^^ {
     case constraint => ProgramFragment(MatchToken(constraint))
@@ -57,19 +57,9 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case frag ~ "+?" => frag.lazyPlus
   }
 
-  def rangePattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ int ~ "," ~ int ~ ("}?"|"}") ^^ {
-    case frag ~ _ ~ from ~ _ ~ to ~ "}" => frag.greedyRange(Some(from), Some(to))
-    case frag ~ _ ~ from ~ _ ~ to ~ "}?" => frag.lazyRange(Some(from), Some(to))
-  }
-
-  def fromPattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ int ~ "," ~ ("}?"|"}") ^^ {
-    case frag ~ _ ~ from ~ _ ~ "}" => frag.greedyRange(Some(from), None)
-    case frag ~ _ ~ from ~ _ ~ "}?" => frag.lazyRange(Some(from), None)
-  }
-
-  def toPattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ "," ~ int ~ ("}?"|"}") ^^ {
-    case frag ~ _ ~ _ ~ to ~ "}" => frag.greedyRange(None, Some(to))
-    case frag ~ _ ~ _ ~ to ~ "}?" => frag.lazyRange(None, Some(to))
+  def rangePattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}?"|"}") ^^ {
+    case frag ~ _ ~ from ~ _ ~ to ~ "}" => frag.greedyRange(from, to)
+    case frag ~ _ ~ from ~ _ ~ to ~ "}?" => frag.lazyRange(from, to)
   }
 
   def exactPattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ int ~ "}" ^^ {
@@ -139,6 +129,9 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     def lazyPlus: ProgramFragment = ProgramFragment(dup, lazyKleene)
 
     def greedyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
+      require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
+      if (from.isDefined && to.isDefined)
+        require(from.get < to.get, "'to' must be greater than 'from'")
       val required = for (i <- from) yield repeat(i)
       val optional = for (i <- to) yield {
         val n = i - from.getOrElse(0)
@@ -151,6 +144,9 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     }
 
     def lazyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
+      require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
+      if (from.isDefined && to.isDefined)
+        require(from.get < to.get, "'to' must be greater than 'from'")
       val required = for (i <- from) yield repeat(i)
       val optional = for (i <- to) yield {
         val n = i - from.getOrElse(0)
