@@ -1,8 +1,8 @@
-name := Common.name
+name := "processors"
 
-version := Common.version
+version := "4.0-SNAPSHOT"
 
-organization := Common.organization
+organization := "edu.arizona.sista"
 
 scalaVersion := "2.11.5"
 
@@ -29,7 +29,7 @@ lazy val models = (project in file("models"))
     publishM2 := {}
   )
 
-addArtifact(Artifact(Common.name, Common.classifier), modelsTask in models)
+addArtifact(Artifact("processors", "models"), modelsTask in models)
 
 unmanagedJars in Compile += (modelsTask in models).value
 

@@ -1,11 +1,13 @@
-name := Common.classifier
+name := "models"
 
-version := Common.version
+version := "4.0-SNAPSHOT"
 
-organization := Common.organization
+organization := "edu.arizona.sista"
+
+scalaVersion := "2.11.5"
 
 artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
-  s"${Common.name}-${module.revision}-${module.name}.${artifact.extension}"
+  s"processors_${sv.binary}-${module.revision}-${module.name}.${artifact.extension}"
 }
 
 modelsTask <<= packagedArtifact in (Compile, packageBin) map {
