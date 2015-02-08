@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors
 
+import scala.io.StdIn
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
@@ -18,7 +19,7 @@ object ProcessorShell {
 
     while(true) {
       print("> ")
-      var text = Console.readLine()
+      var text = StdIn.readLine()
       val doc = proc.annotate(text)
       ProcessorExample.printDoc(doc)
     }
