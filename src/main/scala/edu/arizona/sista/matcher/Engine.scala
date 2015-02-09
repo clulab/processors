@@ -22,6 +22,7 @@ class ExtractorEngine[T <: Actions : ClassTag](rules: String, actions: T, postpr
       extractor <- extractors
       if extractor.priority matches i
       mention <- extractor.findAllIn(document, state)
+      if !state.contains(mention)
     } yield mention
 
     loop(1, new State)
