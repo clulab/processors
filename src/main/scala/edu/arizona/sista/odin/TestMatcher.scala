@@ -1,8 +1,9 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin
 
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
+import edu.arizona.sista.odin._
 
 object myActions extends Actions {
   def mkTextBoundMention(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {

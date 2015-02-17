@@ -1,7 +1,8 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin.impl
 
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
+import edu.arizona.sista.odin._
 
 trait DependencyPatternParsers extends TokenPatternParsers {
   // comments are considered whitespace

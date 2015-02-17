@@ -1,4 +1,4 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin.impl
 
 trait TokenPatternParsers extends TokenConstraintParsers {
   // comments are considered whitespace

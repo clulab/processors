@@ -1,4 +1,4 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin.impl
 
 import java.util.{ Collection, Map => JMap }
 import scala.reflect.ClassTag
@@ -6,6 +6,7 @@ import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
+import edu.arizona.sista.odin._
 import RuleReader._
 
 class RuleReader[T <: Actions : ClassTag](val actions: T) {

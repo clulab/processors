@@ -1,4 +1,4 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin.impl
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._

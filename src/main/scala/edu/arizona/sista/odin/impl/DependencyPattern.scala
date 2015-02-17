@@ -1,7 +1,8 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin.impl
 
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
+import edu.arizona.sista.odin._
 
 class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPattern]) {
   // the labels of the required arguments

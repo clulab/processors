@@ -1,4 +1,4 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin
 
 import scala.util.hashing.MurmurHash3._
 import edu.arizona.sista.struct.Interval

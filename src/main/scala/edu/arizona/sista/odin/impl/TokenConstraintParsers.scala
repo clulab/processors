@@ -1,7 +1,8 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin.impl
 
 import scala.util.parsing.combinator._
 import edu.arizona.sista.processors.Document
+import edu.arizona.sista.odin._
 
 trait TokenConstraintParsers extends StringMatcherParsers {
   def tokenConstraint: Parser[TokenConstraint] = "[" ~> disjunctiveConstraint <~ "]"

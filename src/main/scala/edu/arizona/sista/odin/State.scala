@@ -1,4 +1,4 @@
-package edu.arizona.sista.matcher
+package edu.arizona.sista.odin
 
 class State(val lookUpTable: MentionLUT = Map.empty) {
   def update(mentions: Seq[Mention]): State = new State(mergeLuts(mkLut(mentions)))
@@ -39,7 +39,7 @@ class State(val lookUpTable: MentionLUT = Map.empty) {
 
   def mentionsFor(sent: Int, toks: Seq[Int]): Seq[Mention] =
     toks flatMap (t => mentionsFor(sent, t))
-  
+
   def mentionsFor(sent: Int, toks: Seq[Int], label: String): Seq[Mention] =
     toks flatMap (t => mentionsFor(sent, t, label))
 
