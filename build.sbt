@@ -108,6 +108,7 @@ libraryDependencies ++= Seq(
   "log4j" % "log4j" % "1.2.17",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
   "org.yaml" % "snakeyaml" % "1.14",
+  "jline" % "jline" % "2.11",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "dragontool",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "heptag"
