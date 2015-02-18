@@ -1,0 +1,216 @@
+- name: Positive_regulation_1
+  label: Positive_regulation
+  priority: 5
+  action: mkRegulation
+  pattern: |
+    trigger: [lemma=/promot|induc|mediat|increas|stimulat|lead|enhanc|up-regulat/ & tag=/^V|RB/]
+    controller: nsubj nn*
+    controlled: dobj nn*
+
+- name: Positive_regulation_2
+  priority: 5
+  action: mkRegulation
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: /^regulat/
+    constraint: advmod [word=/^positive/]
+    controller: nsubj nn*
+    controlled: dobj
+
+- name: Positive_regulation_3
+  priority: 5
+  action: mkRegulation
+  type: token
+  label: Positive_regulation
+  example: "monoubiquitinated K-Ras is less sensitive than the unmodified protein to GAP-mediated GTP hydrolysis"
+  pattern: |
+    (?<controller> [mention=/./])? (?<trigger> [word=/^mediat/]) (?<controlled> [mention=/./])
+
+- name: Positive_regulation_4
+  priority: 5
+  action: mkRegulation
+  type: token
+  label: Positive_regulation
+  pattern: |
+    (?<trigger> increased) (?<controlled> [mention=/Binding/]+) following (?<controller> [mention=/^(Protein|Gene_or_gene_product)$/])
+
+
+#acceler|accept|accompani|accumul|action|activ|allow|associ|augment|cataly|caus|cleav|compet|confer|consequ|contribut|convert|cooper|critic|direct|driv|elev|elicit|enhanc|escort|essenti|export|express|facilit|follow|free|gener|high|implic|import|inact|increas|induc|induct|initi|interact|interconvert|involv|lead|led|major|mediat|modif|modul|necess|overexpress|oxid|pivot|play|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|releas|render|requir|rescu|respons|restor|result|retent|sequest|serv|signal|stimul|suffici|sulfat|support|synerg|synthes|target|transcript|transduc|transfer|transport|trigger|unaffect|underli|uninduc|up-regul|upregul|util
+
+
+###Syntactic Variants###
+
+
+- name: Positive_regulation_syntax_1_verb
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controller?: <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
+    controlled: (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])*
+
+
+- name: Positive_regulation_syntax_2_verb
+  priority: 4
+  action: mkRegulation
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled: (>nsubjpass|<vmod) /conj_|nn|cc/* [mention=/./]
+    controller?: agent|prep_by /conj_|nn|cc/* [mention=/./]
+
+
+- name: Positive_regulation_syntax_3_verb
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & !outgoing=nsubjpass & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled: ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) ) [mention=/./]
+
+    controller?: <nn* | (prep_by) /nn|conj_|cc/*
+
+
+- name: Positive_regulation_syntax_4_verb
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled: (nsubjpass /conj_|nn/*) [mention=/./]
+    controller?: (/prep_/ /conj_|nn/*)? /prep_/* /prep_by|agent/ /conj_|nn/* [mention=/./]
+
+
+- name: Positive_regulation_syntax_5_verb
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled: dobj /nn|conj_|cc/*
+    controller: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
+
+
+- name: Positive_regulation_syntax_6_verb
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/VBN|RB/] [word=/regul/ & tag=/^VBN/]?
+    controlled: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
+    controller?: /prep_by|agent/ /appos|nn|conj_|cc/*
+
+
+- name: Positive_regulation_syntax_1_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^(N|JJ)/] [word=/regul/]?
+    controlled: prep_of /nn|conj_|cc/*
+    controller?: (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/*
+
+
+- name: Positive_regulation_syntax_2_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controlled: prep_of? /conj_|cc|nn/+ [mention=/./]
+    controller: /prep_by|agent/ /conj|cc|nn/*
+
+
+- name: Positive_regulation_syntax_3_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^(N|JJ)/ & !outgoing=prep_by] [word=/regul/ & tag=/^N/]?
+    controlled: prep_of /conj_|cc|nn/+ [mention=/./]
+    controller: /conj_|cc|nn/+ [mention=/./]
+
+
+- name: Positive_regulation_syntax_4_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^(N|JJ)/ & !outgoing=/prep_(by|of)/] [word=/regul/ & tag=/^N/]?
+    controlled: <nn? nn /conj|cc|nn|prep/* [mention=/./ & !mention=/Site/]
+
+
+- name: Positive_regulation_syntax_5_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controlled: < nn > /prep_/ /conj_|cc|nn/* [mention=/./]
+    controller?: < nn /conj_|cc|nn/*
+
+
+- name: Positive_regulation_syntax_6_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controller: <prep_via agent|prep_by /nn|conj_|cc/*
+    controlled: (prep_of /nn|conj_|cc/*)+
+
+
+- name: Positive_regulation_syntax_7_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: dependency
+  label: Positive_regulation
+  pattern: |
+    trigger: [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & !outgoing=prep_of & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controlled: < nsubj dobj prep_of /nn|cc|conj/* [mention=/./]
+
+
+- name: Positive_regulation_token_1_noun
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: token
+  label: Positive_regulation
+  pattern: |
+    (?<trigger> [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?) /of|on/ [word=/./ & !tag=/^V|RB/]*? (?<controlled> [mention=/./])
+
+
+- name: Positive_regulation_token_2_verb
+  priority: 4
+  action: mkRegulation
+  example: ""
+  type: token
+  label: Positive_regulation
+  pattern: |
+    (?<trigger> [word=/acceler|accumul|activ|allow|augment|cataly|direct|driv|elev|elicit|enhanc|escort|facilit|gener|heigh|increas|induc|initi|modul|necess|overexpress|pivot|posit|potenti|proce|produc|prolong|promot|rais|reactiv|recruit|render|requir|rescu|respons|restor|retent|sequest|signal|stimul|sulfat|support|synerg|synthes|target|trigger|underli|uninduc|up-regul|upregul/ & tag=/^V|RB/] [word=/regul/ & tag=/^N/]?) (?<controlled> [mention=/./])?

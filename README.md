@@ -318,16 +318,20 @@ CoreNLProcessor constructor, as such:
 
 Scala is (largely) compatible with Java, so this library can be directly used from Java. Below is Java code that translates most of the functionality from the first Scala example in this document to Java:
 
+    import edu.arizona.sista.struct.DirectedGraphEdgeIterator;
+    import edu.arizona.sista.processors.*;
+    import edu.arizona.sista.processors.fastnlp.FastNLPProcessor;
+
     public class ProcessorJavaExample {
         public static void main(String [] args) throws Exception {
             // create the processor
-            Processor proc = new CoreNLPProcessor(true);
+            Processor proc = new CoreNLPProcessor(true, false, false, 100);
             // for much faster processing, use FastNLPProcessor
-            // Processor proc = new FastNLPProcessor(true);
-            
+            // Processor proc = new FastNLPProcessor(true, false);
+
             // the actual work is done here
             Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.");
-            
+
             // you are basically done. the rest of this code simply prints out the annotations
 
             // let's print the sentence-level annotations
@@ -337,7 +341,7 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
                 System.out.println("Tokens: " + mkString(sentence.words(), " "));
                 System.out.println("Start character offsets: " + mkString(sentence.startOffsets(), " "));
                 System.out.println("End character offsets: " + mkString(sentence.endOffsets(), " "));
-                
+
                 // these annotations are optional, so they are stored using Option objects, hence the isDefined checks
                 if(sentence.lemmas().isDefined()){
                     System.out.println("Lemmas: " + mkString(sentence.lemmas().get(), " "));
@@ -353,11 +357,10 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
                 }
                 if(sentence.dependencies().isDefined()) {
                     System.out.println("Syntactic dependencies:");
-                    DirectedGraphEdgeIterator<String> iterator = new        
-                    DirectedGraphEdgeIterator<String>(sentence.dependencies().get());
+                    DirectedGraphEdgeIterator<String> iterator = new
+                        DirectedGraphEdgeIterator<String>(sentence.dependencies().get());
                     while(iterator.hasNext()) {
-                        // this is a scala Tuple3
-                        Tuple3<Object, Object, String> dep = iterator.next();
+                        scala.Tuple3<Object, Object, String> dep = iterator.next();
                         // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
                         System.out.println(" head:" + dep._1() + " modifier:" + dep._2() + " label:" + dep._3());
                     }
@@ -375,9 +378,9 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
             // let's print the coreference chains
             if(doc.coreferenceChains().isDefined()) {
                 // these are scala.collection Iterator and Iterable (not Java!)
-                Iterator<Iterable<CorefMention>> chains = doc.coreferenceChains().get().getChains().iterator();
+                scala.collection.Iterator<scala.collection.Iterable<CorefMention>> chains = doc.coreferenceChains().get().getChains().iterator();
                 while(chains.hasNext()) {
-                    Iterator<CorefMention> chain = chains.next().iterator();
+                    scala.collection.Iterator<CorefMention> chain = chains.next().iterator();
                     System.out.println("Found one coreference chain containing the following mentions:");
                     while(chain.hasNext()) {
                         CorefMention mention = chain.next();
