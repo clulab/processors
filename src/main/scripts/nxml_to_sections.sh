@@ -18,8 +18,6 @@ cd $MYDIR
 # make output directory if needed
 [ ! -d $OUT_DIR ] && mkdir -p $OUT_DIR
 
-# command paths
-ABSTRACT_BODY="split_abstract_body.py"
 # document name for input paper
 docname=$(basename $FILENAME .nxml)
 
@@ -35,10 +33,7 @@ nxml2txt $FILENAME $txt_file $so_file
 
 # split abstract and body
 #$ABSTRACT_BODY $txt_file $so_file $abstract_file $body_file
-$ABSTRACT_BODY $txt_file $so_file $merged_file $merged_file
-
-# no need to keep the .so file anymore
-rm -f $so_file
+./split_abstract_body.py $txt_file $so_file $merged_file $merged_file
 
 # change directory back to where we were originally
 cd $ORIGDIR
