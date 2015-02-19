@@ -43,7 +43,7 @@ object DARPAoutput extends App {
       // is it a serialized file?
       case ser if ser.endsWith("ser") => docFromSerializedFile(ser)
       // assume it needs to be annotated...
-      case _ => proc.annotate(paper)
+      case _ => proc.annotate(getText(paper))
     }
 
     val mentions: Map[String, Seq[EventMention]] =
