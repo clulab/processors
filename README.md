@@ -17,8 +17,8 @@ All the code that we write is licensed under Apache License Version 2.0. However
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell. 
 
 # Changes
-+ **5.0 (Coming soon!)** - switched to Java 8 and Scala 2.11. First ODIN release with the DARPA biomedical grammar. 
-+ **4.0 SNAPSHOT** - added domain-independent event extraction framework, in the `edu.arizona.sista.matcher` package.
++ **5.0 (Coming soon!)** - switched to Java 8 and Scala 2.11. First ODIN public release with the DARPA biomedical grammar. 
++ **4.0 SNAPSHOT** - added domain-independent event extraction framework, in the `edu.arizona.sista.odin` package.
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
