@@ -1,26 +1,23 @@
 # What is it
 
-*We have released a preliminary version of our event extraction (EE) engine. Documentation and domain-specific models coming soon! For the impatient, please take a look at the `edu.arizona.sista.matcher.ExtractorEngine`, the entry point for the framework, or contact us for more information.*
+This is the main public code repository of the NLP group led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
-The `edu.arizona.sista.processors` package aims to be a one-stop place for natural language (NL) processors.
-We currently provide three APIs: one for
-[Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). If you plan to use `BioNLPProcessor`, please install the data resources from [our fork of BANNER](https://github.com/sistanlp/banner) first!
++ A rule-based event extraction (EE) framework called ODIN (Open Domain INformer) in the `edu.arizona.sista.odin` package, together with a grammar tailored for the biomedical domain. See [ODIN's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
++ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster.
++ A machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
++ A suite of NL processors in the `edu.arizona.sista.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). 
 
-Both `CoreNLPProcessor` and `FastNLPProcessor` now include a full-fledged Rhetorical Structure Theory (RST) discourse parser. The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is two orders of magnitude faster.
+This software requires Java 1.6 or higher (we currently use Java 1.8), Scala 2.11, and CoreNLP 3.x or higher. 
 
-Furthermore, this code contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
-
-This software requires Java 1.6, Scala 2.9 or higher, and CoreNLP 1.3.4 or higher. 
-
-This code is licensed under Apache License Version 2.0. However, some of the libraries used here, most notably CoreNLP, are GPL.
+All the code that we write is licensed under Apache License Version 2.0. However, some of the libraries used here, most notably CoreNLP, are GPL.
 
 (c) Mihai Surdeanu, 2013 - 
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell. 
 
 # Changes
-+ **5.0 (Coming soon!)** - switched to Java 8 and Scala 2.11. 
++ **5.0 (Coming soon!)** - switched to Java 8 and Scala 2.11. First ODIN release with the DARPA biomedical grammar. 
 + **4.0 SNAPSHOT** - added domain-independent event extraction framework, in the `edu.arizona.sista.matcher` package.
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
@@ -36,20 +33,31 @@ Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustav
 + **3.2.0** - Updated to Scala 2.10.1 and CoreNLP 3.2.0. Changed versioning system to be identical to CoreNLP's, so it's clear which CoreNLP version is used.
 + **1.0** - Initial release
 
-# Maven
-This software is available on Maven Central as well. Add the following dependencies to your `pom.xml` to use it:
+# Installation
+
+We currently use Arizona State's BANNER for named entity recognition in the biomedical domain. Please install the data resources from [our fork of BANNER](https://github.com/sistanlp/banner) before using `processors`.
+
+This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml`:
 
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.3</version>
+       <version>4.0-SNAPSHOT</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>3.3</version>
+       <version>4.0-SNAPSHOT</version>
        <classifier>models</classifier>
     </dependency>
+ 
+ The equivalent SBT dependencies are:
+ 
+ 	libraryDependencies ++= Seq(
+  		"edu.arizona.sista" %% "processors" % "4.0-SNAPSHOT",
+  		"edu.arizona.sista" %% "processors" % "4.0-SNAPSHOT" classifier "models",
+ 	)
+
 
 # Why you should use this code
 + **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
@@ -57,7 +65,8 @@ This software is available on Maven Central as well. Add the following dependenc
 + **Faster access** - again, because we use arrays instead of hash maps, access to the NL annotations (once constructed) is considerably faster than in the original Stanford code.
 + **Tool-independent API** - we support multiple NL and machine learning tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
-+ **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface.
++ **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface. We also offer event extraction tools for the biomedical domain.
++ **Rule-based event extraction** - we include an event extraction framework, which can be customized to various domains.
 
 # How to compile the source code
 
@@ -530,7 +539,7 @@ A similar structure exists for ranking problems, with `RankingDataset` used to s
 
 For usage examples, including how to create datums and datasets from scratch or import them from the svm-light format, please take a look at the examples under `src/test/scala/edu/arizona/sista/learning`.
 
-## The event extraction framework
+## The ODIN event extraction framework
 
-*Coming soon*
+Please see [ODIN's Wiki](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) page for details.
 
