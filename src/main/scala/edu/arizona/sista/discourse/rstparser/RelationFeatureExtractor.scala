@@ -102,7 +102,7 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
 
     if(left.firstToken.sentence == right.lastToken.sentence) {
       val words = doc.sentences(left.firstSentence).words
-      val tags = doc.sentences(left.firstSentence).words
+      val tags = doc.sentences(left.firstSentence).tags.get
       val deps = doc.sentences(left.firstSentence).dependencies.get
       val (leftHead, leftHeadParent, leftParentRel) = Utils.findSyntacticHeadFromDependencies(deps, left.firstToken.token, left.lastToken.token)
       val (rightHead, rightHeadParent, rightParentRel) = Utils.findSyntacticHeadFromDependencies(deps, right.firstToken.token, right.lastToken.token)
@@ -196,7 +196,7 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
 
     if(left.firstToken.sentence == right.lastToken.sentence) {
       val words = doc.sentences(left.firstSentence).words
-      val tags = doc.sentences(left.firstSentence).words
+      val tags = doc.sentences(left.firstSentence).tags.get
       val tree = doc.sentences(left.firstSentence).syntacticTree.get
       val (leftHead, leftHeadParent) = Utils.findSyntacticHead(tree, null, left.firstToken.token, left.lastToken.token)
       val (rightHead, rightHeadParent) = Utils.findSyntacticHead(tree, null, right.firstToken.token, right.lastToken.token)
