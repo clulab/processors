@@ -3,7 +3,8 @@ package edu.arizona.sista.processors.corenlp
 import edu.arizona.sista.discourse.rstparser.RSTParser
 import edu.arizona.sista.processors._
 import edu.arizona.sista.struct._
-import edu.stanford.nlp.parser.lexparser.{ParserAnnotations, LexicalizedParser}
+import edu.stanford.nlp.parser.lexparser.LexicalizedParser
+import edu.stanford.nlp.parser.common.{ParserAnnotations, ParserUtils}
 import edu.stanford.nlp.pipeline.{ParserAnnotatorUtils, StanfordCoreNLP, Annotation}
 import java.util.Properties
 import collection.mutable.{ListBuffer, ArrayBuffer}
@@ -15,7 +16,7 @@ import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import java.util
 import collection.mutable
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
-import edu.stanford.nlp.trees.{GrammaticalStructureFactory, SemanticHeadFinder}
+import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
 
@@ -390,7 +391,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
       val stanfordTree = stanfordParse(sa)
 
       // store Stanford annotations; Stanford dependencies are created here!
-      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, stanfordTree)
+      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, stanfordTree, GrammaticalStructure.Extras.NONE)
 
       // save our own structures
       if (stanfordTree != null) {
@@ -468,7 +469,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
 
     // create a fake tree if the actual parsing failed
     if(tree == null)
-      tree = ParserAnnotatorUtils.xTree(words)
+      tree = ParserUtils.xTree(words)
 
     //println("TREE: " + tree)
     tree
@@ -481,8 +482,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true,
       da = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
     else
       da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
-    val edges = da.getEdgeSet
-    for (edge <- edges) {
+    for (edge <- da.edgeIterable()) {
       val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
       val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
       var label = edge.getRelation.getShortName
