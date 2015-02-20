@@ -6,56 +6,84 @@ import edu.arizona.sista.odin._
 object ThompsonVM {
   type Sub = Map[String, (Int, Int)]
 
-  private case class Thread(tok: Int, inst: Inst) {
-    var sub: Sub = _
+  trait Thread {
+    def isDone: Boolean
+    def results: Seq[Sub]
   }
 
-  private object Thread {
+  private case class SingleThread(tok: Int, inst: Inst) extends Thread {
+    var sub: Sub = _
+    def isDone: Boolean = inst == Done
+    def results: Seq[Sub] = Seq(sub)
+  }
+
+  private object SingleThread {
     def apply(tok: Int, inst: Inst, sub: Sub): Thread = {
-      val t = Thread(tok, inst)
+      val t = new SingleThread(tok, inst)
       t.sub = sub
       t
     }
   }
 
-  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Option[Sub] = {
+  private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
+    def isDone: Boolean = bundles exists (_ exists (_.isDone))
+    def results: Seq[Sub] = bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
+  }
+
+  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Sub] = {
     def mkThreads(tok: Int, inst: Inst, sub: Sub): Seq[Thread] = inst match {
       case i: Jump => mkThreads(tok, i.next, sub)
       case i: Split => mkThreads(tok, i.lhs, sub) ++ mkThreads(tok, i.rhs, sub)
       case i: SaveStart => mkThreads(tok, i.next, sub + (i.name -> (tok, -1)))
       case i: SaveEnd => mkThreads(tok, i.next, sub + (i.name -> (sub(i.name)._1, tok)))
-      case _ => Seq(Thread(tok, inst, sub))
+      case _ => Seq(SingleThread(tok, inst, sub))
+    }
+
+    def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
+      case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
+        mkThreads(t.tok + 1, i.next, t.sub)  // token matched, return new threads
+      case i: MatchSentenceStart if t.tok == 0 =>
+        mkThreads(t.tok, i.next, t.sub)
+      case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
+        mkThreads(t.tok, i.next, t.sub)
+      case i: MatchMention => state match {
+        case None => Nil  // should we throw an exception or fail silently?
+        case Some(s) =>
+          val bundles = for {
+            mention <- s.mentionsFor(sent, t.tok)
+            if mention.start == t.tok && i.m.matches(mention.label)
+          } yield mkThreads(mention.end, i.next, t.sub)
+          Seq(ThreadBundle(bundles))
+      }
+      case _ => Nil  // thread died with no match
+    }
+
+    def stepThreadBundle(t: ThreadBundle): Seq[Thread] = {
+      val bundles = t.bundles flatMap { bundle =>
+        val ts = stepThreads(bundle)
+        if (ts.nonEmpty) Some(ts) else None
+      }
+      Seq(ThreadBundle(bundles))
+    }
+
+    def stepThread(t: Thread): Seq[Thread] = t match {
+      case t: SingleThread => stepSingleThread(t)
+      case t: ThreadBundle => stepThreadBundle(t)
     }
 
     def stepThreads(threads: Seq[Thread]): Seq[Thread] =
-      threads.flatMap(t => t.inst match {
-        case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
-          mkThreads(t.tok + 1, i.next, t.sub)  // token matched, return new threads
-        case i: MatchSentenceStart if t.tok == 0 =>
-          mkThreads(t.tok, i.next, t.sub)
-        case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
-          mkThreads(t.tok, i.next, t.sub)
-        case i: MatchMention => state match {
-          case None => Nil  // should we throw an exception or fail silently?
-          case Some(s) => for {
-            mention <- s.mentionsFor(sent, t.tok)
-            if mention.start == t.tok && i.m.matches(mention.label)
-            thread <- mkThreads(mention.end, i.next, t.sub)
-          } yield thread
-        }
-        case _ => Nil  // thread died with no match
-      }).distinct
+      (threads flatMap stepThread).distinct
 
-    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Sub]) =
-      threads find (_.inst == Done) match {
+    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Thread]) =
+      threads find (_.isDone) match {
         // no thread has finished, return them all
         case None => (threads, None)
         // a thread finished, drop all threads to its right but keep the ones to its left
-        case Some(t) => (threads.takeWhile(_ != t), Some(t.sub))
+        case Some(t) => (threads.takeWhile(_ != t), Some(t))
       }
 
     @annotation.tailrec
-    def loop(threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
+    def loop(threads: Seq[Thread], result: Option[Thread]): Option[Thread] = {
       if (threads.isEmpty) result
       else {
         val (ts, r) = handleDone(threads)
@@ -63,7 +91,10 @@ object ThompsonVM {
       }
     }
 
-    loop(mkThreads(tok, start, Map.empty), None)
+    loop(mkThreads(tok, start, Map.empty), None) match {
+      case None => Nil
+      case Some(t) => t.results
+    }
   }
 }
 
