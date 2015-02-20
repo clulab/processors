@@ -72,3 +72,18 @@ class EventMention(val label: String,
     Interval(allStarts.min, allEnds.max)
   }
 }
+
+class RelationMention(val label: String,
+                      val arguments: Map[String, Seq[Mention]],
+                      val sentence: Int,
+                      val document: Document,
+                      val keep: Boolean,
+                      val foundBy: String) extends Mention {
+  require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
+  // token interval that contains trigger and all matched arguments
+  override def tokenInterval: Interval = {
+    val allStarts = arguments.values.flatMap(_.map(_.start)).toSeq
+    val allEnds = arguments.values.flatMap(_.map(_.end)).toSeq
+    Interval(allStarts.min, allEnds.max)
+  }
+}
