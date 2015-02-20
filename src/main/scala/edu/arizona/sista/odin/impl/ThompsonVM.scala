@@ -53,7 +53,7 @@ object ThompsonVM {
             mention <- s.mentionsFor(sent, t.tok)
             if mention.start == t.tok && i.m.matches(mention.label)
           } yield mkThreads(mention.end, i.next, t.sub)
-          Seq(ThreadBundle(bundles))
+          if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
       }
       case _ => Nil  // thread died with no match
     }
@@ -63,7 +63,7 @@ object ThompsonVM {
         val ts = stepThreads(bundle)
         if (ts.nonEmpty) Some(ts) else None
       }
-      Seq(ThreadBundle(bundles))
+      if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
     }
 
     def stepThread(t: Thread): Seq[Thread] = t match {
