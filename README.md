@@ -518,6 +518,8 @@ If you end up using this discourse parser, I would appreciate it if you cited th
 
 Peter Jansen, Mihai Surdeanu, and Peter Clark. [Discourse Complements Lexical Semantics for Non-factoid Answer Reranking](http://www.surdeanu.info/mihai/papers/acl2014.pdf). In Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL), 2014. [[bib]](http://www.surdeanu.info/mihai/papers/acl2014.bib)
 
+Developers only: For more details on the discourse parsers, please see [this Wiki page](https://github.com/sistanlp/processors/wiki/Discourse-Parsers-Details).
+
 ## The `edu.arizona.sista.learning` package
 
 `processors` now contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
