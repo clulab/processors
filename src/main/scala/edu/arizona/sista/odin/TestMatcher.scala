@@ -47,9 +47,9 @@ object TestMatcher extends App {
                  |  type: dependency
                  |  action: mkConversion
                  |  pattern: |
-                 |    trigger: [word=/^phospho/ & tag=/^VB/]
-                 |    theme: dobj [mention=Protein]
-                 |    cause: nsubj
+                 |    trigger = [word=/^phospho/ & tag=/^VB/]
+                 |    theme: Protein = dobj [mention=Protein]
+                 |    cause: Protein = nsubj
                  |
                  |- name: rule3
                  |  label: Ubiquitination
@@ -57,8 +57,8 @@ object TestMatcher extends App {
                  |  type: dependency
                  |  action: mkConversion
                  |  pattern: |
-                 |    trigger: ubiquitination
-                 |    theme: prep_of
+                 |    trigger = ubiquitination
+                 |    theme: Protein = prep_of
                  |
                  |- name: rule4
                  |  label: DownRegulation
@@ -66,9 +66,9 @@ object TestMatcher extends App {
                  |  type: dependency
                  |  action: mkRegulation
                  |  pattern: |
-                 |    trigger: [lemma=inhibit]
-                 |    theme: dobj [mention=/^Ubi/ & !mention=Phosphorylation]
-                 |    cause: nsubj
+                 |    trigger = [lemma=inhibit]
+                 |    theme: Ubiquitination = dobj [mention=/^Ubi/ & !mention=Phosphorylation]
+                 |    cause: Protein = nsubj
                  |""".stripMargin
 
   val extractor = new ExtractorEngine(rules, myActions)
