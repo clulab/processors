@@ -99,17 +99,17 @@ trait DependencyPatternParsers extends TokenPatternParsers {
 }
 
 class ArgumentPattern(val name: String, val label: String, pattern: DependencyPatternNode, val required: Boolean) {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Interval] =
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Interval] =
     pattern.findAllIn(tok, sent, doc, state) map Interval.apply
 }
 
 sealed trait DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int]
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int]
 }
 
 class OutgoingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int] = {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     val edges = outgoingEdges(sent, doc)
     if (edges isDefinedAt tok) matcher.filter(edges(tok)) else Nil
   }
@@ -117,7 +117,7 @@ extends DependencyPatternNode with Dependencies {
 
 class IncomingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int] = {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     val edges = incomingEdges(sent, doc)
     if (edges isDefinedAt tok) matcher.filter(edges(tok)) else Nil
   }
@@ -125,33 +125,33 @@ extends DependencyPatternNode with Dependencies {
 
 class ConcatDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int] =
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
     (lhs.findAllIn(tok, sent, doc, state) flatMap (i => rhs.findAllIn(i, sent, doc, state))).distinct
 }
 
 class DisjunctiveDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int] =
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
     (lhs.findAllIn(tok, sent, doc, state) ++ rhs.findAllIn(tok, sent, doc, state)).distinct
 }
 
 class FilteredDependencyPattern(pattern: DependencyPatternNode, constraint: TokenConstraint)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int] = {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     val tokens = pattern.findAllIn(tok, sent, doc, state)
-    constraint.filter(tokens, sent, doc, state)
+    constraint.filter(tokens, sent, doc, Some(state))
   }
 }
 
 class OptionalDependencyPattern(pattern: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int] =
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
     (tok +: pattern.findAllIn(tok, sent, doc, state)).distinct
 }
 
 class KleeneDependencyPattern(pattern: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Int] = {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     @annotation.tailrec
     def loop(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
       case Nil => results
