@@ -80,7 +80,7 @@ class RelationMention(val label: String,
                       val keep: Boolean,
                       val foundBy: String) extends Mention {
   require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
-  // token interval that contains trigger and all matched arguments
+  // token interval that contains all matched arguments
   override def tokenInterval: Interval = {
     val allStarts = arguments.values.flatMap(_.map(_.start)).toSeq
     val allEnds = arguments.values.flatMap(_.map(_.end)).toSeq
