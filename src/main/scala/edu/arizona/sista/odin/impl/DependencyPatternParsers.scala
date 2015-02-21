@@ -14,13 +14,16 @@ trait DependencyPatternParsers extends TokenPatternParsers {
       case trigger ~ _ ~ arguments => new DependencyPattern(trigger, arguments)
     }
 
-  def triggerFinder: Parser[TokenPattern] = "trigger" ~> ":" ~> tokenPattern
+  def triggerFinder: Parser[TokenPattern] = "(?i)trigger".r ~> "=" ~> tokenPattern
 
   def argPattern: Parser[ArgumentPattern] =
-    ident ~ opt("?") ~ ":" ~ disjunctiveDepPattern ^^ {
-      case "trigger" ~ _ ~ _ ~ _ => sys.error("`trigger` is not a valid argument name")
-      case name ~ None ~ _ ~ pat => new ArgumentPattern(name, pat, true)
-      case name ~ Some("?") ~ _ ~ pat => new ArgumentPattern(name, pat, false)
+    ident ~ ":" ~ ident ~ opt("?") ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.compareToIgnoreCase("trigger") == 0 =>
+        sys.error("`trigger` is not a valid argument name")
+      case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, true)
+      case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, false)
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
@@ -37,8 +40,11 @@ trait DependencyPatternParsers extends TokenPatternParsers {
       }
     }
 
+  def filterableDepPattern: Parser[DependencyPatternNode] =
+    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
+
   def filteredDepPattern: Parser[DependencyPatternNode] =
-    (repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern) ~ opt(tokenConstraint) ^^ {
+    filterableDepPattern ~ opt(tokenConstraint) ^^ {
       case pat ~ None => pat
       case pat ~ Some(constraint) => new FilteredDependencyPattern(pat, constraint)
     }
@@ -58,27 +64,29 @@ trait DependencyPatternParsers extends TokenPatternParsers {
     }
   }
 
-  def repeatDepPattern: Parser[DependencyPatternNode] = atomicDepPattern ~ "{" ~ int ~ "}" ^^ {
-    case pat ~ _ ~ n ~ _ => repeatPattern(pat, n)
-  }
-
-  def rangeDepPattern: Parser[DependencyPatternNode] = atomicDepPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ "}" ^^ {
-    case pat ~ _ ~ from ~ _ ~ to ~ _ => (from, to) match {
-      case (None, None) =>
-        sys.error("invalid range")
-      case (None, Some(n)) =>
-        repeatPattern(new OptionalDependencyPattern(pat), n)
-      case (Some(m), None) =>
-        val req = repeatPattern(pat, m)
-        val kleene = new KleeneDependencyPattern(pat)
-        new ConcatDependencyPattern(req, kleene)
-      case (Some(m), Some(n)) =>
-        require(n > m, "'to' must be greater than 'from'")
-        val req = repeatPattern(pat, m)
-        val opt = repeatPattern(new OptionalDependencyPattern(pat), n - m)
-        new ConcatDependencyPattern(req, opt)
+  def repeatDepPattern: Parser[DependencyPatternNode] =
+    atomicDepPattern ~ "{" ~ int ~ "}" ^^ {
+      case pat ~ "{" ~ n ~ "}" => repeatPattern(pat, n)
     }
-  }
+
+  def rangeDepPattern: Parser[DependencyPatternNode] =
+    atomicDepPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ "}" ^^ {
+      case pat ~ "{" ~ from ~ "," ~ to ~ "}" => (from, to) match {
+        case (None, None) =>
+          sys.error("invalid range")
+        case (None, Some(n)) =>
+          repeatPattern(new OptionalDependencyPattern(pat), n)
+        case (Some(m), None) =>
+          val req = repeatPattern(pat, m)
+          val kleene = new KleeneDependencyPattern(pat)
+          new ConcatDependencyPattern(req, kleene)
+        case (Some(m), Some(n)) =>
+          require(n > m, "'to' must be greater than 'from'")
+          val req = repeatPattern(pat, m)
+          val opt = repeatPattern(new OptionalDependencyPattern(pat), n - m)
+          new ConcatDependencyPattern(req, opt)
+      }
+    }
 
   def atomicDepPattern: Parser[DependencyPatternNode] =
     outgoingDepPattern | incomingDepPattern | "(" ~> disjunctiveDepPattern <~ ")"
@@ -90,7 +98,7 @@ trait DependencyPatternParsers extends TokenPatternParsers {
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
 }
 
-class ArgumentPattern(val name: String, pattern: DependencyPatternNode, val required: Boolean) {
+class ArgumentPattern(val name: String, val label: String, pattern: DependencyPatternNode, val required: Boolean) {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Interval] =
     pattern.findAllIn(tok, sent, doc, state) map Interval.apply
 }
