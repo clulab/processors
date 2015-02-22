@@ -99,8 +99,10 @@ trait DependencyPatternParsers extends TokenPatternParsers {
 }
 
 class ArgumentPattern(val name: String, val label: String, pattern: DependencyPatternNode, val required: Boolean) {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Interval] =
-    pattern.findAllIn(tok, sent, doc, state) map Interval.apply
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Mention] = for {
+    t <- pattern.findAllIn(tok, sent, doc, state)
+    m <- state.mentionsFor(sent, t, label)
+  } yield m
 }
 
 sealed trait DependencyPatternNode {

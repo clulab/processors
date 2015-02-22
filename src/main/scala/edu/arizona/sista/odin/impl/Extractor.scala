@@ -47,7 +47,7 @@ class DependencyExtractor(val name: String,
                           val pattern: DependencyPattern) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
-    m <- pattern.findAllIn(sent, doc, state)
-    mention <- action(label, m, sent, doc, name, state, keep)
+    m <- pattern.getMentions(sent, doc, state, label, keep, name)
+    mention <- action(m, state)
   } yield mention
 }

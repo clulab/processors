@@ -10,23 +10,7 @@ object myActions extends Actions {
     Seq(new TextBoundMention(label, mention("--GLOBAL--").head, sent, doc, keep, ruleName))
   }
 
-  def mkConversion(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    val trigger = new TextBoundMention(label, mention("trigger").head, sent, doc, keep, ruleName)
-    val theme = state.mentionsFor(sent, mention("theme").head.start, "Protein").head
-    val cause = if (mention contains "cause") state.mentionsFor(sent, mention("cause").head.start, "Protein").headOption else None
-    val args = if (cause.isDefined) Map("Theme" -> Seq(theme), "Cause" -> Seq(cause.get)) else Map("Theme" -> Seq(theme))
-    val event = new EventMention(label, trigger, args, sent, doc, keep, ruleName)
-    Seq(trigger, event)
-  }
-
-  def mkRegulation(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    val trigger = new TextBoundMention(label, mention("trigger").head, sent, doc, keep, ruleName)
-    val cause = state.mentionsFor(sent, mention("cause").head.start, "Protein").head
-    val theme = state.mentionsFor(sent, mention("theme").head.start, Seq("Phosphorylation", "Ubiquitination")).find(_.isInstanceOf[EventMention]).get
-    val args = Map("Theme" -> Seq(theme), "Cause" -> Seq(cause))
-    val event = new EventMention(label, trigger, args, sent, doc, keep, ruleName)
-    Seq(trigger, event)
-  }
+  def defaultAction(mention: Mention, state: State): Seq[Mention] = Seq(mention)
 }
 
 object TestMatcher extends App {
@@ -45,7 +29,7 @@ object TestMatcher extends App {
                  |  label: Phosphorylation
                  |  priority: 2
                  |  type: dependency
-                 |  action: mkConversion
+                 |  action: defaultAction
                  |  pattern: |
                  |    trigger = [word=/^phospho/ & tag=/^VB/]
                  |    theme: Protein = dobj [mention=Protein]
@@ -55,7 +39,7 @@ object TestMatcher extends App {
                  |  label: Ubiquitination
                  |  priority: 2
                  |  type: dependency
-                 |  action: mkConversion
+                 |  action: defaultAction
                  |  pattern: |
                  |    trigger = ubiquitination
                  |    theme: Protein = prep_of
@@ -64,7 +48,7 @@ object TestMatcher extends App {
                  |  label: DownRegulation
                  |  priority: 3
                  |  type: dependency
-                 |  action: mkRegulation
+                 |  action: defaultAction
                  |  pattern: |
                  |    trigger = [lemma=inhibit]
                  |    theme: Ubiquitination = dobj [mention=/^Ubi/ & !mention=Phosphorylation]

@@ -113,12 +113,12 @@ class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with De
 // checks that a token is inside a mention
 class MentionConstraint(matcher: StringMatcher) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = state match {
-    case None => sys.error("can't match mentions without state")
+    case None => false
     case Some(state) => state.mentionsFor(sent, tok) flatMap (_.allLabels) exists matcher.matches
   }
 
   def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = state match {
-    case None => sys.error("can't match mentions without state")
+    case None => Nil
     case Some(state) => tokens filter { t =>
       state.mentionsFor(sent, t) exists { m =>
         val indicesAndValues = m.allLabels.toSeq.zipWithIndex map (li => (li._2, li._1))
