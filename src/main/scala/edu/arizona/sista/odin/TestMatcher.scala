@@ -11,36 +11,35 @@ object TestMatcher extends App {
 
   val rules = """|- name: rule1
                  |  label: Protein
-                 |  priority: 1
                  |  type: token
                  |  pattern: |
                  |    [entity='B-Protein'] [entity='I-Protein']*
                  |
                  |- name: rule2
                  |  label: Phosphorylation
-                 |  priority: 2
-                 |  type: dependency
                  |  pattern: |
-                 |    trigger = [word=/^phospho/ & tag=/^VB/]
-                 |    theme: Protein = dobj [mention=Protein]
+                 |    Trigger = [word=/^phospho/ & tag=/^VB/]
+                 |    theme: Protein = dobj
                  |    cause: Protein = nsubj
                  |
                  |- name: rule3
                  |  label: Ubiquitination
-                 |  priority: 2
-                 |  type: dependency
                  |  pattern: |
-                 |    trigger = ubiquitination
+                 |    triggER = ubiquitination
                  |    theme: Protein = prep_of
                  |
                  |- name: rule4
                  |  label: DownRegulation
-                 |  priority: 3
-                 |  type: dependency
                  |  pattern: |
                  |    trigger = [lemma=inhibit]
-                 |    theme: Ubiquitination = dobj [mention=/^Ubi/ & !mention=Phosphorylation]
+                 |    theme: Ubiquitination = dobj
                  |    cause: Protein = nsubj
+                 |
+                 |- name: rule5
+                 |  label: XXXtestXXX
+                 |  type: token
+                 |  pattern: |
+                 |    @theme:Phosphorylation and (?<TriGgEr> inhibits) the @cause:Ubiquitination
                  |""".stripMargin
 
   val extractor = new ExtractorEngine(rules)
@@ -54,9 +53,18 @@ object TestMatcher extends App {
   for (m <- mentions) {
     m match {
       case m: EventMention =>
+        println("EventMention")
         println(m.label)
         println(s"string = ${m.text}")
         println(s"trigger = ${m.trigger.text}")
+        m.arguments foreach {
+          case (k,vs) => for (v <- vs) println(s"$k = ${v.text}")
+        }
+        println("=" * 72)
+      case m: RelationMention =>
+        println("RelationMention")
+        println(m.label)
+        println(s"string = ${m.text}")
         m.arguments foreach {
           case (k,vs) => for (v <- vs) println(s"$k = ${v.text}")
         }
