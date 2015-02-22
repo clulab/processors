@@ -17,9 +17,6 @@ class ActionMirror[T <: Actions : ClassTag](obj: T) {
 }
 
 class ReflectedAction(val name: String, methodMirror: MethodMirror) {
-  def apply(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] =
-    methodMirror(label, mention, sent, doc, ruleName, state, keep).asInstanceOf[Seq[Mention]]
-
   def apply(mention: Mention, state: State): Seq[Mention] =
     methodMirror(mention, state).asInstanceOf[Seq[Mention]]
 }
