@@ -9,14 +9,14 @@ object ThompsonVM {
 
   trait Thread {
     def isDone: Boolean
-    def results: Seq[NamedGroups]
+    def results: Seq[(NamedGroups, NamedMentions)]
   }
 
   private case class SingleThread(tok: Int, inst: Inst) extends Thread {
     var groups: NamedGroups = _
     var mentions: NamedMentions = _
     def isDone: Boolean = inst == Done
-    def results: Seq[NamedGroups] = Seq(groups)
+    def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
   }
 
   private object SingleThread {
@@ -30,10 +30,10 @@ object ThompsonVM {
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
     def isDone: Boolean = bundles exists (_ exists (_.isDone))
-    def results: Seq[NamedGroups] = bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
+    def results: Seq[(NamedGroups, NamedMentions)] = bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
   }
 
-  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[NamedGroups] = {
+  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[(NamedGroups, NamedMentions)] = {
     def mkThreads(tok: Int, inst: Inst, groups: NamedGroups, mentions: NamedMentions): Seq[Thread] = inst match {
       case i: Jump => mkThreads(tok, i.next, groups, mentions)
       case i: Split => mkThreads(tok, i.lhs, groups, mentions) ++ mkThreads(tok, i.rhs, groups, mentions)
@@ -55,10 +55,15 @@ object ThompsonVM {
           val bundles = for {
             mention <- s.mentionsFor(sent, t.tok)
             if mention.start == t.tok && i.m.matches(mention.label)
-          } yield mkThreads(mention.end, i.next, t.groups, t.mentions)
+          } yield mkThreads(mention.end, i.next, t.groups, mkMentionCapture(t.mentions, i.name, mention))
           if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
       }
       case _ => Nil  // thread died with no match
+    }
+
+    def mkMentionCapture(mentions: NamedMentions, name: Option[String], mention: Mention): NamedMentions = name match {
+      case None => mentions
+      case Some(name) => mentions + (name -> mention)
     }
 
     def stepThreadBundle(t: ThreadBundle): Seq[Thread] = {
@@ -119,9 +124,19 @@ case class MatchToken(c: TokenConstraint) extends Inst {
 }
 
 case class MatchMention(m: StringMatcher) extends Inst {
+  var name: Option[String] = None
+
   def dup: Inst = {
     val inst = copy()
     if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+object MatchMention {
+  def apply(name: String, matcher: StringMatcher): MatchMention = {
+    val inst = MatchMention(matcher)
+    inst.name = Some(name)
     inst
   }
 }

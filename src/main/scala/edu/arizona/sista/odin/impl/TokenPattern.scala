@@ -8,11 +8,13 @@ class TokenPattern(val start: Inst) {
   import TokenPattern._
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Result] = {
-    ThompsonVM.evaluate(start, tok, sent, doc, state) map { m =>
-      val (start, end) = m(GlobalCapture)
-      Result(Interval(start, end), m - GlobalCapture mapValues {
-        case (from, until) => Interval(from, until)
-      })
+    ThompsonVM.evaluate(start, tok, sent, doc, state) map {
+      case (groups, mentions) =>
+        val (start, end) = groups(GlobalCapture)
+        val newGroups = groups - GlobalCapture mapValues {
+          case (from, until) => Interval(from, until)
+        }
+        Result(Interval(start, end), newGroups, mentions)
     }
   }
 
@@ -67,7 +69,7 @@ class TokenPattern(val start: Inst) {
 object TokenPattern {
   val GlobalCapture = "--GLOBAL--"
   def compile(input: String): TokenPattern = TokenPatternCompiler.compile(input)
-  case class Result(interval: Interval, groups: Map[String, Interval]) {
+  case class Result(interval: Interval, groups: Map[String, Interval], mentions: Map[String, Mention]) {
     val start = interval.start
     val end = interval.end
   }

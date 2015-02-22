@@ -34,9 +34,26 @@ class TokenExtractor(val name: String,
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
     r <- pattern.findAllIn(sent, doc, state)
-    m = Map(TokenPattern.GlobalCapture -> Seq(r.interval)) ++ r.groups.mapValues(Seq(_))
-    mention <- action(label, m, sent, doc, name, state, keep)
+    m = mkMention(r, sent, doc)
+    mention <- action(m, state)
   } yield mention
+
+  def mkMention(r: TokenPattern.Result, sent: Int, doc: Document): Mention = {
+    if (r.groups contains "trigger") {
+      val trigger = new TextBoundMention(label, r.groups("trigger"), sent, doc, keep, name)
+      val groups = r.groups - "trigger" mapValues (i => Seq(new TextBoundMention(label, i, sent, doc, keep, name)))
+      val mentions = r.mentions mapValues (Seq(_))
+      val args = groups ++ mentions
+      new EventMention(label, trigger, args, sent, doc, keep, name)
+    } else if (r.groups.nonEmpty || r.mentions.nonEmpty) {
+      val groups = r.groups mapValues (i => Seq(new TextBoundMention(label, i, sent, doc, keep, name)))
+      val mentions = r.mentions mapValues (Seq(_))
+      val args = groups ++ mentions
+      new RelationMention(label, args, sent, doc, keep, name)
+    } else {
+      new TextBoundMention(label, r.interval, sent, doc, keep, name)
+    }
+  }
 }
 
 class DependencyExtractor(val name: String,

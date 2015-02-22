@@ -41,9 +41,15 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case _ ~ name ~ _ ~ frag ~ _ => frag.capture(name)
   }
 
-  def mentionPattern: Parser[ProgramFragment] = "@" ~> exactStringMatcher ^^ {
+  def unnamedMentionPattern: Parser[ProgramFragment] = "@" ~> exactStringMatcher ^^ {
     case matcher => ProgramFragment(MatchMention(matcher))
   }
+
+  def namedMentionPattern: Parser[ProgramFragment] = "@" ~> stringLiteral ~ ":" ~ exactStringMatcher ^^ {
+    case name ~ ":" ~ matcher => ProgramFragment(MatchMention(name, matcher))
+  }
+
+  def mentionPattern: Parser[ProgramFragment] = namedMentionPattern | unnamedMentionPattern
 
   def atomicPattern: Parser[ProgramFragment] =
     zeroWidthAssertion | singleTokenPattern | mentionPattern | capturePattern | "(" ~> splitPattern <~ ")"

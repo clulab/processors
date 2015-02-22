@@ -6,10 +6,6 @@ import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.odin._
 
 object myActions extends Actions {
-  def mkTextBoundMention(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    Seq(new TextBoundMention(label, mention("--GLOBAL--").head, sent, doc, keep, ruleName))
-  }
-
   def defaultAction(mention: Mention, state: State): Seq[Mention] = Seq(mention)
 }
 
@@ -21,7 +17,7 @@ object TestMatcher extends App {
                  |  label: Protein
                  |  priority: 1
                  |  type: token
-                 |  action: mkTextBoundMention
+                 |  action: defaultAction
                  |  pattern: |
                  |    [entity='B-Protein'] [entity='I-Protein']*
                  |
