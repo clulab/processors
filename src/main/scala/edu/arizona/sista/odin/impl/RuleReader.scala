@@ -52,7 +52,7 @@ class RuleReader[T <: Actions : ClassTag](val actions: T) {
     val label = rule("label")
     val priority = Priority(rule.getOrElse("priority", DefaultPriority))
     val keep = keepValue(rule.getOrElse("keep", DefaultKeep))
-    val action = mirror.reflect(rule("action"))
+    val action = mirror.reflect(rule.getOrElse("action", DefaultAction))
     val pattern = TokenPattern.compile(rule("pattern"))
     new TokenExtractor(name, label, priority, keep, action, pattern)
   }
@@ -62,7 +62,7 @@ class RuleReader[T <: Actions : ClassTag](val actions: T) {
     val label = rule("label")
     val priority = Priority(rule.getOrElse("priority", DefaultPriority))
     val keep = keepValue(rule.getOrElse("keep", DefaultKeep))
-    val action = mirror.reflect(rule("action"))
+    val action = mirror.reflect(rule.getOrElse("action", DefaultAction))
     val pattern = DependencyPattern.compile(rule("pattern"))
     new DependencyExtractor(name, label, priority, keep, action, pattern)
   }
@@ -78,4 +78,5 @@ object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
   val DefaultKeep = "true"
+  val DefaultAction = "identity"
 }

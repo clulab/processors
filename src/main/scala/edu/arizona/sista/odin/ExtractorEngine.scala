@@ -4,7 +4,7 @@ import scala.reflect.ClassTag
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.RuleReader
 
-class ExtractorEngine[T <: Actions : ClassTag](rules: String, actions: T, postprocess: PostProcessor = identity) {
+class ExtractorEngine[T <: Actions : ClassTag](rules: String, actions: T = new Actions, postprocess: PostProcessor = identity) {
   val reader = new RuleReader(actions)
   val extractors = reader.read(rules)
 

@@ -1,5 +1,5 @@
 package edu.arizona.sista.odin
 
 class Actions {
-  // default actions go here
+  def identity(m: Mention, s: State): Seq[Mention] = Seq(m)
 }

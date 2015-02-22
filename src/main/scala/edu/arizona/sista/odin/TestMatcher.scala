@@ -5,10 +5,6 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.odin._
 
-object myActions extends Actions {
-  def defaultAction(mention: Mention, state: State): Seq[Mention] = Seq(mention)
-}
-
 object TestMatcher extends App {
   val text = "TGFBR2 phosphorylates peri-kappa B and inhibits the ubiquitination of SMAD3."
   val entities = Array("B-Protein", "O", "B-Protein", "I-Protein", "O", "O", "O", "O", "O", "B-Protein", "O")
@@ -17,7 +13,6 @@ object TestMatcher extends App {
                  |  label: Protein
                  |  priority: 1
                  |  type: token
-                 |  action: defaultAction
                  |  pattern: |
                  |    [entity='B-Protein'] [entity='I-Protein']*
                  |
@@ -25,7 +20,6 @@ object TestMatcher extends App {
                  |  label: Phosphorylation
                  |  priority: 2
                  |  type: dependency
-                 |  action: defaultAction
                  |  pattern: |
                  |    trigger = [word=/^phospho/ & tag=/^VB/]
                  |    theme: Protein = dobj [mention=Protein]
@@ -35,7 +29,6 @@ object TestMatcher extends App {
                  |  label: Ubiquitination
                  |  priority: 2
                  |  type: dependency
-                 |  action: defaultAction
                  |  pattern: |
                  |    trigger = ubiquitination
                  |    theme: Protein = prep_of
@@ -44,14 +37,13 @@ object TestMatcher extends App {
                  |  label: DownRegulation
                  |  priority: 3
                  |  type: dependency
-                 |  action: defaultAction
                  |  pattern: |
                  |    trigger = [lemma=inhibit]
                  |    theme: Ubiquitination = dobj [mention=/^Ubi/ & !mention=Phosphorylation]
                  |    cause: Protein = nsubj
                  |""".stripMargin
 
-  val extractor = new ExtractorEngine(rules, myActions)
+  val extractor = new ExtractorEngine(rules)
 
   val proc = new BioNLPProcessor
   val doc = proc annotate text
