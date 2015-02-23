@@ -55,6 +55,16 @@
     theme: (<nn)? nn [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
     protein?: (<nn)? <dobj [word=/^has$|^have$|^had$|^retain(s|ed)?$|^show(s|ed)?$|^display(s|ed)?$/] nsubj [mention=/Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
 
+- name: hydrolysis_token_1
+  label: Hydrolysis
+  priority: 4
+  action: mkHydrolysis
+  example: "We measured the rate of GAP-mediated GTP hydrolysis"
+  type: token
+  pattern: |
+    (?<theme> [mention=/Simple_chemical/])
+    (?<trigger> hydrolysis)
+
 - name: hydrolysis_decl1
   label: Hydrolysis
   priority: 4
