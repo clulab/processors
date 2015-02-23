@@ -329,6 +329,7 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
 
     import edu.arizona.sista.struct.DirectedGraphEdgeIterator;
     import edu.arizona.sista.processors.*;
+    import edu.arizona.sista.processors.corenlp.CoreNLPProcessor;
     import edu.arizona.sista.processors.fastnlp.FastNLPProcessor;
 
     public class ProcessorJavaExample {
