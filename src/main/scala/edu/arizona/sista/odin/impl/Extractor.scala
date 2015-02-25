@@ -32,11 +32,11 @@ class TokenExtractor(val name: String,
                      val action: ReflectedAction,
                      val pattern: TokenPattern) extends Extractor {
 
-  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
-    r <- pattern.findAllIn(sent, doc, state)
-    m = mkMention(r, sent, doc)
-    mention <- action(m, state)
-  } yield mention
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
+    val results = pattern.findAllIn(sent, doc, state)
+    val mentions = for (r <- results) yield mkMention(r, sent, doc)
+    action(mentions, state)
+  }
 
   def mkMention(r: TokenPattern.Result, sent: Int, doc: Document): Mention =
     r.groups.keys find (_ equalsIgnoreCase "trigger") match {
@@ -66,8 +66,8 @@ class DependencyExtractor(val name: String,
                           val action: ReflectedAction,
                           val pattern: DependencyPattern) extends Extractor {
 
-  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = for {
-    m <- pattern.getMentions(sent, doc, state, label, keep, name)
-    mention <- action(m, state)
-  } yield mention
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
+    val mentions = pattern.getMentions(sent, doc, state, label, keep, name)
+    action(mentions, state)
+  }
 }
