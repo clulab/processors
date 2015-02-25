@@ -33,7 +33,7 @@ addArtifact(Artifact("processors", "models"), modelsTask in models)
 
 unmanagedJars in Compile += (modelsTask in models).value
 
-unmanagedClasspath in Runtime += baseDirectory.value 
+unmanagedClasspath in Runtime += baseDirectory.value
 
 //
 // publishing settings
@@ -91,24 +91,25 @@ resolvers +=
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % "2.11.5",
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
-  "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.0-SNAP4" % "test",
   "junit" % "junit" % "4.12" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
-  "xom" % "xom" % "1.2.5",
-  "joda-time" % "joda-time" % "2.1",
+  "com.io7m.xom" % "xom" % "1.2.10",
+  "joda-time" % "joda-time" % "2.7",
   "de.jollyday" % "jollyday" % "0.4.7",
-  "com.googlecode.efficient-java-matrix-library" % "ejml" % "0.19",
+  "com.googlecode.efficient-java-matrix-library" % "ejml" % "0.23",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1" classifier "models",
   "ch.qos.logback" % "logback-classic" % "1.0.10",
-  "org.slf4j" % "slf4j-api" % "1.7.3",
+  "org.slf4j" % "slf4j-api" % "1.7.10",
+  "org.slf4j" % "slf4j-simple" % "1.7.10",
   "nz.ac.waikato.cms.weka" % "weka-dev" % "3.7.10",
   "net.sf.jopt-simple" % "jopt-simple" % "4.5",
   "de.bwaldvogel" % "liblinear" % "1.94",
   "log4j" % "log4j" % "1.2.17",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
   "org.yaml" % "snakeyaml" % "1.14",
-  "jline" % "jline" % "2.11",
+  "jline" % "jline" % "2.12",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "dragontool",
   "edu.arizona.sista" %% "banner" % "1.0-SNAPSHOT" classifier "heptag"
