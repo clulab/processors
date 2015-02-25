@@ -65,6 +65,16 @@
     (?<theme> [mention=/Simple_chemical/])
     (?<trigger> hydrolysis)
 
+- name: hydrolysis_token_2
+  label: Hydrolysis
+  priority: 4
+  action: mkHydrolysis
+  example: "Renin is an enzyme that hydrolyzes Ras-GTP."
+  type: token
+  pattern: |
+    (?<trigger> /hydrolyze(s|d)?/)
+    (?<theme> [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)])
+
 - name: hydrolysis_decl1
   label: Hydrolysis
   priority: 4
