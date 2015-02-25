@@ -8,7 +8,7 @@ This is the main public code repository of the NLP group led by [Mihai Surdeanu]
 + A suite of NL processors in the `edu.arizona.sista.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
 that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). 
 
-This software requires Java 1.6 or higher (we currently use Java 1.8), Scala 2.11, and CoreNLP 3.x or higher. 
+This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher. 
 
 All the code that we write is licensed under Apache License Version 2.0. However, some of the libraries used here, most notably CoreNLP, are GPL.
 
@@ -17,8 +17,7 @@ All the code that we write is licensed under Apache License Version 2.0. However
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell. 
 
 # Changes
-+ **5.0 (Coming soon!)** - switched to Java 8 and Scala 2.11. First ODIN public release with the DARPA biomedical grammar. 
-+ **4.0 SNAPSHOT** - added domain-independent event extraction framework, in the `edu.arizona.sista.odin` package.
++ **5.0-SNAPSHOT** - switched to Java 8 and Scala 2.11. First public release of ODIN (domain-independent event extraction) framework, in the `edu.arizona.sista.odin` package. First release of ODIN's DARPA biomedical grammar.
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
