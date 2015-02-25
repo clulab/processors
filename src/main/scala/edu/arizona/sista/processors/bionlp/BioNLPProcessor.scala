@@ -47,6 +47,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
 
   def addBioTokenizerOptions(props:Properties) {
     props.put("tokenize.options", "ptb3Escaping=false")
+    props.put("tokenize.language", "English")
   }
 
   /**

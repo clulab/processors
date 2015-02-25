@@ -13,8 +13,8 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 object ProcessorShell {
   def main(args:Array[String]) {
     // create the processor
-    val proc:Processor = new CoreNLPProcessor(withDiscourse = true) // this uses the slow but better discourse parser
-    // val proc:Processor = new FastNLPProcessor() // this uses the fast but slightly worse discourse parser
+    // val proc:Processor = new CoreNLPProcessor(withDiscourse = true) // this uses the slow but better discourse parser
+    val proc:Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
     // val proc:Processor = new BioNLPProcessor(removeFigTabReferences = true)
 
     while(true) {

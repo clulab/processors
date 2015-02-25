@@ -1,38 +1,53 @@
 package edu.arizona.sista.processors.fastnlp
 
+import java.util.Properties
+
 import edu.arizona.sista.discourse.rstparser.RSTParser
-import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import edu.arizona.sista.processors.corenlp.{CoreNLPUtils, CoreNLPProcessor}
+import edu.arizona.sista.processors.shallownlp.ShallowNLPProcessor
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.struct.DirectedGraph
 import edu.arizona.sista.utils.Files
+import edu.stanford.nlp.ling.CoreAnnotations
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
+import edu.stanford.nlp.parser.nndep.DependencyParser
+import edu.stanford.nlp.pipeline.Annotation
+import edu.stanford.nlp.semgraph.SemanticGraphFactory
+import edu.stanford.nlp.trees.GrammaticalStructure
 import org.maltparserx.MaltParserService
 import FastNLPProcessor._
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import scala.collection.mutable
 import org.maltparserx
+import scala.collection.JavaConversions._
 
 /**
  * Fast NLP tools
- * Uses most of CoreNLP but replaces its parser with maltparser
+ * Extends ShallowNLP with a dependency parser based on maltparser
  * This means that constituent trees and coreference, which depends on that, are not available
  * Also, malt produces Stanford "basic" dependencies, rather than "collapsed" ones
  * User: mihais
  * Date: 1/4/14
  */
 class FastNLPProcessor(internStrings:Boolean = true,
+                       useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
+                       useBasicDependencies:Boolean = true, // this is used only for useMalt == false
                        withDiscourse:Boolean = false)
-  extends CoreNLPProcessor(internStrings, basicDependencies = true, withDiscourse, maxSentenceLength = -1) {
+  extends ShallowNLPProcessor(internStrings) {
+
   /**
    * One maltparser instance for each thread
    * MUST have one separate malt instance per thread!
    * malt uses a working directory which is written at runtime
    * using ThreadLocal variables guarantees that each thread gets its own working directory
    */
-  private val maltService = new ThreadLocal[MaltParserService]
+  lazy val maltService = new ThreadLocal[MaltParserService]
 
   /** RST discourse parser using only dependency based syntax */
-  lazy val rstDependencyParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)
+  lazy val rstDependencyParser = fetchRSTParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)
 
+  /** Stanford's NN dependency parser */
+  lazy val stanfordDepParser = fetchStanfordParser()
 
   override def parse(doc:Document) {
     val annotation = basicSanityCheck(doc)
@@ -42,19 +57,53 @@ class FastNLPProcessor(internStrings:Boolean = true,
     if (doc.sentences.head.lemmas == None)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
 
+    if (useMalt) {
+      // use the malt parser
+      parseWithMalt(doc)
+    } else {
+      parseWithStanford(doc, annotation.get)
+    }
+  }
+
+  private def parseWithMalt(doc:Document) {
     // parse each individual sentence
     val debug = false
-    for(sentence <- doc.sentences) {
-      if(debug) {
+    for (sentence <- doc.sentences) {
+      if (debug) {
         print("PARSING SENTENCE:")
-        for(i <- 0 until sentence.size) print(" " + sentence.words(i))
+        for (i <- 0 until sentence.size) print(" " + sentence.words(i))
         println()
       }
       val dg = parseSentence(sentence)
       sentence.dependencies = Some(dg)
-      if(debug) {
+      if (debug) {
         println("DONE.")
       }
+    }
+  }
+
+  private def parseWithStanford(doc:Document, annotation:Annotation) {
+    val sas = annotation.get(classOf[SentencesAnnotation])
+    var offset = 0
+    for (sa <- sas) {
+      // convert parens to Penn Treebank symbols because this is what the parser has seen in training
+      val words = CoreNLPUtils.parensToSymbols(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
+      sa.set(classOf[CoreAnnotations.TokensAnnotation], words)
+
+      // the actual parsing job
+      val gs = stanfordDepParser.predict(sa)
+
+      // convert to Stanford's semantic graph representation
+      val deps = useBasicDependencies match {
+        case true => SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, true, null)
+        case _ => SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, true, null)
+      }
+
+      // convert to our own directed graph
+      val dg = CoreNLPUtils.toDirectedGraph(deps, in)
+      doc.sentences(offset).dependencies = Some(dg)
+
+      offset += 1
     }
   }
 
@@ -124,10 +173,6 @@ class FastNLPProcessor(internStrings:Boolean = true,
     args.mkString(" ")
   }
 
-  override def resolveCoreference(doc:Document) {
-    // FastNLP does not offer coreference resolution yet
-  }
-
   override def discourse(doc:Document) {
     if(! withDiscourse) return
     basicSanityCheck(doc, checkAnnotation = false)
@@ -148,4 +193,23 @@ class FastNLPProcessor(internStrings:Boolean = true,
 
 object FastNLPProcessor {
   val DEFAULT_MODEL_NAME = "nivreeager-en-crammer"
+
+  var stanfordDependencyParser:Option[DependencyParser] = None
+
+  def fetchStanfordParser():DependencyParser = {
+    this.synchronized {
+      if(stanfordDependencyParser.isEmpty)
+        stanfordDependencyParser = Some(DependencyParser.loadFromModelFile(DependencyParser.DEFAULT_MODEL, new Properties()))
+      stanfordDependencyParser.get
+    }
+  }
+
+  var rstParser:Option[RSTParser] = None
+
+  def fetchRSTParser(path:String):RSTParser = {
+    this.synchronized {
+      if(rstParser.isEmpty) rstParser = Some(RSTParser.loadFrom(path))
+      rstParser.get
+    }
+  }
 }
