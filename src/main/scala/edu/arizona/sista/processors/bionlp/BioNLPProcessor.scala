@@ -12,7 +12,6 @@ import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 
-import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 
@@ -52,17 +51,10 @@ class BioNLPProcessor (internStrings:Boolean = true,
 
   /**
    * Implements the bio-specific post-processing steps from McClosky et al. (2011)
-   * @param sentence Input CoreNLP sentence
+   * @param originalTokens Input CoreNLP sentence
    * @return The modified tokens
    */
-  override def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
-    val originalTokens = sentence.get(classOf[TokensAnnotation])
-
-    val modifiedTokens = postProcessor.process(originalTokens.asScala.toArray).toList.asJava
-    sentence.set(classOf[TokensAnnotation], modifiedTokens)
-
-    modifiedTokens
-  }
+  override def postprocessTokens(originalTokens:Array[CoreLabel]) = postProcessor.process(originalTokens)
 
   /**
    * Removes Figure and Table references that appear within parentheses

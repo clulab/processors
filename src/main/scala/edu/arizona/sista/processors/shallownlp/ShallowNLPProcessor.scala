@@ -10,6 +10,7 @@ import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
@@ -62,16 +63,27 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
    * Hook to allow postprocessing of CoreNLP tokenization
    * This is useful for domain-specific corrections, such as the ones in BioNLPProcessor
    * If you change the tokens, make sure to store them back in the sentence!
-   * @param sentence Input CoreNLP sentence
+   * @param originalTokens Input CoreNLP sentence
    * @return The modified tokens
    */
-  def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
-    sentence.get(classOf[TokensAnnotation])
+  def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = originalTokens
 
-    //
-    // Add postprocessing code here then:
-    // sentence.set(classOf[TokensAnnotation], modifiedTokens)
-    //
+  private def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
+    val origTokens = sentence.get(classOf[TokensAnnotation])
+
+    val modifiedTokens = postprocessTokens(origTokens.asScala.toArray)
+
+    // readjust CoreNLP indices to reflect the new token count; these are crucial for correct dependencies!
+    var offset = 1 // Stanford counts tokens starting at 1
+    for(token <- modifiedTokens) {
+      token.setIndex(offset)
+      offset += 1
+    }
+
+    val tokensAsJava = modifiedTokens.toList.asJava
+    sentence.set(classOf[TokensAnnotation], tokensAsJava)
+
+    tokensAsJava
   }
 
   /**
@@ -84,7 +96,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     origText
   }
 
-  def preprocessSentences(origSentences:Iterable[String]):Iterable[String] = {
+  private def preprocessSentences(origSentences:Iterable[String]):Iterable[String] = {
     val sents = new ListBuffer[String]()
     for(os <- origSentences)
       sents += preprocessText(os)
@@ -254,7 +266,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   /**
-   * Hook to allow postprocessing of CoreNLP POS tagging
+   * Hook to allow postprocessing of CoreNLP POS tagging *in place*, overwriting original POS tags
    * This is useful for domain-specific corrections
    * @param annotation The CoreNLP annotation
    */
