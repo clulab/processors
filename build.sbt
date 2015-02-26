@@ -12,7 +12,7 @@ scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 fork := true
 
 // options for forked jvm
-javaOptions += "-Xmx4G"
+javaOptions += "-Xmx6G"
 
 // forward sbt's stdin to forked process
 connectInput in run := true
@@ -98,8 +98,8 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.7",
   "de.jollyday" % "jollyday" % "0.4.7",
   "com.googlecode.efficient-java-matrix-library" % "ejml" % "0.23",
-  "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1",
-  "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1" classifier "models",
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1" classifier "models",
   "ch.qos.logback" % "logback-classic" % "1.0.10",
   "org.slf4j" % "slf4j-api" % "1.7.10",
   "org.slf4j" % "slf4j-simple" % "1.7.10",
