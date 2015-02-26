@@ -17,7 +17,7 @@ All the code that we write is licensed under Apache License Version 2.0. However
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell. 
 
 # Changes
-+ **5.0-SNAPSHOT** - switched to Java 8 and Scala 2.11. First public release of ODIN (domain-independent event extraction) framework, in the `edu.arizona.sista.odin` package. First release of ODIN's DARPA biomedical grammar. `FastNLPProcessor` now supports both the Malt and the new Stanford NN dependency parser (the Stanford parser is now the default setting).
++ **5.0** - switched to Java 8 and Scala 2.11. First public release of ODIN (domain-independent event extraction) framework, in the `edu.arizona.sista.odin` package. First release of ODIN's DARPA biomedical grammar. `FastNLPProcessor` now supports both the Malt and the new Stanford NN dependency parser (the Stanford parser is now the default setting).
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
@@ -41,12 +41,12 @@ This software is available on Maven Central. To use, simply add the following de
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>4.0-SNAPSHOT</version>
+       <version>5.0</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors</artifactId>
-       <version>4.0-SNAPSHOT</version>
+       <version>5.0</version>
        <classifier>models</classifier>
     </dependency>
  
