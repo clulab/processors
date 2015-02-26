@@ -39,10 +39,6 @@ unmanagedClasspath in Runtime += baseDirectory.value
 // publishing settings
 //
 
-publishArtifact in (Compile, packageSrc) := true
-
-publishArtifact in (Compile, packageDoc) := false
-
 // publish to a maven repo
 publishMavenStyle := true
 
