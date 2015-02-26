@@ -31,7 +31,7 @@ import scala.collection.JavaConversions._
  */
 class FastNLPProcessor(internStrings:Boolean = true,
                        useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
-                       useBasicDependencies:Boolean = true, // this is used only for useMalt == false
+                       useBasicDependencies:Boolean = true, // this can be turned off only for useMalt == false
                        withDiscourse:Boolean = false)
   extends ShallowNLPProcessor(internStrings) {
 
@@ -90,6 +90,10 @@ class FastNLPProcessor(internStrings:Boolean = true,
       val words = CoreNLPUtils.parensToSymbols(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
       sa.set(classOf[CoreAnnotations.TokensAnnotation], words)
 
+      //print("Parsing sentence:")
+      //for(word <- words) print(" " + word.word())
+      //println()
+
       // the actual parsing job
       val gs = stanfordDepParser.predict(sa)
 
@@ -102,6 +106,9 @@ class FastNLPProcessor(internStrings:Boolean = true,
       // convert to our own directed graph
       val dg = CoreNLPUtils.toDirectedGraph(deps, in)
       doc.sentences(offset).dependencies = Some(dg)
+
+      //println("Output directed graph:")
+      //println(dg)
 
       offset += 1
     }

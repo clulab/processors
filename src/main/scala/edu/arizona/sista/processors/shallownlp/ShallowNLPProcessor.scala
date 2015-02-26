@@ -6,7 +6,7 @@ import java.util.Properties
 import edu.arizona.sista.processors.corenlp.CoreNLPDocument
 import edu.arizona.sista.processors._
 import edu.stanford.nlp.ling.CoreAnnotations._
-import edu.stanford.nlp.ling.CoreLabel
+import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 import scala.collection.JavaConversions._
@@ -167,11 +167,14 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
       tokenOffset += crtTokens.size()
       crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
+      crtSent.set(classOf[CoreAnnotations.SentenceIndexAnnotation], new Integer(sentOffset)) // Stanford counts sentences starting from 0
       var i = 0
       while(i < crtTokens.size()) {
         val crtTok = crtTokens.get(i)
         crtTok.setBeginPosition(crtTok.beginPosition() + charOffset)
         crtTok.setEndPosition(crtTok.endPosition() + charOffset)
+        crtTok.setIndex(i + 1) // Stanford counts tokens starting from 1
+        crtTok.setSentIndex(sentOffset) // Stanford counts sentences starting from 0...
         i += 1
       }
 
