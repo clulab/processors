@@ -23,9 +23,10 @@ import scala.collection.JavaConversions._
 
 /**
  * Fast NLP tools
- * Extends ShallowNLP with a dependency parser based on maltparser
+ * Extends ShallowNLP with a dependency parser based on maltparser or the Stanford NN dependency parser
  * This means that constituent trees and coreference, which depends on that, are not available
- * Also, malt produces Stanford "basic" dependencies, rather than "collapsed" ones
+ * The default setting is to use the Stanford parser with "basic" dependencies
+ * Malt produces ONLY Stanford "basic" dependencies, rather than "collapsed" ones
  * User: mihais
  * Date: 1/4/14
  */
