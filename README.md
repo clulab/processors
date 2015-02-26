@@ -53,8 +53,8 @@ This software is available on Maven Central. To use, simply add the following de
  The equivalent SBT dependencies are:
  
  	libraryDependencies ++= Seq(
-  		"edu.arizona.sista" %% "processors" % "4.0-SNAPSHOT",
-  		"edu.arizona.sista" %% "processors" % "4.0-SNAPSHOT" classifier "models",
+  		"edu.arizona.sista" %% "processors" % "5.0",
+  		"edu.arizona.sista" %% "processors" % "5.0" classifier "models",
  	)
 
 
