@@ -18,6 +18,10 @@ trait Mention extends Equals {
   def start: Int = tokenInterval.start
   def end: Int = tokenInterval.end
 
+  // character offsets
+  def startOffset: Int = document.sentences(sentence).startOffsets(start)
+  def endOffset: Int = document.sentences(sentence).endOffsets(end - 1)
+
   // this method should be overriden by Mention subclases
   // to return the label and all the relevant labels in some taxonomy
   def allLabels: Set[String] = Set(label)
