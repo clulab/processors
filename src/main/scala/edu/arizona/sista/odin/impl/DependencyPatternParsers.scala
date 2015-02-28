@@ -17,13 +17,17 @@ trait DependencyPatternParsers extends TokenPatternParsers {
   def triggerFinder: Parser[TokenPattern] = "(?i)trigger".r ~> "=" ~> tokenPattern
 
   def argPattern: Parser[ArgumentPattern] =
-    ident ~ ":" ~ ident ~ opt("?") ~ "=" ~ disjunctiveDepPattern ^^ {
-      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.compareToIgnoreCase("trigger") == 0 =>
+    ident ~ ":" ~ ident ~ opt("?"|"*"|"+") ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
         sys.error("`trigger` is not a valid argument name")
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, true)
+        new ArgumentPattern(name, label, pat, unique = true, required = true)
       case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, false)
+        new ArgumentPattern(name, label, pat, unique = true, required = false)
+      case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, unique = false, required = false)
+      case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, unique = false, required = true)
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
@@ -98,7 +102,7 @@ trait DependencyPatternParsers extends TokenPatternParsers {
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
 }
 
-class ArgumentPattern(val name: String, val label: String, pattern: DependencyPatternNode, val required: Boolean) {
+class ArgumentPattern(val name: String, val label: String, pattern: DependencyPatternNode, val unique: Boolean, val required: Boolean) {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Mention] = for {
     t <- pattern.findAllIn(tok, sent, doc, state)
     m <- state.mentionsFor(sent, t, label)
