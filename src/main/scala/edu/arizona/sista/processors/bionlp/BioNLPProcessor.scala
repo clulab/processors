@@ -222,6 +222,6 @@ class BioNLPProcessor (internStrings:Boolean = true,
 
 object BioNLPProcessor {
   val FIGTAB_REFERENCE_WITH_PARENS = Pattern.compile("\\((\\s*see)?\\s*(figure|table|fig\\.|tab\\.)[^\\)]*\\)", Pattern.CASE_INSENSITIVE)
-  val FIGTAB_REFERENCE = Pattern.compile("(\\s*see)?\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
+  val FIGTAB_REFERENCE = Pattern.compile("\\s*see\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
 }
 
