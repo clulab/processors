@@ -131,8 +131,13 @@ extends DependencyPatternNode with Dependencies {
 
 class ConcatDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
-    (lhs.findAllIn(tok, sent, doc, state) flatMap (i => rhs.findAllIn(i, sent, doc, state))).distinct
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val results = for {
+      i <- lhs.findAllIn(tok, sent, doc, state)
+      j <- rhs.findAllIn(i, sent, doc, state)
+    } yield j
+    results.distinct
+  }
 }
 
 class DisjunctiveDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
