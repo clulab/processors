@@ -3,11 +3,14 @@ package edu.arizona.sista.processors.bionlp.ner
 import java.util
 import java.util.Properties
 
+import edu.arizona.sista.processors.{Sentence, Processor}
+import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.utils.StringUtils
 import edu.stanford.nlp.ie.crf.CRFClassifier
 import edu.stanford.nlp.ling.CoreAnnotations.AnswerAnnotation
 import edu.stanford.nlp.ling.CoreLabel
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import java.util.{List => JavaList}
 
@@ -15,6 +18,7 @@ import org.slf4j.LoggerFactory
 import BioNER._
 
 import scala.collection.mutable.ListBuffer
+import scala.io.StdIn
 
 
 /**
@@ -42,6 +46,33 @@ class BioNER {
 
   def save(path:String) { crfClassifier.foreach(_.serializeClassifier(path)) }
 
+
+
+  def classify(sentence:JavaList[CoreLabel]):List[String] = {
+    assert(crfClassifier.isDefined)
+    val labels = new ListBuffer[String]
+    val predictions = crfClassifier.get.classify(sentence)
+    for(l <- predictions) {
+      labels += l.getString(classOf[AnswerAnnotation])
+    }
+    labels.toList
+  }
+
+  def test(path:String): List[List[(String, String)]] = {
+    val testCorpus = readData(path)
+    val outputs = new ListBuffer[List[(String, String)]]
+    for(sentence <- testCorpus) {
+      val golds = fetchGoldLabels(sentence.asScala.toList)
+      val preds = classify(sentence).toArray
+      outputs += golds.zip(preds)
+    }
+    outputs.toList
+  }
+}
+
+object BioNER {
+  val logger = LoggerFactory.getLogger(classOf[BioNER])
+
   /** Reads IOB data directly into Java lists, because the CRF needs the data of this type */
   def readData(path:String):JavaList[JavaList[CoreLabel]] = {
     val sentences = new util.ArrayList[JavaList[CoreLabel]]()
@@ -65,9 +96,7 @@ class BioNER {
 
   def mkCoreLabel(line:String):CoreLabel = {
     val l = new CoreLabel()
-    //println(s"\tLINE: [$line]")
     val bits = robustSplit(line)
-    //println(s"\tBITS ${bits.mkString(" ")}")
     assert(bits.length == 3)
     l.setWord(bits(0))
     l.setTag(bits(1))
@@ -91,35 +120,16 @@ class BioNER {
     bits.toArray
   }
 
-  def classify(sentence:JavaList[CoreLabel]):List[String] = {
-    assert(crfClassifier.isDefined)
-    val labels = new ListBuffer[String]
-    val predictions = crfClassifier.get.classify(sentence)
-    for(l <- predictions) {
-      labels += l.getString(classOf[AnswerAnnotation])
-    }
-    labels.toList
-  }
+  def fetchGoldLabels(sentence:List[CoreLabel]):List[String] = {
+    val golds = sentence.map(_.ner())
 
-  def test(path:String): List[List[(String, String)]] = {
-    val testCorpus = readData(path)
-    val outputs = new ListBuffer[List[(String, String)]]
-    for(sentence <- testCorpus) {
-      val preds = classify(sentence).toArray
-      val sentOutputs = new ListBuffer[(String, String)]
-      for(i <- 0 until preds.size) {
-        val gold = sentence.get(i).getString(classOf[AnswerAnnotation])
-        val sys = preds(i)
-        sentOutputs += new Tuple2(gold, sys)
-      }
-      outputs += sentOutputs.toList
-    }
-    outputs.toList
+    // reset all gold labels to O so they are not visible at testing time
+    sentence.foreach(t => {
+      t.setNER("O")
+      t.set(classOf[AnswerAnnotation], "O")
+    })
+    golds
   }
-}
-
-object BioNER {
-  val logger = LoggerFactory.getLogger(classOf[BioNER])
 
   def load(path:String):BioNER = {
     val ner = new BioNER
@@ -146,5 +156,68 @@ object BioNER {
       val scorer = new SeqScorer
       scorer.score(outputs)
     }
+
+    if(props.containsKey("banner")) {
+      val outputs = testWithBanner(props.getProperty("banner"))
+      val scorer = new SeqScorer
+      scorer.score(outputs)
+    }
+
+    if(props.containsKey("shell")) {
+      assert(props.containsKey("model"))
+      val ner = load(props.getProperty("model"))
+      shell(ner)
+    }
+  }
+
+  def testWithBanner(path:String): List[List[(String, String)]] = {
+    val testCorpus = readData(path)
+    val proc = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = false)
+    val outputs = new ListBuffer[List[(String, String)]]
+    for(sentence <- testCorpus) {
+      val golds = fetchGoldLabels(sentence.asScala.toList)
+      val preds = classifyWithBanner(sentence, proc)
+      outputs += golds.zip(preds)
+    }
+    outputs.toList
+  }
+
+  def classifyWithBanner(sentence:JavaList[CoreLabel], proc:Processor):List[String] = {
+    val tokens = new ListBuffer[String]
+    for(token <- sentence) tokens += token.word()
+    //println("TOKENS: " + tokens.mkString(" "))
+    val doc = proc.mkDocumentFromTokens(List(tokens))
+    proc.tagPartsOfSpeech(doc)
+    proc.lemmatize(doc)
+    proc.recognizeNamedEntities(doc)
+    val nes = doc.sentences(0).entities.get.toList.map(_.replace("GENE", "Gene_or_gene_product"))
+    //println("NER: " + nes.mkString(" "))
+    nes
+  }
+
+  def shell(ner:BioNER) {
+    val proc:Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
+    while(true) {
+      print("> ")
+      val text = StdIn.readLine()
+      val doc = proc.annotate(text)
+
+      for(sentence <- doc.sentences) {
+        evalSent(ner, sentence)
+      }
+    }
+  }
+
+  def evalSent(ner:BioNER, sentence:Sentence) {
+    println("Evaluating sentence: " + sentence.words.mkString(" "))
+    val tokens = new util.ArrayList[CoreLabel]()
+    for(i <- 0 until sentence.size) {
+      val l = new CoreLabel()
+      l.setWord(sentence.words(i))
+      l.setTag(sentence.tags.get(i))
+      tokens.add(l)
+    }
+    val preds = ner.classify(tokens)
+    println(preds)
   }
 }

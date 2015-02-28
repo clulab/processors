@@ -61,10 +61,9 @@ class SeqScorer {
     val goldMentions = mkMentions(sentence.map(_._1).toArray)
     val sysMentions = mkMentions(sentence.map(_._2).toArray)
 
-    println("Outputs: " + sentence)
-    println("Gold mentions: " + goldMentions)
-    println("Sys mentions: " + sysMentions)
-    System.exit(1)
+    //println("Outputs: " + sentence)
+    //println("Gold mentions: " + goldMentions)
+    //println("Sys mentions: " + sysMentions)
 
     for(m <- goldMentions) {
       val c = getCounts(counts, m.label)
