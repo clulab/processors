@@ -17,7 +17,7 @@ trait DependencyPatternParsers extends TokenPatternParsers {
   def triggerFinder: Parser[TokenPattern] = "(?i)trigger".r ~> "=" ~> tokenPattern
 
   def argPattern: Parser[ArgumentPattern] =
-    ident ~ ":" ~ ident ~ opt("?"|"*"|"+") ~ "=" ~ disjunctiveDepPattern ^^ {
+    identifier ~ ":" ~ identifier ~ opt("?"|"*"|"+") ~ "=" ~ disjunctiveDepPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
         sys.error("`trigger` is not a valid argument name")
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>

@@ -37,8 +37,8 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case "$" => ProgramFragment(MatchSentenceEnd())
   }
 
-  def capturePattern: Parser[ProgramFragment] = "(?<" ~ ident ~ ">" ~ splitPattern ~ ")" ^^ {
-    case _ ~ name ~ _ ~ frag ~ _ => frag.capture(name)
+  def capturePattern: Parser[ProgramFragment] = "(?<" ~ identifier ~ ">" ~ splitPattern ~ ")" ^^ {
+    case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
   }
 
   def unnamedMentionPattern: Parser[ProgramFragment] = "@" ~> exactStringMatcher ^^ {
@@ -63,13 +63,16 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case frag ~ "+?" => frag.lazyPlus
   }
 
+  // positive integer
+  def int: Parser[Int] = """\d+""".r ^^ { _.toInt }
+
   def rangePattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}?"|"}") ^^ {
-    case frag ~ _ ~ from ~ _ ~ to ~ "}" => frag.greedyRange(from, to)
-    case frag ~ _ ~ from ~ _ ~ to ~ "}?" => frag.lazyRange(from, to)
+    case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
+    case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
   }
 
   def exactPattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ int ~ "}" ^^ {
-    case frag ~ _ ~ n ~ _ => frag.repeatPattern(n)
+    case frag ~ "{" ~ n ~ "}" => frag.repeatPattern(n)
   }
 
   // this class is only used while compiling a token pattern

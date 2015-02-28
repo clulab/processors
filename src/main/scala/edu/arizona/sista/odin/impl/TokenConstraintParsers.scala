@@ -32,7 +32,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 
   def atomicConstraint: Parser[TokenConstraint] = fieldConstraint | "(" ~> disjunctiveConstraint <~ ")"
 
-  def fieldConstraint: Parser[TokenConstraint] = ident ~ "=" ~ stringMatcher ^^ {
+  def fieldConstraint: Parser[TokenConstraint] = identifier ~ "=" ~ stringMatcher ^^ {
     case "word" ~ _ ~ matcher => new WordConstraint(matcher)
     case "lemma" ~ _ ~ matcher => new LemmaConstraint(matcher)
     case "tag" ~ _ ~ matcher => new TagConstraint(matcher)
