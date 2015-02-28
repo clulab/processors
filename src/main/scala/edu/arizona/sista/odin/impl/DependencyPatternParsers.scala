@@ -103,10 +103,16 @@ trait DependencyPatternParsers extends TokenPatternParsers {
 }
 
 class ArgumentPattern(val name: String, val label: String, pattern: DependencyPatternNode, val unique: Boolean, val required: Boolean) {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Mention] = for {
-    t <- pattern.findAllIn(tok, sent, doc, state)
-    m <- state.mentionsFor(sent, t, label)
-  } yield m
+  // extracts mentions and groups them according to `unique`
+  def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
+    val matches = for {
+        t <- pattern.findAllIn(tok, sent, doc, state)
+        m <- state.mentionsFor(sent, t, label)
+    } yield m
+    if (matches.isEmpty) Nil
+    else if (unique) matches.map(Seq(_))
+    else Seq(matches)
+  }
 }
 
 sealed trait DependencyPatternNode {
