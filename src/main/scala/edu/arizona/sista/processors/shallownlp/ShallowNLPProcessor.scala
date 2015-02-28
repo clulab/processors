@@ -69,9 +69,9 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = originalTokens
 
   private def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
-    val origTokens = sentence.get(classOf[TokensAnnotation])
+    val origTokens = sentence.get(classOf[TokensAnnotation]).asScala.toArray
 
-    val modifiedTokens = postprocessTokens(origTokens.asScala.toArray)
+    val modifiedTokens = postprocessTokens(origTokens)
 
     // readjust CoreNLP indices to reflect the new token count; these are crucial for correct dependencies!
     var offset = 1 // Stanford counts tokens starting at 1
