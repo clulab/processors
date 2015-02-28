@@ -6,8 +6,9 @@ import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.odin._
 
 object TestMatcher extends App {
-  val text = "TGFBR2 phosphorylates peri-kappa B and inhibits the ubiquitination of SMAD3."
-  val entities = Array("B-Protein", "O", "B-Protein", "I-Protein", "O", "O", "O", "O", "O", "B-Protein", "O")
+  val text = "TGFBR2 phosphorylates peri-kappa B and inhibits the ubiquitination of SMAD3. A binds to C and D."
+  val entities0 = Array("B-Protein", "O", "B-Protein", "I-Protein", "O", "O", "O", "O", "O", "B-Protein", "O")
+  val entities1 = Array("B-Protein", "O", "O", "B-Protein", "O", "B-Protein", "O")
 
   val rules = """|- name: rule1
                  |  label: Protein
@@ -40,13 +41,20 @@ object TestMatcher extends App {
                  |  type: token
                  |  pattern: |
                  |    @theme:Phosphorylation and (?<TriGgEr> inhibits) the @cause:Ubiquitination
+                 |
+                 |- name: rule6
+                 |  label: Binding
+                 |  pattern: |
+                 |    trigger = binds
+                 |    theme: Protein+ = nsubj | prep_to
                  |""".stripMargin
 
   val extractor = new ExtractorEngine(rules)
 
   val proc = new BioNLPProcessor
   val doc = proc annotate text
-  doc.sentences.head.entities = Some(entities)
+  doc.sentences(0).entities = Some(entities0)
+  doc.sentences(1).entities = Some(entities1)
 
   val mentions = extractor extractFrom doc
 
