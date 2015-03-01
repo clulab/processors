@@ -33,21 +33,23 @@ class BioNER {
     val props = new Properties()
     props.setProperty("macro", "true")
     props.setProperty("featureFactory", "edu.arizona.sista.processors.bionlp.ner.BioNERFactory")
-    //props.setProperty("l1reg", "0.1"); // for L1 regularization
     val crf = new CRFClassifier[CoreLabel](props)
     crf
   }
 
   def train(path:String) = {
     crfClassifier = Some(mkClassifier())
-    val trainCorpus = readData(path)
+    val trainCorpus = readData(path, BioNER.USE_IO)
     crfClassifier.foreach(_.train(trainCorpus))
   }
 
   def save(path:String) { crfClassifier.foreach(_.serializeClassifier(path)) }
 
-
-
+  /**
+   * Classifies a sentence in the Stanford format
+   * @param sentence Input sentence; each token must contain: word, lemma, POS tag
+   * @return The IOB predictions for this sentence
+   */
   def classify(sentence:JavaList[CoreLabel]):List[String] = {
     assert(crfClassifier.isDefined)
     val labels = new ListBuffer[String]
@@ -55,11 +57,12 @@ class BioNER {
     for(l <- predictions) {
       labels += l.getString(classOf[AnswerAnnotation])
     }
+    if(BioNER.USE_IO) ioToIob(labels.toList)
     labels.toList
   }
 
   def test(path:String): List[List[(String, String)]] = {
-    val testCorpus = readData(path)
+    val testCorpus = readData(path, convertToIOFormat = false)
     val outputs = new ListBuffer[List[(String, String)]]
     for(sentence <- testCorpus) {
       val golds = fetchGoldLabels(sentence.asScala.toList)
@@ -73,8 +76,10 @@ class BioNER {
 object BioNER {
   val logger = LoggerFactory.getLogger(classOf[BioNER])
 
+  val USE_IO = false
+
   /** Reads IOB data directly into Java lists, because the CRF needs the data of this type */
-  def readData(path:String):JavaList[JavaList[CoreLabel]] = {
+  def readData(path:String, convertToIOFormat:Boolean):JavaList[JavaList[CoreLabel]] = {
     val sentences = new util.ArrayList[JavaList[CoreLabel]]()
     var crtSentence = new util.ArrayList[CoreLabel]()
     var totalTokens = 0
@@ -86,7 +91,7 @@ object BioNER {
           crtSentence = new util.ArrayList[CoreLabel]()
         }
       } else {
-        crtSentence.add(mkCoreLabel(trimmed))
+        crtSentence.add(mkCoreLabel(trimmed, convertToIOFormat))
         totalTokens += 1
       }
     }
@@ -94,22 +99,44 @@ object BioNER {
     sentences
   }
 
-  def mkCoreLabel(line:String):CoreLabel = {
+  def mkCoreLabel(line:String, convertToIOFormat:Boolean):CoreLabel = {
     val l = new CoreLabel()
-    val bits = robustSplit(line)
-    assert(bits.length == 3)
+    val bits = line.split("\\s+") // robustSplit(line, 3)
+    assert(bits.length == 4)
     l.setWord(bits(0))
     l.setTag(bits(1))
-    l.setNER(bits(2))
-    l.set(classOf[AnswerAnnotation], bits(2))
+    l.setLemma(bits(2))
+
+    val label = normalizeLabel(bits(3), convertToIOFormat)
+    l.setNER(label)
+    l.set(classOf[AnswerAnnotation], label)
     l
   }
 
-  /** Splits a line into 3 tokens, knowing that the first one might contain spaces */
-  def robustSplit(line:String):Array[String] = {
+  def normalizeLabel(l:String, convertToIOFormat:Boolean):String = l match {
+    case "B-Gene_or_gene_product" => if(convertToIOFormat) "I-GENE" else "B-GENE"
+    case "I-Gene_or_gene_product" => "I-GENE"
+    case _ => "O"
+  }
+
+  def ioToIob(labels:List[String]):List[String] = {
+    val converted = new ListBuffer[String]
+    var prev:String = null
+    for(label <- labels) {
+      if(label.startsWith("I-") && prev != null && prev != label)
+        converted += "B-" + label.substring(2)
+      else
+        converted += label
+      prev = label
+    }
+    converted.toList
+  }
+
+  /** Splits a line into k tokens, knowing that the left-most one might contain spaces */
+  def robustSplit(line:String, k:Int):Array[String] = {
     val bits = new ListBuffer[String]
     var pos = line.size - 1
-    for(i <- 0 until 2) {
+    for(i <- 0 until k - 1) {
       val newPos = line.lastIndexOf(' ', pos)
       assert(newPos > 0)
       val bit = line.substring(newPos + 1, pos + 1)
@@ -157,19 +184,22 @@ object BioNER {
       scorer.score(outputs)
     }
 
-    if(props.containsKey("banner")) {
-      val outputs = testWithBanner(props.getProperty("banner"))
-      val scorer = new SeqScorer
-      scorer.score(outputs)
-    }
-
     if(props.containsKey("shell")) {
       assert(props.containsKey("model"))
       val ner = load(props.getProperty("model"))
       shell(ner)
     }
+
+    /*
+    if(props.containsKey("banner")) {
+      val outputs = testWithBanner(props.getProperty("banner"))
+      val scorer = new SeqScorer
+      scorer.score(outputs)
+    }
+    */
   }
 
+  /*
   def testWithBanner(path:String): List[List[(String, String)]] = {
     val testCorpus = readData(path)
     val proc = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = false)
@@ -194,6 +224,7 @@ object BioNER {
     //println("NER: " + nes.mkString(" "))
     nes
   }
+  */
 
   def shell(ner:BioNER) {
     val proc:Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
