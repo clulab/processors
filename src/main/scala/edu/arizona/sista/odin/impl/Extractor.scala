@@ -21,7 +21,7 @@ trait Extractor {
   def startsAt: Int = priority match {
     case ExactPriority(i) => i
     case IntervalPriority(start, end) => start
-    case FromPriority(from) => from
+    case InfiniteIntervalPriority(start) => start
   }
 }
 
