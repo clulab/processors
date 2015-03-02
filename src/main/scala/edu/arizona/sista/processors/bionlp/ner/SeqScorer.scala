@@ -8,9 +8,15 @@ import scala.collection.mutable
  * Date: 2/27/15
  */
 class SeqScorer {
-  class Counts(var total:Int = 0, var predicted:Int = 0, var correct:Int = 0)
+  class Counts(var total:Int = 0, var predicted:Int = 0, var correct:Int = 0) {
+    def p = correct.toDouble / predicted.toDouble
 
-  case class Mention(val start:Int, val end:Int, val label:String)
+    def r = correct.toDouble / total.toDouble
+
+    def f1 = 2 * p * r / (p + r)
+  }
+
+  case class Mention(start:Int, end:Int, label:String)
 
   def score(outputs:List[List[(String, String)]]) {
     val counts = new mutable.HashMap[String, Counts]()
@@ -20,10 +26,7 @@ class SeqScorer {
 
     for(label <- counts.keySet) {
       val c = counts.get(label).get
-      val p = c.correct.toDouble / c.predicted.toDouble
-      val r = c.correct.toDouble / c.total.toDouble
-      val f1 = 2 * p * r/(p + r)
-      println(s"$label P:$p R:$r F1:$f1")
+      println(s"$label P:${c.p} R:${c.r} F1:${c.f1}")
     }
   }
 
@@ -61,10 +64,9 @@ class SeqScorer {
     val goldMentions = mkMentions(sentence.map(_._1).toArray)
     val sysMentions = mkMentions(sentence.map(_._2).toArray)
 
-    println("Outputs: " + sentence)
-    println("Gold mentions: " + goldMentions)
-    println("Sys mentions: " + sysMentions)
-    System.exit(1)
+    //println("Outputs: " + sentence)
+    //println("Gold mentions: " + goldMentions)
+    //println("Sys mentions: " + sysMentions)
 
     for(m <- goldMentions) {
       val c = getCounts(counts, m.label)

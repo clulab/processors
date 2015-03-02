@@ -1,10 +1,10 @@
 package edu.arizona.sista.processors.bionlp
 
+import java.util
 import java.util.Properties
 import java.util.regex.Pattern
 
-import banner.BannerWrapper
-import banner.tagging.Mention
+import edu.arizona.sista.processors.bionlp.ner.BioNER
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
@@ -13,7 +13,6 @@ import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * A processor for biomedical texts, based on CoreNLP, but with different tokenization and NER
@@ -27,8 +26,9 @@ class BioNLPProcessor (internStrings:Boolean = true,
                        removeFigTabReferences:Boolean = true)
   extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse, maxSentenceLength) {
 
-  lazy val banner = new BannerWrapper
+  //lazy val banner = new BannerWrapper
   lazy val postProcessor = new BioNLPTokenizerPostProcessor
+  lazy val bioNer = BioNER.load("edu/arizona/sista/processors/bionlp/ner/bioner.dat")
 
   override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -71,6 +71,12 @@ class BioNLPProcessor (internStrings:Boolean = true,
     noRefs
   }
 
+  /**
+   * Removes references to Tables and Figures
+   * @param pattern Fig/Tab pattern
+   * @param text The original text
+   * @return The cleaned text
+   */
   def removeFigTabRefs(pattern:Pattern, text:String):String = {
     val m = pattern.matcher(text)
     val b = new StringBuilder
@@ -86,6 +92,84 @@ class BioNLPProcessor (internStrings:Boolean = true,
     b.toString()
   }
 
+  override def resolveCoreference(doc:Document): Unit = {
+    // TODO: add domain-specific coreference here!
+    doc.coreferenceChains = None
+  }
+
+  /**
+   * Improve POS tagging in the Bio domain
+   * @param annotation The CoreNLP annotation
+   */
+  override def postprocessTags(annotation:Annotation) {
+    val sas = annotation.get(classOf[SentencesAnnotation])
+
+    sas.foreach{ sa =>
+      val tas = sa.get(classOf[TokensAnnotation])
+      tas.foreach{ ta =>
+        val text = ta.originalText().toLowerCase
+        // some of our would-be verbs are mistagged...
+        text match {
+          case ubiq if ubiq.endsWith("ubiquitinates") => ta.setTag("VBZ")
+          case ubiqNom if ubiqNom.endsWith("ubiquitinate") => ta.setTag("VB")
+          case hydro if hydro.endsWith("hydrolyzes") => ta.setTag("VBZ")
+          case _ => ()
+        }
+      }
+
+    }
+  }
+
+  override def recognizeNamedEntities(doc:Document) {
+    val annotation = namedEntitySanityCheck(doc)
+    if(annotation.isEmpty) return
+
+    // run the NER on one sentence at a time
+    // we are traversing our sentences and the CoreNLP sentences in parallel here!
+    val sas = annotation.get.get(classOf[SentencesAnnotation])
+    var sentenceOffset = 0
+    for(sa:CoreMap <- sas) {
+      val ourSentence = doc.sentences(sentenceOffset) // our sentence
+      val coreNLPSentence = sa.get(classOf[TokensAnnotation]) // the CoreNLP sentence
+
+      // build the NER input
+      val inputSent = mkSent(ourSentence)
+
+      // the actual sequence classification
+      val bioNEs = bioNer.classify(inputSent).toArray
+
+      // store labels in the CoreNLP annotation for the sentence
+      var labelOffset = 0
+      for(token <- coreNLPSentence) {
+        token.setNER(bioNEs(labelOffset))
+        labelOffset += 1
+      }
+
+      // store labels in our sentence
+      ourSentence.entities = Some(bioNEs)
+
+      // TODO: we should have s.norms as well...
+
+      sentenceOffset += 1
+    }
+  }
+
+  def mkSent(sentence:Sentence):util.List[CoreLabel] = {
+    val output = new util.ArrayList[CoreLabel]()
+    for(i <- 0 until sentence.size) {
+      val l = new CoreLabel()
+      l.setWord(sentence.words(i))
+      l.setTag(sentence.tags.get(i))
+      l.setLemma(sentence.lemmas.get(i))
+      output.add(l)
+    }
+    output
+  }
+
+  //
+  // Old code using BANNER; no longer needed: recognizeNamedEntities is now implemented using our own BioNER
+  //
+  /*
   override def recognizeNamedEntities(doc:Document) {
     val annotation = namedEntitySanityCheck(doc)
     if(annotation.isEmpty) return
@@ -121,11 +205,11 @@ class BioNLPProcessor (internStrings:Boolean = true,
     }
   }
 
-  /**
+   **
    * Runs the bio-specific NER and returns an array of BIO (begin-input-output) labels for the sentence
    * @param sentence Our own sentence, containing words, lemmas, and POS tags
    * @return an array of BIO labels
-   */
+   *
   def runBioNer(sentence:Sentence):Array[String] = {
     val labels = new Array[String](sentence.size)
     for(i <- 0 until labels.size) labels(i) = "O"
@@ -149,10 +233,10 @@ class BioNLPProcessor (internStrings:Boolean = true,
     labels
   }
 
-  /**
+   **
    * Aligns a Banner Mention with the tokens in our Sentence
    * As a result, the labels get adjusted with the corresponding B- and I- labels from the Mention
-   */
+   *
   private def alignMention(mention:Mention, sentence:Sentence, labels:Array[String]) {
     val (start, end) = matchMentionToTokens(mention, sentence)
     for(i <- start until end) {
@@ -191,33 +275,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
   private def tokenContains(sentence:Sentence, token:Int, charOffset:Int):Boolean =
     sentence.startOffsets(token) <= charOffset &&
     sentence.endOffsets(token) >= charOffset
-
-  override def resolveCoreference(doc:Document): Unit = {
-    // TODO: add domain-specific coreference here!
-    doc.coreferenceChains = None
-  }
-
-  override def postprocessTags(annotation:Annotation) {
-    val sas = annotation.get(classOf[SentencesAnnotation])
-
-    sas.foreach{ sa =>
-      val tb = new ArrayBuffer[String]
-      val tas = sa.get(classOf[TokensAnnotation])
-      tas.foreach{ ta =>
-        val text = ta.originalText().toLowerCase
-        // some of our would-be verbs are mistagged...
-        text match {
-          case ubiq if ubiq.endsWith("ubiquitinates") => ta.setTag("VBZ")
-          case ubiqNom if ubiqNom.endsWith("ubiquitinate") => ta.setTag("VB")
-
-          case hydro if hydro.endsWith("hydrolyzes") => ta.setTag("VBZ")
-
-          case _ => ()
-        }
-      }
-
-    }
-  }
+  */
 }
 
 object BioNLPProcessor {
