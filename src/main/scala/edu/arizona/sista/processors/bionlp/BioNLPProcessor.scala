@@ -1,10 +1,11 @@
 package edu.arizona.sista.processors.bionlp
 
+import java.util
 import java.util.Properties
 import java.util.regex.Pattern
 
 import edu.arizona.sista.processors.bionlp.ner.BioNER
-import edu.arizona.sista.processors.Document
+import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
@@ -131,8 +132,11 @@ class BioNLPProcessor (internStrings:Boolean = true,
       val ourSentence = doc.sentences(sentenceOffset) // our sentence
       val coreNLPSentence = sa.get(classOf[TokensAnnotation]) // the CoreNLP sentence
 
+      // build the NER input
+      val inputSent = mkSent(ourSentence)
+
       // the actual sequence classification
-      val bioNEs = bioNer.classify(coreNLPSentence).toArray
+      val bioNEs = bioNer.classify(inputSent).toArray
 
       // store labels in the CoreNLP annotation for the sentence
       var labelOffset = 0
@@ -148,6 +152,18 @@ class BioNLPProcessor (internStrings:Boolean = true,
 
       sentenceOffset += 1
     }
+  }
+
+  def mkSent(sentence:Sentence):util.List[CoreLabel] = {
+    val output = new util.ArrayList[CoreLabel]()
+    for(i <- 0 until sentence.size) {
+      val l = new CoreLabel()
+      l.setWord(sentence.words(i))
+      l.setTag(sentence.tags.get(i))
+      l.setLemma(sentence.lemmas.get(i))
+      output.add(l)
+    }
+    output
   }
 
   //
