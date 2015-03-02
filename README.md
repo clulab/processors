@@ -6,7 +6,7 @@ This is the main public code repository of the NLP group led by [Mihai Surdeanu]
 + Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster.
 + A machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 + A suite of NL processors in the `edu.arizona.sista.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford and [BANNER](https://sourceforge.net/projects/banner/)). 
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford parser and our own NER based on the Stanford CRF). 
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher. 
 
@@ -17,7 +17,7 @@ All the code that we write is licensed under Apache License Version 2.0. However
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell. 
 
 # Changes
-+ **5.1-SNAPSHOT** - Improved tokenization for the bio domain.
++ **5.1** - Improved tokenization for the bio domain. Replaced the BANNER NER for the bio domain with our own implementation. 
 + **5.0** - changed to Java 8, Scala 2.11, and CoreNLP 3.5.1. First public release of ODIN (domain-independent event extraction) framework, in the `edu.arizona.sista.odin` package. First release of ODIN's DARPA biomedical grammar. `FastNLPProcessor` now supports both the Malt and the new Stanford NN dependency parser (the Stanford parser is now the default setting).
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
@@ -35,27 +35,25 @@ Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustav
 
 # Installation
 
-We currently use Arizona State's BANNER for named entity recognition in the biomedical domain. Please install the data resources from [our fork of BANNER](https://github.com/sistanlp/banner) before using `processors`.
-
 This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml`:
 
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.0</version>
+       <version>5.1</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.0</version>
+       <version>5.1</version>
        <classifier>models</classifier>
     </dependency>
  
  The equivalent SBT dependencies are:
  
  	libraryDependencies ++= Seq(
-  		"edu.arizona.sista" %% "processors" % "5.0",
-  		"edu.arizona.sista" %% "processors" % "5.0" classifier "models",
+  		"edu.arizona.sista" %% "processors" % "5.1",
+  		"edu.arizona.sista" %% "processors" % "5.1" classifier "models",
  	)
 
 
