@@ -1,4 +1,4 @@
-# What is it
+# What is it?
 
 This is the main public code repository of the NLP group led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
