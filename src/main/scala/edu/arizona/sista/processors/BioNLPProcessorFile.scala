@@ -11,18 +11,21 @@ import edu.arizona.sista.processors.bionlp.BioNLPProcessor
  */
 object BioNLPProcessorFile {
   def main(args:Array[String]) {
-    val inputFile = args(0)
-    val outputFile = inputFile + ".ser"
 
     val proc = new BioNLPProcessor()
     val ser = new DocumentSerializer
 
-    val content = io.Source.fromFile(inputFile).getLines().mkString("\n")
-    println(s"Processing file containing ${content.size} characters...")
-    val doc = proc.annotate(content)
+    for (inputFile <- args){
 
-    val os = new PrintWriter(outputFile)
-    ser.save(doc, os)
-    os.close()
+      val outputFile = inputFile + ".ser"
+
+      val content = io.Source.fromFile(inputFile).getLines().mkString("\n")
+      println(s"Processing file with name ${inputFile}, containing ${content.size} characters...")
+      val doc = proc.annotate(content)
+
+      val os = new PrintWriter(outputFile)
+      ser.save(doc, os)
+      os.close()
+    }
   }
 }

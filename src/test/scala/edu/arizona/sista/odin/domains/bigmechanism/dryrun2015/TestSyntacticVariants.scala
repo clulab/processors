@@ -110,7 +110,7 @@ class TestSyntacticVariants {
   }
 
   @Test def testHydrolysisSubjectRelApposition2() {
-    val doc = bioproc.annotate("A main rate-controlling step in RAS is renin, an enzyme that hydrolyzes Ras-GTP to generate angiotensin I.")
+    val doc = bioproc.annotate("A main rate-controlling step in RAS is renin, an enzyme that hydrolyzes Ras-GTP.")
     val mentions = extractor.extractFrom(doc)
 
     try {

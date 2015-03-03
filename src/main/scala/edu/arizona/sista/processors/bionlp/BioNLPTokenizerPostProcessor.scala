@@ -126,11 +126,14 @@ object BioNLPTokenizerPostProcessor {
 
   val DISCARD_STANDALONE_DASHES = true
 
-  val VALID_DASH_SUFFIXES = Set("\\w+ed", "\\w+ing", "(in)?dependent",
-    "deficient", "response", "protein", "by", "specific", "like",
+  val VALID_DASH_SUFFIXES = Set(
+    "\\w+ed", "\\w+ing", // tokenize for all suffix verbs, e.g., "ABC-mediated"
+    "(in)?dependent", "deficient", "response", "protein", "by", "specific", "like",
     "inducible", "responsive", "gene", "mRNA", "transcription", "cytoplasmic",
     "sensitive", "bound", "driven", "positive", "negative", "dominant",
-    "family", "resistant", "activity", "proximal", "defective")
+    "family", "resistant", "activity", "proximal", "defective",
+    "selective", "reporter", "fragment", "rich", "expression", // new suffixes from BC2
+    "mechanisms?", "agonist", "heterozygous", "homozygous")
 
   val dashSuffixes = mkDashSuffixes
 
