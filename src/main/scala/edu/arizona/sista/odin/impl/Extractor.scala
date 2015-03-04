@@ -25,12 +25,14 @@ trait Extractor {
   }
 }
 
-class TokenExtractor(val name: String,
-                     val label: String,
-                     val priority: Priority,
-                     val keep: Boolean,
-                     val action: ReflectedAction,
-                     val pattern: TokenPattern) extends Extractor {
+class TokenExtractor(
+    val name: String,
+    val label: String,
+    val priority: Priority,
+    val keep: Boolean,
+    val action: ReflectedAction,
+    val pattern: TokenPattern
+) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
     val results = pattern.findAllIn(sent, doc, state)
@@ -59,12 +61,14 @@ class TokenExtractor(val name: String,
     }
 }
 
-class DependencyExtractor(val name: String,
-                          val label: String,
-                          val priority: Priority,
-                          val keep: Boolean,
-                          val action: ReflectedAction,
-                          val pattern: DependencyPattern) extends Extractor {
+class DependencyExtractor(
+    val name: String,
+    val label: String,
+    val priority: Priority,
+    val keep: Boolean,
+    val action: ReflectedAction,
+    val pattern: DependencyPattern
+) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
     val mentions = pattern.getMentions(sent, doc, state, label, keep, name)

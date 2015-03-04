@@ -4,9 +4,12 @@ import scala.reflect.ClassTag
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.RuleReader
 
-class ExtractorEngine[T <: Actions : ClassTag](rules: String, actions: T = new Actions, postprocess: PostProcessor = identity) {
-  val reader = new RuleReader(actions)
-  val extractors = reader.read(rules)
+class ExtractorEngine[A <: Actions : ClassTag](
+    rules: String,
+    actions: A = new Actions,
+    postprocess: PostProcessor = identity
+) {
+  val extractors = RuleReader(actions).read(rules)
 
   // the minimum number of iterations required for every rule to run at least once
   val minIterations = extractors.map(_.startsAt).max

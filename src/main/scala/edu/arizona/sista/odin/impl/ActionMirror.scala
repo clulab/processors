@@ -6,8 +6,8 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-class ActionMirror[T <: Actions : ClassTag](obj: T) {
-  private val instanceMirror = runtimeMirror(obj.getClass.getClassLoader).reflect(obj)
+class ActionMirror[A <: Actions : ClassTag](actions: A) {
+  private val instanceMirror = runtimeMirror(actions.getClass.getClassLoader).reflect(actions)
 
   def reflect(name: String): ReflectedAction = {
     val methodSymbol = instanceMirror.symbol.typeSignature.member(TermName(name)).asMethod
