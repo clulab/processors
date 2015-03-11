@@ -14,7 +14,7 @@ All the code that we write is licensed under Apache License Version 2.0. However
 
 (c) Mihai Surdeanu, 2013 - 
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell. 
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell, and Tom Hicks.
 
 # Changes
 + **5.2-SNAPSHOT** - Version 2 of ODIN, including a cleaner (more declarative) rule language, which minimizes the need for custom actions.
