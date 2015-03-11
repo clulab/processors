@@ -13,13 +13,22 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
 
+  // rule intermediary representation
+  class Rule(
+    val name: String,
+    val labels: Set[String],
+    val ruleType: String,
+    val priority: String,
+    val keep: Boolean,
+    val action: String,
+    val pattern: String
+  )
+
   def read(input: String): Seq[Extractor] = {
     // read yaml rules
     val rules = readRules(input)
-    // all rules need a name
-    if (rules exists (!_.contains("name"))) sys.error("unnamed rule")
     // count names occurrences
-    val names = rules groupBy (_("name")) mapValues (_.size)
+    val names = rules groupBy (_.name) mapValues (_.size)
     // names should be unique
     names find (_._2 > 1) match {
       case None => rules map mkExtractor  // return extractors
@@ -27,56 +36,94 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     }
   }
 
-  private def readRules(input: String): Seq[Map[String, String]] = {
+  private def readRules(input: String): Seq[Rule] = {
+    // make yaml object
     val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
-    val rules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
-    rules.asScala.toSeq.map(_.asScala.toMap.mapValues(_.toString))
-  }
 
-  private def mkExtractor(rule: Map[String, String]): Extractor = {
-    val name = rule("name")
-    try {
-      rule.getOrElse("type", DefaultType) match {
-        case "token" => mkTokenExtractor(rule)
-        case "dependency" => mkDependencyExtractor(rule)
-        case _ => sys.error("invalid type")
+    // parse yaml input
+    val rules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
+
+    // return Rule objects
+    rules.asScala.toSeq.map { r =>
+      val m = r.asScala.toMap
+
+      // name is required
+      val name = try {
+        m("name").toString()
+      } catch {
+        case e: Exception => sys.error("unnamed rule")
       }
-    } catch {
-      case e: Exception => sys.error(s"Error parsing rule '$name': ${e.getMessage}")
+
+      // one or more labels are required
+      val labels: Set[String] = try {
+        m("label") match {
+          case label: String => Set(label)
+          case labels: Collection[_] => labels.asScala.map(_.toString).toSet
+        }
+      } catch {
+        case e: Exception => sys.error(s"rule '$name' has no labels")
+      }
+
+      // pattern is required
+      val pattern = try {
+        m("pattern").toString()
+      } catch {
+        case e: Exception => sys.error(s"rule '$name' has no pattern")
+      }
+
+      // these fields have default values
+      val ruleType = m.getOrElse("type", DefaultType).toString()
+      val priority = m.getOrElse("priority", DefaultPriority).toString()
+      val keep = if (m contains "keep") m("keep").asInstanceOf[Boolean] else DefaultKeep
+      val action = m.getOrElse("action", DefaultAction).toString()
+
+      // make intermediary rule
+      new Rule(name, labels, ruleType, priority, keep, action, pattern)
     }
   }
 
-  private def mkTokenExtractor(rule: Map[String, String]): TokenExtractor = {
-    val name = rule("name")
-    val label = rule("label")
-    val priority = Priority(rule.getOrElse("priority", DefaultPriority))
-    val keep = keepValue(rule.getOrElse("keep", DefaultKeep))
-    val action = mirror.reflect(rule.getOrElse("action", DefaultAction))
-    val pattern = TokenPattern.compile(rule("pattern"))
-    new TokenExtractor(name, label, priority, keep, action, pattern)
+  // compiles a rule into an extractor
+  private def mkExtractor(rule: Rule): Extractor = {
+    try {
+      rule.ruleType match {
+        case "token" => mkTokenExtractor(rule)
+        case "dependency" => mkDependencyExtractor(rule)
+        case _ => sys.error(s"rule '${rule.name}' has an invalid type")
+      }
+    } catch {
+      case e: Exception => sys.error(s"Error parsing rule '${rule.name}': ${e.getMessage}")
+    }
   }
 
-  private def mkDependencyExtractor(rule: Map[String, String]): DependencyExtractor = {
-    val name = rule("name")
-    val label = rule("label")
-    val priority = Priority(rule.getOrElse("priority", DefaultPriority))
-    val keep = keepValue(rule.getOrElse("keep", DefaultKeep))
-    val action = mirror.reflect(rule.getOrElse("action", DefaultAction))
-    val pattern = DependencyPattern.compile(rule("pattern"))
-    new DependencyExtractor(name, label, priority, keep, action, pattern)
+  // compiles a token extractor
+  private def mkTokenExtractor(rule: Rule): TokenExtractor = {
+    val name = rule.name
+    val labels = rule.labels
+    val priority = Priority(rule.priority)
+    val keep = rule.keep
+    val action = mirror.reflect(rule.action)
+    val pattern = TokenPattern.compile(rule.pattern)
+    // FIXME we should use all labels
+    new TokenExtractor(name, labels.head, priority, keep, action, pattern)
   }
 
-  private def keepValue(s: String): Boolean = s match {
-    case "true" => true
-    case "false" => false
-    case s => sys.error(s"invalid keep value '$s'")
+  // compiles a dependency extractor
+  private def mkDependencyExtractor(rule: Rule): DependencyExtractor = {
+    val name = rule.name
+    val labels = rule.labels
+    val priority = Priority(rule.priority)
+    val keep = rule.keep
+    val action = mirror.reflect(rule.action)
+    val pattern = DependencyPattern.compile(rule.pattern)
+    // FIXME we should use all labels
+    new DependencyExtractor(name, labels.head, priority, keep, action, pattern)
   }
 }
 
 object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
-  val DefaultKeep = "true"
+  val DefaultKeep = true
   val DefaultAction = "identity"
 
   def apply[A <: Actions : ClassTag](actions: A): RuleReader[A] = new RuleReader(actions)
