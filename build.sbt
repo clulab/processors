@@ -91,6 +91,7 @@ libraryDependencies ++= Seq(
   "junit" % "junit" % "4.12" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "com.io7m.xom" % "xom" % "1.2.10",
+  "org.json4s" % "json4s-native_2.11" % "3.2.11",
   "joda-time" % "joda-time" % "2.7",
   "de.jollyday" % "jollyday" % "0.4.7",
   "com.googlecode.efficient-java-matrix-library" % "ejml" % "0.23",

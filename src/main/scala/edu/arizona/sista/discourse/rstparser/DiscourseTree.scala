@@ -1,11 +1,16 @@
 package edu.arizona.sista.discourse.rstparser
 
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.native.JsonMethods._
+
 import edu.arizona.sista.processors.Document
 
 /**
- * Stores the RST discourse tree for one document
- * User: mihais
- * Date: 4/4/14
+  * Stores the RST discourse tree for one document
+  * User: mihais
+  * Date: 4/4/14
+  * Last Modified: Document JSON output methods added for discourse parser visualizer.
  */
 @SerialVersionUID(1L)
 class DiscourseTree (
@@ -139,6 +144,52 @@ class DiscourseTree (
     }
   }
 
+
+  /** Generate JSON output for the discourse parser visualizer using the default arguments. */
+  def visualizerJSON (): String = {
+    visualizerJSON(printChildren = true, printKind = false, pprint = false)
+  }
+
+  /**
+    * Generate a JSON output string for this discourse tree, specifically including
+    * only information currently needed for the discourse parser visualizer.
+    */
+  def visualizerJSON (printChildren:Boolean, printKind:Boolean, pprint:Boolean): String = {
+    val json = buildJSON(JObject(), printChildren, printKind)
+    if (pprint)
+      pretty(render(json))
+    else
+      compact(render(json))
+  }
+
+  /** Build and return a JSON object for this discourse tree. */
+  def buildJSON (argJson:JValue, printChildren:Boolean, printKind:Boolean): JValue = {
+    var json = argJson
+
+    if (printKind) {
+      json = json merge JObject(JField("kind", JString(kind.toString())))
+    }
+
+    if (relationLabel.length > 0) {
+      json = json merge JObject(JField("relLabel", JString(relationLabel)))
+      if (relationDirection != RelationDirection.None) {
+        json = json merge JObject(JField("relDir", JString(relationDirection.toString())))
+      }
+    }
+
+    if (rawText != null) {
+      json = json merge JObject(JField("text", JString(rawText)))
+    }
+
+    if (printChildren) {
+      if (!isTerminal) {
+        val kids = for (c <- children) yield c.buildJSON(JObject(), printChildren, printKind)
+        if (kids.length > 0)
+          json = json merge JObject(JField("kids", JArray(kids.toList)))
+      }
+    }
+    return json
+  }
 }
 
 case class TokenOffset (sentence:Int, token:Int) {
