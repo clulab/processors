@@ -64,7 +64,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       val ruleType = m.getOrElse("type", DefaultType).toString()
       val priority = m.getOrElse("priority", DefaultPriority).toString()
       val action = m.getOrElse("action", DefaultAction).toString()
-      val keep = if (m contains "keep") m("keep").asInstanceOf[Boolean] else DefaultKeep
+      val keep = m.getOrElse("keep", DefaultKeep).asInstanceOf[Boolean]
 
       // make intermediary rule
       new Rule(name, labels, ruleType, priority, keep, action, pattern)
