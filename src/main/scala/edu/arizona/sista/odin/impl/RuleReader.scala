@@ -13,17 +13,6 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
 
-  // rule intermediary representation
-  class Rule(
-    val name: String,
-    val labels: Set[String],
-    val ruleType: String,
-    val priority: String,
-    val keep: Boolean,
-    val action: String,
-    val pattern: String
-  )
-
   def read(input: String): Seq[Extractor] = {
     // read yaml rules
     val rules = readRules(input)
@@ -55,10 +44,10 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       }
 
       // one or more labels are required
-      val labels: Set[String] = try {
+      val labels: Seq[String] = try {
         m("label") match {
-          case label: String => Set(label)
-          case labels: Collection[_] => labels.asScala.map(_.toString).toSet
+          case label: String => Seq(label)
+          case labels: Collection[_] => labels.asScala.map(_.toString).toSeq.distinct
         }
       } catch {
         case e: Exception => sys.error(s"rule '$name' has no labels")
@@ -74,8 +63,8 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       // these fields have default values
       val ruleType = m.getOrElse("type", DefaultType).toString()
       val priority = m.getOrElse("priority", DefaultPriority).toString()
-      val keep = if (m contains "keep") m("keep").asInstanceOf[Boolean] else DefaultKeep
       val action = m.getOrElse("action", DefaultAction).toString()
+      val keep = if (m contains "keep") m("keep").asInstanceOf[Boolean] else DefaultKeep
 
       // make intermediary rule
       new Rule(name, labels, ruleType, priority, keep, action, pattern)
@@ -103,8 +92,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
     val pattern = TokenPattern.compile(rule.pattern)
-    // FIXME we should use all labels
-    new TokenExtractor(name, labels.head, priority, keep, action, pattern)
+    new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
 
   // compiles a dependency extractor
@@ -115,8 +103,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
     val pattern = DependencyPattern.compile(rule.pattern)
-    // FIXME we should use all labels
-    new DependencyExtractor(name, labels.head, priority, keep, action, pattern)
+    new DependencyExtractor(name, labels, priority, keep, action, pattern)
   }
 }
 
@@ -125,6 +112,17 @@ object RuleReader {
   val DefaultPriority = "1+"
   val DefaultKeep = true
   val DefaultAction = "identity"
+
+  // rule intermediary representation
+  class Rule(
+    val name: String,
+    val labels: Seq[String],
+    val ruleType: String,
+    val priority: String,
+    val keep: Boolean,
+    val action: String,
+    val pattern: String
+  )
 
   def apply[A <: Actions : ClassTag](actions: A): RuleReader[A] = new RuleReader(actions)
 }

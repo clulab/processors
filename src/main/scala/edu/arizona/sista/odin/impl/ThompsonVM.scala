@@ -54,7 +54,7 @@ object ThompsonVM {
         case Some(s) =>
           val bundles = for {
             mention <- s.mentionsFor(sent, t.tok)
-            if mention.start == t.tok && i.m.matches(mention.label)
+            if mention.start == t.tok && mention.matches(i.m)
           } yield mkThreads(mention.end, i.next, t.groups, mkMentionCapture(t.mentions, i.name, mention))
           if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
       }

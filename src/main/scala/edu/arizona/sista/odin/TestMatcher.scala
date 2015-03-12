@@ -25,7 +25,7 @@ object TestMatcher extends App {
                  | # this rule creates phosphorylation events
                  | # the arguments are Protein mentions
                  |- name: rule2
-                 |  label: [Phosphorylation]
+                 |  label: [Phosphorylation, Event]
                  |  pattern: |
                  |    Trigger = [word=/^phospho/ & tag=/^VB/]
                  |    theme: Protein = dobj
@@ -36,6 +36,7 @@ object TestMatcher extends App {
                  |- name: rule3
                  |  label:
                  |    - Ubiquitination
+                 |    - Event
                  |  pattern: |
                  |    triggER = ubiquitination
                  |    theme: Protein = prep_of
@@ -45,7 +46,7 @@ object TestMatcher extends App {
                  |  label: DownRegulation
                  |  pattern: |
                  |    trigger = [lemma=inhibit]
-                 |    theme: Ubiquitination = dobj
+                 |    theme: Event = dobj
                  |    cause: Protein = nsubj
                  |
                  | # example of a surface rule that captures an event

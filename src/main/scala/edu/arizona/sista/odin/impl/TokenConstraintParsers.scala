@@ -114,14 +114,14 @@ class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with De
 class MentionConstraint(matcher: StringMatcher) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = state match {
     case None => false
-    case Some(state) => state.mentionsFor(sent, tok) flatMap (_.allLabels) exists matcher.matches
+    case Some(state) => state.mentionsFor(sent, tok) exists (_ matches matcher)
   }
 
   def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = state match {
     case None => Nil
     case Some(state) => tokens filter { t =>
       state.mentionsFor(sent, t) exists { m =>
-        val indicesAndValues = m.allLabels.toSeq.zipWithIndex map (li => (li._2, li._1))
+        val indicesAndValues = m.labels.zipWithIndex map (li => (li._2, li._1))
         matcher.filter(indicesAndValues).nonEmpty
       }
     }
