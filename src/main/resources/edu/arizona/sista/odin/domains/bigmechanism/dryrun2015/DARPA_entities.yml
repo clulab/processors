@@ -3,7 +3,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Protein$/] kinase [word=/(?i)^B$/] alpha) |
    ([word=/(?i)^PKB$/] alpha) |
@@ -18,7 +17,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ("40" kDa [word=/(?i)^proline(-rich)?$/] [word=/(?i)^AKT$/] substrate) |
    ([word=/(?i)^Proline(-rich)?$/] [word=/(?i)^AKT1$/] substrate "1") |
@@ -29,7 +27,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^BRWD1$/] intronic transcript "2") |
    ([word=/(?i)^Putative$/] uncharacterized [word=/(?i)^protein$/]? encoded by [word=/(?i)^BRWD1-AS2$/]) |
@@ -41,7 +38,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^CRYM$/] antisense gene [word=/(?i)^protein$/]? "1") |
    ([word=/(?i)^CRYM$/] antisense [word=/(?i)^RNA$/] "1") |
@@ -52,7 +48,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Epidermal$/] growth [word=/(?i)^factor(-like)?$/] [word=/(?i)^protein$/]? "6") |
    ([word=/(?i)^EGFL6$/]) |
@@ -63,7 +58,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Epidermal$/] growth factor receptor) |
    ([word=/(?i)^EGFR$/]) |
@@ -74,7 +68,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Diphtheria$/] toxin receptor) |
    ([word=/(?i)^HBEGF$/]) |
@@ -87,7 +80,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^E3$/] [word=/(?i)^ubiquitin(-protein)?$/] ligase [word=/(?i)^HERC2$/]) |
    ([word=/(?i)^HECT$/] domain and [word=/(?i)^RCC1(-like)?$/] [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "2") |
@@ -97,7 +89,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^HERC6$/]) |
    ([word=/(?i)^Probable$/] [word=/(?i)^E3$/] [word=/(?i)^ubiquitin(-protein)?$/] ligase [word=/(?i)^HERC6$/]) |
@@ -107,7 +98,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Multiple$/] epidermal growth [word=/(?i)^factor(-like)?$/] domains [word=/(?i)^protein$/]? "8") |
    ([word=/(?i)^Epidermal$/] growth [word=/(?i)^factor(-like)?$/] [word=/(?i)^protein$/]? "4") |
@@ -119,7 +109,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "3") |
    ([word=/(?i)^GAP1IP4BP$/]) |
@@ -130,7 +119,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASSF1$/]) |
    ([word=/(?i)^Ras$/] association [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "1") |
@@ -140,7 +128,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Regulator$/] for cell adhesion and polarization enriched in lymphoid tissues) |
    ([word=/(?i)^New$/] ras effector "1") |
@@ -152,7 +139,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Peptidylglycine$/] [word=/(?i)^alpha(-amidating)?$/] [word=/(?i)^-?amidating$/]? monooxygenase [word=/(?i)^COOH(-terminal)?$/] interactor) |
    ([word=/(?i)^Ras$/] association [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "9") |
@@ -164,7 +150,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASAL1$/]) |
    ([word=/(?i)^RasGAP(-activating)?(-like)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "1")
@@ -173,7 +158,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras(-related)?$/] [word=/(?i)^protein$/]? [word=/(?i)^M-Ras$/]) |
    ([word=/(?i)^Ras(-related)?$/] [word=/(?i)^protein$/]? [word=/(?i)^R-Ras3$/]) |
@@ -183,7 +167,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Putative$/] [word=/(?i)^SMEK$/] homolog "3") |
    ([word=/(?i)^SMEK3P$/])
@@ -192,7 +175,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^VEGF-A$/]) |
    ([word=/(?i)^VPF$/]) |
@@ -205,7 +187,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Neuregulin-1$/]) |
    ([word=/(?i)^Heregulin$/]) |
@@ -224,7 +205,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^ERBB3$/]) |
    ([word=/(?i)^Tyrosine$/] [word=/(?i)^kinase(-type)?$/] cell surface receptor [word=/(?i)^HER3$/]) |
@@ -235,7 +215,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     /^[^0-9].*(-[AG][DT]P|[AG][DT]P-)/ |
     /p\d+/? /^SAP/ | #TODO: I think we need to detect complexes as sequences of Proteins at step 3
@@ -266,7 +245,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ("p53BP2") |
    ([word=/(?i)^Renal$/] carcinoma antigen [word=/(?i)^NY-REN-51$/]) |
@@ -283,7 +261,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ("v-Raf" murine sarcoma viral oncogene homolog [word=/(?i)^B1$/]) |
    ([word=/(?i)^Proto(-oncogene)?$/] [word=/(?i)^B-Raf$/]) |
@@ -297,7 +274,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Rab5(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "6") |
    ([word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? and [word=/(?i)^VPS9$/] [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "1") |
@@ -308,7 +284,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGRP1$/]) |
    ([word=/(?i)^RAS$/] [word=/(?i)^guanyl(-releasing)?$/] [word=/(?i)^-?releasing$/]? [word=/(?i)^protein$/]? "1") |
@@ -320,7 +295,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGRP3$/]) |
    ([word=/(?i)^Calcium$/] and [word=/(?i)^DAG(-regulated)?$/] guanine nucleotide exchange factor [word=/(?i)^III$/]) |
@@ -331,7 +305,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?(-like)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? [word=/(?i)^IQGAP1$/]) |
    ([word=/(?i)^IQGAP1$/]) |
@@ -341,7 +314,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?(-like)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? [word=/(?i)^IQGAP3$/]) |
    ([word=/(?i)^IQGAP3$/])
@@ -350,7 +322,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^MAPK$/] "3"?) |
    ([word=/(?i)^Insulin(-stimulated)?$/] [word=/(?i)^MAP2$/] kinase) |
@@ -371,7 +342,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^MEK$/] "1") |
    ([word=/(?i)^(MAPK|ERK)$/] kinase "1") |
@@ -386,7 +356,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Neurofibromin$/]) |
    ([word=/(?i)^Neurofibromatosis(-related)?$/] [word=/(?i)^protein$/]? [word=/(?i)^NF-1$/]) |
@@ -401,7 +370,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^NIEHS-SNPs$/]) |
    ([word=/(?i)^TP53$/]) |
@@ -420,7 +388,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^PLC(-epsilon)?-1$/]) |
    ([word=/(?i)^Pancreas(-enriched)?$/] phospholipase [word=/(?i)^C$/]) |
@@ -435,7 +402,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Proto(-oncogene)?$/] "c-RAF") |
    (cRaf) |
@@ -450,7 +416,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "1m") |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "2") |
@@ -461,7 +426,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^SHMPD$/]) |
    ([word=/(?i)^c-Ki(-ras)?$/]) |
@@ -479,7 +443,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Calcium(-promoted)?$/] [word=/(?i)^Ras$/] inactivator) |
    ([word=/(?i)^Ras$/] "p21" [word=/(?i)^protein$/]? activator "4") |
@@ -491,7 +454,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^GTPase$/] [word=/(?i)^NRas$/]) |
    ([word=/(?i)^Wikipedia$/]) |
@@ -505,7 +467,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RalGDS(-like)?$/] "4") |
    ([word=/(?i)^RGL4$/]) |
@@ -517,7 +478,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGEF1B$/]) |
    ([word=/(?i)^GPI$/] "gamma-4") |
@@ -527,7 +487,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RGL1$/]) |
    ([word=/(?i)^RalGDS(-like)?$/] "1") |
@@ -537,7 +496,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RGL3$/]) |
    ([word=/(?i)^RalGDS(-like)?$/] "3") |
@@ -547,7 +505,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ral$/] guanine nucleotide exchange factor "2") |
    ([word=/(?i)^RalGEF$/] "2") |
@@ -560,7 +517,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGRF1$/]) |
    ([word=/(?i)^Ras(-specific)?$/] guanine [word=/(?i)^nucleotide(-releasing)?$/] [word=/(?i)^-?releasing$/]? factor "1") |
@@ -573,7 +529,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^cAMP(-regulated)?$/] guanine nucleotide exchange factor [word=/(?i)^I$/]) |
    ("cAMP-GEFI") |
@@ -588,7 +543,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^MR-GEF$/]) |
    ([word=/(?i)^RAPGEF5$/]) |
@@ -602,7 +556,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Link$/] guanine nucleotide exchange factor [word=/(?i)^II$/]) |
    ([word=/(?i)^Rap$/] guanine nucleotide exchange [word=/(?i)^factor(-like)?$/] "1") |
@@ -613,7 +566,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^SOS2$/]) |
    ([word=/(?i)^Wikipedia$/]) |
@@ -625,7 +577,6 @@
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RalGDS$/]) |
    ([word=/(?i)^Ral$/] guanine nucleotide exchange factor) |

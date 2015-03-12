@@ -2,7 +2,6 @@
 #  label: Gene_or_gen_product
 #  priority: 3
 #  type: token
-#  action: mkTextBoundMention
 #  pattern: |
 #    [word=/(?i)alanine|arginine|asparagine|aspartic acid|cysteine|glutamic acid|glutamine|glycine|histidine|isoleucine|leucine|lysine|methionine|phenylalanine|proline|serine|threonine|tryptophan|tyrosine|valine/ & !mention=/./]
 
@@ -10,7 +9,6 @@
   label: Site
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     [word = /(?i)^(glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine)$/]
     [word = /acid/]?
@@ -21,7 +19,6 @@
   label: Site
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     [word=/(?i)^[ACDEFGHIKLMNQRSTVWY]\d+[ACDEFGHIKLMNPQRSTVWY]?$/] [word=/mutant/]? |
     /^P\d+[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]?$/ [word=/mutant/]?
@@ -30,7 +27,6 @@
   label: Site
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    [word=/(?i)^(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)\d+(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)?$/]
    [word=/mutant/]?
@@ -39,7 +35,6 @@
 #  label: Site
 #  priority: 1
 #  type: token
-#  action: mkTextBoundMention
 #  pattern: |
 #   [word=/(?i)^(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)([-0-9]+)?/]
 #   [word=mutant]?
@@ -48,7 +43,6 @@
   label: Site
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    [word=/(?i)^(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)$/]
    [word=/residue/]?
@@ -59,7 +53,6 @@
   priority: 1
   type: token
   example: "Under the same conditions, ASPP2 (693-1128) fragment phosphorylated by p38 SAPK had very low levels of incorporated 32P"
-  action: mkTextBoundMention
   pattern: |
     "("
     /^\d+-\d+$/
@@ -70,51 +63,49 @@
   label: Site
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     /\(/? /^[A-Z0-9-]+$/ /\)/? /domain/
 
-- name: multi_site
-  label: Multiple_sites
-  priority: 3
-  type: token
-  action: mkMultiSite
-  pattern: |
-    (?<parent> [mention=Site]) [word=/,|and/ | tag=CD]+ (?<site> [tag=CD])
+# - name: multi_site
+#   label: Multiple_sites
+#   priority: 3
+#   type: token
+#   action: mkMultiSite
+#   pattern: |
+#     (?<parent> [mention=Site]) [word=/,|and/ | tag=CD]+ (?<site> [tag=CD])
 
-- name: protein_with_site_token_1
-  label: Protein_with_site
-  priority: 3
-  type: token
-  action: mkComplexEntity
-  pattern: |
-    (?<site> [mention=Site]) [tag=IN] (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/] ([tag=/(,|CC)/]+ [mention=/^(Protein|Gene_or_gene_product)$/])*)
-      |
-    (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/]) [tag=IN] (?<site> [mention=Site] ([tag=/(,|CC)/]+ [mention=Site])*)
+# - name: protein_with_site_token_1
+#   label: Protein_with_site
+#   priority: 3
+#   type: token
+#   action: mkComplexEntity
+#   pattern: |
+#     (?<site> [mention=Site]) [tag=IN] (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/] ([tag=/(,|CC)/]+ [mention=/^(Protein|Gene_or_gene_product)$/])*)
+#       |
+#     (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/]) [tag=IN] (?<site> [mention=Site] ([tag=/(,|CC)/]+ [mention=Site])*)
 
-- name: site_with_protein_syntax_1
-  label: Protein_with_site
-  priority: 3
-  type: dependency
-  action: mkProteinWithSiteSyntax
-  pattern: |
-    trigger: [mention=Site]
-    protein: /pobj|prep_|conj|nn/+ [mention=/^Protein$|^Gene_or_gene_product$/]  # can't use a conj_nor.   There must be other bad conjunctions.
+# - name: site_with_protein_syntax_1
+#   label: Protein_with_site
+#   priority: 3
+#   type: dependency
+#   action: mkProteinWithSiteSyntax
+#   pattern: |
+#     trigger: [mention=Site]
+#     protein: /pobj|prep_|conj|nn/+ [mention=/^Protein$|^Gene_or_gene_product$/]  # can't use a conj_nor.   There must be other bad conjunctions.
 
-- name: protein_with_site_syntax_1
-  label: Protein_with_site
-  priority: 3
-  type: dependency
-  action: mkProteinWithSiteSyntax
-  pattern: |
-    trigger: [mention=/^Protein$|^Gene_or_gene_product$/]
-    site: /pobj|prep_|conj_[^n]|nn/+ [mention=Site] # can't use a conj_nor.   There must be other bad conjunctions.
+# - name: protein_with_site_syntax_1
+#   label: Protein_with_site
+#   priority: 3
+#   type: dependency
+#   action: mkProteinWithSiteSyntax
+#   pattern: |
+#     trigger: [mention=/^Protein$|^Gene_or_gene_product$/]
+#     site: /pobj|prep_|conj_[^n]|nn/+ [mention=Site] # can't use a conj_nor.   There must be other bad conjunctions.
 
 - name: simple_chem
   label: Simple_chemical
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     /(?i)^(GDP|GTP|ATP|ADP|adenine|adenosine|guanine|guanosine)(-(ribose|methyl|acetyl))?$/ /(?i)group/?
       |
@@ -129,7 +120,6 @@
   label: Gene_or_gene_product
   priority: 2
   type: token
-  action: mkTextBoundMention
   pattern: |
     [word = /(?i)^(glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine)/ & !word=/-rich/ & !mention=/./]
 
@@ -137,7 +127,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     /HER2/
 
@@ -145,7 +134,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     /(?i)^[HKN]?-?ras-?$/ |
     /(?i)^RASSF-?$/ |
@@ -157,7 +145,6 @@
   label: Protein
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     /GAP/ |
     /(?i)-ras$/ |
@@ -186,7 +173,6 @@
   label: Cellular_component
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     # rough endoplasmic reticulum
     /(?i)rough/ /(?i)endoplasmic/ /(?i)reticulum/ | /(?i)rough/ ER | RER
@@ -203,18 +189,17 @@
     # the rest of the locations (single token)
     /(?i)nucleolus|nucleus|ribosome|vesicle|golgi|cytoskeleton|mitochondrion|mitochondria|vacuole|cytosol|lysosome|centrosome/
 
-- name: banner_entities
-  label: Gene_or_gene_product
-  priority: 2
-  type: token
-  action: mkBannerMention
-  pattern: |
-    [entity='B-GENE'] [entity='I-GENE']*
+# - name: banner_entities
+#   label: Gene_or_gene_product
+#   priority: 2
+#   type: token
+#   action: mkBannerMention
+#   pattern: |
+#     [entity='B-GENE'] [entity='I-GENE']*
 
 - name: protein_complex
   label: Gene_or_gene_product
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     [word=/^[A-Z]{2,}-[A-Z]{2,}/ & !mention=/./]
