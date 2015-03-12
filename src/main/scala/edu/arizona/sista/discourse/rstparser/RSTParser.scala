@@ -18,10 +18,10 @@ import edu.arizona.sista.discourse.rstparser.RSTParser._
  * Date: 5/26/14
  */
 class RSTParser {
-  private var corpusStats:CorpusStats = null
-  private var eduModel:EDUClassifier = null
-  private var structModel:StructureClassifier = null
-  private var relModel:RelationClassifier = null
+  var corpusStats:CorpusStats = null
+  var eduModel:EDUClassifier = null
+  var structModel:StructureClassifier = null
+  var relModel:RelationClassifier = null
 
   def saveTo(path:String) {
     val writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(path)), Files.FILE_CHARSET)))
