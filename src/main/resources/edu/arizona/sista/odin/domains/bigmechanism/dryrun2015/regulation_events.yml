@@ -1,20 +1,23 @@
+#Regulation events require controllers of type BioChemicalEntity and controlled of type Event
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 #- name: Regulation_1
 #  priority: 5
-#  action: mkRegulation
 #  type: dependency
-#  label: Regulation
+#  label: [Regulation, Event]
 #  pattern: |
-#    trigger: [!word=/^(positive|negative)/] /^regulat/
-#    controller: nsubj nn*
-#    controlled: dobj
+#    trigger = [!word=/^(positive|negative)/] /^regulat/ # TODO: add negative lookarounds
+#    controller:BioChemicalEntity = nsubj nn*
+#    controlled:Event = dobj
 
 #- name: Regulation_token_1
 #  priority: 5
-#  action: mkRegulation
 #  type: token
-#  label: Regulation
+#  label: [Regulation, Event]
 #  pattern: |
-#    (?<controller> [mention=/./]) (?<trigger> [word=/(?i)mediat/]) (?<controlled> [mention=/./])
+#    @controller:BioChemicalEntity (?<trigger> [word=/(?i)mediat/]) @controlled:Event
 
 
 # TODO

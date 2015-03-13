@@ -1,178 +1,159 @@
+#Phosphorylation events require arguments of type BioChemicalEntity
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 ###Syntactic Variants###
 
 
 - name: Negative_regulation_syntax_1_verb
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
-    controller?: <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
-    controlled: (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])*
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controller:BioChemicalEntity? = <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
+    controlled:Event = (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])*
 
 
 - name: Negative_regulation_syntax_2_verb
   priority: 4
-  action: mkRegulation
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
-    controlled: (>nsubjpass|<vmod) /conj_|nn|cc/*  [mention=/./]
-    controller?: agent|prep_by /conj_|nn|cc/* [mention=/./]
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled:Event = (>nsubjpass|<vmod) /conj_|nn|cc/*  
+    controller:BioChemicalEntity? = agent|prep_by /conj_|nn|cc/* 
 
 
 - name: Negative_regulation_syntax_3_verb
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & !outgoing=nsubjpass & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
-    controlled: ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) ) [mention=/./]
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & !outgoing=nsubjpass & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled:Event = ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) ) 
 
-    controller?: <nn* | (prep_by) /nn|conj_|cc/*
+    controller:BioChemicalEntity? = <nn* | (prep_by) /nn|conj_|cc/*
 
 
 - name: Negative_regulation_syntax_4_verb
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
-    controlled: (nsubjpass /conj_|nn/*) [mention=/./]
-    controller?: (/prep_/ /conj_|nn/*)? /prep_/* /prep_by|agent/ /conj_|nn/* [mention=/./]
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled:Event = (nsubjpass /conj_|nn/*) 
+    controller:BioChemicalEntity? = (/prep_/ /conj_|nn/*)? /prep_/* /prep_by|agent/ /conj_|nn/* 
 
 
 - name: Negative_regulation_syntax_5_verb
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
-    controlled: dobj /nn|conj_|cc/*
-    controller: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^V/]?
+    controlled:Event = dobj /nn|conj_|cc/*
+    controller:BioChemicalEntity = (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
 
 
 - name: Negative_regulation_syntax_6_verb
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/VBN|RB/] [word=/regul/ & tag=/^VBN/]?
-    controlled: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
-    controller?: /prep_by|agent/ /appos|nn|conj_|cc/*
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/VBN|RB/] [word=/regul/ & tag=/^VBN/]?
+    controlled:Event = (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
+    controller:BioChemicalEntity? = /prep_by|agent/ /appos|nn|conj_|cc/*
 
 
 - name: Negative_regulation_syntax_1_noun
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/]?
-    controlled: prep_of /nn|conj_|cc/*
-    controller?: (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/*
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/]?
+    controlled:Event = prep_of /nn|conj_|cc/*
+    controller:BioChemicalEntity? = (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/*
 
 
 - name: Negative_regulation_syntax_2_noun
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
-    controlled: prep_of? /conj_|cc|nn/+ [mention=/./]
-    controller: /prep_by|agent/ /conj|cc|nn/*
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controlled:Event = prep_of? /conj_|cc|nn/+ 
+    controller:BioChemicalEntity = /prep_by|agent/ /conj|cc|nn/*
 
 
 - name: Negative_regulation_syntax_3_noun
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/ & !outgoing=prep_by] [word=/regul/ & tag=/^N/]?
-    controlled: prep_of /conj_|cc|nn/+ [mention=/./]
-    controller: /conj_|cc|nn/+ [mention=/./]
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/ & !outgoing=prep_by] [word=/regul/ & tag=/^N/]?
+    controlled:Event = prep_of /conj_|cc|nn/+ 
+    controller:BioChemicalEntity = /conj_|cc|nn/+ 
 
 
 - name: Negative_regulation_syntax_4_noun
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/ & !outgoing=/prep_(by|of)/] [word=/regul/ & tag=/^N/]?
-    controlled: <nn? nn /conj|cc|nn|prep/* [mention=/./ & !mention=/Site/]
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/ & !outgoing=/prep_(by|of)/] [word=/regul/ & tag=/^N/]?
+    controlled:Event = <nn? nn /conj|cc|nn|prep/*
 
 
 - name: Negative_regulation_syntax_5_noun
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
-    controlled: < nn > /prep_/ /conj_|cc|nn/* [mention=/./]
-    controller?: < nn /conj_|cc|nn/*
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controlled:Event = < nn > /prep_/ /conj_|cc|nn/* 
+    controller:BioChemicalEntity? = < nn /conj_|cc|nn/*
 
 
 - name: Negative_regulation_syntax_6_noun
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
-    controller: <prep_via agent|prep_by /nn|conj_|cc/*
-    controlled: (prep_of /nn|conj_|cc/*)+
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controller:BioChemicalEntity = <prep_via agent|prep_by /nn|conj_|cc/*
+    controlled:Event = (prep_of /nn|conj_|cc/*)+
 
 
 - name: Negative_regulation_syntax_7_noun
   priority: 4
-  action: mkRegulation
   example: ""
-  type: dependency
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    trigger: [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & !outgoing=prep_of & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
-    controlled: < nsubj dobj prep_of /nn|cc|conj/* [mention=/./]
+    trigger = [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & !outgoing=prep_of & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?
+    controlled:Event = < nsubj dobj prep_of /nn|cc|conj/* 
 
 
 - name: Negative_regulation_token_1_noun
   priority: 4
-  action: mkRegulation
   example: ""
   type: token
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    (?<trigger> [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?) /of|on/ [word=/./ & !tag=/^V|RB/]*? (?<controlled> [mention=/./])
+    (?<trigger> [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^(N|JJ)/] [word=/regul/ & tag=/^N/]?)
+    /of|on/ [word=/./ & !tag=/^V|RB/]*?
+    @controlled:Event
 
 
 - name: Negative_regulation_token_2_verb
   priority: 4
-  action: mkRegulation
   example: ""
   type: token
-  label: Negative_regulation
+  label: [Negative_regulation, Event]
   pattern: |
-    (?<trigger> [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^N/]?) (?<controlled> [mention=/./])?
+    (?<trigger> [word=/abolish|abrog|absenc|antagon|arrest|attenu|block|blunt|decreas|defect|defici|degrad|delay|deplet|deregul|diminish|disengag|disrupt|down|drop|dysregul|elimin|impair|imped|inactiv|inhibit|interf|knockdown|lack|limit|loss|lost|lower|negat|neutral|nullifi|oppos|overc|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|shutdown|slow|starv|supress|uncoupl/ & tag=/^V|RB/] [word=/regul/ & tag=/^N/]?)
+    (@controlled:Event) # used to be optional...why?
+
 
 
 
