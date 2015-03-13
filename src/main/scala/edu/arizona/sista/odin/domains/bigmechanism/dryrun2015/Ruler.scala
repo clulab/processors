@@ -79,12 +79,12 @@ object Ruler {
     val read = if (shell) readFile _ else readResource _
     val files = Seq(s"$dir/phospho_events.yml",
 //      s"$dir/ubiq_events.yml",
-        s"$dir/hydrox_events.yml"
+        s"$dir/hydrox_events.yml",
 //      s"$dir/hydrolysis_events.yml",
 //      s"$dir/bind_events.yml",
 //      s"$dir/exchange_events.yml",
 //      s"$dir/degrad_events.yml",
-//      s"$dir/transcription_events.yml",
+        s"$dir/transcription_events.yml"
 //      s"$dir/regulation_events.yml",
 //      s"$dir/neg_reg_events.yml",
 //      s"$dir/pos_reg_events.yml",
