@@ -75,27 +75,35 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     case frag ~ "{" ~ n ~ "}" => frag.repeatPattern(n)
   }
 
-  // this class is only used while compiling a token pattern
+  /** Represents a partially compiled TokenPattern.
+    *
+    * Helps the compiler by keeping track of the input and output
+    * instructions of a partially compiled TokenPattern.
+    */
   class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
     import ProgramFragment.findOut
 
+    /** Connects a new instruction to the output instructions.
+      *
+      * Calling this invalidates the ProgramFragment because
+      * the `out` sequence is no longer up to date.
+      */
     def setOut(inst: Inst): Unit = out.foreach(_.next = inst)
 
-    def dup: ProgramFragment = {
+    private def dup: ProgramFragment = {
       val newIn = in.dup
       ProgramFragment(newIn, findOut(newIn))
     }
 
-    def repeat(n: Int): Seq[ProgramFragment] = {
+    private def repeat(n: Int): Seq[ProgramFragment] =
       for (i <- 0 until n) yield dup
-    }
 
     def capture(name: String): ProgramFragment = {
       val start = SaveStart(name)
       val end = SaveEnd(name)
       start.next = in
       setOut(end)
-      ProgramFragment(start, Seq(end))
+      ProgramFragment(start, end)
     }
 
     def greedyOptional: ProgramFragment = {
@@ -113,25 +121,34 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     def greedyKleene: ProgramFragment = {
       val epsilon = Jump()
       val split = Split(in, epsilon)
-      val jump = Jump()
-      jump.next = split
-      setOut(jump)
-      ProgramFragment(split, Seq(epsilon))
+      setOut(split)
+      ProgramFragment(split, epsilon)
     }
 
     def lazyKleene: ProgramFragment = {
       val epsilon = Jump()
       val split = Split(epsilon, in)
-      val jump = Jump()
-      jump.next = split
-      setOut(jump)
-      ProgramFragment(split, Seq(epsilon))
+      setOut(split)
+      ProgramFragment(split, epsilon)
     }
 
-    def greedyPlus: ProgramFragment = ProgramFragment(dup, greedyKleene)
+    def greedyPlus: ProgramFragment = {
+      val epsilon = Jump()
+      val split = Split(in, epsilon)
+      setOut(split)
+      ProgramFragment(in, epsilon)
+    }
 
-    def lazyPlus: ProgramFragment = ProgramFragment(dup, lazyKleene)
+    def lazyPlus: ProgramFragment = {
+      val epsilon = Jump()
+      val split = Split(epsilon, in)
+      setOut(split)
+      ProgramFragment(in, epsilon)
+    }
 
+    /** Returns a new ProgramFragment that matches the current fragment
+      * between `from` and `to` times greedily.
+      */
     def greedyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
       require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
       if (from.isDefined && to.isDefined)
@@ -147,6 +164,9 @@ trait TokenPatternParsers extends TokenConstraintParsers {
       }
     }
 
+    /** Returns a new ProgramFragment that matches the current fragment
+      * between `from` and `to` times lazily.
+      */
     def lazyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
       require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
       if (from.isDefined && to.isDefined)
@@ -162,6 +182,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
       }
     }
 
+    /** Repeats and concatenates the current fragment `n` times. */
     def repeatPattern(n: Int): ProgramFragment = {
       val fragments = repeat(n)
       (fragments.head /: fragments.tail) {
@@ -171,6 +192,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
   }
 
   object ProgramFragment {
+    def apply(in: Inst, out: Inst): ProgramFragment = new ProgramFragment(in, Seq(out))
     def apply(in: Inst, out: Seq[Inst]): ProgramFragment = new ProgramFragment(in, out)
     def apply(in: Inst): ProgramFragment = new ProgramFragment(in, findOut(in))
     def apply(f1: ProgramFragment, f2: ProgramFragment): ProgramFragment = {
@@ -178,10 +200,20 @@ trait TokenPatternParsers extends TokenConstraintParsers {
       ProgramFragment(f1.in, f2.out)
     }
 
-    def findOut(i: Inst): Seq[Inst] = i match {
-      case Split(lhs, rhs) => findOut(lhs) ++ findOut(rhs)
-      case i if i.next == null => Seq(i)
-      case i => findOut(i.next)
+    /** Gets an instruction and returns all the output instructions */
+    def findOut(inst: Inst): Seq[Inst] = {
+      @annotation.tailrec
+      def traverse(pending: List[Inst], seen: Set[Inst], out: List[Inst]): Seq[Inst] =
+        pending match {
+          case Nil => out
+          case i :: rest => i match {
+            case i if seen contains i => traverse(rest, seen, out)
+            case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
+            case i if i.next == null => traverse(rest, seen + i, i :: out)
+            case i => traverse(i.next :: rest, seen + i, out)
+          }
+        }
+      traverse(List(inst), Set.empty, Nil)
     }
   }
 }
