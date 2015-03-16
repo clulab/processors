@@ -51,12 +51,6 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
   private def product[A](xss: Seq[Seq[A]]) = xss.foldRight(Seq(Seq[A]())) {
     (xs, lla) => xs.flatMap(x => lla.map(x +: _))
   }
-
-  private def mergeMatches(lhs: Args, rhs: Args): Args = {
-    val keys = lhs.keySet ++ rhs.keySet
-    val args = keys map (k => (k -> (lhs.getOrElse(k, Nil) ++ rhs.getOrElse(k, Nil))))
-    args.toMap
-  }
 }
 
 object DependencyPattern {
