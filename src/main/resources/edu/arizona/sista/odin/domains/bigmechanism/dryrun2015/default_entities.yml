@@ -1,3 +1,6 @@
+#BioChemicalEntity: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecule: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 #- name: amino_acid
 #  label: Gene_or_gen_product
 #  priority: 3
@@ -103,7 +106,7 @@
 #     site: /pobj|prep_|conj_[^n]|nn/+ [mention=Site] # can't use a conj_nor.   There must be other bad conjunctions.
 
 - name: simple_chem
-  label: Simple_chemical
+  label: [Simple_chemical, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
@@ -117,21 +120,21 @@
      /^\d\d*?P-G[DT]P/
 
 - name: acid
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
   priority: 2
   type: token
   pattern: |
     [word = /(?i)^(glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine)/ & !word=/-rich/ & !mention=/./]
 
 - name: HER_default
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
     /HER2/
 
 - name: Families
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
@@ -142,7 +145,7 @@
     /(?i)^Wnt-?$/
 
 - name: our_proteins
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
@@ -198,7 +201,7 @@
 #     [entity='B-GENE'] [entity='I-GENE']*
 
 - name: protein_complex
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
