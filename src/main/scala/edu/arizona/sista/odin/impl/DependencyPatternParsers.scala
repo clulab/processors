@@ -102,7 +102,13 @@ trait DependencyPatternParsers extends TokenPatternParsers {
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
 }
 
-class ArgumentPattern(val name: String, val label: String, pattern: DependencyPatternNode, val unique: Boolean, val required: Boolean) {
+class ArgumentPattern(
+  val name: String,
+  val label: String,
+  pattern: DependencyPatternNode,
+  val unique: Boolean,
+  val required: Boolean
+) {
   // extracts mentions and groups them according to `unique`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
     val matches = for {

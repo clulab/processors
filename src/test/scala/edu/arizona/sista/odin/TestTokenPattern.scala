@@ -40,4 +40,39 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc, state)
     assert(results.size == 2)
   }
+
+  val text4 = "a b c d e f g h i c"
+  val doc = proc annotate text4
+
+  text4 should "match with a lazy plus" in {
+    val p = TokenPattern.compile("a /./+? c")
+    val results = p.findAllIn(0, doc, None)
+    assert(results.size == 1)
+    assert(results.head.interval.start == 0)
+    assert(results.head.interval.end == 3)
+  }
+
+  it should "match with a greedy plus" in {
+    val p = TokenPattern.compile("a /./+ c")
+    val results = p.findAllIn(0, doc, None)
+    assert(results.size == 1)
+    assert(results.head.interval.start == 0)
+    assert(results.head.interval.end == 10)
+  }
+
+  it should "match with a lazy star" in {
+    val p = TokenPattern.compile("a /./*? c")
+    val results = p.findAllIn(0, doc, None)
+    assert(results.size == 1)
+    assert(results.head.interval.start == 0)
+    assert(results.head.interval.end == 3)
+  }
+
+  it should "match with a greedy star" in {
+    val p = TokenPattern.compile("a /./* c")
+    val results = p.findAllIn(0, doc, None)
+    assert(results.size == 1)
+    assert(results.head.interval.start == 0)
+    assert(results.head.interval.end == 10)
+  }
 }

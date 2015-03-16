@@ -45,20 +45,20 @@ class TokenExtractor(
     r.groups.keys find (_ equalsIgnoreCase "trigger") match {
       case Some(triggerKey) =>
         // result has a trigger, create an EventMention
-        val trigger = new TextBoundMention(label, r.groups(triggerKey), sent, doc, keep, name)
-        val groups = r.groups - triggerKey mapValues (i => Seq(new TextBoundMention(label, i, sent, doc, keep, name)))
+        val trigger = new TextBoundMention(labels, r.groups(triggerKey), sent, doc, keep, name)
+        val groups = r.groups - triggerKey mapValues (i => Seq(new TextBoundMention(labels, i, sent, doc, keep, name)))
         val mentions = r.mentions mapValues (Seq(_))
         val args = groups ++ mentions
-        new EventMention(label, trigger, args, sent, doc, keep, name)
+        new EventMention(labels, trigger, args, sent, doc, keep, name)
       case None if r.groups.nonEmpty || r.mentions.nonEmpty =>
         // result has arguments and no trigger, create a RelationMention
-        val groups = r.groups mapValues (i => Seq(new TextBoundMention(label, i, sent, doc, keep, name)))
+        val groups = r.groups mapValues (i => Seq(new TextBoundMention(labels, i, sent, doc, keep, name)))
         val mentions = r.mentions mapValues (Seq(_))
         val args = groups ++ mentions
-        new RelationMention(label, args, sent, doc, keep, name)
+        new RelationMention(labels, args, sent, doc, keep, name)
       case None =>
         // result has no arguments, create a TextBoundMention
-        new TextBoundMention(label, r.interval, sent, doc, keep, name)
+        new TextBoundMention(labels, r.interval, sent, doc, keep, name)
     }
 }
 
@@ -72,7 +72,7 @@ class DependencyExtractor(
 ) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
-    val mentions = pattern.getMentions(sent, doc, state, label, keep, name)
+    val mentions = pattern.getMentions(sent, doc, state, labels, keep, name)
     action(mentions, state)
   }
 }

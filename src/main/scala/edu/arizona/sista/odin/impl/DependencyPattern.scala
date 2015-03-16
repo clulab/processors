@@ -11,14 +11,26 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
 
   type Args = Map[String, Seq[Mention]]
 
-  def getMentions(sent: Int, doc: Document, state: State, label: String, keep: Boolean, ruleName: String): Seq[Mention] = for {
+  def getMentions(
+    sent: Int,
+    doc: Document,
+    state: State,
+    labels: Seq[String],
+    keep: Boolean,
+    ruleName: String
+  ): Seq[Mention] = for {
     r <- trigger.findAllIn(sent, doc, state)
-    trig = new TextBoundMention(label, Interval(r.start, r.end), sent, doc, keep, ruleName)
+    trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
     args <- extractArguments(trig.tokenInterval, sent, doc, state)
-  } yield new EventMention(label, trig, args, sent, doc, keep, ruleName)
+  } yield new EventMention(labels, trig, args, sent, doc, keep, ruleName)
 
   // extract the arguments of a trigger represented as a token interval
-  private def extractArguments(trig: Interval, sent: Int, doc: Document, state: State): Seq[Args] = for {
+  private def extractArguments(
+    trig: Interval,
+    sent: Int,
+    doc: Document,
+    state: State
+  ): Seq[Args] = for {
     tok <- trig.toSeq
     m <- extractArguments(tok, sent, doc, state)
   } yield m
@@ -52,10 +64,11 @@ object DependencyPattern {
 }
 
 object DependencyPatternCompiler extends DependencyPatternParsers {
-  def compile(input: String): DependencyPattern = parseAll(dependencyPattern, clean(input)) match {
-    case Success(result, _) => result
-    case failure: NoSuccess => sys.error(failure.msg)
-  }
+  def compile(input: String): DependencyPattern =
+    parseAll(dependencyPattern, clean(input)) match {
+      case Success(result, _) => result
+      case failure: NoSuccess => sys.error(failure.msg)
+    }
 
   // remove commented lines and trim whitespaces
   def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim
