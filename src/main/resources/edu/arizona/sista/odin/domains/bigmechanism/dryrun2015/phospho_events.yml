@@ -72,7 +72,7 @@
   example: "... which includes phosphorylation of PKC isozymes by phosphoinositide-dependent protein kinases.  Ras phosphorylation of ASPP2 increased."
   label: [Phosphorylation, Event]
   pattern: |
-    trigger = [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^N/]
+    trigger = [lemma="phosphorylation"]
     theme:BioChemicalEntity = prep_of /nn|conj_|cc/* # don't allow Site
     cause:BioChemicalEntity? = (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/* # don't allow Site
     #site:Site? = (/prep_/ nn*)+
@@ -84,7 +84,7 @@
   example: "Overexpressed PRAS40 suppressed the phosphorylation of S6K1 and 4E-BP1 at their rapamycin-sensitive phosphorylation sites, and reciprocally, overexpression of S6K1 or 4E-BP1 suppressed phosphorylation of PRAS40 (Ser(183)) and its binding to raptor."
   label: [Phosphorylation, Event]
   pattern: |
-    trigger = [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^N/] # nominal predicate
+    trigger = [lemma="phosphorylation"] # nominal predicate
     theme:BioChemicalEntity = prep_of? /conj_|cc|nn/+ 
     site:Site? = /pobj|prep_|conj_|nn/+
     cause:BioChemicalEntity = /prep_by|agent/ /conj|cc|nn/* # don't allow Site
@@ -95,7 +95,7 @@
   example: "ERK- mediated serine phosphorylation of the GAB1 adaptor has been shown to ..."
   label: [Phosphorylation, Event]
   pattern: |
-    trigger = [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^N/ & !outgoing=prep_by] # nominal predicate
+    trigger = [lemma="phosphorylation" & !outgoing=prep_by] # nominal predicate
     theme:BioChemicalEntity = prep_of /conj_|cc|nn/+ 
     cause:BioChemicalEntity = /conj_|cc|nn/+ 
     site:Site? = /pobj|prep_|conj_|nn/+
@@ -106,7 +106,7 @@
   example: " ... mediated by inter-Rad53 phosphorylation.  ASPP1 and ASPP2 have two conserved putative MAPK2 phosphorylation sites in their C-terminus."
   label: [Phosphorylation, Event]
   pattern: |
-    trigger = [lemma="phosphorylation" & !word=/(?i)^de/ & tag=/^N/ & !outgoing=/prep_(by|of)/]
+    trigger = [lemma="phosphorylation" & !outgoing=/prep_(by|of)/]
     theme:BioChemicalEntity = <nn? nn /conj|cc|nn|prep/*
 
 - name: Phosphorylation_syntax_5_noun
@@ -114,7 +114,7 @@
   example: "Interestingly, we observed two conserved putative MAPK phosphorylation sites in ASPP1 and ASPP2."
   label: [Phosphorylation, Event]
   pattern: |
-    trigger = [lemma="phosphorylation" & !word=/^de/ & tag=/^N/]
+    trigger = [lemma="phosphorylation"]
     theme:BioChemicalEntity = < nn > /prep_/ /conj_|cc|nn/* 
     cause:BioChemicalEntity? = < nn /conj_|cc|nn/*
 
@@ -124,7 +124,7 @@
   example: "... the transcriptional cofactor beta-catenin is destabilized via phosphorylation by protein kinase GSK3beta in complex with Axin family members"
   label: [Phosphorylation, Event]
   pattern: |
-    trigger = [lemma="phosphorylation" & !word=/^de/ & tag=/^N/]
+    trigger = [lemma="phosphorylation"]
     cause:BioChemicalEntity = <prep_via agent|prep_by /nn|conj_|cc/* # don't allow Site
     theme:BioChemicalEntity = (prep_of /nn|conj_|cc/*)+ # don't allow Site
 
@@ -133,7 +133,7 @@
   example: ""
   label: [Phosphorylation, Event]
   pattern: |
-    trigger = [lemma="phosphorylation" & !word=/^de/ & !outgoing=prep_of & tag=/^N/]
+    trigger = [lemma="phosphorylation" & !outgoing=prep_of]
     theme:BioChemicalEntity = < nsubj dobj prep_of /nn|cc|conj/* # don't allow Site
 
 - name: Phosphorylation_token_1_noun
