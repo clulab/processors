@@ -15,14 +15,14 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
     sent: Int,
     doc: Document,
     state: State,
-    label: String,
+    labels: Seq[String],
     keep: Boolean,
     ruleName: String
   ): Seq[Mention] = for {
     r <- trigger.findAllIn(sent, doc, state)
-    trig = new TextBoundMention(label, Interval(r.start, r.end), sent, doc, keep, ruleName)
+    trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
     args <- extractArguments(trig.tokenInterval, sent, doc, state)
-  } yield new EventMention(label, trig, args, sent, doc, keep, ruleName)
+  } yield new EventMention(labels, trig, args, sent, doc, keep, ruleName)
 
   // extract the arguments of a trigger represented as a token interval
   private def extractArguments(
