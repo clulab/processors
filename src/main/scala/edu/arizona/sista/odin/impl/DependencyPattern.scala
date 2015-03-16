@@ -43,8 +43,8 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
       results.map(a.name -> _)
     }
     val opt = for (a <- optional) yield a.extract(tok, sent, doc, state).map(a.name -> _)
-    val args = product(req ++ opt) map (_.toMap)
-    args
+    val args = req ++ opt.filter(_.nonEmpty)
+    product(args) map (_.toMap)
   }
 
   // cartesian product
