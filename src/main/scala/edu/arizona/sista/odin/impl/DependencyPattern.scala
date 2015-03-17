@@ -8,8 +8,7 @@ trait DependencyPattern {
   def arguments: Seq[ArgumentPattern]
 
   // separate the required and optional arguments
-  protected val required = for (a <- arguments if a.required) yield a
-  protected val optional = for (a <- arguments if !a.required) yield a
+  protected val (required, optional) = arguments.partition(_.required)
 
   type Args = Map[String, Seq[Mention]]
 
