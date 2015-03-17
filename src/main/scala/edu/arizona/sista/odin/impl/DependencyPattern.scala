@@ -4,10 +4,12 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPattern]) {
+trait DependencyPattern {
+  def arguments: Seq[ArgumentPattern]
+
   // the labels of the required arguments
-  private val required = for (a <- arguments if a.required) yield a
-  private val optional = for (a <- arguments if !a.required) yield a
+  protected val required = for (a <- arguments if a.required) yield a
+  protected val optional = for (a <- arguments if !a.required) yield a
 
   type Args = Map[String, Seq[Mention]]
 
@@ -18,20 +20,16 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
     labels: Seq[String],
     keep: Boolean,
     ruleName: String
-  ): Seq[Mention] = for {
-    r <- trigger.findAllIn(sent, doc, state)
-    trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
-    args <- extractArguments(trig.tokenInterval, sent, doc, state)
-  } yield new EventMention(labels, trig, args, sent, doc, keep, ruleName)
+  ): Seq[Mention]
 
-  // extract the arguments of a trigger represented as a token interval
-  private def extractArguments(
-    trig: Interval,
+  // extract the arguments of a token interval
+  protected def extractArguments(
+    interval: Interval,
     sent: Int,
     doc: Document,
     state: State
   ): Seq[Args] = for {
-    tok <- trig.toSeq
+    tok <- interval.toSeq
     m <- extractArguments(tok, sent, doc, state)
   } yield m
 
@@ -53,17 +51,58 @@ class DependencyPattern(val trigger: TokenPattern, val arguments: Seq[ArgumentPa
   }
 }
 
-object DependencyPattern {
-  def compile(input: String): DependencyPattern = DependencyPatternCompiler.compile(input)
+// if we have a trigger then we create an EventMention
+class EventDependencyPattern(
+  val trigger: TokenPattern,
+  val arguments: Seq[ArgumentPattern]
+) extends DependencyPattern {
+  def getMentions(
+    sent: Int,
+    doc: Document,
+    state: State,
+    labels: Seq[String],
+    keep: Boolean,
+    ruleName: String
+  ): Seq[Mention] = for {
+    r <- trigger.findAllIn(sent, doc, state)
+    trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
+    args <- extractArguments(trig.tokenInterval, sent, doc, state)
+  } yield new EventMention(labels, trig, args, sent, doc, keep, ruleName)
 }
 
-object DependencyPatternCompiler extends DependencyPatternParsers {
-  def compile(input: String): DependencyPattern =
-    parseAll(dependencyPattern, clean(input)) match {
-      case Success(result, _) => result
-      case failure: NoSuccess => sys.error(failure.msg)
-    }
+// if a trigger wasn't specified then we create a RelationMention
+class RelationDependencyPattern(
+  val anchorName: String,
+  val anchorLabel: String,
+  val arguments: Seq[ArgumentPattern]
+) extends DependencyPattern {
+  def getMentions(
+    sent: Int,
+    doc: Document,
+    state: State,
+    labels: Seq[String],
+    keep: Boolean,
+    ruleName: String
+  ): Seq[Mention] = for {
+    tok <- 0 until doc.sentences(sent).size
+    mention <- state.mentionsFor(sent, tok, anchorLabel)
+    args <- extractArguments(mention.tokenInterval, sent, doc, state)
+    relationArgs = args + (anchorName -> Seq(mention))
+  } yield new RelationMention(labels, relationArgs, sent, doc, keep, ruleName)
+}
 
-  // remove commented lines and trim whitespaces
-  def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim
+// compiler interface
+object DependencyPattern {
+  def compile(input: String): DependencyPattern = DependencyPatternCompiler.compile(input)
+
+  private object DependencyPatternCompiler extends DependencyPatternParsers {
+    def compile(input: String): DependencyPattern =
+      parseAll(dependencyPattern, clean(input)) match {
+        case Success(result, _) => result
+        case failure: NoSuccess => sys.error(failure.msg)
+      }
+
+    // remove commented lines and trim whitespaces
+    def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim()
+  }
 }

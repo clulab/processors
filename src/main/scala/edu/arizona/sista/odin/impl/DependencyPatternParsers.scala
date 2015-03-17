@@ -10,8 +10,11 @@ trait DependencyPatternParsers extends TokenPatternParsers {
   val eol = "\n"
 
   def dependencyPattern: Parser[DependencyPattern] =
+    eventDependencyPattern | binaryRelationDependencyPattern
+
+  def eventDependencyPattern: Parser[DependencyPattern] =
     triggerFinder ~ rep1(eol) ~ repsep(argPattern, rep1(eol)) ^^ {
-      case trigger ~ _ ~ arguments => new DependencyPattern(trigger, arguments)
+      case trigger ~ _ ~ arguments => new EventDependencyPattern(trigger, arguments)
     }
 
   def triggerFinder: Parser[TokenPattern] = "(?i)trigger".r ~> "=" ~> tokenPattern
@@ -19,7 +22,7 @@ trait DependencyPatternParsers extends TokenPatternParsers {
   def argPattern: Parser[ArgumentPattern] =
     identifier ~ ":" ~ identifier ~ opt("?"|"*"|"+") ~ "=" ~ disjunctiveDepPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
-        sys.error("`trigger` is not a valid argument name")
+        sys.error("'trigger' is not a valid argument name")
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, unique = true, required = true)
       case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
@@ -28,6 +31,18 @@ trait DependencyPatternParsers extends TokenPatternParsers {
         new ArgumentPattern(name, label, pat, unique = false, required = false)
       case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, unique = false, required = true)
+    }
+
+  // RelationMentions with any number of arguments are possible
+  // but we only allow two arguments
+  def binaryRelationDependencyPattern: Parser[DependencyPattern] =
+    identifier ~ ":" ~ identifier ~ rep1(eol) ~
+    identifier ~ ":" ~ identifier ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
+        sys.error("'trigger' is not a valid argument name")
+      case anchorName ~ ":" ~ anchorLabel ~ _ ~ argName ~ ":" ~ argLabel ~ "=" ~ pat =>
+        val arg = new ArgumentPattern(argName, argLabel, pat, unique = true, required = true)
+        new RelationDependencyPattern(anchorName, anchorLabel, Seq(arg))
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
