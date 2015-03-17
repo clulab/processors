@@ -35,17 +35,24 @@ trait DependencyPattern {
 
   // extract arguments for one of the tokens in the trigger
   private def extractArguments(tok: Int, sent: Int, doc: Document, state: State): Seq[Args] = {
+    // extract all required arguments
     val req = for (a <- required) yield {
       val results = a.extract(tok, sent, doc, state)
+      // if a required argument is not present stop extraction
       if (results.isEmpty) return Nil
       results.map(a.name -> _)
     }
+    // extract optional arguments
     val opt = for (a <- optional) yield a.extract(tok, sent, doc, state).map(a.name -> _)
+    // drop empty optional arguments
     val args = req ++ opt.filter(_.nonEmpty)
-    product(args) map (_.toMap)
+    // return cartesian product of arguments
+    product(args).map(_.toMap)
   }
 
   // cartesian product
+  // from: List(List(x1, x2, x3), List(y1, y2))
+  // to: List(List(x1, y1), List(x1, y2), List(x2, y1), List(x2, y2), List(x3, y1), List(x3, y2))
   private def product[A](xss: Seq[Seq[A]]) = xss.foldRight(Seq(Seq[A]())) {
     (xs, lla) => xs.flatMap(x => lla.map(x +: _))
   }
