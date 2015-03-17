@@ -7,7 +7,7 @@ import edu.arizona.sista.odin._
 trait DependencyPattern {
   def arguments: Seq[ArgumentPattern]
 
-  // the labels of the required arguments
+  // separate the required and optional arguments
   protected val required = for (a <- arguments if a.required) yield a
   protected val optional = for (a <- arguments if !a.required) yield a
 
