@@ -66,6 +66,12 @@ object TestMatcher extends App {
                  |  pattern: |
                  |    trigger = binds
                  |    theme: Protein+ = nsubj | prep_to
+                 |
+                 |- name: rule7
+                 |  label: ExampleRelation
+                 |  pattern: |
+                 |    prot1: Protein
+                 |    prot2: Protein = conj_and
                  |""".stripMargin
 
   // creates an extractor engine using the rules and the default actions
