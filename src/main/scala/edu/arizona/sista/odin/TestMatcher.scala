@@ -27,7 +27,7 @@ object TestMatcher extends App {
                  |- name: rule2
                  |  label: [Phosphorylation, Event]
                  |  pattern: |
-                 |    Trigger = [word=/^phospho/ & tag=/^VB/]
+                 |    Trigger = [word=/^phospho/ & tag=/^VB/] (?! of)
                  |    theme: Protein = dobj
                  |    cause: Protein = nsubj
                  |
@@ -38,7 +38,7 @@ object TestMatcher extends App {
                  |    - Ubiquitination
                  |    - Event
                  |  pattern: |
-                 |    triggER = ubiquitination
+                 |    triggER = ubiquitination (?= of)
                  |    theme: Protein = prep_of
                  |
                  | # creates a regulation with a ubiquitination event as the theme
