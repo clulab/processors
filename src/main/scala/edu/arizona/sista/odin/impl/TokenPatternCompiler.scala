@@ -23,10 +23,10 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     ("(?="|"(?!") ~ splitPattern <~ ")" ^^ {
       case "(?=" ~ frag =>
         frag.setOut(Done)
-        new TokenPatternLookaheadAssertion(frag.in, positive = true)
+        new TokenPatternLookaheadAssertion(frag.in, negative = false)
       case "(?!" ~ frag =>
         frag.setOut(Done)
-        new TokenPatternLookaheadAssertion(frag.in, positive = false)
+        new TokenPatternLookaheadAssertion(frag.in, negative = true)
     }
 
   def splitPattern: Parser[ProgramFragment] =

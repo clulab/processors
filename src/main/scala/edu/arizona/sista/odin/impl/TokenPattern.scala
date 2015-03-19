@@ -86,22 +86,14 @@ class TokenPattern(val start: Inst, val lookahead: Option[TokenPatternLookaheadA
     findAllIn(sent, doc, Some(state))
 }
 
-class TokenPatternLookaheadAssertion(val start: Inst, val positive: Boolean) {
+class TokenPatternLookaheadAssertion(val start: Inst, val negative: Boolean) {
   def filter(
     results: Seq[TokenPattern.Result],
     sent: Int,
     doc: Document,
     state: Option[State]
-  ): Seq[TokenPattern.Result] =
-    for (r <- results if assert(r, sent, doc, state)) yield r
-
-  def assert(
-    result: TokenPattern.Result,
-    sent: Int,
-    doc: Document,
-    state: Option[State]
-  ): Boolean = {
-    val matches = ThompsonVM.evaluate(start, result.end, sent, doc, state)
-    positive == matches.nonEmpty
+  ): Seq[TokenPattern.Result] = results filter { r =>
+    val results = ThompsonVM.evaluate(start, r.end, sent, doc, state)
+    negative == results.isEmpty
   }
 }
