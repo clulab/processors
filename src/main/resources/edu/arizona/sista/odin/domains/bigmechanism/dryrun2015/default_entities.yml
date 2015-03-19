@@ -77,33 +77,28 @@
 #   pattern: |
 #     (?<parent> [mention=Site]) [word=/,|and/ | tag=CD]+ (?<site> [tag=CD])
 
-# - name: protein_with_site_token_1
-#   label: Protein_with_site
-#   priority: 3
-#   type: token
-#   action: mkComplexEntity
-#   pattern: |
-#     (?<site> [mention=Site]) [tag=IN] (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/] ([tag=/(,|CC)/]+ [mention=/^(Protein|Gene_or_gene_product)$/])*)
-#       |
-#     (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/]) [tag=IN] (?<site> [mention=Site] ([tag=/(,|CC)/]+ [mention=Site])*)
+- name: protein_with_site_token_1
+  label: [Protein_with_site, BioChemicalEntity]
+  priority: 3
+  type: token
+  pattern: |
+    @site:Site [tag=IN] (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/] ([tag=/(,|CC)/]+ [mention=/^(Protein|Gene_or_gene_product)$/])*)
+      |
+    @protein:BioChemicalEntity [tag=IN] (?<site> [mention=Site] ([tag=/(,|CC)/]+ [mention=Site])*)
 
-# - name: site_with_protein_syntax_1
-#   label: Protein_with_site
-#   priority: 3
-#   type: dependency
-#   action: mkProteinWithSiteSyntax
-#   pattern: |
-#     trigger: [mention=Site]
-#     protein: /pobj|prep_|conj|nn/+ [mention=/^Protein$|^Gene_or_gene_product$/]  # can't use a conj_nor.   There must be other bad conjunctions.
+- name: site_with_protein_syntax_1
+  label: [Protein_with_site, BioChemicalEntity]
+  priority: 3
+  pattern: |
+     site:Site
+     protein:BioChemicalEntity = /pobj|prep_|conj|nn/+ # can't use a conj_nor.   There must be other bad conjunctions.
 
-# - name: protein_with_site_syntax_1
-#   label: Protein_with_site
-#   priority: 3
-#   type: dependency
-#   action: mkProteinWithSiteSyntax
-#   pattern: |
-#     trigger: [mention=/^Protein$|^Gene_or_gene_product$/]
-#     site: /pobj|prep_|conj_[^n]|nn/+ [mention=Site] # can't use a conj_nor.   There must be other bad conjunctions.
+- name: protein_with_site_syntax_1
+  label: [Protein_with_site, BioChemicalEntity]
+  priority: 3
+  pattern: |
+    protein:BioChemicalEntity
+    site:Site = /pobj|prep_|conj_[^n]|nn/+ # can't use a conj_nor.   There must be other bad conjunctions.
 
 - name: simple_chem
   label: [Simple_chemical, BioChemicalEntity]
