@@ -46,14 +46,18 @@ class TokenExtractor(
       case Some(triggerKey) =>
         // result has a trigger, create an EventMention
         val trigger = new TextBoundMention(labels, r.groups(triggerKey), sent, doc, keep, name)
-        val groups = r.groups - triggerKey mapValues (i => Seq(new TextBoundMention(labels, i, sent, doc, keep, name)))
-        val mentions = r.mentions mapValues (Seq(_))
+        val groups = r.groups - triggerKey transform {
+          (name, interval) => Seq(new TextBoundMention(labels, interval, sent, doc, keep, name))
+        }
+        val mentions = r.mentions.transform((name, mention) => Seq(mention))
         val args = groups ++ mentions
         new EventMention(labels, trigger, args, sent, doc, keep, name)
       case None if r.groups.nonEmpty || r.mentions.nonEmpty =>
         // result has arguments and no trigger, create a RelationMention
-        val groups = r.groups mapValues (i => Seq(new TextBoundMention(labels, i, sent, doc, keep, name)))
-        val mentions = r.mentions mapValues (Seq(_))
+        val groups = r.groups transform {
+          (name, interval) => Seq(new TextBoundMention(labels, interval, sent, doc, keep, name))
+        }
+        val mentions = r.mentions.transform((name, mention) => Seq(mention))
         val args = groups ++ mentions
         new RelationMention(labels, args, sent, doc, keep, name)
       case None =>

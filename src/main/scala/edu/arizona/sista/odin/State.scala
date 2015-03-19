@@ -42,7 +42,7 @@ object State {
       i <- m.tokenInterval.toSeq
       key = (m.sentence, i)
     } yield (key, m)
-    pairs groupBy (_._1) mapValues (_ map (_._2))
+    pairs groupBy (_._1) transform ((k, v) => v.map(_._2))
   }
 
   def mergeLuts(lhs: MentionLUT, rhs: MentionLUT): MentionLUT = {

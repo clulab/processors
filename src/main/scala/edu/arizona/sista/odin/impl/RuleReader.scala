@@ -17,7 +17,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     // read yaml rules
     val rules = readRules(input)
     // count names occurrences
-    val names = rules groupBy (_.name) mapValues (_.size)
+    val names = rules groupBy (_.name) transform ((k, v) => v.size)
     // names should be unique
     names find (_._2 > 1) match {
       case None => rules map mkExtractor  // return extractors

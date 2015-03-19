@@ -11,8 +11,8 @@ class TokenPattern(val start: Inst) {
     ThompsonVM.evaluate(start, tok, sent, doc, state) map {
       case (groups, mentions) =>
         val (start, end) = groups(GlobalCapture)
-        val newGroups = groups - GlobalCapture mapValues {
-          case (from, until) => Interval(from, until)
+        val newGroups = groups - GlobalCapture transform {
+          case (name, (from, until)) => Interval(from, until)
         }
         Result(Interval(start, end), newGroups, mentions)
     }
