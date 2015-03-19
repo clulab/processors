@@ -214,7 +214,7 @@
    ([word=/(?i)^Proto(-oncogene)?(-like)?$/] [word=/(?i)^protein$/]? "c-ErbB-3")
 
 - name: Jan5_dryrun_model
-  label: [Gene_or_gene_product MacroMolecule, BioChemicalEntity]
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
