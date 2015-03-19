@@ -19,20 +19,42 @@ class DarpaActions extends Actions {
     println(s"\nArgs for $ruleName: \n\t${debugOut.mkString("\n\t")}\n")
   }
 
-  def mkUbiquitination(mentions:Seq[Mention], state:State):Seq[Mention] = {
-   mentions.filter{ m =>
-     ! m.arguments.values.flatten.exists(_.text.toLowerCase.startsWith("ubiq")) // Don't allow Ubiquitin
-   }
+  def mkNERMentions(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions flatMap { m =>
+      val candidates = state.mentionsFor(m.sentence, m.tokenInterval.toSeq)
+      // do any candidates intersect the mention?
+      val overlap = candidates.exists(_.tokenInterval.intersects(m.tokenInterval))
+      if (overlap) None else Some(m)
+    }
+  }
+
+  def mkUbiquitination(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.filter { m =>
+      !m.arguments.values.flatten.exists(_.text.toLowerCase.startsWith("ubiq")) // Don't allow Ubiquitin
+    }
+  }
+
+  def mkBinding(mentions: Seq[Mention], state: State): Seq[Mention] = {
+
+    mentions flatMap { m =>
+      m match {
+        case m: EventMention => {
+          val args = m.arguments
+          val themes = for {
+            name <- args.keys
+            if name startsWith "theme"
+            theme <- args(name)
+          } yield theme
+          Seq(new EventMention(m.labels, m.trigger, Map("theme" -> themes.toSeq), m.sentence, m.document, m.keep, m.foundBy))
+        }
+        case r: RelationMention => Nil
+        case _ => Nil
+      }
+    }
   }
 
   def mkTextBoundMention(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
     Seq(new TextBoundMention(label, mention("--GLOBAL--").head, sent, doc, keep, ruleName))
-  }
-
-  def mkBannerMention(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    val allMentions = state.allMentions.filter(_.sentence == sent).map(_.tokenInterval)
-    // make sure each interval doesn't intersect with existing Gene_or_gene_product mentions previously found
-    for (m <- mention("--GLOBAL--") if allMentions.forall(!_.intersects(m))) yield new TextBoundMention(label, m, sent, doc, keep, ruleName)
   }
 
   def mkConversion(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
@@ -53,29 +75,6 @@ class DarpaActions extends Actions {
     val events = for (protein <- proteins; site <- sites) yield new RelationMention(label, Map("Protein" -> Seq(protein), "Site" -> Seq(site)), sent, doc, keep, ruleName)
 
     events
-  }
-
-  def mkProteinWithSiteSyntax(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    // construct an event mention from a complex entity like "Protein_with_site"
-    val trigger = state.mentionsFor(sent, mention("trigger").map(_.start))
-    val proteins = if (mention contains "protein") state.mentionsFor(sent, mention("protein").map(_.start), simpleProteinLabels) else trigger
-    val sites = if (mention contains "site") state.mentionsFor(sent, mention("site").map(_.start), Seq("Site")) else trigger
-
-    val events = for (protein <- proteins; site <- sites) yield new RelationMention(label, Map("Protein" -> Seq(protein), "Site" -> Seq(site)), sent, doc, keep, ruleName)
-
-    events
-  }
-
-  def mkMultiSite(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    // construct an event mention from a complex entity like "Protein_with_site"
-
-    // Will this be a problem?  Protein_with_site mentions are actually EventMentions
-    val parent = state.mentionsFor(sent, mention("parent").head.start, Seq("Site")).head.asInstanceOf[TextBoundMention]
-
-    val site = new TextBoundMention(label, mention("site").head, sent, doc, keep, ruleName)
-    val event = new RelationMention(label, Map("Parent" -> Seq(parent), "Site" -> Seq(site)), sent, doc, keep, ruleName)
-
-    Seq(event)
   }
 
   def findCoref(state: State, doc: Document, sent: Int, anchor: Interval, lspan: Int = 2, rspan: Int = 0, antType: Seq[String], n: Int = 1): Seq[Mention] = {
@@ -149,137 +148,6 @@ class DarpaActions extends Actions {
   def meldMentions(mention: Map[String, Seq[Interval]]): Interval = {
     val range = (for (i: Interval <- mention.values.toSet.toSeq.flatten) yield Seq(i.start, i.end)).flatten.sorted
     new Interval(range.head, range.last)
-  }
-
-
-  def mkSimpleEvent(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    //debug(label, mention, sent, doc, ruleName, state)
-    // Don't change this, but feel free to make a new action based on this one.
-
-    val trigger = new TextBoundMention(label, mention("trigger").head, sent, doc, keep, ruleName)
-
-    def unpackTheseMentions(mentions: Seq[Mention], labels: Seq[String]): Seq[Mention] = {
-
-      val processedMentions =
-        for (m <- mentions) yield
-          m match {
-            case toUnpack if labels contains m.label => unpackMention(m)
-            case _ => Seq(m)
-          }
-      processedMentions.flatten
-    }
-
-    def unpackMention(mention: Mention): Seq[Mention] = {
-      val mentions =
-        for (m <- mention.arguments.values.flatten) yield
-          m match {
-            case m: TextBoundMention => {
-              //println (s"mention label: ${m.label}")
-              Seq(m)
-            }
-            case _ => unpackMention(m)
-          }
-      mentions.flatten.toSeq
-    }
-
-    def findAllSimpleMentions(mentions: Seq[Mention]): Seq[Mention] = {
-
-      val simpleMentions =
-        for (m <- mentions) yield
-          m match {
-            case simple if m.isInstanceOf[TextBoundMention] => Seq(m)
-            case _ => unpackMention(m)
-          }
-
-      simpleMentions.flatten.distinct
-    }
-
-    def getAllMentionsForArg(argName: String): Seq[Mention] = state.mentionsFor(sent, mention.getOrElse(argName, Nil).map(_.start))
-
-    def allMentionsForMatch: Seq[Mention] = state.mentionsFor(sent, mention.values.flatten.map(_.start).toSeq)
-
-    def filterMentions (argName: String, unpackable: Seq[String]): Seq[Mention] = {
-      val validMentions = unpackTheseMentions(getAllMentionsForArg(argName), unpackable)
-        .filter(m => ValidArgument(label, argName) contains m.label)
-      if (validMentions.isEmpty) {
-        findCoref(state,doc,sent,anchor=meldMentions(mention),lspan=5,rspan=6,antType=ValidArgument(label, argName),1)
-      }
-      else validMentions
-    }
-
-    // We want to unpack relation mentions...
-    val themes = filterMentions("theme", Seq("Protein_with_site"))
-
-    // Only propagate EventMentions containing a theme
-    if (themes.isEmpty) return Nil
-
-    // unpack any RelationMentions and keep only mention matching the set of valid TextBound Entity labels
-    val causes = unpackTheseMentions(getAllMentionsForArg("cause"), Seq("Protein_with_site"))
-      .filter(m => proteinLabels contains m.label)
-
-    // unpack any RelationMentions
-    val sites = findAllSimpleMentions(allMentionsForMatch).filter(m => siteLabels contains m.label)
-
-    val events = trigger match {
-      case hasCauseHasThemeHasSite if causes.nonEmpty && themes.nonEmpty && sites.nonEmpty => for (cause <- causes; site <- sites; theme <- themes) yield new EventMention(label, trigger, Map("Theme" -> Seq(theme), "Site" -> Seq(site), "Cause" -> Seq(cause)), sent, doc, keep, ruleName)
-      case hasCauseHasThemeNoSite if causes.nonEmpty && themes.nonEmpty && sites.isEmpty => for (cause <- causes; theme <- themes) yield new EventMention(label, trigger, Map("Theme" -> Seq(theme), "Cause" -> Seq(cause)), sent, doc, keep, ruleName)
-      case noCauseHasThemeHasSite if causes.isEmpty && sites.nonEmpty && themes.nonEmpty => for (site <- sites; theme <- themes) yield new EventMention(label, trigger, Map("Theme" -> Seq(theme), "Site" -> Seq(site)), sent, doc, keep, ruleName)
-      case noCauseNoSiteHasTheme if causes.isEmpty && sites.isEmpty && themes.nonEmpty => for (theme <- themes) yield new EventMention(label, trigger, Map("Theme" -> Seq(theme)), sent, doc, keep, ruleName)
-      case _ => Seq()
-    }
-
-    events
-  }
-
-  def mkComplexEvent(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    // Don't change this, but feel free to make a new action based on this one.
-
-    val trigger = new TextBoundMention(label, mention("trigger").head, sent, doc, keep, ruleName)
-
-    val themes = state.mentionsFor(sent, mention("theme").map(_.start))
-    // Only propagate EventMentions containing a theme
-    if (themes.isEmpty) return Nil
-
-    val causes = state.mentionsFor(sent, mention("cause").map(_.start))
-
-    val events = trigger match {
-      case hasCauseHasTheme if causes.nonEmpty && themes.nonEmpty => for (cause <- causes; theme <- themes) yield new EventMention(label, trigger, Map("Theme" -> Seq(theme), "Cause" -> Seq(cause)), sent, doc, keep, ruleName)
-      case noCauseHasTheme if causes.isEmpty && themes.nonEmpty => for (theme <- themes) yield new EventMention(label, trigger, Map("Theme" -> Seq(theme)), sent, doc, keep, ruleName)
-      case _ => Seq()
-    }
-
-    events
-  }
-
-  def mkRegulation(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    //debug(label, mention, sent, doc, ruleName, state)
-    val trigger = new TextBoundMention(label, mention("trigger").head, sent, doc, keep, ruleName)
-    //println(s"args for $ruleName: ${mention.keys.flatMap(k => mention(k).flatMap(m => doc.sentences(sent).words.slice(m.start, m.end))).mkString(", ")}")
-    val events = for {
-      controllerMention <- mention.getOrElse("controller", Nil)
-      controller <- state.mentionsFor(sent, controllerMention.toSeq).distinct
-      controlledMention <- mention("controlled")
-      controlled <- state.mentionsFor(sent, controlledMention.toSeq, eventLabels).distinct
-      if controlled.isInstanceOf[EventMention]
-      args = Map("Controller" -> Seq(controller), "Controlled" -> Seq(controlled))
-    } yield {
-      new EventMention(label, trigger, args, sent, doc, keep, ruleName)
-    }
-
-   events
-  }
-
-  def mkBindingEvent(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
-    val trigger = new TextBoundMention(label, mention("trigger").head, sent, doc, keep, ruleName)
-    val themes = for {
-      name <- mention.keys
-      if name startsWith "theme"
-      m <- mention(name)
-      theme <- state.mentionsFor(sent, m.start, "Simple_chemical" +: simpleProteinLabels)
-    } yield theme
-    val args = Map("Theme" -> themes.toSeq.distinct)
-    val event = new EventMention(label, trigger, args, sent, doc, keep, ruleName)
-    Seq(event)
   }
 
   def mkBindingCorefEvent(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
