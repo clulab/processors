@@ -12,11 +12,21 @@ trait TokenPatternParsers extends TokenConstraintParsers {
   override val whiteSpace = """(\s|#.*)+""".r
 
   def tokenPattern: Parser[TokenPattern] =
-    splitPattern ^^ {
-      case frag =>
+    splitPattern ~ opt(lookaheadAssertion) ^^ {
+      case frag ~ lookahead =>
         val f = frag.capture(TokenPattern.GlobalCapture)
         f.setOut(Done)
-        new TokenPattern(f.in)
+        new TokenPattern(f.in, lookahead)
+    }
+
+  def lookaheadAssertion: Parser[TokenPatternLookaheadAssertion] =
+    ("(?="|"(?!") ~ splitPattern <~ ")" ^^ {
+      case "(?=" ~ frag =>
+        frag.setOut(Done)
+        new TokenPatternLookaheadAssertion(frag.in, positive = true)
+      case "(?!" ~ frag =>
+        frag.setOut(Done)
+        new TokenPatternLookaheadAssertion(frag.in, positive = false)
     }
 
   def splitPattern: Parser[ProgramFragment] =

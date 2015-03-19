@@ -4,17 +4,36 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-class TokenPattern(val start: Inst) {
+object TokenPattern {
+  val GlobalCapture = "--GLOBAL--"
+
+  def compile(input: String): TokenPattern = TokenPatternCompiler.compile(input)
+
+  case class Result(
+      interval: Interval,
+      groups: Map[String, Interval],
+      mentions: Map[String, Mention]
+  ) {
+    val start = interval.start
+    val end = interval.end
+  }
+}
+
+class TokenPattern(val start: Inst, val lookahead: Option[TokenPatternLookaheadAssertion]) {
   import TokenPattern._
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Result] = {
-    ThompsonVM.evaluate(start, tok, sent, doc, state) map {
+    val results = ThompsonVM.evaluate(start, tok, sent, doc, state) map {
       case (groups, mentions) =>
         val (start, end) = groups(GlobalCapture)
         val newGroups = groups - GlobalCapture transform {
           case (name, (from, until)) => Interval(from, until)
         }
         Result(Interval(start, end), newGroups, mentions)
+    }
+    lookahead match {
+      case None => results
+      case Some(assertion) => assertion.filter(results, sent, doc, state)
     }
   }
 
@@ -29,12 +48,13 @@ class TokenPattern(val start: Inst) {
 
   def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Result] = {
     @annotation.tailrec
-    def collect(i: Int, collected: Seq[Result]): Seq[Result] = findFirstIn(i, sent, doc, state) match {
-      case Nil => collected
-      case results =>
-        val r = results minBy (_.interval.size)
-        collect(r.end, results ++ collected)
-    }
+    def collect(i: Int, collected: Seq[Result]): Seq[Result] =
+      findFirstIn(i, sent, doc, state) match {
+        case Nil => collected
+        case results =>
+          val r = results minBy (_.interval.size)
+          collect(r.end, results ++ collected)
+      }
     collect(tok, Nil)
   }
 
@@ -66,17 +86,22 @@ class TokenPattern(val start: Inst) {
     findAllIn(sent, doc, Some(state))
 }
 
-object TokenPattern {
-  val GlobalCapture = "--GLOBAL--"
+class TokenPatternLookaheadAssertion(val start: Inst, val positive: Boolean) {
+  def filter(
+    results: Seq[TokenPattern.Result],
+    sent: Int,
+    doc: Document,
+    state: Option[State]
+  ): Seq[TokenPattern.Result] =
+    for (r <- results if assert(r, sent, doc, state)) yield r
 
-  def compile(input: String): TokenPattern = TokenPatternCompiler.compile(input)
-
-  case class Result(
-      interval: Interval,
-      groups: Map[String, Interval],
-      mentions: Map[String, Mention]
-  ) {
-    val start = interval.start
-    val end = interval.end
+  def assert(
+    result: TokenPattern.Result,
+    sent: Int,
+    doc: Document,
+    state: Option[State]
+  ): Boolean = {
+    val matches = ThompsonVM.evaluate(start, result.end, sent, doc, state)
+    positive == matches.nonEmpty
   }
 }
