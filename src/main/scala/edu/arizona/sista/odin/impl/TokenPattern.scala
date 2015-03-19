@@ -92,11 +92,8 @@ class TokenPatternLookaheadAssertion(val start: Inst, val negative: Boolean) {
     sent: Int,
     doc: Document,
     state: Option[State]
-  ): Seq[TokenPattern.Result] = {
-    def matchesAssertion(r: TokenPattern.Result): Boolean = {
-      val results = ThompsonVM.evaluate(start, r.end, sent, doc, state)
-      negative == results.isEmpty
-    }
-    results filter matchesAssertion
+  ): Seq[TokenPattern.Result] = results filter { r =>
+    val results = ThompsonVM.evaluate(start, r.end, sent, doc, state)
+    negative == results.isEmpty
   }
 }
