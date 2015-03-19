@@ -19,6 +19,12 @@ class DarpaActions extends Actions {
     println(s"\nArgs for $ruleName: \n\t${debugOut.mkString("\n\t")}\n")
   }
 
+  def mkUbiquitination(mentions:Seq[Mention], state:State):Seq[Mention] = {
+   mentions.filter{ m =>
+     ! m.arguments.values.flatten.exists(_.text.toLowerCase.startsWith("ubiq")) // Don't allow Ubiquitin
+   }
+  }
+
   def mkTextBoundMention(label: String, mention: Map[String, Seq[Interval]], sent: Int, doc: Document, ruleName: String, state: State, keep: Boolean): Seq[Mention] = {
     Seq(new TextBoundMention(label, mention("--GLOBAL--").head, sent, doc, keep, ruleName))
   }
