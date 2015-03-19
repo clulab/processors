@@ -97,18 +97,6 @@ class RelationDependencyPattern(
   } yield new RelationMention(labels, relationArgs, sent, doc, keep, ruleName)
 }
 
-// compiler interface
 object DependencyPattern {
   def compile(input: String): DependencyPattern = DependencyPatternCompiler.compile(input)
-
-  private object DependencyPatternCompiler extends DependencyPatternParsers {
-    def compile(input: String): DependencyPattern =
-      parseAll(dependencyPattern, clean(input)) match {
-        case Success(result, _) => result
-        case failure: NoSuccess => sys.error(failure.msg)
-      }
-
-    // remove commented lines and trim whitespaces
-    def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim()
-  }
 }

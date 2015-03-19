@@ -68,16 +68,15 @@ class TokenPattern(val start: Inst) {
 
 object TokenPattern {
   val GlobalCapture = "--GLOBAL--"
+
   def compile(input: String): TokenPattern = TokenPatternCompiler.compile(input)
-  case class Result(interval: Interval, groups: Map[String, Interval], mentions: Map[String, Mention]) {
+
+  case class Result(
+      interval: Interval,
+      groups: Map[String, Interval],
+      mentions: Map[String, Mention]
+  ) {
     val start = interval.start
     val end = interval.end
-  }
-}
-
-object TokenPatternCompiler extends TokenPatternParsers {
-  def compile(input: String): TokenPattern = parseAll(tokenPattern, input) match {
-    case Success(result, _) => result
-    case failure: NoSuccess => sys.error(failure.msg)
   }
 }

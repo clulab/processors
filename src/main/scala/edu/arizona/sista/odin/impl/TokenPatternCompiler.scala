@@ -1,79 +1,99 @@
 package edu.arizona.sista.odin.impl
 
+object TokenPatternCompiler extends TokenPatternParsers {
+  def compile(input: String): TokenPattern = parseAll(tokenPattern, input) match {
+    case Success(result, _) => result
+    case failure: NoSuccess => sys.error(failure.msg)
+  }
+}
+
 trait TokenPatternParsers extends TokenConstraintParsers {
   // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r
 
-  def tokenPattern: Parser[TokenPattern] = splitPattern ^^ {
-    case frag =>
-      val f = frag.capture(TokenPattern.GlobalCapture)
-      f.setOut(Done)
-      new TokenPattern(f.in)
-  }
-
-  def splitPattern: Parser[ProgramFragment] = concatPattern ~ rep("|" ~> concatPattern) ^^ {
-    case first ~ rest => (first /: rest) {
-      case (lhs, rhs) =>
-        val split = Split(lhs.in, rhs.in)
-        ProgramFragment(split, lhs.out ++ rhs.out)
+  def tokenPattern: Parser[TokenPattern] =
+    splitPattern ^^ {
+      case frag =>
+        val f = frag.capture(TokenPattern.GlobalCapture)
+        f.setOut(Done)
+        new TokenPattern(f.in)
     }
-  }
 
-  def concatPattern: Parser[ProgramFragment] = quantifiedPattern ~ rep(quantifiedPattern) ^^ {
-    case first ~ rest => (first /: rest) {
-      case (lhs, rhs) => ProgramFragment(lhs, rhs)
+  def splitPattern: Parser[ProgramFragment] =
+    concatPattern ~ rep("|" ~> concatPattern) ^^ {
+      case first ~ rest => (first /: rest) {
+        case (lhs, rhs) =>
+          val split = Split(lhs.in, rhs.in)
+          ProgramFragment(split, lhs.out ++ rhs.out)
+      }
     }
+
+  def concatPattern: Parser[ProgramFragment] =
+    quantifiedPattern ~ rep(quantifiedPattern) ^^ {
+      case first ~ rest => (first /: rest) {
+        case (lhs, rhs) => ProgramFragment(lhs, rhs)
+      }
   }
 
   def quantifiedPattern: Parser[ProgramFragment] =
     repeatedPattern | rangePattern | exactPattern | atomicPattern
 
-  def singleTokenPattern: Parser[ProgramFragment] = (wordConstraint | tokenConstraint) ^^ {
-    case constraint => ProgramFragment(MatchToken(constraint))
-  }
+  def singleTokenPattern: Parser[ProgramFragment] =
+    (wordConstraint | tokenConstraint) ^^ {
+      case constraint => ProgramFragment(MatchToken(constraint))
+    }
 
   def zeroWidthAssertion: Parser[ProgramFragment] = ("^"|"$") ^^ {
     case "^" => ProgramFragment(MatchSentenceStart())
     case "$" => ProgramFragment(MatchSentenceEnd())
   }
 
-  def capturePattern: Parser[ProgramFragment] = "(?<" ~ identifier ~ ">" ~ splitPattern ~ ")" ^^ {
-    case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
-  }
+  def capturePattern: Parser[ProgramFragment] =
+    "(?<" ~ identifier ~ ">" ~ splitPattern ~ ")" ^^ {
+      case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
+    }
 
-  def unnamedMentionPattern: Parser[ProgramFragment] = "@" ~> exactStringMatcher ^^ {
-    case matcher => ProgramFragment(MatchMention(matcher))
-  }
+  def unnamedMentionPattern: Parser[ProgramFragment] =
+    "@" ~> exactStringMatcher ^^ {
+      case matcher => ProgramFragment(MatchMention(matcher))
+    }
 
-  def namedMentionPattern: Parser[ProgramFragment] = "@" ~> stringLiteral ~ ":" ~ exactStringMatcher ^^ {
-    case name ~ ":" ~ matcher => ProgramFragment(MatchMention(name, matcher))
-  }
+  def namedMentionPattern: Parser[ProgramFragment] =
+    "@" ~> stringLiteral ~ ":" ~ exactStringMatcher ^^ {
+      case name ~ ":" ~ matcher => ProgramFragment(MatchMention(name, matcher))
+    }
 
-  def mentionPattern: Parser[ProgramFragment] = namedMentionPattern | unnamedMentionPattern
+  def mentionPattern: Parser[ProgramFragment] =
+    namedMentionPattern | unnamedMentionPattern
 
   def atomicPattern: Parser[ProgramFragment] =
-    zeroWidthAssertion | singleTokenPattern | mentionPattern | capturePattern | "(" ~> splitPattern <~ ")"
+    zeroWidthAssertion | singleTokenPattern | mentionPattern |
+    capturePattern | "(" ~> splitPattern <~ ")"
 
-  def repeatedPattern: Parser[ProgramFragment] = atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
-    case frag ~ "?" => frag.greedyOptional
-    case frag ~ "??" => frag.lazyOptional
-    case frag ~ "*" => frag.greedyKleene
-    case frag ~ "*?" => frag.lazyKleene
-    case frag ~ "+" => frag.greedyPlus
-    case frag ~ "+?" => frag.lazyPlus
-  }
+  def repeatedPattern: Parser[ProgramFragment] =
+    atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
+      case frag ~ "?" => frag.greedyOptional
+      case frag ~ "??" => frag.lazyOptional
+      case frag ~ "*" => frag.greedyKleene
+      case frag ~ "*?" => frag.lazyKleene
+      case frag ~ "+" => frag.greedyPlus
+      case frag ~ "+?" => frag.lazyPlus
+    }
 
   // positive integer
-  def int: Parser[Int] = """\d+""".r ^^ { _.toInt }
+  def int: Parser[Int] =
+    """\d+""".r ^^ { _.toInt }
 
-  def rangePattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}?"|"}") ^^ {
-    case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
-    case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
-  }
+  def rangePattern: Parser[ProgramFragment] =
+    atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}?"|"}") ^^ {
+      case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
+      case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
+    }
 
-  def exactPattern: Parser[ProgramFragment] = atomicPattern ~ "{" ~ int ~ "}" ^^ {
-    case frag ~ "{" ~ n ~ "}" => frag.repeatPattern(n)
-  }
+  def exactPattern: Parser[ProgramFragment] =
+    atomicPattern ~ "{" ~ int ~ "}" ^^ {
+      case frag ~ "{" ~ n ~ "}" => frag.repeatPattern(n)
+    }
 
   /** Represents a partially compiled TokenPattern.
     *

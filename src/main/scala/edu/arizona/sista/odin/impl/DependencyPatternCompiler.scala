@@ -4,7 +4,16 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-trait DependencyPatternParsers extends TokenPatternParsers {
+object DependencyPatternCompiler extends TokenPatternParsers {
+  def compile(input: String): DependencyPattern =
+    parseAll(dependencyPattern, clean(input)) match {
+      case Success(result, _) => result
+      case failure: NoSuccess => sys.error(failure.msg)
+    }
+
+  // remove commented lines and trim whitespaces
+  def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim()
+
   // comments are considered whitespace
   override val whiteSpace = """([ \t\x0B\f\r]|#.*)+""".r
   val eol = "\n"
