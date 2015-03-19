@@ -18,7 +18,7 @@ class Ruler(val rules: String, val actions: Actions) {
       // the event mention should not be a regulation and it must contain a cause
       case m: EventMention if !m.label.endsWith("egulation") && m.arguments.contains("cause") =>
         val controller = m.arguments("cause")
-        val someEvent = new EventMention(m.label, m.trigger, m.arguments - "cause", m.sentence, m.document, m.keep, m.foundBy)
+        val someEvent = new EventMention(m.labels, m.trigger, m.arguments - "cause", m.sentence, m.document, m.keep, m.foundBy)
         val args = Map("controller" -> controller, "controlled" -> Seq(someEvent))
         val upreg = new RelationMention("Positive_regulation", args, m.sentence, m.document, m.keep, m.foundBy)
         Seq(upreg, someEvent)
@@ -78,14 +78,14 @@ object Ruler {
     val dir = if (shell) filesDir else resourcesDir
     val read = if (shell) readFile _ else readResource _
     val files = Seq(s"$dir/phospho_events.yml",
-//      s"$dir/ubiq_events.yml",
+        s"$dir/ubiq_events.yml",
         s"$dir/hydrox_events.yml",
 //      s"$dir/hydrolysis_events.yml",
 //      s"$dir/bind_events.yml",
 //      s"$dir/exchange_events.yml",
 //      s"$dir/degrad_events.yml",
         s"$dir/transcription_events.yml",
-//      s"$dir/regulation_events.yml",
+        s"$dir/regulation_events.yml",
         s"$dir/neg_reg_events.yml",
         s"$dir/pos_reg_events.yml"
 //      s"$dir/transport_events.yml"
