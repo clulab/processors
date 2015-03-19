@@ -82,9 +82,14 @@
   priority: 3
   type: token
   pattern: |
+    @site:Site [tag=IN]  @protein:BioChemicalEntity
+      | #TODO: can no longer handle sequences of proteins
     @site:Site [tag=IN] (?<protein> [mention=/^(Protein|Gene_or_gene_product)$/] ([tag=/(,|CC)/]+ [mention=/^(Protein|Gene_or_gene_product)$/])*)
       |
+    @protein:BioChemicalEntity [tag=IN] @site:Site
+      |
     @protein:BioChemicalEntity [tag=IN] (?<site> [mention=Site] ([tag=/(,|CC)/]+ [mention=Site])*)
+
 
 - name: site_with_protein_syntax_1
   label: [Protein_with_site, BioChemicalEntity]
@@ -165,7 +170,7 @@
     /(?i)^IkappaB$/ |
     /(?i)^RPTOR$/ |
     /(?i)^GAB1/ adaptor? |
-    /(?i)^Ras12V$/
+    /(?i)^Ras12V$/ |
 
 - name: cell_parts
   label: Cellular_component
@@ -187,13 +192,13 @@
     # the rest of the locations (single token)
     /(?i)nucleolus|nucleus|ribosome|vesicle|golgi|cytoskeleton|mitochondrion|mitochondria|vacuole|cytosol|lysosome|centrosome/
 
-# - name: banner_entities
-#   label: Gene_or_gene_product
-#   priority: 2
-#   type: token
-#   action: mkBannerMention
-#   pattern: |
-#     [entity='B-GENE'] [entity='I-GENE']*
+- name: ner_entities
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] #TODO: verify what types of entities are being detected (check on chems)
+  action: mkNERMentions
+  priority: 2
+  type: token
+  pattern: |
+    [entity='B-GENE'] [entity='I-GENE']*
 
 - name: protein_complex
   label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
