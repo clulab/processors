@@ -81,7 +81,7 @@ object Ruler {
         s"$dir/ubiq_events.yml",
         s"$dir/hydrox_events.yml",
 //      s"$dir/hydrolysis_events.yml",
-//      s"$dir/bind_events.yml",
+        s"$dir/bind_events.yml",
 //      s"$dir/exchange_events.yml",
 //      s"$dir/degrad_events.yml",
         s"$dir/transcription_events.yml",
