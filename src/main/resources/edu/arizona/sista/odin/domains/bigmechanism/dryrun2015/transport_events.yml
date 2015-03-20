@@ -1,83 +1,74 @@
+#Transport events require themes of type BioChemicalEntity
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 - name: transport_1
   priority: 4
-  action: mkTransport
   example: "It has recently been shown that activation of RAS results in ASPP2 translocation from the plasma membrane to the cytosol and nucleus."
-  label: Transport
-  type: dependency
+  label: [Transport, Event]
   pattern: |
-    trigger: [word=/(?i)^transloc/ | word=/(?i)^transport/] #[tag=/^N/]
-    theme: /nn+|prep_of|nsubj/ [mention=/Gene_or_gene_product|Protein|Simple_chemical/]
-    source: /prep_of/? prep_from [tag=/^N/]
-    destination?: </prep_in/? /prep_/* prep_to /conj|nn|cc|dep/* [mention=Cellular_component]
+    trigger = [word=/(?i)^transloc/ | word=/(?i)^transport/] #[tag=/^N/]
+    theme:BioChemicalEntity = /nn+|prep_of|nsubj/
+    source:Cellular_component = /prep_of/? prep_from [tag=/^N/]
+    destination:Cellular_component? = </prep_in/? /prep_/* prep_to /conj|nn|cc|dep/*
 
 - name: transport_2
   priority: 4
-  action: mkTransport
   example: "We show here that ASPP2 is phosphorylated by the RAS/Raf/MAPK pathway and that this phosphorylation leads to its increased translocation to the cytosol/nucleus and increased binding to p53"
-  label: Transport
-  type: dependency
+  label: [Transport, Event]
   pattern: |
-    trigger: [word=/(?i)^transloc/ | word=/(?i)^transport/]
-    theme: </./+ /nn|prep_of|nsubjpass|appos/ [tag=/^N/] #[mention=/Gene_or_gene_product|Protein|Simple_chemical/]
-    source?: /prep_of/? prep_from [tag=/^N/]
-    destination: <prep_in? prep_to /conj|nn|cc|dep/* [mention=Cellular_component]
+    trigger = [word=/(?i)^transloc/ | word=/(?i)^transport/]
+    theme:BioChemicalEntity = </./+ /nn|prep_of|nsubjpass|appos/ [tag=/^N/] #[mention=/Gene_or_gene_product|Protein|Simple_chemical/]
+    source:Cellular_component? = /prep_of/? prep_from [tag=/^N/]
+    destination:Cellular_component = <prep_in? prep_to /conj|nn|cc|dep/*
 
 
 - name: transport_3
   priority: 4
-  action: mkTransport
   example: "We show here that ASPP2 is phosphorylated by the RAS/Raf/MAPK pathway and that this phosphorylation leads to its increased translocation to the cytosol/nucleus and increased binding to p53"
-  label: Transport
-  type: dependency
+  label: [Transport, Event]
   pattern: |
-    trigger: [word=/(?i)^transloc/ | word=/(?i)^transport/]
-    theme: </./+ /nn|prep_of|nsubjpass/ [tag=/^N/] #[mention=/Gene_or_gene_product|Protein|Simple_chemical/]
-    source: /prep_of/? prep_from [tag=/^N/]
-    destination?: <prep_in? /./* prep_to /conj|nn|cc|dep/* [mention=Cellular_component]
+    trigger = [word=/(?i)^transloc/ | word=/(?i)^transport/]
+    theme:BioChemicalEntity = </./+ /nn|prep_of|nsubjpass/ [tag=/^N/] #[mention=/Gene_or_gene_product|Protein|Simple_chemical/]
+    source:Cellular_component = /prep_of/? prep_from [tag=/^N/]
+    destination:Cellular_component? = <prep_in? /./* prep_to /conj|nn|cc|dep/*
 
 - name: transport_4
   priority: 4
-  action: mkTransport
-  label: Transport
-  type: dependency
+  label: [Transport, Event]
   pattern: |
-    trigger: /(?i)release/
-    theme: dobj [mention=Gene_or_gene_product]
-    source: /prep_of/? /nsubj|prep_from|aux/ [mention=Cellular_component]
-    destination: <prep_in? prep_to /conj|nn|cc|dep/* [mention=Cellular_component]
+    trigger = /(?i)release/
+    theme:BioChemicalEntity = dobj
+    source:Cellular_component = /prep_of/? /nsubj|prep_from|aux/
+    destination:Cellular_component = <prep_in? prep_to /conj|nn|cc|dep/*
 
 - name: transport_5
   priority: 4
-  action: mkTransport
   example: "Recruitment of p53 from the cytosol to the plasma membrane increases with phosphorylation"
-  label: Transport
-  type: dependency
+  label: [Transport, Event]
   pattern: |
-    trigger: /(?i)recruitment/
-    theme: /./* prep_of [mention=Gene_or_gene_product]
-    source?: /./* prep_from [mention=Cellular_component]
-    destination: /./* prep_to /conj|cc|dep/* [mention=Cellular_component]
+    trigger = /(?i)recruitment/
+    theme:BioChemicalEntity = /./* prep_of
+    source:Cellular_component? = /./* prep_from
+    destination:Cellular_component = /./* prep_to /conj|cc|dep/*
 
 - name: transport_6
   priority: 4
-  action: mkTransport
   example: "With increased phosphorylation, p53 is exported from the plasma membrane to the cytosol"
-  label: Transport
-  type: dependency
+  label: [Transport, Event]
   pattern: |
-    trigger: /(?i)export|recruit|releas/
-    theme: /./* nsubjpass [mention=Gene_or_gene_product]
-    source?: /./* prep_from [mention=Cellular_component]
-    destination: /./* prep_to /conj|cc|dep/* [mention=Cellular_component]
+    trigger = /(?i)export|recruit|releas/
+    theme:BioChemicalEntity = /./* nsubjpass
+    source:Cellular_component? = /./* prep_from
+    destination:Cellular_component = /./* prep_to /conj|cc|dep/*
 
 - name: transport_7
   priority: 4
-  action: mkTransport
   example: "Phosphorylation leads the plasma membrane to release p53 to the cytosol."
-  label: Transport
-  type: dependency
+  label: [Transport, Event]
   pattern: |
-    trigger: /(?i)release/
-    theme: dobj [mention=Gene_or_gene_product]
-    source: <xcomp /nsubj|prep_from|aux|dobj/ [mention=Cellular_component]
-    destination: <prep_in? prep_to /conj|nn|cc|dep/* [mention=Cellular_component]
+    trigger = /(?i)release/
+    theme:BioChemicalEntity = dobj
+    source:Cellular_component = <xcomp /nsubj|prep_from|aux|dobj/
+    destination:Cellular_component = <prep_in? prep_to /conj|nn|cc|dep/*
