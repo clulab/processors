@@ -1,82 +1,73 @@
+#Degradation events require theme of type MacroMolecules (i.e. they cannot be a Simple_chemical); cause is BioChemicalEntity (probably)
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 - name: degradation_1
   priority: 4
-  action: mkDegradation
   example: "These results indicate that Smurf2 specifically induces degradation of Smurf1 depending on its ligase activity."
-  type: dependency
-  label: Degradation
+  label: [Degradation, Event]
   pattern: |
-    trigger: [word=/degradation/]
-    theme: <conj_and? prep_of [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause: <dobj nsubj [mention=/Simple_chemical|Gene_or_gene_product|Protein/]
+    trigger = [lemma=/degradation/]
+    theme:MacroMolecule = <conj_and? prep_of
+    cause:BioChemicalEntity = <dobj nsubj
 
 
 - name: degradation_2
   priority: 4
-  action: mkDegradation
   example: "...Smurf2 protein reduces migration of MDA-MB-231 cells through degradation of the Smurf1 protein."
-  type: dependency
-  label: Degradation
+  label: [Degradation, Event]
   pattern: |
-    trigger: [word=/degradation/]
-    theme: prep_of [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause: (<prep_through | <prep_by) nsubj [mention=/Simple_chemical|Gene_or_gene_product|Protein/]
+    trigger = [lemma=/degradation/]
+    theme:MacroMolecule = prep_of
+    cause:BioChemicalEntity = (<prep_through | <prep_by) nsubj
 
 
 - name: degradation_3
   priority: 4
-  action: mkDegradation
   example: "Ubiquitination and degradation of Smurf1 by Smurf2"
-  type: dependency
-  label: Degradation
+  label: [Degradation, Event]
   pattern: |
-    trigger: [word=/(?i).*degradation.*/]
-    theme: <conj_and? prep_of [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause: <conj_and? prep_of prep_by [mention=/Simple_chemical|Gene_or_gene_product|Protein/]
+    trigger = [word=/(?i).*degradation.*/]
+    theme:MacroMolecule = <conj_and? prep_of
+    cause:BioChemicalEntity = <conj_and? prep_of prep_by
 
 
 - name: degradation_4
   priority: 4
-  action: mkDegradation
   example: "...RhoA ubiquitination and degradation by Smurf1 and Smurf2."
-  type: dependency
-  label: Degradation
+  label: [Degradation, Event]
   pattern: |
-    trigger: [word=/degradation/]
-    theme: <conj_and? nn [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause: <conj_and? prep_by [mention=/Simple_chemical|Gene_or_gene_product|Protein/]
+    trigger = [lemma=/degradation/]
+    theme:MacroMolecule = <conj_and? nn
+    cause:BioChemicalEntity = <conj_and? prep_by
 
 
 - name: degradation_5
   priority: 4
-  action: mkDegradation
   example: "Smurf2 has also been reported to bind to transcriptional co-repressor SnoN (Ski-related novel protein N) via Smad2 and to degrade SnoN."
-  type: dependency
-  label: Degradation
+  label: [Degradation, Event]
   pattern: |
-    trigger: [word=/(?i).*degrad.*/ & tag=/^VB/]
-    theme?: dobj [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause?: ((<xcomp | <ccomp)? nsubj) | (<rcmod (<appos)?) [mention=/Simple_chemical|Gene_or_gene_product|Protein/]
+    trigger = [word=/(?i).*degrad.*/ & tag=/^VB/]
+    theme:MacroMolecule? = dobj
+    cause:BioChemicalEntity? = ((<xcomp | <ccomp)? nsubj) | (<rcmod (<appos)?)
 
 
 - name: degradation_pass1
   priority: 4
-  action: mkDegradation
   example: "KRAS and RAS are both degraded by ASPP2 and p53."
-  type: dependency
-  label: Degradation
+  label: [Degradation, Event]
   pattern: |
-    trigger: [word=/(?i)^degrad/ & tag=/^VBN/]
-    theme: nsubjpass | (<rcmod (<appos)?) [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause?: agent [mention=/Simple_chemical|Gene_or_gene_product|Protein/]
+    trigger = [word=/(?i)^degrad/ & tag=/^VBN/]
+    theme:MacroMolecule = nsubjpass | (<rcmod (<appos)?)
+    cause:BioChemicalEntity? = agent
 
 
 - name: degradation_subjnom1
   priority: 4
-  action: mkDegradation
   example: "ASPP2 ubiquitination and degradation of Ras increased."
-  type: dependency
-  label: Degradation
+  label: [Degradation, Event]
   pattern: |
-    trigger: [word=/(?i)^degrad/ & tag=/^N/]
-    theme: <conj_and* prep_of [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause: <conj_and* nn [mention=/Simple_chemical|Gene_or_gene_product|Protein/]
+    trigger = [word=/(?i)^degrad/ & tag=/^N/]
+    theme:MacroMolecule = <conj_and* prep_of
+    cause:BioChemicalEntity = <conj_and* nn
