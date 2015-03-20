@@ -6,24 +6,6 @@ import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 
 package object dryrun2015 {
 
-  val EventLabels = Set(
-    "Phosphorylation", "Ubiquitination", "Hydrolysis", "Regulation", "Positive_regulation", "Negative_regulation", "Binding", "Hydroxylation"
-  )
-
-  // maps a (Label, Argument) tuple to a sequence of mention labels
-  val ValidArgument: Map[(String, String), Seq[String]] = Map(
-    ("Phosphorylation", "theme") -> Seq("Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"),
-    ("Phosphorylation", "cause") -> Seq("Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"),
-    ("Ubiquitination", "theme") -> Seq("Protein", "Gene_or_gene_product", "Complex", "GENE"),
-    ("Ubiquitination", "cause") -> Seq("Protein", "Gene_or_gene_product", "Complex", "GENE"),
-    ("Phosphorylation", "theme") -> Seq("Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"),
-    ("Phosphorylation", "cause") -> Seq("Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"),
-    ("Hydroxylation", "theme") -> Seq("Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"),
-    ("Hydroxylation", "cause") -> Seq("Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"),
-    ("Transcription", "theme") -> Seq("Protein", "Gene_or_gene_product", "Complex", "GENE"),
-    ("Transcription", "cause") -> Seq("Protein", "Gene_or_gene_product", "Complex", "GENE")
-  ) withDefaultValue Nil
-
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
     val mentionsBySentence = mentions groupBy (_.sentence) mapValues (_.sortBy(_.start)) withDefaultValue Nil
     for ((s, i) <- doc.sentences.zipWithIndex) {
@@ -47,7 +29,7 @@ package object dryrun2015 {
         println(s"\t${m.labels} => ${m.text}")
 
       case m: EventMention =>
-        println(s"\tTrigger => ${m.trigger.text}")
+        println(s"\ttrigger => ${m.trigger.text}")
         m.arguments foreach {
           case (k, vs) => for (v <- vs) println(s"\t$k (${v.labels}) => ${v.text}")
         }

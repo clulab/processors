@@ -58,7 +58,7 @@ class Ruler(val rules: String, val actions: Actions) {
   }
 
   // is the mention a biochemical event?
-  def isBioEvent(m: Mention): Boolean = !m.isInstanceOf[TextBoundMention] && EventLabels.contains(m.label)
+  def isBioEvent(m: Mention): Boolean = !m.isInstanceOf[TextBoundMention] && m.labels.contains("Event")
 }
 
 object Ruler {
