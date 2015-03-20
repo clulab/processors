@@ -1,109 +1,97 @@
+# Hydrolysis events require themes of type BioChemicalEntity; causes must be MacroMolecule; protein must be BioChemicalEntity
+# Maybe we need a custom action for this guy.
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 - name: hydrolysis_1
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "We compared the rate of GTP hydrolysis for Ras and mUbRas in the presence of the catalytic domains of two GAPs."
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)hydrolysis/]
-    theme: (<nn? nn) | (prep_of nn?) [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    protein?: <prep_of? <dobj? (prep_for | prep_on) [mention=/Gene_or_gene_product|Protein/ & !(word=/^GAPs?$/)]
-    cause: prep_by [mention=/Gene_or_gene_product|Protein/]
+    trigger = [word=/(?i)hydrolysis/]
+    theme:BioChemicalEntity = (<nn? nn) | (prep_of nn?) [!word=/^GAPs?$/]
+    protein:BioChemicalEntity? = <prep_of? <dobj? (prep_for | prep_on) [!word=/^GAPs?$/]
+    cause:MacroMolecule = prep_by
 
 - name: hydrolysis_2
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "Here we show that monoubiquitination decreases the sensitivity of Ras to GAP-mediated hydrolysis"
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)hydrolysis/]
-    theme?: (nn | <dep) [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    protein: <prep_to | prep_for [mention=/Gene_or_gene_product|Protein/ & !(word=/^GAPs?$/)]
+    trigger = [word=/(?i)hydrolysis/]
+    theme:BioChemicalEntity? = (nn | <dep) [!word=/^GAPs?$/]
+    protein:BioChemicalEntity = <prep_to | prep_for [!word=/^GAPs?$/]
 
 - name: hydrolysis_2wrong
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "Here we show that monoubiquitination decreases the sensitivity of Ras to GAP-mediated hydrolysis"
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)hydrolysis/]
-    theme?: (nn | <dep) [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    protein: (<nsubj dep ccomp dobj prep_of) | (<prep_of <dobj (prep_for|prep_on|prep_in)) [mention=/Gene_or_gene_product|Protein/ & !(word=/^GAPs?$/)]
-    cause?: <nsubj dep ccomp prep_to [mention=/Gene_or_gene_product|Protein|Simple_chemical/]
+    trigger = [word=/(?i)hydrolysis/]
+    theme:BioChemicalEntity? = (nn | <dep) [!word=/^GAPs?$/]
+    protein:BioChemicalEntity = (<nsubj dep ccomp dobj prep_of) | (<prep_of <dobj (prep_for|prep_on|prep_in)) [!word=/^GAPs?$/]
+    cause:MacroMolecule? = <nsubj dep ccomp prep_to
 
 - name: hydrolysis_3
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "No increase in the rate of GTP hydrolysis was observed for mUbRas"
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)hydrolysis/]
-    theme: (nn | <dep) [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    protein?: (< /prep_/)* <nsubjpass /prep_for|prep_in/ [mention=/Gene_or_gene_product|Protein/ & !(word=/^GAPs?$/)]
+    trigger = [word=/(?i)hydrolysis/]
+    theme:BioChemicalEntity = (nn | <dep) [!word=/^GAPs?$/]
+    protein:BioChemicalEntity? = (< /prep_/)* <nsubjpass /prep_for|prep_in/ [!word=/^GAPs?$/]
 
 - name: hydrolysis_4
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "RasPDZ2UL retains intrinsic GTP hydrolysis activity"
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)hydrolysis/]
-    theme: (<nn)? nn [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    protein?: (<nn)? <dobj [word=/^has$|^have$|^had$|^retain(s|ed)?$|^show(s|ed)?$|^display(s|ed)?$/] nsubj [mention=/Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
+    trigger = [word=/(?i)hydrolysis/]
+    theme:BioChemicalEntity = (<nn)? nn [!word=/^GAPs?$/]
+    protein:BioChemicalEntity? = (<nn)? <dobj [word=/^has$|^have$|^had$|^retain(s|ed)?$|^show(s|ed)?$|^display(s|ed)?$/] nsubj [!word=/^GAPs?$/]
 
 - name: hydrolysis_token_1
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "We measured the rate of GAP-mediated GTP hydrolysis"
   type: token
   pattern: |
-    (?<theme> [mention=/Simple_chemical/])
+    @theme:Simple_chemical
     (?<trigger> hydrolysis)
 
 - name: hydrolysis_token_2
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "Renin is an enzyme that hydrolyzes Ras-GTP."
   type: token
   pattern: |
     (?<trigger> /hydrolyze(s|d)?/)
-    (?<theme> [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)])
+    @theme:BioChemicalEntity #TODO: add & !word=/^GAPs?$/]
 
 - name: hydrolysis_decl1
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "RasGAP hydrolyzes GTP to GDP"
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)^hydrolyz/ & tag=/^VB[^N]?/]
-    theme: dobj [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    cause?: (nsubj | (<xcomp? <rcmod <appos?)) [mention=/Gene_or_gene_product|Protein|Simple_chemical/]
+    trigger = [word=/(?i)^hydrolyz/ & tag=/^VB[^N]?/]
+    theme:BioChemicalEntity = dobj [!word=/^GAPs?$/]
+    cause:MacroMolecule? = (nsubj | (<xcomp? <rcmod <appos?))
 
 - name: hydrolysis_pass1
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "Ras-GDP is hydrolyzed by 26S proteasome without ubiquitination"
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)^hydrolyz/ & tag=VBN]
-    theme: ( <vmod | nsubjpass | <rcmod ) [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    cause?: agent [mention=/Gene_or_gene_product|Protein|Simple_chemical/]
+    trigger = [word=/(?i)^hydrolyz/ & tag=VBN]
+    theme:BioChemicalEntity = ( <vmod | nsubjpass | <rcmod ) [!word=/^GAPs?$/]
+    cause:MacroMolecule? = agent
 
 - name: hydrolysis_subjnom1
-  label: Hydrolysis
+  label: [Hydrolysis, Event]
   priority: 4
-  action: mkHydrolysis
   example: "MEK hydrolysis of Ras-GDP increased."
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)^hydrolysis/]
-    theme: prep_of [mention=/Simple_chemical|Gene_or_gene_product|Protein|Complex/ & !(word=/^GAPs?$/)]
-    cause?: nn [mention=/Gene_or_gene_product|Protein|Simple_chemical/]
+    trigger = [word=/(?i)^hydrolysis/]
+    theme:BioChemicalEntity = prep_of [!word=/^GAPs?$/]
+    cause:MacroMolecule? = nn
