@@ -23,7 +23,7 @@ class Lexicon[T] extends Serializable {
   /**
    * Adds a string to the lexicon without adding it twice if it already exists
    */
-  def add(s:T):Int = {
+  def add(s:T):Int = synchronized {
     if (lexicon.contains(s)) {
       savedMemory += 1
       lexicon.get(s).get
