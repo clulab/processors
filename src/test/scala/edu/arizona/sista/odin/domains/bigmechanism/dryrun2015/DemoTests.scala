@@ -72,9 +72,12 @@ class DemoTests3 extends FunSuite with BeforeAndAfter {
     assert(hasPositiveRegulationByEntity("Pkh1", "Phosphorylation", List("S6K1"), mentions), summarizeError(text, "Positive_regulation", assignedParty))
   }
 
+  //TODO Coref
+  /**
+   *
   test("there should be a binding between S6K1 and TopBP1") {
     assert(hasEventWithArguments("Binding", List("S6K1", "TopBP1"), mentions), summarizeError(text, "Binding", assignedParty))
   }
-
+  */
   //test("In the future")(pending)
 }
