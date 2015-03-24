@@ -1,199 +1,176 @@
+#Hydroxylation events require arguments of type BioChemicalEntity
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
 
 - name: Hydroxylation_syntax_1_verb
-  priority: 4
-  action: mkSimpleEvent
+  priority: 4 
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i).*hydroxylat.*/ & !word=/^de/ & tag=/^V/]
-    cause?: <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
-    theme: (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])*
-    #site?: dobj? /prep_(at|on)|nn|conj_|cc/*
+    trigger = [lemma="hydroxylate" & tag=/^V/]
+    cause:BioChemicalEntity? = <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
+    theme:BioChemicalEntity = (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])*
+    #site:Site? = dobj? /prep_(at|on)|nn|conj_|cc/*
 
 
 - name: Hydroxylation_syntax_2_verb
   priority: 4
-  action: mkSimpleEvent
-  type: dependency
-  label: Hydroxylation
+  example: ""
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylated/ & !word=/^de/ & tag=/^V/]
-    theme: (>nsubjpass|<vmod) /conj_|nn|cc/* [mention=/./]
-    cause?:  agent|prep_by /conj_|nn|cc/* [mention=/Protein|Gene_or_gene_product/]
+    trigger = [lemma="hydroxylate" & tag=/^V/]
+    theme:BioChemicalEntity = (>nsubjpass|<vmod) /conj_|nn|cc/* [mention=/./]
+    cause:BioChemicalEntity? =  agent|prep_by /conj_|nn|cc/* [mention=/Protein|Gene_or_gene_product/]
 
 
 - name: Hydroxylation_syntax_3_verb
   priority: 4
-  action: mkSimpleEvent
-  example: ""
-  type: dependency
-  label: Hydroxylation
+  example: "" 
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylat/ & !word=/^de/ & !outgoing=nsubjpass & tag=/^V/] # verbal predicate
-    theme: ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) ) [mention=/Protein|Gene_or_gene_product/]
-    site?: (/pobj|prep_|conj_|nn/+ [mention=Site]) | (< /pobj|prep_|conj_|nn/+ [mention=Site])
-    cause?: <nn* | (prep_by) /nn|conj_|cc/*
+    trigger = [lemma="hydroxylate" & !outgoing=nsubjpass & tag=/^V/] # verbal predicate
+    theme:BioChemicalEntity = ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) )
+    site:Site? = (/pobj|prep_|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+)
+    cause:BioChemicalEntity? = <nn* | (prep_by) /nn|conj_|cc/*
 
 
 - name: Hydroxylation_syntax_4_verb
-  priority: 4
-  action: mkSimpleEvent
-  example: ""
-  type: dependency
-  label: Hydroxylation
+  priority: 4 
+  example: "" 
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylat/ & !word=/^de/ & tag=/^V/]
-    theme: (nsubjpass /conj_|nn/*) [mention=/Protein|Gene_or_gene_product/]
-    site?: /prep_/ /prep_|conj_|nn/* [mention=Site]
-    cause?: (/prep_/ /conj_|nn/*)? /prep_/* (prep_by|agent) /conj_|nn/* [mention=/Protein|Gene_or_gene_product/]
+    trigger = [lemma="hydroxylate" & tag=/^V/]
+    theme:BioChemicalEntity = (nsubjpass /conj_|nn/*)
+    site:Site? = /prep_/ /prep_|conj_|nn/*
+    cause:BioChemicalEntity? = (/prep_/ /conj_|nn/*)? /prep_/* (prep_by|agent) /conj_|nn/*
 
 
 - name: Hydroxylation_syntax_5_verb
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxyl/ & !word=/^de/ & tag=/^V/]
-    theme: dobj /nn|conj_|cc/* [!word=/(?i)ubiq/]
-    cause: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* [!word=/(?i)ubiq/]
-    #site?: dobj? prep_(at|on) /nn|conj_|cc/*
+    trigger = [lemma="hydroxylate" & tag=/^V/]
+    theme:BioChemicalEntity = dobj /nn|conj_|cc/* [!word=/(?i)ubiq/]
+    cause:BioChemicalEntity = (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* [!word=/(?i)ubiq/]
+    #site:Site? = dobj? prep_(at|on) /nn|conj_|cc/*
 
 
 - name: Hydroxylation_syntax_6_verb
   priority: 4
-  action: mkSimpleEvent
+
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxyl/ & !word=/^de/ & tag=VBN]
-    theme:  (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
-    cause?: (prep_by|agent) /appos|nn|conj_|cc/*
-    #site?: dobj? prep_(at|on) /nn|conj_|cc/*
+    trigger = [lemma="hydroxylate" & tag=VBN]
+    theme:BioChemicalEntity =  (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
+    cause:BioChemicalEntity? = (prep_by|agent) /appos|nn|conj_|cc/*
+    #site:Site? = dobj? prep_(at|on) /nn|conj_|cc/*
 
 
 - name: Hydroxylation_syntax_1_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylat/ & !word=/^de/ & tag=/^N/]
-    theme: prep_of /nn|conj_|cc/*
-    cause?: (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/*
-    #site?: (/prep_/ nn*)+
+    trigger = [lemma="hydroxylation"]
+    theme:BioChemicalEntity = prep_of /nn|conj_|cc/*
+    cause:BioChemicalEntity? = (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/*
+    #site:Site? = (/prep_/ nn*)+
     #constraint: <dobj [lemma=/prevent|inhibit|block/]
 
 
 - name: Hydroxylation_syntax_2_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylat/ & !word=/^de/ & tag=/^N/] # nominal predicate
-    theme: prep_of? /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/]
-    site?: /pobj|prep_|conj_|nn/+ [mention=Site]
-    cause: (prep_by|agent) /conj|cc|nn/*
+    trigger = [lemma="hydroxylation"] # nominal predicate
+    theme:BioChemicalEntity = prep_of? /conj_|cc|nn/+
+    site:Site? = /pobj|prep_|conj_|nn/+
+    cause:BioChemicalEntity = (prep_by|agent) /conj|cc|nn/*
 
 
 - name: Hydroxylation_syntax_3_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylat/ & !word=/^de/ & tag=/^N/ & !outgoing=/prep_(by|of)/] # nominal predicate
-    theme: prep_of /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/]
-    cause: /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/]
-    site?: /pobj|prep_|conj_|nn/+ [mention=Site]
+    trigger = [lemma="hydroxylation" & !outgoing=/prep_(by|of)/] # nominal predicate
+    theme:BioChemicalEntity = prep_of /conj_|cc|nn/+
+    cause:BioChemicalEntity = /conj_|cc|nn/+
+    site:Site? = /pobj|prep_|conj_|nn/+
 
 
 - name: Hydroxylation_syntax_4_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylation/ & !word=/(?i)^de/ & !outgoing=prep_by & tag=/^N/]
-    theme: <nn? nn /conj|cc|nn|prep/* [mention=/./ & !mention=/Site/]
+    trigger = [lemma="hydroxylation" & !outgoing=prep_by]
+    theme:BioChemicalEntity = <nn? nn /conj|cc|nn|prep/*
 
 
 - name: Hydroxylation_syntax_5_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylation/ & !word=/^de/ & tag=/^N/]
-    theme: < nn > /prep_/ /conj_|cc|nn/* [mention=/Protein|Gene_or_gene_product/]
-    cause?: < nn /conj_|cc|nn/*
+    trigger = [lemma="hydroxylation"]
+    theme:BioChemicalEntity = < nn > /prep_/ /conj_|cc|nn/*
+    cause:BioChemicalEntity? = < nn /conj_|cc|nn/*
 
 
 - name: Hydroxylation_syntax_6_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylation/ & !word=/^de/ & tag=/^N/]
-    cause: <prep_via agent|prep_by /nn|conj_|cc/*
-    theme: (prep_of /nn|conj_|cc/*)+
+    trigger = [lemma="hydroxylation"]
+    cause:BioChemicalEntity = <prep_via agent|prep_by /nn|conj_|cc/*
+    theme:BioChemicalEntity = (prep_of /nn|conj_|cc/*)+
 
 - name: Hydroxylation_syntax_7_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    trigger: [word=/(?i)hydroxylation/ & !word=/^de/ & !outgoing=prep_of & tag=/^N/]
-    theme: < nsubj dobj prep_of /nn|cc|conj/* [mention=/./]
+    trigger = [lemma="hydroxylation" & !outgoing=prep_of]
+    theme:BioChemicalEntity = < nsubj dobj prep_of /nn|cc|conj/*
 
 - name: Hydroxylation_token_1_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
   type: token
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    (?<trigger> [word=/(?i)hydroxylation/ & !word=/^de/ & tag=/^N/]) /of|on/ [word=/./ & !tag=/^V/]*? (?<theme> [mention=/Protein|Gene_or_gene_product/])
+    (?<trigger> [lemma="hydroxylation"]) /of|on/ [word=/./ & !tag=/^V/]*? @theme:BioChemicalEntity
 
 
 - name: Hydroxylation_token_2_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
   type: token
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    (?<theme> [mention=/Protein|Gene_or_gene_product/]) (?<trigger> [word=/(?i)hydroxylation/ & !word=/^de/ & tag=/^N/]) [!word=of]
+    @theme:BioChemicalEntity (?<trigger> [lemma="hydroxylation"]) [!word=of]
 
 
 - name: Hydroxylation_token_1_verb
   priority: 4
-  action: mkSimpleEvent
   example: ""
   type: token
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    (?<theme> [mention=/Protein|Gene_or_gene_product/]) (?<trigger> [word=/(?i)hydroxylat/ & tag=/^V/]) [tag=IN] (?<cause> [mention=/Protein|Gene_or_gene_product/])?
+    @theme:BioChemicalEntity (?<trigger> [lemma="hydroxylate" & tag=/^V/]) [tag=IN] (@cause:BioChemicalEntity)?
 
 
 - name: Hydroxylation_token_2_verb
   priority: 4
-  action: mkSimpleEvent
   example: ""
   type: token
-  label: Hydroxylation
+  label: [Hydroxylation, Event]
   pattern: |
-    (?<trigger> [word=/(?i)hydroxylat/ & tag=/^V/]) (?<theme> [mention=/Protein|Gene_or_gene_product/]) (fragment? by (?<cause> [mention=/Protein|Gene_or_gene_product/])? )?
+    (?<trigger> [lemma="hydroxylate" & tag=/^V/]) @theme:BioChemicalEntity (fragment? by @cause:BioChemicalEntity)?
+

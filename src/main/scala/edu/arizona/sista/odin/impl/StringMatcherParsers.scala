@@ -4,22 +4,19 @@ import scala.util.matching.Regex
 import scala.util.parsing.combinator._
 
 trait StringMatcherParsers extends RegexParsers {
-  // positive integer
-  def int: Parser[Int] = """\d+""".r ^^ { _.toInt }
-
   // valid java identifier
-  def ident: Parser[String] =
+  def identifier: Parser[String] =
     """\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*""".r
 
   // single- or double-quote delimited string literal
   // with "\" as the escape character
-  def quotedLiteral: Parser[String] =
+  def quotedStringLiteral: Parser[String] =
     """'[^\\']*(?:\\.[^\\']*)*'|"[^\\"]*(?:\\.[^\\"]*)*"""".r ^^ {
       case s => """\\(.)""".r.replaceAllIn(s.drop(1).dropRight(1), m => m.group(1))
     }
 
   // any valid string literal (with or without quotes)
-  def stringLiteral: Parser[String] = ident | quotedLiteral
+  def stringLiteral: Parser[String] = identifier | quotedStringLiteral
 
   // match a perl style "/" delimited regular expression
   // "\" is the escape character, so "\/" becomes "/"
@@ -48,7 +45,7 @@ sealed trait StringMatcher {
 }
 
 class ExactStringMatcher(string: String) extends StringMatcher {
-  def matches(s: String): Boolean = s == string
+  def matches(s: String): Boolean = string == s
 }
 
 class RegexStringMatcher(regex: Regex) extends StringMatcher {

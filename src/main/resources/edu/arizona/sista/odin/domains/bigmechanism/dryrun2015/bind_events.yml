@@ -1,192 +1,179 @@
+#Binding events require arguments of type BioChemicalEntity
+#Use + quantifier for theme
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 - name: binding1
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-    trigger: [lemma=bind & tag=/^V/]
-    theme: nsubj | dobj | /prep_(to|with)/
+    trigger = [lemma=bind & tag=/^V/]
+    theme:BioChemicalEntity+ = nsubj | dobj | /prep_(to|with)/
 
 - name: binding2
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-    trigger: binding
-    theme: <prep_by nsubj | prep_such_as
+    trigger = binding
+    theme:BioChemicalEntity+ = <prep_by nsubj | prep_such_as
 
 - name: binding3
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-    trigger: binding
-    theme: /prep_(of|to)/+ >/./*
+    trigger = binding
+    theme:BioChemicalEntity+ = /prep_(of|to)/+ >/./*
 
 - name: binding4
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: binding
-      theme: <nn <dobj (nsubj | /prep_(of|for)/)+ >/./*
+      trigger = binding
+      theme:BioChemicalEntity+ = <nn <dobj (nsubj | /prep_(of|for)/)+ >/./*
 
 - name: binding5
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: binding
-      theme: <nn >/./*
-      dummy: <nn >nn [word=/protein|domain|site/]
+      trigger = binding
+      theme:BioChemicalEntity+ = <nn >/./*
+      #dummy: <nn >nn [word=/protein|domain|site/]
 
 - name: binding6
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: [lemma=bind & tag=/^V/]
-      theme: (<amod nn* >prep_of? >appos?) | (nsubj | conj_and? dobj)
+      trigger = [lemma=bind & tag=/^V/]
+      theme:BioChemicalEntity+ = (<amod nn* >prep_of? >appos?) | (nsubj | conj_and? dobj)
 
 - name: binding7
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: binding
-      theme: (nn | prep_to) conj_and?
+      trigger = binding
+      theme:BioChemicalEntity+ = (nn | prep_to) conj_and?
 
 - name: binding8
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: interacts
-      theme: nsubj | prep_with
+      trigger = interacts
+      theme:BioChemicalEntity+ = nsubj | prep_with
 
 - name: binding9
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: interaction
-      theme: nn | prep_of | <dobj >prep_with
+      trigger = interaction
+      theme:BioChemicalEntity+ = nn | prep_of | <dobj >prep_with
 
 - name: binding10
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: [lemma=bind & tag=/^V/]
-      theme: <vmod <prep_with?
+      trigger = [lemma=bind & tag=/^V/]
+      theme:BioChemicalEntity+ = <vmod <prep_with?
 
 - name: binding11
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: /cooperation|affinity|association|interaction/
-      theme: >prep_between >conj_and?
+      trigger = /cooperation|affinity|association|interaction/
+      theme:BioChemicalEntity+ = >prep_between >conj_and?
 
 - name: binding12
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: formation
-      theme: prep_of >/./*
-      dummy: prep_of [word=/complex|rings/]
+      trigger = formation (?= of /complex|rings/) #dummy: prep_of [word=/complex|rings/]
+      theme:BioChemicalEntity+ = prep_of >/./*
 
 - name: binding13
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: interact
-      theme: (prep_with | >conj_and <ccomp >nsubjpass) >/./*
+      trigger = interact
+      theme:BioChemicalEntity+ = (prep_with | >conj_and <ccomp >nsubjpass) >/./*
 
 - name: binding14
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-      trigger: interactions
-      theme: <dobj <rcmod >dep >conj_and?
+      trigger = interactions
+      theme:BioChemicalEntity+ = <dobj <rcmod >dep >conj_and?
 
 - name: binding_16
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-    trigger: ligated
-    theme: <vmod | nsubj | prep_to
+    trigger = ligated
+    theme:BioChemicalEntity+ = <vmod | nsubj | prep_to
 
 - name: binding_17
-  label: Binding
+  label: [Binding, Event]
   priority: 4
-  action: mkBindingEvent
   pattern: |
-    trigger: [lemma=bind & tag=/^V/]
-    theme: agent | nsubjpass | dobj | <rcmod <appos?
+    trigger = [lemma=bind & tag=/^V/]
+    theme:BioChemicalEntity+ = agent | nsubjpass | dobj | <rcmod <appos?
 
 # added to catch patterns like "increased XX binding to YY"
 # when the prep_to is (wrongly) attached to increased instead of binding
 - name: binding_token_1
-  label: Binding
+  label: [Binding, Event]
+  action: mkBinding
   priority: 4
   type: token
-  action: mkBindingEvent
   pattern: |
-    (?<theme1> [mention=/Protein|Gene_or_gene_product/]+)
+    (@theme1:BioChemicalEntity)
     (?<trigger> binding) (to|by|with)
-    (?<theme2> [mention=/Protein|Gene_or_gene_product/]+)
+    (@theme2:BioChemicalEntity)
 
 - name: binding_token_2
-  label: Binding
+  label: [Binding, Event]
+  action: mkBinding
   priority: 4
-  action: mkBindingEvent
   type: token
   pattern: |
-    (?<trigger> binding) to (?<theme> [mention=/Protein|Gene_or_gene_product/]+)
+    (?<trigger> binding) to (@theme:BioChemicalEntity)
 
 - name: binding_token_3
-  label: Binding
+  label: [Binding, Event]
+  action: mkBinding
   priority: 4
-  action: mkBindingEvent
   type: token
   pattern: |
-    (?<theme1> [mention=/Protein|Gene_or_gene_product/]+)
+    (@theme1:BioChemicalEntity)
     (?<trigger> [lemma=bind])
-    (?<theme2> [mention=/Protein|Gene_or_gene_product/]+)
+    (@theme2:BioChemicalEntity)
 
 # Prepositional Nominalization
 - name: binding_token_4
-  label: Binding
+  label: [Binding, Event]
+  action: mkBinding
   priority: 4
-  action: mkBindingEvent
   type: token
   pattern: |
-    (?<trigger> binding) of (?<theme1> [mention=/Protein|Gene_or_gene_product/]+) (to|with) (?<theme2> [mention=/Protein|Gene_or_gene_product/]+)
+    (?<trigger> binding) of (@theme1:BioChemicalEntity) (to|with) (@theme2:BioChemicalEntity)
 
-- name: binding_coref1
-  label: Binding
-  priority: 4
-  action: mkBindingCorefEvent
-  example: "Pkh1 phosphorylates the S6K1 protein. This phosphorylated protein binds with TopBP1."
-  type: dependency
-  pattern: |
-    trigger: [lemma=bind & tag=/^VB[^N]?/]
-    theme?: (prep_with | prep_to) [mention=/Protein|Gene_or_gene_product/]
-    endophor: nsubj [lemma=/protein|complex|family/ & !mention=/./] det [lemma=/these|this|the|that|both/]
-    quantifier?: nsubj [lemma=/protein|complex|family/ & !mention=/./] num
+# TODO: figure out how to handle args without types (ex. "endophor")
 
-- name: binding_coref2
-  label: Binding
-  priority: 4
-  action: mkBindingCorefEvent
-  example: "Pkh1 phosphorylates the S6K1 protein. This phosphorylated protein is bound by TopBP1."
-  type: dependency
-  pattern: |
-    trigger: [lemma=bind & tag=VBN]
-    theme?: agent [mention=/Protein|Gene_or_gene_product/]
-    endophor: nsubjpass [lemma=/protein|complex|family/] det [lemma=/these|this|the|that|both/]
-    quantifier?: nsubjpass [lemma=/protein|complex|family/] num
+#- name: binding_coref1
+#  label: [Binding, Event]
+#  priority: 4
+#  example: "Pkh1 phosphorylates the S6K1 protein. This phosphorylated protein binds with TopBP1."
+#  pattern: |
+#    trigger = [lemma=bind & tag=/^VB[^N]?/]
+#    theme:BioChemicalEntity? = (prep_with | prep_to)
+#    endophor: nsubj [lemma=/protein|complex|family/ & !mention=/./] det [lemma=/these|this|the|that|both/]
+#    quantifier?: nsubj [lemma=/protein|complex|family/ & !mention=/./] num
+
+#- name: binding_coref2
+#  label: [Binding, Event]
+#  priority: 4
+#  example: "Pkh1 phosphorylates the S6K1 protein. This phosphorylated protein is bound by TopBP1."
+#  pattern: |
+#    trigger = [lemma=bind & tag=VBN]
+#    theme:BioChemicalEntity? = agent
+#    endophor: nsubjpass [lemma=/protein|complex|family/] det [lemma=/these|this|the|that|both/]
+#    quantifier?: nsubjpass [lemma=/protein|complex|family/] num

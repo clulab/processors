@@ -4,54 +4,105 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
 object ThompsonVM {
-  type Sub = Map[String, (Int, Int)]
+  type NamedGroups = Map[String, (Int, Int)]
+  type NamedMentions = Map[String, Mention]
 
-  private case class Thread(inst: Inst) {
-    var sub: Sub = _
+  trait Thread {
+    def isDone: Boolean
+    def results: Seq[(NamedGroups, NamedMentions)]
   }
 
-  private object Thread {
-    def apply(inst: Inst, sub: Sub): Thread = {
-      val t = Thread(inst)
-      t.sub = sub
+  private case class SingleThread(tok: Int, inst: Inst) extends Thread {
+    var groups: NamedGroups = _
+    var mentions: NamedMentions = _
+    def isDone: Boolean = inst == Done
+    def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
+  }
+
+  private object SingleThread {
+    def apply(tok: Int, inst: Inst, groups: NamedGroups, mentions: NamedMentions): Thread = {
+      val t = new SingleThread(tok, inst)
+      t.groups = groups
+      t.mentions = mentions
       t
     }
   }
 
-  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Option[Sub] = {
-    def mkThreads(tok: Int, inst: Inst, sub: Sub): Seq[Thread] = inst match {
-      case i: Jump => mkThreads(tok, i.next, sub)
-      case i: Split => mkThreads(tok, i.lhs, sub) ++ mkThreads(tok, i.rhs, sub)
-      case i: SaveStart => mkThreads(tok, i.next, sub + (i.name -> (tok, -1)))
-      case i: SaveEnd => mkThreads(tok, i.next, sub + (i.name -> (sub(i.name)._1, tok)))
-      case _ => Seq(Thread(inst, sub))
+  private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
+    def isDone: Boolean = bundles exists (_ exists (_.isDone))
+    def results: Seq[(NamedGroups, NamedMentions)] = bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
+  }
+
+  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[(NamedGroups, NamedMentions)] = {
+    def mkThreads(tok: Int, inst: Inst, groups: NamedGroups, mentions: NamedMentions): Seq[Thread] = inst match {
+      case i: Jump => mkThreads(tok, i.next, groups, mentions)
+      case i: Split => mkThreads(tok, i.lhs, groups, mentions) ++ mkThreads(tok, i.rhs, groups, mentions)
+      case i: SaveStart => mkThreads(tok, i.next, groups + (i.name -> (tok, -1)), mentions)
+      case i: SaveEnd => mkThreads(tok, i.next, groups + (i.name -> (groups(i.name)._1, tok)), mentions)
+      case _ => Seq(SingleThread(tok, inst, groups, mentions))
     }
 
-    def stepThreads(tok: Int, threads: Seq[Thread]): Seq[Thread] =
-      threads.flatMap(t => t.inst match {
-        case i: Match if tok < doc.sentences(sent).size && i.c.matches(tok, sent, doc, state) =>
-          mkThreads(tok + 1, i.next, t.sub)  // token matched, return new threads
-        case _ => Nil  // thread died with no match
-      }).distinct
+    def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
+      case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
+        mkThreads(t.tok + 1, i.next, t.groups, t.mentions)  // token matched, return new threads
+      case i: MatchSentenceStart if t.tok == 0 =>
+        mkThreads(t.tok, i.next, t.groups, t.mentions)
+      case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
+        mkThreads(t.tok, i.next, t.groups, t.mentions)
+      case i: MatchMention => state match {
+        case None => Nil  // should we throw an exception or fail silently?
+        case Some(s) =>
+          val bundles = for {
+            mention <- s.mentionsFor(sent, t.tok)
+            if mention.start == t.tok && mention.matches(i.m)
+          } yield mkThreads(mention.end, i.next, t.groups, mkMentionCapture(t.mentions, i.name, mention))
+          if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
+      }
+      case _ => Nil  // thread died with no match
+    }
 
-    def handleMatch(tok: Int, threads: Seq[Thread]): (Seq[Thread], Option[Sub]) =
-      threads find (_.inst == Done) match {
+    def mkMentionCapture(mentions: NamedMentions, name: Option[String], mention: Mention): NamedMentions = name match {
+      case None => mentions
+      case Some(name) => mentions + (name -> mention)
+    }
+
+    def stepThreadBundle(t: ThreadBundle): Seq[Thread] = {
+      val bundles = t.bundles flatMap { bundle =>
+        val ts = stepThreads(bundle)
+        if (ts.nonEmpty) Some(ts) else None
+      }
+      if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
+    }
+
+    def stepThread(t: Thread): Seq[Thread] = t match {
+      case t: SingleThread => stepSingleThread(t)
+      case t: ThreadBundle => stepThreadBundle(t)
+    }
+
+    def stepThreads(threads: Seq[Thread]): Seq[Thread] =
+      (threads flatMap stepThread).distinct
+
+    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Thread]) =
+      threads find (_.isDone) match {
         // no thread has finished, return them all
         case None => (threads, None)
         // a thread finished, drop all threads to its right but keep the ones to its left
-        case Some(t) => (threads takeWhile (_ != t), Some(t.sub))
+        case Some(t) => (threads.takeWhile(_ != t), Some(t))
       }
 
     @annotation.tailrec
-    def loop(i: Int, threads: Seq[Thread], result: Option[Sub]): Option[Sub] = {
+    def loop(threads: Seq[Thread], result: Option[Thread]): Option[Thread] = {
       if (threads.isEmpty) result
       else {
-        val (ts, r) = handleMatch(i, threads)
-        loop(i + 1, stepThreads(i, ts), r)
+        val (ts, r) = handleDone(threads)
+        loop(stepThreads(ts), r)
       }
     }
 
-    loop(tok, mkThreads(tok, start, Map.empty), None)
+    loop(mkThreads(tok, start, Map.empty, Map.empty), None) match {
+      case None => Nil
+      case Some(t) => t.results
+    }
   }
 }
 
@@ -64,7 +115,41 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup: Inst = Split(lhs.dup, rhs.dup)
 }
 
-case class Match(c: TokenConstraint) extends Inst {
+case class MatchToken(c: TokenConstraint) extends Inst {
+  def dup: Inst = {
+    val inst = copy()
+    if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class MatchMention(m: StringMatcher) extends Inst {
+  var name: Option[String] = None
+
+  def dup: Inst = {
+    val inst = copy()
+    if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+object MatchMention {
+  def apply(name: String, matcher: StringMatcher): MatchMention = {
+    val inst = MatchMention(matcher)
+    inst.name = Some(name)
+    inst
+  }
+}
+
+case class MatchSentenceStart() extends Inst {
+  def dup: Inst = {
+    val inst = copy()
+    if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class MatchSentenceEnd() extends Inst {
   def dup: Inst = {
     val inst = copy()
     if (next != null) inst.next = next.dup

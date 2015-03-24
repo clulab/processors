@@ -1,167 +1,151 @@
+#Exchange events require themes of type Simple_chemical; goal must be MacroMolecule; cause can be BioChemicalEnitty
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 - name: exchange_1
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "RasGEFs bind to Ras and lower the transition energy for the nucleotide exchange of the bound GDP for the more abundant cytosolic GTP"
-  type: dependency
   pattern: |
-    trigger: [word=/(?i)exchang/] #cause, location missing
-    goal?: <prep_for <dobj prep_to [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause?: <prep_for <dobj nsubj [mention=/Gene_or_gene_product|Protein|Complex/]
-    theme1: prep_of [mention=/Simple_chemical/] # GDP
-    theme2: (prep_for | prep_with) [mention=/Simple_chemical/] # GTP
+    trigger = [word=/(?i)exchang/] #cause, location missing
+    goal:BioChemicalEntity? = <prep_for <dobj prep_to
+    cause:BioChemicalEntity? = <prep_for <dobj nsubj
+    theme1:Simple_chemical = prep_of # GDP
+    theme2:Simple_chemical = (prep_for | prep_with) # GTP
 
 
 - name: exchange_1wrong
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "RasGEFs bind to Ras and lower the transition energy for the nucleotide exchange of the bound GDP for the more abundant cytosolic GTP"
-  type: dependency
   pattern: |
-    trigger: [word=/^exchange/]
-    goal?: <prep_for <dobj prep_to [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause?: <prep_for <dobj nsubj [mention=/Gene_or_gene_product|Protein|Complex/]
-    theme1: prep_of [mention=/Simple_chemical/] # GDP
-    theme2: prep_of (prep_for | prep_with) [mention=/Simple_chemical/] # GTP
+    trigger = [word=/^exchange/]
+    goal:BioChemicalEntity? = <prep_for <dobj prep_to
+    cause:BioChemicalEntity? = <prep_for <dobj nsubj
+    theme1:Simple_chemical = prep_of # GDP
+    theme2:Simple_chemical = prep_of (prep_for | prep_with) # GTP
 
 
 - name: exchange_2
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "inactive cytosolic Sos ... activates membrane-tethered Ras by catalyzing the exchange of Ras-bound guanosine diphosphate (GDP) with guanosine triphosphate (GTP)"
-  type: dependency
   pattern: |
-    trigger: [word=/exchange/ & tag=/^NN/]
-    goal?: <dobj <prepc_by dobj [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause?: <dobj <prepc_by nsubj [mention=/Gene_or_gene_product|Complex/]
-    theme1: prep_of [mention=/Simple_chemical/] # GDP
-    theme2: (prep_for | prep_with) [mention=/Simple_chemical/] # GTP
+    trigger = [word=/exchange/ & tag=/^NN/]
+    goal:BioChemicalEntity? = <dobj <prepc_by dobj
+    cause:BioChemicalEntity? = <dobj <prepc_by nsubj
+    theme1:Simple_chemical = prep_of # GDP
+    theme2:Simple_chemical = (prep_for | prep_with) # GTP
 
 
 - name: exchange_3wrong
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "Sos catalyzes Ras GTP/GDP exchange"
-  type: dependency
   pattern: |
-    trigger: [word=/exchange/ & tag=/^NN/]
-    goal?: (<dep nn) | prep_of [mention=/Gene_or_gene_product|Protein|Complex/]
-    cause?: <dep <dobj nsubj [mention=/Gene_or_gene_product|Complex/]
-    theme1: nn [mention=/Simple_chemical/] # GDP
-    theme2: <dep [mention=/Simple_chemical/] # GTP
+    trigger = [word=/exchange/ & tag=/^NN/]
+    goal:BioChemicalEntity? = (<dep nn) | prep_of
+    cause:BioChemicalEntity? = <dep <dobj nsubj
+    theme1:Simple_chemical = nn # GDP
+    theme2:Simple_chemical = <dep # GTP
 
 
 - name: exchange_4wrong
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "Sos functions as a guanine nucleotide – exchange protein (GEF), which helps convert inactive GDP-bound Ras to the active GTP-bound form."
-  type: dependency
   pattern: |
-    trigger: [word=/convert/ & tag=/^VB/]
-    goal?: <xcomp <rcmod <dep <prep_as <nsubj ccomp nsubj [mention=/Gene_or_gene_product|Protein|Complex/] #Ras
-    cause?: <xcomp <rcmod <dep <prep_as nn [mention=/Gene_or_gene_product|Complex/]
-    theme1: dobj # GDP
-    theme2: <xcomp <rcmod <dep <prep_as <nsubj ccomp nsubj prep_to [mention=/Simple_chemical/] # GTP
+    trigger = [word=/convert/ & tag=/^VB/]
+    goal:BioChemicalEntity? = <xcomp <rcmod <dep <prep_as <nsubj ccomp nsubj #Ras
+    cause:BioChemicalEntity? = <xcomp <rcmod <dep <prep_as nn
+    theme1:Simple_chemical = dobj # GDP
+    theme2:Simple_chemical = <xcomp <rcmod <dep <prep_as <nsubj ccomp nsubj prep_to # GTP
 
 
 - name: exchange_5
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "We found increased Ras GTP/GDP exchange by MEK."
   type: token
   pattern: |
-    (?<goal> [mention=/Protein|Gene_or_gene_product|Complex/])?
-     (?<theme1> [mention=/Simple_chemical/]) /\/|\-/
-     (?<theme2> [mention=/Simple_chemical/]) (?<trigger> [lemma=exchange])
-     (/^by$/)? (?<cause> [mention=/Protein|Gene_or_gene_product|Complex/])?
+     (@goal:BioChemicalEntity)?
+     @theme1:Simple_chemical #also included: /\/|\-/
+     @theme2:Simple_chemical
+     (?<trigger> [lemma=exchange])
+     (/^by$/)? (@cause:BioChemicalEntity)?
 
 
 - name: exchange_6
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "it enhances GDP/GTP exchange of Ras and increases the fraction of Ras in the GTP-form"
   type: token
   pattern: |
-    (?<theme1> [mention=/Simple_chemical/]) /\/|\-/
-     (?<theme2> [mention=/Simple_chemical/]) (?<trigger> /(?i)^exchanges?$/)
-     /of|on|for/ (?<goal> [mention=/Protein|Gene_or_gene_product|Complex/])
+     @theme1:Simple_chemical #also included: /\/|\-/
+     @theme2:Simple_chemical 
+     (?<trigger> /(?i)^exchanges?$/)
+     /of|on|for/ @goal:BioChemicalEntity 
 
 
 - name: exchange_decl1
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "Ras exchanges GDP for GTP more rapidly in the presence of Pde2."
-  type: dependency
   pattern: |
-    trigger: [word=/^exchang/ & tag=/^VB[^N]?/]
-    goal: nsubj [mention=/Gene_or_gene_product|Protein|Complex/] #Ras
-    theme1: dobj [mention=/Simple_chemical/] # GDP
-    theme2: dobj? prep_for [mention=/Simple_chemical/] # GTP
+    trigger = [word=/^exchang/ & tag=/^VB[^N]?/]
+    goal:BioChemicalEntity = nsubj #Ras
+    theme1:Simple_chemical = dobj # GDP
+    theme2:Simple_chemical = dobj? prep_for # GTP
 
 
 - name: exchange_decl1wrong
-  label: Exchange
+  label: [Exchange, Event]
   priority: 5
-  action: mkExchange
   example: "Ras exchanges GDP for GTP more rapidly in the presence of Pde2."
-  type: dependency
   pattern: |
-    trigger: [word=/^exchang/ & tag=/^N/]
-    goal: nn [mention=/Gene_or_gene_product|Protein|Complex/] #Ras
-    theme1: dep [mention=/Simple_chemical/] # GDP
-    theme2: dep? prep_for [mention=/Simple_chemical/] # GTP
+    trigger = [word=/^exchang/ & tag=/^N/]
+    goal:BioChemicalEntity = nn #Ras
+    theme1:Simple_chemical = dep # GDP
+    theme2:Simple_chemical = dep? prep_for # GTP
 
 
 - name: exchange_pass1
   priority: 5
-  action: mkExchange
   example: "the GDP bound to the Ras protein is exchanged for GTP."
-  type: dependency
-  label: Exchange
+  label: [Exchange, Event]
   pattern: |
-    trigger: [word=/(?i)^exchang/ & tag=VBN]
-    goal?: <rcmod nn* [mention=/Gene_or_gene_product|Protein|Complex/] #Ras
-    theme1: (<rcmod <prep_to? nsubj) | nsubjpass [mention=/Simple_chemical/] # GDP
-    theme2: prep_for|prep_with [mention=/Simple_chemical/] # GTP
+    trigger = [word=/(?i)^exchang/ & tag=VBN]
+    goal:BioChemicalEntity? = <rcmod nn* #Ras
+    theme1:Simple_chemical = (<rcmod <prep_to? nsubj) | nsubjpass # GDP
+    theme2:Simple_chemical = prep_for|prep_with # GTP
 
 
 - name: exchange_objnom1
   priority: 5
-  action: mkExchange
   example: "In Ras, GDP exchange for GTP increased."
-  type: dependency
-  label: Exchange
+  label: [Exchange, Event]
   pattern: |
-    trigger: [word=/(?i)^exchange/ & tag=/^N/]
-    theme1: nn [mention=/Simple_chemical/] # GDP
-    theme2: prep_for|prep_with [mention=/Simple_chemical/] # GTP
+    trigger = [word=/(?i)^exchange/ & tag=/^N/]
+    theme1:Simple_chemical = nn # GDP
+    theme2:Simple_chemical = prep_for|prep_with # GTP
 
 
 - name: exchange_subjrel1
   priority: 5
-  action: mkExchange
   example: "Its many abnormal phenotypes can be rescued via Pde2, which normally exchanges GDP with GTP."
   type: token
-  label: Exchange
+  label: [Exchange, Event]
   pattern: |
-    (?<trigger> [lemma=exchange]) (?<theme1> [mention=/Simple_chemical/]) (with|for) (?<theme2> [mention=/Simple_chemical/])
+    (?<trigger> [lemma=exchange]) @theme1:Simple_chemical (with|for) @theme2:Simple_chemical
 
 
 - name: exchange_objrel1
   priority: 5
-  action: mkExchange
   example: "Its many abnormal phenotypes can be rescued via GDP, which is normally exchanged with GTP in Ras."
-  type: dependency
-  label: Exchange
+  label: [Exchange, Event]
   pattern: |
-    trigger: [word=/(?i)^exchang/ & tag=VBN]
-    goal?: (prep_with|prep_for)* (prep_in|prep_on) [mention=/Protein|Gene_or_gene_product|Complex/]
-    theme1: <rcmod (<appos)? [mention=/Simple_chemical/] # GDP
-    theme2: prep_for|prep_with [mention=/Simple_chemical/] # GTP
+    trigger = [word=/(?i)^exchang/ & tag=VBN]
+    goal:BioChemicalEntity? = (prep_with|prep_for)* (prep_in|prep_on) [mention=/Protein|Gene_or_gene_product|Complex/]
+    theme1:Simple_chemical = <rcmod (<appos)? # GDP
+    theme2:Simple_chemical = prep_for|prep_with # GTP

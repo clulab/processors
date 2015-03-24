@@ -23,7 +23,7 @@ class TestFalsePositive extends FlatSpec with Matchers {
     val doc = bioproc annotate sentence2
     val mentions = extractor extractFrom doc
     val participants = Set("ASPP1", "ASPP2", "RAS-GTP")
-    assert(mentions.exists(m => m.label == "Binding" && m.arguments("Theme").map(_.text).toSet.diff(participants).isEmpty))
+    assert(mentions.exists(m => m.label == "Binding" && m.arguments("theme").map(_.text).toSet.diff(participants).isEmpty))
   }
 
   sentence3 should "have an up-regulated phosphorylation" in {
@@ -37,7 +37,7 @@ class TestFalsePositive extends FlatSpec with Matchers {
     val mentions = extractor extractFrom doc
     val participants1 = Set("Ras", "UbiquitinC77")
     val participants2 = Set("Ras", "UbiquitinG76C")
-    assert(mentions.exists(m => m.label == "Binding" && m.arguments("Theme").map(_.text).toSet.diff(participants1).isEmpty))
-    assert(mentions.exists(m => m.label == "Binding" && m.arguments("Theme").map(_.text).toSet.diff(participants2).isEmpty))
+    assert(mentions.exists(m => m.label == "Binding" && m.arguments("theme").map(_.text).toSet.diff(participants1).isEmpty))
+    assert(mentions.exists(m => m.label == "Binding" && m.arguments("theme").map(_.text).toSet.diff(participants2).isEmpty))
   }
 }

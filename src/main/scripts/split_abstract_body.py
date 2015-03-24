@@ -73,7 +73,7 @@ def remove_sections(standoff):
         title = tokens[0].lower() if len(tokens) > 1 else ''
 
 
-        if prev_span is None: 
+        if prev_span is None:
             prev_span = (start, end)
         elif span_contains(prev_span, (start, end)):
             continue
@@ -84,8 +84,8 @@ def remove_sections(standoff):
         lookup = ('material', 'method', 'and', 'suplementary', 'supporting', 'information')
         avoid = ('preliminary', 'finding', 'result', 'methodology')
 
-        for word in lookup: 
-            if word in title: 
+        for word in lookup:
+            if word in title:
                 matches += 1
 
         words = len(title.split())

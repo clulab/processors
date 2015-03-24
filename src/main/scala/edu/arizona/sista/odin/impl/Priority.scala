@@ -4,16 +4,16 @@ sealed trait Priority {
   def matches(i: Int): Boolean
 }
 
-case class ExactPriority(val value: Int) extends Priority {
+case class ExactPriority(value: Int) extends Priority {
   def matches(i: Int): Boolean = i == value
 }
 
-case class IntervalPriority(val start: Int, val end: Int) extends Priority {
+case class IntervalPriority(start: Int, end: Int) extends Priority {
   def matches(i: Int): Boolean = i >= start && i <= end
 }
 
-case class FromPriority(val from: Int) extends Priority {
-  def matches(i: Int): Boolean = i >= from
+case class InfiniteIntervalPriority(start: Int) extends Priority {
+  def matches(i: Int): Boolean = i >= start
 }
 
 object Priority {
@@ -22,9 +22,9 @@ object Priority {
   private val from = """^(\d+)\s*\+$""".r
 
   def apply(s: String): Priority = s.trim match {
-    case exact(i) => new ExactPriority(i.toInt)
-    case interval(start, end) => new IntervalPriority(start.toInt, end.toInt)
-    case from(i) => new FromPriority(i.toInt)
-    case _ => scala.sys.error("invalid priority string")
+    case exact(n) => ExactPriority(n.toInt)
+    case interval(n, m) => IntervalPriority(n.toInt, m.toInt)
+    case from(n) => InfiniteIntervalPriority(n.toInt)
+    case p => sys.error(s"invalid priority '$p'")
   }
 }

@@ -16,22 +16,22 @@ class Ruler(val rules: String, val actions: Actions) {
       case m if !m.isInstanceOf[TextBoundMention] && m.arguments.values.flatten.isEmpty => Nil
 
       // the event mention should not be a regulation and it must contain a cause
-      case m: EventMention if !m.label.endsWith("egulation") && m.arguments.contains("Cause") =>
-        val controller = m.arguments("Cause")
-        val someEvent = new EventMention(m.label, m.trigger, m.arguments - "Cause", m.sentence, m.document, m.keep, m.foundBy)
-        val args = Map("Controller" -> controller, "Controlled" -> Seq(someEvent))
+      case m: EventMention if !m.label.endsWith("egulation") && m.arguments.contains("cause") =>
+        val controller = m.arguments("cause")
+        val someEvent = new EventMention(m.labels, m.trigger, m.arguments - "cause", m.sentence, m.document, m.keep, m.foundBy)
+        val args = Map("controller" -> controller, "controlled" -> Seq(someEvent))
         val upreg = new RelationMention("Positive_regulation", args, m.sentence, m.document, m.keep, m.foundBy)
         Seq(upreg, someEvent)
 
-      case m: EventMention if m.label == "Binding" && m.arguments("Theme").map(_.text).contains("Ubiquitin") =>
-        val themes = m.arguments("Theme") filter (_.text != "Ubiquitin")
+      case m: EventMention if m.label == "Binding" && m.arguments("theme").map(_.text).contains("Ubiquitin") =>
+        val themes = m.arguments("theme") filter (_.text != "Ubiquitin")
         if (themes.nonEmpty) {
-          val ubiq = new RelationMention("Ubiquitination", Map("Theme" -> themes), m.sentence, m.document, m.keep, m.foundBy)
+          val ubiq = new RelationMention("Ubiquitination", Map("theme" -> themes), m.sentence, m.document, m.keep, m.foundBy)
           Seq(ubiq)
         } else Nil
 
       // remove mentions of binding with single theme
-      case m: EventMention if m.label == "Binding" && m.arguments("Theme").size == 1 => Nil
+      case m: EventMention if m.label == "Binding" && m.arguments("theme").size == 1 => Nil
 
       case m if m.label.endsWith("egulation") => if (checkRegulationArgs(m)) Seq(m) else Nil
 
@@ -44,7 +44,7 @@ class Ruler(val rules: String, val actions: Actions) {
   // regulations may have one controller
   // controller != controlled
   def checkRegulationArgs(m: Mention): Boolean = {
-    (m.arguments.get("Controller"), m.arguments.get("Controlled")) match {
+    (m.arguments.get("controller"), m.arguments.get("controlled")) match {
       case (_, None) => false
       case (None, Some(controlled)) => controlled.size == 1 && isBioEvent(controlled.head) // controlled must be a valid event...
       case (Some(controller), Some(controlled)) =>
@@ -58,7 +58,7 @@ class Ruler(val rules: String, val actions: Actions) {
   }
 
   // is the mention a biochemical event?
-  def isBioEvent(m: Mention): Boolean = !m.isInstanceOf[TextBoundMention] && EventLabels.contains(m.label)
+  def isBioEvent(m: Mention): Boolean = !m.isInstanceOf[TextBoundMention] && m.labels.contains("Event")
 }
 
 object Ruler {
@@ -78,17 +78,18 @@ object Ruler {
     val dir = if (shell) filesDir else resourcesDir
     val read = if (shell) readFile _ else readResource _
     val files = Seq(s"$dir/phospho_events.yml",
-      s"$dir/ubiq_events.yml",
-      s"$dir/hydrox_events.yml",
-      s"$dir/hydrolysis_events.yml",
-      s"$dir/bind_events.yml",
-      s"$dir/exchange_events.yml",
-      s"$dir/degrad_events.yml",
-      s"$dir/transcription_events.yml",
-      s"$dir/regulation_events.yml",
-      s"$dir/neg_reg_events.yml",
-      s"$dir/pos_reg_events.yml",
-      s"$dir/transport_events.yml")
+        s"$dir/ubiq_events.yml",
+        s"$dir/hydrox_events.yml",
+        s"$dir/hydrolysis_events.yml",
+        s"$dir/bind_events.yml",
+        s"$dir/exchange_events.yml",
+        s"$dir/degrad_events.yml",
+        s"$dir/transcription_events.yml",
+        s"$dir/regulation_events.yml",
+        s"$dir/neg_reg_events.yml",
+        s"$dir/pos_reg_events.yml",
+        s"$dir/transport_events.yml"
+    )
     files map read mkString "\n\n"
   }
 

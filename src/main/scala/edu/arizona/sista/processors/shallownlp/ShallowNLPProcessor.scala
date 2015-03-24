@@ -380,5 +380,3 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     // nothing here
   }
 }
-
-

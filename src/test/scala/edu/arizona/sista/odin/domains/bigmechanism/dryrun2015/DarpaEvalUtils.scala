@@ -9,7 +9,7 @@ object DarpaEvalUtils {
   def hasEventWithArguments(label: String, args: Seq[String], mentions: Seq[Mention]): Boolean = {
     for (m <- mentions) {
       if (!m.isInstanceOf[TextBoundMention]) {
-        if (m.label == label) {
+        if (m.labels contains label) {
           // found the label
 
           // This is only necessary because we decided to make complexes using relation mentions.
@@ -49,10 +49,10 @@ object DarpaEvalUtils {
     for (m <- mentions) {
       if (m.isInstanceOf[RelationMention]) {
         val rm = m.asInstanceOf[RelationMention]
-        if (rm.arguments.contains("Site") &&
-          contains(rm.arguments.get("Site").get, site) &&
-          rm.arguments.contains("Protein") &&
-          contains(rm.arguments.get("Protein").get, text)) {
+        if (rm.arguments.contains("site") &&
+          contains(rm.arguments.get("site").get, site) &&
+          rm.arguments.contains("protein") &&
+          contains(rm.arguments.get("protein").get, text)) {
           //println(s"\t==> found entity mention with site: ${rm.text}")
           return true
         }
@@ -79,10 +79,10 @@ object DarpaEvalUtils {
                             mentions: Seq[Mention]): Boolean = {
     for (m <- mentions) {
       if (!m.isInstanceOf[TextBoundMention]) {
-        if (m.label == label) {
+        if (m.labels contains label) {
           // found the regulation label
-          val controller = m.arguments.get("Controller")
-          val controlled = m.arguments.get("Controlled")
+          val controller = m.arguments.get("controller")
+          val controlled = m.arguments.get("controlled")
 
           if (controller.isDefined && controlled.isDefined && controlled.get.head.isInstanceOf[EventMention]) {
             // some obvious sanity checks

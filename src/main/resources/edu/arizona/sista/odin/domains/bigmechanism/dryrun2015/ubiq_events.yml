@@ -1,198 +1,190 @@
+#Phosphorylation events require arguments of type BioChemicalEntity
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
 
 - name: Ubiquitination_syntax_1_verb
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination 
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i).*ubiquitinat.*/ & !word=/^de/ & tag=/^V/]
-    cause?: <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/* [!word=/(?i)ubiq/]
-    theme: (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])* [!word=/(?i)ubiq/]
-    #site?: dobj? /prep_(at|on)|nn|conj_|cc/*
+    trigger = [lemma=/ubiquitinate/ & tag=/^V/]
+    cause:BioChemicalEntity? = <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
+    theme:BioChemicalEntity = (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])*
+    #site:Site? = dobj? /prep_(at|on)|nn|conj_|cc/*
 
 
 - name: Ubiquitination_syntax_2_verb
   priority: 4
-  action: mkSimpleEvent
-  type: dependency
-  label: Ubiquitination
+  #action: mkUbiquitination
+  example: ""
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinated/ & !word=/^de/ & tag=/^V/]
-    theme: (>nsubjpass|<vmod) /conj_|nn|cc/* [!word=/(?i)ubiq/ & mention=/./]
-    cause?: agent|prep_by /conj_|nn|cc/* [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
+    trigger = [lemma=/ubiquitinate/ & tag=VBN]
+    theme:BioChemicalEntity = (>nsubjpass|<vmod) /conj_|nn|cc/*
+    cause:BioChemicalEntity? = agent|prep_by /conj_|nn|cc/*
 
 
 - name: Ubiquitination_syntax_3_verb
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinat/ & !word=/^de/ & !outgoing=nsubjpass & tag=/^V/] # verbal predicate
-    theme: ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) ) [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
-    site?: (/pobj|prep_|conj_|nn/+ [mention=Site]) | (< /pobj|prep_|conj_|nn/+ [mention=Site])
-    cause?: <nn* | (prep_by) /nn|conj_|cc/* [!word=/(?i)ubiq/]
+    trigger = [lemma=/ubiquitinate/ & !outgoing=nsubjpass & tag=/^V/] # verbal predicate
+    theme:BioChemicalEntity = ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) )
+    site:Site? = (/pobj|prep_|conj_|nn/+ [mention=Site]) | (< /pobj|prep_|conj_|nn/+ [mention=Site])
+    cause:BioChemicalEntity? = <nn* | (prep_by) /nn|conj_|cc/*
 
 
 - name: Ubiquitination_syntax_4_verb
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinat/ & !word=/^de/ & tag=/^V/]
-    theme: (nsubjpass /conj_|nn/*) [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
-    site?: /prep_/ /prep_|conj_|nn/* [mention=Site]
-    cause?: (/prep_/ /conj_|nn/*)? /prep_/* (prep_by|agent) /conj_|nn/* [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
+    trigger = [lemma=/ubiquitinate/ & tag=/^V/]
+    theme:BioChemicalEntity = (nsubjpass /conj_|nn/*)
+    site:Site? = /prep_/ /prep_|conj_|nn/* [mention=Site]
+    cause:BioChemicalEntity? = (/prep_/ /conj_|nn/*)? /prep_/* (prep_by|agent) /conj_|nn/*
 
 
 - name: Ubiquitination_syntax_5_verb
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinat/ & !word=/^de/ & tag=/^V/]
-    theme: dobj /nn|conj_|cc/* [!word=/(?i)ubiq/]
-    cause: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* [!word=/(?i)ubiq/]
-    #site?: dobj? prep_(at|on) /nn|conj_|cc/*
+    trigger = [lemma=/ubiquitinate/ & tag=/^V/]
+    theme:BioChemicalEntity = dobj /nn|conj_|cc/*
+    cause:BioChemicalEntity = (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
+    #site:Site? = dobj? prep_(at|on) /nn|conj_|cc/*
 
 
 - name: Ubiquitination_syntax_6_verb
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinat/ & !word=/^de/ & tag=VBN]
-    theme: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* [!word=/(?i)ubiq/]
-    cause?: (prep_by|agent) /appos|nn|conj_|cc/* [!word=/(?i)ubiq/]
-    #site?: dobj? prep_(at|on) /nn|conj_|cc/*
+    trigger = [lemma=/ubiquitinate/ & tag=VBN]
+    theme:BioChemicalEntity = (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/*
+    cause:BioChemicalEntity? = (prep_by|agent) /appos|nn|conj_|cc/*
+    #site:Site? = dobj? prep_(at|on) /nn|conj_|cc/*
 
 
 - name: Ubiquitination_syntax_1_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinat/ & !word=/^de/ & tag=/^N/]
-    theme: prep_of /nn|conj_|cc/* [!word=/(?i)ubiq/]
-    cause?: (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/* [!word=/(?i)ubiq/]
-    #site?: (/prep_/ nn*)+
+    trigger =[lemma=/ubiquitination$/]
+    theme:BioChemicalEntity = prep_of /nn|conj_|cc/*
+    cause:BioChemicalEntity? = (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/*
+    #site:Site? = (/prep_/ nn*)+
     #constraint: <dobj [lemma=/prevent|inhibit|block/]
 
 
 - name: Ubiquitination_syntax_2_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinat/ & !word=/^de/ & tag=/^N/] # nominal predicate
-    theme: prep_of? /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
-    site?: /pobj|prep_|conj_|nn/+ [mention=Site]
-    cause: (prep_by|agent) /conj|cc|nn/* [!word=/(?i)ubiq/]
+    trigger =[lemma=/ubiquitination$/] # nominal predicate
+    theme:BioChemicalEntity = prep_of? /conj_|cc|nn/+
+    site:Site? = /pobj|prep_|conj_|nn/+ [mention=Site]
+    cause:BioChemicalEntity = (prep_by|agent) /conj|cc|nn/*
 
 
 - name: Ubiquitination_syntax_3_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitinat/ & !word=/^de/ & tag=/^N/ & !outgoing=/prep_(by|of)/] # nominal predicate
-    theme: prep_of /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
-    cause: /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
-    site?: /pobj|prep_|conj_|nn/+ [mention=Site]
+    trigger = [lemma=/ubiquitination$/ & !outgoing=/prep_(by|of)/] # nominal predicate
+    theme:BioChemicalEntity = prep_of /conj_|cc|nn/+
+    cause:BioChemicalEntity = /conj_|cc|nn/+
+    site:Site? = /pobj|prep_|conj_|nn/+ [mention=Site]
 
 
 - name: Ubiquitination_syntax_4_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitination/ & !word=/(?i)^de/ & !outgoing=prep_by & tag=/^N/]
-    theme: <nn? nn /conj|cc|nn|prep/* [!word=/(?i)ubiq/ & mention=/./ & !mention=/Site/]
+    trigger = [lemma=/ubiquitination$/ & !outgoing=prep_by]
+    theme:BioChemicalEntity = <nn? nn /conj|cc|nn|prep/* [!word=/(?i)ubiq/ & mention=/./ & !mention=/Site/]
 
 
 - name: Ubiquitination_syntax_5_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitination/ & !word=/^de/ & tag=/^N/]
-    theme: < nn > /prep_/ /conj_|cc|nn/* [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]
+    trigger = [lemma=/ubiquitination$/]
+    theme:BioChemicalEntity = < nn > /prep_/ /conj_|cc|nn/*
 
 
 - name: Ubiquitination_syntax_6_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitination/ & !word=/^de/ & tag=/^N/]
-    cause: <prep_via agent|prep_by /nn|conj_|cc/* [!word=/(?i)ubiq/]
-    theme: (prep_of /nn|conj_|cc/*)+ [!word=/(?i)ubiq/]
+    trigger = [lemma=/ubiquitination$/]
+    cause:BioChemicalEntity = <prep_via agent|prep_by /nn|conj_|cc/*
+    theme:BioChemicalEntity = (prep_of /nn|conj_|cc/*)+
 
 - name: Ubiquitination_syntax_7_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: "Here we show that monoubiquitination decreases the sensitivity of Ras to GAP-mediated hydrolysis."
-  type: dependency
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    trigger: [word=/(?i)ubiquitination/ & !word=/^de/ & !outgoing=prep_of & tag=/^N/]
-    theme: < nsubj dobj prep_of /nn|cc|conj/* [!word=/(?i)ubiq/ & mention=/./]
+    trigger = [lemma=/ubiquitination$/ & !outgoing=prep_of]
+    theme:BioChemicalEntity = < nsubj dobj prep_of /nn|cc|conj/*
 
 - name: Ubiquitination_token_1_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
   type: token
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    (?<trigger> [word=/(?i)ubiquitination/ & !word=/^de/ & tag=/^N/]) /of|on/ [word=/./ & !tag=/^V/]*? (?<theme> [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/])
+    (?<trigger> [lemma=/ubiquitination$/]) /of|on/ [word=/./ & !tag=/^V/]*? @theme:BioChemicalEntity
 
 
 - name: Ubiquitination_token_2_noun
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
   type: token
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    (?<theme> [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]) (?<trigger> [word=/(?i)ubiquitination/ & !word=/^de/ & tag=/^N/]) [!word=of]
+    @theme:BioChemicalEntity (?<trigger> [lemma=/ubiquitination$/]) [!word=of]
 
 
 - name: Ubiquitination_token_1_verb
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
   type: token
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    (?<theme> [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]) (?<trigger> [word=/(?i)ubiquitinat/ & tag=/^V/]) [tag=IN] (?<cause> [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/])?
+    @theme:BioChemicalEntity (?<trigger> [lemma=/ubiquitinate/ & tag=/^V/]) [tag=IN] (@cause:BioChemicalEntity)?
 
 
 - name: Ubiquitination_token_2_verb
   priority: 4
-  action: mkSimpleEvent
+  action: mkUbiquitination
   example: ""
   type: token
-  label: Ubiquitination
+  label: [Ubiquitination, Event]
   pattern: |
-    (?<trigger> [word=/(?i)ubiquitinat/ & tag=/^V/]) (?<theme> [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/]) (fragment? by (?<cause> [mention=/Protein|Gene_or_gene_product/ & !word=/(?i)ubiq/])? )?
+    (?<trigger> [lemma=/ubiquitinate/ & tag=/^V/]) @theme:BioChemicalEntity (fragment? by (@cause:BioChemicalEntity)? )?

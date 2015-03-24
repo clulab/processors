@@ -1,9 +1,10 @@
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
 
 - name: uniprotID_AKT1_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Protein$/] kinase [word=/(?i)^B$/] alpha) |
    ([word=/(?i)^PKB$/] alpha) |
@@ -15,10 +16,9 @@
    ([word=/(?i)^Protein$/] kinase [word=/(?i)^B$/])
 
 - name: uniprotID_AKTS1_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ("40" kDa [word=/(?i)^proline(-rich)?$/] [word=/(?i)^AKT$/] substrate) |
    ([word=/(?i)^Proline(-rich)?$/] [word=/(?i)^AKT1$/] substrate "1") |
@@ -26,10 +26,9 @@
    ([word=/(?i)^PRAS40$/])
 
 - name: uniprotID_BRAS2_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^BRWD1$/] intronic transcript "2") |
    ([word=/(?i)^Putative$/] uncharacterized [word=/(?i)^protein$/]? encoded by [word=/(?i)^BRWD1-AS2$/]) |
@@ -38,10 +37,9 @@
    ([word=/(?i)^ATP1A1$/] antisense gene [word=/(?i)^protein$/]? "1")
 
 - name: uniprotID_CRAS1_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^CRYM$/] antisense gene [word=/(?i)^protein$/]? "1") |
    ([word=/(?i)^CRYM$/] antisense [word=/(?i)^RNA$/] "1") |
@@ -49,10 +47,9 @@
    ([word=/(?i)^Putative$/] uncharacterized [word=/(?i)^protein$/]? [word=/(?i)^CRYM-AS1$/])
 
 - name: uniprotID_EGFL6_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Epidermal$/] growth [word=/(?i)^factor(-like)?$/] [word=/(?i)^protein$/]? "6") |
    ([word=/(?i)^EGFL6$/]) |
@@ -60,10 +57,9 @@
    ([word=/(?i)^EGF(-like)?$/] [word=/(?i)^protein$/]? "6")
 
 - name: uniprotID_EGFR_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Epidermal$/] growth factor receptor) |
    ([word=/(?i)^EGFR$/]) |
@@ -71,10 +67,9 @@
    ([word=/(?i)^Proto(-oncogene)?$/] "c-ErbB-1")
 
 - name: uniprotID_HBEGF_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Diphtheria$/] toxin receptor) |
    ([word=/(?i)^HBEGF$/]) |
@@ -84,30 +79,27 @@
    ([word=/(?i)^Heparin(-binding)?$/] [word=/(?i)^-?binding$/]? [word=/(?i)^EGF(-like)?$/] growth factor)
 
 - name: uniprotID_HERC2_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^E3$/] [word=/(?i)^ubiquitin(-protein)?$/] ligase [word=/(?i)^HERC2$/]) |
    ([word=/(?i)^HECT$/] domain and [word=/(?i)^RCC1(-like)?$/] [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "2") |
    ([word=/(?i)^HERC2$/])
 
 - name: uniprotID_HERC6_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^HERC6$/]) |
    ([word=/(?i)^Probable$/] [word=/(?i)^E3$/] [word=/(?i)^ubiquitin(-protein)?$/] ligase [word=/(?i)^HERC6$/]) |
    ([word=/(?i)^HECT$/] domain and [word=/(?i)^RCC1(-like)?$/] [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "6")
 
 - name: uniprotID_MEGF8_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Multiple$/] epidermal growth [word=/(?i)^factor(-like)?$/] domains [word=/(?i)^protein$/]? "8") |
    ([word=/(?i)^Epidermal$/] growth [word=/(?i)^factor(-like)?$/] [word=/(?i)^protein$/]? "4") |
@@ -116,10 +108,9 @@
    ([word=/(?i)^Multiple$/] [word=/(?i)^EGF(-like)?$/] domains [word=/(?i)^protein$/]? "8")
 
 - name: uniprotID_RASA3_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "3") |
    ([word=/(?i)^GAP1IP4BP$/]) |
@@ -127,20 +118,18 @@
    ([word=/(?i)^RASA3$/])
 
 - name: uniprotID_RASF1_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASSF1$/]) |
    ([word=/(?i)^Ras$/] association [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "1") |
    ([word=/(?i)^RDA32$/])
 
 - name: uniprotID_RASF5_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Regulator$/] for cell adhesion and polarization enriched in lymphoid tissues) |
    ([word=/(?i)^New$/] ras effector "1") |
@@ -149,10 +138,9 @@
    ([word=/(?i)^RAPL$/])
 
 - name: uniprotID_RASF9_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Peptidylglycine$/] [word=/(?i)^alpha(-amidating)?$/] [word=/(?i)^-?amidating$/]? monooxygenase [word=/(?i)^COOH(-terminal)?$/] interactor) |
    ([word=/(?i)^Ras$/] association [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "9") |
@@ -161,38 +149,34 @@
    ([word=/(?i)^PAM$/] [word=/(?i)^COOH(-terminal)?$/] interactor [word=/(?i)^protein$/]? "1")
 
 - name: uniprotID_RASL1_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASAL1$/]) |
    ([word=/(?i)^RasGAP(-activating)?(-like)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "1")
 
 - name: uniprotID_RASM_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras(-related)?$/] [word=/(?i)^protein$/]? [word=/(?i)^M-Ras$/]) |
    ([word=/(?i)^Ras(-related)?$/] [word=/(?i)^protein$/]? [word=/(?i)^R-Ras3$/]) |
    ([word=/(?i)^MRAS$/])
 
 - name: uniprotID_SMEK3_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Putative$/] [word=/(?i)^SMEK$/] homolog "3") |
    ([word=/(?i)^SMEK3P$/])
 
 - name: uniprotID_VEGFA_HUMAN
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^VEGF-A$/]) |
    ([word=/(?i)^VPF$/]) |
@@ -202,10 +186,9 @@
 
 
 - name: uniprotID_NRG1_HUMAN #from "neighbors"
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Neuregulin-1$/]) |
    ([word=/(?i)^Heregulin$/]) |
@@ -221,10 +204,9 @@
    ([word=/(?i)^HRG$/])
 
 - name: uniprotID_ERBB3_HUMAN #from "neighbors"
-  label: Protein
+  label: [Protein, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^ERBB3$/]) |
    ([word=/(?i)^Tyrosine$/] [word=/(?i)^kinase(-type)?$/] cell surface receptor [word=/(?i)^HER3$/]) |
@@ -232,10 +214,9 @@
    ([word=/(?i)^Proto(-oncogene)?(-like)?$/] [word=/(?i)^protein$/]? "c-ErbB-3")
 
 - name: Jan5_dryrun_model
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
     /^[^0-9].*(-[AG][DT]P|[AG][DT]P-)/ |
     /p\d+/? /^SAP/ | #TODO: I think we need to detect complexes as sequences of Proteins at step 3
@@ -263,10 +244,9 @@
 
 
 - name: uniprotID_ASPP2_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ("p53BP2") |
    ([word=/(?i)^Renal$/] carcinoma antigen [word=/(?i)^NY-REN-51$/]) |
@@ -280,10 +260,9 @@
    ([word=/(?i)^Bbp$/])
 
 - name: uniprotID_BRAF_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ("v-Raf" murine sarcoma viral oncogene homolog [word=/(?i)^B1$/]) |
    ([word=/(?i)^Proto(-oncogene)?$/] [word=/(?i)^B-Raf$/]) |
@@ -294,10 +273,9 @@
    ([word=/(?i)^BRAF$/])
 
 - name: uniprotID_GAPD1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Rab5(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "6") |
    ([word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? and [word=/(?i)^VPS9$/] [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? [word=/(?i)^protein$/]? "1") |
@@ -305,10 +283,9 @@
    ([word=/(?i)^GAPVD1$/])
 
 - name: uniprotID_GRP1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGRP1$/]) |
    ([word=/(?i)^RAS$/] [word=/(?i)^guanyl(-releasing)?$/] [word=/(?i)^-?releasing$/]? [word=/(?i)^protein$/]? "1") |
@@ -317,10 +294,9 @@
    ([word=/(?i)^Ras$/] [word=/(?i)^guanyl(-releasing)?$/] [word=/(?i)^-?releasing$/]? [word=/(?i)^protein$/]?)
 
 - name: uniprotID_GRP3_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGRP3$/]) |
    ([word=/(?i)^Calcium$/] and [word=/(?i)^DAG(-regulated)?$/] guanine nucleotide exchange factor [word=/(?i)^III$/]) |
@@ -328,29 +304,26 @@
    ([word=/(?i)^Guanine$/] nucleotide exchange factor for [word=/(?i)^Rap1$/])
 
 - name: uniprotID_IQGA1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?(-like)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? [word=/(?i)^IQGAP1$/]) |
    ([word=/(?i)^IQGAP1$/]) |
    ("p195")
 
 - name: uniprotID_IQGA3_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?(-like)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? [word=/(?i)^IQGAP3$/]) |
    ([word=/(?i)^IQGAP3$/])
 
 - name: uniprotID_MK03_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^MAPK$/] "3"?) |
    ([word=/(?i)^Insulin(-stimulated)?$/] [word=/(?i)^MAP2$/] kinase) |
@@ -368,10 +341,9 @@
    ([word=/(?i)^ERK-1$/])
 
 - name: uniprotID_MP2K1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^MEK$/] "1") |
    ([word=/(?i)^(MAPK|ERK)$/] kinase "1") |
@@ -383,10 +355,9 @@
    ([word=/(?i)^ERK$/] activator kinase "1")
 
 - name: uniprotID_NF1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Neurofibromin$/]) |
    ([word=/(?i)^Neurofibromatosis(-related)?$/] [word=/(?i)^protein$/]? [word=/(?i)^NF-1$/]) |
@@ -398,10 +369,9 @@
    ([word=/(?i)^Neurofibromin$/] truncated)
 
 - name: uniprotID_P53_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^NIEHS-SNPs$/]) |
    ([word=/(?i)^TP53$/]) |
@@ -417,10 +387,9 @@
    ([word=/(?i)^The$/] [word=/(?i)^TP53$/] mutant web site)
 
 - name: uniprotID_PLCE1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^PLC(-epsilon)?-1$/]) |
    ([word=/(?i)^Pancreas(-enriched)?$/] phospholipase [word=/(?i)^C$/]) |
@@ -432,10 +401,9 @@
    ([word=/(?i)bisphosphate/]? phosphodiesterase "epsilon-1")
 
 - name: uniprotID_RAF1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Proto(-oncogene)?$/] "c-RAF") |
    (cRaf) |
@@ -447,10 +415,9 @@
    ([word=/(?i)^RAF1$/])
 
 - name: uniprotID_RASA2_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "1m") |
    ([word=/(?i)^Ras$/] [word=/(?i)^GTPase(-activating)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "2") |
@@ -458,10 +425,9 @@
    ([word=/(?i)^RASA2$/])
 
 - name: uniprotID_RASK_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^SHMPD$/]) |
    ([word=/(?i)^c-Ki(-ras)?$/]) |
@@ -476,10 +442,9 @@
    ([word=/(?i)^K-Ras$/] "2")
 
 - name: uniprotID_RASL2_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Calcium(-promoted)?$/] [word=/(?i)^Ras$/] inactivator) |
    ([word=/(?i)^Ras$/] "p21" [word=/(?i)^protein$/]? activator "4") |
@@ -488,10 +453,9 @@
    ([word=/(?i)^RasGAP(-activating)?(-like)?$/] [word=/(?i)^-?activating$/]? [word=/(?i)^protein$/]? "2")
 
 - name: uniprotID_RASN_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^GTPase$/] [word=/(?i)^NRas$/]) |
    ([word=/(?i)^Wikipedia$/]) |
@@ -502,10 +466,9 @@
    ([word=/(?i)^NRASbase$/])
 
 - name: uniprotID_RGDSR_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RalGDS(-like)?$/] "4") |
    ([word=/(?i)^RGL4$/]) |
@@ -514,40 +477,36 @@
    ([word=/(?i)^Ral-GDS(-related)?$/] [word=/(?i)^protein$/]?)
 
 - name: uniprotID_RGF1B_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGEF1B$/]) |
    ([word=/(?i)^GPI$/] "gamma-4") |
    ([word=/(?i)^Ras-GEF$/] [word=/(?i)^domain(-containing)?$/] [word=/(?i)^-?containing$/]? family member "1B")
 
 - name: uniprotID_RGL1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RGL1$/]) |
    ([word=/(?i)^RalGDS(-like)?$/] "1") |
    ([word=/(?i)^Ral$/] guanine nucleotide dissociation [word=/(?i)^stimulator(-like)?$/] "1")
 
 - name: uniprotID_RGL3_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RGL3$/]) |
    ([word=/(?i)^RalGDS(-like)?$/] "3") |
    ([word=/(?i)^Ral$/] guanine nucleotide dissociation [word=/(?i)^stimulator(-like)?$/] "3")
 
 - name: uniprotID_RGPS1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Ral$/] guanine nucleotide exchange factor "2") |
    ([word=/(?i)^RalGEF$/] "2") |
@@ -557,10 +516,9 @@
    ([word=/(?i)^RalA$/] exchange factor [word=/(?i)^RalGPS1$/])
 
 - name: uniprotID_RGRF1_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RASGRF1$/]) |
    ([word=/(?i)^Ras(-specific)?$/] guanine [word=/(?i)^nucleotide(-releasing)?$/] [word=/(?i)^-?releasing$/]? factor "1") |
@@ -570,10 +528,9 @@
    ([word=/(?i)^Ras-GRF1$/])
 
 - name: uniprotID_RPGF3_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^cAMP(-regulated)?$/] guanine nucleotide exchange factor [word=/(?i)^I$/]) |
    ("cAMP-GEFI") |
@@ -585,10 +542,9 @@
    ([word=/(?i)^EPAC$/] "1")
 
 - name: uniprotID_RPGF5_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^MR-GEF$/]) |
    ([word=/(?i)^RAPGEF5$/]) |
@@ -599,10 +555,9 @@
    ([word=/(?i)^Related$/] to [word=/(?i)^Epac$/])
 
 - name: uniprotID_RPGFL_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^Link$/] guanine nucleotide exchange factor [word=/(?i)^II$/]) |
    ([word=/(?i)^Rap$/] guanine nucleotide exchange [word=/(?i)^factor(-like)?$/] "1") |
@@ -610,10 +565,9 @@
    ([word=/(?i)^RAPGEFL1$/])
 
 - name: uniprotID_SOS2_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^SOS2$/]) |
    ([word=/(?i)^Wikipedia$/]) |
@@ -622,10 +576,9 @@
 
 
 - name: uniprotID_GNDS_HUMAN
-  label: Gene_or_gene_product
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] 
   priority: 1
   type: token
-  action: mkTextBoundMention
   pattern: |
    ([word=/(?i)^RalGDS$/]) |
    ([word=/(?i)^Ral$/] guanine nucleotide exchange factor) |

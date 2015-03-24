@@ -1,24 +1,10 @@
 package edu.arizona.sista.odin
 
 class State(val lookUpTable: MentionLUT = Map.empty) {
-  def update(mentions: Seq[Mention]): State = new State(mergeLuts(mkLut(mentions)))
+  import State._
 
-  private def mkLut(mentions: Seq[Mention]): MentionLUT = {
-    val pairs = for {
-      m <- mentions
-      i <- m.tokenInterval.toSeq
-      key = (m.sentence, i)
-    } yield (key, m)
-    pairs groupBy (_._1) mapValues (_ map (_._2))
-  }
-
-  private def mergeLuts(newLut: MentionLUT): MentionLUT = {
-    val merged = for {
-      key <- lookUpTable.keySet ++ newLut.keySet
-      mentions = lookUpTable.getOrElse(key, Nil) ++ newLut.getOrElse(key, Nil)
-    } yield (key -> mentions.distinct)
-    merged.toMap
-  }
+  def updated(mentions: Seq[Mention]): State =
+    new State(mergeLuts(lookUpTable, mkLut(mentions)))
 
   // returns all mentions contained in the state
   def allMentions: Seq[Mention] =
@@ -45,4 +31,25 @@ class State(val lookUpTable: MentionLUT = Map.empty) {
 
   def mentionsFor(sent: Int, toks: Seq[Int], labels: Seq[String]): Seq[Mention] =
     toks flatMap (t => mentionsFor(sent, t, labels))
+}
+
+object State {
+  def apply(mentions: Seq[Mention]): State = new State(mkLut(mentions))
+
+  def mkLut(mentions: Seq[Mention]): MentionLUT = {
+    val pairs = for {
+      m <- mentions
+      i <- m.tokenInterval.toSeq
+      key = (m.sentence, i)
+    } yield (key, m)
+    pairs groupBy (_._1) transform ((k, v) => v.map(_._2))
+  }
+
+  def mergeLuts(lhs: MentionLUT, rhs: MentionLUT): MentionLUT = {
+    val merged = for {
+      key <- lhs.keySet ++ rhs.keySet
+      mentions = lhs.getOrElse(key, Nil) ++ rhs.getOrElse(key, Nil)
+    } yield (key -> mentions.distinct)
+    merged.toMap
+  }
 }

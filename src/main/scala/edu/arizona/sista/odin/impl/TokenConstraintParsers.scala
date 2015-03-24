@@ -32,7 +32,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 
   def atomicConstraint: Parser[TokenConstraint] = fieldConstraint | "(" ~> disjunctiveConstraint <~ ")"
 
-  def fieldConstraint: Parser[TokenConstraint] = ident ~ "=" ~ stringMatcher ^^ {
+  def fieldConstraint: Parser[TokenConstraint] = identifier ~ "=" ~ stringMatcher ^^ {
     case "word" ~ _ ~ matcher => new WordConstraint(matcher)
     case "lemma" ~ _ ~ matcher => new LemmaConstraint(matcher)
     case "tag" ~ _ ~ matcher => new TagConstraint(matcher)
@@ -41,8 +41,6 @@ trait TokenConstraintParsers extends StringMatcherParsers {
     case "incoming" ~ _ ~ matcher => new IncomingConstraint(matcher)
     case "outgoing" ~ _ ~ matcher => new OutgoingConstraint(matcher)
     case "mention" ~ _ ~ matcher => new MentionConstraint(matcher)
-    case "mention_start" ~ _ ~ matcher => new MentionStartConstraint(matcher)
-    case "mention_end" ~ _ ~ matcher => new MentionEndConstraint(matcher)
     case _ => sys.error("unrecognized token field")
   }
 }
@@ -115,62 +113,16 @@ class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with De
 // checks that a token is inside a mention
 class MentionConstraint(matcher: StringMatcher) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = state match {
-    case None => sys.error("can't match mentions without state")
-    case Some(state) => state.mentionsFor(sent, tok) flatMap (_.allLabels) exists matcher.matches
+    case None => false
+    case Some(state) => state.mentionsFor(sent, tok) exists (_ matches matcher)
   }
 
   def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = state match {
-    case None => sys.error("can't match mentions without state")
+    case None => Nil
     case Some(state) => tokens filter { t =>
       state.mentionsFor(sent, t) exists { m =>
-        val indicesAndValues = m.allLabels.toSeq.zipWithIndex map (li => (li._2, li._1))
+        val indicesAndValues = m.labels.zipWithIndex map (li => (li._2, li._1))
         matcher.filter(indicesAndValues).nonEmpty
-      }
-    }
-  }
-}
-
-// checks that a token is the beginning of the mention
-class MentionStartConstraint(matcher: StringMatcher) extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = state match {
-    case None => sys.error("can't match mentions without state")
-    case Some(state) =>
-      val mentions = for {
-        mention <- state.mentionsFor(sent, tok)
-        if mention.allLabels.exists(matcher.matches) && tok == mention.start
-      } yield mention
-      mentions.nonEmpty
-  }
-
-  def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = state match {
-    case None => sys.error("can't match mentions without state")
-    case Some(state) => tokens filter { t =>
-      state.mentionsFor(sent, t) exists { m =>
-        val indicesAndValues = m.allLabels.toSeq.zipWithIndex map (li => (li._2, li._1))
-        matcher.filter(indicesAndValues).nonEmpty && t == m.start
-      }
-    }
-  }
-}
-
-// checks that a token is the end of the mention
-class MentionEndConstraint(matcher: StringMatcher) extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = state match {
-    case None => sys.error("can't match mentions without state")
-    case Some(state) =>
-      val mentions = for {
-        mention <- state.mentionsFor(sent, tok)
-        if mention.allLabels.exists(matcher.matches) && tok == mention.end - 1  // mention.end is one past the last mention token
-      } yield mention
-      mentions.nonEmpty
-  }
-
-  def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = state match {
-    case None => sys.error("can't match mentions without state")
-    case Some(state) => tokens filter { t =>
-      state.mentionsFor(sent, t) exists { m =>
-        val indicesAndValues = m.allLabels.toSeq.zipWithIndex map (li => (li._2, li._1))
-        matcher.filter(indicesAndValues).nonEmpty && t == m.end - 1  // mention.end is one past the last mention token
       }
     }
   }

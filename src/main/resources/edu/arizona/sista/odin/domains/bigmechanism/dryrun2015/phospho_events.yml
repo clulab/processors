@@ -1,198 +1,172 @@
+#Phosphorylation events require arguments of type BioChemicalEntity
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
 
 - name: Phosphorylation_syntax_1_verb
   priority: 4
-  action: mkSimpleEvent
   example: "We further showed, in a combined enzymatic assay, that human deoxycytidine kinase and UMP-CMP kinase together phosphorylated araC, dFdC, and 2',3'-dideoxycytidine to their diphosphate forms."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i).*phosphorylat.*/ & !word=/^de/ & tag=/^V/]
-    cause?: <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
-    theme: (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])* [!mention=/Site/]
-    #site?: dobj? /prep_(at|on)|nn|conj_|cc/*
+    trigger = [word=/(?i).*phosphorylat.*/ & !word=/^de/ & tag=/^V/]
+    cause:BioChemicalEntity? = <xcomp? (nsubj | agent | <vmod) /appos|nn|conj_|cc/*
+    theme:BioChemicalEntity = (dobj | xcomp) /conj|dep|cc|nn/* (/./ [word=by])* # don't allow Site
+    #site:Site? = dobj? /prep_(at|on)|nn|conj_|cc/*
 
 
 - name: Phosphorylation_syntax_2_verb
   priority: 4
-  action: mkSimpleEvent
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylated/ & !word=/^de/ & tag=/^V/]
-    theme: (>nsubjpass|<vmod) /conj_|nn|cc/* [mention=/./ & !mention=/Site/]
-    cause?: agent|prep_by /conj_|nn|cc/* [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
+    trigger = [word=/(?i)phosphorylated/ & !word=/^de/ & tag=/^V/]
+    theme:BioChemicalEntity = (>nsubjpass|<vmod) /conj_|nn|cc/*
+    cause:BioChemicalEntity? = agent|prep_by /conj_|nn|cc/* 
 
 
 - name: Phosphorylation_syntax_3_verb
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylat/ & !word=/^de/ & !outgoing=nsubjpass & tag=/^V/] # verbal predicate
-    theme: ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) ) [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
-    site?: (/pobj|prep_|conj_|nn/+ [mention=Site]) | (< /pobj|prep_|conj_|nn/+ [mention=Site])
-    cause?: <nn* | (prep_by) /nn|conj_|cc/* [mention=/Site/]
+    trigger = [word=/(?i)phosphorylat/ & !word=/^de/ & !outgoing=nsubjpass & tag=/^V/] # verbal predicate
+    theme:BioChemicalEntity = ( (/pobj|prep_[^b]|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) ) 
+    site:Site? = (/pobj|prep_|conj_|nn/+) | (< /pobj|prep_|conj_|nn/+) 
+    cause:BioChemicalEntity? = <nn* | (prep_by) /nn|conj_|cc/*
 
 
 - name: Phosphorylation_syntax_4_verb
   priority: 4
-  action: mkSimpleEvent
   example: "Hence ASPP2 can be phosphorylated at serine 827 by MAPK1 in vitro."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^V/]
-    theme: (nsubjpass /conj_|nn/*) [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
-    site?: /prep_/ /prep_|conj_|nn/* [mention=Site]
-    cause?: (/prep_/ /conj_|nn/*)? /prep_/* /prep_by|agent/ /conj_|nn/* [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
+    trigger = [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^V/]
+    theme:BioChemicalEntity = (nsubjpass /conj_|nn/*) 
+    site:Site? = /prep_/ /prep_|conj_|nn/*
+    cause:BioChemicalEntity? = (/prep_/ /conj_|nn/*)? /prep_/* /prep_by|agent/ /conj_|nn/* 
 
 
 - name: Phosphorylation_syntax_5_verb
   priority: 4
-  action: mkSimpleEvent
   example: "IKK contains two catalytic subunits, IKKalpha and IKKbeta, both of which are able to correctly phosphorylate IkappaB.  Its many abnormal phenotypes can be rescued via overexpressing Ras, an XXX that specifically phosphorylates ASPP2."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^V/]
-    theme: dobj /nn|conj_|cc/* [!mention=/Site/]
-    cause: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* [!mention=/Site/]
-    #site?: dobj? prep_(at|on) /nn|conj_|cc/*
+    trigger = [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^V/]
+    theme:BioChemicalEntity = dobj /nn|conj_|cc/* # don't allow Site
+    cause:BioChemicalEntity = (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* # don't allow Site
+    #site:Site? = dobj? prep_(at|on) /nn|conj_|cc/*
 
 
 - name: Phosphorylation_syntax_6_verb
   priority: 4
-  action: mkSimpleEvent
   example: "We measured transcription activation in the presence of ASPP2, which is phosphorylated by Ras."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylat/ & !word=/^de/ & tag=VBN]
-    theme: (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* [!mention=/Site/]
-    cause?: /prep_by|agent/ /appos|nn|conj_|cc/* [!mention=/Site/]
-    #site?: dobj? prep_(at|on) /nn|conj_|cc/*
+    trigger = [word=/(?i)phosphorylat/ & !word=/^de/ & tag=VBN]
+    theme:BioChemicalEntity = (< /xcomp|rcmod|appos/)+ /appos|nn|conj_|cc/* # don't allow Site
+    cause:BioChemicalEntity? = /prep_by|agent/ /appos|nn|conj_|cc/* # don't allow Site
+    #site:Site? = dobj? prep_(at|on) /nn|conj_|cc/*
 
 
 - name: Phosphorylation_syntax_1_noun
   priority: 4
-  action: mkSimpleEvent
   example: "... which includes phosphorylation of PKC isozymes by phosphoinositide-dependent protein kinases.  Ras phosphorylation of ASPP2 increased."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^N/]
-    theme: prep_of /nn|conj_|cc/* [!mention=/Site/]
-    cause?: (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/* [!mention=/Site/]
-    #site?: (/prep_/ nn*)+
+    trigger = [lemma="phosphorylation"]
+    theme:BioChemicalEntity = prep_of /nn|conj_|cc/* # don't allow Site
+    cause:BioChemicalEntity? = (<dobj (prep_by|agent)|nn|prep_of prep_by) /nn|conj_|cc/* # don't allow Site
+    #site:Site? = (/prep_/ nn*)+
     #constraint: <dobj [lemma=/prevent|inhibit|block/]
 
 
 - name: Phosphorylation_syntax_2_noun
   priority: 4
-  action: mkSimpleEvent
   example: "Overexpressed PRAS40 suppressed the phosphorylation of S6K1 and 4E-BP1 at their rapamycin-sensitive phosphorylation sites, and reciprocally, overexpression of S6K1 or 4E-BP1 suppressed phosphorylation of PRAS40 (Ser(183)) and its binding to raptor."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^N/] # nominal predicate
-    theme: prep_of? /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
-    site?: /pobj|prep_|conj_|nn/+ [mention=Site]
-    cause: /prep_by|agent/ /conj|cc|nn/* [!mention=/Site/]
+    trigger = [lemma="phosphorylation"] # nominal predicate
+    theme:BioChemicalEntity = prep_of? /conj_|cc|nn/+ 
+    site:Site? = /pobj|prep_|conj_|nn/+
+    cause:BioChemicalEntity = /prep_by|agent/ /conj|cc|nn/* # don't allow Site
 
 
 - name: Phosphorylation_syntax_3_noun
   priority: 4
-  action: mkSimpleEvent
   example: "ERK- mediated serine phosphorylation of the GAB1 adaptor has been shown to ..."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylat/ & !word=/^de/ & tag=/^N/ & !outgoing=prep_by] # nominal predicate
-    theme: prep_of /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
-    cause: /conj_|cc|nn/+ [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
-    site?: /pobj|prep_|conj_|nn/+ [mention=Site]
+    trigger = [lemma="phosphorylation" & !outgoing=prep_by] # nominal predicate
+    theme:BioChemicalEntity = prep_of /conj_|cc|nn/+ 
+    cause:BioChemicalEntity = /conj_|cc|nn/+ 
+    site:Site? = /pobj|prep_|conj_|nn/+
 
 
 - name: Phosphorylation_syntax_4_noun
   priority: 4
-  action: mkSimpleEvent
   example: " ... mediated by inter-Rad53 phosphorylation.  ASPP1 and ASPP2 have two conserved putative MAPK2 phosphorylation sites in their C-terminus."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylation/ & !word=/(?i)^de/ & tag=/^N/ & !outgoing=/prep_(by|of)/]
-    theme: <nn? nn /conj|cc|nn|prep/* [mention=/./ & !mention=/Site/]
+    trigger = [lemma="phosphorylation" & !outgoing=/prep_(by|of)/]
+    theme:BioChemicalEntity = <nn? nn /conj|cc|nn|prep/*
 
 - name: Phosphorylation_syntax_5_noun
   priority: 4
-  action: mkSimpleEvent
   example: "Interestingly, we observed two conserved putative MAPK phosphorylation sites in ASPP1 and ASPP2."
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylation/ & !word=/^de/ & tag=/^N/]
-    theme: < nn > /prep_/ /conj_|cc|nn/* [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]
-    cause?: < nn /conj_|cc|nn/*
+    trigger = [lemma="phosphorylation"]
+    theme:BioChemicalEntity = < nn > /prep_/ /conj_|cc|nn/* 
+    cause:BioChemicalEntity? = < nn /conj_|cc|nn/*
 
 
 - name: Phosphorylation_syntax_6_noun
   priority: 4
-  action: mkSimpleEvent
   example: "... the transcriptional cofactor beta-catenin is destabilized via phosphorylation by protein kinase GSK3beta in complex with Axin family members"
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylation/ & !word=/^de/ & tag=/^N/]
-    cause: <prep_via agent|prep_by /nn|conj_|cc/* [!mention=/Site/]
-    theme: (prep_of /nn|conj_|cc/*)+ [!mention=/Site/]
+    trigger = [lemma="phosphorylation"]
+    cause:BioChemicalEntity = <prep_via agent|prep_by /nn|conj_|cc/* # don't allow Site
+    theme:BioChemicalEntity = (prep_of /nn|conj_|cc/*)+ # don't allow Site
 
 - name: Phosphorylation_syntax_7_noun
   priority: 4
-  action: mkSimpleEvent
   example: ""
-  type: dependency
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    trigger: [word=/(?i)phosphorylation/ & !word=/^de/ & !outgoing=prep_of & tag=/^N/]
-    theme: < nsubj dobj prep_of /nn|cc|conj/* [!mention=/Site/]
+    trigger = [lemma="phosphorylation" & !outgoing=prep_of]
+    theme:BioChemicalEntity = < nsubj dobj prep_of /nn|cc|conj/* # don't allow Site
 
 - name: Phosphorylation_token_1_noun
   priority: 4
-  action: mkSimpleEvent
   example: " ... which blocks an inhibitory threonine phosphorylation on the JM domains of EGFR and HER2"
   type: token
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    (?<trigger> [word=/(?i)phosphorylation/ & !word=/^de/ & tag=/^N/]) /of|on/ [word=/./ & !tag=/^V/]*? (?<theme> [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/])
+    (?<trigger> [lemma="phosphorylation"]) /of|on/ [word=/./ & !tag=/^V/]*? @theme:BioChemicalEntity
 
 
 - name: Phosphorylation_token_2_noun
   priority: 4
-  action: mkSimpleEvent
   example: " ... , thereby increasing ERBB3 phosphorylation."
   type: token
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    (?<theme> [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]) (?<trigger> [word=/(?i)phosphorylation/ & !word=/^de/]) [!word=of]
+    @theme:BioChemicalEntity (?<trigger> [lemma="phosphorylation"]) [!word=of]
 
 
 - name: Phosphorylation_token_1_verb
   priority: 4
-  action: mkSimpleEvent
   example: "Under the same conditions, ASPP2 (693-1128) fragment phosphorylated by p38 SAPK had very low levels of incorporated 32P."
   type: token
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    (?<theme> [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]) (?<trigger> [word=/(?i)phosphorylat/ & tag=/^V/]) [tag=IN] (?<cause> [mention=/Protein|Gene_or_gene_product/])?
+    @theme:BioChemicalEntity (?<trigger> [lemma="phosphorylate" & tag=/^V/]) [tag=IN] (@cause:BioChemicalEntity)?
 
 
 - name: Phosphorylation_token_2_verb
   priority: 4
-  action: mkSimpleEvent
   example: ""
   type: token
-  label: Phosphorylation
+  label: [Phosphorylation, Event]
   pattern: |
-    (?<trigger> [word=/(?i)phosphorylat/ & tag=/^V/]) (?<theme> [mention=/Protein|Gene_or_gene_product/ & !mention=/Site/]) (fragment? by (?<cause> [mention=/Protein|Gene_or_gene_product/])? )?
+    (?<trigger> [lemma="phosphorylate" & tag=/^V/]) @theme:BioChemicalEntity (fragment? by @cause:BioChemicalEntity)?

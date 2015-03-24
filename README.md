@@ -6,24 +6,24 @@ This is the main public code repository of the NLP group led by [Mihai Surdeanu]
 + Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster.
 + A machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 + A suite of NL processors in the `edu.arizona.sista.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford parser and our own NER based on the Stanford CRF). 
+that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford parser and our own NER based on the Stanford CRF).
 
-This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher. 
+This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
 All the code that we write is licensed under Apache License Version 2.0. However, some of the libraries used here, most notably CoreNLP, are GPL.
 
-(c) Mihai Surdeanu, 2013 - 
+(c) Mihai Surdeanu, 2013 -
 
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell, and Tom Hicks.
 
 # Changes
 + **5.2-SNAPSHOT** - Version 2 of ODIN, including a cleaner (more declarative) rule language, which minimizes the need for custom actions.
-+ **5.1** - Improved tokenization for the bio domain. Replaced the BANNER NER for the bio domain with our own implementation. 
++ **5.1** - Improved tokenization for the bio domain. Replaced the BANNER NER for the bio domain with our own implementation.
 + **5.0** - changed to Java 8, Scala 2.11, and CoreNLP 3.5.1. First public release of ODIN (domain-independent event extraction) framework, in the `edu.arizona.sista.odin` package. First release of ODIN's DARPA biomedical grammar. `FastNLPProcessor` now supports both the Malt and the new Stanford NN dependency parser (the Stanford parser is now the default setting).
 + **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
 + **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
 + **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
-+ **3.1** - Minimal functionality added to the learning package. Changed to CoreNLP 3.3.1. 
++ **3.1** - Minimal functionality added to the learning package. Changed to CoreNLP 3.3.1.
 + **3.0** - Added a RST discourse parser to `CoreNLPProcessor`. Added the `edu.arizona.sista.learning` package. Utils classes are now under `edu.arizona.sista.utils` rather than `edu.arizona.sista.processors.utils`.
 + **2.2** - Various bug fixes. Added support for basic dependencies to `CoreNLPProcessor`.
 + **2.1** - Bug fix in FastNLPProcessor: better root detection algorithm, robust to malt inconsistencies.
@@ -49,13 +49,13 @@ This software is available on Maven Central. To use, simply add the following de
        <version>5.1</version>
        <classifier>models</classifier>
     </dependency>
- 
+
  The equivalent SBT dependencies are:
- 
- 	libraryDependencies ++= Seq(
-  		"edu.arizona.sista" %% "processors" % "5.1",
-  		"edu.arizona.sista" %% "processors" % "5.1" classifier "models",
- 	)
+
+    libraryDependencies ++= Seq(
+        "edu.arizona.sista" %% "processors" % "5.1",
+        "edu.arizona.sista" %% "processors" % "5.1" classifier "models",
+    )
 
 
 # Why you should use this code
@@ -135,13 +135,13 @@ Most of the examples here use Scala. However, this software can be used as is fr
         }
       }
     })
-    
+
     // let's print the discourse tree
     doc.discourseTree.foreach(dt => {
       println("Document-wide discourse tree:")
       println(dt.toString())
     })
-    
+
 The above code generates the following output:
 
     Sentence #0:
@@ -185,7 +185,7 @@ The above code generates the following output:
       sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:9 text: [January 10th , 2013]
     Found one coreference chain containing the following mentions:
       sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
-      
+
     Document-wide discourse tree:
     elaboration (LeftToRight)
       TEXT:John Smith went to China .
@@ -214,8 +214,8 @@ FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces 
      head:2 modifier:3 label:prep
      head:2 modifier:5 label:punct
      head:3 modifier:4 label:pobj
-    
-    
+
+
     Sentence #1:
     Tokens: He visited Beijing , on January 10th , 2013 .
     Start character offsets: 26 29 37 44 46 49 57 61 63 67
@@ -249,7 +249,7 @@ FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces 
 
 ## Using individual annotators
 
-You can of course use only some of the annotators provided by CoreNLP by calling them individually. To illustrate, 
+You can of course use only some of the annotators provided by CoreNLP by calling them individually. To illustrate,
 the `Processor.annotate()` method is implemented as follows:
 
     def annotate(doc:Document): Document = {
@@ -266,7 +266,7 @@ the `Processor.annotate()` method is implemented as follows:
     }
 
 (Note that CoreNLP currently does not support chunking and semantic role labeling.)
-You can use just a few of these annotators. For example, if you need just POS tags, lemmas and named entities, you could use 
+You can use just a few of these annotators. For example, if you need just POS tags, lemmas and named entities, you could use
 the following code:
 
     val doc = proc.mkDocument("John Smith went to China. He visited Beijing, on January 10th, 2013.")
@@ -274,8 +274,8 @@ the following code:
     proc.lemmatize(doc)
     proc.recognizeNamedEntities(doc)
     doc.clear()
-    
-Note that the last method called (`doc.clear()`) clears the internal structures created by the actual CoreNLP annotators. 
+
+Note that the last method called (`doc.clear()`) clears the internal structures created by the actual CoreNLP annotators.
 This saves a lot of memory, so, although it is not strictly necessary, I recommend you call it.
 
 ## Serialization
@@ -293,31 +293,31 @@ This package also offers serialization code for the generated annotations. The t
     val someAnnotation = serializer.load(is)
 
 ### Serialization to/from Strings
-    
+
     // saving to a String object, savedString
     val someAnnotation = proc.annotate(someText)
     val serializer = new DocumentSerializer
     val savedString = serializer.save(someAnnotation)
-    
+
     // loading from a String object, fromString
     val someAnnotation = serializer.load(fromString)
 
-Note that space required for these serialized annotations is considerably smaller (8 to 10 times) than the corresponding 
+Note that space required for these serialized annotations is considerably smaller (8 to 10 times) than the corresponding
 serialized Java objects. This is because we store only the information required to recreate these annotations (e.g., words, lemmas, etc.)
-without storing any of the Java/Scala objects and classes. 
+without storing any of the Java/Scala objects and classes.
 
 ## Cleaning up the interned strings
 
 Classes that implement the `Processor` trait intern String objects to avoid allocating memory repeatedly for the same string.
-This is implemented by maintaining an internal dictionary of strings previously seen. This dictionary is unlikely to 
-use a lot of memory due to the Zipfian distribution of language. But, if memory usage is a big concern, it can be cleaned by 
+This is implemented by maintaining an internal dictionary of strings previously seen. This dictionary is unlikely to
+use a lot of memory due to the Zipfian distribution of language. But, if memory usage is a big concern, it can be cleaned by
 calling:
 
     Processor.in.clear()
 
 I recommend you do this only _after_ you annotated all the documents you plan to keep in memory.
 
-Although I see no good reason for doing this, you can disable the interning of strings completely by setting the `internStrings = false` in the 
+Although I see no good reason for doing this, you can disable the interning of strings completely by setting the `internStrings = false` in the
 CoreNLProcessor constructor, as such:
 
     val processor = new CoreNLPProcessor(internStrings = false)
@@ -435,7 +435,7 @@ The output of this code is:
      head:1 modifier:0 label:nn
      head:2 modifier:1 label:nsubj
      head:2 modifier:4 label:prep_to
-    Constituent tree: 
+    Constituent tree:
     (ROOT
         (S
             (NP
@@ -454,8 +454,8 @@ The output of this code is:
             (. .)
         )
     )
-    
-    
+
+
     Sentence #1:
     Tokens: He visited Beijing , on January 10th , 2013 .
     Start character offsets: 26 29 37 44 46 49 57 61 63 67
@@ -470,7 +470,7 @@ The output of this code is:
      head:1 modifier:8 label:tmod
      head:2 modifier:5 label:prep_on
      head:5 modifier:6 label:amod
-    Constituent tree: 
+    Constituent tree:
     (ROOT
         (S
             (NP
@@ -499,8 +499,8 @@ The output of this code is:
             (. .)
         )
     )
-	
-	
+
+
     Found one coreference chain containing the following mentions:
 		sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:7
     Found one coreference chain containing the following mentions:
@@ -515,8 +515,8 @@ The output of this code is:
 
 ## The discourse parser
 
-The discourse parser in `processors` is inspired by the parser of [Feng and Hirst](http://www.cs.toronto.edu/~weifeng/software.html) and the HILDA parser of [Hernault et al.](http://elanguage.net/journals/dad/article/view/591), but with a different feature set. 
-It is transparently integrated in both `CoreNLPProcessor` and `FastNLPProcessor`: just instantiate it as `CoreNLPProcessor(withDiscourse = true)` or `FastNLPProcessor(withDiscourse = true)`. If discourse is enabled, `Document.discourseTree` stores the discourse tree for the entire document as an instance of the `DiscourseTree` class. 
+The discourse parser in `processors` is inspired by the parser of [Feng and Hirst](http://www.cs.toronto.edu/~weifeng/software.html) and the HILDA parser of [Hernault et al.](http://elanguage.net/journals/dad/article/view/591), but with a different feature set.
+It is transparently integrated in both `CoreNLPProcessor` and `FastNLPProcessor`: just instantiate it as `CoreNLPProcessor(withDiscourse = true)` or `FastNLPProcessor(withDiscourse = true)`. If discourse is enabled, `Document.discourseTree` stores the discourse tree for the entire document as an instance of the `DiscourseTree` class.
 
 Following the conventions from other modern discourse parsing work, the discourse tree:
 + Is represented as a binary tree, containing hypotactic relations (containing one nucleus and one satellite node) or paratactic relations (both nodes have equal importance).

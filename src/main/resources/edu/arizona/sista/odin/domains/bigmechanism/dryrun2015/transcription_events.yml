@@ -1,72 +1,63 @@
+#Transcription events require arguments of type BioChemicalEntity
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
 #- name: expression_1
 #  priority: 4
-#  action: mkSimpleEvent
 #  example: "PTEN protein expression was detectable by Western blot in all cell lines."
-#  label: Transcription
-#  type: dependency
+#  label: [Transcription, Event]
 #  pattern: |
-#    trigger: [word=/(?i)(over)?express/ & tag=/^N/]
-#      theme: nn+ [mention=Gene_or_gene_product|mention=Protein]
+#    trigger = [word=/(?i)(over)?express/ & tag=/^N/]
+#      theme:BioChemicalEntity = nn+
 #
 #
 #- name: expressioni_2
 #  priority: 4
-#  action: mkSimpleEvent
 #  example: "We went on to examine the levels of MCL-1 and BIM expressed in several uveal melanoma cell lines following exposure to AZD8055 and selumetinib (Figure 7A)."
-#  label: Transcription
-#  type: dependency
+#  label: [Transcription, Event]
 #  pattern: |
-#    trigger: [word=/(?i)(over)?express/ & tag=/^V/]
-#      theme: < /vmod|conj_|cc/+ [mention=Gene_or_gene_product|mention=Protein]
+#    trigger = [word=/(?i)(over)?express/ & tag=/^V/]
+#      theme:BioChemicalEntity = < /vmod|conj_|cc/+
 #
 #- name: expression_3
 #  priority: 4
-#  action: mkSimpleEvent
 #  example: "Indeed, EGFR is overexpressed in 30%-85% patients with CRC."
-#  label: Transcription
-#  type: dependency
+#  label: [Transcription, Event]
 #  pattern: |
-#    trigger: [word=/(?i)(over)?express/ & tag=/^V/]
-#    theme: > /nsubjpass/+ [mention=Gene_or_gene_product|mention=Protein]
+#    trigger = [word=/(?i)(over)?express/ & tag=/^V/]
+#    theme:BioChemicalEntity = > /nsubjpass/+
 
 #- name: transcription_0
 #  priority: 4
-#  action: mkSimpleEvent
 #  example: "Indeed, expression of the Raf-RBD dramatically decreased Elk-1 dependent transcription by >80% whereas PI3KC2beta-RBD expressing cells were not inhibited further supporting the model that the PI3KC2beta-RBD does not interact with Ras-GTP."
-#  label: Transcription
-#  type: dependency
+#  label: [Transcription, Event]
 #  pattern: |
-#    trigger: [word=/(?i)transcription/ & tag=/^N/]
-#    theme: <dobj nsubj prep_of? [mention=Gene_or_gene_product]
-#    cause?: nn+ [mention=Gene_or_gene_product]
+#    trigger = [word=/(?i)transcription/ & tag=/^N/]
+#    theme:BioChemicalEntity = <dobj nsubj prep_of?
+#    cause:BioChemicalEntity? = nn+
 
 
 - name: transcription_1
   priority: 4
-  action: mkSimpleEvent
   example: "When looking at oxaliplatin, it can be concluded that when B-Raf is wild type (regardless of K-Ras mutation), increased levels of p73 protein correlate enhanced TAp73 transcription, in the presence of cetuximab (cetuximab or cetuximab plus oxaliplatin)."
-  label: Transcription
-  type: dependency
+  label: [Transcription, Event]
   pattern: |
-    trigger: [word=/(?i)transcription/ & !outgoing=amod]
-    theme: prep_of? nn+
+    trigger = [lemma="transcription" & !outgoing=amod]
+    theme:BioChemicalEntity = prep_of? nn+
 
 - name: transcription_2
   priority: 4
-  action: mkSimpleEvent
   example: "ErbB3 gene transcription"
-  label: Transcription
-  type: dependency
+  label: [Transcription, Event]
   pattern: |
-    trigger: [word=/(?i)transcription/ & !word=/transcription factor/]
-    theme: <dep [mention=Gene_or_gene_product]
+    trigger = [lemma="transcription"] (?! [lemma="factor"])
+    theme:BioChemicalEntity = <dep 
 
 - name: transcription_3
   priority: 4
-  action: mkSimpleEvent
   example: "Transcription of genes"
-  label: Transcription
-  type: dependency
+  label: [Transcription, Event]
   pattern: |
-    trigger: [word=/(?i)transcription/ & !word=/transcription factor/]
-    theme: prep_of [word=/(?i)genes?/]
+    trigger = [lemma="transcription"] (?! [lemma="factor"])
+    theme:BioChemicalEntity = prep_of [word=/(?i)genes?/]
