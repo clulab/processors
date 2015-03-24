@@ -24,6 +24,7 @@ class TestArgsToProperties extends AssertionsForJUnit {
       p4 == "shell is /bin/bash" ||
       p4 == "shell is /bin/sh" ||
       p4 == "shell is /bin/csh" ||
-      p4 == "shell is /bin/tcsh")
+      p4 == "shell is /bin/tcsh" ||
+      p4 == "shell is /bin/zsh")
   }
 }
