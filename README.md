@@ -41,12 +41,12 @@ This software is available on Maven Central. To use, simply add the following de
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.1</version>
+       <version>5.2</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.1</version>
+       <version>5.2</version>
        <classifier>models</classifier>
     </dependency>
 
