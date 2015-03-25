@@ -1,6 +1,6 @@
 name := "processors"
 
-version := "5.2"
+version := "5.3-SNAPSHOT"
 
 organization := "edu.arizona.sista"
 
