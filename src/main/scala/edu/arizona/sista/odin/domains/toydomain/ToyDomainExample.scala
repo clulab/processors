@@ -22,7 +22,7 @@ object ToyDomainExample extends App {
                  |- name: rule2
                  |  label: [Phosphorylation, Event]
                  |  pattern: |
-                 |    Trigger = [word=/^phospho/ & tag=/^VB/] (?! of)
+                 |    trigger = [word=/^phospho/ & tag=/^VB/]
                  |    theme: Protein = dobj
                  |    cause: Protein = nsubj
                  |
@@ -33,7 +33,7 @@ object ToyDomainExample extends App {
                  |    - Ubiquitination
                  |    - Event
                  |  pattern: |
-                 |    triggER = ubiquitination (?= of)
+                 |    trigger = ubiquitination
                  |    theme: Protein = prep_of
                  |
                  | # creates a regulation with a ubiquitination event as the theme
@@ -71,7 +71,7 @@ object ToyDomainExample extends App {
   // creates an extractor engine using the rules and the default actions
   val extractor = new ExtractorEngine(rules)
 
-  // annotate the sentences and override the named entity tags
+  // annotate the sentences
   // note: in another domains, you might prefer an open-domain processor, such as CoreNLPProcessor
   val proc = new BioNLPProcessor
   val doc = proc.annotate(text)
