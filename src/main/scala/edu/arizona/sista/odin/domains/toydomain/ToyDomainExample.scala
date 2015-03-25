@@ -3,13 +3,13 @@ package edu.arizona.sista.odin.domains.toydomain
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.odin._
 
-object TestMatcher extends App {
+object ToyDomainExample extends App {
   // two example sentences
   val text = """|TGFBR2 phosphorylates peri-kappa B and inhibits the ubiquitination of SMAD3.
                 |TGFBR2 binds to TGFBR1 and SMAD3.
                 |""".stripMargin
 
-  // rules are written in yaml and support yaml comments (start with the '#' character)
+  // rules are written in yaml and support yaml comments (starting with the '#' character)
   val rules = """| # this rule creates Protein mentions from named entity tags in IOB notation
                  |- name: rule1
                  |  label: Protein
@@ -46,15 +46,14 @@ object TestMatcher extends App {
                  |
                  | # example of a surface rule that captures an event
                  | # note that you need to capture a trigger for this to be an event mention
-                 | # this event doesn't make sense biologically, is just an example
                  |- name: rule5
-                 |  label: XXXtestXXX
+                 |  label: DownRegulation
                  |  type: token
                  |  pattern: |
-                 |    @theme:Phosphorylation and (?<TriGgEr> inhibits) the @cause:Ubiquitination
+                 |    @theme:Phosphorylation and? (?<trigger> inhibits) the @cause:Ubiquitination
                  |
                  | # example of an argument with a quantifier
-                 | # with the '+' this rule finds a binding with 3 themes
+                 | # with the '+' this rule finds a single binding event with 3 themes
                  | # without the '+' this rule finds 3 bindings with 1 theme each
                  |- name: rule6
                  |  label: Binding
@@ -73,10 +72,11 @@ object TestMatcher extends App {
   val extractor = new ExtractorEngine(rules)
 
   // annotate the sentences and override the named entity tags
+  // note: in another domains, you might prefer an open-domain processor, such as CoreNLPProcessor
   val proc = new BioNLPProcessor
   val doc = proc.annotate(text)
 
-  // extract mentions from annotated document
+  // extract mentions from the annotated document
   val mentions = extractor.extractFrom(doc)
 
   // code used for printing the found mentions
