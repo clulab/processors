@@ -17,8 +17,8 @@ trait Dependencies {
     dependencies(sent, doc).outgoingEdges
 
   def incoming(tok: Int, sent: Int, doc: Document): Seq[String] =
-    incomingEdges(sent, doc)(tok) map (_._2)
+    incomingEdges(sent, doc).lift(tok).getOrElse(Array.empty).map(_._2)
 
   def outgoing(tok: Int, sent: Int, doc: Document): Seq[String] =
-    outgoingEdges(sent, doc)(tok) map (_._2)
+    outgoingEdges(sent, doc).lift(tok).getOrElse(Array.empty).map(_._2)
 }
