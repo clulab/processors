@@ -121,6 +121,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
   }
 
   override def recognizeNamedEntities(doc:Document) {
+    if (!withNER) return
     val annotation = namedEntitySanityCheck(doc)
     if(annotation.isEmpty) return
 
