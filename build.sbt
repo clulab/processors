@@ -80,9 +80,12 @@ pomExtra := (
 // end publishing settings
 //
 
-// we need this to find the snapshot releases for BANNER
-resolvers +=
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+// Sonatype was used to find the snapshot releases for BANNER (may be unnecessary now).
+// Direct Paxtools repository access solves occasional Paxtools acquisition problems.
+resolvers ++= Seq(
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+  "BioPax Releases" at "http://www.biopax.org/m2repo/releases/"
+)
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % "2.11.5",
@@ -105,5 +108,6 @@ libraryDependencies ++= Seq(
   "log4j" % "log4j" % "1.2.17",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
   "org.yaml" % "snakeyaml" % "1.14",
+  "org.biopax.paxtools" % "paxtools-core" % "4.3.0",
   "jline" % "jline" % "2.12"
 )
