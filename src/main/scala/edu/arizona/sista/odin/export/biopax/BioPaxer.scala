@@ -15,9 +15,13 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Add sentence number to mention text output.
+  *   Last Modified: Type alias genes to proteins.
   */
 class BioPaxer {
+  // Type aliases:
+  type Gene = Protein                       // temporary until we decide how to handle genes
+  type GeneReference = ProteinReference     // temporary until we decide how to handle genes
+
   // Constants:
   val SistaBaseURL = "http://nlp.sista.arizona.edu/odin/"
   val SistaDefaultCharset = "UTF-8"
@@ -33,7 +37,7 @@ class BioPaxer {
 
   // local caches for physical entities: map entity type names to entity reference subclasses
   protected val cellCompRefs = scala.collection.mutable.Map[String, ControlledVocabulary]()
-  protected val geneRefs = scala.collection.mutable.Map[String, ProteinReference]()
+  protected val geneRefs = scala.collection.mutable.Map[String, GeneReference]()
   protected val proteinRefs = scala.collection.mutable.Map[String, ProteinReference]()
   protected val smallMoleculeRefs = scala.collection.mutable.Map[String, SmallMoleculeReference]()
 
@@ -94,7 +98,7 @@ class BioPaxer {
         // cellular location is a property not an entity: must be attached to an entity (in future)
       }
       case "Gene_or_gene_product" => {
-        val gRef:ProteinReference = referenceForGene(model, mention)
+        val gRef:GeneReference = referenceForGene(model, mention)
         addGeneToModel(model, mention, gRef)
       }
       case "Protein" => {
@@ -112,12 +116,12 @@ class BioPaxer {
 
 
   /** Add a Gene instance and associated entity reference to the model. */
-  private def addGeneToModel (model:Model, mention:Mention, pRef:ProteinReference) = {
-    val name = proteinKB.getLookupKey(mention)
-    val pUrl = genInternalURL(s"G_${idCntr.genNextId()}")
-    val prot:Protein = model.addNew(classOf[Protein], pUrl)
-    prot.setDisplayName(name)
-    prot.setEntityReference(pRef)
+  private def addGeneToModel (model:Model, mention:Mention, gRef:GeneReference) = {
+    val name = geneKB.getLookupKey(mention)
+    val gUrl = genInternalURL(s"G_${idCntr.genNextId()}")
+    val gene:Gene = model.addNew(classOf[Gene], gUrl)
+    gene.setDisplayName(name)
+    gene.setEntityReference(gRef)
   }
 
   /** Add a Protein instance and associated entity reference to the model. */
@@ -165,7 +169,7 @@ class BioPaxer {
   }
 
   /** Lookup or create a reference for the given gene mention. */
-  private def referenceForGene (model:Model, mention:Mention): ProteinReference = {
+  private def referenceForGene (model:Model, mention:Mention): GeneReference = {
     val name = geneKB.getLookupKey(mention)
     return geneRefs.getOrElseUpdate(name, registerGene(model, mention))
   }
@@ -206,7 +210,7 @@ class BioPaxer {
 
   /** Create and return a new entity reference from the given mention, memoizing it
     * locally, as a side effect. */
-  private def registerGene (model:Model, mention:Mention): ProteinReference = {
+  private def registerGene (model:Model, mention:Mention): GeneReference = {
     // TODO: error handling for the lookup:
     val eInfo = geneKB.resolve(mention) // resolve mention to info about physical entity
     val eName = eInfo("key")
@@ -218,7 +222,7 @@ class BioPaxer {
     val eUrl = geneKB.referenceURI(eId)     // MOCK value with manual call
 
     val uXref = genUnificationXref(model, eId, eInfo("namespace"))
-    val eRef:ProteinReference = model.addNew(classOf[ProteinReference], eUrl)
+    val eRef:GeneReference = model.addNew(classOf[GeneReference], eUrl)
     eRef.setDisplayName(eName)
     eRef.addXref(uXref)
 
