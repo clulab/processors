@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Port to 5.3.
+  *   Last Modified: Add sentence number to mention text output.
   */
 class BioPaxer {
   // Constants:
@@ -296,11 +296,11 @@ class BioPaxer {
     val indent = ("  " * level)
     mention match {
       case mention: TextBoundMention =>
-        mStrings += s"${indent}TextBoundMention: ${mention.label}"
+        mStrings += s"${indent}TextBoundMention: (S${mention.sentence}): ${mention.label}"
         mStrings += s"${indent}text: ${mention.text}"
         if (level == 0) mStrings += ("=" * 80)
       case mention: EventMention =>
-        mStrings += s"${indent}EventMention: ${mention.label}"
+        mStrings += s"${indent}EventMention: (S${mention.sentence}): ${mention.label}"
         mStrings += s"${indent}text: ${mention.text}"
         mStrings += s"${indent}trigger:"
         mStrings ++= mentionToStrings(mention.trigger, level+1)
@@ -314,7 +314,7 @@ class BioPaxer {
         }
         if (level == 0) mStrings += ("=" * 80)
       case mention: RelationMention =>
-        mStrings += s"${indent}RelationMention: ${mention.label}"
+        mStrings += s"${indent}RelationMention: (S${mention.sentence}): ${mention.label}"
         mStrings += s"${indent}text: ${mention.text}"
         mention.arguments foreach {
           case (k,vs) => {
