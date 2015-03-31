@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Type alias genes to proteins.
+  *   Last Modified: Add filter to output of string mentions.
   */
 class BioPaxer {
   // Type aliases:
@@ -54,12 +54,15 @@ class BioPaxer {
 
     addPublicationXref(model, doc)          // add publication xref for the current document
 
-    mentions.foreach { addMention(model, _) }
+    mentions.filter(_.matches("Event")).foreach {
+      addMention(model, _)
+    }
     return model
   }
 
   /** Add the given mention to the given model and return the model. */
   def addMention (model:Model, mention: Mention): Model = {
+    // TODO: parse and accumulate arguments in structure
     mention match {
       case mention: TextBoundMention =>
         addTextBoundMention(model, mention)
@@ -79,7 +82,7 @@ class BioPaxer {
       case "Exchange" =>
       case "Hydrolysis" =>
       case "Hydroxylation" =>
-      case "Phosphorylation" =>
+//      case "Phosphorylation" => doPhosphorylation(model, mention)
       case "Positive_regulation" =>
       case "Transcription" =>
       case "Transport" =>
@@ -89,57 +92,93 @@ class BioPaxer {
   }
 
   def addRelationMention (model:Model, mention:Mention) = {
-  }
-
-  def addTextBoundMention (model:Model, mention:TextBoundMention) = {
-    mention.label match {
-      case "Cellular_component" => {
-        val clv:ControlledVocabulary = referenceForCellularComponent(model, mention)
-        // cellular location is a property not an entity: must be attached to an entity (in future)
-      }
-      case "Gene_or_gene_product" => {
-        val gRef:GeneReference = referenceForGene(model, mention)
-        addGeneToModel(model, mention, gRef)
-      }
-      case "Protein" => {
-        val pRef:ProteinReference = referenceForProtein(model, mention)
-        addProteinToModel(model, mention, pRef)
-      }
-      case "Simple_chemical" => {
-        val smRef:SmallMoleculeReference = referenceForSmallMolecule(model, mention)
-        addSmallMoleculeToModel(model, mention, smRef)
-      }
-      case "Site" =>
+    mention.label match {                   // dispatch on mention type
+      case "Negative_regulation" =>
+      case "Protein_with_site" =>
+      case "Positive_regulation" =>
+      case "Regulation" =>
+      case "Ubiquitination" =>
       case _ => ()
     }
   }
 
+  def addTextBoundMention (model:Model, mention:Mention): Entity = {
+    mention.label match {
+      // TODO: need to restore this:
+//      case "Cellular_component" => return doCellularComponent(model, mention)
+      case "Gene_or_gene_product" => return doGene(model, mention)
+      case "Protein" => return doProtein(model, mention)
+      case "Simple_chemical" => return doSmallMolecule(model, mention)
+      case "Site" => return null
+      case _ => return null
+    }
+  }
 
-  /** Add a Gene instance and associated entity reference to the model. */
-  private def addGeneToModel (model:Model, mention:Mention, gRef:GeneReference) = {
+  def doPhosphorylation (model:Model, mention:Mention): BiochemicalReaction = {
+    val themes = getTheme(mention)
+    if (themes != null) {
+      val theme = themes(0)
+      val left = addTextBoundMention(model, theme)
+      val right = addTextBoundMention(model, theme)
+    }
+    return null
+  }
+
+
+  /** Return a vocabulary item for the cellular component represented by the given mention. */
+  def doCellularComponent (model:Model, mention:Mention): ControlledVocabulary = {
+    // cellular location is a property not an entity: must be attached to an entity (in future)
+    return referenceForCellularComponent(model, mention)
+  }
+
+  /** Create gene instance and entity reference, add them to the model, and return instance. */
+  def doGene (model:Model, mention:Mention): Gene = {
+    val gRef:GeneReference = referenceForGene(model, mention)
+    return addGeneToModel(model, mention, gRef)
+  }
+
+  /** Create protein instance and entity reference, add them to the model, and return instance. */
+  def doProtein (model:Model, mention:Mention): Protein = {
+    val pRef:ProteinReference = referenceForProtein(model, mention)
+    return addProteinToModel(model, mention, pRef)
+  }
+
+  /** Create small molecule instance and entity reference, add them to the model, and return instance. */
+  def doSmallMolecule (model:Model, mention:Mention): SmallMolecule = {
+    val smRef:SmallMoleculeReference = referenceForSmallMolecule(model, mention)
+    return addSmallMoleculeToModel(model, mention, smRef)
+  }
+
+
+  /** Add a gene instance and associated entity reference to the model. */
+  private def addGeneToModel (model:Model, mention:Mention, gRef:GeneReference): Gene = {
     val name = geneKB.getLookupKey(mention)
     val gUrl = genInternalURL(s"G_${idCntr.genNextId()}")
     val gene:Gene = model.addNew(classOf[Gene], gUrl)
     gene.setDisplayName(name)
     gene.setEntityReference(gRef)
+    return gene
   }
 
-  /** Add a Protein instance and associated entity reference to the model. */
-  private def addProteinToModel (model:Model, mention:Mention, pRef:ProteinReference) = {
+  /** Add a protein instance and associated entity reference to the model. */
+  private def addProteinToModel (model:Model, mention:Mention, pRef:ProteinReference): Protein = {
     val name = proteinKB.getLookupKey(mention)
     val pUrl = genInternalURL(s"P_${idCntr.genNextId()}")
     val prot:Protein = model.addNew(classOf[Protein], pUrl)
     prot.setDisplayName(name)
     prot.setEntityReference(pRef)
+    return prot
   }
 
-  /** Add a SmallMolecule instance and associated entity reference to the model. */
-  private def addSmallMoleculeToModel (model:Model, mention:Mention, eRef:SmallMoleculeReference) = {
+  /** Add a small molecule instance and associated entity reference to the model. */
+  private def addSmallMoleculeToModel (model:Model, mention:Mention,
+                                       eRef:SmallMoleculeReference): SmallMolecule = {
     val name = smallMoleculeKB.getLookupKey(mention)
     val eUrl = genInternalURL(s"SM_${idCntr.genNextId()}")
-    val prot:SmallMolecule = model.addNew(classOf[SmallMolecule], eUrl)
-    prot.setDisplayName(name)
-    prot.setEntityReference(eRef)
+    val sMole:SmallMolecule = model.addNew(classOf[SmallMolecule], eUrl)
+    sMole.setDisplayName(name)
+    sMole.setEntityReference(eRef)
+    return sMole
   }
 
   /** Add a PublicationXref for the given document and save it as a class variable. */
@@ -160,6 +199,13 @@ class BioPaxer {
     uXref.setId(eId)
     uXref.setDb(eNamespace)
     return uXref
+  }
+
+  private def getTheme (mention:Mention): Seq[Mention] = {
+    mention.arguments.foreach {
+      case (k, vs) => if (k startsWith "theme") return vs
+    }
+    return Nil
   }
 
   /** Lookup or create a controlled vocabulary item for the given cellular component mention. */
@@ -275,21 +321,6 @@ class BioPaxer {
   }
 
 
-  /** return the given model as a single BioPax OWL string. */
-  def modelToString (model:Model): String = {
-    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
-    val baos:ByteArrayOutputStream = new ByteArrayOutputStream()
-    bpIOH.convertToOWL(model, baos)
-    return baos.toString(SistaDefaultCharset)
-  }
-
-  /** Output the given model to the given output stream. */
-  def outputModel (model:Model, out:OutputStream): Unit = {
-    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
-    bpIOH.convertToOWL(model, out)
-  }
-
-
   /** Generates a BioPax representation of the given mention as a list of strings. */
   def mentionToStrings (mention: Mention): List[String] = {
     return mentionToStrings(mention, 0)
@@ -334,7 +365,40 @@ class BioPaxer {
     return mStrings.toList
   }
 
+
+  /** return the given model as a single BioPax OWL string. */
+  def modelToString (model:Model): String = {
+    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
+    val baos:ByteArrayOutputStream = new ByteArrayOutputStream()
+    bpIOH.convertToOWL(model, baos)
+    return baos.toString(SistaDefaultCharset)
+  }
+
+  /** Output the given model to the given output stream. */
+  def outputModel (model:Model, out:OutputStream): Unit = {
+    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
+    bpIOH.convertToOWL(model, out)
+  }
+
+  /** Output a string representation of the mentions selected by the given label string
+    * to the given output stream.
+    * NB: This method closes the given output stream when done!
+    */
+  def outputFilteredMentions (mentionType:String,
+                              mentions:Seq[Mention],
+                              doc:Document,
+                              fos:FileOutputStream): Unit =
+  {
+    val out:PrintWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))
+    mentions.filter(_.matches(mentionType)).foreach { mention =>
+      mentionToStrings(mention).foreach { str => out.println(str) }
+    }
+    out.flush()
+    out.close()
+  }
+
 }
+
 
 /** Implements an incrementing identification string for numbering entities. */
 class IncrementingId {
