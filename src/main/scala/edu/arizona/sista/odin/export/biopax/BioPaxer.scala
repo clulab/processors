@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Add filter to output of string mentions.
+  *   Last Modified: Refactor to begin mapping top-level events.
   */
 class BioPaxer {
   // Type aliases:
@@ -23,8 +23,10 @@ class BioPaxer {
   type GeneReference = ProteinReference     // temporary until we decide how to handle genes
 
   // Constants:
-  val SistaBaseURL = "http://nlp.sista.arizona.edu/odin/"
-  val SistaDefaultCharset = "UTF-8"
+  val mapsToPhysicalEntity = Set("Gene_or_gene_product", "Protein",
+                                 "Protein_with_site", "Simple_chemical")
+  val sistaBaseURL = "http://nlp.sista.arizona.edu/odin/"
+  val sistaDefaultCharset = "UTF-8"
 
   // external knowledge base accessors
   protected val cellCompKB = new GeneOntologyKBAccessor
@@ -41,119 +43,157 @@ class BioPaxer {
   protected val proteinRefs = scala.collection.mutable.Map[String, ProteinReference]()
   protected val smallMoleculeRefs = scala.collection.mutable.Map[String, SmallMoleculeReference]()
 
+  //
+  // Public API:
+  //
 
   /** Build and return a BioPax model for the given sequence of mentions. */
   def buildModel (mentions:Seq[Mention], doc:Document): Model = {
     // create and initialize a new BioPAX model:
     val factory: BioPAXFactory = BioPAXLevel.L3.getDefaultFactory()
     var model:Model = factory.createModel()
-//    model.setXmlBase(SistaBaseURL)          // TODO: UNCOMMENT LATER?
+    // model.setXmlBase(sistaBaseURL)          // TODO: UNCOMMENT LATER?
 
     // TODO: Set XML namespace for SISTA NLP UAZ?
     // TODO: Add dataSource (Provenance) information for SISTA NLP UAZ
 
     addPublicationXref(model, doc)          // add publication xref for the current document
 
+    initializeModel(model)
+
+    // use only mentions labeled as Events for the roots of the forest trees:
     mentions.filter(_.matches("Event")).foreach {
-      addMention(model, _)
+      doEvents(model, _)
     }
+
     return model
   }
 
-  /** Add the given mention to the given model and return the model. */
-  def addMention (model:Model, mention: Mention): Model = {
-    // TODO: parse and accumulate arguments in structure
-    mention match {
-      case mention: TextBoundMention =>
-        addTextBoundMention(model, mention)
-      case mention: EventMention =>
-        addEventMention(model, mention)
-      case mention: RelationMention =>
-        addRelationMention(model, mention)
-      case _ => ()
-    }
-    return model                            // return updated model
+
+  /** Generates a BioPax representation of the given mention as a list of strings. */
+  def mentionToStrings (mention: Mention): List[String] = {
+    return mentionToStrings(mention, 0)
   }
 
-  def addEventMention (model:Model, mention:EventMention) = {
+
+  /** return the given model as a single BioPax OWL string. */
+  def modelToString (model:Model): String = {
+    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
+    val baos:ByteArrayOutputStream = new ByteArrayOutputStream()
+    bpIOH.convertToOWL(model, baos)
+    return baos.toString(sistaDefaultCharset)
+  }
+
+
+  /** Output a string representation of the mentions selected by the given label string
+    * to the given output stream.
+    * NB: This method closes the given output stream when done!
+    */
+  def outputFilteredMentions (mentionType:String,
+                              mentions:Seq[Mention],
+                              doc:Document,
+                              fos:FileOutputStream): Unit = {
+    val out:PrintWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))
+    mentions.filter(_.matches(mentionType)).foreach { mention =>
+      mentionToStrings(mention).foreach { str => out.println(str) }
+    }
+    out.flush()
+    out.close()
+  }
+
+
+  /** Output the given model to the given output stream. */
+  def outputModel (model:Model, out:OutputStream): Unit = {
+    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
+    bpIOH.convertToOWL(model, out)
+  }
+
+
+  //
+  // Private Methods
+  //
+
+  /** Add the given mention to the given model and return the model. */
+  private def doEvents (model:Model, mention: Mention): Model = {
+    // TODO: parse and accumulate arguments in structure
     mention.label match {                   // dispatch on mention type
-      case "Binding" =>
+      case "Binding" => return doBinding(model, mention)
       case "Degradation" =>
       case "Exchange" =>
+      case "Expression" =>
       case "Hydrolysis" =>
       case "Hydroxylation" =>
-//      case "Phosphorylation" => doPhosphorylation(model, mention)
+      case "Negative_regulation" =>
+      case "Phosphorylation" => return doPhosphorylation(model, mention)
       case "Positive_regulation" =>
+      case "Regulation" =>
+      case "Site" =>
+      case "Translation" =>
       case "Transcription" =>
       case "Transport" =>
       case "Ubiquitination" =>
       case _ => ()
     }
+    return model                            // return updated model
   }
 
-  def addRelationMention (model:Model, mention:Mention) = {
-    mention.label match {                   // dispatch on mention type
-      case "Negative_regulation" =>
-      case "Protein_with_site" =>
-      case "Positive_regulation" =>
-      case "Regulation" =>
-      case "Ubiquitination" =>
-      case _ => ()
-    }
-  }
-
-  def addTextBoundMention (model:Model, mention:Mention): Entity = {
-    mention.label match {
-      // TODO: need to restore this:
-//      case "Cellular_component" => return doCellularComponent(model, mention)
-      case "Gene_or_gene_product" => return doGene(model, mention)
-      case "Protein" => return doProtein(model, mention)
-      case "Simple_chemical" => return doSmallMolecule(model, mention)
-      case "Site" => return null
-      case _ => return null
-    }
-  }
-
-  def doPhosphorylation (model:Model, mention:Mention): BiochemicalReaction = {
+  private def doBinding (model:Model, mention:Mention): Model = {
     val themes = getTheme(mention)
     if (themes != null) {
-      val theme = themes(0)
-      val left = addTextBoundMention(model, theme)
-      val right = addTextBoundMention(model, theme)
+      val reactants = mentionsToPhysicalEntities(model, themes)
+      if (!reactants.isEmpty) {
+        val complex:Complex = addComplex(model, reactants)
+        if (complex != null) {
+          val cplxAss:ComplexAssembly = addComplexAssembly(model, reactants, complex)
+        }
+      }
     }
+    return model
+  }
+
+  private def doPhosphorylation (model:Model, mention:Mention): Model = {
+    // val themes = getTheme(mention)
+    // if (themes != null) {
+    //   val theme = themes(0)                 // should be only one theme
+    //   val left = addTextBoundMention(model, theme)
+    //   val right = addTextBoundMention(model, theme)
+    // }
     return null
   }
 
 
-  /** Return a vocabulary item for the cellular component represented by the given mention. */
-  def doCellularComponent (model:Model, mention:Mention): ControlledVocabulary = {
-    // cellular location is a property not an entity: must be attached to an entity (in future)
-    return referenceForCellularComponent(model, mention)
+  /** Create a complex instance out of the given sequence of physical entities,
+    * add it to the model, and return it. */
+  private def addComplex (model:Model, lefts:Seq[PhysicalEntity]): Complex = {
+    if (lefts.isEmpty) return null          // sanity check
+    val cUrl = genInternalURL(s"CPLX_${idCntr.genNextId()}")
+    val complex:Complex = model.addNew(classOf[Complex], cUrl)
+    complex.setDisplayName(lefts.map(_.getDisplayName()).mkString("-"))
+    lefts.foreach { complex.addComponent(_) }
+    return complex
   }
 
-  /** Create gene instance and entity reference, add them to the model, and return instance. */
-  def doGene (model:Model, mention:Mention): Gene = {
-    val gRef:GeneReference = referenceForGene(model, mention)
-    return addGeneToModel(model, mention, gRef)
-  }
-
-  /** Create protein instance and entity reference, add them to the model, and return instance. */
-  def doProtein (model:Model, mention:Mention): Protein = {
-    val pRef:ProteinReference = referenceForProtein(model, mention)
-    return addProteinToModel(model, mention, pRef)
-  }
-
-  /** Create small molecule instance and entity reference, add them to the model, and return instance. */
-  def doSmallMolecule (model:Model, mention:Mention): SmallMolecule = {
-    val smRef:SmallMoleculeReference = referenceForSmallMolecule(model, mention)
-    return addSmallMoleculeToModel(model, mention, smRef)
+  /** Create a complex assembly instance from the given reactants and product,
+    * add it to the model, and return it. */
+  private def addComplexAssembly (model:Model,
+                                  reactants:Seq[PhysicalEntity],
+                                  product:Complex): ComplexAssembly =
+  {
+    val caName = s"ComplexAssembly_${idCntr.genNextId()}"
+    val caUrl = genInternalURL(caName)
+    val cplxAss:ComplexAssembly = model.addNew(classOf[ComplexAssembly], caUrl)
+    cplxAss.setDisplayName(caName)
+    cplxAss.setConversionDirection(ConversionDirectionType.LEFT_TO_RIGHT)
+    reactants.foreach { cplxAss.addLeft(_) }  // set the reactants on the left
+    cplxAss.addRight(product)                 // set the product on the right
+    return cplxAss
   }
 
 
   /** Add a gene instance and associated entity reference to the model. */
-  private def addGeneToModel (model:Model, mention:Mention, gRef:GeneReference): Gene = {
+  private def addGene (model:Model, mention:Mention, gRef:GeneReference): Gene = {
     val name = geneKB.getLookupKey(mention)
-    val gUrl = genInternalURL(s"G_${idCntr.genNextId()}")
+    val gUrl = genInternalURL(s"GOGP_${idCntr.genNextId()}")
     val gene:Gene = model.addNew(classOf[Gene], gUrl)
     gene.setDisplayName(name)
     gene.setEntityReference(gRef)
@@ -161,9 +201,9 @@ class BioPaxer {
   }
 
   /** Add a protein instance and associated entity reference to the model. */
-  private def addProteinToModel (model:Model, mention:Mention, pRef:ProteinReference): Protein = {
+  private def addProtein (model:Model, mention:Mention, pRef:ProteinReference): Protein = {
     val name = proteinKB.getLookupKey(mention)
-    val pUrl = genInternalURL(s"P_${idCntr.genNextId()}")
+    val pUrl = genInternalURL(s"PROT_${idCntr.genNextId()}")
     val prot:Protein = model.addNew(classOf[Protein], pUrl)
     prot.setDisplayName(name)
     prot.setEntityReference(pRef)
@@ -171,8 +211,8 @@ class BioPaxer {
   }
 
   /** Add a small molecule instance and associated entity reference to the model. */
-  private def addSmallMoleculeToModel (model:Model, mention:Mention,
-                                       eRef:SmallMoleculeReference): SmallMolecule = {
+  private def addSmallMolecule (model:Model, mention:Mention,
+                                eRef:SmallMoleculeReference): SmallMolecule = {
     val name = smallMoleculeKB.getLookupKey(mention)
     val eUrl = genInternalURL(s"SM_${idCntr.genNextId()}")
     val sMole:SmallMolecule = model.addNew(classOf[SmallMolecule], eUrl)
@@ -181,15 +221,40 @@ class BioPaxer {
     return sMole
   }
 
-  /** Add a PublicationXref for the given document and save it as a class variable. */
+  /** Add a PublicationXref for the given document to the model. */
   private def addPublicationXref (model:Model, doc:Document) = {
-    val pxrUrl = s"${SistaBaseURL}PX_${idCntr.genNextId()}"
+    val pxrUrl = s"${sistaBaseURL}PX_${idCntr.genNextId()}"
     model.addNew(classOf[PublicationXref], pxrUrl)
+  }
+
+  /** Create gene instance and entity reference, add them to the model, and return instance. */
+  private def doGene (model:Model, mention:Mention): Gene = {
+    val gRef:GeneReference = referenceForGene(model, mention)
+    return addGene(model, mention, gRef)
+  }
+
+  /** Create protein instance and entity reference, add them to the model, and return instance. */
+  private def doProtein (model:Model, mention:Mention): Protein = {
+    val pRef:ProteinReference = referenceForProtein(model, mention)
+    return addProtein(model, mention, pRef)
+  }
+
+  /** Create protein instance and entity reference, add them to the model, and return instance. */
+  private def doProteinWithSite (model:Model, mention:Mention): Protein = {
+    val protMention = getProtein(mention)(0)  // extract protein mention, ignore site mention
+    val pRef:ProteinReference = referenceForProtein(model, protMention)
+    return addProtein(model, mention, pRef)
+  }
+
+  /** Create small molecule instance and entity reference, add them to the model, and return instance. */
+  private def doSmallMolecule (model:Model, mention:Mention): SmallMolecule = {
+    val smRef:SmallMoleculeReference = referenceForSmallMolecule(model, mention)
+    return addSmallMolecule(model, mention, smRef)
   }
 
   /** Generate an internal URL for the given ID string. */
   private def genInternalURL (id:String): String = {
-    return s"${SistaBaseURL}${id}"
+    return s"${sistaBaseURL}${id}"
   }
 
   /** Generate a unification Xref with the given arguments. */
@@ -201,11 +266,75 @@ class BioPaxer {
     return uXref
   }
 
-  private def getTheme (mention:Mention): Seq[Mention] = {
-    mention.arguments.foreach {
-      case (k, vs) => if (k startsWith "theme") return vs
-    }
+  /** Return the named argument (a mention) from the arguments of the given mention. */
+  private def getMentionArg (mention:Mention, argName:String): Seq[Mention] = {
+    mention.arguments.foreach { case (k, vs) => if (k startsWith argName) return vs }
     return Nil
+  }
+  private def getControlled  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controlled")
+  private def getController  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controller")
+  private def getDestination (mention:Mention): Seq[Mention] = getMentionArg(mention, "destination")
+  private def getGoal        (mention:Mention): Seq[Mention] = getMentionArg(mention, "goal")
+  private def getProtein     (mention:Mention): Seq[Mention] = getMentionArg(mention, "protein")
+  private def getTheme       (mention:Mention): Seq[Mention] = getMentionArg(mention, "theme")
+  private def getSite        (mention:Mention): Seq[Mention] = getMentionArg(mention, "site")
+  private def getSource      (mention:Mention): Seq[Mention] = getMentionArg(mention, "source")
+
+
+  private def initializeModel (model:Model) = {
+    // protein phosphorylation GO:0006468 (GeneOntology)
+    // protein modification characterized by amino acid modified MOD:01157 (PSI-MOD)
+  }
+
+  /** Return a vocabulary item for the cellular component represented by the given mention. */
+  private def makeCellularComponent (model:Model, mention:Mention): ControlledVocabulary = {
+    // cellular location is a property not an entity: must be attached to an entity (in future)
+    return referenceForCellularComponent(model, mention)
+  }
+
+  /** Return a list of strings representing the given mention at the given indentation level. */
+  private def mentionToStrings (mention: Mention, level:Integer): List[String] = {
+    val mStrings:MutableList[String] = MutableList[String]()
+    val indent = ("  " * level)
+    mention match {
+      case mention: TextBoundMention =>
+        mStrings += s"${indent}TextBoundMention: (S${mention.sentence}): ${mention.label}"
+        mStrings += s"${indent}text: ${mention.text}"
+        if (level == 0) mStrings += ("=" * 80)
+      case mention: EventMention =>
+        mStrings += s"${indent}EventMention: (S${mention.sentence}): ${mention.label}"
+        mStrings += s"${indent}text: ${mention.text}"
+        mStrings += s"${indent}trigger:"
+        mStrings ++= mentionToStrings(mention.trigger, level+1)
+        mention.arguments foreach {
+          case (k,vs) => {
+            mStrings += s"${indent}${k}:"
+            for (v <- vs) {
+              mStrings ++= mentionToStrings(v, level+1)
+            }
+          }
+        }
+        if (level == 0) mStrings += ("=" * 80)
+      case mention: RelationMention =>
+        mStrings += s"${indent}RelationMention: (S${mention.sentence}): ${mention.label}"
+        mStrings += s"${indent}text: ${mention.text}"
+        mention.arguments foreach {
+          case (k,vs) => {
+            mStrings += s"${indent}${k}:"
+            for (v <- vs) {
+              mStrings ++= mentionToStrings(v, level+1)
+            }
+          }
+        }
+        if (level == 0) mStrings += ("=" * 80)
+      case _ => ()
+    }
+    return mStrings.toList
+  }
+
+  /** Convert qualifying mentions in the given sequence to a sequence of physical entities.*/
+  private def mentionsToPhysicalEntities (model:Model, mentions:Seq[Mention]): Seq[PhysicalEntity] = {
+    return mentions.filter(m => mapsToPhysicalEntity(m.label)).map(toPhysicalEntity(model, _))
   }
 
   /** Lookup or create a controlled vocabulary item for the given cellular component mention. */
@@ -321,80 +450,15 @@ class BioPaxer {
   }
 
 
-  /** Generates a BioPax representation of the given mention as a list of strings. */
-  def mentionToStrings (mention: Mention): List[String] = {
-    return mentionToStrings(mention, 0)
-  }
-
-  private def mentionToStrings (mention: Mention, level:Integer): List[String] = {
-    val mStrings:MutableList[String] = MutableList[String]()
-    val indent = ("  " * level)
-    mention match {
-      case mention: TextBoundMention =>
-        mStrings += s"${indent}TextBoundMention: (S${mention.sentence}): ${mention.label}"
-        mStrings += s"${indent}text: ${mention.text}"
-        if (level == 0) mStrings += ("=" * 80)
-      case mention: EventMention =>
-        mStrings += s"${indent}EventMention: (S${mention.sentence}): ${mention.label}"
-        mStrings += s"${indent}text: ${mention.text}"
-        mStrings += s"${indent}trigger:"
-        mStrings ++= mentionToStrings(mention.trigger, level+1)
-        mention.arguments foreach {
-          case (k,vs) => {
-            mStrings += s"${indent}${k}:"
-            for (v <- vs) {
-              mStrings ++= mentionToStrings(v, level+1)
-            }
-          }
-        }
-        if (level == 0) mStrings += ("=" * 80)
-      case mention: RelationMention =>
-        mStrings += s"${indent}RelationMention: (S${mention.sentence}): ${mention.label}"
-        mStrings += s"${indent}text: ${mention.text}"
-        mention.arguments foreach {
-          case (k,vs) => {
-            mStrings += s"${indent}${k}:"
-            for (v <- vs) {
-              mStrings ++= mentionToStrings(v, level+1)
-            }
-          }
-        }
-        if (level == 0) mStrings += ("=" * 80)
-      case _ => ()
+  /** Create a physical entity from the given mention, add it to the model, and return it. */
+  private def toPhysicalEntity (model:Model, mention:Mention): PhysicalEntity = {
+    mention.label match {
+      case "Gene_or_gene_product" => return doGene(model, mention)
+      case "Protein" => return doProtein(model, mention)
+      case "Protein_with_site" => return doProteinWithSite(model, mention)
+      case "Simple_chemical" => return doSmallMolecule(model, mention)
+      case _ => return null
     }
-    return mStrings.toList
-  }
-
-
-  /** return the given model as a single BioPax OWL string. */
-  def modelToString (model:Model): String = {
-    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
-    val baos:ByteArrayOutputStream = new ByteArrayOutputStream()
-    bpIOH.convertToOWL(model, baos)
-    return baos.toString(SistaDefaultCharset)
-  }
-
-  /** Output the given model to the given output stream. */
-  def outputModel (model:Model, out:OutputStream): Unit = {
-    val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
-    bpIOH.convertToOWL(model, out)
-  }
-
-  /** Output a string representation of the mentions selected by the given label string
-    * to the given output stream.
-    * NB: This method closes the given output stream when done!
-    */
-  def outputFilteredMentions (mentionType:String,
-                              mentions:Seq[Mention],
-                              doc:Document,
-                              fos:FileOutputStream): Unit =
-  {
-    val out:PrintWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))
-    mentions.filter(_.matches(mentionType)).foreach { mention =>
-      mentionToStrings(mention).foreach { str => out.println(str) }
-    }
-    out.flush()
-    out.close()
   }
 
 }
