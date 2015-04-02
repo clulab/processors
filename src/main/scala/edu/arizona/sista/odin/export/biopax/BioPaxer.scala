@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Add counter formatting method. Generate valid GO IDs.
+  *   Last Modified: Generate valid, but fake, Uniprot IDs.
   */
 class BioPaxer {
   // Type aliases:
@@ -475,7 +475,7 @@ class BioPaxer {
     // val eUrl = eInfo("referenceURI")
 
     // Temporary code until we do resolution against the real KB:
-    val eId = s"rP_${idCntr.genNextId()}"   // MOCK missing referenceID value
+    val eId = idCntr.genNextIdWithFormat("P%05d") // MOCK missing referenceID value
     val eUrl = proteinKB.referenceURI(eId)  // MOCK value with manual call
 
     val uXref = genUnificationXref(model, eId, eInfo("namespace"))
