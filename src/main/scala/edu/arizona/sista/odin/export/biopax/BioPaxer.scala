@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Re-case constants. Add interaction type to complex. Add vocabulary LUT.
+  *   Last Modified: Add counter formatting method. Generate valid GO IDs.
   */
 class BioPaxer {
   // Type aliases:
@@ -452,7 +452,7 @@ class BioPaxer {
     // val eUrl = eInfo("referenceURI")
 
     // Temporary code until we do resolution against the real KB:
-    val eId = s"rG_${idCntr.genNextId()}"   // MOCK missing referenceID value
+    val eId = idCntr.genNextIdWithFormat("GO:%07d")  // MOCK missing referenceID value
     val eUrl = geneKB.referenceURI(eId)     // MOCK value with manual call
 
     val uXref = genUnificationXref(model, eId, eInfo("namespace"))
@@ -529,11 +529,17 @@ class IncrementingId {
   protected var cntr = 0
 
   /** Return the current identification string. */
-  def currentId():String = { s"${cntr}" }
+  def currentId (): String = { s"${cntr}" }
 
   /** Increment counter and return new identification string. */
-  def genNextId():String = {
+  def genNextId (): String = {
     cntr = cntr + 1
     return currentId()
+  }
+
+  /** Increment counter and return new identification string. */
+  def genNextIdWithFormat (formatString:String): String = {
+    cntr = cntr + 1
+    return formatString.format(cntr)
   }
 }
