@@ -5,7 +5,7 @@ import edu.arizona.sista.odin.Mention
 /**
   * Traits and classes used to access information from external knowledge bases.
   *   Written by Tom Hicks. 3/18/2015.
-  *   Last Modified: Port to 5.3.
+  *   Last Modified: Resolve can return a definition. Add molecular interactions KB.
   */
 trait ExternalKBAccessor {
   /** The primary URI of the external KB (e.g., http://identifiers.org/uniprot/). */
@@ -52,6 +52,7 @@ trait ExternalKBAccessor {
     return Map(
       "key" -> getLookupKey(mention),
       "baseURI" -> baseURI,
+      "definition" -> "MOCK-definition",    // a term definition might be available
       "namespace" -> namespace,
       "referenceURI" -> referenceURI(mention),
       "referenceID" -> "MOCK-referenceId",   // the real resolver must return real value!
@@ -62,22 +63,26 @@ trait ExternalKBAccessor {
 }
 
 
-class UniprotKBAccessor extends ExternalKBAccessor {
-  def baseURI = "http://identifiers.org/uniprot/"
-  def namespace = "uniprotkb"
-  def resourceID = "MIR:00100164"
-}
-
-
 class ChEBIKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://identifiers.org/chebi/"
   def namespace = "chebi"
   def resourceID = "MIR:00100565"
 }
 
-
 class GeneOntologyKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://identifiers.org/go/"
   def namespace = "go"
   def resourceID = "MIR:00100013"
+}
+
+class MolecularInteractionsKBAccessor extends ExternalKBAccessor {
+  def baseURI = "http://identifiers.org/psimi/"
+  def namespace = "psimi"
+  def resourceID = "MIR:00000109"
+}
+
+class UniprotKBAccessor extends ExternalKBAccessor {
+  def baseURI = "http://identifiers.org/uniprot/"
+  def namespace = "uniprotkb"
+  def resourceID = "MIR:00100164"
 }

@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Refactor to begin mapping top-level events.
+  *   Last Modified: Re-case constants. Add interaction type to complex. Add vocabulary LUT.
   */
 class BioPaxer {
   // Type aliases:
@@ -23,25 +23,28 @@ class BioPaxer {
   type GeneReference = ProteinReference     // temporary until we decide how to handle genes
 
   // Constants:
-  val mapsToPhysicalEntity = Set("Gene_or_gene_product", "Protein",
+  val DirectInteraction = "direct interaction"
+  val MapsToPhysicalEntity = Set("Gene_or_gene_product", "Protein",
                                  "Protein_with_site", "Simple_chemical")
-  val sistaBaseURL = "http://nlp.sista.arizona.edu/odin/"
-  val sistaDefaultCharset = "UTF-8"
+  val SistaBaseURL = "http://nlp.sista.arizona.edu/odin/"
+  val SistaDefaultCharset = "UTF-8"
 
   // external knowledge base accessors
   protected val cellCompKB = new GeneOntologyKBAccessor
   protected val geneKB = new GeneOntologyKBAccessor
+  protected val moleInterKB = new MolecularInteractionsKBAccessor
   protected val proteinKB = new UniprotKBAccessor
   protected val smallMoleculeKB = new ChEBIKBAccessor
 
   // incrementing ID for numbering entities
   protected val idCntr = new IncrementingId()
 
-  // local caches for physical entities: map entity type names to entity reference subclasses
-  protected val cellCompRefs = scala.collection.mutable.Map[String, ControlledVocabulary]()
+  // local caches for entities: map entity type names to entity reference classes
   protected val geneRefs = scala.collection.mutable.Map[String, GeneReference]()
   protected val proteinRefs = scala.collection.mutable.Map[String, ProteinReference]()
   protected val smallMoleculeRefs = scala.collection.mutable.Map[String, SmallMoleculeReference]()
+  protected val vocabRefs = scala.collection.mutable.Map[String, ControlledVocabulary]()
+
 
   //
   // Public API:
@@ -52,7 +55,7 @@ class BioPaxer {
     // create and initialize a new BioPAX model:
     val factory: BioPAXFactory = BioPAXLevel.L3.getDefaultFactory()
     var model:Model = factory.createModel()
-    // model.setXmlBase(sistaBaseURL)          // TODO: UNCOMMENT LATER?
+    // model.setXmlBase(SistaBaseURL)          // TODO: UNCOMMENT LATER?
 
     // TODO: Set XML namespace for SISTA NLP UAZ?
     // TODO: Add dataSource (Provenance) information for SISTA NLP UAZ
@@ -81,7 +84,7 @@ class BioPaxer {
     val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
     val baos:ByteArrayOutputStream = new ByteArrayOutputStream()
     bpIOH.convertToOWL(model, baos)
-    return baos.toString(sistaDefaultCharset)
+    return baos.toString(SistaDefaultCharset)
   }
 
 
@@ -168,7 +171,7 @@ class BioPaxer {
     if (lefts.isEmpty) return null          // sanity check
     val cUrl = genInternalURL(s"CPLX_${idCntr.genNextId()}")
     val complex:Complex = model.addNew(classOf[Complex], cUrl)
-    complex.setDisplayName(lefts.map(_.getDisplayName()).mkString("-"))
+    complex.setDisplayName(lefts.map(_.getDisplayName()).mkString("+"))
     lefts.foreach { complex.addComponent(_) }
     return complex
   }
@@ -186,6 +189,7 @@ class BioPaxer {
     cplxAss.setConversionDirection(ConversionDirectionType.LEFT_TO_RIGHT)
     reactants.foreach { cplxAss.addLeft(_) }  // set the reactants on the left
     cplxAss.addRight(product)                 // set the product on the right
+    cplxAss.addInteractionType(vocabRefs(DirectInteraction).asInstanceOf[InteractionVocabulary])
     return cplxAss
   }
 
@@ -223,9 +227,57 @@ class BioPaxer {
 
   /** Add a PublicationXref for the given document to the model. */
   private def addPublicationXref (model:Model, doc:Document) = {
-    val pxrUrl = s"${sistaBaseURL}PX_${idCntr.genNextId()}"
+    val pxrUrl = s"${SistaBaseURL}PX_${idCntr.genNextId()}"
     model.addNew(classOf[PublicationXref], pxrUrl)
   }
+
+  /** Add a fixed controlled-vocabulary item to the model and the vocabulary references map. */
+  private def addInteractionVocabularyConstant (
+    model: Model,
+    eNamespace: String,
+    eName: String,
+    eId: String,
+    eDefinition: String
+  ): ControlledVocabulary = {
+    val eUrl = s"${SistaBaseURL}InteractionVocabulary_${idCntr.genNextId()}"
+    val eRef:InteractionVocabulary = model.addNew(classOf[InteractionVocabulary], eUrl)
+    eRef.addTerm(eName)
+    if (!eDefinition.isEmpty)
+      eRef.addComment(eDefinition)
+
+    val uXref = genUnificationXref(model, eId, eNamespace)
+    if (!eDefinition.isEmpty)
+      uXref.addComment(eDefinition)
+    eRef.addXref(uXref)
+
+    vocabRefs.put(eName, eRef)              // memoize new reference
+    return eRef                             // and return it
+  }
+
+  /** Add a fixed controlled-vocabulary item to the model and the vocabulary references map. */
+  private def addVocabularyConstant[T <: ControlledVocabulary] (
+    model: Model,
+    vocabType: Class[T],
+    extKB: ExternalKBAccessor,
+    eName: String,
+    eId: String,
+    eDefinition: String
+  ): T = {
+    val eUrl = extKB.referenceURI(eId)
+    val eRef:T = model.addNew(vocabType, eUrl)
+    eRef.addTerm(eName)
+    if (!eDefinition.isEmpty)
+      eRef.addComment(eDefinition)
+
+    val uXref = genUnificationXref(model, eId, extKB.namespace)
+    if (!eDefinition.isEmpty)
+      uXref.addComment(eDefinition)
+    eRef.addXref(uXref)
+
+    vocabRefs.put(eName, eRef)              // memoize new reference
+    return eRef                             // and return it
+  }
+
 
   /** Create gene instance and entity reference, add them to the model, and return instance. */
   private def doGene (model:Model, mention:Mention): Gene = {
@@ -254,7 +306,7 @@ class BioPaxer {
 
   /** Generate an internal URL for the given ID string. */
   private def genInternalURL (id:String): String = {
-    return s"${sistaBaseURL}${id}"
+    return s"${SistaBaseURL}${id}"
   }
 
   /** Generate a unification Xref with the given arguments. */
@@ -284,7 +336,14 @@ class BioPaxer {
   private def initializeModel (model:Model) = {
     // protein phosphorylation GO:0006468 (GeneOntology)
     // protein modification characterized by amino acid modified MOD:01157 (PSI-MOD)
+
+    // direct interaction MI:0407 (PSI-MOD)
+//    addVocabularyConstant(model, classOf[InteractionVocabulary], moleInterKB, DirectInteraction,
+//      "MI:0407", "Interaction between molecules that are in direct contact with each other.")
+    addInteractionVocabularyConstant(model, "psimi", DirectInteraction,
+      "MI:0407", "Interaction between molecules that are in direct contact with each other.")
   }
+
 
   /** Return a vocabulary item for the cellular component represented by the given mention. */
   private def makeCellularComponent (model:Model, mention:Mention): ControlledVocabulary = {
@@ -334,13 +393,13 @@ class BioPaxer {
 
   /** Convert qualifying mentions in the given sequence to a sequence of physical entities.*/
   private def mentionsToPhysicalEntities (model:Model, mentions:Seq[Mention]): Seq[PhysicalEntity] = {
-    return mentions.filter(m => mapsToPhysicalEntity(m.label)).map(toPhysicalEntity(model, _))
+    return mentions.filter(m => MapsToPhysicalEntity(m.label)).map(toPhysicalEntity(model, _))
   }
 
   /** Lookup or create a controlled vocabulary item for the given cellular component mention. */
   private def referenceForCellularComponent (model:Model, mention:Mention): ControlledVocabulary = {
     val name = cellCompKB.getLookupKey(mention)
-    return cellCompRefs.getOrElseUpdate(name, registerCellularLocation(model, mention))
+    return vocabRefs.getOrElseUpdate(name, registerCellularLocation(model, mention))
   }
 
   /** Lookup or create a reference for the given gene mention. */
@@ -379,7 +438,7 @@ class BioPaxer {
     eRef.addTerm(eName)
     eRef.addXref(uXref)
 
-    cellCompRefs.put(eName, eRef)           // memoize new reference
+    vocabRefs.put(eName, eRef)              // memoize new reference
     return eRef                             // and return it
   }
 
@@ -404,6 +463,7 @@ class BioPaxer {
     geneRefs.put(eName, eRef)               // memoize new reference
     return eRef                             // and return it
   }
+
 
   /** Create and return a new entity reference from the given mention, memoizing it
     * locally, as a side effect. */
