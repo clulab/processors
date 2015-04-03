@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 /**
   * Top-level test driver for BioPax output development.
   *   Author: by Tom Hicks, after program by Gus Hahn-Powell.
-  *   Last Modified: Print string mentions for events only.
+  *   Last Modified: Update for new mention manager.
   */
 object BioPaxDriver extends App {
   val logger = LoggerFactory.getLogger(this.getClass.getSimpleName)
@@ -79,8 +79,9 @@ object BioPaxDriver extends App {
   def outputAllMentions (mentions:Seq[Mention], doc:Document, fos:FileOutputStream): Unit = {
     val out:PrintWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))
     val paxer:BioPaxer = new BioPaxer()
+    val menMgr:MentionManager = new MentionManager()
     mentions.foreach { m =>
-      paxer.mentionToStrings(m).foreach { str => out.println(str) }
+      menMgr.mentionToStrings(m).foreach { str => out.println(str) }
     }
     out.flush()
     out.close()
@@ -98,8 +99,8 @@ object BioPaxDriver extends App {
 
   /** Output string representations for event mentions in the given sequence. */
   def outputEventMentions (mentions:Seq[Mention], doc:Document, fos:FileOutputStream): Unit = {
-    val paxer:BioPaxer = new BioPaxer()
-    paxer.outputFilteredMentions("Event", mentions, doc, fos)
+    val menMgr:MentionManager = new MentionManager()
+    menMgr.outputSelectedMentions("Event", mentions, fos)
     fos.close()                             // NOT NEEDED? REMOVE?
   }
 

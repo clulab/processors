@@ -13,9 +13,9 @@ import org.biopax.paxtools.model._
 import org.biopax.paxtools.model.level3._
 
 /**
-  * Defines implicit classes used to build and output BioPax models.
+  * Defines classes and methods used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Add handling of Degradation.
+  *   Last Modified: Refactor some code to new mention manager.
   */
 class BioPaxer {
   // Type aliases:
@@ -74,12 +74,6 @@ class BioPaxer {
   }
 
 
-  /** Generates a BioPax representation of the given mention as a list of strings. */
-  def mentionToStrings (mention: Mention): List[String] = {
-    return mentionToStrings(mention, 0)
-  }
-
-
   /** return the given model as a single BioPax OWL string. */
   def modelToString (model:Model): String = {
     val bpIOH:BioPAXIOHandler = new SimpleIOHandler()
@@ -87,24 +81,6 @@ class BioPaxer {
     bpIOH.convertToOWL(model, baos)
     return baos.toString(SistaDefaultCharset)
   }
-
-
-  /** Output a string representation of the mentions selected by the given label string
-    * to the given output stream.
-    * NB: This method closes the given output stream when done!
-    */
-  def outputFilteredMentions (mentionType:String,
-                              mentions:Seq[Mention],
-                              doc:Document,
-                              fos:FileOutputStream): Unit = {
-    val out:PrintWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))
-    mentions.filter(_.matches(mentionType)).foreach { mention =>
-      mentionToStrings(mention).foreach { str => out.println(str) }
-    }
-    out.flush()
-    out.close()
-  }
-
 
   /** Output the given model to the given output stream. */
   def outputModel (model:Model, out:OutputStream): Unit = {
@@ -384,46 +360,6 @@ class BioPaxer {
   private def makeCellularComponent (model:Model, mention:Mention): ControlledVocabulary = {
     // cellular location is a property not an entity: must be attached to an entity (in future)
     return referenceForCellularComponent(model, mention)
-  }
-
-  /** Return a list of strings representing the given mention at the given indentation level. */
-  private def mentionToStrings (mention: Mention, level:Integer): List[String] = {
-    val mStrings:MutableList[String] = MutableList[String]()
-    val indent = ("  " * level)
-    mention match {
-      case mention: TextBoundMention =>
-        mStrings += s"${indent}TextBoundMention: (S${mention.sentence}): ${mention.label}"
-        mStrings += s"${indent}text: ${mention.text}"
-        if (level == 0) mStrings += ("=" * 80)
-      case mention: EventMention =>
-        mStrings += s"${indent}EventMention: (S${mention.sentence}): ${mention.label}"
-        mStrings += s"${indent}text: ${mention.text}"
-        mStrings += s"${indent}trigger:"
-        mStrings ++= mentionToStrings(mention.trigger, level+1)
-        mention.arguments foreach {
-          case (k,vs) => {
-            mStrings += s"${indent}${k}:"
-            for (v <- vs) {
-              mStrings ++= mentionToStrings(v, level+1)
-            }
-          }
-        }
-        if (level == 0) mStrings += ("=" * 80)
-      case mention: RelationMention =>
-        mStrings += s"${indent}RelationMention: (S${mention.sentence}): ${mention.label}"
-        mStrings += s"${indent}text: ${mention.text}"
-        mention.arguments foreach {
-          case (k,vs) => {
-            mStrings += s"${indent}${k}:"
-            for (v <- vs) {
-              mStrings ++= mentionToStrings(v, level+1)
-            }
-          }
-        }
-        if (level == 0) mStrings += ("=" * 80)
-      case _ => ()
-    }
-    return mStrings.toList
   }
 
   /** Convert qualifying mentions in the given sequence to a sequence of physical entities.*/
