@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Add binding features to complete complex assembly.
+  *   Last Modified: Add handling of Degradation.
   */
 class BioPaxer {
   // Type aliases:
@@ -23,6 +23,7 @@ class BioPaxer {
   type GeneReference = ProteinReference     // temporary until we decide how to handle genes
 
   // Constants:
+  // val DegradationInteraction = "organic substance degradation"
   val DirectInteraction = "direct interaction"
   val MapsToPhysicalEntity = Set("Gene_or_gene_product", "Protein",
                                  "Protein_with_site", "Simple_chemical")
@@ -121,7 +122,7 @@ class BioPaxer {
     // TODO: parse and accumulate arguments in structure
     mention.label match {                   // dispatch on mention type
       case "Binding" => return doBinding(model, mention)
-      case "Degradation" =>
+      case "Degradation" => return doDegradation(model, mention)
       case "Exchange" =>
       case "Expression" =>
       case "Hydrolysis" =>
@@ -140,6 +141,7 @@ class BioPaxer {
     return model                            // return updated model
   }
 
+  /** Augment model with a representation of Binding action. */
   private def doBinding (model:Model, mention:Mention): Model = {
     val themes = getTheme(mention)
     if (themes != null) {
@@ -149,6 +151,24 @@ class BioPaxer {
         if (complex != null) {
           val cplxAss:ComplexAssembly = addComplexAssembly(model, reactants, complex)
         }
+      }
+    }
+    return model
+  }
+
+  /** Augment model with a representation of Degradation action. */
+  private def doDegradation (model:Model, mention:Mention): Model = {
+    val themes = getTheme(mention)
+    if (themes != null) {
+      val substrates = mentionsToPhysicalEntities(model, themes)
+      if (!substrates.isEmpty) {
+        val substrate = substrates(0)       // if more than one ignore rest
+        val eUrl = genInternalURL(s"Degradation_${idCntr.genNextId()}")
+        val deg:Degradation = model.addNew(classOf[Degradation], eUrl)
+        deg.addLeft(substrate)              // substrate is left, right not allowed
+        // deg.addInteractionType(vocabRefs(DegradationInteraction).asInstanceOf[InteractionVocabulary])
+        deg.addComment(mention.text)
+        deg.setDisplayName(s"Degradation of ${substrate.getDisplayName()}")
       }
     }
     return model
@@ -353,8 +373,10 @@ class BioPaxer {
     // direct interaction MI:0407 (PSI-MOD)
 //    addVocabularyConstant(model, classOf[InteractionVocabulary], moleInterKB, DirectInteraction,
 //      "MI:0407", "Interaction between molecules that are in direct contact with each other.")
-    addInteractionVocabularyConstant(model, "psimi", DirectInteraction,
-      "MI:0407", "Interaction between molecules that are in direct contact with each other.")
+    // addInteractionVocabularyConstant(model, "go", DegradationInteraction, "GO:1901575",
+    //  "The chemical reactions and pathways resulting in the breakdown of an organic substance, any molecular entity containing carbon.")
+    addInteractionVocabularyConstant(model, "psimi", DirectInteraction, "MI:0407",
+      "Interaction between molecules that are in direct contact with each other.")
   }
 
 
