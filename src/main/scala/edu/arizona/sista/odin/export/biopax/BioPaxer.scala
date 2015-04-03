@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines implicit classes used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Generate valid, but fake, Uniprot IDs.
+  *   Last Modified: Add binding features to complete complex assembly.
   */
 class BioPaxer {
   // Type aliases:
@@ -165,14 +165,27 @@ class BioPaxer {
   }
 
 
+  /** Add a binding feature to the given entity and the model, then return it. */
+  private def addBindingFeature (model:Model, entity:PhysicalEntity): BindingFeature = {
+    val eUrl = genInternalURL(s"BindingFeature_${idCntr.genNextId()}")
+    val bf:BindingFeature = model.addNew(classOf[BindingFeature], eUrl)
+    entity.addFeature(bf)
+    return bf
+  }
+
   /** Create a complex instance out of the given sequence of physical entities,
     * add it to the model, and return it. */
   private def addComplex (model:Model, lefts:Seq[PhysicalEntity]): Complex = {
     if (lefts.isEmpty) return null          // sanity check
+    if (lefts.length != 2) return null      // NB: only do duplex complexes, for now
     val cUrl = genInternalURL(s"CPLX_${idCntr.genNextId()}")
     val complex:Complex = model.addNew(classOf[Complex], cUrl)
     complex.setDisplayName(lefts.map(_.getDisplayName()).mkString("+"))
     lefts.foreach { complex.addComponent(_) }
+    val bf0:BindingFeature = addBindingFeature(model, lefts(0))
+    val bf1:BindingFeature = addBindingFeature(model, lefts(1))
+    bf0.setBindsTo(bf1)
+    bf1.setBindsTo(bf0)
     return complex
   }
 
