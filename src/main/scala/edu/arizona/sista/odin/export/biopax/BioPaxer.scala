@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines classes and methods used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Move mention argument accessors to mention manager.
+  *   Last Modified: Update for renamed/optioned argument accessors.
   */
 class BioPaxer {
   // Type aliases:
@@ -122,9 +122,9 @@ class BioPaxer {
 
   /** Augment model with a representation of Binding action. */
   private def doBinding (model:Model, mention:Mention): Model = {
-    val themes = mentionMgr.getTheme(mention)
-    if (themes != null) {
-      val reactants = mentionsToPhysicalEntities(model, themes)
+    val themes = mentionMgr.themeArgs(mention)
+    if (!themes.isEmpty) {
+      val reactants = mentionsToPhysicalEntities(model, themes.get)
       if (!reactants.isEmpty) {
         val complex:Complex = addComplex(model, reactants)
         if (complex != null) {
@@ -137,9 +137,9 @@ class BioPaxer {
 
   /** Augment model with a representation of Degradation action. */
   private def doDegradation (model:Model, mention:Mention): Model = {
-    val themes = mentionMgr.getTheme(mention)
-    if (themes != null) {
-      val substrates = mentionsToPhysicalEntities(model, themes)
+    val themes = mentionMgr.themeArgs(mention)
+    if (!themes.isEmpty) {
+      val substrates = mentionsToPhysicalEntities(model, themes.get)
       if (!substrates.isEmpty) {
         val substrate = substrates(0)       // if more than one ignore rest
         val eUrl = genInternalURL(s"Degradation_${idCntr.genNextId()}")
@@ -154,9 +154,9 @@ class BioPaxer {
   }
 
   private def doPhosphorylation (model:Model, mention:Mention): Model = {
-    // val themes = mentionMgr.getTheme(mention)
-    // if (themes != null) {
-    //   val theme = themes(0)                 // should be only one theme
+    // val themes = mentionMgr.themeArgs(mention)
+    // if (!themes.isEmpty) {
+    //   val theme = themes.get.apply(0)         // should be only one theme
     //   val left = addTextBoundMention(model, theme)
     //   val right = addTextBoundMention(model, theme)
     // }
@@ -305,9 +305,13 @@ class BioPaxer {
 
   /** Create protein instance and entity reference, add them to the model, and return instance. */
   private def doProteinWithSite (model:Model, mention:Mention): Protein = {
-    val protMention = mentionMgr.getProtein(mention)(0)  // extract protein mention, ignore site mention
-    val pRef:ProteinReference = referenceForProtein(model, protMention)
-    return addProtein(model, mention, pRef)
+    // extract protein mention, ignore site mention:
+    val protMention = mentionMgr.proteinArgs(mention)
+    if (!protMention.isEmpty) {
+      val pRef:ProteinReference = referenceForProtein(model, protMention.get.apply(0))
+      return addProtein(model, mention, pRef)
+    }
+    return null
   }
 
   /** Create small molecule instance and entity reference, add them to the model, and return instance. */

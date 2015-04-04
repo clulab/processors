@@ -14,7 +14,7 @@ import edu.arizona.sista.odin._
 /**
   * Defines methods used to manipulate, cache, and output Mentions.
   *   Written by Tom Hicks. 4/3/2015.
-  *   Last Modified: Move mention argument accessors here.
+  *   Last Modified: Rename argument accessors and return option from them.
   */
 class MentionManager {
   // Constants:
@@ -29,21 +29,6 @@ class MentionManager {
   //
   // Public API:
   //
-
-  /** Return the named argument (a mention) from the arguments of the given mention. */
-  def getMentionArg (mention:Mention, argName:String): Seq[Mention] = {
-    mention.arguments.foreach { case (k, vs) => if (k startsWith argName) return vs }
-    return Nil
-  }
-  def getControlled  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controlled")
-  def getController  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controller")
-  def getDestination (mention:Mention): Seq[Mention] = getMentionArg(mention, "destination")
-  def getGoal        (mention:Mention): Seq[Mention] = getMentionArg(mention, "goal")
-  def getProtein     (mention:Mention): Seq[Mention] = getMentionArg(mention, "protein")
-  def getTheme       (mention:Mention): Seq[Mention] = getMentionArg(mention, "theme")
-  def getSite        (mention:Mention): Seq[Mention] = getMentionArg(mention, "site")
-  def getSource      (mention:Mention): Seq[Mention] = getMentionArg(mention, "source")
-
 
   def mergedEvents (): Seq[Mention] = {
     roots.values.toSeq.sortBy(_.seqNum).map(_.mention)
@@ -61,6 +46,21 @@ class MentionManager {
   def mentionToStrings (mention:Mention): List[String] = {
     return mentionToStrings(mention, 0)
   }
+
+
+  /** Return the named argument from the arguments of the given mention. */
+  def namedArgument (mention:Mention, argName:String): Option[Seq[Mention]] = {
+    mention.arguments.get(argName)
+  }
+  def controlledArgs  (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "controlled")
+  def controllerArgs  (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "controller")
+  def destinationArgs (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "destination")
+  def goalArgs        (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "goal")
+  def proteinArgs     (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "protein")
+  def themeArgs       (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "theme")
+  def siteArgs        (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "site")
+  def sourceArgs      (mention:Mention): Option[Seq[Mention]] = namedArgument(mention, "source")
+
 
   /** Output a string representation of the mentions selected by the given label string
     * to the given output stream.
