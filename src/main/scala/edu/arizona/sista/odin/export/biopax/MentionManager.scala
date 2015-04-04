@@ -14,7 +14,7 @@ import edu.arizona.sista.odin._
 /**
   * Defines methods used to manipulate, cache, and output Mentions.
   *   Written by Tom Hicks. 4/3/2015.
-  *   Last Modified: Adding mention hashing to merge mentions.
+  *   Last Modified: Move mention argument accessors here.
   */
 class MentionManager {
   // Constants:
@@ -29,6 +29,21 @@ class MentionManager {
   //
   // Public API:
   //
+
+  /** Return the named argument (a mention) from the arguments of the given mention. */
+  def getMentionArg (mention:Mention, argName:String): Seq[Mention] = {
+    mention.arguments.foreach { case (k, vs) => if (k startsWith argName) return vs }
+    return Nil
+  }
+  def getControlled  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controlled")
+  def getController  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controller")
+  def getDestination (mention:Mention): Seq[Mention] = getMentionArg(mention, "destination")
+  def getGoal        (mention:Mention): Seq[Mention] = getMentionArg(mention, "goal")
+  def getProtein     (mention:Mention): Seq[Mention] = getMentionArg(mention, "protein")
+  def getTheme       (mention:Mention): Seq[Mention] = getMentionArg(mention, "theme")
+  def getSite        (mention:Mention): Seq[Mention] = getMentionArg(mention, "site")
+  def getSource      (mention:Mention): Seq[Mention] = getMentionArg(mention, "source")
+
 
   def mergedEvents (): Seq[Mention] = {
     roots.values.toSeq.sortBy(_.seqNum).map(_.mention)

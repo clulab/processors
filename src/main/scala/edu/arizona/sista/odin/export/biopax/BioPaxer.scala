@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines classes and methods used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Update to mention manager to filter and merge mentions.
+  *   Last Modified: Move mention argument accessors to mention manager.
   */
 class BioPaxer {
   // Type aliases:
@@ -29,6 +29,9 @@ class BioPaxer {
                                  "Protein_with_site", "Simple_chemical")
   val SistaBaseURL = "http://nlp.sista.arizona.edu/odin/"
   val SistaDefaultCharset = "UTF-8"
+
+  // create mention manager and cache
+  protected val mentionMgr = new MentionManager()
 
   // external knowledge base accessors
   protected val cellCompKB = new GeneOntologyKBAccessor
@@ -53,9 +56,6 @@ class BioPaxer {
 
   /** Build and return a BioPax model for the given sequence of mentions. */
   def buildModel (mentions:Seq[Mention], doc:Document): Model = {
-    // create mention cacher
-    val mentionMgr = new MentionManager()
-
     // create and initialize a new BioPAX model:
     val factory: BioPAXFactory = BioPAXLevel.L3.getDefaultFactory()
     var model:Model = factory.createModel()
@@ -122,7 +122,7 @@ class BioPaxer {
 
   /** Augment model with a representation of Binding action. */
   private def doBinding (model:Model, mention:Mention): Model = {
-    val themes = getTheme(mention)
+    val themes = mentionMgr.getTheme(mention)
     if (themes != null) {
       val reactants = mentionsToPhysicalEntities(model, themes)
       if (!reactants.isEmpty) {
@@ -137,7 +137,7 @@ class BioPaxer {
 
   /** Augment model with a representation of Degradation action. */
   private def doDegradation (model:Model, mention:Mention): Model = {
-    val themes = getTheme(mention)
+    val themes = mentionMgr.getTheme(mention)
     if (themes != null) {
       val substrates = mentionsToPhysicalEntities(model, themes)
       if (!substrates.isEmpty) {
@@ -154,7 +154,7 @@ class BioPaxer {
   }
 
   private def doPhosphorylation (model:Model, mention:Mention): Model = {
-    // val themes = getTheme(mention)
+    // val themes = mentionMgr.getTheme(mention)
     // if (themes != null) {
     //   val theme = themes(0)                 // should be only one theme
     //   val left = addTextBoundMention(model, theme)
@@ -305,7 +305,7 @@ class BioPaxer {
 
   /** Create protein instance and entity reference, add them to the model, and return instance. */
   private def doProteinWithSite (model:Model, mention:Mention): Protein = {
-    val protMention = getProtein(mention)(0)  // extract protein mention, ignore site mention
+    val protMention = mentionMgr.getProtein(mention)(0)  // extract protein mention, ignore site mention
     val pRef:ProteinReference = referenceForProtein(model, protMention)
     return addProtein(model, mention, pRef)
   }
@@ -329,21 +329,6 @@ class BioPaxer {
     uXref.setDb(eNamespace)
     return uXref
   }
-
-  /** Return the named argument (a mention) from the arguments of the given mention. */
-  private def getMentionArg (mention:Mention, argName:String): Seq[Mention] = {
-    mention.arguments.foreach { case (k, vs) => if (k startsWith argName) return vs }
-    return Nil
-  }
-  private def getControlled  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controlled")
-  private def getController  (mention:Mention): Seq[Mention] = getMentionArg(mention, "controller")
-  private def getDestination (mention:Mention): Seq[Mention] = getMentionArg(mention, "destination")
-  private def getGoal        (mention:Mention): Seq[Mention] = getMentionArg(mention, "goal")
-  private def getProtein     (mention:Mention): Seq[Mention] = getMentionArg(mention, "protein")
-  private def getTheme       (mention:Mention): Seq[Mention] = getMentionArg(mention, "theme")
-  private def getSite        (mention:Mention): Seq[Mention] = getMentionArg(mention, "site")
-  private def getSource      (mention:Mention): Seq[Mention] = getMentionArg(mention, "source")
-
 
   private def initializeModel (model:Model) = {
     // protein phosphorylation GO:0006468 (GeneOntology)
