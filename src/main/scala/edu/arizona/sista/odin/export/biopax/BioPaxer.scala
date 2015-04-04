@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines classes and methods used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Refactor some code to new mention manager.
+  *   Last Modified: Update to mention manager to filter and merge mentions.
   */
 class BioPaxer {
   // Type aliases:
@@ -53,6 +53,9 @@ class BioPaxer {
 
   /** Build and return a BioPax model for the given sequence of mentions. */
   def buildModel (mentions:Seq[Mention], doc:Document): Model = {
+    // create mention cacher
+    val mentionMgr = new MentionManager()
+
     // create and initialize a new BioPAX model:
     val factory: BioPAXFactory = BioPAXLevel.L3.getDefaultFactory()
     var model:Model = factory.createModel()
@@ -65,8 +68,8 @@ class BioPaxer {
 
     initializeModel(model)
 
-    // use only mentions labeled as Events for the roots of the forest trees:
-    mentions.filter(_.matches("Event")).foreach {
+    mentionMgr.mergeEventMentions(mentions) // merge all instances of same mention
+    mentionMgr.mergedEvents.foreach {       // walk the merge mentions to generate BioPAX
       doEvents(model, _)
     }
 
