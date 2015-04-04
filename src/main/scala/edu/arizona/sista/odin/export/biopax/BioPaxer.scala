@@ -15,7 +15,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines classes and methods used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Update for renamed/optioned argument accessors.
+  *   Last Modified: Check number of bind arguments before physical entity creation.
   */
 class BioPaxer {
   // Type aliases:
@@ -123,7 +123,7 @@ class BioPaxer {
   /** Augment model with a representation of Binding action. */
   private def doBinding (model:Model, mention:Mention): Model = {
     val themes = mentionMgr.themeArgs(mention)
-    if (!themes.isEmpty) {
+    if (!themes.isEmpty && (themes.get.length == 2)) { // NB: currently must be exactly 2 bindees
       val reactants = mentionsToPhysicalEntities(model, themes.get)
       if (!reactants.isEmpty) {
         val complex:Complex = addComplex(model, reactants)
