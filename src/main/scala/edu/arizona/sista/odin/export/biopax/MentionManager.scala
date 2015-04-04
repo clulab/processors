@@ -14,7 +14,7 @@ import edu.arizona.sista.odin._
 /**
   * Defines methods used to manipulate, cache, and output Mentions.
   *   Written by Tom Hicks. 4/3/2015.
-  *   Last Modified: Rename argument accessors and return option from them.
+  *   Last Modified: Print mention argument counts in string output.
   */
 class MentionManager {
   // Constants:
@@ -119,17 +119,17 @@ class MentionManager {
     val indent = ("  " * level)
     mention match {
       case mention: TextBoundMention =>
-        mStrings += s"${indent}TextBoundMention: (S${mention.sentence}): ${mention.label}"
+        mStrings += s"${indent}TextBoundMention: [S${mention.sentence}]: ${mention.label}"
         mStrings += s"${indent}text: ${mention.text}"
         if (level == 0) mStrings += ("=" * 80)
       case mention: EventMention =>
-        mStrings += s"${indent}EventMention: (S${mention.sentence}): ${mention.label}"
+        mStrings += s"${indent}EventMention: [S${mention.sentence}]: ${mention.label}"
         mStrings += s"${indent}text: ${mention.text}"
         mStrings += s"${indent}trigger:"
         mStrings ++= mentionToStrings(mention.trigger, level+1)
         mention.arguments foreach {
           case (k,vs) => {
-            mStrings += s"${indent}${k}:"
+            mStrings += s"${indent}${k} (${vs.length}):"
             for (v <- vs) {
               mStrings ++= mentionToStrings(v, level+1)
             }
@@ -137,11 +137,11 @@ class MentionManager {
         }
         if (level == 0) mStrings += ("=" * 80)
       case mention: RelationMention =>
-        mStrings += s"${indent}RelationMention: (S${mention.sentence}): ${mention.label}"
+        mStrings += s"${indent}RelationMention: [S${mention.sentence}]: ${mention.label}"
         mStrings += s"${indent}text: ${mention.text}"
         mention.arguments foreach {
           case (k,vs) => {
-            mStrings += s"${indent}${k}:"
+            mStrings += s"${indent}${k} (${vs.length}):"
             for (v <- vs) {
               mStrings ++= mentionToStrings(v, level+1)
             }
