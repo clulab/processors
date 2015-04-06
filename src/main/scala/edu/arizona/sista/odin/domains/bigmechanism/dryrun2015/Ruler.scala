@@ -9,7 +9,7 @@ class Ruler(val rules: String, val actions: Actions) {
 
   def extractFrom(doc: Document): Seq[Mention] = engine.extractFrom(doc)
 
-  def postprocess(mentions: Seq[Mention]): Seq[Mention] = {
+  def postprocess(mentions: Seq[Mention], state: State): Seq[Mention] = {
     mentions flatMap { mention => mention match {
 
       // Do we somehow have an empty Mention?
