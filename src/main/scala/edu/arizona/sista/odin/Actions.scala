@@ -9,5 +9,5 @@ package edu.arizona.sista.odin
   */
 class Actions {
   /** Returns the mentions untransformed */
-  def identity(mentions: Seq[Mention], state: State): Seq[Mention] = mentions
+  val identity: Action = identityAction
 }
