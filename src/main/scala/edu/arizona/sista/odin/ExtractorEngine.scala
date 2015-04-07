@@ -7,7 +7,7 @@ import edu.arizona.sista.odin.impl.RuleReader
 class ExtractorEngine[A <: Actions : ClassTag](
     rules: String,
     actions: A = new Actions,
-    globalAction: Action = ExtractorEngine.identity
+    globalAction: Action = identityAction
 ) {
   val extractors = RuleReader(actions).read(rules)
 
@@ -31,9 +31,4 @@ class ExtractorEngine[A <: Actions : ClassTag](
 
     loop(1, initialState)
   }
-}
-
-object ExtractorEngine {
-  /** Default global action */
-  def identity(mentions: Seq[Mention], state: State): Seq[Mention] = mentions
 }
