@@ -7,7 +7,7 @@ import edu.arizona.sista.odin.impl.RuleReader
 class ExtractorEngine[A <: Actions : ClassTag](
     rules: String,
     actions: A = new Actions,
-    postprocess: GlobalAction = ExtractorEngine.identity
+    globalAction: Action = ExtractorEngine.identity
 ) {
   val extractors = RuleReader(actions).read(rules)
 
@@ -19,7 +19,7 @@ class ExtractorEngine[A <: Actions : ClassTag](
     def loop(i: Int, state: State): Seq[Mention] = iteration(i, state) match {
       case Nil if i >= minIterations => state.allMentions  // we are done
       case Nil => loop(i + 1, state)
-      case mentions => loop(i + 1, state.updated(postprocess(mentions, state)))
+      case mentions => loop(i + 1, state.updated(globalAction(mentions, state)))
     }
 
     def iteration(i: Int, state: State): Seq[Mention] = for {
