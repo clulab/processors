@@ -1,5 +1,4 @@
-
-package edu.arizona.sista.odin.export.biopax
+package edu.arizona.sista.odin.extern.export.biopax
 
 import java.io._
 

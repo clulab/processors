@@ -1,4 +1,4 @@
-package edu.arizona.sista.odin.export.biopax
+package edu.arizona.sista.odin.extern.export.biopax
 
 import java.io._
 
@@ -7,6 +7,7 @@ import scala.collection.mutable.Map
 
 import edu.arizona.sista.processors._
 import edu.arizona.sista.odin._
+import edu.arizona.sista.odin.extern.inward._
 
 import org.biopax.paxtools.io._
 import org.biopax.paxtools.model._
@@ -15,7 +16,7 @@ import org.biopax.paxtools.model.level3._
 /**
   * Defines classes and methods used to build and output BioPax models.
   *   Written by Tom Hicks. 3/6/2015.
-  *   Last Modified: Check number of bind arguments before physical entity creation.
+  *   Last Modified: Update for refactored export/import packages.
   */
 class BioPaxer {
   // Type aliases:

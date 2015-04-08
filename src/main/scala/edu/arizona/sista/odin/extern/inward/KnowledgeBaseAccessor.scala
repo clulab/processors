@@ -1,11 +1,11 @@
-package edu.arizona.sista.odin.export.biopax
+package edu.arizona.sista.odin.extern.inward
 
 import edu.arizona.sista.odin._
 
 /**
   * Traits and classes used to access information from external knowledge bases.
   *   Written by Tom Hicks. 3/18/2015.
-  *   Last Modified: Sync with grounding version in domains.bigmechanism.summer2015.
+  *   Last Modified: Port to odin branch: adapt for grounding scheme.
   */
 trait ExternalKBAccessor {
   /** The primary URI of the external KB (e.g., http://identifiers.org/uniprot/). */
@@ -59,29 +59,5 @@ trait ExternalKBAccessor {
       "standardName" -> ""                  // standard nomenclature might be available
     )
   }
-}
 
-
-class ChEBIKBAccessor extends ExternalKBAccessor {
-  def baseURI = "http://identifiers.org/chebi/"
-  def namespace = "chebi"
-  def resourceID = "MIR:00100565"
-}
-
-class GeneOntologyKBAccessor extends ExternalKBAccessor {
-  def baseURI = "http://identifiers.org/go/"
-  def namespace = "go"
-  def resourceID = "MIR:00100013"
-}
-
-class MolecularInteractionsKBAccessor extends ExternalKBAccessor {
-  def baseURI = "http://identifiers.org/psimi/"
-  def namespace = "psimi"
-  def resourceID = "MIR:00000109"
-}
-
-class UniprotKBAccessor extends ExternalKBAccessor {
-  def baseURI = "http://identifiers.org/uniprot/"
-  def namespace = "uniprotkb"
-  def resourceID = "MIR:00100164"
 }
