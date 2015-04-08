@@ -1,4 +1,4 @@
-package edu.arizona.sista.odin.domains.bigmechanism.summer2015
+package edu.arizona.sista.odin.extern.inward
 
 import edu.arizona.sista.odin._
 

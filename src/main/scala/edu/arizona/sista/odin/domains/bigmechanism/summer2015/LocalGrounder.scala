@@ -3,11 +3,12 @@ package edu.arizona.sista.odin.domains.bigmechanism.summer2015
 import util.control.Breaks._
 
 import edu.arizona.sista.odin._
+import edu.arizona.sista.odin.extern.inward._
 
 /**
   * Class which implements project internal methods to ground entities.
   *   Written by Tom Hicks. 4/6/2015.
-  *   Last Modified: Initial working version: only failsafe UAZID accessor working so far.
+  *   Last Modified: Update for refactoring of KB accessor trait.
   */
 class LocalGrounder extends DarpaFlowStep {
   /** An exception in case we somehow fail to assign an ID during resolution. */
