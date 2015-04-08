@@ -1,11 +1,11 @@
 package edu.arizona.sista.odin.export.biopax
 
-import edu.arizona.sista.odin.Mention
+import edu.arizona.sista.odin._
 
 /**
   * Traits and classes used to access information from external knowledge bases.
   *   Written by Tom Hicks. 3/18/2015.
-  *   Last Modified: Resolve can return a definition. Add molecular interactions KB.
+  *   Last Modified: Sync with grounding version in domains.bigmechanism.summer2015.
   */
 trait ExternalKBAccessor {
   /** The primary URI of the external KB (e.g., http://identifiers.org/uniprot/). */
@@ -15,7 +15,8 @@ trait ExternalKBAccessor {
   def namespace: String
 
   /** The Resource Identifier for the primary resource location for this
-    * knowledge base (e.g., MIR:00100164). */
+    * knowledge base (e.g., MIR:00100164).
+    * NB: This is MIRIAM registration ID of the external knowledge base, NOT an entity ID. */
   def resourceID: String
 
 
@@ -42,22 +43,20 @@ trait ExternalKBAccessor {
 
 
   /** Resolve the given Mention to an entry in an external knowledge base
-    * and return a map of keys and property values from that entry. */
-  // def resolve (mention:Mention): Map[String,String] = {
-  //   return Map[String,String]()
-  // }
-
-  // Mock method until we do real resolution against the knowledge bases
+    * and return a map of keys and property values from that entry.
+    * Default method to be overridden by each child knowledge base accessor.
+    */
   def resolve (mention:Mention): Map[String,String] = {
     return Map(
-      "key" -> getLookupKey(mention),
+      "referenceID" -> "UNRESOLVED ID",     // the real resolver must return real value!
+      "alternateIDs" -> "",                 // a list of alternate IDs might be available
       "baseURI" -> baseURI,
-      "definition" -> "MOCK-definition",    // a term definition might be available
-      "namespace" -> namespace,
+      "definition" -> "",                   // a term definition might be available
+      "key" -> getLookupKey(mention),
+      "namespace" -> namespace,             // the namespace string of this accessor
       "referenceURI" -> referenceURI(mention),
-      "referenceID" -> "MOCK-referenceId",   // the real resolver must return real value!
-      "standardName" -> "MOCK-standardName", // standard nomenclature might be available
-      "resourceID" -> resourceID
+      "resourceID" -> resourceID,           // MIRIAM registration ID
+      "standardName" -> ""                  // standard nomenclature might be available
     )
   }
 }
