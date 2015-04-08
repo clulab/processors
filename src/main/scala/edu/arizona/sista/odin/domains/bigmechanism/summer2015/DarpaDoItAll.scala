@@ -5,6 +5,7 @@ import edu.arizona.sista.odin._
 import edu.arizona.sista.odin.domains.bigmechanism.dryrun2015.Ruler.readRules
 import edu.arizona.sista.odin.domains.bigmechanism.dryrun2015.DarpaActions
 import edu.arizona.sista.odin.domains.bigmechanism.dryrun2015.displayMention
+import edu.arizona.sista.odin.domains.bigmechanism.dryrun2015.mentionToStrings
 
 object DarpaDoItAll extends App {
   // read file from command line
@@ -17,7 +18,7 @@ object DarpaDoItAll extends App {
   // initialize extractor engine
   val rules = readRules()
   val actions = new DarpaActions
-  val grounder = new Grounder
+  val grounder = new LocalGrounder
   val coref = new Coref
   val flow = new DarpaFlow(grounder, coref)
   val ee = new ExtractorEngine(rules, actions, flow.apply)
@@ -25,6 +26,9 @@ object DarpaDoItAll extends App {
   // extract mentions from document
   val mentions = ee.extractFrom(doc)
 
-  // print mentions found
-  mentions foreach displayMention
+  // print mentions found:
+  //mentions foreach displayMention
+
+  // alternate print representation which shows the new xrefs:
+  mentions.foreach { m => mentionToStrings(m).foreach{ println(_) } }
 }
