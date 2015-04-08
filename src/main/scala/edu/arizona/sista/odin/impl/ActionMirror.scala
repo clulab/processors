@@ -7,14 +7,14 @@ import edu.arizona.sista.odin._
 class ActionMirror[A <: Actions : ClassTag](actions: A) {
   private val instanceMirror = runtimeMirror(actions.getClass.getClassLoader).reflect(actions)
 
-  def reflect(name: String): ReflectedAction = {
+  def reflect(name: String): Action = {
     val methodSymbol = instanceMirror.symbol.typeSignature.member(TermName(name)).asMethod
     val methodMirror = instanceMirror.reflectMethod(methodSymbol)
-    new ReflectedAction(name, methodMirror)
+    if (methodSymbol.returnType.dealias == typeOf[Action].dealias) methodMirror().asInstanceOf[Action]
+    else if (methodSymbol.returnType == typeOf[Seq[Mention]]) {
+      def action(mentions: Seq[Mention], state: State): Seq[Mention] =
+        methodMirror(mentions, state).asInstanceOf[Seq[Mention]]
+      action _
+    } else sys.error(s"invalid action '$name'")
   }
-}
-
-class ReflectedAction(val name: String, methodMirror: MethodMirror) {
-  def apply(mentions: Seq[Mention], state: State): Seq[Mention] =
-    methodMirror(mentions, state).asInstanceOf[Seq[Mention]]
 }

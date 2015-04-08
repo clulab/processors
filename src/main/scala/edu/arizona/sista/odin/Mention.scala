@@ -13,6 +13,11 @@ trait Mention extends Equals {
   def keep: Boolean
   val arguments: Map[String, Seq[Mention]]
 
+  // points to an Xref object that represents an entry in an external database
+  var xref: Option[Xref] = None
+  def isGrounded: Boolean = xref.isDefined
+  def ground(namespace: String, id: String) = xref = Some(Xref(namespace, id))
+
   // default label
   def label: String = labels.head
 

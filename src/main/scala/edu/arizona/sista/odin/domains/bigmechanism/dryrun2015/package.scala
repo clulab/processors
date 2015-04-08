@@ -1,5 +1,7 @@
 package edu.arizona.sista.odin.domains.bigmechanism
 
+import scala.collection.mutable.MutableList
+
 import edu.arizona.sista.odin._
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
@@ -43,6 +45,55 @@ package object dryrun2015 {
     }
     println(s"$boundary\n")
   }
+
+
+  /** Generates a representation of the given mention as a list of strings. */
+  def mentionToStrings (mention:Mention): List[String] = {
+    return mentionToStrings(mention, 0)
+  }
+
+  /** Return a list of strings representing the given mention at the given indentation level. */
+  private def mentionToStrings (mention:Mention, level:Integer): List[String] = {
+    val mStrings:MutableList[String] = MutableList[String]()
+    val indent = ("  " * level)
+    mention match {
+      case mention: TextBoundMention =>
+        mStrings += s"${indent}TextBoundMention: [S${mention.sentence}]: ${mention.label}"
+        mStrings += s"${indent}text: ${mention.text}"
+        if (mention.isGrounded)
+          mStrings += s"${indent}xref: ${mention.xref.get}"
+        if (level == 0) mStrings += ("=" * 80)
+      case mention: EventMention =>
+        mStrings += s"${indent}EventMention: [S${mention.sentence}]: ${mention.label}"
+        mStrings += s"${indent}text: ${mention.text}"
+        mStrings += s"${indent}trigger:"
+        mStrings ++= mentionToStrings(mention.trigger, level+1)
+        mention.arguments foreach {
+          case (k,vs) => {
+            mStrings += s"${indent}${k} (${vs.length}):"
+            for (v <- vs) {
+              mStrings ++= mentionToStrings(v, level+1)
+            }
+          }
+        }
+        if (level == 0) mStrings += ("=" * 80)
+      case mention: RelationMention =>
+        mStrings += s"${indent}RelationMention: [S${mention.sentence}]: ${mention.label}"
+        mStrings += s"${indent}text: ${mention.text}"
+        mention.arguments foreach {
+          case (k,vs) => {
+            mStrings += s"${indent}${k} (${vs.length}):"
+            for (v <- vs) {
+              mStrings ++= mentionToStrings(v, level+1)
+            }
+          }
+        }
+        if (level == 0) mStrings += ("=" * 80)
+      case _ => ()
+    }
+    return mStrings.toList
+  }
+
 
   // generates a representation of the mention that can be used
   // for the csv file expected by darpa
