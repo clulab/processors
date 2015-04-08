@@ -16,6 +16,7 @@ trait Mention extends Equals {
   // points to an Xref object that represents an entry in an external database
   var xref: Option[Xref] = None
   def isGrounded: Boolean = xref.isDefined
+  def ground(namespace: String, id: String) = xref = Some(Xref(namespace, id))
 
   // default label
   def label: String = labels.head
