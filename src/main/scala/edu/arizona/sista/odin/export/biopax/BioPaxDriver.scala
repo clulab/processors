@@ -78,7 +78,6 @@ object BioPaxDriver extends App {
   /** Output string representations for the given sequence of mentions. */
   def outputAllMentions (mentions:Seq[Mention], doc:Document, fos:FileOutputStream): Unit = {
     val out:PrintWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))
-    val paxer:BioPaxer = new BioPaxer()
     val menMgr:MentionManager = new MentionManager()
     mentions.foreach { m =>
       menMgr.mentionToStrings(m).foreach { str => out.println(str) }

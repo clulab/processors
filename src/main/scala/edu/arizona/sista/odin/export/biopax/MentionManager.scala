@@ -42,7 +42,7 @@ class MentionManager {
     }
   }
 
-  /** Generates a BioPax representation of the given mention as a list of strings. */
+  /** Generates a representation of the given mention as a list of strings. */
   def mentionToStrings (mention:Mention): List[String] = {
     return mentionToStrings(mention, 0)
   }
