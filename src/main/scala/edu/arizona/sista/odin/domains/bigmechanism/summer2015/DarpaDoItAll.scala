@@ -20,7 +20,7 @@ object DarpaDoItAll extends App {
   val actions = new DarpaActions
   val grounder = new LocalGrounder
   val coref = new Coref
-  val flow = new DarpaFlow(grounder, coref)
+  val flow = grounder andThen coref
   val ee = new ExtractorEngine(rules, actions, flow.apply)
 
   // extract mentions from document

@@ -2,21 +2,20 @@ package edu.arizona.sista.odin.domains.bigmechanism.summer2015
 
 import edu.arizona.sista.odin._
 
-class DarpaFlow(grounder: DarpaFlowStep, coref: DarpaFlowStep)
-    extends DarpaFlowStep {
-
-  /** This method goes into odin's ExtractorEngine as the globalAction:
+trait DarpaFlow {
+  /** Gets the candidate mentions and returns the final mentions.
     *
-    * {{{
-    * val ee = new ExtractorEngine(rules, actions, flow.apply)
-    * }}}
+    * @param mentions this iteration's candidate mentions
+    * @param state contains mentions from previous iterations
+    * @return the final mentions
     */
-  def apply(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    // ground mentions
-    val groundedMentions = grounder.apply(mentions, state)
-    // apply coreference
-    val resolvedMentions = coref.apply(groundedMentions, state)
-    // success!
-    resolvedMentions
-  }
+  def apply(mentions: Seq[Mention], state: State): Seq[Mention]
+
+  /** Composes two instances of DarpaFlow into a single DarpaFlow */
+  def andThen(that: DarpaFlow): DarpaFlow = new AndThenDarpaFlow(this, that)
+}
+
+class AndThenDarpaFlow(step1: DarpaFlow, step2: DarpaFlow) extends DarpaFlow {
+  def apply(mentions: Seq[Mention], state: State): Seq[Mention] =
+    step2(step1(mentions, state), state)
 }

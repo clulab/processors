@@ -11,7 +11,7 @@ import edu.arizona.sista.odin.extern.inward._
   *   Written by Tom Hicks. 4/6/2015.
   *   Last Modified: Implemented small chemical lookup.
   */
-class LocalGrounder extends DarpaFlowStep {
+class LocalGrounder extends DarpaFlow {
   /** An exception in case we somehow fail to assign an ID during resolution. */
   case class NoFailSafe(message:String) extends Exception(message)
 
