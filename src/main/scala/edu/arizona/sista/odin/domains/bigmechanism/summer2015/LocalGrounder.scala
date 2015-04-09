@@ -1,6 +1,7 @@
 package edu.arizona.sista.odin.domains.bigmechanism.summer2015
 
 import util.control.Breaks._
+import scala.io.Source
 
 import edu.arizona.sista.odin._
 import edu.arizona.sista.odin.extern.inward._
@@ -8,7 +9,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * Class which implements project internal methods to ground entities.
   *   Written by Tom Hicks. 4/6/2015.
-  *   Last Modified: Update for refactoring of KB accessor trait.
+  *   Last Modified: Implemented small chemical lookup.
   */
 class LocalGrounder extends DarpaFlowStep {
   /** An exception in case we somehow fail to assign an ID during resolution. */
@@ -96,10 +97,38 @@ class AzProteinFamiliesKBAccessor extends ExternalKBAccessor {
 
 
 class AzSmallMoleculeKBAccessor extends ExternalKBAccessor {
-  def baseURI = "http://identifiers.org/chebi/"
-  def namespace = "chebi"
-  def resourceID = "MIR:00100565"
-  override def resolve (mention:Mention): Map[String,String] = Map.empty
+  def baseURI = "http://identifiers.org/hmdb/"
+  def namespace = "hmdb"
+  def resourceID = "MIR:00000051"
+
+  private val hmdb = scala.collection.mutable.Map[String, Map[String,String]]()
+
+  override def resolve (mention:Mention): Map[String,String] = {
+    val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
+    hmdb.getOrElseUpdate(key, Map.empty)
+  }
+
+  private def readAndFillKB = {
+    val kbStream = this.getClass.getResourceAsStream(
+      "/edu/arizona/sista/odin/domains/bigmechanism/summer2015/hmdb.kb")
+    for (line <- Source.fromInputStream(kbStream).getLines) {
+      val fields = line.split("\t").map(_.trim)
+      if ((fields.size > 2) && fields(0).nonEmpty && fields(2).nonEmpty) {
+        val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
+        hmdb(storageKey) = Map(             // create new entry in KB
+          "referenceID" -> fields(2),
+          "namespace" -> namespace,
+          "baseURI" -> baseURI,
+          "resourceID" -> resourceID,
+          "key" -> storageKey,
+          "text" -> fields(0)               // return original text
+        )
+      }
+    }
+  }
+
+  // load KB to initialize class
+  readAndFillKB
 }
 
 
