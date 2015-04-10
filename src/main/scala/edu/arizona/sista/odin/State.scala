@@ -16,7 +16,7 @@ class State(val lookUpTable: MentionLUT = Map.empty) {
 
   /** Checks if a mention is already contained in the state */
   def contains(m: Mention): Boolean =
-    mentionsFor(m.sentence, m.start) exists (_ == m)
+    mentionsFor(m.sentence, m.start) contains m
 
   /** Returns all mentions for a given sentence and token */
   def mentionsFor(sent: Int, tok: Int): Seq[Mention] =
