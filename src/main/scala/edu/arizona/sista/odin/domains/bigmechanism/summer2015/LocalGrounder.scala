@@ -30,27 +30,21 @@ class LocalGrounder extends DarpaFlow {
 
 
   /** Local implementation of trait: use project specific KBs to ground and augment given mentions. */
-  def apply (mentions: Seq[Mention], state: State): Seq[Mention] = {
-    mentions.foreach { _ match {
-      case tm:TextBoundMention => resolveAndAugment(tm, state)
-      case _ =>
-    }}
-    return mentions
+  def apply (mentions: Seq[Mention], state: State): Seq[Mention] = mentions map {
+    case tm: TextBoundMention => resolveAndAugment(tm, state)
+    case m => m
   }
 
   /** Search the KB accessors in sequence, use the first one which resolves the given mention. */
-  private def resolveAndAugment (mention: Mention, state: State): Unit = {
-    breakable {
-      searchSequence.foreach { kbAccessor =>
-        val resInfo = kbAccessor.resolve(mention)
-        if (!resInfo.isEmpty) {
-          mention.ground(resInfo("namespace"), resInfo("referenceID"))
-          break                             // resolved: exit out now
-        }
+  private def resolveAndAugment (mention: Mention, state: State): Mention = {
+    searchSequence.foreach { kbAccessor =>
+      val resInfo = kbAccessor.resolve(mention)
+      if (!resInfo.isEmpty) {
+        return mention.ground(resInfo("namespace"), resInfo("referenceID"))
       }
-      // we should never get here because our accessors include a failsafe ID assignment
-      throw NoFailSafe(s"LocalGrounder failed to assign an ID to ${mention.label} '${mention.text}' in S${mention.sentence}")
-    }  // end breakable
+    }
+    // we should never get here because our accessors include a failsafe ID assignment
+    throw NoFailSafe(s"LocalGrounder failed to assign an ID to ${mention.label} '${mention.text}' in S${mention.sentence}")
   }
 }
 
