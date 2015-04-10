@@ -13,7 +13,7 @@ object DarpaDoItAll extends App {
 
   // annotate text
   val proc = new BioNLPProcessor
-  val doc = proc.annotate(text)
+  val doc = proc annotate text
 
   // initialize extractor engine
   val rules = readRules()
@@ -21,10 +21,10 @@ object DarpaDoItAll extends App {
   val grounder = new LocalGrounder
   val coref = new Coref
   val flow = grounder andThen coref
-  val ee = new ExtractorEngine(rules, actions, flow.apply)
+  val engine = new ExtractorEngine(rules, actions, flow.apply)
 
   // extract mentions from document
-  val mentions = ee.extractFrom(doc)
+  val mentions = engine extractFrom doc
 
   // print mentions found:
   //mentions foreach displayMention
