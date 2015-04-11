@@ -5,7 +5,7 @@ import edu.arizona.sista.odin._
 /**
   * Class which implements project internal methods to ground entities.
   *   Written by Tom Hicks. 4/6/2015.
-  *   Last Modified: Add (unused) tissue type KB.
+  *   Last Modified: Use subcellular locations (cell components) KB.
   */
 class LocalGrounder extends DarpaFlow {
   /** An exception in case we somehow fail to assign an ID during resolution. */
@@ -18,9 +18,10 @@ class LocalGrounder extends DarpaFlow {
     * 4. AZ Failsafe KB (failsafe: always generates an ID in a non-official, local namespace)
     */
   protected val searchSequence = Seq(
-    new AzProteinFamiliesKBAccessor,
+    new AzProteinFamilyKBAccessor,
     new AzProteinKBAccessor,
     new AzSmallMoleculeKBAccessor,
+    new AzSubcellularLocationKBAccessor,
 //    new AzTissueTypeKBAccessor,
     new AzFailsafeKBAccessor
   )

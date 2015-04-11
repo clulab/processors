@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * Classes which implements project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Add tissue type KB.
+  *   Last Modified: Add subcellular locations (cell components) KB.
   */
 
 
@@ -47,7 +47,7 @@ class AzProteinKBAccessor extends ExternalKBAccessor {
 
 
 /** KB accessor to resolve protein family names in mentions. */
-class AzProteinFamiliesKBAccessor extends ExternalKBAccessor {
+class AzProteinFamilyKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://identifiers.org/pfam/"
   def namespace = "pfam"
   def resourceID = "MIR:00000028"
@@ -61,11 +61,11 @@ class AzSmallMoleculeKBAccessor extends ExternalKBAccessor {
   def namespace = "hmdb"
   def resourceID = "MIR:00000051"
 
-  private val hmdb = scala.collection.mutable.Map[String, Map[String,String]]()
+  private val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
 
   override def resolve (mention:Mention): Map[String,String] = {
     val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
-    hmdb.getOrElseUpdate(key, Map.empty)
+    theKB.getOrElseUpdate(key, Map.empty)
   }
 
   private def readAndFillKB = {
@@ -75,7 +75,7 @@ class AzSmallMoleculeKBAccessor extends ExternalKBAccessor {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size > 2) && fields(0).nonEmpty && fields(2).nonEmpty) {
         val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
-        hmdb(storageKey) = Map(             // create new entry in KB
+        theKB(storageKey) = Map(               // create new entry in KB
           "referenceID" -> fields(2),
           "namespace" -> namespace,
           "baseURI" -> baseURI,
@@ -99,11 +99,11 @@ class AzTissueTypeKBAccessor extends ExternalKBAccessor {
   def namespace = "uniprot"
   def resourceID = "MIR:00000005"
 
-  private val tissdb = scala.collection.mutable.Map[String, Map[String,String]]()
+  private val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
 
   override def resolve (mention:Mention): Map[String,String] = {
     val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
-    tissdb.getOrElseUpdate(key, Map.empty)
+    theKB.getOrElseUpdate(key, Map.empty)
   }
 
   private def readAndFillKB = {
@@ -113,7 +113,45 @@ class AzTissueTypeKBAccessor extends ExternalKBAccessor {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size >= 2) && fields(0).nonEmpty && fields(1).nonEmpty) {
         val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
-        tissdb(storageKey) = Map(             // create new entry in KB
+        theKB(storageKey) = Map(               // create new entry in KB
+          "referenceID" -> fields(1),
+          "namespace" -> namespace,
+          "baseURI" -> baseURI,
+          "resourceID" -> resourceID,
+          "key" -> storageKey,
+          "text" -> fields(0)               // return original text
+        )
+      }
+    }
+    kbStream.close()
+  }
+
+  // MAIN: load KB to initialize class
+  readAndFillKB
+}
+
+
+/** KB accessor to resolve subcellular location names in mentions. */
+class AzSubcellularLocationKBAccessor extends ExternalKBAccessor {
+  def baseURI = "http://identifiers.org/uniprot/"
+  def namespace = "uniprot"
+  def resourceID = "MIR:00000005"
+
+  private val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
+
+  override def resolve (mention:Mention): Map[String,String] = {
+    val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
+    theKB.getOrElseUpdate(key, Map.empty)
+  }
+
+  private def readAndFillKB = {
+    val kbStream = this.getClass.getResourceAsStream(
+      "/edu/arizona/sista/odin/domains/bigmechanism/summer2015/subcellular_locations.tsv")
+    for (line <- Source.fromInputStream(kbStream).getLines) {
+      val fields = line.split("\t").map(_.trim)
+      if ((fields.size >= 2) && fields(0).nonEmpty && fields(1).nonEmpty) {
+        val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
+        theKB(storageKey) = Map(               // create new entry in KB
           "referenceID" -> fields(1),
           "namespace" -> namespace,
           "baseURI" -> baseURI,
