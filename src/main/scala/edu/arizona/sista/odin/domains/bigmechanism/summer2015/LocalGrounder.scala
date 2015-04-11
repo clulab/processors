@@ -5,7 +5,7 @@ import edu.arizona.sista.odin._
 /**
   * Class which implements project internal methods to ground entities.
   *   Written by Tom Hicks. 4/6/2015.
-  *   Last Modified: Refactor: separate out local KB accessors.
+  *   Last Modified: Add (unused) tissue type KB.
   */
 class LocalGrounder extends DarpaFlow {
   /** An exception in case we somehow fail to assign an ID during resolution. */
@@ -21,6 +21,7 @@ class LocalGrounder extends DarpaFlow {
     new AzProteinFamiliesKBAccessor,
     new AzProteinKBAccessor,
     new AzSmallMoleculeKBAccessor,
+//    new AzTissueTypeKBAccessor,
     new AzFailsafeKBAccessor
   )
 

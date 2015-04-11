@@ -8,11 +8,11 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * Classes which implements project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Refactored from local grounder class.
+  *   Last Modified: Add tissue type KB.
   */
 
 
-/** KB accessor implementation which always resolves the given mention with a local, fake ID. */
+/** KB accessor implementation which always resolves each mention with a local, fake ID. */
 class AzFailsafeKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://edu.arizona.sista.odin/uazid/"
   def namespace = "uazid"
@@ -37,6 +37,7 @@ class AzFailsafeKBAccessor extends ExternalKBAccessor {
 }
 
 
+/** KB accessor to resolve protein names in mentions. */
 class AzProteinKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://identifiers.org/uniprot/"
   def namespace = "uniprotkb"
@@ -45,6 +46,7 @@ class AzProteinKBAccessor extends ExternalKBAccessor {
 }
 
 
+/** KB accessor to resolve protein family names in mentions. */
 class AzProteinFamiliesKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://identifiers.org/pfam/"
   def namespace = "pfam"
@@ -53,6 +55,7 @@ class AzProteinFamiliesKBAccessor extends ExternalKBAccessor {
 }
 
 
+/** KB accessor to resolve small molecule (chemical) names in mentions. */
 class AzSmallMoleculeKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://identifiers.org/hmdb/"
   def namespace = "hmdb"
@@ -82,9 +85,48 @@ class AzSmallMoleculeKBAccessor extends ExternalKBAccessor {
         )
       }
     }
+    kbStream.close()
   }
 
-  // load KB to initialize class
+  // MAIN: load KB to initialize class
+  readAndFillKB
+}
+
+
+/** KB accessor to resolve tissue type names in mentions. */
+class AzTissueTypeKBAccessor extends ExternalKBAccessor {
+  def baseURI = "http://identifiers.org/uniprot/"
+  def namespace = "uniprot"
+  def resourceID = "MIR:00000005"
+
+  private val tissdb = scala.collection.mutable.Map[String, Map[String,String]]()
+
+  override def resolve (mention:Mention): Map[String,String] = {
+    val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
+    tissdb.getOrElseUpdate(key, Map.empty)
+  }
+
+  private def readAndFillKB = {
+    val kbStream = this.getClass.getResourceAsStream(
+      "/edu/arizona/sista/odin/domains/bigmechanism/summer2015/tissue-type.tsv")
+    for (line <- Source.fromInputStream(kbStream).getLines) {
+      val fields = line.split("\t").map(_.trim)
+      if ((fields.size >= 2) && fields(0).nonEmpty && fields(1).nonEmpty) {
+        val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
+        tissdb(storageKey) = Map(             // create new entry in KB
+          "referenceID" -> fields(1),
+          "namespace" -> namespace,
+          "baseURI" -> baseURI,
+          "resourceID" -> resourceID,
+          "key" -> storageKey,
+          "text" -> fields(0)               // return original text
+        )
+      }
+    }
+    kbStream.close()
+  }
+
+  // MAIN: load KB to initialize class
   readAndFillKB
 }
 
