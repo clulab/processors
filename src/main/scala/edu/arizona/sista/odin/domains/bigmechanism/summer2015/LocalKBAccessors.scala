@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Abstract out the 2 column, TSV KB accessor.
+  *   Last Modified: Add Ryans protein family KB; parse with 3 column, TSV KB accessor.
   */
 
 /**
@@ -45,6 +45,41 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
 }
 
 
+/**
+  * Abstract class which reads three-column, tab-separated-value (TSV) text files
+  * where 1st column is the name string, 2nd column is the species, and 3rd column is the ID string.
+  * Some of our knowledge bases follow this pattern and can simply extend this class.
+  */
+abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
+  protected val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
+
+  override def resolve (mention:Mention): Map[String,String] = {
+    val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
+    theKB.getOrElseUpdate(key, Map.empty)
+  }
+
+  protected def readAndFillKB (kbResourcePath:String) = {
+    val kbStream = this.getClass.getResourceAsStream(kbResourcePath)
+    for (line <- Source.fromInputStream(kbStream).getLines) {
+      val fields = line.split("\t").map(_.trim)
+      if ((fields.size == 3) && fields(0).nonEmpty && fields(2).nonEmpty) {
+        val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
+        theKB(storageKey) = Map(               // create new entry in KB
+          "referenceID" -> fields(2),
+          "namespace" -> namespace,
+          "baseURI" -> baseURI,
+          "resourceID" -> resourceID,
+          "key" -> storageKey,
+          "species" -> fields(1),
+          "text" -> fields(0)               // return original text
+        )
+      }
+    }
+    kbStream.close()
+  }
+}
+
+
 /** KB accessor to resolve protein names in mentions. */
 class AzProteinKBAccessor extends ExternalKBAccessor {
   def baseURI = "http://identifiers.org/uniprot/"
@@ -55,11 +90,13 @@ class AzProteinKBAccessor extends ExternalKBAccessor {
 
 
 /** KB accessor to resolve protein family names in mentions. */
-class AzProteinFamilyKBAccessor extends ExternalKBAccessor {
-  def baseURI = "http://identifiers.org/pfam/"
-  def namespace = "pfam"
-  def resourceID = "MIR:00000028"
-  override def resolve (mention:Mention): Map[String,String] = Map.empty // TODO: IMPLEMENT
+class AzProteinFamilyKBAccessor extends AzNameSpeciesIdKBAccessor {
+  def baseURI = "http://identifiers.org/interpro/"
+  def namespace = "interpro"
+  def resourceID = "MIR:00000011"
+
+  // MAIN: load KB to initialize class
+  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/ProteinFamilies.tsv")
 }
 
 
