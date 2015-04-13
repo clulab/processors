@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Add Ryans protein family KB; parse with 3 column, TSV KB accessor.
+  *   Last Modified: Add and test a cellular location resolver based on GeneOntology.
   */
 
 /**
@@ -111,14 +111,24 @@ class AzSmallMoleculeKBAccessor extends AzNameIdKBAccessor {
 }
 
 
-/** KB accessor to resolve subcellular location names in mentions. */
+/** KB accessor to resolve subcellular location names in mentions using GeneOntology DB. */
 class AzSubcellularLocationKBAccessor extends AzNameIdKBAccessor {
+  def baseURI = "http://identifiers.org/go/"
+  def namespace = "go"
+  def resourceID = "MIR:00000022"
+
+  // MAIN: load KB to initialize class
+  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/GO-subcellular-locations.tsv")
+}
+
+/** KB accessor to resolve subcellular location names in mentions using Uniprot DB. */
+class AzSubcellularLocationKBAccessor2 extends AzNameIdKBAccessor {
   def baseURI = "http://identifiers.org/uniprot/"
   def namespace = "uniprot"
   def resourceID = "MIR:00000005"
 
   // MAIN: load KB to initialize class
-  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/subcellular_locations.tsv")
+  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/uniprot-subcellular-locations.tsv")
 }
 
 
