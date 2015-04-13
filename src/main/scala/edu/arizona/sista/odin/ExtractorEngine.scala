@@ -19,15 +19,21 @@ class ExtractorEngine[A <: Actions : ClassTag](
     def loop(i: Int, state: State): Seq[Mention] = extract(i, state) match {
       case Nil if i >= minIterations => state.allMentions  // we are done
       case Nil => loop(i + 1, state)
-      case mentions => loop(i + 1, state.updated(globalAction(mentions, state)))
+      case mentions => loop(i + 1, state.updated(mentions))
     }
 
-    def extract(i: Int, state: State): Seq[Mention] = for {
-      extractor <- extractors
-      if extractor.priority matches i
-      mention <- extractor.findAllIn(document, state)
-      if !state.contains(mention)
-    } yield mention
+    def extract(i: Int, state: State): Seq[Mention] = {
+      // extract mentions using extractors (each extractor applies its own action)
+      val extractedMentions = for {
+        extractor <- extractors
+        if extractor.priority matches i
+        mention <- extractor.findAllIn(document, state)
+      } yield mention
+      // apply globalAction to all extracted mentions
+      val finalMentions = globalAction(extractedMentions, state)
+      // only return mentions that are not already in the state
+      finalMentions.filter(!state.contains(_))
+    }
 
     loop(1, initialState)
   }
