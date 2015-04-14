@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 /**
   * Top-level driver to output grounded text mentions in Broscoi format.
   *   Written by Tom Hicks. 4/13/2015.
-  *   Last Modified: Initial creation.
+  *   Last Modified: Use char offsets, only text mentions, single output file.
   */
 object BroscoiDriver extends App {
   private val idCntr = new IncrementingCounter() // counter sequence class
@@ -30,9 +30,9 @@ object BroscoiDriver extends App {
 
   val PapersDir = s"${System.getProperty("user.dir")}/src/test/resources/papers/"
   val paperNames = Seq(
-    "MEKinhibition.txt.ser",
-    "UbiquitinationofRas.txt.ser",
-    "PMC3441633.txt.ser",
+//    "MEKinhibition.txt.ser",
+//    "UbiquitinationofRas.txt.ser",
+//    "PMC3441633.txt.ser",
     "PMC3847091.txt.ser"
   )
 
@@ -77,12 +77,13 @@ object BroscoiDriver extends App {
   def outputTextBoundMentions (mentions:Seq[Mention], doc:Document, fos:FileOutputStream): Unit = {
     val out:PrintWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)))
     val ground = new LocalGrounder()
-    val state = State.apply(mentions)
-    val modifiedMentions = ground.apply(mentions, state)
-    modifiedMentions.foreach { m =>
+    val tbMentions = mentions.filter(_.isInstanceOf[TextBoundMention])
+    val state = State.apply(tbMentions)
+    val groundedMentions = ground.apply(tbMentions, state)
+    groundedMentions.foreach { m =>
       val ns = if (m.xref.isDefined) m.xref.get.namespace else ""
       val id = if (m.xref.isDefined) m.xref.get.id else ""
-      out.println(s"T${idCntr.next()}\t${m.label}\t${m.start}\t${m.end}\t${ns}\t${id}\t${m.text}")
+      out.println(s"T${idCntr.next()}\t${m.label}\t${m.startOffset}\t${m.endOffset}\t${ns}\t${id}\t${m.text}")
     }
     out.flush()
     out.close()
