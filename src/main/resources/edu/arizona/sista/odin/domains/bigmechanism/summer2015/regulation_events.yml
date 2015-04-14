@@ -1,0 +1,645 @@
+#Regulation events require controllers of type BioChemicalEntity and controlled of type Event
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
+#- name: Regulation_1
+#  priority: 5
+#  type: dependency
+#  label: [Regulation, Event]
+#  pattern: |
+#    trigger = [!word=/^(positive|negative)/] /^regulat/ # TODO: add negative lookarounds
+#    controller:BioChemicalEntity = nsubj nn*
+#    controlled:Event = dobj
+
+#- name: Regulation_token_1
+#  priority: 5
+#  type: token
+#  label: [Regulation, Event]
+#  pattern: |
+#    @controller:BioChemicalEntity (?<trigger> [word=/(?i)mediat/]) @controlled:Event
+
+
+# TODO
+
+
+#  104 dependent
+#   41 required
+#   23 essential
+#   17 activation
+#   14 requires
+#   14 involved
+#   12 results
+#   11 activate
+#   10 response
+#   10 necessary
+#   10 caused
+
+# Regulation
+
+#   58 regulation
+#   37 regulated
+#   25 regulates
+#   25 effect
+#   23 independent
+#   22 control
+#   18 effects
+#   15 associated
+#   14 role
+#   13 regulate
+#   12 sensitive
+#   12 controls
+#   11 target
+#   10 regulating
+#   10 Regulation
+#    9 controlled
+#    6 targets
+#    6 stabilization
+#    5 independently
+#    5 affected
+#    5 affect
+#    4 targeting
+#    4 stabilizing
+#    4 stabilizes
+#    4 related
+#    4 regulator
+#    4 linked
+#    4 influence
+#    4 correlates
+#    4 controlling
+#    4 associates
+#    4 altered
+#    4 affects
+#    3 unaffected
+#    3 sensitivity
+#    3 regulatory
+#    3 regulators
+#    3 play a role
+#    3 participates
+#    3 modulating
+#    3 link
+#    3 involving
+#    3 involves
+#    3 involvement
+#    3 involved
+#    3 effector
+#    3 deregulated
+#    2 uncoupled
+#    2 stabilized
+#    2 sensitizes
+#    2 response
+#    2 plays a role
+#    2 insensitive
+#    2 influences
+#    2 important
+#    2 implicated
+#    2 gatekeeper
+#    2 dependent
+#    2 correlated
+#    2 association
+#    2 altering
+#    1 upstream
+#    1 undergo
+#    1 transcriptional regulation
+#    1 targeted
+#    1 stabilize
+#    1 stabilisation
+#    1 signals
+#    1 signal
+#    1 resistant
+#    1 required
+#    1 regulatory roles
+#    1 recruits
+#    1 reconstitutes
+#    1 plays a significant role
+#    1 plays a critical role
+#    1 played a role
+#    1 play important roles
+#    1 play distinct roles
+#    1 play a critical role
+#    1 phosphoregulation
+#    1 participation
+#    1 oscillate
+#    1 no effect
+#    1 no activity
+#    1 modulator
+#    1 modulation
+#    1 modulates
+#    1 modulate
+#    1 mediated
+#    1 marks
+#    1 maintenance
+#    1 maintain
+#    1 links
+#    1 input
+#    1 influencing
+#    1 influenced
+#    1 induced
+#    1 inactive
+#    1 has a novel role
+#    1 engagement
+#    1 effectors
+#    1 dysregulation
+#    1 determinant
+#    1 depend
+#    1 coupling
+#    1 couple
+#    1 correlate
+#    1 coordinating
+#    1 coordinated
+#    1 coordinate
+#    1 contribute
+#    1 consequence
+#    1 component
+#    1 changes
+#    1 changed
+#    1 change
+#    1 broken down
+#    1 based
+#    1 autoregulated
+#    1 associate
+#    1 alters
+#    1 alteration
+#    1 alter
+#    1 Uncoupling
+#    1 Regulated
+#    1 Effects
+#    1 Altered
+
+# ---
+
+# Positive_regulation
+
+#  104 dependent
+#   99 induced
+#   56 mediated
+#   41 required
+#   36 induction
+#   34 increased
+#   23 essential
+#   17 activation
+#   16 induces
+#   16 enhanced
+#   14 requires
+#   14 involved
+#   14 induce
+#   13 stimulated
+#   13 increase
+#   12 results
+#   11 stimulation
+#   11 leads
+#   11 activate
+#   10 response
+#   10 necessary
+#   10 caused
+#    9 up-regulation
+#    9 elevated
+#    9 critical
+#    8 resulted
+#    8 mediates
+#    8 involves
+#    8 accumulation
+#    7 up-regulated
+#    7 transactivation
+#    7 responsible
+#    7 promotes
+#    7 catalyzed
+#    6 mediate
+#    6 inducing
+#    6 increasing
+#    6 increases
+#    6 crucial
+#    5 upregulated
+#    5 target
+#    5 implicated
+#    5 activates
+#    5 Induction
+#    4 triggers
+#    4 triggered
+#    4 transcriptional activation
+#    4 result
+#    4 promote
+#    4 produced
+#    4 mediating
+#    4 leading
+#    4 interaction
+#    4 hydrolyzes
+#    4 depends
+#    4 catalyzes
+#    4 augmented
+#    4 activated
+#    3 up-regulates
+#    3 transport
+#    3 stimulates
+#    3 stimulate
+#    3 require
+#    3 promoting
+#    3 modified
+#    3 led
+#    3 initiates
+#    3 initiate
+#    3 inducible
+#    3 important
+#    3 generated
+#    3 facilitate
+#    3 export
+#    3 enhances
+#    3 elevation
+#    3 directed
+#    2 yield
+#    2 upregulates
+#    2 upregulate
+#    2 up-regulating
+#    2 transporters
+#    2 transporter
+#    2 transfer
+#    2 transduced
+#    2 transactivate
+#    2 targets
+#    2 sulfates
+#    2 stimulating
+#    2 restored
+#    2 responses
+#    2 prolonged increase
+#    2 positively regulated
+#    2 positive
+#    2 plays an important role
+#    2 oxidizes
+#    2 modulating
+#    2 initiated
+#    2 enhance
+#    2 due to
+#    2 displace
+#    2 dependence
+#    2 depended
+#    2 contributing
+#    2 confer
+#    2 causes
+#    2 allowing
+#    1 utilizes
+#    1 upregulation
+#    1 up-regulate
+#    1 uninducible
+#    1 underlies
+#    1 underlie
+#    1 unaffected
+#    1 triggering
+#    1 transferred
+#    1 transduction
+#    1 transducer
+#    1 transduce
+#    1 transactivates
+#    1 transactivated
+#    1 trans-activation
+#    1 trans-activating
+#    1 synthesized
+#    1 synergize
+#    1 supports
+#    1 sulfation
+#    1 sufficient
+#    1 stimulatory
+#    1 signaling pathway
+#    1 signal transducer
+#    1 serve a role
+#    1 sequestratio
+#    1 sequesters
+#    1 sequestering
+#    1 sequestered
+#    1 role
+#    1 retention
+#    1 retained
+#    1 resulting
+#    1 resultant
+#    1 responsiveness
+#    1 responsive
+#    1 rescued
+#    1 requirement
+#    1 renders
+#    1 removing
+#    1 releases
+#    1 release
+#    1 regulates
+#    1 recruitment
+#    1 recruiting
+#    1 recruited
+#    1 recruit
+#    1 raise
+#    1 promotion
+#    1 prolongs
+#    1 prolonging
+#    1 proceeds
+#    1 potentiates
+#    1 positively regulating
+#    1 positive regulator
+#    1 plays a crucial role
+#    1 playing a major role
+#    1 play pivotal roles
+#    1 play an important role
+#    1 play a key role
+#    1 phosphorylates
+#    1 oxidized
+#    1 oxidation
+#    1 overexpression
+#    1 modulate
+#    1 modifying
+#    1 modification
+#    1 leads to
+#    1 involving
+#    1 involvement
+#    1 involve
+#    1 interconverts
+#    1 insufficient
+#    1 inhibits
+#    1 importance
+#    1 implicate
+#    1 hyperactive
+#    1 higher
+#    1 high
+#    1 have a pivotal role
+#    1 generating
+#    1 frees
+#    1 follows
+#    1 facilitating
+#    1 facilitates
+#    1 expression
+#    1 express
+#    1 exportin
+#    1 exported
+#    1 essential mediator
+#    1 escorts
+#    1 enhancing
+#    1 enhancement
+#    1 elicits
+#    1 eliciting
+#    1 elicited
+#    1 elicit
+#    1 effector
+#    1 driven
+#    1 drive
+#    1 dissociated
+#    1 dissociate
+#    1 dispensable
+#    1 depend
+#    1 degradation
+#    1 converted
+#    1 convert
+#    1 contributes
+#    1 contribute
+#    1 consequence
+#    1 conferred
+#    1 competent
+#    1 co-activator
+#    1 cleaved
+#    1 changes
+#    1 cause
+#    1 catalyze
+#    1 catalyses
+#    1 catalysed
+#    1 because of
+#    1 associated
+#    1 affecting
+#    1 affected
+#    1 activators
+#    1 activator
+#    1 activations
+#    1 accumulates
+#    1 accumulated
+#    1 accompanied
+#    1 accepted
+#    1 accelerating
+#    1 accelerates
+#    1 absence
+#    1 Up-regulation
+#    1 Retention
+#    1 Reactivation
+#    1 Inducible
+#    1 Increased
+#    1 Increase
+#    1 Cooperation
+#    1 Activation
+#    1 3-O-Sulfation
+
+# ---
+
+# Activation
+
+#  153 activation
+#   29 activated
+#   15 active
+#   15 activates
+#   13 activate
+#   11 Activation
+#    9 activator
+#    7 activating
+#    3 Activated
+#    2 coactivator
+#    1 v
+#    1 transcriptional activation
+#    1 transactivation
+#    1 trans-activation
+#    1 stimulation
+#    1 stimulated
+#    1 reactivation
+#    1 kinase-active
+#    1 insensitive
+#    1 inactive
+#    1 hyperactive
+#    1 coactivated
+#    1 activators
+#    1 a
+#    1 Activating
+
+# ---
+
+# Negative_regulation
+
+#   41 inhibition
+#   35 inhibited
+#   28 inhibitor
+#   27 inhibit
+#   19 reduced
+#   19 inhibits
+#   16 inhibiting
+#   12 decreased
+#   12 blocked
+#   11 suppression
+#   11 reduction
+#   11 inhibitory
+#    9 repression
+#    9 inhibitors
+#    9 Inhibition
+#    8 repressor
+#    7 suppressed
+#    7 prevents
+#    7 disrupt
+#    7 decrease
+#    7 abolished
+#    6 prevented
+#    6 block
+#    5 suppresses
+#    5 repressed
+#    5 reduces
+#    5 negatively regulates
+#    5 loss
+#    5 blocks
+#    4 reversed
+#    4 repress
+#    4 preventing
+#    4 negative regulator
+#    4 diminished
+#    4 depletion
+#    4 delayed
+#    4 delay
+#    4 attenuated
+#    4 arrest
+#    3 reversible
+#    3 repressing
+#    3 represses
+#    3 reduce
+#    3 negatively regulate
+#    3 negative regulation
+#    3 interferes
+#    3 impairs
+#    3 disruption
+#    3 defects
+#    3 decreases
+#    3 blocking
+#    3 autoinhibition
+#    3 attenuates
+#    3 abrogated
+#    3 Negative regulation
+#    2 suppress
+#    2 starvation
+#    2 reverse
+#    2 resistant
+#    2 repressive
+#    2 prevent
+#    2 negatively regulated
+#    2 low
+#    2 lost
+#    2 limitation
+#    2 interfering
+#    2 downregulation
+#    2 down-regulation
+#    2 down-regulates
+#    2 deficit
+#    2 attenuator
+#    2 attenuating
+#    2 antagonizing
+#    2 Suppression
+#    2 Disruption
+#    2 Depletion
+#    1 unperturbed
+#    1 uncouples
+#    1 transrepression
+#    1 trans-inhibiting
+#    1 suppressors
+#    1 suppressive effect
+#    1 suppressing
+#    1 slows
+#    1 shutdown
+#    1 reverses
+#    1 restricting
+#    1 removes
+#    1 relieves
+#    1 regulator
+#    1 reducing
+#    1 protected
+#    1 perturbs
+#    1 overcomes
+#    1 overcame
+#    1 nullified
+#    1 neutralizes
+#    1 negatively controlled
+#    1 negative-regulatory
+#    1 negative regulatory role
+#    1 negative regulators
+#    1 negative control
+#    1 lowers
+#    1 lacking
+#    1 lack
+#    1 knockdown
+#    1 interference
+#    1 interfere
+#    1 inhibitory function
+#    1 induces
+#    1 inactivation
+#    1 inactivated
+#    1 impedes
+#    1 impeded
+#    1 impaired
+#    1 impair
+#    1 eliminating
+#    1 eliminated
+#    1 dysregulation
+#    1 drops
+#    1 drop
+#    1 downregulating
+#    1 downregulated
+#    1 downregulate
+#    1 down-regulating
+#    1 disrupting
+#    1 disengaging
+#    1 diminishes
+#    1 derepression
+#    1 derepress
+#    1 deregulated
+#    1 degraded
+#    1 deficient
+#    1 deficiency
+#    1 decreasing
+#    1 corepression
+#    1 blunted
+#    1 blockade
+#    1 becomes
+#    1 attenuate
+#    1 arresting
+#    1 arrested
+#    1 antagonizes
+#    1 antagonized
+#    1 absence
+#    1 abrogation
+#    1 abrogates
+#    1 abrogate
+#    1 Opposing
+#    1 Lack
+#    1 Knockdown
+#    1 Inhibitory
+#    1 Inhibitors
+#    1 Defective
+#    1 Blockade
+
+# ---
+
+# Inactivation
+
+#    8 inactivation
+#    7 loss
+#    7 inactive
+#    6 knockout
+#    5 knockdown
+#    3 deficiency
+#    2 silenced
+#    2 inactivates
+#    2 deletion
+#    2 Knockdown
+#    2 Deletion
+#    1 switch off
+#    1 silencing
+#    1 replacing
+#    1 lacking
+#    1 knockouts
+#    1 knock-out
+#    1 kinase-inactive
+#    1 inhibitors
+#    1 inactivating
+#    1 inactivated
+#    1 deficient
+#    1 defective
+#    1 antiactivators
+#    1 activation
+#    1 absence
+#    1 Knock down
+#    1 KO
+#    1 Inactivation
+#    1 Inactivating

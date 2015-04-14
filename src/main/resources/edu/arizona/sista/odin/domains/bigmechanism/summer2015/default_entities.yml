@@ -127,14 +127,14 @@
     [word = /(?i)^(glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine)/ & !word=/-rich/ & !mention=/./]
 
 - name: HER_default
-  label: [Protein, MacroMolecule, BioChemicalEntity]
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
     /HER2/
 
 - name: Families
-  label: [Protein, MacroMolecule, BioChemicalEntity]
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |
@@ -145,7 +145,7 @@
     /(?i)^Wnt-?$/
 
 - name: our_proteins
-  label: [Protein, MacroMolecule, BioChemicalEntity]
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]
   priority: 1
   type: token
   pattern: |

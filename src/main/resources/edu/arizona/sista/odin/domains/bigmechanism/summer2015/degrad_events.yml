@@ -1,0 +1,73 @@
+#Degradation events require theme of type MacroMolecules (i.e. they cannot be a Simple_chemical); cause is BioChemicalEntity (probably)
+#
+#BioChemicalEntities: "Protein", "Gene_or_gene_product", "Simple_chemical", "Complex", "GENE"
+#MacroMolecules: "Protein", "Gene_or_gene_product", "Complex", "GENE"
+
+- name: degradation_1
+  priority: 4
+  example: "These results indicate that Smurf2 specifically induces degradation of Smurf1 depending on its ligase activity."
+  label: [Degradation, Event]
+  pattern: |
+    trigger = [lemma=/degradation/]
+    theme:MacroMolecule = <conj_and? prep_of
+    cause:BioChemicalEntity = <dobj nsubj
+
+
+- name: degradation_2
+  priority: 4
+  example: "...Smurf2 protein reduces migration of MDA-MB-231 cells through degradation of the Smurf1 protein."
+  label: [Degradation, Event]
+  pattern: |
+    trigger = [lemma=/degradation/]
+    theme:MacroMolecule = prep_of
+    cause:BioChemicalEntity = (<prep_through | <prep_by) nsubj
+
+
+- name: degradation_3
+  priority: 4
+  example: "Ubiquitination and degradation of Smurf1 by Smurf2"
+  label: [Degradation, Event]
+  pattern: |
+    trigger = [word=/(?i).*degradation.*/]
+    theme:MacroMolecule = <conj_and? prep_of
+    cause:BioChemicalEntity = <conj_and? prep_of prep_by
+
+
+- name: degradation_4
+  priority: 4
+  example: "...RhoA ubiquitination and degradation by Smurf1 and Smurf2."
+  label: [Degradation, Event]
+  pattern: |
+    trigger = [lemma=/degradation/]
+    theme:MacroMolecule = <conj_and? nn
+    cause:BioChemicalEntity = <conj_and? prep_by
+
+
+- name: degradation_5
+  priority: 4
+  example: "Smurf2 has also been reported to bind to transcriptional co-repressor SnoN (Ski-related novel protein N) via Smad2 and to degrade SnoN."
+  label: [Degradation, Event]
+  pattern: |
+    trigger = [word=/(?i).*degrad.*/ & tag=/^VB/]
+    theme:MacroMolecule? = dobj
+    cause:BioChemicalEntity? = ((<xcomp | <ccomp)? nsubj) | (<rcmod (<appos)?)
+
+
+- name: degradation_pass1
+  priority: 4
+  example: "KRAS and RAS are both degraded by ASPP2 and p53."
+  label: [Degradation, Event]
+  pattern: |
+    trigger = [word=/(?i)^degrad/ & tag=/^VBN/]
+    theme:MacroMolecule = nsubjpass | (<rcmod (<appos)?)
+    cause:BioChemicalEntity? = agent
+
+
+- name: degradation_subjnom1
+  priority: 4
+  example: "ASPP2 ubiquitination and degradation of Ras increased."
+  label: [Degradation, Event]
+  pattern: |
+    trigger = [word=/(?i)^degrad/ & tag=/^N/]
+    theme:MacroMolecule = <conj_and* prep_of
+    cause:BioChemicalEntity = <conj_and* nn
