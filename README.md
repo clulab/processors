@@ -289,8 +289,8 @@ This package also offers serialization code for the generated annotations. The t
     val serializer = new DocumentSerializer
     serializer.save(someAnnotation, pw)
 
-    // loading from an InputStream, is
-    val someAnnotation = serializer.load(is)
+    // loading from an BufferedReader, br
+    val someAnnotation = serializer.load(br)
 
 ### Serialization to/from Strings
 
