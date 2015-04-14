@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 /**
   * Top-level test driver for Grounding development.
   *   Written by Tom Hicks. 4/7/2015.
-  *   Last Modified: Intial creation.
+  *   Last Modified: Change output file extension.
   */
 object GroundDriver extends App {
   val logger = LoggerFactory.getLogger(this.getClass.getSimpleName)
@@ -57,7 +57,7 @@ object GroundDriver extends App {
   }
 
   def processPaper (paper: String): Unit = {
-    val outName = mkOutputName(paper, ".txt")
+    val outName = mkOutputName(paper, ".xref")
     val outFile = new FileOutputStream(new File(outName))
     val inFile = s"$PapersDir/$paper"
 
