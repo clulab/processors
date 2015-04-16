@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Add protein resolver based on Uniprot.
+  *   Last Modified: Read the large KBs from gzipped files.
   */
 
 /**
@@ -25,8 +25,8 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
-    val kbStream = this.getClass.getResourceAsStream(kbResourcePath)
-    for (line <- Source.fromInputStream(kbStream).getLines) {
+    val source: Source = streamFromResource(kbResourcePath)
+    for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 2) && fields(0).nonEmpty && fields(1).nonEmpty) {
         val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
@@ -40,7 +40,7 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
         )
       }
     }
-    kbStream.close()
+    source.close()
   }
 }
 
@@ -59,8 +59,8 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
-    val kbStream = this.getClass.getResourceAsStream(kbResourcePath)
-    for (line <- Source.fromInputStream(kbStream).getLines) {
+    val source: Source = streamFromResource(kbResourcePath)
+    for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 3) && fields(0).nonEmpty && fields(2).nonEmpty) {
         val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
@@ -75,7 +75,7 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
         )
       }
     }
-    kbStream.close()
+    source.close()
   }
 }
 
@@ -87,7 +87,7 @@ class AzProteinKBAccessor extends AzNameSpeciesIdKBAccessor {
   def resourceID = "MIR:00100164"
 
   // MAIN: load KB to initialize class
-  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/uniprot-proteins.tsv")
+  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/uniprot-proteins.tsv.gz")
 }
 
 
@@ -98,7 +98,7 @@ class AzProteinFamilyKBAccessor extends AzNameSpeciesIdKBAccessor {
   def resourceID = "MIR:00000011"
 
   // MAIN: load KB to initialize class
-  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/ProteinFamilies.tsv")
+  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/ProteinFamilies.tsv.gz")
 }
 
 
@@ -109,7 +109,7 @@ class AzSmallMoleculeKBAccessor extends AzNameIdKBAccessor {
   def resourceID = "MIR:00000051"
 
   // MAIN: load KB to initialize class
-  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/hmdb.tsv")
+  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/hmdb.tsv.gz")
 }
 
 
