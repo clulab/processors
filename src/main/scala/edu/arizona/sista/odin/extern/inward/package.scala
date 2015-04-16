@@ -1,13 +1,13 @@
-package edu.arizona.sista.odin.domains.bigmechanism
+package edu.arizona.sista.odin.extern
 
 import java.io.BufferedInputStream
 import java.util.zip.GZIPInputStream
 
 import scala.io.Source
 
-package object summer2015 {
+package object inward {
 
-  def streamFromResource (resourcePath:String): Source = {
+  def sourceFromResource (resourcePath:String): Source = {
     val inStream = this.getClass.getResourceAsStream(resourcePath)
     if (resourcePath.endsWith(".gz"))
       Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(inStream)))

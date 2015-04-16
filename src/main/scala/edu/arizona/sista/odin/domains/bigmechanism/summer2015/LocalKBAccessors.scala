@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Read the large KBs from gzipped files.
+  *   Last Modified: Update for inward package support.
   */
 
 /**
@@ -25,7 +25,7 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
-    val source: Source = streamFromResource(kbResourcePath)
+    val source: Source = sourceFromResource(kbResourcePath)
     for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 2) && fields(0).nonEmpty && fields(1).nonEmpty) {
@@ -59,7 +59,7 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
-    val source: Source = streamFromResource(kbResourcePath)
+    val source: Source = sourceFromResource(kbResourcePath)
     for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 3) && fields(0).nonEmpty && fields(2).nonEmpty) {
