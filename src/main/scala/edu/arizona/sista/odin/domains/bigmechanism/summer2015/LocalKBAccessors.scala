@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Add and test a cellular location resolver based on GeneOntology.
+  *   Last Modified: Add protein resolver based on Uniprot.
   */
 
 /**
@@ -81,11 +81,13 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
 
 
 /** KB accessor to resolve protein names in mentions. */
-class AzProteinKBAccessor extends ExternalKBAccessor {
+class AzProteinKBAccessor extends AzNameSpeciesIdKBAccessor {
   def baseURI = "http://identifiers.org/uniprot/"
   def namespace = "uniprotkb"
   def resourceID = "MIR:00100164"
-  override def resolve (mention:Mention): Map[String,String] = Map.empty // TODO: IMPLEMENT
+
+  // MAIN: load KB to initialize class
+  readAndFillKB("/edu/arizona/sista/odin/domains/bigmechanism/summer2015/uniprot-proteins.tsv")
 }
 
 
