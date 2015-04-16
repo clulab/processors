@@ -105,6 +105,15 @@
     protein:BioChemicalEntity
     site:Site = /pobj|prep_|conj_[^n]|nn/+ # can't use a conj_nor.   There must be other bad conjunctions.
 
+- name: ner_entities
+  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] #TODO: verify what types of entities are being detected (check on chems)
+  action: mkNERMentions
+  priority: 2
+  type: token
+  pattern: |
+    [entity='B-GENE'] [entity='I-GENE']*
+
+# Hopefully everything below here will be ported to .tsv entries
 - name: simple_chem
   label: [Simple_chemical, BioChemicalEntity]
   priority: 1
@@ -191,14 +200,6 @@
       |
     # the rest of the locations (single token)
     /(?i)nucleolus|nucleus|ribosome|vesicle|golgi|cytoskeleton|mitochondrion|mitochondria|vacuole|cytosol|lysosome|centrosome/
-
-- name: ner_entities
-  label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity] #TODO: verify what types of entities are being detected (check on chems)
-  action: mkNERMentions
-  priority: 2
-  type: token
-  pattern: |
-    [entity='B-GENE'] [entity='I-GENE']*
 
 - name: protein_complex
   label: [Gene_or_gene_product, MacroMolecule, BioChemicalEntity]

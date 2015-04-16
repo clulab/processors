@@ -70,7 +70,7 @@ object Ruler {
   def readEntityRules(shell: Boolean = false): String = {
     val dir = if (shell) filesDir else resourcesDir
     val read = if (shell) readFile _ else readResource _
-    val files = Seq(s"$dir/default_entities.yml", s"$dir/DARPA_entities.yml")
+    val files = Seq(s"$dir/custom_entities.yml", s"$dir/model_entities.yml")
     files map read mkString "\n\n"
   }
 
