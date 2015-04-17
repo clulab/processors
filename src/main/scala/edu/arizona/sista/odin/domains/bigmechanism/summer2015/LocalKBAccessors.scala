@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Use canonicalized storage and lookup keys.
+  *   Last Modified: Canonicalized lookup keys cause collisions: prefer humans, if possible.
   */
 
 /**
@@ -73,16 +73,28 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 3) && fields(0).nonEmpty && fields(2).nonEmpty) {
         val text = fields(0)
-        val storageKey = makeKBCanonKey(text)
-        theKB(storageKey) = Map(               // create new entry in KB
+        val species = fields(1)
+
+        // make new key and entry for the KB:
+        val storageKey = makeKBCanonKey(text) // make canonical storage key
+        val newEntry = Map(
           "referenceID" -> fields(2),
           "namespace" -> namespace,
           "baseURI" -> baseURI,
           "resourceID" -> resourceID,
           "key" -> storageKey,
-          "species" -> fields(1),
+          "species" -> species,
           "text" -> text                    // also return original text
-        )
+          )
+
+        val entry = theKB.get(storageKey)   // look for existing entry
+        if (entry.isDefined) {              // if entry is already in this KB
+          if (!isHumanSpecies(entry.get.getOrElse("species",""))) // if it is not human
+            theKB(storageKey) = newEntry    // then overwrite it with new entry
+          // else ignore it: do not overwrite human entry with any other
+        }
+        else                                // key not seen before
+          theKB(storageKey) = newEntry
       }
     }
     source.close()

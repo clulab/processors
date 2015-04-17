@@ -8,7 +8,7 @@ import scala.io.Source
 /**
   * Support methods for the inward package.
   *   Written by Tom Hicks. 4/16/2015.
-  *   Last Modified: Add doc strings, method to make storage and lookup keys.
+  *   Last Modified: Add method to test for human species labels.
   */
 package object inward {
 
@@ -18,6 +18,14 @@ package object inward {
   /** The set of words to remove from the text to create a lookup key. */
   // val KeyStopWords = Set("family", "protein")
 
+  /** The set of words to remove from the text to create a lookup key. */
+  val HumanLabels = Set("homo sapiens", "human")
+
+
+  /** Tell whether the given species string is label for humans or not. */
+  def isHumanSpecies (species: String): Boolean = {
+    if (HumanLabels.contains(species.toLowerCase)) true else false
+  }
 
   /** Canonicalize the given text string into a key for storage and lookup. */
   def makeKBCanonKey (text:String): String = {
