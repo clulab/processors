@@ -21,7 +21,7 @@ object DarpaDoItAll extends App {
   val grounder = new LocalGrounder
   val coref = new Coref
   val flow = grounder andThen coref
-  val engine = new ExtractorEngine(rules, actions, flow.apply)
+  val engine = ExtractorEngine(rules, actions, flow.apply)
 
   // extract mentions from document
   val mentions = engine extractFrom doc
