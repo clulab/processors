@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Canonicalized lookup keys cause collisions: prefer humans, if possible.
+  *   Last Modified: Refactor helper methods to utils class.
   */
 
 /**
@@ -20,7 +20,7 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
   protected val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
 
   override def getLookupKey (mention:Mention): String = {
-    return makeKBCanonKey(mention.text)   // canonicalize text for KBs
+    return LocalKBUtils.makeKBCanonKey(mention.text)   // canonicalize text for KBs
   }
 
   override def resolve (mention:Mention): Map[String,String] = {
@@ -29,12 +29,12 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
-    val source: Source = sourceFromResource(kbResourcePath)
+    val source: Source = LocalKBUtils.sourceFromResource(kbResourcePath)
     for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 2) && fields(0).nonEmpty && fields(1).nonEmpty) {
         val text = fields(0)
-        val storageKey = makeKBCanonKey(text)
+        val storageKey = LocalKBUtils.makeKBCanonKey(text)
         theKB(storageKey) = Map(            // create new entry in KB
           "referenceID" -> fields(1),
           "namespace" -> namespace,
@@ -59,7 +59,7 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
   protected val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
 
   override def getLookupKey (mention:Mention): String = {
-    return makeKBCanonKey(mention.text)   // canonicalize text for KBs
+    return LocalKBUtils.makeKBCanonKey(mention.text)   // canonicalize text for KBs
   }
 
   override def resolve (mention:Mention): Map[String,String] = {
@@ -68,7 +68,7 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
-    val source: Source = sourceFromResource(kbResourcePath)
+    val source: Source = LocalKBUtils.sourceFromResource(kbResourcePath)
     for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 3) && fields(0).nonEmpty && fields(2).nonEmpty) {
@@ -76,7 +76,7 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
         val species = fields(1)
 
         // make new key and entry for the KB:
-        val storageKey = makeKBCanonKey(text) // make canonical storage key
+        val storageKey = LocalKBUtils.makeKBCanonKey(text) // make canonical storage key
         val newEntry = Map(
           "referenceID" -> fields(2),
           "namespace" -> namespace,
@@ -89,7 +89,7 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
 
         val entry = theKB.get(storageKey)   // look for existing entry
         if (entry.isDefined) {              // if entry is already in this KB
-          if (!isHumanSpecies(entry.get.getOrElse("species",""))) // if it is not human
+          if (!LocalKBUtils.isHumanSpecies(entry.get.getOrElse("species",""))) // if not human
             theKB(storageKey) = newEntry    // then overwrite it with new entry
           // else ignore it: do not overwrite human entry with any other
         }

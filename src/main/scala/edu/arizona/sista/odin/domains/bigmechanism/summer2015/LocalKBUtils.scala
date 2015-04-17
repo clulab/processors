@@ -1,4 +1,4 @@
-package edu.arizona.sista.odin.extern
+package edu.arizona.sista.odin.domains.bigmechanism.summer2015
 
 import java.io.BufferedInputStream
 import java.util.zip.GZIPInputStream
@@ -6,11 +6,11 @@ import java.util.zip.GZIPInputStream
 import scala.io.Source
 
 /**
-  * Support methods for the inward package.
+  * Support methods for writing local KB accessors.
   *   Written by Tom Hicks. 4/16/2015.
-  *   Last Modified: Add method to test for human species labels.
+  *   Last Modified: Refactor as methods in utility object.
   */
-package object inward {
+object LocalKBUtils {
 
   /** The set of characters to remove from the text to create a lookup key. */
   val KeyCharactersToRemove = " /-".toSet
