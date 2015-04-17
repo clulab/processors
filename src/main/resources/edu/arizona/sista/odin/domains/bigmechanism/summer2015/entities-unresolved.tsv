@@ -40,6 +40,7 @@ glutamate
 glycine
 #proteins
 HER2
+
 #families
 H-ras
 K-ras
@@ -62,8 +63,8 @@ RASSF
 Rabex
 BIRC
 survivin
-API[0-9
-EPR-[0-9 
+API
+EPR
 Pkh1
 S6K1
 TopBP1
@@ -75,37 +76,25 @@ GAB1
 Ras12V
 
 #cellular parts
-rough endoplasmic reticulum
-rough ER
-RER
-golgi apparatus
-golgi complex
-golgi body
-smooth endoplasmic reticulum
-SER
-membrane
-cell membrane
-nuclear membrane
+rough ER	GO:0005791
+RER	GO:0005791
+golgi complex	unresolved
+golgi body	unresolved
+SER	unresolved
+membrane	unresolved
+cell membrane	unresolved
 nucleus membrane
-plasma membrane
-nucleolus
-nucleus
-ribosome
-vesicle
-golgi
-cytoskeleton
-mitochondrion
-mitochondria
-vacuole
-cytosol
-lysosome
-centrosome
+plasma membrane	unresolved
+nucleolus	unresolved
+nucleus	unresolved
+golgi	unresolved
+mitochondria	unresolved
+lysosome	unresolved
 
 #complexes
-SAP
-RAPGEF
-RASGEF 
-RASGR 
+RAPGEF	unresolved
+RASGEF	unresolved
+RASGR unresolved
 RGL 
 RASAL 
 IQGAP 
@@ -124,11 +113,9 @@ Q76NI1
 NF 
 DAB2IP
 
-#missing uniprot IDs
-KNDC1
-PLCE1
-Q17RH5
-Q7VWQ8
-Q91ZZ2
-RALGDS
+#are these really genes?
+RAPGEF2	Q17RH5
+RAPGEF2 protein	Q17RH5
+Rapgef1	Q91ZZ2
+Guanine nucleotide exchange factor	Q91ZZ2
 
