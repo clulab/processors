@@ -8,7 +8,7 @@ import edu.arizona.sista.odin.extern.inward._
 /**
   * A collections of classes which implement project internal knowledge base accessors.
   *   Written by Tom Hicks. 4/10/2015.
-  *   Last Modified: Update for inward package support.
+  *   Last Modified: Use canonicalized storage and lookup keys.
   */
 
 /**
@@ -19,9 +19,13 @@ import edu.arizona.sista.odin.extern.inward._
 abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
   protected val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
 
+  override def getLookupKey (mention:Mention): String = {
+    return makeKBCanonKey(mention.text)   // canonicalize text for KBs
+  }
+
   override def resolve (mention:Mention): Map[String,String] = {
-    val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
-    theKB.getOrElseUpdate(key, Map.empty)
+    val key = getLookupKey(mention)         // make a key from the mention
+    theKB.getOrElseUpdate(key, Map.empty)   // lookup the key
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
@@ -29,14 +33,15 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
     for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 2) && fields(0).nonEmpty && fields(1).nonEmpty) {
-        val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
-        theKB(storageKey) = Map(               // create new entry in KB
+        val text = fields(0)
+        val storageKey = makeKBCanonKey(text)
+        theKB(storageKey) = Map(            // create new entry in KB
           "referenceID" -> fields(1),
           "namespace" -> namespace,
           "baseURI" -> baseURI,
           "resourceID" -> resourceID,
           "key" -> storageKey,
-          "text" -> fields(0)               // return original text
+          "text" -> text                    // also return original text
         )
       }
     }
@@ -53,9 +58,13 @@ abstract class AzNameIdKBAccessor extends ExternalKBAccessor {
 abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
   protected val theKB = scala.collection.mutable.Map[String, Map[String,String]]()
 
+  override def getLookupKey (mention:Mention): String = {
+    return makeKBCanonKey(mention.text)   // canonicalize text for KBs
+  }
+
   override def resolve (mention:Mention): Map[String,String] = {
-    val key = getLookupKey(mention).toLowerCase // lookup keys are all lowercase in this KB
-    theKB.getOrElseUpdate(key, Map.empty)
+    val key = getLookupKey(mention)         // make a key from the mention
+    theKB.getOrElseUpdate(key, Map.empty)   // lookup the key
   }
 
   protected def readAndFillKB (kbResourcePath:String) = {
@@ -63,7 +72,8 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
     for (line <- source.getLines) {
       val fields = line.split("\t").map(_.trim)
       if ((fields.size == 3) && fields(0).nonEmpty && fields(2).nonEmpty) {
-        val storageKey = fields(0).toLowerCase // lookup keys are all lowercase in this KB
+        val text = fields(0)
+        val storageKey = makeKBCanonKey(text)
         theKB(storageKey) = Map(               // create new entry in KB
           "referenceID" -> fields(2),
           "namespace" -> namespace,
@@ -71,7 +81,7 @@ abstract class AzNameSpeciesIdKBAccessor extends ExternalKBAccessor {
           "resourceID" -> resourceID,
           "key" -> storageKey,
           "species" -> fields(1),
-          "text" -> fields(0)               // return original text
+          "text" -> text                    // also return original text
         )
       }
     }
@@ -161,7 +171,7 @@ class AzFailsafeKBAccessor extends ExternalKBAccessor {
 
   private def newResolution (key:String): Map[String,String] = {
     return Map(
-      "referenceID" -> "UAZID:%05d".format(idCntr.next),
+      "referenceID" -> "UAZ%05d".format(idCntr.next),
       "namespace" -> namespace,
       "baseURI" -> baseURI,
       "key" -> key
