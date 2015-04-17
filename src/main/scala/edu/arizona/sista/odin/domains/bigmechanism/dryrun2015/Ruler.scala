@@ -5,7 +5,7 @@ import edu.arizona.sista.odin._
 import edu.arizona.sista.processors.Document
 
 class Ruler(val rules: String, val actions: Actions) {
-  val engine = new ExtractorEngine(rules, actions, postprocess)
+  val engine = ExtractorEngine(rules, actions, postprocess)
 
   def extractFrom(doc: Document): Seq[Mention] = engine.extractFrom(doc)
 

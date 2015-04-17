@@ -69,7 +69,7 @@ object ToyDomainExample extends App {
                  |""".stripMargin
 
   // creates an extractor engine using the rules and the default actions
-  val extractor = new ExtractorEngine(rules)
+  val extractor = ExtractorEngine(rules)
 
   // annotate the sentences
   // note: in another domains, you might prefer an open-domain processor, such as CoreNLPProcessor
