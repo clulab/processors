@@ -54,6 +54,9 @@ trait Mention extends Equals {
   /** character offset of the mention end */
   def endOffset: Int = document.sentences(sentence).endOffsets(end - 1)
 
+  /** returns true if this is a valid mention */
+  def isValid: Boolean = true
+
   /** returns true if the string matches any of the mention labels */
   def matches(label: String): Boolean = labels contains label
 
@@ -155,6 +158,15 @@ class EventMention(
     val allStarts = trigger.start +: arguments.values.flatMap(_.map(_.start)).toSeq
     val allEnds = trigger.end +: arguments.values.flatMap(_.map(_.end)).toSeq
     Interval(allStarts.min, allEnds.max)
+  }
+
+  override def isValid: Boolean = {
+    // get token interval for trigger
+    val trig = trigger.tokenInterval
+    // get token intervals for arguments
+    val args = arguments.values.flatten.map(_.tokenInterval)
+    // the event is invalid if the trigger is contained by one of its arguments
+    !args.exists(_.contains(trig))
   }
 }
 
