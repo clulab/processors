@@ -29,10 +29,13 @@ class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) 
         if extractor.priority matches i
         mention <- extractor.findAllIn(document, state)
       } yield mention
-      // apply globalAction to all extracted mentions
-      val finalMentions = globalAction(extractedMentions, state)
-      // only return mentions that are not already in the state
-      finalMentions filterNot state.contains
+      // apply globalAction and filter resulting mentions
+      val finalMentions = for {
+        mention <- globalAction(extractedMentions, state)
+        if mention.isValid && !state.contains(mention)
+      } yield mention
+      // return the final mentions
+      finalMentions
     }
 
     loop(1, initialState)
