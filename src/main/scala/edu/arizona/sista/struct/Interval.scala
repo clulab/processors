@@ -9,8 +9,14 @@ case class Interval(start: Int, end: Int) {
 
   def contains(i: Int): Boolean = i >= start && i < end
 
-  def intersects(that: Interval): Boolean =
+  def contains(that: Interval): Boolean =
+    this.allenContains(that) || this.allenStartedBy(that) || this.allenFinishedBy(that)
+
+  def overlaps(that: Interval): Boolean =
     !(this.allenPrecedes(that) || this.allenMeets(that) || this.allenMetBy(that) || this.allenPrecededBy(that))
+
+  @deprecated("Please use Interval.overlaps instead", "processors 5.3")
+  def intersects(that: Interval): Boolean = overlaps(that)
 
   // allen relations
   def allenPrecedes(that: Interval): Boolean = this.end < that.start
