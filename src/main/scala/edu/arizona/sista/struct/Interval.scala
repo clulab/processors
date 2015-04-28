@@ -1,17 +1,29 @@
 package edu.arizona.sista.struct
 
+/**
+ *  An interval of integers.
+ *
+ *  @constructor create a new interval
+ *  @param start the first element of the interval
+ *  @param end the last element of the interval (exclusive)
+ */
 case class Interval(start: Int, end: Int) {
   require(start < end, "invalid range")
 
+  /** returns the number of elements in the interval */
   def size: Int = end - start
 
+  /** returns a sequence with the elements of the interval */
   def toSeq: Seq[Int] = start until end
 
+  /** returns true if the argument is included in the interval */
   def contains(i: Int): Boolean = i >= start && i < end
 
+  /** returns true if the given interval is contained by this interval */
   def contains(that: Interval): Boolean =
     this.start <= that.start && this.end >= that.end
 
+  /** returns true if there is any overlap between the members of the intervals */
   def overlaps(that: Interval): Boolean =
     if (this.start < that.start) {
       this.end > that.start
@@ -115,5 +127,6 @@ case class Interval(start: Int, end: Int) {
 }
 
 object Interval {
-  def apply(idx: Int): Interval = Interval(idx, idx + 1)
+  /** make an interval with a single element */
+  def apply(i: Int): Interval = Interval(i, i + 1)
 }
