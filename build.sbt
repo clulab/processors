@@ -80,10 +80,6 @@ pomExtra := (
 // end publishing settings
 //
 
-// we need this to find the snapshot releases for BANNER
-resolvers +=
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
