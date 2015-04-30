@@ -123,6 +123,4 @@ object RuleReader {
     val action: String,
     val pattern: String
   )
-
-  def apply[A <: Actions : ClassTag](actions: A): RuleReader[A] = new RuleReader(actions)
 }

@@ -1,0 +1,121 @@
+#chemicals
+GDP unresolved
+#radioactive forms
+32P-GDP unresolved
+33P-GDP unresolved
+GTP unresolved
+32P-GTP unresolved
+ATP unresolved
+ADP unresolved
+adenosine unresolved
+guanine unresolved
+guanosine unresolved
+- ribose unresolved
+- methyl unresolved
+- acetyl unresolved
+fatty acid unresolved
+
+#acids
+glycine
+phenylalanine
+leucine
+serine
+tyrosine
+cysteine
+tryptophan
+proline
+histidine
+arginine
+soleucine
+methionine
+threonine
+asparagine
+lysine
+serine
+arginine
+valine
+alanine
+aspartate
+glutamate
+glycine
+#proteins
+HER2
+
+#families
+H-ras
+K-ras
+N-ras
+RASSF
+MEK
+ERK
+WNT
+
+#proteins
+GAP
+-ras
+PI3K
+BRAF
+RAF
+AF6
+
+#can be followed by digits
+RASSF
+Rabex
+BIRC
+survivin
+API
+EPR
+Pkh1
+S6K1
+TopBP1
+IKKalpha
+IKKbeta
+IkappaB
+RPTOR
+GAB1
+Ras12V
+
+#cellular parts
+rough ER	GO:0005791
+RER	GO:0005791
+golgi complex	unresolved
+golgi body	unresolved
+SER	unresolved
+membrane	unresolved
+cell membrane	unresolved
+nucleus membrane
+plasma membrane	unresolved
+nucleolus	unresolved
+nucleus	unresolved
+golgi	unresolved
+mitochondria	unresolved
+lysosome	unresolved
+
+#complexes
+RAPGEF	unresolved
+RASGEF	unresolved
+RASGR unresolved
+RGL 
+RASAL 
+IQGAP 
+GAPVD 
+DAB2IP 
+SOS 
+SYNGAP1 
+RAPG 
+MEK 
+ERK 
+ASPP 
+ATG5 
+Q12967 
+Q9P212 
+Q76NI1 
+NF 
+DAB2IP
+
+#are these really genes?
+RAPGEF2	Q17RH5
+RAPGEF2 protein	Q17RH5
+Rapgef1	Q91ZZ2
+Guanine nucleotide exchange factor	Q91ZZ2
+

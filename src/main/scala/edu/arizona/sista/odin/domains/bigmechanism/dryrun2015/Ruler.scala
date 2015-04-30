@@ -5,11 +5,11 @@ import edu.arizona.sista.odin._
 import edu.arizona.sista.processors.Document
 
 class Ruler(val rules: String, val actions: Actions) {
-  val engine = new ExtractorEngine(rules, actions, postprocess)
+  val engine = ExtractorEngine(rules, actions, postprocess)
 
   def extractFrom(doc: Document): Seq[Mention] = engine.extractFrom(doc)
 
-  def postprocess(mentions: Seq[Mention]): Seq[Mention] = {
+  def postprocess(mentions: Seq[Mention], state: State): Seq[Mention] = {
     mentions flatMap { mention => mention match {
 
       // Do we somehow have an empty Mention?
@@ -70,7 +70,7 @@ object Ruler {
   def readEntityRules(shell: Boolean = false): String = {
     val dir = if (shell) filesDir else resourcesDir
     val read = if (shell) readFile _ else readResource _
-    val files = Seq(s"$dir/default_entities.yml", s"$dir/DARPA_entities.yml")
+    val files = Seq(s"$dir/custom_entities.yml", s"$dir/model_entities.yml")
     files map read mkString "\n\n"
   }
 

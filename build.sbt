@@ -85,7 +85,7 @@ resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % "2.11.5",
+  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
   "org.scalatest" %% "scalatest" % "3.0.0-SNAP4" % "test",
   "junit" % "junit" % "4.12" % "test",
