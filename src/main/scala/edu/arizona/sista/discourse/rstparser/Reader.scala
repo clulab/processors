@@ -170,7 +170,7 @@ class Reader {
   def annotate(text:Array[String], proc:Processor):Document = {
     if(proc == null) return null
 
-    val doc = proc.mkDocumentFromSentences(text)
+    val doc = proc.mkDocumentFromSentences(text, keepText = false)
     proc.annotate(doc)
 
     doc

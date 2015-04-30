@@ -103,7 +103,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     sents.toList
   }
 
-  def mkDocument(origText:String): Document = {
+  def mkDocument(origText:String, keepText:Boolean): Document = {
     val text = preprocessText(origText)
 
     val annotation = new Annotation(text)
@@ -125,7 +125,10 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       sa.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
     }
 
-    new CoreNLPDocument(sentences, Some(annotation))
+    val doc = new CoreNLPDocument(sentences, Some(annotation))
+    if(keepText) doc.text = Some(origText)
+
+    doc
   }
 
   def mkSentence(annotation:CoreMap): Sentence = {
@@ -158,9 +161,11 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   def mkDocumentFromSentences(origSentences:Iterable[String],
+                              keepText:Boolean,
                               charactersBetweenSentences:Int = 1): Document = {
     val sentences = preprocessSentences(origSentences)
-    val docAnnotation = new Annotation(sentences.mkString(mkSep(charactersBetweenSentences)))
+    val origText = sentences.mkString(mkSep(charactersBetweenSentences))
+    val docAnnotation = new Annotation(origText)
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
     docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
     val docSents = new Array[Sentence](sentences.size)
@@ -197,7 +202,10 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       sentOffset += 1
     }
 
-    new CoreNLPDocument(docSents, Some(docAnnotation))
+    val doc = new CoreNLPDocument(docSents, Some(docAnnotation))
+    if(keepText) doc.text = Some(origText)
+
+    doc
   }
 
   private def mkSep(size:Int):String = {
@@ -207,13 +215,15 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   def mkDocumentFromTokens(sentences:Iterable[Iterable[String]],
+                           keepText:Boolean,
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document = {
     val sb = new ListBuffer[String]
     for (s <- sentences)
       sb += s.mkString(mkSep(charactersBetweenTokens))
     val sentenceTexts = sb.toArray
-    val docAnnotation = new Annotation(sentenceTexts.mkString(mkSep(charactersBetweenSentences)))
+    val origText = sentenceTexts.mkString(mkSep(charactersBetweenSentences))
+    val docAnnotation = new Annotation(origText)
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
     docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
     val docSents = new Array[Sentence](sentences.size)
@@ -246,7 +256,10 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       sentOffset += 1
     }
 
-    new CoreNLPDocument(docSents, Some(docAnnotation))
+    val doc = new CoreNLPDocument(docSents, Some(docAnnotation))
+    if(keepText) doc.text = Some(origText)
+
+    doc
   }
 
   def basicSanityCheck(doc:Document, checkAnnotation:Boolean = true): Option[Annotation] = {

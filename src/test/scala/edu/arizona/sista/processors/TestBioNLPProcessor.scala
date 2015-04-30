@@ -16,7 +16,7 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
   @Test def testNER() {
     val doc = proc.mkDocumentFromSentences(List(
       "Co-immunoprecipitation analysis confirmed that Bis interacted with Bcl-2 in vivo.",
-      "The Ras protein is phosphorylated by TBRI."))
+      "The Ras protein is phosphorylated by TBRI."), keepText = false)
 
     annotate(doc)
 
@@ -47,7 +47,7 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
       "We also demonstrate considerable isoform diversity of both hc-Rel and p105. " +
       "We show that this heterogeneity is, in part, the result of phosphorylation. " +
       "Furthermore, we demonstrate that p105 and hc-Rel are tyrosine kinase substrates. " +
-      "This finding indicates a role for both proteins in intracellular signal transduction pathways which are modulated by modification of their phosphorylation status.");
+      "This finding indicates a role for both proteins in intracellular signal transduction pathways which are modulated by modification of their phosphorylation status.", keepText = false);
 
     annotate(doc)
 
