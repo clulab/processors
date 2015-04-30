@@ -9,14 +9,16 @@ import edu.arizona.sista.struct.Internalizer
  */
 trait Processor {
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
-  def mkDocument(text:String): Document
+  def mkDocument(text:String, keepText:Boolean): Document
 
   /** Constructs a document of tokens from an array of untokenized sentences */
   def mkDocumentFromSentences(sentences:Iterable[String],
+                              keepText:Boolean,
                               charactersBetweenSentences:Int = 1): Document
 
   /** Constructs a document of tokens from an array of tokenized sentences */
   def mkDocumentFromTokens(sentences:Iterable[Iterable[String]],
+                           keepText:Boolean,
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document
 
@@ -49,18 +51,18 @@ trait Processor {
   /** Discourse parsing; modifies the document in place */
   def discourse(doc:Document)
 
-  def annotate(text:String): Document = {
-    val doc = mkDocument(text)
+  def annotate(text:String, keepText:Boolean = false): Document = {
+    val doc = mkDocument(text, keepText)
     annotate(doc)
   }
 
-  def annotateFromSentences(sentences:Iterable[String]): Document = {
-    val doc = mkDocumentFromSentences(sentences)
+  def annotateFromSentences(sentences:Iterable[String], keepText:Boolean = false): Document = {
+    val doc = mkDocumentFromSentences(sentences, keepText)
     annotate(doc)
   }
 
-  def annotateFromTokens(sentences:Iterable[Iterable[String]]): Document = {
-    val doc = mkDocumentFromTokens(sentences)
+  def annotateFromTokens(sentences:Iterable[Iterable[String]], keepText:Boolean = false): Document = {
+    val doc = mkDocumentFromTokens(sentences, keepText)
     annotate(doc)
   }
 

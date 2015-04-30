@@ -12,13 +12,18 @@ import java.lang.StringBuilder
  * User: mihais
  * Date: 3/1/13
  */
-class Document(
+class Document( var id:Option[String],
                 val sentences:Array[Sentence],
                 var coreferenceChains:Option[CorefChains],
-                var discourseTree:Option[DiscourseTree]) extends Serializable {
+                var discourseTree:Option[DiscourseTree],
+                var text:Option[String]) extends Serializable {
+
+  def this(sa:Array[Sentence], cc:Option[CorefChains], dt:Option[DiscourseTree]) {
+    this(None, sa, cc, dt, None)
+  }
 
   def this(sa: Array[Sentence]) {
-    this(sa, None, None)
+    this(None, sa, None, None, None)
   }
 
   /** Clears any internal state potentially constructed by the annotators */

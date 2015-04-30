@@ -32,7 +32,7 @@ class DiscourseParserRunner (useProcessor:String = "core") {
     // var timings:List[List[Any]] = List()    // initialize a list for gathering timings
     val start = System.currentTimeMillis()
     // val doc = processor.annotate(text)   // call the main library annotate method
-    var (doc, timings) = myAnnotate(processor.mkDocument(text)) // custom processing: below
+    var (doc, timings) = myAnnotate(processor.mkDocument(text, keepText = false)) // custom processing: below
     val stop = System.currentTimeMillis()
     val elapsed = stop - start
     timings = List("ANNOT", elapsed, start, stop) +: timings

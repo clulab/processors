@@ -29,7 +29,7 @@ class TestBioNLPProcessor2 extends AssertionsForJUnit {
   }
 
   def annotate(text:String):Document = {
-    val doc = proc.mkDocument(text)
+    val doc = proc.mkDocument(text, keepText = false)
     println(s"Processing a document with ${doc.sentences.size} sentences...")
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)

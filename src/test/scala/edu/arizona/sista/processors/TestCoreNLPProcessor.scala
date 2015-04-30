@@ -3,7 +3,7 @@ package edu.arizona.sista.processors
 import edu.arizona.sista.discourse.rstparser.RelationDirection
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.Assert._
-import org.junit.{Before, Test}
+import org.junit.Test
 import collection.JavaConversions.asJavaCollection
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
@@ -16,7 +16,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   var proc:Processor = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
 
   @Test def testTokenOffsets1() {
-    val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
+    val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)
     doc.clear()
 
     assertEquals(doc.sentences(0).words(0), "John")
@@ -47,7 +47,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   }
 
   @Test def testTokenOffsets2() {
-    val doc = proc.mkDocumentFromSentences(List("John Doe went to China.", "There, he visited Beijing."))
+    val doc = proc.mkDocumentFromSentences(List("John Doe went to China.", "There, he visited Beijing."), keepText = false)
     doc.clear()
 
     assertEquals(doc.sentences(0).words(0), "John")
@@ -80,7 +80,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   @Test def testTokenOffsets3() {
     val doc = proc.mkDocumentFromTokens(List(
       List("John", "Doe", "went", "to", "China", "."),
-      List("There", ",", "he", "visited", "Beijing", ".")))
+      List("There", ",", "he", "visited", "Beijing", ".")), keepText = false)
     doc.clear()
 
     assertEquals(doc.sentences(0).words(0), "John")
@@ -111,7 +111,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   }
 
   @Test def testPartsOfSpeech() {
-    val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
+    val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)
     proc.tagPartsOfSpeech(doc)
     doc.clear()
 
@@ -130,7 +130,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   }
 
   @Test def testLemmas() {
-    val doc = proc.mkDocumentFromSentences(List("John Doe went to China.", "There, he visited Beijing."))
+    val doc = proc.mkDocumentFromSentences(List("John Doe went to China.", "There, he visited Beijing."), keepText = false)
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
     doc.clear()
@@ -150,7 +150,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   }
 
   @Test def testNER() {
-    val doc = proc.mkDocumentFromSentences(List("John Doe went to China on January 15th, 2001.", "There, he visited Beijing."))
+    val doc = proc.mkDocumentFromSentences(List("John Doe went to China on January 15th, 2001.", "There, he visited Beijing."), keepText = false)
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
     proc.recognizeNamedEntities(doc)
@@ -183,7 +183,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   }
 
   @Test def testParse() {
-    val doc = proc.mkDocumentFromSentences(List("John Doe went to China"))
+    val doc = proc.mkDocumentFromSentences(List("John Doe went to China"), keepText = false)
     proc.parse(doc)
     doc.clear()
 
@@ -239,7 +239,7 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
   }
 
   @Test def testHeadWords() {
-    val doc = proc.mkDocumentFromSentences(List("John Doe went to China"))
+    val doc = proc.mkDocumentFromSentences(List("John Doe went to China"), keepText = false)
     proc.parse(doc)
     doc.clear()
 
@@ -264,5 +264,10 @@ class TestCoreNLPProcessor extends AssertionsForJUnit {
     assertTrue(d.relationLabel == "elaboration")
     assertTrue(d.relationDirection == RelationDirection.LeftToRight)
     assertTrue(! d.isTerminal && d.children.length == 2)
+  }
+
+  @Test def testText(): Unit = {
+    val doc = proc.annotateFromSentences(List("Sentence 1.", "Sentence 2."), keepText = true)
+    assertTrue(doc.text.get == "Sentence 1. Sentence 2.")
   }
 }
