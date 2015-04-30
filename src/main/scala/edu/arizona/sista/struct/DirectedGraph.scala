@@ -139,17 +139,17 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
 
     // build table of pointers to previous node in shortest path to the source
     @annotation.tailrec
-    def mkPrev(rest: Set[Int], dist: Map[Int, Double], prev: Map[Int, Int]): Map[Int, Int] =
-      if (rest.isEmpty) prev
+    def mkPrev(nodes: Set[Int], dist: Map[Int, Double], prev: Map[Int, Int]): Map[Int, Int] =
+      if (nodes.isEmpty) prev
       else {
-        val u = rest minBy dist
+        val u = nodes minBy dist
         val d = dist(u) + 1  // all edges have a cost of 1
         val newDistPrev = for {
           v <- neighbors(u)
-          if rest.contains(v) && d < dist(v)
+          if nodes.contains(v) && d < dist(v)
         } yield (v -> d, v -> u)
         val (newDist, newPrev) = newDistPrev.unzip
-        mkPrev(rest - u, dist ++ newDist, prev ++ newPrev)
+        mkPrev(nodes - u, dist ++ newDist, prev ++ newPrev)
       }
 
     // build path from source to node
