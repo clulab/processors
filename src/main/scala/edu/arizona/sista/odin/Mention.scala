@@ -81,10 +81,10 @@ trait Mention extends Equals {
     case Some(txt) => txt.slice(startOffset, endOffset)
     case None =>
       // try to reconstruct the sentence using the character offsets
-      val bits = words.head +: tokenInterval.toSeq.drop(1).flatMap { i =>
+      val bits = words.head +: tokenInterval.toSeq.drop(1).map { i =>
         val spaces = " " * (sentenceObj.startOffsets(i) - sentenceObj.endOffsets(i - 1))
         val word = sentenceObj.words(i)
-        Seq(spaces, word)
+        spaces + word
       }
       bits.mkString
   }
