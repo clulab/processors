@@ -168,6 +168,14 @@ class EventMention(
     // the event is invalid if the trigger is contained by one of its arguments
     !args.exists(_.contains(trig))
   }
+
+  // trigger should be part of the hashCode too
+  override def hashCode: Int = {
+    val h0 = symmetricSeed
+    val h1 = mix(h0, super.hashCode)
+    val h2 = mixLast(h1, trigger.hashCode)
+    finalizeHash(h2, 2)
+  }
 }
 
 class RelationMention(
