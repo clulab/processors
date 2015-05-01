@@ -48,11 +48,13 @@ trait Mention extends Equals {
   /** one after the last token in the mention */
   def end: Int = tokenInterval.end
 
+  def sentenceObj = document.sentences(sentence)
+
   /** character offset of the mention beginning */
-  def startOffset: Int = document.sentences(sentence).startOffsets(start)
+  def startOffset: Int = sentenceObj.startOffsets(start)
 
   /** character offset of the mention end */
-  def endOffset: Int = document.sentences(sentence).endOffsets(end - 1)
+  def endOffset: Int = sentenceObj.endOffsets(end - 1)
 
   /** returns true if this is a valid mention */
   def isValid: Boolean = true
@@ -64,11 +66,28 @@ trait Mention extends Equals {
   def matches(matcher: StringMatcher): Boolean = labels exists matcher.matches
 
   /** returns all tokens in mention */
-  def words: Seq[String] = document.sentences(sentence).words.slice(start, end)
+  def words: Seq[String] = sentenceObj.words.slice(start, end)
+
+  def tags: Option[Seq[String]] = sentenceObj.tags.map(_.slice(start, end))
+
+  def lemmas: Option[Seq[String]] = sentenceObj.lemmas.map(_.slice(start, end))
+
+  def entities: Option[Seq[String]] = sentenceObj.entities.map(_.slice(start, end))
+
+  def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end))
 
   /** returns a string that contains the mention */
-  // FIXME This string doesn't match the original text. We can do better than this.
-  def text: String = words.mkString(" ")
+  def text: String = document.text match {
+    case Some(txt) => txt.slice(startOffset, endOffset)
+    case None =>
+      // try to reconstruct the sentence using the character offsets
+      val bits = words.head +: tokenInterval.toSeq.drop(1).flatMap { i =>
+        val spaces = " " * (sentenceObj.startOffsets(i) - sentenceObj.endOffsets(i - 1))
+        val word = sentenceObj.words(i)
+        Seq(spaces, word)
+      }
+      bits.mkString
+  }
 
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
@@ -211,8 +230,8 @@ class RelationMention(
 
   // token interval that contains all matched arguments
   override def tokenInterval: Interval = {
-    val allStarts = arguments.values.flatMap(_.map(_.start)).toSeq
-    val allEnds = arguments.values.flatMap(_.map(_.end)).toSeq
+    val allStarts = arguments.values.flatMap(_.map(_.start))
+    val allEnds = arguments.values.flatMap(_.map(_.end))
     Interval(allStarts.min, allEnds.max)
   }
 }
