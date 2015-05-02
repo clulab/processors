@@ -50,7 +50,7 @@ object ThompsonVM {
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
         mkThreads(t.tok, i.next, t.groups, t.mentions)
       case i: MatchMention => state match {
-        case None => Nil  // should we throw an exception or fail silently?
+        case None => sys.error("can't match mentions without state")
         case Some(s) =>
           val bundles = for {
             mention <- s.mentionsFor(sent, t.tok)
