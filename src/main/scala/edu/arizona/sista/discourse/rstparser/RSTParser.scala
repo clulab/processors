@@ -179,8 +179,13 @@ object RSTParser {
       }
     }
     if (props.containsKey("test")) {
-      val defaultModelPath = RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH
-      val modelPath = if (props.containsKey("model")) props.getProperty("model") else defaultModelPath
+      val modelPath =
+        // if a model was provided, use it
+        if (props.containsKey("model")) props.getProperty("model")
+        // if the user wants dependencies, use that model
+        else if (props.containsKey("dep")) RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH
+        // use constituent model by default
+        else RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH
       parser = loadFrom(modelPath)
       parser.test(props.getProperty("test"), props.containsKey("dep"))
     }
