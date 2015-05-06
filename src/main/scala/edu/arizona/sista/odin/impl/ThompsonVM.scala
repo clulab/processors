@@ -128,6 +128,7 @@ case class MatchMention(m: StringMatcher) extends Inst {
 
   def dup: Inst = {
     val inst = copy()
+    inst.name = name
     if (next != null) inst.next = next.dup
     inst
   }
