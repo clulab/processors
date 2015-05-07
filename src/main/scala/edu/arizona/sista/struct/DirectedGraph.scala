@@ -7,6 +7,7 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer}
  * A generic graph where the nodes have Int identifiers and edges have type E
  * The node ids are offsets in an array thus they must start at 0
  * This class is designed to be as immutable as possible, thus no operations to modify it are provided
+ * Each edge in edges stores (head, modifier, label)
  * User: mihais
  * Date: 3/5/13
  */

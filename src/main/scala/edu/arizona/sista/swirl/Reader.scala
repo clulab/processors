@@ -4,9 +4,11 @@ import java.io.File
 
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import edu.arizona.sista.processors.{Document, Processor}
+import edu.arizona.sista.struct.DirectedGraph
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable
+import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import scala.io.Source
 
 import Reader._
@@ -20,15 +22,30 @@ class Reader {
   class CoNLLToken(val word:String, val pos:String, val pred:Int, val frameBits:Array[String]) {
     override def toString:String = word + "/" + pos + "/" + pred  }
 
+  var argConflictCount = 0
+  var multiPredCount = 0
+  var argCount = 0
+  var predCount = 0
+
   def read(file:File,
            proc:Processor = null,
-           verbose:Boolean = false):Document = {
+           verbose:Boolean = false):(Document, Array[DirectedGraph[String]]) = {
     val source = Source.fromFile(file)
     val sentences = new ArrayBuffer[Array[CoNLLToken]]
     var sentence = new ArrayBuffer[CoNLLToken]
+
+    argConflictCount = 0
+    multiPredCount = 0
+    argCount = 0
+    predCount = 0
     var tokenCount = 0
     var sentCount = 0
     var hyphCount = 0
+
+    //
+    // read all sentences
+    // also, collapse hyphenated phrases, which were brutally tokenized in CoNLL
+    //
     for(l <- source.getLines()) {
       val line = l.trim
       if(line.length > 0) {
@@ -48,7 +65,58 @@ class Reader {
     source.close()
     logger.debug(s"Read $tokenCount tokens, grouped in $sentCount sentences.")
     logger.debug(s"Found $hyphCount hyphens.")
-    null
+    logger.debug(s"In hyphenated phrases, found $multiPredCount multi predicates and $argConflictCount argument conflicts.")
+
+    //
+    // construct the semantic dependencies from CoNLL tokens
+    //
+    val semDependencies = new ArrayBuffer[DirectedGraph[String]]()
+    for(sent <- sentences) {
+      semDependencies += mkSemanticDependencies(sent)
+    }
+
+    //
+    // construct one Document for the entire corpus and annotate it
+    //
+
+
+    logger.debug(s"Found a total of $predCount predicates with $argCount arguments.")
+
+    (document, semDependencies.toArray)
+  }
+
+  def mkSemanticDependencies(sentence:Array[CoNLLToken]):DirectedGraph[String] = {
+    val edges = new ListBuffer[(Int, Int, String)]
+    val heads = new mutable.HashSet[Int]()
+    val modifiers = new mutable.HashSet[Int]()
+
+    var columnOffset = -1
+    for(p <- 0 until sentence.length) {
+      if(sentence(p).pred > 0) { // found a head
+        val head = p
+        heads += head
+        predCount += 1
+        columnOffset += sentence(p).pred // in case of multiple predicates squished in one token, use the last
+        for(i <- 0 until sentence.length) {
+          if(sentence(i).frameBits(columnOffset) != "_") {
+            val modifier = i
+            val label = sentence(i).frameBits(columnOffset)
+            edges += new Tuple3(head, modifier, label)
+            modifiers += modifier
+            argCount += 1
+          }
+        }
+      }
+    }
+
+    val roots = new mutable.HashSet[Int]()
+    for(h <- heads) {
+      if(! modifiers.contains(h)) {
+        roots += h
+      }
+    }
+
+    new DirectedGraph[String](edges.toList, roots.toSet)
   }
 
   def mkToken(bits:Array[String]):CoNLLToken = {
@@ -112,7 +180,8 @@ class Reader {
 
     if(l > 0) {
       if(l > 1) {
-        logger.info("Found MULTI PREDICATE in hyphenated phrase: " + phrase.mkString(" "))
+        if(verbose) logger.debug("Found MULTI PREDICATE in hyphenated phrase: " + phrase.mkString(" "))
+        multiPredCount += 1
       }
       if(verbose) {
         // logger.info("Found hyphenated predicate: " + phrase.mkString(" "))
@@ -123,7 +192,32 @@ class Reader {
   }
 
   def mergeFrames(phrase:Array[CoNLLToken], verbose:Boolean):Array[String] = {
-    // TODO
+    val frameBits = new Array[String](phrase(0).frameBits.length)
+    for(i <- 0 until frameBits.length) {
+      frameBits(i) = mergeFrame(phrase, i, verbose)
+    }
+    frameBits
+  }
+
+  def mergeFrame(phrase:Array[CoNLLToken], position:Int, verbose:Boolean):String = {
+    // pick the right-most argument assignment
+    // for example, if the tokens have: "A1 _ A0" we would pick A0
+    // of course, the above scenario is HIGHLY unlikely. normally, there will be a single argument, e.g.: "_ _ A0"
+
+    var arg = "_"
+    var count = 0
+    for(i <- phrase.length - 1 to 0 by -1) {
+      if(phrase(i).frameBits(position) != "_") {
+        if(arg == "_") arg = phrase(i).frameBits(position)
+        count += 1
+      }
+    }
+    if(count > 1) {
+      if(verbose) logger.debug("Found ARGUMENT CONFLICT " + phrase.map(_.frameBits(position)).mkString(" ") + " in hyphenated phrase: " + phrase.mkString(" "))
+      argConflictCount += 1
+    }
+
+    arg
   }
 }
 
@@ -135,6 +229,6 @@ object Reader {
     val proc = new FastNLPProcessor(useMalt = false, useBasicDependencies = false)
     val file = new File(args(0))
 
-    reader.read(file, proc, verbose = true)
+    reader.read(file, proc, verbose = false)
   }
 }
