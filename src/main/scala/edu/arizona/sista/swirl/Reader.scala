@@ -29,7 +29,7 @@ class Reader {
 
   def read(file:File,
            proc:Processor = null,
-           verbose:Boolean = false):(Document, Array[DirectedGraph[String]]) = {
+           verbose:Boolean = false):Document = {
     val source = Source.fromFile(file)
     val sentences = new ArrayBuffer[Array[CoNLLToken]]
     var sentence = new ArrayBuffer[CoNLLToken]
@@ -68,7 +68,7 @@ class Reader {
     logger.debug(s"In hyphenated phrases, found $multiPredCount multi predicates and $argConflictCount argument conflicts.")
 
     //
-    // construct the semantic dependencies from CoNLL tokens
+    // construct the semantic roles from CoNLL tokens
     //
     val semDependencies = new ArrayBuffer[DirectedGraph[String]]()
     for(sent <- sentences) {
@@ -78,11 +78,35 @@ class Reader {
     //
     // construct one Document for the entire corpus and annotate it
     //
+    val document = mkDocument(sentences.toArray, proc)
 
+    //
+    // assign the semantic roles to sentences in the created Document
+    //
+    assert(document.sentences.length == semDependencies.size)
+    for(i <- 0 until document.sentences.length) {
+      document.sentences(i).semanticRoles = Some(semDependencies(i))
+    }
 
     logger.debug(s"Found a total of $predCount predicates with $argCount arguments.")
 
-    (document, semDependencies.toArray)
+    document
+  }
+
+  def mkDocument(sentences:Array[Array[CoNLLToken]], proc:Processor):Document = {
+    //
+    // create the document from tokens
+    // then, regenerate the POS tags and syntactic dependencies
+    //
+
+    val tokens = sentences.map(_.map(_.word).toList).toList
+    val doc = proc.mkDocumentFromTokens(tokens, keepText = false)
+    proc.tagPartsOfSpeech(doc)
+    proc.lemmatize(doc)
+    proc.recognizeNamedEntities(doc)
+    proc.parse(doc)
+
+    doc
   }
 
   def mkSemanticDependencies(sentence:Array[CoNLLToken]):DirectedGraph[String] = {

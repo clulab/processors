@@ -51,14 +51,16 @@ class Sentence(
                 /** Constituent tree of this sentence; includes head words */
                 var syntacticTree:Option[Tree],
                 /** DAG of syntactic dependencies; word offsets start at 0 */
-                var dependencies:Option[DirectedGraph[String]]) extends Serializable {
+                var dependencies:Option[DirectedGraph[String]],
+                /** DAG of semantic roles; word offsets start at 0 */
+                var semanticRoles:Option[DirectedGraph[String]]) extends Serializable {
 
   def this(
             words:Array[String],
             startOffsets:Array[Int],
             endOffsets:Array[Int]) =
     this(words, startOffsets, endOffsets,
-      None, None, None, None, None, None, None)
+      None, None, None, None, None, None, None, None)
 
   def size:Int = words.length
 
@@ -66,9 +68,9 @@ class Sentence(
    * Recreates the text of the sentence, preserving the original number of white spaces between tokens
    * @return the text of the sentence
    */
-  def getSentenceText():String = {
+  def getSentenceText:String = {
     val text = new mutable.StringBuilder()
-    for(i <- 0 until words.size) {
+    for(i <- 0 until words.length) {
       if(i > 0) {
         // add as many white spaces as recorded between tokens
         for (j <- 0 until (startOffsets(i) - endOffsets(i - 1))) {
@@ -95,14 +97,15 @@ class CorefMention (
                      /** Id of the coreference chain containing this mention; -1 if singleton mention */
                      val chainId:Int) extends Serializable {
 
-  def length = (endOffset - startOffset)
+  def length = endOffset - startOffset
 
   override def equals(other:Any):Boolean = {
     other match {
-      case that:CorefMention => (sentenceIndex == that.sentenceIndex &&
+      case that:CorefMention =>
+        sentenceIndex == that.sentenceIndex &&
         headIndex == that.headIndex &&
         startOffset == that.startOffset &&
-        endOffset == that.endOffset)
+        endOffset == that.endOffset
       case _ => false
     }
   }
@@ -167,7 +170,7 @@ class CorefChains (rawMentions:Iterable[CorefMention]) extends Serializable {
   /** All mentions in this document */
   def getMentions:Iterable[CorefMention] = mentions.values
 
-  def isEmpty = (mentions.size == 0 && chains.size == 0)
+  def isEmpty = mentions.size == 0 && chains.size == 0
 }
 
 object CorefChains {

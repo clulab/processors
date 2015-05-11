@@ -130,14 +130,17 @@ class DocumentSerializer {
 
     var deps:Option[DirectedGraph[String]] = None
     var tree:Option[Tree] = None
+    var semRoles:Option[DirectedGraph[String]] = None
     do {
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
-        deps = Some(loadDependencies(r))
+        deps = Some(loadDirectedGraph(r, END_OF_DEPENDENCIES))
       } else if (bits(0) == START_CONSTITUENTS) {
         val position = new MutableNumber[Int](0)
         bits = read(r)
         tree = Some(loadTree(bits, position))
+      } else if(bits(0) == START_SEMROLES) {
+        semRoles = Some(loadDirectedGraph(r, END_OF_SEMROLES))
       }
     } while(bits(0) != END_OF_SENTENCE)
 
@@ -150,11 +153,11 @@ class DocumentSerializer {
       bufferOption(entityBuffer, nilEntities),
       bufferOption(normBuffer, nilNorms),
       bufferOption(chunkBuffer, nilChunks),
-      tree, deps
+      tree, deps, semRoles
     )
   }
 
-  private def loadDependencies(r:BufferedReader):DirectedGraph[String] = {
+  private def loadDirectedGraph(r:BufferedReader, endMarker:String):DirectedGraph[String] = {
     val edges = new ListBuffer[(Int, Int, String)]
     val roots = new mutable.HashSet[Int]()
     var bits = read(r)
@@ -165,12 +168,12 @@ class DocumentSerializer {
     }
     do {
       bits = read(r)
-      if (bits(0) != END_OF_DEPENDENCIES) {
+      if (bits(0) != endMarker) {
         val edge = new Tuple3(bits(0).toInt, bits(1).toInt, bits(2))
         //println("adding edge: " + edge)
         edges += edge
       }
-    } while(bits(0) != END_OF_DEPENDENCIES)
+    } while(bits(0) != endMarker)
     val dg = new DirectedGraph[String](edges.toList, roots.toSet)
     //println(dg)
     dg
@@ -220,11 +223,15 @@ class DocumentSerializer {
     }
     if (sent.dependencies.nonEmpty) {
       os.println(START_DEPENDENCIES + SEP + sent.dependencies.size)
-      sent.dependencies.foreach(g => saveDependencies(g, os))
+      sent.dependencies.foreach(g => saveDirectedGraph(g, END_OF_DEPENDENCIES, os))
     }
     if (sent.syntacticTree.nonEmpty) {
       os.println(START_CONSTITUENTS + SEP + "1")
       sent.syntacticTree.foreach(t => { saveTree(t, os); os.println() })
+    }
+    if (sent.semanticRoles.nonEmpty) {
+      os.println(START_SEMROLES + SEP + sent.semanticRoles.size)
+      sent.semanticRoles.foreach(g => saveDirectedGraph(g, END_OF_SEMROLES, os))
     }
     os.println(END_OF_SENTENCE)
   }
@@ -296,14 +303,14 @@ class DocumentSerializer {
     os.println()
   }
 
-  private def saveDependencies(dg:DirectedGraph[String], os:PrintWriter) {
+  private def saveDirectedGraph(dg:DirectedGraph[String], endMarker:String, os:PrintWriter) {
     os.println(dg.roots.mkString(sep = SEP))
     val it = new DirectedGraphEdgeIterator[String](dg)
     while(it.hasNext) {
       val edge = it.next()
       os.println(edge._1 + SEP + edge._2 + SEP + edge._3)
     }
-    os.println(END_OF_DEPENDENCIES)
+    os.println(endMarker)
   }
 
   private def loadDiscourse(r:BufferedReader):DiscourseTree = {
@@ -403,10 +410,12 @@ object DocumentSerializer {
   val START_TOKENS = "T"
   val START_COREF = "C"
   val START_DEPENDENCIES = "D"
+  val START_SEMROLES = "SR"
   val START_CONSTITUENTS = "Y"
   val START_DISCOURSE = "R"
 
   val END_OF_SENTENCE = "EOS"
   val END_OF_DOCUMENT = "EOD"
   val END_OF_DEPENDENCIES = "EOX"
+  val END_OF_SEMROLES = "EOSR"
 }
