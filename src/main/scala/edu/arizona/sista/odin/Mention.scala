@@ -31,11 +31,6 @@ trait Mention extends Equals {
     */
   val arguments: Map[String, Seq[Mention]]
 
-  /** points to an Xref object that represents an entry in an external database */
-  val xref: Option[Xref]
-  def isGrounded: Boolean = xref.isDefined
-  def ground(namespace: String, id: String): Mention
-
   /** default label */
   def label: String = labels.head
 
@@ -113,8 +108,7 @@ class TextBoundMention(
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
-    val foundBy: String,
-    val xref: Option[Xref] = None
+    val foundBy: String
 ) extends Mention {
 
   def this(
@@ -125,16 +119,6 @@ class TextBoundMention(
     keep: Boolean,
     foundBy: String
   ) = this(Seq(label), tokenInterval, sentence, document, keep, foundBy)
-
-  def ground(namespace: String, id: String): Mention =
-    new TextBoundMention(
-      labels,
-      tokenInterval,
-      sentence,
-      document,
-      keep,
-      foundBy,
-      Some(Xref(namespace, id)))
 
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
@@ -147,8 +131,7 @@ class EventMention(
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
-    val foundBy: String,
-    val xref: Option[Xref] = None
+    val foundBy: String
 ) extends Mention {
 
   def this(
@@ -160,17 +143,6 @@ class EventMention(
     keep: Boolean,
     foundBy: String
   ) = this(Seq(label), trigger, arguments, sentence, document, keep, foundBy)
-
-  def ground(namespace: String, id: String): Mention =
-    new EventMention(
-      labels,
-      trigger,
-      arguments,
-      sentence,
-      document,
-      keep,
-      foundBy,
-      Some(Xref(namespace, id)))
 
   // token interval that contains trigger and all matched arguments
   override def tokenInterval: Interval = {
@@ -203,8 +175,7 @@ class RelationMention(
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
-    val foundBy: String,
-    val xref: Option[Xref] = None
+    val foundBy: String
 ) extends Mention {
 
   require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
@@ -217,16 +188,6 @@ class RelationMention(
     keep: Boolean,
     foundBy: String
   ) = this(Seq(label), arguments, sentence, document, keep, foundBy)
-
-  def ground(namespace: String, id: String): Mention =
-    new RelationMention(
-      labels,
-      arguments,
-      sentence,
-      document,
-      keep,
-      foundBy,
-      Some(Xref(namespace, id)))
 
   // token interval that contains all matched arguments
   override def tokenInterval: Interval = {

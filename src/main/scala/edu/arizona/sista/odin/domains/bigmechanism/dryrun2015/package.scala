@@ -60,8 +60,8 @@ package object dryrun2015 {
       case mention: TextBoundMention =>
         mStrings += s"${indent}TextBoundMention: [S${mention.sentence}]: ${mention.label}"
         mStrings += s"${indent}text: ${mention.text}"
-        if (mention.isGrounded)
-          mStrings += s"${indent}xref: ${mention.xref.get}"
+        //if (mention.isGrounded)
+        //  mStrings += s"${indent}xref: ${mention.xref.get}"
         if (level == 0) mStrings += ("=" * 80)
       case mention: EventMention =>
         mStrings += s"${indent}EventMention: [S${mention.sentence}]: ${mention.label}"
