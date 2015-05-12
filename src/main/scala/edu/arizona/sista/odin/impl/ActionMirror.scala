@@ -10,8 +10,8 @@ class ActionMirror[A <: Actions : ClassTag](actions: A) {
   def reflect(name: String): Action = {
     val methodSymbol = instanceMirror.symbol.typeSignature.member(TermName(name)).asMethod
     val methodMirror = instanceMirror.reflectMethod(methodSymbol)
-    if (methodSymbol.returnType.dealias == typeOf[Action].dealias) methodMirror().asInstanceOf[Action]
-    else if (methodSymbol.returnType == typeOf[Seq[Mention]]) {
+    if (methodSymbol.returnType <:< typeOf[Action]) methodMirror().asInstanceOf[Action]
+    else if (methodSymbol.returnType <:< typeOf[Seq[Mention]]) {
       def action(mentions: Seq[Mention], state: State): Seq[Mention] =
         methodMirror(mentions, state).asInstanceOf[Seq[Mention]]
       action _
