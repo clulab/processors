@@ -20,10 +20,10 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
 
     annotate(doc)
 
-    assertTrue(doc.sentences(0).entities.get(7) == "B-GENE")
-    assertTrue(doc.sentences(1).entities.get(1) == "B-GENE")
-    assertTrue(doc.sentences(1).entities.get(2) == "I-GENE")
-    assertTrue(doc.sentences(1).entities.get(6) == "B-GENE")
+    assertTrue(doc.sentences(0).entities.get(7) == "B-Gene_or_gene_product")
+    assertTrue(doc.sentences(1).entities.get(1) == "B-Gene_or_gene_product")
+    assertTrue(doc.sentences(1).entities.get(2) == "I-Gene_or_gene_product")
+    assertTrue(doc.sentences(1).entities.get(6) == "B-Gene_or_gene_product")
 
     var i = 0
     for(s <- doc.sentences) {
@@ -51,9 +51,9 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
 
     annotate(doc)
 
-    assertTrue(doc.sentences(0).entities.get(7) == "B-GENE")
-    assertTrue(doc.sentences(0).entities.get(8) == "I-GENE")
-    assertTrue(doc.sentences(1).entities.get(1) == "B-GENE")
+    assertTrue(doc.sentences(0).entities.get(7) == "B-Gene_or_gene_product")
+    assertTrue(doc.sentences(0).entities.get(8) == "I-Gene_or_gene_product")
+    assertTrue(doc.sentences(1).entities.get(1) == "B-Gene_or_gene_product")
 
     var i = 0
     for(s <- doc.sentences) {

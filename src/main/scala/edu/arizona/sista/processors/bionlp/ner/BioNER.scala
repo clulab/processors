@@ -55,7 +55,7 @@ class BioNER {
     val labels = new ListBuffer[String]
     val predictions = crfClassifier.get.classify(sentence)
     for(l <- predictions) {
-      labels += l.getString(classOf[AnswerAnnotation])
+      labels += reverseNormalize(l.getString(classOf[AnswerAnnotation]))
     }
     if(BioNER.USE_IO) ioToIob(labels.toList)
     labels.toList
@@ -79,14 +79,14 @@ object BioNER {
   val USE_IO = false
 
   /** Reads IOB data directly into Java lists, because the CRF needs the data of this type */
-  def readData(path:String, convertToIOFormat:Boolean):JavaList[JavaList[CoreLabel]] = {
+  def readData(path: String, convertToIOFormat: Boolean): JavaList[JavaList[CoreLabel]] = {
     val sentences = new util.ArrayList[JavaList[CoreLabel]]()
     var crtSentence = new util.ArrayList[CoreLabel]()
     var totalTokens = 0
-    for(line <- io.Source.fromFile(path).getLines()) {
+    for (line <- io.Source.fromFile(path).getLines()) {
       val trimmed = line.trim
-      if(trimmed.isEmpty) {
-        if(crtSentence.size() > 0) {
+      if (trimmed.isEmpty) {
+        if (crtSentence.size() > 0) {
           sentences.add(crtSentence)
           crtSentence = new util.ArrayList[CoreLabel]()
         }
@@ -99,7 +99,7 @@ object BioNER {
     sentences
   }
 
-  def mkCoreLabel(line:String, convertToIOFormat:Boolean):CoreLabel = {
+  def mkCoreLabel(line: String, convertToIOFormat: Boolean): CoreLabel = {
     val l = new CoreLabel()
     val bits = line.split("\\s+") // robustSplit(line, 3)
     assert(bits.length == 4)
@@ -113,11 +113,17 @@ object BioNER {
     l
   }
 
-  def normalizeLabel(l:String, convertToIOFormat:Boolean):String = l match {
-    case "B-Gene_or_gene_product" => if(convertToIOFormat) "I-GENE" else "B-GENE"
+  def normalizeLabel(l: String, convertToIOFormat: Boolean): String = l match {
+    case "B-Gene_or_gene_product" => if (convertToIOFormat) "I-GENE" else "B-GENE"
     case "I-Gene_or_gene_product" => "I-GENE"
     case _ => "O"
   }
+
+  def reverseNormalize(l: String) =
+    l match {
+      case RuleNER.OUTSIDE_LABEL => RuleNER.OUTSIDE_LABEL
+      case _ => BioNLPProcessor.NORMALIZED_LABELS.get(l).get // TODO: we should remove normalizeLabel and reverseNormalize
+    }
 
   def ioToIob(labels:List[String]):List[String] = {
     val converted = new ListBuffer[String]
@@ -135,7 +141,7 @@ object BioNER {
   /** Splits a line into k tokens, knowing that the left-most one might contain spaces */
   def robustSplit(line:String, k:Int):Array[String] = {
     val bits = new ListBuffer[String]
-    var pos = line.size - 1
+    var pos = line.length - 1
     for(i <- 0 until k - 1) {
       val newPos = line.lastIndexOf(' ', pos)
       assert(newPos > 0)
@@ -189,42 +195,7 @@ object BioNER {
       val ner = load(props.getProperty("model"))
       shell(ner)
     }
-
-    /*
-    if(props.containsKey("banner")) {
-      val outputs = testWithBanner(props.getProperty("banner"))
-      val scorer = new SeqScorer
-      scorer.score(outputs)
-    }
-    */
   }
-
-  /*
-  def testWithBanner(path:String): List[List[(String, String)]] = {
-    val testCorpus = readData(path)
-    val proc = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = false)
-    val outputs = new ListBuffer[List[(String, String)]]
-    for(sentence <- testCorpus) {
-      val golds = fetchGoldLabels(sentence.asScala.toList)
-      val preds = classifyWithBanner(sentence, proc)
-      outputs += golds.zip(preds)
-    }
-    outputs.toList
-  }
-
-  def classifyWithBanner(sentence:JavaList[CoreLabel], proc:Processor):List[String] = {
-    val tokens = new ListBuffer[String]
-    for(token <- sentence) tokens += token.word()
-    //println("TOKENS: " + tokens.mkString(" "))
-    val doc = proc.mkDocumentFromTokens(List(tokens))
-    proc.tagPartsOfSpeech(doc)
-    proc.lemmatize(doc)
-    proc.recognizeNamedEntities(doc)
-    val nes = doc.sentences(0).entities.get.toList.map(_.replace("GENE", "Gene_or_gene_product"))
-    //println("NER: " + nes.mkString(" "))
-    nes
-  }
-  */
 
   def shell(ner:BioNER) {
     val proc:Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
