@@ -21,21 +21,51 @@ class RuleNER(val matchers:Array[(String, HashTrie)]) {
     val overallLabels = new Array[String](sentence.size)
     for(i <- 0 until overallLabels.length) overallLabels(i) = OUTSIDE_LABEL
     for(matcher <- matchers) {
-      val labels = matcher._2.find(sentence.words, matcher._1, OUTSIDE_LABEL)
+      // the actual match
+      var labels = matcher._2.find(sentence.words, matcher._1, OUTSIDE_LABEL)
+
+      // some matchers are overmatching due to the case-insensitive setting,
+      // e.g., Gene_or_gene_product contains protein names that are identical to prepositions, such as "IN" and "TO"
+      labels = filterMatches(labels, sentence)
+      //println("LABELS: " + labels.mkString(" "))
+
       // matchers must be stored in descending order of their priorities
       // so we do not allow new labels to overwrite labels already generated
       RuleNER.mergeLabels(overallLabels, labels)
     }
     overallLabels
   }
+
+  def filterMatches(labels:Array[String], sentence:Sentence):Array[String] = {
+    val filtered = removeSinglePrepositions(labels, sentence)
+
+    filtered
+  }
+
+  /** Remove single tokens that are not tagged as nouns */
+  def removeSinglePrepositions(labels:Array[String], sentence:Sentence):Array[String] = {
+    val filtered = new Array[String](labels.length)
+    for(i <- 0 until labels.length) {
+      if(labels(i).startsWith("B-") &&
+         (i == labels.length - 1 || ! labels(i + 1).startsWith("I-")) && // single token entity
+         ! sentence.tags.get(i).startsWith("NN")) { // not a noun
+        filtered(i) = RuleNER.OUTSIDE_LABEL
+      } else {
+        filtered(i) = labels(i)
+      }
+    }
+    filtered
+  }
+
 }
 
 object RuleNER {
   val logger = LoggerFactory.getLogger(classOf[RuleNER])
   val OUTSIDE_LABEL = "O"
 
-  /** Loads all KBs; KBs must be listed in descending order of their priorities, e.g., protein families before Uniprot */
+  /** Loads all KBs; KBs must be listed in descending order of their priorities */
   def load(kbs:List[String], caseInsensitive:Boolean = true):RuleNER = {
+    logger.debug("Beginning to load the KBs for the rule-based bio NER...")
     val matchers = new ArrayBuffer[(String, HashTrie)]
     for(kb <- kbs) {
       val name = extractKBName(kb)
@@ -47,6 +77,7 @@ object RuleNER {
       matchers += new Tuple2(name, matcher)
       reader.close()
     }
+    logger.debug("KB loading completed.")
     new RuleNER(matchers.toArray)
   }
 

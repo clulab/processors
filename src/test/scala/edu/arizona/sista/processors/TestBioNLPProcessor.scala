@@ -20,19 +20,21 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
 
     annotate(doc)
 
-    assertTrue(doc.sentences(0).entities.get(7) == "B-Gene_or_gene_product")
-    assertTrue(doc.sentences(1).entities.get(1) == "B-Gene_or_gene_product")
-    assertTrue(doc.sentences(1).entities.get(2) == "I-Gene_or_gene_product")
-    assertTrue(doc.sentences(1).entities.get(6) == "B-Gene_or_gene_product")
-
     var i = 0
     for(s <- doc.sentences) {
-      println(s"Sentence #$i")
-      for (ne <- s.entities.get) {
-        println(s"\tNE: $ne")
-      }
+      println(s"Labels for sentence #$i: " + s.entities.get.mkString(" "))
       i += 1
     }
+
+
+    assertTrue(doc.sentences(0).entities.get(4) == "B-Gene_or_gene_product")
+    assertTrue(doc.sentences(0).entities.get(7) == "B-Family")
+    assertTrue(doc.sentences(0).entities.get(8) == "O")
+
+    assertTrue(doc.sentences(1).entities.get(1) == "B-Family")
+    assertTrue(doc.sentences(1).entities.get(2) == "O")
+    assertTrue(doc.sentences(1).entities.get(6) == "B-Gene_or_gene_product")
+
   }
 
   @Test def testNER2() {
@@ -47,22 +49,20 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
       "We also demonstrate considerable isoform diversity of both hc-Rel and p105. " +
       "We show that this heterogeneity is, in part, the result of phosphorylation. " +
       "Furthermore, we demonstrate that p105 and hc-Rel are tyrosine kinase substrates. " +
-      "This finding indicates a role for both proteins in intracellular signal transduction pathways which are modulated by modification of their phosphorylation status.", keepText = false);
+      "This finding indicates a role for both proteins in intracellular signal transduction pathways which are modulated by modification of their phosphorylation status.", keepText = false)
 
     annotate(doc)
 
-    assertTrue(doc.sentences(0).entities.get(7) == "B-Gene_or_gene_product")
-    assertTrue(doc.sentences(0).entities.get(8) == "I-Gene_or_gene_product")
-    assertTrue(doc.sentences(1).entities.get(1) == "B-Gene_or_gene_product")
-
     var i = 0
     for(s <- doc.sentences) {
-      println(s"Sentence #$i")
-      for (ne <- s.entities.get) {
-        println(s"\tNE: $ne")
-      }
+      println(s"Labels for sentence #$i: " + s.entities.get.mkString(" "))
       i += 1
     }
+
+    assertTrue(doc.sentences(0).entities.get(7) == "B-Simple_chemical")
+    assertTrue(doc.sentences(0).entities.get(8) == "O")
+    assertTrue(doc.sentences(0).entities.get(12) == "B-Gene_or_gene_product")
+    assertTrue(doc.sentences(1).entities.get(1) == "B-Gene_or_gene_product")
   }
 
   def annotate(doc:Document) {
