@@ -40,6 +40,12 @@ class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) 
 
     loop(1, initialState)
   }
+
+  def extractByType[M <: Mention : ClassTag](document: Document, initialState: State = new State): Seq[M] =
+    extractFrom(document, initialState) flatMap {
+      case m: M => Some(m)
+      case _ => None
+    }
 }
 
 object ExtractorEngine {
