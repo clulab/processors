@@ -1,9 +1,9 @@
 package edu.arizona.sista.swirl2
 
-import java.io.File
+import java.io.{PrintWriter, File}
 
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
-import edu.arizona.sista.processors.{Document, Processor}
+import edu.arizona.sista.processors.{DocumentSerializer, Document, Processor}
 import edu.arizona.sista.struct.DirectedGraph
 import org.slf4j.LoggerFactory
 
@@ -252,7 +252,12 @@ object Reader {
     val reader = new Reader
     val proc = new FastNLPProcessor(useMalt = false, useBasicDependencies = false)
     val file = new File(args(0))
+    val outputFile = new File(args(0) + ".ser")
 
-    reader.read(file, proc, verbose = false)
+    val doc = reader.read(file, proc, verbose = false)
+    val serializer = new DocumentSerializer
+    val os = new PrintWriter(outputFile)
+    serializer.save(doc, os)
+    os.close()
   }
 }

@@ -91,7 +91,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
       val words = CoreNLPUtils.parensToSymbols(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
       sa.set(classOf[CoreAnnotations.TokensAnnotation], words)
 
-      println("Parsing sentence: " + words.map(_.word()).mkString(" "))
+      // println("Parsing sentence: " + words.map(_.word()).mkString(" "))
 
       // the actual parsing job
       val gs = stanfordDepParser.predict(sa)
