@@ -12,7 +12,7 @@ package object dryrun2015 {
     val mentionsBySentence = mentions groupBy (_.sentence) mapValues (_.sortBy(_.start)) withDefaultValue Nil
     for ((s, i) <- doc.sentences.zipWithIndex) {
       println(s"sentence #$i")
-      println(s.getSentenceText())
+      println(s.getSentenceText)
       println
       mentionsBySentence(i).sortBy(_.label) foreach displayMention
       println("=" * 50)

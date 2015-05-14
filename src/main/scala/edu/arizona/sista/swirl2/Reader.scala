@@ -1,4 +1,4 @@
-package edu.arizona.sista.swirl
+package edu.arizona.sista.swirl2
 
 import java.io.File
 
