@@ -18,7 +18,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val mentions = Seq(new TextBoundMention("Phosphorylation", Interval(0, 4), 0, doc, true, "<MANUAL>"))
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
-    assert(results.size == 1)
+    results.size should be (1)
   }
 
   text2 should "contain one match" in {
@@ -28,7 +28,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
                        new TextBoundMention("Phosphorylation", Interval(0, 7), 0, doc, true, "<MANUAL>"))
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
-    assert(results.size == 1)
+    results.size should be (1)
   }
 
   text3 should "contain two matches" in {
@@ -38,7 +38,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
                        new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>"))
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
-    assert(results.size == 2)
+    results.size should be (2)
   }
 
   val text4 = "a b c d e f g h i c"
@@ -47,33 +47,33 @@ class TestTokenPattern extends FlatSpec with Matchers {
   text4 should "match with a lazy plus" in {
     val p = TokenPattern.compile("a /./+? c")
     val results = p.findAllIn(0, doc, None)
-    assert(results.size == 1)
-    assert(results.head.interval.start == 0)
-    assert(results.head.interval.end == 3)
+    results.size should be (1)
+    results.head.interval.start should be (0)
+    results.head.interval.end should be (3)
   }
 
   it should "match with a greedy plus" in {
     val p = TokenPattern.compile("a /./+ c")
     val results = p.findAllIn(0, doc, None)
-    assert(results.size == 1)
-    assert(results.head.interval.start == 0)
-    assert(results.head.interval.end == 10)
+    results.size should be (1)
+    results.head.interval.start should be (0)
+    results.head.interval.end should be (10)
   }
 
   it should "match with a lazy star" in {
     val p = TokenPattern.compile("a /./*? c")
     val results = p.findAllIn(0, doc, None)
-    assert(results.size == 1)
-    assert(results.head.interval.start == 0)
-    assert(results.head.interval.end == 3)
+    results.size should be (1)
+    results.head.interval.start should be (0)
+    results.head.interval.end should be (3)
   }
 
   it should "match with a greedy star" in {
     val p = TokenPattern.compile("a /./* c")
     val results = p.findAllIn(0, doc, None)
-    assert(results.size == 1)
-    assert(results.head.interval.start == 0)
-    assert(results.head.interval.end == 10)
+    results.size should be (1)
+    results.head.interval.start should be (0)
+    results.head.interval.end should be (10)
   }
 
   val text5 = "JAK3 phosphorylates three HuR residues (Y63, Y68, Y200)"
