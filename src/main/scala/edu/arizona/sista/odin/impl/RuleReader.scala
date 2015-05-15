@@ -111,7 +111,7 @@ object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
   val DefaultKeep = true
-  val DefaultAction = "identity"
+  val DefaultAction = "default"
 
   // rule intermediary representation
   class Rule(

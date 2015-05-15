@@ -8,6 +8,6 @@ package edu.arizona.sista.odin
   * }}}
   */
 class Actions {
-  /** Returns the mentions untransformed */
-  val identity: Action = identityAction
+  /** The default action. Set to the identityAction. */
+  val default: Action = identityAction
 }
