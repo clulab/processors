@@ -75,4 +75,34 @@ class TestTokenPattern extends FlatSpec with Matchers {
     assert(results.head.interval.start == 0)
     assert(results.head.interval.end == 10)
   }
+
+  val text5 = "JAK3 phosphorylates three HuR residues (Y63, Y68, Y200)"
+  val doc5 = proc annotate text5
+
+  text5 should "match Y200 using greedy plus" in {
+    val p = TokenPattern.compile("/./+ @site:Site")
+    val mentions = Seq(
+      new TextBoundMention("Site", Interval(6), 0, doc5, true, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(8), 0, doc5, true, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(10), 0, doc5, true, "<MANUAL>")
+    )
+    val state = State(mentions)
+    val results = p.findAllIn(0, doc5, state)
+    results.size should be (1)
+    results.head.interval.start should be (10)
+  }
+
+  it should "match Y63 using lazy plus" in {
+    val p = TokenPattern.compile("/./+? @site:Site")
+    val mentions = Seq(
+      new TextBoundMention("Site", Interval(6), 0, doc5, true, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(8), 0, doc5, true, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(10), 0, doc5, true, "<MANUAL>")
+    )
+    val state = State(mentions)
+    val results = p.findAllIn(0, doc5, state)
+    results.size should be (1)
+    results.head.interval.start should be (6)
+  }
+
 }
