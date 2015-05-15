@@ -92,13 +92,22 @@ trait Mention extends Equals {
   }
 
   override def hashCode: Int = {
-    val h0 = symmetricSeed
+    val h0 = stringHash("edu.arizona.sista.odin.Mention")
     val h1 = mix(h0, labels.hashCode)
     val h2 = mix(h1, tokenInterval.hashCode)
     val h3 = mix(h2, sentence.hashCode)
     val h4 = mix(h3, document.hashCode)
-    val h5 = mixLast(h4, arguments.hashCode)
+    val h5 = mixLast(h4, argumentsHashCode)
     finalizeHash(h5, 5)
+  }
+
+  private def argumentsHashCode: Int = {
+    var h = stringHash("Mention.arguments")
+    for ((name, args) <- arguments.toSeq.sortBy(_._1)) {
+      h = mix(h, stringHash(name))
+      h = mix(h, unorderedHash(args))
+    }
+    finalizeHash(h, arguments.size * 2)
   }
 }
 
@@ -134,6 +143,8 @@ class EventMention(
     val foundBy: String
 ) extends Mention {
 
+  require(arguments.values.flatten.nonEmpty, "EventMentions need arguments")
+
   def this(
     label: String,
     trigger: TextBoundMention,
@@ -162,7 +173,7 @@ class EventMention(
 
   // trigger should be part of the hashCode too
   override def hashCode: Int = {
-    val h0 = symmetricSeed
+    val h0 = stringHash("edu.arizona.sista.odin.EventMention")
     val h1 = mix(h0, super.hashCode)
     val h2 = mixLast(h1, trigger.hashCode)
     finalizeHash(h2, 2)
