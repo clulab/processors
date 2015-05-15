@@ -53,7 +53,7 @@ class TokenPattern(val start: Inst, val lookahead: Option[TokenPatternLookaheadA
         case Nil => collected
         case results =>
           val r = results minBy (_.interval.size)
-          collect(r.end, results ++ collected)
+          collect(r.end, collected ++ results)
       }
     collect(tok, Nil)
   }

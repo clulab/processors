@@ -89,7 +89,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val state = State(mentions)
     val results = p.findAllIn(0, doc5, state)
     results.size should be (1)
-    results.head.interval.start should be (10)
+    results.head.interval.start should be (0)
+    results.head.interval.end should be (11)
   }
 
   it should "match Y63 using lazy plus" in {
@@ -101,8 +102,14 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
     val state = State(mentions)
     val results = p.findAllIn(0, doc5, state)
-    results.size should be (1)
-    results.head.interval.start should be (6)
+    results.size should be (3)
+    results(0).interval.start should be (0)
+    results(0).interval.end should be (7)
+    results(1).interval.start should be (7)
+    results(1).interval.end should be (9)
+    results(2).interval.start should be (9)
+    results(2).interval.end should be (11)
+
   }
 
 }

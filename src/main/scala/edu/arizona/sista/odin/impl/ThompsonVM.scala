@@ -30,7 +30,8 @@ object ThompsonVM {
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
     def isDone: Boolean = bundles exists (_ exists (_.isDone))
-    def results: Seq[(NamedGroups, NamedMentions)] = bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
+    def results: Seq[(NamedGroups, NamedMentions)] =
+      bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
   }
 
   def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[(NamedGroups, NamedMentions)] = {
@@ -91,11 +92,11 @@ object ThompsonVM {
       }
 
     @annotation.tailrec
-    def loop(threads: Seq[Thread], result: Option[Thread]): Option[Thread] = {
-      if (threads.isEmpty) result
+    def loop(threads: Seq[Thread], currentResult: Option[Thread]): Option[Thread] = {
+      if (threads.isEmpty) currentResult
       else {
-        val (ts, r) = handleDone(threads)
-        loop(stepThreads(ts), r)
+        val (ts, nextResult) = handleDone(threads)
+        loop(stepThreads(ts), nextResult orElse currentResult)
       }
     }
 
