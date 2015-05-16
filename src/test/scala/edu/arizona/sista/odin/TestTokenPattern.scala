@@ -112,7 +112,47 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
   }
 
-  it should "match an event mention" in {
+  it should "match event with lazy plus" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: Phosphorylation
+      |  pattern: |
+      |    (@cause:BioChemicalEntity)?
+      |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
+      |    [!tag=/^V/]*?
+      |    @theme:BioChemicalEntity /./+? @site:Site""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("BioChemicalEntity", Interval(3), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(6), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(8), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(10), 0, doc5, false, "<MANUAL>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc5, state)
+
+    results should have size (1)
+    val event = results.head
+
+    event.arguments should contain key ("cause")
+    event.arguments("cause") should have size (1)
+    event.arguments("cause").head.text should be ("JAK3")
+
+    event.arguments should contain key ("theme")
+    event.arguments("theme") should have size (1)
+    event.arguments("theme").head.text should be ("HuR")
+
+    event.arguments should contain key ("site")
+    event.arguments("site") should have size (1)
+    event.arguments("site").head.text should be ("Y63")
+  }
+
+  it should "match event with greedy plus" in {
     val rule = """
       |- name: test_rule
       |  priority: 1
@@ -123,6 +163,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
       |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
       |    [!tag=/^V/]*?
       |    @theme:BioChemicalEntity /./+ @site:Site""".stripMargin
+
     val mentions = Seq(
       new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc5, false, "<MANUAL>"),
       new TextBoundMention("BioChemicalEntity", Interval(3), 0, doc5, false, "<MANUAL>"),
@@ -130,14 +171,25 @@ class TestTokenPattern extends FlatSpec with Matchers {
       new TextBoundMention("Site", Interval(8), 0, doc5, false, "<MANUAL>"),
       new TextBoundMention("Site", Interval(10), 0, doc5, false, "<MANUAL>")
     )
+
     val state = State(mentions)
     val ee = ExtractorEngine(rule)
     val results = ee.extractFrom(doc5, state)
+
     results should have size (1)
     val event = results.head
+
     event.arguments should contain key ("cause")
+    event.arguments("cause") should have size (1)
+    event.arguments("cause").head.text should be ("JAK3")
+
     event.arguments should contain key ("theme")
+    event.arguments("theme") should have size (1)
+    event.arguments("theme").head.text should be ("HuR")
+
     event.arguments should contain key ("site")
+    event.arguments("site") should have size (1)
+    event.arguments("site").head.text should be ("Y200")
   }
 
 }
