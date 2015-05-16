@@ -18,7 +18,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val mentions = Seq(new TextBoundMention("Phosphorylation", Interval(0, 4), 0, doc, true, "<MANUAL>"))
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
-    results.size should be (1)
+    results should have size (1)
   }
 
   text2 should "contain one match" in {
@@ -28,7 +28,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
                        new TextBoundMention("Phosphorylation", Interval(0, 7), 0, doc, true, "<MANUAL>"))
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
-    results.size should be (1)
+    results should have size (1)
   }
 
   text3 should "contain two matches" in {
@@ -38,7 +38,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
                        new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>"))
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
-    results.size should be (2)
+    results should have size (2)
   }
 
   val text4 = "a b c d e f g h i c"
@@ -47,7 +47,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   text4 should "match with a lazy plus" in {
     val p = TokenPattern.compile("a /./+? c")
     val results = p.findAllIn(0, doc, None)
-    results.size should be (1)
+    results should have size (1)
     results.head.interval.start should be (0)
     results.head.interval.end should be (3)
   }
@@ -55,7 +55,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   it should "match with a greedy plus" in {
     val p = TokenPattern.compile("a /./+ c")
     val results = p.findAllIn(0, doc, None)
-    results.size should be (1)
+    results should have size (1)
     results.head.interval.start should be (0)
     results.head.interval.end should be (10)
   }
@@ -63,7 +63,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   it should "match with a lazy star" in {
     val p = TokenPattern.compile("a /./*? c")
     val results = p.findAllIn(0, doc, None)
-    results.size should be (1)
+    results should have size (1)
     results.head.interval.start should be (0)
     results.head.interval.end should be (3)
   }
@@ -71,7 +71,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   it should "match with a greedy star" in {
     val p = TokenPattern.compile("a /./* c")
     val results = p.findAllIn(0, doc, None)
-    results.size should be (1)
+    results should have size (1)
     results.head.interval.start should be (0)
     results.head.interval.end should be (10)
   }
@@ -88,7 +88,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
     val state = State(mentions)
     val results = p.findAllIn(0, doc5, state)
-    results.size should be (1)
+    results should have size (1)
     results.head.interval.start should be (0)
     results.head.interval.end should be (11)
   }
@@ -102,7 +102,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
     val state = State(mentions)
     val results = p.findAllIn(0, doc5, state)
-    results.size should be (3)
+    results should have size (3)
     results(0).interval.start should be (0)
     results(0).interval.end should be (7)
     results(1).interval.start should be (7)
@@ -110,6 +110,34 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results(2).interval.start should be (9)
     results(2).interval.end should be (11)
 
+  }
+
+  it should "match an event mention" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: Phosphorylation
+      |  pattern: |
+      |    (@cause:BioChemicalEntity)?
+      |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
+      |    [!tag=/^V/]*?
+      |    @theme:BioChemicalEntity /./+ @site:Site""".stripMargin
+    val mentions = Seq(
+      new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("BioChemicalEntity", Interval(3), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(6), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(8), 0, doc5, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(10), 0, doc5, false, "<MANUAL>")
+    )
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc5, state)
+    results should have size (1)
+    val event = results.head
+    event.arguments should contain key ("cause")
+    event.arguments should contain key ("theme")
+    event.arguments should contain key ("site")
   }
 
 }
