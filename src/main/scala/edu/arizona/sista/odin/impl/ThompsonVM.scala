@@ -120,11 +120,7 @@ object ThompsonVM {
     def loop(threads: Seq[Thread], currentResult: Option[Thread]): Option[Thread] = {
       if (threads.isEmpty) currentResult
       else {
-        println(threads)
         val (ts, nextResult) = handleDone(threads)
-        println(ts)
-        println(nextResult orElse currentResult)
-        println("-" * 30)
         loop(stepThreads(ts), nextResult orElse currentResult)
       }
     }
