@@ -48,32 +48,40 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val p = TokenPattern.compile("a /./+? c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
-    results.head.interval.start should be (0)
-    results.head.interval.end should be (3)
+    results.head.interval should have (
+      'start (0),
+      'end (3)
+    )
   }
 
   it should "match with a greedy plus" in {
     val p = TokenPattern.compile("a /./+ c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
-    results.head.interval.start should be (0)
-    results.head.interval.end should be (10)
+    results.head.interval should have (
+      'start (0),
+      'end (10)
+    )
   }
 
   it should "match with a lazy star" in {
     val p = TokenPattern.compile("a /./*? c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
-    results.head.interval.start should be (0)
-    results.head.interval.end should be (3)
+    results.head.interval should have (
+      'start (0),
+      'end (3)
+    )
   }
 
   it should "match with a greedy star" in {
     val p = TokenPattern.compile("a /./* c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
-    results.head.interval.start should be (0)
-    results.head.interval.end should be (10)
+    results.head.interval should have (
+      'start (0),
+      'end (10)
+    )
   }
 
   val text5 = "JAK3 phosphorylates three HuR residues (Y63, Y68, Y200)"
@@ -89,8 +97,10 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val state = State(mentions)
     val results = p.findAllIn(0, doc5, state)
     results should have size (1)
-    results.head.interval.start should be (0)
-    results.head.interval.end should be (11)
+    results.head.interval should have (
+      'start (0),
+      'end (11)
+    )
   }
 
   it should "match Y63 using lazy plus" in {
@@ -103,12 +113,18 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val state = State(mentions)
     val results = p.findAllIn(0, doc5, state)
     results should have size (3)
-    results(0).interval.start should be (0)
-    results(0).interval.end should be (7)
-    results(1).interval.start should be (7)
-    results(1).interval.end should be (9)
-    results(2).interval.start should be (9)
-    results(2).interval.end should be (11)
+    results(0).interval should have (
+      'start (0),
+      'end (7)
+    )
+    results(1).interval should have (
+      'start (7),
+      'end (9)
+    )
+    results(2).interval should have (
+      'start (9),
+      'end (11)
+    )
 
   }
 
