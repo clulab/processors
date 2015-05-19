@@ -65,6 +65,21 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
     assertTrue(doc.sentences(1).entities.get(1) == "B-Gene_or_gene_product")
   }
 
+  @Test def testNER3() {
+    val doc = proc.mkDocument("Mek is a protein!")
+
+    annotate(doc)
+
+    var i = 0
+    for(s <- doc.sentences) {
+      println(s"Labels for sentence #$i: " + s.entities.get.mkString(" "))
+      i += 1
+    }
+
+    // TODO: uncomment this after the rules are fixed
+    // assertTrue(doc.sentences(0).entities.get(0) == "B-Family")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)

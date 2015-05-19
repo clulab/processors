@@ -34,17 +34,35 @@ object ThompsonVM {
       bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
   }
 
-  def evaluate(start: Inst, tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[(NamedGroups, NamedMentions)] = {
-    def mkThreads(tok: Int, inst: Inst, groups: NamedGroups, mentions: NamedMentions): Seq[Thread] = inst match {
-      case i: Jump => mkThreads(tok, i.next, groups, mentions)
-      case i: Split => mkThreads(tok, i.lhs, groups, mentions) ++ mkThreads(tok, i.rhs, groups, mentions)
-      case i: SaveStart => mkThreads(tok, i.next, groups + (i.name -> (tok, -1)), mentions)
-      case i: SaveEnd => mkThreads(tok, i.next, groups + (i.name -> (groups(i.name)._1, tok)), mentions)
-      case _ => Seq(SingleThread(tok, inst, groups, mentions))
+  def evaluate(
+      start: Inst,
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: Option[State]
+  ): Seq[(NamedGroups, NamedMentions)] = {
+
+    def mkThreads(
+        tok: Int,
+        inst: Inst,
+        groups: NamedGroups,
+        mentions: NamedMentions
+    ): Seq[Thread] = inst match {
+      case i: Jump =>
+        mkThreads(tok, i.next, groups, mentions)
+      case i: Split =>
+        mkThreads(tok, i.lhs, groups, mentions) ++ mkThreads(tok, i.rhs, groups, mentions)
+      case i: SaveStart =>
+        mkThreads(tok, i.next, groups + (i.name -> (tok, -1)), mentions)
+      case i: SaveEnd =>
+        mkThreads(tok, i.next, groups + (i.name -> (groups(i.name)._1, tok)), mentions)
+      case _ =>
+        Seq(SingleThread(tok, inst, groups, mentions))
     }
 
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
-      case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
+      case i: MatchToken
+          if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
         mkThreads(t.tok + 1, i.next, t.groups, t.mentions)  // token matched, return new threads
       case i: MatchSentenceStart if t.tok == 0 =>
         mkThreads(t.tok, i.next, t.groups, t.mentions)
@@ -56,13 +74,20 @@ object ThompsonVM {
           val bundles = for {
             mention <- s.mentionsFor(sent, t.tok)
             if mention.start == t.tok && mention.matches(i.m)
-          } yield mkThreads(mention.end, i.next, t.groups, mkMentionCapture(t.mentions, i.name, mention))
+          } yield {
+            val captures = mkMentionCapture(t.mentions, i.name, mention)
+            mkThreads(mention.end, i.next, t.groups, captures)
+          }
           if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
       }
       case _ => Nil  // thread died with no match
     }
 
-    def mkMentionCapture(mentions: NamedMentions, name: Option[String], mention: Mention): NamedMentions = name match {
+    def mkMentionCapture(
+        mentions: NamedMentions,
+        name: Option[String],
+        mention: Mention
+    ): NamedMentions = name match {
       case None => mentions
       case Some(name) => mentions + (name -> mention)
     }
