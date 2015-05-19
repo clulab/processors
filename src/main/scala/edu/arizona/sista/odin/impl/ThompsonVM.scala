@@ -97,7 +97,9 @@ object ThompsonVM {
         val ts = stepThreads(bundle)
         if (ts.nonEmpty) Some(ts) else None
       }
-      if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
+      if (bundles.isEmpty) Nil
+      else if (bundles.size == 1) bundles.head
+      else Seq(ThreadBundle(bundles))
     }
 
     def stepThread(t: Thread): Seq[Thread] = t match {
