@@ -208,4 +208,64 @@ class TestTokenPattern extends FlatSpec with Matchers {
     event.arguments("site").head.text should be ("Y200")
   }
 
+  val text6 = "JAK3 complex phosphorylates three HuR residues (Y63, Y68, Y200)"
+  val doc6 = proc annotate text6
+
+  text6 should "match event when there are several entity mentions" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: Phosphorylation
+      |  pattern: |
+      |    (@cause:BioChemicalEntity)? complex?
+      |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
+      |    [!tag=/^V/]*?
+      |    @theme:BioChemicalEntity /./+ @site:Site""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("BioChemicalEntity", Interval(0, 2), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("BioChemicalEntity", Interval(3), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(6), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(8), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(10), 0, doc6, false, "<MANUAL>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc6, state)
+
+    results should have size (2)
+
+    val event1 = results(0)
+
+    event1.arguments should contain key ("cause")
+    event1.arguments("cause") should have size (1)
+    event1.arguments("cause").head.text should contain ("JAK3")
+
+    event1.arguments should contain key ("theme")
+    event1.arguments("theme") should have size (1)
+    event1.arguments("theme").head.text should be ("HuR")
+
+    event1.arguments should contain key ("site")
+    event1.arguments("site") should have size (1)
+    event1.arguments("site").head.text should be ("Y200")
+
+    val event2 = results(0)
+
+    event2.arguments should contain key ("cause")
+    event2.arguments("cause") should have size (1)
+    event2.arguments("cause").head.text should contain ("JAK3")
+
+    event2.arguments should contain key ("theme")
+    event2.arguments("theme") should have size (1)
+    event2.arguments("theme").head.text should be ("HuR")
+
+    event2.arguments should contain key ("site")
+    event2.arguments("site") should have size (1)
+    event2.arguments("site").head.text should be ("Y200")
+
+  }
+
 }
