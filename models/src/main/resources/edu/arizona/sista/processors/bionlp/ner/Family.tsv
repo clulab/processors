@@ -1,4 +1,4 @@
-# Tue May 19 11:52:57 MST 2015
+# Tue May 19 18:21:21 MST 2015
 (	Uracil-5	)	-	methyltransferase
 1,2-dihydroxy-3-keto-5-methylthiopentene	dioxygenase	,	eukaryotes
 1,4-alpha-glucan	branching	enzyme	,	GlgB
@@ -4552,6 +4552,7 @@ Guanylate_cyc_2
 Guanylate_kinase
 Guanylin
 Guanylyl	cyclase
+H-RAS
 H	/	ACA	ribonucleoprotein	complex	,	subunit	Gar1
 H	/	ACA	ribonucleoprotein	complex	,	subunit	Gar1	/	Naf1
 H	/	ACA	ribonucleoprotein	complex	,	subunit	Nhp2	,	eukaryote
