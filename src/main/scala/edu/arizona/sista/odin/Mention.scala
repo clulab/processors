@@ -5,7 +5,7 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.StringMatcher
 
-trait Mention extends Equals {
+trait Mention extends Equals with Ordered[Mention]{
   /** A sequence of labels for this mention.
     * The first label in the sequence is considered the default.
     */
@@ -89,6 +89,25 @@ trait Mention extends Equals {
   override def equals(that: Any): Boolean = that match {
     case that: Mention => that.canEqual(this) && this.hashCode == that.hashCode
     case _ => false
+  }
+
+  def compare(that: Mention): Int = {
+    require(this.document == that.document)
+
+    (this.sentence - that.sentence,
+      this.tokenInterval.start - that.tokenInterval.start,
+      this.tokenInterval.end - that.tokenInterval.end) match {
+      case (0,0,x) => x
+      case (0,x,_) => x
+      case (x,_,_) => x
+    }
+  }
+
+  def precedes(that: Mention): Boolean = {
+    this.compare(that) match {
+      case c if c < 0 => true
+      case _ => false
+    }
   }
 
   override def hashCode: Int = {
