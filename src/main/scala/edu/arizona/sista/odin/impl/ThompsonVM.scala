@@ -78,7 +78,9 @@ object ThompsonVM {
             val captures = mkMentionCapture(t.mentions, i.name, mention)
             mkThreads(mention.end, i.next, t.groups, captures)
           }
-          if (bundles.nonEmpty) Seq(ThreadBundle(bundles)) else Nil
+          if (bundles.isEmpty) Nil
+          else if (bundles.size == 1) bundles.head
+          else Seq(ThreadBundle(bundles))
       }
       case _ => Nil  // thread died with no match
     }
