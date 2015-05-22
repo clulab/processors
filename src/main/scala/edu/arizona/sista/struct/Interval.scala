@@ -7,7 +7,7 @@ package edu.arizona.sista.struct
  *  @param start the first element of the interval
  *  @param end the last element of the interval (exclusive)
  */
-case class Interval(start: Int, end: Int) {
+case class Interval(start: Int, end: Int) extends Ordered[Interval] {
   require(start < end, "invalid range")
 
   /** returns the number of elements in the interval */
@@ -30,6 +30,11 @@ case class Interval(start: Int, end: Int) {
     } else if (this.start > that.start) {
       this.start < that.end
     } else true
+
+  def compare(that: Interval): Int =
+    if (this.start > that.start) 1
+    else if (this.start < that.start) -1
+    else this.size - that.size
 
   @deprecated("Please use Interval.overlaps instead", "processors 5.3")
   def intersects(that: Interval): Boolean = overlaps(that)
