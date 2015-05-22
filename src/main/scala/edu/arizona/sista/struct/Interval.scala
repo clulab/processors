@@ -23,10 +23,6 @@ class Interval(val start: Int, val end: Int) extends IndexedSeq[Int] with Ordere
     start + index
   }
 
-  def min: Int = start
-
-  def max: Int = end - 1
-
   def compare(that: Interval): Int =
     if (this.start > that.start) 1
     else if (this.start < that.start) -1
