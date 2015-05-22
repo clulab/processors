@@ -7,7 +7,7 @@ package edu.arizona.sista.struct
  *  @param start the first element of the interval
  *  @param end the last element of the interval (exclusive)
  */
-case class Interval(start: Int, end: Int) extends IndexedSeq[Int] with Ordered[Interval] {
+class Interval(val start: Int, val end: Int) extends IndexedSeq[Int] with Ordered[Interval] {
   require(start < end || (start == 0 && end == 0), "invalid range")
 
   override def toString: String = s"Interval($start, $end)"
@@ -141,5 +141,6 @@ object Interval {
   /** the empty interval */
   val empty: Interval = Empty
   /** make an interval with a single element */
-  def apply(i: Int): Interval = Interval(i, i + 1)
+  def apply(i: Int): Interval = new Interval(i, i + 1)
+  def apply(start: Int, end: Int): Interval = new Interval(start, end)
 }
