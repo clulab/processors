@@ -7,17 +7,24 @@ package edu.arizona.sista.struct
  *  @param start the first element of the interval
  *  @param end the last element of the interval (exclusive)
  */
-case class Interval(start: Int, end: Int) extends Ordered[Interval] {
+case class Interval(start: Int, end: Int) extends IndexedSeq[Int] with Ordered[Interval] {
   require(start < end || (start == 0 && end == 0), "invalid range")
 
-  /** returns the number of elements in the interval */
-  def size: Int = end - start
+  override def toString: String = s"Interval($start, $end)"
 
-  /** returns a sequence with the elements of the interval */
-  def toSeq: Seq[Int] = start until end
+  def length: Int = end - start
 
-  /** returns true if the argument is included in the interval */
   def contains(i: Int): Boolean = i >= start && i < end
+
+  def apply(index: Int): Int = {
+    require(index >= 0 && index < length, "invalid index")
+    start + index
+  }
+
+  def compare(that: Interval): Int =
+    if (this.start > that.start) 1
+    else if (this.start < that.start) -1
+    else this.size - that.size
 
   /** returns true if the given interval is contained by this interval */
   def contains(that: Interval): Boolean =
@@ -30,11 +37,6 @@ case class Interval(start: Int, end: Int) extends Ordered[Interval] {
     } else if (this.start > that.start) {
       this.start < that.end
     } else true
-
-  def compare(that: Interval): Int =
-    if (this.start > that.start) 1
-    else if (this.start < that.start) -1
-    else this.size - that.size
 
   @deprecated("Please use Interval.overlaps instead", "processors 5.3")
   def intersects(that: Interval): Boolean = overlaps(that)
