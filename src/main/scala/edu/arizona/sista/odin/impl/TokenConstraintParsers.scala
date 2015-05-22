@@ -5,7 +5,11 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
 trait TokenConstraintParsers extends StringMatcherParsers {
-  def tokenConstraint: Parser[TokenConstraint] = "[" ~> disjunctiveConstraint <~ "]"
+  def tokenConstraint: Parser[TokenConstraint] =
+    "[" ~> opt(disjunctiveConstraint) <~ "]" ^^ {
+      case Some(constraint) => constraint
+      case None => Wildcard
+    }
 
   def wordConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
     case matcher => new WordConstraint(matcher)
@@ -49,6 +53,11 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 sealed trait TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean
   def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int]
+}
+
+object Wildcard extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = true
+  def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = tokens
 }
 
 class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
