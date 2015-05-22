@@ -45,7 +45,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   val doc = proc annotate text4
 
   text4 should "match with a lazy plus" in {
-    val p = TokenPattern.compile("a /./+? c")
+    val p = TokenPattern.compile("a []+? c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
     results.head.interval should have (
@@ -55,7 +55,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   }
 
   it should "match with a greedy plus" in {
-    val p = TokenPattern.compile("a /./+ c")
+    val p = TokenPattern.compile("a []+ c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
     results.head.interval should have (
@@ -65,7 +65,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   }
 
   it should "match with a lazy star" in {
-    val p = TokenPattern.compile("a /./*? c")
+    val p = TokenPattern.compile("a []*? c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
     results.head.interval should have (
@@ -75,7 +75,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   }
 
   it should "match with a greedy star" in {
-    val p = TokenPattern.compile("a /./* c")
+    val p = TokenPattern.compile("a []* c")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
     results.head.interval should have (
@@ -88,7 +88,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   val doc5 = proc annotate text5
 
   text5 should "match Y200 using greedy plus" in {
-    val p = TokenPattern.compile("/./+ @site:Site")
+    val p = TokenPattern.compile("[]+ @site:Site")
     val mentions = Seq(
       new TextBoundMention("Site", Interval(6), 0, doc5, true, "<MANUAL>"),
       new TextBoundMention("Site", Interval(8), 0, doc5, true, "<MANUAL>"),
@@ -104,7 +104,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   }
 
   it should "match Y63 using lazy plus" in {
-    val p = TokenPattern.compile("/./+? @site:Site")
+    val p = TokenPattern.compile("[]+? @site:Site")
     val mentions = Seq(
       new TextBoundMention("Site", Interval(6), 0, doc5, true, "<MANUAL>"),
       new TextBoundMention("Site", Interval(8), 0, doc5, true, "<MANUAL>"),
@@ -138,7 +138,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
       |    (@cause:BioChemicalEntity)?
       |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
       |    [!tag=/^V/]*?
-      |    @theme:BioChemicalEntity /./+? @site:Site""".stripMargin
+      |    @theme:BioChemicalEntity []+? @site:Site""".stripMargin
 
     val mentions = Seq(
       new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc5, false, "<MANUAL>"),
@@ -178,7 +178,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
       |    (@cause:BioChemicalEntity)?
       |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
       |    [!tag=/^V/]*?
-      |    @theme:BioChemicalEntity /./+ @site:Site""".stripMargin
+      |    @theme:BioChemicalEntity []+ @site:Site""".stripMargin
 
     val mentions = Seq(
       new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc5, false, "<MANUAL>"),
@@ -221,7 +221,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
       |    (@cause:BioChemicalEntity)? complex?
       |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
       |    [!tag=/^V/]*?
-      |    @theme:BioChemicalEntity /./+ @site:Site""".stripMargin
+      |    @theme:BioChemicalEntity []+ @site:Site""".stripMargin
 
     val mentions = Seq(
       new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc6, false, "<MANUAL>"),
