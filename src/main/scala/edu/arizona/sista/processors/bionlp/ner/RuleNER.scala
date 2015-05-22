@@ -18,8 +18,89 @@ import RuleNER._
 class RuleNER(val matchers:Array[(String, HashTrie)]) {
 
   def find(sentence:Sentence):Array[String] = {
+    // findByPriority(sentence)
+    findLongestMatch(sentence)
+  }
+
+  /**
+   * Finds the longest match across all matchers.
+   * This means that the longest match is always chosen, even if coming from a matcher with lower priority
+   * Only ties are disambiguated according to the order provided in the constructor
+   */
+  def findLongestMatch(sentence:Sentence):Array[String] = {
+    val words = sentence.words
+    val caseInsensitiveWords = sentence.words.map(_.toLowerCase)
+
+    var offset = 0
+    val labels = new ArrayBuffer[String]()
+    while(offset < words.length) {
+      // stores the spans found by all matchers
+      val spans = new Array[Int](matchers.length)
+
+      // attempt to match each category at this offset
+      for (i <- matchers.indices) {
+        spans(i) = findAt(words, caseInsensitiveWords, matchers(i)._2, offset, sentence)
+      }
+
+      // pick the longest match
+      // solve ties by preferring earlier (higher priority) matchers
+      var bestSpanOffset = -1
+      var bestSpan = -1
+      for(i <- matchers.indices) {
+        if(spans(i) > bestSpan) {
+          bestSpanOffset = i
+          bestSpan = spans(i)
+        }
+      }
+
+      // found something!
+      if(bestSpanOffset != -1) {
+        assert(bestSpan > 0)
+        val label = matchers(bestSpanOffset)._1
+        labels += "B-" + label
+        for(i <- 1 until bestSpan) {
+          labels += "I-" + label
+        }
+        offset += bestSpan
+      } else {
+        labels += OUTSIDE_LABEL
+        offset += 1
+      }
+    }
+
+    labels.toArray
+  }
+
+  private def findAt(seq:Array[String],
+                     caseInsensitiveSeq:Array[String],
+                     matcher:HashTrie,
+                     offset:Int,
+                     sentence:Sentence):Int = {
+    val span = matcher.caseInsensitive match {
+      case true => matcher.findAt(caseInsensitiveSeq, offset)
+      case _ => matcher.findAt(seq, offset)
+    }
+
+    if(span > 0 && validMatch(offset, offset + span, sentence)) span
+    else -1
+  }
+
+  private def validMatch(start:Int, end:Int, sentence:Sentence):Boolean = {
+    // we only accept single tokens if they are tagged as NN*
+    // see also removeSinglePrepositions
+    if(end - start == 1 && ! sentence.tags.get(start).startsWith("NN"))
+      return false
+
+    true
+  }
+
+  /**
+   * Inspects matchers in the order provided in the constructor
+   * This means that a matcher with higher priority is preferred even if a longer one (with lower priority) exists!
+   */
+  def findByPriority(sentence:Sentence):Array[String] = {
     val overallLabels = new Array[String](sentence.size)
-    for(i <- 0 until overallLabels.length) overallLabels(i) = OUTSIDE_LABEL
+    for(i <- overallLabels.indices) overallLabels(i) = OUTSIDE_LABEL
     for(matcher <- matchers) {
       // the actual match
       var labels = matcher._2.find(sentence.words, matcher._1, OUTSIDE_LABEL)
@@ -45,7 +126,7 @@ class RuleNER(val matchers:Array[(String, HashTrie)]) {
   /** Remove single tokens that are not tagged as nouns */
   def removeSinglePrepositions(labels:Array[String], sentence:Sentence):Array[String] = {
     val filtered = new Array[String](labels.length)
-    for(i <- 0 until labels.length) {
+    for(i <- labels.indices) {
       if(labels(i).startsWith("B-") &&
          (i == labels.length - 1 || ! labels(i + 1).startsWith("I-")) && // single token entity
          ! sentence.tags.get(i).startsWith("NN")) { // not a noun
