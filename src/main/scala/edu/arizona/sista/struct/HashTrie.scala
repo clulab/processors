@@ -112,20 +112,24 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     labels.toArray
   }
 
-  /** Returns the length of the matched span, or -1 if nothing matched */
-  private def findAt(sequence:Array[String], offset:Int):Int = {
-    if(! entries.contains(sequence(offset))) {
+  /**
+   * Returns the length of the matched span, or -1 if nothing matched
+   * When multiple paths are found, the longest one is kept
+   * Text must be normalized (i.e., case folding) BEFORE this call, if necessary!
+   */
+  def findAt(sequenceNormalized:Array[String], offset:Int):Int = {
+    if(! entries.contains(sequenceNormalized(offset))) {
       return -1 // first token in the sequence does not exist in the first layer
     }
 
-    val tree = entries.get(sequence(offset)).get
+    val tree = entries.get(sequenceNormalized(offset)).get
     val longestMatch = new MutableNumber[Int](-1)
     if(tree.completePath) longestMatch.value = 1
 
     if(tree.children.isDefined) {
       var shouldStop = false
       for (child <- tree.children.get if ! shouldStop) {
-        shouldStop = child.find(sequence, offset + 1, 1, longestMatch)
+        shouldStop = child.find(sequenceNormalized, offset + 1, 1, longestMatch)
       }
     }
 
