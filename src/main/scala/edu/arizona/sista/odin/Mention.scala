@@ -162,7 +162,7 @@ class EventMention(
     val foundBy: String
 ) extends Mention {
 
-  //require(arguments.values.flatten.nonEmpty, "EventMentions need arguments")
+  require(arguments.values.flatten.nonEmpty || labels.contains("Unresolved"), "EventMentions need arguments")
 
   def this(
     label: String,
