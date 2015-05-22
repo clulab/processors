@@ -8,7 +8,7 @@ package edu.arizona.sista.struct
  *  @param end the last element of the interval (exclusive)
  */
 case class Interval(start: Int, end: Int) extends Ordered[Interval] {
-  require(start < end, "invalid range")
+  require(start < end || (start == 0 && end == 0), "invalid range")
 
   /** returns the number of elements in the interval */
   def size: Int = end - start
@@ -131,7 +131,13 @@ case class Interval(start: Int, end: Int) extends Ordered[Interval] {
     that allenPrecedes this
 }
 
+private[struct] object Empty extends Interval(0, 0) {
+  override def toString: String = "Empty"
+}
+
 object Interval {
+  /** the empty interval */
+  val empty: Interval = Empty
   /** make an interval with a single element */
   def apply(i: Int): Interval = Interval(i, i + 1)
 }
