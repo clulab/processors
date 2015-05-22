@@ -39,7 +39,7 @@ class Interval(val start: Int, val end: Int) extends IndexedSeq[Int] with Ordere
   /** returns true if there is any overlap between the members of the intervals */
   def overlaps(that: Interval): Boolean =
     if (this == empty) false
-    else if (that == emtpy) false
+    else if (that == empty) false
     else if (this.start < that.start) {
       this.end > that.start
     } else if (this.start > that.start) {
