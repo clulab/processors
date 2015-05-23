@@ -102,12 +102,12 @@ trait Mention extends Equals {
   }
 
   private def argumentsHashCode: Int = {
-    var h = stringHash("Mention.arguments")
-    for ((name, args) <- arguments.toSeq.sortBy(_._1)) {
-      h = mix(h, stringHash(name))
-      h = mix(h, unorderedHash(args))
+    val h0 = stringHash("Mention.arguments")
+    val hs = arguments map {
+      case (name, args) => mix(stringHash(name), unorderedHash(args))
     }
-    finalizeHash(h, arguments.size * 2)
+    val h = mixLast(h0, unorderedHash(hs))
+    finalizeHash(h, arguments.size)
   }
 }
 
