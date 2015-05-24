@@ -8,7 +8,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   def tokenConstraint: Parser[TokenConstraint] =
     "[" ~> opt(disjunctiveConstraint) <~ "]" ^^ {
       case Some(constraint) => constraint
-      case None => Wildcard
+      case None => Unconstrained
     }
 
   def wordConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
@@ -55,7 +55,7 @@ sealed trait TokenConstraint {
   def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int]
 }
 
-object Wildcard extends TokenConstraint {
+object Unconstrained extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = true
   def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = tokens
 }
