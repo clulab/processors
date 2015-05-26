@@ -14,7 +14,7 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 /**
  * External API for running different discourse parsers for visualization.
  * Written By: Tom Hicks. 1/15/2015.
- * Last Modified: Update Javadoc documentation.
+ * Last Modified: Relabel the total elapsed annotation time.
  */
 class DiscourseParserRunner (useProcessor:String = "core") {
   val processor:Processor =
@@ -35,7 +35,7 @@ class DiscourseParserRunner (useProcessor:String = "core") {
     var (doc, timings) = myAnnotate(processor.mkDocument(text, keepText = false)) // custom processing: below
     val stop = System.currentTimeMillis()
     val elapsed = stop - start
-    timings = List("ANNOT", elapsed, start, stop) +: timings
+    timings = List("TOTAL", elapsed, start, stop) +: timings
     // println(this.toString()+": [ANNOT]: %5d, %d, %d".format(elapsed, start, stop)) // for debugging
 
     doc.discourseTree.foreach(dt => {
