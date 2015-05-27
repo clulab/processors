@@ -193,6 +193,7 @@ object BioNLPProcessor {
   val RULE_NER_KBS = List( // knowledge for the rule-based NER
     "edu/arizona/sista/processors/bionlp/ner/Gene_or_gene_product.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Family.tsv",
+    "edu/arizona/sista/processors/bionlp/ner/Site.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Cellular_component.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Simple_chemical.tsv"
   )
