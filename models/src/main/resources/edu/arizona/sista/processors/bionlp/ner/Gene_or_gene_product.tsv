@@ -1,4 +1,4 @@
-# Wed May 20 14:34:09 MST 2015
+# Tue May 26 21:13:50 MST 2015
 (	1-49	)	-	CCK58
 (	2-5	'	)	oligo	(	A	)	synthase	1
 (	2-5	'	)	oligo	(	A	)	synthase	2
@@ -18,6 +18,14 @@
 (	S	)	-	limonene	7-monooxygenase
 -14	gene	protein
 -HSD11	type	II
+14-3-3	beta	,	zeta
+14-3-3	family
+1a03_human
+1a24_human
+1b07_human
+1b18_human
+1b58_human
+1c06_human
 100	kDa	coactivator
 100	kDa	coated	vesicle	protein	A
 100	kDa	coated	vesicle	protein	C
@@ -307,6 +315,8 @@
 1-phosphatidylinositol	5-phosphate	4-kinase	2-beta
 1R20
 1R21
+2aab_human
+2aba_human
 200	kDa	neurofilament	protein
 205	kDa	nucleoporin
 20-alpha-HSD
@@ -1093,6 +1103,7 @@
 5	'	-	TG-3	'	-	interacting	factor	2
 5	'	-	Tyr-DNA	phosphodiesterase
 5	'	-	tyrosyl-DNA	phosphodiesterase
+6Y-FGFR3c	P250R	mutant
 600	kDa	retinoblastoma	protein	associated	factor
 60	kDa	BRG-1	/	Brm	associated	factor	subunit	A
 60	kDa	BRG-1	/	Brm	associated	factor	subunit	B
@@ -1324,6 +1335,11 @@
 9-cis	retinol	dehydrogenase
 9cRDH
 9	kDa	protein
+A_Raf
+Active	platelet	derived	growth	factor	A	chain	isoforms
+Activin	A	receptor	,	type	I
+Aiolos
+Angiotensin	receptor	1
 A1	140	kDa	subunit
 A121
 A1	36	kDa	subunit
@@ -10232,6 +10248,12 @@ BZRP
 BZRPL1
 BZW1
 BZW2
+CAMKIIB
+CCND1	protein
+CEBPB	protein
+CaMKII	family
+CaMKIIA
+CalDAG-GEFIII
 C10
 C10orf103
 C10orf104
@@ -21688,6 +21710,7 @@ CYTSB
 CYYR1
 CZF-1
 CZF1
+Diacylglycerol	kinase	,	zeta
 D0S117E
 D0S1430E
 D-10
@@ -25382,6 +25405,13 @@ DZIP1L
 DZIP2
 DZIP3
 DZIP
+EFNBs
+EGF	like	ligands
+ESR1	protein
+ESR2	protein
+EphR
+Ephrin	B
+Erythrocyte	band	4.2	protein
 E12
 E14
 E170
@@ -28445,6 +28475,18 @@ EZR
 Ezrin	binding	protein	PACE-1
 Ezrin
 Ezrin-radixin-moesin	binding	phosphoprotein	50
+FGFR1b	binding	FGFs
+FGFR1c	binding	FGFs
+FGFR2b	binding	FGFs
+FGFR2c	binding	FGFs
+FGFR3b	binding	FGFs
+FGFR3c	binding	FGFs
+FGFR4	binding	FGFs
+FGR2_HUMAN
+FRS2	family-active
+Fc	epsilon	RI	alpha-chain
+Fc	epsilon	RI	beta-chain
+Fc	epsilon	RI	gamma-chain
 F10
 F11
 F11R
@@ -31504,6 +31546,12 @@ Fzo	homolog
 FZR1
 Fzr
 FZR
+GAP1-IP4BP
+GNAO2
+Gbetagamma
+Geranylgeranyl	transferase	type	1	beta	subunit
+Gi	family
+Glutamate	receptor	,	ionotropic	,	N-methyl	D-aspartate	1
 G0	/	G1	switch	protein	2
 G0	/	G1	switch	regulatory	protein	19-1
 G0	/	G1	switch	regulatory	protein	19-2
@@ -35833,6 +35881,11 @@ GZMK
 GZMM
 GZP1
 Gz	selective	GTPase	activating	protein
+H-RAS	isoform	1
+H-RAS	isoform	2
+HGF	alpha
+HGF	beta
+HRAS	protein
 H105E3
 H10BH
 H13
@@ -40097,6 +40150,16 @@ HZF1
 HZF
 HZFW
 Hzyg
+IFNG	protein
+IGF-1R	alpha
+IGF-IR	beta
+IL1B	protein
+IL2B_HUMAN
+IL2R	alpha
+IL2R	beta
+IL2R	gamma
+Insulin	Receptor	Alpha
+Insulin	Receptor	Beta
 I100
 I-15P
 I-1
@@ -43440,6 +43503,13 @@ JV4-1
 JV5-1
 JWA
 JXC1
+K-RAS	isoform	2A
+K-RAS	isoform	2B
+KRAS	family
+KRAS	isoform	4B
+KRAS	protein
+KRas	iso2
+Ksam-IIC3
 K10
 K12
 K13
@@ -47571,6 +47641,10 @@ Kynurenine	--	oxoglutarate	transaminase	II
 Kynurenine	--	oxoglutarate	transaminase	III
 Kynurenine	--	oxoglutarate	transaminase	IV
 Kyphoscoliosis	peptidase
+LGN	protein
+LNXp80
+Ligand	responsive	p-6Y-EGFR	mutants	resistant	to	non	covalent	TKIs
+Ligand	responsive	p-6Y-EGFR	mutants	sensitive	to	non	covalent	TKIs
 L10mt
 L11mt
 L12mt
@@ -50602,6 +50676,13 @@ LZTR2
 LZTS1
 LZTS2
 LZTS3
+MAPK1	protein
+MAPK3	protein
+MEK
+MEKK1	/	4
+MET	receptor	Alpha
+MET	receptor	Beta
+Mastermind
 M11S1
 M130
 M160
@@ -56298,6 +56379,15 @@ MZM1L
 MZT1
 MZT2A
 MZT2B
+NGF	protein
+NOX1	protein
+NO_VALUE
+NR2	subunits
+NRAS	promoter
+NRAS	protein
+NRG1	/	2/3	/	4
+Neuralized
+Neurofibromatosis	type	I
 N14F
 N27C7-2
 N2A3
@@ -63303,6 +63393,38 @@ Oxytocin-neurophysin	1
 Oxytocin	receptor
 OZF
 OZFP
+P-ERBB4cyt1
+P01111
+P01112
+P01116
+P04049
+P110ACT
+P42684
+PAK	family
+PDGF	beta
+PDGFB	(	82-241	)
+PKC	(	LPA	responsive	)
+PKC	epsilon
+PKC	theta
+PKC	zeta
+PKCT
+PLCbetagamma
+PLCepsilon
+PPARA	protein
+PRKCB2
+PTGS2	protein
+Phosphatidylinositol	3	kinase	regulatory	subunit	,	alpha
+Phosphatidylinositol	3	kinase	,	catalytic	subunit	alpha
+Phosphatidylinositol	3	kinase	,	catalytic	subunit	,	delta
+Phospho-MEK
+Phospho-MEK1	,	phospho-SEK1
+Phosphoinositide	3	kinase	,	catalytic	subunit	,	gamma
+Phospholipase	C	,	epsilon	1
+Processed	PDGF-B
+Protein	farnesyltransferase	alpha	subunit
+Protein	farnesyltransferase	beta	subunit
+Protein	kinase	C	,	iota	type
+Protein	kinase	C	,	zeta
 P100
 P100	polymyositis-scleroderma	overlap	syndrome	associated	autoantigen
 P105
@@ -74357,6 +74479,7 @@ PZ	dependent	protease	inhibitor
 PZI
 PZP
 PZR
+Q13671
 Q50-type	retinal	homeobox	protein
 QA79	membrane	protein
 QAPRTase
@@ -74418,6 +74541,21 @@ Quinone	oxidoreductase	PIG3
 Quinone	reductase	1
 Quinone	reductase	2
 Quinone	reductase	CBR4
+RAP1	GTP	GDP	dissociation	stimulator	1
+RAS	family
+RAS	guanyl	nucleotide	releasing	protein	1
+RAS	guanyl	nucleotide	releasing	protein	2
+RAS	inhibitor	1
+RNA	Polymerase	II
+Rab	acceptor	1
+Ral	GDS	related	protein	Rgr
+Ras	association	(	RalGDS	/	AF	-6	)	domain	family	2
+Ras	association	(	RalGDS	/	AF	-6	)	domain	family	5
+Ras	association	domain	family	protein	1
+Ras	binding	protein	Sur	8
+Ras-GDP
+Ras-GTP
+Retinoic	acid	receptor	responder	3
 R12
 R1
 R24L
@@ -78770,6 +78908,9 @@ RZF
 RZRA
 RZRB
 RZRG
+Src	Family	Kinases-active
+Src	family	tyrosine	kinases	(	SFKs	)
+Syndecan	Family
 SAPK
 S100A10
 S100A11
@@ -86982,6 +87123,12 @@ SZF1
 SZP
 SZRD1
 SZT2
+T	cell	lymphoma	invasion	and	metastasis	1
+TGFbetareceptor	I
+TGFbetareceptor	II
+Transforming	Protein	P21H-Ras-1
+Typical	PKCs
+Tyrosine	protein	kinase	ABL2
 T10
 T12
 T14
@@ -93942,6 +94089,14 @@ TYW4
 TYW5
 TZFP
 TZP
+UGT1A1	protein
+UGT1A10	protein
+UGT1A3	protein
+UGT1A6	protein
+UGT1A7	protein
+UGT1A8	protein
+UGT1A9	protein
+UGT2B11	protein
 U11	/	U12	-20	K
 U11	/	U12	-25	K
 U11	/	U12	-31	K
@@ -98248,6 +98403,7 @@ XylT-I
 XylT-II
 Xylulokinase
 Xylulose	kinase
+YWHAS
 Y1
 Y2B
 Y2
@@ -98400,6 +98556,8 @@ YY-1
 YY1
 YY-2
 YY2
+Zinc	finger	and	BTB	domain	containing	12
+Zinc	finger	protein	,	subfamily	1A	,	member	3
 Z39IG
 Za11
 ZA20D1
@@ -101276,6 +101434,31 @@ ZZZ3
 [	Pyruvate	dehydrogenase	(	acetyl	transferring	)	]	kinase	isozyme	4	,	mitochondrial
 [	Pyruvate	dehydrogenase	[	acetyl	transferring	]	]	-	phosphatase	1	,	mitochondrial
 [	Pyruvate	dehydrogenase	[	acetyl	transferring	]	]	-	phosphatase	2	,	mitochondrial
+a2abe5_human
+aakb1_human
+aakg1_human
+aapk1_human
+acadv_human
+aco11_human
+ada10_human
+adas_human
+addg_human
+ahnk_human
+akts1_human
+al1b1_human
+alpha6	Integrin
+amerl_human
+anag_human
+anfy1_human
+anr11_human
+ar6p1_human
+arfrp_human
+argal_human
+arhg1_human
+arhg2_human
+aspc1_human
+at1a1_human
+at1b3_human
 aarF	domain	containing	protein	kinase	3
 abLIM-1
 abLIM-2
@@ -101291,6 +101474,18 @@ apM-2
 apoB-48R
 ara	CALC
 aSMase
+b3ga3_human
+b4dip2_human
+b4dyu4_human
+b4e074_human
+baip2_human
+beta4	integrin
+bl1s1_human
+bl1s2_human
+bl1s4_human
+bl1s5_human
+bl1s6_human
+byr2_schpo
 b	(	0	,+	)	AT1
 b	(	0	,+	)	-	type	amino	acid	transporter	1
 b	(	0	,+	)	-	type	amino	acid	transport	protein
@@ -101443,6 +101638,31 @@ bNOS
 b-PEN-LEN
 b-SAAS
 bZIP	enhancing	factor	BEF
+c42s2_human
+cGMP	3	`	,5	`	-	cyclic	phosphodiesterase	delta
+cadh1_human
+calm_mouse
+calx_human
+caza1_human
+cc28a_human
+ch033_human
+chm1a_human
+chm1b_human
+chm2a_human
+chm4b_human
+ci009_human
+cl045_human
+clap2_human
+comd3_human
+cq085_human
+cskp_human
+ctna1_human
+ctnb1_human
+ctnd1_human
+cybp_human
+cyfp1_human
+cyh1_human
+cyts_human
 cADPr	hydrolase	1
 cADPr	hydrolase	2
 cAMP	and	cAMP	inhibited	cGMP	3	'	,5	'	-	cyclic	phosphodiesterase	10A
@@ -101577,6 +101797,24 @@ cTAK1
 cTnT
 cvHsp
 cyclin-X
+d3dtx6_human
+dc1i1_human
+dc1i2_human
+dc1l1_human
+dc1l2_human
+den6b_human
+dest_human
+dhb4_human
+dlrb1_human
+dnjb1_human
+dnjc8_human
+dop2_human
+dp13b_human
+dpolb_human
+dtbp1_human
+dus23_human
+dyhc1_human
+dyl1_human
 dCK
 dCMP	deaminase
 dCMP	kinase
@@ -101596,6 +101834,26 @@ dTMP	kinase
 dUTPase
 dUTPase	like	protein
 dUTP	pyrophosphatase
+e41l1_human
+e41l2_human
+e41l5_human
+e41la_human
+echa_human
+echb_human
+echp_human
+ef1a1_human
+ei2ba_human
+ei2bb_human
+ei2bd_human
+ei2be_human
+ei2bg_human
+ergi1_human
+ergi2_human
+ergi3_human
+erln1_human
+erln2_human
+es8l2_human
+ezri_human
 e3B1
 eEF1A-1
 eEF1A-2
@@ -101729,6 +101987,15 @@ er-cHL
 eRF1
 eRF3a
 eRF3b
+f126b_human
+fa21a_human
+fa71c_human
+facr2_human
+fbp1l_human
+ferm1_human
+fnta_rat
+fntb_rat
+frpd3_human
 fMet-Leu-Phe	receptor
 fMLP	receptor
 fSAP24
@@ -101736,6 +102003,23 @@ fSAP35
 fSAP79
 fSAPb
 fTnT
+g45ip_human
+gapd1_human
+gbb1_human
+gcn1l_human
+gdib_human
+glcm_human
+glp3l_human
+gnds_human
+gnds_mouse
+gnds_rat
+goga7_human
+goli4_human
+golp3_human
+grap1_human
+gtpb1_human
+gtr14_human
+gtr3_human
 gammaC
 gC1q-R	protein
 ghHb1
@@ -101762,6 +102046,9 @@ gPAPP
 gQC
 grp60
 gVIIA-PLA2
+hSos1
+hap28_human
+hdgr3_human
 h103p
 h104p
 h12
@@ -102856,6 +103143,19 @@ hZNF3
 hZNF7
 hZTL1
 hZwilch
+icef1_human
+if1ay_human
+if2b2_human
+igs21_human
+iqga1_human
+iqga2_human
+iqga3_human
+ita2_human
+ita3_human
+ita6_human
+itav_human
+itb4_human
+itb5_human
 i-FXN
 iGnT
 imBRI2
@@ -102870,6 +103170,23 @@ iPLA2-gamma
 iRhom1
 iRhom2
 isoQC
+k1c18_human
+kanl2_human
+kbrs2_human
+kc1a_human
+kc1d_human
+kcc2g_human
+khdr1_human
+ki20b_human
+kinh_human
+kpcd_human
+kpym_human
+kras_human_dna_51bp_intronic
+ks6a1_human
+ks6a3_human
+ks6a4_human
+ks6a5_human
+ksyk_human
 kelch	like	1	antisense
 kH1
 kH2
@@ -102877,9 +103194,42 @@ kiDCR
 kinesin	light	chain	2
 kNBC1
 k-NBC3
+l2gl2_human
+lanc1_human
+leg4_human
+lpprc_human
+lrc59_human
+ltor3_human
+lyag_human
 l-LEN
 l-SAAS
 lugP4
+m2om_human
+mSnx27
+mSnx31
+magg1_human
+mare1_human
+mb12a_human
+md2l1_human
+merl_human
+mk01_human
+mk03_human
+mk07_human
+mk08_human
+mk13_human
+mk14_human
+ml12a_human
+mmta2_human
+moes_human
+mp2k2_human
+mp2k3_human
+mp2k4_human
+mpcp_human
+mrckb_human
+ms3l1_human
+mspd2_human
+my18a_human
+myome_human
 m56-FXN
 m78-FXN
 m7GpppN	mRNA	hydrolase
@@ -102974,6 +103324,13 @@ mu4
 mu-ARP2
 muCANP
 munc13
+nc2a_human
+neur1_human
+neuregulin	1	beta
+nibl1_human
+nips1_human
+nips2_human
+nltp_human
 nCL-1
 nCL-2
 nCL-3
@@ -103002,10 +103359,170 @@ nSMase-3
 nSMase3
 nSMase
 nSR100
+osb10_human
+osb11_human
+osbl3_human
+osbl8_human
+otu6b_human
 olfactory	receptor	OR14-21
 olfactory	receptor	OR1-44
 ornithine	decarboxylase	paralog
 osH1
+p-5Y-EGFRvIII
+p-5Y-FGFR2b	P253R	mutant
+p-5Y-FGFR3b	S249C	mutant
+p-5Y-FRS3
+p-5Y-LAT-2
+p-6Y-EGFR
+p-6Y-EGFR	A289D
+p-6Y-EGFR	A289T
+p-6Y-EGFR	A289V
+p-6Y-EGFR	D770_N771insNPG
+p-6Y-EGFR	D770_N771insNPH
+p-6Y-EGFR	E746_A750del
+p-6Y-EGFR	E746_A750del	;	T790M
+p-6Y-EGFR	E746_S752delinsV
+p-6Y-EGFR	E746_T751delinsA
+p-6Y-EGFR	G598V
+p-6Y-EGFR	G719A
+p-6Y-EGFR	G719C
+p-6Y-EGFR	G719S
+p-6Y-EGFR	L747_A750delinsP
+p-6Y-EGFR	L747_P753delinsS
+p-6Y-EGFR	L747_S752del
+p-6Y-EGFR	L747_T751del
+p-6Y-EGFR	L747_T751delinsP
+p-6Y-EGFR	L858R
+p-6Y-EGFR	L858R	;	T790M
+p-6Y-EGFR	L861Q
+p-6Y-EGFR	M766_A767insASV
+p-6Y-EGFR	R108K
+p-6Y-EGFR	T263P
+p-6Y-EGFR	V738_K739insKIPVAI
+p-6Y-ERBB2
+p-6Y-FGFR3b	G697C	mutant
+p-6Y-FRS2
+p-6Y-PTK2
+p-7Y-ERBB2
+p-7Y-FGFR2b	S376C	mutant
+p-7Y-KIT
+p-8Y-	FGFR2c	A315T	mutant
+p-8Y-FGFR2
+p-8Y-FGFR2	(	22-764	)
+p-8Y-FGFR2-18
+p-8Y-FGFR2-5
+p-8Y-FGFR2b	S373C	mutant
+p-8Y-FGFR2c	A314D	mutant
+p-8Y-FGFR2c	A314S	mutant
+p-8Y-FGFR2c	A315S	mutant
+p-8Y-FGFR2c	P253R	mutant
+p-8Y-FGFR2c	S252W	mutant
+p-8Y-FGFR2c	S372C	mutant
+p-8Y-FGFR2c	W290G	mutant
+p-8Y-FGFR2c	Y375C	mutant
+p-CAMK2A	,	p-CAMK2B
+p-CAMK2D	,	p-CAMK2G
+p-EPHBs
+p-ERBB4	JM-A	CYT-1
+p-ERBB4	JM-B	CYT-1
+p-ERBB4cyt2
+p-FGFR1	P252S	mutant
+p-FGFR1	P252T	mutant
+p-FGFR1c	P252R	mutant
+p-FGFR2	W290C	mutant
+p-FGFR3	795fs	*	139
+p-FGFR3	mutant	(	overexpressed	)
+p-IRS1	,2
+p-RASGRP1	,3
+p-S	,	T-MEK2
+p-S218	,222	-	MEK1
+p-S225-SPHK1
+p-S257	,	T261-SEK1
+p-SHC1	p46	,	p52
+p-T286-CAMK2A
+p-T287-CAMK2B
+p-T287-CAMK2D
+p-T287-CAMK2G
+p-Y	,	Y877-ERBB2
+p-Y-ERBB2
+p-Y-SHC1
+p-Y-SHC2
+p-Y349	,	Y350-SHC1
+p-Y629-SH2B2
+p-Y770	,780	-	FGFR2b	S252W	mutant
+p14	/	19	ARF
+p27958-pro_0000037566
+p2r3b_human
+p3c2b_human
+p42	/	p44MAPKs
+p46	SHC
+p4r3a_human
+p52	SHC
+p62DOK
+p85a_human
+p85b_human
+pFyn-Y420
+pTEK
+pa24a_human
+pa24b_human
+pacn2_human
+pctl_human
+pcyox_human
+pdc10_human
+pdc6i_human
+pfkal_human
+pfkap_human
+phar4_human
+phla2_human
+phla3_human
+phlb1_human
+phosphorylated	FGFR1	K656E	mutant
+phosphorylated	FGFR1	N546K	mutant
+phosphorylated	FGFR1	R576W	mutant
+phosphorylated	FGFR2	K660E	mutant
+phosphorylated	FGFR2	K660M	mutant
+phosphorylated	FGFR2	K660N	mutant
+phosphorylated	FGFR2	N549H	mutant
+phosphorylated	FGFR2	N549K	mutant
+phosphorylated	FGFR2	S267P	mutant
+phosphorylated	FGFR3	A391E	mutant
+phosphorylated	FGFR3	G370C	mutant
+phosphorylated	FGFR3	G380R	mutant
+phosphorylated	FGFR3	G382D	mutant
+phosphorylated	FGFR3	K650E	mutant
+phosphorylated	FGFR3	K650M	mutant
+phosphorylated	FGFR3	K650N	mutant
+phosphorylated	FGFR3	K650Q	mutant
+phosphorylated	FGFR3	K650T	mutant
+phosphorylated	FGFR3	R248C	mutant
+phosphorylated	FGFR3	S371C	mutant
+phosphorylated	FGFR3	Y373C	mutant
+phosphorylated	FGFR4	N535D	mutant
+phosphorylated	FGFR4	N535K	mutant
+phosphorylated	FGFR4	V550E	mutant
+phosphorylated	FGFR4	V550L	mutant
+phosphorylated	FGFR4	Y367C	mutant
+pi3r4_human
+pipna_human
+pipnb_human
+pitm1_human
+pk3ca_mouse
+pk3cd_human
+pk3cg_human
+pkha1_human
+pkha2_human
+pkha5_human
+pkha7_human
+pkhf2_human
+pkhg3_human
+pkhh1_human
+plsi_human
+pp1r7_human
+pp2aa_human
+ppct_human
+praf1_mouse
+ptn6_human
+ptn9_human
 p0071
 p100	co-activator
 p100
@@ -103537,6 +104054,42 @@ pVHL
 pVI-ARL
 py160
 pyridoxal	dependent	decarboxylase	domain	containing	2	pseudogene
+q1zyl5_human
+q46342_closo
+q59es3_human
+q59ha3_human
+q95iz1_human
+r51a1_human
+rabe1_human
+rabek_human
+radi_human
+ragp1_human
+rang_human
+rasf1_human
+rasf2_human
+rasf5_human
+rasf5_mouse
+rash_human
+rask_human
+rasn_human
+rb11a_human
+rb11b_human
+rb33b_human
+rb3gp_human
+rbgpr_human
+rbp17_human
+rgap1_human
+rhg01_human
+rhg08_human
+rhg17_human
+rhg18_human
+rhg35_human
+rl23a_human
+rl39l_human
+rpgf2_human
+rpgf4_mouse
+rs28_human
+rslba_human
 r150
 rcPTTG1
 retSDR1
@@ -103550,6 +104103,54 @@ rRNA	processing	protein	FCF1	homolog
 rRNA	processing	protein	UTP23	homolog
 rRNA	/	tRNA	2	'	-	O-methyltransferase	fibrillarin	like	protein	1
 rTS
+s2533_human
+s61a1_human
+sSCF
+sc22b_human
+sc23a_human
+sc31a_human
+sc61b_human
+sc61g_human
+scam2_human
+scam3_human
+scam4_human
+scmc1_human
+scpdl_human
+sdcb1_human
+se1l1_human
+sep14_human
+sft2b_human
+sft2c_human
+sgmr1_human
+sh23a_human
+sh3g2_human
+shlb1_human
+shlb2_human
+slai2_human
+snag_human
+snapn_human
+snp23_human
+snp29_human
+sorcn_human
+sp16h_human
+sptn1_human
+spxn4_human
+sqrd_human
+src8_human
+srp09_human
+srtd1_human
+sta5a_human
+sta5b_human
+stalp_human
+star5_human
+star7_human
+stea3_human
+stml2_human
+strum_human
+stxb3_human
+stxb5_human
+swp70_human
+syj2b_human
 s80HER4
 sAC
 sAmp
@@ -103615,6 +104216,30 @@ ssSPTb
 sTfR
 sTnT
 sudD	homolog
+tagl2_human
+tb10b_human
+tb22b_human
+tbc15_human
+tbc17_human
+tbc9b_human
+tbcd1_human
+tbcd4_human
+tfip8_human
+tgfa1_human
+tm109_human
+tm252_human
+tm9s1_human
+tmeda_human
+tmm33_human
+tp4a1_human
+tpd54_human
+tppc3_human
+tppc4_human
+tppc5_human
+tri44_human
+ts101_human
+tsn8_human
+tt39b_human
 t	(	6	)	A37	threonylcarbamoyladenosine	biosynthesis	protein	OSGEP
 t	(	6	)	A37	threonylcarbamoyladenosine	biosynthesis	protein	OSGEPL1
 t	(	6	)	A	synthase
@@ -103727,12 +104352,25 @@ tRNA-yW	synthesizing	protein	3
 tRNA	yW	synthesizing	protein	4
 tRNA-yW	synthesizing	protein
 t-SNARE	domain	containing	protein	1
+ubql2_human
+un93b_human
 uKATP-1
 unc53H1
 unc53H2
 unc53H3
 uPA
 uPAR
+va0d1_human
+vatb2_human
+vatc1_human
+vatc2_human
+vate1_human
+vatl_human
+vcy1_human
+vp26a_human
+vp33a_human
+vp33b_human
+vp37b_human
 v-fos	transformation	effector	protein
 vHNF1
 v-kit	Hardy-Zuckerman	4	feline	sarcoma	viral	oncogene	homolog
@@ -103760,6 +104398,7 @@ v-Raf	murine	sarcoma	viral	oncogene	homolog	B1
 vWF	cleaving	protease
 vWF-CP
 vWF
+wash7_human
 xCT
 xGPAT1
 y+	LAT-1
@@ -103767,6 +104406,11 @@ y+	LAT-2
 y	(	+	)	L-type	amino	acid	transporter	1
 y	(	+	)	L-type	amino	acid	transporter	2
 y+	system	cationic	amino	acid	transporter
+zc3hf_human
+zdh17_human
+zfyv1_human
+zn239_human
+zwilc_human
 zDHHC22
 zDHHC23
 zFGF5

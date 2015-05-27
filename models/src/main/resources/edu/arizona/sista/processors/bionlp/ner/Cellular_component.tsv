@@ -1,4 +1,4 @@
-# Wed May 20 14:34:09 MST 2015
+# Tue May 26 21:13:50 MST 2015
 2-micrometer	circle	DNA
 A	band
 Acidocalcisome
@@ -1103,6 +1103,7 @@ host	presynaptic	cell	membrane
 host	synapse
 host	trans-Golgi	network
 host	trans-Golgi	network	membrane
+integral	to	membrane
 icosahedral	viral	capsid
 icosahedral	viral	capsid	,	collar
 icosahedral	viral	capsid	,	collar	fiber
