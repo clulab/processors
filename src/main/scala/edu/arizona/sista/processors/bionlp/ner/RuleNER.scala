@@ -166,12 +166,15 @@ object RuleNER {
     val matcher = new HashTrie(caseInsensitive = caseInsensitive, internStrings = true)
     var done = false
     while(! done) {
-      val line = reader.readLine()
+      var line = reader.readLine()
       if(line == null) {
         done = true
       } else {
-        val tokens = line.trim.split("\\s+")
-        matcher.add(tokens)
+        line = line.trim
+        if(! line.startsWith("#")) {
+          val tokens = line.split("\\s+")
+          matcher.add(tokens)
+        }
       }
     }
     matcher
