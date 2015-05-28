@@ -66,12 +66,20 @@ class Sentence(
    * Recreates the text of the sentence, preserving the original number of white spaces between tokens
    * @return the text of the sentence
    */
-  def getSentenceText():String = {
+  def getSentenceText():String =  getSentenceFragmentText(0, words.length)
+
+  def getSentenceFragmentText(start:Int, end:Int):String = {
+    // optimize the single token case
+    if(end - start == 1) words(start)
+
     val text = new mutable.StringBuilder()
-    for(i <- 0 until words.size) {
+    for(i <- start until end) {
       if(i > 0) {
         // add as many white spaces as recorded between tokens
-        for (j <- 0 until (startOffsets(i) - endOffsets(i - 1))) {
+        // something this space is negative: in BioNLPProcessor we replace "/" with "and"
+        //   in these cases, let's make sure we print 1 space, otherwise the text is hard to read
+        val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
+        for (j <- 0 until numberOfSpaces) {
           text.append(" ")
         }
       }

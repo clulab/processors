@@ -86,12 +86,37 @@ class RuleNER(val matchers:Array[(String, HashTrie)]) {
   }
 
   private def validMatch(start:Int, end:Int, sentence:Sentence):Boolean = {
-    // we only accept single tokens if they are tagged as NN*
-    // see also removeSinglePrepositions
-    if(end - start == 1 && ! sentence.tags.get(start).startsWith("NN"))
+    // must contain at least one NN*
+    // see also removeSinglePrepositions, for deprecated code
+    var nouns = 0
+    for(i <- start until end)
+      if(sentence.tags.get(i).startsWith("NN"))
+        nouns += 1
+    if(nouns == 0)
       return false
 
-    true
+    // the text must contain at least one letter AND (the letter must be upper case OR the text contains at least 1 digit)
+    val text = sentence.getSentenceFragmentText(start, end)
+    val (letters, digits, upperCaseLetters, spaces) = scanText(text)
+    if(letters > 0 && (digits > 0 || upperCaseLetters > 0 || spaces > 0))
+      return true
+
+    false
+  }
+
+  private def scanText(text:String):(Int, Int, Int, Int) = {
+    var letters = 0
+    var digits = 0
+    var upperCaseLetters = 0
+    var spaces = 0
+    for(i <- text.indices) {
+      val c = text.charAt(i)
+      if(Character.isLetter(c)) letters += 1
+      if(Character.isUpperCase(c)) upperCaseLetters += 1
+      if(Character.isDigit(c)) digits += 1
+      if(Character.isWhitespace(c)) spaces += 1
+    }
+    (letters, digits, upperCaseLetters, spaces)
   }
 
   /**
