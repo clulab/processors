@@ -1,6 +1,6 @@
 package edu.arizona.sista.swirl2
 
-import java.io.{PrintWriter, File}
+import java.io.{FileReader, BufferedReader, PrintWriter, File}
 
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import edu.arizona.sista.processors.{DocumentSerializer, Document, Processor}
@@ -26,6 +26,23 @@ class Reader {
   var multiPredCount = 0
   var argCount = 0
   var predCount = 0
+
+  def load(filePath:String):Document = {
+    val serFile = new File(filePath + ".ser")
+    if(serFile.exists()) {
+      // if the serialized file exists, use it
+      logger.debug(s"Found serialized file at ${serFile.getAbsolutePath}. Will use that.")
+      val documentSerializer = new DocumentSerializer
+      val b = new BufferedReader(new FileReader(serFile))
+      val doc = documentSerializer.load(b)
+      b.close()
+      doc
+    } else {
+      // the serialized file does not exist. Parse online
+      val proc = new FastNLPProcessor(useMalt = false, useBasicDependencies = false)
+      read(new File(filePath), proc)
+    }
+  }
 
   def read(file:File,
            proc:Processor = null,
