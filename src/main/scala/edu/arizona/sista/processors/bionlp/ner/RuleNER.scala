@@ -98,8 +98,10 @@ class RuleNER(val matchers:Array[(String, HashTrie)]) {
     // the text must contain at least one letter AND (the letter must be upper case OR the text contains at least 1 digit)
     val text = sentence.getSentenceFragmentText(start, end)
     val (letters, digits, upperCaseLetters, spaces) = scanText(text)
-    if(letters > 0 && (digits > 0 || upperCaseLetters > 0 || spaces > 0))
+    if(letters > 0 && (digits > 0 || upperCaseLetters > 0 || spaces > 0)) {
+      //println("Found valid match: " + text)
       return true
+    }
 
     false
   }

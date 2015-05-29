@@ -74,7 +74,7 @@ class Sentence(
 
     val text = new mutable.StringBuilder()
     for(i <- start until end) {
-      if(i > 0) {
+      if(i > start) {
         // add as many white spaces as recorded between tokens
         // something this space is negative: in BioNLPProcessor we replace "/" with "and"
         //   in these cases, let's make sure we print 1 space, otherwise the text is hard to read
