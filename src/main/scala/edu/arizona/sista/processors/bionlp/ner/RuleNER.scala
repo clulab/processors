@@ -20,7 +20,8 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
 
   def find(sentence:Sentence):Array[String] = {
     // findByPriority(sentence)
-    findLongestMatch(sentence)
+    var seq = findLongestMatch(sentence)
+    seq
   }
 
   /**

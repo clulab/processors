@@ -165,9 +165,36 @@ class BioNLPProcessor (internStrings:Boolean = true,
           ourSentence.entities = Some(bioNEs)
         }
 
+        // post-processing
+        postProcessing(ourSentence)
+
         // TODO: we should have s.norms as well...
 
         sentenceOffset += 1
+      }
+    }
+  }
+
+  /**
+   * Fix common NER errors
+   */
+  def postProcessing(sent:Sentence) {
+    var i = 0
+    val seq = sent.entities.get
+    val tags = sent.tags.get
+    while(i < seq.length) {
+      // the A and B complex
+      if(i <= seq.length - 5 &&
+        tags(i).startsWith("DT") && // the
+        seq(i + 1).startsWith("B-") && // entity1
+        tags(i + 2).startsWith("CC") && // and
+        seq(i + 3).startsWith("B-") && // entity2
+        sent.lemmas.get(i + 4) == "complex") {
+        seq(i + 2) = "O"
+        seq(i + 4) = "O"
+        i += 5
+      } else {
+        i += 1
       }
     }
   }
