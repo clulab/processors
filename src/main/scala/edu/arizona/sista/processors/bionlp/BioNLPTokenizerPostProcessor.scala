@@ -24,6 +24,7 @@ class BioNLPTokenizerPostProcessor {
     tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
     tokens = breakOnPattern(tokens, dashSuffixes)
     tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
+    tokens = breakComplex(tokens, SINGLEDASH_PATTERN)
 
     // re-join trailing or preceding - or + to previous digit
     tokens = joinSigns(tokens)
@@ -73,6 +74,26 @@ class BioNLPTokenizerPostProcessor {
         val s1 = token.word().substring(0, sepPos)
         output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
         output += tokenFactory.makeToken("and", token.beginPosition() + sepPos, 1) // replace "/" with "and"; it parses better
+        val s3 = token.word().substring(sepPos + 1)
+        output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
+          token.endPosition() - token.beginPosition() - sepPos - 1)
+      } else {
+        output += token
+      }
+    }
+    output.toArray
+  }
+
+  def breakComplex(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
+    val output = new ArrayBuffer[CoreLabel]
+    for(i <- 0 until tokens.size) {
+      val token = tokens(i)
+      val matcher = pattern.matcher(token.word())
+      if (matcher.matches() && i < tokens.size - 1 && tokens(i + 1).word().toLowerCase() == "complex") {
+        val sepPos = matcher.start(2)
+        val s1 = token.word().substring(0, sepPos)
+        output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
+        output += tokenFactory.makeToken("and", token.beginPosition() + sepPos, 1) // replace "-" with "and"; it parses better
         val s3 = token.word().substring(sepPos + 1)
         output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
           token.endPosition() - token.beginPosition() - sepPos - 1)
@@ -165,6 +186,7 @@ object BioNLPTokenizerPostProcessor {
   val dashSuffixes = mkDashSuffixes
 
   val SINGLESLASH_PATTERN = Pattern.compile("([\\w\\-_]+)(/)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
+  val SINGLEDASH_PATTERN = Pattern.compile("([\\w\\-_]+)(\\-)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
 
   val PARENS = Set("(", ")", "[", "]")
 
