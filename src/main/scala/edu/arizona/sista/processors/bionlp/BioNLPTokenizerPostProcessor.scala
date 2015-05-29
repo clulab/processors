@@ -24,7 +24,6 @@ class BioNLPTokenizerPostProcessor {
     tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
     tokens = breakOnPattern(tokens, dashSuffixes)
     tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
-    //tokens = breakDoubleSlash(tokens, DOUBLESLASH_COMPLEX)
 
     // re-join trailing or preceding - or + to previous digit
     tokens = joinSigns(tokens)
@@ -83,28 +82,6 @@ class BioNLPTokenizerPostProcessor {
     }
     output.toArray
   }
-
-  /*
-  def breakDoubleSlash(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
-    val output = new ArrayBuffer[CoreLabel]
-    for(i <- 0 until tokens.size) {
-      val token = tokens(i)
-      val matcher = pattern.matcher(token.word())
-      if (matcher.find()) {
-        val sepPos = matcher.start(2)
-        val s1 = token.word().substring(0, sepPos)
-        output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
-        output += tokenFactory.makeToken("and", token.beginPosition() + sepPos, 1) // replace "/" with "and"; it parses better
-        val s3 = token.word().substring(sepPos + 1)
-        output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
-          token.endPosition() - token.beginPosition() - sepPos - 1)
-      } else {
-        output += token
-      }
-    }
-    output.toArray
-  }
-  */
 
   def joinSigns(tokens:Array[CoreLabel]):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
@@ -188,7 +165,6 @@ object BioNLPTokenizerPostProcessor {
   val dashSuffixes = mkDashSuffixes
 
   val SINGLESLASH_PATTERN = Pattern.compile("([\\w\\-_]+)(/)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
-  //val DOUBLESLASH_COMPLEX = Pattern.compile("([a-z\\d])(/)([a-z\\d])(/)\\s*(complex)", Pattern.CASE_INSENSITIVE)
 
   val PARENS = Set("(", ")", "[", "]")
 

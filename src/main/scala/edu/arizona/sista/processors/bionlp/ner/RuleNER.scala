@@ -6,6 +6,7 @@ import edu.arizona.sista.processors.Sentence
 import edu.arizona.sista.struct.HashTrie
 import org.slf4j.LoggerFactory
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 import RuleNER._
@@ -15,7 +16,7 @@ import RuleNER._
  * User: mihais
  * Date: 5/11/15
  */
-class RuleNER(val matchers:Array[(String, HashTrie)]) {
+class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:Set[String]) {
 
   def find(sentence:Sentence):Array[String] = {
     // findByPriority(sentence)
@@ -103,6 +104,11 @@ class RuleNER(val matchers:Array[(String, HashTrie)]) {
       return true
     }
 
+    // have we seen this single token as lower case in the KB; if so, accept it in the text
+    if(letters > 0 && knownCaseInsensitives.contains(text)) {
+      return true
+    }
+
     false
   }
 
@@ -175,21 +181,22 @@ object RuleNER {
   def load(kbs:List[String], caseInsensitive:Boolean = true):RuleNER = {
     logger.debug("Beginning to load the KBs for the rule-based bio NER...")
     val matchers = new ArrayBuffer[(String, HashTrie)]
+    val knownCaseInsensitives = new mutable.HashSet[String]()
     for(kb <- kbs) {
       val name = extractKBName(kb)
       val is = RuleNER.getClass.getClassLoader.getResourceAsStream(kb)
       assert(is != null, s"Failed to find KB file $kb in the classpath!")
       val reader = new BufferedReader(new InputStreamReader(is))
-      val matcher = loadKB(reader, caseInsensitive)
+      val matcher = loadKB(reader, caseInsensitive, knownCaseInsensitives)
       logger.debug(s"Loaded matcher for label $name. This matchers contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
       matchers += new Tuple2(name, matcher)
       reader.close()
     }
     logger.debug("KB loading completed.")
-    new RuleNER(matchers.toArray)
+    new RuleNER(matchers.toArray, knownCaseInsensitives.toSet)
   }
 
-  def loadKB(reader:BufferedReader, caseInsensitive:Boolean): HashTrie = {
+  def loadKB(reader:BufferedReader, caseInsensitive:Boolean, knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
     val matcher = new HashTrie(caseInsensitive = caseInsensitive, internStrings = true)
     var done = false
     while(! done) {
@@ -201,6 +208,10 @@ object RuleNER {
         if(! line.startsWith("#")) {
           val tokens = line.split("\\s+")
           matcher.add(tokens)
+
+          if(tokens.length == 1 && line.toLowerCase == line) {
+            knownCaseInsensitives.add(line)
+          }
         }
       }
     }
