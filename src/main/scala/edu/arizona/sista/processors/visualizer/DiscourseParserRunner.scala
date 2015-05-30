@@ -14,7 +14,7 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 /**
  * External API for running different discourse parsers for visualization.
  * Written By: Tom Hicks. 1/15/2015.
- * Last Modified: Return word and dependency edge sets from doc sentences.
+ * Last Modified: Revert to returning arrays of arrays of words.
  */
 class DiscourseParserRunner (useProcessor:String = "core") {
   val processor:Processor =
@@ -42,8 +42,6 @@ class DiscourseParserRunner (useProcessor:String = "core") {
       println(this.toString()+": Discourse tree from processor.annotate (with coRef)")
       println(dt.toString())
     })
-
-    // doc.sentences.map(s => s.dependencies.foreach(dep => println(dep.allEdges))) // REMOVE LATER
 
     // return information from discourse trees as an array of JSON strings:
     new DiscourseParserResults(text, timingsToJson(timings), discTrees(doc),
@@ -107,8 +105,8 @@ class DiscourseParserRunner (useProcessor:String = "core") {
 
 
   /** Return a sequence of the document's arrays of words, one for each sentence. */
-  def sentWords (doc: Document): Array[String] = {
-    doc.sentences.map(s => s.words.mkString(" "))
+  def sentWords (doc: Document): Array[Array[String]] = {
+    doc.sentences.map(s => s.words)
   }
 
   /** Return an array of JSON representations of the document's syntax trees. */
@@ -155,5 +153,5 @@ class DiscourseParserResults(val text:String,
                              val timings:String,
                              val dTrees:Array[String],
                              val synTrees:Array[String],
-                             val sentWords:Array[String],
+                             val sentWords:Array[Array[String]],
                              val dependEdges:Array[String])
