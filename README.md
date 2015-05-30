@@ -1,6 +1,6 @@
 # What is it?
 
-This is the main public code repository of the NLP group led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
+This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
 + A rule-based event extraction (EE) framework called ODIN (Open Domain INformer) in the `edu.arizona.sista.odin` package, together with a grammar tailored for the biomedical domain. See [ODIN's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
 + Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster.
