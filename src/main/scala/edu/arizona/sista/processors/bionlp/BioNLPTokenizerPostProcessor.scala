@@ -23,7 +23,8 @@ class BioNLPTokenizerPostProcessor {
     tokens = breakOnPattern(tokens, Pattern.compile("(anti)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
     tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
     tokens = breakOnPattern(tokens, dashSuffixes)
-    tokens = breakOnPattern(tokens, ANYSLASH_PATTERN)
+    tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
+    tokens = breakComplex(tokens, SINGLEDASH_PATTERN)
 
     // re-join trailing or preceding - or + to previous digit
     tokens = joinSigns(tokens)
@@ -36,21 +37,66 @@ class BioNLPTokenizerPostProcessor {
     for(i <- 0 until tokens.size) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
-      if (matcher.find()) {
+      if (matcher.matches()) {
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
-        if(! DISCARD_STANDALONE_DASHES || ! s1.equals("-")){
-          output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
+        if(ACTUAL_PREFIXES.contains(s1.toLowerCase)) {
+          // do not separate here; these prefixes cannot live on their own
+          output += token
+        } else {
+          if (!DISCARD_STANDALONE_DASHES || !s1.equals("-")) {
+            output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
+          }
+          val sep = matcher.group(2)
+          if (!DISCARD_STANDALONE_DASHES || !sep.equals("-")) {
+            output += tokenFactory.makeToken(sep, token.beginPosition() + sepPos, 1)
+          }
+          val s3 = token.word().substring(sepPos + 1)
+          if (!DISCARD_STANDALONE_DASHES || !s3.equals("-")) {
+            output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
+              token.endPosition() - token.beginPosition() - sepPos - 1)
+          }
         }
-        val sep = matcher.group(2)
-        if(! DISCARD_STANDALONE_DASHES || ! sep.equals("-")){
-          output += tokenFactory.makeToken(sep, token.beginPosition() + sepPos, 1)
-        }
+      } else {
+        output += token
+      }
+    }
+    output.toArray
+  }
+
+  def breakOneSlash(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
+    val output = new ArrayBuffer[CoreLabel]
+    for(i <- 0 until tokens.size) {
+      val token = tokens(i)
+      val matcher = pattern.matcher(token.word())
+      if (matcher.matches()) {
+        val sepPos = matcher.start(2)
+        val s1 = token.word().substring(0, sepPos)
+        output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
+        output += tokenFactory.makeToken("and", token.beginPosition() + sepPos, 1) // replace "/" with "and"; it parses better
         val s3 = token.word().substring(sepPos + 1)
-        if(! DISCARD_STANDALONE_DASHES || ! s3.equals("-")){
-          output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
-            token.endPosition() - token.beginPosition() - sepPos - 1)
-        }
+        output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
+          token.endPosition() - token.beginPosition() - sepPos - 1)
+      } else {
+        output += token
+      }
+    }
+    output.toArray
+  }
+
+  def breakComplex(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
+    val output = new ArrayBuffer[CoreLabel]
+    for(i <- 0 until tokens.size) {
+      val token = tokens(i)
+      val matcher = pattern.matcher(token.word())
+      if (matcher.matches() && i < tokens.size - 1 && tokens(i + 1).word().toLowerCase() == "complex") {
+        val sepPos = matcher.start(2)
+        val s1 = token.word().substring(0, sepPos)
+        output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
+        output += tokenFactory.makeToken("and", token.beginPosition() + sepPos, 1) // replace "-" with "and"; it parses better
+        val s3 = token.word().substring(sepPos + 1)
+        output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
+          token.endPosition() - token.beginPosition() - sepPos - 1)
       } else {
         output += token
       }
@@ -135,9 +181,12 @@ object BioNLPTokenizerPostProcessor {
     "selective", "reporter", "fragment", "rich", "expression", // new suffixes from BC2
     "mechanisms?", "agonist", "heterozygous", "homozygous")
 
+  val ACTUAL_PREFIXES = Set("co", "semi")
+
   val dashSuffixes = mkDashSuffixes
 
-  val ANYSLASH_PATTERN = Pattern.compile("(\\w+)(/)(\\w+)")
+  val SINGLESLASH_PATTERN = Pattern.compile("([\\w\\-_]+)(/)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
+  val SINGLEDASH_PATTERN = Pattern.compile("([\\w\\-_]+)(\\-)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
 
   val PARENS = Set("(", ")", "[", "]")
 

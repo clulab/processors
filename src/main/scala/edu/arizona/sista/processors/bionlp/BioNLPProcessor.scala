@@ -7,6 +7,7 @@ import java.util.regex.Pattern
 import edu.arizona.sista.processors.bionlp.ner.{BioNER, RuleNER}
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import edu.arizona.sista.struct.MutableNumber
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
@@ -165,11 +166,59 @@ class BioNLPProcessor (internStrings:Boolean = true,
           ourSentence.entities = Some(bioNEs)
         }
 
+        // post-processing
+        postProcessing(ourSentence)
+
         // TODO: we should have s.norms as well...
 
         sentenceOffset += 1
       }
     }
+  }
+
+  /**
+   * Fix common NER errors
+   */
+  def postProcessing(sent:Sentence) {
+    var i = 0
+    val seq = sent.entities.get
+    val tags = sent.tags.get
+    val lemmas = sent.lemmas.get
+    while(i < seq.length) {
+      // IF: A ,(optional) and B complex THEN: make sure "complex" is labeled "O"
+      val offset = new MutableNumber[Int](i - 1)
+      if(lemmas(i) == "complex" &&
+         isEntity(offset, seq) &&
+         isCC(offset, tags) &&
+         isEntity(offset, seq)) {
+        seq(i) = RuleNER.OUTSIDE_LABEL
+        seq(findEntityStart(i - 1, seq) - 1) = RuleNER.OUTSIDE_LABEL
+      }
+      i += 1
+    }
+  }
+
+  def isEntity(offset:MutableNumber[Int], seq:Array[String]):Boolean = {
+    if(offset.value >= 0 && (seq(offset.value).startsWith("B-") || seq(offset.value).startsWith("I-"))) {
+      offset.value = findEntityStart(offset.value, seq) - 1
+      return true
+    }
+    false
+  }
+  def findEntityStart(offset:Int, seq:Array[String]):Int = {
+    var i = offset
+    while(i > 0 && seq(i).startsWith("I-"))
+      i -= 1
+    i
+  }
+  def isCC(offset:MutableNumber[Int], tags:Array[String]):Boolean = {
+    if(offset.value >= 0 && tags(offset.value) == "CC") {
+      offset.value -= 1
+      if(offset.value >= 0 && tags(offset.value) == ",")
+        offset.value -= 1
+      return true
+    }
+    false
   }
 
   def mkSent(sentence:Sentence):util.List[CoreLabel] = {

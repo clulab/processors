@@ -6,6 +6,7 @@ import edu.arizona.sista.processors.Sentence
 import edu.arizona.sista.struct.HashTrie
 import org.slf4j.LoggerFactory
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 import RuleNER._
@@ -15,11 +16,12 @@ import RuleNER._
  * User: mihais
  * Date: 5/11/15
  */
-class RuleNER(val matchers:Array[(String, HashTrie)]) {
+class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:Set[String]) {
 
   def find(sentence:Sentence):Array[String] = {
     // findByPriority(sentence)
-    findLongestMatch(sentence)
+    var seq = findLongestMatch(sentence)
+    seq
   }
 
   /**
@@ -86,12 +88,44 @@ class RuleNER(val matchers:Array[(String, HashTrie)]) {
   }
 
   private def validMatch(start:Int, end:Int, sentence:Sentence):Boolean = {
-    // we only accept single tokens if they are tagged as NN*
-    // see also removeSinglePrepositions
-    if(end - start == 1 && ! sentence.tags.get(start).startsWith("NN"))
+    // must contain at least one NN*
+    // see also removeSinglePrepositions, for deprecated code
+    var nouns = 0
+    for(i <- start until end)
+      if(sentence.tags.get(i).startsWith("NN"))
+        nouns += 1
+    if(nouns == 0)
       return false
 
-    true
+    // the text must contain at least one letter AND (the letter must be upper case OR the text contains at least 1 digit)
+    val text = sentence.getSentenceFragmentText(start, end)
+    val (letters, digits, upperCaseLetters, spaces) = scanText(text)
+    if(letters > 0 && (digits > 0 || upperCaseLetters > 0 || spaces > 0)) {
+      //println("Found valid match: " + text)
+      return true
+    }
+
+    // have we seen this single token as lower case in the KB; if so, accept it in the text
+    if(letters > 0 && knownCaseInsensitives.contains(text)) {
+      return true
+    }
+
+    false
+  }
+
+  private def scanText(text:String):(Int, Int, Int, Int) = {
+    var letters = 0
+    var digits = 0
+    var upperCaseLetters = 0
+    var spaces = 0
+    for(i <- text.indices) {
+      val c = text.charAt(i)
+      if(Character.isLetter(c)) letters += 1
+      if(Character.isUpperCase(c)) upperCaseLetters += 1
+      if(Character.isDigit(c)) digits += 1
+      if(Character.isWhitespace(c)) spaces += 1
+    }
+    (letters, digits, upperCaseLetters, spaces)
   }
 
   /**
@@ -148,21 +182,22 @@ object RuleNER {
   def load(kbs:List[String], caseInsensitive:Boolean = true):RuleNER = {
     logger.debug("Beginning to load the KBs for the rule-based bio NER...")
     val matchers = new ArrayBuffer[(String, HashTrie)]
+    val knownCaseInsensitives = new mutable.HashSet[String]()
     for(kb <- kbs) {
       val name = extractKBName(kb)
       val is = RuleNER.getClass.getClassLoader.getResourceAsStream(kb)
       assert(is != null, s"Failed to find KB file $kb in the classpath!")
       val reader = new BufferedReader(new InputStreamReader(is))
-      val matcher = loadKB(reader, caseInsensitive)
+      val matcher = loadKB(reader, caseInsensitive, knownCaseInsensitives)
       logger.debug(s"Loaded matcher for label $name. This matchers contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
       matchers += new Tuple2(name, matcher)
       reader.close()
     }
     logger.debug("KB loading completed.")
-    new RuleNER(matchers.toArray)
+    new RuleNER(matchers.toArray, knownCaseInsensitives.toSet)
   }
 
-  def loadKB(reader:BufferedReader, caseInsensitive:Boolean): HashTrie = {
+  def loadKB(reader:BufferedReader, caseInsensitive:Boolean, knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
     val matcher = new HashTrie(caseInsensitive = caseInsensitive, internStrings = true)
     var done = false
     while(! done) {
@@ -174,6 +209,10 @@ object RuleNER {
         if(! line.startsWith("#")) {
           val tokens = line.split("\\s+")
           matcher.add(tokens)
+
+          if(tokens.length == 1 && line.toLowerCase == line) {
+            knownCaseInsensitives.add(line)
+          }
         }
       }
     }
