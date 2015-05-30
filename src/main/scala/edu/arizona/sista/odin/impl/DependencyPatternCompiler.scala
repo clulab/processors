@@ -125,15 +125,15 @@ object DependencyPatternCompiler extends TokenPatternParsers {
 class ArgumentPattern(
   val name: String,
   val label: String,
-  pattern: DependencyPatternNode,
+  val pattern: DependencyPatternNode,
   val unique: Boolean,
   val required: Boolean
 ) {
   // extracts mentions and groups them according to `unique`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
     val matches = for {
-        t <- pattern.findAllIn(tok, sent, doc, state)
-        m <- state.mentionsFor(sent, t, label)
+      t <- pattern.findAllIn(tok, sent, doc, state)
+      m <- state.mentionsFor(sent, t, label)
     } yield m
     if (matches.isEmpty) Nil
     else if (unique) matches.map(Seq(_))
@@ -149,7 +149,9 @@ class OutgoingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     val edges = outgoingEdges(sent, doc)
-    if (edges isDefinedAt tok) matcher.filter(edges(tok)) else Nil
+    if (edges isDefinedAt tok)
+      for ((tok2, label) <- edges(tok) if matcher.matches(label)) yield tok2
+    else Nil
   }
 }
 
@@ -157,7 +159,9 @@ class IncomingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     val edges = incomingEdges(sent, doc)
-    if (edges isDefinedAt tok) matcher.filter(edges(tok)) else Nil
+    if (edges isDefinedAt tok)
+      for ((tok2, label) <- edges(tok) if matcher.matches(label)) yield tok2
+    else Nil
   }
 }
 
@@ -197,9 +201,9 @@ extends DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     @annotation.tailrec
     def loop(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
-      case Nil => results
-      case t :: ts if results contains t => loop(ts, results)
-      case t :: ts => loop(ts ++ pattern.findAllIn(t, sent, doc, state), t +: results)
+      case Seq() => results
+      case t +: ts if results contains t => loop(ts, results)
+      case t +: ts => loop(ts ++ pattern.findAllIn(t, sent, doc, state), t +: results)
     }
     loop(Seq(tok), Nil)
   }

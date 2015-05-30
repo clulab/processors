@@ -16,13 +16,13 @@ trait Dependencies {
   def outgoingEdges(sent: Int, doc: Document): Array[Array[(Int, String)]] =
     dependencies(sent, doc).outgoingEdges
 
-  def incoming(tok: Int, sent: Int, doc: Document): Seq[String] = {
+  def incoming(tok: Int, sent: Int, doc: Document): Array[String] = {
     val edges = incomingEdges(sent, doc)
-    if (edges isDefinedAt tok) edges(tok).map(_._2) else Nil
+    if (edges isDefinedAt tok) edges(tok).map(_._2) else Array.empty
   }
 
-  def outgoing(tok: Int, sent: Int, doc: Document): Seq[String] = {
+  def outgoing(tok: Int, sent: Int, doc: Document): Array[String] = {
     val edges = outgoingEdges(sent, doc)
-    if (edges isDefinedAt tok) edges(tok).map(_._2) else Nil
+    if (edges isDefinedAt tok) edges(tok).map(_._2) else Array.empty
   }
 }

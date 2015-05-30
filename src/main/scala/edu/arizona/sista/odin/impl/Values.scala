@@ -3,7 +3,7 @@ package edu.arizona.sista.odin.impl
 import edu.arizona.sista.processors.Document
 
 trait Values {
-  def values(strings: Option[Array[String]], msg: String): Seq[String] =
+  def values(strings: Option[Array[String]], msg: String): Array[String] =
     strings match {
       case None => sys.error(msg)
       case Some(strings) => strings
