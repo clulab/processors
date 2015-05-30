@@ -14,7 +14,7 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 /**
  * External API for running different discourse parsers for visualization.
  * Written By: Tom Hicks. 1/15/2015.
- * Last Modified: Relabel the total elapsed annotation time.
+ * Last Modified: Return word and dependency edge sets from doc sentences.
  */
 class DiscourseParserRunner (useProcessor:String = "core") {
   val processor:Processor =
@@ -43,8 +43,11 @@ class DiscourseParserRunner (useProcessor:String = "core") {
       println(dt.toString())
     })
 
+    // doc.sentences.map(s => s.dependencies.foreach(dep => println(dep.allEdges))) // REMOVE LATER
+
     // return information from discourse trees as an array of JSON strings:
-    new DiscourseParserResults(text, toJson(timings), discTrees(doc), synTrees(doc))
+    new DiscourseParserResults(text, timingsToJson(timings), discTrees(doc),
+                               synTrees(doc), sentWords(doc), dependEdges(doc))
   }
 
 
@@ -67,12 +70,45 @@ class DiscourseParserRunner (useProcessor:String = "core") {
     return (doc, t)
   }
 
+  /** Return a sequence of lists of dependency edges: one list for each sentence. */
+  def dependEdges (doc: Document): Array[String] = {
+    doc.sentences.map(sent =>
+      if (sent.dependencies.isDefined)
+        sent.dependencies.get.allEdges
+      else List.empty
+    ).map(edgesToJson(_))
+  }
+
   /** Return an array of JSON representations of the document's discourse trees. */
   def discTrees (doc: Document): Array[String] = {
     val allTrees = doc.discourseTree map { dTree =>
       dTree.visualizerJSON()
     }
     allTrees.toArray
+  }
+
+
+  /** Return a JSON string from the given (possibly empty) list of edges. */
+  def edgesToJson (edgeList:List[(Int, Int, String)], pprint:Boolean=false): String = {
+    val jEdges:List[JValue] =
+      if (edgeList.isEmpty) List[JValue]()
+      else edgeList.map(edgeToJson(_))
+    if (pprint)
+      pretty(render(jEdges))
+    else
+      compact(render(jEdges))
+  }
+
+  def edgeToJson (edge:Tuple3[Int, Int, String]): JArray = {
+    JArray(List(JInt(BigInt(edge._1.asInstanceOf[Long])),
+                JInt(BigInt(edge._2.asInstanceOf[Long])),
+                JString(edge._3.toString)))
+  }
+
+
+  /** Return a sequence of the document's arrays of words, one for each sentence. */
+  def sentWords (doc: Document): Array[String] = {
+    doc.sentences.map(s => s.words.mkString(" "))
   }
 
   /** Return an array of JSON representations of the document's syntax trees. */
@@ -92,7 +128,7 @@ class DiscourseParserRunner (useProcessor:String = "core") {
   }
 
   /** Return a JSON string from the given list of lists of timings. */
-  def toJson (timings:List[List[Any]], pprint:Boolean=false): String = {
+  def timingsToJson (timings:List[List[Any]], pprint:Boolean=false): String = {
     val jTimings:List[JValue] = timings.map(it => tListToJson(it))
     if (pprint)
       pretty(render(jTimings))
@@ -118,4 +154,6 @@ class DiscourseParserRunner (useProcessor:String = "core") {
 class DiscourseParserResults(val text:String,
                              val timings:String,
                              val dTrees:Array[String],
-                             val synTrees:Array[String])
+                             val synTrees:Array[String],
+                             val sentWords:Array[String],
+                             val dependEdges:Array[String])
