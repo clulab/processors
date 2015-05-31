@@ -167,7 +167,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
         }
 
         // post-processing
-        postProcessing(ourSentence)
+        nerPostProcessing(ourSentence)
 
         // TODO: we should have s.norms as well...
 
@@ -179,13 +179,17 @@ class BioNLPProcessor (internStrings:Boolean = true,
   /**
    * Fix common NER errors
    */
-  def postProcessing(sent:Sentence) {
-    var i = 0
+  def nerPostProcessing(sent:Sentence) {
     val seq = sent.entities.get
     val tags = sent.tags.get
     val lemmas = sent.lemmas.get
+    val words = sent.words
+
+    //
+    // IF: A ,(optional) and B complex THEN: make sure "complex" is labeled "O"
+    //
+    var i = 0
     while(i < seq.length) {
-      // IF: A ,(optional) and B complex THEN: make sure "complex" is labeled "O"
       val offset = new MutableNumber[Int](i - 1)
       if(lemmas(i) == "complex" &&
          isEntity(offset, seq) &&
@@ -193,6 +197,19 @@ class BioNLPProcessor (internStrings:Boolean = true,
          isEntity(offset, seq)) {
         seq(i) = RuleNER.OUTSIDE_LABEL
         seq(findEntityStart(i - 1, seq) - 1) = RuleNER.OUTSIDE_LABEL
+      }
+      i += 1
+    }
+
+    //
+    // Single-character entities cannot exist in this domain
+    //
+    i = 0
+    while(i < seq.length) {
+      if(seq(i).startsWith("B-") &&
+         (i == seq.length - 1 || ! seq(i + 1).startsWith("I-")) &&
+         words(i).length == 1) {
+        seq(i) = RuleNER.OUTSIDE_LABEL
       }
       i += 1
     }
@@ -239,7 +256,7 @@ object BioNLPProcessor {
   val FIGTAB_REFERENCE = Pattern.compile("\\s*see\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
   val CRF_MODEL_PATH = "edu/arizona/sista/processors/bionlp/ner/bioner.dat"
 
-  val RULE_NER_KBS = List( // knowledge for the rule-based NER
+  val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
     "edu/arizona/sista/processors/bionlp/ner/Gene_or_gene_product.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Family.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Site.tsv",
