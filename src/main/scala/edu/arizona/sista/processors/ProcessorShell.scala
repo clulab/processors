@@ -1,5 +1,6 @@
 package edu.arizona.sista.processors
 
+import scala.collection.immutable.ListMap
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
@@ -23,7 +24,7 @@ object ProcessorShell {
   reader.setPrompt(">>> ")
   reader.setHistory(history)
 
-  val commands = Map(
+  val commands = ListMap(
     ":help" -> "show commands",
     ":core" -> "use CoreNLPProcessor",
     ":bio" -> "use BioNLPProcessor",
