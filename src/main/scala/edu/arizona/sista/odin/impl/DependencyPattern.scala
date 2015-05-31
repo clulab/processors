@@ -28,7 +28,7 @@ trait DependencyPattern {
     doc: Document,
     state: State
   ): Seq[Args] = for {
-    tok <- interval.toSeq
+    tok <- interval
     m <- extractArguments(tok, sent, doc, state)
   } yield m
 
