@@ -7,8 +7,6 @@ import java.io.File
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
 
-import scala.annotation.tailrec
-
 /**
  * A simple interactive shell
  * User: mihais
@@ -47,46 +45,39 @@ object ProcessorShell {
     println("\nWelcome to the ProcessorShell!")
     printCommands()
 
-    @tailrec
-    def runShell() {
-      val stillRunning =
-        reader.readLine match {
-          case ":help" =>
-            printCommands()
-            true
+    var running = true
 
-          case ":core" =>
-            reader.setPrompt("(core)>>> ")
-            println("Preparing CoreNLPProcessor...\n")
-            proc = core
-            proc.annotate("initialize me!")
-            true
+    while (running) {
+      reader.readLine match {
+        case ":help" =>
+          printCommands()
 
-          case ":fast" =>
-            reader.setPrompt("(fast)>>> ")
-            println("Preparing FastNLPProcessor...\n")
-            proc = fast
-            proc.annotate("initialize me!")
-            true
+        case ":core" =>
+          reader.setPrompt("(core)>>> ")
+          println("Preparing CoreNLPProcessor...\n")
+          proc = core
+          proc.annotate("initialize me!")
 
-          case ":bio" =>
-            reader.setPrompt("(bio)>>> ")
-            println("Preparing BioNLPProcessor...\n")
-            proc = bio
-            proc.annotate("initialize me!")
-            true
+        case ":fast" =>
+          reader.setPrompt("(fast)>>> ")
+          println("Preparing FastNLPProcessor...\n")
+          proc = fast
+          proc.annotate("initialize me!")
 
-          case ":exit" | null =>
-            false
-          case text =>
-            val doc = proc.annotate(text)
-            ProcessorExample.printDoc(doc)
-            true
-        }
-      if (stillRunning) runShell()
+        case ":bio" =>
+          reader.setPrompt("(bio)>>> ")
+          println("Preparing BioNLPProcessor...\n")
+          proc = bio
+          proc.annotate("initialize me!")
+
+        case ":exit" | null =>
+          running = false
+
+        case text =>
+          val doc = proc.annotate(text)
+          ProcessorExample.printDoc(doc)
+      }
     }
-    // Initialize the shell
-    runShell()
 
     // manual terminal cleanup
     reader.getTerminal.restore()
