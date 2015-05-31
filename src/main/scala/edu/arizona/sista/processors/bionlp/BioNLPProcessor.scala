@@ -186,7 +186,8 @@ class BioNLPProcessor (internStrings:Boolean = true,
     val words = sent.words
 
     //
-    // IF: A ,(optional) and B complex THEN: make sure "complex" is labeled "O"
+    // IF: "A ,(optional) and B complex" THEN: make sure "complex" is labeled "O"
+    // This pattern is considered a Binding event, and will be modeled by REACH
     //
     var i = 0
     while(i < seq.length) {
@@ -213,6 +214,32 @@ class BioNLPProcessor (internStrings:Boolean = true,
       }
       i += 1
     }
+
+    //
+    // Figure references, e.g., "Figure S2", should not be labeled
+    //
+    i = 1
+    while(i < seq.length) {
+      if(isFigRef(lemmas, i) && (seq(i).startsWith("I-") || seq(i).startsWith("B-"))) {
+        val start = findEntityStart(i, seq)
+        val end = findEntityEnd(i, seq)
+        println(s"FOUND fig ref from $start to $end")
+        for(j <- start until end)
+          seq(j) = RuleNER.OUTSIDE_LABEL
+        i = end
+      } else {
+        i += 1
+      }
+    }
+  }
+
+  def isFigRef(lemmas:Array[String], offset:Int):Boolean = {
+    assert(offset > 0)
+    val m1 = POTENTIAL_FIGURE_TEXT.matcher(lemmas(offset - 1))
+    val m2 = POTENTIAL_FIGURE_NUMBER.matcher(lemmas(offset))
+    if(m1.matches() && m2.matches())
+      return true
+    false
   }
 
   def isEntity(offset:MutableNumber[Int], seq:Array[String]):Boolean = {
@@ -222,12 +249,23 @@ class BioNLPProcessor (internStrings:Boolean = true,
     }
     false
   }
+
   def findEntityStart(offset:Int, seq:Array[String]):Int = {
     var i = offset
     while(i > 0 && seq(i).startsWith("I-"))
       i -= 1
     i
   }
+
+  def findEntityEnd(offset:Int, seq:Array[String]):Int = {
+    var i = offset
+    if(seq(i).startsWith("B-"))
+      i += 1
+    while(i < seq.length && seq(i).startsWith("I-"))
+      i += 1
+    i
+  }
+
   def isCC(offset:MutableNumber[Int], tags:Array[String]):Boolean = {
     if(offset.value >= 0 && tags(offset.value) == "CC") {
       offset.value -= 1
@@ -252,8 +290,11 @@ class BioNLPProcessor (internStrings:Boolean = true,
 }
 
 object BioNLPProcessor {
-  val FIGTAB_REFERENCE_WITH_PARENS = Pattern.compile("\\((\\s*see)?\\s*(figure|table|fig\\.|tab\\.)[^\\)]*\\)", Pattern.CASE_INSENSITIVE)
-  val FIGTAB_REFERENCE = Pattern.compile("\\s*see\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
+  val FIGTAB_REFERENCE_WITH_PARENS = Pattern.compile("\\((\\s*see)?(\\s*supplementary)?\\s*(figure|table|fig\\.|tab\\.)[^\\)]*\\)", Pattern.CASE_INSENSITIVE)
+  val FIGTAB_REFERENCE = Pattern.compile("\\s*see(\\s*supplementary)?\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
+  val POTENTIAL_FIGURE_NUMBER = Pattern.compile("[a-z]*\\d+", Pattern.CASE_INSENSITIVE)
+  val POTENTIAL_FIGURE_TEXT = Pattern.compile("(figure|figures|fig\\.?|figs\\.?)", Pattern.CASE_INSENSITIVE)
+
   val CRF_MODEL_PATH = "edu/arizona/sista/processors/bionlp/ner/bioner.dat"
 
   val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
