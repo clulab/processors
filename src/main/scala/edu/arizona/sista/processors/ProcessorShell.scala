@@ -21,7 +21,6 @@ object ProcessorShell extends App {
   }
 
   val reader = new ConsoleReader
-  reader.setPrompt(">>> ")
   reader.setHistory(history)
 
   val commands = ListMap(
@@ -33,13 +32,13 @@ object ProcessorShell extends App {
   )
 
   // create the processor
-  val core:Processor = new CoreNLPProcessor(withDiscourse = false) // this uses the slow but better discourse parser
-  val fast:Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
-  val bio:Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
+  val core: Processor = new CoreNLPProcessor(withDiscourse = false) // this uses the slow but better discourse parser
+  val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
+  val bio: Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
 
-  var proc = bio
-  reader.setPrompt("(bio)>>> ")
-  println("Loading BioNLPProcessor...\n")
+  var proc = core
+  reader.setPrompt("(core)>>> ")
+  println("Loading CoreNLPProcessor...\n")
   proc.annotate("blah")
 
   println("\nWelcome to the ProcessorShell!")
