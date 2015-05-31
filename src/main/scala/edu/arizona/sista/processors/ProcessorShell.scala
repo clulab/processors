@@ -13,7 +13,7 @@ import jline.console.history.FileHistory
  * User: mihais
  * Date: 3/13/14
  */
-object ProcessorShell {
+object ProcessorShell extends App {
 
   val history = new FileHistory(new File(System.getProperty("user.home"), ".processorshellhistory"))
   sys addShutdownHook {
@@ -32,59 +32,57 @@ object ProcessorShell {
     ":exit" -> "exit system"
   )
 
-  def main(args:Array[String]) {
-    // create the processor
-    val core:Processor = new CoreNLPProcessor(withDiscourse = false) // this uses the slow but better discourse parser
-    val fast:Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
-    val bio:Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
+  // create the processor
+  val core:Processor = new CoreNLPProcessor(withDiscourse = false) // this uses the slow but better discourse parser
+  val fast:Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
+  val bio:Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
 
-    var proc = bio
-    reader.setPrompt("(bio)>>> ")
-    println("Loading BioNLPProcessor...\n")
-    proc.annotate("blah")
+  var proc = bio
+  reader.setPrompt("(bio)>>> ")
+  println("Loading BioNLPProcessor...\n")
+  proc.annotate("blah")
 
-    println("\nWelcome to the ProcessorShell!")
-    printCommands()
+  println("\nWelcome to the ProcessorShell!")
+  printCommands()
 
-    var running = true
+  var running = true
 
-    while (running) {
-      reader.readLine match {
-        case ":help" =>
-          printCommands()
+  while (running) {
+    reader.readLine match {
+      case ":help" =>
+        printCommands()
 
-        case ":core" =>
-          reader.setPrompt("(core)>>> ")
-          println("Preparing CoreNLPProcessor...\n")
-          proc = core
-          proc.annotate("initialize me!")
+      case ":core" =>
+        reader.setPrompt("(core)>>> ")
+        println("Preparing CoreNLPProcessor...\n")
+        proc = core
+        proc.annotate("initialize me!")
 
-        case ":fast" =>
-          reader.setPrompt("(fast)>>> ")
-          println("Preparing FastNLPProcessor...\n")
-          proc = fast
-          proc.annotate("initialize me!")
+      case ":fast" =>
+        reader.setPrompt("(fast)>>> ")
+        println("Preparing FastNLPProcessor...\n")
+        proc = fast
+        proc.annotate("initialize me!")
 
-        case ":bio" =>
-          reader.setPrompt("(bio)>>> ")
-          println("Preparing BioNLPProcessor...\n")
-          proc = bio
-          proc.annotate("initialize me!")
+      case ":bio" =>
+        reader.setPrompt("(bio)>>> ")
+        println("Preparing BioNLPProcessor...\n")
+        proc = bio
+        proc.annotate("initialize me!")
 
-        case ":exit" | null =>
-          running = false
+      case ":exit" | null =>
+        running = false
 
-        case text =>
-          val doc = proc.annotate(text)
-          ProcessorExample.printDoc(doc)
-      }
+      case text =>
+        val doc = proc.annotate(text)
+        ProcessorExample.printDoc(doc)
     }
-
-    // manual terminal cleanup
-    reader.getTerminal.restore()
-    reader.shutdown()
-
   }
+
+  // manual terminal cleanup
+  reader.getTerminal.restore()
+  reader.shutdown()
+
 
   // summarize available commands
   def printCommands(): Unit = {
