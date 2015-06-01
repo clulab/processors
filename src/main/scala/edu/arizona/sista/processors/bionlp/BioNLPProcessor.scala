@@ -118,6 +118,8 @@ class BioNLPProcessor (internStrings:Boolean = true,
           case ubiq if ubiq.endsWith("ubiquitinates") => ta.setTag("VBZ")
           case ubiqNom if ubiqNom.endsWith("ubiquitinate") => ta.setTag("VB")
           case hydro if hydro.endsWith("hydrolyzes") => ta.setTag("VBZ")
+          case aids if aids.toLowerCase == "aids" && aids != "AIDS" =>
+            ta.setTag("VBZ")
           case _ => ()
         }
       }
