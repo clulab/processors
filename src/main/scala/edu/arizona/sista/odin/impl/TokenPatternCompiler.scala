@@ -12,21 +12,30 @@ trait TokenPatternParsers extends TokenConstraintParsers {
   override val whiteSpace = """(\s|#.*)+""".r
 
   def tokenPattern: Parser[TokenPattern] =
-    splitPattern ~ opt(lookaheadAssertion) ^^ {
-      case frag ~ lookahead =>
+    opt(lookbehindAssertion) ~ splitPattern ~ opt(lookaheadAssertion) ^^ {
+      case lookbehind ~ frag ~ lookahead =>
         val f = frag.capture(TokenPattern.GlobalCapture)
         f.setOut(Done)
-        new TokenPattern(f.in, lookahead)
+        new TokenPattern(f.in, lookbehind, lookahead)
     }
 
-  def lookaheadAssertion: Parser[TokenPatternLookaheadAssertion] =
-    ("(?="|"(?!") ~ splitPattern <~ ")" ^^ {
-      case "(?=" ~ frag =>
+  def lookaheadAssertion: Parser[LookaheadAssertion] =
+    ("(?=" | "(?!") ~ splitPattern <~ ")" ^^ {
+      case op ~ frag =>
         frag.setOut(Done)
-        new TokenPatternLookaheadAssertion(frag.in, negative = false)
-      case "(?!" ~ frag =>
+        val negative = op.endsWith("!")
+        new LookaheadAssertion(frag.in, negative)
+    }
+
+  def lookbehindAssertion: Parser[LookbehindAssertion] =
+    ("(?<=" | "(?<!") ~ rep1(singleTokenPattern) <~ ")" ^^ {
+      case op ~ toks =>
+        val frag = (toks.head /: toks.tail) {
+          case (lhs, rhs) => ProgramFragment(lhs, rhs)
+        }
         frag.setOut(Done)
-        new TokenPatternLookaheadAssertion(frag.in, negative = true)
+        val negative = op.endsWith("!")
+        new LookbehindAssertion(frag.in, toks.size, negative)
     }
 
   def splitPattern: Parser[ProgramFragment] =

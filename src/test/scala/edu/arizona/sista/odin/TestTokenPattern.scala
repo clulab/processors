@@ -84,6 +84,39 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
   }
 
+  it should "match with postitive lookbehind" in {
+    val p = TokenPattern.compile("(?<=a) b")
+    val results = p.findAllIn(0, doc, None)
+    results should have size (1)
+    results.head.interval should have (
+      'start (1),
+      'end (2)
+    )
+  }
+
+  it should "not match with negative lookbehind" in {
+    val p = TokenPattern.compile("(?<!a) b")
+    val results = p.findAllIn(0, doc, None)
+    results should be ('empty)
+  }
+
+  it should "match with postitive lookahead" in {
+    val p = TokenPattern.compile("b (?=c)")
+    val results = p.findAllIn(0, doc, None)
+    results should have size (1)
+    results.head.interval should have (
+      'start (1),
+      'end (2)
+    )
+  }
+
+  it should "not match with negative lookahead" in {
+    val p = TokenPattern.compile("b (?!c)")
+    val results = p.findAllIn(0, doc, None)
+    results should be ('empty)
+  }
+
+
   val text5 = "JAK3 phosphorylates three HuR residues (Y63, Y68, Y200)"
   val doc5 = proc annotate text5
 
