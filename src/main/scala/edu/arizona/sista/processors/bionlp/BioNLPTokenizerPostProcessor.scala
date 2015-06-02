@@ -89,7 +89,7 @@ class BioNLPTokenizerPostProcessor {
     for(i <- 0 until tokens.size) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
-      if (matcher.matches() && i < tokens.size - 1 && tokens(i + 1).word().toLowerCase() == "complex") {
+      if (matcher.matches() && i < tokens.size - 1 && isComplex(tokens(i + 1).word().toLowerCase())) {
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
         output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
@@ -165,6 +165,11 @@ class BioNLPTokenizerPostProcessor {
     }
     output.toArray
   }
+
+  def isComplex(word:String):Boolean = {
+    val m = COMPLEX.matcher(word)
+    m.matches()
+  }
 }
 
 object BioNLPTokenizerPostProcessor {
@@ -189,6 +194,8 @@ object BioNLPTokenizerPostProcessor {
   val SINGLEDASH_PATTERN = Pattern.compile("([\\w\\-_]+)(\\-)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
 
   val PARENS = Set("(", ")", "[", "]")
+
+  val COMPLEX = Pattern.compile("complex|dimer|heterodimer")
 
   def isParen(s:String) = PARENS.contains(s)
 
