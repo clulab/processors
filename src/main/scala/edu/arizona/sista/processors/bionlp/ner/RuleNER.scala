@@ -110,6 +110,10 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
       return true
     }
 
+    // if at least 1 letter and length > 3 accept (e.g., "rapamycin")
+    if(letters > 0 && text.length > 3)
+      return true
+
     false
   }
 
