@@ -89,7 +89,9 @@ class BioNLPTokenizerPostProcessor {
     for(i <- 0 until tokens.size) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
-      if (matcher.matches() && i < tokens.size - 1 && isComplex(tokens(i + 1).word().toLowerCase())) {
+      if (matcher.matches() &&
+        ((i < tokens.size - 1 && isComplex(tokens(i + 1).word())) ||
+          (i > 0 && isComplex(tokens(i - 1).word())))){
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
         output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
