@@ -1,4 +1,4 @@
-# Wed May 27 11:46:00 MST 2015
+# Tue Jun 02 14:40:04 MST 2015
 2-micrometer	circle	DNA
 A	band
 Acidocalcisome
@@ -112,8 +112,8 @@ Golgi	trans	cisterna	membrane
 Golgi	associated	vesicle
 Golgi	associated	vesicle	lumen
 Golgi	associated	vesicle	membrane
-Gram	negative-bacterium-type	cell	wall
-Gram	positive-bacterium-type	cell	wall
+Gram-negative-bacterium-type	cell	wall
+Gram-positive-bacterium-type	cell	wall
 Glycosome
 Glycosome	matrix
 Glycosome	membrane
@@ -790,7 +790,7 @@ ectexine
 ectoplasm
 egg	coat
 eisosome
-eisosome	membrane	domain	/	MCC
+eisosome	membrane	domain	and	MCC
 elaioplast
 elaioplast	stroma
 elastic	fiber
@@ -862,7 +862,7 @@ extracellular	exosome
 extracellular	matrix
 extracellular	matrix	component
 extracellular	membrane	bounded	organelle
-extracellular	non	membrane	bounded	organelle
+extracellular	non-membrane-bounded	organelle
 extracellular	organelle
 extracellular	region
 extracellular	region	part
@@ -1183,7 +1183,7 @@ intracellular
 intracellular	canaliculus
 intracellular	immature	spore
 intracellular	membrane	bounded	organelle
-intracellular	non	membrane	bounded	organelle
+intracellular	non-membrane-bounded	organelle
 intracellular	organelle
 intracellular	organelle	lumen
 intracellular	organelle	part
@@ -1453,7 +1453,7 @@ new	mitotic	spindle	pole	body
 nexine
 node	of	Ranvier
 non	growing	cell	tip
-non	membrane	bounded	organelle
+non-membrane-bounded	organelle
 non	segmented	viral	genome
 nonmotile	primary	cilium
 nuclear	body
@@ -1905,6 +1905,7 @@ spore	cortex
 spore	outer	membrane
 surface	film
 synaptosome
+trailing	edge
 tail	portion	of	tanycyte
 tectum
 terminal	bouton
