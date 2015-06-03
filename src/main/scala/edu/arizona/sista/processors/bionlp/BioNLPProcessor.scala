@@ -110,20 +110,34 @@ class BioNLPProcessor (internStrings:Boolean = true,
     val sas = annotation.get(classOf[SentencesAnnotation])
 
     sas.foreach{ sa =>
-      val tas = sa.get(classOf[TokensAnnotation])
+      val tas = sa.get(classOf[TokensAnnotation]).toList.toArray
+
+      //
+      // some of our would-be verbs are mistagged...
+      //
       tas.foreach{ ta =>
         val text = ta.originalText().toLowerCase
-        // some of our would-be verbs are mistagged...
         text match {
           case ubiq if ubiq.endsWith("ubiquitinates") => ta.setTag("VBZ")
           case ubiqNom if ubiqNom.endsWith("ubiquitinate") => ta.setTag("VB")
           case hydro if hydro.endsWith("hydrolyzes") => ta.setTag("VBZ")
-          case aids if aids.toLowerCase == "aids" && aids != "AIDS" =>
-            ta.setTag("VBZ")
+          case aids if aids.toLowerCase == "aids" && aids != "AIDS" => ta.setTag("VBZ")
           case _ => ()
         }
       }
 
+      //
+      // change VBN to JJ if in between DT and NN
+      // e.g.: "XRCC1 is phosphorylated by the co-immunoprecipitated DNA-PK" => "co-immunoprecipitated" should be JJ
+      //
+      for(i <- tas.indices) {
+        if(i > 0 && i < tas.length - 1 &&
+          tas(i).tag() == "VBN" &&
+          tas(i - 1).tag().startsWith("DT") &&
+          tas(i + 1).tag().startsWith("NN")) {
+          tas(i).setTag("JJ")
+        }
+      }
     }
   }
 
@@ -169,7 +183,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
         }
 
         // post-processing
-        nerPostProcessing(ourSentence)
+        postProcessNamedEntities(ourSentence)
 
         // TODO: we should have s.norms as well...
 
@@ -181,7 +195,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
   /**
    * Fix common NER errors
    */
-  def nerPostProcessing(sent:Sentence) {
+  def postProcessNamedEntities(sent:Sentence) {
     val seq = sent.entities.get
     val tags = sent.tags.get
     val lemmas = sent.lemmas.get
@@ -233,6 +247,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
         i += 1
       }
     }
+
   }
 
   def isFigRef(lemmas:Array[String], offset:Int):Boolean = {
