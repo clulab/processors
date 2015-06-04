@@ -253,7 +253,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
       if(isFigRef(lemmas, i) && (seq(i).startsWith("I-") || seq(i).startsWith("B-"))) {
         val start = findEntityStart(i, seq)
         val end = findEntityEnd(i, seq)
-        println(s"FOUND fig ref from $start to $end")
+        // println(s"FOUND fig ref from $start to $end")
         for(j <- start until end)
           seq(j) = RuleNER.OUTSIDE_LABEL
         i = end
