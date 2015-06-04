@@ -138,6 +138,20 @@ class BioNLPProcessor (internStrings:Boolean = true,
           tas(i).setTag("JJ")
         }
       }
+
+      //
+      // parens must be tagged -LRB- and -RRB-
+      // this improves parsing a lot!
+      //
+      tas.foreach { ta =>
+        val text = ta.originalText()
+        text match {
+          case "(" => ta.setTag("-LRB-")
+          case ")" => ta.setTag("-RRB-")
+          case _ =>
+        }
+      }
+
     }
   }
 

@@ -25,6 +25,7 @@ class BioNLPTokenizerPostProcessor {
     tokens = breakOnPattern(tokens, dashSuffixes)
     tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
     tokens = breakComplex(tokens, SINGLEDASH_PATTERN)
+    tokens = breakMutant(tokens, SINGLEDASH_PATTERN)
 
     // re-join trailing or preceding - or + to previous digit
     tokens = joinSigns(tokens)
@@ -106,6 +107,28 @@ class BioNLPTokenizerPostProcessor {
     output.toArray
   }
 
+  def breakMutant(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
+    val output = new ArrayBuffer[CoreLabel]
+    for(i <- 0 until tokens.size) {
+      val token = tokens(i)
+      val matcher = pattern.matcher(token.word())
+      if (matcher.matches() &&
+        ((i < tokens.size - 1 && isMutant(tokens(i + 1).word())) ||
+          (i > 0 && isMutant(tokens(i - 1).word())))){
+        val sepPos = matcher.start(2)
+        val s1 = token.word().substring(0, sepPos)
+        output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
+        // "-" is simply removed for mutation modifications
+        val s3 = token.word().substring(sepPos + 1)
+        output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1,
+          token.endPosition() - token.beginPosition() - sepPos - 1)
+      } else {
+        output += token
+      }
+    }
+    output.toArray
+  }
+
   def joinSigns(tokens:Array[CoreLabel]):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
     var i = 0
@@ -172,6 +195,10 @@ class BioNLPTokenizerPostProcessor {
     val m = COMPLEX.matcher(word)
     m.matches()
   }
+  def isMutant(word:String):Boolean = {
+    val m = MUTANT.matcher(word)
+    m.matches()
+  }
 }
 
 object BioNLPTokenizerPostProcessor {
@@ -198,6 +225,7 @@ object BioNLPTokenizerPostProcessor {
   val PARENS = Set("(", ")", "[", "]")
 
   val COMPLEX = Pattern.compile("complex|dimer|heterodimer")
+  val MUTANT = Pattern.compile("mutant|mutants")
 
   def isParen(s:String) = PARENS.contains(s)
 
