@@ -1,4 +1,4 @@
-# Tue Jun 02 14:40:04 MST 2015
+# Thu Jun 04 14:23:30 MST 2015
 (	Uracil-5	)	-	methyltransferase
 1,2-dihydroxy-3-keto-5-methylthiopentene	dioxygenase	,	eukaryotes
 1,4-alpha-glucan-branching	enzyme	,	GlgB
@@ -633,10 +633,10 @@ Ada3
 Adaptin	ear	binding	coat	associated	protein	1	NECAP-1
 Adaptin_binding
 Adaptor	protein	Cbl
-Adaptor	protein	complex	AP-1	,	gamma	subunit
-Adaptor	protein	complex	AP-2	,	alpha	subunit
-Adaptor	protein	complex	AP-3	,	delta	subunit
-Adaptor	protein	complex	AP-4	,	epsilon	subunit
+Adaptor	protein	complex	AP	and	1	,	gamma	subunit
+Adaptor	protein	complex	AP	and	2	,	alpha	subunit
+Adaptor	protein	complex	AP	and	3	,	delta	subunit
+Adaptor	protein	complex	AP	and	4	,	epsilon	subunit
 Adaptor	protein	complex	,	sigma	subunit
 Ade_cyc
 Aden_phosphoribosyltr

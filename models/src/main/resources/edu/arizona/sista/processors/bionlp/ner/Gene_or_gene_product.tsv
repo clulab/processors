@@ -1,4 +1,4 @@
-# Tue Jun 02 14:40:04 MST 2015
+# Thu Jun 04 14:23:30 MST 2015
 (	1-49	)	-	CCK58
 (	2-5	'	)	oligo	(	A	)	synthase	1
 (	2-5	'	)	oligo	(	A	)	synthase	2
@@ -2551,20 +2551,20 @@ Adaptive	response	to	oxidative	stress	protein	29
 Adaptor	associated	kinase	1
 Adaptor	in	lymphocytes	of	unknown	function	X
 Adaptor	molecule	disabled-2
-Adaptor	protein	complex	AP-1	subunit	beta-1
-Adaptor	protein	complex	AP-1	subunit	gamma-1
-Adaptor	protein	complex	AP-1	subunit	mu-1
-Adaptor	protein	complex	AP-1	subunit	mu-2
-Adaptor	protein	complex	AP-1	subunit	sigma-1A
-Adaptor	protein	complex	AP-1	subunit	sigma-1B
-Adaptor	protein	complex	AP-1	subunit	sigma-1C
-Adaptor	protein	complex	AP-2	subunit	alpha-1
-Adaptor	protein	complex	AP-2	subunit	alpha-2
-Adaptor	protein	complex	AP-2	subunit	beta
-Adaptor	protein	complex	AP-2	subunit	mu
-Adaptor	protein	complex	AP-2	subunit	sigma
-Adaptor	protein	complex	AP-3	subunit	beta-1
-Adaptor	protein	complex	AP-3	subunit	beta-2
+Adaptor	protein	complex	AP	and	1	subunit	beta-1
+Adaptor	protein	complex	AP	and	1	subunit	gamma-1
+Adaptor	protein	complex	AP	and	1	subunit	mu-1
+Adaptor	protein	complex	AP	and	1	subunit	mu-2
+Adaptor	protein	complex	AP	and	1	subunit	sigma-1A
+Adaptor	protein	complex	AP	and	1	subunit	sigma-1B
+Adaptor	protein	complex	AP	and	1	subunit	sigma-1C
+Adaptor	protein	complex	AP	and	2	subunit	alpha-1
+Adaptor	protein	complex	AP	and	2	subunit	alpha-2
+Adaptor	protein	complex	AP	and	2	subunit	beta
+Adaptor	protein	complex	AP	and	2	subunit	mu
+Adaptor	protein	complex	AP	and	2	subunit	sigma
+Adaptor	protein	complex	AP	and	3	subunit	beta-1
+Adaptor	protein	complex	AP	and	3	subunit	beta-2
 Adaptor	protein	Wyatt
 Adaptor	related	protein	complex	1	associated	regulatory	protein
 Adaptor	related	protein	complex	1	subunit	beta-1
@@ -7558,6 +7558,7 @@ B2M	(	21-119	)
 BCL-X	(	L	)
 BLNK-LAT-active
 BTK-ITK-active
+B-Raf	P15056
 B0AT1
 B0AT2
 B120
@@ -47686,8 +47687,8 @@ LNXp80
 Laminin	Alpha
 Laminin	Beta
 Laminin	Gamma
-Ligand	responsive	p-6Y-EGFR	mutants	resistant	to	non	covalent	TKIs
-Ligand	responsive	p-6Y-EGFR	mutants	sensitive	to	non	covalent	TKIs
+Ligand	responsive	p-6Y	EGFR	mutants	resistant	to	non	covalent	TKIs
+Ligand	responsive	p-6Y	EGFR	mutants	sensitive	to	non	covalent	TKIs
 L10mt
 L11mt
 L12mt
@@ -89057,7 +89058,7 @@ TFIIH	basal	transcription	factor	complex	p34	subunit
 TFIIH	basal	transcription	factor	complex	p44	subunit
 TFIIH	basal	transcription	factor	complex	p52	subunit
 TFIIH	basal	transcription	factor	complex	p62	subunit
-TFIIH	basal	transcription	factor	complex	TTD-A	subunit
+TFIIH	basal	transcription	factor	complex	TTD	and	A	subunit
 TFIIH	p80
 TFIIH	p89
 TFIIIA
@@ -103323,7 +103324,7 @@ p-FGFR1	P252T	mutant
 p-FGFR1c	P252R	mutant
 p-FGFR2	W290C	mutant
 p-FGFR3	795fs	*	139
-p-FGFR3	mutant	(	overexpressed	)
+p	FGFR3	mutant	(	overexpressed	)
 p-IRS1	,2
 p-RASGRP1	,3
 p-S	,	T-BRAF
