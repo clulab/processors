@@ -4,8 +4,8 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
 object ThompsonVM {
-  type NamedGroups = Map[String, (Int, Int)]
-  type NamedMentions = Map[String, Mention]
+  type NamedGroups = Map[String, Seq[(Int, Int)]]
+  type NamedMentions = Map[String, Seq[Mention]]
 
   trait Thread {
     def isDone: Boolean
@@ -52,10 +52,13 @@ object ThompsonVM {
         mkThreads(tok, i.next, groups, mentions)
       case i: Split =>
         mkThreads(tok, i.lhs, groups, mentions) ++ mkThreads(tok, i.rhs, groups, mentions)
-      case i: SaveStart =>
-        mkThreads(tok, i.next, groups + (i.name -> (tok, -1)), mentions)
-      case i: SaveEnd =>
-        mkThreads(tok, i.next, groups + (i.name -> (groups(i.name)._1, tok)), mentions)
+      case i: SaveStart => // start a new capture
+        val gs = groups.getOrElse(i.name, Vector.empty) :+ (tok, -1)
+        mkThreads(tok, i.next, groups + (i.name -> gs), mentions)
+      case i: SaveEnd => // close current capture
+        val g0 = groups(i.name)
+        val gs = g0.init :+ (g0.last._1, tok)
+        mkThreads(tok, i.next, groups + (i.name -> gs), mentions)
       case _ =>
         Seq(SingleThread(tok, inst, groups, mentions))
     }
@@ -91,7 +94,9 @@ object ThompsonVM {
         mention: Mention
     ): NamedMentions = name match {
       case None => mentions
-      case Some(name) => mentions + (name -> mention)
+      case Some(name) =>
+        val ms = mentions.getOrElse(name, Vector.empty) :+ mention
+        mentions + (name -> ms)
     }
 
     def stepThreadBundle(t: ThreadBundle): Seq[Thread] = {
