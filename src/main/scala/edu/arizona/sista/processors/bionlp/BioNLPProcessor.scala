@@ -108,6 +108,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
    */
   override def postprocessTags(annotation:Annotation) {
     val sas = annotation.get(classOf[SentencesAnnotation])
+    val hyphPat = """(^[a-zA-Z0-9-]+-[A-Z0-9][a-zA-Z0-9-]*)""".r
 
     sas.foreach{ sa =>
       val tas = sa.get(classOf[TokensAnnotation]).toList.toArray
@@ -116,11 +117,11 @@ class BioNLPProcessor (internStrings:Boolean = true,
       // some of our would-be verbs are mistagged...
       //
       tas.foreach{ ta =>
-        val text = ta.originalText().toLowerCase
+        val text = ta.originalText()
         text match {
-          case ubiq if ubiq.endsWith("ubiquitinates") => ta.setTag("VBZ")
-          case ubiqNom if ubiqNom.endsWith("ubiquitinate") => ta.setTag("VB")
-          case hydro if hydro.endsWith("hydrolyzes") => ta.setTag("VBZ")
+          case ubiq if ubiq.toLowerCase.endsWith("ubiquitinates") => ta.setTag("VBZ")
+          case ubiqNom if ubiqNom.toLowerCase.endsWith("ubiquitinate") => ta.setTag("VB")
+          case hydro if hydro.toLowerCase.endsWith("hydrolyzes") => ta.setTag("VBZ")
           case aids if aids.toLowerCase == "aids" && aids != "AIDS" => ta.setTag("VBZ")
           case _ => ()
         }
@@ -152,6 +153,16 @@ class BioNLPProcessor (internStrings:Boolean = true,
         }
       }
 
+      //
+      // Capitalized hyphenated words at beginning of sentence -> NNP
+      // e.g. "K-Ras phosphorylates p53."
+      tas.foreach { ta =>
+        val text = ta.originalText()
+        text match {
+          case hyphen if ta.index == 1 && (hyphPat findFirstIn hyphen).nonEmpty => ta.setTag("NNP")
+          case _ => ()
+        }
+      }
     }
   }
 
