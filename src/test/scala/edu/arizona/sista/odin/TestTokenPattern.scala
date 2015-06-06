@@ -84,7 +84,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
   }
 
-  it should "match with postitive lookbehind" in {
+  it should "match with positive lookbehind" in {
     val p = TokenPattern.compile("(?<=a) b")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
@@ -94,13 +94,25 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
   }
 
+  it should "match with negative lookbehind that goes beyond sentence start" in {
+    val p = TokenPattern.compile("(?<!x) a b c")
+    val results = p.findAllIn(0, doc, None)
+    results should have size (1)
+  }
+
+  it should "not match with positive lookbehind that goes beyond sentence start" in {
+    val p = TokenPattern.compile("(?<=x) a b c")
+    val results = p.findAllIn(0, doc, None)
+    results should be ('empty)
+  }
+
   it should "not match with negative lookbehind" in {
     val p = TokenPattern.compile("(?<!a) b")
     val results = p.findAllIn(0, doc, None)
     results should be ('empty)
   }
 
-  it should "match with postitive lookahead" in {
+  it should "match with positive lookahead" in {
     val p = TokenPattern.compile("b (?=c)")
     val results = p.findAllIn(0, doc, None)
     results should have size (1)
