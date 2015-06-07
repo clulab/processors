@@ -113,13 +113,20 @@ object DependencyPatternCompiler extends TokenPatternParsers {
     }
 
   def atomicDepPattern: Parser[DependencyPatternNode] =
-    outgoingDepPattern | incomingDepPattern | "(" ~> disjunctiveDepPattern <~ ")"
+    outgoingDepPattern | incomingDepPattern |
+    outgoingWildcard | incomingWildcard |
+    "(" ~> disjunctiveDepPattern <~ ")"
 
   def outgoingDepPattern: Parser[DependencyPatternNode] =
     opt(">") ~> stringMatcher ^^ { new OutgoingDependencyPattern(_) }
 
   def incomingDepPattern: Parser[DependencyPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
+
+  def outgoingWildcard: Parser[DependencyPatternNode] = ">>" ^^ { _ => OutgoingWildcard }
+
+  def incomingWildcard: Parser[DependencyPatternNode] = "<<" ^^ { _ => IncomingWildcard }
+
 }
 
 class ArgumentPattern(
@@ -143,6 +150,22 @@ class ArgumentPattern(
 
 sealed trait DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int]
+}
+
+object OutgoingWildcard extends DependencyPatternNode with Dependencies {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val edges = outgoingEdges(sent, doc)
+    if (edges isDefinedAt tok) edges(tok).map(_._1)
+    else Nil
+  }
+}
+
+object IncomingWildcard extends DependencyPatternNode with Dependencies {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val edges = incomingEdges(sent, doc)
+    if (edges isDefinedAt tok) edges(tok).map(_._1)
+    else Nil
+  }
 }
 
 class OutgoingDependencyPattern(matcher: StringMatcher)
