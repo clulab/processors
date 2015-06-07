@@ -99,7 +99,7 @@ class TokenPattern(
 class LookbehindAssertion(val start: Inst, val size: Int, val negative: Boolean) {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = {
     val startTok = tok - size
-    if (startTok < 0) false
+    if (startTok < 0) negative // only fail if negative is false
     else {
       val results = ThompsonVM.evaluate(start, startTok, sent, doc, state)
       negative == results.isEmpty

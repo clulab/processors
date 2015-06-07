@@ -1,4 +1,4 @@
-# Thu Jun 04 15:55:13 MST 2015
+# Sat Jun 06 00:10:49 MST 2015
 (	1-49	)	-	CCK58
 (	2-5	'	)	oligo	(	A	)	synthase	1
 (	2-5	'	)	oligo	(	A	)	synthase	2
@@ -19,7 +19,6 @@
 -14	gene	protein
 -HSD11	type	II
 14-3-3	beta	,	zeta
-14-3-3	family
 100	kDa	coactivator
 100	kDa	coated	vesicle	protein	A
 100	kDa	coated	vesicle	protein	C
@@ -1328,10 +1327,7 @@
 9cRDH
 9	kDa	protein
 ACTK
-AKR1C3	protein
-AKR7A2	protein
 AKT1-2-active
-AOC3	protein
 Active	platelet	derived	growth	factor	A	chain	isoforms
 Aiolos
 Antigen
@@ -10250,20 +10246,7 @@ BZRPL1
 BZW1
 BZW2
 CAMKIIB
-CCND1	protein
-CEBPB	protein
-CGB	protein
 CMPK1	Adenylate	Kinases
-CRK	family
-CYP17A1	protein
-CYP19A1	protein
-CYP1A1	protein
-CYP1A2	protein
-CYP1B1	protein
-CYP2A6	protein
-CYP2C19	protein
-CYP3A4	protein
-CaMKII	family
 CaMKIIA
 CalDAG-GEFIII
 Citron
@@ -28489,7 +28472,6 @@ EZR
 Ezrin	binding	protein	PACE-1
 Ezrin
 Ezrin-radixin-moesin-binding	phosphoprotein	50
-FASL	protein
 FGFR1b	binding	FGFs
 FGFR1c	binding	FGFs
 FGFR2b	binding	FGFs
@@ -28500,7 +28482,6 @@ FGFR4	binding	FGFs
 FGR2_HUMAN
 FRG
 FRS2	family-active
-FSHB	protein
 Fc	epsilon	RI	alpha-chain
 Fc	epsilon	RI	beta-chain
 Fc	epsilon	RI	gamma-chain
@@ -31564,18 +31545,12 @@ FZR1
 Fzr
 FZR
 G	protein	alpha	(	i/o/z	/	t	)	subunit
-G12	family
 GAP1-IP4BP
-GCLC	protein
 GDP
 GNAO2
-GRP1	family
-GSS	protein
 GTP
-Gi	family
 Gq	family
 Growth	factor	receptor
-Gs	family
 G0	and	G1	switch	protein	2
 G0	and	G1	switch	regulatory	protein	19-1
 G0	and	G1	switch	regulatory	protein	19-2
@@ -35909,12 +35884,6 @@ H-RAS	isoform	1
 H-RAS	isoform	2
 HGF	alpha
 HGF	beta
-HRAS	protein
-HSD17B1	protein
-HSD17B12	protein
-HSD17B2	protein
-HSD17B4	protein
-HSD17B7	protein
 H105E3
 H10BH
 H13
@@ -40185,8 +40154,6 @@ IL2B_HUMAN
 IL2R	alpha
 IL2R	beta
 IL2R	gamma
-IL6	protein
-INS	protein
 IRS1	and	2
 ITK	ligand
 IgE
@@ -43545,10 +43512,7 @@ JWA
 JXC1
 K-RAS	isoform	2A
 K-RAS	isoform	2B
-KEAP1	protein
-KRAS	family
 KRAS	isoform	4B
-KRAS	protein
 KRas	iso2
 Ksam-IIC3
 K10
@@ -50720,8 +50684,6 @@ LZTR2
 LZTS1
 LZTS2
 LZTS3
-MAPK1	protein
-MAPK3	protein
 MEK
 MEK1	phosphorylated
 MEK1-2-active
@@ -56430,12 +56392,9 @@ MZT1
 MZT2A
 MZT2B
 N-cad-CTF1
-NADSYN1	protein
 NF	kappa	B1	p50
 NFAT1-c-4-inactive2
-NOX1	protein
 NR2	subunits
-NRAS	protein
 NRG1/2/3	/	4
 NT-4	/	5
 Neurotic
@@ -63464,14 +63423,10 @@ PKC	epsilon
 PKC	theta
 PKC	zeta
 PKCT
-PLC-gamma	family
 PLC-gamma	family-active
 PLCbetagamma
 PLCepsilon
-POR	protein
-PPARA	protein
 PRKCB2
-PTGS2	protein
 Phospho-MEK
 Phospho-MEK1	,	phospho-SEK1
 Platelet	releasate	cytosolic	proteins
@@ -74593,7 +74548,6 @@ Quinone	oxidoreductase	PIG3
 Quinone	reductase	1
 Quinone	reductase	2
 Quinone	reductase	CBR4
-RAS	family
 RASGRP1	,3
 ROCK
 Rac	GEFs
@@ -87179,13 +87133,11 @@ SZP
 SZRD1
 SZT2
 TAp63a
-TGFB1	protein
 TGFbetareceptor	I
 TGFbetareceptor	II
 TGFbetareceptors
 TXA2-R	alpha
 TXA2-R	beta
-TXA2-R	family
 TXA2-R	family-inactive
 Typical	PKCs
 T10
@@ -103358,32 +103310,6 @@ p70S6K
 p75	(	NTR	)
 pFyn-Y420
 pTEK
-phosphorylated	FGFR1	K656E	mutant
-phosphorylated	FGFR1	N546K	mutant
-phosphorylated	FGFR1	R576W	mutant
-phosphorylated	FGFR2	K660E	mutant
-phosphorylated	FGFR2	K660M	mutant
-phosphorylated	FGFR2	K660N	mutant
-phosphorylated	FGFR2	N549H	mutant
-phosphorylated	FGFR2	N549K	mutant
-phosphorylated	FGFR2	S267P	mutant
-phosphorylated	FGFR3	A391E	mutant
-phosphorylated	FGFR3	G370C	mutant
-phosphorylated	FGFR3	G380R	mutant
-phosphorylated	FGFR3	G382D	mutant
-phosphorylated	FGFR3	K650E	mutant
-phosphorylated	FGFR3	K650M	mutant
-phosphorylated	FGFR3	K650N	mutant
-phosphorylated	FGFR3	K650Q	mutant
-phosphorylated	FGFR3	K650T	mutant
-phosphorylated	FGFR3	R248C	mutant
-phosphorylated	FGFR3	S371C	mutant
-phosphorylated	FGFR3	Y373C	mutant
-phosphorylated	FGFR4	N535D	mutant
-phosphorylated	FGFR4	N535K	mutant
-phosphorylated	FGFR4	V550E	mutant
-phosphorylated	FGFR4	V550L	mutant
-phosphorylated	FGFR4	Y367C	mutant
 p0071
 p100	co-activator
 p100
