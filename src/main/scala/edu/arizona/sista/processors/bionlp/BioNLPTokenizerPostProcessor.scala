@@ -18,11 +18,13 @@ class BioNLPTokenizerPostProcessor {
   def process(input:Array[CoreLabel]):Array[CoreLabel] = {
     var tokens = input
 
-    // we can't use the regex "(anti)|(non)" since that will create an extra
-    // group and confuse breakOnPattern, thus we do an extra pass
-    tokens = breakOnPattern(tokens, Pattern.compile("(anti)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
+    // non is a special prefix, because it drives negation detection
     tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
+
+    // we now handle common English prefixes much better; see COMMON_PREFIXES
+    // tokens = breakOnPattern(tokens, Pattern.compile("(anti)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
     tokens = breakOnPattern(tokens, dashSuffixes)
+
     tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
     tokens = breakComplex(tokens, SINGLEDASH_PATTERN)
     tokens = breakMutant(tokens, SINGLEDASH_PATTERN)
@@ -41,7 +43,7 @@ class BioNLPTokenizerPostProcessor {
       if (matcher.matches()) {
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
-        if(ACTUAL_PREFIXES.contains(s1.toLowerCase)) {
+        if(COMMON_PREFIXES.contains(s1.toLowerCase)) {
           // do not separate here; these prefixes cannot live on their own
           output += token
         } else {
@@ -208,6 +210,7 @@ object BioNLPTokenizerPostProcessor {
 
   val VALID_DASH_SUFFIXES = Set(
     "\\w+ed", "\\w+ing", // tokenize for all suffix verbs, e.g., "ABC-mediated"
+    "\\w+ation", // tokenize for all nominalization of simple events, e.g., "p53-phosphorylation"
     "(in)?dependent", "deficient", "response", "protein", "by", "specific", "like",
     "inducible", "responsive", "gene", "mRNA", "transcription", "cytoplasmic",
     "sensitive", "bound", "driven", "positive", "negative", "dominant",
@@ -215,7 +218,8 @@ object BioNLPTokenizerPostProcessor {
     "selective", "reporter", "fragment", "rich", "expression", // new suffixes from BC2
     "mechanisms?", "agonist", "heterozygous", "homozygous")
 
-  val ACTUAL_PREFIXES = Set("co", "semi", "re")
+  // "non" is excluded from this set; it should be tokenized because it drives negation detection
+  val COMMON_PREFIXES = Set("anti", "auto", "bi", "co", "de", "dis", "extra", "homo", "hetero", "hyper", "macro", "micro", "mono", "omni", "over", "poly", "pre", "post", "re", "semi", "sub", "super", "trans", "under")
 
   val dashSuffixes = mkDashSuffixes
 
