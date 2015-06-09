@@ -215,7 +215,7 @@ object BioNLPTokenizerPostProcessor {
     "selective", "reporter", "fragment", "rich", "expression", // new suffixes from BC2
     "mechanisms?", "agonist", "heterozygous", "homozygous")
 
-  val ACTUAL_PREFIXES = Set("co", "semi")
+  val ACTUAL_PREFIXES = Set("co", "semi", "re")
 
   val dashSuffixes = mkDashSuffixes
 
