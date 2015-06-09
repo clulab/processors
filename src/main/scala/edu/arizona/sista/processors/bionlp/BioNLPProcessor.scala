@@ -273,6 +273,29 @@ class BioNLPProcessor (internStrings:Boolean = true,
       }
     }
 
+    //
+    // Some single-token entities should not be labeled when in lower case
+    //
+    i = 0
+    while(i < seq.length) {
+      if (seq(i).startsWith("B-") &&
+        (i == seq.length - 1 || !seq(i + 1).startsWith("I-")) &&
+        isLowerCase(words(i)) &&
+        RuleNER.NOT_ENTITY_IN_LOWER_CASE.contains(words(i))) {
+        seq(i) = RuleNER.OUTSIDE_LABEL
+      }
+      i += 1
+    }
+
+  }
+
+  def isLowerCase(s:String):Boolean = {
+    for(i <- 0 until s.length) {
+      val c = s.charAt(i)
+      if(Character.isLetter(c) && ! Character.isLowerCase(c))
+        return false
+    }
+    true
   }
 
   def isFigRef(lemmas:Array[String], offset:Int):Boolean = {
