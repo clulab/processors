@@ -1,4 +1,4 @@
-# Sat Jun 06 00:10:49 MST 2015
+# Tue Jun 09 17:08:59 MST 2015
 (	1-49	)	-	CCK58
 (	2-5	'	)	oligo	(	A	)	synthase	1
 (	2-5	'	)	oligo	(	A	)	synthase	2
@@ -919,7 +919,7 @@
 50	kDa	dystrophin	associated	glycoprotein
 50	kDa	nuclear	polyadenylated	RNA	binding	protein
 50	kDa	nucleoporin
-50	kDa	stimulated	trans	acting	factor
+50	kDa	stimulated	trans-acting	factor
 5,10-methenyl-tetrahydrofolate	synthetase
 51	kDa	erythrocyte	cytosolic	protein
 51	kDa	FK506	binding	protein
@@ -2894,65 +2894,65 @@ ADP-ribose-L-arginine	cleaving	enzyme
 ADP-ribose	phosphohydrolase
 ADP-ribose	pyrophosphatase	,	mitochondrial
 ADP-ribosylarginine	hydrolase
-ADP-ribosylation	factor	1	GTPase	activating	protein
-ADP-ribosylation	factor	1
-ADP-ribosylation	factor	3
-ADP-ribosylation	factor	4
-ADP-ribosylation	factor	5
-ADP-ribosylation	factor	6
-ADP-ribosylation	factor	7
-ADP-ribosylation	factor	7	variant
-ADP-ribosylation	factor	binding	protein	GGA1
-ADP-ribosylation	factor	binding	protein	GGA2
-ADP-ribosylation	factor	binding	protein	GGA3
-ADP-ribosylation	factor	directed	GTPase	activating	protein	1
-ADP-ribosylation	factor	domain	containing	protein	1
-ADP-ribosylation	factor	GTPase	activating	protein	1
-ADP-ribosylation	factor	GTPase	activating	protein	2
-ADP-ribosylation	factor	GTPase	activating	protein	3
-ADP-ribosylation	factor	guanine	nucleotide-exchange	factor	1
-ADP-ribosylation	factor	guanine	nucleotide-exchange	factor	2
-ADP-ribosylation	factor	interacting	protein	1
-ADP-ribosylation	factor	interacting	protein	2
-ADP-ribosylation	factor	like	protein	10B
-ADP-ribosylation	factor	like	protein	10C
-ADP-ribosylation	factor	like	protein	10
-ADP-ribosylation	factor	like	protein	11
-ADP-ribosylation	factor	like	protein	12
-ADP-ribosylation	factor	like	protein	13A
-ADP-ribosylation	factor	like	protein	13B
-ADP-ribosylation	factor	like	protein	14
-ADP-ribosylation	factor	like	protein	15
-ADP-ribosylation	factor	like	protein	16
-ADP-ribosylation	factor	like	protein	17
-ADP-ribosylation	factor	like	protein	1
-ADP-ribosylation	factor	like	protein	2	binding	protein
-ADP-ribosylation	factor	like	protein	2
-ADP-ribosylation	factor	like	protein	2	like	1
-ADP-ribosylation	factor	like	protein	3
-ADP-ribosylation	factor	like	protein	4A
-ADP-ribosylation	factor	like	protein	4C
-ADP-ribosylation	factor	like	protein	4D
-ADP-ribosylation	factor	like	protein	4L
-ADP-ribosylation	factor	like	protein	5A
-ADP-ribosylation	factor	like	protein	5B
-ADP-ribosylation	factor	like	protein	6
-ADP-ribosylation	factor	like	protein	6	interacting	protein	1
-ADP-ribosylation	factor	like	protein	6	interacting	protein	2
-ADP-ribosylation	factor	like	protein	6	interacting	protein	4
-ADP-ribosylation	factor	like	protein	6	interacting	protein	5
-ADP-ribosylation	factor	like	protein	6	interacting	protein	6
-ADP-ribosylation	factor	like	protein	7
-ADP-ribosylation	factor	like	protein	8A
-ADP-ribosylation	factor	like	protein	8B
-ADP-ribosylation	factor	like	protein	8
-ADP-ribosylation	factor	like	protein	9
-ADP-ribosylation	factor	like	protein	LAK
-ADP-ribosylation	factor	like	tumor	suppressor	protein	1
-ADP-ribosylation	factor	related	protein	1
-ADP-ribosylation	factor	related	protein	2
-ADP-ribosylation	factors	guanine	nucleotide-exchange	protein	100
-ADP-ribosylation	factors	guanine	nucleotide-exchange	protein	2
+ADP	ribosylation	factor	1	GTPase	activating	protein
+ADP	ribosylation	factor	1
+ADP	ribosylation	factor	3
+ADP	ribosylation	factor	4
+ADP	ribosylation	factor	5
+ADP	ribosylation	factor	6
+ADP	ribosylation	factor	7
+ADP	ribosylation	factor	7	variant
+ADP	ribosylation	factor	binding	protein	GGA1
+ADP	ribosylation	factor	binding	protein	GGA2
+ADP	ribosylation	factor	binding	protein	GGA3
+ADP	ribosylation	factor	directed	GTPase	activating	protein	1
+ADP	ribosylation	factor	domain	containing	protein	1
+ADP	ribosylation	factor	GTPase	activating	protein	1
+ADP	ribosylation	factor	GTPase	activating	protein	2
+ADP	ribosylation	factor	GTPase	activating	protein	3
+ADP	ribosylation	factor	guanine	nucleotide-exchange	factor	1
+ADP	ribosylation	factor	guanine	nucleotide-exchange	factor	2
+ADP	ribosylation	factor	interacting	protein	1
+ADP	ribosylation	factor	interacting	protein	2
+ADP	ribosylation	factor	like	protein	10B
+ADP	ribosylation	factor	like	protein	10C
+ADP	ribosylation	factor	like	protein	10
+ADP	ribosylation	factor	like	protein	11
+ADP	ribosylation	factor	like	protein	12
+ADP	ribosylation	factor	like	protein	13A
+ADP	ribosylation	factor	like	protein	13B
+ADP	ribosylation	factor	like	protein	14
+ADP	ribosylation	factor	like	protein	15
+ADP	ribosylation	factor	like	protein	16
+ADP	ribosylation	factor	like	protein	17
+ADP	ribosylation	factor	like	protein	1
+ADP	ribosylation	factor	like	protein	2	binding	protein
+ADP	ribosylation	factor	like	protein	2
+ADP	ribosylation	factor	like	protein	2	like	1
+ADP	ribosylation	factor	like	protein	3
+ADP	ribosylation	factor	like	protein	4A
+ADP	ribosylation	factor	like	protein	4C
+ADP	ribosylation	factor	like	protein	4D
+ADP	ribosylation	factor	like	protein	4L
+ADP	ribosylation	factor	like	protein	5A
+ADP	ribosylation	factor	like	protein	5B
+ADP	ribosylation	factor	like	protein	6
+ADP	ribosylation	factor	like	protein	6	interacting	protein	1
+ADP	ribosylation	factor	like	protein	6	interacting	protein	2
+ADP	ribosylation	factor	like	protein	6	interacting	protein	4
+ADP	ribosylation	factor	like	protein	6	interacting	protein	5
+ADP	ribosylation	factor	like	protein	6	interacting	protein	6
+ADP	ribosylation	factor	like	protein	7
+ADP	ribosylation	factor	like	protein	8A
+ADP	ribosylation	factor	like	protein	8B
+ADP	ribosylation	factor	like	protein	8
+ADP	ribosylation	factor	like	protein	9
+ADP	ribosylation	factor	like	protein	LAK
+ADP	ribosylation	factor	like	tumor	suppressor	protein	1
+ADP	ribosylation	factor	related	protein	1
+ADP	ribosylation	factor	related	protein	2
+ADP	ribosylation	factors	guanine	nucleotide-exchange	protein	100
+ADP	ribosylation	factors	guanine	nucleotide-exchange	protein	2
 ADP-ribosyl	cyclase	1
 ADP-ribosyl	cyclase	2
 ADP-ribosyl	cyclase	and	cyclic	ADP-ribose	hydrolase	1
@@ -5052,13 +5052,13 @@ Anthrax	toxin	receptor	2
 Anthrax	toxin	receptor	like
 Antiapoptosis	clone	11	protein
 Antiapoptotic	protein	GW112
-Anti	apoptotic	protein	NrH
+Anti-apoptotic	protein	NrH
 Antibacterial	protein	FALL-39
 Antibacterial	protein	LL-37
 Anticardiolipin	cofactor
-Anti	CNG1
+Anti-CNG1
 Anticoagulant	protein	C
-Anti	differentiation	ncRNA	protein
+Anti-differentiation	ncRNA	protein
 Antidiuretic	hormone	receptor	1a
 Antidiuretic	hormone	receptor	1b
 Antidiuretic	hormone	receptor
@@ -5104,10 +5104,10 @@ Antihemophilic	factor
 Antileukoproteinase
 Antimicrobial	peptide-57
 Antimicrobial	peptide	VGF	[	554-577	]
-Anti	Muellerian	hormone
-Anti	Muellerian	hormone	type-2	receptor
-Anti	Muellerian	hormone	type	II	receptor
-Anti	neoplastic	urinary	protein
+Anti-Muellerian	hormone
+Anti-Muellerian	hormone	type-2	receptor
+Anti-Muellerian	hormone	type	II	receptor
+Anti-neoplastic	urinary	protein
 Antioxidant	enzyme	AOE372
 Antioxidant	enzyme	B166
 Antioxidant	protein	1
@@ -5118,8 +5118,8 @@ Antisecretory	factor	1
 Antisense	basic	fibroblast	growth	factor
 Antisense	RNA	to	thymidylate	synthase
 Antisense	to	ERCC-1	protein
-Anti	silencing	function	protein	1	homolog	A
-Anti	silencing	function	protein	1	homolog	B
+Anti-silencing	function	protein	1	homolog	A
+Anti-silencing	function	protein	1	homolog	B
 Antithrombin-III
 Anti-Zuai-1
 Antizyme	inhibitor	1
@@ -7010,54 +7010,54 @@ ATP	binding	cassette	1
 ATP	binding	cassette	2
 ATP	binding	cassette	3
 ATP	binding	cassette	50
-ATP	binding	cassette	sub	family	A	member	10
-ATP	binding	cassette	sub	family	A	member	12
-ATP	binding	cassette	sub	family	A	member	13
-ATP	binding	cassette	sub	family	A	member	1
-ATP	binding	cassette	sub	family	A	member	2
-ATP	binding	cassette	sub	family	A	member	3
-ATP	binding	cassette	sub	family	A	member	4
-ATP	binding	cassette	sub	family	A	member	5
-ATP	binding	cassette	sub	family	A	member	6
-ATP	binding	cassette	sub	family	A	member	7
-ATP	binding	cassette	sub	family	A	member	8
-ATP	binding	cassette	sub	family	A	member	9
-ATP	binding	cassette	sub	family	B	member	10	,	mitochondrial
-ATP	binding	cassette	sub	family	B	member	11
-ATP	binding	cassette	sub	family	B	member	1
-ATP	binding	cassette	sub	family	B	member	2
-ATP	binding	cassette	sub	family	B	member	3
-ATP	binding	cassette	sub	family	B	member	4
-ATP	binding	cassette	sub	family	B	member	5
-ATP	binding	cassette	sub	family	B	member	6	,	mitochondrial
-ATP	binding	cassette	sub	family	B	member	7	,	mitochondrial
-ATP	binding	cassette	sub	family	B	member	8	,	mitochondrial
-ATP	binding	cassette	sub	family	B	member	9
-ATP	binding	cassette	sub	family	C	member	10
-ATP	binding	cassette	sub	family	C	member	11
-ATP	binding	cassette	sub	family	C	member	12
-ATP	binding	cassette	sub	family	C	member	1
-ATP	binding	cassette	sub	family	C	member	2
-ATP	binding	cassette	sub	family	C	member	3
-ATP	binding	cassette	sub	family	C	member	4
-ATP	binding	cassette	sub	family	C	member	5
-ATP	binding	cassette	sub	family	C	member	6
-ATP	binding	cassette	sub	family	C	member	7
-ATP	binding	cassette	sub	family	C	member	8
-ATP	binding	cassette	sub	family	C	member	9
-ATP	binding	cassette	sub	family	D	member	1
-ATP	binding	cassette	sub	family	D	member	2
-ATP	binding	cassette	sub	family	D	member	3
-ATP	binding	cassette	sub	family	D	member	4
-ATP	binding	cassette	sub	family	E	member	1
-ATP	binding	cassette	sub	family	F	member	1
-ATP	binding	cassette	sub	family	F	member	2
-ATP	binding	cassette	sub	family	F	member	3
-ATP	binding	cassette	sub	family	G	member	1
-ATP	binding	cassette	sub	family	G	member	2
-ATP	binding	cassette	sub	family	G	member	4
-ATP	binding	cassette	sub	family	G	member	5
-ATP	binding	cassette	sub	family	G	member	8
+ATP	binding	cassette	sub-family	A	member	10
+ATP	binding	cassette	sub-family	A	member	12
+ATP	binding	cassette	sub-family	A	member	13
+ATP	binding	cassette	sub-family	A	member	1
+ATP	binding	cassette	sub-family	A	member	2
+ATP	binding	cassette	sub-family	A	member	3
+ATP	binding	cassette	sub-family	A	member	4
+ATP	binding	cassette	sub-family	A	member	5
+ATP	binding	cassette	sub-family	A	member	6
+ATP	binding	cassette	sub-family	A	member	7
+ATP	binding	cassette	sub-family	A	member	8
+ATP	binding	cassette	sub-family	A	member	9
+ATP	binding	cassette	sub-family	B	member	10	,	mitochondrial
+ATP	binding	cassette	sub-family	B	member	11
+ATP	binding	cassette	sub-family	B	member	1
+ATP	binding	cassette	sub-family	B	member	2
+ATP	binding	cassette	sub-family	B	member	3
+ATP	binding	cassette	sub-family	B	member	4
+ATP	binding	cassette	sub-family	B	member	5
+ATP	binding	cassette	sub-family	B	member	6	,	mitochondrial
+ATP	binding	cassette	sub-family	B	member	7	,	mitochondrial
+ATP	binding	cassette	sub-family	B	member	8	,	mitochondrial
+ATP	binding	cassette	sub-family	B	member	9
+ATP	binding	cassette	sub-family	C	member	10
+ATP	binding	cassette	sub-family	C	member	11
+ATP	binding	cassette	sub-family	C	member	12
+ATP	binding	cassette	sub-family	C	member	1
+ATP	binding	cassette	sub-family	C	member	2
+ATP	binding	cassette	sub-family	C	member	3
+ATP	binding	cassette	sub-family	C	member	4
+ATP	binding	cassette	sub-family	C	member	5
+ATP	binding	cassette	sub-family	C	member	6
+ATP	binding	cassette	sub-family	C	member	7
+ATP	binding	cassette	sub-family	C	member	8
+ATP	binding	cassette	sub-family	C	member	9
+ATP	binding	cassette	sub-family	D	member	1
+ATP	binding	cassette	sub-family	D	member	2
+ATP	binding	cassette	sub-family	D	member	3
+ATP	binding	cassette	sub-family	D	member	4
+ATP	binding	cassette	sub-family	E	member	1
+ATP	binding	cassette	sub-family	F	member	1
+ATP	binding	cassette	sub-family	F	member	2
+ATP	binding	cassette	sub-family	F	member	3
+ATP	binding	cassette	sub-family	G	member	1
+ATP	binding	cassette	sub-family	G	member	2
+ATP	binding	cassette	sub-family	G	member	4
+ATP	binding	cassette	sub-family	G	member	5
+ATP	binding	cassette	sub-family	G	member	8
 ATP	binding	cassette	transporter	10
 ATP	binding	cassette	transporter	12
 ATP	binding	cassette	transporter	1
@@ -7858,7 +7858,7 @@ BART
 Barttin
 BARX1
 BARX2
-Basal	body-orientation	factor	1
+Basal	body	orientation	factor	1
 Basal	body	up	regulated	protein	22
 Basal	cell	adhesion	molecule
 Basalin
@@ -9698,9 +9698,9 @@ BRCA1	associated	protein	1
 BRCA1	associated	protein
 BRCA1	associated	protein	required	for	ATM	activation	protein	1
 BRCA1	associated	RING	domain	protein	1
-BRCA1	and	BRCA2	and	containing	complex	subunit	36
-BRCA1	and	BRCA2	and	containing	complex	subunit	3
-BRCA1	and	BRCA2	and	containing	complex	subunit	45
+BRCA1	and	BRCA2-containing	complex	subunit	36
+BRCA1	and	BRCA2-containing	complex	subunit	3
+BRCA1	and	BRCA2-containing	complex	subunit	45
 BRCA1	C-terminus-associated	protein
 BRCA1
 BRCA1	interacting	protein	1
@@ -9737,9 +9737,9 @@ Breakpoint	cluster	region	protein	2
 Breakpoint	cluster	region	protein
 Breast	basic	conserved	protein	1
 Breast	cancer	and	salivary	gland	expressed	protein
-Breast	cancer	anti	estrogen	resistance	2
-Breast	cancer	anti	estrogen	resistance	protein	1
-Breast	cancer	anti	estrogen	resistance	protein	3
+Breast	cancer	anti-estrogen	resistance	2
+Breast	cancer	anti-estrogen	resistance	protein	1
+Breast	cancer	anti-estrogen	resistance	protein	3
 Breast	cancer	associated	antigen	BRCAA1
 Breast	cancer	associated	antigen	SGA-72M
 Breast	cancer	associated	gene	1	protein
@@ -18966,7 +18966,7 @@ Connexin-50
 Connexin-58
 Connexin-59
 Connexin-62
-Conserved	anti	apoptotic	protein
+Conserved	anti-apoptotic	protein
 Conserved	dopamine	neurotrophic	factor
 Conserved	edge	expressed	protein
 Conserved	ERA	like	GTPase
@@ -21583,7 +21583,7 @@ Cytokine	receptor	WSX-1
 Cytokine	responsive	protein	CR6
 Cytokine	SCM-1	beta
 Cytokine	SCM-1
-Cytokine	suppressive	anti	inflammatory	drug	binding	protein
+Cytokine	suppressive	anti-inflammatory	drug	binding	protein
 Cytokine	synthesis	inhibitory	factor
 Cytokine	Zcyto10
 Cytokine	Zcyto18
@@ -21630,8 +21630,8 @@ Cytoplasmic	polyadenylation	element	binding	protein	3
 Cytoplasmic	polyadenylation	element	binding	protein	4
 Cytoplasmic	protein	NCK1
 Cytoplasmic	protein	NCK2
-Cytoplasmic	tRNA	2-thiolation	protein	1
-Cytoplasmic	tRNA	2-thiolation	protein	2
+Cytoplasmic	tRNA	2	thiolation	protein	1
+Cytoplasmic	tRNA	2	thiolation	protein	2
 Cytoplasmic	tRNA	adenylyltransferase	1
 Cytoplasmic	tyrosine	protein	kinase	BMX
 CYTOR4
@@ -24349,8 +24349,8 @@ DNA	topoisomerase	I	,	mitochondrial
 DNA	transposase	THAP9
 DNA	unwinding	element	binding	protein	B
 DNAX	accessory	molecule	1
-DNAX-activation	protein	10
-DNAX-activation	protein	12
+DNAX	activation	protein	10
+DNAX	activation	protein	12
 DNb-5
 DNB5
 DNCH1
@@ -28249,8 +28249,8 @@ EWSR2
 EX33
 Exchange	factor	directly	activated	by	cAMP	1
 Exchange	factor	directly	activated	by	cAMP	2
-Exchange	factor	for	ADP-ribosylation	factor	guanine	nucleotide	factor	6	B
-Exchange	factor	for	ADP-ribosylation	factor	guanine	nucleotide	factor	6
+Exchange	factor	for	ADP	ribosylation	factor	guanine	nucleotide	factor	6	B
+Exchange	factor	for	ADP	ribosylation	factor	guanine	nucleotide	factor	6
 Exchange	factor	for	ARF6	B
 Exchange	factor	for	ARF6
 Exchange	factor	found	in	platelets	and	leukemic	and	neuronal	tissues
@@ -28621,7 +28621,7 @@ FAD	dependent	oxidoreductase	domain	containing	protein	2
 FADD-homologous	ICE	and	ced	-3	-	like	protease
 FADD
 FADD	like	antiapoptotic	molecule	1
-FADD	like	anti	apoptotic	molecule	3
+FADD	like	anti-apoptotic	molecule	3
 FADD	like	ICE
 FADK	1
 FADK	2
@@ -34155,7 +34155,7 @@ Golgi	adaptor	HA1	and	AP1	adaptin	sigma-1B	subunit
 Golgi	adaptor	HA1	and	AP1	adaptin	sigma-1C	subunit
 Golgi	adaptor	HA1	and	AP1	adaptin	subunit	gamma-1
 Golgi	alpha-mannosidase	II
-Golgi	anti	apoptotic	protein
+Golgi	anti-apoptotic	protein
 Golgi	apparatus	membrane	protein	TVP23	homolog	A
 Golgi	apparatus	membrane	protein	TVP23	homolog	B
 Golgi	apparatus	membrane	protein	TVP23	homolog	C
@@ -36314,8 +36314,8 @@ HBVDNAPTP1
 HBV	DNAPTP1	transactivated	protein	A
 HBV	DNAPTP1	transactivated	protein	B
 HBV	PreS1	transactivated	protein	3
-HBV	pre-S2	trans	regulated	protein	2
-HBV	pre-S2	trans	regulated	protein	3
+HBV	pre-S2	trans-regulated	protein	2
+HBV	pre-S2	trans-regulated	protein	3
 HBV	pX	associated	protein	8
 HBV	XAg	transactivated	protein	11
 HBV	XAg	transactivated	protein	12
@@ -36485,7 +36485,7 @@ HCV	F	transactivated	protein	1
 HCV	F	transactivated	protein	2
 HCV	non	structural	protein	4A	transactivated	protein	1
 HCV	non	structural	protein	4A	transactivated	protein	2
-HCV	NS2	trans	regulated	protein
+HCV	NS2	trans-regulated	protein
 HCV	NS3	transactivated	protein	1
 HCV	NS3	transactivated	protein	2
 HCV	NS5A	binding	protein	37
@@ -43336,7 +43336,7 @@ JIP3
 JIP-4
 JJAZ1
 JKAMP
-J	kappa-recombination	signal	binding	protein
+J	kappa	recombination	signal	binding	protein
 JK
 JKT41	binding	protein
 JKTBP
@@ -47651,8 +47651,8 @@ LNXp80
 Laminin	Alpha
 Laminin	Beta
 Laminin	Gamma
-Ligand	responsive	p-6Y	EGFR	mutants	resistant	to	non	covalent	TKIs
-Ligand	responsive	p-6Y	EGFR	mutants	sensitive	to	non	covalent	TKIs
+Ligand	responsive	p-6Y-EGFR	mutants	resistant	to	non	covalent	TKIs
+Ligand	responsive	p-6Y-EGFR	mutants	sensitive	to	non	covalent	TKIs
 L10mt
 L11mt
 L12mt
@@ -58356,7 +58356,7 @@ NFATc
 NFATC
 NF-ATp
 NFATP
-NFAT	pre	existing	subunit
+NFAT	pre-existing	subunit
 NFAT	transcription	complex	cytosolic	component
 NFATx
 NFBD1
@@ -58498,7 +58498,7 @@ NGFI-A-binding	protein	1
 NGFI-A-binding	protein	2
 NGFI-A
 NGF	induced	differentiation	clone	67	protein
-NGF	inducible	anti	proliferative	protein	PC3
+NGF	inducible	anti-proliferative	protein	PC3
 NGFRAP1
 NGFRAP1L1
 NGFRAP1	like	protein	1
@@ -60686,7 +60686,7 @@ NUTM2D
 NUTM2E
 NUTM2F
 NUTM2G
-Nutrient-deprivation	autophagy	factor-1
+Nutrient	deprivation	autophagy	factor-1
 Nutritionally	regulated	adipose	and	cardiac	enriched	protein	homolog
 NVL
 NVLp
@@ -68395,8 +68395,8 @@ PPAPDC2
 PPAPDC3
 PPARA
 PPAR-alpha
-PPAR-alpha	and	interacting	complex	protein	285
-PPAR-alpha	and	interacting	complex	protein	320	kDa
+PPAR-alpha-interacting	complex	protein	285
+PPAR-alpha-interacting	complex	protein	320	kDa
 PPAR-alpha-regulated	and	starvation	induced	gene	protein
 PPAR-beta
 PPARB
@@ -68907,14 +68907,14 @@ PRELP
 Premature	ovarian	failure	protein	1B
 Premelanosome	protein
 Pre-miRNA	5	'	-	monophosphate	methyltransferase
-Pre	mRNA	3	'	-	end	processing	factor	FIP1
-Pre	mRNA	branch	site	protein	p14
-Pre	mRNA	cleavage	complex	2	protein	Pcf11
-Pre	mRNA	cleavage	complex	II	protein	Clp1
-Pre	mRNA	cleavage	complex	II	protein	Pcf11
-Pre	mRNA	cleavage	factor	Im	25	kDa	subunit
-Pre	mRNA	cleavage	factor	Im	59	kDa	subunit
-Pre	mRNA	cleavage	factor	Im	68	kDa	subunit
+Pre-mRNA	3	'	-	end	processing	factor	FIP1
+Pre-mRNA	branch	site	protein	p14
+Pre-mRNA	cleavage	complex	2	protein	Pcf11
+Pre-mRNA	cleavage	complex	II	protein	Clp1
+Pre-mRNA	cleavage	complex	II	protein	Pcf11
+Pre-mRNA	cleavage	factor	Im	25	kDa	subunit
+Pre-mRNA	cleavage	factor	Im	59	kDa	subunit
+Pre-mRNA	cleavage	factor	Im	68	kDa	subunit
 Pre-mRNA-processing	factor	17
 Pre-mRNA-processing	factor	19
 Pre-mRNA-processing	factor	31
@@ -68998,8 +68998,8 @@ Presenilin	like	protein	2
 Presenilin	like	protein	3
 Presenilin	like	protein	4
 Presenilins	associated	rhomboid	like	protein	,	mitochondrial
-Presenilin-stabilization	factor
-Presenilin-stabilization	factor	like
+Presenilin	stabilization	factor
+Presenilin	stabilization	factor	like
 Presequence	protease	,	mitochondrial
 Presequence	translocated	associated	motor	subunit	PAM16
 PRES
@@ -71093,7 +71093,7 @@ Protein	Idas
 Protein	I
 Protein	II
 Protein	III
-Protein	immuno-reactive	with	anti	PTH	polyclonal	antibodies
+Protein	immuno-reactive	with	anti-PTH	polyclonal	antibodies
 Protein	IMPACT
 Protein	INCA1
 Protein	incorporated	later	into	tight	junctions
@@ -73325,7 +73325,7 @@ Putative	acyl-CoA	thioesterase	6
 Putative	acyl-coenzyme	A	thioesterase	6
 Putative	adenosylhomocysteinase	2
 Putative	adenosylhomocysteinase	3
-Putative	ADP-ribosylation	factor	like	protein	5C
+Putative	ADP	ribosylation	factor	like	protein	5C
 Putative	adrenomedullin-5-like	protein
 Putative	ALMS1	like	protein
 Putative	alpha-1-antitrypsin-related	protein
@@ -73347,8 +73347,8 @@ Putative	ataxin-3-like	protein
 Putative	ataxin-7-like	protein	3B
 Putative	AT-hook-containing	transcription	factor	1
 Putative	ATP11A	upstream	neighbor	protein
-Putative	ATP	binding	cassette	sub	family	A	member	11
-Putative	ATP	binding	cassette	sub	family	C	member	13
+Putative	ATP	binding	cassette	sub-family	A	member	11
+Putative	ATP	binding	cassette	sub-family	C	member	13
 Putative	ATP	dependent	RNA	helicase	DDX11	like	protein	8
 Putative	ATP	dependent	RNA	helicase	DDX12
 Putative	ATP	dependent	RNA	helicase	DHX30
@@ -75995,9 +75995,9 @@ Regulating	synaptic	membrane	exocytosis	protein	1
 Regulating	synaptic	membrane	exocytosis	protein	2
 Regulating	synaptic	membrane	exocytosis	protein	3
 Regulating	synaptic	membrane	exocytosis	protein	4
-Regulation	of	nuclear	pre	mRNA	domain	containing	protein	1A
-Regulation	of	nuclear	pre	mRNA	domain	containing	protein	1B
-Regulation	of	nuclear	pre	mRNA	domain	containing	protein	2
+Regulation	of	nuclear	pre-mRNA	domain	containing	protein	1A
+Regulation	of	nuclear	pre-mRNA	domain	containing	protein	1B
+Regulation	of	nuclear	pre-mRNA	domain	containing	protein	2
 Regulator	for	cell	adhesion	and	polarization	enriched	in	lymphoid	tissues
 Regulator	of	AFP
 Regulator	of	C53	and	LZAP	and	DDRGK1
@@ -76796,9 +76796,9 @@ Rho	GDI	3
 Rho-GDI	alpha
 Rho-GDI	beta
 Rho-GDI	gamma
-Rho	GDP-dissociation	inhibitor	1
-Rho	GDP-dissociation	inhibitor	2
-Rho	GDP-dissociation	inhibitor	3
+Rho	GDP	dissociation	inhibitor	1
+Rho	GDP	dissociation	inhibitor	2
+Rho	GDP	dissociation	inhibitor	3
 RHOG
 Rho	GTPase	activating	protein	10
 Rho	GTPase	activating	protein	10	like
@@ -80525,7 +80525,7 @@ Serine	and	arginine	repetitive	matrix	protein	2
 Serine	and	arginine	repetitive	matrix	protein	3
 Serine	and	arginine	repetitive	matrix	protein	4
 Serine	and	arginine	repetitive	matrix	protein	5
-Serine	arginine	rich	pre	mRNA	splicing	factor	SR-A1
+Serine	arginine	rich	pre-mRNA	splicing	factor	SR-A1
 Serine	and	arginine-rich	protein	specific	kinase	1
 Serine	and	arginine-rich	protein	specific	kinase	2
 Serine	and	arginine-rich	protein	specific	kinase	3
@@ -89081,7 +89081,7 @@ TGF-alpha
 TGFB1
 TGFB1I1
 TGFB1I4
-TGFB1	induced	anti	apoptotic	factor	1
+TGFB1	induced	anti-apoptotic	factor	1
 TGFB2
 TGFB3
 TGFB4
@@ -90482,8 +90482,8 @@ TNF-R1
 TNFR1
 TNF-R2
 TNFR2
-TNFR2-TRAF	and	signaling	complex	protein	1
-TNFR2-TRAF	and	signaling	complex	protein	2
+TNFR2-TRAF-signaling	complex	protein	1
+TNFR2-TRAF-signaling	complex	protein	2
 TNFR3
 TNFR	associated	protein	1
 TNF	receptor	associated	factor	1
@@ -91125,9 +91125,9 @@ Trans-2	,3	-	enoyl-CoA	reductase
 Trans-2	,3	-	enoyl-CoA	reductase	like
 Trans-2-enoyl-CoA	reductase	,	mitochondrial
 Trans-3-hydroxy-L-proline	dehydratase
-Trans	acting	T-cell-specific	transcription	factor	GATA-3
-Trans	activated	by	hepatitis	C	virus	core	protein	1
-Trans	activated	by	hepatitis	C	virus	core	protein	2
+Trans-acting	T-cell-specific	transcription	factor	GATA-3
+Trans-activated	by	hepatitis	C	virus	core	protein	1
+Trans-activated	by	hepatitis	C	virus	core	protein	2
 Transactivated	by	transforming	growth	factor	beta	protein	1
 Trans-activation-responsive	RNA	binding	protein
 Transactivator	HSM-1	/	2
@@ -103824,7 +103824,7 @@ pRB	associated	protein
 pRB	binding	protein	E2F-1
 pRb
 prCAD
-pre	mRNA	3	'	end	processing	protein	WDR33
+pre-mRNA	3	'	end	processing	protein	WDR33
 pre-mRNA-splicing	factor	SF2	,	P33	subunit
 pre-rRNA	processing	protein	FTSJ3
 pRGR1

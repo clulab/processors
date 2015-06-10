@@ -1,4 +1,4 @@
-# Sat Jun 06 00:10:49 MST 2015
+# Tue Jun 09 17:08:59 MST 2015
 (	+	)	RNA	virus	helicase	core	domain
 1,3-beta-glucan	synthase	subunit	FKS1	like	,	domain-1
 1-acyl-sn-glycerol-3-phosphate	acyltransferase
@@ -128,7 +128,7 @@ ADC	synthase
 ADD	domain
 ADF-H	and	Gelsolin-like	domain
 ADP	ribosyltransferase
-ADP-ribosylation	factor	like	2	binding	protein	,	domain
+ADP	ribosylation	factor	like	2	binding	protein	,	domain
 AF1862	like	domain
 AF2212	like	domain
 AF2331	like	domain
@@ -480,9 +480,9 @@ Anthrax	toxin	,	lethal	factor	,	central
 Anthrax	toxin	,	lethal	and	endema	factor	,	N	-	/	C-terminal
 Anti	sigma-E	protein	RseA	,	C-terminal
 Anti	sigma-E	protein	RseA	,	N-terminal
-Anti	Mullerian	hormone	,	N-terminal
-Anti	proliferative	protein
-Anti	sigma	factor	RsgI	,	N-terminal
+Anti-Mullerian	hormone	,	N-terminal
+Anti-proliferative	protein
+Anti-sigma	factor	RsgI	,	N-terminal
 Antibiotic	biosynthesis	monooxygenase	like	domain
 Anticodon	binding
 Anticodon	binding	domain
@@ -3117,7 +3117,7 @@ Glutamine-Leucine-Glutamine	,	QLQ
 Glutaminyl-tRNA	synthetase	,	class	Ib	,	non	specific	RNA	binding	domain	2
 Glutaminyl-tRNA	synthetase	,	class	Ib	,	non	specific	RNA	binding	domain	,	N-terminal
 Glutamyl	and	glutaminyl-tRNA	synthetase	,	class	Ib	,	alpha-bundle	domain
-Glutamyl	and	glutaminyl-tRNA	synthetase	,	class	Ib	,	anti	codon	binding	domain
+Glutamyl	and	glutaminyl-tRNA	synthetase	,	class	Ib	,	anti-codon	binding	domain
 Glutamyl	and	glutaminyl-tRNA	synthetase	,	class	Ib	,	catalytic	domain
 Glutaredoxin
 Glutaredoxin	2	,	C-terminal
@@ -3388,7 +3388,7 @@ Helitron	helicase	like	domain
 Helix	hairpin	bin	domain
 Helix-hairpin-helix	DNA	binding	motif	,	class	1
 Helix-turn-helix	DNA	binding	domain	of	Spt6
-Helix-turn-helix	Mga	,	DNA	binding	trans	acting	positive	regulator
+Helix-turn-helix	Mga	,	DNA	binding	trans-acting	positive	regulator
 Helix-turn-helix	motif	,	Crp-type
 Helix-turn-helix	protein	RpiR
 Helix-turn-helix	,	HxlR	type
@@ -3696,7 +3696,7 @@ Intimin	,	C-terminal
 Intracellular	proteinase	inhibitor	BsuPI
 Intradiol	ring-cleavage	dioxygenase	,	C-terminal
 Intradiol	ring-cleavage	dioxygenase	,	core
-Intramolecular	chaperone	auto	processing	domain
+Intramolecular	chaperone	auto-processing	domain
 Invasin	,	domain	3
 Invasin	and	intimin	cell-adhesion
 Involucrin	2
@@ -3955,7 +3955,7 @@ Lytic	transglycosylase	,	superhelical	U	shaped
 Lytic	transglycosylase	,	superhelical	U	shaped	and	linker	domain
 Lytic	transglycosylase	,	superhelical	linker
 Lytic	transglycosylase	like	SLT	domain
-M	protein	trans	acting	positive	regulator	(	MGA	)	,	PRD	domain
+M	protein	trans-acting	positive	regulator	(	MGA	)	,	PRD	domain
 MABP	domain
 MAD	homology	1	,	Dwarfin-type
 MAD	homology	,	MH1
@@ -4023,7 +4023,7 @@ Mab-21	domain
 Mac	1
 MacB	like	periplasmic	core	domain
 Macro	domain
-Macro	like	domain
+Macro-like	domain
 Macrophage	scavenger	receptor
 Mad3	like
 Mad3	and	BUB1	homology	region	1
@@ -5271,11 +5271,11 @@ Pre-ATP-grasp	domain
 Pre-C2HC	domain
 Pre-SET	domain
 Pre-SET	zinc	binding	sub-group
-Pre	mRNA	3	'	-	end	processing	endonuclease	polyadenylation	factor	C-term
-Pre	mRNA	cleavage	complex	II	Clp1
-Pre	mRNA	polyadenylation	factor	Fip1
-Pre	mRNA	processing	factor	4	(	PRP4	)	-	like
-Pre	mRNA	splicing	Prp18	interacting	factor
+Pre-mRNA	3	'	-	end	processing	endonuclease	polyadenylation	factor	C-term
+Pre-mRNA	cleavage	complex	II	Clp1
+Pre-mRNA	polyadenylation	factor	Fip1
+Pre-mRNA	processing	factor	4	(	PRP4	)	-	like
+Pre-mRNA	splicing	Prp18	interacting	factor
 Pre-mRNA-processing-splicing	factor	8	,	U5-snRNA-binding
 Pre-mRNA-processing-splicing	factor	8	,	U6-snRNA-binding
 Pre-mRNA-splicing	factor	19
@@ -5728,7 +5728,7 @@ Rare	lipoprotein	A	,	bacterial
 Ras	GTPase	activating	protein
 Ras	guanine	nucleotide	exchange	factor	domain
 Ras	guanine-nucleotide	exchange	factors	catalytic	domain
-Ras-association
+Ras	association
 Ras	binding	domain	of	Byr2
 Ras	like	guanine	nucleotide	exchange	factor	,	N-terminal
 RasGAP	protein	,	C-terminal
@@ -5844,7 +5844,7 @@ Rhabdovirus	nucleocapsid	,	N-terminal
 Rhamnogalacturonan	lyase	,	domain	II
 Rhamnogalacturonan	lyase	,	domain	III
 Rhamnogalacturonase	B	,	N-terminal
-Rho	GDP-dissociation	inhibitor	domain
+Rho	GDP	dissociation	inhibitor	domain
 Rho	GTPase	activation	protein
 Rho	GTPase	activating	protein	domain
 Rho	binding	domain
@@ -6280,7 +6280,7 @@ Signal	transduction	response	regulator	,	receiver	domain
 Signal	induced	proliferation	associated	1	like	protein	,	C-terminal
 Signaling	lymphocytic	activation	molecule	,	N-terminal
 SinI	like	,	DNA	binding	domain
-SinR	repressor	and	SinI	anti	repressor	,	dimerisation	domain
+SinR	repressor	and	SinI	anti-repressor	,	dimerisation	domain
 Single	alpha-helix	domain
 Single	domain	Von	Willebrand	factor	type	C	domain
 Single	hybrid	motif
