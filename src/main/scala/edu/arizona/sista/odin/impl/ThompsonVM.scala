@@ -7,7 +7,7 @@ object ThompsonVM {
   type NamedGroups = Map[String, (Int, Int)]
   type NamedMentions = Map[String, Mention]
 
-  trait Thread {
+  sealed trait Thread {
     def isDone: Boolean
     def results: Seq[(NamedGroups, NamedMentions)]
   }
@@ -30,8 +30,12 @@ object ThompsonVM {
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
     def isDone: Boolean = bundles exists (_ exists (_.isDone))
-    def results: Seq[(NamedGroups, NamedMentions)] =
-      bundles.flatMap(_.find(_.isDone).map(_.results)).flatten
+    def results: Seq[(NamedGroups, NamedMentions)] = for {
+      ts <- bundles
+      t = ts.head
+      if t.isDone
+      r <- t.results
+    } yield r
   }
 
   def evaluate(
@@ -78,10 +82,13 @@ object ThompsonVM {
             val captures = mkMentionCapture(t.mentions, i.name, mention)
             mkThreads(mention.end, i.next, t.groups, captures)
           }
-          if (bundles.isEmpty) Nil
-          else if (bundles.size == 1) bundles.head
-          else Seq(ThreadBundle(bundles))
+          bundles match {
+            case Seq() => Nil
+            case Seq(bundle) => bundle
+            case bundles => Seq(ThreadBundle(bundles))
+          }
       }
+      case Done => Seq(t)
       case _ => Nil  // thread died with no match
     }
 
@@ -95,13 +102,20 @@ object ThompsonVM {
     }
 
     def stepThreadBundle(t: ThreadBundle): Seq[Thread] = {
-      val bundles = t.bundles flatMap { bundle =>
-        val ts = stepThreads(bundle)
-        if (ts.nonEmpty) Some(ts) else None
+      val bundles = for {
+        threads <- t.bundles
+        newThreads = stepThreads(threads)
+        if newThreads.nonEmpty
+        (survivingThreads, result) = handleDone(newThreads)
+      } yield result match {
+        case None => survivingThreads
+        case Some(r) => survivingThreads :+ r
       }
-      if (bundles.isEmpty) Nil
-      else if (bundles.size == 1) bundles.head
-      else Seq(ThreadBundle(bundles))
+      bundles match {
+        case Seq() => Nil
+        case Seq(bundle) => bundle
+        case bundles => Seq(ThreadBundle(bundles))
+      }
     }
 
     def stepThread(t: Thread): Seq[Thread] = t match {
@@ -116,6 +130,10 @@ object ThompsonVM {
       threads find (_.isDone) match {
         // no thread has finished, return them all
         case None => (threads, None)
+        case Some(t: ThreadBundle) =>
+          val survivors = threads.takeWhile(_ != t)
+          if (t.bundles.forall(_.head.isDone)) (survivors, Some(t))
+          else (survivors :+ t, None)
         // a thread finished, drop all threads to its right but keep the ones to its left
         case Some(t) => (threads.takeWhile(_ != t), Some(t))
       }

@@ -180,8 +180,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
       |  type: token
       |  label: Phosphorylation
       |  pattern: |
-      |    (@cause:BioChemicalEntity)?
-      |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
+      |    @cause:BioChemicalEntity
+      |    (?<trigger> [lemma="phosphorylate" & tag=/^V/])
       |    [!tag=/^V/]*?
       |    @theme:BioChemicalEntity []+? @site:Site""".stripMargin
 
@@ -220,8 +220,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
       |  type: token
       |  label: Phosphorylation
       |  pattern: |
-      |    (@cause:BioChemicalEntity)?
-      |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
+      |    @cause:BioChemicalEntity
+      |    (?<trigger>[lemma="phosphorylate" & tag=/^V/])
       |    [!tag=/^V/]*?
       |    @theme:BioChemicalEntity []+ @site:Site""".stripMargin
 
@@ -263,18 +263,18 @@ class TestTokenPattern extends FlatSpec with Matchers {
       |  type: token
       |  label: Phosphorylation
       |  pattern: |
-      |    (@cause:BioChemicalEntity)? complex?
-      |    (?<trigger> [lemma="phosphorylate" & tag=/^V/ & !mention=ModificationTrigger])
+      |    @cause:BioChemicalEntity complex?
+      |    (?<trigger>[lemma="phosphorylate" & tag=/^V/])
       |    [!tag=/^V/]*?
       |    @theme:BioChemicalEntity []+ @site:Site""".stripMargin
 
     val mentions = Seq(
       new TextBoundMention("BioChemicalEntity", Interval(0), 0, doc6, false, "<MANUAL>"),
       new TextBoundMention("BioChemicalEntity", Interval(0, 2), 0, doc6, false, "<MANUAL>"),
-      new TextBoundMention("BioChemicalEntity", Interval(3), 0, doc6, false, "<MANUAL>"),
-      new TextBoundMention("Site", Interval(6), 0, doc6, false, "<MANUAL>"),
-      new TextBoundMention("Site", Interval(8), 0, doc6, false, "<MANUAL>"),
-      new TextBoundMention("Site", Interval(10), 0, doc6, false, "<MANUAL>")
+      new TextBoundMention("BioChemicalEntity", Interval(4), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(7), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(9), 0, doc6, false, "<MANUAL>"),
+      new TextBoundMention("Site", Interval(11), 0, doc6, false, "<MANUAL>")
     )
 
     val state = State(mentions)
@@ -287,7 +287,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
     event1.arguments should contain key ("cause")
     event1.arguments("cause") should have size (1)
-    event1.arguments("cause").head.text should contain ("JAK3")
+    event1.arguments("cause").head.text should be ("JAK3")
 
     event1.arguments should contain key ("theme")
     event1.arguments("theme") should have size (1)
@@ -297,11 +297,11 @@ class TestTokenPattern extends FlatSpec with Matchers {
     event1.arguments("site") should have size (1)
     event1.arguments("site").head.text should be ("Y200")
 
-    val event2 = results(0)
+    val event2 = results(1)
 
     event2.arguments should contain key ("cause")
     event2.arguments("cause") should have size (1)
-    event2.arguments("cause").head.text should contain ("JAK3")
+    event2.arguments("cause").head.text should be ("JAK3 complex")
 
     event2.arguments should contain key ("theme")
     event2.arguments("theme") should have size (1)
