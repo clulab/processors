@@ -1,4 +1,4 @@
-# Sat Jun 06 00:10:49 MST 2015
+# Tue Jun 09 17:08:59 MST 2015
 (	Uracil-5	)	-	methyltransferase
 1,2-dihydroxy-3-keto-5-methylthiopentene	dioxygenase	,	eukaryotes
 1,4-alpha-glucan-branching	enzyme	,	GlgB
@@ -233,8 +233,8 @@ ADF/Cofilin/Destrin
 ADIP
 ADP-ribosyl	cyclase	(	CD38	and	157	)
 ADP-ribosylarginine	hydrolase
-ADP-ribosylation	factor	binding	protein	GGA3
-ADP-ribosylation	factor	like	protein	6	interacting	protein	6
+ADP	ribosylation	factor	binding	protein	GGA3
+ADP	ribosylation	factor	like	protein	6	interacting	protein	6
 ADP-ribosylation	and	Crystallin	J1
 ADP	specific	phosphofructokinase	and	glucokinase
 ADPK
@@ -426,7 +426,7 @@ ATHOOK
 ATM
 ATP	synthase	subunit	s	,	mitochondrial
 ATP	synthase	subunit	s	like	protein
-ATP	binding	cassette	sub	family	A	member	3
+ATP	binding	cassette	sub-family	A	member	3
 ATP	binding	cassette	subfamily	A	member	1
 ATP	binding	cassette	subfamily	A	member	12
 ATP	binding	cassette	subfamily	A	member	2
@@ -870,7 +870,7 @@ Annexin	,	type	XXXI
 Anoctamin
 Anthrax	toxin	receptor
 Anthrax_toxin_receptor_2
-Anti	muellerian	hormone	receptor	,	type	II
+Anti-muellerian	hormone	receptor	,	type	II
 Antifreeze	,	type	III
 Antigen	peptide	transporter	1
 Antigen	peptide	transporter	2
@@ -1162,8 +1162,8 @@ Bardet-Biedl	syndrome	4	protein
 Bardet-Biedl	syndrome	5	protein
 Bardet-Biedl	syndrome	5	protein	and	sex-determination	protein	fem-3
 Bardet-Biedl	syndrome	7	protein
-Barrier-	to-autointegration	factor	,	BAF
-Basal	body-orientation	factor	1
+Barrier-	to	autointegration	factor	,	BAF
+Basal	body	orientation	factor	1
 Basic	helix-loop-helix	leucine	zipper	transcrition	factor	MiT	and	TFE
 Basic	leucine	zipper	transcriptional	factor	ATF	like
 Basic	leucine	zipper	transcriptional	factor	ATF	like	2
@@ -1271,8 +1271,8 @@ Brain	expressed	X	linked	protein
 Brain	and	reproductive	organ	expressed	protein
 Branch
 Branched-chain	amino	acid	aminotransferase	II
-Breast	cancer	anti	estrogen	resistance	protein	1
-Breast	cancer	anti	estrogen	resistance	protein	3
+Breast	cancer	anti-estrogen	resistance	protein	1
+Breast	cancer	anti-estrogen	resistance	protein	3
 Breast	cancer	type	1	susceptibility	protein	(	BRCA1	)
 Breast	cancer	type	2	susceptibility	protein
 Breast	carcinoma	amplified	sequence	3
@@ -2310,7 +2310,7 @@ Cytoplasmic	dynein	2	heavy	chain	1
 Cytoplasmic	protein	NCK
 Cytoplasmic	protein	NCK1
 Cytoplasmic	protein	NCK2
-Cytoplasmic	tRNA	2-thiolation	protein	1
+Cytoplasmic	tRNA	2	thiolation	protein	1
 Cytoplasmic	tyrosine	protein	kinase	BMX
 Cytoplasmic_NCK
 Cytoskeleton	associated	protein	2
@@ -2906,7 +2906,7 @@ Daxx
 Daxx	protein
 Dcp1	like	decapping
 DcpS
-De	etiolated	protein	1	,	Det1
+De-etiolated	protein	1	,	Det1
 Deacylase_Dtd
 Death	associated	protein	kinase	1
 Decaprenyl	diphosphate	synthase	like
@@ -12258,8 +12258,8 @@ Potassium	and	sodium	hyperpolarization	activated	cyclic	nucleotide	gated	channel
 Potassium	and	sodium	hyperpolarization	activated	cyclic	nucleotide	gated	channel	4
 Pprylas_GlgP
 Pre-T-cell	antigen	receptor
-Pre	mRNA	splicing	factor
-Pre	mRNA	splicing	factor	PRP21	like	protein
+Pre-mRNA	splicing	factor
+Pre-mRNA	splicing	factor	PRP21	like	protein
 Pre-mRNA-processing-splicing	factor	8
 Pre-mRNA-splicing	factor	Cwf15	and	Cwc15
 Pre-mRNA-splicing	factor	38
@@ -13249,7 +13249,7 @@ Receptor	transporting	protein	and	CXXC-type	zinc	finger	protein	11
 Receptor-type	tyrosine	protein	kinase	FLT3
 Receptor-type	tyrosine	protein	phosphatase	C
 Receptor-type	tyrosine	protein	phosphatase	H
-Recombination-activation	protein	1
+Recombination	activation	protein	1
 Recoverin
 Reduced	folate	carrier
 Reduced	growth	phenotype	protein	1
@@ -14039,8 +14039,8 @@ SWI	and	SNF	complex	subunit	BAF60B
 SWI	and	SNF	complex	subunit	BRG1
 SWI	and	SNF	complex	subunit	SMARCA2
 SWI	and	SNF	complex	subunit	SMARCC1
-SWI	and	SNF	and	like	complex	subunit	BAF250a
-SWI	and	SNF	and	like	complex	subunit	BAF250	and	Osa
+SWI	and	SNF-like	complex	subunit	BAF250a
+SWI	and	SNF-like	complex	subunit	BAF250	and	Osa
 SWI	and	SNFcomplex	subunit	SMARCC2
 SWI_SNF
 SWR1-complex	protein	4	and	DNA	methyltransferase	1	associated	protein	1

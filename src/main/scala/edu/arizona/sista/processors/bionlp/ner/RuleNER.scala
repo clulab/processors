@@ -269,4 +269,10 @@ object RuleNER {
     }
     false
   }
+
+  /**
+   * A horrible hack to keep track of entities that should not be labeled when in lower case
+   * TODO: This is more a placeholder, so we remember we need a more general solution here
+   */
+  val NOT_ENTITY_IN_LOWER_CASE = Set("blot", "prey")
 }
