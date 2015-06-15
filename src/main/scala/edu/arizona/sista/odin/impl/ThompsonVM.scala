@@ -15,15 +15,23 @@ object ThompsonVM {
   private case class SingleThread(tok: Int, inst: Inst) extends Thread {
     var groups: NamedGroups = _
     var mentions: NamedMentions = _
+    var partialGroups: List[(String, Int)] = Nil
     def isDone: Boolean = inst == Done
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
   }
 
   private object SingleThread {
-    def apply(tok: Int, inst: Inst, groups: NamedGroups, mentions: NamedMentions): Thread = {
+    def apply(
+        tok: Int,
+        inst: Inst,
+        groups: NamedGroups,
+        mentions: NamedMentions,
+        partialGroups: List[(String, Int)]
+    ): Thread = {
       val t = new SingleThread(tok, inst)
       t.groups = groups
       t.mentions = mentions
+      t.partialGroups = partialGroups
       t
     }
   }
@@ -50,31 +58,33 @@ object ThompsonVM {
         tok: Int,
         inst: Inst,
         groups: NamedGroups,
-        mentions: NamedMentions
+        mentions: NamedMentions,
+        partialGroups: List[(String, Int)]
     ): Seq[Thread] = inst match {
       case i: Jump =>
-        mkThreads(tok, i.next, groups, mentions)
+        mkThreads(tok, i.next, groups, mentions, partialGroups)
       case i: Split =>
-        mkThreads(tok, i.lhs, groups, mentions) ++ mkThreads(tok, i.rhs, groups, mentions)
+        mkThreads(tok, i.lhs, groups, mentions, partialGroups) ++ mkThreads(tok, i.rhs, groups, mentions, partialGroups)
       case i: SaveStart => // start a new capture
-        val gs = groups.getOrElse(i.name, Vector.empty) :+ (tok, -1)
-        mkThreads(tok, i.next, groups + (i.name -> gs), mentions)
-      case i: SaveEnd => // close current capture
-        val g0 = groups(i.name)
-        val gs = g0.init :+ (g0.last._1, tok)
-        mkThreads(tok, i.next, groups + (i.name -> gs), mentions)
+        mkThreads(tok, i.next, groups, mentions, (i.name, tok) :: partialGroups)
+      case i: SaveEnd => partialGroups match {
+        case (name, start) :: partials if name == i.name =>
+          val gs = groups.getOrElse(name, Vector.empty) :+ (start, tok)
+          mkThreads(tok, i.next, groups + (name -> gs), mentions, partials)
+        case _ => sys.error("unable to close capture")
+      }
       case _ =>
-        Seq(SingleThread(tok, inst, groups, mentions))
+        Seq(SingleThread(tok, inst, groups, mentions, partialGroups))
     }
 
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
       case i: MatchToken
           if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
-        mkThreads(t.tok + 1, i.next, t.groups, t.mentions)  // token matched, return new threads
+        mkThreads(t.tok + 1, i.next, t.groups, t.mentions, t.partialGroups)  // token matched, return new threads
       case i: MatchSentenceStart if t.tok == 0 =>
-        mkThreads(t.tok, i.next, t.groups, t.mentions)
+        mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
-        mkThreads(t.tok, i.next, t.groups, t.mentions)
+        mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchMention => state match {
         case None => sys.error("can't match mentions without state")
         case Some(s) =>
@@ -83,7 +93,7 @@ object ThompsonVM {
             if mention.start == t.tok && mention.matches(i.m)
           } yield {
             val captures = mkMentionCapture(t.mentions, i.name, mention)
-            mkThreads(mention.end, i.next, t.groups, captures)
+            mkThreads(mention.end, i.next, t.groups, captures, t.partialGroups)
           }
           bundles match {
             case Seq() => Nil
@@ -152,7 +162,7 @@ object ThompsonVM {
       }
     }
 
-    loop(mkThreads(tok, start, Map.empty, Map.empty), None) match {
+    loop(mkThreads(tok, start, Map.empty, Map.empty, Nil), None) match {
       case None => Nil
       case Some(t) => t.results
     }

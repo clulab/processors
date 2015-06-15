@@ -128,6 +128,27 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results should be ('empty)
   }
 
+  it should "match nested captures" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: TestCapture
+      |  pattern: |
+      |    a b (?<cap1>c d (?<cap2>e f) g h) i c
+      |""".stripMargin
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc)
+
+    results should have size (1)
+    val rel = results.head
+    rel.arguments should contain key ("cap1")
+    rel.arguments("cap1") should have size (1)
+    rel.arguments("cap1").head.text should be ("c d e f g h")
+    rel.arguments should contain key ("cap2")
+    rel.arguments("cap2") should have size (1)
+    rel.arguments("cap2").head.text should be ("e f")
+  }
 
   val text5 = "JAK3 phosphorylates three HuR residues (Y63, Y68, Y200)"
   val doc5 = proc annotate text5
