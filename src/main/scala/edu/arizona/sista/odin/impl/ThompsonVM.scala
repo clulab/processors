@@ -9,6 +9,7 @@ object ThompsonVM {
 
   sealed trait Thread {
     def isDone: Boolean
+    def isReallyDone: Boolean
     def results: Seq[(NamedGroups, NamedMentions)]
   }
 
@@ -16,6 +17,7 @@ object ThompsonVM {
     var groups: NamedGroups = _
     var mentions: NamedMentions = _
     def isDone: Boolean = inst == Done
+    def isReallyDone: Boolean = isDone
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
   }
 
@@ -29,7 +31,10 @@ object ThompsonVM {
   }
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
-    def isDone: Boolean = bundles exists (_ exists (_.isDone))
+    // at least one thread is done and the threads after the threadbundle can be dropped
+    def isDone: Boolean = bundles.exists(_.exists(_.isDone))
+    // all bundles are done and we can retrieve the results
+    def isReallyDone: Boolean = bundles.forall(_.head.isReallyDone)
     def results: Seq[(NamedGroups, NamedMentions)] = for {
       ts <- bundles
       t = ts.head
@@ -130,10 +135,10 @@ object ThompsonVM {
       threads find (_.isDone) match {
         // no thread has finished, return them all
         case None => (threads, None)
+        // a threadbundle is done, but is it really done?
         case Some(t: ThreadBundle) =>
           val survivors = threads.takeWhile(_ != t)
-          if (t.bundles.forall(_.head.isDone)) (survivors, Some(t))
-          else (survivors :+ t, None)
+          if (t.isReallyDone) (survivors, Some(t)) else (survivors :+ t, None)
         // a thread finished, drop all threads to its right but keep the ones to its left
         case Some(t) => (threads.takeWhile(_ != t), Some(t))
       }
