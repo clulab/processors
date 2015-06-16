@@ -47,7 +47,7 @@ object ThompsonVM {
     def results: Seq[(NamedGroups, NamedMentions)] = for {
       ts <- bundles
       t = ts.head
-      if t.isDone
+      if t.isReallyDone
       r <- t.results
     } yield r
   }
