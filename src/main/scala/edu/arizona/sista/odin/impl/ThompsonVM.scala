@@ -14,29 +14,16 @@ object ThompsonVM {
     def results: Seq[(NamedGroups, NamedMentions)]
   }
 
-  private case class SingleThread(tok: Int, inst: Inst) extends Thread {
-    var groups: NamedGroups = _
-    var mentions: NamedMentions = _
-    var partialGroups: List[(String, Int)] = Nil
+  private case class SingleThread(
+      tok: Int,
+      inst: Inst,
+      groups: NamedGroups,
+      mentions: NamedMentions,
+      partialGroups: List[(String, Int)]
+  ) extends Thread {
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
-  }
-
-  private object SingleThread {
-    def apply(
-        tok: Int,
-        inst: Inst,
-        groups: NamedGroups,
-        mentions: NamedMentions,
-        partialGroups: List[(String, Int)]
-    ): Thread = {
-      val t = new SingleThread(tok, inst)
-      t.groups = groups
-      t.mentions = mentions
-      t.partialGroups = partialGroups
-      t
-    }
   }
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
