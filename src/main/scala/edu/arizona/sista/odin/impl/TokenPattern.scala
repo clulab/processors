@@ -34,11 +34,8 @@ class TokenPattern(
     val results = ThompsonVM.evaluate(start, tok, sent, doc, state) map {
       case (groups, mentions) =>
         // there must be one GlobalCapture only
-        val (start, end) = groups(GlobalCapture).head
-        val newGroups = groups - GlobalCapture transform {
-          case (name, gs) => gs.map(i => Interval(i._1, i._2))
-        }
-        Result(Interval(start, end), newGroups, mentions)
+        val globalCapture = groups(GlobalCapture).head
+        Result(globalCapture, groups - GlobalCapture, mentions)
     }
     // enforce lookahead assertion if there is one
     lookahead match {

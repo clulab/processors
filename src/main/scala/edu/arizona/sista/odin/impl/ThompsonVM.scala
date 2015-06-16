@@ -1,10 +1,11 @@
 package edu.arizona.sista.odin.impl
 
 import edu.arizona.sista.processors.Document
+import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.odin._
 
 object ThompsonVM {
-  type NamedGroups = Map[String, Seq[(Int, Int)]]
+  type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
 
   sealed trait Thread {
@@ -69,7 +70,7 @@ object ThompsonVM {
         mkThreads(tok, i.next, groups, mentions, (i.name, tok) :: partialGroups)
       case i: SaveEnd => partialGroups match {
         case (name, start) :: partials if name == i.name =>
-          val gs = groups.getOrElse(name, Vector.empty) :+ (start, tok)
+          val gs = groups.getOrElse(name, Vector.empty) :+ Interval(start, tok)
           mkThreads(tok, i.next, groups + (name -> gs), mentions, partials)
         case _ => sys.error("unable to close capture")
       }
