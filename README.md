@@ -21,6 +21,22 @@ Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustav
 + **5.2** - Version 2 of ODIN, including a cleaner (more declarative) rule language, which minimizes the need for custom actions. See `edu.arizona.sista.odin.domains.toydomain` for an example of a toy domain, and `edu.arizona.sista.odin.domains.bigmechanism.dryrun2015` for a complete biomedical domain.
 + [more...](CHANGES.md)
 
+# Citations
+
+If you use one of our discourse parsers, please cite this paper:
+
+Mihai Surdeanu, Thomas Hicks, and Marco A. Valenzuela-Escarcega. Two Practical Rhetorical Structure Theory Parsers. In *Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies: Software Demonstrations (NAACL HLT)*, 2015. [[pdf]](http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf) [[bib]](http://surdeanu.info/mihai/papers/naacl2015-discourse.bib)
+
+If you use ODIN, our event extraction framework, please cite this paper:
+
+Marco A. Valenzuela-Escarcega, Gustave Hahn-Powell, Thomas Hicks, and Mihai Surdeanu. A Domain-independent Rule-based Framework for Event Extraction. In *Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Assian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)*, 2015. [[pdf]](http://surdeanu.info/mihai/papers/acl2015.pdf) [[bib]](http://surdeanu.info/mihai/papers/acl2015.bib)
+
+If you use `CoreNLPProcessor`, please cite Stanford's paper:
+
+Christopher D. Manning, Mihai Surdeanu, John Bauer, Jenny Finkel, Steven J. Bethard, and David McClosky. The Stanford CoreNLP Natural Language Processing Toolkit. In *Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL)*, 2014. [[pdf]](http://surdeanu.info/mihai/papers/acl2014-corenlp.pdf) [[bib]](http://surdeanu.info/mihai/papers/acl2014-corenlp.bib)
+
+If you use anything else in this package, please link to this github page.
+
 # Installation
 
 This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml`:
