@@ -59,8 +59,7 @@ class TestBioNLPProcessor extends AssertionsForJUnit {
       i += 1
     }
 
-    assertTrue(doc.sentences(0).entities.get(7) == "B-Gene_or_gene_product")
-    assertTrue(doc.sentences(0).entities.get(8) == "I-Gene_or_gene_product")
+    assertTrue(doc.sentences(0).entities.get(7) == "B-Simple_chemical")
     assertTrue(doc.sentences(0).entities.get(12) == "B-Gene_or_gene_product")
     assertTrue(doc.sentences(1).entities.get(1) == "B-Gene_or_gene_product")
   }
