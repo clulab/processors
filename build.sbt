@@ -1,10 +1,12 @@
 name := "processors"
 
-version := "5.3-SNAPSHOT"
+version := "5.3.1-SNAPSHOT"
 
 organization := "edu.arizona.sista"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
+
+crossScalaVersions := Seq("2.11.6", "2.10.5")
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
