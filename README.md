@@ -28,20 +28,20 @@ This software is available on Maven Central. To use, simply add the following de
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.2</version>
+       <version>5.3</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.2</version>
+       <version>5.3</version>
        <classifier>models</classifier>
     </dependency>
 
  The equivalent SBT dependencies are:
 
     libraryDependencies ++= Seq(
-        "edu.arizona.sista" %% "processors" % "5.2",
-        "edu.arizona.sista" %% "processors" % "5.2" classifier "models"
+        "edu.arizona.sista" %% "processors" % "5.3",
+        "edu.arizona.sista" %% "processors" % "5.3" classifier "models"
     )
 
 
@@ -52,7 +52,7 @@ This software is available on Maven Central. To use, simply add the following de
 + **Tool-independent API** - we support multiple NL and machine learning tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
 + **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface. We also offer event extraction tools for the biomedical domain.
-+ **Rule-based event extraction** - we include an event extraction framework, which can be customized to various domains.
++ **Rule-based event extraction** - we include ODIN, an event extraction framework, which can be customized to various domains.
 
 # How to compile the source code
 
