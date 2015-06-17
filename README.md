@@ -10,13 +10,14 @@ that cherry picks fast components from multiple sources (Stanford and [MaltParse
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
-All our own code is licensed under Apache License Version 2.0. **However, some of the libraries used here, most notably CoreNLP, are GPL.** If not removed from this package, technically our whole code becomes GPL.
+All our own code is licensed under Apache License Version 2.0. **However, some of the libraries used here, most notably CoreNLP, are GPL v2.** If `CoreNLPProcessor` is not removed from this package, technically our whole code becomes GPL v2.
 
 (c) Mihai Surdeanu, 2013 -
 
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell, and Tom Hicks.
 
 # Changes
++ **5.3** - Many incremental improvements to ODIN and `BioNLPProcessor`, including better tokenization of biomedical text, and a revamped bio NER, which now combines an in-house CRF with a rule-based system, with rules derived from multiple knowledge bases such as Uniprot.
 + **5.2** - Version 2 of ODIN, including a cleaner (more declarative) rule language, which minimizes the need for custom actions. See `edu.arizona.sista.odin.domains.toydomain` for an example of a toy domain, and `edu.arizona.sista.odin.domains.bigmechanism.dryrun2015` for a complete biomedical domain.
 + **5.1** - Improved tokenization for the bio domain. Replaced the BANNER NER for the bio domain with our own implementation. Installing BANNER is thus no longer necessary.
 + **5.0** - changed to Java 8, Scala 2.11, and CoreNLP 3.5.1. First public release of ODIN (domain-independent event extraction) framework, in the `edu.arizona.sista.odin` package. First release of ODIN's DARPA biomedical grammar. `FastNLPProcessor` now supports both the Malt and the new Stanford NN dependency parser (the Stanford parser is now the default setting).
