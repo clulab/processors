@@ -14,7 +14,7 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 
 (c) Mihai Surdeanu, 2013 -
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell, and Tom Hicks.
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
 + **5.3** - Many incremental improvements to ODIN and `BioNLPProcessor`, including better tokenization of biomedical text, and a revamped bio NER, which now combines an in-house CRF with a rule-based system, with rules derived from multiple knowledge bases such as Uniprot.
