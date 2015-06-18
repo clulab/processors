@@ -113,19 +113,25 @@ object DependencyPatternCompiler extends TokenPatternParsers {
     }
 
   def atomicDepPattern: Parser[DependencyPatternNode] =
-    outgoingDepPattern | incomingDepPattern |
-    outgoingWildcard | incomingWildcard |
-    "(" ~> disjunctiveDepPattern <~ ")"
+    outgoingPattern | incomingPattern | "(" ~> disjunctiveDepPattern <~ ")"
 
-  def outgoingDepPattern: Parser[DependencyPatternNode] =
+  def outgoingPattern: Parser[DependencyPatternNode] =
+    outgoingMatcher | outgoingWildcard
+
+  def incomingPattern: Parser[DependencyPatternNode] =
+    incomingMatcher | incomingWildcard
+
+  def outgoingMatcher: Parser[DependencyPatternNode] =
     opt(">") ~> stringMatcher ^^ { new OutgoingDependencyPattern(_) }
 
-  def incomingDepPattern: Parser[DependencyPatternNode] =
+  def incomingMatcher: Parser[DependencyPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
 
-  def outgoingWildcard: Parser[DependencyPatternNode] = ">>" ^^ { _ => OutgoingWildcard }
+  def outgoingWildcard: Parser[DependencyPatternNode] =
+    ">>" ^^ { _ => OutgoingWildcard }
 
-  def incomingWildcard: Parser[DependencyPatternNode] = "<<" ^^ { _ => IncomingWildcard }
+  def incomingWildcard: Parser[DependencyPatternNode] =
+    "<<" ^^ { _ => IncomingWildcard }
 
 }
 
