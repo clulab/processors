@@ -83,7 +83,7 @@ pomExtra := (
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
-  "org.scalatest" %% "scalatest" % "3.0.0-SNAP4" % "test",
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "junit" % "junit" % "4.12" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "com.io7m.xom" % "xom" % "1.2.10",
@@ -101,5 +101,5 @@ libraryDependencies ++= Seq(
   "log4j" % "log4j" % "1.2.17",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
   "org.yaml" % "snakeyaml" % "1.14",
-  "jline" % "jline" % "2.12"
+  "jline" % "jline" % "2.12.1"
 )
