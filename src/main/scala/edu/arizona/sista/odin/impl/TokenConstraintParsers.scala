@@ -52,13 +52,10 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 
 sealed trait TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean
-  def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] =
-    for (tok <- tokens if matches(tok, sent, doc, state)) yield tok
 }
 
 object Unconstrained extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = true
-  override def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = tokens
 }
 
 class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {

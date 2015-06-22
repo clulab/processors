@@ -58,20 +58,22 @@ object DependencyPatternCompiler extends TokenPatternParsers {
     }
 
   def concatDepPattern: Parser[DependencyPatternNode] =
-    filteredDepPattern ~ rep(filteredDepPattern) ^^ {
+    stepDepPattern ~ rep(stepDepPattern) ^^ {
       case first ~ rest => (first /: rest) {
         case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
       }
     }
 
-  def filterableDepPattern: Parser[DependencyPatternNode] =
-    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
+  def stepDepPattern: Parser[DependencyPatternNode] =
+    filterDepPattern | traversalDepPattern
 
-  def filteredDepPattern: Parser[DependencyPatternNode] =
-    filterableDepPattern ~ opt(tokenConstraint) ^^ {
-      case pat ~ None => pat
-      case pat ~ Some(constraint) => new FilteredDependencyPattern(pat, constraint)
-    }
+  /** token constraint */
+  def filterDepPattern: Parser[DependencyPatternNode] =
+    tokenConstraint ^^ { new TokenConstraintDependencyPattern(_) }
+
+  /** any pattern that represents graph traversal */
+  def traversalDepPattern: Parser[DependencyPatternNode] =
+    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
 
   def quantifiedDepPattern: Parser[DependencyPatternNode] =
     atomicDepPattern ~ ("?"|"*"|"+") ^^ {
@@ -211,12 +213,10 @@ extends DependencyPatternNode {
     (lhs.findAllIn(tok, sent, doc, state) ++ rhs.findAllIn(tok, sent, doc, state)).distinct
 }
 
-class FilteredDependencyPattern(pattern: DependencyPatternNode, constraint: TokenConstraint)
+class TokenConstraintDependencyPattern(constraint: TokenConstraint)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
-    val tokens = pattern.findAllIn(tok, sent, doc, state)
-    constraint.filter(tokens, sent, doc, Some(state))
-  }
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
+    if (constraint.matches(tok, sent, doc, Some(state))) Seq(tok) else Nil
 }
 
 class OptionalDependencyPattern(pattern: DependencyPatternNode)
