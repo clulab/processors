@@ -94,6 +94,20 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
   }
 
+  it should "match with several lookarounds" in {
+    val p = TokenPattern.compile("(?<=a) b (?=c) | (?<=b) c (?=d)")
+    val results = p.findAllIn(0, doc, None)
+    results should have size (2)
+    results(0).interval should have (
+      'start (1),
+      'end (2)
+    )
+    results(1).interval should have (
+      'start (2),
+      'end (3)
+    )
+  }
+
   it should "match with negative lookbehind that goes beyond sentence start" in {
     val p = TokenPattern.compile("(?<!x) a b c")
     val results = p.findAllIn(0, doc, None)

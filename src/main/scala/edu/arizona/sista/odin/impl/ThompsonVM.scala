@@ -78,6 +78,22 @@ object ThompsonVM {
         mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
         mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+      case i: MatchLookAhead =>
+        val results = loop(mkThreads(t.tok, i.start, t.groups, t.mentions, Nil), None)
+        if (i.negative == results.isEmpty)
+          mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+        else Nil
+      case i: MatchLookBehind =>
+        val startTok = tok - i.size
+        if (startTok < 0) {
+          if (i.negative) mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+          else Nil
+        } else {
+          val results = loop(mkThreads(startTok, i.start, t.groups, t.mentions, Nil), None)
+          if (i.negative == results.isEmpty)
+            mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+          else Nil
+        }
       case i: MatchMention => state match {
         case None => sys.error("can't match mentions without state")
         case Some(s) =>
@@ -165,6 +181,22 @@ object ThompsonVM {
 sealed trait Inst {
   var next: Inst = null
   def dup: Inst
+}
+
+case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
+  def dup: Inst = {
+    val inst = MatchLookAhead(start.dup, negative)
+    if (next != null) inst.next = next.dup
+    inst
+  }
+}
+
+case class MatchLookBehind(start: Inst, size: Int, negative: Boolean) extends Inst {
+  def dup: Inst = {
+    val inst = MatchLookBehind(start.dup, size, negative)
+    if (next != null) inst.next = next.dup
+    inst
+  }
 }
 
 case class Split(lhs: Inst, rhs: Inst) extends Inst {

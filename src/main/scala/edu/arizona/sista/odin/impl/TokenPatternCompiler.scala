@@ -11,32 +11,11 @@ trait TokenPatternParsers extends TokenConstraintParsers {
   // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r
 
-  def tokenPattern: Parser[TokenPattern] =
-    opt(lookbehindAssertion) ~ splitPattern ~ opt(lookaheadAssertion) ^^ {
-      case lookbehind ~ frag ~ lookahead =>
-        val f = frag.capture(TokenPattern.GlobalCapture)
-        f.setOut(Done)
-        new TokenPattern(f.in, lookbehind, lookahead)
-    }
-
-  def lookaheadAssertion: Parser[LookaheadAssertion] =
-    ("(?=" | "(?!") ~ splitPattern <~ ")" ^^ {
-      case op ~ frag =>
-        frag.setOut(Done)
-        val negative = op.endsWith("!")
-        new LookaheadAssertion(frag.in, negative)
-    }
-
-  def lookbehindAssertion: Parser[LookbehindAssertion] =
-    ("(?<=" | "(?<!") ~ rep1(singleTokenPattern) <~ ")" ^^ {
-      case op ~ toks =>
-        val frag = (toks.head /: toks.tail) {
-          case (lhs, rhs) => ProgramFragment(lhs, rhs)
-        }
-        frag.setOut(Done)
-        val negative = op.endsWith("!")
-        new LookbehindAssertion(frag.in, toks.size, negative)
-    }
+  def tokenPattern: Parser[TokenPattern] = splitPattern ^^ { frag =>
+    val f = frag.capture(TokenPattern.GlobalCapture)
+    f.setOut(Done)
+    new TokenPattern(f.in)
+  }
 
   def splitPattern: Parser[ProgramFragment] =
     concatPattern ~ rep("|" ~> concatPattern) ^^ {
@@ -62,10 +41,32 @@ trait TokenPatternParsers extends TokenConstraintParsers {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 
-  def zeroWidthAssertion: Parser[ProgramFragment] = ("^"|"$") ^^ {
+  def assertionPattern: Parser[ProgramFragment] =
+    sentenceAssertion | lookaheadAssertion | lookbehindAssertion
+
+  def sentenceAssertion: Parser[ProgramFragment] = ("^"|"$") ^^ {
     case "^" => ProgramFragment(MatchSentenceStart())
     case "$" => ProgramFragment(MatchSentenceEnd())
   }
+
+  def lookaheadAssertion: Parser[ProgramFragment] =
+    ("(?=" | "(?!") ~ splitPattern <~ ")" ^^ {
+      case op ~ frag =>
+        frag.setOut(Done)
+        val negative = op.endsWith("!")
+        ProgramFragment(MatchLookAhead(frag.in, negative))
+    }
+
+  def lookbehindAssertion: Parser[ProgramFragment] =
+    ("(?<=" | "(?<!") ~ rep1(singleTokenPattern) <~ ")" ^^ {
+      case op ~ toks =>
+        val frag = (toks.head /: toks.tail) {
+          case (lhs, rhs) => ProgramFragment(lhs, rhs)
+        }
+        frag.setOut(Done)
+        val negative = op.endsWith("!")
+        ProgramFragment(MatchLookBehind(frag.in, toks.size, negative))
+    }
 
   def capturePattern: Parser[ProgramFragment] =
     "(?<" ~ identifier ~ ">" ~ splitPattern ~ ")" ^^ {
@@ -86,7 +87,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     namedMentionPattern | unnamedMentionPattern
 
   def atomicPattern: Parser[ProgramFragment] =
-    zeroWidthAssertion | singleTokenPattern | mentionPattern |
+    assertionPattern | singleTokenPattern | mentionPattern |
     capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[ProgramFragment] =
