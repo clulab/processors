@@ -15,7 +15,7 @@ object ToyDomainExample extends App {
                  |  label: Protein
                  |  type: token
                  |  pattern: |
-                 |    [entity='B-GENE'] [entity='I-GENE']*
+                 |    [entity='B-Gene_or_gene_product'] [entity='I-Gene_or_gene_product']*
                  |
                  | # this rule creates phosphorylation events
                  | # the arguments are Protein mentions
