@@ -114,8 +114,16 @@ object DependencyPatternCompiler extends TokenPatternParsers {
       }
     }
 
+  def lookaroundDepPattern: Parser[DependencyPatternNode] =
+    ("(?=" | "(?!") ~ disjunctiveDepPattern <~ ")" ^^ {
+      case op ~ pat =>
+        val negative = op.endsWith("!")
+        new LookaroundDependencyPattern(pat, negative)
+    }
+
   def atomicDepPattern: Parser[DependencyPatternNode] =
-    outgoingPattern | incomingPattern | "(" ~> disjunctiveDepPattern <~ ")"
+    outgoingPattern | incomingPattern | lookaroundDepPattern |
+    "(" ~> disjunctiveDepPattern <~ ")"
 
   def outgoingPattern: Parser[DependencyPatternNode] =
     outgoingMatcher | outgoingWildcard
@@ -217,6 +225,14 @@ class TokenConstraintDependencyPattern(constraint: TokenConstraint)
 extends DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
     if (constraint.matches(tok, sent, doc, Some(state))) Seq(tok) else Nil
+}
+
+class LookaroundDependencyPattern(lookaround: DependencyPatternNode, negative: Boolean)
+extends DependencyPatternNode {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val results = lookaround.findAllIn(tok, sent, doc, state)
+    if (results.isEmpty == negative) Seq(tok) else Nil
+  }
 }
 
 class OptionalDependencyPattern(pattern: DependencyPatternNode)
