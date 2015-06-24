@@ -7,42 +7,30 @@ import edu.arizona.sista.odin._
 object TokenPattern {
   val GlobalCapture = "--GLOBAL--"
 
-  def compile(input: String): TokenPattern = TokenPatternCompiler.compile(input)
+  def compile(input: String, unit: String = "word"): TokenPattern = {
+    val compiler = new TokenPatternParsers(unit)
+    compiler.compileTokenPattern(input)
+  }
 
   case class Result(
       interval: Interval,
-      groups: Map[String, Interval],
-      mentions: Map[String, Mention]
+      groups: Map[String, Seq[Interval]],
+      mentions: Map[String, Seq[Mention]]
   ) {
     val start = interval.start
     val end = interval.end
   }
 }
 
-class TokenPattern(
-    val start: Inst,
-    val lookbehind: Option[LookbehindAssertion],
-    val lookahead: Option[LookaheadAssertion]
-) {
+class TokenPattern(val start: Inst) {
   import TokenPattern._
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Result] = {
-    // enforce lookbehind assertion if there is one
-    if (lookbehind.isDefined && !lookbehind.get.matches(tok, sent, doc, state))
-      return Nil
-    // apply the main pattern
-    val results = ThompsonVM.evaluate(start, tok, sent, doc, state) map {
+    ThompsonVM.evaluate(start, tok, sent, doc, state) map {
       case (groups, mentions) =>
-        val (start, end) = groups(GlobalCapture)
-        val newGroups = groups - GlobalCapture transform {
-          case (name, (from, until)) => Interval(from, until)
-        }
-        Result(Interval(start, end), newGroups, mentions)
-    }
-    // enforce lookahead assertion if there is one
-    lookahead match {
-      case None => results
-      case Some(assertion) => assertion.filter(results, sent, doc, state)
+        // there must be one GlobalCapture only
+        val globalCapture = groups(GlobalCapture).head
+        Result(globalCapture, groups - GlobalCapture, mentions)
     }
   }
 
@@ -93,27 +81,4 @@ class TokenPattern(
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Result] =
     findAllIn(sent, doc, Some(state))
-}
-
-class LookbehindAssertion(val start: Inst, val size: Int, val negative: Boolean) {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = {
-    val startTok = tok - size
-    if (startTok < 0) negative // only fail if negative is false
-    else {
-      val results = ThompsonVM.evaluate(start, startTok, sent, doc, state)
-      negative == results.isEmpty
-    }
-  }
-}
-
-class LookaheadAssertion(val start: Inst, val negative: Boolean) {
-  def filter(
-    results: Seq[TokenPattern.Result],
-    sent: Int,
-    doc: Document,
-    state: Option[State]
-  ): Seq[TokenPattern.Result] = results filter { r =>
-    val results = ThompsonVM.evaluate(start, r.end, sent, doc, state)
-    negative == results.isEmpty
-  }
 }

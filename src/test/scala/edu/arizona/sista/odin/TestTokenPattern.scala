@@ -94,6 +94,20 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
   }
 
+  it should "match with several lookarounds" in {
+    val p = TokenPattern.compile("(?<=a) b (?=c) | (?<=b) c (?=d)")
+    val results = p.findAllIn(0, doc, None)
+    results should have size (2)
+    results(0).interval should have (
+      'start (1),
+      'end (2)
+    )
+    results(1).interval should have (
+      'start (2),
+      'end (3)
+    )
+  }
+
   it should "match with negative lookbehind that goes beyond sentence start" in {
     val p = TokenPattern.compile("(?<!x) a b c")
     val results = p.findAllIn(0, doc, None)
@@ -128,6 +142,27 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results should be ('empty)
   }
 
+  it should "match nested captures" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: TestCapture
+      |  pattern: |
+      |    a b (?<cap1>c d (?<cap2>e f) g h) i c
+      |""".stripMargin
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc)
+
+    results should have size (1)
+    val rel = results.head
+    rel.arguments should contain key ("cap1")
+    rel.arguments("cap1") should have size (1)
+    rel.arguments("cap1").head.text should be ("c d e f g h")
+    rel.arguments should contain key ("cap2")
+    rel.arguments("cap2") should have size (1)
+    rel.arguments("cap2").head.text should be ("e f")
+  }
 
   val text5 = "JAK3 phosphorylates three HuR residues (Y63, Y68, Y200)"
   val doc5 = proc annotate text5
@@ -313,4 +348,157 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
   }
 
+  val text7 = "JAK3 binds to MEK and RAS"
+  val doc7 = proc annotate text7
+
+  text7 should "match three mentions with argument name 'theme'" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: Binding
+      |  pattern: |
+      |    @theme:Protein binds to @theme:Protein and @theme:Protein
+      |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(0), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(3), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc7, false, "<MANUAL>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc7, state)
+
+    results should have size (1)
+    val binding = results.head
+    binding.arguments should contain key ("theme")
+    val themes = binding.arguments("theme")
+    themes should have size (3)
+    val themeTexts = themes.map(_.text)
+    themeTexts should contain ("JAK3")
+    themeTexts should contain ("RAS")
+    themeTexts should contain ("MEK")
+
+  }
+
+  it should "capture three arguments with name 'theme'" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: Binding
+      |  pattern: |
+      |    (?<theme>[]) binds to (?<theme>[]) and (?<theme>[])
+      |""".stripMargin
+
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc7)
+
+    results should have size (1)
+    val binding = results.head
+    binding.arguments should contain key ("theme")
+    val themes = binding.arguments("theme")
+    themes should have size (3)
+    val themeTexts = themes.map(_.text)
+    themeTexts should contain ("JAK3")
+    themeTexts should contain ("RAS")
+    themeTexts should contain ("MEK")
+
+  }
+
+  it should "capture text and mentions with same argument name" in {
+    val rule = """
+      |- name: test_rule
+      |  priority: 1
+      |  type: token
+      |  label: Binding
+      |  pattern: |
+      |    (?<theme>[]) binds to @theme:Protein and (?<theme>[])
+      |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(0), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(3), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc7, false, "<MANUAL>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc7, state)
+
+    results should have size (1)
+    val binding = results.head
+    binding.arguments should contain key ("theme")
+    val themes = binding.arguments("theme")
+    themes should have size (3)
+    val themeTexts = themes.map(_.text)
+    themeTexts should contain ("JAK3")
+    themeTexts should contain ("RAS")
+    themeTexts should contain ("MEK")
+
+  }
+
+  it should "capture text and mentions using unit: \"lemma\"" in {
+    val rule = """
+                 |- name: test_rule
+                 |  priority: 1
+                 |  type: token
+                 |  unit: lemma
+                 |  label: Binding
+                 |  pattern: |
+                 |    (?<theme>[]) bind to @theme:Protein
+                 |""".stripMargin
+
+  val mentions = Seq(
+    new TextBoundMention("Protein", Interval(0), 0, doc7, false, "<MANUAL>"),
+    new TextBoundMention("Protein", Interval(3), 0, doc7, false, "<MANUAL>")
+  )
+
+  val state = State(mentions)
+  val ee = ExtractorEngine(rule)
+  val results = ee.extractFrom(doc7, state)
+
+  results should have size (1)
+  val binding = results.head
+  binding.arguments should contain key ("theme")
+  val themes = binding.arguments("theme")
+  themes should have size (2)
+  val themeTexts = themes.map(_.text)
+  themeTexts should contain ("JAK3")
+  themeTexts should contain ("MEK")
+
+  }
+
+  it should "capture text and mentions using unit: \"tag\"" in {
+    val rule = """
+                 |- name: test_rule
+                 |  priority: 1
+                 |  type: token
+                 |  unit: tag
+                 |  label: Binding
+                 |  pattern: |
+                 |    (?<theme>[]) VBZ TO @theme:Protein
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(0), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(3), 0, doc7, false, "<MANUAL>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc7, state)
+
+    results should have size (1)
+    val binding = results.head
+    binding.arguments should contain key ("theme")
+    val themes = binding.arguments("theme")
+    themes should have size (2)
+    val themeTexts = themes.map(_.text)
+    themeTexts should contain ("JAK3")
+    themeTexts should contain ("MEK")
+
+  }
 }

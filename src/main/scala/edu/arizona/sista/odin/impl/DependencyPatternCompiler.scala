@@ -4,8 +4,8 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-object DependencyPatternCompiler extends TokenPatternParsers {
-  def compile(input: String): DependencyPattern =
+class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) {
+  def compileDependencyPattern(input: String): DependencyPattern =
     parseAll(dependencyPattern, clean(input)) match {
       case Success(result, _) => result
       case failure: NoSuccess => sys.error(failure.msg)
@@ -58,20 +58,22 @@ object DependencyPatternCompiler extends TokenPatternParsers {
     }
 
   def concatDepPattern: Parser[DependencyPatternNode] =
-    filteredDepPattern ~ rep(filteredDepPattern) ^^ {
+    stepDepPattern ~ rep(stepDepPattern) ^^ {
       case first ~ rest => (first /: rest) {
         case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
       }
     }
 
-  def filterableDepPattern: Parser[DependencyPatternNode] =
-    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
+  def stepDepPattern: Parser[DependencyPatternNode] =
+    filterDepPattern | traversalDepPattern
 
-  def filteredDepPattern: Parser[DependencyPatternNode] =
-    filterableDepPattern ~ opt(tokenConstraint) ^^ {
-      case pat ~ None => pat
-      case pat ~ Some(constraint) => new FilteredDependencyPattern(pat, constraint)
-    }
+  /** token constraint */
+  def filterDepPattern: Parser[DependencyPatternNode] =
+    tokenConstraint ^^ { new TokenConstraintDependencyPattern(_) }
+
+  /** any pattern that represents graph traversal */
+  def traversalDepPattern: Parser[DependencyPatternNode] =
+    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
 
   def quantifiedDepPattern: Parser[DependencyPatternNode] =
     atomicDepPattern ~ ("?"|"*"|"+") ^^ {
@@ -112,14 +114,33 @@ object DependencyPatternCompiler extends TokenPatternParsers {
       }
     }
 
-  def atomicDepPattern: Parser[DependencyPatternNode] =
-    outgoingDepPattern | incomingDepPattern | "(" ~> disjunctiveDepPattern <~ ")"
+  def lookaroundDepPattern: Parser[DependencyPatternNode] =
+    ("(?=" | "(?!") ~ disjunctiveDepPattern <~ ")" ^^ {
+      case op ~ pat => new LookaroundDependencyPattern(pat, op.endsWith("!"))
+    }
 
-  def outgoingDepPattern: Parser[DependencyPatternNode] =
+  def atomicDepPattern: Parser[DependencyPatternNode] =
+    outgoingPattern | incomingPattern | lookaroundDepPattern |
+    "(" ~> disjunctiveDepPattern <~ ")"
+
+  def outgoingPattern: Parser[DependencyPatternNode] =
+    outgoingMatcher | outgoingWildcard
+
+  def incomingPattern: Parser[DependencyPatternNode] =
+    incomingMatcher | incomingWildcard
+
+  def outgoingMatcher: Parser[DependencyPatternNode] =
     opt(">") ~> stringMatcher ^^ { new OutgoingDependencyPattern(_) }
 
-  def incomingDepPattern: Parser[DependencyPatternNode] =
+  def incomingMatcher: Parser[DependencyPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
+
+  def outgoingWildcard: Parser[DependencyPatternNode] =
+    ">>" ^^^ OutgoingWildcard
+
+  def incomingWildcard: Parser[DependencyPatternNode] =
+    "<<" ^^^ IncomingWildcard
+
 }
 
 class ArgumentPattern(
@@ -143,6 +164,22 @@ class ArgumentPattern(
 
 sealed trait DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int]
+}
+
+object OutgoingWildcard extends DependencyPatternNode with Dependencies {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val edges = outgoingEdges(sent, doc)
+    if (edges isDefinedAt tok) edges(tok).map(_._1)
+    else Nil
+  }
+}
+
+object IncomingWildcard extends DependencyPatternNode with Dependencies {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val edges = incomingEdges(sent, doc)
+    if (edges isDefinedAt tok) edges(tok).map(_._1)
+    else Nil
+  }
 }
 
 class OutgoingDependencyPattern(matcher: StringMatcher)
@@ -182,11 +219,17 @@ extends DependencyPatternNode {
     (lhs.findAllIn(tok, sent, doc, state) ++ rhs.findAllIn(tok, sent, doc, state)).distinct
 }
 
-class FilteredDependencyPattern(pattern: DependencyPatternNode, constraint: TokenConstraint)
+class TokenConstraintDependencyPattern(constraint: TokenConstraint)
+extends DependencyPatternNode {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
+    if (constraint.matches(tok, sent, doc, Some(state))) Seq(tok) else Nil
+}
+
+class LookaroundDependencyPattern(lookaround: DependencyPatternNode, negative: Boolean)
 extends DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
-    val tokens = pattern.findAllIn(tok, sent, doc, state)
-    constraint.filter(tokens, sent, doc, Some(state))
+    val results = lookaround.findAllIn(tok, sent, doc, state)
+    if (results.isEmpty == negative) Seq(tok) else Nil
   }
 }
 

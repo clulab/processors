@@ -5,14 +5,27 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
 trait TokenConstraintParsers extends StringMatcherParsers {
+
+  def unit: String
+
   def tokenConstraint: Parser[TokenConstraint] =
     "[" ~> opt(disjunctiveConstraint) <~ "]" ^^ {
       case Some(constraint) => constraint
       case None => Unconstrained
     }
 
-  def wordConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
-    case matcher => new WordConstraint(matcher)
+  def unitConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
+    case matcher => unit match {
+      case "word" => new WordConstraint(matcher)
+      case "lemma" => new LemmaConstraint(matcher)
+      case "tag" => new TagConstraint(matcher)
+      case "entity" => new EntityConstraint(matcher)
+      case "chunk" => new ChunkConstraint(matcher)
+      case "incoming" => new IncomingConstraint(matcher)
+      case "outgoing" => new OutgoingConstraint(matcher)
+      case "mention" => new MentionConstraint(matcher)
+      case _ => sys.error("unrecognized token field")
+    }
   }
 
   def disjunctiveConstraint: Parser[TokenConstraint] =
@@ -52,13 +65,10 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 
 sealed trait TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean
-  def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] =
-    for (tok <- tokens if matches(tok, sent, doc, state)) yield tok
 }
 
 object Unconstrained extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = true
-  override def filter(tokens: Seq[Int], sent: Int, doc: Document, state: Option[State]): Seq[Int] = tokens
 }
 
 class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {

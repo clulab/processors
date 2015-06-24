@@ -1,11 +1,12 @@
 package edu.arizona.sista.odin.impl
 
 import edu.arizona.sista.processors.Document
+import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.odin._
 
 object ThompsonVM {
-  type NamedGroups = Map[String, (Int, Int)]
-  type NamedMentions = Map[String, Mention]
+  type NamedGroups = Map[String, Seq[Interval]]
+  type NamedMentions = Map[String, Seq[Mention]]
 
   sealed trait Thread {
     def isDone: Boolean
@@ -13,21 +14,16 @@ object ThompsonVM {
     def results: Seq[(NamedGroups, NamedMentions)]
   }
 
-  private case class SingleThread(tok: Int, inst: Inst) extends Thread {
-    var groups: NamedGroups = _
-    var mentions: NamedMentions = _
+  private case class SingleThread(
+      tok: Int,
+      inst: Inst,
+      groups: NamedGroups,
+      mentions: NamedMentions,
+      partialGroups: List[(String, Int)]
+  ) extends Thread {
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
-  }
-
-  private object SingleThread {
-    def apply(tok: Int, inst: Inst, groups: NamedGroups, mentions: NamedMentions): Thread = {
-      val t = new SingleThread(tok, inst)
-      t.groups = groups
-      t.mentions = mentions
-      t
-    }
   }
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
@@ -55,28 +51,49 @@ object ThompsonVM {
         tok: Int,
         inst: Inst,
         groups: NamedGroups,
-        mentions: NamedMentions
+        mentions: NamedMentions,
+        partialGroups: List[(String, Int)]
     ): Seq[Thread] = inst match {
       case i: Jump =>
-        mkThreads(tok, i.next, groups, mentions)
+        mkThreads(tok, i.next, groups, mentions, partialGroups)
       case i: Split =>
-        mkThreads(tok, i.lhs, groups, mentions) ++ mkThreads(tok, i.rhs, groups, mentions)
-      case i: SaveStart =>
-        mkThreads(tok, i.next, groups + (i.name -> (tok, -1)), mentions)
-      case i: SaveEnd =>
-        mkThreads(tok, i.next, groups + (i.name -> (groups(i.name)._1, tok)), mentions)
+        mkThreads(tok, i.lhs, groups, mentions, partialGroups) ++ mkThreads(tok, i.rhs, groups, mentions, partialGroups)
+      case i: SaveStart => // start a new capture
+        mkThreads(tok, i.next, groups, mentions, (i.name, tok) :: partialGroups)
+      case i: SaveEnd => partialGroups match {
+        case (name, start) :: partials if name == i.name =>
+          val gs = groups.getOrElse(name, Vector.empty) :+ Interval(start, tok)
+          mkThreads(tok, i.next, groups + (name -> gs), mentions, partials)
+        case _ => sys.error("unable to close capture")
+      }
       case _ =>
-        Seq(SingleThread(tok, inst, groups, mentions))
+        Seq(SingleThread(tok, inst, groups, mentions, partialGroups))
     }
 
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
       case i: MatchToken
           if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
-        mkThreads(t.tok + 1, i.next, t.groups, t.mentions)  // token matched, return new threads
+        mkThreads(t.tok + 1, i.next, t.groups, t.mentions, t.partialGroups)  // token matched, return new threads
       case i: MatchSentenceStart if t.tok == 0 =>
-        mkThreads(t.tok, i.next, t.groups, t.mentions)
+        mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
-        mkThreads(t.tok, i.next, t.groups, t.mentions)
+        mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+      case i: MatchLookAhead =>
+        val results = loop(mkThreads(t.tok, i.start, t.groups, t.mentions, Nil), None)
+        if (i.negative == results.isEmpty)
+          mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+        else Nil
+      case i: MatchLookBehind =>
+        val startTok = tok - i.size
+        if (startTok < 0) {
+          if (i.negative) mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+          else Nil
+        } else {
+          val results = loop(mkThreads(startTok, i.start, t.groups, t.mentions, Nil), None)
+          if (i.negative == results.isEmpty)
+            mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+          else Nil
+        }
       case i: MatchMention => state match {
         case None => sys.error("can't match mentions without state")
         case Some(s) =>
@@ -85,7 +102,7 @@ object ThompsonVM {
             if mention.start == t.tok && mention.matches(i.m)
           } yield {
             val captures = mkMentionCapture(t.mentions, i.name, mention)
-            mkThreads(mention.end, i.next, t.groups, captures)
+            mkThreads(mention.end, i.next, t.groups, captures, t.partialGroups)
           }
           bundles match {
             case Seq() => Nil
@@ -103,7 +120,9 @@ object ThompsonVM {
         mention: Mention
     ): NamedMentions = name match {
       case None => mentions
-      case Some(name) => mentions + (name -> mention)
+      case Some(name) =>
+        val ms = mentions.getOrElse(name, Vector.empty) :+ mention
+        mentions + (name -> ms)
     }
 
     def stepThreadBundle(t: ThreadBundle): Seq[Thread] = {
@@ -152,7 +171,7 @@ object ThompsonVM {
       }
     }
 
-    loop(mkThreads(tok, start, Map.empty, Map.empty), None) match {
+    loop(mkThreads(tok, start, Map.empty, Map.empty, Nil), None) match {
       case None => Nil
       case Some(t) => t.results
     }
@@ -161,80 +180,54 @@ object ThompsonVM {
 
 sealed trait Inst {
   var next: Inst = null
-  def dup: Inst
+  def dup(): Inst
+  def deepcopy(): Inst = {
+    val inst = dup()
+    if (next != null) inst.next = next.deepcopy()
+    inst
+  }
+}
+
+case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
+  def dup() = MatchLookAhead(start.deepcopy(), negative)
+}
+
+case class MatchLookBehind(start: Inst, size: Int, negative: Boolean) extends Inst {
+  def dup() = MatchLookBehind(start.deepcopy(), size, negative)
 }
 
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
-  def dup: Inst = Split(lhs.dup, rhs.dup)
+  def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
 }
 
 case class MatchToken(c: TokenConstraint) extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
-case class MatchMention(m: StringMatcher) extends Inst {
-  var name: Option[String] = None
-
-  def dup: Inst = {
-    val inst = copy()
-    inst.name = name
-    if (next != null) inst.next = next.dup
-    inst
-  }
-}
-
-object MatchMention {
-  def apply(name: String, matcher: StringMatcher): MatchMention = {
-    val inst = MatchMention(matcher)
-    inst.name = Some(name)
-    inst
-  }
+case class MatchMention(m: StringMatcher, name: Option[String]) extends Inst {
+  def dup() = copy()
 }
 
 case class MatchSentenceStart() extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class MatchSentenceEnd() extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class Jump() extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class SaveStart(name: String) extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class SaveEnd(name: String) extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case object Done extends Inst {
-  def dup: Inst = this
+  def dup() = this
 }
