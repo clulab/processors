@@ -4,8 +4,8 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-object DependencyPatternCompiler extends TokenPatternParsers {
-  def compile(input: String): DependencyPattern =
+class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) {
+  def compileDependencyPattern(input: String): DependencyPattern =
     parseAll(dependencyPattern, clean(input)) match {
       case Success(result, _) => result
       case failure: NoSuccess => sys.error(failure.msg)

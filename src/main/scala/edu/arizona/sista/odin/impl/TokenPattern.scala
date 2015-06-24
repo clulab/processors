@@ -7,7 +7,10 @@ import edu.arizona.sista.odin._
 object TokenPattern {
   val GlobalCapture = "--GLOBAL--"
 
-  def compile(input: String): TokenPattern = TokenPatternCompiler.compile(input)
+  def compile(input: String, unit: String = "word"): TokenPattern = {
+    val compiler = new TokenPatternParsers(unit)
+    compiler.compileTokenPattern(input)
+  }
 
   case class Result(
       interval: Interval,

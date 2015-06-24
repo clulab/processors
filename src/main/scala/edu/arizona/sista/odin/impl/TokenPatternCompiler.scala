@@ -1,15 +1,13 @@
 package edu.arizona.sista.odin.impl
 
-object TokenPatternCompiler extends TokenPatternParsers {
-  def compile(input: String): TokenPattern = parseAll(tokenPattern, input) match {
+class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
+  // comments are considered whitespace
+  override val whiteSpace = """(\s|#.*)+""".r
+
+  def compileTokenPattern(input: String): TokenPattern = parseAll(tokenPattern, input) match {
     case Success(result, _) => result
     case failure: NoSuccess => sys.error(failure.msg)
   }
-}
-
-trait TokenPatternParsers extends TokenConstraintParsers {
-  // comments are considered whitespace
-  override val whiteSpace = """(\s|#.*)+""".r
 
   def tokenPattern: Parser[TokenPattern] = splitPattern ^^ { frag =>
     val f = frag.capture(TokenPattern.GlobalCapture)
@@ -37,7 +35,7 @@ trait TokenPatternParsers extends TokenConstraintParsers {
     repeatedPattern | rangePattern | exactPattern | atomicPattern
 
   def singleTokenPattern: Parser[ProgramFragment] =
-    (wordConstraint | tokenConstraint) ^^ {
+    (unitConstraint | tokenConstraint) ^^ {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 

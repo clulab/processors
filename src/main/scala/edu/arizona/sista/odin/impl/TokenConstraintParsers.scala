@@ -5,14 +5,27 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
 trait TokenConstraintParsers extends StringMatcherParsers {
+
+  def unit: String
+
   def tokenConstraint: Parser[TokenConstraint] =
     "[" ~> opt(disjunctiveConstraint) <~ "]" ^^ {
       case Some(constraint) => constraint
       case None => Unconstrained
     }
 
-  def wordConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
-    case matcher => new WordConstraint(matcher)
+  def unitConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
+    case matcher => unit match {
+      case "word" => new WordConstraint(matcher)
+      case "lemma" => new LemmaConstraint(matcher)
+      case "tag" => new TagConstraint(matcher)
+      case "entity" => new EntityConstraint(matcher)
+      case "chunk" => new ChunkConstraint(matcher)
+      case "incoming" => new IncomingConstraint(matcher)
+      case "outgoing" => new OutgoingConstraint(matcher)
+      case "mention" => new MentionConstraint(matcher)
+      case _ => sys.error("unrecognized token field")
+    }
   }
 
   def disjunctiveConstraint: Parser[TokenConstraint] =

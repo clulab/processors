@@ -65,9 +65,11 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       val priority = m.getOrElse("priority", DefaultPriority).toString()
       val action = m.getOrElse("action", DefaultAction).toString()
       val keep = m.getOrElse("keep", DefaultKeep).asInstanceOf[Boolean]
+      // unit is relevant to TokenPattern only
+      val unit = m.getOrElse("unit", DefaultUnit).toString()
 
       // make intermediary rule
-      new Rule(name, labels, ruleType, priority, keep, action, pattern)
+      new Rule(name, labels, ruleType, unit, priority, keep, action, pattern)
     }
   }
 
@@ -91,7 +93,8 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val pattern = TokenPattern.compile(rule.pattern)
+    val compiler = new TokenPatternParsers(rule.unit)
+    val pattern = compiler.compileTokenPattern(rule.pattern)
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
 
@@ -102,7 +105,8 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val pattern = DependencyPattern.compile(rule.pattern)
+    val compiler = new DependencyPatternCompiler(rule.unit)
+    val pattern = compiler.compileDependencyPattern(rule.pattern)
     new DependencyExtractor(name, labels, priority, keep, action, pattern)
   }
 }
@@ -112,12 +116,14 @@ object RuleReader {
   val DefaultPriority = "1+"
   val DefaultKeep = true
   val DefaultAction = "default"
+  val DefaultUnit = "word"
 
   // rule intermediary representation
   class Rule(
     val name: String,
     val labels: Seq[String],
     val ruleType: String,
+    val unit: String,
     val priority: String,
     val keep: Boolean,
     val action: String,

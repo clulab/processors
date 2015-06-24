@@ -96,7 +96,3 @@ class RelationDependencyPattern(
     relationArgs = args + (anchorName -> Seq(mention))
   } yield new RelationMention(labels, relationArgs, sent, doc, keep, ruleName)
 }
-
-object DependencyPattern {
-  def compile(input: String): DependencyPattern = DependencyPatternCompiler.compile(input)
-}
