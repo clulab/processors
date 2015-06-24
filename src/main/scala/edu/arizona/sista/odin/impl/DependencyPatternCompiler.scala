@@ -116,9 +116,7 @@ object DependencyPatternCompiler extends TokenPatternParsers {
 
   def lookaroundDepPattern: Parser[DependencyPatternNode] =
     ("(?=" | "(?!") ~ disjunctiveDepPattern <~ ")" ^^ {
-      case op ~ pat =>
-        val negative = op.endsWith("!")
-        new LookaroundDependencyPattern(pat, negative)
+      case op ~ pat => new LookaroundDependencyPattern(pat, op.endsWith("!"))
     }
 
   def atomicDepPattern: Parser[DependencyPatternNode] =
