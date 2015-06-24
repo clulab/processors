@@ -136,10 +136,10 @@ object DependencyPatternCompiler extends TokenPatternParsers {
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
 
   def outgoingWildcard: Parser[DependencyPatternNode] =
-    ">>" ^^ { _ => OutgoingWildcard }
+    ">>" ^^^ OutgoingWildcard
 
   def incomingWildcard: Parser[DependencyPatternNode] =
-    "<<" ^^ { _ => IncomingWildcard }
+    "<<" ^^^ IncomingWildcard
 
 }
 
