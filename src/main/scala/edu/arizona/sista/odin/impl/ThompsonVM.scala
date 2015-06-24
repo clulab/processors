@@ -180,96 +180,54 @@ object ThompsonVM {
 
 sealed trait Inst {
   var next: Inst = null
-  def dup: Inst
+  def dup(): Inst
+  def deepcopy(): Inst = {
+    val inst = dup()
+    if (next != null) inst.next = next.deepcopy()
+    inst
+  }
 }
 
 case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
-  def dup: Inst = {
-    val inst = MatchLookAhead(start.dup, negative)
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = MatchLookAhead(start.deepcopy(), negative)
 }
 
 case class MatchLookBehind(start: Inst, size: Int, negative: Boolean) extends Inst {
-  def dup: Inst = {
-    val inst = MatchLookBehind(start.dup, size, negative)
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = MatchLookBehind(start.deepcopy(), size, negative)
 }
 
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
-  def dup: Inst = Split(lhs.dup, rhs.dup)
+  def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
 }
 
 case class MatchToken(c: TokenConstraint) extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
-case class MatchMention(m: StringMatcher) extends Inst {
-  var name: Option[String] = None
-
-  def dup: Inst = {
-    val inst = copy()
-    inst.name = name
-    if (next != null) inst.next = next.dup
-    inst
-  }
-}
-
-object MatchMention {
-  def apply(name: String, matcher: StringMatcher): MatchMention = {
-    val inst = MatchMention(matcher)
-    inst.name = Some(name)
-    inst
-  }
+case class MatchMention(m: StringMatcher, name: Option[String]) extends Inst {
+  def dup() = copy()
 }
 
 case class MatchSentenceStart() extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class MatchSentenceEnd() extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class Jump() extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class SaveStart(name: String) extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case class SaveEnd(name: String) extends Inst {
-  def dup: Inst = {
-    val inst = copy()
-    if (next != null) inst.next = next.dup
-    inst
-  }
+  def dup() = copy()
 }
 
 case object Done extends Inst {
-  def dup: Inst = this
+  def dup() = this
 }

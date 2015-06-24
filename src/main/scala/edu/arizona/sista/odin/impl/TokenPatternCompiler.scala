@@ -75,12 +75,12 @@ trait TokenPatternParsers extends TokenConstraintParsers {
 
   def unnamedMentionPattern: Parser[ProgramFragment] =
     "@" ~> exactStringMatcher ^^ {
-      case matcher => ProgramFragment(MatchMention(matcher))
+      case matcher => ProgramFragment(MatchMention(matcher, None))
     }
 
   def namedMentionPattern: Parser[ProgramFragment] =
     "@" ~> stringLiteral ~ ":" ~ exactStringMatcher ^^ {
-      case name ~ ":" ~ matcher => ProgramFragment(MatchMention(name, matcher))
+      case name ~ ":" ~ matcher => ProgramFragment(MatchMention(matcher, Some(name)))
     }
 
   def mentionPattern: Parser[ProgramFragment] =
@@ -130,13 +130,10 @@ trait TokenPatternParsers extends TokenConstraintParsers {
       */
     def setOut(inst: Inst): Unit = out.foreach(_.next = inst)
 
-    private def dup: ProgramFragment = {
-      val newIn = in.dup
-      ProgramFragment(newIn, findOut(newIn))
-    }
+    private def copy(): ProgramFragment = ProgramFragment(in.deepcopy())
 
     private def repeat(n: Int): Seq[ProgramFragment] =
-      for (i <- 0 until n) yield dup
+      for (i <- 0 until n) yield copy()
 
     def capture(name: String): ProgramFragment = {
       val start = SaveStart(name)
