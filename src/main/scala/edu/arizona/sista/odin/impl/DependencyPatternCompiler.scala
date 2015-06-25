@@ -222,7 +222,7 @@ extends DependencyPatternNode {
 class TokenConstraintDependencyPattern(constraint: TokenConstraint)
 extends DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
-    if (constraint.matches(tok, sent, doc, Some(state))) Seq(tok) else Nil
+    if (constraint.matches(tok, sent, doc, state)) Seq(tok) else Nil
 }
 
 class LookaroundDependencyPattern(lookaround: DependencyPatternNode, negative: Boolean)

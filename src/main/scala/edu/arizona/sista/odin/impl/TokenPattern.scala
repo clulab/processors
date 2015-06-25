@@ -25,7 +25,7 @@ object TokenPattern {
 class TokenPattern(val start: Inst) {
   import TokenPattern._
 
-  def findPrefixOf(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Result] = {
+  def findPrefixOf(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     ThompsonVM.evaluate(start, tok, sent, doc, state) map {
       case (groups, mentions) =>
         // there must be one GlobalCapture only
@@ -34,7 +34,7 @@ class TokenPattern(val start: Inst) {
     }
   }
 
-  def findFirstIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Result] = {
+  def findFirstIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     val n = doc.sentences(sent).size
     for (i <- tok until n) {
       val r = findPrefixOf(i, sent, doc, state)
@@ -43,7 +43,7 @@ class TokenPattern(val start: Inst) {
     Nil
   }
 
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: Option[State]): Seq[Result] = {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     @annotation.tailrec
     def collect(i: Int, collected: Seq[Result]): Seq[Result] =
       findFirstIn(i, sent, doc, state) match {
@@ -55,30 +55,13 @@ class TokenPattern(val start: Inst) {
     collect(tok, Nil)
   }
 
-  def findPrefixOf(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] =
-    findPrefixOf(tok, sent, doc, Some(state))
-
-  def findPrefixOf(sent: Int, doc: Document, state: Option[State]): Seq[Result] =
+  def findPrefixOf(sent: Int, doc: Document, state: State = new State): Seq[Result] =
     findPrefixOf(0, sent, doc, state)
 
-  def findPrefixOf(sent: Int, doc: Document, state: State): Seq[Result] =
-    findPrefixOf(sent: Int, doc: Document, Some(state))
-
-  def findFirstIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] =
-    findFirstIn(tok, sent, doc, Some(state))
-
-  def findFirstIn(sent: Int, doc: Document, state: Option[State]): Seq[Result] =
+  def findFirstIn(sent: Int, doc: Document, state: State = new State): Seq[Result] =
     findFirstIn(0, sent, doc, state)
 
-  def findFirstIn(sent: Int, doc: Document, state: State): Seq[Result] =
-    findFirstIn(sent, doc, Some(state))
-
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] =
-    findAllIn(tok, sent, doc, Some(state))
-
-  def findAllIn(sent: Int, doc: Document, state: Option[State]): Seq[Result] =
+  def findAllIn(sent: Int, doc: Document, state: State = new State): Seq[Result] =
     findAllIn(0, sent, doc, state)
 
-  def findAllIn(sent: Int, doc: Document, state: State): Seq[Result] =
-    findAllIn(sent, doc, Some(state))
 }

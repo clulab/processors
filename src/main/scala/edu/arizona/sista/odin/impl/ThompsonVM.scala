@@ -44,7 +44,7 @@ object ThompsonVM {
       tok: Int,
       sent: Int,
       doc: Document,
-      state: Option[State]
+      state: State
   ): Seq[(NamedGroups, NamedMentions)] = {
 
     def mkThreads(
@@ -94,22 +94,19 @@ object ThompsonVM {
             mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
           else Nil
         }
-      case i: MatchMention => state match {
-        case None => sys.error("can't match mentions without state")
-        case Some(s) =>
-          val bundles = for {
-            mention <- s.mentionsFor(sent, t.tok)
-            if mention.start == t.tok && mention.matches(i.m)
-          } yield {
-            val captures = mkMentionCapture(t.mentions, i.name, mention)
-            mkThreads(mention.end, i.next, t.groups, captures, t.partialGroups)
-          }
-          bundles match {
-            case Seq() => Nil
-            case Seq(bundle) => bundle
-            case bundles => Seq(ThreadBundle(bundles))
-          }
-      }
+      case i: MatchMention =>
+        val bundles = for {
+          mention <- state.mentionsFor(sent, t.tok)
+          if mention.start == t.tok && mention.matches(i.m)
+        } yield {
+          val captures = mkMentionCapture(t.mentions, i.name, mention)
+          mkThreads(mention.end, i.next, t.groups, captures, t.partialGroups)
+        }
+        bundles match {
+          case Seq() => Nil
+          case Seq(bundle) => bundle
+          case bundles => Seq(ThreadBundle(bundles))
+        }
       case Done => Seq(t)
       case _ => Nil  // thread died with no match
     }

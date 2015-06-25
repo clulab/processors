@@ -64,67 +64,65 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 }
 
 sealed trait TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean
 }
 
 object Unconstrained extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = true
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean = true
 }
 
 class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches word(tok, sent, doc)
 }
 
 class LemmaConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches lemma(tok, sent, doc)
 }
 
 class TagConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches tag(tok, sent, doc)
 }
 
 class EntityConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches entity(tok, sent, doc)
 }
 
 class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches chunk(tok, sent, doc)
 }
 
 class IncomingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     incoming(tok, sent, doc) exists matcher.matches
 }
 
 class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     outgoing(tok, sent, doc) exists matcher.matches
 }
 
 // checks that a token is inside a mention
 class MentionConstraint(matcher: StringMatcher) extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean = state match {
-    case None => sys.error("can't match mentions without state")
-    case Some(state) => state.mentionsFor(sent, tok) exists (_ matches matcher)
-  }
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    state.mentionsFor(sent, tok) exists (_ matches matcher)
 }
 
 class NegatedConstraint(constraint: TokenConstraint) extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     !constraint.matches(tok, sent, doc, state)
 }
 
 class ConjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.matches(tok, sent, doc, state) && rhs.matches(tok, sent, doc, state)
 }
 
 class DisjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: Option[State]): Boolean =
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.matches(tok, sent, doc, state) || rhs.matches(tok, sent, doc, state)
 }
