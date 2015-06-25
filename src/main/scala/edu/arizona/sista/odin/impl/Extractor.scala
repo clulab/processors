@@ -18,13 +18,6 @@ trait Extractor {
     i <- 0 until doc.sentences.size
     m <- findAllIn(i, doc, state)
   } yield m
-
-  def startsAt: Int = priority match {
-    case ExactPriority(i) => i
-    case IntervalPriority(start, end) => start
-    case InfiniteIntervalPriority(start) => start
-    case SparsePriority(values) => values.min
-  }
 }
 
 class TokenExtractor(
