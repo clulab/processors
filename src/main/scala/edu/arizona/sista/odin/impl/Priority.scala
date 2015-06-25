@@ -30,7 +30,7 @@ object Priority {
     case exact(n) => ExactPriority(n.toInt)
     case interval(n, m) => IntervalPriority(n.toInt, m.toInt)
     case from(n) => InfiniteIntervalPriority(n.toInt)
-    case sparse(ns) => SparsePriority("""\s*,\s*""".r.split(ns).map(_.toInt).toSet)
+    case sparse(ns) => SparsePriority(ns.split(",").map(_.trim.toInt).toSet)
     case p => sys.error(s"invalid priority '$p'")
   }
 }
