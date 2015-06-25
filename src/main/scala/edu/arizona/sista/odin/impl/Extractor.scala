@@ -23,6 +23,7 @@ trait Extractor {
     case ExactPriority(i) => i
     case IntervalPriority(start, end) => start
     case InfiniteIntervalPriority(start) => start
+    case SparsePriority(values) => values.min
   }
 }
 
