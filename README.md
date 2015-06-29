@@ -342,7 +342,7 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
             // Processor proc = new FastNLPProcessor(true, false);
 
             // the actual work is done here
-            Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.");
+            Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.", false);
 
             // you are basically done. the rest of this code simply prints out the annotations
 

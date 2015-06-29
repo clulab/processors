@@ -10,11 +10,12 @@ class ActionMirror[A <: Actions : ClassTag](actions: A) {
   def reflect(name: String): Action = {
     val methodSymbol = instanceMirror.symbol.typeSignature.member(TermName(name)).asMethod
     val methodMirror = instanceMirror.reflectMethod(methodSymbol)
-    if (methodSymbol.returnType <:< typeOf[Action]) methodMirror().asInstanceOf[Action]
-    else if (methodSymbol.returnType <:< typeOf[Seq[Mention]]) {
-      def action(mentions: Seq[Mention], state: State): Seq[Mention] =
-        methodMirror(mentions, state).asInstanceOf[Seq[Mention]]
-      action _
-    } else sys.error(s"invalid action '$name'")
+    if (methodSymbol.returnType <:< typeOf[Action]) {
+      methodMirror().asInstanceOf[Action]
+    } else if (methodSymbol.returnType <:< typeOf[Seq[Mention]]) {
+      (ms: Seq[Mention], st: State) => methodMirror(ms, st).asInstanceOf[Seq[Mention]]
+    } else {
+      sys.error(s"invalid action '$name'")
+    }
   }
 }
