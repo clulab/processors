@@ -14,23 +14,19 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
   // remove commented lines and trim whitespaces
   def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim()
 
-  // comments are considered whitespace
-  override val whiteSpace = """([ \t\x0B\f\r]|#.*)+""".r
-  val eol = "\n"
-
   def dependencyPattern: Parser[DependencyPattern] =
     eventDependencyPattern | relationDependencyPattern
 
   def eventDependencyPattern: Parser[DependencyPattern] =
-    triggerFinder ~ rep1(eol) ~ repsep(argPattern, rep1(eol)) ^^ {
-      case trigger ~ _ ~ arguments => new EventDependencyPattern(trigger, arguments)
+    triggerFinder ~ rep1(argPattern) ^^ {
+      case trigger ~ arguments => new EventDependencyPattern(trigger, arguments)
     }
 
   def relationDependencyPattern: Parser[DependencyPattern] =
-    identifier ~ ":" ~ identifier ~ rep1(eol) ~ repsep(argPattern, rep1(eol)) ^^ {
-      case name ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
+    identifier ~ ":" ~ identifier ~ rep1(argPattern) ^^ {
+      case name ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
         sys.error("'trigger' is not a valid argument name")
-      case anchorName ~ ":" ~ anchorLabel ~ _ ~ arguments =>
+      case anchorName ~ ":" ~ anchorLabel ~ arguments =>
         new RelationDependencyPattern(anchorName, anchorLabel, arguments)
     }
 
@@ -129,8 +125,11 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
   def incomingPattern: Parser[DependencyPatternNode] =
     incomingMatcher | incomingWildcard
 
+  // there is ambiguity between an outgoingMatcher with an implicit '>'
+  // and the name of the next argument, we solve this by ensuring that
+  // the outgoingMatcher is not followed by ':'
   def outgoingMatcher: Parser[DependencyPatternNode] =
-    opt(">") ~> stringMatcher ^^ { new OutgoingDependencyPattern(_) }
+    opt(">") ~> stringMatcher <~ not(":") ^^ { new OutgoingDependencyPattern(_) }
 
   def incomingMatcher: Parser[DependencyPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
