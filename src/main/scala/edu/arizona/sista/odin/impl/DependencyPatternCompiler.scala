@@ -6,13 +6,10 @@ import edu.arizona.sista.odin._
 
 class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) {
   def compileDependencyPattern(input: String): DependencyPattern =
-    parseAll(dependencyPattern, clean(input)) match {
+    parseAll(dependencyPattern, input) match {
       case Success(result, _) => result
       case failure: NoSuccess => sys.error(failure.msg)
     }
-
-  // remove commented lines and trim whitespaces
-  def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim()
 
   def dependencyPattern: Parser[DependencyPattern] =
     eventDependencyPattern | relationDependencyPattern
