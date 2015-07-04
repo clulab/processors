@@ -34,8 +34,11 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
   def quantifiedPattern: Parser[ProgramFragment] =
     repeatedPattern | rangePattern | exactPattern | atomicPattern
 
+  // when matching the default token field (unitConstraint)
+  // we need to make sure that the next token is not a ':'
+  // only argument names are followed by colon (and a label)
   def singleTokenPattern: Parser[ProgramFragment] =
-    (unitConstraint | tokenConstraint) ^^ {
+    (unitConstraint <~ not(":") | tokenConstraint) ^^ {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 
