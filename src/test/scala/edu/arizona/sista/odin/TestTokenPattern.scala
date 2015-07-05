@@ -15,7 +15,9 @@ class TestTokenPattern extends FlatSpec with Matchers {
   text1 should "contain one match" in {
     val doc = proc annotate text1
     val p = TokenPattern.compile("@Phosphorylation and inhibits")
-    val mentions = Seq(new TextBoundMention("Phosphorylation", Interval(0, 4), 0, doc, true, "<MANUAL>"))
+    val mentions = Seq(
+      new TextBoundMention("Phosphorylation", Interval(0, 4), 0, doc, true, "<MANUAL>")
+    )
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
     results should have size (1)
@@ -24,8 +26,10 @@ class TestTokenPattern extends FlatSpec with Matchers {
   text2 should "contain one match" in {
     val doc = proc annotate text2
     val p = TokenPattern.compile("@Phosphorylation and inhibits")
-    val mentions = Seq(new TextBoundMention("Phosphorylation", Interval(0, 4), 0, doc, true, "<MANUAL>"),
-                       new TextBoundMention("Phosphorylation", Interval(0, 7), 0, doc, true, "<MANUAL>"))
+    val mentions = Seq(
+      new TextBoundMention("Phosphorylation", Interval(0, 4), 0, doc, true, "<MANUAL>"),
+      new TextBoundMention("Phosphorylation", Interval(0, 7), 0, doc, true, "<MANUAL>")
+    )
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
     results should have size (1)
@@ -34,8 +38,10 @@ class TestTokenPattern extends FlatSpec with Matchers {
   text3 should "contain two matches" in {
     val doc = proc annotate text3
     val p = TokenPattern.compile("@Phosphorylation and inhibits")
-    val mentions = Seq(new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>"),
-                       new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>"))
+    val mentions = Seq(
+      new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>"),
+      new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>")
+    )
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
     results should have size (2)
