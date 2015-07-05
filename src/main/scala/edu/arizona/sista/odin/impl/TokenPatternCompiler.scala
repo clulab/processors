@@ -58,15 +58,31 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
         ProgramFragment(MatchLookAhead(frag.in, negative))
     }
 
+  // MatchLookBehind requires the length of the pattern, so the pattern
+  // is restricted to fixed width patterns only
   def lookbehindAssertion: Parser[ProgramFragment] =
-    ("(?<=" | "(?<!") ~ rep1(singleTokenPattern) <~ ")" ^^ {
-      case op ~ toks =>
-        val frag = (toks.head /: toks.tail) {
-          case (lhs, rhs) => ProgramFragment(lhs, rhs)
-        }
+    ("(?<=" | "(?<!") ~ fixedWidthPattern <~ ")" ^^ {
+      case op ~ fragWithSize =>
+        val (frag, size) = fragWithSize
         frag.setOut(Done)
         val negative = op.endsWith("!")
-        ProgramFragment(MatchLookBehind(frag.in, toks.size, negative))
+        ProgramFragment(MatchLookBehind(frag.in, size, negative))
+    }
+
+  // a fixed width token pattern is a pattern whose length is known at compile time
+  // it is a concatenation of fixed width atoms
+  def fixedWidthPattern: Parser[(ProgramFragment, Int)] =
+    rep1(fixedWidthAtom) ^^ { atoms =>
+      (atoms.head /: atoms.tail) {
+        case ((lhs, sl), (rhs, sr)) => (ProgramFragment(lhs, rhs), sl + sr)
+      }
+    }
+
+  // a single token constraint which may be repeated a fixed number of times
+  def fixedWidthAtom: Parser[(ProgramFragment, Int)] =
+    singleTokenPattern ~ opt("{" ~> int <~ "}") ^^ {
+      case frag ~ None => (frag, 1)
+      case frag ~ Some(n) => (frag.repeatPattern(n), n)
     }
 
   def capturePattern: Parser[ProgramFragment] =
