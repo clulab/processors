@@ -501,4 +501,18 @@ class TestTokenPattern extends FlatSpec with Matchers {
     themeTexts should contain ("MEK")
 
   }
+
+  val text8 = "x a a a a a b c d"
+  val doc8 = proc annotate text8
+
+  "TokenPattern" should "handle repetition in lookbehind" in {
+    val p = TokenPattern.compile("(?<= a a{3} a) b ")
+    val results = p.findAllIn(0, doc8)
+    results should have size (1)
+    results.head.interval should have (
+      'start (6),
+      'end (7)
+    )
+  }
+
 }
