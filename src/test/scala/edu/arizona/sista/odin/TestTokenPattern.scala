@@ -502,16 +502,16 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
   }
 
-  val text8 = "x a a a a a b c d"
+  val text8 = "x a a b a b a b a b c d"
   val doc8 = proc annotate text8
 
   "TokenPattern" should "handle repetition in lookbehind" in {
-    val p = TokenPattern.compile("(?<= a a{3} a) b ")
+    val p = TokenPattern.compile("(?<= a (a b){3} a) b ")
     val results = p.findAllIn(0, doc8)
     results should have size (1)
     results.head.interval should have (
-      'start (6),
-      'end (7)
+      'start (9),
+      'end (10)
     )
   }
 

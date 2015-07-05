@@ -58,8 +58,8 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
         ProgramFragment(MatchLookAhead(frag.in, negative))
     }
 
-  // MatchLookBehind requires the length of the pattern, so the pattern
-  // is restricted to fixed width patterns only
+  // MatchLookBehind requires the length of the pattern's matches,
+  // so the pattern is restricted to fixed width patterns only
   def lookbehindAssertion: Parser[ProgramFragment] =
     ("(?<=" | "(?<!") ~ fixedWidthPattern <~ ")" ^^ {
       case op ~ fragWithSize =>
@@ -69,21 +69,29 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
         ProgramFragment(MatchLookBehind(frag.in, size, negative))
     }
 
-  // a fixed width token pattern is a pattern whose length is known at compile time
-  // it is a concatenation of fixed width atoms
+  // a pattern is fixed width if we know the length of its matches at compile time
+  // it is a concatenation of fixed width chunks
   def fixedWidthPattern: Parser[(ProgramFragment, Int)] =
-    rep1(fixedWidthAtom) ^^ { atoms =>
+    rep1(fixedWidthChunk) ^^ { atoms =>
       (atoms.head /: atoms.tail) {
         case ((lhs, sl), (rhs, sr)) => (ProgramFragment(lhs, rhs), sl + sr)
       }
     }
 
-  // a single token constraint which may be repeated a fixed number of times
-  def fixedWidthAtom: Parser[(ProgramFragment, Int)] =
-    singleTokenPattern ~ opt("{" ~> int <~ "}") ^^ {
-      case frag ~ None => (frag, 1)
-      case frag ~ Some(n) => (frag.repeatPattern(n), n)
+  // a fixed width atom with optional repetition
+  def fixedWidthChunk: Parser[(ProgramFragment, Int)] =
+    fixedWidthAtom ~ opt("{" ~> int <~ "}") ^^ {
+      case (frag, size) ~ None => (frag, size)
+      case (frag, size) ~ Some(n) => (frag.repeatPattern(n), n * size)
     }
+
+  // a fixed width token or a fixed width pattern surrounded by parenthesis
+  def fixedWidthAtom: Parser[(ProgramFragment, Int)] =
+    fixedWidthToken | "(" ~> fixedWidthPattern <~ ")"
+
+  // a single fixed width token matcher
+  def fixedWidthToken: Parser[(ProgramFragment, Int)] =
+    singleTokenPattern ^^ { (_, 1) }
 
   def capturePattern: Parser[ProgramFragment] =
     "(?<" ~ identifier ~ ">" ~ splitPattern ~ ")" ^^ {
