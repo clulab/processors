@@ -21,7 +21,7 @@ class TestBioNLPProcessor2 extends FlatSpec with Matchers {
     doc.sentences(0).syntacticTree.isDefined should be (true)
   }
 
-  "BioNLPProcessor" should "parse body text" in {
+  it should "parse body text" in {
     val text = textFileToString("src/test/resources/edu/arizona/sista/processors/PLoS_One_2013_Dec_18_8_12_e84604.body.txt")
     val doc = annotate(text)
     doc.sentences(0).syntacticTree.isDefined should be (true)
