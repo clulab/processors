@@ -1,13 +1,12 @@
 package edu.arizona.sista.processors
 
 import edu.arizona.sista.struct.DirectedGraphEdgeIterator
-import org.scalatest.junit.AssertionsForJUnit
-import org.junit.{Before, Test}
+import org.scalatest._
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import java.util.concurrent.{TimeUnit, Executors}
 import java.lang.Long
-import junit.framework.Assert
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import TestProcessorThreading._
 
@@ -16,68 +15,104 @@ import TestProcessorThreading._
  * User: mihais
  * Date: 1/4/14
  */
-class TestProcessorThreading extends AssertionsForJUnit {
-  var corenlp:Processor = null
-  var fastnlp:Processor = null
+class TestProcessorThreading extends FlatSpec with Matchers {
+  var corenlp:Processor = new CoreNLPProcessor(internStrings = true)
+  var fastnlp:Processor = new FastNLPProcessor(internStrings = true)
 
-  @Before def constructProcessor() {
-    corenlp = new CoreNLPProcessor(internStrings = true)
-    fastnlp = new FastNLPProcessor(internStrings = true)
+  "2 identical FastNLPProcessors" should "run Ok in 2 threads" in {
+    val (times, outputs) = runTwoThreads(List(fastnlp, fastnlp, fastnlp).toArray)
+    times.length should be (3)
+    outputs.length should be (3)
+
+    // the threaded times should not be too slow compared with the sequential one
+    for(i <- 1 until times.length) {
+      (times(i) < times(0) * 10) should be (true)
+    }
+    // make sure each thread produced the same output as the sequential job
+    for(i <- 1 until outputs.length) {
+      outputs(i) should be (outputs(0))
+    }
   }
 
-  @Test def testTwoThreadsSameProcCoreNLP() {
-    runTwoThreads(List(corenlp, corenlp, corenlp).toArray)
+  "2 identical CoreNLPProcessors" should "run Ok in 2 threads" in {
+    val (times, outputs) = runTwoThreads(List(corenlp, corenlp, corenlp).toArray)
+    times.length should be (3)
+    outputs.length should be (3)
+
+    // the threaded times should not be too slow compared with the sequential one
+    for(i <- 1 until times.length) {
+      (times(i) < times(0) * 10) should be (true)
+    }
+    // make sure each thread produced the same output as the sequential job
+    for(i <- 1 until outputs.length) {
+      outputs(i) should be (outputs(0))
+    }
   }
 
-  @Test def testTwoThreadsDifferentProcCoreNLP() {
-    runTwoThreads(List(corenlp, new CoreNLPProcessor(), new CoreNLPProcessor()).toArray)
+  "2 different FastNLPProcessors" should "run Ok in 2 threads" in {
+    val (times, outputs) = runTwoThreads(List(fastnlp, new FastNLPProcessor(), new FastNLPProcessor()).toArray)
+    times.length should be (3)
+    outputs.length should be (3)
+
+    // the threaded times should not be too slow compared with the sequential one
+    for(i <- 1 until times.length) {
+      (times(i) < times(0) * 10) should be (true)
+    }
+    // make sure each thread produced the same output as the sequential job
+    for(i <- 1 until outputs.length) {
+      outputs(i) should be (outputs(0))
+    }
   }
 
-  @Test def testTwoThreadsSameProcFastNLP() {
-    runTwoThreads(List(fastnlp, fastnlp, fastnlp).toArray)
+  "2 different CoreNLPProcessors" should "run Ok in 2 threads" in {
+    val (times, outputs) = runTwoThreads(List(corenlp, new CoreNLPProcessor(), new CoreNLPProcessor()).toArray)
+    times.length should be (3)
+    outputs.length should be (3)
+
+    // the threaded times should not be too slow compared with the sequential one
+    for(i <- 1 until times.length) {
+      (times(i) < times(0) * 10) should be (true)
+    }
+    // make sure each thread produced the same output as the sequential job
+    for(i <- 1 until outputs.length) {
+      outputs(i) should be (outputs(0))
+    }
   }
 
-  @Test def testTwoThreadsDifferentProcFastNLP() {
-    runTwoThreads(List(fastnlp, new FastNLPProcessor(), new FastNLPProcessor()).toArray)
-  }
+  private def runTwoThreads(procs:Array[Processor]):(Array[Long], Array[String]) = {
+    // estimated times; position 0 is the sequential run
+    val estimatedTimes = new ListBuffer[Long]
+    // produced dependencies; position 0 is the output of the sequential run
+    val outputs = new ListBuffer[String]()
 
-  private def runTwoThreads(procs:Array[Processor]) {
     val text = Source.fromFile("src/test/resources/edu/arizona/sista/processors/raw_text.txt").getLines.mkString(" ")
-    println(s"Read a text with ${text.length} characters:\n${text}")
+    //println(s"Read a text with ${text.length} characters:\n${text}")
     // run the annotation pipeline once to load all models in memory
     procs(0).annotate("This is a simple sentence.")
 
-    // now measure actual ellapsed time
+    // now measure actual ellapsed time and output in the sequential run
     val startTime = System.currentTimeMillis()
     val doc = procs(0).annotate(text)
-    val estimatedSeqTime = System.currentTimeMillis() - startTime
-    println(s"Sequential time: $estimatedSeqTime ms")
-    val goldDeps = getDependencies(doc)
+    estimatedTimes += (System.currentTimeMillis() - startTime)
+    outputs += getDependencies(doc)
 
-    // now annotate the same text in two threads
+    // now annotate the same text using multiple threads on two cores
     val noThreads = procs.length - 1
-    val estimatedTimes = new Array[Double](noThreads)
+    val estimatedThreadTimes = new Array[Long](noThreads)
     val dependencies = new Array[String](noThreads)
     val executor = Executors.newFixedThreadPool(2) // we assume any machine nowadays has at least two cores
     for(i <- 0 until noThreads) {
-      val worker = new MyThread(estimatedTimes, i, procs(i + 1), text, dependencies)
+      val worker = new MyThread(estimatedThreadTimes, i, procs(i + 1), text, dependencies)
       executor.execute(worker)
     }
     executor.shutdown()
     executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
-    println("Finished all threads.")
+    //println("Finished all threads.")
+    estimatedTimes ++= estimatedThreadTimes
+    outputs ++= dependencies
 
-    println("Estimated thread times:")
-    for(i <- 0 until noThreads) {
-      println(s"Thread #$i: " + estimatedTimes(i))
-      // estimated times should not be too slow compared with the sequential one
-      Assert.assertTrue(estimatedTimes(i) < estimatedSeqTime * 10.0)
-    }
-
-    // make sure each thread produced the same output as the sequential job
-    for(i <- 0 until noThreads) {
-      Assert.assertTrue(goldDeps == dependencies(i))
-    }
+    //println("All estimated time: " + estimatedTimes)
+    (estimatedTimes.toArray, outputs.toArray)
   }
 }
 
@@ -96,7 +131,7 @@ object TestProcessorThreading {
   }
 }
 
-class MyThread (val estimatedTimes:Array[Double],
+class MyThread (val estimatedTimes:Array[Long],
                 val index:Int,
                 val proc:Processor,
                 val text:String,
