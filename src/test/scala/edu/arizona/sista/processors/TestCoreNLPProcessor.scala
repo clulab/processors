@@ -1,9 +1,7 @@
 package edu.arizona.sista.processors
 
 import edu.arizona.sista.discourse.rstparser.RelationDirection
-import org.scalatest.junit.AssertionsForJUnit
-import org.junit.Assert._
-import org.junit.Test
+import org.scalatest._
 import collection.JavaConversions.asJavaCollection
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
@@ -12,262 +10,263 @@ import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
  * User: mihais
  * Date: 3/3/13
  */
-class TestCoreNLPProcessor extends AssertionsForJUnit {
+class TestCoreNLPProcessor extends FlatSpec with Matchers {
   var proc:Processor = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
 
-  @Test def testTokenOffsets1() {
+  "CoreNLPProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)
     doc.clear()
 
-    assertEquals(doc.sentences(0).words(0), "John")
-    assertEquals(doc.sentences(0).words(1), "Doe")
-    assertEquals(doc.sentences(0).words(2), "went")
-    assertEquals(doc.sentences(0).words(3), "to")
-    assertEquals(doc.sentences(0).words(4), "China")
-    assertEquals(doc.sentences(0).words(5), ".")
-    assertEquals(doc.sentences(1).words(0), "There")
-    assertEquals(doc.sentences(1).words(1), ",")
-    assertEquals(doc.sentences(1).words(2), "he")
-    assertEquals(doc.sentences(1).words(3), "visited")
-    assertEquals(doc.sentences(1).words(4), "Beijing")
-    assertEquals(doc.sentences(1).words(5), ".")
+    doc.sentences(0).words(0) should be ("John")
+    doc.sentences(0).words(1) should be ("Doe")
+    doc.sentences(0).words(2) should be ("went")
+    doc.sentences(0).words(3) should be ("to")
+    doc.sentences(0).words(4) should be ("China")
+    doc.sentences(0).words(5) should be (".")
+    doc.sentences(1).words(0) should be ("There")
+    doc.sentences(1).words(1) should be (",")
+    doc.sentences(1).words(2) should be ("he")
+    doc.sentences(1).words(3) should be ("visited")
+    doc.sentences(1).words(4) should be ("Beijing")
+    doc.sentences(1).words(5) should be (".")
 
-    assertEquals(doc.sentences(0).startOffsets(0), 0)
-    assertEquals(doc.sentences(0).startOffsets(1), 5)
-    assertEquals(doc.sentences(0).startOffsets(2), 9)
-    assertEquals(doc.sentences(0).startOffsets(3), 14)
-    assertEquals(doc.sentences(0).startOffsets(4), 17)
-    assertEquals(doc.sentences(0).startOffsets(5), 22)
-    assertEquals(doc.sentences(1).startOffsets(0), 24)
-    assertEquals(doc.sentences(1).startOffsets(1), 29)
-    assertEquals(doc.sentences(1).startOffsets(2), 31)
-    assertEquals(doc.sentences(1).startOffsets(3), 34)
-    assertEquals(doc.sentences(1).startOffsets(4), 42)
-    assertEquals(doc.sentences(1).startOffsets(5), 49)
+    doc.sentences(0).startOffsets(0) should be (0)
+    doc.sentences(0).startOffsets(1) should be (5)
+    doc.sentences(0).startOffsets(2) should be (9)
+    doc.sentences(0).startOffsets(3) should be (14)
+    doc.sentences(0).startOffsets(4) should be (17)
+    doc.sentences(0).startOffsets(5) should be (22)
+    doc.sentences(1).startOffsets(0) should be (24)
+    doc.sentences(1).startOffsets(1) should be (29)
+    doc.sentences(1).startOffsets(2) should be (31)
+    doc.sentences(1).startOffsets(3) should be (34)
+    doc.sentences(1).startOffsets(4) should be (42)
+    doc.sentences(1).startOffsets(5) should be (49)
   }
 
-  @Test def testTokenOffsets2() {
+  it should "tokenize a list of sentences correctly" in {
     val doc = proc.mkDocumentFromSentences(List("John Doe went to China.", "There, he visited Beijing."), keepText = false)
     doc.clear()
 
-    assertEquals(doc.sentences(0).words(0), "John")
-    assertEquals(doc.sentences(0).words(1), "Doe")
-    assertEquals(doc.sentences(0).words(2), "went")
-    assertEquals(doc.sentences(0).words(3), "to")
-    assertEquals(doc.sentences(0).words(4), "China")
-    assertEquals(doc.sentences(0).words(5), ".")
-    assertEquals(doc.sentences(1).words(0), "There")
-    assertEquals(doc.sentences(1).words(1), ",")
-    assertEquals(doc.sentences(1).words(2), "he")
-    assertEquals(doc.sentences(1).words(3), "visited")
-    assertEquals(doc.sentences(1).words(4), "Beijing")
-    assertEquals(doc.sentences(1).words(5), ".")
+    doc.sentences(0).words(0) should be ("John")
+    doc.sentences(0).words(1) should be ("Doe")
+    doc.sentences(0).words(2) should be ("went")
+    doc.sentences(0).words(3) should be ("to")
+    doc.sentences(0).words(4) should be ("China")
+    doc.sentences(0).words(5) should be (".")
+    doc.sentences(1).words(0) should be ("There")
+    doc.sentences(1).words(1) should be (",")
+    doc.sentences(1).words(2) should be ("he")
+    doc.sentences(1).words(3) should be ("visited")
+    doc.sentences(1).words(4) should be ("Beijing")
+    doc.sentences(1).words(5) should be (".")
 
-    assertEquals(doc.sentences(0).startOffsets(0), 0)
-    assertEquals(doc.sentences(0).startOffsets(1), 5)
-    assertEquals(doc.sentences(0).startOffsets(2), 9)
-    assertEquals(doc.sentences(0).startOffsets(3), 14)
-    assertEquals(doc.sentences(0).startOffsets(4), 17)
-    assertEquals(doc.sentences(0).startOffsets(5), 22)
-    assertEquals(doc.sentences(1).startOffsets(0), 24)
-    assertEquals(doc.sentences(1).startOffsets(1), 29)
-    assertEquals(doc.sentences(1).startOffsets(2), 31)
-    assertEquals(doc.sentences(1).startOffsets(3), 34)
-    assertEquals(doc.sentences(1).startOffsets(4), 42)
-    assertEquals(doc.sentences(1).startOffsets(5), 49)
+    doc.sentences(0).startOffsets(0) should be (0)
+    doc.sentences(0).startOffsets(1) should be (5)
+    doc.sentences(0).startOffsets(2) should be (9)
+    doc.sentences(0).startOffsets(3) should be (14)
+    doc.sentences(0).startOffsets(4) should be (17)
+    doc.sentences(0).startOffsets(5) should be (22)
+    doc.sentences(1).startOffsets(0) should be (24)
+    doc.sentences(1).startOffsets(1) should be (29)
+    doc.sentences(1).startOffsets(2) should be (31)
+    doc.sentences(1).startOffsets(3) should be (34)
+    doc.sentences(1).startOffsets(4) should be (42)
+    doc.sentences(1).startOffsets(5) should be (49)
   }
 
-  @Test def testTokenOffsets3() {
+  it should "tokenize sequences of tokens correctly" in {
     val doc = proc.mkDocumentFromTokens(List(
       List("John", "Doe", "went", "to", "China", "."),
       List("There", ",", "he", "visited", "Beijing", ".")), keepText = false)
     doc.clear()
 
-    assertEquals(doc.sentences(0).words(0), "John")
-    assertEquals(doc.sentences(0).words(1), "Doe")
-    assertEquals(doc.sentences(0).words(2), "went")
-    assertEquals(doc.sentences(0).words(3), "to")
-    assertEquals(doc.sentences(0).words(4), "China")
-    assertEquals(doc.sentences(0).words(5), ".")
-    assertEquals(doc.sentences(1).words(0), "There")
-    assertEquals(doc.sentences(1).words(1), ",")
-    assertEquals(doc.sentences(1).words(2), "he")
-    assertEquals(doc.sentences(1).words(3), "visited")
-    assertEquals(doc.sentences(1).words(4), "Beijing")
-    assertEquals(doc.sentences(1).words(5), ".")
+    doc.sentences(0).words(0) should be ("John")
+    doc.sentences(0).words(1) should be ("Doe")
+    doc.sentences(0).words(2) should be ("went")
+    doc.sentences(0).words(3) should be ("to")
+    doc.sentences(0).words(4) should be ("China")
+    doc.sentences(0).words(5) should be (".")
+    doc.sentences(1).words(0) should be ("There")
+    doc.sentences(1).words(1) should be (",")
+    doc.sentences(1).words(2) should be ("he")
+    doc.sentences(1).words(3) should be ("visited")
+    doc.sentences(1).words(4) should be ("Beijing")
+    doc.sentences(1).words(5) should be (".")
 
-    assertEquals(doc.sentences(0).startOffsets(0), 0)
-    assertEquals(doc.sentences(0).startOffsets(1), 5)
-    assertEquals(doc.sentences(0).startOffsets(2), 9)
-    assertEquals(doc.sentences(0).startOffsets(3), 14)
-    assertEquals(doc.sentences(0).startOffsets(4), 17)
-    assertEquals(doc.sentences(0).startOffsets(5), 23)
-    assertEquals(doc.sentences(1).startOffsets(0), 25)
-    assertEquals(doc.sentences(1).startOffsets(1), 31)
-    assertEquals(doc.sentences(1).startOffsets(2), 33)
-    assertEquals(doc.sentences(1).startOffsets(3), 36)
-    assertEquals(doc.sentences(1).startOffsets(4), 44)
-    assertEquals(doc.sentences(1).startOffsets(5), 52)
+    doc.sentences(0).startOffsets(0) should be (0)
+    doc.sentences(0).startOffsets(1) should be (5)
+    doc.sentences(0).startOffsets(2) should be (9)
+    doc.sentences(0).startOffsets(3) should be (14)
+    doc.sentences(0).startOffsets(4) should be (17)
+    doc.sentences(0).startOffsets(5) should be (23)
+    doc.sentences(1).startOffsets(0) should be (25)
+    doc.sentences(1).startOffsets(1) should be (31)
+    doc.sentences(1).startOffsets(2) should be (33)
+    doc.sentences(1).startOffsets(3) should be (36)
+    doc.sentences(1).startOffsets(4) should be (44)
+    doc.sentences(1).startOffsets(5) should be (52)
   }
 
-  @Test def testPartsOfSpeech() {
+  it should "POS tag correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)
     proc.tagPartsOfSpeech(doc)
     doc.clear()
 
-    assertEquals(doc.sentences(0).tags.get(0), "NNP")
-    assertEquals(doc.sentences(0).tags.get(1), "NNP")
-    assertEquals(doc.sentences(0).tags.get(2), "VBD")
-    assertEquals(doc.sentences(0).tags.get(3), "TO")
-    assertEquals(doc.sentences(0).tags.get(4), "NNP")
-    assertEquals(doc.sentences(0).tags.get(5), ".")
-    assertEquals(doc.sentences(1).tags.get(0), "RB")
-    assertEquals(doc.sentences(1).tags.get(1), ",")
-    assertEquals(doc.sentences(1).tags.get(2), "PRP")
-    assertEquals(doc.sentences(1).tags.get(3), "VBD")
-    assertEquals(doc.sentences(1).tags.get(4), "NNP")
-    assertEquals(doc.sentences(1).tags.get(5), ".")
+    doc.sentences(0).tags.get(0) should be ("NNP")
+    doc.sentences(0).tags.get(1) should be ("NNP")
+    doc.sentences(0).tags.get(2) should be ("VBD")
+    doc.sentences(0).tags.get(3) should be ("TO")
+    doc.sentences(0).tags.get(4) should be ("NNP")
+    doc.sentences(0).tags.get(5) should be (".")
+    doc.sentences(1).tags.get(0) should be ("RB")
+    doc.sentences(1).tags.get(1) should be (",")
+    doc.sentences(1).tags.get(2) should be ("PRP")
+    doc.sentences(1).tags.get(3) should be ("VBD")
+    doc.sentences(1).tags.get(4) should be ("NNP")
+    doc.sentences(1).tags.get(5) should be (".")
   }
 
-  @Test def testLemmas() {
+  it should "lemmatize correctly" in {
     val doc = proc.mkDocumentFromSentences(List("John Doe went to China.", "There, he visited Beijing."), keepText = false)
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
     doc.clear()
 
-    assertEquals(doc.sentences(0).lemmas.get(0), "John")
-    assertEquals(doc.sentences(0).lemmas.get(1), "Doe")
-    assertEquals(doc.sentences(0).lemmas.get(2), "go")
-    assertEquals(doc.sentences(0).lemmas.get(3), "to")
-    assertEquals(doc.sentences(0).lemmas.get(4), "China")
-    assertEquals(doc.sentences(0).lemmas.get(5), ".")
-    assertEquals(doc.sentences(1).lemmas.get(0), "there")
-    assertEquals(doc.sentences(1).lemmas.get(1), ",")
-    assertEquals(doc.sentences(1).lemmas.get(2), "he")
-    assertEquals(doc.sentences(1).lemmas.get(3), "visit")
-    assertEquals(doc.sentences(1).lemmas.get(4), "Beijing")
-    assertEquals(doc.sentences(1).lemmas.get(5), ".")
+    doc.sentences(0).lemmas.get(0) should be ("John")
+    doc.sentences(0).lemmas.get(1) should be ("Doe")
+    doc.sentences(0).lemmas.get(2) should be ("go")
+    doc.sentences(0).lemmas.get(3) should be ("to")
+    doc.sentences(0).lemmas.get(4) should be ("China")
+    doc.sentences(0).lemmas.get(5) should be (".")
+    doc.sentences(1).lemmas.get(0) should be ("there")
+    doc.sentences(1).lemmas.get(1) should be (",")
+    doc.sentences(1).lemmas.get(2) should be ("he")
+    doc.sentences(1).lemmas.get(3) should be ("visit")
+    doc.sentences(1).lemmas.get(4) should be ("Beijing")
+    doc.sentences(1).lemmas.get(5) should be (".")
   }
 
-  @Test def testNER() {
+  it should "recognize NEs correctly" in {
     val doc = proc.mkDocumentFromSentences(List("John Doe went to China on January 15th, 2001.", "There, he visited Beijing."), keepText = false)
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
     proc.recognizeNamedEntities(doc)
     doc.clear()
 
-    assertEquals(doc.sentences(0).entities.get(0), "PERSON")
-    assertEquals(doc.sentences(0).entities.get(1), "PERSON")
-    assertEquals(doc.sentences(0).entities.get(2), "O")
-    assertEquals(doc.sentences(0).entities.get(3), "O")
-    assertEquals(doc.sentences(0).entities.get(4), "LOCATION")
-    assertEquals(doc.sentences(0).entities.get(5), "O")
-    assertEquals(doc.sentences(0).entities.get(6), "DATE")
-    assertEquals(doc.sentences(0).entities.get(7), "DATE")
-    assertEquals(doc.sentences(0).entities.get(8), "DATE")
-    assertEquals(doc.sentences(0).entities.get(9), "DATE")
-    assertEquals(doc.sentences(0).entities.get(10), "O")
-    assertEquals(doc.sentences(1).entities.get(0), "O")
-    assertEquals(doc.sentences(1).entities.get(1), "O")
-    assertEquals(doc.sentences(1).entities.get(2), "O")
-    assertEquals(doc.sentences(1).entities.get(3), "O")
-    assertEquals(doc.sentences(1).entities.get(4), "LOCATION")
-    assertEquals(doc.sentences(1).entities.get(5), "O")
+    doc.sentences(0).entities.get(0) should be ("PERSON")
+    doc.sentences(0).entities.get(1) should be ("PERSON")
+    doc.sentences(0).entities.get(2) should be ("O")
+    doc.sentences(0).entities.get(3) should be ("O")
+    doc.sentences(0).entities.get(4) should be ("LOCATION")
+    doc.sentences(0).entities.get(5) should be ("O")
+    doc.sentences(0).entities.get(6) should be ("DATE")
+    doc.sentences(0).entities.get(7) should be ("DATE")
+    doc.sentences(0).entities.get(8) should be ("DATE")
+    doc.sentences(0).entities.get(9) should be ("DATE")
+    doc.sentences(0).entities.get(10) should be ("O")
+    doc.sentences(1).entities.get(0) should be ("O")
+    doc.sentences(1).entities.get(1) should be ("O")
+    doc.sentences(1).entities.get(2) should be ("O")
+    doc.sentences(1).entities.get(3) should be ("O")
+    doc.sentences(1).entities.get(4) should be ("LOCATION")
+    doc.sentences(1).entities.get(5) should be ("O")
 
-    assertEquals(doc.sentences(0).norms.get(5), "O")
-    assertEquals(doc.sentences(0).norms.get(6), "2001-01-15")
-    assertEquals(doc.sentences(0).norms.get(7), "2001-01-15")
-    assertEquals(doc.sentences(0).norms.get(8), "2001-01-15")
-    assertEquals(doc.sentences(0).norms.get(9), "2001-01-15")
-    assertEquals(doc.sentences(0).norms.get(10), "O")
+    doc.sentences(0).norms.get(5) should be ("O")
+    doc.sentences(0).norms.get(6) should be ("2001-01-15")
+    doc.sentences(0).norms.get(7) should be ("2001-01-15")
+    doc.sentences(0).norms.get(8) should be ("2001-01-15")
+    doc.sentences(0).norms.get(9) should be ("2001-01-15")
+    doc.sentences(0).norms.get(10) should be ("O")
   }
 
-  @Test def testParse() {
+  it should "run the constituent parser correctly" in {
     val doc = proc.mkDocumentFromSentences(List("John Doe went to China"), keepText = false)
     proc.parse(doc)
     doc.clear()
 
-    assertTrue(doc.sentences.head.dependencies.get.hasEdge(1, 0, "nn"))
-    assertTrue(doc.sentences.head.dependencies.get.hasEdge(2, 1, "nsubj"))
-    assertTrue(doc.sentences.head.dependencies.get.hasEdge(2, 4, "prep_to"))
-    assertFalse(doc.sentences.head.dependencies.get.hasEdge(2, 3, "obj"))
+    doc.sentences.head.dependencies.get.hasEdge(1, 0, "nn") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(2, 1, "nsubj") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(2, 4, "prep_to") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(2, 3, "obj") should be (false)
 
     doc.sentences.head.syntacticTree.foreach(t => {
-      println("Constituent parse tree: " + t)
-      assertTrue(t.isUnary)
-      assertTrue(t.value == "ROOT")
+      //println("Constituent parse tree: " + t)
+      t.isUnary should be (true)
+      t.value should be ("ROOT")
       val s = t.children.get(0)
-      assertTrue(s.headOffset == 2)
-      assertTrue(s.children.get.length == 2)
-      assertTrue(s.head == 1)
-      assertTrue(s.startOffset == 0)
-      assertTrue(s.endOffset == 5)
+      s.headOffset should be (2)
+      s.children.get.length should be (2)
+      s.head should be (1)
+      s.startOffset should be (0)
+      s.endOffset should be (5)
 
       val vp = s.children.get(1)
-      assertTrue(vp.value == "VP")
-      assertTrue(vp.headOffset == 2)
-      assertTrue(vp.children.get.length == 2)
-      assertTrue(vp.head == 0)
-      assertTrue(vp.startOffset == 2)
-      assertTrue(vp.endOffset == 5)
+      vp.value should be ("VP")
+      vp.headOffset should be (2)
+      vp.children.get.length should be (2)
+      vp.head should be (0)
+      vp.startOffset should be (2)
+      vp.endOffset should be (5)
     })
   }
 
-  @Test def testCoreference() {
+  it should "run the coreference resolver correctly" in {
     val doc = proc.annotate("John Smith went to China. He visited Beijing.")
-    assertTrue(doc.coreferenceChains != None)
+    (doc.coreferenceChains != None) should be (true)
 
     val mentions = doc.coreferenceChains.get.getMentions
-    assertTrue(mentions.size == 4)
+    mentions.size should be (4)
 
     val chain = doc.coreferenceChains.get.getChain(0, 1)
-    assertTrue(chain != None)
+    (chain != None) should be (true)
 
     val john = new CorefMention(0, 1, 0, 2, -1)
-    assertTrue(chain.get.contains(john))
-    assertTrue(mentions.contains(john))
+    chain.get.contains(john) should be (true)
+    mentions.contains(john) should be (true)
 
     val he = new CorefMention(1, 0, 0, 1, -1)
-    assertTrue(chain.get.contains(he))
-    assertTrue(mentions.contains(he))
+    chain.get.contains(he) should be (true)
+    mentions.contains(he) should be (true)
 
     val china = new CorefMention(0, 4, 4, 5, -1)
-    assertTrue(mentions.contains(china))
+    mentions.contains(china) should be (true)
 
     val beijing = new CorefMention(1, 2, 2, 3, -1)
-    assertTrue(mentions.contains(beijing))
+    mentions.contains(beijing) should be (true)
   }
 
-  @Test def testHeadWords() {
+  it should "assign head words to constituent phrases correctly" in {
     val doc = proc.mkDocumentFromSentences(List("John Doe went to China"), keepText = false)
     proc.parse(doc)
     doc.clear()
 
     doc.sentences.head.syntacticTree.foreach(t => {
       val s = t.children.get.head
-      println("S constituent is: " + s)
-      assertTrue(s.head == 1)
+      //println("S constituent is: " + s)
+      s.head should be (1)
       val np = s.children.get.head
-      println("NP constituent is: " + np)
-      assertTrue(np.head == 1)
+      //println("NP constituent is: " + np)
+      np.head should be (1)
       val vp = s.children.get(1)
-      println("VP constituent is: " + vp)
-      assertTrue(vp.head == 0)
+      //println("VP constituent is: " + vp)
+      vp.head should be (0)
     })
   }
 
-  @Test def testDiscourse() {
+  it should "parse discourse relations correctly" in {
     val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
     doc.clear()
 
     val d = doc.discourseTree.get
-    assertTrue(d.relationLabel == "elaboration")
-    assertTrue(d.relationDirection == RelationDirection.LeftToRight)
-    assertTrue(! d.isTerminal && d.children.length == 2)
+    d.relationLabel should be ("elaboration")
+    d.relationDirection should be (RelationDirection.LeftToRight)
+    d.isTerminal should be (false)
+    d.children.length should be (2)
   }
 
-  @Test def testText(): Unit = {
+  it should "create document text correctly" in {
     val doc = proc.annotateFromSentences(List("Sentence 1.", "Sentence 2."), keepText = true)
-    assertTrue(doc.text.get == "Sentence 1. Sentence 2.")
+    doc.text.get should be ("Sentence 1. Sentence 2.")
   }
 }
