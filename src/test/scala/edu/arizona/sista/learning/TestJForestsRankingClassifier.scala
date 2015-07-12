@@ -1,18 +1,15 @@
 package edu.arizona.sista.learning
 
-import org.scalatest.junit.AssertionsForJUnit
-import org.junit.Test
-import java.io._
+import org.scalatest._
 import scala.collection.mutable.ArrayBuffer
-import junit.framework.Assert
 
 /**
  *
  * User: mihais
  * Date: 11/26/13
  */
-class TestJForestsRankingClassifier extends AssertionsForJUnit {
-  @Test def testClassifier() {
+class TestJForestsRankingClassifier extends FlatSpec with Matchers {
+  "JForestsRankingClassifier" should "have an accuracy > 0.54 in this dataset" in {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
       "src/test/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
 
@@ -47,8 +44,8 @@ class TestJForestsRankingClassifier extends AssertionsForJUnit {
 
     // we should do better the 54% P@1 on this dataset
     val p = RankerEvaluator.score(queries, queryScores.toArray)
-    println("P@1 = " + p)
-    Assert.assertTrue(p >= 0.54)
+    //println("P@1 = " + p)
+    p should be >= 0.54
 
     // cls.saveTo("./model.TestJForestsRankingClassifier")
   }
