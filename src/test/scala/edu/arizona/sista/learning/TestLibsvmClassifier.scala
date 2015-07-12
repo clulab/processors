@@ -1,8 +1,6 @@
 package edu.arizona.sista.learning
 
-import org.scalatest.junit.AssertionsForJUnit
-import junit.framework.Assert._
-import org.junit.Test
+import org.scalatest._
 import edu.arizona.sista.struct.Counter
 import libsvm._
 
@@ -11,8 +9,8 @@ import libsvm._
  * User: mihais, dfried
  * Date: 11/17/13
  */
-class TestLibSVMClassifier extends AssertionsForJUnit {
-  @Test def testRVFClassifier() {
+class TestLibSVMClassifier extends FlatSpec with Matchers {
+  "LibSVMClassifier" should "work with RVFDataset" in {
     val classifier = new LibSVMClassifier[String, String](LinearKernel)
     val dataset = new RVFDataset[String, String]()
 
@@ -26,19 +24,19 @@ class TestLibSVMClassifier extends AssertionsForJUnit {
     classifier.train(dataset)
 
     val dn = mkRVFDatum("+", List("good", "great", "bad", "new"))
-    assertTrue("d1 label must match", classifier.classOf(d1) == d1.label)
-    assertTrue("d2 label must match", classifier.classOf(d2) == d2.label)
-    assertTrue("dn label must match", classifier.classOf(dn) == dn.label)
+    classifier.classOf(d1) should be(d1.label)
+    classifier.classOf(d2) should be(d2.label)
+    classifier.classOf(dn) should be(dn.label)
 
-    val probs = classifier.scoresOf(dn)
-    println("Probability for class +: " + probs.getCount("+"))
-    println("Probability for class -: " + probs.getCount("-"))
-    println("Probability for class ~: " + probs.getCount("~"))
-    //assertTrue("+ should have higher probability than -", probs.getCount("+") > probs.getCount("-"))
-    //assertTrue("- should have higher probability than ~", probs.getCount("-") > probs.getCount("~"))
+    //val probs = classifier.scoresOf(dn)
+    //println("Probability for class +: " + probs.getCount("+"))
+    //println("Probability for class -: " + probs.getCount("-"))
+    //println("Probability for class ~: " + probs.getCount("~"))
+    //"+ should have higher probability than -", probs.getCount("+") > probs.getCount("-"))
+    //"- should have higher probability than ~", probs.getCount("-") > probs.getCount("~"))
   }
 
-  @Test def testBVFClassifier() {
+  it should "work with BVFDataset" in {
     println("testBVFClassifier")
     val classifier = new LibSVMClassifier[String, String](LinearKernel)
 
@@ -65,17 +63,17 @@ class TestLibSVMClassifier extends AssertionsForJUnit {
     classifier.train(dataset)
 
     val dn = new BVFDatum[String, String]("+", List("good", "great", "bad", "new"))
-    assertTrue(classifier.classOf(d1) == d1.label)
-    assertTrue(classifier.classOf(d2) == d2.label)
-    assertTrue(classifier.classOf(dn) == dn.label)
+    classifier.classOf(d1) should be(d1.label)
+    classifier.classOf(d2) should be(d2.label)
+    classifier.classOf(dn) should be(dn.label)
 
     val probs = classifier.scoresOf(dn)
-    println("Probability for class +: " + probs.getCount("+"))
-    println("Probability for class -: " + probs.getCount("-"))
-    println("Probability for class ~: " + probs.getCount("~"))
-    println(s"our probs: ${probs.toShortString}")
-    // assertTrue(probs.getCount("+") > probs.getCount("-"))
-    // assertTrue(probs.getCount("-") > probs.getCount("~"))
+    //println("Probability for class +: " + probs.getCount("+"))
+    //println("Probability for class -: " + probs.getCount("-"))
+    //println("Probability for class ~: " + probs.getCount("~"))
+    //println(s"our probs: ${probs.toShortString}")
+    // probs.getCount("+") should be > probs.getCount("-")
+    // probs.getCount("-") should be > probs.getCount("~")
 
     //
     // let's make sure we get the same scores if we use libsvm directly
@@ -100,9 +98,9 @@ class TestLibSVMClassifier extends AssertionsForJUnit {
     problem.x(0) = ld1
     problem.x(1) = ld2
     problem.x(2) = ld3
-    println("before train")
+    //println("before train")
     val model = svm.svm_train(problem, classifier.parameters)
-    println("after train")
+    //println("after train")
     val ldn = new Array[svm_node](4)
     ldn(0) = new svm_node { index = 1; value =  1 }
     ldn(1) = new svm_node { index = 2; value =  1 }
@@ -114,12 +112,12 @@ class TestLibSVMClassifier extends AssertionsForJUnit {
     for(i <- 0 until model.nr_class) {
       probabilities.setCount(dataset.labelLexicon.get(model.label(i)), lprobs(i))
     }
-    println(s"probs calculated by wrapper: ${probs.toShortString}")
-    println(s"probs calculated by  libsvm: ${probs.toShortString}")
+    //println(s"probs calculated by wrapper: ${probs.toShortString}")
+    //println(s"probs calculated by  libsvm: ${probs.toShortString}")
     // here we check that our wrapper and libsvm get the same scores
-    assertTrue(probs.getCount("+") == probabilities.getCount("+"))
-    assertTrue(probs.getCount("-") == probabilities.getCount("-"))
-    assertTrue(probs.getCount("~") == probabilities.getCount("~"))
+    probs.getCount("+") should be(probabilities.getCount("+"))
+    probs.getCount("-") should be(probabilities.getCount("-"))
+    probs.getCount("~") should be(probabilities.getCount("~"))
 
     //
     // Let's analyze the classifier learned weights here
@@ -133,39 +131,11 @@ class TestLibSVMClassifier extends AssertionsForJUnit {
         println("\t" + fv._1 + " " + fv._2)
       }
     }
-    assertTrue(weights.get("+").get.getCount("good") > weights.get("+").get.getCount("great"))
-    assertTrue(weights.get("+").get.getCount("great") > weights.get("+").get.getCount("bad"))
-    assertTrue(weights.get("+").get.getCount("great") > weights.get("+").get.getCount("meh"))
+    weights.get("+").get.getCount("good") should be > weights.get("+").get.getCount("great")
+    weights.get("+").get.getCount("great") should be > weights.get("+").get.getCount("bad")
+    weights.get("+").get.getCount("great") should be > weights.get("+").get.getCount("meh")
     */
   }
-
-  /*
-  @Test def testWeightsTwoLabels() {
-    val classifier = new LiblinearClassifier[String, String](bias = false)
-    val dataset = new BVFDataset[String, String]()
-
-    val d1 = new BVFDatum[String, String]("+", List("good", "great", "good"))
-    val d2 = new BVFDatum[String, String]("-", List("bad", "awful"))
-
-    dataset += d1
-    dataset += d2
-    classifier.train(dataset)
-
-    val weights = classifier.getWeights
-    for(l <- weights.keys) {
-      println("Feature weights for label " + l)
-      val sorted = weights.get(l).get.sorted
-      for(fv <- sorted) {
-        println("\t" + fv._1 + " " + fv._2)
-      }
-    }
-    assertTrue(weights.get("+").get.getCount("good") > weights.get("+").get.getCount("great"))
-    assertTrue(weights.get("+").get.getCount("great") > weights.get("+").get.getCount("bad"))
-    assertTrue(weights.get("+").get.getCount("great") > weights.get("+").get.getCount("awful"))
-    assertTrue(weights.get("-").get.getCount("great") < weights.get("-").get.getCount("awful"))
-    assertTrue(weights.get("-").get.getCount("good") < weights.get("-").get.getCount("awful"))
-  }
-  */
 
   private def mkRVFDatum(label:String, features:List[String]):RVFDatum[String, String] = {
     val c = new Counter[String]
@@ -173,27 +143,7 @@ class TestLibSVMClassifier extends AssertionsForJUnit {
     new RVFDatum[String, String](label, c)
   }
 
-  /*
-  @Test def testLRClassifier() {
-    val classifier = new LogisticRegressionClassifier[Int, String](bias = false)
-    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
-    classifier.train(dataset)
-    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_test.txt.gz")
-    var total = 0
-    var correct = 0
-    for(datum <- datums) {
-      val l = classifier.classOf(datum)
-      //println(s"prediction: $l")
-      if(l == datum.label) correct += 1
-      total += 1
-    }
-    val acc = correct.toDouble / total.toDouble
-    println("Accuracy: " + acc)
-    assertTrue(acc > 0.97)
-  }
-  */
-
-  @Test def testSVMClassifier() {
+  it should "have an accuracy > .60 on this dataset" in {
     for (kernel <- List(LinearKernel, PolynomialKernel, RBFKernel, SigmoidKernel)) {
       val classifier = new LibSVMClassifier[Int, String](kernel, degree=1)
       val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
@@ -208,8 +158,8 @@ class TestLibSVMClassifier extends AssertionsForJUnit {
         total += 1
       }
       val acc = correct.toDouble / total.toDouble
-      println(s"$kernel accuracy: $acc")
-      assertTrue(acc > 0.60) // polynomial has low acc w/ default params
+      //println(s"$kernel accuracy: $acc")
+      acc should be > 0.60 // polynomial has low acc w/ default params
     }
   }
 }
