@@ -4,7 +4,6 @@ import org.scalatest._
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.odin.impl.TokenPattern
-import edu.arizona.sista.odin._
 
 class TestTokenPattern extends FlatSpec with Matchers {
   val proc = new BioNLPProcessor
