@@ -38,7 +38,13 @@ class PredicateClassifier {
     val output = new ListBuffer[(String, String)]
     for(s <- doc.sentences;
         i <- s.words.indices) {
-      output += new Tuple2(goldLabel(s, i), classify(s, i))
+      val g = goldLabel(s, i)
+      val scores = classify(s, i)
+      val p = (scores.getCount(POS_LABEL) >= POS_THRESHOLD) match {
+        case true => POS_LABEL
+        case false => NEG_LABEL
+      }
+      output += new Tuple2(g, p)
     }
 
     score(output.toList)
@@ -66,15 +72,10 @@ class PredicateClassifier {
 
   }
 
-  def classify(sent:Sentence, position:Int):String = {
-    if(! validForPredicate(sent, position))
-      return NEG_LABEL
-
+  def classify(sent:Sentence, position:Int):Counter[String] = {
     val datum = mkDatum(sent, position, NEG_LABEL)
-    val s = classifier.scoresOf(datum).getCount(POS_LABEL)
-
-    if(s > -1) POS_LABEL
-    else NEG_LABEL
+    val s = classifier.scoresOf(datum)
+    s
   }
 
   def createDataset(doc:Document): Dataset[String, String] = {
@@ -83,18 +84,13 @@ class PredicateClassifier {
 
     for(s <- doc.sentences;
         i <- s.words.indices) {
-      if(validForPredicate(s, i)) {
-        val label = goldLabel(s, i)
-        labelStats.incrementCount(label)
-        dataset += mkDatum(s, i, label)
-      }
+      val label = goldLabel(s, i)
+      labelStats.incrementCount(label)
+      dataset += mkDatum(s, i, label)
     }
     logger.info("Label statistics for training examples: " + labelStats)
     dataset
   }
-
-  def validForPredicate(sent:Sentence, position:Int):Boolean =
-    VALID_POS_PATTERN.findFirstIn(sent.tags.get(position)).isDefined
 
   def goldLabel(sentence:Sentence, position:Int):String = {
     val outgoing = sentence.semanticRoles.get.outgoingEdges
@@ -130,9 +126,9 @@ class PredicateClassifier {
 object PredicateClassifier {
   val logger = LoggerFactory.getLogger(classOf[PredicateClassifier])
 
-  val VALID_POS_PATTERN = """NN|VB|JJ""".r
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
+  val POS_THRESHOLD = 0.5 // lower this to boost recall
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
