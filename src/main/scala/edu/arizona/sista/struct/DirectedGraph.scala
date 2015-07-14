@@ -129,6 +129,18 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     case _ => false
   }
 
+  // Gets a single path represented as a sequence in which each element
+  // is a sequence of edges connecting two tokens, and returns a sequence in which
+  // each element is a sequence of edges forming a path.
+  // In other words, it returns all possible paths given the edges connecting the nodes of interest.
+  def mkEdgePaths(edges: Seq[Seq[(Int, Int, E)]]): Seq[Seq[(Int, Int, E)]] = edges match {
+    case Nil => Seq(Nil)
+    case Seq(first, rest @ _*) => for {
+      i <- first
+      j <- mkEdgePaths(rest)
+    } yield i +: j
+  }
+
   // returns the shortest path between two nodes as a sequence of nodes
   // each pair of nodes is guaranteed to have at least one edge, maybe several
   def shortestPath(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Int] = {
@@ -162,6 +174,18 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     val prev = Map(start -> -1)  // start has no previous node
     mkPath(end, mkPrev(nodes, dist, prev), Nil)
   }
+
+  def shortestPathEdges(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Seq[(Int, Int, E)]] = {
+    // get sequence of nodes in the shortest path
+    val nodesPath = shortestPath(start, end, ignoreDirection)
+    // make pairs of nodes in the shortest path
+    val pairs = nodesPath.sliding(2).toList
+    // get edges for each pair
+    val edges = for (Seq(n1, n2) <- pairs) yield getEdges(n1, n2, ignoreDirection)
+    // return sequence of paths, where each path is a sequence of edges
+    mkEdgePaths(edges)
+  }
+
 }
 
 class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[(Int, Int, E)] {
