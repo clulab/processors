@@ -128,7 +128,7 @@ object PredicateClassifier {
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
-  val POS_THRESHOLD = 0.5 // lower this to boost recall
+  val POS_THRESHOLD = 0.25 // lower this to boost recall
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
