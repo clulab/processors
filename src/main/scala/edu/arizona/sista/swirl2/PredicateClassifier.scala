@@ -1,8 +1,11 @@
 package edu.arizona.sista.swirl2
 
+import java.io._
+
 import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.struct.Counter
+import edu.arizona.sista.utils.Files
 import org.slf4j.LoggerFactory
 
 import edu.arizona.sista.utils.StringUtils._
@@ -121,6 +124,10 @@ class PredicateClassifier {
     }
     logger.info("Predicates by POS tag: " + posStats)
   }
+
+  def saveTo(w:Writer): Unit = {
+    classifier.saveTo(w)
+  }
 }
 
 object PredicateClassifier {
@@ -132,14 +139,34 @@ object PredicateClassifier {
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
-    val pc = new PredicateClassifier
+    var pc = new PredicateClassifier
 
     if(props.containsKey("train")) {
       pc.train(props.getProperty("train"))
+      if(props.containsKey("model")) {
+        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
+        pc.saveTo(os)
+        os.close()
+      }
     }
 
     if(props.containsKey("test")) {
+      if(props.containsKey("model")) {
+        val is = new BufferedReader(new FileReader(props.getProperty("model")))
+        pc = loadFrom(is)
+        is.close()
+      }
       pc.test(props.getProperty("test"))
     }
+  }
+
+  def loadFrom(r:java.io.Reader):PredicateClassifier = {
+    val pc = new PredicateClassifier
+    val reader = Files.toBufferedReader(r)
+
+    val c = LiblinearClassifier.loadFrom[String, String](reader)
+    pc.classifier = c
+
+    pc
   }
 }
