@@ -175,7 +175,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     mkPath(end, mkPrev(nodes, dist, prev), Nil)
   }
 
-  def shortestPathEdges(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Seq[(Int, Int, E)]] = {
+  def shortestPathEdges(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Seq[(Int, Int, E, String)]] = {
     // get sequence of nodes in the shortest path
     val nodesPath = shortestPath(start, end, ignoreDirection)
     // make pairs of nodes in the shortest path
@@ -183,7 +183,12 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     // get edges for each pair
     val edges = for (Seq(n1, n2) <- pairs) yield getEdges(n1, n2, ignoreDirection)
     // return sequence of paths, where each path is a sequence of edges
-    mkEdgePaths(edges)
+    for (edgePath <- mkEdgePaths(edges)) yield {
+      for ((Seq(n1, n2), edge) <- pairs zip edgePath) yield edge match {
+        case (`n1`, `n2`, dep) => (n1, n2, dep, ">")
+        case (`n2`, `n1`, dep) => (n2, n1, dep, "<")
+      }
+    }
   }
 
 }
