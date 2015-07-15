@@ -175,6 +175,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     mkPath(end, mkPrev(nodes, dist, prev), Nil)
   }
 
+  // the edge tuple is (head:Int, dependent:Int, label:E, direction:String)
   def shortestPathEdges(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Seq[(Int, Int, E, String)]] = {
     // get sequence of nodes in the shortest path
     val nodesPath = shortestPath(start, end, ignoreDirection)
