@@ -18,12 +18,6 @@ trait Extractor {
     i <- 0 until doc.sentences.size
     m <- findAllIn(i, doc, state)
   } yield m
-
-  def startsAt: Int = priority match {
-    case ExactPriority(i) => i
-    case IntervalPriority(start, end) => start
-    case InfiniteIntervalPriority(start) => start
-  }
 }
 
 class TokenExtractor(
@@ -44,26 +38,35 @@ class TokenExtractor(
   def mkMention(r: TokenPattern.Result, sent: Int, doc: Document): Mention =
     r.groups.keys find (_ equalsIgnoreCase "trigger") match {
       case Some(triggerKey) =>
-        // result has a trigger, create an EventMention
-        val trigger = new TextBoundMention(labels, r.groups(triggerKey), sent, doc, keep, name)
-        val groups = r.groups - triggerKey transform {
-          (name, interval) => Seq(new TextBoundMention(labels, interval, sent, doc, keep, name))
+        // having several triggers in the same rule is not supported
+        // the first will be used and the rest ignored
+        val int = r.groups(triggerKey).head
+        val trigger = new TextBoundMention(labels, int, sent, doc, keep, name)
+        val groups = r.groups - triggerKey transform { (name, intervals) =>
+          intervals.map(i => new TextBoundMention(labels, i, sent, doc, keep, name))
         }
-        val mentions = r.mentions.transform((name, mention) => Seq(mention))
-        val args = groups ++ mentions
+        val args = mergeArgs(groups, r.mentions)
         new EventMention(labels, trigger, args, sent, doc, keep, name)
       case None if r.groups.nonEmpty || r.mentions.nonEmpty =>
         // result has arguments and no trigger, create a RelationMention
-        val groups = r.groups transform {
-          (name, interval) => Seq(new TextBoundMention(labels, interval, sent, doc, keep, name))
+        val groups = r.groups transform { (name, intervals) =>
+          intervals.map(i => new TextBoundMention(labels, i, sent, doc, keep, name))
         }
-        val mentions = r.mentions.transform((name, mention) => Seq(mention))
-        val args = groups ++ mentions
+        val args = mergeArgs(groups, r.mentions)
         new RelationMention(labels, args, sent, doc, keep, name)
       case None =>
         // result has no arguments, create a TextBoundMention
         new TextBoundMention(labels, r.interval, sent, doc, keep, name)
     }
+
+  type Args = Map[String, Seq[Mention]]
+  def mergeArgs(m1: Args, m2: Args): Args = {
+    val merged = for (name <- m1.keys ++ m2.keys) yield {
+      val args = m1.getOrElse(name, Vector.empty) ++ m2.getOrElse(name, Vector.empty)
+      name -> args.distinct
+    }
+    merged.toMap
+  }
 }
 
 class DependencyExtractor(

@@ -1,10 +1,8 @@
 package edu.arizona.sista.learning
 
-import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import java.io.{File, PrintWriter}
-import junit.framework.Assert
-import org.junit.Test
 import scala.sys.process._
 
 /**
@@ -12,9 +10,9 @@ import scala.sys.process._
  * User: mihais
  * Date: 4/25/13
  */
-class TestSVMRankingClassifier  extends AssertionsForJUnit {
+class TestSVMRankingClassifier extends FlatSpec with Matchers {
 
-  @Test def testClassifier() {
+  "SVMRankingClassifier" should "perform similarly to the command line svm_rank_classify" in {
     val dataset = new BVFRankingDataset[String]
 
     val qid1 = new ListBuffer[Datum[Int, String]]
@@ -27,7 +25,7 @@ class TestSVMRankingClassifier  extends AssertionsForJUnit {
     qid2 += new BVFDatum[Int, String](1, List("great"))
     dataset += qid2.toList
 
-    println("Dataset feature lexicon is:\n" + dataset.featureLexicon)
+    //println("Dataset feature lexicon is:\n" + dataset.featureLexicon)
     // normally, keepIntermediateFiles = false
     // also, set the working directory to something meaningful in your application
     val classifier = new SVMRankingClassifier[String](".", keepIntermediateFiles = true)
@@ -37,7 +35,7 @@ class TestSVMRankingClassifier  extends AssertionsForJUnit {
     qid3 += new BVFDatum[Int, String](2, List("good", "bad"))
     qid3 += new BVFDatum[Int, String](1, List("great"))
     val scores = classifier.scoresOf(qid3)
-    println("Scores: " + scores)
+    //println("Scores: " + scores)
 
     //
     // the code before is just for debug purposes
@@ -49,14 +47,14 @@ class TestSVMRankingClassifier  extends AssertionsForJUnit {
     classifier.mkTestFile(pw, qid3, 1)
     pw.close()
     val exitCode = "svm_rank_classify ./test.dat ./model.dat ./predictions".!
-    Assert.assertTrue(exitCode == 0)
+    exitCode should be (0)
 
     val svmRankClassifyScores =
       io.Source.fromFile("./predictions").getLines().map(l => l.toDouble).toArray
     val ourScores = scores.toArray
-    Assert.assertTrue(svmRankClassifyScores(0) == ourScores(0))
-    Assert.assertTrue(svmRankClassifyScores(1) == ourScores(1))
-    println("Scores match!")
+    svmRankClassifyScores(0) should be (ourScores(0))
+    svmRankClassifyScores(1) should be (ourScores(1))
+    //println("Scores match!")
 
     //
     // let's verify that we get the same scores after serialization
@@ -64,9 +62,9 @@ class TestSVMRankingClassifier  extends AssertionsForJUnit {
     classifier.saveTo("./model.ser")
     val serCls:SVMRankingClassifier[String] = SVMRankingClassifier.loadFrom("./model.ser")
     val serScores = serCls.scoresOf(qid3).toArray
-    Assert.assertTrue(serScores(0) == ourScores(0))
-    Assert.assertTrue(serScores(1) == ourScores(1))
-    println("Scores after serialization match!")
+    serScores(0) should be (ourScores(0))
+    serScores(1) should be (ourScores(1))
+    //println("Scores after serialization match!")
 
     // delete all files generated here
     new File("./model.dat").delete()
@@ -74,10 +72,9 @@ class TestSVMRankingClassifier  extends AssertionsForJUnit {
     new File("./test.dat").delete()
     new File("./predictions").delete()
     new File("./model.ser").delete()
-
   }
 
-  @Test def testClassifier2() {
+  it should "perform better than 0.50 P@1 on this dataset" in {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
       "src/test/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
 
@@ -94,8 +91,8 @@ class TestSVMRankingClassifier  extends AssertionsForJUnit {
 
     // we should do better the 50% P@1 on this dataset
     val p = RankerEvaluator.score(queries, queryScores.toArray)
-    println("P@1 = " + p)
-    Assert.assertTrue(p >= 0.50)
+    //println("P@1 = " + p)
+    p should be > 0.50
 
     // delete all files generated here
     new File("./model.dat").delete()

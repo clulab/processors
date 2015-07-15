@@ -1,9 +1,7 @@
 package edu.arizona.sista.learning
 
-import org.scalatest.junit.AssertionsForJUnit
-import org.junit.Test
+import org.scalatest._
 import scala.collection.mutable.ArrayBuffer
-import junit.framework.Assert
 import java.io.{OutputStreamWriter, PrintWriter}
 
 /**
@@ -11,8 +9,8 @@ import java.io.{OutputStreamWriter, PrintWriter}
  * User: mihais
  * Date: 12/10/13
  */
-class TestPerceptronRankingClassifier extends AssertionsForJUnit {
-  @Test def testClassifier() {
+class TestPerceptronRankingClassifier extends FlatSpec with Matchers {
+  "PerceptronRankingClassifier" should "have a P@1 > .50 on this dataset" in {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
       "src/test/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
 
@@ -33,7 +31,7 @@ class TestPerceptronRankingClassifier extends AssertionsForJUnit {
 
     // we should do better the 50% P@1 on this dataset
     val p = RankerEvaluator.score(queries, queryScores.toArray)
-    println("P@1 = " + p)
-    Assert.assertTrue(p >= 0.50)
+    //println("P@1 = " + p)
+    p should be > 0.50
   }
 }

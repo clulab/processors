@@ -5,7 +5,7 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.StringMatcher
 
-trait Mention extends Equals {
+trait Mention extends Equals with Ordered[Mention] {
   /** A sequence of labels for this mention.
     * The first label in the sequence is considered the default.
     */
@@ -30,11 +30,6 @@ trait Mention extends Equals {
     * For example, in the biodomain, Binding may have several themes.
     */
   val arguments: Map[String, Seq[Mention]]
-
-  /** points to an Xref object that represents an entry in an external database */
-  val xref: Option[Xref]
-  def isGrounded: Boolean = xref.isDefined
-  def ground(namespace: String, id: String): Mention
 
   /** default label */
   def label: String = labels.head
@@ -81,7 +76,7 @@ trait Mention extends Equals {
     case Some(txt) => txt.slice(startOffset, endOffset)
     case None =>
       // try to reconstruct the sentence using the character offsets
-      val bits = words.head +: tokenInterval.toSeq.drop(1).map { i =>
+      val bits = words.head +: tokenInterval.drop(1).map { i =>
         val spaces = " " * (sentenceObj.startOffsets(i) - sentenceObj.endOffsets(i - 1))
         val word = sentenceObj.words(i)
         spaces + word
@@ -96,14 +91,37 @@ trait Mention extends Equals {
     case _ => false
   }
 
+  def compare(that: Mention): Int = {
+    require(this.document == that.document)
+    if (this.sentence < that.sentence) -1
+    else if (this.sentence > that.sentence) 1
+    else this.tokenInterval compare that.tokenInterval
+  }
+
+  def precedes(that: Mention): Boolean = {
+    this.compare(that) match {
+      case c if c < 0 => true
+      case _ => false
+    }
+  }
+
   override def hashCode: Int = {
-    val h0 = symmetricSeed
+    val h0 = stringHash("edu.arizona.sista.odin.Mention")
     val h1 = mix(h0, labels.hashCode)
     val h2 = mix(h1, tokenInterval.hashCode)
     val h3 = mix(h2, sentence.hashCode)
     val h4 = mix(h3, document.hashCode)
-    val h5 = mixLast(h4, arguments.hashCode)
+    val h5 = mixLast(h4, argumentsHashCode)
     finalizeHash(h5, 5)
+  }
+
+  private def argumentsHashCode: Int = {
+    val h0 = stringHash("Mention.arguments")
+    val hs = arguments map {
+      case (name, args) => mix(stringHash(name), unorderedHash(args))
+    }
+    val h = mixLast(h0, unorderedHash(hs))
+    finalizeHash(h, arguments.size)
   }
 }
 
@@ -113,8 +131,7 @@ class TextBoundMention(
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
-    val foundBy: String,
-    val xref: Option[Xref] = None
+    val foundBy: String
 ) extends Mention {
 
   def this(
@@ -125,16 +142,6 @@ class TextBoundMention(
     keep: Boolean,
     foundBy: String
   ) = this(Seq(label), tokenInterval, sentence, document, keep, foundBy)
-
-  def ground(namespace: String, id: String): Mention =
-    new TextBoundMention(
-      labels,
-      tokenInterval,
-      sentence,
-      document,
-      keep,
-      foundBy,
-      Some(Xref(namespace, id)))
 
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
@@ -147,9 +154,10 @@ class EventMention(
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
-    val foundBy: String,
-    val xref: Option[Xref] = None
+    val foundBy: String
 ) extends Mention {
+
+  require(arguments.values.flatten.nonEmpty || labels.contains("Unresolved"), "EventMentions need arguments")
 
   def this(
     label: String,
@@ -160,17 +168,6 @@ class EventMention(
     keep: Boolean,
     foundBy: String
   ) = this(Seq(label), trigger, arguments, sentence, document, keep, foundBy)
-
-  def ground(namespace: String, id: String): Mention =
-    new EventMention(
-      labels,
-      trigger,
-      arguments,
-      sentence,
-      document,
-      keep,
-      foundBy,
-      Some(Xref(namespace, id)))
 
   // token interval that contains trigger and all matched arguments
   override def tokenInterval: Interval = {
@@ -190,7 +187,7 @@ class EventMention(
 
   // trigger should be part of the hashCode too
   override def hashCode: Int = {
-    val h0 = symmetricSeed
+    val h0 = stringHash("edu.arizona.sista.odin.EventMention")
     val h1 = mix(h0, super.hashCode)
     val h2 = mixLast(h1, trigger.hashCode)
     finalizeHash(h2, 2)
@@ -203,8 +200,7 @@ class RelationMention(
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
-    val foundBy: String,
-    val xref: Option[Xref] = None
+    val foundBy: String
 ) extends Mention {
 
   require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
@@ -217,16 +213,6 @@ class RelationMention(
     keep: Boolean,
     foundBy: String
   ) = this(Seq(label), arguments, sentence, document, keep, foundBy)
-
-  def ground(namespace: String, id: String): Mention =
-    new RelationMention(
-      labels,
-      arguments,
-      sentence,
-      document,
-      keep,
-      foundBy,
-      Some(Xref(namespace, id)))
 
   // token interval that contains all matched arguments
   override def tokenInterval: Interval = {

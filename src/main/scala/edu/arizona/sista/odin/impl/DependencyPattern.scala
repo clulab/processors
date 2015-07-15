@@ -28,7 +28,7 @@ trait DependencyPattern {
     doc: Document,
     state: State
   ): Seq[Args] = for {
-    tok <- interval.toSeq
+    tok <- interval
     m <- extractArguments(tok, sent, doc, state)
   } yield m
 
@@ -95,8 +95,4 @@ class RelationDependencyPattern(
     args <- extractArguments(mention.tokenInterval, sent, doc, state)
     relationArgs = args + (anchorName -> Seq(mention))
   } yield new RelationMention(labels, relationArgs, sent, doc, keep, ruleName)
-}
-
-object DependencyPattern {
-  def compile(input: String): DependencyPattern = DependencyPatternCompiler.compile(input)
 }

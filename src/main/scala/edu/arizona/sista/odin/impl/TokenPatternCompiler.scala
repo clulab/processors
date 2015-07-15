@@ -1,33 +1,19 @@
 package edu.arizona.sista.odin.impl
 
-object TokenPatternCompiler extends TokenPatternParsers {
-  def compile(input: String): TokenPattern = parseAll(tokenPattern, input) match {
-    case Success(result, _) => result
-    case failure: NoSuccess => sys.error(failure.msg)
-  }
-}
-
-trait TokenPatternParsers extends TokenConstraintParsers {
+class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
   // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r
 
-  def tokenPattern: Parser[TokenPattern] =
-    splitPattern ~ opt(lookaheadAssertion) ^^ {
-      case frag ~ lookahead =>
-        val f = frag.capture(TokenPattern.GlobalCapture)
-        f.setOut(Done)
-        new TokenPattern(f.in, lookahead)
-    }
+  def compileTokenPattern(input: String): TokenPattern = parseAll(tokenPattern, input) match {
+    case Success(result, _) => result
+    case failure: NoSuccess => sys.error(failure.msg)
+  }
 
-  def lookaheadAssertion: Parser[TokenPatternLookaheadAssertion] =
-    ("(?="|"(?!") ~ splitPattern <~ ")" ^^ {
-      case "(?=" ~ frag =>
-        frag.setOut(Done)
-        new TokenPatternLookaheadAssertion(frag.in, negative = false)
-      case "(?!" ~ frag =>
-        frag.setOut(Done)
-        new TokenPatternLookaheadAssertion(frag.in, negative = true)
-    }
+  def tokenPattern: Parser[TokenPattern] = splitPattern ^^ { frag =>
+    val f = frag.capture(TokenPattern.GlobalCapture)
+    f.setOut(Done)
+    new TokenPattern(f.in)
+  }
 
   def splitPattern: Parser[ProgramFragment] =
     concatPattern ~ rep("|" ~> concatPattern) ^^ {
@@ -48,15 +34,64 @@ trait TokenPatternParsers extends TokenConstraintParsers {
   def quantifiedPattern: Parser[ProgramFragment] =
     repeatedPattern | rangePattern | exactPattern | atomicPattern
 
+  // when matching the default token field (unitConstraint)
+  // we need to make sure that the next token is not a ':'
+  // only argument names are followed by colon (and a label)
   def singleTokenPattern: Parser[ProgramFragment] =
-    (wordConstraint | tokenConstraint) ^^ {
+    (unitConstraint <~ not(":") | tokenConstraint) ^^ {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 
-  def zeroWidthAssertion: Parser[ProgramFragment] = ("^"|"$") ^^ {
+  def assertionPattern: Parser[ProgramFragment] =
+    sentenceAssertion | lookaheadAssertion | lookbehindAssertion
+
+  def sentenceAssertion: Parser[ProgramFragment] = ("^"|"$") ^^ {
     case "^" => ProgramFragment(MatchSentenceStart())
     case "$" => ProgramFragment(MatchSentenceEnd())
   }
+
+  def lookaheadAssertion: Parser[ProgramFragment] =
+    ("(?=" | "(?!") ~ splitPattern <~ ")" ^^ {
+      case op ~ frag =>
+        frag.setOut(Done)
+        val negative = op.endsWith("!")
+        ProgramFragment(MatchLookAhead(frag.in, negative))
+    }
+
+  // MatchLookBehind requires the length of the pattern's matches,
+  // so the pattern is restricted to fixed width patterns only
+  def lookbehindAssertion: Parser[ProgramFragment] =
+    ("(?<=" | "(?<!") ~ fixedWidthPattern <~ ")" ^^ {
+      case op ~ fragWithSize =>
+        val (frag, size) = fragWithSize
+        frag.setOut(Done)
+        val negative = op.endsWith("!")
+        ProgramFragment(MatchLookBehind(frag.in, size, negative))
+    }
+
+  // a pattern is fixed width if we know the length of its matches at compile time
+  // it is a concatenation of fixed width chunks
+  def fixedWidthPattern: Parser[(ProgramFragment, Int)] =
+    rep1(fixedWidthChunk) ^^ { atoms =>
+      (atoms.head /: atoms.tail) {
+        case ((lhs, sl), (rhs, sr)) => (ProgramFragment(lhs, rhs), sl + sr)
+      }
+    }
+
+  // a fixed width atom with optional repetition
+  def fixedWidthChunk: Parser[(ProgramFragment, Int)] =
+    fixedWidthAtom ~ opt("{" ~> int <~ "}") ^^ {
+      case (frag, size) ~ None => (frag, size)
+      case (frag, size) ~ Some(n) => (frag.repeatPattern(n), n * size)
+    }
+
+  // a fixed width token or a fixed width pattern surrounded by parenthesis
+  def fixedWidthAtom: Parser[(ProgramFragment, Int)] =
+    fixedWidthToken | "(" ~> fixedWidthPattern <~ ")"
+
+  // a single fixed width token matcher
+  def fixedWidthToken: Parser[(ProgramFragment, Int)] =
+    singleTokenPattern ^^ { (_, 1) }
 
   def capturePattern: Parser[ProgramFragment] =
     "(?<" ~ identifier ~ ">" ~ splitPattern ~ ")" ^^ {
@@ -65,19 +100,19 @@ trait TokenPatternParsers extends TokenConstraintParsers {
 
   def unnamedMentionPattern: Parser[ProgramFragment] =
     "@" ~> exactStringMatcher ^^ {
-      case matcher => ProgramFragment(MatchMention(matcher))
+      case matcher => ProgramFragment(MatchMention(matcher, None))
     }
 
   def namedMentionPattern: Parser[ProgramFragment] =
     "@" ~> stringLiteral ~ ":" ~ exactStringMatcher ^^ {
-      case name ~ ":" ~ matcher => ProgramFragment(MatchMention(name, matcher))
+      case name ~ ":" ~ matcher => ProgramFragment(MatchMention(matcher, Some(name)))
     }
 
   def mentionPattern: Parser[ProgramFragment] =
     namedMentionPattern | unnamedMentionPattern
 
   def atomicPattern: Parser[ProgramFragment] =
-    zeroWidthAssertion | singleTokenPattern | mentionPattern |
+    assertionPattern | singleTokenPattern | mentionPattern |
     capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[ProgramFragment] =
@@ -120,13 +155,10 @@ trait TokenPatternParsers extends TokenConstraintParsers {
       */
     def setOut(inst: Inst): Unit = out.foreach(_.next = inst)
 
-    private def dup: ProgramFragment = {
-      val newIn = in.dup
-      ProgramFragment(newIn, findOut(newIn))
-    }
+    private def copy(): ProgramFragment = ProgramFragment(in.deepcopy())
 
     private def repeat(n: Int): Seq[ProgramFragment] =
-      for (i <- 0 until n) yield dup
+      for (i <- 0 until n) yield copy()
 
     def capture(name: String): ProgramFragment = {
       val start = SaveStart(name)

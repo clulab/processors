@@ -53,7 +53,7 @@ object State {
   def mkLut(mentions: Seq[Mention]): MentionLUT = {
     val pairs = for {
       m <- mentions
-      i <- m.tokenInterval.toSeq
+      i <- m.tokenInterval
       key = (m.sentence, i)
     } yield (key, m)
     pairs groupBy (_._1) transform ((k, v) => v.map(_._2))

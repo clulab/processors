@@ -9,16 +9,16 @@ import edu.arizona.sista.struct.Internalizer
  */
 trait Processor {
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
-  def mkDocument(text:String, keepText:Boolean): Document
+  def mkDocument(text:String, keepText:Boolean = false): Document
 
   /** Constructs a document of tokens from an array of untokenized sentences */
   def mkDocumentFromSentences(sentences:Iterable[String],
-                              keepText:Boolean,
+                              keepText:Boolean = false,
                               charactersBetweenSentences:Int = 1): Document
 
   /** Constructs a document of tokens from an array of tokenized sentences */
   def mkDocumentFromTokens(sentences:Iterable[Iterable[String]],
-                           keepText:Boolean,
+                           keepText:Boolean = false,
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document
 

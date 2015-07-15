@@ -1,6 +1,6 @@
 # What is it?
 
-This is the main public code repository of the NLP group led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
+This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
 + A rule-based event extraction (EE) framework called ODIN (Open Domain INformer) in the `edu.arizona.sista.odin` package, together with a grammar tailored for the biomedical domain. See [ODIN's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
 + Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster.
@@ -10,29 +10,32 @@ that cherry picks fast components from multiple sources (Stanford and [MaltParse
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
-All our own code is licensed under Apache License Version 2.0. **However, some of the libraries used here, most notably CoreNLP, are GPL.** If not removed from this package, technically our whole code becomes GPL.
+All our own code is licensed under Apache License Version 2.0. **However, some of the libraries used here, most notably CoreNLP, are GPL v2.** If `CoreNLPProcessor` is not removed from this package, technically our whole code becomes GPL v2.
 
 (c) Mihai Surdeanu, 2013 -
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, Daniel Fried, Dane Bell, and Tom Hicks.
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **5.3** - Many incremental improvements to ODIN and `BioNLPProcessor`, including better tokenization of biomedical text, and a revamped bio NER, which now combines an in-house CRF with a rule-based system, with rules derived from multiple knowledge bases such as Uniprot.
 + **5.2** - Version 2 of ODIN, including a cleaner (more declarative) rule language, which minimizes the need for custom actions. See `edu.arizona.sista.odin.domains.toydomain` for an example of a toy domain, and `edu.arizona.sista.odin.domains.bigmechanism.dryrun2015` for a complete biomedical domain.
-+ **5.1** - Improved tokenization for the bio domain. Replaced the BANNER NER for the bio domain with our own implementation. Installing BANNER is thus no longer necessary.
-+ **5.0** - changed to Java 8, Scala 2.11, and CoreNLP 3.5.1. First public release of ODIN (domain-independent event extraction) framework, in the `edu.arizona.sista.odin` package. First release of ODIN's DARPA biomedical grammar. `FastNLPProcessor` now supports both the Malt and the new Stanford NN dependency parser (the Stanford parser is now the default setting).
-+ **4.0** - added `BioNLPProcessor`. Install our fork of the [BANNER named entity recognizer](https://github.com/sistanlp/banner) before!
-+ **3.3** - bug fix: make sure DocumentSerializer.load() works when multiple documents are serialized into the same file.
-+ **3.2** - Added a discourse parser to `FastNLPProcessor`. This performs marginally worse than the one in `CoreNLPProcessor`, but it is much faster for end-to-end processing, due to the shift-reduce syntactic parser.
-+ **3.1** - Minimal functionality added to the learning package. Changed to CoreNLP 3.3.1.
-+ **3.0** - Added a RST discourse parser to `CoreNLPProcessor`. Added the `edu.arizona.sista.learning` package. Utils classes are now under `edu.arizona.sista.utils` rather than `edu.arizona.sista.processors.utils`.
-+ **2.2** - Various bug fixes. Added support for basic dependencies to `CoreNLPProcessor`.
-+ **2.1** - Bug fix in FastNLPProcessor: better root detection algorithm, robust to malt inconsistencies.
-+ **2.0** - We now support two processors: `CoreNLPProcessor` and `FastNLPProcessor`. Changed the package name from `e.a.s.processor` to `e.a.s.processors`. Added Java usage example to README. Updated to CoreNLP 3.3.0. Added better unit tests to check for thread safetiness.
-+ **1.5** - Bug fixing. Made the string interning process (see `Processor.in`) local to each thread to avoid concurrency issues in multi-threaded programs. Added new unit tests. Added minor functionality to Lexicon.
-+ **1.4** - Code cleanup. Added some minor new functionality such as finding base NPs in the Trees class.
-+ **1.3** - Reverted back to the `1.x` version numbers, since we will add other software here not just CoreNLP. Added correct mvn dependencies for the CoreNLP jars. Removed the `install*.sh` scripts, which are no longer needed.
-+ **3.2.0** - Updated to Scala 2.10.1 and CoreNLP 3.2.0. Changed versioning system to be identical to CoreNLP's, so it's clear which CoreNLP version is used.
-+ **1.0** - Initial release
++ [more...](CHANGES.md)
+
+# Citations
+
+If you use one of our discourse parsers, please cite this paper:
+
+Mihai Surdeanu, Thomas Hicks, and Marco A. Valenzuela-Escarcega. Two Practical Rhetorical Structure Theory Parsers. In *Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies: Software Demonstrations (NAACL HLT)*, 2015. [[pdf]](http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf) [[bib]](http://surdeanu.info/mihai/papers/naacl2015-discourse.bib)
+
+If you use ODIN, our event extraction framework, please cite this paper:
+
+Marco A. Valenzuela-Escarcega, Gustave Hahn-Powell, Thomas Hicks, and Mihai Surdeanu. A Domain-independent Rule-based Framework for Event Extraction. In *Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Asian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)*, 2015. [[pdf]](http://surdeanu.info/mihai/papers/acl2015.pdf) [[bib]](http://surdeanu.info/mihai/papers/acl2015.bib)
+
+If you use `CoreNLPProcessor`, please cite Stanford's paper:
+
+Christopher D. Manning, Mihai Surdeanu, John Bauer, Jenny Finkel, Steven J. Bethard, and David McClosky. The Stanford CoreNLP Natural Language Processing Toolkit. In *Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL)*, 2014. [[pdf]](http://surdeanu.info/mihai/papers/acl2014-corenlp.pdf) [[bib]](http://surdeanu.info/mihai/papers/acl2014-corenlp.bib)
+
+If you use anything else in this package, please link to this github page.
 
 # Installation
 
@@ -41,20 +44,20 @@ This software is available on Maven Central. To use, simply add the following de
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.2</version>
+       <version>5.3</version>
     </dependency>
     <dependency>
        <groupId>edu.arizona.sista</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.2</version>
+       <version>5.3</version>
        <classifier>models</classifier>
     </dependency>
 
  The equivalent SBT dependencies are:
 
     libraryDependencies ++= Seq(
-        "edu.arizona.sista" %% "processors" % "5.2",
-        "edu.arizona.sista" %% "processors" % "5.2" classifier "models",
+        "edu.arizona.sista" %% "processors" % "5.3",
+        "edu.arizona.sista" %% "processors" % "5.3" classifier "models"
     )
 
 
@@ -65,7 +68,7 @@ This software is available on Maven Central. To use, simply add the following de
 + **Tool-independent API** - we support multiple NL and machine learning tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
 + **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface. We also offer event extraction tools for the biomedical domain.
-+ **Rule-based event extraction** - we include an event extraction framework, which can be customized to various domains.
++ **Rule-based event extraction** - we include ODIN, an event extraction framework, which can be customized to various domains.
 
 # How to compile the source code
 
@@ -339,7 +342,7 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
             // Processor proc = new FastNLPProcessor(true, false);
 
             // the actual work is done here
-            Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.");
+            Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.", false);
 
             // you are basically done. the rest of this code simply prints out the annotations
 

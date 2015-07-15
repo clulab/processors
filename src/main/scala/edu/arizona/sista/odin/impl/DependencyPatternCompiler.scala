@@ -4,33 +4,26 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-object DependencyPatternCompiler extends TokenPatternParsers {
-  def compile(input: String): DependencyPattern =
-    parseAll(dependencyPattern, clean(input)) match {
+class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) {
+  def compileDependencyPattern(input: String): DependencyPattern =
+    parseAll(dependencyPattern, input) match {
       case Success(result, _) => result
       case failure: NoSuccess => sys.error(failure.msg)
     }
-
-  // remove commented lines and trim whitespaces
-  def clean(input: String): String = input.replaceAll("""(?m)^\s*#.*$""", "").trim()
-
-  // comments are considered whitespace
-  override val whiteSpace = """([ \t\x0B\f\r]|#.*)+""".r
-  val eol = "\n"
 
   def dependencyPattern: Parser[DependencyPattern] =
     eventDependencyPattern | relationDependencyPattern
 
   def eventDependencyPattern: Parser[DependencyPattern] =
-    triggerFinder ~ rep1(eol) ~ repsep(argPattern, rep1(eol)) ^^ {
-      case trigger ~ _ ~ arguments => new EventDependencyPattern(trigger, arguments)
+    triggerFinder ~ rep1(argPattern) ^^ {
+      case trigger ~ arguments => new EventDependencyPattern(trigger, arguments)
     }
 
   def relationDependencyPattern: Parser[DependencyPattern] =
-    identifier ~ ":" ~ identifier ~ rep1(eol) ~ repsep(argPattern, rep1(eol)) ^^ {
-      case name ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
+    identifier ~ ":" ~ identifier ~ rep1(argPattern) ^^ {
+      case name ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
         sys.error("'trigger' is not a valid argument name")
-      case anchorName ~ ":" ~ anchorLabel ~ _ ~ arguments =>
+      case anchorName ~ ":" ~ anchorLabel ~ arguments =>
         new RelationDependencyPattern(anchorName, anchorLabel, arguments)
     }
 
@@ -58,20 +51,22 @@ object DependencyPatternCompiler extends TokenPatternParsers {
     }
 
   def concatDepPattern: Parser[DependencyPatternNode] =
-    filteredDepPattern ~ rep(filteredDepPattern) ^^ {
+    stepDepPattern ~ rep(stepDepPattern) ^^ {
       case first ~ rest => (first /: rest) {
         case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
       }
     }
 
-  def filterableDepPattern: Parser[DependencyPatternNode] =
-    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
+  def stepDepPattern: Parser[DependencyPatternNode] =
+    filterDepPattern | traversalDepPattern
 
-  def filteredDepPattern: Parser[DependencyPatternNode] =
-    filterableDepPattern ~ opt(tokenConstraint) ^^ {
-      case pat ~ None => pat
-      case pat ~ Some(constraint) => new FilteredDependencyPattern(pat, constraint)
-    }
+  /** token constraint */
+  def filterDepPattern: Parser[DependencyPatternNode] =
+    tokenConstraint ^^ { new TokenConstraintDependencyPattern(_) }
+
+  /** any pattern that represents graph traversal */
+  def traversalDepPattern: Parser[DependencyPatternNode] =
+    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
 
   def quantifiedDepPattern: Parser[DependencyPatternNode] =
     atomicDepPattern ~ ("?"|"*"|"+") ^^ {
@@ -112,28 +107,50 @@ object DependencyPatternCompiler extends TokenPatternParsers {
       }
     }
 
+  def lookaroundDepPattern: Parser[DependencyPatternNode] =
+    ("(?=" | "(?!") ~ disjunctiveDepPattern <~ ")" ^^ {
+      case op ~ pat => new LookaroundDependencyPattern(pat, op.endsWith("!"))
+    }
+
   def atomicDepPattern: Parser[DependencyPatternNode] =
-    outgoingDepPattern | incomingDepPattern | "(" ~> disjunctiveDepPattern <~ ")"
+    outgoingPattern | incomingPattern | lookaroundDepPattern |
+    "(" ~> disjunctiveDepPattern <~ ")"
 
-  def outgoingDepPattern: Parser[DependencyPatternNode] =
-    opt(">") ~> stringMatcher ^^ { new OutgoingDependencyPattern(_) }
+  def outgoingPattern: Parser[DependencyPatternNode] =
+    outgoingMatcher | outgoingWildcard
 
-  def incomingDepPattern: Parser[DependencyPatternNode] =
+  def incomingPattern: Parser[DependencyPatternNode] =
+    incomingMatcher | incomingWildcard
+
+  // there is ambiguity between an outgoingMatcher with an implicit '>'
+  // and the name of the next argument, we solve this by ensuring that
+  // the outgoingMatcher is not followed by ':'
+  def outgoingMatcher: Parser[DependencyPatternNode] =
+    opt(">") ~> stringMatcher <~ not(":") ^^ { new OutgoingDependencyPattern(_) }
+
+  def incomingMatcher: Parser[DependencyPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
+
+  def outgoingWildcard: Parser[DependencyPatternNode] =
+    ">>" ^^^ OutgoingWildcard
+
+  def incomingWildcard: Parser[DependencyPatternNode] =
+    "<<" ^^^ IncomingWildcard
+
 }
 
 class ArgumentPattern(
   val name: String,
   val label: String,
-  pattern: DependencyPatternNode,
+  val pattern: DependencyPatternNode,
   val unique: Boolean,
   val required: Boolean
 ) {
   // extracts mentions and groups them according to `unique`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
     val matches = for {
-        t <- pattern.findAllIn(tok, sent, doc, state)
-        m <- state.mentionsFor(sent, t, label)
+      t <- pattern.findAllIn(tok, sent, doc, state)
+      m <- state.mentionsFor(sent, t, label)
     } yield m
     if (matches.isEmpty) Nil
     else if (unique) matches.map(Seq(_))
@@ -145,11 +162,29 @@ sealed trait DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int]
 }
 
+object OutgoingWildcard extends DependencyPatternNode with Dependencies {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val edges = outgoingEdges(sent, doc)
+    if (edges isDefinedAt tok) edges(tok).map(_._1)
+    else Nil
+  }
+}
+
+object IncomingWildcard extends DependencyPatternNode with Dependencies {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+    val edges = incomingEdges(sent, doc)
+    if (edges isDefinedAt tok) edges(tok).map(_._1)
+    else Nil
+  }
+}
+
 class OutgoingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     val edges = outgoingEdges(sent, doc)
-    if (edges isDefinedAt tok) matcher.filter(edges(tok)) else Nil
+    if (edges isDefinedAt tok)
+      for ((tok2, label) <- edges(tok) if matcher.matches(label)) yield tok2
+    else Nil
   }
 }
 
@@ -157,7 +192,9 @@ class IncomingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     val edges = incomingEdges(sent, doc)
-    if (edges isDefinedAt tok) matcher.filter(edges(tok)) else Nil
+    if (edges isDefinedAt tok)
+      for ((tok2, label) <- edges(tok) if matcher.matches(label)) yield tok2
+    else Nil
   }
 }
 
@@ -178,11 +215,17 @@ extends DependencyPatternNode {
     (lhs.findAllIn(tok, sent, doc, state) ++ rhs.findAllIn(tok, sent, doc, state)).distinct
 }
 
-class FilteredDependencyPattern(pattern: DependencyPatternNode, constraint: TokenConstraint)
+class TokenConstraintDependencyPattern(constraint: TokenConstraint)
+extends DependencyPatternNode {
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
+    if (constraint.matches(tok, sent, doc, state)) Seq(tok) else Nil
+}
+
+class LookaroundDependencyPattern(lookaround: DependencyPatternNode, negative: Boolean)
 extends DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
-    val tokens = pattern.findAllIn(tok, sent, doc, state)
-    constraint.filter(tokens, sent, doc, Some(state))
+    val results = lookaround.findAllIn(tok, sent, doc, state)
+    if (results.isEmpty == negative) Seq(tok) else Nil
   }
 }
 
@@ -197,9 +240,9 @@ extends DependencyPatternNode {
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
     @annotation.tailrec
     def loop(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
-      case Nil => results
-      case t :: ts if results contains t => loop(ts, results)
-      case t :: ts => loop(ts ++ pattern.findAllIn(t, sent, doc, state), t +: results)
+      case Seq() => results
+      case t +: ts if results contains t => loop(ts, results)
+      case t +: ts => loop(ts ++ pattern.findAllIn(t, sent, doc, state), t +: results)
     }
     loop(Seq(tok), Nil)
   }

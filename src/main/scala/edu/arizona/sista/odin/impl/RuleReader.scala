@@ -21,7 +21,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     // names should be unique
     names find (_._2 > 1) match {
       case None => rules map mkExtractor  // return extractors
-      case Some((name, count)) => sys.error(s"rule name '$name' is not unique")
+      case Some((name, count)) => throw OdinCompileException(s"rule name '$name' is not unique", Some(name))
     }
   }
 
@@ -40,7 +40,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       val name = try {
         m("name").toString()
       } catch {
-        case e: Exception => sys.error("unnamed rule")
+        case e: Exception => throw OdinCompileException("unnamed rule")
       }
 
       // one or more labels are required
@@ -50,14 +50,14 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
           case labels: Collection[_] => labels.asScala.map(_.toString).toSeq.distinct
         }
       } catch {
-        case e: Exception => sys.error(s"rule '$name' has no labels")
+        case e: Exception => throw OdinCompileException(s"rule '$name' has no labels", Some(name))
       }
 
       // pattern is required
       val pattern = try {
         m("pattern").toString()
       } catch {
-        case e: Exception => sys.error(s"rule '$name' has no pattern")
+        case e: Exception => throw OdinCompileException(s"rule '$name' has no pattern", Some(name))
       }
 
       // these fields have default values
@@ -65,9 +65,11 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       val priority = m.getOrElse("priority", DefaultPriority).toString()
       val action = m.getOrElse("action", DefaultAction).toString()
       val keep = m.getOrElse("keep", DefaultKeep).asInstanceOf[Boolean]
+      // unit is relevant to TokenPattern only
+      val unit = m.getOrElse("unit", DefaultUnit).toString()
 
       // make intermediary rule
-      new Rule(name, labels, ruleType, priority, keep, action, pattern)
+      new Rule(name, labels, ruleType, unit, priority, keep, action, pattern)
     }
   }
 
@@ -77,10 +79,11 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       rule.ruleType match {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
-        case _ => sys.error(s"rule '${rule.name}' has an invalid type")
+        case _ => 
+          throw OdinCompileException(s"rule '${rule.name}' has unsupported type '${rule.ruleType}'", Some(rule.name))
       }
     } catch {
-      case e: Exception => sys.error(s"Error parsing rule '${rule.name}': ${e.getMessage}")
+      case e: Exception => throw OdinCompileException(s"Error parsing rule '${rule.name}': ${e.getMessage}", Some(rule.name))
     }
   }
 
@@ -91,7 +94,8 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val pattern = TokenPattern.compile(rule.pattern)
+    val compiler = new TokenPatternParsers(rule.unit)
+    val pattern = compiler.compileTokenPattern(rule.pattern)
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
 
@@ -102,7 +106,8 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val pattern = DependencyPattern.compile(rule.pattern)
+    val compiler = new DependencyPatternCompiler(rule.unit)
+    val pattern = compiler.compileDependencyPattern(rule.pattern)
     new DependencyExtractor(name, labels, priority, keep, action, pattern)
   }
 }
@@ -111,13 +116,15 @@ object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
   val DefaultKeep = true
-  val DefaultAction = "identity"
+  val DefaultAction = "default"
+  val DefaultUnit = "word"
 
   // rule intermediary representation
   class Rule(
     val name: String,
     val labels: Seq[String],
     val ruleType: String,
+    val unit: String,
     val priority: String,
     val keep: Boolean,
     val action: String,

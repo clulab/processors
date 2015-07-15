@@ -1,16 +1,14 @@
 package edu.arizona.sista.learning
 
-import org.scalatest.junit.AssertionsForJUnit
-import org.junit.Test
-import junit.framework.Assert._
+import org.scalatest._
 
 /**
  *
  * User: mihais
  * Date: 12/10/13
  */
-class TestRandomForestClassifier extends AssertionsForJUnit {
-  @Test def testClassifier() {
+class TestRandomForestClassifier extends FlatSpec with Matchers {
+  "RandomForestClassifier" should "have an accuracy > .96 on this dataset" in {
     val classifier = new RandomForestClassifier[Int, String](
       numTrees = 1000,
       featureSampleRatio = -0.50,
@@ -32,7 +30,7 @@ class TestRandomForestClassifier extends AssertionsForJUnit {
     }
     val acc = correct.toDouble / total.toDouble
     println("Accuracy: " + acc)
-    assertTrue(acc > 0.96)
+    acc should be > 0.96
     */
   }
 }

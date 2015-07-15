@@ -6,7 +6,7 @@ import edu.arizona.sista.odin.impl.{ RuleReader, Extractor }
 
 class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) {
   // the minimum number of iterations required for every rule to run at least once
-  val minIterations = extractors.map(_.startsAt).max
+  val minIterations = extractors.map(_.priority.startsAt).max
 
   /** Extract mentions from a document.
    *
@@ -40,6 +40,12 @@ class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) 
 
     loop(1, initialState)
   }
+
+  def extractByType[M <: Mention : ClassTag](document: Document, initialState: State = new State): Seq[M] =
+    extractFrom(document, initialState) flatMap {
+      case m: M => Some(m)
+      case _ => None
+    }
 }
 
 object ExtractorEngine {

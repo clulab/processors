@@ -1,30 +1,27 @@
 package edu.arizona.sista.utils
 
-import org.scalatest.junit.AssertionsForJUnit
-import org.junit.Test
-import junit.framework.Assert
+import org.scalatest._
 
 /**
  * 
  * User: mihais
  * Date: 4/3/13
  */
-class TestArgsToProperties extends AssertionsForJUnit {
-  @Test def testArgsToProperties() {
-    val props = StringUtils.argsToProperties(List("-props", "src/test/resources/edu/arizona/sista/utils/test.properties").toArray)
+class TestArgsToProperties extends FlatSpec with Matchers {
+  val props = StringUtils.argsToProperties(List("-props", "src/test/resources/edu/arizona/sista/utils/test.properties").toArray)
 
+  "properties" should "contain p1 with value /some/path" in {
     val p1 = props.getProperty("p1")
+    p1 should be ("/some/path")
+  }
+
+  it should "contain p2 with the value /some/path/subdir/123" in {
     val p2 = props.getProperty("p2")
+    p2 should be ("/some/path/subdir/123")
+  }
 
-    Assert.assertTrue(p1 == "/some/path")
-    Assert.assertTrue(p2 == "/some/path/subdir/123")
-
+  it should "contain p4 set to a valid shell" in {
     val p4 = props.getProperty("p4")
-    Assert.assertTrue(
-      p4 == "shell is /bin/bash" ||
-      p4 == "shell is /bin/sh" ||
-      p4 == "shell is /bin/csh" ||
-      p4 == "shell is /bin/tcsh" ||
-      p4 == "shell is /bin/zsh")
+    p4 should fullyMatch regex """shell is /bin/bash|shell is /bin/sh|shell is /bin/csh|shell is /bin/tcsh|shell is /bin/zsh"""
   }
 }
