@@ -18,7 +18,7 @@ class ArgumentFeatureExtractor {
     val predTag = tagAt(sent, pred)
 
     // unigrams
-    for (i <- Range(-2, 3)) {
+    for (i <- Range(-1, 2)) {
       // of lemmas
       val lemma = lemmaAt(sent, position + i)
       features += s"lemma:$i:$lemma"
@@ -30,13 +30,17 @@ class ArgumentFeatureExtractor {
       features += s"tag:$i:$tag:$predTag"
     }
 
-    val path = sent.dependencies.get.shortestPath(pred, position).toArray
-    features += s"path-length:${path.length}"
-    val posPath = new StringBuilder
-    for(i <- 1 until path.length - 1)
-      posPath.append(sent.tags.get(path(i)))
-    features += s"pos-path:${posPath.toString()}"
-    //println(s"$position\t$pred\t${path.toList}\t${posPath.toString()}")
+    val paths = sent.dependencies.get.shortestPathEdges(pred, position)
+    if(paths.nonEmpty) {
+      val path = paths.head.toArray
+      features += s"path-length:${path.length}"
+      val pathLabels = path.map(_._3).mkString("-")
+      features += s"path-labels:$pathLabels"
+      features += s"path-labels:$predLemma-$pathLabels-${lemmaAt(sent, position)}"
+      // println(s"$position\t$pred\t${path.toList}\t$pathLabels")
+    } else {
+      features += "no-path"
+    }
 
     if (pred == position) {
       features += s"same-token:${tagAt(sent, position)}"

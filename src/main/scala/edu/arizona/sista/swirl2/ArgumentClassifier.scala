@@ -26,8 +26,8 @@ class ArgumentClassifier {
 
     computeArgStats(doc)
 
-    val dataset = createDataset(doc)
-    dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    var dataset = createDataset(doc)
+    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
     classifier.train(dataset)
@@ -47,10 +47,13 @@ class ArgumentClassifier {
             case true => POS_LABEL
             case false => NEG_LABEL
           }
-          val scores = classify(s, arg, pred)
-          val predLabel = (scores.getCount(POS_LABEL) >= POS_THRESHOLD) match {
-            case true => POS_LABEL
-            case false => NEG_LABEL
+          var predLabel = NEG_LABEL
+          if(VALID_ARG_POS.findFirstIn(s.tags.get(arg)).isDefined) {
+            val scores = classify(s, arg, pred)
+            predLabel = (scores.getCount(POS_LABEL) >= POS_THRESHOLD) match {
+              case true => POS_LABEL
+              case false => NEG_LABEL
+            }
           }
           output += new Tuple2(goldLabel, predLabel)
         }
@@ -70,18 +73,23 @@ class ArgumentClassifier {
     val dataset = new BVFDataset[String, String]()
     val random = new Random(0)
     var sentCount = 0
+    var droppedCands = 0
     for(s <- doc.sentences) {
       val outEdges = s.semanticRoles.get.outgoingEdges
       for(pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
         for(arg <- s.words.indices) {
-          if(args.contains(arg)) {
-            dataset += mkDatum(s, arg, pred, POS_LABEL)
-          } else {
-            // down sample negatives
-            if(random.nextDouble() < DOWNSAMPLE_PROB) {
-              dataset += mkDatum(s, arg, pred, NEG_LABEL)
+          if(VALID_ARG_POS.findFirstIn(s.tags.get(arg)).isDefined) {
+            if (args.contains(arg)) {
+              dataset += mkDatum(s, arg, pred, POS_LABEL)
+            } else {
+              // down sample negatives
+              if (random.nextDouble() < DOWNSAMPLE_PROB) {
+                dataset += mkDatum(s, arg, pred, NEG_LABEL)
+              }
             }
+          } else {
+            droppedCands += 1
           }
         }
       }
@@ -89,6 +97,7 @@ class ArgumentClassifier {
       if(sentCount % 1000 == 0)
         logger.debug(s"Processed $sentCount/${doc.sentences.length} sentences...")
     }
+    logger.debug(s"Dropped $droppedCands candidate arguments.")
     dataset
   }
 
@@ -109,7 +118,8 @@ class ArgumentClassifier {
       for(i <- g.outgoingEdges.indices) {
         for(a <- g.outgoingEdges(i)) {
           val pos = s.tags.get(a._1)
-          posStats.incrementCount(pos)
+          if(pos.length < 2) posStats.incrementCount(pos)
+          else posStats.incrementCount(pos.substring(0, 2))
           count += 1
         }
       }
@@ -125,9 +135,11 @@ object ArgumentClassifier {
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
 
-  val FEATURE_THRESHOLD = 10
-  val DOWNSAMPLE_PROB = 0.25
+  val FEATURE_THRESHOLD = 3
+  val DOWNSAMPLE_PROB = 0.50
   val POS_THRESHOLD = 0.50
+
+  val VALID_ARG_POS = "NN|IN|PR|JJ|TO|RB|VB|MD|WD|CD|\\$|WP|DT".r
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
