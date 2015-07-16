@@ -30,14 +30,28 @@ class ArgumentFeatureExtractor {
       features += s"tag:$i:$tag:$predTag"
     }
 
+    if("IN|TO".r.findFirstMatchIn(lemmaAt(sent, position)).isDefined) {
+      for(dep <- sent.dependencies.get.outgoingEdges(position)) {
+        val mlemma = lemmaAt(sent, dep._1)
+        val mtag = tagAt(sent, dep._1)
+        features += s"mlemma:$mlemma"
+        features += s"mtag:$mtag"
+      }
+    }
+
     val paths = sent.dependencies.get.shortestPathEdges(pred, position)
     if(paths.nonEmpty) {
       val path = paths.head.toArray
       features += s"path-length:${path.length}"
-      val pathLabels = path.map(_._3).mkString("-")
-      features += s"path-labels:$pathLabels"
-      features += s"path-labels:$predLemma-$pathLabels-${lemmaAt(sent, position)}"
+      //val pathLabels = path.map(_._3).mkString("-")
+      //features += s"path-labels:$pathLabels"
+      //features += s"path-labels:$predLemma-$pathLabels-${lemmaAt(sent, position)}"
       // println(s"$position\t$pred\t${path.toList}\t$pathLabels")
+
+      val dirPathLabels = path.map(d => s"${d._3}${d._4}").mkString("-")
+      features += s"path-labels:$dirPathLabels"
+      features += s"path-labels:$predLemma-$dirPathLabels-${lemmaAt(sent, position)}"
+      features += s"path-labels:$predTag-$dirPathLabels-${tagAt(sent, position)}"
     } else {
       features += "no-path"
     }
@@ -46,6 +60,8 @@ class ArgumentFeatureExtractor {
       features += s"same-token:${tagAt(sent, position)}"
     } else {
       features += s"token-dist:${math.abs(pred - position)}:${pred < position}"
+      if(pred < position) features += "before"
+      else features += "after"
     }
 
     features.toList

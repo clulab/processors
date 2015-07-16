@@ -28,8 +28,10 @@ class ArgumentClassifier {
 
     var dataset = createDataset(doc)
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    classifier = new LogisticRegressionClassifier[String, String]()
-    //classifier = new LinearSVMClassifier[String, String]()
+    //classifier = new LogisticRegressionClassifier[String, String]()
+    classifier = new LinearSVMClassifier[String, String]()
+    //classifier = new RandomForestClassifier(numTrees = 100)
+    //classifier = new PerceptronClassifier[String, String](epochs = 5)
     classifier.train(dataset)
   }
 
@@ -50,7 +52,7 @@ class ArgumentClassifier {
           var predLabel = NEG_LABEL
           if(VALID_ARG_POS.findFirstIn(s.tags.get(arg)).isDefined) {
             val scores = classify(s, arg, pred)
-            predLabel = (scores.getCount(POS_LABEL) >= POS_THRESHOLD) match {
+            predLabel = (scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL)) match {
               case true => POS_LABEL
               case false => NEG_LABEL
             }
