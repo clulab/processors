@@ -7,9 +7,10 @@ import edu.arizona.sista.odin._
 
 class TestDependencyPattern extends FlatSpec with Matchers {
   val proc = new FastNLPProcessor
-  val text = "I saw Kermit at the pond."
 
   "DependencyPattern" should "support multiline patterns" in {
+
+    val text = "I saw Kermit at the pond."
     val doc = proc.annotate(text)
 
     val rule = """
@@ -36,6 +37,34 @@ class TestDependencyPattern extends FlatSpec with Matchers {
     results should have size (1)
     results.head.arguments should contain key ("participants")
     results.head.arguments should contain key ("location")
+
+  }
+
+  it should "support quantified arguments" in {
+
+    val text = "The binding of Ras, TGFBR1, MEK and TGFBR2."
+    val doc = proc.annotate(text)
+
+    val rule = """
+      |- name: testRule
+      |  label: Binding
+      |  pattern: |
+      |    trigger = binding
+      |    theme:Protein{2} = prep pobj conj?
+      |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(3), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(7), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(9), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc, state)
+
+    results should have size (6)
 
   }
 
