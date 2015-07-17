@@ -369,7 +369,8 @@ object BioNLPProcessor {
     "edu/arizona/sista/processors/bionlp/ner/Cellular_component.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Simple_chemical.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Species.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Cell_lines.tsv"
+    "edu/arizona/sista/processors/bionlp/ner/Cell_lines.tsv",
+    "edu/arizona/sista/processors/bionlp/ner/Organ.tsv"
   )
 
   val NORMALIZED_LABELS = Map[String, String]( // needed to convert  the CRF's labels (from BioCreative) to our labels
