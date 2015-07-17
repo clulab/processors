@@ -17,13 +17,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   def unitConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
     case matcher => unit match {
       case "word" => new WordConstraint(matcher)
-      case "lemma" => new LemmaConstraint(matcher)
       case "tag" => new TagConstraint(matcher)
-      case "entity" => new EntityConstraint(matcher)
-      case "chunk" => new ChunkConstraint(matcher)
-      case "incoming" => new IncomingConstraint(matcher)
-      case "outgoing" => new OutgoingConstraint(matcher)
-      case "mention" => new MentionConstraint(matcher)
       case _ => sys.error("unrecognized token field")
     }
   }
