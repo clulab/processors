@@ -30,17 +30,34 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
   def triggerFinder: Parser[TokenPattern] = "(?i)trigger".r ~> "=" ~> tokenPattern
 
   def argPattern: Parser[ArgumentPattern] =
-    identifier ~ ":" ~ identifier ~ opt("?"|"*"|"+") ~ "=" ~ disjunctiveDepPattern ^^ {
+    exactSizeArgPattern | quantifiedArgPattern | singleArgPattern
+
+  def singleArgPattern: Parser[ArgumentPattern] =
+    identifier ~ ":" ~ identifier ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
+        sys.error("'trigger' is not a valid argument name")
+      case name ~ ":" ~ label ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, size = Some(1))
+    }
+
+  def quantifiedArgPattern: Parser[ArgumentPattern] =
+    identifier ~ ":" ~ identifier ~ ("?" | "*" | "+") ~ "=" ~ disjunctiveDepPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
         sys.error("'trigger' is not a valid argument name")
-      case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = true, required = true)
-      case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = true, required = false)
-      case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = false, required = false)
-      case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = false, required = true)
+      case name ~ ":" ~ label ~ "?" ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = false, size = Some(1))
+      case name ~ ":" ~ label ~ "*" ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = false, size = None)
+      case name ~ ":" ~ label ~ "+" ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, size = None)
+    }
+
+  def exactSizeArgPattern: Parser[ArgumentPattern] =
+    identifier ~ ":" ~ identifier ~ ("{" ~> int <~ "}") ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
+        sys.error("'trigger' is not a valid argument name")
+      case name ~ ":" ~ label ~ n ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, size = Some(n))
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
@@ -143,8 +160,8 @@ class ArgumentPattern(
   val name: String,
   val label: String,
   val pattern: DependencyPatternNode,
-  val unique: Boolean,
-  val required: Boolean
+  val required: Boolean,
+  val size: Option[Int]
 ) {
   // extracts mentions and groups them according to `unique`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
@@ -153,7 +170,7 @@ class ArgumentPattern(
       m <- state.mentionsFor(sent, t, label)
     } yield m
     if (matches.isEmpty) Nil
-    else if (unique) matches.map(Seq(_))
+    else if (size.isDefined) matches.combinations(size.get).toList
     else Seq(matches)
   }
 }
