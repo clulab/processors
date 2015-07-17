@@ -21,7 +21,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     // names should be unique
     names find (_._2 > 1) match {
       case None => rules map mkExtractor  // return extractors
-      case Some((name, count)) => throw OdinCompileException(s"rule name '$name' is not unique", Some(name))
+      case Some((name, count)) => throw OdinNamedCompileException(s"rule name '$name' is not unique", name)
     }
   }
 
@@ -50,14 +50,14 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
           case labels: Collection[_] => labels.asScala.map(_.toString).toSeq.distinct
         }
       } catch {
-        case e: Exception => throw OdinCompileException(s"rule '$name' has no labels", Some(name))
+        case e: Exception => throw OdinNamedCompileException(s"rule '$name' has no labels", name)
       }
 
       // pattern is required
       val pattern = try {
         m("pattern").toString()
       } catch {
-        case e: Exception => throw OdinCompileException(s"rule '$name' has no pattern", Some(name))
+        case e: Exception => throw OdinNamedCompileException(s"rule '$name' has no pattern", name)
       }
 
       // these fields have default values
@@ -80,10 +80,10 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
         case _ => 
-          throw OdinCompileException(s"rule '${rule.name}' has unsupported type '${rule.ruleType}'", Some(rule.name))
+          throw OdinNamedCompileException(s"rule '${rule.name}' has unsupported type '${rule.ruleType}'", rule.name)
       }
     } catch {
-      case e: Exception => throw OdinCompileException(s"Error parsing rule '${rule.name}': ${e.getMessage}", Some(rule.name))
+      case e: Exception => throw OdinNamedCompileException(s"Error parsing rule '${rule.name}': ${e.getMessage}", rule.name)
     }
   }
 
