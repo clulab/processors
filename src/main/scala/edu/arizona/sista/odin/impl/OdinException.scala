@@ -11,6 +11,7 @@ package edu.arizona.sista.odin.impl
 class OdinException(val msg: String) extends RuntimeException(msg)
 // unapply method must live in the companion object
 object  OdinException {
+  def apply(msg: String) = new OdinException(msg)
   def unapply(e: OdinException): Option[String] = Some(e.msg)
 }
 
@@ -21,6 +22,7 @@ object  OdinException {
 class OdinCompileException(msg: String) extends OdinException(msg)
 
 object  OdinCompileException {
+  def apply(msg: String) = new OdinCompileException(msg)
   def unapply(e: OdinCompileException): Option[String] = Some(e.msg)
 }
 
@@ -32,6 +34,7 @@ object  OdinCompileException {
 class OdinNamedCompileException(msg: String, val ruleName: String) extends OdinCompileException(msg)
 
 object OdinNamedCompileException {
+  def apply(msg: String, ruleName: String) = new OdinNamedCompileException(msg, ruleName)
   def unapply(e: OdinNamedCompileException): Option[(String, String)] = Some((e.msg, e.ruleName))
 }
 
