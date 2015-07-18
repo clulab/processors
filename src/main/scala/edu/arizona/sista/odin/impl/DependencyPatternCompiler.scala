@@ -15,7 +15,7 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     eventDependencyPattern | relationDependencyPattern
 
   def eventDependencyPattern: Parser[DependencyPattern] =
-    triggerFinder ~ rep1(argPattern) ^^ {
+    "(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern) ^^ {
       case trigger ~ arguments => new EventDependencyPattern(trigger, arguments)
     }
 
@@ -26,8 +26,6 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
         new RelationDependencyPattern(anchorName, anchorLabel, arguments)
     }
-
-  def triggerFinder: Parser[TokenPattern] = "(?i)trigger".r ~> "=" ~> tokenPattern
 
   def argPattern: Parser[ArgumentPattern] =
     exactSizeArgPattern | quantifiedArgPattern | singleArgPattern
