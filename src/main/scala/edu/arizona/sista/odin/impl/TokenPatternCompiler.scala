@@ -32,7 +32,7 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
   }
 
   def quantifiedPattern: Parser[ProgramFragment] =
-    repeatedPattern | rangePattern | exactPattern | atomicPattern
+    atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern
 
   // when matching the default token field (unitConstraint)
   // we need to make sure that the next token is not a ':'
@@ -109,7 +109,7 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
     }
 
   def mentionPattern: Parser[ProgramFragment] =
-    namedMentionPattern | unnamedMentionPattern
+    namedMentionPattern ||| unnamedMentionPattern
 
   def atomicPattern: Parser[ProgramFragment] =
     assertionPattern | singleTokenPattern | mentionPattern |

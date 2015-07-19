@@ -28,7 +28,7 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     }
 
   def argPattern: Parser[ArgumentPattern] =
-    exactSizeArgPattern | quantifiedArgPattern | singleArgPattern
+    singleArgPattern ||| quantifiedArgPattern ||| exactSizeArgPattern
 
   def singleArgPattern: Parser[ArgumentPattern] =
     identifier ~ ":" ~ identifier ~ "=" ~ disjunctiveDepPattern ^^ {
@@ -81,7 +81,7 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
 
   /** any pattern that represents graph traversal */
   def traversalDepPattern: Parser[DependencyPatternNode] =
-    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
+    atomicDepPattern ||| repeatDepPattern ||| rangeDepPattern ||| quantifiedDepPattern
 
   def quantifiedDepPattern: Parser[DependencyPatternNode] =
     atomicDepPattern ~ ("?"|"*"|"+") ^^ {
