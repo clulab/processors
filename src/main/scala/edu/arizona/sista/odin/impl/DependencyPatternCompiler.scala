@@ -161,7 +161,7 @@ class ArgumentPattern(
   val required: Boolean,
   val size: Option[Int]
 ) {
-  // extracts mentions and groups them according to `unique`
+  // extracts mentions and groups them according to `size`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
     val matches = for {
       t <- pattern.findAllIn(tok, sent, doc, state)
