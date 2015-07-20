@@ -123,6 +123,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
           case ubiqNom if ubiqNom.toLowerCase.endsWith("ubiquitinate") => ta.setTag("VB")
           case hydro if hydro.toLowerCase.endsWith("hydrolyzes") => ta.setTag("VBZ")
           case aids if aids.toLowerCase == "aids" && aids != "AIDS" => ta.setTag("VBZ")
+          case human if human.toLowerCase == "human" => ta.setTag("NN") // Modified by Enrique for context 07/20/15 
           case _ => ()
         }
       }
@@ -370,7 +371,8 @@ object BioNLPProcessor {
     "edu/arizona/sista/processors/bionlp/ner/Simple_chemical.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Species.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Cell_lines.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Organ.tsv"
+    "edu/arizona/sista/processors/bionlp/ner/Organ.tsv",
+    "edu/arizona/sista/processors/bionlp/ner/TissueType.tsv"
   )
 
   val NORMALIZED_LABELS = Map[String, String]( // needed to convert  the CRF's labels (from BioCreative) to our labels
