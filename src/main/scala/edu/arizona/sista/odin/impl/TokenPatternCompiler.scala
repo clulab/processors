@@ -116,7 +116,7 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
     capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[ProgramFragment] =
-    atomicPattern ~ ("??"|"*?"|"+?"|"?"|"*"|"+") ^^ {
+    atomicPattern ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?") ^^ {
       case frag ~ "?" => frag.greedyOptional
       case frag ~ "??" => frag.lazyOptional
       case frag ~ "*" => frag.greedyKleene
