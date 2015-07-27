@@ -9,30 +9,34 @@ class Taxonomy(parents: Map[String, String]) {
 
   import Taxonomy.ROOT
 
+  private val parentList = parents.toList
+
   /** returns true if term is defined in taxonomy, false otherwise */
   def contains(term: String): Boolean = parents contains term
 
   /** returns true if hypernym is a superclass of hyponym, or if hypernym == hyponym */
-  def isa(hyponym: String, hypernym: String): Boolean = labelsFor(hyponym) contains hypernym
+  def isa(hyponym: String, hypernym: String): Boolean = lazyHypernymsFor(hyponym) contains hypernym
 
-  /** returns the most recent common ancestor for term1 and term2 if there is one */
-  def commonAncestor(term1: String, term2: String): Option[String] = {
-    var ancestor: Option[String] = None
-    for ((l1, l2) <- labelsFor(term1) zip labelsFor(term2)) {
-      if (l1 == l2) ancestor = Some(l1)
-      else return ancestor
-    }
-    ancestor
+  // builds a sequence of hypernyms lazily
+  def lazyHypernymsFor(term: String): Stream[String] = term match {
+    case ROOT => Stream.empty
+    case node => node #:: lazyHypernymsFor(parents(node))
   }
 
   /** returns the term and all its hypernyms */
-  def labelsFor(term: String): List[String] = {
+  def hypernymsFor(term: String): List[String] =
+    lazyHypernymsFor(term).toList
+
+  /** returns the term and all its hyponyms */
+  def hyponymsFor(term: String): List[String] = {
     @annotation.tailrec
-    def collect(nodes: List[String]): List[String] = parents(nodes.head) match {
-      case ROOT => nodes
-      case p => collect(p :: nodes)
+    def collect(remaining: List[String], results: List[String]): List[String] = remaining match {
+      case Nil => results
+      case head :: tail =>
+        val children = parentList.filter(_._2 == head).map(_._1)
+        collect(tail ::: children, head :: results)
     }
-    collect(List(term))
+    collect(List(term), Nil)
   }
 
 }
