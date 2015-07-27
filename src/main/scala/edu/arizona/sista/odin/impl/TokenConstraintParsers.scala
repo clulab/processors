@@ -23,15 +23,15 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   }
 
   def disjunctiveConstraint: Parser[TokenConstraint] =
-    conjunctiveConstraint ~ rep("|" ~> conjunctiveConstraint) ^^ {
-      case first ~ rest => (first /: rest) {
+    rep1sep(conjunctiveConstraint, "|") ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
         case (lhs, rhs) => new DisjunctiveConstraint(lhs, rhs)
       }
     }
 
   def conjunctiveConstraint: Parser[TokenConstraint] =
-    negatedConstraint ~ rep("&" ~> negatedConstraint) ^^ {
-      case first ~ rest => (first /: rest) {
+    rep1sep(negatedConstraint, "&") ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
         case (lhs, rhs) => new ConjunctiveConstraint(lhs, rhs)
       }
     }

@@ -59,15 +59,15 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
-    concatDepPattern ~ rep("|" ~> concatDepPattern) ^^ {
-      case first ~ rest => (first /: rest) {
+    rep1sep(concatDepPattern, "|") ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
         case (lhs, rhs) => new DisjunctiveDependencyPattern(lhs, rhs)
       }
     }
 
   def concatDepPattern: Parser[DependencyPatternNode] =
-    stepDepPattern ~ rep(stepDepPattern) ^^ {
-      case first ~ rest => (first /: rest) {
+    rep1(stepDepPattern) ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
         case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
       }
     }
@@ -84,7 +84,7 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     atomicDepPattern ||| repeatDepPattern ||| rangeDepPattern ||| quantifiedDepPattern
 
   def quantifiedDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ ("?"|"*"|"+") ^^ {
+    atomicDepPattern ~ ("?" | "*" | "+") ^^ {
       case pat ~ "?" => new OptionalDependencyPattern(pat)
       case pat ~ "*" => new KleeneDependencyPattern(pat)
       case pat ~ "+" => new ConcatDependencyPattern(pat, new KleeneDependencyPattern(pat))
@@ -99,8 +99,8 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
   }
 
   def repeatDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ "{" ~ int ~ "}" ^^ {
-      case pat ~ "{" ~ n ~ "}" => repeatPattern(pat, n)
+    atomicDepPattern ~ ("{" ~> int <~ "}") ^^ {
+      case pat ~ n => repeatPattern(pat, n)
     }
 
   def rangeDepPattern: Parser[DependencyPatternNode] =
