@@ -9,12 +9,13 @@ class Taxonomy(parents: Map[String, String]) {
 
   import Taxonomy.ROOT
 
-  private val vocabulary: Set[String] = parents.keySet
+  /** returns true if term is defined in taxonomy, false otherwise */
+  def contains(term: String): Boolean = parents contains term
 
-  def contains(term: String): Boolean = vocabulary contains term
-
+  /** returns true if hypernym is a superclass of hyponym, or if hypernym == hyponym */
   def isa(hyponym: String, hypernym: String): Boolean = labelsFor(hyponym) contains hypernym
 
+  /** returns the most recent common ancestor for term1 and term2 if there is one */
   def commonAncestor(term1: String, term2: String): Option[String] = {
     var ancestor: Option[String] = None
     for ((l1, l2) <- labelsFor(term1) zip labelsFor(term2)) {
@@ -24,6 +25,7 @@ class Taxonomy(parents: Map[String, String]) {
     ancestor
   }
 
+  /** returns the term and all its hypernyms */
   def labelsFor(term: String): List[String] = {
     @annotation.tailrec
     def collect(nodes: List[String]): List[String] = parents(nodes.head) match {
@@ -54,20 +56,34 @@ object Taxonomy {
       parents: Map[String,String]
   ): Map[String, String] = nodes match {
     case Nil =>
+      // we are done parsing, return the parents table
       parents
-    case (head: String) +: tail =>
-      if (parents.keySet contains head)
-        throw new OdinCompileException(s"duplicated taxonomy term '$head'")
-      mkParents(tail, parent, parents.updated(head, parent))
+    case (term: String) +: tail =>
+      if (parents contains term) {
+        throw new OdinCompileException(s"duplicated taxonomy term '$term'")
+      }
+      // add term to parents table and continue parsing siblings
+      mkParents(tail, parent, parents.updated(term, parent))
     case head +: tail =>
-      val m = head.asInstanceOf[JMap[String, Collection[Any]]].asScala
-      if (m.keys.size != 1)
-        throw new OdinCompileException("malformed taxonomy tree")
-      val k = m.keys.head
-      if (parents.keySet contains k)
-        throw new OdinCompileException(s"duplicated taxonomy term '$k'")
-      val v = m(k).asScala.toSeq
-      mkParents(tail, parent, mkParents(v, k, parents.updated(k, parent)))
+      // get next node as a scala map
+      val map = head.asInstanceOf[JMap[String, Collection[Any]]].asScala
+      if (map.keys.size != 1) {
+        val labels = map.keys.mkString(", ")
+        throw new OdinCompileException(s"taxonomy tree node with multiple labels: $labels")
+      }
+      val term = map.keys.head
+      if (parents contains term) {
+        throw new OdinCompileException(s"duplicated taxonomy term '$term'")
+      }
+      Option(map(term)) match {
+        case None =>
+          throw new OdinCompileException(s"taxonomy term '$term' has no children (looks like an extra ':')")
+        case Some(children) =>
+          // 1. add term to parents table
+          // 2. parse children
+          // 3. parse siblings
+          mkParents(tail, parent, mkParents(children.asScala.toSeq, term, parents.updated(term, parent)))
+      }
   }
 
 }
