@@ -9,8 +9,6 @@ class Taxonomy(parents: Map[String, String]) {
 
   import Taxonomy.ROOT
 
-  private val parentList = parents.toList
-
   /** returns true if term is defined in taxonomy, false otherwise */
   def contains(term: String): Boolean = parents contains term
 
@@ -33,8 +31,8 @@ class Taxonomy(parents: Map[String, String]) {
     def collect(remaining: List[String], results: List[String]): List[String] = remaining match {
       case Nil => results
       case head :: tail =>
-        val children = parentList.filter(_._2 == head).map(_._1)
-        collect(tail ::: children, head :: results)
+        val children = for ((child, parent) <- parents if parent == head) yield child
+        collect(tail ++ children, head :: results)
     }
     collect(List(term), Nil)
   }
