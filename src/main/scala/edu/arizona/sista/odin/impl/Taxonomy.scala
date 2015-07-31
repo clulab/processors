@@ -18,7 +18,8 @@ class Taxonomy(parents: Map[String, String]) {
   // builds a sequence of hypernyms lazily
   def lazyHypernymsFor(term: String): Stream[String] = term match {
     case ROOT => Stream.empty
-    case node => node #:: lazyHypernymsFor(parents(node))
+    case node if contains(node) => node #:: lazyHypernymsFor(parents(node))
+    case node => throw new OdinException(s"term '$node' not in taxonomy")
   }
 
   /** returns the term and all its hypernyms */
@@ -30,9 +31,10 @@ class Taxonomy(parents: Map[String, String]) {
     @annotation.tailrec
     def collect(remaining: List[String], results: List[String]): List[String] = remaining match {
       case Nil => results
-      case head :: tail =>
+      case head :: tail if contains(head) =>
         val children = for ((child, parent) <- parents if parent == head) yield child
         collect(tail ++ children, head :: results)
+      case head :: tail => throw new OdinException(s"term '$head' not in taxonomy")
     }
     collect(List(term), Nil)
   }
