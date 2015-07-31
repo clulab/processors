@@ -364,15 +364,15 @@ object BioNLPProcessor {
   val CRF_MODEL_PATH = "edu/arizona/sista/processors/bionlp/ner/bioner.dat"
 
   val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
+    "edu/arizona/sista/processors/bionlp/ner/Organ.tsv",
+    "edu/arizona/sista/processors/bionlp/ner/CellType.tsv",
+    "edu/arizona/sista/processors/bionlp/ner/CellLine.tsv",
+    "edu/arizona/sista/processors/bionlp/ner/Species.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Gene_or_gene_product.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Family.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Site.tsv",
     "edu/arizona/sista/processors/bionlp/ner/Cellular_component.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Simple_chemical.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Species.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/CellLine.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Organ.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/CellType.tsv"
+    "edu/arizona/sista/processors/bionlp/ner/Simple_chemical.tsv"
   )
 
   val NORMALIZED_LABELS = Map[String, String]( // needed to convert  the CRF's labels (from BioCreative) to our labels
