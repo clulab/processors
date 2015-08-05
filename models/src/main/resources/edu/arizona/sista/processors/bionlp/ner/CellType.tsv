@@ -1,4 +1,4 @@
-# Wed Jul 22 17:50:56 MST 2015
+# Tue Aug 04 16:26:30 MST 2015
 Abdomen
 Abdominal	adipose	tissue
 Abdominal	epidermis
@@ -128,13 +128,14 @@ Adenohypophysis
 Anterior	lobe	of	hypophysis
 Apical	shoot
 Adnexa	of	skin
+B	cell
+B	cells
 Brain	astrocyte
 Brain	astrocytoma
 B-cell	lymphoma
 B-cell
 B	lymphocyte
 B-lymphocyte
-B	cell
 B1	motor	neuron
 B2	motor	neuron
 Bag	cell
@@ -506,6 +507,9 @@ Corpus	,	uterine	glandular	cell
 Corpus	,	uterine	glandular	cells
 Cornu	luminal	epithelium
 Cornu	luminal	epithelial	cell
+DT40	B	cells
+DT40	cells
+DT40	wild-type	(	wt	)	,	PKCbeta-	(	PKCbeta-/-	)	,	and	CARMA1	deficient	(	CARMA1-/-	)	DT40	B	cells
 Digestive	system
 Dorsal	cochlear	nucleus
 DCN
@@ -1453,6 +1457,7 @@ Male	gametophyte
 Malphigian	corpuscle
 Malphigian	glomerulus
 Mesonephric	duct
+NIH3T3	fibroblasts
 Neuroglial	cell
 Neuroglia
 Nerve	cement
@@ -1527,6 +1532,7 @@ Nucleated	erythrocyte
 Neurohypophysis
 Nephroblastoma
 Nodule
+Oocytes
 Ocular
 Oculus
 Oxyntic	cell
@@ -1628,6 +1634,12 @@ Oviduct	glandular	cell
 Ovotestis
 Ovule
 Organ	of	Jacobson
+PKCbeta-/-	cells
+PKCbeta	deficient	DT40	B	cells
+PKCbeta	deficient	DT40	cells
+PTP-1B	was	cotransfected	with	c-Src	into	alphaIIbbeta3-SYF	cells
+PTP-1B+	/+	platelets
+PTP-1B-/-	platelets
 Pallium
 Pallium	glial	cell
 Pallium	neural	cell
@@ -2161,6 +2173,9 @@ Synovium
 Synovial	membrane
 Schwalbe	's	corpuscle
 Schwalbe	corpuscle
+TAK	deficient	DT40	B	cells
+TAK1	deficient	DT40	cells
+TAK1	deficient	cells
 Tapetum	cells	of	anther
 Trabecular	bone
 Tooth	pulp
@@ -2455,12 +2470,15 @@ Yolk	sac	tumor
 Zona	glomerulosa
 agranulocytes
 agranulocyte
+alphaIIbbeta3-SYF	cells	expressing	c-Src
+alphaIIbbeta3-SYF	cells	were	transfected	with	selected	c	Src	mutants
 blood	cells
 blood	cell
 band	cells
 band	cell
 bile
 biles
+brain
 connective	tissue
 connective	tissues
 connective	tissue	matrix
@@ -2473,6 +2491,13 @@ ethmoid	air	cells
 ethmoid	air	cell
 erythrocyte
 erythrocytes
+embryo
+embryos
+fibrinogen	binding	to	PTP-1B-/-	platelets
+fibrinogen	binding	to	alphaIIbbeta3-SYF	cells	or	platelets
+fibrinogen	binding	to	platelets
+fibrinogen	bound	PTP-1B-/-	platelets
+fibroblasts
 granulocytes
 granulocyte
 hair	cells
@@ -2481,10 +2506,13 @@ histiocytes
 histiocyte
 hair
 hairs
+hematopoietic	and	nonhematopoietic	cells
+human	and	mouse	platelets
 islet	of	langerhans	cells
 islet	of	langerhans	cell
 immune	cells
 immune	cell
+immature	and	naive	B	lymphocytes
 langerhans	cells
 langerhans	cell
 lymphocytes
@@ -2499,6 +2527,12 @@ monocytes
 monocyte
 muscle	tissue
 muscle	tissues
+mature	B	cells
+mouse	embryonic	fibroblasts
+nonlymphoid	cells
+oocyte
+oocytes
+osteoclasts
 plasma	cell
 plasma	cells
 phagocytic	cells
@@ -2515,9 +2549,13 @@ pericardial	fluid
 pericardial	fluids
 pleural	fluid
 pleural	fluids
+platelet
+platelets
+primary	B	cells	after	BCR	stimulation
 pDC
 red	blood	cells
 red	blood	cell
+resting	platelets
 renal	distal	convoluted	tubule
 subcutaneous	tissues
 subcutaneous	tissue
@@ -2525,6 +2563,7 @@ semen
 seman
 synovial	fluid
 synovial	fluids
+spleens
 thyroid	epithelial	cells
 thyroid	epithelial	cell
 thrombocytes
@@ -2534,3 +2573,9 @@ villa
 von	Ebner	's	gland
 white	blood	cells
 white	blood	cell
+wild-type	DT40	cells
+wild-type	and	PKCbeta	deficient	DT40	B	cells
+wild-type	and	PKCbeta	deficient	DT40	cells
+wild-type	or	PKCbeta-/-	DT40	cells
+wild-type	or	TAK-/-	DT40	cells
+wild-type	platelets	with	MnCl2	and	fibrinogen
