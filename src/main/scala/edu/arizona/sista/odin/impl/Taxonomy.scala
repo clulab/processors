@@ -2,8 +2,6 @@ package edu.arizona.sista.odin.impl
 
 import java.util.{ Collection, Map => JMap }
 import scala.collection.JavaConverters._
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
 
 class Taxonomy(parents: Map[String, String]) {
 
