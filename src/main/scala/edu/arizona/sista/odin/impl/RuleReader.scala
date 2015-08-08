@@ -1,6 +1,7 @@
 package edu.arizona.sista.odin.impl
 
 import java.util.{ Collection, Map => JMap }
+import scala.util.Try
 import scala.reflect.ClassTag
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
@@ -13,24 +14,51 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
 
-  def read(input: String): Seq[Extractor] = {
+  def read(input: String): Seq[Extractor] =
+    Try(readMasterFile(input)) getOrElse readSimpleFile(input)
+
+  def readSimpleFile(input: String): Seq[Extractor] = {
+    // make yaml object
+    val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
+    // parse yaml input
+    val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
     // read yaml rules
-    val rules = readRules(input)
+    val rules = readRules(jRules, None)
     // count names occurrences
     val names = rules groupBy (_.name) transform ((k, v) => v.size)
     // names should be unique
     names find (_._2 > 1) match {
       case None => rules map mkExtractor  // return extractors
-      case Some((name, count)) => throw OdinNamedCompileException(s"rule name '$name' is not unique", name)
+      case Some((name, count)) =>
+        throw OdinNamedCompileException(s"rule name '$name' is not unique", name)
     }
   }
 
-  private def readRules(input: String): Seq[Rule] = {
-    // make yaml object
-    val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
+  def readMasterFile(input: String): Seq[Extractor] = {
+    val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+    val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala
+    val taxonomy = master.get("taxonomy").map(t => Taxonomy(t.asInstanceOf[Collection[Any]]))
+    val rules = readRules(master("rules").asInstanceOf[Collection[JMap[String, Any]]], taxonomy)
+    // count names occurrences
+    val names = rules groupBy (_.name) transform ((k, v) => v.size)
+    // names should be unique
+    names find (_._2 > 1) match {
+      case None => rules map mkExtractor // return extractors
+      case Some((name, count)) =>
+        throw OdinNamedCompileException(s"rule name '$name' is not unique", name)
+    }
+  }
 
-    // parse yaml input
-    val rules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
+  private def readRules(
+      rules: Collection[JMap[String, Any]],
+      taxonomy: Option[Taxonomy]
+  ): Seq[Rule] = {
+
+    // returns label and all its hypernyms
+    def expand(label: String): Seq[String] = taxonomy match {
+      case Some(t) => t.hypernymsFor(label)
+      case None => Seq(label)
+    }
 
     // return Rule objects
     rules.asScala.toSeq.map { r =>
@@ -46,18 +74,21 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       // one or more labels are required
       val labels: Seq[String] = try {
         m("label") match {
-          case label: String => Seq(label)
-          case labels: Collection[_] => labels.asScala.map(_.toString).toSeq.distinct
+          case label: String => expand(label)
+          case jLabels: Collection[_] =>
+            jLabels.asScala.flatMap(l => expand(l.toString)).toVector.distinct
         }
       } catch {
-        case e: Exception => throw OdinNamedCompileException(s"rule '$name' has no labels", name)
+        case e: Exception =>
+          throw OdinNamedCompileException(s"rule '$name' has no labels", name)
       }
 
       // pattern is required
       val pattern = try {
         m("pattern").toString()
       } catch {
-        case e: Exception => throw OdinNamedCompileException(s"rule '$name' has no pattern", name)
+        case e: Exception =>
+          throw OdinNamedCompileException(s"rule '$name' has no pattern", name)
       }
 
       // these fields have default values
@@ -71,6 +102,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       // make intermediary rule
       new Rule(name, labels, ruleType, unit, priority, keep, action, pattern)
     }
+
   }
 
   // compiles a rule into an extractor
@@ -80,10 +112,13 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
         case _ => 
-          throw OdinNamedCompileException(s"rule '${rule.name}' has unsupported type '${rule.ruleType}'", rule.name)
+          val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
+          throw OdinNamedCompileException(msg, rule.name)
       }
     } catch {
-      case e: Exception => throw OdinNamedCompileException(s"Error parsing rule '${rule.name}': ${e.getMessage}", rule.name)
+      case e: Exception =>
+        val msg = s"Error parsing rule '${rule.name}': ${e.getMessage}"
+        throw OdinNamedCompileException(msg, rule.name)
     }
   }
 
