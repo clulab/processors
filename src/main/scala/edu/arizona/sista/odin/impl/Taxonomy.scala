@@ -10,15 +10,17 @@ class Taxonomy(parents: Map[String, String]) {
   import Taxonomy.ROOT
 
   /** returns true if term is defined in taxonomy, false otherwise */
-  def contains(term: String): Boolean = parents contains term
+  def contains(term: String): Boolean =
+    parents contains term
 
   /** returns true if hypernym is a superclass of hyponym, or if hypernym == hyponym */
-  def isa(hyponym: String, hypernym: String): Boolean = lazyHypernymsFor(hyponym) contains hypernym
+  def isa(hyponym: String, hypernym: String): Boolean =
+    lazyHypernymsFor(hyponym) contains hypernym
 
   // builds a sequence of hypernyms lazily
   def lazyHypernymsFor(term: String): Stream[String] = term match {
     case ROOT => Stream.empty
-    case node if contains(node) => node #:: lazyHypernymsFor(parents(node))
+    case node if this.contains(node) => node #:: lazyHypernymsFor(parents(node))
     case node => throw new OdinException(s"term '$node' not in taxonomy")
   }
 
@@ -31,7 +33,7 @@ class Taxonomy(parents: Map[String, String]) {
     @annotation.tailrec
     def collect(remaining: List[String], results: List[String]): List[String] = remaining match {
       case Nil => results
-      case head :: tail if contains(head) =>
+      case head :: tail if this.contains(head) =>
         val children = for ((child, parent) <- parents if parent == head) yield child
         collect(tail ++ children, head :: results)
       case head :: tail => throw new OdinException(s"term '$head' not in taxonomy")
@@ -45,11 +47,7 @@ object Taxonomy {
 
   val ROOT = "**ROOT**"
 
-  def apply(input: String): Taxonomy = {
-    val yaml = new Yaml(new Constructor(classOf[Collection[Any]]))
-    val roots = yaml.load(input).asInstanceOf[Collection[Any]]
-    new Taxonomy(mkParents(roots))
-  }
+  def apply(forest: Collection[Any]): Taxonomy = new Taxonomy(mkParents(forest))
 
   def mkParents(nodes: Collection[Any]): Map[String, String] =
     mkParents(nodes.asScala.toSeq, ROOT, Map.empty)
@@ -57,17 +55,17 @@ object Taxonomy {
   def mkParents(
       nodes: Seq[Any],
       parent: String,
-      parents: Map[String,String]
+      table: Map[String,String]
   ): Map[String, String] = nodes match {
     case Nil =>
       // we are done parsing, return the parents table
-      parents
+      table
     case (term: String) +: tail =>
-      if (parents contains term) {
+      if (table contains term) {
         throw new OdinCompileException(s"duplicated taxonomy term '$term'")
       }
       // add term to parents table and continue parsing siblings
-      mkParents(tail, parent, parents.updated(term, parent))
+      mkParents(tail, parent, table.updated(term, parent))
     case head +: tail =>
       // get next node as a scala map
       val map = head.asInstanceOf[JMap[String, Collection[Any]]].asScala
@@ -76,17 +74,18 @@ object Taxonomy {
         throw new OdinCompileException(s"taxonomy tree node with multiple labels: $labels")
       }
       val term = map.keys.head
-      if (parents contains term) {
+      if (table contains term) {
         throw new OdinCompileException(s"duplicated taxonomy term '$term'")
       }
       Option(map(term)) match {
         case None =>
-          throw new OdinCompileException(s"taxonomy term '$term' has no children (looks like an extra ':')")
+          val msg = s"taxonomy term '$term' has no children (looks like an extra ':')"
+          throw new OdinCompileException(msg)
         case Some(children) =>
           // 1. add term to parents table
           // 2. parse children
           // 3. parse siblings
-          mkParents(tail, parent, mkParents(children.asScala.toSeq, term, parents.updated(term, parent)))
+          mkParents(tail, parent, mkParents(children.asScala.toSeq, term, table.updated(term, parent)))
       }
   }
 

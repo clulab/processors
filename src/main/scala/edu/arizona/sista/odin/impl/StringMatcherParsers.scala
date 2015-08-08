@@ -4,6 +4,23 @@ import scala.util.matching.Regex
 import scala.util.parsing.combinator._
 
 trait StringMatcherParsers extends RegexParsers {
+
+  // any valid StringMatcher
+  def stringMatcher: Parser[StringMatcher] = exactStringMatcher | regexStringMatcher
+
+  // a StringMatcher that compares to a string
+  def exactStringMatcher: Parser[StringMatcher] = stringLiteral ^^ {
+    string => new ExactStringMatcher(string)
+  }
+
+  // a StringMatcher that uses a regex
+  def regexStringMatcher: Parser[StringMatcher] = regexLiteral ^^ {
+    regex => new RegexStringMatcher(regex)
+  }
+
+  // any valid string literal (with or without quotes)
+  def stringLiteral: Parser[String] = identifier | quotedStringLiteral
+
   // valid java identifier
   def identifier: Parser[String] =
     """\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*""".r
@@ -12,30 +29,15 @@ trait StringMatcherParsers extends RegexParsers {
   // with "\" as the escape character
   def quotedStringLiteral: Parser[String] =
     """'[^\\']*(?:\\.[^\\']*)*'|"[^\\"]*(?:\\.[^\\"]*)*"""".r ^^ {
-      case s => """\\(.)""".r.replaceAllIn(s.drop(1).dropRight(1), m => m.group(1))
+      s => """\\(.)""".r.replaceAllIn(s.drop(1).dropRight(1), m => m.group(1))
     }
-
-  // any valid string literal (with or without quotes)
-  def stringLiteral: Parser[String] = identifier | quotedStringLiteral
 
   // match a perl style "/" delimited regular expression
   // "\" is the escape character, so "\/" becomes "/"
   def regexLiteral: Parser[Regex] = """/[^\\/]*(?:\\.[^\\/]*)*/""".r ^^ {
-    case s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/").r
+    s => s.drop(1).dropRight(1).replaceAll("""\\/""", "/").r
   }
 
-  // a StringMatcher that compares to a string
-  def exactStringMatcher: Parser[StringMatcher] = stringLiteral ^^ {
-    case string => new ExactStringMatcher(string)
-  }
-
-  // a StringMatcher that uses a regex
-  def regexStringMatcher: Parser[StringMatcher] = regexLiteral ^^ {
-    case regex => new RegexStringMatcher(regex)
-  }
-
-  // any valid StringMatcher
-  def stringMatcher: Parser[StringMatcher] = exactStringMatcher | regexStringMatcher
 }
 
 sealed trait StringMatcher {
