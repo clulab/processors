@@ -18,20 +18,10 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     Try(readMasterFile(input)) getOrElse readSimpleFile(input)
 
   def readSimpleFile(input: String): Seq[Extractor] = {
-    // make yaml object
     val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
-    // parse yaml input
     val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
-    // read yaml rules
     val rules = readRules(jRules, None)
-    // count names occurrences
-    val names = rules groupBy (_.name) transform ((k, v) => v.size)
-    // names should be unique
-    names find (_._2 > 1) match {
-      case None => rules map mkExtractor  // return extractors
-      case Some((name, count)) =>
-        throw OdinNamedCompileException(s"rule name '$name' is not unique", name)
-    }
+    mkExtractors(rules)
   }
 
   def readMasterFile(input: String): Seq[Extractor] = {
@@ -39,6 +29,10 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala
     val taxonomy = master.get("taxonomy").map(t => Taxonomy(t.asInstanceOf[Collection[Any]]))
     val rules = readRules(master("rules").asInstanceOf[Collection[JMap[String, Any]]], taxonomy)
+    mkExtractors(rules)
+  }
+
+  def mkExtractors(rules: Seq[Rule]): Seq[Extractor] = {
     // count names occurrences
     val names = rules groupBy (_.name) transform ((k, v) => v.size)
     // names should be unique
