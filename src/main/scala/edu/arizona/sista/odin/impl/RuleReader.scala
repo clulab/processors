@@ -1,12 +1,11 @@
 package edu.arizona.sista.odin.impl
 
 import java.util.{ Collection, Map => JMap }
-import scala.util.Try
 import scala.reflect.ClassTag
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
 import edu.arizona.sista.odin._
 import RuleReader._
 
@@ -15,7 +14,11 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   private val mirror = new ActionMirror(actions)
 
   def read(input: String): Seq[Extractor] =
-    Try(readMasterFile(input)) getOrElse readSimpleFile(input)
+    try {
+      readMasterFile(input)
+    } catch {
+      case e: ConstructorException => readSimpleFile(input)
+    }
 
   def readSimpleFile(input: String): Seq[Extractor] = {
     val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
