@@ -107,14 +107,18 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     rules.asScala.toSeq.flatMap { r =>
       val m = r.asScala.toMap
       if (m contains "import") {
+        // import rules from a file and return them
         importRules(m, taxonomy, vars)
       } else {
+        // gets a label and returns it and all its hypernyms
         val expand: String => Seq[String] = label => taxonomy match {
           case Some(t) => t.hypernymsFor(label)
           case None => Seq(label)
         }
+        // interpolates a template variable
         val template: Any => String =
           s => """\$\{(.*)\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
+        // return the rule (in a Seq because this is a flatMap)
         Seq(mkRule(m, expand, template))
       }
     }
@@ -128,10 +132,20 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   ): Seq[Rule] = {
     val file = new File(data("import").toString)
     val input = io.Source.fromFile(file).mkString
-    val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
-    val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
+    val (jRules: Collection[JMap[String, Any]], jVars: Map[String, String]) = try {
+      val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+      val data = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
+      val jRules = data("rules").asInstanceOf[Collection[JMap[String, Any]]]
+      val jVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
+      (jRules, jVars)
+    } catch {
+      case e: ConstructorException =>
+        val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
+        val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
+        (jRules, Map.empty)
+    }
     val localVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala).getOrElse(Map.empty)
-    readRules(jRules, taxonomy, vars ++ localVars)
+    readRules(jRules, taxonomy, jVars ++ vars ++ localVars)
   }
 
   // compiles a rule into an extractor
