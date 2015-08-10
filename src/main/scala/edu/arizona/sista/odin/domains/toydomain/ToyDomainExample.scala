@@ -24,6 +24,9 @@ object ToyDomainExample extends App {
                  |      - DownRegulation
                  |  - ExampleRelation
                  |
+                 |vars:
+                 |  phospho: Phosphorylation
+                 |
                  |rules:
                  |  # this rule creates Protein mentions from named entity tags in IOB notation
                  |  - name: rule1
@@ -35,7 +38,7 @@ object ToyDomainExample extends App {
                  |  # this rule creates phosphorylation events
                  |  # the arguments are Protein mentions
                  |  - name: rule2
-                 |    label: Phosphorylation
+                 |    label: "{{ phospho }}"
                  |    pattern: |
                  |      trigger = [word=/^phospho/ & tag=/^VB/]
                  |      theme: Protein = dobj
