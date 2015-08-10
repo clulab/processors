@@ -114,7 +114,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
           case None => Seq(label)
         }
         val template: Any => String =
-          s => """\{\{\s*(.*)\s*\}\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
+          s => """\$\{(.*)\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
         Seq(mkRule(m, expand, template))
       }
     }

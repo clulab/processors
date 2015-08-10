@@ -38,7 +38,7 @@ object ToyDomainExample extends App {
                  |  # this rule creates phosphorylation events
                  |  # the arguments are Protein mentions
                  |  - name: rule2
-                 |    label: "{{ phospho }}"
+                 |    label: ${ phospho }
                  |    pattern: |
                  |      trigger = [word=/^phospho/ & tag=/^VB/]
                  |      theme: Protein = dobj
