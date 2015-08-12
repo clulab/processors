@@ -115,7 +115,8 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
           case Some(t) => t.hypernymsFor(label)
           case None => Seq(label)
         }
-        // interpolates a template variable
+        // interpolates a template variable with ${variableName} notation
+        // note that $variableName is not supported and $ can't be escaped
         val template: Any => String =
           s => """\$\{(.*)\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
         // return the rule (in a Seq because this is a flatMap)
@@ -130,22 +131,36 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       taxonomy: Option[Taxonomy],
       vars: Map[String, String]
   ): Seq[Rule] = {
-    val file = new File(data("import").toString)
-    val input = io.Source.fromFile(file).mkString
-    val (jRules: Collection[JMap[String, Any]], jVars: Map[String, String]) = try {
+    val path = data("import").toString
+    val url = getClass.getResource(path)
+    // try to read a resource or else a file
+    val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+    val input = source.mkString // slurp
+    source.close()
+    // read rules and vars from file
+    val (jRules: Collection[JMap[String, Any]], fileVars: Map[String, String]) = try {
+      // try to read file with rules and optional vars by trying to read a JMap
       val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
       val data = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
+      // read list of rules
       val jRules = data("rules").asInstanceOf[Collection[JMap[String, Any]]]
-      val jVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
-      (jRules, jVars)
+      // read optional vars
+      val fileVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
+      (jRules, fileVars)
     } catch {
       case e: ConstructorException =>
+        // try to read file with a list of rules by trying to read a Collection of JMaps
         val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
         val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
         (jRules, Map.empty)
     }
+    // variables specified by the call to `import`
     val localVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala).getOrElse(Map.empty)
-    readRules(jRules, taxonomy, jVars ++ vars ++ localVars)
+    // this map concatenation implements variable scope:
+    // - an imported file may define its own variables (`fileVars`)
+    // - the importer file can define variables (`vars`) that override `fileVars`
+    // - a call to `import` can specify variables (`localVars`) that override the importer `vars`
+    readRules(jRules, taxonomy, fileVars ++ vars ++ localVars)
   }
 
   // compiles a rule into an extractor
@@ -197,6 +212,7 @@ object RuleReader {
   val DefaultAction = "default"
   val DefaultUnit = "word"
 
+  // interprets yaml boolean literals
   def strToBool(s: String): Boolean = s match {
     case "y" | "Y" | "yes" | "Yes" | "YES" | "true" | "True" | "TRUE" | "on" | "On" | "ON" => true
     case "n" | "N" | "no" | "No" | "NO" | "false" | "False" | "FALSE" | "off" | "Off" | "OFF" => false
