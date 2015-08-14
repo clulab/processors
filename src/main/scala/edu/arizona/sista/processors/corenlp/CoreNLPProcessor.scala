@@ -185,6 +185,10 @@ class CoreNLPProcessor(internStrings:Boolean = true,
     if(! withDiscourse) return
     basicSanityCheck(doc, checkAnnotation = false)
 
+    if(withDiscourse && basicDependencies == false) {
+      throw new RuntimeException("ERROR: you must use basic Stanford dependencies if discourse is enabled!")
+    }
+
     if (doc.sentences.head.tags == None)
       throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
     if (doc.sentences.head.lemmas == None)

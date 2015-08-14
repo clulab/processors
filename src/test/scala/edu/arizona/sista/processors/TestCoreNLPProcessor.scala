@@ -11,7 +11,7 @@ import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
  * Date: 3/3/13
  */
 class TestCoreNLPProcessor extends FlatSpec with Matchers {
-  var proc:Processor = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
+  var proc:Processor = new CoreNLPProcessor(internStrings = true, basicDependencies = true, withDiscourse = true)
 
   "CoreNLPProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)
@@ -187,7 +187,7 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
 
     doc.sentences.head.dependencies.get.hasEdge(1, 0, "nn") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(2, 1, "nsubj") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(2, 4, "prep_to") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(2, 3, "prep") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(2, 3, "obj") should be (false)
 
     doc.sentences.head.syntacticTree.foreach(t => {

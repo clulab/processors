@@ -30,6 +30,11 @@ class Document( var id:Option[String],
   def clear() { }
 }
 
+object Document {
+  val STANFORD_BASIC = 0 // Basic Stanford dependencies are stored at position 0 in the dependenciesByType array
+  val STANFORD_COLLAPSED = 1 // Collapsed Stanford dependencies are stored at position 0 in the dependenciesByType array
+}
+
 /** Stores the annotations for a single sentence */
 class Sentence(
                 /** Actual tokens in this sentence */
@@ -76,7 +81,7 @@ class Sentence(
     for(i <- start until end) {
       if(i > start) {
         // add as many white spaces as recorded between tokens
-        // something this space is negative: in BioNLPProcessor we replace "/" with "and"
+        // sometimes this space is negative: in BioNLPProcessor we replace "/" with "and"
         //   in these cases, let's make sure we print 1 space, otherwise the text is hard to read
         val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
         for (j <- 0 until numberOfSpaces) {
