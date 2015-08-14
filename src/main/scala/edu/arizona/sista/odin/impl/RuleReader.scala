@@ -118,7 +118,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
         // interpolates a template variable with ${variableName} notation
         // note that $variableName is not supported and $ can't be escaped
         val template: Any => String =
-          s => """\$\{(.*)\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
+          s => """\$\{(.*?)\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
         // return the rule (in a Seq because this is a flatMap)
         Seq(mkRule(m, expand, template))
       }
