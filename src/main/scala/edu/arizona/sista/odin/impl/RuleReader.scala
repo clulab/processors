@@ -33,7 +33,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   def readMasterFile(input: String): Seq[Extractor] = {
     val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
     val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala
-    val taxonomy = master.get("taxonomy").map(t => Taxonomy(t.asInstanceOf[Collection[Any]]))
+    val taxonomy = master.get("taxonomy").map(readTaxonomy)
     val vars = master.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
     val rules = readRules(jRules, taxonomy, vars)
@@ -124,6 +124,19 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       }
     }
 
+  }
+
+  // reads a taxonomy from data, where data may be either a forest or a file path
+  private def readTaxonomy(data: Any): Taxonomy = data match {
+    case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
+    case path: String =>
+      val url = getClass.getResource(path)
+      val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+      val input = source.mkString
+      source.close()
+      val yaml = new Yaml(new Constructor(classOf[Collection[Any]]))
+      val data = yaml.load(input).asInstanceOf[Collection[Any]]
+      Taxonomy(data)
   }
 
   private def importRules(
