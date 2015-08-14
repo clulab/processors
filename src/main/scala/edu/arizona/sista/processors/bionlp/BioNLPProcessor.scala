@@ -32,6 +32,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
 
   //lazy val banner = new BannerWrapper
   lazy val postProcessor = new BioNLPTokenizerPostProcessor
+  lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences)
   lazy val bioNer = BioNER.load(CRF_MODEL_PATH)
   lazy val ruleNer = RuleNER.load(RULE_NER_KBS)
 
@@ -61,44 +62,9 @@ class BioNLPProcessor (internStrings:Boolean = true,
    */
   override def postprocessTokens(originalTokens:Array[CoreLabel]) = postProcessor.process(originalTokens)
 
-  /**
-   * Removes Figure and Table references that appear within parentheses
-   * @param origText The original input text
-   * @return The preprocessed text
-   */
-  override def preprocessText(origText:String):String = {
-    if (!removeFigTabReferences) return origText
-
-    var noRefs = origText
-    // the pattern with parens must run first!
-    noRefs = removeFigTabRefs(BioNLPProcessor.FIGTAB_REFERENCE_WITH_PARENS, noRefs)
-    noRefs = removeFigTabRefs(BioNLPProcessor.FIGTAB_REFERENCE, noRefs)
-    noRefs
-  }
-
-  /**
-   * Removes references to Tables and Figures
-   * @param pattern Fig/Tab pattern
-   * @param text The original text
-   * @return The cleaned text
-   */
-  def removeFigTabRefs(pattern:Pattern, text:String):String = {
-    val m = pattern.matcher(text)
-    val b = new StringBuilder
-    var previousEnd = 0
-    while(m.find()) {
-      b.append(text.substring(previousEnd, m.start()))
-      // white out the reference, keeping the same number of characters
-      for(i <- m.start() until m.end()) b.append(" ")
-      previousEnd = m.end()
-    }
-    if(previousEnd < text.length)
-      b.append(text.substring(previousEnd))
-    b.toString()
-  }
+  override def preprocessText(origText:String):String = preProcessor.preprocess(origText)
 
   override def resolveCoreference(doc:Document): Unit = {
-    // TODO: add domain-specific coreference here!
     doc.coreferenceChains = None
   }
 
@@ -355,8 +321,6 @@ class BioNLPProcessor (internStrings:Boolean = true,
 }
 
 object BioNLPProcessor {
-  val FIGTAB_REFERENCE_WITH_PARENS = Pattern.compile("\\((\\s*see)?(\\s*supplementary)?\\s*(figure|table|fig\\.|tab\\.)[^\\)]*\\)", Pattern.CASE_INSENSITIVE)
-  val FIGTAB_REFERENCE = Pattern.compile("\\s*see(\\s*supplementary)?\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
   val POTENTIAL_FIGURE_NUMBER = Pattern.compile("[a-z]*\\d+", Pattern.CASE_INSENSITIVE)
   val POTENTIAL_FIGURE_TEXT = Pattern.compile("(figure|figures|fig\\.?|figs\\.?)", Pattern.CASE_INSENSITIVE)
 
