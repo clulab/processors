@@ -47,7 +47,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     names find (_._2 > 1) match {
       case None => rules map mkExtractor // return extractors
       case Some((name, count)) =>
-        throw OdinNamedCompileException(s"rule name '$name' is not unique", name)
+        throw new OdinNamedCompileException(s"rule name '$name' is not unique", name)
     }
   }
 
@@ -61,7 +61,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     val name = try {
       template(data("name"))
     } catch {
-      case e: Exception => throw OdinCompileException("unnamed rule")
+      case e: Exception => throw new OdinCompileException("unnamed rule")
     }
 
     // one or more labels are required
@@ -73,7 +73,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       }
     } catch {
       case e: Exception =>
-        throw OdinNamedCompileException(s"rule '$name' has no labels", name)
+        throw new OdinNamedCompileException(s"rule '$name' has no labels", name)
     }
 
     // pattern is required
@@ -81,7 +81,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       template(data("pattern"))
     } catch {
       case e: Exception =>
-        throw OdinNamedCompileException(s"rule '$name' has no pattern", name)
+        throw new OdinNamedCompileException(s"rule '$name' has no pattern", name)
     }
 
     // these fields have default values
@@ -184,12 +184,12 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
         case "dependency" => mkDependencyExtractor(rule)
         case _ => 
           val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
-          throw OdinNamedCompileException(msg, rule.name)
+          throw new OdinNamedCompileException(msg, rule.name)
       }
     } catch {
       case e: Exception =>
         val msg = s"Error parsing rule '${rule.name}': ${e.getMessage}"
-        throw OdinNamedCompileException(msg, rule.name)
+        throw new OdinNamedCompileException(msg, rule.name)
     }
   }
 
