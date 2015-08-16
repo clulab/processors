@@ -56,7 +56,7 @@ pomIncludeRepository := { _ => false }
 
 // mandatory stuff to add to the pom for publishing
 pomExtra := (
-  <url>https://github.com/sistanlp/processors</url>
+  <url>https://github.com/clulab/processors</url>
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -65,8 +65,8 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-    <url>https://github.com/sistanlp/processors</url>
-    <connection>https://github.com/sistanlp/processors</connection>
+    <url>https://github.com/clulab/processors</url>
+    <connection>https://github.com/clulab/processors</connection>
   </scm>
   <developers>
     <developer>
