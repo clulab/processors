@@ -244,6 +244,20 @@ class EventMention(
     )
   }
 
+  // Create a new EventMention by removing a sequence of arguments
+  def -(argNames:Seq[String]): EventMention = {
+    new EventMention(
+      labels,
+      trigger,
+      // Remove each key
+      argNames.foldRight(arguments){ (arg, argMap) => argMap - arg },
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+
 }
 
 class RelationMention(
