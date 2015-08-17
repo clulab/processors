@@ -312,4 +312,16 @@ class RelationMention(
     )
   }
 
+  // Convert a RelationMention to an EventMention by specifying a trigger
+  def toEventMention(trigger: TextBoundMention): RelationMention = {
+    new RelationMention(
+      labels,
+      arguments,
+      sentence,
+      document,
+      keep,
+      s"$foundBy + toEventMention"
+    )
+  }
+
 }
