@@ -257,7 +257,7 @@ class EventMention(
       foundBy
     )
   }
-  
+
   // Create a new EventMention by adding a key, value pair to the arguments map
   def +(argName:String, mentions:Seq[Mention]): EventMention = {
     new EventMention(
@@ -299,4 +299,17 @@ class RelationMention(
     val allEnds = arguments.values.flatMap(_.map(_.end))
     Interval(allStarts.min, allEnds.max)
   }
+
+  // Create a new RelationMention by changing only the sequence of labels
+  def copy(newLabels: Seq[String]): RelationMention = {
+    new RelationMention(
+      newLabels,
+      arguments,
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+
 }
