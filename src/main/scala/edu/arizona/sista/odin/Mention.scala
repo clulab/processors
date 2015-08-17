@@ -205,6 +205,20 @@ class EventMention(
     val h2 = mixLast(h1, trigger.hashCode)
     finalizeHash(h2, 2)
   }
+
+  // Create a new EventMention by changing only the sequence of labels
+  def copy(newLabels: Seq[String]): EventMention = {
+    new EventMention(
+      newLabels,
+      trigger,
+      arguments,
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+
 }
 
 class RelationMention(
