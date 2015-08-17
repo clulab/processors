@@ -5,6 +5,7 @@ import edu.arizona.sista.struct.DirectedGraph
 
 trait Dependencies {
   def dependencies(sent: Int, doc: Document): DirectedGraph[String] =
+    // NOTE: the .dependencies method first tries collapsed dependencies. If not available, it backs off to basic deps
     doc.sentences(sent).dependencies match {
       case None => sys.error("sentence has no dependencies")
       case Some(deps) => deps

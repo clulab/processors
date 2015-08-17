@@ -3,9 +3,9 @@ package edu.arizona.sista.processors.fastnlp
 import java.util.Properties
 
 import edu.arizona.sista.discourse.rstparser.RSTParser
-import edu.arizona.sista.processors.corenlp.{CoreNLPUtils, CoreNLPProcessor}
+import edu.arizona.sista.processors.corenlp.CoreNLPUtils
 import edu.arizona.sista.processors.shallownlp.ShallowNLPProcessor
-import edu.arizona.sista.processors.{Sentence, Document}
+import edu.arizona.sista.processors.{DependencyMap, Sentence, Document}
 import edu.arizona.sista.struct.DirectedGraph
 import edu.arizona.sista.utils.Files
 import edu.stanford.nlp.ling.CoreAnnotations
@@ -20,6 +20,7 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import scala.collection.mutable
 import org.maltparserx
 import scala.collection.JavaConversions._
+import edu.arizona.sista.discourse.rstparser.Utils._
 
 /**
  * Fast NLP tools
@@ -32,7 +33,6 @@ import scala.collection.JavaConversions._
  */
 class FastNLPProcessor(internStrings:Boolean = true,
                        useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
-                       useBasicDependencies:Boolean = true, // this can be turned off only for useMalt == false
                        withDiscourse:Boolean = false)
   extends ShallowNLPProcessor(internStrings) {
 
@@ -53,9 +53,9 @@ class FastNLPProcessor(internStrings:Boolean = true,
   override def parse(doc:Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
-    if (doc.sentences.head.tags == None)
+    if (doc.sentences.head.tags.isEmpty)
       throw new RuntimeException("ERROR: you have to run the POS tagger before NER!")
-    if (doc.sentences.head.lemmas == None)
+    if (doc.sentences.head.lemmas.isEmpty)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
 
     if (useMalt) {
@@ -76,7 +76,8 @@ class FastNLPProcessor(internStrings:Boolean = true,
         println()
       }
       val dg = parseSentence(sentence)
-      sentence.dependencies = Some(dg)
+      // Note: malt only support basic Stanford dependencies!
+      sentence.setDependencies(DependencyMap.STANFORD_BASIC, dg)
       if (debug) {
         println("DONE.")
       }
@@ -99,14 +100,12 @@ class FastNLPProcessor(internStrings:Boolean = true,
       val gs = stanfordDepParser.predict(sa)
 
       // convert to Stanford's semantic graph representation
-      val deps = useBasicDependencies match {
-        case true => SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, true, null)
-        case _ => SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, true, null)
-      }
+      val basicDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, true, null)
+      val collapsedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, true, null)
 
       // convert to our own directed graph
-      val dg = CoreNLPUtils.toDirectedGraph(deps, in)
-      doc.sentences(offset).dependencies = Some(dg)
+      doc.sentences(offset).setDependencies(DependencyMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+      doc.sentences(offset).setDependencies(DependencyMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
 
       //println("Output directed graph:")
       //println(dg)
@@ -119,7 +118,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
   private def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val tokens = new Array[String](sentence.words.length)
-    for(i <- 0 until tokens.length) {
+    for(i <- tokens.indices) {
       tokens(i) = s"${i + 1}\t${sentence.words(i)}\t${sentence.lemmas.get(i)}\t${sentence.tags.get(i)}\t${sentence.tags.get(i)}\t_"
     }
 
@@ -185,15 +184,11 @@ class FastNLPProcessor(internStrings:Boolean = true,
     if(! withDiscourse) return
     basicSanityCheck(doc, checkAnnotation = false)
 
-    if(withDiscourse && useBasicDependencies == false) {
-      throw new RuntimeException("ERROR: you must use basic Stanford dependencies if discourse is enabled!")
-    }
-
-    if (doc.sentences.head.tags == None)
+    if (doc.sentences.head.tags.isEmpty)
       throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
-    if (doc.sentences.head.lemmas == None)
+    if (doc.sentences.head.lemmas.isEmpty)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before discourse parsing!")
-    if(doc.sentences.head.dependencies == None)
+    if(! hasDeps(doc.sentences.head))
       throw new RuntimeException("ERROR: you have to run the dependency parser before discourse parsing!")
 
     val out = rstDependencyParser.parse(doc)

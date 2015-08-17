@@ -122,18 +122,21 @@ class DocumentSerializer {
     assert(wordBuffer.size == tokenCount)
     assert(startOffsetBuffer.size == tokenCount)
     assert(endOffsetBuffer.size == tokenCount)
-    assert(tagBuffer.size == 0 || tagBuffer.size == tokenCount)
-    assert(lemmaBuffer.size == 0 || lemmaBuffer.size == tokenCount)
-    assert(entityBuffer.size == 0 || entityBuffer.size == tokenCount)
-    assert(normBuffer.size == 0 || normBuffer.size == tokenCount)
-    assert(chunkBuffer.size == 0 || chunkBuffer.size == tokenCount)
+    assert(tagBuffer.isEmpty || tagBuffer.size == tokenCount)
+    assert(lemmaBuffer.isEmpty || lemmaBuffer.size == tokenCount)
+    assert(entityBuffer.isEmpty || entityBuffer.size == tokenCount)
+    assert(normBuffer.isEmpty || normBuffer.size == tokenCount)
+    assert(chunkBuffer.isEmpty || chunkBuffer.size == tokenCount)
 
-    var deps:Option[DirectedGraph[String]] = None
+    var deps = new DependencyMap
     var tree:Option[Tree] = None
     do {
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
-        deps = Some(loadDependencies(r))
+        val dt = bits(1).toInt
+        val sz = bits(2).toInt
+        val d = loadDependencies(r, sz)
+        deps += (dt -> d)
       } else if (bits(0) == START_CONSTITUENTS) {
         val position = new MutableNumber[Int](0)
         bits = read(r)
@@ -154,7 +157,7 @@ class DocumentSerializer {
     )
   }
 
-  private def loadDependencies(r:BufferedReader):DirectedGraph[String] = {
+  private def loadDependencies(r:BufferedReader, sz:Int):DirectedGraph[String] = {
     val edges = new ListBuffer[(Int, Int, String)]
     val roots = new mutable.HashSet[Int]()
     var bits = read(r)
@@ -177,7 +180,7 @@ class DocumentSerializer {
   }
 
   private def bufferOption[T: ClassTag](b:ArrayBuffer[T], allNils:Boolean): Option[Array[T]] = {
-    if (b.size == 0) return None
+    if (b.isEmpty) return None
     if (allNils) return None
     Some(b.toArray)
   }
@@ -218,9 +221,10 @@ class DocumentSerializer {
       saveToken(sent, offset, os)
       offset += 1
     }
-    if (sent.dependencies.nonEmpty) {
-      os.println(START_DEPENDENCIES + SEP + sent.dependencies.size)
-      sent.dependencies.foreach(g => saveDependencies(g, os))
+    if (sent.dependenciesByType.nonEmpty) {
+      for(t <- sent.dependenciesByType.keySet) {
+        saveDependencies(sent.dependenciesByType.get(t).get, t, os)
+      }
     }
     if (sent.syntacticTree.nonEmpty) {
       os.println(START_CONSTITUENTS + SEP + "1")
@@ -231,7 +235,7 @@ class DocumentSerializer {
 
   private def saveTree(tree:Tree, os:PrintWriter) {
     os.print(tree.value + SEP + tree.head + SEP + tree.startOffset + SEP + tree.endOffset + SEP)
-    if (tree.children == None) os.print(0)
+    if (tree.children.isEmpty) os.print(0)
     else os.print(tree.children.get.length)
     if (! tree.isLeaf) {
       for(c <- tree.children.get) {
@@ -296,7 +300,8 @@ class DocumentSerializer {
     os.println()
   }
 
-  private def saveDependencies(dg:DirectedGraph[String], os:PrintWriter) {
+  private def saveDependencies(dg:DirectedGraph[String], dependencyType:Int, os:PrintWriter) {
+    os.println(START_DEPENDENCIES + SEP + dependencyType + SEP + dg.size)
     os.println(dg.roots.mkString(sep = SEP))
     val it = new DirectedGraphEdgeIterator[String](dg)
     while(it.hasNext) {
