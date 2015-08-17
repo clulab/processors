@@ -145,6 +145,19 @@ class TextBoundMention(
 
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
+
+  // Create a new TextBoundMention by changing only the sequence of labels
+  def copy(newLabels: Seq[String]): TextBoundMention = {
+    new TextBoundMention(
+      newLabels,
+      tokenInterval,
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+
 }
 
 class EventMention(
