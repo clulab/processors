@@ -324,4 +324,30 @@ class RelationMention(
     )
   }
 
+
+  // Create a new RelationMention by removing a single argument
+  def -(argName:String): RelationMention = {
+    new RelationMention(
+      labels,
+      arguments - argName,
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+
+  // Create a new RelationMention by removing a sequence of arguments
+  def -(argNames:Seq[String]): RelationMention = {
+    new RelationMention(
+      labels,
+      // Remove each key
+      argNames.foldRight(arguments){ (arg, argMap) => argMap - arg },
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+
 }
