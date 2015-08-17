@@ -219,6 +219,18 @@ class EventMention(
     )
   }
 
+  // Convert an EventMention to a RelationMention by deleting the trigger
+  def toRelationMention: RelationMention = {
+    new RelationMention(
+      labels,
+      arguments,
+      sentence,
+      document,
+      keep,
+      s"$foundBy + toRelationMention"
+    )
+  }
+
 }
 
 class RelationMention(
