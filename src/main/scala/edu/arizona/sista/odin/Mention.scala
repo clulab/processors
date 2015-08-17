@@ -257,6 +257,19 @@ class EventMention(
       foundBy
     )
   }
+  
+  // Create a new EventMention by adding a key, value pair to the arguments map
+  def +(argName:String, mentions:Seq[Mention]): EventMention = {
+    new EventMention(
+      labels,
+      trigger,
+      arguments + (argName -> mentions),
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
 
 }
 
