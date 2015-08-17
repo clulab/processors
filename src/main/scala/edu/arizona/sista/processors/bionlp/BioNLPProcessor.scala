@@ -28,7 +28,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
                        withDiscourse:Boolean = false,
                        maxSentenceLength:Int = 100,
                        removeFigTabReferences:Boolean = true)
-  extends CoreNLPProcessor(internStrings, basicDependencies = false, withDiscourse, maxSentenceLength) {
+  extends CoreNLPProcessor(internStrings, withDiscourse, maxSentenceLength) {
 
   //lazy val banner = new BannerWrapper
   lazy val postProcessor = new BioNLPTokenizerPostProcessor

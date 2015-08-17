@@ -22,7 +22,7 @@ class TestDependencyPattern extends FlatSpec with Matchers {
       |      nsubj                # the nominal subject
       |        |                  # and
       |      dobj                 # the direct object
-      |    location:Place = prep pobj
+      |    location:Place = prep_at
       |""".stripMargin
 
     val mentions = Seq(
@@ -44,13 +44,14 @@ class TestDependencyPattern extends FlatSpec with Matchers {
 
     val text = "The binding of Ras, TGFBR1, MEK and TGFBR2."
     val doc = proc.annotate(text)
+    //println(doc.sentences.head.dependencies.get)
 
     val rule = """
       |- name: testRule
       |  label: Binding
       |  pattern: |
       |    trigger = binding
-      |    theme:Protein{2} = prep pobj conj?
+      |    theme:Protein{2} = prep_of conj?
       |""".stripMargin
 
     val mentions = Seq(

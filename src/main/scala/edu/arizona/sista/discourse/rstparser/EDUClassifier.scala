@@ -9,6 +9,7 @@ import EDUClassifier._
 import edu.arizona.sista.struct.Counter
 import edu.arizona.sista.learning._
 import java.io._
+import Utils._
 
 /**
  * Detects EDU boundaries
@@ -99,15 +100,15 @@ class EDUClassifier {
     }
     println("...")
     println("Incoming dependencies for token:")
-    val inc = sent.dependencies.get.incomingEdges
+    val inc = deps(sent).incomingEdges
     if(offset < inc.size) {
       for (d <- inc(offset)) {
         println("\t" + sent.words(d._1) + "\t" + d._2)
       }
     }
-    if(offset < sent.dependencies.get.outgoingEdges.size) {
-      val (_, top) = featureExtractor.pathToRoot(offset, sent.dependencies.get.incomingEdges)
-      val leftMost = sent.dependencies.get.outgoingEdges(offset).size == 0
+    if(offset < deps(sent).outgoingEdges.size) {
+      val (_, top) = featureExtractor.pathToRoot(offset, deps(sent).incomingEdges)
+      val leftMost = deps(sent).outgoingEdges(offset).size == 0
       println(errType + "\tleftmost:" + top + "|" + leftMost)
     }
   }

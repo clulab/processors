@@ -3,6 +3,7 @@ package edu.arizona.sista.discourse.rstparser
 import scala.io.StdIn
 import edu.arizona.sista.processors.{Sentence, Document, Processor}
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
+import Utils._
 
 /**
  * Displays dependency path to root for a given word. Debugging only.
@@ -31,8 +32,8 @@ object ShowDepPath {
   def showPath(s:Sentence) {
     println("WORDS: " + s.words.mkString(" "))
     println("DEPENDENCIES:")
-    val in = s.dependencies.get.incomingEdges
-    for(i <- 0 until in.size) {
+    val in = deps(s).incomingEdges
+    for(i <- in.indices) {
       print("\t" + i + "(" + s.words(i) + "):")
       for(e <- in(i)) {
         print(" (" + e._1 + ", " + e._2 + ")")
@@ -41,7 +42,7 @@ object ShowDepPath {
     }
 
     println("PATHS TO ROOT:")
-    for(i <- 0 until in.size) {
+    for(i <- in.indices) {
       println("\t" + i + "(" + s.words(i) + "): " + pathToRoot(i, in))
     }
   }
@@ -51,7 +52,7 @@ object ShowDepPath {
     var root = false
     var pos = start
     while(! root) {
-      if(in(pos).size == 0) {
+      if(in(pos).isEmpty) {
         root = true
       } else {
         os.append(in(pos)(0)._2)
