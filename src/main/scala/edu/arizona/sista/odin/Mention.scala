@@ -231,6 +231,19 @@ class EventMention(
     )
   }
 
+  // Create a new EventMention by removing a single argument
+  def -(argName:String): EventMention = {
+    new EventMention(
+      labels,
+      trigger,
+      arguments - argName,
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+
 }
 
 class RelationMention(
