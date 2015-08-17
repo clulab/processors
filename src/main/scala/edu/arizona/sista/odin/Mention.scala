@@ -350,4 +350,16 @@ class RelationMention(
     )
   }
 
+  // Create a new RelationMention by adding a key, value pair to the arguments map
+  def +(argName:String, mentions:Seq[Mention]): RelationMention = {
+    new RelationMention(
+      labels,
+      arguments + (argName -> mentions),
+      sentence,
+      document,
+      keep,
+      foundBy
+    )
+  }
+  
 }
