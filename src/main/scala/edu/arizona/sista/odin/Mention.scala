@@ -324,7 +324,6 @@ class RelationMention(
     )
   }
 
-
   // Create a new RelationMention by removing a single argument
   def -(argName:String): RelationMention = {
     new RelationMention(
@@ -361,5 +360,5 @@ class RelationMention(
       foundBy
     )
   }
-  
+
 }
