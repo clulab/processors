@@ -232,7 +232,7 @@ class EventMention(
     if (arguments contains argName) {
       arguments(argName)
         .combinations(size)
-        .map(args => this + (argName, args))
+        .map(args => this + (argName -> args))
         .toSeq
     } else {
       Nil
@@ -248,8 +248,8 @@ class EventMention(
     copy(arguments = this.arguments -- argNames)
 
   // Create a new EventMention by adding a key, value pair to the arguments map
-  def +(argName: String, mentions: Seq[Mention]): EventMention =
-    copy(arguments = this.arguments + (argName -> mentions))
+  def +(arg: (String, Seq[Mention])): EventMention =
+    copy(arguments = this.arguments + arg)
 
 }
 
@@ -316,7 +316,7 @@ class RelationMention(
     copy(arguments = this.arguments -- argNames)
 
   // Create a new RelationMention by adding a key, value pair to the arguments map
-  def +(argName: String, mentions: Seq[Mention]): RelationMention =
-    copy(arguments = this.arguments + (argName -> mentions))
+  def +(arg: (String, Seq[Mention])): RelationMention =
+    copy(arguments = this.arguments + arg)
 
 }
