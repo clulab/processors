@@ -146,17 +146,15 @@ class TextBoundMention(
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
 
-  // Create a new TextBoundMention by changing only the sequence of labels
-  def copy(newLabels: Seq[String]): TextBoundMention = {
-    new TextBoundMention(
-      newLabels,
-      tokenInterval,
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
-  }
+  // Copy constructor for TextBoundMention
+  def copy(
+      labels: Seq[String] = this.labels,
+      tokenInterval: Interval = this.tokenInterval,
+      sentence: Int = this.sentence,
+      document: Document = this.document,
+      keep: Boolean = this.keep,
+      foundBy: String = this.foundBy
+  ): TextBoundMention = new TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy)
 
 }
 
@@ -206,70 +204,42 @@ class EventMention(
     finalizeHash(h2, 2)
   }
 
-  // Create a new EventMention by changing only the sequence of labels
-  def copy(newLabels: Seq[String]): EventMention = {
-    new EventMention(
-      newLabels,
-      trigger,
-      arguments,
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
-  }
+  // Copy constructor for EventMention
+  def copy(
+      labels: Seq[String] = this.labels,
+      trigger: TextBoundMention = this.trigger,
+      arguments: Map[String, Seq[Mention]] = this.arguments,
+      sentence: Int = this.sentence,
+      document: Document = this.document,
+      keep: Boolean = this.keep,
+      foundBy: String = this.foundBy
+  ): EventMention = new EventMention(labels, trigger, arguments, sentence, document, keep, foundBy)
 
   // Convert an EventMention to a RelationMention by deleting the trigger
   def toRelationMention: RelationMention = {
     new RelationMention(
-      labels,
-      arguments,
-      sentence,
-      document,
-      keep,
-      s"$foundBy + toRelationMention"
+      this.labels,
+      this.arguments,
+      this.sentence,
+      this.document,
+      this.keep,
+      s"${this.foundBy} + toRelationMention"
     )
+
   }
 
   // Create a new EventMention by removing a single argument
-  def -(argName:String): EventMention = {
-    new EventMention(
-      labels,
-      trigger,
-      arguments - argName,
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
-  }
+  def -(argName:String): EventMention = copy(arguments = this.arguments - argName)
 
   // Create a new EventMention by removing a sequence of arguments
-  def -(argNames:Seq[String]): EventMention = {
-    new EventMention(
-      labels,
-      trigger,
-      // Remove each key
-      argNames.foldRight(arguments){ (arg, argMap) => argMap - arg },
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
+  def --(argNames:Seq[String]): EventMention = {
+    val newArguments = argNames.foldRight(this.arguments) { (arg, argMap) => argMap - arg }
+    copy(arguments = newArguments)
   }
 
   // Create a new EventMention by adding a key, value pair to the arguments map
-  def +(argName:String, mentions:Seq[Mention]): EventMention = {
-    new EventMention(
-      labels,
-      trigger,
-      arguments + (argName -> mentions),
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
-  }
+  def +(argName:String, mentions:Seq[Mention]): EventMention =
+    copy(arguments = this.arguments + (argName -> mentions))
 
 }
 
@@ -300,65 +270,45 @@ class RelationMention(
     Interval(allStarts.min, allEnds.max)
   }
 
-  // Create a new RelationMention by changing only the sequence of labels
-  def copy(newLabels: Seq[String]): RelationMention = {
-    new RelationMention(
-      newLabels,
-      arguments,
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
-  }
+  // Copy constructor for RelationMention
+  def copy(
+      labels: Seq[String] = this.labels,
+      arguments: Map[String, Seq[Mention]] = this.arguments,
+      sentence: Int = this.sentence,
+      document: Document = this.document,
+      keep: Boolean = this.keep,
+      foundBy: String = this.foundBy
+  ): RelationMention = new RelationMention(labels, arguments, sentence, document, keep, foundBy)
 
   // Convert a RelationMention to an EventMention by specifying a trigger
-  def toEventMention(trigger: TextBoundMention): RelationMention = {
-    new RelationMention(
-      labels,
-      arguments,
-      sentence,
-      document,
-      keep,
-      s"$foundBy + toEventMention"
+  def toEventMention(trigger: TextBoundMention): EventMention = {
+
+    require(trigger.document == this.document, "Trigger's document does not match RelationMention's document")
+    require(trigger.sentence == this.sentence, "Trigger's sentence does not match RelationMention's sentence")
+
+    new EventMention(
+      this.labels,
+      trigger,
+      this.arguments,
+      this.sentence,
+      this.document,
+      this.keep,
+      s"${this.foundBy} + toEventMention"
     )
   }
 
   // Create a new RelationMention by removing a single argument
-  def -(argName:String): RelationMention = {
-    new RelationMention(
-      labels,
-      arguments - argName,
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
-  }
+  def -(argName:String): RelationMention = copy(arguments = this.arguments - argName)
 
   // Create a new RelationMention by removing a sequence of arguments
-  def -(argNames:Seq[String]): RelationMention = {
-    new RelationMention(
-      labels,
-      // Remove each key
-      argNames.foldRight(arguments){ (arg, argMap) => argMap - arg },
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
+  def --(argNames:Seq[String]): RelationMention = {
+      val newArgs = argNames.foldRight(arguments){ (arg, argMap) => argMap - arg }
+      copy(arguments = newArgs)
   }
 
   // Create a new RelationMention by adding a key, value pair to the arguments map
   def +(argName:String, mentions:Seq[Mention]): RelationMention = {
-    new RelationMention(
-      labels,
-      arguments + (argName -> mentions),
-      sentence,
-      document,
-      keep,
-      foundBy
-    )
+    copy(arguments = this.arguments + (argName -> mentions))
   }
 
 }
