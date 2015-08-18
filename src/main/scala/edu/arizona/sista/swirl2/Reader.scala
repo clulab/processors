@@ -3,7 +3,7 @@ package edu.arizona.sista.swirl2
 import java.io.{FileReader, BufferedReader, PrintWriter, File}
 
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
-import edu.arizona.sista.processors.{DocumentSerializer, Document, Processor}
+import edu.arizona.sista.processors.{DependencyMap, DocumentSerializer, Document, Processor}
 import edu.arizona.sista.struct.DirectedGraph
 import org.slf4j.LoggerFactory
 
@@ -39,7 +39,7 @@ class Reader {
       doc
     } else {
       // the serialized file does not exist. Parse online
-      val proc = new FastNLPProcessor(useMalt = false, useBasicDependencies = false)
+      val proc = new FastNLPProcessor(useMalt = false)
       read(new File(filePath), proc)
     }
   }
@@ -102,7 +102,7 @@ class Reader {
     //
     assert(document.sentences.length == semDependencies.size)
     for(i <- 0 until document.sentences.length) {
-      document.sentences(i).semanticRoles = Some(semDependencies(i))
+      document.sentences(i).setDependencies(DependencyMap.SEMANTIC_ROLES, semDependencies(i))
     }
 
     logger.debug(s"Found a total of $predCount predicates with $argCount arguments.")
@@ -267,7 +267,7 @@ object Reader {
 
   def main(args:Array[String]) {
     val reader = new Reader
-    val proc = new FastNLPProcessor(useMalt = false, useBasicDependencies = false)
+    val proc = new FastNLPProcessor(useMalt = false)
     val file = new File(args(0))
     val outputFile = new File(args(0) + ".ser")
 
