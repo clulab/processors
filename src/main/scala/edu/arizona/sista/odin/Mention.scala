@@ -228,6 +228,17 @@ class EventMention(
 
   }
 
+  def scatter(argName: String, size: Int): Seq[EventMention] = {
+    if (arguments contains argName) {
+      arguments(argName)
+        .combinations(size)
+        .map(args => this + (argName, args))
+        .toSeq
+    } else {
+      Nil
+    }
+  }
+
   // Create a new EventMention by removing a single argument
   def -(argName: String): EventMention =
     copy(arguments = this.arguments - argName)
