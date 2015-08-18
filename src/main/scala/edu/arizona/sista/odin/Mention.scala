@@ -229,16 +229,15 @@ class EventMention(
   }
 
   // Create a new EventMention by removing a single argument
-  def -(argName:String): EventMention = copy(arguments = this.arguments - argName)
+  def -(argName: String): EventMention =
+    copy(arguments = this.arguments - argName)
 
   // Create a new EventMention by removing a sequence of arguments
-  def --(argNames:Seq[String]): EventMention = {
-    val newArguments = argNames.foldRight(this.arguments) { (arg, argMap) => argMap - arg }
-    copy(arguments = newArguments)
-  }
+  def --(argNames: Seq[String]): EventMention =
+    copy(arguments = this.arguments -- argNames)
 
   // Create a new EventMention by adding a key, value pair to the arguments map
-  def +(argName:String, mentions:Seq[Mention]): EventMention =
+  def +(argName: String, mentions: Seq[Mention]): EventMention =
     copy(arguments = this.arguments + (argName -> mentions))
 
 }
@@ -298,17 +297,15 @@ class RelationMention(
   }
 
   // Create a new RelationMention by removing a single argument
-  def -(argName:String): RelationMention = copy(arguments = this.arguments - argName)
+  def -(argName: String): RelationMention =
+    copy(arguments = this.arguments - argName)
 
   // Create a new RelationMention by removing a sequence of arguments
-  def --(argNames:Seq[String]): RelationMention = {
-      val newArgs = argNames.foldRight(arguments){ (arg, argMap) => argMap - arg }
-      copy(arguments = newArgs)
-  }
+  def --(argNames: Seq[String]): RelationMention =
+    copy(arguments = this.arguments -- argNames)
 
   // Create a new RelationMention by adding a key, value pair to the arguments map
-  def +(argName:String, mentions:Seq[Mention]): RelationMention = {
+  def +(argName: String, mentions: Seq[Mention]): RelationMention =
     copy(arguments = this.arguments + (argName -> mentions))
-  }
 
 }
