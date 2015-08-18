@@ -157,11 +157,7 @@ class DocumentSerializer {
     )
   }
 
-<<<<<<< HEAD
-  private def loadDirectedGraph(r:BufferedReader, endMarker:String):DirectedGraph[String] = {
-=======
   private def loadDependencies(r:BufferedReader, sz:Int):DirectedGraph[String] = {
->>>>>>> master
     val edges = new ListBuffer[(Int, Int, String)]
     val roots = new mutable.HashSet[Int]()
     var bits = read(r)
@@ -172,12 +168,12 @@ class DocumentSerializer {
     }
     do {
       bits = read(r)
-      if (bits(0) != endMarker) {
+      if (bits(0) != END_OF_DEPENDENCIES) {
         val edge = new Tuple3(bits(0).toInt, bits(1).toInt, bits(2))
         //println("adding edge: " + edge)
         edges += edge
       }
-    } while(bits(0) != endMarker)
+    } while(bits(0) != END_OF_DEPENDENCIES)
     val dg = new DirectedGraph[String](edges.toList, roots.toSet)
     //println(dg)
     dg
@@ -225,24 +221,14 @@ class DocumentSerializer {
       saveToken(sent, offset, os)
       offset += 1
     }
-<<<<<<< HEAD
-    if (sent.dependencies.nonEmpty) {
-      os.println(START_DEPENDENCIES + SEP + sent.dependencies.size)
-      sent.dependencies.foreach(g => saveDirectedGraph(g, END_OF_DEPENDENCIES, os))
-=======
     if (sent.dependenciesByType.nonEmpty) {
       for(t <- sent.dependenciesByType.keySet) {
         saveDependencies(sent.dependenciesByType.get(t).get, t, os)
       }
->>>>>>> master
     }
     if (sent.syntacticTree.nonEmpty) {
       os.println(START_CONSTITUENTS + SEP + "1")
       sent.syntacticTree.foreach(t => { saveTree(t, os); os.println() })
-    }
-    if (sent.semanticRoles.nonEmpty) {
-      os.println(START_SEMROLES + SEP + sent.semanticRoles.size)
-      sent.semanticRoles.foreach(g => saveDirectedGraph(g, END_OF_SEMROLES, os))
     }
     os.println(END_OF_SENTENCE)
   }
@@ -314,19 +300,15 @@ class DocumentSerializer {
     os.println()
   }
 
-<<<<<<< HEAD
-  private def saveDirectedGraph(dg:DirectedGraph[String], endMarker:String, os:PrintWriter) {
-=======
   private def saveDependencies(dg:DirectedGraph[String], dependencyType:Int, os:PrintWriter) {
     os.println(START_DEPENDENCIES + SEP + dependencyType + SEP + dg.size)
->>>>>>> master
     os.println(dg.roots.mkString(sep = SEP))
     val it = new DirectedGraphEdgeIterator[String](dg)
     while(it.hasNext) {
       val edge = it.next()
       os.println(edge._1 + SEP + edge._2 + SEP + edge._3)
     }
-    os.println(endMarker)
+    os.println(END_OF_DEPENDENCIES)
   }
 
   private def loadDiscourse(r:BufferedReader):DiscourseTree = {
