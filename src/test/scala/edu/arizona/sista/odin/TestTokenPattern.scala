@@ -3,7 +3,7 @@ package edu.arizona.sista.odin
 import org.scalatest._
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.struct.Interval
-import edu.arizona.sista.odin.impl.TokenPattern
+import edu.arizona.sista.odin.impl.{OdinCompileException, TokenPattern}
 
 class TestTokenPattern extends FlatSpec with Matchers {
   val proc = new BioNLPProcessor
@@ -445,7 +445,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
   }
 
-  it should "capture text and mentions using unit: \"lemma\"" in {
+  "rule" should "not compile with unit: \"lemma\"" in {
     val rule = """
                  |- name: test_rule
                  |  priority: 1
@@ -456,24 +456,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
                  |    (?<theme>[]) bind to @theme:Protein
                  |""".stripMargin
 
-  val mentions = Seq(
-    new TextBoundMention("Protein", Interval(0), 0, doc7, false, "<MANUAL>"),
-    new TextBoundMention("Protein", Interval(3), 0, doc7, false, "<MANUAL>")
-  )
-
-  val state = State(mentions)
-  val ee = ExtractorEngine(rule)
-  val results = ee.extractFrom(doc7, state)
-
-  results should have size (1)
-  val binding = results.head
-  binding.arguments should contain key ("theme")
-  val themes = binding.arguments("theme")
-  themes should have size (2)
-  val themeTexts = themes.map(_.text)
-  themeTexts should contain ("JAK3")
-  themeTexts should contain ("MEK")
-
+    an [OdinCompileException] should be thrownBy ExtractorEngine(rule)
   }
 
   it should "capture text and mentions using unit: \"tag\"" in {

@@ -185,10 +185,10 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     proc.parse(doc)
     doc.clear()
 
-    doc.sentences.head.dependencies.get.hasEdge(1, 0, "nn") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(2, 1, "nsubj") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(2, 4, "prep_to") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(2, 3, "obj") should be (false)
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(1, 0, "nn") should be (true)
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 1, "nsubj") should be (true)
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "prep") should be (true)
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "obj") should be (false)
 
     doc.sentences.head.syntacticTree.foreach(t => {
       //println("Constituent parse tree: " + t)

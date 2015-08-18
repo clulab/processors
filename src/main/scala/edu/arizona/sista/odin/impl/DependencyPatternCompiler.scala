@@ -15,7 +15,7 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     eventDependencyPattern | relationDependencyPattern
 
   def eventDependencyPattern: Parser[DependencyPattern] =
-    triggerFinder ~ rep1(argPattern) ^^ {
+    "(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern) ^^ {
       case trigger ~ arguments => new EventDependencyPattern(trigger, arguments)
     }
 
@@ -27,32 +27,47 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
         new RelationDependencyPattern(anchorName, anchorLabel, arguments)
     }
 
-  def triggerFinder: Parser[TokenPattern] = "(?i)trigger".r ~> "=" ~> tokenPattern
-
   def argPattern: Parser[ArgumentPattern] =
-    identifier ~ ":" ~ identifier ~ opt("?"|"*"|"+") ~ "=" ~ disjunctiveDepPattern ^^ {
+    singleArgPattern ||| quantifiedArgPattern ||| exactSizeArgPattern
+
+  def singleArgPattern: Parser[ArgumentPattern] =
+    identifier ~ ":" ~ identifier ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
+        sys.error("'trigger' is not a valid argument name")
+      case name ~ ":" ~ label ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, size = Some(1))
+    }
+
+  def quantifiedArgPattern: Parser[ArgumentPattern] =
+    identifier ~ ":" ~ identifier ~ ("?" | "*" | "+") ~ "=" ~ disjunctiveDepPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
         sys.error("'trigger' is not a valid argument name")
-      case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = true, required = true)
-      case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = true, required = false)
-      case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = false, required = false)
-      case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, unique = false, required = true)
+      case name ~ ":" ~ label ~ "?" ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = false, size = Some(1))
+      case name ~ ":" ~ label ~ "*" ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = false, size = None)
+      case name ~ ":" ~ label ~ "+" ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, size = None)
+    }
+
+  def exactSizeArgPattern: Parser[ArgumentPattern] =
+    identifier ~ ":" ~ identifier ~ ("{" ~> int <~ "}") ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
+        sys.error("'trigger' is not a valid argument name")
+      case name ~ ":" ~ label ~ n ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, size = Some(n))
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
-    concatDepPattern ~ rep("|" ~> concatDepPattern) ^^ {
-      case first ~ rest => (first /: rest) {
+    rep1sep(concatDepPattern, "|") ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
         case (lhs, rhs) => new DisjunctiveDependencyPattern(lhs, rhs)
       }
     }
 
   def concatDepPattern: Parser[DependencyPatternNode] =
-    stepDepPattern ~ rep(stepDepPattern) ^^ {
-      case first ~ rest => (first /: rest) {
+    rep1(stepDepPattern) ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
         case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
       }
     }
@@ -66,10 +81,10 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
 
   /** any pattern that represents graph traversal */
   def traversalDepPattern: Parser[DependencyPatternNode] =
-    repeatDepPattern | rangeDepPattern | quantifiedDepPattern | atomicDepPattern
+    atomicDepPattern ||| repeatDepPattern ||| rangeDepPattern ||| quantifiedDepPattern
 
   def quantifiedDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ ("?"|"*"|"+") ^^ {
+    atomicDepPattern ~ ("?" | "*" | "+") ^^ {
       case pat ~ "?" => new OptionalDependencyPattern(pat)
       case pat ~ "*" => new KleeneDependencyPattern(pat)
       case pat ~ "+" => new ConcatDependencyPattern(pat, new KleeneDependencyPattern(pat))
@@ -84,8 +99,8 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
   }
 
   def repeatDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ "{" ~ int ~ "}" ^^ {
-      case pat ~ "{" ~ n ~ "}" => repeatPattern(pat, n)
+    atomicDepPattern ~ ("{" ~> int <~ "}") ^^ {
+      case pat ~ n => repeatPattern(pat, n)
     }
 
   def rangeDepPattern: Parser[DependencyPatternNode] =
@@ -143,17 +158,17 @@ class ArgumentPattern(
   val name: String,
   val label: String,
   val pattern: DependencyPatternNode,
-  val unique: Boolean,
-  val required: Boolean
+  val required: Boolean,
+  val size: Option[Int]
 ) {
-  // extracts mentions and groups them according to `unique`
+  // extracts mentions and groups them according to `size`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
     val matches = for {
       t <- pattern.findAllIn(tok, sent, doc, state)
       m <- state.mentionsFor(sent, t, label)
     } yield m
     if (matches.isEmpty) Nil
-    else if (unique) matches.map(Seq(_))
+    else if (size.isDefined) matches.combinations(size.get).toList
     else Seq(matches)
   }
 }

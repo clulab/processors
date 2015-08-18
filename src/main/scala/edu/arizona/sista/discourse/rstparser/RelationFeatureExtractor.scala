@@ -73,17 +73,17 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
                                     edus:Array[Array[(Int, Int)]],
                                     corpusStats:CorpusStats) {
       // this only works if syntactic dependencies are available
-      if(! doc.sentences(left.firstSentence).dependencies.isDefined) {
+      if(! hasDeps(doc.sentences(left.firstSentence))) {
         return
       }
 
       if(left.firstToken.sentence == right.lastToken.sentence) {
         val words = doc.sentences(left.firstSentence).words
         val tags = doc.sentences(left.firstSentence).tags.get
-        val deps = doc.sentences(left.firstSentence).dependencies.get
-        val (leftHead, leftHeadParent, leftParentRel) = Utils.findSyntacticHeadFromDependencies(deps, left.firstToken.token, left.lastToken.token)
-        val (rightHead, rightHeadParent, rightParentRel) = Utils.findSyntacticHeadFromDependencies(deps, right.firstToken.token, right.lastToken.token)
-        val commonAncestors = Utils.findCommonAncestorsFromDependencies(deps, left.firstToken.token, right.lastToken.token)
+        val dependencies = deps(doc.sentences(left.firstSentence))
+        val (leftHead, leftHeadParent, leftParentRel) = Utils.findSyntacticHeadFromDependencies(dependencies, left.firstToken.token, left.lastToken.token)
+        val (rightHead, rightHeadParent, rightParentRel) = Utils.findSyntacticHeadFromDependencies(dependencies, right.firstToken.token, right.lastToken.token)
+        val commonAncestors = Utils.findCommonAncestorsFromDependencies(dependencies, left.firstToken.token, right.lastToken.token)
 
         if(leftHead != -1 && rightHead != -1) {
           var dominating:Int = -1
@@ -110,11 +110,11 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
           }
 
           if(leftHead != -1) {
-            val leftHeadPos = leftHead.toDouble / words.size.toDouble
+            val leftHeadPos = leftHead.toDouble / words.length.toDouble
             f(s"deps-leftheadpos", leftHeadPos)
           }
           if(rightHead != -1) {
-            val rightHeadPos = rightHead.toDouble / words.size.toDouble
+            val rightHeadPos = rightHead.toDouble / words.length.toDouble
             f(s"deps-rightheadpos", rightHeadPos)
           }
 
@@ -129,7 +129,7 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
                 f(s"deps-ancestorword:$aw")
                 val at = tags(ancestor)
                 f(s"deps-ancestortag:$at")
-                for (d <- deps.incomingEdges(ancestor)) {
+                for (d <- dependencies.incomingEdges(ancestor)) {
                   f(s"deps-ancestor-inc:${d._2}")
                 }
               }
@@ -139,13 +139,13 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
             f(s"deps-dominatedword:${words(dominated)}")
             f(s"deps-dominatingtag:${tags(dominating)}")
             f(s"deps-dominatedtag:${tags(dominated)}")
-            f(s"deps-domrel:${domRel}")
+            f(s"deps-domrel:$domRel")
 
             f(s"$leftDominates-deps-dominatingword:${words(dominating)}")
             f(s"$leftDominates-deps-dominatedword:${words(dominated)}")
             f(s"$leftDominates-deps-dominatingtag:${tags(dominating)}")
             f(s"$leftDominates-deps-dominatedtag:${tags(dominated)}")
-            f(s"$leftDominates-deps-domrel:${domRel}")
+            f(s"$leftDominates-deps-domrel:$domRel")
           } else {
             f("deps-samesent-dominates-unk")
           }
@@ -161,9 +161,9 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
                             edus:Array[Array[(Int, Int)]],
                             corpusStats:CorpusStats) {
       // this only works if constituent syntax is available
-      if(! doc.sentences(left.firstSentence).syntacticTree.isDefined) {
+      if(doc.sentences(left.firstSentence).syntacticTree.isEmpty) {
         // backoff to dependency-based features
-        if(doc.sentences(left.firstSentence).dependencies.isDefined) {
+        if(hasDeps(doc.sentences(left.firstSentence))) {
           writeDomSetWithDepsFeatures(left, right, doc, edus, corpusStats)
           return
         } else {
@@ -206,8 +206,8 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
             // TODO: case when neither dominates (happens for negative examples?)
           }
 
-          val leftHeadPos = leftHead.headOffset.toDouble / words.size.toDouble
-          val rightHeadPos = rightHead.headOffset.toDouble / words.size.toDouble
+          val leftHeadPos = leftHead.headOffset.toDouble / words.length.toDouble
+          val rightHeadPos = rightHead.headOffset.toDouble / words.length.toDouble
           f(s"leftheadpos", leftHeadPos)
           f(s"rightheadpos", rightHeadPos)
 
@@ -257,13 +257,13 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
       f("tprefix_" + suffix + ":" + mkNgram(tags, 0, 2), 1)
       f("tprefix_" + suffix + ":" + mkNgram(tags, 0, 1), 1)
 
-      f("suffix_" + suffix + ":" + mkNgram(words, words.size - 3, words.size), 1)
-      f("suffix_" + suffix + ":" + mkNgram(words, words.size - 2, words.size), 1)
-      f("suffix_" + suffix + ":" + mkNgram(words, words.size - 1, words.size), 1)
+      f("suffix_" + suffix + ":" + mkNgram(words, words.length - 3, words.length), 1)
+      f("suffix_" + suffix + ":" + mkNgram(words, words.length - 2, words.length), 1)
+      f("suffix_" + suffix + ":" + mkNgram(words, words.length - 1, words.length), 1)
 
-      f("tsuffix_" + suffix + ":" + mkNgram(tags, tags.size - 3, tags.size), 1)
-      f("tsuffix_" + suffix + ":" + mkNgram(tags, tags.size - 2, tags.size), 1)
-      f("tsuffix_" + suffix + ":" + mkNgram(tags, tags.size - 1, tags.size), 1)
+      f("tsuffix_" + suffix + ":" + mkNgram(tags, tags.length - 3, tags.length), 1)
+      f("tsuffix_" + suffix + ":" + mkNgram(tags, tags.length - 2, tags.length), 1)
+      f("tsuffix_" + suffix + ":" + mkNgram(tags, tags.length - 1, tags.length), 1)
     }
 
     def writeUnigrams(tree:DiscourseTree,
@@ -372,7 +372,7 @@ class RelationFeatureExtractor(val filter:Set[String] = null) {
                            right:DiscourseTree,
                            doc:Document) {
       // this only works if coreference information is available
-      if(! doc.coreferenceChains.isDefined) return
+      if(doc.coreferenceChains.isEmpty) return
 
       var linkCount = 0
       for(chain <- doc.coreferenceChains.get.getChains) {

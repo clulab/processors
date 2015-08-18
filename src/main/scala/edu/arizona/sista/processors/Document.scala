@@ -2,6 +2,7 @@ package edu.arizona.sista.processors
 
 import edu.arizona.sista.discourse.rstparser.DiscourseTree
 import edu.arizona.sista.struct.{Tree, DirectedGraph}
+import DependencyMap._
 
 import collection.mutable
 import collection.mutable.ListBuffer
@@ -50,19 +51,55 @@ class Sentence(
                 var chunks:Option[Array[String]],
                 /** Constituent tree of this sentence; includes head words */
                 var syntacticTree:Option[Tree],
-                /** DAG of syntactic dependencies; word offsets start at 0 */
-                var dependencies:Option[DirectedGraph[String]],
-                /** DAG of semantic roles; word offsets start at 0 */
-                var semanticRoles:Option[DirectedGraph[String]]) extends Serializable {
+                /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
+                var dependenciesByType:DependencyMap) extends Serializable {
 
   def this(
             words:Array[String],
             startOffsets:Array[Int],
             endOffsets:Array[Int]) =
     this(words, startOffsets, endOffsets,
-      None, None, None, None, None, None, None, None)
+      None, None, None, None, None, None, new DependencyMap)
 
   def size:Int = words.length
+
+  /**
+   * Default dependencies: first Stanford collapsed, then Stanford basic, then None
+   * @return A directed graph of dependencies if any exist, otherwise None
+   */
+  def dependencies:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+
+    if(dependenciesByType.contains(STANFORD_COLLAPSED))
+      dependenciesByType.get(STANFORD_COLLAPSED)
+    else if(dependenciesByType.contains(STANFORD_BASIC))
+      dependenciesByType.get(STANFORD_BASIC)
+    else
+      None
+  }
+
+  /** Fetches the Stanford basic dependencies */
+  def stanfordBasicDependencies:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+    dependenciesByType.get(STANFORD_BASIC)
+  }
+
+  /** Fetches the Stanford collapsed dependencies */
+  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+    dependenciesByType.get(STANFORD_COLLAPSED)
+  }
+
+  def semanticRoles:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+    dependenciesByType.get(SEMANTIC_ROLES)
+  }
+
+  def setDependencies(depType:Int, deps:DirectedGraph[String]): Unit = {
+    if(dependenciesByType == null)
+      dependenciesByType = new DependencyMap
+    dependenciesByType += (depType -> deps)
+  }
 
   /**
    * Recreates the text of the sentence, preserving the original number of white spaces between tokens
@@ -78,7 +115,7 @@ class Sentence(
     for(i <- start until end) {
       if(i > start) {
         // add as many white spaces as recorded between tokens
-        // something this space is negative: in BioNLPProcessor we replace "/" with "and"
+        // sometimes this space is negative: in BioNLPProcessor we replace "/" with "and"
         //   in these cases, let's make sure we print 1 space, otherwise the text is hard to read
         val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
         for (j <- 0 until numberOfSpaces) {
@@ -90,6 +127,16 @@ class Sentence(
     text.toString()
   }
 
+}
+
+class DependencyMap extends mutable.HashMap[Int, DirectedGraph[String]] {
+  override def initialSize:Int = 2 // we have very few dependency types, so let's create a small hash to save memory
+}
+
+object DependencyMap {
+  val STANFORD_BASIC = 0 // basic Stanford dependencies
+  val STANFORD_COLLAPSED = 1 // collapsed Stanford dependencies
+  val SEMANTIC_ROLES = 2 // semantic roles from CoNLL 2008-09, which includes PropBank and NomBank
 }
 
 /** Stores a single coreference mention */
@@ -223,11 +270,11 @@ object CorefChains {
     val chainBuffer = new mutable.HashMap[Int, ListBuffer[CorefMention]]
     for (m <- mentions.values) {
       var cb = chainBuffer.get(m.chainId)
-      if (cb == None) {
+      if (cb.isEmpty) {
         val cbv = new ListBuffer[CorefMention]
         chainBuffer += m.chainId -> cbv
         cb = chainBuffer.get(m.chainId)
-        assert(cb != None)
+        assert(cb.isDefined)
       }
       cb.get += m
     }
