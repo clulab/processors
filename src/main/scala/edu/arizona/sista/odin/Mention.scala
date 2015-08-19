@@ -228,16 +228,14 @@ class EventMention(
 
   }
 
-  def scatter(argName: String, size: Int): Seq[EventMention] = {
-    if (arguments contains argName) {
-      arguments(argName)
-        .combinations(size)
-        .map(args => this + (argName -> args))
-        .toSeq
-    } else {
-      Nil
-    }
-  }
+  // scatters the args named `argName` into N mentions each with `size` args named `argName`
+  // all combinations of args are produced
+  def scatter(argName: String, size: Int): Seq[EventMention] =
+    arguments
+      .getOrElse(argName, Nil)
+      .combinations(size)
+      .map(args => this + (argName -> args))
+      .toList
 
   // Create a new EventMention by removing a single argument
   def -(argName: String): EventMention =
@@ -306,6 +304,15 @@ class RelationMention(
       s"${this.foundBy} + toEventMention"
     )
   }
+
+  // scatters the args named `argName` into N mentions each with `size` args named `argName`
+  // all combinations of args are produced
+  def scatter(argName: String, size: Int): Seq[RelationMention] =
+    arguments
+      .getOrElse(argName, Nil)
+      .combinations(size)
+      .map(args => this + (argName -> args))
+      .toList
 
   // Create a new RelationMention by removing a single argument
   def -(argName: String): RelationMention =
