@@ -1,8 +1,11 @@
 package edu.arizona.sista.swirl2
 
+import java.io._
+
 import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.struct.Counter
+import edu.arizona.sista.utils.Files
 import edu.arizona.sista.utils.StringUtils._
 import org.slf4j.LoggerFactory
 
@@ -38,6 +41,7 @@ class ArgumentClassifier {
   def test(testPath:String): Unit = {
     val reader = new Reader
     val doc = reader.load(testPath)
+    val distHist = new Counter[Int]()
 
     val output = new ListBuffer[(String, String)]
     for(s <- doc.sentences) {
@@ -57,12 +61,15 @@ class ArgumentClassifier {
               case false => NEG_LABEL
             }
           }
+          if(goldLabel == POS_LABEL && predLabel != POS_LABEL)
+            distHist.incrementCount(math.abs(arg - pred))
           output += new Tuple2(goldLabel, predLabel)
         }
       }
     }
 
     BinaryScorer.score(output, POS_LABEL)
+    logger.debug(s"Distance histogram for missed arguments: $distHist")
   }
 
   def classify(sent:Sentence, arg:Int, pred:Int):Counter[String] = {
@@ -129,6 +136,10 @@ class ArgumentClassifier {
     logger.info("Arguments by POS tag: " + posStats.sorted)
     logger.info("Total number of arguments: " + count)
   }
+
+  def saveTo(w:Writer): Unit = {
+    classifier.saveTo(w)
+  }
 }
 
 object ArgumentClassifier {
@@ -145,14 +156,36 @@ object ArgumentClassifier {
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
-    val ac = new ArgumentClassifier
+    var ac = new ArgumentClassifier
 
     if(props.containsKey("train")) {
       ac.train(props.getProperty("train"))
+
+      if(props.containsKey("model")) {
+        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
+        ac.saveTo(os)
+        os.close()
+      }
     }
 
     if(props.containsKey("test")) {
+      if(props.containsKey("model")) {
+        val is = new BufferedReader(new FileReader(props.getProperty("model")))
+        ac = loadFrom(is)
+        is.close()
+      }
+
       ac.test(props.getProperty("test"))
     }
+  }
+
+  def loadFrom(r:java.io.Reader):ArgumentClassifier = {
+    val ac = new ArgumentClassifier
+    val reader = Files.toBufferedReader(r)
+
+    val c = LiblinearClassifier.loadFrom[String, String](reader)
+    ac.classifier = c
+
+    ac
   }
 }
