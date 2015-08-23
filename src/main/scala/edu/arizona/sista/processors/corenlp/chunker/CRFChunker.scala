@@ -35,7 +35,7 @@ object CRFChunker {
     new CRFChunker(crf)
   }
 
-  def train(sentences: Seq[Seq[CoreLabel]]): CRFChunker = {
+  def train(sentences: Array[Array[CoreLabel]]): CRFChunker = {
     // calling toBuffer is necessary because List is immutable
     // and corenlp tries to modify the sequence in place :(
     val data = sentences.map(_.toBuffer.asJava).toBuffer.asJava

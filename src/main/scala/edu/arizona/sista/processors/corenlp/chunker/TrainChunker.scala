@@ -16,7 +16,7 @@ object TrainChunker extends App {
   // test
   test(chunker, testSentences)
 
-  def test(chunker: CRFChunker, sentences: List[List[CoreLabel]]): Unit = {
+  def test(chunker: CRFChunker, sentences: Array[Array[CoreLabel]]): Unit = {
     val tp = mutable.Map[String, Double]() withDefaultValue 0.0
     val fp = mutable.Map[String, Double]() withDefaultValue 0.0
     val fn = mutable.Map[String, Double]() withDefaultValue 0.0
@@ -58,15 +58,15 @@ object TrainChunker extends App {
     println(f"TOTAL\t$totalPrecision%.2f\t$totalRecall%.2f\t$totalF1%.2f")
   }
 
-  def readData(path: String): List[List[CoreLabel]] = {
+  def readData(path: String): Array[Array[CoreLabel]] = {
     val file = new File(path)
     val source = io.Source.fromFile(file)
     val text = source.mkString
     source.close()
     // sentences are separated by an empty line
-    val sentences = text.split("\n\n").toList
+    val sentences = text.split("\n\n")
     sentences.map { sent =>
-      sent.split("\n").toList.map { tok =>
+      sent.split("\n").map { tok =>
         val Array(word, tag, chunk) = tok.split(" ")
         val label = new CoreLabel
         label.setWord(word)
