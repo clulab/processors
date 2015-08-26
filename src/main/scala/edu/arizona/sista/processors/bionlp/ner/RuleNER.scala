@@ -13,15 +13,26 @@ import RuleNER._
 
 /**
  * Rule-based NER for the Bio domain
+ * If useLemmas is true, tokens are matched using lemmas, otherwise using words
+ * knownCaseInsensitives contains single-token entities that can be spelled using lower case, according to the KB(s)
  * User: mihais
  * Date: 5/11/15
  */
-class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:Set[String]) {
+class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:Set[String], val useLemmas:Boolean = false) {
+
+  def this(matchers:Array[(String, HashTrie)], useLemmas:Boolean) { this(matchers, Set[String](), useLemmas) }
 
   def find(sentence:Sentence):Array[String] = {
     // findByPriority(sentence)
-    var seq = findLongestMatch(sentence)
+    val seq = findLongestMatch(sentence)
     seq
+  }
+
+  def getTokens(sentence:Sentence):Array[String] = {
+    useLemmas match {
+      case true => sentence.lemmas.get
+      case _ => sentence.words
+    }
   }
 
   /**
@@ -30,18 +41,18 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
    * Only ties are disambiguated according to the order provided in the constructor
    */
   def findLongestMatch(sentence:Sentence):Array[String] = {
-    val words = sentence.words
-    val caseInsensitiveWords = sentence.words.map(_.toLowerCase)
+    val tokens = getTokens(sentence)
+    val caseInsensitiveWords = tokens.map(_.toLowerCase)
 
     var offset = 0
     val labels = new ArrayBuffer[String]()
-    while(offset < words.length) {
+    while(offset < tokens.length) {
       // stores the spans found by all matchers
       val spans = new Array[Int](matchers.length)
 
       // attempt to match each category at this offset
       for (i <- matchers.indices) {
-        spans(i) = findAt(words, caseInsensitiveWords, matchers(i)._2, offset, sentence)
+        spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, sentence)
       }
 
       // pick the longest match
@@ -139,9 +150,10 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
   def findByPriority(sentence:Sentence):Array[String] = {
     val overallLabels = new Array[String](sentence.size)
     for(i <- overallLabels.indices) overallLabels(i) = OUTSIDE_LABEL
+    val tokens = getTokens(sentence)
     for(matcher <- matchers) {
       // the actual match
-      var labels = matcher._2.find(sentence.words, matcher._1, OUTSIDE_LABEL)
+      var labels = matcher._2.find(tokens, matcher._1, OUTSIDE_LABEL)
 
       // some matchers are overmatching due to the case-insensitive setting,
       // e.g., Gene_or_gene_product contains protein names that are identical to prepositions, such as "IN" and "TO"
