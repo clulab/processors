@@ -195,7 +195,7 @@ object RuleNER {
   val OUTSIDE_LABEL = "O"
 
   /** Loads all KBs; KBs must be listed in descending order of their priorities */
-  def load(kbs:List[String], caseInsensitive:Boolean = true):RuleNER = {
+  def load(kbs:List[String], useLemmas:Boolean = false, caseInsensitive:Boolean = true):RuleNER = {
     logger.debug("Beginning to load the KBs for the rule-based bio NER...")
     val matchers = new ArrayBuffer[(String, HashTrie)]
     val knownCaseInsensitives = new mutable.HashSet[String]()
@@ -210,7 +210,7 @@ object RuleNER {
       reader.close()
     }
     logger.debug("KB loading completed.")
-    new RuleNER(matchers.toArray, knownCaseInsensitives.toSet)
+    new RuleNER(matchers.toArray, knownCaseInsensitives.toSet, useLemmas)
   }
 
   def loadKB(reader:BufferedReader, caseInsensitive:Boolean, knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
