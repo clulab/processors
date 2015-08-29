@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import EDUFeatureExtractor._
 import scala.collection.mutable
 import edu.arizona.sista.struct.Counter
+import Utils._
 
 /**
  * Generates features necessary for EDU classification
@@ -55,7 +56,7 @@ class EDUFeatureExtractor {
     //
     // dependency features
     //
-    if(sent.dependencies.isDefined) {
+    if(hasDeps(sent)) {
       for(i <- EDU_LEFT_CTX to EDU_RIGHT_CTX) {
         val offset = position.token + i
         val conn = getConnective(cs, offset)
@@ -64,7 +65,7 @@ class EDUFeatureExtractor {
         val in = getIncomingDependencies(sent, offset)
         val nextIn = getIncomingDependencies(sent, offset + 1)
 
-        if(in.size == 0) {
+        if(in.isEmpty) {
           f("noind" + i)
         } else {
           for (d <- in) {
@@ -85,7 +86,7 @@ class EDUFeatureExtractor {
         val out = getOutgoingDependencies(sent, offset)
         val nextOut = getOutgoingDependencies(sent, offset + 1)
 
-        if(out.size == 0) {
+        if(out.isEmpty) {
           f("nooutd" + i)
         } else {
           for (d <- out) {
@@ -103,7 +104,7 @@ class EDUFeatureExtractor {
 
         // path to root
         if(offset >= 0 && offset < sent.size) {
-          val (path, _) = pathToRoot(offset, sent.dependencies.get.incomingEdges)
+          val (path, _) = pathToRoot(offset, deps(sent).incomingEdges)
           f("path" + i + ":" + path)
         }
 
@@ -117,10 +118,10 @@ class EDUFeatureExtractor {
         f("rs" + i + ":" + rs + "|" + word)
       }
 
-      if(position.token < sent.dependencies.get.outgoingEdges.size) {
-        val leftMost = sent.dependencies.get.outgoingEdges(position.token).size == 0
+      if(position.token < deps(sent).outgoingEdges.length) {
+        val leftMost = deps(sent).outgoingEdges(position.token).isEmpty
         if (leftMost) {
-          val (path, top) = pathToRoot(position.token, sent.dependencies.get.incomingEdges)
+          val (path, top) = pathToRoot(position.token, deps(sent).incomingEdges)
           val word = getWord(sent, position.token)
           f("leftmostpath:" + path + "|" + leftMost)
           f("leftmosttop:" + top + "|" + leftMost)
@@ -172,20 +173,20 @@ class EDUFeatureExtractor {
   }
 
   private def getOutgoingDependencies(sent:Sentence, offset:Int):Array[(Int, String)] = {
-    if(offset >= 0 && offset < sent.dependencies.get.outgoingEdges.size) sent.dependencies.get.getOutgoingEdges(offset)
+    if(offset >= 0 && offset < deps(sent).outgoingEdges.length) deps(sent).getOutgoingEdges(offset)
     else new Array[(Int, String)](0)
   }
 
   private def getIncomingDependencies(sent:Sentence, offset:Int):Array[(Int, String)] = {
-    if(offset >= 0 && offset < sent.dependencies.get.incomingEdges.size) sent.dependencies.get.getIncomingEdges(offset)
+    if(offset >= 0 && offset < deps(sent).incomingEdges.length) deps(sent).getIncomingEdges(offset)
     else new Array[(Int, String)](0)
   }
 
 
   def getRightSibling(sent:Sentence, offset:Int):String = {
-    val dg = sent.dependencies.get
-    if(offset >= 0 && offset < sent.size && offset < dg.size && dg.getIncomingEdges(offset).size > 0) {
-      val head = sent.dependencies.get.getIncomingEdges(offset)(0)._1
+    val dg = deps(sent)
+    if(offset >= 0 && offset < sent.size && offset < dg.size && dg.getIncomingEdges(offset).length > 0) {
+      val head = deps(sent).getIncomingEdges(offset)(0)._1
       val siblings = getOutgoingDependencies(sent, head)
       var rs = Int.MaxValue
       for(s <- siblings) {
@@ -201,13 +202,13 @@ class EDUFeatureExtractor {
   }
 
   private def getHeadWord(sent:Sentence, offset:Int):String = {
-    val dg = sent.dependencies.get
+    val dg = deps(sent)
     if(offset < 0) EDU_PAD
     else if(offset < sent.size) {
-      if(offset >= dg.incomingEdges.size || dg.getIncomingEdges(offset).size == 0) {
+      if(offset >= dg.incomingEdges.length || dg.getIncomingEdges(offset).isEmpty) {
         EDU_PAD
       } else {
-        val headPos = sent.dependencies.get.getIncomingEdges(offset)(0)._1
+        val headPos = deps(sent).getIncomingEdges(offset)(0)._1
         if (headPos < 0) "ROOT"
         else sent.words(headPos)
       }
@@ -229,7 +230,7 @@ class EDUFeatureExtractor {
 
   private def getConnective(connectives:Array[String], offset:Int):String = {
     if(offset < 0) EDU_PAD
-    else if(offset < connectives.size) connectives(offset)
+    else if(offset < connectives.length) connectives(offset)
     else EDU_PAD
   }
 
@@ -241,7 +242,7 @@ class EDUFeatureExtractor {
     // CoreNLP may have cycles...
     val seen = new mutable.HashSet[Int]()
     while(! root) {
-      if(pos >=in.size || in(pos).size == 0) {
+      if(pos >=in.length || in(pos).isEmpty) {
         root = true
       } else if(seen.contains(pos)) { // found a cycle; stop here
         os.append("CYCLE")

@@ -46,7 +46,7 @@ object ProcessorExample {
       sentence.tags.foreach(tags => println("POS tags: " + tags.mkString(" ")))
       sentence.entities.foreach(entities => println("Named entities: " + entities.mkString(" ")))
       sentence.norms.foreach(norms => println("Normalized entities: " + norms.mkString(" ")))
-      sentence.dependencies.foreach(dependencies => {
+      sentence.stanfordBasicDependencies.foreach(dependencies => {
         println("Syntactic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while(iterator.hasNext) {

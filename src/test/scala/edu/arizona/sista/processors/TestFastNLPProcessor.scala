@@ -21,8 +21,7 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
     //println(doc.sentences.head.dependencies)
     doc.sentences.head.dependencies.get.hasEdge(1, 0, "nn") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(2, 1, "nsubj") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(2, 3, "prep") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(3, 4, "pobj") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(2, 4, "prep_to") should be (true)
 
     /*
     val it = new DirectedGraphEdgeIterator[String](doc.sentences.head.dependencies.get)

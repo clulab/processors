@@ -1,6 +1,6 @@
 name := "models"
 
-version := "5.4-SNAPSHOT"
+version := "5.5-SNAPSHOT"
 
 organization := "edu.arizona.sista"
 

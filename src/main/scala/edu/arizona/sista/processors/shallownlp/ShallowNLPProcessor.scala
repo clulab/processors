@@ -86,26 +86,8 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     tokensAsJava
   }
 
-  /**
-   * Hook to allow the preprocessing of input text to CoreNLP
-   * This is useful for domain-specific corrections, such as the ones in BioNLPProcessor, where we remove Table and Fig references
-   * @param origText The original input text
-   * @return The preprocessed text
-   */
-  def preprocessText(origText:String):String = {
-    origText
-  }
 
-  private def preprocessSentences(origSentences:Iterable[String]):Iterable[String] = {
-    val sents = new ListBuffer[String]()
-    for(os <- origSentences)
-      sents += preprocessText(os)
-    sents.toList
-  }
-
-  def mkDocument(origText:String, keepText:Boolean): Document = {
-    val text = preprocessText(origText)
-
+  def mkDocument(text:String, keepText:Boolean): Document = {
     val annotation = new Annotation(text)
     tokenizerWithSentenceSplitting.annotate(annotation)
     val sas = annotation.get(classOf[SentencesAnnotation])
@@ -126,7 +108,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     }
 
     val doc = new CoreNLPDocument(sentences, Some(annotation))
-    if(keepText) doc.text = Some(origText)
+    if(keepText) doc.text = Some(text)
 
     doc
   }
@@ -160,10 +142,9 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     else None
   }
 
-  def mkDocumentFromSentences(origSentences:Iterable[String],
+  def mkDocumentFromSentences(sentences:Iterable[String],
                               keepText:Boolean,
                               charactersBetweenSentences:Int = 1): Document = {
-    val sentences = preprocessSentences(origSentences)
     val origText = sentences.mkString(mkSep(charactersBetweenSentences))
     val docAnnotation = new Annotation(origText)
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
@@ -283,9 +264,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
    * This is useful for domain-specific corrections
    * @param annotation The CoreNLP annotation
    */
-  def postprocessTags(annotation:Annotation) {
-
-  }
+  def postprocessTags(annotation:Annotation) { }
 
   def tagPartsOfSpeech(doc:Document) {
     val annotation = basicSanityCheck(doc)

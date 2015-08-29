@@ -2,6 +2,7 @@ package edu.arizona.sista.discourse.rstparser
 
 import scala.io.StdIn
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
+import Utils._
 
 /**
  * Extracts the head word of a span using dependency syntax
@@ -16,11 +17,11 @@ object CheckDepHead {
       var text = StdIn.readLine()
       val doc = proc.annotate(text)
       val offsets = StdIn.readLine().split("\\s+")
-      println(doc.sentences(0).dependencies.get)
+      println(deps(doc.sentences(0)))
 
       val start = offsets(0).toInt
       val end = offsets(1).toInt
-      val (h, p, l) = Utils.findSyntacticHeadFromDependencies(doc.sentences(0).dependencies.get, start, end)
+      val (h, p, l) = Utils.findSyntacticHeadFromDependencies(deps(doc.sentences(0)), start, end)
       println(s"Head = $h")
       println(s"Parent = $p")
     }

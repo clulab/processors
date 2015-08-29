@@ -16,8 +16,9 @@ import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
-import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 import CoreNLPUtils._
+import edu.arizona.sista.discourse.rstparser.Utils._
 
 /**
  * API for Stanford's CoreNLP tools
@@ -25,7 +26,6 @@ import CoreNLPUtils._
  * Date: 3/1/13
  */
 class CoreNLPProcessor(internStrings:Boolean = true,
-                       val basicDependencies:Boolean = false,
                        val withDiscourse:Boolean = false,
                        val maxSentenceLength:Int = 100) extends ShallowNLPProcessor(internStrings) {
   lazy val coref = mkCoref
@@ -76,10 +76,12 @@ class CoreNLPProcessor(internStrings:Boolean = true,
         doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(stanfordTree, headFinder, position))
 
         // save syntactic dependencies
-        doc.sentences(offset).dependencies = Some(toDirectedGraph(sa))
+        val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
+        val collapsedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
+        doc.sentences(offset).setDependencies(DependencyMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+        doc.sentences(offset).setDependencies(DependencyMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
       } else {
         doc.sentences(offset).syntacticTree = None
-        doc.sentences(offset).dependencies = None
       }
       offset += 1
     }
@@ -130,27 +132,17 @@ class CoreNLPProcessor(internStrings:Boolean = true,
     tree
   }
 
-  def toDirectedGraph(sa:CoreMap):DirectedGraph[String] = {
-    var da: SemanticGraph = null
-    if (basicDependencies)
-      da = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
-    else
-      da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
-
-    CoreNLPUtils.toDirectedGraph(da, in)
-  }
-
   override def resolveCoreference(doc:Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
-    if (doc.sentences.head.tags == None)
+    if (doc.sentences.head.tags.isEmpty)
       throw new RuntimeException("ERROR: you have to run the POS tagger before coreference resolution!")
-    if (doc.sentences.head.lemmas == None)
+    if (doc.sentences.head.lemmas.isEmpty)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before coreference resolution!")
-    if (doc.sentences.head.entities == None)
+    if (doc.sentences.head.entities.isEmpty)
       throw new RuntimeException("ERROR: you have to run the NER before coreference resolution!")
-    if(doc.sentences.head.dependencies == None)
+    if(doc.sentences.head.syntacticTree.isEmpty)
       throw new RuntimeException("ERROR: you have to run the parser before coreference resolution!")
 
     coref.annotate(annotation.get)
@@ -185,13 +177,13 @@ class CoreNLPProcessor(internStrings:Boolean = true,
     if(! withDiscourse) return
     basicSanityCheck(doc, checkAnnotation = false)
 
-    if (doc.sentences.head.tags == None)
+    if (doc.sentences.head.tags.isEmpty)
       throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
-    if (doc.sentences.head.lemmas == None)
+    if (doc.sentences.head.lemmas.isEmpty)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before discourse parsing!")
-    if(doc.sentences.head.dependencies == None)
+    if(! hasDeps(doc.sentences.head))
       throw new RuntimeException("ERROR: you have to run the dependency parser before discourse parsing!")
-    if(doc.sentences.head.syntacticTree == None)
+    if(doc.sentences.head.syntacticTree.isEmpty)
       throw new RuntimeException("ERROR: you have to run the constituent parser before discourse parsing!")
 
     val out = rstConstituentParser.parse(doc)
