@@ -1,7 +1,7 @@
 package edu.arizona.sista.discourse.rstparser
 
 import edu.arizona.sista.learning._
-import edu.arizona.sista.processors.Document
+import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.struct.Counter
 import edu.arizona.sista.struct.{DirectedGraph, Lexicon, Tree}
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -13,6 +13,14 @@ import scala.collection.mutable
  * Date: 5/29/14
  */
 object Utils {
+  /**
+   * Fetches dependencies from a given sentence
+   * Note: RST parsing works better with basic dependencies, so we ALWAYS use them here!
+   */
+  def deps(s:Sentence):DirectedGraph[String] = s.stanfordBasicDependencies.get
+
+  def hasDeps(s:Sentence):Boolean = s.stanfordBasicDependencies.isDefined
+
   def tokenCount(doc:Document) = {
     var sum = 0
     for(s <- doc.sentences)

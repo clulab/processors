@@ -14,6 +14,8 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
   val outgoingEdges:Array[Array[(Int, E)]] = mkOutgoing(edges)
   val incomingEdges:Array[Array[(Int, E)]] = mkIncoming(edges)
 
+  def allEdges(): List[(Int, Int, E)] = edges
+
   private def computeSize(edges:List[(Int, Int, E)]):Int = {
     var size = 0
     for (e <- edges) {

@@ -2,6 +2,7 @@ package edu.arizona.sista.processors
 
 import edu.arizona.sista.discourse.rstparser.DiscourseTree
 import edu.arizona.sista.struct.{Tree, DirectedGraph}
+import DependencyMap._
 
 import collection.mutable
 import collection.mutable.ListBuffer
@@ -51,22 +52,55 @@ class Sentence(
                 /** Constituent tree of this sentence; includes head words */
                 var syntacticTree:Option[Tree],
                 /** DAG of syntactic dependencies; word offsets start at 0 */
-                var dependencies:Option[DirectedGraph[String]]) extends Serializable {
+                var dependenciesByType:DependencyMap) extends Serializable {
 
   def this(
             words:Array[String],
             startOffsets:Array[Int],
             endOffsets:Array[Int]) =
     this(words, startOffsets, endOffsets,
-      None, None, None, None, None, None, None)
+      None, None, None, None, None, None, new DependencyMap)
 
   def size:Int = words.length
+
+  /**
+   * Default dependencies: first Stanford collapsed, then Stanford basic, then None
+   * @return A directed graph of dependencies if any exist, otherwise None
+   */
+  def dependencies:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+
+    if(dependenciesByType.contains(STANFORD_COLLAPSED))
+      dependenciesByType.get(STANFORD_COLLAPSED)
+    else if(dependenciesByType.contains(STANFORD_BASIC))
+      dependenciesByType.get(STANFORD_BASIC)
+    else
+      None
+  }
+
+  /** Fetches the Stanford basic dependencies */
+  def stanfordBasicDependencies:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+    dependenciesByType.get(STANFORD_BASIC)
+  }
+
+  /** Fetches the Stanford collapsed dependencies */
+  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+    dependenciesByType.get(STANFORD_COLLAPSED)
+  }
+
+  def setDependencies(depType:Int, deps:DirectedGraph[String]): Unit = {
+    if(dependenciesByType == null)
+      dependenciesByType = new DependencyMap
+    dependenciesByType += (depType -> deps)
+  }
 
   /**
    * Recreates the text of the sentence, preserving the original number of white spaces between tokens
    * @return the text of the sentence
    */
-  def getSentenceText():String =  getSentenceFragmentText(0, words.length)
+  def getSentenceText:String =  getSentenceFragmentText(0, words.length)
 
   def getSentenceFragmentText(start:Int, end:Int):String = {
     // optimize the single token case
@@ -76,7 +110,7 @@ class Sentence(
     for(i <- start until end) {
       if(i > start) {
         // add as many white spaces as recorded between tokens
-        // something this space is negative: in BioNLPProcessor we replace "/" with "and"
+        // sometimes this space is negative: in BioNLPProcessor we replace "/" with "and"
         //   in these cases, let's make sure we print 1 space, otherwise the text is hard to read
         val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
         for (j <- 0 until numberOfSpaces) {
@@ -88,6 +122,15 @@ class Sentence(
     text.toString()
   }
 
+}
+
+class DependencyMap extends mutable.HashMap[Int, DirectedGraph[String]] {
+  override def initialSize:Int = 2 // we have very few dependency types, so let's create a small hash to save memory
+}
+
+object DependencyMap {
+  val STANFORD_BASIC = 0 // basic Stanford dependencies
+  val STANFORD_COLLAPSED = 1 // collapsed Stanford dependencies
 }
 
 /** Stores a single coreference mention */
@@ -103,14 +146,15 @@ class CorefMention (
                      /** Id of the coreference chain containing this mention; -1 if singleton mention */
                      val chainId:Int) extends Serializable {
 
-  def length = (endOffset - startOffset)
+  def length = endOffset - startOffset
 
   override def equals(other:Any):Boolean = {
     other match {
-      case that:CorefMention => (sentenceIndex == that.sentenceIndex &&
+      case that:CorefMention =>
+        sentenceIndex == that.sentenceIndex &&
         headIndex == that.headIndex &&
         startOffset == that.startOffset &&
-        endOffset == that.endOffset)
+        endOffset == that.endOffset
       case _ => false
     }
   }
@@ -175,7 +219,7 @@ class CorefChains (rawMentions:Iterable[CorefMention]) extends Serializable {
   /** All mentions in this document */
   def getMentions:Iterable[CorefMention] = mentions.values
 
-  def isEmpty = (mentions.size == 0 && chains.size == 0)
+  def isEmpty = mentions.isEmpty && chains.isEmpty
 }
 
 object CorefChains {
@@ -220,11 +264,11 @@ object CorefChains {
     val chainBuffer = new mutable.HashMap[Int, ListBuffer[CorefMention]]
     for (m <- mentions.values) {
       var cb = chainBuffer.get(m.chainId)
-      if (cb == None) {
+      if (cb.isEmpty) {
         val cbv = new ListBuffer[CorefMention]
         chainBuffer += m.chainId -> cbv
         cb = chainBuffer.get(m.chainId)
-        assert(cb != None)
+        assert(cb.isDefined)
       }
       cb.get += m
     }
