@@ -79,7 +79,7 @@ object ThompsonVM {
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
         mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
-        val results = loop(mkThreads(t.tok, i.start, t.groups, t.mentions, Nil), None)
+        val results = eval(mkThreads(t.tok, i.start, t.groups, t.mentions, Nil), None)
         if (i.negative == results.isEmpty)
           mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
         else Nil
@@ -89,7 +89,7 @@ object ThompsonVM {
           if (i.negative) mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
           else Nil
         } else {
-          val results = loop(mkThreads(startTok, i.start, t.groups, t.mentions, Nil), None)
+          val results = eval(mkThreads(startTok, i.start, t.groups, t.mentions, Nil), None)
           if (i.negative == results.isEmpty)
             mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
           else Nil
@@ -160,15 +160,15 @@ object ThompsonVM {
       }
 
     @annotation.tailrec
-    def loop(threads: Seq[Thread], currentResult: Option[Thread]): Option[Thread] = {
+    def eval(threads: Seq[Thread], currentResult: Option[Thread]): Option[Thread] = {
       if (threads.isEmpty) currentResult
       else {
         val (ts, nextResult) = handleDone(threads)
-        loop(stepThreads(ts), nextResult orElse currentResult)
+        eval(stepThreads(ts), nextResult orElse currentResult)
       }
     }
 
-    loop(mkThreads(tok, start, Map.empty, Map.empty, Nil), None) match {
+    eval(mkThreads(tok, start, Map.empty, Map.empty, Nil), None) match {
       case None => Nil
       case Some(t) => t.results
     }
