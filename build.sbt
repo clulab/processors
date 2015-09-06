@@ -55,7 +55,7 @@ publishTo := {
 pomIncludeRepository := { _ => false }
 
 // mandatory stuff to add to the pom for publishing
-pomExtra := (
+pomExtra :=
   <url>https://github.com/clulab/processors</url>
   <licenses>
     <license>
@@ -74,7 +74,7 @@ pomExtra := (
       <name>Mihai Surdeanu</name>
       <email>mihai@surdeanu.info</email>
     </developer>
-  </developers>)
+  </developers>
 
 //
 // end publishing settings
