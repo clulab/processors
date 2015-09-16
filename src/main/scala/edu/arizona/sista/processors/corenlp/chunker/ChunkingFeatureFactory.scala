@@ -1,4 +1,4 @@
-package edu.arizona.sista.chunker
+package edu.arizona.sista.processors.corenlp.chunker
 
 import java.util.Collection
 import edu.stanford.nlp.ie.NERFeatureFactory

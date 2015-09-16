@@ -47,7 +47,7 @@ object CRFChunker {
   def mkClassifier(): CRFClassifier[CoreLabel] = {
     val props = new Properties()
     props.setProperty("macro", "true") // use a generic CRF configuration
-    props.setProperty("featureFactory", "edu.arizona.sista.chunker.ChunkingFeatureFactory") // our own FF!
+    props.setProperty("featureFactory", "edu.arizona.sista.processors.corenlp.chunker.ChunkingFeatureFactory") // our own FF!
     props.setProperty("featureCountThreshold", "10") // filter features by frequency threshold
     // TODO explore featureWeightThreshold
     new CRFClassifier[CoreLabel](props)
