@@ -6,7 +6,7 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.StringMatcher
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.native.JsonMethods._
+import org.json4s.native._
 
 trait Mention extends Equals with Ordered[Mention] {
   /** A sequence of labels for this mention.
@@ -88,7 +88,10 @@ trait Mention extends Equals with Ordered[Mention] {
   }
 
   def jsonAST: JValue
-  def json: String
+
+  def json(pretty: Boolean = false): String =
+    if (pretty) prettyJson(renderJValue(jsonAST))
+    else compactJson(renderJValue(jsonAST))
 
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
@@ -160,8 +163,6 @@ class TextBoundMention(
     ("foundBy" -> foundBy)
   }
 
-  def json: String = compact(render(jsonAST))
-
 }
 
 class EventMention(
@@ -222,8 +223,6 @@ class EventMention(
     ("arguments" -> JObject(args))
   }
 
-  def json: String = compact(render(jsonAST))
-
 }
 
 class RelationMention(
@@ -263,7 +262,5 @@ class RelationMention(
     ("foundBy" -> foundBy) ~
     ("arguments" -> JObject(args))
   }
-
-  def json: String = compact(render(jsonAST))
 
 }
