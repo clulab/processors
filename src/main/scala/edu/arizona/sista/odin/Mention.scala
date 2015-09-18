@@ -157,7 +157,8 @@ class TextBoundMention(
 
   def jsonAST: JValue = {
     ("type" -> "TextBound") ~
-    ("tokenInterval" -> tokenInterval) ~
+    ("tokenInterval" -> List(start, end)) ~
+    ("characterOffsets" -> List(startOffset, endOffset)) ~
     ("labels" -> labels) ~
     ("sentence" -> sentence) ~
     ("foundBy" -> foundBy)
