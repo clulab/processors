@@ -2,7 +2,7 @@ name := "processors"
 
 version := "5.6-SNAPSHOT"
 
-organization := "edu.arizona.sista"
+organization := "org.clulab"
 
 scalaVersion := "2.11.6"
 
