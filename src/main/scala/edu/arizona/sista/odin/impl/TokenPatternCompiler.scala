@@ -95,7 +95,7 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
     singleTokenPattern ^^ { (_, 1) }
 
   def capturePattern: Parser[ProgramFragment] =
-    "(?<" ~ identifier ~ ">" ~ splitPattern ~ ")" ^^ {
+    "(?<" ~ stringLiteral ~ ">" ~ splitPattern ~ ")" ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
     }
 

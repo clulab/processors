@@ -42,14 +42,14 @@ class TokenExtractor(
         // the first will be used and the rest ignored
         val int = r.groups(triggerKey).head
         val trigger = new TextBoundMention(labels, int, sent, doc, keep, name)
-        val groups = r.groups - triggerKey transform { (name, intervals) =>
+        val groups = r.groups - triggerKey transform { (argName, intervals) =>
           intervals.map(i => new TextBoundMention(labels, i, sent, doc, keep, name))
         }
         val args = mergeArgs(groups, r.mentions)
         new EventMention(labels, trigger, args, sent, doc, keep, name)
       case None if r.groups.nonEmpty || r.mentions.nonEmpty =>
         // result has arguments and no trigger, create a RelationMention
-        val groups = r.groups transform { (name, intervals) =>
+        val groups = r.groups transform { (argName, intervals) =>
           intervals.map(i => new TextBoundMention(labels, i, sent, doc, keep, name))
         }
         val args = mergeArgs(groups, r.mentions)
