@@ -61,8 +61,18 @@ class ArgumentClassifier {
               case false => NEG_LABEL
             }
           }
-          if(goldLabel == POS_LABEL && predLabel != POS_LABEL)
+          if(goldLabel == POS_LABEL && predLabel != POS_LABEL) {
             distHist.incrementCount(math.abs(arg - pred))
+            if(math.abs(arg - pred) < 3) {
+              println(s"Missed argument ${s.words(arg)}($arg) for predicate ${s.words(pred)}($pred):")
+              println( s"""Sentence: ${s.words.mkString(", ")}""")
+              val datum = mkDatum(s, arg, pred, NEG_LABEL)
+              println("Datum: " + datum.features.mkString(", "))
+              println("Dependencies:\n" + s.dependencies.get)
+              println()
+            }
+
+          }
           output += new Tuple2(goldLabel, predLabel)
         }
       }

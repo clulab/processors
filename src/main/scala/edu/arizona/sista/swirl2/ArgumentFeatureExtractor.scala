@@ -30,16 +30,16 @@ class ArgumentFeatureExtractor {
       features += s"tag:$i:$tag:$predTag"
     }
 
-    if("IN|TO".r.findFirstMatchIn(lemmaAt(sent, position)).isDefined) {
+    //if("IN|TO".r.findFirstMatchIn(lemmaAt(sent, position)).isDefined) {
       for(dep <- sent.dependencies.get.outgoingEdges(position)) {
         val mlemma = lemmaAt(sent, dep._1)
         val mtag = tagAt(sent, dep._1)
         features += s"mlemma:$mlemma"
         features += s"mtag:$mtag"
       }
-    }
+    //}
 
-    val paths = sent.dependencies.get.shortestPathEdges(pred, position)
+    val paths = sent.dependencies.get.shortestPathEdges(pred, position, ignoreDirection = true)
     if(paths.nonEmpty) {
       val path = paths.head.toArray
       features += s"path-length:${path.length}"
