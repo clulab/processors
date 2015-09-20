@@ -141,142 +141,152 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
       case frag ~ n => frag.repeatPattern(n)
     }
 
-  /** Represents a partially compiled TokenPattern.
+}
+
+/** Represents a partially compiled TokenPattern.
+  *
+  * Helps the compiler by keeping track of the input and output
+  * instructions of a partially compiled TokenPattern.
+  */
+class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
+  import ProgramFragment.findOut
+
+  /** Connects a new instruction to the output instructions.
     *
-    * Helps the compiler by keeping track of the input and output
-    * instructions of a partially compiled TokenPattern.
+    * Calling this invalidates the ProgramFragment because
+    * the `out` sequence is no longer up to date.
     */
-  class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
-    import ProgramFragment.findOut
+  def setOut(inst: Inst): Unit = out.foreach(_.next = inst)
 
-    /** Connects a new instruction to the output instructions.
-      *
-      * Calling this invalidates the ProgramFragment because
-      * the `out` sequence is no longer up to date.
-      */
-    def setOut(inst: Inst): Unit = out.foreach(_.next = inst)
+  private def copy(): ProgramFragment = ProgramFragment(in.deepcopy())
 
-    private def copy(): ProgramFragment = ProgramFragment(in.deepcopy())
+  private def repeat(n: Int): Seq[ProgramFragment] =
+    for (i <- 0 until n) yield copy()
 
-    private def repeat(n: Int): Seq[ProgramFragment] =
-      for (i <- 0 until n) yield copy()
+  def capture(name: String): ProgramFragment = {
+    val start = SaveStart(name)
+    val end = SaveEnd(name)
+    start.next = in
+    setOut(end)
+    ProgramFragment(start, end)
+  }
 
-    def capture(name: String): ProgramFragment = {
-      val start = SaveStart(name)
-      val end = SaveEnd(name)
-      start.next = in
-      setOut(end)
-      ProgramFragment(start, end)
+  def greedyOptional: ProgramFragment = {
+    val epsilon = Jump()
+    val split = Split(in, epsilon)
+    ProgramFragment(split, epsilon +: out)
+  }
+
+  def lazyOptional: ProgramFragment = {
+    val epsilon = Jump()
+    val split = Split(epsilon, in)
+    ProgramFragment(split, epsilon +: out)
+  }
+
+  def greedyKleene: ProgramFragment = {
+    val epsilon = Jump()
+    val split = Split(in, epsilon)
+    setOut(split)
+    ProgramFragment(split, epsilon)
+  }
+
+  def lazyKleene: ProgramFragment = {
+    val epsilon = Jump()
+    val split = Split(epsilon, in)
+    setOut(split)
+    ProgramFragment(split, epsilon)
+  }
+
+  def greedyPlus: ProgramFragment = {
+    val epsilon = Jump()
+    val split = Split(in, epsilon)
+    setOut(split)
+    ProgramFragment(in, epsilon)
+  }
+
+  def lazyPlus: ProgramFragment = {
+    val epsilon = Jump()
+    val split = Split(epsilon, in)
+    setOut(split)
+    ProgramFragment(in, epsilon)
+  }
+
+  /** Returns a new ProgramFragment that matches the current fragment
+    * between `from` and `to` times greedily.
+    */
+  def greedyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
+    require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
+    if (from.isDefined && to.isDefined)
+      require(from.get < to.get, "'to' must be greater than 'from'")
+    val required = for (i <- from) yield repeat(i)
+    val optional = for (i <- to) yield {
+      val n = i - from.getOrElse(0)
+      greedyOptional.repeat(n)
     }
+    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyKleene))
+    ProgramFragment(fragments)
+  }
 
-    def greedyOptional: ProgramFragment = {
-      val epsilon = Jump()
-      val split = Split(in, epsilon)
-      ProgramFragment(split, epsilon +: out)
+  /** Returns a new ProgramFragment that matches the current fragment
+    * between `from` and `to` times lazily.
+    */
+  def lazyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
+    require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
+    if (from.isDefined && to.isDefined)
+      require(from.get < to.get, "'to' must be greater than 'from'")
+    val required = for (i <- from) yield repeat(i)
+    val optional = for (i <- to) yield {
+      val n = i - from.getOrElse(0)
+      lazyOptional.repeat(n)
     }
+    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyKleene))
+    ProgramFragment(fragments)
+  }
 
-    def lazyOptional: ProgramFragment = {
-      val epsilon = Jump()
-      val split = Split(epsilon, in)
-      ProgramFragment(split, epsilon +: out)
-    }
+  /** Repeats and concatenates the current fragment `n` times. */
+  def repeatPattern(n: Int): ProgramFragment = {
+    ProgramFragment(repeat(n))
+  }
 
-    def greedyKleene: ProgramFragment = {
-      val epsilon = Jump()
-      val split = Split(in, epsilon)
-      setOut(split)
-      ProgramFragment(split, epsilon)
-    }
+}
 
-    def lazyKleene: ProgramFragment = {
-      val epsilon = Jump()
-      val split = Split(epsilon, in)
-      setOut(split)
-      ProgramFragment(split, epsilon)
-    }
+object ProgramFragment {
 
-    def greedyPlus: ProgramFragment = {
-      val epsilon = Jump()
-      val split = Split(in, epsilon)
-      setOut(split)
-      ProgramFragment(in, epsilon)
-    }
+  def apply(in: Inst, out: Inst): ProgramFragment =
+    new ProgramFragment(in, Seq(out))
 
-    def lazyPlus: ProgramFragment = {
-      val epsilon = Jump()
-      val split = Split(epsilon, in)
-      setOut(split)
-      ProgramFragment(in, epsilon)
-    }
+  def apply(in: Inst, out: Seq[Inst]): ProgramFragment =
+    new ProgramFragment(in, out)
 
-    /** Returns a new ProgramFragment that matches the current fragment
-      * between `from` and `to` times greedily.
-      */
-    def greedyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
-      require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
-      if (from.isDefined && to.isDefined)
-        require(from.get < to.get, "'to' must be greater than 'from'")
-      val required = for (i <- from) yield repeat(i)
-      val optional = for (i <- to) yield {
-        val n = i - from.getOrElse(0)
-        greedyOptional.repeat(n)
-      }
-      val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyKleene))
-      (fragments.head /: fragments.tail) {
-        case (lhs, rhs) => ProgramFragment(lhs, rhs)
-      }
-    }
+  def apply(in: Inst): ProgramFragment =
+    new ProgramFragment(in, findOut(in))
 
-    /** Returns a new ProgramFragment that matches the current fragment
-      * between `from` and `to` times lazily.
-      */
-    def lazyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
-      require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
-      if (from.isDefined && to.isDefined)
-        require(from.get < to.get, "'to' must be greater than 'from'")
-      val required = for (i <- from) yield repeat(i)
-      val optional = for (i <- to) yield {
-        val n = i - from.getOrElse(0)
-        lazyOptional.repeat(n)
-      }
-      val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyKleene))
-      (fragments.head /: fragments.tail) {
-        case (lhs, rhs) => ProgramFragment(lhs, rhs)
-      }
-    }
+  def apply(f1: ProgramFragment, f2: ProgramFragment): ProgramFragment = {
+    f1.setOut(f2.in)
+    ProgramFragment(f1.in, f2.out)
+  }
 
-    /** Repeats and concatenates the current fragment `n` times. */
-    def repeatPattern(n: Int): ProgramFragment = {
-      val fragments = repeat(n)
-      (fragments.head /: fragments.tail) {
-        case (lhs, rhs) => ProgramFragment(lhs, rhs)
-      }
+  def apply(fragments: Seq[ProgramFragment]): ProgramFragment = {
+    require(fragments.nonEmpty)
+    (fragments.head /: fragments.tail) {
+      case (lhs, rhs) => ProgramFragment(lhs, rhs)
     }
   }
 
-  object ProgramFragment {
-    def apply(in: Inst, out: Inst): ProgramFragment = new ProgramFragment(in, Seq(out))
-    def apply(in: Inst, out: Seq[Inst]): ProgramFragment = new ProgramFragment(in, out)
-    def apply(in: Inst): ProgramFragment = new ProgramFragment(in, findOut(in))
-    def apply(f1: ProgramFragment, f2: ProgramFragment): ProgramFragment = {
-      f1.setOut(f2.in)
-      ProgramFragment(f1.in, f2.out)
-    }
-
-    /** Gets an instruction and returns all the output instructions */
-    def findOut(inst: Inst): Seq[Inst] = {
-      @annotation.tailrec
-      def traverse(pending: List[Inst], seen: Set[Inst], out: List[Inst]): Seq[Inst] =
-        pending match {
-          case Nil => out
-          case i :: rest => i match {
-            case i if seen contains i => traverse(rest, seen, out)
-            case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
-            case i if i.next == null => traverse(rest, seen + i, i :: out)
-            case i => traverse(i.next :: rest, seen + i, out)
-          }
+  /** Gets an instruction and returns all the output instructions */
+  def findOut(inst: Inst): Seq[Inst] = {
+    @annotation.tailrec
+    def traverse(pending: List[Inst], seen: Set[Inst], out: List[Inst]): Seq[Inst] =
+      pending match {
+        case Nil => out
+        case i :: rest => i match {
+        case i if seen contains i => traverse(rest, seen, out)
+        case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
+        case i if i.next == null => traverse(rest, seen + i, i :: out)
+        case i => traverse(i.next :: rest, seen + i, out)
         }
-      traverse(List(inst), Set.empty, Nil)
-    }
+      }
+    traverse(List(inst), Set.empty, Nil)
   }
+
 }
