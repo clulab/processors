@@ -130,7 +130,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   private def readTaxonomy(data: Any): Taxonomy = data match {
     case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
     case path: String =>
-      val url = getClass.getResource(path)
+      val url = getClass.getClassLoader.getResource(path)
       val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
       val input = source.mkString
       source.close()
@@ -145,7 +145,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
       importerVars: Map[String, String]
   ): Seq[Rule] = {
     val path = data("import").toString
-    val url = getClass.getResource(path)
+    val url = getClass.getClassLoader.getResource(path)
     // try to read a resource or else a file
     val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
     val input = source.mkString // slurp
