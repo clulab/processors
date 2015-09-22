@@ -4,6 +4,9 @@ import scala.util.hashing.MurmurHash3._
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.StringMatcher
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.native._
 
 trait Mention extends Equals with Ordered[Mention] {
   /** A sequence of labels for this mention.
@@ -84,6 +87,12 @@ trait Mention extends Equals with Ordered[Mention] {
       bits.mkString
   }
 
+  def jsonAST: JValue
+
+  def json(pretty: Boolean = false): String =
+    if (pretty) prettyJson(renderJValue(jsonAST))
+    else compactJson(renderJValue(jsonAST))
+
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
   override def equals(that: Any): Boolean = that match {
@@ -145,6 +154,16 @@ class TextBoundMention(
 
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
+
+  def jsonAST: JValue = {
+    ("type" -> "TextBound") ~
+    ("tokenInterval" -> List(start, end)) ~
+    ("characterOffsets" -> List(startOffset, endOffset)) ~
+    ("labels" -> labels) ~
+    ("sentence" -> sentence) ~
+    ("foundBy" -> foundBy)
+  }
+
 }
 
 class EventMention(
@@ -192,6 +211,19 @@ class EventMention(
     val h2 = mixLast(h1, trigger.hashCode)
     finalizeHash(h2, 2)
   }
+
+  def jsonAST: JValue = {
+    val args = arguments.toList.map {
+      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+    }
+    ("type" -> "Event") ~
+    ("labels" -> labels) ~
+    ("sentence" -> sentence) ~
+    ("foundBy" -> foundBy) ~
+    ("trigger" -> trigger.jsonAST) ~
+    ("arguments" -> JObject(args))
+  }
+
 }
 
 class RelationMention(
@@ -220,4 +252,16 @@ class RelationMention(
     val allEnds = arguments.values.flatMap(_.map(_.end))
     Interval(allStarts.min, allEnds.max)
   }
+
+  def jsonAST: JValue = {
+    val args = arguments.toList.map {
+      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+    }
+    ("type" -> "Relation") ~
+    ("labels" -> labels) ~
+    ("sentence" -> sentence) ~
+    ("foundBy" -> foundBy) ~
+    ("arguments" -> JObject(args))
+  }
+
 }
