@@ -227,9 +227,12 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       for (w <- sentence) {
         val crtTok = new CoreLabel()
         crtTok.setWord(w)
+        crtTok.setValue(w)
         crtTok.setBeginPosition(charOffset)
         charOffset += w.length
         crtTok.setEndPosition(charOffset)
+        crtTok.setIndex(tokOffset + 1) // Stanford counts tokens starting from 1
+        crtTok.setSentIndex(sentOffset) // Stanford counts sentences starting from 0...
         crtTokens.add(crtTok)
         tokOffset += 1
         charOffset += charactersBetweenTokens
@@ -255,7 +258,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   def basicSanityCheck(doc:Document, checkAnnotation:Boolean = true): Option[Annotation] = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")
-    if (doc.sentences.size == 0) return None
+    if (doc.sentences.length == 0) return None
     if (doc.sentences(0).words == null)
       throw new RuntimeException("ERROR: Sentence.words == null!")
 
@@ -335,11 +338,10 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     try {
       ner.annotate(annotation.get)
     } catch {
-      case e:Exception => {
+      case e:Exception =>
         println("Caught NER exception!")
         println("Document:\n" + doc)
         throw e
-      }
     }
 
     // convert CoreNLP Annotations to our data structures
