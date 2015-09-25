@@ -130,7 +130,7 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   private def readTaxonomy(data: Any): Taxonomy = data match {
     case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
     case path: String =>
-      val url = getClass.getResource(path)
+      val url = getClass.getClassLoader.getResource(path)
       val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
       val input = source.mkString
       source.close()
@@ -142,24 +142,24 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   private def importRules(
       data: Map[String, Any],
       taxonomy: Option[Taxonomy],
-      vars: Map[String, String]
+      importerVars: Map[String, String]
   ): Seq[Rule] = {
     val path = data("import").toString
-    val url = getClass.getResource(path)
+    val url = getClass.getClassLoader.getResource(path)
     // try to read a resource or else a file
     val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
     val input = source.mkString // slurp
     source.close()
     // read rules and vars from file
-    val (jRules: Collection[JMap[String, Any]], fileVars: Map[String, String]) = try {
+    val (jRules: Collection[JMap[String, Any]], localVars: Map[String, String]) = try {
       // try to read file with rules and optional vars by trying to read a JMap
       val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
       val data = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
       // read list of rules
       val jRules = data("rules").asInstanceOf[Collection[JMap[String, Any]]]
       // read optional vars
-      val fileVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
-      (jRules, fileVars)
+      val localVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
+      (jRules, localVars)
     } catch {
       case e: ConstructorException =>
         // try to read file with a list of rules by trying to read a Collection of JMaps
@@ -168,12 +168,12 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
         (jRules, Map.empty)
     }
     // variables specified by the call to `import`
-    val localVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala).getOrElse(Map.empty)
+    val importVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala).getOrElse(Map.empty)
     // this map concatenation implements variable scope:
-    // - an imported file may define its own variables (`fileVars`)
-    // - the importer file can define variables (`vars`) that override `fileVars`
-    // - a call to `import` can specify variables (`localVars`) that override the importer `vars`
-    readRules(jRules, taxonomy, fileVars ++ vars ++ localVars)
+    // - an imported file may define its own variables (`localVars`)
+    // - the importer file can define variables (`importerVars`) that override `localVars`
+    // - a call to `import` can include variables (`importVars`) that override `importerVars`
+    readRules(jRules, taxonomy, localVars ++ importerVars ++ importVars)
   }
 
   // compiles a rule into an extractor

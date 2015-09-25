@@ -4,6 +4,9 @@ import scala.util.hashing.MurmurHash3._
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.StringMatcher
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.native._
 
 trait Mention extends Equals with Ordered[Mention] {
   /** A sequence of labels for this mention.
@@ -84,6 +87,12 @@ trait Mention extends Equals with Ordered[Mention] {
       bits.mkString
   }
 
+  def jsonAST: JValue
+
+  def json(pretty: Boolean = false): String =
+    if (pretty) prettyJson(renderJValue(jsonAST))
+    else compactJson(renderJValue(jsonAST))
+
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
   override def equals(that: Any): Boolean = that match {
@@ -145,6 +154,26 @@ class TextBoundMention(
 
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
+
+  def jsonAST: JValue = {
+    ("type" -> "TextBound") ~
+    ("tokenInterval" -> List(start, end)) ~
+    ("characterOffsets" -> List(startOffset, endOffset)) ~
+    ("labels" -> labels) ~
+    ("sentence" -> sentence) ~
+    ("foundBy" -> foundBy)
+  }
+
+  // Copy constructor for TextBoundMention
+  def copy(
+      labels: Seq[String] = this.labels,
+      tokenInterval: Interval = this.tokenInterval,
+      sentence: Int = this.sentence,
+      document: Document = this.document,
+      keep: Boolean = this.keep,
+      foundBy: String = this.foundBy
+  ): TextBoundMention = new TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy)
+
 }
 
 class EventMention(
@@ -192,6 +221,64 @@ class EventMention(
     val h2 = mixLast(h1, trigger.hashCode)
     finalizeHash(h2, 2)
   }
+
+  def jsonAST: JValue = {
+    val args = arguments.toList.map {
+      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+    }
+    ("type" -> "Event") ~
+    ("labels" -> labels) ~
+    ("sentence" -> sentence) ~
+    ("foundBy" -> foundBy) ~
+    ("trigger" -> trigger.jsonAST) ~
+    ("arguments" -> JObject(args))
+  }
+
+  // Copy constructor for EventMention
+  def copy(
+      labels: Seq[String] = this.labels,
+      trigger: TextBoundMention = this.trigger,
+      arguments: Map[String, Seq[Mention]] = this.arguments,
+      sentence: Int = this.sentence,
+      document: Document = this.document,
+      keep: Boolean = this.keep,
+      foundBy: String = this.foundBy
+  ): EventMention = new EventMention(labels, trigger, arguments, sentence, document, keep, foundBy)
+
+  // Convert an EventMention to a RelationMention by deleting the trigger
+  def toRelationMention: RelationMention = {
+    new RelationMention(
+      this.labels,
+      this.arguments,
+      this.sentence,
+      this.document,
+      this.keep,
+      s"${this.foundBy} + toRelationMention"
+    )
+
+  }
+
+  // scatters the args named `argName` into N mentions each with `size` args named `argName`
+  // all combinations of args are produced
+  def scatter(argName: String, size: Int): Seq[EventMention] =
+    arguments
+      .getOrElse(argName, Nil)
+      .combinations(size)
+      .map(args => this + (argName -> args))
+      .toList
+
+  // Create a new EventMention by removing a single argument
+  def -(argName: String): EventMention =
+    copy(arguments = this.arguments - argName)
+
+  // Create a new EventMention by removing a sequence of arguments
+  def --(argNames: Seq[String]): EventMention =
+    copy(arguments = this.arguments -- argNames)
+
+  // Create a new EventMention by adding a key, value pair to the arguments map
+  def +(arg: (String, Seq[Mention])): EventMention =
+    copy(arguments = this.arguments + arg)
+
 }
 
 class RelationMention(
@@ -220,4 +307,64 @@ class RelationMention(
     val allEnds = arguments.values.flatMap(_.map(_.end))
     Interval(allStarts.min, allEnds.max)
   }
+
+  def jsonAST: JValue = {
+    val args = arguments.toList.map {
+      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+    }
+    ("type" -> "Relation") ~
+    ("labels" -> labels) ~
+    ("sentence" -> sentence) ~
+    ("foundBy" -> foundBy) ~
+    ("arguments" -> JObject(args))
+  }
+
+  // Copy constructor for RelationMention
+  def copy(
+      labels: Seq[String] = this.labels,
+      arguments: Map[String, Seq[Mention]] = this.arguments,
+      sentence: Int = this.sentence,
+      document: Document = this.document,
+      keep: Boolean = this.keep,
+      foundBy: String = this.foundBy
+  ): RelationMention = new RelationMention(labels, arguments, sentence, document, keep, foundBy)
+
+  // Convert a RelationMention to an EventMention by specifying a trigger
+  def toEventMention(trigger: TextBoundMention): EventMention = {
+
+    require(trigger.document == this.document, "Trigger's document does not match RelationMention's document")
+    require(trigger.sentence == this.sentence, "Trigger's sentence does not match RelationMention's sentence")
+
+    new EventMention(
+      this.labels,
+      trigger,
+      this.arguments,
+      this.sentence,
+      this.document,
+      this.keep,
+      s"${this.foundBy} + toEventMention"
+    )
+  }
+
+  // scatters the args named `argName` into N mentions each with `size` args named `argName`
+  // all combinations of args are produced
+  def scatter(argName: String, size: Int): Seq[RelationMention] =
+    arguments
+      .getOrElse(argName, Nil)
+      .combinations(size)
+      .map(args => this + (argName -> args))
+      .toList
+
+  // Create a new RelationMention by removing a single argument
+  def -(argName: String): RelationMention =
+    copy(arguments = this.arguments - argName)
+
+  // Create a new RelationMention by removing a sequence of arguments
+  def --(argNames: Seq[String]): RelationMention =
+    copy(arguments = this.arguments -- argNames)
+
+  // Create a new RelationMention by adding a key, value pair to the arguments map
+  def +(arg: (String, Seq[Mention])): RelationMention =
+    copy(arguments = this.arguments + arg)
+
 }
