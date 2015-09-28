@@ -31,11 +31,24 @@ class ArgumentClassifier {
 
     var dataset = createDataset(doc)
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    //classifier = new LogisticRegressionClassifier[String, String]()
-    classifier = new LinearSVMClassifier[String, String]()
+    classifier = new LogisticRegressionClassifier[String, String]()
+    //classifier = new LinearSVMClassifier[String, String]()
     //classifier = new RandomForestClassifier(numTrees = 100)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
     classifier.train(dataset)
+  }
+
+  def validCandidate(sent:Sentence, arg:Int, pred:Int):Boolean = {
+    if(! VALID_ARG_POS.findFirstIn(sent.tags.get(arg)).isDefined)
+      return false
+
+    val deps = sent.stanfordBasicDependencies.get
+    val paths = deps.shortestPathEdges(pred, arg, ignoreDirection = true)
+    var validPath = false
+    paths.foreach(p => if(p.size < 4) validPath = true)
+    if(! validPath) return false
+
+    true
   }
 
   def test(testPath:String): Unit = {
@@ -43,6 +56,7 @@ class ArgumentClassifier {
     val doc = reader.load(testPath)
     val distHist = new Counter[Int]()
 
+    var totalCands = 0
     val output = new ListBuffer[(String, String)]
     for(s <- doc.sentences) {
       val outEdges = s.semanticRoles.get.outgoingEdges
@@ -54,7 +68,7 @@ class ArgumentClassifier {
             case false => NEG_LABEL
           }
           var predLabel = NEG_LABEL
-          if(VALID_ARG_POS.findFirstIn(s.tags.get(arg)).isDefined) {
+          if(validCandidate(s, arg, pred)) {
             val scores = classify(s, arg, pred)
             predLabel = (scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL)) match {
               case true => POS_LABEL
@@ -74,11 +88,13 @@ class ArgumentClassifier {
 
           }
           output += new Tuple2(goldLabel, predLabel)
+          totalCands += 1
         }
       }
     }
 
     BinaryScorer.score(output, POS_LABEL)
+    logger.debug(s"Total number of candidates investigated: $totalCands")
     logger.debug(s"Distance histogram for missed arguments: $distHist")
   }
 
@@ -98,7 +114,7 @@ class ArgumentClassifier {
       for(pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
         for(arg <- s.words.indices) {
-          if(VALID_ARG_POS.findFirstIn(s.tags.get(arg)).isDefined) {
+          if(validCandidate(s, arg, pred)) {
             if (args.contains(arg)) {
               dataset += mkDatum(s, arg, pred, POS_LABEL)
             } else {

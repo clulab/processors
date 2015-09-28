@@ -23,9 +23,9 @@ class TestShortestPath extends FlatSpec with Matchers {
     val paths = deps.shortestPathEdges(pred, arg, ignoreDirection = true)
     paths.isEmpty should be (false)
     val path = paths.head
-    val dirPathLabels = path.map(d => s"${d._3}${d._4}").mkString("-")
+    val dirPathLabels = path.map(d => s"${d._1}->${d._2}:${d._3}${d._4}").mkString("-")
     println(s"Shortest path: [$dirPathLabels]")
     path.isEmpty should be (false)
-    dirPathLabels should be ("nsubj>-det>")
+    dirPathLabels should be ("3->1:nsubj>-1->0:det>")
   }
 }

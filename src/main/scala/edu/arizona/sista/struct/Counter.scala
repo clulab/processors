@@ -109,8 +109,12 @@ class Counter[T](
   override def toString:String = {
     val os = new StringBuilder
     os.append ("[")
-    for (key <- keySet) {
-      os.append (key + ":" + getCount(key).formatted("%3.3f") + ", ")
+    var first = true
+    val keys = keySet
+    for (key <- keys) {
+      if(! first) os.append(", ")
+      os.append (key + ":" + getCount(key).formatted("%3.3f"))
+      first = false
     }
     os.append ("]")
     os.toString
