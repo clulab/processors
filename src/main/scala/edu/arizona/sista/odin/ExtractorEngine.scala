@@ -12,11 +12,18 @@ class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) 
 
   /** Extract mentions from a document.
    *
-   *  @param document a processor's document
-   *  @param initialState (optional) a state instance that may be prepopulated
+   *  @param doc a processor's document
    *  @return a sequence of mentions extracted from the document
    */
-  def extractFrom(document: Document, initialState: State = new State): Seq[Mention] = {
+  def extractFrom(doc: Document): Seq[Mention] = extractFrom(doc, new State)
+
+  /** Extract mentions from a document.
+   *
+   *  @param document a processor's document
+   *  @param initialState a state instance that may be prepopulated
+   *  @return a sequence of mentions extracted from the document
+   */
+  def extractFrom(document: Document, initialState: State): Seq[Mention] = {
     @annotation.tailrec
     def loop(i: Int, state: State): Seq[Mention] = extract(i, state) match {
       case Nil if i > minIterations => state.allMentions // we are done
