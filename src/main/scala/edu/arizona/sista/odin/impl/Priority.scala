@@ -1,28 +1,30 @@
 package edu.arizona.sista.odin.impl
 
 sealed trait Priority {
+  /** returns true if `i` matches the priority */
   def matches(i: Int): Boolean
-  def startsAt: Int
+  /** minimum number of iterations required to satisfy the priority */
+  def minIterations: Int
 }
 
 case class ExactPriority(value: Int) extends Priority {
   def matches(i: Int): Boolean = i == value
-  def startsAt: Int = value
+  def minIterations: Int = value
 }
 
 case class IntervalPriority(start: Int, end: Int) extends Priority {
   def matches(i: Int): Boolean = i >= start && i <= end
-  def startsAt: Int = start
+  def minIterations: Int = end
 }
 
 case class InfiniteIntervalPriority(start: Int) extends Priority {
   def matches(i: Int): Boolean = i >= start
-  def startsAt: Int = start
+  def minIterations: Int = start
 }
 
 case class SparsePriority(values: Set[Int]) extends Priority {
   def matches(i: Int): Boolean = values contains i
-  def startsAt: Int = values.min
+  def minIterations: Int = values.max
 }
 
 object Priority {
