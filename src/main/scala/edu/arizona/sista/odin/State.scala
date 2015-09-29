@@ -3,8 +3,12 @@ package edu.arizona.sista.odin
 /** Represents the current state of the ExtractorEngine.
   * Contains all the mentions found in previous iterations.
   */
-class State(val lookUpTable: MentionLUT = Map.empty) {
+class State(val lookUpTable: MentionLUT) {
+
   import State._
+
+  /** Makes an empty state */
+  def this() = this(Map.empty)
 
   /** Merges the current state with the provided mentions and returns a new State object. */
   def updated(mentions: Seq[Mention]): State =
