@@ -2,15 +2,15 @@
 
 This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
-+ A rule-based event extraction (EE) framework called ODIN (Open Domain INformer) in the `edu.arizona.sista.odin` package, together with a grammar tailored for the biomedical domain. See [ODIN's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
-+ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster.
++ A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `edu.arizona.sista.odin` package, together with a grammar tailored for the biomedical domain. See [Odin's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
++ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster. You can test our discourse parsers online [here](http://agathon.sista.arizona.edu:8080/discp/).
 + A machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 + A suite of NL processors in the `edu.arizona.sista.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
 that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford parser and our own NER based on the Stanford CRF).
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
-All our own code is licensed under Apache License Version 2.0. **However, some of the libraries used here, most notably CoreNLP, are GPL v2.** If `CoreNLPProcessor` is not removed from this package, technically our whole code becomes GPL v2. Soon, we will split the code into multiple componenets, so licensing becomes less ambiguous.
+All our own code is licensed under Apache License Version 2.0. **However, some of the libraries used here, most notably CoreNLP, are GPL v2.** If `CoreNLPProcessor` is not removed from this package, technically our whole code becomes GPL v2. Soon, we will split the code into multiple components, so licensing becomes less ambiguous.
 
 (c) Mihai Surdeanu, 2013 -
 
@@ -28,7 +28,7 @@ If you use one of our discourse parsers, please cite this paper:
 
 Mihai Surdeanu, Thomas Hicks, and Marco A. Valenzuela-Escarcega. Two Practical Rhetorical Structure Theory Parsers. In *Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies: Software Demonstrations (NAACL HLT)*, 2015. [[pdf]](http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf) [[bib]](http://surdeanu.info/mihai/papers/naacl2015-discourse.bib)
 
-If you use ODIN, our event extraction framework, please cite this paper:
+If you use Odin, our event extraction framework, please cite this paper:
 
 Marco A. Valenzuela-Escarcega, Gustave Hahn-Powell, Thomas Hicks, and Mihai Surdeanu. A Domain-independent Rule-based Framework for Event Extraction. In *Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Asian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)*, 2015. [[pdf]](http://surdeanu.info/mihai/papers/acl2015.pdf) [[bib]](http://surdeanu.info/mihai/papers/acl2015.bib)
 
@@ -69,7 +69,7 @@ This software is available on Maven Central. To use, simply add the following de
 + **Tool-independent API** - we support multiple NL and machine learning tools. If you use this code, you will have to change your code only minimally (i.e., only the constructor for the `Processor` object).
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
 + **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface. We also offer event extraction tools for the biomedical domain.
-+ **Rule-based event extraction** - we include ODIN, an event extraction framework, which can be customized to various domains.
++ **Rule-based event extraction** - we include Odin, an event extraction framework, which can be customized to various domains.
 
 # How to compile the source code
 
@@ -543,7 +543,11 @@ A similar structure exists for ranking problems, with `RankingDataset` used to s
 
 For usage examples, including how to create datums and datasets from scratch or import them from the svm-light format, please take a look at the examples under `src/test/scala/edu/arizona/sista/learning`.
 
-## The ODIN event extraction framework
+## The Odin event extraction framework
 
-Please see [ODIN's Wiki](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) page for details.
+Please see [Odin's Wiki](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) page for details.
+
+## Other resources
+
++ [Visualizer for our discourse parsers](http://agathon.sista.arizona.edu:8080/discp/)
 
