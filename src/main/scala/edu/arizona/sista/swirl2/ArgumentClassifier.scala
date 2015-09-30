@@ -45,7 +45,7 @@ class ArgumentClassifier {
     val deps = sent.stanfordBasicDependencies.get
     val paths = deps.shortestPathEdges(pred, arg, ignoreDirection = true)
     var validPath = false
-    paths.foreach(p => if(p.size < 4) validPath = true)
+    paths.foreach(p => if(p.size < 3) validPath = true)
     if(! validPath) return false
 
     true

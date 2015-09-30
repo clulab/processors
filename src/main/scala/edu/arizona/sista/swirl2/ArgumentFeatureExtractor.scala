@@ -29,7 +29,7 @@ class ArgumentFeatureExtractor {
     paths.foreach(path => {
       val ps = pathToString(path, sent, useTags = true)
       features += s"path$prefix:$before:$predTag-$ps"
-      features += s"path$prefix:$before:$predLemma:$predTag-$ps:$argLemma"
+      //features += s"path$prefix:$before:$predLemma:$predTag-$ps:$argLemma"
     })
   }
 
@@ -58,7 +58,6 @@ class ArgumentFeatureExtractor {
       return features.toList
     }
 
-    val argLemma = lemmaAt(sent, position)
     val argTag = tagAt(sent, position, MAX_TAG_SIZE)
     val before = position < pred
 
