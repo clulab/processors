@@ -11,7 +11,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   def tokenConstraint: Parser[TokenConstraint] =
     "[" ~> opt(disjunctiveConstraint) <~ "]" ^^ {
       case Some(constraint) => constraint
-      case None => Unconstrained
+      case None => TokenWildcard
     }
 
   def unitConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
@@ -61,8 +61,10 @@ sealed trait TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean
 }
 
-object Unconstrained extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean = true
+/** matches any token, provided that it exists */
+object TokenWildcard extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    doc.sentences(sent).words.isDefinedAt(tok)
 }
 
 class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
