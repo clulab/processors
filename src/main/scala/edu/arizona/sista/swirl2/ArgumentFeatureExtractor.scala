@@ -64,20 +64,32 @@ class ArgumentFeatureExtractor {
     addDepFeatures(features, "B", sent, sent.stanfordBasicDependencies.get, position, pred)
     addDepFeatures(features, "C", sent, sent.stanfordCollapsedDependencies.get, position, pred)
 
-    /*
     // unigrams
     for (i <- Range(-1, 2)) {
-      // of lemmas
       val lemma = lemmaAt(sent, position + i)
+      val tag = tagAt(sent, position + i)
+
+      // of lemmas
       features += s"lemma:$i:$lemma"
+      features += s"lemma:$i:$lemma:$before"
       features += s"lemma:$i:$lemma:$predLemma"
+      features += s"lemma:$i:$lemma:$predLemma:$before"
+
+      // hybrid
+      features += s"lemma:$i:$lemma:$predTag"
+      features += s"lemma:$i:$lemma:$predTag:$before"
+      features += s"lemma:$i:$tag:$predLemma"
+      features += s"lemma:$i:$tag:$predLemma:$before"
+
 
       // of POS tags
-      val tag = tagAt(sent, position + i)
       features += s"tag:$i:$tag"
+      features += s"tag:$i:$tag:$before"
       features += s"tag:$i:$tag:$predTag"
+      features += s"tag:$i:$tag:$predTag:$before"
     }
 
+    /*
     val deps = sent.stanfordBasicDependencies.get
     //if("IN|TO".r.findFirstMatchIn(lemmaAt(sent, position)).isDefined) {
       for(dep <- deps.outgoingEdges(position)) {
@@ -117,6 +129,10 @@ class ArgumentFeatureExtractor {
     features.toList
   }
 
+  def wordAt(sent:Sentence, position:Int):String = {
+    if(position >= 0 && position < sent.size) sent.words(position)
+    else PADDING
+  }
   def lemmaAt(sent:Sentence, position:Int):String = {
     if(position >= 0 && position < sent.size) sent.lemmas.get(position)
     else PADDING

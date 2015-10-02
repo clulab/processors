@@ -38,19 +38,6 @@ class ArgumentClassifier {
     classifier.train(dataset)
   }
 
-  def validCandidate(sent:Sentence, arg:Int, pred:Int):Boolean = {
-    if(! VALID_ARG_POS.findFirstIn(sent.tags.get(arg)).isDefined)
-      return false
-
-    val deps = sent.stanfordBasicDependencies.get
-    val paths = deps.shortestPathEdges(pred, arg, ignoreDirection = true)
-    var validPath = false
-    paths.foreach(p => if(p.size < 3) validPath = true)
-    if(! validPath) return false
-
-    true
-  }
-
   def test(testPath:String): Unit = {
     val reader = new Reader
     val doc = reader.load(testPath)
@@ -68,7 +55,7 @@ class ArgumentClassifier {
             case false => NEG_LABEL
           }
           var predLabel = NEG_LABEL
-          if(validCandidate(s, arg, pred)) {
+          if(ValidCandidate.isValid(s, arg, pred)) {
             val scores = classify(s, arg, pred)
             predLabel = (scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL)) match {
               case true => POS_LABEL
@@ -114,7 +101,7 @@ class ArgumentClassifier {
       for(pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
         for(arg <- s.words.indices) {
-          if(validCandidate(s, arg, pred)) {
+          if(ValidCandidate.isValid(s, arg, pred)) {
             if (args.contains(arg)) {
               dataset += mkDatum(s, arg, pred, POS_LABEL)
             } else {
@@ -177,8 +164,6 @@ object ArgumentClassifier {
   val FEATURE_THRESHOLD = 3
   val DOWNSAMPLE_PROB = 0.50
   val POS_THRESHOLD = 0.50
-
-  val VALID_ARG_POS = "NN|IN|PR|JJ|TO|RB|VB|MD|WD|CD|\\$|WP|DT".r
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
