@@ -34,8 +34,8 @@ abstract class Dataset[L, F](
   /** Returns Datum for given row */
   def mkDatum(row:Int): Datum[L, F]
 
-  /** Removes features that appear less than threshold times in this dataset. Works in place. */
-  def removeFeaturesByFrequency(threshold:Int)
+  /** Removes features that appear less than threshold times in this dataset. */
+  def removeFeaturesByFrequency(threshold:Int):Dataset[L, F]
 
   /** Creates a new dataset keeping only the features in the given set */
   def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F]
@@ -94,7 +94,7 @@ class BVFDataset[L, F] (
     counts
   }
 
-  override def removeFeaturesByFrequency(threshold:Int) {
+  override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
     val newFeatures = new ArrayBuffer[Array[Int]]
     val counts = countFeatures(features)
     logger.debug("Total unique features before filtering: " + counts.size)
@@ -169,7 +169,7 @@ class RVFDataset[L, F] (
     c
   }
 
-  override def removeFeaturesByFrequency(threshold:Int) {
+  override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
     throw new RuntimeException("Not supported yet!")
   }
 

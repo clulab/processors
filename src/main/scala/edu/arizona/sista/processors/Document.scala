@@ -51,7 +51,7 @@ class Sentence(
                 var chunks:Option[Array[String]],
                 /** Constituent tree of this sentence; includes head words */
                 var syntacticTree:Option[Tree],
-                /** DAG of syntactic dependencies; word offsets start at 0 */
+                /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
                 var dependenciesByType:DependencyMap) extends Serializable {
 
   def this(
@@ -88,6 +88,11 @@ class Sentence(
   def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = {
     if(dependenciesByType == null) return None
     dependenciesByType.get(STANFORD_COLLAPSED)
+  }
+
+  def semanticRoles:Option[DirectedGraph[String]] = {
+    if(dependenciesByType == null) return None
+    dependenciesByType.get(SEMANTIC_ROLES)
   }
 
   def setDependencies(depType:Int, deps:DirectedGraph[String]): Unit = {
@@ -131,6 +136,7 @@ class DependencyMap extends mutable.HashMap[Int, DirectedGraph[String]] {
 object DependencyMap {
   val STANFORD_BASIC = 0 // basic Stanford dependencies
   val STANFORD_COLLAPSED = 1 // collapsed Stanford dependencies
+  val SEMANTIC_ROLES = 2 // semantic roles from CoNLL 2008-09, which includes PropBank and NomBank
 }
 
 /** Stores a single coreference mention */
