@@ -26,7 +26,7 @@ class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) 
   def extractFrom(document: Document, initialState: State): Seq[Mention] = {
     @annotation.tailrec
     def loop(i: Int, state: State): Seq[Mention] = extract(i, state) match {
-      case Nil if i > minIterations => state.allMentions // we are done
+      case Nil if i >= minIterations => state.allMentions // we are done
       case Nil => loop(i + 1, state)
       case mentions => loop(i + 1, state.updated(mentions))
     }
