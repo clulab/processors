@@ -99,18 +99,10 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
     }
 
-  def unnamedMentionPattern: Parser[ProgramFragment] =
-    "@" ~> exactStringMatcher ^^ {
-      case matcher => ProgramFragment(MatchMention(matcher, None))
-    }
-
-  def namedMentionPattern: Parser[ProgramFragment] =
-    "@" ~> stringLiteral ~ ":" ~ exactStringMatcher ^^ {
-      case name ~ ":" ~ matcher => ProgramFragment(MatchMention(matcher, Some(name)))
-    }
-
   def mentionPattern: Parser[ProgramFragment] =
-    namedMentionPattern ||| unnamedMentionPattern
+    "@" ~> opt(stringLiteral <~ ":") ~ exactStringMatcher ^^ {
+      case name ~ matcher => ProgramFragment(MatchMention(matcher, name))
+    }
 
   def atomicPattern: Parser[ProgramFragment] =
     assertionPattern | singleTokenPattern | mentionPattern |
