@@ -272,10 +272,10 @@ object ProgramFragment {
       pending match {
         case Nil => out
         case i :: rest => i match {
-        case i if seen contains i => traverse(rest, seen, out)
-        case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
-        case i if i.next == null => traverse(rest, seen + i, i :: out)
-        case i => traverse(i.next :: rest, seen + i, out)
+          case i if seen contains i => traverse(rest, seen, out)
+          case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
+          case i if i.next == null => traverse(rest, seen + i, i :: out)
+          case i => traverse(i.next :: rest, seen + i, out)
         }
       }
     traverse(List(inst), Set.empty, Nil)
