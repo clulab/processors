@@ -6,14 +6,16 @@ import edu.arizona.sista.odin._
 
 trait TokenConstraintParsers extends StringMatcherParsers {
 
-  def unit: String
-
   def tokenConstraint: Parser[TokenConstraint] =
     "[" ~> opt(disjunctiveConstraint) <~ "]" ^^ {
       case Some(constraint) => constraint
       case None => TokenWildcard
     }
 
+  /** the field that should be used by unitConstraint */
+  def unit: String
+
+  /** makes a token constraint from a single string matcher */
   def unitConstraint: Parser[TokenConstraint] = stringMatcher ^^ {
     case matcher => unit match {
       case "word" => new WordConstraint(matcher)
@@ -55,6 +57,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
     case "mention" ~ _ ~ matcher => new MentionConstraint(matcher)
     case _ => sys.error("unrecognized token field")
   }
+
 }
 
 sealed trait TokenConstraint {
