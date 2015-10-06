@@ -4,7 +4,7 @@ import scala.reflect.ClassTag
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin.impl.{ RuleReader, Extractor }
 
-class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) {
+class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Action) {
 
   // minimum number of iterations required to satisfy the priorities
   // of all extractors
@@ -55,6 +55,7 @@ class ExtractorEngine(val extractors: Seq[Extractor], val globalAction: Action) 
       case m: M => Some(m)
       case _ => None
     }
+
 }
 
 object ExtractorEngine {

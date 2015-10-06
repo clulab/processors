@@ -16,21 +16,21 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
 
-  def read(input: String): Seq[Extractor] =
+  def read(input: String): Vector[Extractor] =
     try {
       readMasterFile(input)
     } catch {
       case e: ConstructorException => readSimpleFile(input)
     }
 
-  def readSimpleFile(input: String): Seq[Extractor] = {
+  def readSimpleFile(input: String): Vector[Extractor] = {
     val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
     val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
     val rules = readRules(jRules, None, Map.empty)
     mkExtractors(rules)
   }
 
-  def readMasterFile(input: String): Seq[Extractor] = {
+  def readMasterFile(input: String): Vector[Extractor] = {
     val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
     val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala
     val taxonomy = master.get("taxonomy").map(readTaxonomy)
@@ -40,12 +40,12 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
     mkExtractors(rules)
   }
 
-  def mkExtractors(rules: Seq[Rule]): Seq[Extractor] = {
+  def mkExtractors(rules: Seq[Rule]): Vector[Extractor] = {
     // count names occurrences
     val names = rules groupBy (_.name) transform ((k, v) => v.size)
     // names should be unique
     names find (_._2 > 1) match {
-      case None => rules map mkExtractor // return extractors
+      case None => (rules map mkExtractor).toVector // return extractors
       case Some((name, count)) =>
         throw new OdinNamedCompileException(s"rule name '$name' is not unique", name)
     }
