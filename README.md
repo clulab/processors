@@ -550,4 +550,6 @@ Please see [Odin's Wiki](https://github.com/sistanlp/processors/wiki/ODIN-(Open-
 ## Other resources
 
 + [Visualizer for our discourse parsers](http://agathon.sista.arizona.edu:8080/discp/)
++ [Odin online demo](http://agathon.sista.arizona.edu:8080/odinweb/open)
++ See our [Reach project](https://github.com/clulab/reach) for more applications of Odin and demos
 
