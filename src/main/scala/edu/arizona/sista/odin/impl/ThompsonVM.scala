@@ -49,6 +49,8 @@ object ThompsonVM {
       state: State
   ): Seq[(NamedGroups, NamedMentions)] = {
 
+    // Executes instruction on token and returns the produced threads.
+    // Threads are created by following all no-Match instructions.
     def mkThreads(
         tok: Int,
         inst: Inst,
@@ -57,7 +59,10 @@ object ThompsonVM {
         partialGroups: PartialGroups
     ): Seq[Thread] = {
       @annotation.tailrec
-      def loop(is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)], ts: Seq[Thread]): Seq[Thread] = is match {
+      def loop(
+          is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
+          ts: Seq[Thread]
+      ): Seq[Thread] = is match {
         case Nil => ts
         case (i, gs, ms, pgs) :: rest => i match {
           case i: Jump => loop((i.next, gs, ms, pgs) :: rest, ts)
@@ -72,9 +77,12 @@ object ThompsonVM {
           case i => loop(rest, ts :+ SingleThread(tok, i, gs, ms, pgs))
         }
       }
+      // return threads produced by `inst`
       loop(List((inst, groups, mentions, partialGroups)), Nil)
     }
 
+    // Advance thread by executing instruction.
+    // Instruction is expected to be a Match instruction.
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
       case i: MatchToken
           if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
