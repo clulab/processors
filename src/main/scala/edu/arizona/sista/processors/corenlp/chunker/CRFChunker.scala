@@ -48,8 +48,7 @@ object CRFChunker {
     val props = new Properties()
     props.setProperty("macro", "true") // use a generic CRF configuration
     props.setProperty("featureFactory", "edu.arizona.sista.processors.corenlp.chunker.ChunkingFeatureFactory") // our own FF!
-    props.setProperty("featureCountThreshold", "10") // filter features by frequency threshold
-    // TODO explore featureWeightThreshold
+    props.setProperty("featureCountThresh", "10") // filter features by frequency threshold
     new CRFClassifier[CoreLabel](props)
   }
 
