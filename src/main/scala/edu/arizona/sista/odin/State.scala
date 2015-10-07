@@ -15,8 +15,8 @@ class State(val lookUpTable: MentionLUT) {
     new State(mergeLuts(lookUpTable, mkLut(mentions)))
 
   /** Returns all mentions contained in the state for which keep == true */
-  def allMentions: Seq[Mention] =
-    lookUpTable.values.toSeq.flatten.distinct.filter(_.keep)
+  def allMentions: Vector[Mention] =
+    lookUpTable.values.toStream.flatten.distinct.filter(_.keep).toVector
 
   /** Checks if a mention is already contained in the state */
   def contains(m: Mention): Boolean =
