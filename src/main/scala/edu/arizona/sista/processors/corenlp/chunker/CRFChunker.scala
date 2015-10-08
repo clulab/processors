@@ -1,6 +1,6 @@
 package edu.arizona.sista.processors.corenlp.chunker
 
-import java.io.File
+import java.io.{ File, InputStream }
 import java.util.Properties
 import scala.collection.JavaConverters._
 import edu.stanford.nlp.ie.crf.CRFClassifier
@@ -26,8 +26,11 @@ class CRFChunker(crf: CRFClassifier[CoreLabel]) {
 
 object CRFChunker {
 
-  def load(path: String): CRFChunker =
-    load(new File(path))
+  def load(is: InputStream): CRFChunker = {
+    val crf = mkClassifier()
+    crf.loadClassifier(is)
+    new CRFChunker(crf)
+  }
 
   def load(file: File): CRFChunker = {
     val crf = mkClassifier()

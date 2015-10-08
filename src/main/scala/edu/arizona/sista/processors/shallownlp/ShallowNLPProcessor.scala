@@ -2,7 +2,7 @@ package edu.arizona.sista.processors.shallownlp
 
 import java.util
 import java.util.Properties
-import java.nio.file.Paths
+import java.util.zip.GZIPInputStream
 
 import edu.arizona.sista.processors.corenlp.CoreNLPDocument
 import edu.arizona.sista.processors.corenlp.chunker.CRFChunker
@@ -63,9 +63,10 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   def mkChunker: CRFChunker = {
-    val url = getClass.getClassLoader.getResource("edu/arizona/sista/processors/corenlp/chunker/chunker.crf.gz")
-    val file = Paths.get(url.toURI).toFile
-    CRFChunker.load(file)
+    val path = "edu/arizona/sista/processors/corenlp/chunker/chunker.crf.gz"
+    val is = getClass.getClassLoader.getResourceAsStream(path)
+    val gzis = new GZIPInputStream(is)
+    CRFChunker.load(gzis)
   }
 
   /**
