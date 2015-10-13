@@ -224,7 +224,7 @@ class EventMention(
 
   def jsonAST: JValue = {
     val args = arguments.toList.map {
-      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+      case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
     }
     ("type" -> "Event") ~
     ("labels" -> labels) ~
@@ -310,7 +310,7 @@ class RelationMention(
 
   def jsonAST: JValue = {
     val args = arguments.toList.map {
-      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+      case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
     }
     ("type" -> "Relation") ~
     ("labels" -> labels) ~

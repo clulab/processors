@@ -99,18 +99,10 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
     }
 
-  def unnamedMentionPattern: Parser[ProgramFragment] =
-    "@" ~> exactStringMatcher ^^ {
-      case matcher => ProgramFragment(MatchMention(matcher, None))
-    }
-
-  def namedMentionPattern: Parser[ProgramFragment] =
-    "@" ~> stringLiteral ~ ":" ~ exactStringMatcher ^^ {
-      case name ~ ":" ~ matcher => ProgramFragment(MatchMention(matcher, Some(name)))
-    }
-
   def mentionPattern: Parser[ProgramFragment] =
-    namedMentionPattern ||| unnamedMentionPattern
+    "@" ~> opt(stringLiteral <~ ":") ~ exactStringMatcher ^^ {
+      case name ~ matcher => ProgramFragment(MatchMention(matcher, name))
+    }
 
   def atomicPattern: Parser[ProgramFragment] =
     assertionPattern | singleTokenPattern | mentionPattern |
@@ -280,10 +272,10 @@ object ProgramFragment {
       pending match {
         case Nil => out
         case i :: rest => i match {
-        case i if seen contains i => traverse(rest, seen, out)
-        case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
-        case i if i.next == null => traverse(rest, seen + i, i :: out)
-        case i => traverse(i.next :: rest, seen + i, out)
+          case i if seen contains i => traverse(rest, seen, out)
+          case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
+          case i if i.next == null => traverse(rest, seen + i, i :: out)
+          case i => traverse(i.next :: rest, seen + i, out)
         }
       }
     traverse(List(inst), Set.empty, Nil)
