@@ -2,14 +2,13 @@ package edu.arizona.sista.odin.impl
 
 import java.io.File
 import java.util.{ Collection, Map => JMap }
-import scala.reflect.ClassTag
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
 import edu.arizona.sista.odin._
 
-class RuleReader[A <: Actions : ClassTag](val actions: A) {
+class RuleReader(val actions: Actions) {
 
   import RuleReader._
 

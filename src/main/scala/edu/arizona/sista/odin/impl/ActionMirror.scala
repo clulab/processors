@@ -1,10 +1,9 @@
 package edu.arizona.sista.odin.impl
 
-import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import edu.arizona.sista.odin._
 
-class ActionMirror[A <: Actions : ClassTag](actions: A) {
+class ActionMirror(actions: Actions) {
   private val instanceMirror = runtimeMirror(actions.getClass.getClassLoader).reflect(actions)
 
   def reflect(name: String): Action = {

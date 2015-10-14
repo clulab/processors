@@ -70,11 +70,7 @@ object ExtractorEngine {
    *  @param globalAction an action that will be applied to the extracted
    *                      mentions at the end of each iteration
    */
-  def apply[A <: Actions : ClassTag](
-      rules: String,
-      actions: A,
-      globalAction: Action
-  ): ExtractorEngine = {
+  def apply(rules: String, actions: Actions, globalAction: Action): ExtractorEngine = {
     val reader = new RuleReader(actions)
     val extractors = reader.read(rules)
     new ExtractorEngine(extractors, globalAction)
@@ -92,7 +88,7 @@ object ExtractorEngine {
    *  @param rules a yaml formatted string with the extraction rules
    *  @param actions an object that contains all the actions used by the rules
    */
-  def apply[A <: Actions : ClassTag](rules: String, actions: A): ExtractorEngine =
+  def apply(rules: String, actions: Actions): ExtractorEngine =
     apply(rules, actions, identityAction)
 
   /** Create a new ExtractorEngine.
