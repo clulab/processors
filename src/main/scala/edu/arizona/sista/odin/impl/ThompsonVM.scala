@@ -84,8 +84,7 @@ object ThompsonVM {
     // Advance thread by executing instruction.
     // Instruction is expected to be a Match instruction.
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
-      case i: MatchToken
-          if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
+      case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
         mkThreads(t.tok + 1, i.next, t.groups, t.mentions, t.partialGroups)  // token matched, return new threads
       case i: MatchSentenceStart if t.tok == 0 =>
         mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)

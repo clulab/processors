@@ -30,7 +30,7 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
       (chunks.head /: chunks.tail) {
         case (lhs, rhs) => ProgramFragment(lhs, rhs)
       }
-  }
+    }
 
   def quantifiedPattern: Parser[ProgramFragment] =
     atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern
