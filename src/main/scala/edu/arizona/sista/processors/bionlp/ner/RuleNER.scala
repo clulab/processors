@@ -196,7 +196,7 @@ object RuleNER {
 
   /** Loads all KBs; KBs must be listed in descending order of their priorities */
   def load(kbs:List[String], useLemmas:Boolean = false, caseInsensitive:Boolean = true):RuleNER = {
-    logger.debug("Beginning to load the KBs for the rule-based bio NER...")
+    logger.info("Beginning to load the KBs for the rule-based bio NER...")
     val matchers = new ArrayBuffer[(String, HashTrie)]
     val knownCaseInsensitives = new mutable.HashSet[String]()
     for(kb <- kbs) {
@@ -205,11 +205,11 @@ object RuleNER {
       assert(is != null, s"Failed to find KB file $kb in the classpath!")
       val reader = new BufferedReader(new InputStreamReader(is))
       val matcher = loadKB(reader, caseInsensitive, knownCaseInsensitives)
-      logger.debug(s"Loaded matcher for label $name. This matchers contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
+      logger.info(s"Loaded matcher for label $name. This matchers contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
       matchers += new Tuple2(name, matcher)
       reader.close()
     }
-    logger.debug("KB loading completed.")
+    logger.info("KB loading completed.")
     new RuleNER(matchers.toArray, knownCaseInsensitives.toSet, useLemmas)
   }
 
