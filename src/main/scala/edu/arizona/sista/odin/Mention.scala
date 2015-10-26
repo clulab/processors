@@ -176,6 +176,8 @@ class TextBoundMention(
 
 }
 
+// NOTE that event mentions *may* have no arguments
+// this is allowed because it is useful for coreference
 class EventMention(
     val labels: Seq[String],
     val trigger: TextBoundMention,
