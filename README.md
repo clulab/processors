@@ -17,9 +17,9 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **5.7.1** - Made Odin event mentions friendlier for event coreference.
 + **5.7.0** - Added chunker for shallow syntax based on the CoNLL-2000 shared task. Improved Odin's Java API. Several bugfixes.
 + **5.6.0** - Changed organization to org.clulab. Changed to 3-number versions. Changed resource loader behavior for the Odin "import" command. 
-+ **5.5** - Added support for rule templates, importing grammar files, and taxonomies in Odin. 
 + [more...](CHANGES.md)
 
 # Citations
@@ -45,20 +45,20 @@ This software is available on Maven Central. To use, simply add the following de
     <dependency>
        <groupId>org.clulab</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.7.0</version>
+       <version>5.7.1</version>
     </dependency>
     <dependency>
        <groupId>org.clulab</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.7.0</version>
+       <version>5.7.1</version>
        <classifier>models</classifier>
     </dependency>
 
  The equivalent SBT dependencies are:
 
     libraryDependencies ++= Seq(
-        "org.clulab" %% "processors" % "5.7.0",
-        "org.clulab" %% "processors" % "5.7.0" classifier "models"
+        "org.clulab" %% "processors" % "5.7.1",
+        "org.clulab" %% "processors" % "5.7.1" classifier "models"
     )
 
 
