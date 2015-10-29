@@ -176,6 +176,8 @@ class TextBoundMention(
 
 }
 
+// NOTE that event mentions *may* have no arguments
+// this is allowed because it is useful for coreference
 class EventMention(
     val labels: Seq[String],
     val trigger: TextBoundMention,
@@ -185,8 +187,6 @@ class EventMention(
     val keep: Boolean,
     val foundBy: String
 ) extends Mention {
-
-  require(arguments.values.flatten.nonEmpty || labels.contains("Unresolved"), "EventMentions need arguments")
 
   def this(
     label: String,
@@ -224,7 +224,7 @@ class EventMention(
 
   def jsonAST: JValue = {
     val args = arguments.toList.map {
-      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+      case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
     }
     ("type" -> "Event") ~
     ("labels" -> labels) ~
@@ -310,7 +310,7 @@ class RelationMention(
 
   def jsonAST: JValue = {
     val args = arguments.toList.map {
-      case (name, mentions) => (name -> JArray(mentions.toList.map(_.jsonAST)))
+      case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
     }
     ("type" -> "Relation") ~
     ("labels" -> labels) ~

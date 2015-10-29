@@ -3,16 +3,20 @@ package edu.arizona.sista.odin
 /** Represents the current state of the ExtractorEngine.
   * Contains all the mentions found in previous iterations.
   */
-class State(val lookUpTable: MentionLUT = Map.empty) {
+class State(val lookUpTable: MentionLUT) {
+
   import State._
+
+  /** Makes an empty state */
+  def this() = this(Map.empty)
 
   /** Merges the current state with the provided mentions and returns a new State object. */
   def updated(mentions: Seq[Mention]): State =
     new State(mergeLuts(lookUpTable, mkLut(mentions)))
 
   /** Returns all mentions contained in the state for which keep == true */
-  def allMentions: Seq[Mention] =
-    lookUpTable.values.toSeq.flatten.distinct.filter(_.keep)
+  def allMentions: Vector[Mention] =
+    lookUpTable.values.toStream.flatten.distinct.filter(_.keep).toVector
 
   /** Checks if a mention is already contained in the state */
   def contains(m: Mention): Boolean =
