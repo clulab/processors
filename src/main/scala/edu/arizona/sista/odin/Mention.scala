@@ -101,7 +101,8 @@ trait Mention extends Equals with Ordered[Mention] {
   }
 
   def compare(that: Mention): Int = {
-    require(this.document == that.document)
+    require(this.document == that.document,
+      "can't compare mentions if they belong to different documents")
     if (this.sentence < that.sentence) -1
     else if (this.sentence > that.sentence) 1
     else this.tokenInterval compare that.tokenInterval
