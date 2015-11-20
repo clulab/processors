@@ -50,14 +50,14 @@ class ArgumentClassifier {
       for (pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
         for(arg <- s.words.indices) {
-          val goldLabel = (args.contains(arg)) match {
+          val goldLabel = args.contains(arg) match {
             case true => POS_LABEL
             case false => NEG_LABEL
           }
           var predLabel = NEG_LABEL
           if(ValidCandidate.isValid(s, arg, pred)) {
             val scores = classify(s, arg, pred)
-            predLabel = (scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL)) match {
+            predLabel = scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL) match {
               case true => POS_LABEL
               case false => NEG_LABEL
             }
