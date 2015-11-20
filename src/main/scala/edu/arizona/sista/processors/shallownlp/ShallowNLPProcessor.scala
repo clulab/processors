@@ -2,8 +2,10 @@ package edu.arizona.sista.processors.shallownlp
 
 import java.util
 import java.util.Properties
+import java.util.zip.GZIPInputStream
 
 import edu.arizona.sista.processors.corenlp.CoreNLPDocument
+import edu.arizona.sista.processors.corenlp.chunker.CRFChunker
 import edu.arizona.sista.processors._
 import edu.stanford.nlp.ling.CoreAnnotations._
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
@@ -26,6 +28,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   lazy val posTagger = mkPosTagger
   lazy val lemmatizer = mkLemmatizer
   lazy val ner = mkNer
+  lazy val chunker = mkChunker
 
   def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -57,6 +60,13 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
     val props = new Properties()
     props.put("annotators", "ner")
     new StanfordCoreNLP(props, false)
+  }
+
+  def mkChunker: CRFChunker = {
+    val path = "edu/arizona/sista/processors/corenlp/chunker/chunker.crf.gz"
+    val is = getClass.getClassLoader.getResourceAsStream(path)
+    val gzis = new GZIPInputStream(is)
+    CRFChunker.load(gzis)
   }
 
   /**
@@ -359,7 +369,12 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   def chunking(doc:Document) {
-    // TODO: add shallow parsing here!
+    for (s <- doc.sentences) {
+      val words = s.words
+      val tags = s.tags.get
+      val chunks = chunker.classify(words, tags)
+      s.chunks = Some(chunks)
+    }
   }
 
   def labelSemanticRoles(doc:Document) {

@@ -25,6 +25,7 @@ import BioNLPProcessor._
 class BioNLPProcessor (internStrings:Boolean = true,
                        withCRFNER:Boolean = true,
                        withRuleNER:Boolean = true,
+                       withContext:Boolean = true,
                        withDiscourse:Boolean = false,
                        maxSentenceLength:Int = 100,
                        removeFigTabReferences:Boolean = true)
@@ -34,7 +35,8 @@ class BioNLPProcessor (internStrings:Boolean = true,
   lazy val postProcessor = new BioNLPTokenizerPostProcessor
   lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences)
   lazy val bioNer = BioNER.load(CRF_MODEL_PATH)
-  lazy val ruleNer = RuleNER.load(RULE_NER_KBS)
+  lazy val ruleNer = RuleNER.load(RULE_NER_KBS, useLemmas = false)
+  //lazy val contextRules = RuleNER.load(YOUR CONTEXT KBS, useLemmas = true) // TODO Enrique
 
   override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -142,6 +144,17 @@ class BioNLPProcessor (internStrings:Boolean = true,
         sentence.entities = Some(ruleNer.find(sentence))
       }
     }
+
+    // TODO Enrique
+    /*
+    if(withContext) {
+      // run the rule-based NER on one sentence at a time
+      for(sentence <- doc.sentences) {
+        val contextLabels = Some(contextRules.find(sentence))
+        // merge them into sentence.entities giving higher priority to ruleNer!
+      }
+    }
+    */
 
     if (withCRFNER) {
       // run the CRF NER on one sentence at a time

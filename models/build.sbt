@@ -1,8 +1,8 @@
 name := "models"
 
-version := "5.4-SNAPSHOT"
+version := "5.7.2-SNAPSHOT"
 
-organization := "edu.arizona.sista"
+organization := "org.clulab"
 
 scalaVersion := "2.11.6"
 

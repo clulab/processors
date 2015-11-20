@@ -105,7 +105,7 @@ class Sentence(
    * Recreates the text of the sentence, preserving the original number of white spaces between tokens
    * @return the text of the sentence
    */
-  def getSentenceText:String =  getSentenceFragmentText(0, words.length)
+  def getSentenceText():String =  getSentenceFragmentText(0, words.length)
 
   def getSentenceFragmentText(start:Int, end:Int):String = {
     // optimize the single token case

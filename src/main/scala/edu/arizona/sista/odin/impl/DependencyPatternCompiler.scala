@@ -5,6 +5,7 @@ import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
 class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) {
+
   def compileDependencyPattern(input: String): DependencyPattern =
     parseAll(dependencyPattern, input) match {
       case Success(result, _) => result
@@ -155,11 +156,11 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
 }
 
 class ArgumentPattern(
-  val name: String,
-  val label: String,
-  val pattern: DependencyPatternNode,
-  val required: Boolean,
-  val size: Option[Int]
+    val name: String,
+    val label: String,
+    val pattern: DependencyPatternNode,
+    val required: Boolean,
+    val size: Option[Int]
 ) {
   // extracts mentions and groups them according to `size`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {

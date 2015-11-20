@@ -1,76 +1,178 @@
 package edu.arizona.sista.odin.impl
 
+import java.io.File
 import java.util.{ Collection, Map => JMap }
-import scala.reflect.ClassTag
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
 import edu.arizona.sista.odin._
-import RuleReader._
 
-class RuleReader[A <: Actions : ClassTag](val actions: A) {
+class RuleReader(val actions: Actions) {
+
+  import RuleReader._
+
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
 
-  def read(input: String): Seq[Extractor] = {
-    // read yaml rules
-    val rules = readRules(input)
+  def read(input: String): Vector[Extractor] =
+    try {
+      readMasterFile(input)
+    } catch {
+      case e: ConstructorException => readSimpleFile(input)
+    }
+
+  def readSimpleFile(input: String): Vector[Extractor] = {
+    val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
+    val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
+    val rules = readRules(jRules, None, Map.empty)
+    mkExtractors(rules)
+  }
+
+  def readMasterFile(input: String): Vector[Extractor] = {
+    val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+    val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala
+    val taxonomy = master.get("taxonomy").map(readTaxonomy)
+    val vars = master.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
+    val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
+    val rules = readRules(jRules, taxonomy, vars)
+    mkExtractors(rules)
+  }
+
+  def mkExtractors(rules: Seq[Rule]): Vector[Extractor] = {
     // count names occurrences
     val names = rules groupBy (_.name) transform ((k, v) => v.size)
     // names should be unique
     names find (_._2 > 1) match {
-      case None => rules map mkExtractor  // return extractors
-      case Some((name, count)) => throw OdinNamedCompileException(s"rule name '$name' is not unique", name)
+      case None => (rules map mkExtractor).toVector // return extractors
+      case Some((name, count)) =>
+        throw new OdinNamedCompileException(s"rule name '$name' is not unique", name)
     }
   }
 
-  private def readRules(input: String): Seq[Rule] = {
-    // make yaml object
-    val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
+  def mkRule(
+      data: Map[String, Any],
+      expand: String => Seq[String],
+      template: Any => String
+  ): Rule = {
 
-    // parse yaml input
-    val rules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
+    // name is required
+    val name = try {
+      template(data("name"))
+    } catch {
+      case e: Exception => throw new OdinCompileException("unnamed rule")
+    }
+
+    // one or more labels are required
+    val labels: Seq[String] = try {
+      data("label") match {
+        case label: String => expand(template(label))
+        case jLabels: Collection[_] =>
+          jLabels.asScala.flatMap(l => expand(template(l))).toSeq.distinct
+      }
+    } catch {
+      case e: Exception =>
+        throw new OdinNamedCompileException(s"rule '$name' has no labels", name)
+    }
+
+    // pattern is required
+    val pattern = try {
+      template(data("pattern"))
+    } catch {
+      case e: Exception =>
+        throw new OdinNamedCompileException(s"rule '$name' has no pattern", name)
+    }
+
+    // these fields have default values
+    val ruleType = template(data.getOrElse("type", DefaultType))
+    val priority = template(data.getOrElse("priority", DefaultPriority))
+    val action = template(data.getOrElse("action", DefaultAction))
+    val keep = strToBool(template(data.getOrElse("keep", DefaultKeep)))
+    // unit is relevant to TokenPattern only
+    val unit = template(data.getOrElse("unit", DefaultUnit))
+
+    // make intermediary rule
+    new Rule(name, labels, ruleType, unit, priority, keep, action, pattern)
+
+  }
+
+  private def readRules(
+      rules: Collection[JMap[String, Any]],
+      taxonomy: Option[Taxonomy],
+      vars: Map[String, String]
+  ): Seq[Rule] = {
 
     // return Rule objects
-    rules.asScala.toSeq.map { r =>
+    rules.asScala.toSeq.flatMap { r =>
       val m = r.asScala.toMap
-
-      // name is required
-      val name = try {
-        m("name").toString()
-      } catch {
-        case e: Exception => throw OdinCompileException("unnamed rule")
-      }
-
-      // one or more labels are required
-      val labels: Seq[String] = try {
-        m("label") match {
-          case label: String => Seq(label)
-          case labels: Collection[_] => labels.asScala.map(_.toString).toSeq.distinct
+      if (m contains "import") {
+        // import rules from a file and return them
+        importRules(m, taxonomy, vars)
+      } else {
+        // gets a label and returns it and all its hypernyms
+        val expand: String => Seq[String] = label => taxonomy match {
+          case Some(t) => t.hypernymsFor(label)
+          case None => Seq(label)
         }
-      } catch {
-        case e: Exception => throw OdinNamedCompileException(s"rule '$name' has no labels", name)
+        // interpolates a template variable with ${variableName} notation
+        // note that $variableName is not supported and $ can't be escaped
+        val template: Any => String =
+          s => """\$\{(.*?)\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
+        // return the rule (in a Seq because this is a flatMap)
+        Seq(mkRule(m, expand, template))
       }
-
-      // pattern is required
-      val pattern = try {
-        m("pattern").toString()
-      } catch {
-        case e: Exception => throw OdinNamedCompileException(s"rule '$name' has no pattern", name)
-      }
-
-      // these fields have default values
-      val ruleType = m.getOrElse("type", DefaultType).toString()
-      val priority = m.getOrElse("priority", DefaultPriority).toString()
-      val action = m.getOrElse("action", DefaultAction).toString()
-      val keep = m.getOrElse("keep", DefaultKeep).asInstanceOf[Boolean]
-      // unit is relevant to TokenPattern only
-      val unit = m.getOrElse("unit", DefaultUnit).toString()
-
-      // make intermediary rule
-      new Rule(name, labels, ruleType, unit, priority, keep, action, pattern)
     }
+
+  }
+
+  // reads a taxonomy from data, where data may be either a forest or a file path
+  private def readTaxonomy(data: Any): Taxonomy = data match {
+    case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
+    case path: String =>
+      val url = getClass.getClassLoader.getResource(path)
+      val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+      val input = source.mkString
+      source.close()
+      val yaml = new Yaml(new Constructor(classOf[Collection[Any]]))
+      val data = yaml.load(input).asInstanceOf[Collection[Any]]
+      Taxonomy(data)
+  }
+
+  private def importRules(
+      data: Map[String, Any],
+      taxonomy: Option[Taxonomy],
+      importerVars: Map[String, String]
+  ): Seq[Rule] = {
+    val path = data("import").toString
+    val url = getClass.getClassLoader.getResource(path)
+    // try to read a resource or else a file
+    val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+    val input = source.mkString // slurp
+    source.close()
+    // read rules and vars from file
+    val (jRules: Collection[JMap[String, Any]], localVars: Map[String, String]) = try {
+      // try to read file with rules and optional vars by trying to read a JMap
+      val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+      val data = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
+      // read list of rules
+      val jRules = data("rules").asInstanceOf[Collection[JMap[String, Any]]]
+      // read optional vars
+      val localVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
+      (jRules, localVars)
+    } catch {
+      case e: ConstructorException =>
+        // try to read file with a list of rules by trying to read a Collection of JMaps
+        val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
+        val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
+        (jRules, Map.empty)
+    }
+    // variables specified by the call to `import`
+    val importVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala).getOrElse(Map.empty)
+    // this map concatenation implements variable scope:
+    // - an imported file may define its own variables (`localVars`)
+    // - the importer file can define variables (`importerVars`) that override `localVars`
+    // - a call to `import` can include variables (`importVars`) that override `importerVars`
+    readRules(jRules, taxonomy, localVars ++ importerVars ++ importVars)
   }
 
   // compiles a rule into an extractor
@@ -80,10 +182,13 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
         case _ => 
-          throw OdinNamedCompileException(s"rule '${rule.name}' has unsupported type '${rule.ruleType}'", rule.name)
+          val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
+          throw new OdinNamedCompileException(msg, rule.name)
       }
     } catch {
-      case e: Exception => throw OdinNamedCompileException(s"Error parsing rule '${rule.name}': ${e.getMessage}", rule.name)
+      case e: Exception =>
+        val msg = s"Error parsing rule '${rule.name}': ${e.getMessage}"
+        throw new OdinNamedCompileException(msg, rule.name)
     }
   }
 
@@ -115,9 +220,16 @@ class RuleReader[A <: Actions : ClassTag](val actions: A) {
 object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
-  val DefaultKeep = true
+  val DefaultKeep = "true"
   val DefaultAction = "default"
   val DefaultUnit = "word"
+
+  // interprets yaml boolean literals
+  def strToBool(s: String): Boolean = s match {
+    case "y" | "Y" | "yes" | "Yes" | "YES" | "true" | "True" | "TRUE" | "on" | "On" | "ON" => true
+    case "n" | "N" | "no" | "No" | "NO" | "false" | "False" | "FALSE" | "off" | "Off" | "OFF" => false
+    case b => sys.error(s"invalid boolean literal '$b'")
+  }
 
   // rule intermediary representation
   class Rule(

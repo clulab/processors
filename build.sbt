@@ -1,8 +1,8 @@
 name := "processors"
 
-version := "5.4-SNAPSHOT"
+version := "5.7.2-SNAPSHOT"
 
-organization := "edu.arizona.sista"
+organization := "org.clulab"
 
 scalaVersion := "2.11.6"
 
@@ -55,7 +55,7 @@ publishTo := {
 pomIncludeRepository := { _ => false }
 
 // mandatory stuff to add to the pom for publishing
-pomExtra := (
+pomExtra :=
   <url>https://github.com/clulab/processors</url>
   <licenses>
     <license>
@@ -74,7 +74,7 @@ pomExtra := (
       <name>Mihai Surdeanu</name>
       <email>mihai@surdeanu.info</email>
     </developer>
-  </developers>)
+  </developers>
 
 //
 // end publishing settings

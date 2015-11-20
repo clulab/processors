@@ -5,8 +5,10 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.odin._
 
 object ThompsonVM {
+
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
+  type PartialGroups = List[(String, Int)]
 
   sealed trait Thread {
     def isDone: Boolean
@@ -47,39 +49,49 @@ object ThompsonVM {
       state: State
   ): Seq[(NamedGroups, NamedMentions)] = {
 
+    // Executes instruction on token and returns the produced threads.
+    // Threads are created by following all no-Match instructions.
     def mkThreads(
         tok: Int,
         inst: Inst,
         groups: NamedGroups,
         mentions: NamedMentions,
-        partialGroups: List[(String, Int)]
-    ): Seq[Thread] = inst match {
-      case i: Jump =>
-        mkThreads(tok, i.next, groups, mentions, partialGroups)
-      case i: Split =>
-        mkThreads(tok, i.lhs, groups, mentions, partialGroups) ++ mkThreads(tok, i.rhs, groups, mentions, partialGroups)
-      case i: SaveStart => // start a new capture
-        mkThreads(tok, i.next, groups, mentions, (i.name, tok) :: partialGroups)
-      case i: SaveEnd => partialGroups match {
-        case (name, start) :: partials if name == i.name =>
-          val gs = groups.getOrElse(name, Vector.empty) :+ Interval(start, tok)
-          mkThreads(tok, i.next, groups + (name -> gs), mentions, partials)
-        case _ => sys.error("unable to close capture")
+        partialGroups: PartialGroups
+    ): Seq[Thread] = {
+      @annotation.tailrec
+      def loop(
+          is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
+          ts: Seq[Thread]
+      ): Seq[Thread] = is match {
+        case Nil => ts
+        case (i, gs, ms, pgs) :: rest => i match {
+          case i: Jump => loop((i.next, gs, ms, pgs) :: rest, ts)
+          case i: Split => loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
+          case i: SaveStart => loop((i.next, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
+          case i: SaveEnd => pgs match {
+            case (name, start) :: partials if name == i.name =>
+              val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
+              loop((i.next, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
+            case _ => sys.error("unable to close capture")
+          }
+          case i => loop(rest, ts :+ SingleThread(tok, i, gs, ms, pgs))
+        }
       }
-      case _ =>
-        Seq(SingleThread(tok, inst, groups, mentions, partialGroups))
+      // return threads produced by `inst`
+      loop(List((inst, groups, mentions, partialGroups)), Nil)
     }
 
+    // Advance thread by executing instruction.
+    // Instruction is expected to be a Match instruction.
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
-      case i: MatchToken
-          if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
+      case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
         mkThreads(t.tok + 1, i.next, t.groups, t.mentions, t.partialGroups)  // token matched, return new threads
       case i: MatchSentenceStart if t.tok == 0 =>
         mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
         mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
-        val results = loop(mkThreads(t.tok, i.start, t.groups, t.mentions, Nil), None)
+        val results = eval(mkThreads(t.tok, i.start, t.groups, t.mentions, Nil), None)
         if (i.negative == results.isEmpty)
           mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
         else Nil
@@ -89,7 +101,7 @@ object ThompsonVM {
           if (i.negative) mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
           else Nil
         } else {
-          val results = loop(mkThreads(startTok, i.start, t.groups, t.mentions, Nil), None)
+          val results = eval(mkThreads(startTok, i.start, t.groups, t.mentions, Nil), None)
           if (i.negative == results.isEmpty)
             mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
           else Nil
@@ -160,15 +172,15 @@ object ThompsonVM {
       }
 
     @annotation.tailrec
-    def loop(threads: Seq[Thread], currentResult: Option[Thread]): Option[Thread] = {
+    def eval(threads: Seq[Thread], currentResult: Option[Thread]): Option[Thread] = {
       if (threads.isEmpty) currentResult
       else {
         val (ts, nextResult) = handleDone(threads)
-        loop(stepThreads(ts), nextResult orElse currentResult)
+        eval(stepThreads(ts), nextResult orElse currentResult)
       }
     }
 
-    loop(mkThreads(tok, start, Map.empty, Map.empty, Nil), None) match {
+    eval(mkThreads(tok, start, Map.empty, Map.empty, Nil), None) match {
       case None => Nil
       case Some(t) => t.results
     }
