@@ -31,9 +31,9 @@ class ArgumentClassifier {
 
     var dataset = createDataset(doc)
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    classifier = new LogisticRegressionClassifier[String, String]()
+    //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    //classifier = new RandomForestClassifier(numTrees = 100)
+    classifier = new RandomForestClassifier(numTrees = 100)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
     classifier.train(dataset)
   }
@@ -64,6 +64,9 @@ class ArgumentClassifier {
           }
           if(goldLabel == POS_LABEL && predLabel != POS_LABEL) {
             distHist.incrementCount(math.abs(arg - pred))
+
+            // debug output
+            /*
             if(math.abs(arg - pred) < 3) {
               println(s"Missed argument ${s.words(arg)}($arg) for predicate ${s.words(pred)}($pred):")
               println( s"""Sentence: ${s.words.mkString(", ")}""")
@@ -72,6 +75,7 @@ class ArgumentClassifier {
               println("Dependencies:\n" + s.dependencies.get)
               println()
             }
+            */
 
           }
           output += new Tuple2(goldLabel, predLabel)
