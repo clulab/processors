@@ -1,5 +1,6 @@
 package edu.arizona.sista.swirl2
 
+import edu.arizona.sista.embeddings.word2vec.Word2Vec
 import edu.arizona.sista.processors.Sentence
 import edu.arizona.sista.struct.DirectedGraph
 
@@ -12,7 +13,17 @@ import ArgumentFeatureExtractor._
  * User: mihais
  * Date: 7/14/15
  */
-class ArgumentFeatureExtractor {
+class ArgumentFeatureExtractor(word2vecFile:String) {
+
+  // val w2v = new Word2Vec(word2vecFile)
+
+  def addEmbeddingsFeatures(features:ListBuffer[String],
+                            prefix:String,
+                            sent:Sentence,
+                            position:Int): Unit = {
+    // val embeddings = w2v.getWordVector(sent.words(position))
+
+  }
 
   def addDepFeatures(features:ListBuffer[String],
                      prefix:String,
@@ -88,6 +99,8 @@ class ArgumentFeatureExtractor {
       features += s"tag:$i:$tag:$predTag"
       features += s"tag:$i:$tag:$predTag:$before"
     }
+
+    addEmbeddingsFeatures(features, "AE", sent, position)
 
     /*
     val deps = sent.stanfordBasicDependencies.get

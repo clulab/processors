@@ -20,7 +20,7 @@ import scala.util.Random
  * Date: 7/13/15
  */
 class ArgumentClassifier {
-  lazy val featureExtractor = new ArgumentFeatureExtractor
+  lazy val featureExtractor = new ArgumentFeatureExtractor("vectors.txt")
   var classifier:Classifier[String, String] = null
 
   def train(trainPath:String): Unit = {
@@ -33,7 +33,7 @@ class ArgumentClassifier {
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    classifier = new RandomForestClassifier(numTrees = 100)
+    classifier = new RandomForestClassifier(numTrees = 100, maxTreeDepth = 3)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
     classifier.train(dataset)
   }
@@ -100,7 +100,8 @@ class ArgumentClassifier {
     val random = new Random(0)
     var sentCount = 0
     var droppedCands = 0
-    for(s <- doc.sentences) {
+    var done = false
+    for(s <- doc.sentences if ! done) {
       val outEdges = s.semanticRoles.get.outgoingEdges
       for(pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
@@ -119,9 +120,13 @@ class ArgumentClassifier {
           }
         }
       }
+
       sentCount += 1
       if(sentCount % 1000 == 0)
         logger.debug(s"Processed $sentCount/${doc.sentences.length} sentences...")
+
+      if(MAX_TRAINING_DATUMS > 0 && dataset.size > MAX_TRAINING_DATUMS)
+        done = true
     }
     logger.debug(s"Dropped $droppedCands candidate arguments.")
     dataset
@@ -168,6 +173,7 @@ object ArgumentClassifier {
   val FEATURE_THRESHOLD = 3
   val DOWNSAMPLE_PROB = 0.50
   val POS_THRESHOLD = 0.50
+  val MAX_TRAINING_DATUMS = 1000
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
