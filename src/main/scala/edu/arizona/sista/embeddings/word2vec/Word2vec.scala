@@ -15,13 +15,13 @@ import edu.arizona.sista.utils.MathUtils
  */
 
 // matrixConstructor is lazy, meant to save memory space if we're caching features
-class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
+class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
 
   lazy val dimensions = matrix.values.head.length
 
   /** alternate constructor to allow loading from a file, possibly with a set of words to constrain the vocab */
   def this(mf: String, wordsToUse: Option[Set[String]] = None) = {
-    this(Word2vec.loadMatrix(mf, wordsToUse)._1)
+    this(Word2Vec.loadMatrix(mf, wordsToUse)._1)
   }
   // construct the matrix for this instance lazily by calling the constructor
   lazy val matrix : Map[String, Array[Double]] = matrixConstructor
@@ -106,7 +106,7 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
     val v = new Array[Double](dimensions)
     var found = false
     for(w1 <- words) {
-      val w = Word2vec.sanitizeWord(w1)         // sanitize words
+      val w = Word2Vec.sanitizeWord(w1)         // sanitize words
       val vo = matrix.get(w)
       if(vo.isDefined) {
         found = true
@@ -114,7 +114,7 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
       }
     }
     if(! found) return List()
-    Word2vec.norm(v)
+    Word2Vec.norm(v)
     mostSimilarWords(v, howMany, None)
   }
 
@@ -130,7 +130,7 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
       val v = matrix.get(s)
       if(v.isDefined) add(vTotal, v.get)
     }
-    Word2vec.norm(vTotal)
+    Word2Vec.norm(vTotal)
     vTotal
   }
 
@@ -140,7 +140,7 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
     * @return the array of embeddings weights
     */
   def getWordVector(word:String):Option[Array[Double]] = {
-    val sw = Word2vec.sanitizeWord(word)
+    val sw = Word2Vec.sanitizeWord(word)
     matrix.get(sw)
   }
 
@@ -150,9 +150,9 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
    */
   def textSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2vec.sanitizeWord(_))
+    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2vec.sanitizeWord(_))
+    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
     sanitizedTextSimilarity(st1, st2)
   }
 
@@ -172,9 +172,9 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
    */
   def multiplicativeTextSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2vec.sanitizeWord(_))
+    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2vec.sanitizeWord(_))
+    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
     multiplicativeSanitizedTextSimilarity(st1, st2)
   }
 
@@ -205,8 +205,8 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
                                       t2: Iterable[String],
                                       method: Symbol = 'linear,
                                       normalize: Boolean = false): Double = {
-    val st1 = t1.map(Word2vec.sanitizeWord(_))
-    val st2 = t2.map(Word2vec.sanitizeWord(_))
+    val st1 = t1.map(Word2Vec.sanitizeWord(_))
+    val st2 = t2.map(Word2Vec.sanitizeWord(_))
     logMultiplicativeSanitizedTextSimilarity(st1, st2, method, normalize)
   }
 
@@ -240,15 +240,15 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
    */
   def maxSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2vec.sanitizeWord(_))
+    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2vec.sanitizeWord(_))
+    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
     sanitizedMaxSimilarity(st1, st2)
   }
 
   def minSimilarity(t1: Iterable[String], t2: Iterable[String]): Double = {
-    val st1 = t1.map(Word2vec.sanitizeWord(_))
-    val st2 = t2.map(Word2vec.sanitizeWord(_))
+    val st1 = t1.map(Word2Vec.sanitizeWord(_))
+    val st2 = t2.map(Word2Vec.sanitizeWord(_))
     sanitizedMinSimilarity(st1, st2)
   }
 
@@ -300,9 +300,9 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
    */
   def avgSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2vec.sanitizeWord(_))
+    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2vec.sanitizeWord(_))
+    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
     val (score, pairs) = sanitizedAvgSimilarity(st1, st2)
 
     score
@@ -310,9 +310,9 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
 
   def avgSimilarityReturnTop(t1:Iterable[String], t2:Iterable[String]):(Double, Array[(Double, String, String)]) = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2vec.sanitizeWord(_))
+    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2vec.sanitizeWord(_))
+    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
     val (score, pairs) = sanitizedAvgSimilarity(st1, st2)
 
     val sorted = pairs.sortBy(- _._1).toArray
@@ -366,13 +366,13 @@ class Word2vec(matrixConstructor: => Map[String, Array[Double]]) {
       // add it in place to the sum vector
       add(v, scaled)
     }
-    Word2vec.norm(v)
+    Word2Vec.norm(v)
     v
   }
 }
 
-object Word2vec {
-  val logger = LoggerFactory.getLogger(classOf[Word2vec])
+object Word2Vec {
+  val logger = LoggerFactory.getLogger(classOf[Word2Vec])
 
   /**
    * Normalizes words for word2vec
@@ -478,7 +478,7 @@ object Word2vec {
 
 
   def main(args:Array[String]) {
-    val w2v = new Word2vec(args(0), None)
+    val w2v = new Word2Vec(args(0), None)
 
     println("Words most similar to \"house\":")
     for(t <- w2v.mostSimilarWords(Set("house"), 40)) {
