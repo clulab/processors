@@ -36,7 +36,7 @@ class RandomForestClassifier[L, F]( val numTrees:Int = 1000,
     val scores = getScores(d)
     var max = Double.MinValue
     var bestIndex = -1
-    for(i <- 0 until scores.length) {
+    for(i <- scores.indices) {
       if(scores(i) > max) {
         max = scores(i)
         bestIndex = i
@@ -49,7 +49,7 @@ class RandomForestClassifier[L, F]( val numTrees:Int = 1000,
   override def scoresOf(d:Datum[L, F]): Counter[L] = {
     val scores = getScores(d)
     val c = new Counter[L]
-    for(i <- 0 until scores.length) {
+    for(i <- scores.indices) {
       val l = labelMap.get(classAttribute.get.value(i)).get
       c.incrementCount(l, scores(i))
     }
@@ -62,12 +62,21 @@ class RandomForestClassifier[L, F]( val numTrees:Int = 1000,
   }
 
   override def train(dataset:Dataset[L, F], indices:Array[Int]) {
-    // create the label map
-    for(l <- dataset.labelLexicon.keySet)
-      labelMap += asString(l) -> l
-
     // create the Weka dataset
-    instances = Some(datasetToInstances(dataset, indices))
+    val wekaInstances = datasetToInstances(dataset, indices)
+
+    // actual train
+    trainWeka(dataset.labelLexicon, wekaInstances)
+  }
+
+  override def trainWeka(labelLexicon:Lexicon[L], wekaInstances:Instances): Unit = {
+
+    // store the Weka dataset
+    instances = Some(wekaInstances)
+
+    // create the label map
+    for (l <- labelLexicon.keySet)
+      labelMap += asString(l) -> l
 
     // create and configure the random forest
     val rfc = new FastRandomForest
@@ -110,7 +119,7 @@ class RandomForestClassifier[L, F]( val numTrees:Int = 1000,
     }
   }
 
-  private def datasetToInstances(dataset:Dataset[L, F], indices:Array[Int]):Instances = {
+  def datasetToInstances(dataset:Dataset[L, F], indices:Array[Int]):Instances = {
     val featureLexicon = dataset.featureLexicon
     val labelLexicon = dataset.labelLexicon
 
@@ -141,7 +150,7 @@ class RandomForestClassifier[L, F]( val numTrees:Int = 1000,
     // create instances
     //
     val instances = new Instances("Dataset", attributes, indices.length)
-    for(i <- 0 until indices.length) {
+    for(i <- indices.indices) {
       val label = dataset.labels(indices(i))
       val fs = dataset.featuresCounter(indices(i))
       val inst = mkInstance(featureLexicon, labelLexicon, label, fs, index)

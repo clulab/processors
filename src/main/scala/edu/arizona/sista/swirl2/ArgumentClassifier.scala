@@ -29,13 +29,28 @@ class ArgumentClassifier {
 
     computeArgStats(doc)
 
+    logger.debug("Constructing dataset...")
     var dataset = createDataset(doc)
+    logger.debug("Finished constructing dataset.")
+
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
     classifier = new RandomForestClassifier(numTrees = 100, maxTreeDepth = 0, numThreads = 8)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    classifier.train(dataset)
+
+    classifier match {
+      case rfc:RandomForestClassifier[String, String] =>
+        logger.debug("Converting dataset to Weka instances...")
+        val labelLexicon = dataset.labelLexicon
+        val indices = Datasets.mkTrainIndices(dataset.size, None)
+        val wekaInstances = rfc.datasetToInstances(dataset, indices)
+        dataset = null // no longer needed; clear to save memory
+        logger.debug("Conversion complete.")
+        classifier.trainWeka(labelLexicon, wekaInstances)
+      case oc:Classifier[String, String] =>
+        classifier.train(dataset)
+    }
   }
 
   def test(testPath:String): Unit = {
@@ -170,8 +185,8 @@ object ArgumentClassifier {
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
 
-  val FEATURE_THRESHOLD = 3
-  val DOWNSAMPLE_PROB = 0.50
+  val FEATURE_THRESHOLD = 10
+  val DOWNSAMPLE_PROB = 0.25
   val POS_THRESHOLD = 0.50
   val MAX_TRAINING_DATUMS = 10000
 
