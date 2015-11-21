@@ -33,7 +33,7 @@ class ArgumentClassifier {
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    classifier = new RandomForestClassifier(numTrees = 100, maxTreeDepth = 3)
+    classifier = new RandomForestClassifier(numTrees = 100, maxTreeDepth = 0, numThreads = 8)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
     classifier.train(dataset)
   }
@@ -173,7 +173,7 @@ object ArgumentClassifier {
   val FEATURE_THRESHOLD = 3
   val DOWNSAMPLE_PROB = 0.50
   val POS_THRESHOLD = 0.50
-  val MAX_TRAINING_DATUMS = 1000
+  val MAX_TRAINING_DATUMS = 10000
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
@@ -184,7 +184,7 @@ object ArgumentClassifier {
 
       if(props.containsKey("model")) {
         val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
-        ac.saveTo(os)
+        //ac.saveTo(os)
         os.close()
       }
     }
@@ -192,7 +192,7 @@ object ArgumentClassifier {
     if(props.containsKey("test")) {
       if(props.containsKey("model")) {
         val is = new BufferedReader(new FileReader(props.getProperty("model")))
-        ac = loadFrom(is)
+        //ac = loadFrom(is)
         is.close()
       }
 
