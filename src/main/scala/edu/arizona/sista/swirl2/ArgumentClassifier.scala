@@ -27,7 +27,7 @@ object ArgumentClassifier {
   val NUM_THREADS = 16
 
   val FEATURE_THRESHOLD = 10
-  val DOWNSAMPLE_PROB = 0.25
+  val DOWNSAMPLE_PROB = 0.50
   val MAX_TRAINING_DATUMS = 1000
 
   val POS_LABEL = "+"
