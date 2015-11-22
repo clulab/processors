@@ -19,6 +19,56 @@ import scala.util.Random
  * User: mihais
  * Date: 7/13/15
  */
+object ArgumentClassifier {
+  val logger = LoggerFactory.getLogger(classOf[ArgumentClassifier])
+
+  val NUM_TREES = 100
+  val MAX_TREE_DEPTH = 0
+  val NUM_THREADS = 16
+
+  val FEATURE_THRESHOLD = 10
+  val DOWNSAMPLE_PROB = 0.25
+  val MAX_TRAINING_DATUMS = 1000
+
+  val POS_LABEL = "+"
+  val NEG_LABEL = "-"
+
+  def main(args:Array[String]): Unit = {
+    val props = argsToProperties(args)
+    var ac = new ArgumentClassifier
+
+    if(props.containsKey("train")) {
+      ac.train(props.getProperty("train"))
+
+      if(props.containsKey("model")) {
+        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
+        //ac.saveTo(os)
+        os.close()
+      }
+    }
+
+    if(props.containsKey("test")) {
+      if(props.containsKey("model")) {
+        val is = new BufferedReader(new FileReader(props.getProperty("model")))
+        //ac = loadFrom(is)
+        is.close()
+      }
+
+      ac.test(props.getProperty("test"))
+    }
+  }
+
+  def loadFrom(r:java.io.Reader):ArgumentClassifier = {
+    val ac = new ArgumentClassifier
+    val reader = Files.toBufferedReader(r)
+
+    val c = LiblinearClassifier.loadFrom[String, String](reader)
+    ac.classifier = c
+
+    ac
+  }
+}
+
 class ArgumentClassifier {
   lazy val featureExtractor = new ArgumentFeatureExtractor("vectors.txt")
   var classifier:Classifier[String, String] = null
@@ -36,7 +86,7 @@ class ArgumentClassifier {
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    classifier = new RandomForestClassifier(numTrees = 100, maxTreeDepth = 0, numThreads = 8)
+    classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
 
     classifier match {
@@ -179,49 +229,3 @@ class ArgumentClassifier {
   }
 }
 
-object ArgumentClassifier {
-  val logger = LoggerFactory.getLogger(classOf[ArgumentClassifier])
-
-  val POS_LABEL = "+"
-  val NEG_LABEL = "-"
-
-  val FEATURE_THRESHOLD = 10
-  val DOWNSAMPLE_PROB = 0.25
-  val POS_THRESHOLD = 0.50
-  val MAX_TRAINING_DATUMS = 10000
-
-  def main(args:Array[String]): Unit = {
-    val props = argsToProperties(args)
-    var ac = new ArgumentClassifier
-
-    if(props.containsKey("train")) {
-      ac.train(props.getProperty("train"))
-
-      if(props.containsKey("model")) {
-        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
-        //ac.saveTo(os)
-        os.close()
-      }
-    }
-
-    if(props.containsKey("test")) {
-      if(props.containsKey("model")) {
-        val is = new BufferedReader(new FileReader(props.getProperty("model")))
-        //ac = loadFrom(is)
-        is.close()
-      }
-
-      ac.test(props.getProperty("test"))
-    }
-  }
-
-  def loadFrom(r:java.io.Reader):ArgumentClassifier = {
-    val ac = new ArgumentClassifier
-    val reader = Files.toBufferedReader(r)
-
-    val c = LiblinearClassifier.loadFrom[String, String](reader)
-    ac.classifier = c
-
-    ac
-  }
-}
