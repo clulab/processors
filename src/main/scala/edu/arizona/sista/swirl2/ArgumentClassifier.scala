@@ -28,7 +28,7 @@ object ArgumentClassifier {
 
   val FEATURE_THRESHOLD = 10
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 10000
+  val MAX_TRAINING_DATUMS = 0
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
@@ -83,10 +83,10 @@ class ArgumentClassifier {
     var dataset = createDataset(doc)
     logger.debug("Finished constructing dataset.")
 
-    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    //classifier = new LogisticRegressionClassifier[String, String]()
+    // dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
+    //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
 
     classifier match {
@@ -161,7 +161,7 @@ class ArgumentClassifier {
   }
 
   def createDataset(doc:Document): Dataset[String, String] = {
-    val dataset = new BVFDataset[String, String]()
+    val dataset = new RVFDataset[String, String]()
     val random = new Random(0)
     var sentCount = 0
     var droppedCands = 0
@@ -202,8 +202,8 @@ class ArgumentClassifier {
     position < oes.length && oes(position) != null && oes(position).nonEmpty
   }
 
-  def mkDatum(sent:Sentence, arg:Int, pred:Int, label:String): BVFDatum[String, String] = {
-    new BVFDatum[String, String](label, featureExtractor.mkFeatures(sent, arg, pred))
+  def mkDatum(sent:Sentence, arg:Int, pred:Int, label:String): RVFDatum[String, String] = {
+    new RVFDatum[String, String](label, featureExtractor.mkFeatures(sent, arg, pred))
   }
 
   def computeArgStats(doc:Document): Unit = {

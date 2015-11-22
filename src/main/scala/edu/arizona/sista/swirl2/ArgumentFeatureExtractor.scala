@@ -2,9 +2,7 @@ package edu.arizona.sista.swirl2
 
 import edu.arizona.sista.embeddings.word2vec.Word2Vec
 import edu.arizona.sista.processors.Sentence
-import edu.arizona.sista.struct.DirectedGraph
-
-import scala.collection.mutable.ListBuffer
+import edu.arizona.sista.struct.{Counter, DirectedGraph}
 
 import ArgumentFeatureExtractor._
 
@@ -15,17 +13,22 @@ import ArgumentFeatureExtractor._
  */
 class ArgumentFeatureExtractor(word2vecFile:String) {
 
-  // val w2v = new Word2Vec(word2vecFile)
+  val w2v = new Word2Vec(word2vecFile)
 
-  def addEmbeddingsFeatures(features:ListBuffer[String],
+  def addEmbeddingsFeatures(features:Counter[String],
                             prefix:String,
                             sent:Sentence,
                             position:Int): Unit = {
-    // val embeddings = w2v.getWordVector(sent.words(position))
-
+    val embeddings = w2v.getWordVector(sent.words(position))
+    if(embeddings.isDefined)
+    for(i <- embeddings.get.indices) {
+      val fn = prefix + ":" + i.toString
+      val fv = embeddings.get(i)
+      features.setCount(fn, fv)
+    }
   }
 
-  def addDepFeatures(features:ListBuffer[String],
+  def addDepFeatures(features:Counter[String],
                      prefix:String,
                      sent:Sentence,
                      deps:DirectedGraph[String],
@@ -39,7 +42,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     val paths = deps.shortestPathEdges(pred, arg, ignoreDirection = true)
     paths.foreach(path => {
       val ps = pathToString(path, sent, useTags = true)
-      features += s"path$prefix:$before:$predTag-$ps"
+      features.incrementCount(s"path$prefix:$before:$predTag-$ps")
       //features += s"path$prefix:$before:$predLemma:$predTag-$ps:$argLemma"
     })
   }
@@ -58,15 +61,15 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     }
   }
 
-  def mkFeatures(sent:Sentence, position:Int, pred:Int):Seq[String] = {
-    val features = new ListBuffer[String]
+  def mkFeatures(sent:Sentence, position:Int, pred:Int):Counter[String] = {
+    val features = new Counter[String]
 
     val predLemma = lemmaAt(sent, pred)
     val predTag = tagAt(sent, pred, MAX_TAG_SIZE)
 
     if(position == pred) {
-      features += s"same:$predLemma:$predTag"
-      return features.toList
+      features.incrementCount(s"same:$predLemma:$predTag")
+      return features
     }
 
     val argTag = tagAt(sent, position, MAX_TAG_SIZE)
@@ -81,23 +84,23 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       val tag = tagAt(sent, position + i)
 
       // of lemmas
-      features += s"lemma:$i:$lemma"
-      features += s"lemma:$i:$lemma:$before"
-      features += s"lemma:$i:$lemma:$predLemma"
-      features += s"lemma:$i:$lemma:$predLemma:$before"
+      features.incrementCount(s"lemma:$i:$lemma")
+      features.incrementCount(s"lemma:$i:$lemma:$before")
+      features.incrementCount(s"lemma:$i:$lemma:$predLemma")
+      features.incrementCount(s"lemma:$i:$lemma:$predLemma:$before")
 
       // hybrid
-      features += s"lemma:$i:$lemma:$predTag"
-      features += s"lemma:$i:$lemma:$predTag:$before"
-      features += s"lemma:$i:$tag:$predLemma"
-      features += s"lemma:$i:$tag:$predLemma:$before"
+      features.incrementCount(s"lemma:$i:$lemma:$predTag")
+      features.incrementCount(s"lemma:$i:$lemma:$predTag:$before")
+      features.incrementCount(s"lemma:$i:$tag:$predLemma")
+      features.incrementCount(s"lemma:$i:$tag:$predLemma:$before")
 
 
       // of POS tags
-      features += s"tag:$i:$tag"
-      features += s"tag:$i:$tag:$before"
-      features += s"tag:$i:$tag:$predTag"
-      features += s"tag:$i:$tag:$predTag:$before"
+      features.incrementCount(s"tag:$i:$tag")
+      features.incrementCount(s"tag:$i:$tag:$before")
+      features.incrementCount(s"tag:$i:$tag:$predTag")
+      features.incrementCount(s"tag:$i:$tag:$predTag:$before")
     }
 
     addEmbeddingsFeatures(features, "AE", sent, position)
@@ -139,7 +142,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     }
     */
 
-    features.toList
+    features
   }
 
   def wordAt(sent:Sentence, position:Int):String = {
