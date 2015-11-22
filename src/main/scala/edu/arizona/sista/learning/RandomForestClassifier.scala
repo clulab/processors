@@ -73,6 +73,7 @@ class RandomForestClassifier[L, F]( val numTrees:Int = 1000,
 
     // store the Weka dataset
     instances = Some(wekaInstances)
+    instances.get.deleteWithMissingClass()
 
     // create the label map
     for (l <- labelLexicon.keySet)
