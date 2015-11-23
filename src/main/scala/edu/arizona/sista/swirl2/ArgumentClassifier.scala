@@ -28,7 +28,7 @@ object ArgumentClassifier {
 
   val FEATURE_THRESHOLD = 10
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 0
+  val MAX_TRAINING_DATUMS = 20000
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
@@ -72,21 +72,26 @@ object ArgumentClassifier {
 class ArgumentClassifier {
   lazy val featureExtractor = new ArgumentFeatureExtractor("vectors.txt")
   var classifier:Classifier[String, String] = null
+  val lemmaCounts = new Counter[String]
 
   def train(trainPath:String): Unit = {
     val reader = new Reader
-    val doc = reader.load(trainPath)
+    var doc = reader.load(trainPath)
 
     computeArgStats(doc)
 
+    countLemmas(doc)
+    featureExtractor.lemmaCounts = Some(lemmaCounts)
+
     logger.debug("Constructing dataset...")
     var dataset = createDataset(doc)
+    doc = null // the raw data is no longer needed
     logger.debug("Finished constructing dataset.")
 
     // dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    classifier = new LogisticRegressionClassifier[String, String]()
+    //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
+    classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
 
     classifier match {
@@ -101,6 +106,21 @@ class ArgumentClassifier {
       case oc:Classifier[String, String] =>
         classifier.train(dataset)
     }
+  }
+
+  def countLemmas(doc:Document): Unit = {
+    for(s <- doc.sentences) {
+      for(l <- s.lemmas.get) {
+        lemmaCounts.incrementCount(l)
+      }
+    }
+    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset.")
+    var count = 0
+    for(l <- lemmaCounts.keySet) {
+      if(lemmaCounts.getCount(l) > ArgumentFeatureExtractor.UNKNOWN_THRESHOLD)
+        count += 1
+    }
+    logger.debug(s"$count of these lemmas will be mapped to Unknown.")
   }
 
   def test(testPath:String): Unit = {

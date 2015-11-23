@@ -13,8 +13,9 @@ import ArgumentFeatureExtractor._
  */
 class ArgumentFeatureExtractor(word2vecFile:String) {
 
-  val w2v = new Word2Vec(word2vecFile)
+  // val w2v = new Word2Vec(word2vecFile)
 
+  /*
   def addEmbeddingsFeatures(features:Counter[String],
                             prefix:String,
                             sent:Sentence,
@@ -27,6 +28,9 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       features.setCount(fn, fv)
     }
   }
+  */
+
+  var lemmaCounts:Option[Counter[String]] = None
 
   def addDepFeatures(features:Counter[String],
                      prefix:String,
@@ -103,7 +107,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       features.incrementCount(s"tag:$i:$tag:$predTag:$before")
     }
 
-    addEmbeddingsFeatures(features, "AE", sent, position)
+    // addEmbeddingsFeatures(features, "AE", sent, position)
 
     /*
     val deps = sent.stanfordBasicDependencies.get
@@ -146,11 +150,34 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
   }
 
   def wordAt(sent:Sentence, position:Int):String = {
-    if(position >= 0 && position < sent.size) sent.words(position)
+    if(position >= 0 && position < sent.size) {
+      val w = sent.words(position)
+      val l = sent.lemmas.get(position)
+      if(lemmaCounts.isDefined) {
+        if(lemmaCounts.get.getCount(l) > UNKNOWN_THRESHOLD) {
+          w
+        } else {
+          "*u*"
+        }
+      } else {
+        w
+      }
+    }
     else PADDING
   }
   def lemmaAt(sent:Sentence, position:Int):String = {
-    if(position >= 0 && position < sent.size) sent.lemmas.get(position)
+    if(position >= 0 && position < sent.size) {
+      val l = sent.lemmas.get(position)
+      if(lemmaCounts.isDefined) {
+        if(lemmaCounts.get.getCount(l) > UNKNOWN_THRESHOLD) {
+          l
+        } else {
+          "*u*"
+        }
+      } else {
+        l
+      }
+    }
     else PADDING
   }
   def tagAt(sent:Sentence, position:Int, maxSize:Int = 0):String = {
@@ -167,4 +194,5 @@ object ArgumentFeatureExtractor {
   val PADDING = "##"
 
   val MAX_TAG_SIZE = 2
+  val UNKNOWN_THRESHOLD = 5
 }
