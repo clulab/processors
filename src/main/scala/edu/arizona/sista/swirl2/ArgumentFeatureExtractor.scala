@@ -109,7 +109,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       features.incrementCount(s"tag:$i:$tag:$predTag:$before")
     }
 
-    addEmbeddingsFeatures(features, "AE", sent, position)
+    // addEmbeddingsFeatures(features, "AE", sent, position)
 
     /*
     val deps = sent.stanfordBasicDependencies.get

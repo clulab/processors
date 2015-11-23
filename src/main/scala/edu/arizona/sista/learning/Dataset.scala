@@ -1,5 +1,6 @@
 package edu.arizona.sista.learning
 
+import scala.collection.mutable
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import edu.arizona.sista.struct.Counter
 import edu.arizona.sista.struct.Lexicon
@@ -95,23 +96,42 @@ class BVFDataset[L, F] (
   }
 
   override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
-    val newFeatures = new ArrayBuffer[Array[Int]]
+    // compute feature frequencies
     val counts = countFeatures(features)
     logger.debug("Total unique features before filtering: " + counts.size)
-    for(row <- features) {
-      newFeatures += removeByFreq(row, counts, threshold)
+
+    // map old feature ids to new ids, over the filtered set
+    val featureIndexMap = new mutable.HashMap[Int, Int]()
+    var newId = 0
+    for(f <- 0 until featureLexicon.size) {
+      if(counts.getCount(f) >= threshold) {
+        featureIndexMap += f -> newId
+        newId += 1
+      }
+    }
+
+    // construct the new dataset with the filtered features
+    val newFeatures = new ArrayBuffer[Array[Int]]
+    val newValues = new ArrayBuffer[Array[Double]]()
+    for(i <- 0 until size) {
+      val feats = features(i)
+      val filteredFeats = removeByFreq(feats, counts, threshold, featureIndexMap)
+      newFeatures += filteredFeats
     }
     logger.debug("Total features after filtering: " + countFeatures(newFeatures).size)
 
-    // TODO: this keeps the original feature lexicon. build a new one just with the remaining features
-    new BVFDataset[L, F](labelLexicon, featureLexicon, labels, newFeatures)
+    new BVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures)
   }
 
-  private def removeByFreq(fs:Array[Int], counts:Counter[Int], threshold:Int):Array[Int] = {
+  private def removeByFreq(fs:Array[Int],
+                           counts:Counter[Int],
+                           threshold:Int,
+                           featureIndexMap:mutable.HashMap[Int, Int]):Array[Int] = {
     val filtered = new ArrayBuffer[Int]()
     for(f <- fs) {
       if(counts.getCount(f) >= threshold) {
-        filtered += f
+        assert(featureIndexMap.contains(f))
+        filtered += featureIndexMap.get(f).get
       }
     }
     filtered.toArray
@@ -170,32 +190,49 @@ class RVFDataset[L, F] (
   }
 
   override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
-    val newFeatures = new ArrayBuffer[Array[Int]]
-    val newValues = new ArrayBuffer[Array[Double]]()
+
+    // compute feature frequencies
     val counts = countFeatures(features)
     logger.debug("Total unique features before filtering: " + counts.size)
 
+    // map old feature ids to new ids, over the filtered set
+    val featureIndexMap = new mutable.HashMap[Int, Int]()
+    var newId = 0
+    for(f <- 0 until featureLexicon.size) {
+      if(counts.getCount(f) >= threshold) {
+        featureIndexMap += f -> newId
+        newId += 1
+      }
+    }
+
+    // construct the new dataset with the filtered features
+    val newFeatures = new ArrayBuffer[Array[Int]]
+    val newValues = new ArrayBuffer[Array[Double]]()
     for(i <- 0 until size) {
       val feats = features(i)
       val vals = values(i)
-      val (filteredFeats, filteredVals) = removeByFreq(feats, vals, counts, threshold)
+      val (filteredFeats, filteredVals) = removeByFreq(feats, vals, counts, threshold, featureIndexMap)
       newFeatures += filteredFeats
       newValues += filteredVals
     }
     logger.debug("Total features after filtering: " + countFeatures(newFeatures).size)
 
-    // TODO: this keeps the original feature lexicon. build a new one just with the remaining features
-    new RVFDataset[L, F](labelLexicon, featureLexicon, labels, newFeatures, newValues)
+    new RVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures, newValues)
   }
 
-  private def removeByFreq(fs:Array[Int], vs:Array[Double], counts:Counter[Int], threshold:Int):(Array[Int], Array[Double]) = {
+  private def removeByFreq(fs:Array[Int],
+                           vs:Array[Double],
+                           counts:Counter[Int],
+                           threshold:Int,
+                           featureIndexMap:mutable.HashMap[Int, Int]):(Array[Int], Array[Double]) = {
     val filteredFeats = new ArrayBuffer[Int]()
     val filteredVals = new ArrayBuffer[Double]()
     for(i <- fs.indices) {
       val f = fs(i)
       val v = vs(i)
       if(counts.getCount(f) >= threshold) {
-        filteredFeats += f
+        assert(featureIndexMap.contains(f))
+        filteredFeats += featureIndexMap.get(f).get
         filteredVals += v
       }
     }

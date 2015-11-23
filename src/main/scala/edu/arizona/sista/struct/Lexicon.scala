@@ -90,6 +90,28 @@ class Lexicon[T] extends Serializable {
       p.println(s"$i ${index(i)}")
     }
   }
+
+  /**
+    * Maps feature indices from their old value to the new values given in the map
+    * If an existing feature does not appear in the map, it is simply not included in the new lexicon
+    *   (this is to support feature selection)
+    * @param indexMap Map from old index to new index
+    */
+  def mapIndicesTo(indexMap:Map[Int, Int]): Lexicon[T] = {
+    val nl = new Lexicon[T]
+
+    for(of <- index.indices) {
+      if(indexMap.contains(of)) {
+        // this means that the new indices must be monotonic with the old ones!
+        val nf = indexMap.get(of).get
+        assert(nf == nl.index.size)
+        nl.index += index(of)
+        nl.lexicon += index(of) -> nf
+      }
+    }
+
+    nl
+  }
 }
 
 object Lexicon {
