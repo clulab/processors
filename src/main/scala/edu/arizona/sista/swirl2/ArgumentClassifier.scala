@@ -26,9 +26,9 @@ object ArgumentClassifier {
   val MAX_TREE_DEPTH = 0
   val NUM_THREADS = 16
 
-  val FEATURE_THRESHOLD = 10
+  val FEATURE_THRESHOLD = 2
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 20000
+  val MAX_TRAINING_DATUMS = 0
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
@@ -88,10 +88,10 @@ class ArgumentClassifier {
     doc = null // the raw data is no longer needed
     logger.debug("Finished constructing dataset.")
 
-    // dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    //classifier = new LogisticRegressionClassifier[String, String]()
+    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
+    //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
 
     classifier match {
@@ -120,7 +120,7 @@ class ArgumentClassifier {
       if(lemmaCounts.getCount(l) > ArgumentFeatureExtractor.UNKNOWN_THRESHOLD)
         count += 1
     }
-    logger.debug(s"$count of these lemmas will be mapped to Unknown.")
+    logger.debug(s"$count of these lemmas will be kept as such. The rest will mapped to Unknown.")
   }
 
   def test(testPath:String): Unit = {

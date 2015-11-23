@@ -13,9 +13,8 @@ import ArgumentFeatureExtractor._
  */
 class ArgumentFeatureExtractor(word2vecFile:String) {
 
-  // val w2v = new Word2Vec(word2vecFile)
+  lazy val w2v = new Word2Vec(word2vecFile)
 
-  /*
   def addEmbeddingsFeatures(features:Counter[String],
                             prefix:String,
                             sent:Sentence,
@@ -28,7 +27,6 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       features.setCount(fn, fv)
     }
   }
-  */
 
   var lemmaCounts:Option[Counter[String]] = None
 
@@ -45,9 +43,13 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     val before = if(arg < pred) "T" else "F"
     val paths = deps.shortestPathEdges(pred, arg, ignoreDirection = true)
     paths.foreach(path => {
-      val ps = pathToString(path, sent, useTags = true)
-      features.incrementCount(s"path$prefix:$before:$predTag-$ps")
-      //features += s"path$prefix:$before:$predLemma:$predTag-$ps:$argLemma"
+      // path including POS tags
+      val pst = pathToString(path, sent, useTags = true)
+      features.incrementCount(s"path$prefix:$before:$predTag-$pst")
+
+      // path including lemmas along the way
+      val psl = pathToString(path, sent, useTags = false)
+      features.incrementCount(s"path$prefix:$before:$predLemma-$psl")
     })
   }
 
@@ -55,7 +57,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     if(useTags)
       path.map(d => s"${d._3}${d._4}${tagAt(sent, endPoint(d), MAX_TAG_SIZE)}").mkString("-")
     else
-      path.map(d => s"${d._3}${d._4}").mkString("-")
+      path.map(d => s"${d._3}${d._4}${lemmaAt(sent, endPoint(d))}").mkString("-")
   }
 
   def endPoint(dep:(Int, Int, String, String)):Int = {
@@ -107,7 +109,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       features.incrementCount(s"tag:$i:$tag:$predTag:$before")
     }
 
-    // addEmbeddingsFeatures(features, "AE", sent, position)
+    addEmbeddingsFeatures(features, "AE", sent, position)
 
     /*
     val deps = sent.stanfordBasicDependencies.get
@@ -157,7 +159,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
         if(lemmaCounts.get.getCount(l) > UNKNOWN_THRESHOLD) {
           w
         } else {
-          "*u*"
+          UNKNOWN_TOKEN
         }
       } else {
         w
@@ -172,7 +174,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
         if(lemmaCounts.get.getCount(l) > UNKNOWN_THRESHOLD) {
           l
         } else {
-          "*u*"
+          UNKNOWN_TOKEN
         }
       } else {
         l
@@ -195,4 +197,5 @@ object ArgumentFeatureExtractor {
 
   val MAX_TAG_SIZE = 2
   val UNKNOWN_THRESHOLD = 5
+  val UNKNOWN_TOKEN = "*u*"
 }

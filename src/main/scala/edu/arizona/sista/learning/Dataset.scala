@@ -170,7 +170,36 @@ class RVFDataset[L, F] (
   }
 
   override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
-    throw new RuntimeException("Not supported yet!")
+    val newFeatures = new ArrayBuffer[Array[Int]]
+    val newValues = new ArrayBuffer[Array[Double]]()
+    val counts = countFeatures(features)
+    logger.debug("Total unique features before filtering: " + counts.size)
+
+    for(i <- 0 until size) {
+      val feats = features(i)
+      val vals = values(i)
+      val (filteredFeats, filteredVals) = removeByFreq(feats, vals, counts, threshold)
+      newFeatures += filteredFeats
+      newValues += filteredVals
+    }
+    logger.debug("Total features after filtering: " + countFeatures(newFeatures).size)
+
+    // TODO: this keeps the original feature lexicon. build a new one just with the remaining features
+    new RVFDataset[L, F](labelLexicon, featureLexicon, labels, newFeatures, newValues)
+  }
+
+  private def removeByFreq(fs:Array[Int], vs:Array[Double], counts:Counter[Int], threshold:Int):(Array[Int], Array[Double]) = {
+    val filteredFeats = new ArrayBuffer[Int]()
+    val filteredVals = new ArrayBuffer[Double]()
+    for(i <- fs.indices) {
+      val f = fs(i)
+      val v = vs(i)
+      if(counts.getCount(f) >= threshold) {
+        filteredFeats += f
+        filteredVals += v
+      }
+    }
+    (filteredFeats.toArray, filteredVals.toArray)
   }
 
   override def mkDatum(row:Int): Datum[L, F] = {
