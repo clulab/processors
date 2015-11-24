@@ -28,7 +28,7 @@ object ArgumentClassifier {
 
   val FEATURE_THRESHOLD = 2
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 0
+  val MAX_TRAINING_DATUMS = 100
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
@@ -88,11 +88,12 @@ class ArgumentClassifier {
     doc = null // the raw data is no longer needed
     logger.debug("Finished constructing dataset.")
 
-    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    classifier = new LogisticRegressionClassifier[String, String]()
+    //dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
     //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
+    classifier = new RFClassifier[String, String](numTrees = 1, numThreads = 1)
 
     classifier match {
       case rfc:RandomForestClassifier[String, String] =>
@@ -103,6 +104,10 @@ class ArgumentClassifier {
         dataset = null // no longer needed; clear to save memory
         logger.debug("Conversion complete.")
         classifier.trainWeka(labelLexicon, wekaInstances)
+      case rfc2:RFClassifier[String, String] =>
+        val counterDataset = dataset.toCounterDataset
+        dataset = null
+        rfc2.train(counterDataset)
       case oc:Classifier[String, String] =>
         classifier.train(dataset)
     }

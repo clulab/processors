@@ -37,6 +37,10 @@ class Lexicon[T] extends Serializable {
 
   def exists(i:Int):Boolean = i < index.size
 
+  def contains(f:T):Boolean = lexicon.contains(f)
+
+  def indices = 0 until index.size
+
   /**
    * Fetches the string with the given index from the lexicon
    * This deliberately does NOT check for bounds for fast access.

@@ -30,9 +30,11 @@ abstract class Dataset[L, F](
   /** number of training examples */
   def size = labels.size
 
+  def indices = 0 until size
+
   def featuresCounter(datumOffset:Int):Counter[Int]
 
-  /** Returns Datum for given row */
+  /** Returns the Datum for given row */
   def mkDatum(row:Int): Datum[L, F]
 
   /** Removes features that appear less than threshold times in this dataset. */
@@ -40,6 +42,9 @@ abstract class Dataset[L, F](
 
   /** Creates a new dataset keeping only the features in the given set */
   def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F]
+
+  /** Convert this dataset to a CounterDataset */
+  def toCounterDataset:CounterDataset[L, F]
 }
 
 /**
@@ -60,10 +65,9 @@ class BVFDataset[L, F] (
 
   def += (datum:Datum[L, F]) {
     datum match {
-      case bd:BVFDatum[L, F] => {
+      case bd:BVFDatum[L, F] =>
         labels += labelLexicon.add(bd.label)
         features += featuresToArray(bd.features)
-      }
       case _ => throw new RuntimeException("ERROR: you cannot add a non BVFDatum to a BVFDataset!")
     }
   }
@@ -112,7 +116,6 @@ class BVFDataset[L, F] (
 
     // construct the new dataset with the filtered features
     val newFeatures = new ArrayBuffer[Array[Int]]
-    val newValues = new ArrayBuffer[Array[Double]]()
     for(i <- 0 until size) {
       val feats = features(i)
       val filteredFeats = removeByFreq(feats, counts, threshold, featureIndexMap)
@@ -140,6 +143,18 @@ class BVFDataset[L, F] (
   override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {
     throw new RuntimeException("Not supported yet!")
   }
+
+  override def toCounterDataset:CounterDataset[L, F] = {
+    val cfs = new ArrayBuffer[Counter[Int]]()
+    for(d <- features.indices) {
+      val cf = new Counter[Int]
+      for(i <- features(d).indices) {
+        cf.incrementCount(features(d)(i))
+      }
+      cfs += cf
+    }
+    new CounterDataset[L, F](labelLexicon, featureLexicon, labels, cfs)
+  }
 }
 
 /**
@@ -161,12 +176,11 @@ class RVFDataset[L, F] (
 
   override def += (datum:Datum[L, F]) {
     datum match {
-      case d:RVFDatum[L, F] => {
+      case d:RVFDatum[L, F] =>
         labels += labelLexicon.add(d.label)
         val fvs = featuresCounterToArray(d.featuresCounter)
         features += fvs.map(fv => fv._1)
         values += fvs.map(fv => fv._2)
-      }
       case _ => throw new RuntimeException("ERROR: you cannot add a non RVFDatum to a RVFDataset!")
     }
   }
@@ -183,7 +197,7 @@ class RVFDataset[L, F] (
     val c = new Counter[Int]
     val fs = features(datumOffset)
     val vs = values(datumOffset)
-    for(i <- 0 until fs.length) {
+    for(i <- fs.indices) {
       c.incrementCount(fs(i), vs(i))
     }
     c
@@ -251,7 +265,7 @@ class RVFDataset[L, F] (
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
     def foreach[U](fn: ((F, Double)) => U): Unit = {
       for(i <- 0 until RVFDataset.this.size) {
-        for(j <- 0 until features(i).size) {
+        for(j <- features(i).indices) {
           val fi = features(i)(j)
           val v = values(i)(j)
           val f = featureLexicon.get(fi)
@@ -262,7 +276,7 @@ class RVFDataset[L, F] (
 
     def updateAll(fn: ((F, Double)) => Double): Unit = {
       for(i <- 0 until RVFDataset.this.size) {
-        for(j <- 0 until features(i).size) {
+        for(j <- features(i).indices) {
           val fi = features(i)(j)
           val v = values(i)(j)
           val f = featureLexicon.get(fi)
@@ -273,32 +287,54 @@ class RVFDataset[L, F] (
   }
 
   override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {
+    // map old feature ids to new ids, over the filtered set
+    val featureIndexMap = new mutable.HashMap[Int, Int]()
+    var newId = 0
+    for(f <- 0 until featureLexicon.size) {
+      if(featuresToKeep.contains(f)) {
+        featureIndexMap += f -> newId
+        newId += 1
+      }
+    }
+
+    // construct the new dataset with the filtered features
     val newFeatures = new ArrayBuffer[Array[Int]]
     val newValues = new ArrayBuffer[Array[Double]]
-
-    for(row <- 0 until features.size) {
-      val (nfs, nvs) = keepOnlyRow(features(row), values(row), featuresToKeep)
+    for(row <- features.indices) {
+      val (nfs, nvs) = keepOnlyRow(features(row), values(row), featureIndexMap)
       newFeatures += nfs
       newValues += nvs
     }
 
-    new RVFDataset[L, F](labelLexicon, featureLexicon, labels, newFeatures, newValues)
+    new RVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures, newValues)
   }
 
-  def keepOnlyRow(feats:Array[Int], vals:Array[Double], featuresToKeep:Set[Int]):(Array[Int], Array[Double]) = {
+  def keepOnlyRow(feats:Array[Int], vals:Array[Double], featureIndexMap:mutable.HashMap[Int, Int]):(Array[Int], Array[Double]) = {
     val newFeats = new ArrayBuffer[Int]()
     val newVals = new ArrayBuffer[Double]()
 
-    for(i <- 0 until feats.size) {
+    for(i <- feats.indices) {
       val f = feats(i)
       val v = vals(i)
-      if(featuresToKeep.contains(f)) {
-        newFeats += f
+      if(featureIndexMap.contains(f)) {
+        newFeats += featureIndexMap.get(f).get
         newVals += v
       }
     }
 
     (newFeats.toArray, newVals.toArray)
+  }
+
+  override def toCounterDataset:CounterDataset[L, F] = {
+    val cfs = new ArrayBuffer[Counter[Int]]()
+    for(d <- features.indices) {
+      val cf = new Counter[Int]
+      for(i <- features(d).indices) {
+        cf.incrementCount(features(d)(i), values(d)(i))
+      }
+      cfs += cf
+    }
+    new CounterDataset[L, F](labelLexicon, featureLexicon, labels, cfs)
   }
 }
 
@@ -417,4 +453,59 @@ object RVFDataset {
     }
     datums
   }
+}
+
+/**
+  * Dataset that represents datums as explicit counters
+  * This is more efficient for the training of various algorithms such as random forests
+  */
+class CounterDataset[L, F](ll:Lexicon[L],
+                           fl:Lexicon[F],
+                           ls:ArrayBuffer[Int],
+                           val features:ArrayBuffer[Counter[Int]]) extends Dataset[L, F](ll, fl, ls) {
+  override def +=(datum: Datum[L, F]): Unit = {
+    labels += labelLexicon.add(datum.label)
+    val fvs = toIndexCounter(datum.featuresCounter)
+    features += fvs
+  }
+
+  private def toIndexCounter(feats:Counter[F]):Counter[Int] = {
+    val c = new Counter[Int]
+    for(f <- feats.keySet) {
+      assert(featureLexicon.contains(f))
+      c.incrementCount(featureLexicon.get(f).get, feats.getCount(f))
+    }
+    c
+  }
+
+  private def toFeatureCounter(c:Counter[Int]):Counter[F] = {
+    val feats = new Counter[F]
+    for(f <- c.keySet) {
+      assert(f < featureLexicon.size)
+      feats.incrementCount(featureLexicon.get(f), c.getCount(f))
+    }
+    feats
+  }
+
+  /**
+    * Returns the Datum for given row
+    * These datums are always represented as RVFDatums
+    */
+  override def mkDatum(row: Int): Datum[L, F] = {
+    new RVFDatum[L, F](labelLexicon.get(labels(row)), toFeatureCounter(features(row)))
+  }
+
+  /** Creates a new dataset keeping only the features in the given set */
+  override def keepOnly(featuresToKeep: Set[Int]): Dataset[L, F] = {
+    throw new RuntimeException("ERROR: keepOnly not supported yet!")
+  }
+
+  /** Removes features that appear less than threshold times in this dataset. */
+  override def removeFeaturesByFrequency(threshold: Int): Dataset[L, F] = {
+    throw new RuntimeException("ERROR: removeFeaturesByFrequency not supported yet!")
+  }
+
+  override def featuresCounter(datumOffset: Int): Counter[Int] = features(datumOffset)
+
+  def toCounterDataset:CounterDataset[L, F] = this
 }
