@@ -101,11 +101,13 @@ class Counter[T](
     dotproduct
   }
 
+  /** Sorts counts in descending order */
   def sorted:List[(T, Double)] = {
     val vs = new ListBuffer[(T, Double)]
     for(k <- keySet) vs += new Tuple2(k, getCount(k))
     vs.toList.sortBy(0 - _._2)
   }
+
   override def toString:String = {
     val os = new StringBuilder
     os.append ("[")

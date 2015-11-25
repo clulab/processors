@@ -19,7 +19,6 @@ import scala.util.Random
   * Date: 11/23/15
   */
 class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classifier[L, F] with Serializable {
-  val randomSeed = new Random(RANDOM_SEED)
   var trees:Option[Array[RFTree]] = None
 
   /**
@@ -39,14 +38,19 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
 
     logger.debug(s"Training on a dataset containing ${dataset.size} datums, with ${dataset.labelLexicon.size} labels.")
 
+    //
     // compute the feature thresholds
+    //
     val thresholds = computeFeatureThresholds(dataset)
 
+    //
     // construct the bags, one per tree
+    //
     val bags = new ArrayBuffer[RFJob[L, F]]()
     val bagSize = (TRAIN_BAG_PCT * indices.length).toInt
+    val randomSeed = new Random(RANDOM_SEED)
     for(i <- 0 until numTrees) {
-      bags += mkBag(dataset, indices, thresholds, bagSize)
+      bags += mkBag(dataset, indices, thresholds, bagSize, randomSeed)
     }
     logger.debug(s"Constructed ${bags.size} bag(s), each containing $bagSize datums.")
 
@@ -86,6 +90,7 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
           thresholdCount += 1
         }
       }
+      // TODO: if the feature has more than MAX_THRESHOLDS thresholds, use quantiles instead
       thresholds += featThresholds.toArray
     }
     logger.debug("Finished computing feature thresholds.")
@@ -93,20 +98,129 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
     thresholds.toArray
   }
 
-  def buildTree(job:RFJob[L, F]):RFTree = {
-    // TODO: implement this
-    throw new RuntimeException("implement me!")
+  def buildTree(job:RFJob[L, F]):RFTree = buildTree(job, Set[(Int, Double)]())
+
+  /** Constructs a single decision tree from the given dataset sample */
+  def buildTree(job:RFJob[L, F], activeNodes:Set[(Int, Double)]):RFTree = {
+    //
+    // termination condition: all datums have the same labels in this split
+    //
+    if(sameLabels(job)) {
+      return new RFLeaf(job.dataset.labels(job.indices.head))
+    }
+
+    //
+    // randomly select a subset of features
+    //
+    val currentFeatureIndices = randomFeatureSelection(
+      job.dataset.numFeatures,
+      featuresPerNode(job.dataset.numFeatures),
+      job.random)
+
+    //
+    // find feature with highest utility
+    //
+    var best:Option[(Int, Double, Double)] = None // feature, threshold, utility
+    for(f <- currentFeatureIndices) {
+      val utility = featureUtility(f, job, activeNodes)
+      if(utility.isDefined) {
+        if(best.isEmpty || best.get._3 < utility.get._3) {
+          best = utility
+        }
+      }
+    }
+
+    //
+    // nothing found, take majority class
+    //
+    if(best.isEmpty) {
+      new RFLeaf(majorityClass(job))
+    }
+
+    //
+    // otherwise, construct a non-terminal node on the best split and recurse
+    //
+    else {
+      val newActiveNodes = new mutable.HashSet[(Int, Double)]()
+      newActiveNodes ++= activeNodes
+      newActiveNodes += new Tuple2(best.get._1, best.get._2)
+      val newActiveNodesSet = newActiveNodes.toSet
+      new RFNonTerminal(best.get._1, best.get._2,
+        buildTree(mkLeftJob(job, best.get._1, best.get._2), newActiveNodesSet),
+        buildTree(mkRightJob(job, best.get._1, best.get._2), newActiveNodesSet))
+    }
   }
 
-  def mkBag(dataset: Dataset[L, F],
+  /** Computes the utility of the given feature */
+  def featureUtility(feature:Int, job:RFJob[L, F], activeNodes:Set[(Int, Double)]): Option[(Int, Double, Double)] = {
+    informationGain(feature, job, activeNodes)
+  }
+
+  /** Computes the utility of the given feature using information gain */
+  def informationGain(feature:Int, job:RFJob[L, F], activeNodes:Set[(Int, Double)]): Option[(Int, Double, Double)] = {
+    None // TODO: implement this next
+  }
+
+  /** Randomly picks selectedFeats features between 0 .. numFeats */
+  def randomFeatureSelection(numFeats:Int, selectedFeats:Int, random:Random):Array[Int] = {
+    var feats = new ArrayBuffer[Int]()
+    for(i <- 0 until selectedFeats) {
+      feats += random.nextInt(numFeats)
+    }
+    feats.toArray
+  }
+
+  def sameLabels(job:RFJob[L, F]):Boolean = {
+    val ls = new mutable.HashSet[Int]()
+    for(i <- job.indices) {
+      ls += job.dataset.labels(i)
+      if(ls.size > 1) return false
+    }
+    true
+  }
+
+  def majorityClass(job:RFJob[L, F]):Int = {
+    val ls = new Counter[Int]()
+    for(i <- job.indices) {
+      ls.incrementCount(job.dataset.labels(i))
+    }
+    ls.sorted.head._1
+  }
+
+  def mkBag(dataset: CounterDataset[L, F],
             indices: Array[Int],
             thresholds: Array[Array[Double]],
-            length:Int):RFJob[L, F] = {
+            length:Int,
+            random:Random):RFJob[L, F] = {
     val bagIndices = new ArrayBuffer[Int]()
     for(i <- 0 until length) {
-      bagIndices += indices(randomSeed.nextInt(indices.length))
+      bagIndices += indices(random.nextInt(indices.length))
     }
-    new RFJob[L, F](dataset, bagIndices.toArray, thresholds)
+    new RFJob[L, F](dataset, bagIndices.toArray, thresholds, new Random(RANDOM_SEED))
+  }
+
+  /** Constructs a job from the datums containing values of this feature smaller or equal than the threshold */
+  def mkLeftJob(job:RFJob[L, F], feature:Int, threshold:Double):RFJob[L, F] = {
+    val newIndices = new ArrayBuffer[Int]
+    for(i <- job.indices) {
+      if(job.dataset.featuresCounter(i).getCount(feature) <= threshold) {
+        newIndices += i
+      }
+    }
+    // shallow copy everything except the new datum indices
+    new RFJob[L, F](job.dataset, newIndices.toArray, job.featureThresholds, job.random)
+  }
+
+  /** Constructs a job from the datums containing values of this feature larger than the threshold */
+  def mkRightJob(job:RFJob[L, F], feature:Int, threshold:Double):RFJob[L, F] = {
+    val newIndices = new ArrayBuffer[Int]
+    for(i <- job.indices) {
+      if(job.dataset.featuresCounter(i).getCount(feature) > threshold) {
+        newIndices += i
+      }
+    }
+    // shallow copy everything except the new datum indices
+    new RFJob[L, F](job.dataset, newIndices.toArray, job.featureThresholds, job.random)
   }
 
   /**
@@ -129,9 +243,10 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
 }
 
 class RFJob[L, F](
-  val dataset:Dataset[L, F],
+  val dataset:CounterDataset[L, F],
   val indices:Array[Int],
-  val featureThresholds:Array[Array[Double]]
+  val featureThresholds:Array[Array[Double]],
+  val random:Random
 )
 
 trait RFTree {
@@ -160,4 +275,9 @@ object RFClassifier {
 
   val RANDOM_SEED = 1
   val TRAIN_BAG_PCT = 0.66
+
+  /** Decides how many features to use in each node */
+  def featuresPerNode(numFeats:Int):Int = {
+    math.sqrt(numFeats).toInt
+  }
 }
