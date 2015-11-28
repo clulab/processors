@@ -26,29 +26,40 @@ class State(val lookUpTable: MentionLUT) {
   def mentionsFor(sent: Int, tok: Int): Seq[Mention] =
     lookUpTable.getOrElse((sent, tok), Nil)
 
+  /** Returns all mentions for a given sentence */
+  def mentionsFor(sent: Int): Seq[Mention] = {
+    val mentions = for {
+      (s, t) <- lookUpTable.keys
+      if s == sent
+      m <- lookUpTable((s, t))
+    } yield m
+    mentions.toList.distinct
+  }
+
   /** Returns all mentions for a given sentence and token that match a given label */
   def mentionsFor(sent: Int, tok: Int, label: String): Seq[Mention] =
-    mentionsFor(sent, tok) filter (_ matches label)
+    mentionsFor(sent, tok).filter(_ matches label)
 
   /** Returns all mentions for a given sentence and token that match any of the given labels */
   def mentionsFor(sent: Int, tok: Int, labels: Seq[String]): Seq[Mention] =
-    labels flatMap (l => mentionsFor(sent, tok, l))
+    labels.flatMap(l => mentionsFor(sent, tok, l)).distinct
 
   /** Returns all mentions for a given sentence and any of the given tokens */
   def mentionsFor(sent: Int, toks: Seq[Int]): Seq[Mention] =
-    toks flatMap (t => mentionsFor(sent, t))
+    toks.flatMap(t => mentionsFor(sent, t)).distinct
 
   /** Returns all mentions for a given sentence and any of the given tokens
     * that match a given label
     */
   def mentionsFor(sent: Int, toks: Seq[Int], label: String): Seq[Mention] =
-    toks flatMap (t => mentionsFor(sent, t, label))
+    toks.flatMap(t => mentionsFor(sent, t, label)).distinct
 
   /** Returns all mentions for a given sentence and any of the given tokens
     * that match any of the given labels
     */
   def mentionsFor(sent: Int, toks: Seq[Int], labels: Seq[String]): Seq[Mention] =
-    toks flatMap (t => mentionsFor(sent, t, labels))
+    toks.flatMap(t => mentionsFor(sent, t, labels)).distinct
+
 }
 
 object State {
