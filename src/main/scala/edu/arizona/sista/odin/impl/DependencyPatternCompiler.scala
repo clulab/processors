@@ -13,18 +13,19 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     }
 
   def dependencyPattern: Parser[DependencyPattern] =
-    eventDependencyPattern | relationDependencyPattern
+    triggerPatternDependencyPattern | triggerMentionDependencyPattern
 
-  def eventDependencyPattern: Parser[DependencyPattern] =
+  def triggerPatternDependencyPattern: Parser[DependencyPattern] =
     "(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern) ^^ {
-      case trigger ~ arguments => new EventDependencyPattern(trigger, arguments)
+      case trigger ~ arguments => new TriggerPatternDependencyPattern(trigger, arguments)
     }
 
-  def relationDependencyPattern: Parser[DependencyPattern] =
+  def triggerMentionDependencyPattern: Parser[DependencyPattern] =
     identifier ~ ":" ~ identifier ~ rep1(argPattern) ^^ {
-      case name ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
-        sys.error("'trigger' is not a valid argument name")
+      case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName.equalsIgnoreCase("trigger") =>
+        new TriggerMentionDependencyPattern(anchorLabel, arguments)
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
+        // if anchorName is not "trigger" then return a RelationMention
         new RelationDependencyPattern(anchorName, anchorLabel, arguments)
     }
 
