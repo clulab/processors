@@ -28,7 +28,7 @@ object ArgumentClassifier {
 
   val FEATURE_THRESHOLD = 2
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 100
+  val MAX_TRAINING_DATUMS = 1000
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
@@ -93,7 +93,7 @@ class ArgumentClassifier {
     //classifier = new LinearSVMClassifier[String, String]()
     //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    classifier = new RFClassifier[String, String](numTrees = 1, numThreads = 1)
+    classifier = new RFClassifier[String, String](numTrees = 1, maxTreeDepth = 0, numThreads = 1)
 
     classifier match {
       case rfc:RandomForestClassifier[String, String] =>

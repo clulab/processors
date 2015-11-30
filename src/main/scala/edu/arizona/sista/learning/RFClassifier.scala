@@ -2,7 +2,7 @@ package edu.arizona.sista.learning
 
 import java.io.{Writer, Serializable}
 
-import edu.arizona.sista.struct.Counter
+import edu.arizona.sista.struct.{Lexicon, Counter}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -18,8 +18,14 @@ import scala.util.Random
   * User: mihais
   * Date: 11/23/15
   */
-class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classifier[L, F] with Serializable {
+class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:Int = 0) extends Classifier[L, F] with Serializable {
   var trees:Option[Array[RFTree]] = None
+
+  /** Feature lexicon */
+  private var featureLexicon:Option[Lexicon[F]] = None
+
+  /** Label lexicon */
+  private var labelLexicon:Option[Lexicon[L]] = None
 
   /**
     * Trains a classifier, using only the datums specified in indices
@@ -35,6 +41,9 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
   def train(dataset: CounterDataset[L, F], indices: Array[Int]): Unit = {
     if(numThreads < 0) throw new RuntimeException("ERROR: numThreads must be >= 0!")
     if(numTrees < 1) throw new RuntimeException("ERROR: numTrees must be >= 1!")
+
+    labelLexicon = Some(dataset.labelLexicon)
+    featureLexicon = Some(dataset.featureLexicon)
 
     logger.debug(s"Training on a dataset containing ${dataset.size} datums, with ${dataset.labelLexicon.size} labels.")
 
@@ -56,13 +65,18 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
 
     // the actual tree building
     logger.debug("Beginning tree building...")
-    val bagThreads = bags.toSet.par
-    if(numThreads != 0)
-      bagThreads.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(numThreads))
-    trees = Some(bagThreads.map(buildTree).toArray)
+    numThreads match {
+      case 0 => // use as many threads as possible
+        val parBags = bags.toSet.par
+        trees = Some(parBags.map(buildTree).toArray)
+      case 1 => // sequential run in the same thread
+        trees = Some(bags.map(buildTree).toArray)
+      case _ => // use a specific number of threads
+        val parBags = bags.toSet.par
+        parBags.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(numThreads))
+        trees = Some(parBags.map(buildTree).toArray)
+    }
     logger.debug(s"Done building ${trees.get.length} trees.")
-
-    System.exit(1) // TODO: remove
   }
 
   def computeFeatureThresholds(dataset:CounterDataset[L, F]): Array[Array[Double]] = {
@@ -78,6 +92,9 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
           values += c.getCount(f)
         }
       }
+
+      //logger.debug(s"Feature ${dataset.featureLexicon.get(f)}: $values")
+
       val sortedValues = values.toArray.sorted
       assert(sortedValues.length > 0)
       val featThresholds = new ArrayBuffer[Double]()
@@ -95,6 +112,11 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
     }
     logger.debug("Finished computing feature thresholds.")
     logger.debug(s"Found $thresholdCount thresholds for ${thresholds.length} features.")
+
+    for(f <- thresholds.indices) {
+      logger.debug(s"Feature [${featureLexicon.get.get(f)}]: ${thresholds(f).toList}")
+    }
+
     thresholds.toArray
   }
 
@@ -107,6 +129,10 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
     //
     if(sameLabels(job)) {
       return new RFLeaf(job.dataset.labels(job.indices.head))
+    }
+
+    if(maxTreeDepth > 0 && activeNodes.size > maxTreeDepth) {
+      return new RFLeaf(majorityClass(job))
     }
 
     //
@@ -141,6 +167,8 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
     // otherwise, construct a non-terminal node on the best split and recurse
     //
     else {
+      logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
+
       val newActiveNodes = new mutable.HashSet[(Int, Double)]()
       newActiveNodes ++= activeNodes
       newActiveNodes += new Tuple2(best.get._1, best.get._2)
@@ -158,8 +186,54 @@ class RFClassifier[L, F](numTrees:Int = 100, numThreads:Int = 0) extends Classif
 
   /** Computes the utility of the given feature using information gain */
   def informationGain(feature:Int, job:RFJob[L, F], activeNodes:Set[(Int, Double)]): Option[(Int, Double, Double)] = {
-    None // TODO: implement this next
+    var bestThreshold:Option[(Double, Double)] = None // threshold, utility
+    for(threshold <- job.featureThresholds(feature)) {
+      if(! activeNodes.contains((feature, threshold))) {
+        val utility = informationGainForThreshold(feature, threshold, job)
+        if(utility.isDefined && (bestThreshold.isEmpty || bestThreshold.get._2 < utility.get)) {
+          bestThreshold = Some(threshold, utility.get)
+        }
+      }
+    }
+    if(bestThreshold.isEmpty) None
+    else Some((feature, bestThreshold.get._1, bestThreshold.get._2))
   }
+
+  /** Computes IG for a given feature and threshold */
+  def informationGainForThreshold(feature:Int, threshold:Double, job:RFJob[L, F]):Option[Double] = {
+    //
+    // separate the job in two lists: smaller or equal, or larger than threshold
+    // in each list, compute the entropy for the existing labels
+    //
+    val leftCounter = new Counter[Int]()
+    val rightCounter = new Counter[Int]()
+    for(i <- job.indices) {
+      if(job.dataset.featuresCounter(i).getCount(feature) <= threshold) { // left branch
+        leftCounter.incrementCount(job.dataset.labels(i))
+      } else { // right branch
+        rightCounter.incrementCount(job.dataset.labels(i))
+      }
+    }
+
+    // bail out if any of the splits is empty
+    if(leftCounter.size == 0 || rightCounter.size == 0) {
+      return None
+    }
+
+    // we skip the entropy of the parent node because it is constant for all features
+    val ig =  - entropy(leftCounter) - entropy(rightCounter)
+    Some(ig)
+  }
+
+  def entropy(labels:Counter[Int]):Double = {
+    var ent = 0.0
+    for(label <- labels.keySet) {
+      ent -= labels.proportion(label) * log2(labels.proportion(label))
+    }
+    ent
+  }
+
+  def log2(d:Double):Double = math.log(d) / math.log(2)
 
   /** Randomly picks selectedFeats features between 0 .. numFeats */
   def randomFeatureSelection(numFeats:Int, selectedFeats:Int, random:Random):Array[Int] = {
@@ -274,10 +348,11 @@ object RFClassifier {
   val logger = LoggerFactory.getLogger(classOf[RFClassifier[String, String]])
 
   val RANDOM_SEED = 1
-  val TRAIN_BAG_PCT = 0.66
+  val TRAIN_BAG_PCT = 1.00 // 0.66
 
   /** Decides how many features to use in each node */
   def featuresPerNode(numFeats:Int):Int = {
-    math.sqrt(numFeats).toInt
+    numFeats
+    // math.sqrt(numFeats).toInt
   }
 }

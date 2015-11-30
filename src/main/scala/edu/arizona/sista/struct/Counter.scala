@@ -15,12 +15,13 @@ import java.text.DecimalFormat
  */
 class Counter[T](
                   private val counts:mutable.HashMap[T, MutableNumber[Double]],
-                  private val defaultReturnValue:Double = 0.0) extends Serializable {
+                  private val defaultReturnValue:Double = 0.0,
+                  private var total:Double = 0.0) extends Serializable {
 
-  def this(elements:Iterable[T]) = this(Counter.mkCounts(elements), 0.0)
+  def this(elements:Iterable[T]) = this(Counter.mkCounts(elements), 0.0, elements.size)
 
   def this(defaultReturnValue:Double) =
-    this(new mutable.HashMap[T, MutableNumber[Double]], defaultReturnValue)
+    this(new mutable.HashMap[T, MutableNumber[Double]], defaultReturnValue, total = 0.0)
 
   def this() = this(0.0)
 
@@ -31,10 +32,23 @@ class Counter[T](
     }
   }
 
-  def incrementCount(key:T, inc:Double = 1.0):Double = Counter.incrementCount(counts, key, inc)
+  def proportion(key:T):Double = getCount(key) / total
+  def getTotal = total
+
+  def incrementCount(key:T, inc:Double = 1.0):Double = {
+    val v = Counter.incrementCount(counts, key, inc)
+    total += inc
+    v
+  }
+  def setCount(key:T, value:Double) {
+    val prev = getCount(key)
+    Counter.setCount(counts, key, value)
+    total += value - prev
+  }
+
   def decrementCount(key:T, inc:Double):Double = incrementCount(key, - inc)
   def decrementCount(key:T):Double = incrementCount(key, -1.0)
-  def setCount(key:T, value:Double) { Counter.setCount(counts, key, value) }
+
   def keySet = counts.keySet
   def size = counts.size
   def contains(key:T) = keySet.contains(key)
@@ -224,7 +238,7 @@ class Counter[T](
   def saveTo(w:Writer) {
     val writer = Files.toPrintWriter(w)
     writer.println(s"$defaultReturnValue ${counts.size}")
-    if(counts.size > 0) {
+    if(counts.nonEmpty) {
       val first = counts.keys.head
       first match {
         // TODO: kinda hacky, but don't know how to recover from type erasure in loadFrom()...
@@ -245,25 +259,21 @@ class Counter[T](
 object Counter {
   private def incrementCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, inc:Double): Double = {
     map.get(key) match {
-      case Some(c) => {
+      case Some(c) =>
         c.value += inc
         c.value
-      }
-      case None => {
+      case None =>
         map.put(key, new MutableNumber[Double](inc))
         inc
-      }
     }
   }
 
   private def setCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, value:Double) {
     map.get(key) match {
-      case Some(c) => {
+      case Some(c) =>
         c.value = value
-      }
-      case None => {
+      case None =>
         map.put(key, new MutableNumber[Double](value))
-      }
     }
   }
 
