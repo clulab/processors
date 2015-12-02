@@ -164,11 +164,11 @@ class ArgumentPattern(
     val size: Option[Int]
 ) {
   // extracts mentions and groups them according to `size`
-  def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[Mention]] = {
+  def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[(Mention, SynPath)]] = {
     val matches = for {
-      t <- pattern.findAllIn(tok, sent, doc, state)
-      m <- state.mentionsFor(sent, t, label)
-    } yield m
+      (tok, path) <- pattern.findAllIn(tok, sent, doc, state)
+      m <- state.mentionsFor(sent, tok, label)
+    } yield (m, path.reverse) // paths were collected in reverse
     if (matches.isEmpty) Nil
     else if (size.isDefined) matches.combinations(size.get).toList
     else Seq(matches)
@@ -176,91 +176,198 @@ class ArgumentPattern(
 }
 
 sealed trait DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int]
+
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[(Int, SynPath)] = {
+    findAllIn(tok, sent, doc, state, Nil)
+  }
+
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)]
+
+  // return distinct results considering Int only and ignoring SynPath
+  def distinct(results: Seq[(Int, SynPath)]): Seq[(Int, SynPath)] = {
+    var seen: Set[Int] = Set.empty
+    for ((tok, path) <- results if !seen.contains(tok)) yield {
+      seen += tok // remember tok for next time
+      (tok, path)
+    }
+  }
+
 }
 
 object OutgoingWildcard extends DependencyPatternNode with Dependencies {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
     val edges = outgoingEdges(sent, doc)
-    if (edges isDefinedAt tok) edges(tok).map(_._1)
-    else Nil
+    if (edges isDefinedAt tok) {
+      for {
+        (nextTok, label) <- edges(tok)
+        newPath = (tok, nextTok, label) +: path // path is collected in reverse
+      } yield (nextTok, newPath)
+    } else Nil
   }
 }
 
 object IncomingWildcard extends DependencyPatternNode with Dependencies {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
     val edges = incomingEdges(sent, doc)
-    if (edges isDefinedAt tok) edges(tok).map(_._1)
-    else Nil
+    if (edges isDefinedAt tok) {
+      for {
+        (nextTok, label) <- edges(tok)
+        newPath = (nextTok, tok, label) +: path // path is collected in reverse
+      } yield (nextTok, newPath)
+    } else Nil
   }
 }
 
 class OutgoingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
     val edges = outgoingEdges(sent, doc)
-    if (edges isDefinedAt tok)
-      for ((tok2, label) <- edges(tok) if matcher.matches(label)) yield tok2
-    else Nil
+    if (edges isDefinedAt tok) {
+      for {
+        (nextTok, label) <- edges(tok)
+        if matcher.matches(label)
+        newPath = (tok, nextTok, label) +: path // path is collected in reverse
+      } yield (nextTok, newPath)
+    } else Nil
   }
 }
 
 class IncomingDependencyPattern(matcher: StringMatcher)
 extends DependencyPatternNode with Dependencies {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
     val edges = incomingEdges(sent, doc)
-    if (edges isDefinedAt tok)
-      for ((tok2, label) <- edges(tok) if matcher.matches(label)) yield tok2
-    else Nil
+    if (edges isDefinedAt tok) {
+      for {
+        (nextTok, label) <- edges(tok)
+        if matcher.matches(label)
+        newPath = (nextTok, tok, label) +: path // path is collected in reverse
+      } yield (nextTok, newPath)
+    } else Nil
   }
 }
 
 class ConcatDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
     val results = for {
-      i <- lhs.findAllIn(tok, sent, doc, state)
-      j <- rhs.findAllIn(i, sent, doc, state)
-    } yield j
-    results.distinct
+      (i, p) <- lhs.findAllIn(tok, sent, doc, state, path)
+      (j, q) <- rhs.findAllIn(i, sent, doc, state, p)
+    } yield (j, q)
+    distinct(results)
   }
 }
 
 class DisjunctiveDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
-    (lhs.findAllIn(tok, sent, doc, state) ++ rhs.findAllIn(tok, sent, doc, state)).distinct
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
+    val leftResults = lhs.findAllIn(tok, sent, doc, state, path)
+    val rightResults = rhs.findAllIn(tok, sent, doc, state, path)
+    distinct(leftResults ++ rightResults)
+  }
 }
 
 class TokenConstraintDependencyPattern(constraint: TokenConstraint)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
-    if (constraint.matches(tok, sent, doc, state)) Seq(tok) else Nil
+  def findAllIn(
+    tok: Int,
+    sent: Int,
+    doc: Document,
+    state: State,
+    path: SynPath
+  ): Seq[(Int, SynPath)] = {
+    if (constraint.matches(tok, sent, doc, state)) Seq((tok, path)) else Nil
+  }
 }
 
 class LookaroundDependencyPattern(lookaround: DependencyPatternNode, negative: Boolean)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
     val results = lookaround.findAllIn(tok, sent, doc, state)
-    if (results.isEmpty == negative) Seq(tok) else Nil
+    if (results.isEmpty == negative) Seq((tok, path)) else Nil
   }
 }
 
 class OptionalDependencyPattern(pattern: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] =
-    (tok +: pattern.findAllIn(tok, sent, doc, state)).distinct
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
+    distinct((tok, path) +: pattern.findAllIn(tok, sent, doc, state, path))
+  }
 }
 
 class KleeneDependencyPattern(pattern: DependencyPatternNode)
 extends DependencyPatternNode {
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Int] = {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
     @annotation.tailrec
-    def loop(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
+    def collect(
+        remaining: Seq[(Int, SynPath)],
+        seen: Set[Int],
+        results: Seq[(Int, SynPath)]
+    ): Seq[(Int, SynPath)] = remaining match {
       case Seq() => results
-      case t +: ts if results contains t => loop(ts, results)
-      case t +: ts => loop(ts ++ pattern.findAllIn(t, sent, doc, state), t +: results)
+      case (t, p) +: rest if seen contains t => collect(rest, seen, results)
+      case (t, p) +: rest =>
+        collect(rest ++ pattern.findAllIn(t, sent, doc, state, p), seen + t, (t, p) +: results)
     }
-    loop(Seq(tok), Nil)
+    collect(Seq((tok, path)), Set.empty, Nil)
   }
 }
