@@ -7,7 +7,10 @@ package edu.arizona.sista.struct
  *  @param start the first element of the interval
  *  @param end the last element of the interval (exclusive)
  */
-class Interval protected (val start: Int, val end: Int) extends IndexedSeq[Int] with Ordered[Interval] {
+@SerialVersionUID(1L)
+class Interval protected (val start: Int, val end: Int)
+extends IndexedSeq[Int] with Ordered[Interval] with Serializable {
+
   require(start < end || (start == 0 && end == 0), "invalid range")
 
   import Interval.empty
@@ -41,6 +44,7 @@ class Interval protected (val start: Int, val end: Int) extends IndexedSeq[Int] 
     } else if (this.start > that.start) {
       this.start < that.end
     } else true
+
 }
 
 private[struct] object Empty extends Interval(0, 0) {
@@ -48,11 +52,15 @@ private[struct] object Empty extends Interval(0, 0) {
 }
 
 object Interval {
+
   /** the empty interval */
   val empty: Interval = Empty
+
   /** make an interval with a single element */
   def apply(i: Int): Interval = new Interval(i, i + 1)
+
   /** make an interval */
   def apply(start: Int, end: Int): Interval =
     if (start == end) empty else new Interval(start, end)
+
 }

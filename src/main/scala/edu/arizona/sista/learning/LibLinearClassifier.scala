@@ -1,6 +1,6 @@
 package edu.arizona.sista.learning
 
-import edu.arizona.sista.utils.Files
+import edu.arizona.sista.utils.{Files,MathUtils}
 import org.slf4j.LoggerFactory
 import de.bwaldvogel.liblinear._
 import edu.arizona.sista.struct.Counter
@@ -46,15 +46,16 @@ class LiblinearClassifier[L, F](
   override def scoresOf(d:Datum[L, F]): Counter[L] = {
     val features = datumToFeatures(d)
     val probs = new Array[Double](model.getNrClass)
-    if(model.isProbabilityModel) {
+    val normedProbs: Array[Double] = if(model.isProbabilityModel) {
       Linear.predictProbability(model, features, probs)
+      probs
     } else {
       Linear.predictValues(model, features, probs)
-      // TODO: convert to probabilities using softmax
+      MathUtils.softmax(probs).toArray
     }
     val probabilities = new Counter[L]
     for(i <- 0 until model.getNrClass) {
-      probabilities.setCount(labelLexicon.get.get(model.getLabels()(i)), probs(i))
+      probabilities.setCount(labelLexicon.get.get(model.getLabels()(i)), normedProbs(i))
     }
     probabilities
   }
