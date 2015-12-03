@@ -11,7 +11,7 @@ trait DependencyPattern {
   protected val (required, optional) = arguments.partition(_.required)
 
   type Args = Map[String, Seq[Mention]]
-  type Paths = Map[Mention, SynPath]
+  type Paths = Map[String, Map[Mention, SynPath]]
 
   def getMentions(
       sent: Int,
@@ -41,19 +41,19 @@ trait DependencyPattern {
       state: State
   ): Seq[(Args, Paths)] = {
     // variable to collect paths
-    var paths: Map[Mention, SynPath] = Map.empty
+    var paths: Map[String, Map[Mention, SynPath]] = Map.empty
     // extract all required arguments
     val req = for (a <- required) yield {
       val results: Seq[Seq[(Mention, SynPath)]] = a.extract(tok, sent, doc, state)
       // if a required argument is not present stop extraction
       if (results.isEmpty) return Nil
-      paths ++= results.flatten // collect paths
+      paths += (a.name -> results.flatten.toMap) // collect paths
       results.map(a.name -> _.map(_._1))
     }
     // extract optional arguments
     val opt = for (a <- optional) yield {
       val results: Seq[Seq[(Mention, SynPath)]] = a.extract(tok, sent, doc, state)
-      paths ++= results.flatten // collect paths
+      paths += (a.name -> results.flatten.toMap) // collect paths
       results.map(a.name -> _.map(_._1))
     }
     // drop empty optional arguments
@@ -128,6 +128,6 @@ class RelationDependencyPattern(
     if mention matches anchorLabel
     (args, paths) <- extractArguments(mention.tokenInterval, sent, doc, state)
     relationArgs = args + (anchorName -> Seq(mention))
-    relationPaths = paths + (mention -> Nil)
+    relationPaths = paths + (anchorName -> Map(mention -> Nil))
   } yield new RelationMention(labels, relationArgs, relationPaths, sent, doc, keep, ruleName)
 }

@@ -35,7 +35,9 @@ trait Mention extends Equals with Ordered[Mention] {
     */
   val arguments: Map[String, Seq[Mention]]
 
-  val paths: Map[Mention, SynPath]
+  val paths: Map[String, Map[Mention, SynPath]]
+
+  def getPath(argRole: String, mention: Mention): SynPath = paths(argRole)(mention)
 
   /** default label */
   def label: String = labels.head
@@ -155,7 +157,7 @@ class TextBoundMention(
 
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
-  val paths: Map[Mention, SynPath] = Map.empty
+  val paths: Map[String, Map[Mention, SynPath]] = Map.empty
 
   def jsonAST: JValue = {
     ("type" -> "TextBound") ~
@@ -185,7 +187,7 @@ class EventMention(
     val labels: Seq[String],
     val trigger: TextBoundMention,
     val arguments: Map[String, Seq[Mention]],
-    val paths: Map[Mention, SynPath],
+    val paths: Map[String, Map[Mention, SynPath]],
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
@@ -196,7 +198,7 @@ class EventMention(
     label: String,
     trigger: TextBoundMention,
     arguments: Map[String, Seq[Mention]],
-    paths: Map[Mention, SynPath],
+    paths: Map[String, Map[Mention, SynPath]],
     sentence: Int,
     document: Document,
     keep: Boolean,
@@ -211,7 +213,7 @@ class EventMention(
     document: Document,
     keep: Boolean,
     foundBy: String
-  ) = this(Seq(label), trigger, arguments, Map.empty[Mention, SynPath], sentence, document, keep, foundBy)
+  ) = this(Seq(label), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   def this(
     labels: Seq[String],
@@ -221,7 +223,7 @@ class EventMention(
     document: Document,
     keep: Boolean,
     foundBy: String
-  ) = this(labels, trigger, arguments, Map.empty[Mention, SynPath], sentence, document, keep, foundBy)
+  ) = this(labels, trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   // token interval that contains trigger and all matched arguments
   override def tokenInterval: Interval = {
@@ -264,7 +266,7 @@ class EventMention(
       labels: Seq[String] = this.labels,
       trigger: TextBoundMention = this.trigger,
       arguments: Map[String, Seq[Mention]] = this.arguments,
-      paths: Map[Mention, SynPath] = this.paths,
+      paths: Map[String, Map[Mention, SynPath]] = this.paths,
       sentence: Int = this.sentence,
       document: Document = this.document,
       keep: Boolean = this.keep,
@@ -312,7 +314,7 @@ class EventMention(
 class RelationMention(
     val labels: Seq[String],
     val arguments: Map[String, Seq[Mention]],
-    val paths: Map[Mention, SynPath],
+    val paths: Map[String, Map[Mention, SynPath]],
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
@@ -324,7 +326,7 @@ class RelationMention(
   def this(
       label: String,
       arguments: Map[String, Seq[Mention]],
-      paths: Map[Mention, SynPath],
+      paths: Map[String, Map[Mention, SynPath]],
       sentence: Int,
       document: Document,
       keep: Boolean,
@@ -338,7 +340,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), arguments, Map.empty[Mention, SynPath], sentence, document, keep, foundBy)
+  ) = this(Seq(label), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   def this(
       labels: Seq[String],
@@ -347,7 +349,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(labels, arguments, Map.empty[Mention, SynPath], sentence, document, keep, foundBy)
+  ) = this(labels, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   // token interval that contains all matched arguments
   override def tokenInterval: Interval = {
