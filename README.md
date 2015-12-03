@@ -46,20 +46,20 @@ This software is available on Maven Central. To use, simply add the following de
     <dependency>
        <groupId>org.clulab</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.7.1</version>
+       <version>5.7.2</version>
     </dependency>
     <dependency>
        <groupId>org.clulab</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.7.1</version>
+       <version>5.7.2</version>
        <classifier>models</classifier>
     </dependency>
 
  The equivalent SBT dependencies are:
 
     libraryDependencies ++= Seq(
-        "org.clulab" %% "processors" % "5.7.1",
-        "org.clulab" %% "processors" % "5.7.1" classifier "models"
+        "org.clulab" %% "processors" % "5.7.2",
+        "org.clulab" %% "processors" % "5.7.2" classifier "models"
     )
 
 
