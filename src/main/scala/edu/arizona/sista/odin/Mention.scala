@@ -111,12 +111,7 @@ trait Mention extends Equals with Ordered[Mention] {
     else this.tokenInterval compare that.tokenInterval
   }
 
-  def precedes(that: Mention): Boolean = {
-    this.compare(that) match {
-      case c if c < 0 => true
-      case _ => false
-    }
-  }
+  def precedes(that: Mention): Boolean = this.compare(that) < 0
 
   override def hashCode: Int = {
     val h0 = stringHash("edu.arizona.sista.odin.Mention")
