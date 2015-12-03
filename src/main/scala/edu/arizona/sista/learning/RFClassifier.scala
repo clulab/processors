@@ -92,20 +92,18 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
           values += c.getCount(f)
         }
       }
+      if(values.size > 0 && ! values.contains(0.0)) {
+        values += 0.0
+      }
 
       //logger.debug(s"Feature ${dataset.featureLexicon.get(f)}: $values")
 
       val sortedValues = values.toArray.sorted
-      assert(sortedValues.length > 0)
+      assert(sortedValues.length > 1)
       val featThresholds = new ArrayBuffer[Double]()
-      if(sortedValues.length == 1) {
-        featThresholds += sortedValues.head / 2.0
+      for(i <- 0 until sortedValues.length - 1) {
+        featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
         thresholdCount += 1
-      } else {
-        for(i <- 0 until sortedValues.length - 1) {
-          featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
-          thresholdCount += 1
-        }
       }
       // TODO: if the feature has more than MAX_THRESHOLDS thresholds, use quantiles instead
       thresholds += featThresholds.toArray
@@ -335,6 +333,11 @@ class RFLeaf(l:Int) extends RFTree {
   def label = Some(l)
   def left = None
   def right = None
+
+  override def toString:String = label match {
+    case None => "[]"
+    case Some(l) => l.toString
+  }
 }
 
 class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
@@ -342,6 +345,10 @@ class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
   def label = None
   def left = Some(l)
   def right = Some(r)
+
+  override def toString:String = {
+    ""
+  }
 }
 
 object RFClassifier {
