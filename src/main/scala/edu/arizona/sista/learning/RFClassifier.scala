@@ -5,6 +5,7 @@ import java.io.{Writer, Serializable}
 import edu.arizona.sista.struct.{Lexicon, Counter}
 import org.slf4j.LoggerFactory
 
+import scala.StringBuilder
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -326,6 +327,14 @@ trait RFTree {
   def label:Option[Int]
   def left:Option[RFTree]
   def right:Option[RFTree]
+
+  def indent(i:Int):String = {
+    val b = new StringBuilder()
+    for(j <- 0 until i) b += ' '
+    b.toString()
+  }
+
+  def toString(ind:Int, labelLexicon:)
 }
 
 class RFLeaf(l:Int) extends RFTree {
@@ -334,7 +343,9 @@ class RFLeaf(l:Int) extends RFTree {
   def left = None
   def right = None
 
-  override def toString:String = label match {
+  override def toString = toString(0)
+
+  def toString(ind:Int):String = indent(ind) + label match {
     case None => "[]"
     case Some(l) => l.toString
   }
@@ -346,8 +357,12 @@ class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
   def left = Some(l)
   def right = Some(r)
 
-  override def toString:String = {
-    ""
+  override def toString:String = toString(0)
+
+  override def toString(ind:Int):String = {
+    val b = new StringBuilder
+    b.append(indent(ind))
+
   }
 }
 
