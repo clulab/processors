@@ -5,7 +5,6 @@ import java.io.{Writer, Serializable}
 import edu.arizona.sista.struct.{Lexicon, Counter}
 import org.slf4j.LoggerFactory
 
-import scala.StringBuilder
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -19,8 +18,13 @@ import scala.util.Random
   * User: mihais
   * Date: 11/23/15
   */
-class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:Int = 0) extends Classifier[L, F] with Serializable {
+class RFClassifier[L, F](numTrees:Int = 100,
+                         maxTreeDepth:Int = 0,
+                         numThreads:Int = 0,
+                         trainBagPct:Double = 0.66) extends Classifier[L, F] with Serializable {
   var trees:Option[Array[RFTree]] = None
+
+  var verbose = false
 
   /** Feature lexicon */
   private var featureLexicon:Option[Lexicon[F]] = None
@@ -57,14 +61,16 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
     // construct the bags, one per tree
     //
     val bags = new ArrayBuffer[RFJob[L, F]]()
-    val bagSize = (TRAIN_BAG_PCT * indices.length).toInt
+    val bagSize = math.ceil(trainBagPct * indices.length).toInt
     val randomSeed = new Random(RANDOM_SEED)
     for(i <- 0 until numTrees) {
-      bags += mkBag(dataset, indices, thresholds, bagSize, randomSeed)
+      bags += mkBag(dataset, indices, thresholds, bagSize, randomSeed, i)
     }
     logger.debug(s"Constructed ${bags.size} bag(s), each containing $bagSize datums.")
 
+    //
     // the actual tree building
+    //
     logger.debug("Beginning tree building...")
     numThreads match {
       case 0 => // use as many threads as possible
@@ -77,7 +83,15 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
         parBags.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(numThreads))
         trees = Some(parBags.map(buildTree).toArray)
     }
-    logger.debug(s"Done building ${trees.get.length} trees.")
+
+    if(verbose) {
+      logger.debug(s"Label lexicon:\n${labelLexicon.get}")
+      logger.debug(s"Feature lexicon:\n${featureLexicon.get}")
+      logger.debug(s"Done building ${trees.get.length} trees:")
+      for (tree <- trees.get) {
+        logger.debug(s"Tree:\n$tree")
+      }
+    }
   }
 
   def computeFeatureThresholds(dataset:CounterDataset[L, F]): Array[Array[Double]] = {
@@ -93,7 +107,7 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
           values += c.getCount(f)
         }
       }
-      if(values.size > 0 && ! values.contains(0.0)) {
+      if(values.nonEmpty && ! values.contains(0.0)) {
         values += 0.0
       }
 
@@ -112,14 +126,19 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
     logger.debug("Finished computing feature thresholds.")
     logger.debug(s"Found $thresholdCount thresholds for ${thresholds.length} features.")
 
-    for(f <- thresholds.indices) {
-      logger.debug(s"Feature [${featureLexicon.get.get(f)}]: ${thresholds(f).toList}")
+    if(verbose) {
+      for (f <- thresholds.indices) {
+        logger.debug(s"Feature [${featureLexicon.get.get(f)}]: ${thresholds(f).toList}")
+      }
     }
 
     thresholds.toArray
   }
 
-  def buildTree(job:RFJob[L, F]):RFTree = buildTree(job, Set[(Int, Double)]())
+  def buildTree(job:RFJob[L, F]):RFTree = {
+    if(verbose) logger.debug(s"Starting build tree using job: $job")
+    buildTree(job, Set[(Int, Double)]())
+  }
 
   /** Constructs a single decision tree from the given dataset sample */
   def buildTree(job:RFJob[L, F], activeNodes:Set[(Int, Double)]):RFTree = {
@@ -127,6 +146,7 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
     // termination condition: all datums have the same labels in this split
     //
     if(sameLabels(job)) {
+      //logger.debug(s"Found termination condition on job: $job")
       return new RFLeaf(job.dataset.labels(job.indices.head))
     }
 
@@ -166,7 +186,7 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
     // otherwise, construct a non-terminal node on the best split and recurse
     //
     else {
-      logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
+      //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
 
       val newActiveNodes = new mutable.HashSet[(Int, Double)]()
       newActiveNodes ++= activeNodes
@@ -264,12 +284,13 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
             indices: Array[Int],
             thresholds: Array[Array[Double]],
             length:Int,
-            random:Random):RFJob[L, F] = {
+            random:Random,
+            offset:Int):RFJob[L, F] = {
     val bagIndices = new ArrayBuffer[Int]()
     for(i <- 0 until length) {
       bagIndices += indices(random.nextInt(indices.length))
     }
-    new RFJob[L, F](dataset, bagIndices.toArray, thresholds, new Random(RANDOM_SEED))
+    new RFJob[L, F](dataset, bagIndices.toArray, thresholds, new Random(RANDOM_SEED + offset))
   }
 
   /** Constructs a job from the datums containing values of this feature smaller or equal than the threshold */
@@ -306,7 +327,25 @@ class RFClassifier[L, F](numTrees:Int = 100, maxTreeDepth:Int = 0, numThreads:In
 
   /** Returns the argmax for this datum */
   override def classOf(d: Datum[L, F]): L = {
-    throw new RuntimeException("ERROR: classOf not supported yet!")
+
+    //
+    // convert the datum to a counter of Ints, for easier processing
+    //
+    val fs = d.featuresCounter
+    val ifs = new Counter[Int]
+    for(f <- fs.keySet) {
+      if(featureLexicon.get.contains(f)) {
+        ifs.incrementCount(featureLexicon.get.get(f).get, fs.getCount(f))
+      }
+    }
+
+    val labels = new Counter[Int]
+    for(tree <- trees.get) {
+      val label = tree.apply(ifs)
+      labels.incrementCount(label)
+    }
+    val topLabel = labels.sorted.head._1
+    labelLexicon.get.get(topLabel)
   }
 
   /** Saves to writer. Does NOT close the writer */
@@ -319,8 +358,22 @@ class RFJob[L, F](
   val dataset:CounterDataset[L, F],
   val indices:Array[Int],
   val featureThresholds:Array[Array[Double]],
-  val random:Random
-)
+  val random:Random) {
+
+  override def toString:String = {
+    val b = new StringBuilder
+    var first = true
+    for(i <- indices) {
+      if(! first) b.append(" ")
+      b.append(i.toString)
+      b.append(":")
+      b.append(dataset.labels(i).toString)
+      first = false
+    }
+    b.toString()
+  }
+
+}
 
 trait RFTree {
   def decision:Option[(Int, Double)]
@@ -334,7 +387,17 @@ trait RFTree {
     b.toString()
   }
 
-  def toString(ind:Int, labelLexicon:)
+  def toString(int:Int):String
+
+  def apply(datum:Counter[Int]):Int = {
+    this match {
+      case leaf:RFLeaf => label.get
+      case nonTerm:RFNonTerminal =>
+        val v = datum.getCount(nonTerm.decision.get._1)
+        if(v <= nonTerm.decision.get._2) nonTerm.left.get.apply(datum)
+        else nonTerm.right.get.apply(datum)
+    }
+  }
 }
 
 class RFLeaf(l:Int) extends RFTree {
@@ -345,9 +408,11 @@ class RFLeaf(l:Int) extends RFTree {
 
   override def toString = toString(0)
 
-  def toString(ind:Int):String = indent(ind) + label match {
-    case None => "[]"
-    case Some(l) => l.toString
+  override def toString(ind:Int):String = {
+    val b = new StringBuilder
+    b.append(indent(ind))
+    label.foreach(l => b.append(l.toString))
+    b.toString()
   }
 }
 
@@ -362,7 +427,16 @@ class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
   override def toString(ind:Int):String = {
     val b = new StringBuilder
     b.append(indent(ind))
-
+    decision.foreach(d => {
+      b.append(d._1.toString)
+      b.append(" ")
+      b.append(d._2.toString)
+      b.append("\n")
+      left.foreach(l => b.append(l.toString(ind + 2)))
+      b.append("\n")
+      right.foreach(r => b.append(r.toString(ind + 2)))
+    })
+    b.toString()
   }
 }
 
@@ -370,7 +444,6 @@ object RFClassifier {
   val logger = LoggerFactory.getLogger(classOf[RFClassifier[String, String]])
 
   val RANDOM_SEED = 1
-  val TRAIN_BAG_PCT = 1.00 // 0.66
 
   /** Decides how many features to use in each node */
   def featuresPerNode(numFeats:Int):Int = {
