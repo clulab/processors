@@ -311,11 +311,11 @@ extends DependencyPatternNode {
 class TokenConstraintDependencyPattern(constraint: TokenConstraint)
 extends DependencyPatternNode {
   def findAllIn(
-    tok: Int,
-    sent: Int,
-    doc: Document,
-    state: State,
-    path: SynPath
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
   ): Seq[(Int, SynPath)] = {
     if (constraint.matches(tok, sent, doc, state)) Seq((tok, path)) else Nil
   }
