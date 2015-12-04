@@ -373,11 +373,12 @@ class RelationMention(
   def copy(
       labels: Seq[String] = this.labels,
       arguments: Map[String, Seq[Mention]] = this.arguments,
+      paths: Map[String, Map[Mention, SynPath]] = this.paths,
       sentence: Int = this.sentence,
       document: Document = this.document,
       keep: Boolean = this.keep,
       foundBy: String = this.foundBy
-  ): RelationMention = new RelationMention(labels, arguments, sentence, document, keep, foundBy)
+  ): RelationMention = new RelationMention(labels, arguments, paths, sentence, document, keep, foundBy)
 
   // Convert a RelationMention to an EventMention by specifying a trigger
   def toEventMention(trigger: TextBoundMention): EventMention = {
