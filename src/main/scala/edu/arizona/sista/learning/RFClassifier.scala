@@ -377,7 +377,7 @@ class RFJob[L, F](
 
 trait RFTree {
   def decision:Option[(Int, Double)]
-  def label:Option[Int]
+  def labels:Option[Counter[Int]]
   def left:Option[RFTree]
   def right:Option[RFTree]
 
@@ -389,9 +389,9 @@ trait RFTree {
 
   def toString(int:Int):String
 
-  def apply(datum:Counter[Int]):Int = {
+  def apply(datum:Counter[Int]):Counter[Int] = {
     this match {
-      case leaf:RFLeaf => label.get
+      case leaf:RFLeaf => labels.get
       case nonTerm:RFNonTerminal =>
         val v = datum.getCount(nonTerm.decision.get._1)
         if(v <= nonTerm.decision.get._2) nonTerm.left.get.apply(datum)
@@ -400,9 +400,9 @@ trait RFTree {
   }
 }
 
-class RFLeaf(l:Int) extends RFTree {
+class RFLeaf(ls:Counter[Int]) extends RFTree {
   def decision = None
-  def label = Some(l)
+  def labels = Some(ls)
   def left = None
   def right = None
 
@@ -411,14 +411,14 @@ class RFLeaf(l:Int) extends RFTree {
   override def toString(ind:Int):String = {
     val b = new StringBuilder
     b.append(indent(ind))
-    label.foreach(l => b.append(l.toString))
+    labels.foreach(l => b.append(l.toString))
     b.toString()
   }
 }
 
 class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
   def decision = Some(f, t)
-  def label = None
+  def labels = None
   def left = Some(l)
   def right = Some(r)
 
