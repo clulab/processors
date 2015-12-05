@@ -11,42 +11,55 @@ trait DependencyPattern {
   protected val (required, optional) = arguments.partition(_.required)
 
   type Args = Map[String, Seq[Mention]]
+  type Paths = Map[String, Map[Mention, SynPath]]
 
   def getMentions(
-    sent: Int,
-    doc: Document,
-    state: State,
-    labels: Seq[String],
-    keep: Boolean,
-    ruleName: String
+      sent: Int,
+      doc: Document,
+      state: State,
+      labels: Seq[String],
+      keep: Boolean,
+      ruleName: String
   ): Seq[Mention]
 
   // extract the arguments of a token interval
   protected def extractArguments(
-    interval: Interval,
-    sent: Int,
-    doc: Document,
-    state: State
-  ): Seq[Args] = for {
+      interval: Interval,
+      sent: Int,
+      doc: Document,
+      state: State
+  ): Seq[(Args, Paths)] = for {
     tok <- interval
-    m <- extractArguments(tok, sent, doc, state)
-  } yield m
+    mp <- extractArguments(tok, sent, doc, state)
+  } yield mp
 
   // extract arguments for one of the tokens in the trigger
-  private def extractArguments(tok: Int, sent: Int, doc: Document, state: State): Seq[Args] = {
+  private def extractArguments(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State
+  ): Seq[(Args, Paths)] = {
+    // variable to collect paths
+    var paths: Map[String, Map[Mention, SynPath]] = Map.empty
     // extract all required arguments
     val req = for (a <- required) yield {
-      val results = a.extract(tok, sent, doc, state)
+      val results: Seq[Seq[(Mention, SynPath)]] = a.extract(tok, sent, doc, state)
       // if a required argument is not present stop extraction
       if (results.isEmpty) return Nil
-      results.map(a.name -> _)
+      paths += (a.name -> results.flatten.toMap) // collect paths
+      results.map(a.name -> _.map(_._1))
     }
     // extract optional arguments
-    val opt = for (a <- optional) yield a.extract(tok, sent, doc, state).map(a.name -> _)
+    val opt = for (a <- optional) yield {
+      val results: Seq[Seq[(Mention, SynPath)]] = a.extract(tok, sent, doc, state)
+      paths += (a.name -> results.flatten.toMap) // collect paths
+      results.map(a.name -> _.map(_._1))
+    }
     // drop empty optional arguments
     val args = req ++ opt.filter(_.nonEmpty)
     // return cartesian product of arguments
-    product(args).map(_.toMap)
+    product(args).map(a => (a.toMap, paths))
   }
 
   // cartesian product
@@ -57,42 +70,64 @@ trait DependencyPattern {
   }
 }
 
-// if we have a trigger then we create an EventMention
-class EventDependencyPattern(
-  val trigger: TokenPattern,
-  val arguments: Seq[ArgumentPattern]
+// creates an EventMention using a TokenPattern for the trigger
+class TriggerPatternDependencyPattern(
+    val trigger: TokenPattern,
+    val arguments: Seq[ArgumentPattern]
 ) extends DependencyPattern {
   def getMentions(
-    sent: Int,
-    doc: Document,
-    state: State,
-    labels: Seq[String],
-    keep: Boolean,
-    ruleName: String
+      sent: Int,
+      doc: Document,
+      state: State,
+      labels: Seq[String],
+      keep: Boolean,
+      ruleName: String
   ): Seq[Mention] = for {
     r <- trigger.findAllIn(sent, doc, state)
     trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
-    args <- extractArguments(trig.tokenInterval, sent, doc, state)
-  } yield new EventMention(labels, trig, args, sent, doc, keep, ruleName)
+    (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
+  } yield new EventMention(labels, trig, args, paths, sent, doc, keep, ruleName)
 }
 
-// if a trigger wasn't specified then we create a RelationMention
-class RelationDependencyPattern(
-  val anchorName: String,
-  val anchorLabel: String,
-  val arguments: Seq[ArgumentPattern]
+// creates an EventMention by matching trigger mentions
+class TriggerMentionDependencyPattern(
+    val triggerLabel: String,
+    val arguments: Seq[ArgumentPattern]
 ) extends DependencyPattern {
   def getMentions(
-    sent: Int,
-    doc: Document,
-    state: State,
-    labels: Seq[String],
-    keep: Boolean,
-    ruleName: String
+      sent: Int,
+      doc: Document,
+      state: State,
+      labels: Seq[String],
+      keep: Boolean,
+      ruleName: String
   ): Seq[Mention] = for {
-    tok <- 0 until doc.sentences(sent).size
-    mention <- state.mentionsFor(sent, tok, anchorLabel)
-    args <- extractArguments(mention.tokenInterval, sent, doc, state)
+    mention <- state.mentionsFor(sent)
+    if mention matches triggerLabel
+    if mention.isInstanceOf[TextBoundMention]
+    trig = mention.asInstanceOf[TextBoundMention]
+    (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
+  } yield new EventMention(labels, trig, args, paths, sent, doc, keep, ruleName)
+}
+
+// creates a RelationMention by matching mentions
+class RelationDependencyPattern(
+    val anchorName: String,
+    val anchorLabel: String,
+    val arguments: Seq[ArgumentPattern]
+) extends DependencyPattern {
+  def getMentions(
+      sent: Int,
+      doc: Document,
+      state: State,
+      labels: Seq[String],
+      keep: Boolean,
+      ruleName: String
+  ): Seq[Mention] = for {
+    mention <- state.mentionsFor(sent)
+    if mention matches anchorLabel
+    (args, paths) <- extractArguments(mention.tokenInterval, sent, doc, state)
     relationArgs = args + (anchorName -> Seq(mention))
-  } yield new RelationMention(labels, relationArgs, sent, doc, keep, ruleName)
+    relationPaths = paths + (anchorName -> Map(mention -> Nil))
+  } yield new RelationMention(labels, relationArgs, relationPaths, sent, doc, keep, ruleName)
 }
