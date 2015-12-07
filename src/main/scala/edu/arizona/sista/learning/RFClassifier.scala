@@ -96,6 +96,36 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   def computeFeatureThresholds(dataset:CounterDataset[L, F]): Array[Array[Double]] = {
     logger.debug("Computing feature thresholds...")
+
+    // store all seen feature values
+    val featureValues = new Array[mutable.HashSet[Double]](featureLexicon.get.size)
+    for(f <- featureValues.indices)
+      featureValues(f) = new mutable.HashSet[Double]()
+    for(i <- dataset.indices) {
+      val c = dataset.featuresCounter(i)
+      for(f <- c.keySet) {
+        featureValues(f) += c.getCount(f)
+      }
+    }
+    for(f <- featureValues.indices)
+      featureValues(f) += 0
+
+    // compute thresholds
+    val thresholds = new Array[Array[Double]](featureValues.length)
+    var thresholdCount = 0
+    for(f <- featureValues.indices) {
+      val sortedValues = featureValues(f).toArray.sorted
+      assert(sortedValues.length > 1)
+      val featThresholds = new ArrayBuffer[Double]()
+      for(i <- 0 until sortedValues.length - 1) {
+        featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
+        thresholdCount += 1
+      }
+      // TODO: if the feature has more than MAX_THRESHOLDS thresholds, use quantiles instead
+      thresholds(f) = featThresholds.toArray
+    }
+
+    /*
     val thresholds = new ArrayBuffer[Array[Double]]()
     var thresholdCount = 0
     for(f <- dataset.featureLexicon.indices) {
@@ -123,6 +153,8 @@ class RFClassifier[L, F](numTrees:Int = 100,
       // TODO: if the feature has more than MAX_THRESHOLDS thresholds, use quantiles instead
       thresholds += featThresholds.toArray
     }
+    */
+
     logger.debug("Finished computing feature thresholds.")
     logger.debug(s"Found $thresholdCount thresholds for ${thresholds.length} features.")
 
@@ -135,9 +167,17 @@ class RFClassifier[L, F](numTrees:Int = 100,
     thresholds.toArray
   }
 
+  var treeCount = 0
+
   def buildTree(job:RFJob[L, F]):RFTree = {
     if(verbose) logger.debug(s"Starting build tree using job: $job")
-    buildTree(job, Set[(Int, Double)]())
+    val t = buildTree(job, Set[(Int, Double)]())
+
+    this.synchronized {
+      treeCount += 1
+      logger.debug(s"Built $treeCount/$numTrees decision trees of depth $maxTreeDepth.")
+    }
+    t
   }
 
   /** Constructs a single decision tree from the given dataset sample */
@@ -147,11 +187,11 @@ class RFClassifier[L, F](numTrees:Int = 100,
     //
     if(sameLabels(job)) {
       //logger.debug(s"Found termination condition on job: $job")
-      return new RFLeaf(job.dataset.labels(job.indices.head))
+      return new RFLeaf(job.labelDist)
     }
 
     if(maxTreeDepth > 0 && activeNodes.size > maxTreeDepth) {
-      return new RFLeaf(majorityClass(job))
+      return new RFLeaf(job.labelDist)
     }
 
     //
@@ -179,7 +219,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     // nothing found, take majority class
     //
     if(best.isEmpty) {
-      new RFLeaf(majorityClass(job))
+      new RFLeaf(job.labelDist)
     }
 
     //
@@ -272,14 +312,6 @@ class RFClassifier[L, F](numTrees:Int = 100,
     true
   }
 
-  def majorityClass(job:RFJob[L, F]):Int = {
-    val ls = new Counter[Int]()
-    for(i <- job.indices) {
-      ls.incrementCount(job.dataset.labels(i))
-    }
-    ls.sorted.head._1
-  }
-
   def mkBag(dataset: CounterDataset[L, F],
             indices: Array[Int],
             thresholds: Array[Array[Double]],
@@ -322,12 +354,6 @@ class RFClassifier[L, F](numTrees:Int = 100,
     * Convention: if the classifier can return probabilities, these must be probabilities
     **/
   override def scoresOf(d: Datum[L, F]): Counter[L] = {
-    throw new RuntimeException("ERROR: scoresOf not supported yet!")
-  }
-
-  /** Returns the argmax for this datum */
-  override def classOf(d: Datum[L, F]): L = {
-
     //
     // convert the datum to a counter of Ints, for easier processing
     //
@@ -339,13 +365,31 @@ class RFClassifier[L, F](numTrees:Int = 100,
       }
     }
 
+    //
+    // merge the label distributions from the predictions of all trees
+    //
     val labels = new Counter[Int]
     for(tree <- trees.get) {
-      val label = tree.apply(ifs)
-      labels.incrementCount(label)
+      val labelDist = tree.apply(ifs)
+      labels += labelDist
     }
-    val topLabel = labels.sorted.head._1
-    labelLexicon.get.get(topLabel)
+    for(l <- labels.keySet) {
+      labels.setCount(l, labels.getCount(l) / trees.get.length.toDouble)
+    }
+
+    // convert to labels of type L
+    val prettyLabels = new Counter[L]()
+    for(l <- labels.keySet) {
+      prettyLabels.setCount(labelLexicon.get.get(l), labels.getCount(l))
+    }
+
+    prettyLabels
+  }
+
+  /** Returns the argmax for this datum */
+  override def classOf(d: Datum[L, F]): L = {
+    val scores = scoresOf(d)
+    scores.sorted.head._1
   }
 
   /** Saves to writer. Does NOT close the writer */
@@ -371,6 +415,16 @@ class RFJob[L, F](
       first = false
     }
     b.toString()
+  }
+
+  def labelDist:Counter[Int] = {
+    val counts = new Counter[Int]
+    for(i <- indices)
+      counts.incrementCount(dataset.labels(i))
+    val proportions = new Counter[Int]
+    for(l <- counts.keySet)
+      proportions.setCount(l, counts.proportion(l))
+    proportions
   }
 
 }

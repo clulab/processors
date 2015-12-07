@@ -91,7 +91,7 @@ class Counter[T](
       if (getCount(key) == defaultReturnValue) out.setCount(key, toAdd.getCount(key))
     }
 
-    // Step 2: Add all keys that are common between this and toSub
+    // Step 2: Add all keys that are common between this and toSub, or unique to this
     for (key <- keySet) out.setCount(key, getCount(key) + toAdd.getCount(key))
 
     out

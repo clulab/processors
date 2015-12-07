@@ -28,8 +28,10 @@ class PredicateClassifier {
 
     computePredStats(doc)
 
-    val dataset = createDataset(doc)
-    classifier = new LogisticRegressionClassifier[String, String]()
+    var dataset = createDataset(doc)
+    dataset = dataset.removeFeaturesByFrequency(10)
+    //classifier = new LogisticRegressionClassifier[String, String]()
+    classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 8, numThreads = 1)
     //classifier = new LinearSVMClassifier[String, String]()
     classifier.train(dataset)
   }
