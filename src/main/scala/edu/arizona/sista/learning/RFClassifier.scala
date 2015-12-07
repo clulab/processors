@@ -180,6 +180,60 @@ class RFClassifier[L, F](numTrees:Int = 100,
     t
   }
 
+  def updateContingencyTables(features:Array[Int],
+                              contingencyTables:Array[Array[(Counter[Int], Counter[Int])]],
+                              overallLabels:Counter[Int]): Unit = {
+    // add labels from all datums where this feature *has value 0* to the left contigency tables (i.e., <= threshold)
+    for(f <- features) {
+      for(t <- contingencyTables(f).indices) {
+        val left = contingencyTables(f)(t)._1
+        val right = contingencyTables(f)(t)._2
+        val seen = new Counter[Int]
+        seen += left
+        seen += right
+        val diff = overallLabels - seen
+        left += diff
+      }
+    }
+  }
+
+  def computeContingencyTables(job:RFJob[L, F], features:Array[Int]): Array[Array[(Counter[Int], Counter[Int])]] = {
+    // initialize the threshold contingency tables *only* for the selected features
+    val contingencyTables = new Array[Array[(Counter[Int], Counter[Int])]](job.dataset.featureLexicon.size)
+    for(f <- features) {
+      contingencyTables(f) = new Array[(Counter[Int], Counter[Int])](job.featureThresholds(f).length)
+      for(i <- contingencyTables(f).indices) {
+        contingencyTables(f)(i) = new Tuple2(new Counter[Int], new Counter[Int])
+      }
+    }
+
+    // update contingency tables for non-zero features
+    for(i <- job.indices) {
+      val l = job.dataset.labels(i)
+      val fs = job.dataset.featuresCounter(i)
+      for(f <- fs.keySet) {
+        val tables = contingencyTables(f)
+        if(tables != null) {
+          val fv = fs.getCount(f)
+          updateContingencyTables(contingencyTables(f), l, fv, job.featureThresholds(f))
+        }
+      }
+    }
+    // logger.debug("Done computing contingency tables.")
+    contingencyTables
+  }
+
+  def updateContingencyTables(tables:Array[(Counter[Int], Counter[Int])], label:Int, fv:Double, thresholds:Array[Double]): Unit = {
+    assert(tables.length == thresholds.length)
+    for(i <- thresholds.indices) {
+      if(fv <= thresholds(i)) {
+        tables(i)._1.incrementCount(label)
+      } else {
+        tables(i)._2.incrementCount(label)
+      }
+    }
+  }
+
   /** Constructs a single decision tree from the given dataset sample */
   def buildTree(job:RFJob[L, F], activeNodes:Set[(Int, Double)]):RFTree = {
     //
@@ -190,6 +244,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
       return new RFLeaf(job.labelDist)
     }
 
+    // reached maximum depth
     if(maxTreeDepth > 0 && activeNodes.size > maxTreeDepth) {
       return new RFLeaf(job.labelDist)
     }
@@ -202,12 +257,23 @@ class RFClassifier[L, F](numTrees:Int = 100,
       featuresPerNode(job.dataset.numFeatures),
       job.random)
 
+
+    //
+    // compute contingency tables for all selected features and all their thresholds
+    //
+    // count only the non-zero features
+    val contingencyTables = computeContingencyTables(job, currentFeatureIndices)
+    // compute the label distribution for this job
+    val overallLabels = job.labelCounts
+    // update contingency tables for the selected features that had zero values in this job
+    updateContingencyTables(currentFeatureIndices, contingencyTables, overallLabels)
+
     //
     // find feature with highest utility
     //
     var best:Option[(Int, Double, Double)] = None // feature, threshold, utility
     for(f <- currentFeatureIndices) {
-      val utility = featureUtility(f, job, activeNodes)
+      val utility = featureUtility(f, job.featureThresholds(f), contingencyTables(f), activeNodes)
       if(utility.isDefined) {
         if(best.isEmpty || best.get._3 < utility.get._3) {
           best = utility
@@ -226,7 +292,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     // otherwise, construct a non-terminal node on the best split and recurse
     //
     else {
-      //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
+      logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
 
       val newActiveNodes = new mutable.HashSet[(Int, Double)]()
       newActiveNodes ++= activeNodes
@@ -239,16 +305,24 @@ class RFClassifier[L, F](numTrees:Int = 100,
   }
 
   /** Computes the utility of the given feature */
-  def featureUtility(feature:Int, job:RFJob[L, F], activeNodes:Set[(Int, Double)]): Option[(Int, Double, Double)] = {
-    informationGain(feature, job, activeNodes)
+  def featureUtility(feature:Int,
+                     thresholds:Array[Double],
+                     contingencyTables:Array[(Counter[Int], Counter[Int])],
+                     activeNodes:Set[(Int, Double)]): Option[(Int, Double, Double)] = {
+    informationGain(feature, thresholds, contingencyTables, activeNodes)
   }
 
   /** Computes the utility of the given feature using information gain */
-  def informationGain(feature:Int, job:RFJob[L, F], activeNodes:Set[(Int, Double)]): Option[(Int, Double, Double)] = {
+  def informationGain(feature:Int,
+                      thresholds:Array[Double],
+                      contingencyTables:Array[(Counter[Int], Counter[Int])],
+                      activeNodes:Set[(Int, Double)]): Option[(Int, Double, Double)] = {
     var bestThreshold:Option[(Double, Double)] = None // threshold, utility
-    for(threshold <- job.featureThresholds(feature)) {
+    for(t <- thresholds.indices) {
+      val threshold = thresholds(t)
+      val contingencyTable = contingencyTables(t)
       if(! activeNodes.contains((feature, threshold))) {
-        val utility = informationGainForThreshold(feature, threshold, job)
+        val utility = informationGainForThreshold(feature, threshold, contingencyTable)
         if(utility.isDefined && (bestThreshold.isEmpty || bestThreshold.get._2 < utility.get)) {
           bestThreshold = Some(threshold, utility.get)
         }
@@ -259,7 +333,13 @@ class RFClassifier[L, F](numTrees:Int = 100,
   }
 
   /** Computes IG for a given feature and threshold */
-  def informationGainForThreshold(feature:Int, threshold:Double, job:RFJob[L, F]):Option[Double] = {
+  def informationGainForThreshold(feature:Int,
+                                  threshold:Double,
+                                  contingencyTable:(Counter[Int], Counter[Int])):Option[Double] = {
+    val leftCounter = contingencyTable._1
+    val rightCounter = contingencyTable._2
+
+    /*
     //
     // separate the job in two lists: smaller or equal, or larger than threshold
     // in each list, compute the entropy for the existing labels
@@ -273,6 +353,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
         rightCounter.incrementCount(job.dataset.labels(i))
       }
     }
+    */
 
     // bail out if any of the splits is empty
     if(leftCounter.size == 0 || rightCounter.size == 0) {
@@ -418,13 +499,18 @@ class RFJob[L, F](
   }
 
   def labelDist:Counter[Int] = {
-    val counts = new Counter[Int]
-    for(i <- indices)
-      counts.incrementCount(dataset.labels(i))
+    val counts = labelCounts
     val proportions = new Counter[Int]
     for(l <- counts.keySet)
       proportions.setCount(l, counts.proportion(l))
     proportions
+  }
+
+  def labelCounts:Counter[Int] = {
+    val counts = new Counter[Int]
+    for(i <- indices)
+      counts.incrementCount(dataset.labels(i))
+    counts
   }
 
 }
