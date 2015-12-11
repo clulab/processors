@@ -88,12 +88,12 @@ class ArgumentClassifier {
     doc = null // the raw data is no longer needed
     logger.debug("Finished constructing dataset.")
 
-    //dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
     //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    classifier = new RFClassifier[String, String](numTrees = 1, maxTreeDepth = 0, numThreads = 1)
+    classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 100, trainBagPct = 0.80, numThreads = 1)
 
     classifier match {
       case rfc:RandomForestClassifier[String, String] =>

@@ -3,6 +3,7 @@ package edu.arizona.sista.learning
 import java.io.{Writer, Serializable}
 
 import edu.arizona.sista.struct.{Lexicon, Counter}
+import edu.arizona.sista.utils.MathUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -19,8 +20,8 @@ import scala.util.Random
   * Date: 11/23/15
   */
 class RFClassifier[L, F](numTrees:Int = 100,
-                         maxTreeDepth:Int = 0,
-                         numThreads:Int = 0,
+                         maxTreeDepth:Int = 0, // 0 means unlimited tree depth
+                         numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
                          trainBagPct:Double = 0.66) extends Classifier[L, F] with Serializable {
   var trees:Option[Array[RFTree]] = None
 
@@ -87,11 +88,12 @@ class RFClassifier[L, F](numTrees:Int = 100,
     if(verbose) {
       logger.debug(s"Label lexicon:\n${labelLexicon.get}")
       logger.debug(s"Feature lexicon:\n${featureLexicon.get}")
+    }
       logger.debug(s"Done building ${trees.get.length} trees:")
       for (tree <- trees.get) {
-        logger.debug(s"Tree:\n$tree")
+        logger.debug(s"Tree:\n${tree.toPrettyString[L, F](0, featureLexicon.get, labelLexicon.get)}")
       }
-    }
+
   }
 
   def computeFeatureThresholds(dataset:CounterDataset[L, F]): Array[Array[Double]] = {
@@ -178,6 +180,20 @@ class RFClassifier[L, F](numTrees:Int = 100,
       logger.debug(s"Built $treeCount/$numTrees decision trees of depth $maxTreeDepth.")
     }
     t
+  }
+
+  def printContingencyTables(tables:Array[Array[(Counter[Int], Counter[Int])]], thresholds:Array[Array[Double]]) {
+    println(s"Tables for ${tables.length} features.")
+    for(f <- tables.indices) {
+      if(tables(f) != null) {
+        println(s"Tables for feature $f")
+        for (t <- tables(f).indices) {
+          println(s"\tThreshold ${thresholds(f)(t)}:")
+          println(s"\t\tSMALLER: ${tables(f)(t)._1}")
+          println(s"\t\tGREATER: ${tables(f)(t)._2}")
+        }
+      }
+    }
   }
 
   def updateContingencyTables(features:Array[Int],
@@ -267,6 +283,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     val overallLabels = job.labelCounts
     // update contingency tables for the selected features that had zero values in this job
     updateContingencyTables(currentFeatureIndices, contingencyTables, overallLabels)
+    //printContingencyTables(contingencyTables, job.featureThresholds)
 
     //
     // find feature with highest utility
@@ -292,7 +309,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     // otherwise, construct a non-terminal node on the best split and recurse
     //
     else {
-      logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
+      // logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
 
       val newActiveNodes = new mutable.HashSet[(Int, Double)]()
       newActiveNodes ++= activeNodes
@@ -356,7 +373,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     */
 
     // bail out if any of the splits is empty
-    if(leftCounter.size == 0 || rightCounter.size == 0) {
+    if(leftCounter.getTotal == 0 || rightCounter.getTotal == 0) {
       return None
     }
 
@@ -377,9 +394,10 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   /** Randomly picks selectedFeats features between 0 .. numFeats */
   def randomFeatureSelection(numFeats:Int, selectedFeats:Int, random:Random):Array[Int] = {
+    val allFeats = MathUtils.randomize((0 until numFeats).toArray, random)
     var feats = new ArrayBuffer[Int]()
     for(i <- 0 until selectedFeats) {
-      feats += random.nextInt(numFeats)
+      feats += allFeats(i)
     }
     feats.toArray
   }
@@ -400,8 +418,17 @@ class RFClassifier[L, F](numTrees:Int = 100,
             random:Random,
             offset:Int):RFJob[L, F] = {
     val bagIndices = new ArrayBuffer[Int]()
-    for(i <- 0 until length) {
-      bagIndices += indices(random.nextInt(indices.length))
+
+    if(length == indices.length) {
+      // just copy all indices in this situation
+      for(i <- indices) {
+        bagIndices += i
+      }
+    } else {
+      // proper sampling with replacement
+      for (i <- 0 until length) {
+        bagIndices += indices(random.nextInt(indices.length))
+      }
     }
     new RFJob[L, F](dataset, bagIndices.toArray, thresholds, new Random(RANDOM_SEED + offset))
   }
@@ -538,6 +565,8 @@ trait RFTree {
         else nonTerm.right.get.apply(datum)
     }
   }
+
+  def toPrettyString[L, F](ind:Int, featureLexicon:Lexicon[F], labelLexicon:Lexicon[L]):String
 }
 
 class RFLeaf(ls:Counter[Int]) extends RFTree {
@@ -554,17 +583,32 @@ class RFLeaf(ls:Counter[Int]) extends RFTree {
     labels.foreach(l => b.append(l.toString))
     b.toString()
   }
+
+  override def toPrettyString[L, F](ind:Int, featureLexicon:Lexicon[F], labelLexicon:Lexicon[L]):String = {
+    val b = new StringBuilder
+    b.append(indent(ind))
+    labels.foreach(l => {
+      for(lk <- l.keySet) {
+        b.append(s"(${labelLexicon.get(lk)} ${l.getCount(lk)}) ")
+      }
+    })
+    b.toString()
+  }
+
 }
 
 class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
   def decision = Some(f, t)
+
   def labels = None
+
   def left = Some(l)
+
   def right = Some(r)
 
-  override def toString:String = toString(0)
+  override def toString: String = toString(0)
 
-  override def toString(ind:Int):String = {
+  override def toString(ind: Int): String = {
     val b = new StringBuilder
     b.append(indent(ind))
     decision.foreach(d => {
@@ -578,6 +622,21 @@ class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
     })
     b.toString()
   }
+
+  override def toPrettyString[L, F](ind: Int, featureLexicon: Lexicon[F], labelLexicon: Lexicon[L]): String = {
+    val b = new StringBuilder
+    b.append(indent(ind))
+    decision.foreach(d => {
+      b.append(featureLexicon.get(d._1).toString)
+      b.append(" ")
+      b.append(d._2.toString)
+      b.append("\n")
+      left.foreach(l => b.append(l.toPrettyString(ind + 2, featureLexicon, labelLexicon)))
+      b.append("\n")
+      right.foreach(r => b.append(r.toPrettyString(ind + 2, featureLexicon, labelLexicon)))
+    })
+    b.toString()
+  }
 }
 
 object RFClassifier {
@@ -588,6 +647,6 @@ object RFClassifier {
   /** Decides how many features to use in each node */
   def featuresPerNode(numFeats:Int):Int = {
     numFeats
-    // math.sqrt(numFeats).toInt
+    //math.sqrt(numFeats).toInt
   }
 }

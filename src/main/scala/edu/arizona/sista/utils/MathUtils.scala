@@ -1,7 +1,8 @@
 package edu.arizona.sista.utils
 
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import java.util.Random
+
+import scala.util
 
 /**
  * Math utility methods useful for stats and ML
@@ -179,7 +180,7 @@ object MathUtils {
   val LogTolerance:Double = 30.0
   val LogToleranceFloat:Float = 20.0f
 
-  def randomize[T](l: Array[T], rand:Random): Array[T] = {
+  def randomize[T](l: Array[T], rand:util.Random): Array[T] = {
     for (i <- l.length - 1 to 1 by -1) {
       val j = rand.nextInt(i)
       val tmp = l(j)

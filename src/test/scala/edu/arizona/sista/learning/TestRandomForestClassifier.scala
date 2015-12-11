@@ -9,13 +9,15 @@ import org.scalatest._
  */
 class TestRandomForestClassifier extends FlatSpec with Matchers {
   "RandomForestClassifier" should "have an accuracy > .96 on this dataset" in {
+    /*
     val classifier = new RandomForestClassifier[Int, String](
       numTrees = 1000,
       featureSampleRatio = -0.50,
       maxTreeDepth = 0)
-
-    // MS: let's disable this; it takes forever
+    */
     /*
+    val classifier = new RFClassifier[Int, String](numTrees = 1000, maxTreeDepth = 10)
+
     val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
     classifier.train(dataset)
 
