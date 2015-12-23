@@ -1,6 +1,6 @@
 name := "processors"
 
-version := "5.7.3-SNAPSHOT"
+version := "5.7.3"
 
 organization := "org.clulab"
 
