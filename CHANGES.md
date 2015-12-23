@@ -1,4 +1,5 @@
 # Changes
++ **5.7.3** - Added support for context entities: species, organs, cell lines, cell types.
 + **5.7.2** - Keep matched syntactic paths in event/relation mentions. Added support for trigger matching from the state.
 + **5.7.1** - Made Odin event mentions friendlier for event coreference.
 + **5.7.0** - Added chunker for shallow syntax based on the CoNLL-2000 shared task. Improved Odin's Java API. Several bugfixes.
