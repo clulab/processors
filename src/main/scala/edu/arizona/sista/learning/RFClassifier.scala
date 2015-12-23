@@ -265,6 +265,11 @@ class RFClassifier[L, F](numTrees:Int = 100,
       return new RFLeaf(job.labelDist)
     }
 
+    // the remaining dataset is too small
+    if(job.indices.length < 10) {
+      return new RFLeaf(job.labelDist)
+    }
+
     //
     // randomly select a subset of features
     //
@@ -378,7 +383,9 @@ class RFClassifier[L, F](numTrees:Int = 100,
     }
 
     // we skip the entropy of the parent node because it is constant for all features
-    val ig =  - entropy(leftCounter) - entropy(rightCounter)
+    val leftWeight = leftCounter.getTotal / (leftCounter.getTotal + rightCounter.getTotal)
+    val rightWeight = rightCounter.getTotal / (leftCounter.getTotal + rightCounter.getTotal)
+    val ig =  - (leftWeight * entropy(leftCounter)) - (rightWeight * entropy(rightCounter))
     Some(ig)
   }
 
