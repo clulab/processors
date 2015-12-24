@@ -39,7 +39,7 @@ class BioNER {
 
   def train(path:String) = {
     crfClassifier = Some(mkClassifier())
-    val trainCorpus = readData(path, BioNER.USE_IO)
+    val trainCorpus = readData(path)
     crfClassifier.foreach(_.train(trainCorpus))
   }
 
@@ -55,19 +55,21 @@ class BioNER {
     val labels = new ListBuffer[String]
     val predictions = crfClassifier.get.classify(sentence)
     for(l <- predictions) {
-      labels += reverseNormalize(l.getString(classOf[AnswerAnnotation]))
+      labels += l.getString(classOf[AnswerAnnotation])
     }
-    if(BioNER.USE_IO) ioToIob(labels.toList)
     labels.toList
   }
 
   def test(path:String): List[List[(String, String)]] = {
-    val testCorpus = readData(path, convertToIOFormat = false)
+    val testCorpus = readData(path)
     val outputs = new ListBuffer[List[(String, String)]]
     for(sentence <- testCorpus) {
       val golds = fetchGoldLabels(sentence.asScala.toList)
       val preds = classify(sentence).toArray
-      outputs += golds.zip(preds)
+      val outputPerSent = golds.zip(preds)
+      outputs += outputPerSent
+
+      // println(outputPerSent)
     }
     outputs.toList
   }
@@ -76,10 +78,8 @@ class BioNER {
 object BioNER {
   val logger = LoggerFactory.getLogger(classOf[BioNER])
 
-  val USE_IO = false
-
   /** Reads IOB data directly into Java lists, because the CRF needs the data of this type */
-  def readData(path: String, convertToIOFormat: Boolean): JavaList[JavaList[CoreLabel]] = {
+  def readData(path: String): JavaList[JavaList[CoreLabel]] = {
     val sentences = new util.ArrayList[JavaList[CoreLabel]]()
     var crtSentence = new util.ArrayList[CoreLabel]()
     var totalTokens = 0
@@ -87,11 +87,12 @@ object BioNER {
       val trimmed = line.trim
       if (trimmed.isEmpty) {
         if (crtSentence.size() > 0) {
+          postProcessTags(crtSentence)
           sentences.add(crtSentence)
           crtSentence = new util.ArrayList[CoreLabel]()
         }
       } else {
-        crtSentence.add(mkCoreLabel(trimmed, convertToIOFormat))
+        crtSentence.add(mkCoreLabel(trimmed))
         totalTokens += 1
       }
     }
@@ -99,43 +100,31 @@ object BioNER {
     sentences
   }
 
-  def mkCoreLabel(line: String, convertToIOFormat: Boolean): CoreLabel = {
+  def mkCoreLabel(line: String): CoreLabel = {
     val l = new CoreLabel()
     val bits = line.split("\\s+") // robustSplit(line, 3)
     assert(bits.length == 4)
+    l.setOriginalText(bits(0))
     l.setWord(bits(0))
     l.setTag(bits(1))
     l.setLemma(bits(2))
 
-    val label = normalizeLabel(bits(3), convertToIOFormat)
+    val label = bits(3)
     l.setNER(label)
     l.set(classOf[AnswerAnnotation], label)
     l
   }
 
-  def normalizeLabel(l: String, convertToIOFormat: Boolean): String = l match {
-    case "B-Gene_or_gene_product" => if (convertToIOFormat) "I-GENE" else "B-GENE"
-    case "I-Gene_or_gene_product" => "I-GENE"
-    case _ => "O"
-  }
-
-  def reverseNormalize(l: String) =
-    l match {
-      case RuleNER.OUTSIDE_LABEL => RuleNER.OUTSIDE_LABEL
-      case _ => BioNLPProcessor.NORMALIZED_LABELS.get(l).get // TODO: we should remove normalizeLabel and reverseNormalize
+  /**
+    * Fixes common POS tagging mistakes, using the same code used by BioNLPProcessor at runtime
+    * @param sentence List of tokens in one sentence
+    */
+  def postProcessTags(sentence:JavaList[CoreLabel]): Unit = {
+    val tokens = new Array[CoreLabel](sentence.size())
+    for(i <- 0 until sentence.size()) {
+      tokens(i) = sentence.get(i)
     }
-
-  def ioToIob(labels:List[String]):List[String] = {
-    val converted = new ListBuffer[String]
-    var prev:String = null
-    for(label <- labels) {
-      if(label.startsWith("I-") && prev != null && prev != label)
-        converted += "B-" + label.substring(2)
-      else
-        converted += label
-      prev = label
-    }
-    converted.toList
+    BioNLPProcessor.postprocessCoreLabelTags(tokens)
   }
 
   /** Splits a line into k tokens, knowing that the left-most one might contain spaces */

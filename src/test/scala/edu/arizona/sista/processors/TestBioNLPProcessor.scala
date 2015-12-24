@@ -38,7 +38,7 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
 
   it should "recognize correct NEs in text 2" in {
     val doc = proc.mkDocument(
-      "Identification of complex formation between two intracellular tyrosine kinase substrates: human c-Rel and the p105 precursor of p50 NF-kappa B. " +
+      "Identification of complex formation between two intracellular tyrosine kinase substrates: mouse c-Rel and the p105 precursor of p50 NF-kappa B. " +
       "Immune complexes of the product of the c-rel protooncogene and of p105, the p50 NF-kappa B precursor, isolated from human T-lymphoblastoid cell lines are comprised of multiple proteins. " +
       "Only p105 and human c-Rel (hc-Rel) are common to complexes precipitated with antiserum directed against either p105 or hc-Rel. " +
       "Both proteins are inducible by phytohemagglutinin (PHA) and phorbol 12-myristate 13-acetate (PMA) and their subcellular distribution is affected by this induction. " +

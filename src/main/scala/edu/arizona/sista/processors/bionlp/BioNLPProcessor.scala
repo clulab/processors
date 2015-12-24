@@ -76,63 +76,10 @@ class BioNLPProcessor (internStrings:Boolean = true,
    */
   override def postprocessTags(annotation:Annotation) {
     val sas = annotation.get(classOf[SentencesAnnotation])
-    val hyphPat = """(^[a-zA-Z0-9-]+-[A-Z0-9][a-zA-Z0-9-]*)""".r
 
     sas.foreach{ sa =>
       val tas = sa.get(classOf[TokensAnnotation]).toList.toArray
-
-      //
-      // some of our would-be verbs are mistagged...
-      //
-      tas.foreach{ ta =>
-        val text = ta.originalText()
-        text match {
-          case ubiq if ubiq.toLowerCase.endsWith("ubiquitinates") => ta.setTag("VBZ")
-          case ubiqNom if ubiqNom.toLowerCase.endsWith("ubiquitinate") => ta.setTag("VB")
-          case hydro if hydro.toLowerCase.endsWith("hydrolyzes") => ta.setTag("VBZ")
-          case aids if aids.toLowerCase == "aids" && aids != "AIDS" => ta.setTag("VBZ")
-          case human if human.toLowerCase == "human" => ta.setTag("NN") // Modified by Enrique for context 07/20/15
-          case glyc if glyc.toLowerCase == "glycosylates" => ta.setTag("VBZ")
-          case _ => ()
-        }
-      }
-
-      //
-      // change VBN to JJ if in between DT and NN
-      // e.g.: "XRCC1 is phosphorylated by the co-immunoprecipitated DNA-PK" => "co-immunoprecipitated" should be JJ
-      //
-      for(i <- tas.indices) {
-        if(i > 0 && i < tas.length - 1 &&
-          tas(i).tag() == "VBN" &&
-          tas(i - 1).tag().startsWith("DT") &&
-          tas(i + 1).tag().startsWith("NN")) {
-          tas(i).setTag("JJ")
-        }
-      }
-
-      //
-      // parens must be tagged -LRB- and -RRB-
-      // this improves parsing a lot!
-      //
-      tas.foreach { ta =>
-        val text = ta.originalText()
-        text match {
-          case "(" => ta.setTag("-LRB-")
-          case ")" => ta.setTag("-RRB-")
-          case _ =>
-        }
-      }
-
-      //
-      // Capitalized hyphenated words at beginning of sentence -> NNP
-      // e.g. "K-Ras phosphorylates p53."
-      tas.foreach { ta =>
-        val text = ta.originalText()
-        text match {
-          case hyphen if ta.index == 1 && (hyphPat findFirstIn hyphen).nonEmpty => ta.setTag("NNP")
-          case _ => ()
-        }
-      }
+      postprocessCoreLabelTags(tas)
     }
   }
 
@@ -330,6 +277,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
     val output = new util.ArrayList[CoreLabel]()
     for(i <- 0 until sentence.size) {
       val l = new CoreLabel()
+      l.setOriginalText(sentence.words(i))
       l.setWord(sentence.words(i))
       l.setTag(sentence.tags.get(i))
       l.setLemma(sentence.lemmas.get(i))
@@ -361,4 +309,67 @@ object BioNLPProcessor {
     "B-GENE" -> "B-Gene_or_gene_product",
     "I-GENE" -> "I-Gene_or_gene_product"
   )
+
+  /**
+    * Fixes some common POS tagging mistakes (in place, using CoreLabel.setTag)
+    * Note: this function is used by the CRF-based BioNER to cleanup its training data (from BioCreative 2).
+    *       This means that everytime there are changes here, the CRF should be retrained. Tell Mihai.
+    * @param tas arrays of tokens stored as CoreNLP CoreLabel
+    */
+  def postprocessCoreLabelTags(tas:Array[CoreLabel]): Unit = {
+    val hyphPat = """(^[a-zA-Z0-9-]+-[A-Z0-9][a-zA-Z0-9-]*)""".r
+
+    //
+    // some of our would-be verbs are mistagged...
+    //
+    tas.foreach{ ta =>
+      val text = ta.originalText()
+      text match {
+        case ubiq if ubiq.toLowerCase.endsWith("ubiquitinates") => ta.setTag("VBZ")
+        case ubiqNom if ubiqNom.toLowerCase.endsWith("ubiquitinate") => ta.setTag("VB")
+        case hydro if hydro.toLowerCase.endsWith("hydrolyzes") => ta.setTag("VBZ")
+        case aids if aids.toLowerCase == "aids" && aids != "AIDS" => ta.setTag("VBZ")
+        case human if human.toLowerCase == "human" => ta.setTag("NN") // Modified by Enrique for context 07/20/15
+        case glyc if glyc.toLowerCase == "glycosylates" => ta.setTag("VBZ")
+        case _ => ()
+      }
+    }
+
+    //
+    // change VBN to JJ if in between DT and NN
+    // e.g.: "XRCC1 is phosphorylated by the co-immunoprecipitated DNA-PK" => "co-immunoprecipitated" should be JJ
+    //
+    for(i <- tas.indices) {
+      if(i > 0 && i < tas.length - 1 &&
+        tas(i).tag() == "VBN" &&
+        tas(i - 1).tag().startsWith("DT") &&
+        tas(i + 1).tag().startsWith("NN")) {
+        tas(i).setTag("JJ")
+      }
+    }
+
+    //
+    // parens must be tagged -LRB- and -RRB-
+    // this improves parsing a lot!
+    //
+    tas.foreach { ta =>
+      val text = ta.originalText()
+      text match {
+        case "(" => ta.setTag("-LRB-")
+        case ")" => ta.setTag("-RRB-")
+        case _ =>
+      }
+    }
+
+    //
+    // Capitalized hyphenated words at beginning of sentence -> NNP
+    // e.g. "K-Ras phosphorylates p53."
+    tas.foreach { ta =>
+      val text = ta.originalText()
+      text match {
+        case hyphen if ta.index == 1 && (hyphPat findFirstIn hyphen).nonEmpty => ta.setTag("NNP")
+        case _ => ()
+      }
+    }
+  }
 }
