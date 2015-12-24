@@ -147,17 +147,6 @@ class BioNLPProcessor (internStrings:Boolean = true,
       }
     }
 
-    // TODO Enrique
-    /*
-    if(withContext) {
-      // run the rule-based NER on one sentence at a time
-      for(sentence <- doc.sentences) {
-        val contextLabels = Some(contextRules.find(sentence))
-        // merge them into sentence.entities giving higher priority to ruleNer!
-      }
-    }
-    */
-
     if (withCRFNER) {
       // run the CRF NER on one sentence at a time
       // we are traversing our sentences and the CoreNLP sentences in parallel here!
@@ -169,9 +158,22 @@ class BioNLPProcessor (internStrings:Boolean = true,
 
         // build the NER input
         val inputSent = mkSent(ourSentence)
+        /*
+        println("Input sentence:")
+        for(i <- 0 until inputSent.size()) {
+          val t = inputSent.get(i)
+          println("\t" + t.word() + " " + t.tag() + " " + t.lemma())
+        }
+        */
 
         // the actual sequence classification
         val bioNEs = bioNer.classify(inputSent).toArray
+
+        /*
+        if(ourSentence.entities.isDefined)
+          println(s"""ENTITIES FROM RULE-NER: ${ourSentence.entities.get.mkString(" ")}""")
+        println(s""" ENTITIES FROM CRF-NER: ${bioNEs.mkString(" ")}""")
+        */
 
         // store labels in the CoreNLP annotation for the sentence
         var labelOffset = 0
@@ -187,6 +189,8 @@ class BioNLPProcessor (internStrings:Boolean = true,
         } else {
           ourSentence.entities = Some(bioNEs)
         }
+
+        // println(s"""ENTITIES AFTER MERGING: ${ourSentence.entities.get.mkString(" ")}""")
 
         // post-processing
         postProcessNamedEntities(ourSentence)

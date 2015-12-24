@@ -70,11 +70,13 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
       if(bestSpanOffset != -1) {
         assert(bestSpan > 0)
         val label = matchers(bestSpanOffset)._1
+        //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
         labels += "B-" + label
         for(i <- 1 until bestSpan) {
           labels += "I-" + label
         }
         offset += bestSpan
+        //println(s"Will continue matching starting at $offset")
       } else {
         labels += OUTSIDE_LABEL
         offset += 1
