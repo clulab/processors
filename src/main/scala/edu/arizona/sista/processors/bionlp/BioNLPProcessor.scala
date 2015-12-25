@@ -86,6 +86,7 @@ class BioNLPProcessor (internStrings:Boolean = true,
   override def recognizeNamedEntities(doc:Document) {
     val annotation = namedEntitySanityCheck(doc)
     if(annotation.isEmpty) return
+    val verboseMerge = false
 
     if(withRuleNER) {
       // run the rule-based NER on one sentence at a time
@@ -116,11 +117,11 @@ class BioNLPProcessor (internStrings:Boolean = true,
         // the actual sequence classification
         val bioNEs = bioNer.classify(inputSent).toArray
 
-        /*
-        if(ourSentence.entities.isDefined)
-          println(s"""ENTITIES FROM RULE-NER: ${ourSentence.entities.get.mkString(" ")}""")
-        println(s""" ENTITIES FROM CRF-NER: ${bioNEs.mkString(" ")}""")
-        */
+        if(verboseMerge) {
+          if (ourSentence.entities.isDefined)
+            println( s"""ENTITIES FROM RULE-NER: ${ourSentence.entities.get.mkString(" ")}""")
+          println( s""" ENTITIES FROM CRF-NER: ${bioNEs.mkString(" ")}""")
+        }
 
         // store labels in the CoreNLP annotation for the sentence
         var labelOffset = 0
@@ -129,15 +130,22 @@ class BioNLPProcessor (internStrings:Boolean = true,
           labelOffset += 1
         }
 
+        // BC2 annotations include context information in gene names (e.g., species)
+        // Here, we remove context info if they appear at the beginning of gene names,
+        //   because they are annotated by our RuleNER, and we want both the context and the gene in our output!
+        removeContextFromBeginningOfGenes(bioNEs, ourSentence.entities.get)
+
         // store labels in our sentence
         // the rule-based NER labels take priority!
+        // TODO: change to prefer longest entity here??
         if(ourSentence.entities.isDefined) {
           RuleNER.mergeLabels(ourSentence.entities.get, bioNEs)
         } else {
           ourSentence.entities = Some(bioNEs)
         }
 
-        // println(s"""ENTITIES AFTER MERGING: ${ourSentence.entities.get.mkString(" ")}""")
+        if(verboseMerge)
+          println(s"""ENTITIES AFTER MERGING: ${ourSentence.entities.get.mkString(" ")}""")
 
         // post-processing
         postProcessNamedEntities(ourSentence)
@@ -147,6 +155,34 @@ class BioNLPProcessor (internStrings:Boolean = true,
         sentenceOffset += 1
       }
     }
+  }
+
+  def removeContextFromBeginningOfGenes(bc2Labels:Array[String], labelsWithContext:Array[String]): Unit = {
+    assert(bc2Labels.length == labelsWithContext.length)
+    val gene = "Gene_or_gene_product"
+    var i = 0
+    while(i < bc2Labels.length) {
+      // found species names at the beginning of a gene name!
+      if(bc2Labels(i) == s"B-$gene" && beginsContext(labelsWithContext(i))) {
+        val contextEnd = findEntityEnd(i, labelsWithContext)
+        while(i < contextEnd) {
+          // Ok to set the context labels to O here; they will be picked again during the merge of ruleNer and CRF
+          bc2Labels(i) = RuleNER.OUTSIDE_LABEL
+          i += 1
+        }
+        if(i < bc2Labels.length && bc2Labels(i) == s"I-$gene") {
+          // start the gene name after the species
+          bc2Labels(i) = s"B-$gene"
+        }
+      } else {
+        i += 1
+      }
+    }
+  }
+
+  def beginsContext(label:String):Boolean = {
+    if(label == "B-Species" || label == "B-Organ" || label == "B-CellType" || label == "B-CellLine") true
+    else false
   }
 
   /**
