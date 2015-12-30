@@ -19,13 +19,13 @@ class ActionMirror(actions: Actions) {
       action().asInstanceOf[Action]
     } else if (returnType =:= typeOf[Seq[Mention]]) {
       // def action(mentions: Seq[Mention], state: State): Seq[Mention]
-      (ms: Seq[Mention], st: State) => {
-        action(ms, st).asInstanceOf[Seq[Mention]]
+      (mentions: Seq[Mention], state: State) => {
+        action(mentions, state).asInstanceOf[Seq[Mention]]
       }
     } else if (returnType =:= typeOf[JList[Mention]]) {
       // java.util.List<Mention> action(java.util.List<Mention> mentions, State state)
-      (ms: Seq[Mention], st: State) => {
-        action(ms.asJava, st).asInstanceOf[JList[Mention]].asScala
+      (mentions: Seq[Mention], state: State) => {
+        action(mentions.asJava, state).asInstanceOf[JList[Mention]].asScala
       }
     } else {
       sys.error(s"invalid action '$name'")
