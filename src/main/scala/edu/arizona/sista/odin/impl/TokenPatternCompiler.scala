@@ -164,40 +164,40 @@ class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
   }
 
   def greedyOptional: ProgramFragment = {
-    val epsilon = Jump()
+    val epsilon = Pass()
     val split = Split(in, epsilon)
     ProgramFragment(split, epsilon +: out)
   }
 
   def lazyOptional: ProgramFragment = {
-    val epsilon = Jump()
+    val epsilon = Pass()
     val split = Split(epsilon, in)
     ProgramFragment(split, epsilon +: out)
   }
 
   def greedyKleene: ProgramFragment = {
-    val epsilon = Jump()
+    val epsilon = Pass()
     val split = Split(in, epsilon)
     setOut(split)
     ProgramFragment(split, epsilon)
   }
 
   def lazyKleene: ProgramFragment = {
-    val epsilon = Jump()
+    val epsilon = Pass()
     val split = Split(epsilon, in)
     setOut(split)
     ProgramFragment(split, epsilon)
   }
 
   def greedyPlus: ProgramFragment = {
-    val epsilon = Jump()
+    val epsilon = Pass()
     val split = Split(in, epsilon)
     setOut(split)
     ProgramFragment(in, epsilon)
   }
 
   def lazyPlus: ProgramFragment = {
-    val epsilon = Jump()
+    val epsilon = Pass()
     val split = Split(epsilon, in)
     setOut(split)
     ProgramFragment(in, epsilon)

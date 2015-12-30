@@ -65,7 +65,7 @@ object ThompsonVM {
       ): Seq[Thread] = is match {
         case Nil => ts
         case (i, gs, ms, pgs) :: rest => i match {
-          case i: Jump => loop((i.next, gs, ms, pgs) :: rest, ts)
+          case i: Pass => loop((i.next, gs, ms, pgs) :: rest, ts)
           case i: Split => loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
           case i: SaveStart => loop((i.next, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
           case i: SaveEnd => pgs match {
@@ -225,7 +225,7 @@ case class MatchSentenceEnd() extends Inst {
   def dup() = copy()
 }
 
-case class Jump() extends Inst {
+case class Pass() extends Inst {
   def dup() = copy()
 }
 
