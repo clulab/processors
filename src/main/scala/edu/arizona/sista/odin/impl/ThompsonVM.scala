@@ -61,9 +61,9 @@ object ThompsonVM {
       @annotation.tailrec
       def loop(
           is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-          ts: Seq[Thread]
+          ts: List[Thread]
       ): Seq[Thread] = is match {
-        case Nil => ts
+        case Nil => ts.reverse
         case (i, gs, ms, pgs) :: rest => i match {
           case i: Pass => loop((i.next, gs, ms, pgs) :: rest, ts)
           case i: Split => loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
@@ -74,7 +74,7 @@ object ThompsonVM {
               loop((i.next, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
             case _ => sys.error("unable to close capture")
           }
-          case i => loop(rest, ts :+ SingleThread(tok, i, gs, ms, pgs))
+          case i => loop(rest, SingleThread(tok, i, gs, ms, pgs) :: ts)
         }
       }
       // return threads produced by `inst`
