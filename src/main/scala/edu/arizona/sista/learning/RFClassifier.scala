@@ -20,9 +20,11 @@ import scala.util.Random
   * Date: 11/23/15
   */
 class RFClassifier[L, F](numTrees:Int = 100,
-                         maxTreeDepth:Int = 0, // 0 means unlimited tree depth
+                         maxTreeDepth:Int = 20, // 0 means unlimited tree depth
                          numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
-                         trainBagPct:Double = 0.66) extends Classifier[L, F] with Serializable {
+                         trainBagPct:Double = 0.66, // how much data to use per tree
+                         splitTooSmallPct:Double = 0.01) // 0 means no split is too small
+  extends Classifier[L, F] with Serializable {
   var trees:Option[Array[RFTree]] = None
 
   var verbose = false
@@ -262,13 +264,16 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
     // reached maximum depth
     if(maxTreeDepth > 0 && activeNodes.size > maxTreeDepth) {
+      //logger.debug(s"Found termination condition at depth ${activeNodes.size}")
       return new RFLeaf(job.labelDist)
     }
 
     // the remaining dataset is too small
-    if(job.indices.length < 10) {
+    if(splitTooSmallPct > 0 && job.indices.length < splitTooSmallPct * job.dataset.size) {
+      //logger.debug(s"Found termination condition due to dataset too small: ${job.indices.length}")
       return new RFLeaf(job.labelDist)
     }
+
 
     //
     // randomly select a subset of features
@@ -314,7 +319,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     // otherwise, construct a non-terminal node on the best split and recurse
     //
     else {
-      // logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
+      //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
 
       val newActiveNodes = new mutable.HashSet[(Int, Double)]()
       newActiveNodes ++= activeNodes
@@ -653,7 +658,7 @@ object RFClassifier {
 
   /** Decides how many features to use in each node */
   def featuresPerNode(numFeats:Int):Int = {
-    numFeats
-    //math.sqrt(numFeats).toInt
+    //numFeats
+    math.sqrt(numFeats).toInt
   }
 }

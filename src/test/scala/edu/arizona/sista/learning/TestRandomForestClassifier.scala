@@ -15,8 +15,8 @@ class TestRandomForestClassifier extends FlatSpec with Matchers {
       featureSampleRatio = -0.50,
       maxTreeDepth = 0)
     */
-    /*
-    val classifier = new RFClassifier[Int, String](numTrees = 1000, maxTreeDepth = 10)
+
+    val classifier = new RFClassifier[Int, String](numTrees = 100, maxTreeDepth = 20)
 
     val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
     classifier.train(dataset)
@@ -33,6 +33,5 @@ class TestRandomForestClassifier extends FlatSpec with Matchers {
     val acc = correct.toDouble / total.toDouble
     println("Accuracy: " + acc)
     acc should be > 0.96
-    */
   }
 }
