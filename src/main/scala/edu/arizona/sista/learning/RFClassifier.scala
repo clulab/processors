@@ -23,7 +23,8 @@ class RFClassifier[L, F](numTrees:Int = 100,
                          maxTreeDepth:Int = 20, // 0 means unlimited tree depth
                          numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
                          trainBagPct:Double = 0.66, // how much data to use per tree
-                         splitTooSmallPct:Double = 0.01) // 0 means no split is too small
+                         splitTooSmallPct:Double = 0.01, // 0 means no split is too small
+                         howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt) // how many features to use per node, as a function of total feature count
   extends Classifier[L, F] with Serializable {
   var trees:Option[Array[RFTree]] = None
 
@@ -280,7 +281,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     //
     val currentFeatureIndices = randomFeatureSelection(
       job.dataset.numFeatures,
-      featuresPerNode(job.dataset.numFeatures),
+      howManyFeaturesPerNode(job.dataset.numFeatures),
       job.random)
 
 
@@ -656,9 +657,11 @@ object RFClassifier {
 
   val RANDOM_SEED = 1
 
-  /** Decides how many features to use in each node */
-  def featuresPerNode(numFeats:Int):Int = {
-    //numFeats
+  /** How many features to use in each node: sqrt(total feature count) */
+  def featuresPerNodeSqrt(numFeats:Int):Int = {
     math.sqrt(numFeats).toInt
   }
+
+  /** Use all features in each node */
+  def featuresPerNodeAll(numFeats:Int):Int = numFeats
 }
