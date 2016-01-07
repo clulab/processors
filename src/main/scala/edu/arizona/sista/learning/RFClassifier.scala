@@ -103,30 +103,40 @@ class RFClassifier[L, F](numTrees:Int = 100,
     logger.debug("Computing feature thresholds...")
 
     // store all seen feature values
-    val featureValues = new Array[mutable.HashSet[Double]](featureLexicon.get.size)
+    val featureValues = new Array[Counter[Double]](featureLexicon.get.size)
     for(f <- featureValues.indices)
-      featureValues(f) = new mutable.HashSet[Double]()
+      featureValues(f) = new Counter[Double]()
     for(i <- dataset.indices) {
       val c = dataset.featuresCounter(i)
       for(f <- c.keySet) {
-        featureValues(f) += c.getCount(f)
+        featureValues(f).incrementCount(c.getCount(f))
       }
     }
+    // because we have a sparse representation, 0 values must be explicitly added for all features
     for(f <- featureValues.indices)
-      featureValues(f) += 0
+      featureValues(f).incrementCount(0)
 
     // compute thresholds
     val thresholds = new Array[Array[Double]](featureValues.length)
     var thresholdCount = 0
     for(f <- featureValues.indices) {
-      val sortedValues = featureValues(f).toArray.sorted
-      assert(sortedValues.length > 1)
       val featThresholds = new ArrayBuffer[Double]()
-      for(i <- 0 until sortedValues.length - 1) {
-        featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
-        thresholdCount += 1
-      }
-      // TODO: if the feature has more than MAX_THRESHOLDS thresholds, use quantiles instead
+
+      if(featureValues(f).size > RFClassifier.QUANTILE_THRESHOLD) {
+        // too many feature values; use quantiles instead
+        val quantileValues = quantiles(featureValues(f), RFClassifier.QUANTILE_THRESHOLD)
+        featThresholds ++= quantileValues
+        thresholdCount += quantileValues.length
+
+      } else {
+        val sortedValues = featureValues(f).sorted(descending = false).map(_._1)
+        assert(sortedValues.length > 1)
+        for (i <- 0 until sortedValues.length - 1) {
+          featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
+          thresholdCount += 1
+        }
+     }
+
       thresholds(f) = featThresholds.toArray
     }
 
@@ -155,7 +165,6 @@ class RFClassifier[L, F](numTrees:Int = 100,
         featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
         thresholdCount += 1
       }
-      // TODO: if the feature has more than MAX_THRESHOLDS thresholds, use quantiles instead
       thresholds += featThresholds.toArray
     }
     */
@@ -170,6 +179,28 @@ class RFClassifier[L, F](numTrees:Int = 100,
     }
 
     thresholds.toArray
+  }
+
+  /** Computes binCount-1 quantile values, such that the sequence of values is split into binCount bins */
+  def quantiles(values:Counter[Double], binCount:Int):Array[Double] = {
+    val sortedUniq = values.sorted(descending = false)
+    val sorted = new ArrayBuffer[Double]()
+    for(su <- sortedUniq) {
+      for(i <- 0 until su._2.toInt) {
+        sorted += su._1
+      }
+    }
+
+    val qs = new Array[Double](binCount - 1)
+    for(i <- qs.indices) {
+      val pos = sorted.length.toDouble * (i + 1).toDouble / binCount.toDouble
+      if(pos == pos.floor) {
+        qs(i) = (sorted(pos.toInt) + sorted(pos.toInt - 1)) / 2.0
+      } else {
+        qs(i) = sorted(pos.floor.toInt)
+      }
+    }
+    qs
   }
 
   var treeCount = 0
@@ -656,6 +687,8 @@ object RFClassifier {
   val logger = LoggerFactory.getLogger(classOf[RFClassifier[String, String]])
 
   val RANDOM_SEED = 1
+
+  val QUANTILE_THRESHOLD = 10
 
   /** How many features to use in each node: sqrt(total feature count) */
   def featuresPerNodeSqrt(numFeats:Int):Int = {

@@ -115,11 +115,14 @@ class Counter[T](
     dotproduct
   }
 
+  def sorted:List[(T, Double)] = sorted(true)
+
   /** Sorts counts in descending order */
-  def sorted:List[(T, Double)] = {
+  def sorted(descending:Boolean):List[(T, Double)] = {
     val vs = new ListBuffer[(T, Double)]
     for(k <- keySet) vs += new Tuple2(k, getCount(k))
-    vs.toList.sortBy(0 - _._2)
+    if(descending) vs.toList.sortBy(0 - _._2)
+    else vs.toList.sortBy(_._2)
   }
 
   override def toString:String = {
