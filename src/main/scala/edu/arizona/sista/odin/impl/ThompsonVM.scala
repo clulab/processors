@@ -85,7 +85,7 @@ object ThompsonVM {
     // Instruction is expected to be a Match instruction.
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
       case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
-        mkThreads(t.tok + 1, i.next, t.groups, t.mentions, t.partialGroups)  // token matched, return new threads
+        mkThreads(t.tok + 1, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceStart if t.tok == 0 =>
         mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
@@ -185,6 +185,7 @@ object ThompsonVM {
   }
 }
 
+// instruction
 sealed trait Inst {
   var next: Inst = null
   def dup(): Inst
@@ -195,46 +196,57 @@ sealed trait Inst {
   }
 }
 
-case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
-  def dup() = MatchLookAhead(start.deepcopy(), negative)
+// the pattern matched succesfully
+case object Done extends Inst {
+  def dup() = this
 }
 
-case class MatchLookBehind(start: Inst, size: Int, negative: Boolean) extends Inst {
-  def dup() = MatchLookBehind(start.deepcopy(), size, negative)
-}
-
-case class Split(lhs: Inst, rhs: Inst) extends Inst {
-  def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
-}
-
-case class MatchToken(c: TokenConstraint) extends Inst {
-  def dup() = copy()
-}
-
-case class MatchMention(m: StringMatcher, name: Option[String]) extends Inst {
-  def dup() = copy()
-}
-
-case class MatchSentenceStart() extends Inst {
-  def dup() = copy()
-}
-
-case class MatchSentenceEnd() extends Inst {
-  def dup() = copy()
-}
-
+// no operation
 case class Pass() extends Inst {
   def dup() = copy()
 }
 
+// split execution
+case class Split(lhs: Inst, rhs: Inst) extends Inst {
+  def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
+}
+
+// start capturing tokens
 case class SaveStart(name: String) extends Inst {
   def dup() = copy()
 }
 
+// end capturing tokens
 case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
 }
 
-case object Done extends Inst {
-  def dup() = this
+// matches token using token constraint
+case class MatchToken(c: TokenConstraint) extends Inst {
+  def dup() = copy()
+}
+
+// matches mention by label using string matcher
+case class MatchMention(m: StringMatcher, name: Option[String]) extends Inst {
+  def dup() = copy()
+}
+
+// matches sentence start
+case class MatchSentenceStart() extends Inst {
+  def dup() = copy()
+}
+
+// matches sentence end
+case class MatchSentenceEnd() extends Inst {
+  def dup() = copy()
+}
+
+// zero-width look-ahead assertion
+case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
+  def dup() = MatchLookAhead(start.deepcopy(), negative)
+}
+
+// zero-width look-behind assertion
+case class MatchLookBehind(start: Inst, size: Int, negative: Boolean) extends Inst {
+  def dup() = MatchLookBehind(start.deepcopy(), size, negative)
 }
