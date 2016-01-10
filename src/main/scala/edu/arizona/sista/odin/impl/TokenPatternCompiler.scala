@@ -112,8 +112,8 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
     atomicPattern ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?") ^^ {
       case frag ~ "?" => frag.greedyOptional
       case frag ~ "??" => frag.lazyOptional
-      case frag ~ "*" => frag.greedyKleene
-      case frag ~ "*?" => frag.lazyKleene
+      case frag ~ "*" => frag.greedyStar
+      case frag ~ "*?" => frag.lazyStar
       case frag ~ "+" => frag.greedyPlus
       case frag ~ "+?" => frag.lazyPlus
     }
@@ -175,14 +175,14 @@ class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
     ProgramFragment(split, epsilon +: out)
   }
 
-  def greedyKleene: ProgramFragment = {
+  def greedyStar: ProgramFragment = {
     val epsilon = Pass()
     val split = Split(in, epsilon)
     setOut(split)
     ProgramFragment(split, epsilon)
   }
 
-  def lazyKleene: ProgramFragment = {
+  def lazyStar: ProgramFragment = {
     val epsilon = Pass()
     val split = Split(epsilon, in)
     setOut(split)
@@ -215,7 +215,7 @@ class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
       val n = i - from.getOrElse(0)
       greedyOptional.repeat(n)
     }
-    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyKleene))
+    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyStar))
     ProgramFragment(fragments)
   }
 
@@ -231,7 +231,7 @@ class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
       val n = i - from.getOrElse(0)
       lazyOptional.repeat(n)
     }
-    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyKleene))
+    val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyStar))
     ProgramFragment(fragments)
   }
 
