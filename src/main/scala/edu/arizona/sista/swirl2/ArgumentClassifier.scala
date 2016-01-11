@@ -28,7 +28,7 @@ object ArgumentClassifier {
 
   val FEATURE_THRESHOLD = 5
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 1000
+  val MAX_TRAINING_DATUMS = 0 // 10000
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
@@ -91,9 +91,9 @@ class ArgumentClassifier {
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
+    //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    //classifier = new RFClassifier[String, String]() // , trainBagPct = 0.8, numThreads = 0)
+    classifier = new RFClassifier[String, String](maxTreeDepth = 0, utilityTooSmallThreshold = 0.001, howManyFeaturesPerNode = RFClassifier.featuresPerNodeTwoThirds) // , trainBagPct = 0.8, numThreads = 0)
 
     classifier match {
       case rfc:RandomForestClassifier[String, String] =>
@@ -112,6 +112,8 @@ class ArgumentClassifier {
         classifier.train(dataset)
     }
   }
+
+  def featuresPerNode(total:Int):Int = (0.66 * total).toInt // math.sqrt(total.toDouble).toInt
 
   def countLemmas(doc:Document): Unit = {
     for(s <- doc.sentences) {

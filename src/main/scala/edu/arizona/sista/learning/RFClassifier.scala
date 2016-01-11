@@ -20,9 +20,9 @@ import scala.util.Random
   * Date: 11/23/15
   */
 class RFClassifier[L, F](numTrees:Int = 100,
-                         maxTreeDepth:Int = 20, // 0 means unlimited tree depth
+                         maxTreeDepth:Int = 0, // 0 means unlimited tree depth
                          trainBagPct:Double = 0.66, // how much data to use per tree
-                         utilityTooSmallThreshold:Double = 0.01, // 0 means no utility is too small
+                         utilityTooSmallThreshold:Double = 0.001, // 0 means no utility is too small
                          splitTooSmallPct:Double = 0.01, // 0 means no split is too small
                          numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
                          howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt) // how many features to use per node, as a function of total feature count
@@ -218,7 +218,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   def buildTree(job:RFJob[L, F]):RFTree = {
     if(verbose) logger.debug(s"Starting build tree using job: $job")
-    val t = buildTree(job, Set[(Int, Double)]())
+    val t = buildTree(job, Set[(Int, Double)](), true)
 
     this.synchronized {
       treeCount += 1
@@ -303,7 +303,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
   }
 
   /** Constructs a single decision tree from the given dataset sample */
-  def buildTree(job:RFJob[L, F], activeNodes:Set[(Int, Double)]):RFTree = {
+  def buildTree(job:RFJob[L, F], activeNodes:Set[(Int, Double)], verbose:Boolean):RFTree = {
     //
     // termination condition: all datums have the same labels in this split
     //
@@ -374,6 +374,10 @@ class RFClassifier[L, F](numTrees:Int = 100,
     // otherwise, construct a non-terminal node on the best split and recurse
     //
     else {
+      if(verbose) {
+        // TODO: print dataset, feature, threshold, and utility values
+      }
+
       //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
 
       val newActiveNodes = new mutable.HashSet[(Int, Double)]()
@@ -381,8 +385,8 @@ class RFClassifier[L, F](numTrees:Int = 100,
       newActiveNodes += new Tuple2(best.get.feature, best.get.threshold)
       val newActiveNodesSet = newActiveNodes.toSet
       new RFNonTerminal(best.get.feature, best.get.threshold,
-        buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue), newActiveNodesSet),
-        buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue), newActiveNodesSet))
+        buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue), newActiveNodesSet, false),
+        buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue), newActiveNodesSet, false))
     }
   }
 
@@ -606,6 +610,12 @@ class RFJob[L, F](
     b.toString()
   }
 
+  def printDataset(): Unit = {
+    for(i <- indices) {
+      println(s"label:${dataset.labels(i)}\tfeatures:${dataset.featuresCounter(i)}")
+    }
+  }
+
   def labelDist:Counter[Int] = {
     val counts = labelCounts
     val proportions = new Counter[Int]
@@ -732,6 +742,11 @@ object RFClassifier {
   /** How many features to use in each node: sqrt(total feature count) */
   def featuresPerNodeSqrt(numFeats:Int):Int = {
     math.sqrt(numFeats).toInt
+  }
+
+  /** How many features to use in each node: 2/3 * (total feature count) */
+  def featuresPerNodeTwoThirds(numFeats:Int):Int = {
+    (2.0 * numFeats / 3.0).toInt
   }
 
   /** Use all features in each node */
