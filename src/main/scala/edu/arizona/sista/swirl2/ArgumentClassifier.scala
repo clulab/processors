@@ -23,12 +23,12 @@ object ArgumentClassifier {
   val logger = LoggerFactory.getLogger(classOf[ArgumentClassifier])
 
   val NUM_TREES = 100
-  val MAX_TREE_DEPTH = 0
+  val MAX_TREE_DEPTH = 20
   val NUM_THREADS = 4
 
   val FEATURE_THRESHOLD = 5
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 0 // 10000
+  val MAX_TRAINING_DATUMS = 1000
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
@@ -91,9 +91,9 @@ class ArgumentClassifier {
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
+    classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0) // , trainBagPct = 0.8, numThreads = 0)
+    //classifier = new RFClassifier[String, String]() // , trainBagPct = 0.8, numThreads = 0)
 
     classifier match {
       case rfc:RandomForestClassifier[String, String] =>
