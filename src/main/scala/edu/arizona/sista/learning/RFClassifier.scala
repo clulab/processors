@@ -217,8 +217,8 @@ class RFClassifier[L, F](numTrees:Int = 100,
   var treeCount = 0
 
   def buildTree(job:RFJob[L, F]):RFTree = {
-    if(verbose) logger.debug(s"Starting build tree using job: $job")
-    val t = buildTree(job, Set[(Int, Double)](), true)
+    // if(verbose) logger.debug(s"Starting build tree using job: $job")
+    val t = buildTree(job, Set[(Int, Double)](), verbose = false)
 
     this.synchronized {
       treeCount += 1
@@ -355,9 +355,16 @@ class RFClassifier[L, F](numTrees:Int = 100,
       else
         logger.debug(s"Feature ${featureLexicon.get.get(f)} has no utility!")
       */
+
+      if(verbose && utility.isDefined) {
+        println("Current utility:")
+        debugUtility(utility.get, job)
+      }
+
       if(utility.isDefined) {
         if(best.isEmpty || best.get.value < utility.get.value) {
           best = utility
+          if(verbose) println("CHOSEN NEW BEST!")
         }
       }
     }
@@ -375,7 +382,8 @@ class RFClassifier[L, F](numTrees:Int = 100,
     //
     else {
       if(verbose) {
-        // TODO: print dataset, feature, threshold, and utility values
+        println("BEST OVERALL:")
+        debugUtility(best.get, job)
       }
 
       //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
@@ -385,9 +393,21 @@ class RFClassifier[L, F](numTrees:Int = 100,
       newActiveNodes += new Tuple2(best.get.feature, best.get.threshold)
       val newActiveNodesSet = newActiveNodes.toSet
       new RFNonTerminal(best.get.feature, best.get.threshold,
-        buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue), newActiveNodesSet, false),
-        buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue), newActiveNodesSet, false))
+        buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue), newActiveNodesSet, verbose = false),
+        buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue), newActiveNodesSet, verbose = false))
     }
+  }
+
+  def debugUtility(utility:Utility, job:RFJob[L, F]): Unit = {
+    println("UTILITY DEBUG:")
+    println("Using dataset:")
+    job.printDataset()
+    println(s"Using feature ${utility.feature} with threshold ${utility.threshold}")
+    println(s"Contingency table for this feature+threshold is: SMALLER: ${utility.leftCounter}, GREATER: ${utility.rightCounter}")
+    println(s"Overall utility: ${utility.value}")
+    println(s"Parent utility: ${utility.parentValue}")
+    println(s"Utility of left child: ${utility.leftChildValue}")
+    println(s"Utility of right child: ${utility.rightChildValue}")
   }
 
   /** Computes the utility of the given feature */
@@ -462,7 +482,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
       return None
     }
 
-    Some(Utility(feature, threshold, value, currentEntropy, leftEntropy, rightEntropy))
+    Some(Utility(feature, threshold, value, currentEntropy, leftEntropy, rightEntropy, leftCounter, rightCounter))
   }
 
   /** Randomly picks selectedFeats features between 0 .. numFeats */
@@ -587,7 +607,9 @@ case class Utility (feature:Int, // index of this feature in the feature lexicon
                     value:Double, // overall utility value if the split at this threshold is taken
                     parentValue:Double, // utility of the node to be split
                     leftChildValue:Double, // utility of the left child after split
-                    rightChildValue:Double) // utility of the right child after split
+                    rightChildValue:Double, // utility of the right child after split
+                    leftCounter:Counter[Int], // label distribution for datums with feature <= threshold
+                    rightCounter:Counter[Int]) // label distribution for datums with feature > threshold
 
 
 class RFJob[L, F](
@@ -755,7 +777,8 @@ object RFClassifier {
   def entropy(labels:Counter[Int]):Double = {
     var ent = 0.0
     for(label <- labels.keySet) {
-      ent -= labels.proportion(label) * log2(labels.proportion(label))
+      if(labels.getCount(label) > 0)
+        ent -= labels.proportion(label) * log2(labels.proportion(label))
     }
     ent
   }

@@ -31,12 +31,12 @@ class PredicateClassifier {
     var dataset = createDataset(doc)
     dataset = dataset.removeFeaturesByFrequency(2)
     //classifier = new LogisticRegressionClassifier[String, String]()
-    classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, trainBagPct = 0.8, utilityTooSmallThreshold = 0.001, howManyFeaturesPerNode = featuresPerNode)
+    classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, trainBagPct = 0.8, howManyFeaturesPerNode = featuresPerNode)
     //classifier = new LinearSVMClassifier[String, String]()
     classifier.train(dataset)
   }
 
-  def featuresPerNode(total:Int):Int = total / 5 // math.sqrt(total.toDouble).toInt
+  def featuresPerNode(total:Int):Int = (10 * math.sqrt(total)).toInt // math.sqrt(total.toDouble).toInt
 
   def test(testPath:String): Unit = {
     val reader = new Reader

@@ -89,11 +89,11 @@ class ArgumentClassifier {
     logger.debug("Finished constructing dataset.")
 
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    //classifier = new LogisticRegressionClassifier[String, String]()
+    classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
     //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    classifier = new RFClassifier[String, String](maxTreeDepth = 0, utilityTooSmallThreshold = 0.001, howManyFeaturesPerNode = RFClassifier.featuresPerNodeTwoThirds) // , trainBagPct = 0.8, numThreads = 0)
+    //classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, utilityTooSmallThreshold = 0.01, howManyFeaturesPerNode = featuresPerNode)
 
     classifier match {
       case rfc:RandomForestClassifier[String, String] =>
@@ -113,7 +113,7 @@ class ArgumentClassifier {
     }
   }
 
-  def featuresPerNode(total:Int):Int = (0.66 * total).toInt // math.sqrt(total.toDouble).toInt
+  def featuresPerNode(total:Int):Int = (10.0 * math.sqrt(total.toDouble)).toInt
 
   def countLemmas(doc:Document): Unit = {
     for(s <- doc.sentences) {

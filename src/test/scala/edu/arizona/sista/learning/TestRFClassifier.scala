@@ -9,7 +9,7 @@ import org.scalatest.{Matchers, FlatSpec}
   */
 class TestRFClassifier extends FlatSpec with Matchers {
   "RFClassifier" should "work with BVFDataset" in {
-    val classifier = new RFClassifier[String, String](trainBagPct = 1.0, howManyFeaturesPerNode = RFClassifier.featuresPerNodeAll)
+    val classifier = new RFClassifier[String, String](numTrees = 1, trainBagPct = 1.0, howManyFeaturesPerNode = RFClassifier.featuresPerNodeAll)
     val dataset = new BVFDataset[String, String]()
 
     val d1 = new BVFDatum[String, String]("+", List("good", "good", "great"))
