@@ -21,6 +21,7 @@ import scala.collection.mutable.ListBuffer
 class PredicateClassifier {
   lazy val featureExtractor = new PredicateFeatureExtractor
   var classifier:Classifier[String, String] = null
+  val lemmaCounts = new Counter[String]
 
   def train(trainPath:String): Unit = {
     val reader = new Reader
@@ -28,15 +29,34 @@ class PredicateClassifier {
 
     computePredStats(doc)
 
+    countLemmas(doc)
+    featureExtractor.lemmaCounts = Some(lemmaCounts)
+
     var dataset = createDataset(doc)
     dataset = dataset.removeFeaturesByFrequency(2)
     //classifier = new LogisticRegressionClassifier[String, String]()
-    classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, trainBagPct = 0.8, howManyFeaturesPerNode = featuresPerNode)
+    classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, trainBagPct = 0.90, howManyFeaturesPerNode = featuresPerNode)
+    //classifier = new RandomForestClassifier[String, String](numTrees = 100)
     //classifier = new LinearSVMClassifier[String, String]()
     classifier.train(dataset)
   }
 
-  def featuresPerNode(total:Int):Int = (10 * math.sqrt(total)).toInt // math.sqrt(total.toDouble).toInt
+  def featuresPerNode(total:Int):Int = total / 2 // (10 * math.sqrt(total)).toInt
+
+  def countLemmas(doc:Document): Unit = {
+    for(s <- doc.sentences) {
+      for(l <- s.lemmas.get) {
+        lemmaCounts.incrementCount(l)
+      }
+    }
+    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset.")
+    var count = 0
+    for(l <- lemmaCounts.keySet) {
+      if(lemmaCounts.getCount(l) > ArgumentFeatureExtractor.UNKNOWN_THRESHOLD)
+        count += 1
+    }
+    logger.debug(s"$count of these lemmas will be kept as such. The rest will mapped to Unknown.")
+  }
 
   def test(testPath:String): Unit = {
     val reader = new Reader

@@ -22,7 +22,7 @@ import scala.util.Random
 class RFClassifier[L, F](numTrees:Int = 100,
                          maxTreeDepth:Int = 0, // 0 means unlimited tree depth
                          trainBagPct:Double = 0.66, // how much data to use per tree
-                         utilityTooSmallThreshold:Double = 0.001, // 0 means no utility is too small
+                         utilityTooSmallThreshold:Double = 0.01, // 0 means no utility is too small
                          splitTooSmallPct:Double = 0.01, // 0 means no split is too small
                          numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
                          howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt) // how many features to use per node, as a function of total feature count
