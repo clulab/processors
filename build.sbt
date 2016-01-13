@@ -12,7 +12,8 @@ scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 fork := true
 
 // options for forked jvm
-javaOptions += "-Xmx164G"
+javaOptions += "-Xmx6G"
+javaOptions += "-Xss100m"
 
 // forward sbt's stdin to forked process
 connectInput in run := true
