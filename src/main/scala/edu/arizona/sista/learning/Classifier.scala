@@ -1,12 +1,9 @@
 package edu.arizona.sista.learning
 
 import java.io._
-import java.nio.charset.Charset
 
-import de.bwaldvogel.liblinear.Linear
 import edu.arizona.sista.struct.{Lexicon, Counter}
 import edu.arizona.sista.learning.Datasets._
-import weka.core.Instances
 
 /**
  * Trait for iid classification
@@ -29,10 +26,6 @@ trait Classifier[L, F] {
    * indices is useful for bagging
    */
   def train(dataset:Dataset[L, F], indices:Array[Int])
-
-  def trainWeka(labelLexicon:Lexicon[L], wekaInstances:Instances): Unit = {
-    throw new RuntimeException("ERROR: trainWeka not supported for this classifier!")
-  }
 
   /** Returns the argmax for this datum */
   def classOf(d:Datum[L, F]): L

@@ -96,18 +96,10 @@ class ArgumentClassifier {
     //classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, utilityTooSmallThreshold = 0.01, howManyFeaturesPerNode = featuresPerNode)
 
     classifier match {
-      case rfc:RandomForestClassifier[String, String] =>
-        logger.debug("Converting dataset to Weka instances...")
-        val labelLexicon = dataset.labelLexicon
-        val indices = Datasets.mkTrainIndices(dataset.size, None)
-        val wekaInstances = rfc.datasetToInstances(dataset, indices)
-        dataset = null // no longer needed; clear to save memory
-        logger.debug("Conversion complete.")
-        classifier.trainWeka(labelLexicon, wekaInstances)
-      case rfc2:RFClassifier[String, String] =>
+      case rfc:RFClassifier[String, String] =>
         val counterDataset = dataset.toCounterDataset
         dataset = null
-        rfc2.train(counterDataset)
+        rfc.train(counterDataset)
       case oc:Classifier[String, String] =>
         classifier.train(dataset)
     }

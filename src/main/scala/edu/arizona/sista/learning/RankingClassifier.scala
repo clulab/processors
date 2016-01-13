@@ -97,8 +97,6 @@ object RankingClassifier {
 
     properties.getProperty("classifierClass") match {
       case "SVMRankingClassifier" => new SVMRankingClassifier[F](properties)
-      case "SVMKRankingClassifier" => new SVMKRankingClassifier[F](properties)
-      case "JForestsRankingClassifier" => new JForestsRankingClassifier[F](properties)
       case "PerceptronRankingClassifier" => new PerceptronRankingClassifier[F](properties)
       case _ => throw new RuntimeException("ERROR: unknown ranking classifier type: " +
         properties.getProperty("classifierType") + "!")

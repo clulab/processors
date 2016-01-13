@@ -4,7 +4,7 @@ import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 
 /**
- * Evaluates the output of svm_rank_classify or jforests
+ * Evaluates the output of svm_rank_classify or other reranking classifier
  * This currently computes P@1
  * This works for the QA system, but it should work for every generic svm_rank_classify like output
  * User: mihais
