@@ -1,4 +1,5 @@
 # Changes
++ **5.8.0** - Added in-house random forest implementation. Removed Weka dependency and its RF classifier. Removed RF reranking classifier.
 + **5.7.3** - Added support for context entities: species, organs, cell lines, cell types.
 + **5.7.2** - Keep matched syntactic paths in event/relation mentions. Added support for trigger matching from the state.
 + **5.7.1** - Made Odin event mentions friendlier for event coreference.
