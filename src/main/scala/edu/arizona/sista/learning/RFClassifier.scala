@@ -100,8 +100,10 @@ class RFClassifier[L, F](numTrees:Int = 100,
       logger.debug(s"Feature lexicon:\n${featureLexicon.get}")
     }
     logger.debug(s"Done building ${trees.get.length} trees.")
-    for (tree <- trees.get) {
-      logger.debug(s"Tree:\n${tree.toPrettyString[L, F](0, featureLexicon.get, labelLexicon.get)}")
+    if(verbose) {
+      for (tree <- trees.get) {
+        logger.debug(s"Tree:\n${tree.toPrettyString[L, F](0, featureLexicon.get, labelLexicon.get)}")
+      }
     }
   }
 
@@ -568,23 +570,35 @@ class RFClassifier[L, F](numTrees:Int = 100,
       }
     }
 
+    if(verbose) {
+      logger.debug(s"Classifying datum: $ifs.")
+    }
+
     //
     // merge the label distributions from the predictions of all trees
     //
     val labels = new Counter[Int]
+    var treeIndex = 0
     for(tree <- trees.get) {
       val labelDist = tree.apply(ifs)
       labels += labelDist
+      if(verbose) {
+        logger.debug(s"Label distribution from tree #$treeIndex: $labelDist")
+        logger.debug(s"Tree:\n$tree")
+      }
+      treeIndex += 1
     }
     for(l <- labels.keySet) {
       labels.setCount(l, labels.getCount(l) / trees.get.length.toDouble)
     }
+    if(verbose) logger.debug(s"Overall label distribution: $labels")
 
     // convert to labels of type L
     val prettyLabels = new Counter[L]()
     for(l <- labels.keySet) {
       prettyLabels.setCount(labelLexicon.get.get(l), labels.getCount(l))
     }
+    if(verbose) logger.debug(s"Pretty labels: $prettyLabels")
 
     prettyLabels
   }
