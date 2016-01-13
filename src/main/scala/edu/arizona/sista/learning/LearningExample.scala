@@ -34,7 +34,7 @@ object LearningExample {
     val classifier = new LogisticRegressionClassifier[String, String]()
     //val classifier = new LinearSVMClassifier[String, String]()
     //val classifier = new PerceptronClassifier[String, String]()
-    //val classifier = new RandomForestClassifier[String, String]()
+    //eval classifier = new RandomForestClassifier[String, String]()
     classifier.train(dataset)
 
     //

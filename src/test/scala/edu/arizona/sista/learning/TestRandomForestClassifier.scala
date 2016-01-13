@@ -8,14 +8,10 @@ import org.scalatest._
  * Date: 12/10/13
  */
 class TestRandomForestClassifier extends FlatSpec with Matchers {
-  "RandomForestClassifier" should "have an accuracy > .96 on this dataset" in {
-    val classifier = new RandomForestClassifier[Int, String](
-      numTrees = 1000,
-      featureSampleRatio = -0.50,
-      maxTreeDepth = 0)
+  "RandomForestClassifier" should "have an accuracy > .95 on this dataset" in {
+    //val classifier = new RandomForestClassifier[Int, String](numTrees = 50, maxTreeDepth = 0)
+    val classifier = new RFClassifier[Int, String]
 
-    // MS: let's disable this; it takes forever
-    /*
     val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
     classifier.train(dataset)
 
@@ -30,7 +26,6 @@ class TestRandomForestClassifier extends FlatSpec with Matchers {
     }
     val acc = correct.toDouble / total.toDouble
     println("Accuracy: " + acc)
-    acc should be > 0.96
-    */
+    acc should be >= 0.955
   }
 }

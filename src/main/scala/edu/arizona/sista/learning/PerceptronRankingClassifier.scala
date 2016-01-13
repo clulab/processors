@@ -2,14 +2,14 @@ package edu.arizona.sista.learning
 
 import java.io._
 import org.slf4j.LoggerFactory
-import PerceptronRankingClassifier.logger
 import scala.collection.mutable.ArrayBuffer
 import edu.arizona.sista.struct.Counter
 import edu.arizona.sista.struct.Counters.dotProduct
 import edu.arizona.sista.struct.Lexicon
 import edu.arizona.sista.utils.{StringUtils, MathUtils}
-import java.util.{Properties, Random}
+import java.util.Properties
 import scala.Serializable
+import scala.util.Random
 import Datasets._
 
 /**

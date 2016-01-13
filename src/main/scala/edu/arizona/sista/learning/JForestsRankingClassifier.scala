@@ -4,7 +4,7 @@ import java.io._
 import scala.collection.mutable.ArrayBuffer
 import edu.uci.jforestsx.applications.RankingApp
 import edu.uci.jforestsx.learning.trees.Ensemble
-import java.util.{Random, Properties}
+import java.util.Properties
 import edu.uci.jforestsx.config.TrainingConfig
 import edu.arizona.sista.utils.{StringUtils, MathUtils}
 import org.slf4j.LoggerFactory
@@ -15,6 +15,7 @@ import edu.uci.jforestsx.input._
 import scala.Serializable
 import edu.uci.jforestsx.dataset.Feature
 import scala.collection.mutable
+import scala.util.Random
 
 
 /**

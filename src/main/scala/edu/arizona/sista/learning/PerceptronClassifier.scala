@@ -3,13 +3,14 @@ package edu.arizona.sista.learning
 import edu.arizona.sista.struct.Counter
 import java.io._
 import org.slf4j.LoggerFactory
-import java.util.{Random, Properties}
+import java.util.Properties
 import edu.arizona.sista.utils.{Files, MathUtils, StringUtils}
 import edu.arizona.sista.struct.Lexicon
 import edu.arizona.sista.struct.Counters._
 import PerceptronClassifier.logger
 import scala.collection.mutable.ArrayBuffer
 import scala.Serializable
+import scala.util.Random
 
 /**
  * Multiclass perceptron classifier, in primal mode

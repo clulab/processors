@@ -15,12 +15,13 @@ import java.text.DecimalFormat
  */
 class Counter[T](
                   private val counts:mutable.HashMap[T, MutableNumber[Double]],
-                  private val defaultReturnValue:Double = 0.0) extends Serializable {
+                  private val defaultReturnValue:Double = 0.0,
+                  private var total:Double = 0.0) extends Serializable {
 
-  def this(elements:Iterable[T]) = this(Counter.mkCounts(elements), 0.0)
+  def this(elements:Iterable[T]) = this(Counter.mkCounts(elements), 0.0, elements.size)
 
   def this(defaultReturnValue:Double) =
-    this(new mutable.HashMap[T, MutableNumber[Double]], defaultReturnValue)
+    this(new mutable.HashMap[T, MutableNumber[Double]], defaultReturnValue, total = 0.0)
 
   def this() = this(0.0)
 
@@ -31,10 +32,23 @@ class Counter[T](
     }
   }
 
-  def incrementCount(key:T, inc:Double = 1.0):Double = Counter.incrementCount(counts, key, inc)
+  def proportion(key:T):Double = getCount(key) / total
+  def getTotal = total
+
+  def incrementCount(key:T, inc:Double = 1.0):Double = {
+    val v = Counter.incrementCount(counts, key, inc)
+    total += inc
+    v
+  }
+  def setCount(key:T, value:Double) {
+    val prev = getCount(key)
+    Counter.setCount(counts, key, value)
+    total += value - prev
+  }
+
   def decrementCount(key:T, inc:Double):Double = incrementCount(key, - inc)
   def decrementCount(key:T):Double = incrementCount(key, -1.0)
-  def setCount(key:T, value:Double) { Counter.setCount(counts, key, value) }
+
   def keySet = counts.keySet
   def size = counts.size
   def contains(key:T) = keySet.contains(key)
@@ -77,7 +91,7 @@ class Counter[T](
       if (getCount(key) == defaultReturnValue) out.setCount(key, toAdd.getCount(key))
     }
 
-    // Step 2: Add all keys that are common between this and toSub
+    // Step 2: Add all keys that are common between this and toSub, or unique to this
     for (key <- keySet) out.setCount(key, getCount(key) + toAdd.getCount(key))
 
     out
@@ -101,16 +115,25 @@ class Counter[T](
     dotproduct
   }
 
-  def sorted:List[(T, Double)] = {
+  def sorted:List[(T, Double)] = sorted(true)
+
+  /** Sorts counts in descending order */
+  def sorted(descending:Boolean):List[(T, Double)] = {
     val vs = new ListBuffer[(T, Double)]
     for(k <- keySet) vs += new Tuple2(k, getCount(k))
-    vs.toList.sortBy(0 - _._2)
+    if(descending) vs.toList.sortBy(0 - _._2)
+    else vs.toList.sortBy(_._2)
   }
+
   override def toString:String = {
     val os = new StringBuilder
     os.append ("[")
-    for (key <- keySet) {
-      os.append (key + ":" + getCount(key).formatted("%3.3f") + ", ")
+    var first = true
+    val keys = keySet
+    for (key <- keys) {
+      if(! first) os.append(", ")
+      os.append (key + ":" + getCount(key).formatted("%3.3f"))
+      first = false
     }
     os.append ("]")
     os.toString
@@ -218,7 +241,7 @@ class Counter[T](
   def saveTo(w:Writer) {
     val writer = Files.toPrintWriter(w)
     writer.println(s"$defaultReturnValue ${counts.size}")
-    if(counts.size > 0) {
+    if(counts.nonEmpty) {
       val first = counts.keys.head
       first match {
         // TODO: kinda hacky, but don't know how to recover from type erasure in loadFrom()...
@@ -239,25 +262,21 @@ class Counter[T](
 object Counter {
   private def incrementCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, inc:Double): Double = {
     map.get(key) match {
-      case Some(c) => {
+      case Some(c) =>
         c.value += inc
         c.value
-      }
-      case None => {
+      case None =>
         map.put(key, new MutableNumber[Double](inc))
         inc
-      }
     }
   }
 
   private def setCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, value:Double) {
     map.get(key) match {
-      case Some(c) => {
+      case Some(c) =>
         c.value = value
-      }
-      case None => {
+      case None =>
         map.put(key, new MutableNumber[Double](value))
-      }
     }
   }
 

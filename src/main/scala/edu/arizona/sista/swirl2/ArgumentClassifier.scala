@@ -19,23 +19,115 @@ import scala.util.Random
  * User: mihais
  * Date: 7/13/15
  */
+object ArgumentClassifier {
+  val logger = LoggerFactory.getLogger(classOf[ArgumentClassifier])
+
+  val NUM_TREES = 100
+  val MAX_TREE_DEPTH = 20
+  val NUM_THREADS = 4
+
+  val FEATURE_THRESHOLD = 5
+  val DOWNSAMPLE_PROB = 0.50
+  val MAX_TRAINING_DATUMS = 0 // 10000
+
+  val POS_LABEL = "+"
+  val NEG_LABEL = "-"
+
+  def main(args:Array[String]): Unit = {
+    val props = argsToProperties(args)
+    var ac = new ArgumentClassifier
+
+    if(props.containsKey("train")) {
+      ac.train(props.getProperty("train"))
+
+      if(props.containsKey("model")) {
+        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
+        //ac.saveTo(os)
+        os.close()
+      }
+    }
+
+    if(props.containsKey("test")) {
+      if(props.containsKey("model")) {
+        val is = new BufferedReader(new FileReader(props.getProperty("model")))
+        //ac = loadFrom(is)
+        is.close()
+      }
+
+      ac.test(props.getProperty("test"))
+    }
+  }
+
+  def loadFrom(r:java.io.Reader):ArgumentClassifier = {
+    val ac = new ArgumentClassifier
+    val reader = Files.toBufferedReader(r)
+
+    val c = LiblinearClassifier.loadFrom[String, String](reader)
+    ac.classifier = c
+
+    ac
+  }
+}
+
 class ArgumentClassifier {
-  lazy val featureExtractor = new ArgumentFeatureExtractor
+  lazy val featureExtractor = new ArgumentFeatureExtractor("vectors.txt")
   var classifier:Classifier[String, String] = null
+  val lemmaCounts = new Counter[String]
 
   def train(trainPath:String): Unit = {
     val reader = new Reader
-    val doc = reader.load(trainPath)
+    var doc = reader.load(trainPath)
 
     computeArgStats(doc)
 
+    countLemmas(doc)
+    featureExtractor.lemmaCounts = Some(lemmaCounts)
+
+    logger.debug("Constructing dataset...")
     var dataset = createDataset(doc)
+    doc = null // the raw data is no longer needed
+    logger.debug("Finished constructing dataset.")
+
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    //classifier = new LogisticRegressionClassifier[String, String]()
-    classifier = new LinearSVMClassifier[String, String]()
-    //classifier = new RandomForestClassifier(numTrees = 100)
+    classifier = new LogisticRegressionClassifier[String, String]()
+    //classifier = new LinearSVMClassifier[String, String]()
+    //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    classifier.train(dataset)
+    //classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, utilityTooSmallThreshold = 0.01, howManyFeaturesPerNode = featuresPerNode)
+
+    classifier match {
+      case rfc:RandomForestClassifier[String, String] =>
+        logger.debug("Converting dataset to Weka instances...")
+        val labelLexicon = dataset.labelLexicon
+        val indices = Datasets.mkTrainIndices(dataset.size, None)
+        val wekaInstances = rfc.datasetToInstances(dataset, indices)
+        dataset = null // no longer needed; clear to save memory
+        logger.debug("Conversion complete.")
+        classifier.trainWeka(labelLexicon, wekaInstances)
+      case rfc2:RFClassifier[String, String] =>
+        val counterDataset = dataset.toCounterDataset
+        dataset = null
+        rfc2.train(counterDataset)
+      case oc:Classifier[String, String] =>
+        classifier.train(dataset)
+    }
+  }
+
+  def featuresPerNode(total:Int):Int = (10.0 * math.sqrt(total.toDouble)).toInt
+
+  def countLemmas(doc:Document): Unit = {
+    for(s <- doc.sentences) {
+      for(l <- s.lemmas.get) {
+        lemmaCounts.incrementCount(l)
+      }
+    }
+    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset.")
+    var count = 0
+    for(l <- lemmaCounts.keySet) {
+      if(lemmaCounts.getCount(l) > ArgumentFeatureExtractor.UNKNOWN_THRESHOLD)
+        count += 1
+    }
+    logger.debug(s"$count of these lemmas will be kept as such. The rest will mapped to Unknown.")
   }
 
   def test(testPath:String): Unit = {
@@ -43,26 +135,30 @@ class ArgumentClassifier {
     val doc = reader.load(testPath)
     val distHist = new Counter[Int]()
 
+    var totalCands = 0
     val output = new ListBuffer[(String, String)]
     for(s <- doc.sentences) {
       val outEdges = s.semanticRoles.get.outgoingEdges
       for (pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
         for(arg <- s.words.indices) {
-          val goldLabel = (args.contains(arg)) match {
+          val goldLabel = args.contains(arg) match {
             case true => POS_LABEL
             case false => NEG_LABEL
           }
           var predLabel = NEG_LABEL
-          if(VALID_ARG_POS.findFirstIn(s.tags.get(arg)).isDefined) {
+          if(ValidCandidate.isValid(s, arg, pred)) {
             val scores = classify(s, arg, pred)
-            predLabel = (scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL)) match {
+            predLabel = scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL) match {
               case true => POS_LABEL
               case false => NEG_LABEL
             }
           }
           if(goldLabel == POS_LABEL && predLabel != POS_LABEL) {
             distHist.incrementCount(math.abs(arg - pred))
+
+            // debug output
+            /*
             if(math.abs(arg - pred) < 3) {
               println(s"Missed argument ${s.words(arg)}($arg) for predicate ${s.words(pred)}($pred):")
               println( s"""Sentence: ${s.words.mkString(", ")}""")
@@ -71,14 +167,17 @@ class ArgumentClassifier {
               println("Dependencies:\n" + s.dependencies.get)
               println()
             }
+            */
 
           }
           output += new Tuple2(goldLabel, predLabel)
+          totalCands += 1
         }
       }
     }
 
     BinaryScorer.score(output, POS_LABEL)
+    logger.debug(s"Total number of candidates investigated: $totalCands")
     logger.debug(s"Distance histogram for missed arguments: $distHist")
   }
 
@@ -89,16 +188,17 @@ class ArgumentClassifier {
   }
 
   def createDataset(doc:Document): Dataset[String, String] = {
-    val dataset = new BVFDataset[String, String]()
+    val dataset = new RVFDataset[String, String]()
     val random = new Random(0)
     var sentCount = 0
     var droppedCands = 0
-    for(s <- doc.sentences) {
+    var done = false
+    for(s <- doc.sentences if ! done) {
       val outEdges = s.semanticRoles.get.outgoingEdges
       for(pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
         for(arg <- s.words.indices) {
-          if(VALID_ARG_POS.findFirstIn(s.tags.get(arg)).isDefined) {
+          if(ValidCandidate.isValid(s, arg, pred)) {
             if (args.contains(arg)) {
               dataset += mkDatum(s, arg, pred, POS_LABEL)
             } else {
@@ -112,9 +212,13 @@ class ArgumentClassifier {
           }
         }
       }
+
       sentCount += 1
       if(sentCount % 1000 == 0)
         logger.debug(s"Processed $sentCount/${doc.sentences.length} sentences...")
+
+      if(MAX_TRAINING_DATUMS > 0 && dataset.size > MAX_TRAINING_DATUMS)
+        done = true
     }
     logger.debug(s"Dropped $droppedCands candidate arguments.")
     dataset
@@ -125,8 +229,8 @@ class ArgumentClassifier {
     position < oes.length && oes(position) != null && oes(position).nonEmpty
   }
 
-  def mkDatum(sent:Sentence, arg:Int, pred:Int, label:String): BVFDatum[String, String] = {
-    new BVFDatum[String, String](label, featureExtractor.mkFeatures(sent, arg, pred))
+  def mkDatum(sent:Sentence, arg:Int, pred:Int, label:String): RVFDatum[String, String] = {
+    new RVFDatum[String, String](label, featureExtractor.mkFeatures(sent, arg, pred))
   }
 
   def computeArgStats(doc:Document): Unit = {
@@ -152,50 +256,3 @@ class ArgumentClassifier {
   }
 }
 
-object ArgumentClassifier {
-  val logger = LoggerFactory.getLogger(classOf[ArgumentClassifier])
-
-  val POS_LABEL = "+"
-  val NEG_LABEL = "-"
-
-  val FEATURE_THRESHOLD = 3
-  val DOWNSAMPLE_PROB = 0.50
-  val POS_THRESHOLD = 0.50
-
-  val VALID_ARG_POS = "NN|IN|PR|JJ|TO|RB|VB|MD|WD|CD|\\$|WP|DT".r
-
-  def main(args:Array[String]): Unit = {
-    val props = argsToProperties(args)
-    var ac = new ArgumentClassifier
-
-    if(props.containsKey("train")) {
-      ac.train(props.getProperty("train"))
-
-      if(props.containsKey("model")) {
-        val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
-        ac.saveTo(os)
-        os.close()
-      }
-    }
-
-    if(props.containsKey("test")) {
-      if(props.containsKey("model")) {
-        val is = new BufferedReader(new FileReader(props.getProperty("model")))
-        ac = loadFrom(is)
-        is.close()
-      }
-
-      ac.test(props.getProperty("test"))
-    }
-  }
-
-  def loadFrom(r:java.io.Reader):ArgumentClassifier = {
-    val ac = new ArgumentClassifier
-    val reader = Files.toBufferedReader(r)
-
-    val c = LiblinearClassifier.loadFrom[String, String](reader)
-    ac.classifier = c
-
-    ac
-  }
-}

@@ -21,6 +21,7 @@ import scala.collection.mutable.ListBuffer
 class PredicateClassifier {
   lazy val featureExtractor = new PredicateFeatureExtractor
   var classifier:Classifier[String, String] = null
+  val lemmaCounts = new Counter[String]
 
   def train(trainPath:String): Unit = {
     val reader = new Reader
@@ -28,10 +29,33 @@ class PredicateClassifier {
 
     computePredStats(doc)
 
-    val dataset = createDataset(doc)
+    countLemmas(doc)
+    featureExtractor.lemmaCounts = Some(lemmaCounts)
+
+    var dataset = createDataset(doc)
+    dataset = dataset.removeFeaturesByFrequency(2)
     classifier = new LogisticRegressionClassifier[String, String]()
+    //classifier = new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 0, trainBagPct = 0.8, howManyFeaturesPerNode = featuresPerNode)
+    //classifier = new RandomForestClassifier[String, String](numTrees = 100)
     //classifier = new LinearSVMClassifier[String, String]()
     classifier.train(dataset)
+  }
+
+  def featuresPerNode(total:Int):Int = total / 2 // (10 * math.sqrt(total)).toInt
+
+  def countLemmas(doc:Document): Unit = {
+    for(s <- doc.sentences) {
+      for(l <- s.lemmas.get) {
+        lemmaCounts.incrementCount(l)
+      }
+    }
+    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset.")
+    var count = 0
+    for(l <- lemmaCounts.keySet) {
+      if(lemmaCounts.getCount(l) > ArgumentFeatureExtractor.UNKNOWN_THRESHOLD)
+        count += 1
+    }
+    logger.debug(s"$count of these lemmas will be kept as such. The rest will mapped to Unknown.")
   }
 
   def test(testPath:String): Unit = {
@@ -54,9 +78,22 @@ class PredicateClassifier {
   }
 
   def classify(sent:Sentence, position:Int):Counter[String] = {
-    val datum = mkDatum(sent, position, NEG_LABEL)
-    val s = classifier.scoresOf(datum)
-    s
+    if(filter(sent, position)) {
+      val datum = mkDatum(sent, position, NEG_LABEL)
+      val s = classifier.scoresOf(datum)
+      //println(s"Scores for datum: $s")
+      s
+    } else {
+      val s = new Counter[String]
+      s.setCount(NEG_LABEL, 1.0)
+      s
+    }
+  }
+
+  def filter(s:Sentence, i:Int):Boolean = {
+    val tag = s.tags.get(i)
+    if(tag.startsWith("NN") || tag.startsWith("VB")) true
+    else false
   }
 
   def createDataset(doc:Document): Dataset[String, String] = {
@@ -65,9 +102,11 @@ class PredicateClassifier {
 
     for(s <- doc.sentences;
         i <- s.words.indices) {
-      val label = goldLabel(s, i)
-      labelStats.incrementCount(label)
-      dataset += mkDatum(s, i, label)
+      if(filter(s, i)) {
+        val label = goldLabel(s, i)
+        labelStats.incrementCount(label)
+        dataset += mkDatum(s, i, label)
+      }
     }
     logger.info("Label statistics for training examples: " + labelStats)
     dataset
@@ -79,7 +118,7 @@ class PredicateClassifier {
     if (position >= outgoing.length)
       return NEG_LABEL
 
-    outgoing.nonEmpty match {
+    outgoing(position).nonEmpty match {
       case true => POS_LABEL
       case _ => NEG_LABEL
     }
@@ -91,7 +130,9 @@ class PredicateClassifier {
 
   def computePredStats(doc:Document): Unit = {
     val posStats = new Counter[String]()
+    var tokenCount = 0
     for(s <- doc.sentences) {
+      tokenCount += s.words.length
       val g = s.semanticRoles.get
       for(i <- g.outgoingEdges.indices) {
         if(g.outgoingEdges(i).nonEmpty) {
@@ -100,6 +141,7 @@ class PredicateClassifier {
         }
       }
     }
+    logger.info(s"Found ${doc.sentences.length} sentences with $tokenCount tokens.")
     logger.info("Predicates by POS tag: " + posStats)
   }
 
@@ -113,7 +155,7 @@ object PredicateClassifier {
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
-  val POS_THRESHOLD = 0.25 // lower this to boost recall
+  val POS_THRESHOLD = 0.50 // lower this to boost recall
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)

@@ -1,6 +1,7 @@
 package edu.arizona.sista.swirl2
 
 import edu.arizona.sista.processors.Sentence
+import edu.arizona.sista.struct.Counter
 
 import scala.collection.mutable.ListBuffer
 
@@ -12,6 +13,8 @@ import PredicateFeatureExtractor._
  * Date: 5/28/15
  */
 class PredicateFeatureExtractor {
+  var lemmaCounts:Option[Counter[String]] = None
+
   def mkFeatures(sent:Sentence, position:Int):Seq[String] = {
     val features = new ListBuffer[String]
 
@@ -51,7 +54,18 @@ class PredicateFeatureExtractor {
   }
 
   def lemmaAt(sent:Sentence, position:Int):String = {
-    if(position >= 0 && position < sent.size) sent.lemmas.get(position)
+    if(position >= 0 && position < sent.size) {
+      val l = sent.lemmas.get(position)
+      if(lemmaCounts.isDefined) {
+        if(lemmaCounts.get.getCount(l) > UNKNOWN_THRESHOLD) {
+          l
+        } else {
+          UNKNOWN_TOKEN
+        }
+      } else {
+        l
+      }
+    }
     else PADDING
   }
   def tagAt(sent:Sentence, position:Int):String = {
@@ -62,4 +76,6 @@ class PredicateFeatureExtractor {
 
 object PredicateFeatureExtractor {
   val PADDING = "##"
+  val UNKNOWN_THRESHOLD = 20
+  val UNKNOWN_TOKEN = "*u*"
 }

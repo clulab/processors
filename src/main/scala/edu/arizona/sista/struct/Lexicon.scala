@@ -37,6 +37,10 @@ class Lexicon[T] extends Serializable {
 
   def exists(i:Int):Boolean = i < index.size
 
+  def contains(f:T):Boolean = lexicon.contains(f)
+
+  def indices = 0 until index.size
+
   /**
    * Fetches the string with the given index from the lexicon
    * This deliberately does NOT check for bounds for fast access.
@@ -53,7 +57,7 @@ class Lexicon[T] extends Serializable {
   override def toString:String = {
     val os = new StringBuilder
     for(w <- lexicon.keySet) {
-      os.append(w + " -> " + lexicon.get(w) + "\n")
+      os.append(w + " -> " + lexicon.get(w).get + "\n")
     }
     os.toString()
   }
@@ -89,6 +93,28 @@ class Lexicon[T] extends Serializable {
     for(i <- 0 until index.size) {
       p.println(s"$i ${index(i)}")
     }
+  }
+
+  /**
+    * Maps feature indices from their old value to the new values given in the map
+    * If an existing feature does not appear in the map, it is simply not included in the new lexicon
+    *   (this is to support feature selection)
+    * @param indexMap Map from old index to new index
+    */
+  def mapIndicesTo(indexMap:Map[Int, Int]): Lexicon[T] = {
+    val nl = new Lexicon[T]
+
+    for(of <- index.indices) {
+      if(indexMap.contains(of)) {
+        // this means that the new indices must be monotonic with the old ones!
+        val nf = indexMap.get(of).get
+        assert(nf == nl.index.size)
+        nl.index += index(of)
+        nl.lexicon += index(of) -> nf
+      }
+    }
+
+    nl
   }
 }
 

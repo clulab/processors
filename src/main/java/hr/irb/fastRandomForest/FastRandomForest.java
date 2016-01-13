@@ -582,8 +582,8 @@ public class FastRandomForest
     getCapabilities().testWithFail(data);
 
     // remove instances with missing class
-    data = new Instances(data);
-    data.deleteWithMissingClass();
+    data = new Instances(data); // XXX: Mihai: why is the data copied here???
+    data.deleteWithMissingClass(); // Mihai: We do this in RandomForestClassifier
 
     // only class? -> build ZeroR model
     if(data.numAttributes() == 1){
