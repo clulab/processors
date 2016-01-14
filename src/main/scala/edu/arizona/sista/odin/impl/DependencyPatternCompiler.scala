@@ -22,7 +22,7 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
 
   def triggerMentionDependencyPattern: Parser[DependencyPattern] =
     identifier ~ ":" ~ identifier ~ rep1(argPattern) ^^ {
-      case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName.equalsIgnoreCase("trigger") =>
+      case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName equalsIgnoreCase "trigger" =>
         new TriggerMentionDependencyPattern(anchorLabel, arguments)
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
         // if anchorName is not "trigger" then return a RelationMention
@@ -30,33 +30,18 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     }
 
   def argPattern: Parser[ArgumentPattern] =
-    singleArgPattern ||| quantifiedArgPattern ||| exactSizeArgPattern
-
-  def singleArgPattern: Parser[ArgumentPattern] =
-    identifier ~ ":" ~ identifier ~ "=" ~ disjunctiveDepPattern ^^ {
-      case name ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
-        sys.error("'trigger' is not a valid argument name")
-      case name ~ ":" ~ label ~ "=" ~ pat =>
+    identifier ~ ":" ~ identifier ~ opt("?" | "*" | "+" | "{" ~> int <~ "}") ~ "=" ~ disjunctiveDepPattern ^^ {
+      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name equalsIgnoreCase "trigger" =>
+        sys.error(s"'$name' is not a valid argument name")
+      case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, size = Some(1))
-    }
-
-  def quantifiedArgPattern: Parser[ArgumentPattern] =
-    identifier ~ ":" ~ identifier ~ ("?" | "*" | "+") ~ "=" ~ disjunctiveDepPattern ^^ {
-      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
-        sys.error("'trigger' is not a valid argument name")
-      case name ~ ":" ~ label ~ "?" ~ "=" ~ pat =>
+      case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = false, size = Some(1))
-      case name ~ ":" ~ label ~ "*" ~ "=" ~ pat =>
+      case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = false, size = None)
-      case name ~ ":" ~ label ~ "+" ~ "=" ~ pat =>
+      case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, size = None)
-    }
-
-  def exactSizeArgPattern: Parser[ArgumentPattern] =
-    identifier ~ ":" ~ identifier ~ ("{" ~> int <~ "}") ~ "=" ~ disjunctiveDepPattern ^^ {
-      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
-        sys.error("'trigger' is not a valid argument name")
-      case name ~ ":" ~ label ~ n ~ "=" ~ pat =>
+      case name ~ ":" ~ label ~ Some(n:Int) ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, size = Some(n))
     }
 
