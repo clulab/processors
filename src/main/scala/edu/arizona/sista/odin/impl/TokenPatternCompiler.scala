@@ -140,7 +140,8 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
   * Helps the compiler by keeping track of the input and output
   * instructions of a partially compiled TokenPattern.
   */
-class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
+class ProgramFragment(val in: Inst, val out: List[Inst]) {
+
   import ProgramFragment.findOut
 
   /** Connects a new instruction to the output instructions.
@@ -166,13 +167,13 @@ class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
   def greedyOptional: ProgramFragment = {
     val epsilon = Pass()
     val split = Split(in, epsilon)
-    ProgramFragment(split, epsilon +: out)
+    ProgramFragment(split, epsilon :: out)
   }
 
   def lazyOptional: ProgramFragment = {
     val epsilon = Pass()
     val split = Split(epsilon, in)
-    ProgramFragment(split, epsilon +: out)
+    ProgramFragment(split, epsilon :: out)
   }
 
   def greedyStar: ProgramFragment = {
@@ -245,17 +246,17 @@ class ProgramFragment(val in: Inst, val out: Seq[Inst]) {
 object ProgramFragment {
 
   def apply(in: Inst, out: Inst): ProgramFragment =
-    new ProgramFragment(in, Seq(out))
+    new ProgramFragment(in, List(out))
 
   def apply(in: Inst, out: Seq[Inst]): ProgramFragment =
-    new ProgramFragment(in, out)
+    new ProgramFragment(in, out.toList)
 
   def apply(in: Inst): ProgramFragment =
     new ProgramFragment(in, findOut(in))
 
   def apply(f1: ProgramFragment, f2: ProgramFragment): ProgramFragment = {
     f1.setOut(f2.in)
-    ProgramFragment(f1.in, f2.out)
+    new ProgramFragment(f1.in, f2.out)
   }
 
   def apply(fragments: Seq[ProgramFragment]): ProgramFragment = {
@@ -266,9 +267,9 @@ object ProgramFragment {
   }
 
   /** Gets an instruction and returns all the output instructions */
-  def findOut(inst: Inst): Seq[Inst] = {
+  def findOut(inst: Inst): List[Inst] = {
     @annotation.tailrec
-    def traverse(pending: List[Inst], seen: Set[Inst], out: List[Inst]): Seq[Inst] =
+    def traverse(pending: List[Inst], seen: Set[Inst], out: List[Inst]): List[Inst] =
       pending match {
         case Nil => out
         case i :: rest => i match {
