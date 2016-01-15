@@ -8,7 +8,8 @@ import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native._
 
-trait Mention extends Equals with Ordered[Mention] {
+@SerialVersionUID(1L)
+trait Mention extends Equals with Ordered[Mention] with Serializable {
 
   /** A sequence of labels for this mention.
     * The first label in the sequence is considered the default.
@@ -136,7 +137,6 @@ trait Mention extends Equals with Ordered[Mention] {
 
 }
 
-@SerialVersionUID(1L)
 class TextBoundMention(
     val labels: Seq[String],
     val tokenInterval: Interval,
@@ -144,7 +144,7 @@ class TextBoundMention(
     val document: Document,
     val keep: Boolean,
     val foundBy: String
-) extends Mention with Serializable {
+) extends Mention {
 
   def this(
     label: String,
@@ -182,7 +182,6 @@ class TextBoundMention(
 
 // NOTE that event mentions *may* have no arguments
 // this is allowed because it is useful for coreference
-@SerialVersionUID(1L)
 class EventMention(
     val labels: Seq[String],
     val trigger: TextBoundMention,
@@ -192,7 +191,7 @@ class EventMention(
     val document: Document,
     val keep: Boolean,
     val foundBy: String
-) extends Mention with Serializable {
+) extends Mention {
 
   def this(
     label: String,
@@ -310,7 +309,6 @@ class EventMention(
 
 }
 
-@SerialVersionUID(1L)
 class RelationMention(
     val labels: Seq[String],
     val arguments: Map[String, Seq[Mention]],
@@ -319,7 +317,7 @@ class RelationMention(
     val document: Document,
     val keep: Boolean,
     val foundBy: String
-) extends Mention with Serializable {
+) extends Mention {
 
   require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
 
