@@ -4,6 +4,7 @@ import java.io.File
 import java.util.{ Collection, Map => JMap }
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
+import scala.util.matching.Regex
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
 import edu.arizona.sista.odin._
@@ -117,7 +118,7 @@ class RuleReader(val actions: Actions) {
         // interpolates a template variable with ${variableName} notation
         // note that $variableName is not supported and $ can't be escaped
         val template: Any => String =
-          s => """\$\{(.*?)\}""".r.replaceAllIn(s.toString(), m => vars(m.group(1).trim))
+          s => """\$\{(.*?)\}""".r.replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1).trim)))
         // return the rule (in a Seq because this is a flatMap)
         Seq(mkRule(m, expand, template))
       }
