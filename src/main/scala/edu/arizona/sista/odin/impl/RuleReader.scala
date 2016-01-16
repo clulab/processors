@@ -128,8 +128,10 @@ class RuleReader(val actions: Actions) {
         }
         // interpolates a template variable with ${variableName} notation
         // note that $variableName is not supported and $ can't be escaped
-        val template: Any => String =
-          s => """\$\{(.*?)\}""".r.replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1).trim)))
+        val template: Any => String = { s =>
+          """\$\{\s*(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*)\s*\}""".r
+            .replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1))))
+        }
         // return the rule (in a Seq because this is a flatMap)
         Seq(mkRule(m, expand, template))
       }
