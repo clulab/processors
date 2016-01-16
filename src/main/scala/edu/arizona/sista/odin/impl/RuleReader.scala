@@ -61,36 +61,47 @@ class RuleReader(val actions: Actions) {
     val name = try {
       template(data("name"))
     } catch {
-      case e: Exception => throw new OdinCompileException("unnamed rule")
+      case e: NoSuchElementException => throw new OdinCompileException("unnamed rule")
+    }
+
+    // replace variables or throw an OdinNamedCompileException
+    def tmpl(raw: Any): String = {
+      try {
+        template(raw)
+      } catch {
+        case e: NoSuchElementException =>
+          val varName = e.getMessage.drop(15)
+          throw new OdinNamedCompileException(s"var '$varName' not found in rule '$name'", name)
+      }
     }
 
     // one or more labels are required
     val labels: Seq[String] = try {
       data("label") match {
-        case label: String => expand(template(label))
+        case label: String => expand(tmpl(label))
         case jLabels: Collection[_] =>
-          jLabels.asScala.flatMap(l => expand(template(l))).toSeq.distinct
+          jLabels.asScala.flatMap(l => expand(tmpl(l))).toSeq.distinct
       }
     } catch {
-      case e: Exception =>
+      case e: NoSuchElementException =>
         throw new OdinNamedCompileException(s"rule '$name' has no labels", name)
     }
 
     // pattern is required
     val pattern = try {
-      template(data("pattern"))
+      tmpl(data("pattern"))
     } catch {
-      case e: Exception =>
+      case e: NoSuchElementException =>
         throw new OdinNamedCompileException(s"rule '$name' has no pattern", name)
     }
 
     // these fields have default values
-    val ruleType = template(data.getOrElse("type", DefaultType))
-    val priority = template(data.getOrElse("priority", DefaultPriority))
-    val action = template(data.getOrElse("action", DefaultAction))
-    val keep = strToBool(template(data.getOrElse("keep", DefaultKeep)))
+    val ruleType = tmpl(data.getOrElse("type", DefaultType))
+    val priority = tmpl(data.getOrElse("priority", DefaultPriority))
+    val action = tmpl(data.getOrElse("action", DefaultAction))
+    val keep = strToBool(tmpl(data.getOrElse("keep", DefaultKeep)))
     // unit is relevant to TokenPattern only
-    val unit = template(data.getOrElse("unit", DefaultUnit))
+    val unit = tmpl(data.getOrElse("unit", DefaultUnit))
 
     // make intermediary rule
     new Rule(name, labels, ruleType, unit, priority, keep, action, pattern)
