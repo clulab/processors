@@ -17,6 +17,7 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **5.8.0** - Added in-house random forest implementation. Removed Weka dependency and its RF classifier. Removed RF reranking classifier. Bug fix in Odin: allow `$` and `\` in variable values. Restricted Odin variable names to valid Java identifiers. Added object Serializer. We no longer intern Strings by default in BioNLPProcessor.
 + **5.7.3** - Added support for context entities: species, organs, cell lines, cell types.
 + **5.7.2** - Keep matched syntactic paths in event/relation mentions. Added support for trigger matching from the state.
 + [more...](CHANGES.md)
@@ -44,20 +45,20 @@ This software is available on Maven Central. To use, simply add the following de
     <dependency>
        <groupId>org.clulab</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.7.3</version>
+       <version>5.8.0</version>
     </dependency>
     <dependency>
        <groupId>org.clulab</groupId>
        <artifactId>processors_2.11</artifactId>
-       <version>5.7.3</version>
+       <version>5.8.0</version>
        <classifier>models</classifier>
     </dependency>
 
  The equivalent SBT dependencies are:
 
     libraryDependencies ++= Seq(
-        "org.clulab" %% "processors" % "5.7.3",
-        "org.clulab" %% "processors" % "5.7.3" classifier "models"
+        "org.clulab" %% "processors" % "5.8.0",
+        "org.clulab" %% "processors" % "5.8.0" classifier "models"
     )
 
 

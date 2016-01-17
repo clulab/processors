@@ -22,7 +22,7 @@ import BioNLPProcessor._
  * User: mihais
  * Date: 10/27/14
  */
-class BioNLPProcessor (internStrings:Boolean = true,
+class BioNLPProcessor (internStrings:Boolean = false,
                        withCRFNER:Boolean = true,
                        withRuleNER:Boolean = true,
                        withContext:Boolean = true,
