@@ -136,6 +136,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
 
   def jsonAST: JValue
 
+  /** returns a json representation of the mention */
   def json(pretty: Boolean = false): String =
     if (pretty) prettyJson(renderJValue(jsonAST))
     else compactJson(renderJValue(jsonAST))
