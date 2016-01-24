@@ -1,5 +1,6 @@
 package edu.arizona.sista.odin
 
+import scala.util.matching.Regex
 import scala.util.hashing.MurmurHash3._
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
@@ -65,6 +66,9 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
 
   /** returns true if the string matches any of the mention labels */
   def matches(label: String): Boolean = labels contains label
+
+  /** returns true if the regex matches any of the mention labels */
+  def matches(regex: Regex): Boolean = labels.exists(l => regex.findFirstIn(l).nonEmpty)
 
   /** returns true if the StringMatcher matches any of the mention labels */
   def matches(matcher: StringMatcher): Boolean = labels exists matcher.matches
