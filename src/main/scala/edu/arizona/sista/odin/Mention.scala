@@ -151,12 +151,12 @@ class TextBoundMention(
 ) extends Mention {
 
   def this(
-    label: String,
-    tokenInterval: Interval,
-    sentence: Int,
-    document: Document,
-    keep: Boolean,
-    foundBy: String
+      label: String,
+      tokenInterval: Interval,
+      sentence: Int,
+      document: Document,
+      keep: Boolean,
+      foundBy: String
   ) = this(Seq(label), tokenInterval, sentence, document, keep, foundBy)
 
   // TextBoundMentions don't have arguments
@@ -209,23 +209,23 @@ class EventMention(
   ) = this(Seq(label), trigger, arguments, paths, sentence, document, keep, foundBy)
 
   def this(
-    label: String,
-    trigger: TextBoundMention,
-    arguments: Map[String, Seq[Mention]],
-    sentence: Int,
-    document: Document,
-    keep: Boolean,
-    foundBy: String
+      label: String,
+      trigger: TextBoundMention,
+      arguments: Map[String, Seq[Mention]],
+      sentence: Int,
+      document: Document,
+      keep: Boolean,
+      foundBy: String
   ) = this(Seq(label), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   def this(
-    labels: Seq[String],
-    trigger: TextBoundMention,
-    arguments: Map[String, Seq[Mention]],
-    sentence: Int,
-    document: Document,
-    keep: Boolean,
-    foundBy: String
+      labels: Seq[String],
+      trigger: TextBoundMention,
+      arguments: Map[String, Seq[Mention]],
+      sentence: Int,
+      document: Document,
+      keep: Boolean,
+      foundBy: String
   ) = this(labels, trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   // token interval that contains trigger and all matched arguments
