@@ -253,7 +253,7 @@ class EventMention(
   }
 
   def jsonAST: JValue = {
-    val args = arguments.toList.map {
+    val args = arguments.map {
       case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
     }
     ("type" -> "Event") ~
@@ -261,7 +261,7 @@ class EventMention(
     ("sentence" -> sentence) ~
     ("foundBy" -> foundBy) ~
     ("trigger" -> trigger.jsonAST) ~
-    ("arguments" -> JObject(args))
+    ("arguments" -> JObject(args.toList))
   }
 
   // Copy constructor for EventMention
@@ -361,14 +361,14 @@ class RelationMention(
   }
 
   def jsonAST: JValue = {
-    val args = arguments.toList.map {
+    val args = arguments.map {
       case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
     }
     ("type" -> "Relation") ~
     ("labels" -> labels) ~
     ("sentence" -> sentence) ~
     ("foundBy" -> foundBy) ~
-    ("arguments" -> JObject(args))
+    ("arguments" -> JObject(args.toList))
   }
 
   // Copy constructor for RelationMention
