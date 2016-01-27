@@ -32,12 +32,19 @@ class RuleReader(val actions: Actions) {
 
   def readMasterFile(input: String): Vector[Extractor] = {
     val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
-    val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala
+    val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
     val taxonomy = master.get("taxonomy").map(readTaxonomy)
-    val vars = master.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
+    val vars = getVars(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
     val rules = readRules(jRules, taxonomy, vars)
     mkExtractors(rules)
+  }
+
+  def getVars(data: Map[String, Any]): Map[String, String] = {
+    data
+      .get("vars")
+      .map(_.asInstanceOf[JMap[String, Any]].asScala.mapValues(_.toString).toMap)
+      .getOrElse(Map.empty)
   }
 
   def mkExtractors(rules: Seq[Rule]): Vector[Extractor] = {
@@ -171,7 +178,7 @@ class RuleReader(val actions: Actions) {
       // read list of rules
       val jRules = data("rules").asInstanceOf[Collection[JMap[String, Any]]]
       // read optional vars
-      val localVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala.toMap).getOrElse(Map.empty)
+      val localVars = getVars(data)
       (jRules, localVars)
     } catch {
       case e: ConstructorException =>
@@ -181,7 +188,7 @@ class RuleReader(val actions: Actions) {
         (jRules, Map.empty)
     }
     // variables specified by the call to `import`
-    val importVars = data.get("vars").map(_.asInstanceOf[JMap[String, String]].asScala).getOrElse(Map.empty)
+    val importVars = getVars(data)
     // this map concatenation implements variable scope:
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
