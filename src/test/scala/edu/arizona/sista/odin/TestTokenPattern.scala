@@ -34,15 +34,28 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results should have size (1)
   }
 
+  // test overlaps
+  val doc3 = proc annotate text3
   text3 should "contain two matches" in {
-    val doc = proc annotate text3
-    val p = TokenPattern.compile("@Phosphorylation and inhibits")
+    val p = TokenPattern.compile("@ph:Phosphorylation (by TGFBR3)? and inhibits")
     val mentions = Seq(
-      new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>"),
-      new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc, true, "<MANUAL>")
+      new TextBoundMention("Phosphorylation", Interval(0, 7), 0, doc3, true, "<MANUAL>"),
+      new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc3, true, "<MANUAL>")
     )
     val state = State(mentions)
-    val results = p.findAllIn(0, doc, state)
+    val results = p.findAllIn(0, doc3, state).distinct
+    results should have size (2)
+  }
+
+  // test overlaps
+  it should "also contain two matches if mentions in state are reversed" in {
+    val p = TokenPattern.compile("@ph:Phosphorylation (by TGFBR3)? and inhibits")
+    val mentions = Seq(
+      new TextBoundMention("Phosphorylation", Interval(0, 9), 0, doc3, true, "<MANUAL>"),
+      new TextBoundMention("Phosphorylation", Interval(0, 7), 0, doc3, true, "<MANUAL>")
+    )
+    val state = State(mentions)
+    val results = p.findAllIn(0, doc3, state).distinct
     results should have size (2)
   }
 
