@@ -55,6 +55,7 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
       // attempt to match each category at this offset
       for (i <- matchers.indices) {
         spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, sentence)
+        // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
       }
 
       // pick the longest match

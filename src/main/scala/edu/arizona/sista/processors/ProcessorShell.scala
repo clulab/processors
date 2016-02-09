@@ -32,15 +32,12 @@ object ProcessorShell extends App {
   )
 
   // create the processor
-  val core: Processor = new CoreNLPProcessor(withDiscourse = false) // this uses the slow but better discourse parser
-  val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
-  val bio: Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
+  lazy val core: Processor = new CoreNLPProcessor(withDiscourse = false) // this uses the slow but better discourse parser
+  lazy val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
+  lazy val bio: Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
 
   var proc = core
   reader.setPrompt("(core)>>> ")
-  println("Loading CoreNLPProcessor...\n")
-  proc.annotate("blah")
-
   println("\nWelcome to the ProcessorShell!")
   printCommands()
 
