@@ -1,5 +1,5 @@
 # Changes
-+ **5.8.1** - Improved Odin's variables compatibility with YAML.
++ **5.8.1** - Improved Odin's variables compatibility with YAML. Switched BioNLPProcessor to using bioresources rather than the local resources.
 + **5.8.0** - Added in-house random forest implementation. Removed Weka dependency and its RF classifier. Removed RF reranking classifier. Bug fix in Odin: allow `$` and `\` in variable values. Restricted Odin variable names to valid Java identifiers. Added object Serializer. We no longer intern Strings by default in BioNLPProcessor.
 + **5.7.3** - Added support for context entities: species, organs, cell lines, cell types.
 + **5.7.2** - Keep matched syntactic paths in event/relation mentions. Added support for trigger matching from the state.
