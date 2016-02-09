@@ -118,6 +118,7 @@ object KBGenerator {
       .sorted
       .distinct
     ow.print(uniqLines.mkString("\n"))
+    ow.println()
     ow.close()
 
     logger.info(s"Done. Read $lineCount lines (${uniqLines.size} distinct) from ${entry.kbName}")
