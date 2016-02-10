@@ -367,6 +367,7 @@ object BioNLPProcessor {
         case aids if aids.toLowerCase == "aids" && aids != "AIDS" => ta.setTag("VBZ")
         case human if human.toLowerCase == "human" => ta.setTag("NN") // Modified by Enrique for context 07/20/15
         case glyc if glyc.toLowerCase == "glycosylates" => ta.setTag("VBZ")
+        case mutant if mutant.toLowerCase == "mutant" => ta.setTag("NN")
         case _ => ()
       }
     }
