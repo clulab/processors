@@ -71,6 +71,28 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(1).entities.get(1) should be ("B-Gene_or_gene_product")
   }
 
+  it should "recognize correct species in text 3" in {
+    val doc = proc.mkDocument(
+      "Human RAS is different from human pinworm RAS.", keepText = false)
+
+    annotate(doc)
+
+    val s = doc.sentences(0)
+    for(i <- 0 until s.size) {
+      println(s"${s.words(i)} ${s.tags.get(i)} ${s.lemmas.get(i)} ${s.entities.get(i)}")
+    }
+
+    var i = 0
+    for(s <- doc.sentences) {
+      println(s"Labels for sentence #$i: " + s.entities.get.mkString(" "))
+      i += 1
+    }
+
+    doc.sentences(0).entities.get(0) should be ("B-Species")
+    doc.sentences(0).entities.get(5) should be ("B-Species")
+    doc.sentences(0).entities.get(6) should be ("I-Species")
+  }
+
   it should "recognize protein families" in {
     val doc = proc.mkDocument("Mek is a protein!")
 

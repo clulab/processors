@@ -1,8 +1,10 @@
 package edu.arizona.sista.processors.bionlp.ner
 
-import java.io.{InputStreamReader, BufferedReader}
+import java.io.{FileInputStream, File, InputStreamReader, BufferedReader}
+import java.util.zip.GZIPInputStream
 
-import edu.arizona.sista.processors.Sentence
+import edu.arizona.sista.processors.{Processor, Sentence}
+import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.struct.HashTrie
 import org.slf4j.LoggerFactory
 
@@ -53,6 +55,7 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
       // attempt to match each category at this offset
       for (i <- matchers.indices) {
         spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, sentence)
+        // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
       }
 
       // pick the longest match
@@ -195,54 +198,6 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
 object RuleNER {
   val logger = LoggerFactory.getLogger(classOf[RuleNER])
   val OUTSIDE_LABEL = "O"
-
-  /** Loads all KBs; KBs must be listed in descending order of their priorities */
-  def load(kbs:List[String], useLemmas:Boolean = false, caseInsensitive:Boolean = true):RuleNER = {
-    logger.info("Beginning to load the KBs for the rule-based bio NER...")
-    val matchers = new ArrayBuffer[(String, HashTrie)]
-    val knownCaseInsensitives = new mutable.HashSet[String]()
-    for(kb <- kbs) {
-      val name = extractKBName(kb)
-      val is = RuleNER.getClass.getClassLoader.getResourceAsStream(kb)
-      assert(is != null, s"Failed to find KB file $kb in the classpath!")
-      val reader = new BufferedReader(new InputStreamReader(is))
-      val matcher = loadKB(reader, caseInsensitive, knownCaseInsensitives)
-      logger.info(s"Loaded matcher for label $name. This matchers contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-      matchers += new Tuple2(name, matcher)
-      reader.close()
-    }
-    logger.info("KB loading completed.")
-    new RuleNER(matchers.toArray, knownCaseInsensitives.toSet, useLemmas)
-  }
-
-  def loadKB(reader:BufferedReader, caseInsensitive:Boolean, knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
-    val matcher = new HashTrie(caseInsensitive = caseInsensitive, internStrings = true)
-    var done = false
-    while(! done) {
-      var line = reader.readLine()
-      if(line == null) {
-        done = true
-      } else {
-        line = line.trim
-        if(! line.startsWith("#")) {
-          val tokens = line.split("\\s+")
-          matcher.add(tokens)
-
-          if(tokens.length == 1 && line.toLowerCase == line) {
-            knownCaseInsensitives.add(line)
-          }
-        }
-      }
-    }
-    matcher
-  }
-
-  def extractKBName(kb:String):String = {
-    val slash = kb.lastIndexOf("/")
-    val dot = kb.lastIndexOf('.')
-    val name = kb.substring(slash + 1, dot)
-    name
-  }
 
   /** Merges labels in src into dst, without overlapping any existing labels in dst */
   def mergeLabels(dst:Array[String], src:Array[String]) {

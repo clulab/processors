@@ -122,16 +122,21 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
       return -1 // first token in the sequence does not exist in the first layer
     }
 
+    //println(s"Matched ${sequenceNormalized(offset)} at offset $offset")
     val tree = entries.get(sequenceNormalized(offset)).get
     val longestMatch = new MutableNumber[Int](-1)
-    if(tree.completePath) longestMatch.value = 1
 
+    // attempt to match more by inspecting the children
     if(tree.children.isDefined) {
       var shouldStop = false
       for (child <- tree.children.get if ! shouldStop) {
         shouldStop = child.find(sequenceNormalized, offset + 1, 1, longestMatch)
       }
     }
+
+    // we did not find anything in the children paths, but this is a complete match as is
+    if(longestMatch.value < 0 && tree.completePath)
+      longestMatch.value = 1
 
     longestMatch.value
   }
@@ -148,6 +153,13 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
     os.toString()
   }
 
+  /**
+    * @param sequence Text to match against
+    * @param offset Start token in the sequence
+    * @param currentSpanLength How many tokens have we matched so far
+    * @param longestMatch The value of the longest match interval
+    * @return true if search should stop here; false otherwise
+    */
   def find(sequence:Array[String], offset:Int, currentSpanLength:Int, longestMatch:MutableNumber[Int]):Boolean = {
     if(offset >= sequence.length) {
       return true

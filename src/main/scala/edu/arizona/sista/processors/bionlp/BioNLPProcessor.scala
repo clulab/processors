@@ -4,7 +4,7 @@ import java.util
 import java.util.Properties
 import java.util.regex.Pattern
 
-import edu.arizona.sista.processors.bionlp.ner.{BioNER, RuleNER}
+import edu.arizona.sista.processors.bionlp.ner.{KBLoader, BioNER, RuleNER}
 import edu.arizona.sista.processors.{Sentence, Document}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.MutableNumber
@@ -12,6 +12,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotat
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
 
@@ -35,8 +36,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
   lazy val postProcessor = new BioNLPTokenizerPostProcessor
   lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences)
   lazy val bioNer = BioNER.load(CRF_MODEL_PATH)
-  lazy val ruleNer = RuleNER.load(RULE_NER_KBS, useLemmas = false)
-  //lazy val contextRules = RuleNER.load(YOUR CONTEXT KBS, useLemmas = true) // TODO Enrique
+  lazy val ruleNer = KBLoader.loadAll
 
   override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
@@ -321,30 +321,17 @@ class BioNLPProcessor (internStrings:Boolean = false,
     }
     output
   }
+
+
 }
 
 object BioNLPProcessor {
+  val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
+
   val POTENTIAL_FIGURE_NUMBER = Pattern.compile("[a-z]*\\d+", Pattern.CASE_INSENSITIVE)
   val POTENTIAL_FIGURE_TEXT = Pattern.compile("(figure|figures|fig\\.?|figs\\.?)", Pattern.CASE_INSENSITIVE)
 
   val CRF_MODEL_PATH = "edu/arizona/sista/processors/bionlp/ner/bioner.dat"
-
-  val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
-    "edu/arizona/sista/processors/bionlp/ner/Gene_or_gene_product.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Family.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Site.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Cellular_component.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Simple_chemical.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Organ.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/CellType.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/CellLine.tsv",
-    "edu/arizona/sista/processors/bionlp/ner/Species.tsv"
-  )
-
-  val NORMALIZED_LABELS = Map[String, String]( // needed to convert  the CRF's labels (from BioCreative) to our labels
-    "B-GENE" -> "B-Gene_or_gene_product",
-    "I-GENE" -> "I-Gene_or_gene_product"
-  )
 
   /**
     * Fixes some common POS tagging mistakes (in place, using CoreLabel.setTag)

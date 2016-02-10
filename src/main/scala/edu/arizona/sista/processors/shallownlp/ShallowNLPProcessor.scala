@@ -78,7 +78,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
    */
   def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = originalTokens
 
-  private def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
+  protected def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
     val origTokens = sentence.get(classOf[TokensAnnotation]).asScala.toArray
 
     val modifiedTokens = postprocessTokens(origTokens)
