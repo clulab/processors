@@ -8,7 +8,15 @@ object ThompsonVM {
 
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
+  // a partial group is the name and the start of a group, without the end
   type PartialGroups = List[(String, Int)]
+
+  // enum
+  object Direction extends Enumeration {
+    type Direction = Value
+    val LeftToRight, RightToLeft = Value
+  }
+  import Direction._
 
   sealed trait Thread {
     def isDone: Boolean
@@ -19,9 +27,10 @@ object ThompsonVM {
   private case class SingleThread(
       tok: Int,
       inst: Inst,
+      direction: Direction,
       groups: NamedGroups,
       mentions: NamedMentions,
-      partialGroups: List[(String, Int)]
+      partialGroups: PartialGroups
   ) extends Thread {
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
@@ -54,6 +63,7 @@ object ThompsonVM {
     def mkThreads(
         tok: Int,
         inst: Inst,
+        direction: Direction = Direction.LeftToRight,
         groups: NamedGroups = Map.empty,
         mentions: NamedMentions = Map.empty,
         partialGroups: PartialGroups = Nil
@@ -74,7 +84,7 @@ object ThompsonVM {
               loop((i.next, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
             case _ => sys.error("unable to close capture")
           }
-          case i => loop(rest, SingleThread(tok, i, gs, ms, pgs) :: ts)
+          case i => loop(rest, SingleThread(tok, i, direction, gs, ms, pgs) :: ts)
         }
       }
       // return threads produced by `inst`
@@ -85,25 +95,25 @@ object ThompsonVM {
     // Instruction is expected to be a Match instruction.
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
       case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
-        mkThreads(t.tok + 1, i.next, t.groups, t.mentions, t.partialGroups)
+        mkThreads(t.tok + 1, i.next, t.direction, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceStart if t.tok == 0 =>
-        mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+        mkThreads(t.tok, i.next, t.direction, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
-        mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+        mkThreads(t.tok, i.next, t.direction, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
         val results = eval(mkThreads(t.tok, i.start))
         if (i.negative == results.isEmpty)
-          mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+          mkThreads(t.tok, i.next, t.direction, t.groups, t.mentions, t.partialGroups)
         else Nil
       case i: MatchLookBehind =>
         val startTok = tok - i.size
         if (startTok < 0) {
-          if (i.negative) mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+          if (i.negative) mkThreads(t.tok, i.next, t.direction, t.groups, t.mentions, t.partialGroups)
           else Nil
         } else {
           val results = eval(mkThreads(startTok, i.start))
           if (i.negative == results.isEmpty)
-            mkThreads(t.tok, i.next, t.groups, t.mentions, t.partialGroups)
+            mkThreads(t.tok, i.next, t.direction, t.groups, t.mentions, t.partialGroups)
           else Nil
         }
       case i: MatchMention =>
@@ -112,7 +122,7 @@ object ThompsonVM {
           if mention.start == t.tok && mention.matches(i.m)
         } yield {
           val captures = mkMentionCapture(t.mentions, i.name, mention)
-          mkThreads(mention.end, i.next, t.groups, captures, t.partialGroups)
+          mkThreads(mention.end, i.next, t.direction, t.groups, captures, t.partialGroups)
         }
         bundles match {
           case Seq() => Nil
