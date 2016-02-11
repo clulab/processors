@@ -516,4 +516,52 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
   }
 
+  // test for variable-length lookbehind assertions
+  val negLookbehindPattern = "(!< @Title @Person) @person:Person"
+  negLookbehindPattern should "should allow for variable-length negative lookbehind assertion" in {
+    val grammar = """
+                 |# our rule for capturing titles
+                 |- name: title_rule
+                 |  priority: 1
+                 |  type: token
+                 |  label: Title
+                 |  pattern: |
+                 |    [word=/(?i)^(herr|doktor|professor)$/]
+                 |
+                 |# our rule for capturing a Person NE
+                 |- name: person_rule
+                 |  priority: 1
+                 |  type: token
+                 |  label: Person
+                 |  pattern: |
+                 |    Faust
+                 |
+                 |- name: fellow_without_title_rule
+                 |  priority: 2
+                 |  type: token
+                 |  label: TitlelessDude
+                 |  pattern: |
+                 |    (?<! @Title) @titleless:Person
+                 |
+                 |""".stripMargin
+
+
+    val ee = ExtractorEngine(grammar)
+
+    val text9a = "Herr Professor Doktor Faust, may I see you in your office?"
+    val doc9a = proc annotate text9a
+    val results9a = ee.extractFrom(doc9a)
+    val titlelessDudeMentions9a = results9a.filter(_.label matches "TitlelessDude")
+    // Should have (3) Title and (1) Person
+    results9a should have size (4)
+    titlelessDudeMentions9a should have size (0)
+
+    val text9b = "Faust is a friend of mine."
+    val doc9b = proc annotate text9b
+    val results9b = ee.extractFrom(doc9b)
+    val titlelessDudeMentions9b = results9b.filter(_.label matches "TitlelessDude")
+    // Should have (1) Person and (1) TitlelessDude
+    results9b should have size (2)
+    titlelessDudeMentions9b should have size (1)
+  }
 }
