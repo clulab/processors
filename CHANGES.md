@@ -1,4 +1,5 @@
 # Changes
++ **5.8.2** - Implemented unrestricted lookbehind for Odin's surface patterns.
 + **5.8.1** - Improved Odin's variables compatibility with YAML. Switched BioNLPProcessor to using bioresources rather than the local resources. Bug fix: RuleNER was not producing the longest possible match all the time.
 + **5.8.0** - Added in-house random forest implementation. Removed Weka dependency and its RF classifier. Removed RF reranking classifier. Bug fix in Odin: allow `$` and `\` in variable values. Restricted Odin variable names to valid Java identifiers. Added object Serializer. We no longer intern Strings by default in BioNLPProcessor.
 + **5.7.3** - Added support for context entities: species, organs, cell lines, cell types.
