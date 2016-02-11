@@ -103,9 +103,11 @@ object ThompsonVM {
         mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
         val results = eval(mkThreads(t.tok, i.start, LeftToRight))
-        if (i.negative == results.isEmpty)
+        if (i.negative == results.isEmpty) {
           mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
-        else Nil
+        } else {
+          Nil
+        }
       case i: MatchLookBehind =>
         val startTok = t.tok - 1
         val results = if (startTok < 0) None else eval(mkThreads(startTok, i.start, RightToLeft))
