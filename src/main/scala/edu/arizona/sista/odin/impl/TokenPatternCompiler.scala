@@ -59,40 +59,14 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
         ProgramFragment(MatchLookAhead(frag.in, negative))
     }
 
-  // MatchLookBehind requires the length of the pattern's matches,
-  // so the pattern is restricted to fixed width patterns only
+  // MatchLookBehind builds the pattern in reverse
   def lookbehindAssertion: Parser[ProgramFragment] =
-    ("(?<=" | "(?<!") ~ fixedWidthPattern <~ ")" ^^ {
-      case op ~ fragWithSize =>
-        val (frag, size) = fragWithSize
+    ("(?<=" | "(?<!") ~ splitPatternRev <~ ")" ^^ {
+      case op ~ frag =>
         frag.setOut(Done)
         val negative = op.endsWith("!")
-        ProgramFragment(MatchLookBehind(frag.in, size, negative))
+        ProgramFragment(MatchLookBehind(frag.in, negative))
     }
-
-  // a pattern is fixed width if we know the length of its matches at compile time
-  // it is a concatenation of fixed width chunks
-  def fixedWidthPattern: Parser[(ProgramFragment, Int)] =
-    rep1(fixedWidthChunk) ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
-        case ((lhs, sl), (rhs, sr)) => (ProgramFragment(lhs, rhs), sl + sr)
-      }
-    }
-
-  // a fixed width atom with optional repetition
-  def fixedWidthChunk: Parser[(ProgramFragment, Int)] =
-    fixedWidthAtom ~ opt("{" ~> int <~ "}") ^^ {
-      case (frag, size) ~ None => (frag, size)
-      case (frag, size) ~ Some(n) => (frag.repeatPattern(n), n * size)
-    }
-
-  // a fixed width token or a fixed width pattern surrounded by parenthesis
-  def fixedWidthAtom: Parser[(ProgramFragment, Int)] =
-    fixedWidthToken | "(" ~> fixedWidthPattern <~ ")"
-
-  // a single fixed width token matcher
-  def fixedWidthToken: Parser[(ProgramFragment, Int)] =
-    singleTokenPattern ^^ { (_, 1) }
 
   def capturePattern: Parser[ProgramFragment] =
     "(?<" ~ stringLiteral ~ ">" ~ splitPattern ~ ")" ^^ {
@@ -130,6 +104,57 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
 
   def exactPattern: Parser[ProgramFragment] =
     atomicPattern ~ ("{" ~> int <~ "}") ^^ {
+      case frag ~ n => frag.repeatPattern(n)
+    }
+
+  // reverse grammar
+
+  def splitPatternRev: Parser[ProgramFragment] =
+    rep1sep(concatPatternRev, "|") ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
+        case (lhs, rhs) =>
+          val split = Split(lhs.in, rhs.in)
+          ProgramFragment(split, lhs.out ++ rhs.out)
+      }
+    }
+
+  def concatPatternRev: Parser[ProgramFragment] =
+    rep1(quantifiedPatternRev) ^^ { chunks =>
+      (chunks.head /: chunks.tail) {
+        case (lhs, rhs) => ProgramFragment(rhs, lhs)
+      }
+    }
+
+  def quantifiedPatternRev: Parser[ProgramFragment] =
+    atomicPatternRev ||| repeatedPatternRev ||| rangePatternRev ||| exactPatternRev
+
+  def capturePatternRev: Parser[ProgramFragment] =
+    "(?<" ~ stringLiteral ~ ">" ~ splitPatternRev ~ ")" ^^ {
+      case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
+    }
+
+  def atomicPatternRev: Parser[ProgramFragment] =
+    assertionPattern | singleTokenPattern | mentionPattern |
+    capturePatternRev | "(" ~> splitPatternRev <~ ")"
+
+  def repeatedPatternRev: Parser[ProgramFragment] =
+    atomicPatternRev ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?") ^^ {
+      case frag ~ "?" => frag.greedyOptional
+      case frag ~ "??" => frag.lazyOptional
+      case frag ~ "*" => frag.greedyStar
+      case frag ~ "*?" => frag.lazyStar
+      case frag ~ "+" => frag.greedyPlus
+      case frag ~ "+?" => frag.lazyPlus
+    }
+
+  def rangePatternRev: Parser[ProgramFragment] =
+    atomicPatternRev ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?") ^^ {
+      case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
+      case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
+    }
+
+  def exactPatternRev: Parser[ProgramFragment] =
+    atomicPatternRev ~ ("{" ~> int <~ "}") ^^ {
       case frag ~ n => frag.repeatPattern(n)
     }
 

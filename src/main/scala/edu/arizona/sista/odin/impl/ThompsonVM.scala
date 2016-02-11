@@ -102,20 +102,17 @@ object ThompsonVM {
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
         mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
-        val results = eval(mkThreads(t.tok, i.start))
+        val results = eval(mkThreads(t.tok, i.start, LeftToRight))
         if (i.negative == results.isEmpty)
           mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
         else Nil
       case i: MatchLookBehind =>
-        val startTok = tok - i.size
-        if (startTok < 0) {
-          if (i.negative) mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
-          else Nil
+        val startTok = t.tok - 1
+        val results = if (startTok < 0) None else eval(mkThreads(startTok, i.start, RightToLeft))
+        if (i.negative == results.isEmpty) {
+          mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {
-          val results = eval(mkThreads(startTok, i.start))
-          if (i.negative == results.isEmpty)
-            mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
-          else Nil
+          Nil
         }
       case i: MatchMention =>
         val bundles = for {
@@ -258,6 +255,6 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
 }
 
 // zero-width look-behind assertion
-case class MatchLookBehind(start: Inst, size: Int, negative: Boolean) extends Inst {
-  def dup() = MatchLookBehind(start.deepcopy(), size, negative)
+case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
+  def dup() = MatchLookBehind(start.deepcopy(), negative)
 }
