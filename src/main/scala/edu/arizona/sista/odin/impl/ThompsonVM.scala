@@ -63,7 +63,7 @@ object ThompsonVM {
     def mkThreads(
         tok: Int,
         inst: Inst,
-        dir: Direction = Direction.LeftToRight,
+        dir: Direction = LeftToRight,
         groups: NamedGroups = Map.empty,
         mentions: NamedMentions = Map.empty,
         partialGroups: PartialGroups = Nil
