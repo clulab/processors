@@ -94,7 +94,7 @@ object ThompsonVM {
     // Advance thread by executing instruction.
     // Instruction is expected to be a Match instruction.
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
-      case i: MatchToken if t.tok < doc.sentences(sent).size && i.c.matches(t.tok, sent, doc, state) =>
+      case i: MatchToken if doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state) =>
         val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
         mkThreads(nextTok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceStart if t.tok == 0 =>
@@ -102,14 +102,15 @@ object ThompsonVM {
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
         mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
-        val results = eval(mkThreads(t.tok, i.start, LeftToRight))
+        val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
+        val results = eval(mkThreads(startTok, i.start, LeftToRight))
         if (i.negative == results.isEmpty) {
           mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {
           Nil
         }
       case i: MatchLookBehind =>
-        val startTok = t.tok - 1
+        val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
         val results = if (startTok < 0) None else eval(mkThreads(startTok, i.start, RightToLeft))
         if (i.negative == results.isEmpty) {
           mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
