@@ -620,15 +620,21 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
   // positive lookbehind in negative lookbehind
   val lookaroundPattern2 = "(?<! (?<= a) mangy) black cat"
-  lookaroundPattern2 should "match \"black cat\" in \"a mangy black cat\", \"the mangy black cat\", and \"the curious black cat\"" in {
+
+  lookaroundPattern2 should "not match \"black cat\" in \"a mangy black cat\"" in {
+    val p = TokenPattern.compile(lookaroundPattern2)
+    val doc = proc annotate "I glimpsed a mangy black cat in the moonlight."
+    val results = p.findAllIn(0, doc)
+    results should have size (0)
+  }
+
+  it should "match \"black cat\" in \"the mangy black cat\", and \"the curious black cat\"" in {
 
     val p = TokenPattern.compile(lookaroundPattern2)
-    val doc1 = proc annotate "I glimpsed a mangy black cat in the moonlight."
-    val doc2 = proc annotate "I glimpsed the mangy black cat in the moonlight."
-    val doc3 = proc annotate "I glimpsed the curious black cat in the moonlight."
+    val doc1 = proc annotate "I glimpsed the mangy black cat in the moonlight."
+    val doc2 = proc annotate "I glimpsed the curious black cat in the moonlight."
     val results1 = p.findAllIn(0, doc1)
     val results2 = p.findAllIn(0, doc2)
-    val results3 = p.findAllIn(0, doc3)
 
     // matches b/c neg lookbehind req. contained pattern to be false
     results1 should have size (1)
@@ -636,19 +642,14 @@ class TestTokenPattern extends FlatSpec with Matchers {
       'start (4),
       'end (6)
     )
-    // matches b/c neg lookbehind req. contained pattern to be false
     results2 should have size (1)
-    results3.head.interval should have (
-      'start (4),
-      'end (6)
-    )
-    results3 should have size (1)
     // matches b/c neg lookbehind req. contained pattern to be false
-    results3.head.interval should have (
+    results2.head.interval should have (
       'start (4),
       'end (6)
     )
   }
+
   it should "not match \"the curious blue cat\"" in {
     val doc1 = proc annotate "I glimpsed the curious blue cat in the moonlight."
     val p = TokenPattern.compile(lookaroundPattern2)
@@ -663,14 +664,22 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val p = TokenPattern.compile(lookaroundPattern3)
     val doc1 = proc annotate "I glimpsed a mangy black cat in the moonlight."
     val doc2 = proc annotate "I glimpsed a mangy blue cat in the moonlight."
-    val doc3 = proc annotate "I glimpsed the mangy black cat in the moonlight."
     val results1 = p.findAllIn(0, doc1)
     val results2 = p.findAllIn(0, doc2)
-    val results3 = p.findAllIn(0, doc3)
 
     results1 should have size (0)
     results2 should have size (0)
-    results3 should have size (0)
+  }
+
+  it should "match \"black cat\" in \"the mangy black cat\"" in {
+    val p = TokenPattern.compile(lookaroundPattern3)
+    val doc = proc annotate "I glimpsed the mangy black cat in the moonlight."
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (4),
+      'end (6)
+    )
   }
 
   // negative lookbehind in negative lookbehind
