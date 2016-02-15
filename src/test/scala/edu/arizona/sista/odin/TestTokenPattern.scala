@@ -552,7 +552,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
   // test for variable-length lookbehind assertions
   //////////////////////////////////////////////////
 
-  val negLookbehindPattern = "(!< @Title @Person) @person:Person"
+  val negLookbehindPattern = "(?<! ^ @Title+) @person:Person"
   negLookbehindPattern should "should allow for variable-length negative lookbehind assertion" in {
     val grammar = """
                  |# our rule for capturing titles
@@ -576,7 +576,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
                  |  type: token
                  |  label: TitlelessDude
                  |  pattern: |
-                 |    (?<! @Title) @titleless:Person
+                 |    (?<! ^ @Title+) @titleless:Person
                  |
                  |""".stripMargin
 
