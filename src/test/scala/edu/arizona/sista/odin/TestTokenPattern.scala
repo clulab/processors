@@ -160,6 +160,38 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results should be ('empty)
   }
 
+  // a b c d e f g h i c
+
+  it should "match with variable length lookbehind" in {
+    val p = TokenPattern.compile("(?<=a []+) e")
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (4),
+      'end (5)
+    )
+  }
+
+  it should "match with nested lookbehind" in {
+    val p = TokenPattern.compile("(?<= (?<= (?<= a b) c d) e) f")
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (5),
+      'end (6)
+    )
+  }
+
+  it should "match with lookahead in lookbehind" in {
+    val p = TokenPattern.compile("(?<= a b (?=c d)) c")
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (2),
+      'end (3)
+    )
+  }
+
   it should "match nested captures" in {
     val rule = """
       |- name: test_rule
