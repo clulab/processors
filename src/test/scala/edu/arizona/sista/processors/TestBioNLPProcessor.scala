@@ -18,13 +18,11 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
 
     annotate(doc)
 
-    /*
     var i = 0
     for(s <- doc.sentences) {
       println(s"Labels for sentence #$i: " + s.entities.get.mkString(" "))
       i += 1
     }
-    */
 
     doc.sentences(0).entities.get(4) should be ("B-Gene_or_gene_product")
     doc.sentences(0).entities.get(7) should be ("B-Family")
