@@ -43,17 +43,19 @@ If you use anything else in this package, please link to this github page.
 
 This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml`:
 
-    <dependency>
-       <groupId>org.clulab</groupId>
-       <artifactId>processors_2.11</artifactId>
-       <version>5.8.1</version>
-    </dependency>
-    <dependency>
-       <groupId>org.clulab</groupId>
-       <artifactId>processors_2.11</artifactId>
-       <version>5.8.1</version>
-       <classifier>models</classifier>
-    </dependency>
+```xml
+<dependency>
+   <groupId>org.clulab</groupId>
+   <artifactId>processors_2.11</artifactId>
+   <version>5.8.1</version>
+</dependency>
+<dependency>
+   <groupId>org.clulab</groupId>
+   <artifactId>processors_2.11</artifactId>
+   <version>5.8.1</version>
+   <classifier>models</classifier>
+</dependency>
+```
 
 The equivalent SBT dependencies are:
 
