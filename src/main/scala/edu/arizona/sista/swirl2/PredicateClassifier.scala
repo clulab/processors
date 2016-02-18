@@ -34,8 +34,10 @@ class PredicateClassifier {
 
     var dataset = createDataset(doc)
     dataset = dataset.removeFeaturesByFrequency(2)
-    classifier = new LogisticRegressionClassifier[String, String]()
-    //classifier = new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 0, trainBagPct = 0.8, howManyFeaturesPerNode = featuresPerNode)
+    //classifier = new LogisticRegressionClassifier[String, String]()
+    classifier = new RFClassifier[String, String](numTrees = 100,
+      maxTreeDepth = 20, trainBagPct = 0.8, howManyFeaturesPerNode = featuresPerNode,
+      nilLabel = Some(NEG_LABEL))
     //classifier = new RandomForestClassifier[String, String](numTrees = 100)
     //classifier = new LinearSVMClassifier[String, String]()
     classifier.train(dataset)
