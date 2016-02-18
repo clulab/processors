@@ -84,117 +84,121 @@ Add the generated jar files under `target/` to your $CLASSPATH, along with the o
 Most of the examples here use Scala. However, this software can be used as is from Java as well! Scroll down towards the end of this document to see a Java usage example.
 
 ### Annotating entire documents
+```scala
+// create the processor
+// any processor works here! Try FastNLPProcessor or BioNLPProcessor.
+val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
 
-    // create the processor
-    // any processor works here! Try FastNLPProcessor or BioNLPProcessor.
-    val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
+// the actual work is done here
+val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
 
-    // the actual work is done here
-    val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
+// you are basically done. the rest of this code simply prints out the annotations
 
-    // you are basically done. the rest of this code simply prints out the annotations
+// let's print the sentence-level annotations
+var sentenceCount = 0
+for (sentence <- doc.sentences) {
+  println("Sentence #" + sentenceCount + ":")
+  println("Tokens: " + sentence.words.mkString(" "))
+  println("Start character offsets: " + sentence.startOffsets.mkString(" "))
+  println("End character offsets: " + sentence.endOffsets.mkString(" "))
 
-    // let's print the sentence-level annotations
-    var sentenceCount = 0
-    for (sentence <- doc.sentences) {
-      println("Sentence #" + sentenceCount + ":")
-      println("Tokens: " + sentence.words.mkString(" "))
-      println("Start character offsets: " + sentence.startOffsets.mkString(" "))
-      println("End character offsets: " + sentence.endOffsets.mkString(" "))
-
-      // these annotations are optional, so they are stored using Option objects, hence the foreach statement
-      sentence.lemmas.foreach(lemmas => println("Lemmas: " + lemmas.mkString(" ")))
-      sentence.tags.foreach(tags => println("POS tags: " + tags.mkString(" ")))
-      sentence.entities.foreach(entities => println("Named entities: " + entities.mkString(" ")))
-      sentence.norms.foreach(norms => println("Normalized entities: " + norms.mkString(" ")))
-      sentence.dependencies.foreach(dependencies => {
-        println("Syntactic dependencies:")
-        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
-        while(iterator.hasNext) {
-          val dep = iterator.next
-          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-          println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
-        }
-      })
-      sentence.syntacticTree.foreach(tree => {
-        println("Constituent tree: " + tree)
-        // see the edu.arizona.sista.utils.Tree class for more information
-        // on syntactic trees, including access to head phrases/words
-      })
-
-      sentenceCount += 1
-      println("\n")
+  // these annotations are optional, so they are stored using Option objects, hence the foreach statement
+  sentence.lemmas.foreach(lemmas => println(s"Lemmas: ${lemmas.mkString(" ")}"))
+  sentence.tags.foreach(tags => println(s"POS tags: ${tags.mkString(" ")}"))
+  sentence.chunks.foreach(chunks => println(s"Chunks: ${chunks.mkString(" ")}"))
+  sentence.entities.foreach(entities => println(s"Named entities: ${entities.mkString(" ")}"))
+  sentence.norms.foreach(norms => println(s"Normalized entities: ${norms.mkString(" ")}"))
+  sentence.dependencies.foreach(dependencies => {
+    println("Syntactic dependencies:")
+    val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+    while(iterator.hasNext) {
+      val dep = iterator.next
+      // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+      println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
     }
+  })
+  sentence.syntacticTree.foreach(tree => {
+    println("Constituent tree: " + tree)
+    // see the edu.arizona.sista.utils.Tree class for more information
+    // on syntactic trees, including access to head phrases/words
+  })
 
-    // let's print the coreference chains
-    doc.coreferenceChains.foreach(chains => {
-      for (chain <- chains.getChains) {
-        println("Found one coreference chain containing the following mentions:")
-        for (mention <- chain) {
-          // note that all these offsets start at 0 too
-          println("\tsentenceIndex:" + mention.sentenceIndex +
-            " headIndex:" + mention.headIndex +
-            " startTokenOffset:" + mention.startOffset +
-            " endTokenOffset:" + mention.endOffset +
-            " text: " + doc.sentences(mention.sentenceIndex).words.slice(mention.startOffset, mention.endOffset).mkString("[", " ", "]"))
-        }
-      }
-    })
+  sentenceCount += 1
+  println("\n")
+}
 
-    // let's print the discourse tree
-    doc.discourseTree.foreach(dt => {
-      println("Document-wide discourse tree:")
-      println(dt.toString())
-    })
+// let's print the coreference chains
+doc.coreferenceChains.foreach(chains => {
+  for (chain <- chains.getChains) {
+    println("Found one coreference chain containing the following mentions:")
+    for (mention <- chain) {
+      // note that all these offsets start at 0 too
+      println("\tsentenceIndex:" + mention.sentenceIndex +
+        " headIndex:" + mention.headIndex +
+        " startTokenOffset:" + mention.startOffset +
+        " endTokenOffset:" + mention.endOffset +
+        " text: " + doc.sentences(mention.sentenceIndex).words.slice(mention.startOffset, mention.endOffset).mkString("[", " ", "]"))
+    }
+  }
+})
 
+// let's print the discourse tree
+doc.discourseTree.foreach(dt => {
+  println("Document-wide discourse tree:")
+  println(dt.toString())
+})
+```
 The above code generates the following output:
 
-    Sentence #0:
-    Tokens: John Smith went to China .
-    Start character offsets: 0 5 11 16 19 24
-    End character offsets: 4 10 15 18 24 25
-    Lemmas: John Smith go to China .
-    POS tags: NNP NNP VBD TO NNP .
-    Named entities: PERSON PERSON O O LOCATION O
-    Normalized entities: O O O O O O
-    Syntactic dependencies:
-      head:1 modifier:0 label:nn
-      head:2 modifier:1 label:nsubj
-      head:2 modifier:4 label:prep_to
-    Constituent tree: (ROOT (S (NP (NNP John) (NNP Smith)) (VP (VBD went) (PP (TO to) (NP (NNP China)))) (. .)))
+```
+Sentence #0:
+Tokens: John Smith went to China .
+Start character offsets: 0 5 11 16 19 24
+End character offsets: 4 10 15 18 24 25
+Lemmas: John Smith go to China .
+POS tags: NNP NNP VBD TO NNP .
+Chunks: B-NP B-VP B-NP O B-PP B-NP I-NP I-NP I-NP O
+Named entities: PERSON PERSON O O LOCATION O
+Normalized entities: O O O O O O
+Syntactic dependencies:
+  head:1 modifier:0 label:nn
+  head:2 modifier:1 label:nsubj
+  head:2 modifier:4 label:prep_to
+Constituent tree: (ROOT (S (NP (NNP John) (NNP Smith)) (VP (VBD went) (PP (TO to) (NP (NNP China)))) (. .)))
 
 
-    Sentence #1:
-    Tokens: He visited Beijing , on January 10th , 2013 .
-    Start character offsets: 26 29 37 44 46 49 57 61 63 67
-    End character offsets: 28 36 44 45 48 56 61 62 67 68
-    Lemmas: he visit Beijing , on January 10th , 2013 .
-    POS tags: PRP VBD NNP , IN NNP JJ , CD .
-    Named entities: O O LOCATION O O DATE DATE DATE DATE O
-    Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
-    Syntactic dependencies:
-      head:1 modifier:0 label:nsubj
-      head:1 modifier:2 label:dobj
-      head:1 modifier:8 label:tmod
-      head:2 modifier:5 label:prep_on
-      head:5 modifier:6 label:amod
-    Constituent tree: (ROOT (S (NP (PRP He)) (VP (VBD visited) (NP (NP (NNP Beijing)) (, ,) (PP (IN on) (NP (NNP January) (JJ 10th))) (, ,)) (NP-TMP (CD 2013))) (. .)))
+Sentence #1:
+Tokens: He visited Beijing , on January 10th , 2013 .
+Start character offsets: 26 29 37 44 46 49 57 61 63 67
+End character offsets: 28 36 44 45 48 56 61 62 67 68
+Lemmas: he visit Beijing , on January 10th , 2013 .
+POS tags: PRP VBD NNP , IN NNP JJ , CD .
+Named entities: O O LOCATION O O DATE DATE DATE DATE O
+Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
+Syntactic dependencies:
+  head:1 modifier:0 label:nsubj
+  head:1 modifier:2 label:dobj
+  head:1 modifier:8 label:tmod
+  head:2 modifier:5 label:prep_on
+  head:5 modifier:6 label:amod
+Constituent tree: (ROOT (S (NP (PRP He)) (VP (VBD visited) (NP (NP (NNP Beijing)) (, ,) (PP (IN on) (NP (NNP January) (JJ 10th))) (, ,)) (NP-TMP (CD 2013))) (. .)))
 
 
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:3 text: [Beijing]
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:1 headIndex:0 startTokenOffset:0 endTokenOffset:1 text: [He]
-      sentenceIndex:0 headIndex:1 startTokenOffset:0 endTokenOffset:2 text: [John Smith]
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:9 text: [January 10th , 2013]
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:3 text: [Beijing]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:1 headIndex:0 startTokenOffset:0 endTokenOffset:1 text: [He]
+  sentenceIndex:0 headIndex:1 startTokenOffset:0 endTokenOffset:2 text: [John Smith]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:9 text: [January 10th , 2013]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
 
-    Document-wide discourse tree:
-    elaboration (LeftToRight)
-      TEXT:John Smith went to China .
-      TEXT:He visited Beijing , on January 10th , 2013 .
+Document-wide discourse tree:
+elaboration (LeftToRight)
+  TEXT:John Smith went to China .
+  TEXT:He visited Beijing , on January 10th , 2013 .
+```
 
 For more details about the annotation data structures, please see the `edu/arizona/sista/processor/Document.scala` file.
 
@@ -553,4 +557,3 @@ Please see [Odin's Wiki](https://github.com/sistanlp/processors/wiki/ODIN-(Open-
 + [Visualizer for our discourse parsers](http://agathon.sista.arizona.edu:8080/discp/)
 + [Odin online demo](http://agathon.sista.arizona.edu:8080/odinweb/open)
 + See our [Reach project](https://github.com/clulab/reach) for more applications of Odin and demos
-
