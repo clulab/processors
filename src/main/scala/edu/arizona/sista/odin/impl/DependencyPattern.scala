@@ -86,7 +86,7 @@ class TriggerPatternDependencyPattern(
     r <- trigger.findAllIn(sent, doc, state)
     trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
     (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
-  } yield new EventMention(labels, trig, args, paths, sent, doc, keep, ruleName)
+  } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
 }
 
 // creates an EventMention by matching trigger mentions
@@ -107,7 +107,7 @@ class TriggerMentionDependencyPattern(
     if mention.isInstanceOf[TextBoundMention]
     trig = mention.asInstanceOf[TextBoundMention]
     (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
-  } yield new EventMention(labels, trig, args, paths, sent, doc, keep, ruleName)
+  } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
 }
 
 // creates a RelationMention by matching mentions
@@ -129,5 +129,5 @@ class RelationDependencyPattern(
     (args, paths) <- extractArguments(mention.tokenInterval, sent, doc, state)
     relationArgs = args + (anchorName -> Seq(mention))
     relationPaths = paths + (anchorName -> Map(mention -> Nil))
-  } yield new RelationMention(labels, relationArgs, relationPaths, sent, doc, keep, ruleName)
+  } yield new RelationMention(labels, mkTokenInterval(relationArgs), relationArgs, relationPaths, sent, doc, keep, ruleName)
 }
