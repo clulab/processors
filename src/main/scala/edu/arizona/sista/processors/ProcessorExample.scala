@@ -42,10 +42,11 @@ object ProcessorExample {
       println("End character offsets: " + sentence.endOffsets.mkString(" "))
 
       // these annotations are optional, so they are stored using Option objects, hence the foreach statement
-      sentence.lemmas.foreach(lemmas => println("Lemmas: " + lemmas.mkString(" ")))
-      sentence.tags.foreach(tags => println("POS tags: " + tags.mkString(" ")))
-      sentence.entities.foreach(entities => println("Named entities: " + entities.mkString(" ")))
-      sentence.norms.foreach(norms => println("Normalized entities: " + norms.mkString(" ")))
+      sentence.lemmas.foreach(lemmas => println(s"Lemmas: ${lemmas.mkString(" ")}"))
+      sentence.tags.foreach(tags => println(s"POS tags: ${tags.mkString(" ")}"))
+      sentence.chunks.foreach(chunks => println(s"Chunks: ${chunks.mkString(" ")}"))
+      sentence.entities.foreach(entities => println(s"Named entities: ${entities.mkString(" ")}"))
+      sentence.norms.foreach(norms => println(s"Normalized entities: ${norms.mkString(" ")}"))
       sentence.stanfordBasicDependencies.foreach(dependencies => {
         println("Syntactic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
