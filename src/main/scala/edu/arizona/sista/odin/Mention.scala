@@ -99,10 +99,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
       // we don't need dependencies, a single token is its own head
       tokenInterval
     } else {
-      sentenceObj.dependencies match {
-        case Some(deps) => DependencyUtils.findHeads(tokenInterval, deps)
-        case None => Nil
-      }
+      DependencyUtils.findHeadsStrict(tokenInterval, sentenceObj)
     }
   }
 
