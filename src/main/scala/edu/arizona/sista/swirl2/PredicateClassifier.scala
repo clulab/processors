@@ -35,15 +35,16 @@ class PredicateClassifier {
     var dataset = createDataset(doc)
     dataset = dataset.removeFeaturesByFrequency(2)
     //classifier = new LogisticRegressionClassifier[String, String]()
-    classifier = new RFClassifier[String, String](numTrees = 100,
-      maxTreeDepth = 20, trainBagPct = 0.8, howManyFeaturesPerNode = featuresPerNode,
+    classifier = new RFClassifier[String, String](numTrees = 10,
+      maxTreeDepth = 20, trainBagPct = 0.5,
+      howManyFeaturesPerNode = featuresPerNode,
       nilLabel = Some(NEG_LABEL))
     //classifier = new RandomForestClassifier[String, String](numTrees = 100)
     //classifier = new LinearSVMClassifier[String, String]()
     classifier.train(dataset)
   }
 
-  def featuresPerNode(total:Int):Int = total / 2 // (10 * math.sqrt(total)).toInt
+  def featuresPerNode(total:Int):Int = (total * 0.66).toInt
 
   def countLemmas(doc:Document): Unit = {
     for(s <- doc.sentences) {
