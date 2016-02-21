@@ -193,6 +193,41 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
   }
 
+  it should "keep complete match interval when capturing an EventMention" in {
+    val rule = """
+      |- name: testrule
+      |  priority: 1
+      |  type: token
+      |  label: TestCapture
+      |  pattern: |
+      |    b c (?<args>d e) (?<trigger> f) (?<args>g h) i
+      |""".stripMargin
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc)
+    results should have size (1)
+    val r = results.head
+    r shouldBe an [EventMention]
+    r.arguments should contain key ("args")
+    r.arguments("args") should have size (2)
+    val Seq(a1, a2) = r.arguments("args").sorted
+    r.asInstanceOf[EventMention].trigger.tokenInterval should have (
+      'start (5),
+      'end (6)
+    )
+    a1.tokenInterval should have (
+      'start (3),
+      'end (5)
+    )
+    a2.tokenInterval should have (
+      'start (6),
+      'end (8)
+    )
+    r.tokenInterval should have (
+      'start (1),
+      'end (9)
+    )
+  }
+
   it should "match with variable length lookbehind" in {
     val p = TokenPattern.compile("(?<=a []+) e")
     val results = p.findAllIn(0, doc)
