@@ -20,13 +20,13 @@ import scala.util.Random
   * Date: 11/23/15
   */
 class RFClassifier[L, F](numTrees:Int = 100,
-                         maxTreeDepth:Int = 0, // 0 means unlimited tree depth
+                         maxTreeDepth:Int = 20, // 0 means unlimited tree depth
                          trainBagPct:Double = 0.66, // how much data to use per tree
                          utilityTooSmallThreshold:Double = 0, // 0 means no utility is too small
-                         splitTooSmallPct:Double = 0.01, // 0 means no split is too small
+                         splitTooSmallPct:Double = 0.0, // 0 means no split is too small
                          numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
-                         howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt,
-                         nilLabel:Option[L] = None) // how many features to use per node, as a function of total feature count
+                         howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt, // how many features to use per node, as a function of total feature count
+                         nilLabel:Option[L] = None)
   extends Classifier[L, F] with Serializable {
   var trees:Option[Array[RFTree]] = None
 
