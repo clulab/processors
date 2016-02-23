@@ -24,13 +24,18 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     this(Word2Vec.loadMatrix(mf, wordsToUse)._1)
   }
 
-  /** alternate constructor to allow loading from a file, possibly with a set of words to constrain the vocab */
+  /** alternate constructor to allow loading from a source, possibly with a set of words to constrain the vocab */
   def this(src: io.Source, wordsToUse: Option[Set[String]]) = {
     this(Word2Vec.loadMatrixFromSource(src, wordsToUse)._1)
   }
 
-  // construct the matrix for this instance lazily by calling the constructor
-  lazy val matrix : Map[String, Array[Double]] = matrixConstructor
+  /** alternate constructor to allow loading from a stream, possibly with a set of words to constrain the vocab */
+  def this(is: InputStream, wordsToUse: Option[Set[String]]) = {
+    this(Word2Vec.loadMatrixFromStream(is, wordsToUse)._1)
+  }
+
+  // laziness here causes problems with InputStream-based alternate constructor
+  val matrix : Map[String, Array[Double]] = matrixConstructor
 
   def saveMatrix(mf: String) {
     val pw = new PrintWriter(mf)
@@ -460,6 +465,15 @@ object Word2Vec {
     matrix
   }
 
+  private def loadMatrixFromStream(is: InputStream, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
+    logger.debug("Started to load word2vec matrix from stream ...")
+    val src: Source = io.Source.fromInputStream(is, "iso-8859-1")
+    val lines: Iterator[String] = src.getLines
+    val matrix = buildMatrix(lines, wordsToUse)
+    src.close()
+    logger.debug("Completed matrix loading.")
+    matrix
+  }
   private def loadMatrixFromSource(src: io.Source, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load word2vec matrix from source ...")
     val lines: Iterator[String] = src.getLines()
