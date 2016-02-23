@@ -58,62 +58,46 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   }
 
   /** for numerical comparisons */
-  def numberExpression: Parser[NumericExpression] = addSubtractExpression
-
-  def addSubtractExpression: Parser[NumericExpression] = additionExpression | subtractionExpression
-
-  def additionExpression: Parser[NumericExpression] = rep1sep(productExpression, "+") ^^ { prods =>
-    (prods.head /: prods.tail) {
-      case (lhs, rhs) => new Addition(lhs, rhs)
+  def numberExpression: Parser[NumericExpression] =
+    productExpression ~ rep(( "+" | "-" ) ~ productExpression) ^^ {
+      case prod ~ list => (prod /: list) {
+        case (lhs, "+" ~ rhs) => new Addition(lhs, rhs)
+        case (lhs, "-" ~ rhs) => new Subtraction(lhs, rhs)
+      }
     }
-  }
 
-  def subtractionExpression: Parser[NumericExpression] = rep1sep(productExpression, "+") ^^ { prods =>
-    (prods.head /: prods.tail) {
-      case (lhs, rhs) => new Addition(lhs, rhs)
+  def productExpression: Parser[NumericExpression] =
+    termExpression ~ rep(("*" | "/" | "//" | "%" ) ~ termExpression) ^^ {
+      case prod ~ list => (prod /: list) {
+        case (lhs, "*" ~ rhs) => new Multiplication(lhs, rhs)
+        case (lhs, "/" ~ rhs) => new Division(lhs, rhs)
+        case (lhs, "//" ~ rhs) => new TruncatedDivision(lhs, rhs)
+        case (lhs, "%" ~ rhs) => new Modulo(lhs, rhs)
+      }
     }
-  }
-
-  def productExpression: Parser[NumericExpression] = multiplicationExpression | divisionExpression | truncatedDivisionExpression | moduloExpression
-
-  def multiplicationExpression: Parser[NumericExpression] = rep1sep(termExpression, "*") ^^ { prods =>
-    (prods.head /: prods.tail) {
-      case (lhs, rhs) => new Multiplication(lhs, rhs)
-    }
-  }
-
-  def divisionExpression: Parser[NumericExpression] = rep1sep(termExpression, "/") ^^ { prods =>
-    (prods.head /: prods.tail) {
-      case (lhs, rhs) => new Division(lhs, rhs)
-    }
-  }
-
-  def truncatedDivisionExpression: Parser[NumericExpression] = rep1sep(termExpression, "//") ^^ { prods =>
-    (prods.head /: prods.tail) {
-      case (lhs, rhs) => new TruncatedDivision(lhs, rhs)
-    }
-  }
-
-  def moduloExpression: Parser[NumericExpression] = rep1sep(termExpression, "%") ^^ { prods =>
-    (prods.head /: prods.tail) {
-      case (lhs, rhs) => new Modulo(lhs, rhs)
-    }
-  }
 
   def termExpression: Parser[NumericExpression] = numberLiteral | numericFunction | "(" ~> numberExpression <~ ")"
 
-  // an equality symbol
+  def negativeTermExpression: Parser[NumericExpression] = opt("-" | "+") ~ termExpression ^^ {
+    case Some("-") ~ te => new NegativeTermExpression(te)
+    case Some("+") ~ te => te
+    case None ~ te => te
+  }
+
+  // an equality/inequality symbol
   // the longest strings must come first
   def compareOps: Parser[String] = ">=" | "<=" | "==" | "!="| ">" | "<"
 
   def numberLiteral: Parser[NumericExpression] =
-    """[-+]?(?:\d*\.?\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?""".r ^^ { num =>
+    """(?:\d*\.?\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?""".r ^^ { num =>
       new Literal(num.toDouble)
     }
 
   /** update as needed.  Currently only a distributional similarity comparison */
   def numericFunction: Parser[NumericExpression] = similarTo
 
+  // TODO: chain these guys to have expressions of the form "1 < x < 2"
+  //  group the comparisons in pairs and then merge the pairs with "AND"s
   def numericConstraint: Parser[TokenConstraint] = numberExpression ~ compareOps ~ numberExpression ^^ {
     case lhs ~ ">" ~ rhs => new GreaterThan(lhs, rhs)
     case lhs ~ ">=" ~ rhs => new GreaterThanOrEqual(lhs, rhs)
@@ -154,6 +138,11 @@ class Addition(lhs: NumericExpression, rhs: NumericExpression) extends NumericEx
     lhs.number(tok, sent, doc, state) + rhs.number(tok, sent, doc, state)
 }
 
+class Subtraction(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
+    lhs.number(tok, sent, doc, state) - rhs.number(tok, sent, doc, state)
+}
+
 class Multiplication(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
     lhs.number(tok, sent, doc, state) * rhs.number(tok, sent, doc, state)
@@ -172,6 +161,11 @@ class TruncatedDivision(lhs: NumericExpression, rhs: NumericExpression) extends 
 class Modulo(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
     lhs.number(tok, sent, doc, state) % rhs.number(tok, sent, doc, state)
+}
+
+class NegativeTermExpression(termExpression: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
+    -termExpression.number(tok, sent, doc, state)
 }
 
 /** matcher must be an exact string matcher, so that a particular word vector can be retrieved */
