@@ -4,7 +4,7 @@ import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
 import edu.arizona.sista.odin._
 
-class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) {
+class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) extends TokenPatternParsers(unit, resources) {
 
   def compileDependencyPattern(input: String): DependencyPattern =
     parseAll(dependencyPattern, input) match {

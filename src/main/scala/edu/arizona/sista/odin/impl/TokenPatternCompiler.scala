@@ -1,6 +1,6 @@
 package edu.arizona.sista.odin.impl
 
-class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
+class TokenPatternParsers(val unit: String, val resources: OdinResourceManager) extends TokenConstraintParsers {
 
   // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r
