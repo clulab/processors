@@ -1,10 +1,12 @@
 package edu.arizona.sista.odin.impl
 
-import java.io.InputStream
+import java.io.{FileInputStream, BufferedInputStream, InputStream}
 
-// other resources could go here
+/**
+ * Manage resources for Odin
+ * @param embeddings: handles a word embeddings resource for distributional similarity comparisons; standard word vector format?
+ * */
 class OdinResourceManager(val embeddings: Option[EmbeddingsResource])
-
 
 object OdinResourceManager {
 
@@ -22,10 +24,12 @@ object OdinResourceManager {
     new OdinResourceManager(embeddings)
   }
 
-  // TODO: is this the proper way to get the real path?
-  def getInputStream(p: String): InputStream = {
+  def getInputStream(p: String): BufferedInputStream = {
     println(s"Path to resources is $p")
-    getClass.getClassLoader.getResourceAsStream(p)
+    val streamFromResources: InputStream = getClass.getClassLoader.getResourceAsStream(p)
+    // try resource-based loading, fall back to system file path otherwise
+    if (streamFromResources == null) new BufferedInputStream(new FileInputStream(p))
+    else new BufferedInputStream(streamFromResources)
   }
 
   // YOU NEED TO CLOSE ME!!!
@@ -37,13 +41,15 @@ object OdinResourceManager {
   def buildResources(resourcesMap: Map[String, String]): Map[String, Option[OdinResource]] = {
     val pairs = resourcesMap map {
       case (embeddings, p) if embeddings.toLowerCase startsWith "embeddings" =>
-        val source = getSource(p)
+        //val source = getSource(p)
+        val is = getInputStream(p)
 
-//         // Make sure the file exists
-//         if (is == null) {
-//           throw new OdinCompileException(s"invalid path given for 'embeddings': $p")
-//         }
-        val pair = ("embeddings", Some(new EmbeddingsResource(source)))
+        // Make sure the file exists
+        if (is == null) {
+           throw new OdinCompileException(s"invalid path given for 'embeddings': $p")
+        }
+        //val pair = ("embeddings", Some(new EmbeddingsResource(source)))
+        val pair = ("embeddings", Some(new EmbeddingsResource(is)))
         //source.close()
         pair
       }
