@@ -18,7 +18,7 @@ import RVFDataset._
 abstract class Dataset[L, F](
   val labelLexicon:Lexicon[L],
   val featureLexicon:Lexicon[F],
-  val labels:ArrayBuffer[Int]) {
+  val labels:ArrayBuffer[Int]) extends Serializable {
 
   def this() = this(new Lexicon[L], new Lexicon[F], new ArrayBuffer[Int])
 
