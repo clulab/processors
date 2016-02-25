@@ -4,6 +4,7 @@ import scala.util.matching.Regex
 import scala.util.hashing.MurmurHash3._
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
+import edu.arizona.sista.utils.DependencyUtils
 import edu.arizona.sista.odin.impl.StringMatcher
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -76,13 +77,46 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   /** returns all tokens in mention */
   def words: Seq[String] = sentenceObj.words.slice(start, end)
 
+  /** returns all tags in mention */
   def tags: Option[Seq[String]] = sentenceObj.tags.map(_.slice(start, end))
 
+  /** returns all lemmas in mention */
   def lemmas: Option[Seq[String]] = sentenceObj.lemmas.map(_.slice(start, end))
 
+  /** returns all entities in mention */
   def entities: Option[Seq[String]] = sentenceObj.entities.map(_.slice(start, end))
 
+  /** returns all chunks in mention */
   def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end))
+
+  /** Return all syntactic heads, where a head is a token in `mention`
+    * whose parent isn't contained in `mention`.
+    */
+  def synHeads: Seq[Int] = {
+    if (tokenInterval.isEmpty) {
+      Nil
+    } else if (tokenInterval.size == 1) {
+      // we don't need dependencies, a single token is its own head
+      tokenInterval
+    } else {
+      sentenceObj.dependencies match {
+        case Some(deps) => DependencyUtils.findHeads(tokenInterval, deps)
+        case None => Nil
+      }
+    }
+  }
+
+  /** Return the syntactic head of `mention`  */
+  def synHead: Option[Int] = synHeads.lastOption
+
+  /** returns head token */
+  def synHeadWord: Option[String] = synHead.map(i => sentenceObj.words(i))
+
+  /** returns head pos tag */
+  def synHeadTag: Option[String] = synHead.flatMap(i => sentenceObj.tags.map(_(i)))
+
+  /** returns head lemma */
+  def synHeadLemma: Option[String] = synHead.flatMap(i => sentenceObj.lemmas.map(_(i)))
 
   /** returns a string that contains the mention */
   def text: String = document.text match {
