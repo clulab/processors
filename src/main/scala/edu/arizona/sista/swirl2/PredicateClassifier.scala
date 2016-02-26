@@ -33,7 +33,8 @@ class PredicateClassifier {
     featureExtractor.lemmaCounts = Some(lemmaCounts)
 
     var dataset = createDataset(doc)
-    dataset = dataset.removeFeaturesByFrequency(20)
+    // dataset = dataset.removeFeaturesByFrequency(20)
+    dataset = dataset.removeFeaturesByInformationGain(0.50)
     //classifier = new LogisticRegressionClassifier[String, String]()
     classifier = new RFClassifier[String, String](numTrees = 10, howManyFeaturesPerNode = featuresPerNode, nilLabel = Some(NEG_LABEL))
     //classifier = new RandomForestClassifier[String, String](numTrees = 100)

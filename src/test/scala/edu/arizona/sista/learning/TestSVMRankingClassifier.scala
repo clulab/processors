@@ -5,14 +5,16 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import java.io.{File, PrintWriter}
 import scala.sys.process._
 
+object NeedsExternalBinary extends Tag("NeedsExternalBinary")
+
 /**
- *
+ * Tests training svm_rank; needs the svm_rank_classify in the $PATH!
  * User: mihais
  * Date: 4/25/13
  */
 class TestSVMRankingClassifier extends FlatSpec with Matchers {
 
-  "SVMRankingClassifier" should "perform similarly to the command line svm_rank_classify" in {
+  "SVMRankingClassifier" should "perform similarly to the command line svm_rank_classify" taggedAs (NeedsExternalBinary) in {
     val dataset = new BVFRankingDataset[String]
 
     val qid1 = new ListBuffer[Datum[Int, String]]

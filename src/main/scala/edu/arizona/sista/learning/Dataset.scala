@@ -40,6 +40,9 @@ abstract class Dataset[L, F](
   /** Removes features that appear less than threshold times in this dataset. */
   def removeFeaturesByFrequency(threshold:Int):Dataset[L, F]
 
+  /** Removes features by information gain. */
+  def removeFeaturesByInformationGain(pctToKeep:Double):Dataset[L, F]
+
   /** Creates a new dataset keeping only the features in the given set */
   def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F]
 
@@ -99,6 +102,65 @@ class BVFDataset[L, F] (
     counts
   }
 
+  override def removeFeaturesByInformationGain(pctToKeep:Double):Dataset[L, F] = {
+    logger.debug("Computing information gain for all features in dataset...")
+
+    // compute information gain per feature
+    val igs = computeInformationGains(features, labels)
+    logger.debug("Total unique features before filtering: " + igs.size)
+
+    // sort all features in descending order of their IG
+    val fb = new ListBuffer[(Int, Double)]
+    for(f <- igs.keySet) fb += new Tuple2(f, igs.get(f).get.ig)
+    val sortedFeats = fb.sortBy(- _._2).toArray
+
+    // keep the top pctToKeep
+    val maxLen = (pctToKeep * sortedFeats.length.toDouble).ceil.toInt
+    assert(maxLen > 0 && maxLen <= sortedFeats.length)
+    logger.debug(s"Will keep $maxLen features after filtering by IG.")
+
+    // these are the features to keep
+    val featsToKeep = new mutable.HashSet[Int]()
+    for(i <- 0 until maxLen) featsToKeep += sortedFeats(i)._1
+
+    // keep only these features in the dataset
+    keepOnly(featsToKeep.toSet)
+  }
+
+  def computeInformationGains(fs:ArrayBuffer[Array[Int]], ls:ArrayBuffer[Int]):Map[Int, InformationGain] = {
+    val igs = new mutable.HashMap[Int, InformationGain]()
+
+    // count occurrence of f with label l
+    for(i <- 0 until fs.length) {
+      val d = fs(i)
+      val l = ls(i)
+      for(f <- d) {
+        val ig = igs.getOrElseUpdate(f, new InformationGain(datums = fs.length))
+        ig.datumsWithFeat += 1
+        ig.posDatumsByClass.incrementCount(l)
+      }
+    }
+
+    // count negative occurrences of f with label l
+    for(i <- 0 until fs.length) {
+      val d = fs(i)
+      val l = ls(i)
+      val presentFeats = new mutable.HashSet[Int]()
+      for(f <- d) presentFeats += f
+
+      for(f <- igs.keySet) {
+        if(! presentFeats.contains(f)) {
+          val ig = igs.get(f).get
+          ig.datumsWithoutFeat += 1
+          ig.negDatumsByClass.incrementCount(l)
+        }
+      }
+    }
+
+    igs.toMap
+  }
+
+
   override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
     // compute feature frequencies
     val counts = countFeatures(features)
@@ -141,7 +203,37 @@ class BVFDataset[L, F] (
   }
 
   override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {
-    throw new RuntimeException("Not supported yet!")
+    // map old feature ids to new ids, over the filtered set
+    val featureIndexMap = new mutable.HashMap[Int, Int]()
+    var newId = 0
+    for(f <- 0 until featureLexicon.size) {
+      if(featuresToKeep.contains(f)) {
+        featureIndexMap += f -> newId
+        newId += 1
+      }
+    }
+
+    // construct the new dataset with the filtered features
+    val newFeatures = new ArrayBuffer[Array[Int]]
+    for(row <- features.indices) {
+      val nfs = keepOnlyRow(features(row), featureIndexMap)
+      newFeatures += nfs
+    }
+
+    new BVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures)
+  }
+
+  def keepOnlyRow(feats:Array[Int], featureIndexMap:mutable.HashMap[Int, Int]):Array[Int] = {
+    val newFeats = new ArrayBuffer[Int]()
+
+    for(i <- feats.indices) {
+      val f = feats(i)
+      if(featureIndexMap.contains(f)) {
+        newFeats += featureIndexMap.get(f).get
+      }
+    }
+
+    newFeats.toArray
   }
 
   override def toCounterDataset:CounterDataset[L, F] = {
@@ -338,6 +430,36 @@ class RVFDataset[L, F] (
   }
 }
 
+class InformationGain(
+  var datums:Int = 0,
+  var datumsWithFeat:Int = 0,
+  var datumsWithoutFeat:Int = 0,
+  val posDatumsByClass:Counter[Int] = new Counter[Int],
+  val negDatumsByClass:Counter[Int] = new Counter[Int]) {
+  def ig:Double = {
+    var pos = 0.0
+    var neg = 0.0
+    if(pWith != 0) {
+      for (c <- posDatumsByClass.keySet) {
+        val p = posDatumsByClass.getCount(c) / datumsWithFeat.toDouble
+        pos += p * math.log(p)
+      }
+      pos *= pWith
+    }
+    if(pWithout != 0) {
+      for(c <- negDatumsByClass.keySet) {
+        val p = negDatumsByClass.getCount(c) / datumsWithoutFeat.toDouble
+        neg += p * math.log(p)
+      }
+      neg *= pWithout
+    }
+    pos + neg
+  }
+
+  def pWith = datumsWithFeat.toDouble / datums.toDouble
+  def pWithout = datumsWithoutFeat.toDouble / datums.toDouble
+}
+
 object RVFDataset {
   val logger = LoggerFactory.getLogger(classOf[RVFDataset[String, String]])
 
@@ -502,7 +624,11 @@ class CounterDataset[L, F](ll:Lexicon[L],
 
   /** Removes features that appear less than threshold times in this dataset. */
   override def removeFeaturesByFrequency(threshold: Int): Dataset[L, F] = {
-    throw new RuntimeException("ERROR: removeFeaturesByFrequency not supported yet!")
+    throw new RuntimeException("ERROR: removeFeaturesByFrequency not supported in CounterDataset yet!")
+  }
+
+  override def removeFeaturesByInformationGain(pctToKeep:Double):Dataset[L, F] = {
+    throw new RuntimeException("removeFeaturesByInformationGain not supported in CounterDataset yet!")
   }
 
   override def featuresCounter(datumOffset: Int): Counter[Int] = features(datumOffset)

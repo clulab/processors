@@ -106,11 +106,10 @@ class ArgumentClassifier {
     }
 
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    classifier = new LogisticRegressionClassifier[String, String]()
+    //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    //classifier = new RFClassifier[String, String](numTrees = 10, howManyFeaturesPerNode = featuresPerNode)
+    classifier = new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    //classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, utilityTooSmallThreshold = 0.01, howManyFeaturesPerNode = featuresPerNode)
 
     classifier match {
       case rfc:RFClassifier[String, String] =>
