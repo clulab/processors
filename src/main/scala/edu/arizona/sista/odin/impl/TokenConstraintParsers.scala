@@ -58,7 +58,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   }
 
   /** for numerical comparisons */
-  def numberExpression: Parser[NumericExpression] =
+  def numericExpression: Parser[NumericExpression] =
     productExpression ~ rep(( "+" | "-" ) ~ productExpression) ^^ {
       case prod ~ list => (prod /: list) {
         case (lhs, "+" ~ rhs) => new Addition(lhs, rhs)
@@ -67,45 +67,58 @@ trait TokenConstraintParsers extends StringMatcherParsers {
     }
 
   def productExpression: Parser[NumericExpression] =
-    termExpression ~ rep(("*" | "/" | "//" | "%" ) ~ termExpression) ^^ {
+    termExpression ~ rep(("*" | "//" | "/" | "%" ) ~ termExpression) ^^ {
       case prod ~ list => (prod /: list) {
         case (lhs, "*" ~ rhs) => new Multiplication(lhs, rhs)
         case (lhs, "/" ~ rhs) => new Division(lhs, rhs)
-        case (lhs, "//" ~ rhs) => new TruncatedDivision(lhs, rhs)
-        case (lhs, "%" ~ rhs) => new Modulo(lhs, rhs)
+        case (lhs, "//" ~ rhs) => new EuclideanQuotient(lhs, rhs)
+        case (lhs, "%" ~ rhs) => new EuclideanRemainder(lhs, rhs)
       }
     }
 
-  def termExpression: Parser[NumericExpression] = numberLiteral | numericFunction | "(" ~> numberExpression <~ ")"
-
-  def negativeTermExpression: Parser[NumericExpression] = opt("-" | "+") ~ termExpression ^^ {
-    case Some("-") ~ te => new NegativeTermExpression(te)
-    case Some("+") ~ te => te
-    case None ~ te => te
+  def termExpression: Parser[NumericExpression] = opt("-" | "+") ~ atomicExpression ^^ {
+    case Some("-") ~ expr => new NegativeExpression(expr)
+    case Some("+") ~ expr => expr
+    case None ~ expr => expr
   }
+
+  def atomicExpression: Parser[NumericExpression] =
+    numberConstant | numericFunction | "(" ~> numericExpression <~ ")"
 
   // an equality/inequality symbol
   // the longest strings must come first
-  def compareOps: Parser[String] = ">=" | "<=" | "==" | "!="| ">" | "<"
+  def compareOps: Parser[String] = ">=" | "<=" | "==" | "!=" | ">" | "<"
 
-  def numberLiteral: Parser[NumericExpression] =
-    """(?:\d*\.?\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?""".r ^^ { num =>
-      new Literal(num.toDouble)
-    }
+  def numberConstant: Parser[NumericExpression] = numberLiteral ^^ { new Constant(_) }
+
+  def numberLiteral: Parser[Double] =
+    """(?:\d*\.?\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?""".r ^^ { _.toDouble }
 
   /** update as needed.  Currently only a distributional similarity comparison */
   def numericFunction: Parser[NumericExpression] = similarTo
 
-  // TODO: chain these guys to have expressions of the form "1 < x < 2"
-  //  group the comparisons in pairs and then merge the pairs with "AND"s
-  def numericConstraint: Parser[TokenConstraint] = numberExpression ~ compareOps ~ numberExpression ^^ {
-    case lhs ~ ">" ~ rhs => new GreaterThan(lhs, rhs)
-    case lhs ~ ">=" ~ rhs => new GreaterThanOrEqual(lhs, rhs)
-    case lhs ~ "<" ~ rhs => new LessThan(lhs, rhs)
-    case lhs ~ "<=" ~ rhs => new LessThanOrEqual(lhs, rhs)
-    case lhs ~ "==" ~ rhs => new Equal(lhs, rhs)
-    case lhs ~ "!=" ~ rhs => new NotEqual(lhs, rhs)
-  }
+  def numericConstraint: Parser[TokenConstraint] =
+    numericExpression ~ compareOps ~ numericExpression ~ rep(compareOps ~ numericExpression) ^^ {
+      case lhs ~ op ~ rhs ~ rest =>
+        var prev = rhs
+        val first = mkCompare(lhs, op, rhs)
+        (first /: rest) {
+          case (l, op ~ expr) =>
+            val r = mkCompare(prev, op, expr)
+            prev = expr
+            new ConjunctiveConstraint(l, r)
+        }
+    }
+
+  def mkCompare(lhs: NumericExpression, op: String, rhs: NumericExpression): TokenConstraint =
+    op match {
+      case ">" => new GreaterThan(lhs, rhs)
+      case "<" => new LessThan(lhs, rhs)
+      case ">=" => new GreaterThanOrEqual(lhs, rhs)
+      case "<=" => new LessThanOrEqual(lhs, rhs)
+      case "==" => new Equal(lhs, rhs)
+      case "!=" => new NotEqual(lhs, rhs)
+    }
 
   /**
    * ex. get the distributional similarity score (dot product of L2 normed vectors)
@@ -129,8 +142,8 @@ sealed trait NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double
 }
 
-class Literal(val num: Double) extends NumericExpression {
-  def number(tok: Int, sent: Int, doc: Document, state: State): Double = num
+class Constant(val value: Double) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double = value
 }
 
 class Addition(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
@@ -153,19 +166,25 @@ class Division(lhs: NumericExpression, rhs: NumericExpression) extends NumericEx
     lhs.number(tok, sent, doc, state) / rhs.number(tok, sent, doc, state)
 }
 
-class TruncatedDivision(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
-  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
-    (lhs.number(tok, sent, doc, state) / rhs.number(tok, sent, doc, state)).floor
+class EuclideanQuotient(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
+    val a = lhs.number(tok, sent, doc, state)
+    val n = rhs.number(tok, sent, doc, state)
+    math.signum(n) * math.floor(a / math.abs(n))
+  }
 }
 
-class Modulo(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
-  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
-    lhs.number(tok, sent, doc, state) % rhs.number(tok, sent, doc, state)
+class EuclideanRemainder(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
+    val a = lhs.number(tok, sent, doc, state)
+    val n = math.abs(rhs.number(tok, sent, doc, state))
+    a - n * math.floor(a / n)
+  }
 }
 
-class NegativeTermExpression(termExpression: NumericExpression) extends NumericExpression {
+class NegativeExpression(expr: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
-    -termExpression.number(tok, sent, doc, state)
+    -expr.number(tok, sent, doc, state)
 }
 
 /** matcher must be an exact string matcher, so that a particular word vector can be retrieved */
