@@ -270,14 +270,15 @@ object RuleReader {
 
   // rule intermediary representation
   class Rule(
-              val name: String,
-              val labels: Seq[String],
-              val ruleType: String,
-              val unit: String,
-              val priority: String,
-              val keep: Boolean,
-              val action: String,
-              val pattern: String,
-              val resources: OdinResourceManager
-              )
+      val name: String,
+      val labels: Seq[String],
+      val ruleType: String,
+      val unit: String,
+      val priority: String,
+      val keep: Boolean,
+      val action: String,
+      val pattern: String,
+      val resources: OdinResourceManager
+  )
+
 }
