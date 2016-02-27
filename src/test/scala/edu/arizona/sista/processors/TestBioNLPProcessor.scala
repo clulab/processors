@@ -71,7 +71,7 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
 
   it should "recognize correct species in text 3" in {
     val doc = proc.mkDocument(
-      "Human RAS is different from human pinworm RAS.", keepText = false)
+      "Human RAS is different from Anthrax bacterium RAS.", keepText = false)
 
     annotate(doc)
 
