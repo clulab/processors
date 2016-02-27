@@ -4,5 +4,7 @@ language: scala
 scala:
   - 2.11.6
 script:
-  sbt 'test-only -- -l NeedsExternalBinary'
-
+  - sbt 'test-only -- -l NeedsExternalBinary'
+branches:
+  only:
+    - master
