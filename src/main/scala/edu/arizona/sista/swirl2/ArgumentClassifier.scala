@@ -105,7 +105,8 @@ class ArgumentClassifier {
       os.close()
     }
 
-    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    //dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    dataset = dataset.removeFeaturesByInformationGain(0.05)
     //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
     classifier = new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode)
@@ -121,7 +122,7 @@ class ArgumentClassifier {
     }
   }
 
-  def featuresPerNode(total:Int):Int = (10.0 * math.sqrt(total.toDouble)).toInt
+  def featuresPerNode(total:Int):Int = RFClassifier.featuresPerNodeTwoThirds(total)// (10.0 * math.sqrt(total.toDouble)).toInt
 
   def countLemmas(doc:Document): Unit = {
     for(s <- doc.sentences) {
