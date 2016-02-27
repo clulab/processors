@@ -101,7 +101,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
       logger.debug(s"Feature lexicon:\n${featureLexicon.get}")
     }
     logger.debug(s"Done building ${trees.get.length} trees.")
-    if(true) {
+    if(verbose) {
       for (tree <- trees.get) {
         logger.debug(s"Tree:\n${tree.toPrettyString[L, F](0, featureLexicon.get, labelLexicon.get)}")
       }

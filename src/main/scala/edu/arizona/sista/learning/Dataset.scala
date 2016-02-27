@@ -92,14 +92,23 @@ class BVFDataset[L, F] (
     c
   }
 
-  def countFeatures(fs:ArrayBuffer[Array[Int]]):Counter[Int] = {
+  def countFeatures(fs:ArrayBuffer[Array[Int]], threshold:Int):Set[Int] = {
     val counts = new Counter[Int]
     for(d <- fs) {
       for(f <- d) {
         counts.incrementCount(f)
       }
     }
-    counts
+    logger.debug("Total unique features before filtering: " + counts.size)
+
+    val passed = new mutable.HashSet[Int]()
+    for(f <- counts.keySet) {
+      if(counts.getCount(f) >= threshold)
+        passed += f
+    }
+    logger.debug(s"Total unique features after filtering with threshold $threshold: ${passed.size}")
+
+    passed.toSet
   }
 
   override def removeFeaturesByInformationGain(pctToKeep:Double):Dataset[L, F] = {
@@ -131,7 +140,7 @@ class BVFDataset[L, F] (
     val igs = new mutable.HashMap[Int, InformationGain]()
 
     // count occurrence of f with label l
-    for(i <- 0 until fs.length) {
+    for(i <- fs.indices) {
       val d = fs(i)
       val l = ls(i)
       for(f <- d) {
@@ -142,7 +151,7 @@ class BVFDataset[L, F] (
     }
 
     // count negative occurrences of f with label l
-    for(i <- 0 until fs.length) {
+    for(i <- fs.indices) {
       val d = fs(i)
       val l = ls(i)
       val presentFeats = new mutable.HashSet[Int]()
@@ -162,44 +171,10 @@ class BVFDataset[L, F] (
 
 
   override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
-    // compute feature frequencies
-    val counts = countFeatures(features)
-    logger.debug("Total unique features before filtering: " + counts.size)
+    // compute feature frequencies and keep the ones above threshold
+    val counts = countFeatures(features, threshold)
 
-    // map old feature ids to new ids, over the filtered set
-    val featureIndexMap = new mutable.HashMap[Int, Int]()
-    var newId = 0
-    for(f <- 0 until featureLexicon.size) {
-      if(counts.getCount(f) >= threshold) {
-        featureIndexMap += f -> newId
-        newId += 1
-      }
-    }
-
-    // construct the new dataset with the filtered features
-    val newFeatures = new ArrayBuffer[Array[Int]]
-    for(i <- 0 until size) {
-      val feats = features(i)
-      val filteredFeats = removeByFreq(feats, counts, threshold, featureIndexMap)
-      newFeatures += filteredFeats
-    }
-    logger.debug("Total features after filtering: " + countFeatures(newFeatures).size)
-
-    new BVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures)
-  }
-
-  private def removeByFreq(fs:Array[Int],
-                           counts:Counter[Int],
-                           threshold:Int,
-                           featureIndexMap:mutable.HashMap[Int, Int]):Array[Int] = {
-    val filtered = new ArrayBuffer[Int]()
-    for(f <- fs) {
-      if(counts.getCount(f) >= threshold) {
-        assert(featureIndexMap.contains(f))
-        filtered += featureIndexMap.get(f).get
-      }
-    }
-    filtered.toArray
+    keepOnly(counts)
   }
 
   override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {
@@ -293,56 +268,6 @@ class RVFDataset[L, F] (
       c.incrementCount(fs(i), vs(i))
     }
     c
-  }
-
-  override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
-
-    // compute feature frequencies
-    val counts = countFeatures(features)
-    logger.debug("Total unique features before filtering: " + counts.size)
-
-    // map old feature ids to new ids, over the filtered set
-    val featureIndexMap = new mutable.HashMap[Int, Int]()
-    var newId = 0
-    for(f <- 0 until featureLexicon.size) {
-      if(counts.getCount(f) >= threshold) {
-        featureIndexMap += f -> newId
-        newId += 1
-      }
-    }
-
-    // construct the new dataset with the filtered features
-    val newFeatures = new ArrayBuffer[Array[Int]]
-    val newValues = new ArrayBuffer[Array[Double]]()
-    for(i <- 0 until size) {
-      val feats = features(i)
-      val vals = values(i)
-      val (filteredFeats, filteredVals) = removeByFreq(feats, vals, counts, threshold, featureIndexMap)
-      newFeatures += filteredFeats
-      newValues += filteredVals
-    }
-    logger.debug("Total features after filtering: " + countFeatures(newFeatures).size)
-
-    new RVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures, newValues)
-  }
-
-  private def removeByFreq(fs:Array[Int],
-                           vs:Array[Double],
-                           counts:Counter[Int],
-                           threshold:Int,
-                           featureIndexMap:mutable.HashMap[Int, Int]):(Array[Int], Array[Double]) = {
-    val filteredFeats = new ArrayBuffer[Int]()
-    val filteredVals = new ArrayBuffer[Double]()
-    for(i <- fs.indices) {
-      val f = fs(i)
-      val v = vs(i)
-      if(counts.getCount(f) >= threshold) {
-        assert(featureIndexMap.contains(f))
-        filteredFeats += featureIndexMap.get(f).get
-        filteredVals += v
-      }
-    }
-    (filteredFeats.toArray, filteredVals.toArray)
   }
 
   override def mkDatum(row:Int): Datum[L, F] = {
