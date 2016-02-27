@@ -9,19 +9,19 @@ scalaVersion := "2.11.6"
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
 // fork jvm to separate process
-fork := true
+// fork := true
 
 parallelExecution in Test := false
 
 // options for forked jvm
-javaOptions += "-Xmx6G"
-javaOptions += "-Xss100m"
+// javaOptions += "-Xmx6G"
+// javaOptions += "-Xss100m"
 
 // forward sbt's stdin to forked process
-connectInput in run := true
+// connectInput in run := true
 
 // don't show output prefix
-outputStrategy := Some(StdoutOutput)
+// outputStrategy := Some(StdoutOutput)
 
 lazy val core = project in file(".")
 
