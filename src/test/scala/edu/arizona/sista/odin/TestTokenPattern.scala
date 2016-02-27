@@ -160,6 +160,104 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results should be ('empty)
   }
 
+  // a b c d e f g h i c
+
+  it should "keep complete match interval when capturing a RelationMention" in {
+    val rule = """
+      |- name: testrule
+      |  priority: 1
+      |  type: token
+      |  label: TestCapture
+      |  pattern: |
+      |    b c (?<args>d e) f (?<args>g h) i
+      |""".stripMargin
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc)
+    results should have size (1)
+    val r = results.head
+    r shouldBe a [RelationMention]
+    r.arguments should contain key ("args")
+    r.arguments("args") should have size (2)
+    val Seq(a1, a2) = r.arguments("args").sorted
+    a1.tokenInterval should have (
+      'start (3),
+      'end (5)
+    )
+    a2.tokenInterval should have (
+      'start (6),
+      'end (8)
+    )
+    r.tokenInterval should have (
+      'start (1),
+      'end (9)
+    )
+  }
+
+  it should "keep complete match interval when capturing an EventMention" in {
+    val rule = """
+      |- name: testrule
+      |  priority: 1
+      |  type: token
+      |  label: TestCapture
+      |  pattern: |
+      |    b c (?<args>d e) (?<trigger> f) (?<args>g h) i
+      |""".stripMargin
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc)
+    results should have size (1)
+    val r = results.head
+    r shouldBe an [EventMention]
+    r.arguments should contain key ("args")
+    r.arguments("args") should have size (2)
+    val Seq(a1, a2) = r.arguments("args").sorted
+    r.asInstanceOf[EventMention].trigger.tokenInterval should have (
+      'start (5),
+      'end (6)
+    )
+    a1.tokenInterval should have (
+      'start (3),
+      'end (5)
+    )
+    a2.tokenInterval should have (
+      'start (6),
+      'end (8)
+    )
+    r.tokenInterval should have (
+      'start (1),
+      'end (9)
+    )
+  }
+
+  it should "match with variable length lookbehind" in {
+    val p = TokenPattern.compile("(?<=a []+) e")
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (4),
+      'end (5)
+    )
+  }
+
+  it should "match with nested lookbehind" in {
+    val p = TokenPattern.compile("(?<= (?<= (?<= a b) c d) e) f")
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (5),
+      'end (6)
+    )
+  }
+
+  it should "match with lookahead in lookbehind" in {
+    val p = TokenPattern.compile("(?<= a b (?=c d)) c")
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (2),
+      'end (3)
+    )
+  }
+
   it should "match nested captures" in {
     val rule = """
       |- name: test_rule
@@ -513,6 +611,155 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results.head.interval should have (
       'start (9),
       'end (10)
+    )
+  }
+
+  //////////////////////////////////////////////////
+  // test for variable-length lookbehind assertions
+  //////////////////////////////////////////////////
+
+  // match person if it is not preceded by a sequence of titles (starting at beginning of sentence)
+  val negLookbehindPattern = "(?<! ^ @Title+) @person:Person"
+
+  negLookbehindPattern should "should allow for variable-length negative lookbehind assertion" in {
+    val grammar = """
+                 |# our rule for capturing titles
+                 |- name: title_rule
+                 |  priority: 1
+                 |  type: token
+                 |  label: Title
+                 |  pattern: |
+                 |    [word=/(?i)^(herr|doktor|professor)$/]
+                 |
+                 |# our rule for capturing a Person NE
+                 |- name: person_rule
+                 |  priority: 1
+                 |  type: token
+                 |  label: Person
+                 |  pattern: |
+                 |    Faust
+                 |
+                 |- name: fellow_without_title_rule
+                 |  priority: 2
+                 |  type: token
+                 |  label: TitlelessDude
+                 |  pattern: |
+                 |    (?<! ^ @Title+) @titleless:Person
+                 |
+                 |""".stripMargin
+
+
+    val ee = ExtractorEngine(grammar)
+
+    val text9a = "Herr Professor Doktor Faust, may I see you in my office?"
+    val doc9a = proc annotate text9a
+    val results9a = ee.extractFrom(doc9a)
+    val titlelessDudeMentions9a = results9a.filter(_.label matches "TitlelessDude")
+    // Should have (3) Title and (1) Person
+    results9a should have size (4)
+    titlelessDudeMentions9a should have size (0)
+
+    val text9b = "Faust is a friend of mine."
+    val doc9b = proc annotate text9b
+    val results9b = ee.extractFrom(doc9b)
+    val titlelessDudeMentions9b = results9b.filter(_.label matches "TitlelessDude")
+    // Should have (1) Person and (1) TitlelessDude
+    results9b should have size (2)
+    titlelessDudeMentions9b should have size (1)
+  }
+
+  // negative lookbehind + pattern + negative lookahead
+  val lookaroundPattern1 = "(?<! [tag=/^N/]+) [tag=/^N/] (?! [tag=/^N/]+)"
+  lookaroundPattern1 should "find only single-noun NPs" in {
+
+    val p = TokenPattern.compile(lookaroundPattern1)
+    val doc1 = proc annotate "I'll have a cow eyeball smoothie, please."
+    val doc2 = proc annotate "What do you want in your smoothie?"
+    val results1 = p.findAllIn(0, doc1)
+    val results2 = p.findAllIn(0, doc2)
+
+    results1 should have size (0)
+    results2 should have size (1)
+    results2.head.interval should have (
+      'start (6),
+      'end (7)
+    )
+  }
+
+  // positive lookbehind in negative lookbehind
+  // match "black cat" if it is not preceded by token "mangy" that is preceded by token "a"
+  val lookaroundPattern2 = "(?<! (?<= a) mangy) black cat"
+
+  lookaroundPattern2 should "not match \"black cat\" in \"a mangy black cat\"" in {
+    val p = TokenPattern.compile(lookaroundPattern2)
+    val doc = proc annotate "I glimpsed a mangy black cat in the moonlight."
+    val results = p.findAllIn(0, doc)
+    results should have size (0)
+  }
+
+  it should "match \"black cat\" in \"the mangy black cat\", and \"the curious black cat\"" in {
+    val p = TokenPattern.compile(lookaroundPattern2)
+    val doc1 = proc annotate "I glimpsed the mangy black cat in the moonlight."
+    val doc2 = proc annotate "I glimpsed the curious black cat in the moonlight."
+    val results1 = p.findAllIn(0, doc1)
+    val results2 = p.findAllIn(0, doc2)
+
+    // matches b/c neg lookbehind req. contained pattern to be false
+    results1 should have size (1)
+    results1.head.interval should have (
+      'start (4),
+      'end (6)
+    )
+    results2 should have size (1)
+    // matches b/c neg lookbehind req. contained pattern to be false
+    results2.head.interval should have (
+      'start (4),
+      'end (6)
+    )
+  }
+
+  it should "not match \"the curious blue cat\"" in {
+    val doc1 = proc annotate "I glimpsed the curious blue cat in the moonlight."
+    val p = TokenPattern.compile(lookaroundPattern2)
+    val results1 = p.findAllIn(0, doc1)
+    results1 should have size (0)
+  }
+
+  // negative lookbehind in negative lookbehind
+  // only match "black cat" if it is not preceded by token "mangy" that is not preceded by the token "the"
+  val lookaroundPattern3 = "(?<! (?<! the) mangy) black cat"
+
+  lookaroundPattern3 should "not match \"a mangy black cat\", \"a mangy blue cat\", or \"the mangy black cat\"" in {
+    val p = TokenPattern.compile(lookaroundPattern3)
+    val doc1 = proc annotate "I glimpsed a mangy black cat in the moonlight."
+    val doc2 = proc annotate "I glimpsed a mangy blue cat in the moonlight."
+    val results1 = p.findAllIn(0, doc1)
+    val results2 = p.findAllIn(0, doc2)
+    results1 should have size (0)
+    results2 should have size (0)
+  }
+
+  it should "match \"black cat\" in \"the mangy black cat\"" in {
+    val p = TokenPattern.compile(lookaroundPattern3)
+    val doc = proc annotate "I glimpsed the mangy black cat in the moonlight."
+    val results = p.findAllIn(0, doc)
+    results should have size (1)
+    results.head.interval should have (
+      'start (4),
+      'end (6)
+    )
+  }
+
+  // negative lookbehind in negative lookbehind
+  it should "match \"black cat\" in \"a curious black cat\"" in {
+    val p = TokenPattern.compile(lookaroundPattern3)
+    val doc1 = proc annotate "I glimpsed a curious black cat in the moonlight."
+    val results1 = p.findAllIn(0, doc1)
+    results1 should have size (1)
+    // matches b/c neg lookbehind req. contained pattern to be false
+    results1.head.interval should have (
+      'start (4),
+      'end (6)
     )
   }
 

@@ -4,6 +4,7 @@ import scala.util.matching.Regex
 import scala.util.hashing.MurmurHash3._
 import edu.arizona.sista.struct.Interval
 import edu.arizona.sista.processors.Document
+import edu.arizona.sista.utils.DependencyUtils
 import edu.arizona.sista.odin.impl.StringMatcher
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -76,13 +77,46 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   /** returns all tokens in mention */
   def words: Seq[String] = sentenceObj.words.slice(start, end)
 
+  /** returns all tags in mention */
   def tags: Option[Seq[String]] = sentenceObj.tags.map(_.slice(start, end))
 
+  /** returns all lemmas in mention */
   def lemmas: Option[Seq[String]] = sentenceObj.lemmas.map(_.slice(start, end))
 
+  /** returns all entities in mention */
   def entities: Option[Seq[String]] = sentenceObj.entities.map(_.slice(start, end))
 
+  /** returns all chunks in mention */
   def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end))
+
+  /** Return all syntactic heads, where a head is a token in `mention`
+    * whose parent isn't contained in `mention`.
+    */
+  def synHeads: Seq[Int] = {
+    if (tokenInterval.isEmpty) {
+      Nil
+    } else if (tokenInterval.size == 1) {
+      // we don't need dependencies, a single token is its own head
+      tokenInterval
+    } else {
+      sentenceObj.dependencies match {
+        case Some(deps) => DependencyUtils.findHeads(tokenInterval, deps)
+        case None => Nil
+      }
+    }
+  }
+
+  /** Return the syntactic head of `mention`  */
+  def synHead: Option[Int] = synHeads.lastOption
+
+  /** returns head token */
+  def synHeadWord: Option[String] = synHead.map(i => sentenceObj.words(i))
+
+  /** returns head pos tag */
+  def synHeadTag: Option[String] = synHead.flatMap(i => sentenceObj.tags.map(_(i)))
+
+  /** returns head lemma */
+  def synHeadLemma: Option[String] = synHead.flatMap(i => sentenceObj.lemmas.map(_(i)))
 
   /** returns a string that contains the mention */
   def text: String = document.text match {
@@ -188,6 +222,7 @@ class TextBoundMention(
 // this is allowed because it is useful for coreference
 class EventMention(
     val labels: Seq[String],
+    val tokenInterval: Interval,
     val trigger: TextBoundMention,
     val arguments: Map[String, Seq[Mention]],
     val paths: Map[String, Map[Mention, SynPath]],
@@ -198,15 +233,15 @@ class EventMention(
 ) extends Mention {
 
   def this(
-    label: String,
-    trigger: TextBoundMention,
-    arguments: Map[String, Seq[Mention]],
-    paths: Map[String, Map[Mention, SynPath]],
-    sentence: Int,
-    document: Document,
-    keep: Boolean,
-    foundBy: String
-  ) = this(Seq(label), trigger, arguments, paths, sentence, document, keep, foundBy)
+      label: String,
+      trigger: TextBoundMention,
+      arguments: Map[String, Seq[Mention]],
+      paths: Map[String, Map[Mention, SynPath]],
+      sentence: Int,
+      document: Document,
+      keep: Boolean,
+      foundBy: String
+  ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, paths, sentence, document, keep, foundBy)
 
   def this(
       label: String,
@@ -216,7 +251,7 @@ class EventMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
+  ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   def this(
       labels: Seq[String],
@@ -226,14 +261,7 @@ class EventMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(labels, trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
-
-  // token interval that contains trigger and all matched arguments
-  override def tokenInterval: Interval = {
-    val allStarts = trigger.start +: arguments.values.flatMap(_.map(_.start)).toSeq
-    val allEnds = trigger.end +: arguments.values.flatMap(_.map(_.end)).toSeq
-    Interval(allStarts.min, allEnds.max)
-  }
+  ) = this(labels, mkTokenInterval(trigger, arguments), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   override def isValid: Boolean = {
     // get token interval for trigger
@@ -267,6 +295,7 @@ class EventMention(
   // Copy constructor for EventMention
   def copy(
       labels: Seq[String] = this.labels,
+      tokenInterval: Interval = this.tokenInterval,
       trigger: TextBoundMention = this.trigger,
       arguments: Map[String, Seq[Mention]] = this.arguments,
       paths: Map[String, Map[Mention, SynPath]] = this.paths,
@@ -274,12 +303,13 @@ class EventMention(
       document: Document = this.document,
       keep: Boolean = this.keep,
       foundBy: String = this.foundBy
-  ): EventMention = new EventMention(labels, trigger, arguments, paths, sentence, document, keep, foundBy)
+  ): EventMention = new EventMention(labels, tokenInterval, trigger, arguments, paths, sentence, document, keep, foundBy)
 
   // Convert an EventMention to a RelationMention by deleting the trigger
   def toRelationMention: RelationMention = {
     new RelationMention(
       this.labels,
+      this.tokenInterval,
       this.arguments,
       this.paths,
       this.sentence,
@@ -315,6 +345,7 @@ class EventMention(
 
 class RelationMention(
     val labels: Seq[String],
+    val tokenInterval: Interval,
     val arguments: Map[String, Seq[Mention]],
     val paths: Map[String, Map[Mention, SynPath]],
     val sentence: Int,
@@ -333,7 +364,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), arguments, paths, sentence, document, keep, foundBy)
+  ) = this(Seq(label), mkTokenInterval(arguments), arguments, paths, sentence, document, keep, foundBy)
 
   def this(
       label: String,
@@ -342,7 +373,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
+  ) = this(Seq(label), mkTokenInterval(arguments), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   def this(
       labels: Seq[String],
@@ -351,14 +382,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(labels, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
-
-  // token interval that contains all matched arguments
-  override def tokenInterval: Interval = {
-    val allStarts = arguments.values.flatMap(_.map(_.start))
-    val allEnds = arguments.values.flatMap(_.map(_.end))
-    Interval(allStarts.min, allEnds.max)
-  }
+  ) = this(labels, mkTokenInterval(arguments), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
 
   def jsonAST: JValue = {
     val args = arguments.map {
@@ -374,13 +398,14 @@ class RelationMention(
   // Copy constructor for RelationMention
   def copy(
       labels: Seq[String] = this.labels,
+      tokenInterval: Interval = this.tokenInterval,
       arguments: Map[String, Seq[Mention]] = this.arguments,
       paths: Map[String, Map[Mention, SynPath]] = this.paths,
       sentence: Int = this.sentence,
       document: Document = this.document,
       keep: Boolean = this.keep,
       foundBy: String = this.foundBy
-  ): RelationMention = new RelationMention(labels, arguments, paths, sentence, document, keep, foundBy)
+  ): RelationMention = new RelationMention(labels, tokenInterval, arguments, paths, sentence, document, keep, foundBy)
 
   // Convert a RelationMention to an EventMention by specifying a trigger
   def toEventMention(trigger: TextBoundMention): EventMention = {
@@ -390,6 +415,7 @@ class RelationMention(
 
     new EventMention(
       this.labels,
+      mkTokenInterval(trigger, this.arguments), // make new tokenInterval
       trigger,
       this.arguments,
       this.paths,

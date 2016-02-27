@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/clulab/processors.svg?branch=master)](https://travis-ci.org/clulab/processors)
+
 # What is it?
 
 This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
@@ -43,25 +45,28 @@ If you use anything else in this package, please link to this github page.
 
 This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml`:
 
-    <dependency>
-       <groupId>org.clulab</groupId>
-       <artifactId>processors_2.11</artifactId>
-       <version>5.8.1</version>
-    </dependency>
-    <dependency>
-       <groupId>org.clulab</groupId>
-       <artifactId>processors_2.11</artifactId>
-       <version>5.8.1</version>
-       <classifier>models</classifier>
-    </dependency>
+```xml
+<dependency>
+   <groupId>org.clulab</groupId>
+   <artifactId>processors_2.11</artifactId>
+   <version>5.8.1</version>
+</dependency>
+<dependency>
+   <groupId>org.clulab</groupId>
+   <artifactId>processors_2.11</artifactId>
+   <version>5.8.1</version>
+   <classifier>models</classifier>
+</dependency>
+```
 
- The equivalent SBT dependencies are:
+The equivalent SBT dependencies are:
 
-    libraryDependencies ++= Seq(
-        "org.clulab" %% "processors" % "5.8.1",
-        "org.clulab" %% "processors" % "5.8.1" classifier "models"
-    )
-
+```scala
+libraryDependencies ++= Seq(
+    "org.clulab" %% "processors" % "5.8.1",
+    "org.clulab" %% "processors" % "5.8.1" classifier "models"
+)
+```
 
 # Why you should use this code
 + **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
@@ -84,124 +89,131 @@ Add the generated jar files under `target/` to your $CLASSPATH, along with the o
 Most of the examples here use Scala. However, this software can be used as is from Java as well! Scroll down towards the end of this document to see a Java usage example.
 
 ### Annotating entire documents
+```scala
+// create the processor
+// any processor works here! Try FastNLPProcessor or BioNLPProcessor.
+val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
 
-    // create the processor
-    // any processor works here! Try FastNLPProcessor or BioNLPProcessor.
-    val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
+// the actual work is done here
+val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
 
-    // the actual work is done here
-    val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
+// you are basically done. the rest of this code simply prints out the annotations
 
-    // you are basically done. the rest of this code simply prints out the annotations
+// let's print the sentence-level annotations
+var sentenceCount = 0
+for (sentence <- doc.sentences) {
+  println("Sentence #" + sentenceCount + ":")
+  println("Tokens: " + sentence.words.mkString(" "))
+  println("Start character offsets: " + sentence.startOffsets.mkString(" "))
+  println("End character offsets: " + sentence.endOffsets.mkString(" "))
 
-    // let's print the sentence-level annotations
-    var sentenceCount = 0
-    for (sentence <- doc.sentences) {
-      println("Sentence #" + sentenceCount + ":")
-      println("Tokens: " + sentence.words.mkString(" "))
-      println("Start character offsets: " + sentence.startOffsets.mkString(" "))
-      println("End character offsets: " + sentence.endOffsets.mkString(" "))
-
-      // these annotations are optional, so they are stored using Option objects, hence the foreach statement
-      sentence.lemmas.foreach(lemmas => println("Lemmas: " + lemmas.mkString(" ")))
-      sentence.tags.foreach(tags => println("POS tags: " + tags.mkString(" ")))
-      sentence.entities.foreach(entities => println("Named entities: " + entities.mkString(" ")))
-      sentence.norms.foreach(norms => println("Normalized entities: " + norms.mkString(" ")))
-      sentence.dependencies.foreach(dependencies => {
-        println("Syntactic dependencies:")
-        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
-        while(iterator.hasNext) {
-          val dep = iterator.next
-          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-          println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
-        }
-      })
-      sentence.syntacticTree.foreach(tree => {
-        println("Constituent tree: " + tree)
-        // see the edu.arizona.sista.utils.Tree class for more information
-        // on syntactic trees, including access to head phrases/words
-      })
-
-      sentenceCount += 1
-      println("\n")
+  // these annotations are optional, so they are stored using Option objects, hence the foreach statement
+  sentence.lemmas.foreach(lemmas => println(s"Lemmas: ${lemmas.mkString(" ")}"))
+  sentence.tags.foreach(tags => println(s"POS tags: ${tags.mkString(" ")}"))
+  sentence.chunks.foreach(chunks => println(s"Chunks: ${chunks.mkString(" ")}"))
+  sentence.entities.foreach(entities => println(s"Named entities: ${entities.mkString(" ")}"))
+  sentence.norms.foreach(norms => println(s"Normalized entities: ${norms.mkString(" ")}"))
+  sentence.dependencies.foreach(dependencies => {
+    println("Syntactic dependencies:")
+    val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+    while(iterator.hasNext) {
+      val dep = iterator.next
+      // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+      println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
     }
+  })
+  sentence.syntacticTree.foreach(tree => {
+    println("Constituent tree: " + tree)
+    // see the edu.arizona.sista.utils.Tree class for more information
+    // on syntactic trees, including access to head phrases/words
+  })
 
-    // let's print the coreference chains
-    doc.coreferenceChains.foreach(chains => {
-      for (chain <- chains.getChains) {
-        println("Found one coreference chain containing the following mentions:")
-        for (mention <- chain) {
-          // note that all these offsets start at 0 too
-          println("\tsentenceIndex:" + mention.sentenceIndex +
-            " headIndex:" + mention.headIndex +
-            " startTokenOffset:" + mention.startOffset +
-            " endTokenOffset:" + mention.endOffset +
-            " text: " + doc.sentences(mention.sentenceIndex).words.slice(mention.startOffset, mention.endOffset).mkString("[", " ", "]"))
-        }
-      }
-    })
+  sentenceCount += 1
+  println("\n")
+}
 
-    // let's print the discourse tree
-    doc.discourseTree.foreach(dt => {
-      println("Document-wide discourse tree:")
-      println(dt.toString())
-    })
+// let's print the coreference chains
+doc.coreferenceChains.foreach(chains => {
+  for (chain <- chains.getChains) {
+    println("Found one coreference chain containing the following mentions:")
+    for (mention <- chain) {
+      // note that all these offsets start at 0 too
+      println("\tsentenceIndex:" + mention.sentenceIndex +
+        " headIndex:" + mention.headIndex +
+        " startTokenOffset:" + mention.startOffset +
+        " endTokenOffset:" + mention.endOffset +
+        " text: " + doc.sentences(mention.sentenceIndex).words.slice(mention.startOffset, mention.endOffset).mkString("[", " ", "]"))
+    }
+  }
+})
 
+// let's print the discourse tree
+doc.discourseTree.foreach(dt => {
+  println("Document-wide discourse tree:")
+  println(dt.toString())
+})
+```
 The above code generates the following output:
 
-    Sentence #0:
-    Tokens: John Smith went to China .
-    Start character offsets: 0 5 11 16 19 24
-    End character offsets: 4 10 15 18 24 25
-    Lemmas: John Smith go to China .
-    POS tags: NNP NNP VBD TO NNP .
-    Named entities: PERSON PERSON O O LOCATION O
-    Normalized entities: O O O O O O
-    Syntactic dependencies:
-      head:1 modifier:0 label:nn
-      head:2 modifier:1 label:nsubj
-      head:2 modifier:4 label:prep_to
-    Constituent tree: (ROOT (S (NP (NNP John) (NNP Smith)) (VP (VBD went) (PP (TO to) (NP (NNP China)))) (. .)))
+```
+Sentence #0:
+Tokens: John Smith went to China .
+Start character offsets: 0 5 11 16 19 24
+End character offsets: 4 10 15 18 24 25
+Lemmas: John Smith go to China .
+POS tags: NNP NNP VBD TO NNP .
+Chunks: B-NP I-NP B-VP B-PP B-NP O
+Named entities: PERSON PERSON O O LOCATION O
+Normalized entities: O O O O O O
+Syntactic dependencies:
+  head:1 modifier:0 label:nn
+  head:2 modifier:1 label:nsubj
+  head:2 modifier:4 label:prep_to
+Constituent tree: (ROOT (S (NP (NNP John) (NNP Smith)) (VP (VBD went) (PP (TO to) (NP (NNP China)))) (. .)))
 
 
-    Sentence #1:
-    Tokens: He visited Beijing , on January 10th , 2013 .
-    Start character offsets: 26 29 37 44 46 49 57 61 63 67
-    End character offsets: 28 36 44 45 48 56 61 62 67 68
-    Lemmas: he visit Beijing , on January 10th , 2013 .
-    POS tags: PRP VBD NNP , IN NNP JJ , CD .
-    Named entities: O O LOCATION O O DATE DATE DATE DATE O
-    Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
-    Syntactic dependencies:
-      head:1 modifier:0 label:nsubj
-      head:1 modifier:2 label:dobj
-      head:1 modifier:8 label:tmod
-      head:2 modifier:5 label:prep_on
-      head:5 modifier:6 label:amod
-    Constituent tree: (ROOT (S (NP (PRP He)) (VP (VBD visited) (NP (NP (NNP Beijing)) (, ,) (PP (IN on) (NP (NNP January) (JJ 10th))) (, ,)) (NP-TMP (CD 2013))) (. .)))
+Sentence #1:
+Tokens: He visited Beijing , on January 10th , 2013 .
+Start character offsets: 26 29 37 44 46 49 57 61 63 67
+End character offsets: 28 36 44 45 48 56 61 62 67 68
+Lemmas: he visit Beijing , on January 10th , 2013 .
+POS tags: PRP VBD NNP , IN NNP JJ , CD .
+Chunks: B-NP B-VP B-NP O B-PP B-NP I-NP I-NP I-NP O
+Named entities: O O LOCATION O O DATE DATE DATE DATE O
+Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
+Syntactic dependencies:
+  head:1 modifier:0 label:nsubj
+  head:1 modifier:2 label:dobj
+  head:1 modifier:8 label:tmod
+  head:2 modifier:5 label:prep_on
+  head:5 modifier:6 label:amod
+Constituent tree: (ROOT (S (NP (PRP He)) (VP (VBD visited) (NP (NP (NNP Beijing)) (, ,) (PP (IN on) (NP (NNP January) (JJ 10th))) (, ,)) (NP-TMP (CD 2013))) (. .)))
 
 
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:3 text: [Beijing]
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:1 headIndex:0 startTokenOffset:0 endTokenOffset:1 text: [He]
-      sentenceIndex:0 headIndex:1 startTokenOffset:0 endTokenOffset:2 text: [John Smith]
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:9 text: [January 10th , 2013]
-    Found one coreference chain containing the following mentions:
-      sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:1 headIndex:2 startTokenOffset:2 endTokenOffset:3 text: [Beijing]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:1 headIndex:0 startTokenOffset:0 endTokenOffset:1 text: [He]
+  sentenceIndex:0 headIndex:1 startTokenOffset:0 endTokenOffset:2 text: [John Smith]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:1 headIndex:5 startTokenOffset:5 endTokenOffset:9 text: [January 10th , 2013]
+Found one coreference chain containing the following mentions:
+  sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
 
-    Document-wide discourse tree:
-    elaboration (LeftToRight)
-      TEXT:John Smith went to China .
-      TEXT:He visited Beijing , on January 10th , 2013 .
+Document-wide discourse tree:
+elaboration (LeftToRight)
+  TEXT:John Smith went to China .
+  TEXT:He visited Beijing , on January 10th , 2013 .
+```
 
 For more details about the annotation data structures, please see the `edu/arizona/sista/processor/Document.scala` file.
 
 Changing processors is trivial: just replace the first line in the above example with:
 
-    val proc:Processor = new FastNLPProcessor()
-    // everything else stays the same
+```scala
+val proc:Processor = new FastNLPProcessor()
+// everything else stays the same
+```
 
 FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces its parser with maltparser, trained to generated Stanford "basic" (rather than "collapsed") dependencies. This means that this annotator does not produce constituent trees and coreference chains. However, because of the faster parser, you should see a speedup increase of at least one order of magnitude. The output of the above code with `FastNLPProcessor` is:
 
@@ -211,6 +223,7 @@ FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces 
     End character offsets: 4 10 15 18 24 25
     Lemmas: John Smith go to China .
     POS tags: NNP NNP VBD TO NNP .
+    Chunks: B-NP I-NP B-VP B-PP B-NP O
     Named entities: PERSON PERSON O O LOCATION O
     Normalized entities: O O O O O O
     Syntactic dependencies:
@@ -227,6 +240,7 @@ FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces 
     End character offsets: 28 36 44 45 48 56 61 62 67 68
     Lemmas: he visit Beijing , on January 10th , 2013 .
     POS tags: PRP VBD NNP , IN NNP JJ , CD .
+    Chunks: B-NP B-VP B-NP O B-PP B-NP I-NP I-NP I-NP O
     Named entities: O O LOCATION O O DATE DATE DATE DATE O
     Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
     Syntactic dependencies:
@@ -242,43 +256,51 @@ FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces 
 
 ### Annotating documents already split into sentences
 
-    val doc = proc.annotateFromSentences(List("John Smith went to China.", "He visited Beijing."))
-    // everything else stays the same
+```scala
+val doc = proc.annotateFromSentences(List("John Smith went to China.", "He visited Beijing."))
+// everything else stays the same
+```
 
 ### Annotating documents already split into sentences and tokenized
 
-    val doc = annotateFromTokens(List(
-      List("John", "Smith", "went", "to", "China", "."),
-      List("There", ",", "he", "visited", "Beijing", ".")))
-    // everything else stays the same
+```scala
+val doc = annotateFromTokens(List(
+  List("John", "Smith", "went", "to", "China", "."),
+  List("There", ",", "he", "visited", "Beijing", ".")))
+// everything else stays the same
+```
 
 ## Using individual annotators
 
 You can of course use only some of the annotators provided by CoreNLP by calling them individually. To illustrate,
 the `Processor.annotate()` method is implemented as follows:
 
-    def annotate(doc:Document): Document = {
-      tagPartsOfSpeech(doc)
-      lemmatize(doc)
-      recognizeNamedEntities(doc)
-      parse(doc)
-      chunking(doc)
-      labelSemanticRoles(doc)
-      resolveCoreference(doc)
-      discourse(doc)
-      doc.clear()
-      doc
-    }
+```scala
+def annotate(doc:Document): Document = {
+  tagPartsOfSpeech(doc)
+  lemmatize(doc)
+  recognizeNamedEntities(doc)
+  parse(doc)
+  chunking(doc)
+  labelSemanticRoles(doc)
+  resolveCoreference(doc)
+  discourse(doc)
+  doc.clear()
+  doc
+}
+```
 
 (Note that CoreNLP currently does not support chunking and semantic role labeling.)
 You can use just a few of these annotators. For example, if you need just POS tags, lemmas and named entities, you could use
 the following code:
 
-    val doc = proc.mkDocument("John Smith went to China. He visited Beijing, on January 10th, 2013.")
-    proc.tagPartsOfSpeech(doc)
-    proc.lemmatize(doc)
-    proc.recognizeNamedEntities(doc)
-    doc.clear()
+```scala
+val doc = proc.mkDocument("John Smith went to China. He visited Beijing, on January 10th, 2013.")
+proc.tagPartsOfSpeech(doc)
+proc.lemmatize(doc)
+proc.recognizeNamedEntities(doc)
+doc.clear()
+```
 
 Note that the last method called (`doc.clear()`) clears the internal structures created by the actual CoreNLP annotators.
 This saves a lot of memory, so, although it is not strictly necessary, I recommend you call it.
@@ -289,23 +311,27 @@ This package also offers serialization code for the generated annotations. The t
 
 ### Serialization to/from streams
 
-    // saving to a PrintWriter, pw
-    val someAnnotation = proc.annotate(someText)
-    val serializer = new DocumentSerializer
-    serializer.save(someAnnotation, pw)
+```scala
+// saving to a PrintWriter, pw
+val someAnnotation = proc.annotate(someText)
+val serializer = new DocumentSerializer
+serializer.save(someAnnotation, pw)
 
-    // loading from an BufferedReader, br
-    val someAnnotation = serializer.load(br)
+// loading from an BufferedReader, br
+val someAnnotation = serializer.load(br)
+```
 
 ### Serialization to/from Strings
 
-    // saving to a String object, savedString
-    val someAnnotation = proc.annotate(someText)
-    val serializer = new DocumentSerializer
-    val savedString = serializer.save(someAnnotation)
+```scala
+// saving to a String object, savedString
+val someAnnotation = proc.annotate(someText)
+val serializer = new DocumentSerializer
+val savedString = serializer.save(someAnnotation)
 
-    // loading from a String object, fromString
-    val someAnnotation = serializer.load(fromString)
+// loading from a String object, fromString
+val someAnnotation = serializer.load(fromString)
+```
 
 Note that space required for these serialized annotations is considerably smaller (8 to 10 times) than the corresponding
 serialized Java objects. This is because we store only the information required to recreate these annotations (e.g., words, lemmas, etc.)
@@ -318,113 +344,122 @@ This is implemented by maintaining an internal dictionary of strings previously 
 use a lot of memory due to the Zipfian distribution of language. But, if memory usage is a big concern, it can be cleaned by
 calling:
 
-    Processor.in.clear()
+```scala
+Processor.in.clear()
+```
 
 I recommend you do this only _after_ you annotated all the documents you plan to keep in memory.
 
 Although I see no good reason for doing this, you can disable the interning of strings completely by setting the `internStrings = false` in the
 CoreNLProcessor constructor, as such:
 
-    val processor = new CoreNLPProcessor(internStrings = false)
+```scala
+val processor = new CoreNLPProcessor(internStrings = false)
+```
 
 ## Using processors from Java
 
 Scala is (largely) compatible with Java, so this library can be directly used from Java. Below is Java code that translates most of the functionality from the first Scala example in this document to Java:
 
-    import edu.arizona.sista.struct.DirectedGraphEdgeIterator;
-    import edu.arizona.sista.processors.*;
-    import edu.arizona.sista.processors.corenlp.CoreNLPProcessor;
-    import edu.arizona.sista.processors.fastnlp.FastNLPProcessor;
+```java
+import edu.arizona.sista.struct.DirectedGraphEdgeIterator;
+import edu.arizona.sista.processors.*;
+import edu.arizona.sista.processors.corenlp.CoreNLPProcessor;
+import edu.arizona.sista.processors.fastnlp.FastNLPProcessor;
 
-    public class ProcessorJavaExample {
-        public static void main(String [] args) throws Exception {
-            // create the processor
-            Processor proc = new CoreNLPProcessor(true, false, false, 100);
-            // for much faster processing, use FastNLPProcessor
-            // Processor proc = new FastNLPProcessor(true, false);
+public class ProcessorJavaExample {
+    public static void main(String [] args) throws Exception {
+        // create the processor
+        Processor proc = new CoreNLPProcessor(true, false, false, 100);
+        // for much faster processing, use FastNLPProcessor
+        // Processor proc = new FastNLPProcessor(true, false);
 
-            // the actual work is done here
-            Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.", false);
+        // the actual work is done here
+        Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.", false);
 
-            // you are basically done. the rest of this code simply prints out the annotations
+        // you are basically done. the rest of this code simply prints out the annotations
 
-            // let's print the sentence-level annotations
-            int sentenceCount = 0;
-            for (Sentence sentence: doc.sentences()) {
-                System.out.println("Sentence #" + sentenceCount + ":");
-                System.out.println("Tokens: " + mkString(sentence.words(), " "));
-                System.out.println("Start character offsets: " + mkString(sentence.startOffsets(), " "));
-                System.out.println("End character offsets: " + mkString(sentence.endOffsets(), " "));
+        // let's print the sentence-level annotations
+        int sentenceCount = 0;
+        for (Sentence sentence: doc.sentences()) {
+            System.out.println("Sentence #" + sentenceCount + ":");
+            System.out.println("Tokens: " + mkString(sentence.words(), " "));
+            System.out.println("Start character offsets: " + mkString(sentence.startOffsets(), " "));
+            System.out.println("End character offsets: " + mkString(sentence.endOffsets(), " "));
 
-                // these annotations are optional, so they are stored using Option objects, hence the isDefined checks
-                if(sentence.lemmas().isDefined()){
-                    System.out.println("Lemmas: " + mkString(sentence.lemmas().get(), " "));
-                }
-                if(sentence.tags().isDefined()){
-                    System.out.println("POS tags: " + mkString(sentence.tags().get(), " "));
-                }
-                if(sentence.entities().isDefined()){
-                    System.out.println("Named entities: " + mkString(sentence.entities().get(), " "));
-                }
-                if(sentence.norms().isDefined()){
-                    System.out.println("Normalized entities: " + mkString(sentence.norms().get(), " "));
-                }
-                if(sentence.dependencies().isDefined()) {
-                    System.out.println("Syntactic dependencies:");
-                    DirectedGraphEdgeIterator<String> iterator = new
-                        DirectedGraphEdgeIterator<String>(sentence.dependencies().get());
-                    while(iterator.hasNext()) {
-                        scala.Tuple3<Object, Object, String> dep = iterator.next();
-                        // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-                        System.out.println(" head:" + dep._1() + " modifier:" + dep._2() + " label:" + dep._3());
-                    }
-                }
-                if(sentence.syntacticTree().isDefined()) {
-                    System.out.println("Constituent tree: " + sentence.syntacticTree().get());
-                    // see the edu.arizona.sista.struct.Tree class for more information
-                    // on syntactic trees, including access to head phrases/words
-                }
-
-                sentenceCount += 1;
-                System.out.println("\n");
+            // these annotations are optional, so they are stored using Option objects, hence the isDefined checks
+            if(sentence.lemmas().isDefined()){
+                System.out.println("Lemmas: " + mkString(sentence.lemmas().get(), " "));
             }
-
-            // let's print the coreference chains
-            if(doc.coreferenceChains().isDefined()) {
-                // these are scala.collection Iterator and Iterable (not Java!)
-                scala.collection.Iterator<scala.collection.Iterable<CorefMention>> chains = doc.coreferenceChains().get().getChains().iterator();
-                while(chains.hasNext()) {
-                    scala.collection.Iterator<CorefMention> chain = chains.next().iterator();
-                    System.out.println("Found one coreference chain containing the following mentions:");
-                    while(chain.hasNext()) {
-                        CorefMention mention = chain.next();
-                        // note that all these offsets start at 0 too
-                        System.out.println("\tsentenceIndex:" + mention.sentenceIndex() +
-                            " headIndex:" + mention.headIndex() +
-                            " startTokenOffset:" + mention.startOffset() +
-                            " endTokenOffset:" + mention.endOffset());
-                    }
+            if(sentence.tags().isDefined()){
+                System.out.println("POS tags: " + mkString(sentence.tags().get(), " "));
+            }
+            if(sentence.chunks().isDefined()){
+                System.out.println("Chunks: " + mkString(sentence.chunks().get(), " "));
+            }
+            if(sentence.entities().isDefined()){
+                System.out.println("Named entities: " + mkString(sentence.entities().get(), " "));
+            }
+            if(sentence.norms().isDefined()){
+                System.out.println("Normalized entities: " + mkString(sentence.norms().get(), " "));
+            }
+            if(sentence.dependencies().isDefined()) {
+                System.out.println("Syntactic dependencies:");
+                DirectedGraphEdgeIterator<String> iterator = new
+                    DirectedGraphEdgeIterator<String>(sentence.dependencies().get());
+                while(iterator.hasNext()) {
+                    scala.Tuple3<Object, Object, String> dep = iterator.next();
+                    // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+                    System.out.println(" head:" + dep._1() + " modifier:" + dep._2() + " label:" + dep._3());
                 }
             }
+            if(sentence.syntacticTree().isDefined()) {
+                System.out.println("Constituent tree: " + sentence.syntacticTree().get());
+                // see the edu.arizona.sista.struct.Tree class for more information
+                // on syntactic trees, including access to head phrases/words
+            }
+
+            sentenceCount += 1;
+            System.out.println("\n");
         }
 
-        public static String mkString(String [] sa, String sep) {
-            StringBuilder os = new StringBuilder();
-            for(int i = 0; i < sa.length; i ++) {
-                if(i > 0) os.append(sep);
-                os.append(sa[i]);
+        // let's print the coreference chains
+        if(doc.coreferenceChains().isDefined()) {
+            // these are scala.collection Iterator and Iterable (not Java!)
+            scala.collection.Iterator<scala.collection.Iterable<CorefMention>> chains = doc.coreferenceChains().get().getChains().iterator();
+            while(chains.hasNext()) {
+                scala.collection.Iterator<CorefMention> chain = chains.next().iterator();
+                System.out.println("Found one coreference chain containing the following mentions:");
+                while(chain.hasNext()) {
+                    CorefMention mention = chain.next();
+                    // note that all these offsets start at 0 too
+                    System.out.println("\tsentenceIndex:" + mention.sentenceIndex() +
+                        " headIndex:" + mention.headIndex() +
+                        " startTokenOffset:" + mention.startOffset() +
+                        " endTokenOffset:" + mention.endOffset());
+                }
             }
-            return os.toString();
-        }
-        public static String mkString(int [] sa, String sep) {
-            StringBuilder os = new StringBuilder();
-            for(int i = 0; i < sa.length; i ++) {
-                if(i > 0) os.append(sep);
-                os.append(Integer.toString(sa[i]));
-            }
-            return os.toString();
         }
     }
+
+    public static String mkString(String [] sa, String sep) {
+        StringBuilder os = new StringBuilder();
+        for(int i = 0; i < sa.length; i ++) {
+            if(i > 0) os.append(sep);
+            os.append(sa[i]);
+        }
+        return os.toString();
+    }
+    public static String mkString(int [] sa, String sep) {
+        StringBuilder os = new StringBuilder();
+        for(int i = 0; i < sa.length; i ++) {
+            if(i > 0) os.append(sep);
+            os.append(Integer.toString(sa[i]));
+        }
+        return os.toString();
+    }
+}
+```
 
 The output of this code is:
 
@@ -434,6 +469,7 @@ The output of this code is:
     End character offsets: 4 10 15 18 24 25
     Lemmas: John Smith go to China .
     POS tags: NNP NNP VBD TO NNP .
+    Chunks: B-NP I-NP B-VP B-PP B-NP O
     Named entities: PERSON PERSON O O LOCATION O
     Normalized entities: O O O O O O
     Syntactic dependencies:
@@ -467,6 +503,7 @@ The output of this code is:
     End character offsets: 28 36 44 45 48 56 61 62 67 68
     Lemmas: he visit Beijing , on January 10th , 2013 .
     POS tags: PRP VBD NNP , IN NNP JJ , CD .
+    Chunks: B-NP B-VP B-NP O B-PP B-NP I-NP I-NP I-NP O
     Named entities: O O LOCATION O O DATE DATE DATE DATE O
     Normalized entities: O O O O O 2013-01-10 2013-01-10 2013-01-10 2013-01-10 O
     Syntactic dependencies:
@@ -553,4 +590,3 @@ Please see [Odin's Wiki](https://github.com/sistanlp/processors/wiki/ODIN-(Open-
 + [Visualizer for our discourse parsers](http://agathon.sista.arizona.edu:8080/discp/)
 + [Odin online demo](http://agathon.sista.arizona.edu:8080/odinweb/open)
 + See our [Reach project](https://github.com/clulab/reach) for more applications of Odin and demos
-
