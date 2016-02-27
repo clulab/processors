@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/clulab/processors.svg?branch=master)](https://travis-ci.org/clulab/processors)
+
 # What is it?
 
 This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
