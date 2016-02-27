@@ -11,6 +11,9 @@ trait TokenConstraintParsers extends StringMatcherParsers {
       case None => TokenWildcard
     }
 
+  /** access to resources (w2v embeddings, wordnet, etc) */
+  def resources: OdinResourceManager
+
   /** the field that should be used by unitConstraint */
   def unit: String
 

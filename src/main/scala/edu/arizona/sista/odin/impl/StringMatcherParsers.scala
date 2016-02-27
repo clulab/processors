@@ -5,9 +5,6 @@ import scala.util.parsing.combinator._
 
 trait StringMatcherParsers extends RegexParsers {
 
-  /** access to resources (w2v embeddings, wordnet, etc) */
-  def resources: OdinResourceManager
-
   // any valid StringMatcher
   def stringMatcher: Parser[StringMatcher] = exactStringMatcher | regexStringMatcher
 
