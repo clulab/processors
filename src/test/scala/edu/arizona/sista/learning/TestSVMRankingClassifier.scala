@@ -77,7 +77,7 @@ class TestSVMRankingClassifier extends FlatSpec with Matchers {
     new File("./model.ser").delete()
   }
 
-  it should "perform better than 0.50 P@1 on this dataset" in {
+  it should "perform better than 0.50 P@1 on this dataset" taggedAs (NeedsExternalBinary) in {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
       "src/test/resources/edu/arizona/sista/learning/ranking_train.txt.gz")
 
