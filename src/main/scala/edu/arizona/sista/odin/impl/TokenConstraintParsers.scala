@@ -62,7 +62,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 
   /** for numerical comparisons */
   def numericExpression: Parser[NumericExpression] =
-    productExpression ~ rep(( "+" | "-" ) ~ productExpression) ^^ {
+    productExpression ~ rep(("+" | "-") ~ productExpression) ^^ {
       case prod ~ list => (prod /: list) {
         case (lhs, "+" ~ rhs) => new Addition(lhs, rhs)
         case (lhs, "-" ~ rhs) => new Subtraction(lhs, rhs)
@@ -70,7 +70,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
     }
 
   def productExpression: Parser[NumericExpression] =
-    termExpression ~ rep(("*" | "//" | "/" | "%" ) ~ termExpression) ^^ {
+    termExpression ~ rep(("*" | "//" | "/" | "%") ~ termExpression) ^^ {
       case prod ~ list => (prod /: list) {
         case (lhs, "*" ~ rhs) => new Multiplication(lhs, rhs)
         case (lhs, "/" ~ rhs) => new Division(lhs, rhs)
