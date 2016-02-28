@@ -34,7 +34,7 @@ class PredicateClassifier {
 
     var dataset = createDataset(doc)
     // dataset = dataset.removeFeaturesByFrequency(20)
-    dataset = dataset.removeFeaturesByInformationGain(0.50)
+    dataset = dataset.removeFeaturesByInformationGain(0.75)
     //classifier = new LogisticRegressionClassifier[String, String]()
     classifier = new RFClassifier[String, String](numTrees = 10, howManyFeaturesPerNode = featuresPerNode, nilLabel = Some(NEG_LABEL))
     //classifier = new RandomForestClassifier[String, String](numTrees = 100)

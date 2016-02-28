@@ -115,12 +115,12 @@ class BVFDataset[L, F] (
     logger.debug("Computing information gain for all features in dataset...")
 
     // compute information gain per feature
-    val igs = computeInformationGains(features, labels)
+    val (total, igs) = computeInformationGains(features, labels)
     logger.debug("Total unique features before filtering: " + igs.size)
 
     // sort all features in descending order of their IG
     val fb = new ListBuffer[(Int, Double)]
-    for(f <- igs.keySet) fb += new Tuple2(f, igs.get(f).get.ig)
+    for(f <- igs.keySet) fb += new Tuple2(f, igs.get(f).get.ig(total))
     val sortedFeats = fb.sortBy(- _._2).toArray
 
     // keep the top pctToKeep
@@ -136,37 +136,26 @@ class BVFDataset[L, F] (
     keepOnly(featsToKeep.toSet)
   }
 
-  def computeInformationGains(fs:ArrayBuffer[Array[Int]], ls:ArrayBuffer[Int]):Map[Int, InformationGain] = {
+  def computeInformationGains(fs:ArrayBuffer[Array[Int]], ls:ArrayBuffer[Int]):(InformationGain, Map[Int, InformationGain]) = {
     val igs = new mutable.HashMap[Int, InformationGain]()
+    val total = new InformationGain()
 
     // count occurrence of f with label l
     for(i <- fs.indices) {
       val d = fs(i)
       val l = ls(i)
+
+      total.datumCount += 1
+      total.datumsByClass.incrementCount(l)
+
       for(f <- d) {
-        val ig = igs.getOrElseUpdate(f, new InformationGain(datums = fs.length))
-        ig.datumsWithFeat += 1
-        ig.posDatumsByClass.incrementCount(l)
+        val ig = igs.getOrElseUpdate(f, new InformationGain)
+        ig.datumCount += 1
+        ig.datumsByClass.incrementCount(l)
       }
     }
 
-    // count negative occurrences of f with label l
-    for(i <- fs.indices) {
-      val d = fs(i)
-      val l = ls(i)
-      val presentFeats = new mutable.HashSet[Int]()
-      for(f <- d) presentFeats += f
-
-      for(f <- igs.keySet) {
-        if(! presentFeats.contains(f)) {
-          val ig = igs.get(f).get
-          ig.datumsWithoutFeat += 1
-          ig.negDatumsByClass.incrementCount(l)
-        }
-      }
-    }
-
-    igs.toMap
+    (total, igs.toMap)
   }
 
 
@@ -355,34 +344,30 @@ class RVFDataset[L, F] (
   }
 }
 
-class InformationGain(
-  var datums:Int = 0,
-  var datumsWithFeat:Int = 0,
-  var datumsWithoutFeat:Int = 0,
-  val posDatumsByClass:Counter[Int] = new Counter[Int],
-  val negDatumsByClass:Counter[Int] = new Counter[Int]) {
-  def ig:Double = {
+class InformationGain( var datumCount:Int = 0,
+                       val datumsByClass:Counter[Int] = new Counter[Int]) {
+  def ig(total:InformationGain):Double = {
     var pos = 0.0
     var neg = 0.0
-    if(pWith != 0) {
-      for (c <- posDatumsByClass.keySet) {
-        val p = posDatumsByClass.getCount(c) / datumsWithFeat.toDouble
+    if(pWith(total) != 0) {
+      for (c <- datumsByClass.keySet) {
+        val p = datumsByClass.getCount(c) / datumCount.toDouble
         pos += p * math.log(p)
       }
-      pos *= pWith
+      pos *= pWith(total)
     }
-    if(pWithout != 0) {
-      for(c <- negDatumsByClass.keySet) {
-        val p = negDatumsByClass.getCount(c) / datumsWithoutFeat.toDouble
+    if(pWithout(total) != 0) {
+      for(c <- total.datumsByClass.keySet) {
+        val p = (total.datumsByClass.getCount(c) - datumsByClass.getCount(c)) / (total.datumCount - datumCount).toDouble
         neg += p * math.log(p)
       }
-      neg *= pWithout
+      neg *= pWithout(total)
     }
     pos + neg
   }
 
-  def pWith = datumsWithFeat.toDouble / datums.toDouble
-  def pWithout = datumsWithoutFeat.toDouble / datums.toDouble
+  def pWith(total:InformationGain) = datumCount.toDouble / total.datumCount.toDouble
+  def pWithout(total:InformationGain) = (total.datumCount - datumCount).toDouble / total.datumCount.toDouble
 }
 
 object RVFDataset {

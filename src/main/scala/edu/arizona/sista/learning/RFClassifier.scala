@@ -227,7 +227,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
     this.synchronized {
       treeCount += 1
-      logger.debug(s"Built $treeCount/$numTrees decision trees of depth $maxTreeDepth. Current tree accuracy is ${pt.weight}")
+      logger.debug(s"Built $treeCount/$numTrees decision trees of depth $maxTreeDepth.") // Current tree accuracy is ${pt.weight}")
     }
     pt
   }

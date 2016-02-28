@@ -31,7 +31,8 @@ class TestRandomForestClassifier extends FlatSpec with Matchers {
     //val classifier = new RandomForestClassifier[Int, String](numTrees = 50, maxTreeDepth = 0)
     val classifier = new RFClassifier[Int, String]
 
-    val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz")
+    var dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_train.txt.gz").asInstanceOf[Dataset[Int, String]]
+    dataset = dataset.removeFeaturesByInformationGain(0.75)
     classifier.train(dataset)
 
     val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/test/resources/edu/arizona/sista/learning/classification_test.txt.gz")
