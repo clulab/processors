@@ -14,7 +14,7 @@ trait StringMatcherParsers extends RegexParsers {
   }
 
   // a StringMatcher that uses a regex
-  def regexStringMatcher: Parser[StringMatcher] = regexLiteral ^^ {
+  def regexStringMatcher: Parser[RegexStringMatcher] = regexLiteral ^^ {
     regex => new RegexStringMatcher(regex)
   }
 
