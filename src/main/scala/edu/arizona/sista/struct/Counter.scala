@@ -37,13 +37,13 @@ class Counter[T](
 
   def incrementCount(key:T, inc:Double = 1.0):Double = {
     val v = Counter.incrementCount(counts, key, inc)
-    total += inc
+    total += inc // keep total up to date!
     v
   }
   def setCount(key:T, value:Double) {
     val prev = getCount(key)
     Counter.setCount(counts, key, value)
-    total += value - prev
+    total += value - prev // keep total up to date!
   }
 
   def decrementCount(key:T, inc:Double):Double = incrementCount(key, - inc)

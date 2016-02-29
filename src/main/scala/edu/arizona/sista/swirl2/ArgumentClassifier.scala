@@ -22,20 +22,16 @@ import scala.util.Random
 object ArgumentClassifier {
   val logger = LoggerFactory.getLogger(classOf[ArgumentClassifier])
 
-  val NUM_TREES = 100
-  val MAX_TREE_DEPTH = 20
-  val NUM_THREADS = 4
-
   val FEATURE_THRESHOLD = 5
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 0 // 10000
+  val MAX_TRAINING_DATUMS = 0
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
-    var ac = new ArgumentClassifier
+    val ac = new ArgumentClassifier
 
     if(props.containsKey("train")) {
       ac.train(props.getProperty("train"))
@@ -75,25 +71,46 @@ class ArgumentClassifier {
   val lemmaCounts = new Counter[String]
 
   def train(trainPath:String): Unit = {
-    val reader = new Reader
-    var doc = reader.load(trainPath)
+    val datasetFileName = "dataset.ser"
+    var dataset:Dataset[String, String] = null
 
-    computeArgStats(doc)
+    if(new File(datasetFileName).exists()) {
+      // read the dataset from the serialized file
+      logger.info(s"Reading dataset from $datasetFileName...")
+      val is = new ObjectInputStream(new FileInputStream(datasetFileName))
+      dataset = is.readObject().asInstanceOf[Dataset[String, String]]
+      val lc = is.readObject().asInstanceOf[Counter[String]]
+      for(l <- lc.keySet) lemmaCounts.setCount(l, lc.getCount(l))
+      featureExtractor.lemmaCounts = Some(lemmaCounts)
+      is.close()
+    } else {
+      // generate the dataset online
+      val reader = new Reader
+      var doc = reader.load(trainPath)
+      computeArgStats(doc)
 
-    countLemmas(doc)
-    featureExtractor.lemmaCounts = Some(lemmaCounts)
+      countLemmas(doc)
+      featureExtractor.lemmaCounts = Some(lemmaCounts)
 
-    logger.debug("Constructing dataset...")
-    var dataset = createDataset(doc)
-    doc = null // the raw data is no longer needed
-    logger.debug("Finished constructing dataset.")
+      logger.debug("Constructing dataset...")
+      dataset = createDataset(doc)
+      doc = null // the raw data is no longer needed
+      logger.debug("Finished constructing dataset.")
 
-    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
-    classifier = new LogisticRegressionClassifier[String, String]()
+      // now save it for future runs
+      logger.info(s"Writing dataset to $datasetFileName...")
+      val os = new ObjectOutputStream(new FileOutputStream(datasetFileName))
+      os.writeObject(dataset)
+      os.writeObject(lemmaCounts)
+      os.close()
+    }
+
+    //dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
+    dataset = dataset.removeFeaturesByInformationGain(0.05)
+    //classifier = new LogisticRegressionClassifier[String, String]()
     //classifier = new LinearSVMClassifier[String, String]()
-    //classifier = new RandomForestClassifier(numTrees = NUM_TREES, maxTreeDepth = MAX_TREE_DEPTH, numThreads = NUM_THREADS)
+    classifier = new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode)
     //classifier = new PerceptronClassifier[String, String](epochs = 5)
-    //classifier = new RFClassifier[String, String](numTrees = 100, maxTreeDepth = 0, utilityTooSmallThreshold = 0.01, howManyFeaturesPerNode = featuresPerNode)
 
     classifier match {
       case rfc:RFClassifier[String, String] =>
@@ -105,7 +122,7 @@ class ArgumentClassifier {
     }
   }
 
-  def featuresPerNode(total:Int):Int = (10.0 * math.sqrt(total.toDouble)).toInt
+  def featuresPerNode(total:Int):Int = RFClassifier.featuresPerNodeTwoThirds(total)// (10.0 * math.sqrt(total.toDouble)).toInt
 
   def countLemmas(doc:Document): Unit = {
     for(s <- doc.sentences) {

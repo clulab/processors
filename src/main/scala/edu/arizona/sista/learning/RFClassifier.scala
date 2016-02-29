@@ -20,12 +20,13 @@ import scala.util.Random
   * Date: 11/23/15
   */
 class RFClassifier[L, F](numTrees:Int = 100,
-                         maxTreeDepth:Int = 0, // 0 means unlimited tree depth
+                         maxTreeDepth:Int = 20, // 0 means unlimited tree depth
                          trainBagPct:Double = 0.66, // how much data to use per tree
-                         utilityTooSmallThreshold:Double = 0.01, // 0 means no utility is too small
-                         splitTooSmallPct:Double = 0.01, // 0 means no split is too small
+                         utilityTooSmallThreshold:Double = 0, // 0 means no utility is too small
+                         splitTooSmallPct:Double = 0.0, // 0 means no split is too small
                          numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
-                         howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt) // how many features to use per node, as a function of total feature count
+                         howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt, // how many features to use per node, as a function of total feature count
+                         nilLabel:Option[L] = None)
   extends Classifier[L, F] with Serializable {
   var trees:Option[Array[RFTree]] = None
 
@@ -86,13 +87,13 @@ class RFClassifier[L, F](numTrees:Int = 100,
     numThreads match {
       case 0 => // use as many threads as possible
         val parBags = bags.toSet.par
-        trees = Some(parBags.map(buildTree).toArray)
+        trees = Some(parBags.map(buildTreeMain).toArray)
       case 1 => // sequential run in the same thread
-        trees = Some(bags.map(buildTree).toArray)
+        trees = Some(bags.map(buildTreeMain).toArray)
       case _ => // use a specific number of threads
         val parBags = bags.toSet.par
         parBags.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(numThreads))
-        trees = Some(parBags.map(buildTree).toArray)
+        trees = Some(parBags.map(buildTreeMain).toArray)
     }
 
     if(verbose) {
@@ -218,15 +219,34 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   var treeCount = 0
 
-  def buildTree(job:RFJob[L, F]):RFTree = {
+  def buildTreeMain(job:RFJob[L, F]):RFTree = {
     // if(verbose) logger.debug(s"Starting build tree using job: $job")
-    val t = buildTree(job, Set[(Int, Double)](), verbose = false)
+    val t = buildTree(job)
+    val pt = t // prune(t)
+    pt.weight = 1.0 // job.oobAccuracy(pt)
 
     this.synchronized {
       treeCount += 1
-      logger.debug(s"Built $treeCount/$numTrees decision trees of depth $maxTreeDepth.")
+      logger.debug(s"Built $treeCount/$numTrees decision trees of depth $maxTreeDepth.") // Current tree accuracy is ${pt.weight}")
     }
-    t
+    pt
+  }
+
+  def prune(tree:RFTree):RFTree = {
+    tree match {
+      case nt:RFNonTerminal =>
+        nt.l = prune(nt.l)
+        nt.r = prune(nt.r)
+
+        if(nt.left.get.isLeaf && nt.right.get.isLeaf &&
+          nt.left.get.sameLabels(nt.right.get)) {
+          println("Pruned 1 node")
+          new RFLeaf(nt.left.get.mergeLabels(nt.right.get))
+        } else {
+          nt
+        }
+      case _ => tree
+    }
   }
 
   def printContingencyTables(tables:Array[Array[(Counter[Int], Counter[Int])]], thresholds:Array[Array[Double]]) {
@@ -278,7 +298,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     }
 
     // update contingency tables for non-zero features
-    for(i <- job.indices) {
+    for(i <- job.trainIndices) {
       val l = job.dataset.labels(i)
       val fs = job.dataset.featuresCounter(i)
       for(f <- fs.keySet) {
@@ -305,25 +325,25 @@ class RFClassifier[L, F](numTrees:Int = 100,
   }
 
   /** Constructs a single decision tree from the given dataset sample */
-  def buildTree(job:RFJob[L, F], activeNodes:Set[(Int, Double)], verbose:Boolean):RFTree = {
+  def buildTree(job:RFJob[L, F]):RFTree = {
     //
     // termination condition: all datums have the same labels in this split
     //
     if(sameLabels(job)) {
       //logger.debug(s"Found termination condition due to uniform labels on job")
-      return new RFLeaf(job.labelDist)
+      return new RFLeaf(job.leafLabels)
     }
 
-    // reached maximum depth
-    if(maxTreeDepth > 0 && activeNodes.size > maxTreeDepth) {
+    // termination condition: reached maximum depth
+    if(maxTreeDepth > 0 && job.activeNodes.size > maxTreeDepth) {
       //logger.debug(s"Found termination condition at depth ${activeNodes.size}")
-      return new RFLeaf(job.labelDist)
+      return new RFLeaf(job.leafLabels)
     }
 
-    // the remaining dataset is too small
-    if(splitTooSmallPct > 0 && job.indices.length < splitTooSmallPct * job.dataset.size) {
+    // termination condition: the remaining dataset is too small
+    if(splitTooSmallPct > 0 && job.trainIndices.length < splitTooSmallPct * job.dataset.size) {
       //logger.debug(s"Found termination condition due to dataset too small: ${job.indices.length}")
-      return new RFLeaf(job.labelDist)
+      return new RFLeaf(job.leafLabels)
     }
 
     //
@@ -350,7 +370,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     //
     var best:Option[Utility] = None
     for(f <- currentFeatureIndices) {
-      val utility = featureUtility(f, job.featureThresholds(f), contingencyTables(f), activeNodes, job.currentUtility)
+      val utility = featureUtility(f, job.featureThresholds(f), contingencyTables(f), job.activeNodes, job.currentUtility)
       /*
       if(utility.isDefined)
         logger.debug(s"Utility for feature ${featureLexicon.get.get(f)} and threshold ${utility.get._2} is ${utility.get._3}")
@@ -376,7 +396,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     //
     if(best.isEmpty) {
       // logger.debug("No useful feature found.")
-      new RFLeaf(job.labelDist)
+      new RFLeaf(job.leafLabels)
     }
 
     //
@@ -391,12 +411,12 @@ class RFClassifier[L, F](numTrees:Int = 100,
       //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
 
       val newActiveNodes = new mutable.HashSet[(Int, Double)]()
-      newActiveNodes ++= activeNodes
+      newActiveNodes ++= job.activeNodes
       newActiveNodes += new Tuple2(best.get.feature, best.get.threshold)
       val newActiveNodesSet = newActiveNodes.toSet
       new RFNonTerminal(best.get.feature, best.get.threshold,
-        buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue), newActiveNodesSet, verbose = false),
-        buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue), newActiveNodesSet, verbose = false))
+        buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue, newActiveNodesSet)),
+        buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue, newActiveNodesSet)))
     }
   }
 
@@ -434,6 +454,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
       if(! activeNodes.contains((feature, threshold))) {
         val ig = informationGainForThreshold(feature, threshold, contingencyTable, currentEntropy)
         if(ig.isDefined && (bestThreshold.isEmpty || bestThreshold.get.value < ig.get.value)) {
+          // println("Found new best IG: " + ig.get.value)
           bestThreshold = ig
         }
       }
@@ -500,7 +521,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   def sameLabels(job:RFJob[L, F]):Boolean = {
     val ls = new mutable.HashSet[Int]()
-    for(i <- job.indices) {
+    for(i <- job.trainIndices) {
       ls += job.dataset.labels(i)
       if(ls.size > 1) return false
     }
@@ -510,48 +531,69 @@ class RFClassifier[L, F](numTrees:Int = 100,
   def mkBag(dataset: CounterDataset[L, F],
             indices: Array[Int],
             thresholds: Array[Array[Double]],
-            length:Int,
+            trainIndicesLength:Int,
             entropy:Double,
             random:Random,
             offset:Int):RFJob[L, F] = {
     val bagIndices = new ArrayBuffer[Int]()
+    val oobIndices = new ArrayBuffer[Int]()
 
-    if(length == indices.length) {
+    if(trainIndicesLength == indices.length) {
       // just copy all indices in this situation
       for(i <- indices) {
         bagIndices += i
       }
     } else {
       // proper sampling with replacement
-      for (i <- 0 until length) {
+      for (i <- 0 until trainIndicesLength) {
         bagIndices += indices(random.nextInt(indices.length))
       }
+
+      // the remaining indices form the OOB dataset
+      val uniqueBagIndices = bagIndices.toSet
+      for(i <- indices.indices) {
+        if(! uniqueBagIndices.contains(indices(i))) {
+          oobIndices += indices(i)
+        }
+      }
+
+      /*
+      // sampling wo/ replacement
+      val randomized = MathUtils.randomize(indices, random)
+      for (i <- 0 until trainIndicesLength) {
+        bagIndices += indices(i)
+      }
+      for(i <- trainIndicesLength until indices.length) {
+        oobIndices += indices(i)
+      }
+      */
+
     }
-    new RFJob[L, F](dataset, bagIndices.toArray, thresholds, entropy, new Random(RANDOM_SEED + offset))
+    new RFJob[L, F](dataset, bagIndices.toArray, oobIndices.toArray, Set[(Int, Double)](), nilLabel, thresholds, entropy, new Random(RANDOM_SEED + offset))
   }
 
   /** Constructs a job from the datums containing values of this feature smaller or equal than the threshold */
-  def mkLeftJob(job:RFJob[L, F], feature:Int, threshold:Double, entropy:Double):RFJob[L, F] = {
+  def mkLeftJob(job:RFJob[L, F], feature:Int, threshold:Double, entropy:Double, activeNodes:Set[(Int, Double)]):RFJob[L, F] = {
     val newIndices = new ArrayBuffer[Int]
-    for(i <- job.indices) {
+    for(i <- job.trainIndices) {
       if(job.dataset.featuresCounter(i).getCount(feature) <= threshold) {
         newIndices += i
       }
     }
     // shallow copy everything except the new datum indices
-    new RFJob[L, F](job.dataset, newIndices.toArray, job.featureThresholds, entropy, job.random)
+    new RFJob[L, F](job.dataset, newIndices.toArray, job.oobIndices, activeNodes, job.nilLabel, job.featureThresholds, entropy, job.random)
   }
 
   /** Constructs a job from the datums containing values of this feature larger than the threshold */
-  def mkRightJob(job:RFJob[L, F], feature:Int, threshold:Double, entropy:Double):RFJob[L, F] = {
+  def mkRightJob(job:RFJob[L, F], feature:Int, threshold:Double, entropy:Double, activeNodes:Set[(Int, Double)]):RFJob[L, F] = {
     val newIndices = new ArrayBuffer[Int]
-    for(i <- job.indices) {
+    for(i <- job.trainIndices) {
       if(job.dataset.featuresCounter(i).getCount(feature) > threshold) {
         newIndices += i
       }
     }
     // shallow copy everything except the new datum indices
-    new RFJob[L, F](job.dataset, newIndices.toArray, job.featureThresholds, entropy, job.random)
+    new RFJob[L, F](job.dataset, newIndices.toArray, job.oobIndices, activeNodes, job.nilLabel, job.featureThresholds, entropy, job.random)
   }
 
   /**
@@ -581,22 +623,19 @@ class RFClassifier[L, F](numTrees:Int = 100,
     var treeIndex = 0
     for(tree <- trees.get) {
       val labelDist = tree.apply(ifs)
-      labels += labelDist
+      labels += labelDist * tree.weight
       if(verbose) {
         logger.debug(s"Label distribution from tree #$treeIndex: $labelDist")
         logger.debug(s"Tree:\n$tree")
       }
       treeIndex += 1
     }
-    for(l <- labels.keySet) {
-      labels.setCount(l, labels.getCount(l) / trees.get.length.toDouble)
-    }
     if(verbose) logger.debug(s"Overall label distribution: $labels")
 
-    // convert to labels of type L
+    // convert to labels of type L and proportions
     val prettyLabels = new Counter[L]()
     for(l <- labels.keySet) {
-      prettyLabels.setCount(labelLexicon.get.get(l), labels.getCount(l))
+      prettyLabels.setCount(labelLexicon.get.get(l), labels.proportion(l))
     }
     if(verbose) logger.debug(s"Pretty labels: $prettyLabels")
 
@@ -628,7 +667,10 @@ case class Utility (feature:Int, // index of this feature in the feature lexicon
 
 class RFJob[L, F](
                    val dataset:CounterDataset[L, F],
-                   val indices:Array[Int],
+                   val trainIndices:Array[Int],
+                   val oobIndices:Array[Int],
+                   val activeNodes:Set[(Int, Double)],
+                   val nilLabel:Option[L],
                    val featureThresholds:Array[Array[Double]],
                    val currentUtility:Double,
                    val random:Random) {
@@ -636,7 +678,7 @@ class RFJob[L, F](
   override def toString:String = {
     val b = new StringBuilder
     var first = true
-    for(i <- indices) {
+    for(i <- trainIndices) {
       if(! first) b.append(" ")
       b.append(i.toString)
       b.append(":")
@@ -647,7 +689,7 @@ class RFJob[L, F](
   }
 
   def printDataset(): Unit = {
-    for(i <- indices) {
+    for(i <- trainIndices) {
       println(s"label:${dataset.labels(i)}\tfeatures:${dataset.featuresCounter(i)}")
     }
   }
@@ -660,14 +702,58 @@ class RFJob[L, F](
     proportions
   }
 
-  def labelCounts:Counter[Int] = RFClassifier.labelCounts[L, F](indices, dataset)
+  def leafLabels = labelDist
+
+  def labelCounts:Counter[Int] = RFClassifier.labelCounts[L, F](trainIndices, dataset)
 
   def features:Set[Int] = {
     val feats = new mutable.HashSet[Int]()
-    for(i <- indices) {
+    for(i <- trainIndices) {
       feats ++= dataset.featuresCounter(i).keySet
     }
     feats.toSet
+  }
+
+  def oobAccuracy(tree:RFTree):Double = {
+    val labels = new ArrayBuffer[(Int, Int)] // gold, pred
+    for(i <- oobIndices.indices) {
+      val prediction = tree.apply(dataset.featuresCounter(oobIndices(i))).sorted.head._1
+      labels += new Tuple2(dataset.labels(oobIndices(i)), prediction)
+    }
+
+    if(nilLabel.isEmpty) accuracy(labels)
+    else f1(labels, dataset.labelLexicon.get(nilLabel.get).get)
+  }
+
+  private def accuracy(labels:Seq[(Int, Int)]):Double = {
+    var correct = 0
+    for(l <- labels)
+      if(l._1 == l._2)
+        correct += 1
+    correct.toDouble / labels.size.toDouble
+  }
+
+  private def f1(labels:Seq[(Int, Int)], nilLabel:Int):Double = {
+    var correct = 0
+    var predicted = 0
+    var total = 0
+    for(l <- labels) {
+      if(l._1 != nilLabel) total += 1
+      if(l._2 != nilLabel) {
+        predicted += 1
+        if(l._1 == l._2)
+          correct += 1
+      }
+    }
+    var p = 0.0
+    if(predicted != 0) p = correct.toDouble / predicted.toDouble
+    var r = 0.0
+    if(total != 0) r = correct.toDouble / total.toDouble
+    var f1 = 0.0
+    if(p != 0.0 && r != 0.0)
+      f1 = 2 * p * r / (p + r)
+    logger.debug(s"P $p, R $r, F1 $f1")
+    f1
   }
 }
 
@@ -676,6 +762,9 @@ trait RFTree {
   def labels:Option[Counter[Int]]
   def left:Option[RFTree]
   def right:Option[RFTree]
+  var weight:Double = 1.0
+
+  def isLeaf = right.isEmpty && left.isEmpty
 
   def indent(i:Int):String = {
     val b = new StringBuilder()
@@ -693,6 +782,18 @@ trait RFTree {
         if(v <= nonTerm.decision.get._2) nonTerm.left.get.apply(datum)
         else nonTerm.right.get.apply(datum)
     }
+  }
+
+  def sameLabels(other:RFTree):Boolean = {
+    //val s1 = labels.get.sorted.map(_._1).mkString("-")
+    //val s2 = other.labels.get.sorted.map(_._1).mkString("-")
+    val s1 = labels.get.sorted.head._1
+    val s2 = other.labels.get.sorted.head._1
+    s1 == s2
+  }
+
+  def mergeLabels(other:RFTree):Counter[Int] = {
+    labels.get + other.labels.get
   }
 
   def toPrettyString[L, F](ind:Int, featureLexicon:Lexicon[F], labelLexicon:Lexicon[L]):String
@@ -726,7 +827,7 @@ class RFLeaf(ls:Counter[Int]) extends RFTree {
 
 }
 
-class RFNonTerminal(f:Int, t:Double, l:RFTree, r:RFTree) extends RFTree {
+class RFNonTerminal(f:Int, t:Double, var l:RFTree, var r:RFTree) extends RFTree {
   def decision = Some(f, t)
 
   def labels = None

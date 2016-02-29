@@ -18,7 +18,7 @@ import RVFDataset._
 abstract class Dataset[L, F](
   val labelLexicon:Lexicon[L],
   val featureLexicon:Lexicon[F],
-  val labels:ArrayBuffer[Int]) {
+  val labels:ArrayBuffer[Int]) extends Serializable {
 
   def this() = this(new Lexicon[L], new Lexicon[F], new ArrayBuffer[Int])
 
@@ -39,6 +39,9 @@ abstract class Dataset[L, F](
 
   /** Removes features that appear less than threshold times in this dataset. */
   def removeFeaturesByFrequency(threshold:Int):Dataset[L, F]
+
+  /** Removes features by information gain. */
+  def removeFeaturesByInformationGain(pctToKeep:Double):Dataset[L, F]
 
   /** Creates a new dataset keeping only the features in the given set */
   def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F]
@@ -89,26 +92,86 @@ class BVFDataset[L, F] (
     c
   }
 
-  def countFeatures(fs:ArrayBuffer[Array[Int]]):Counter[Int] = {
+  def countFeatures(fs:ArrayBuffer[Array[Int]], threshold:Int):Set[Int] = {
     val counts = new Counter[Int]
     for(d <- fs) {
       for(f <- d) {
         counts.incrementCount(f)
       }
     }
-    counts
-  }
-
-  override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
-    // compute feature frequencies
-    val counts = countFeatures(features)
     logger.debug("Total unique features before filtering: " + counts.size)
 
+    val passed = new mutable.HashSet[Int]()
+    for(f <- counts.keySet) {
+      if(counts.getCount(f) >= threshold)
+        passed += f
+    }
+    logger.debug(s"Total unique features after filtering with threshold $threshold: ${passed.size}")
+
+    passed.toSet
+  }
+
+  override def removeFeaturesByInformationGain(pctToKeep:Double):Dataset[L, F] = {
+    logger.debug("Computing information gain for all features in dataset...")
+
+    // compute information gain per feature
+    val (total, igs) = computeInformationGains(features, labels)
+    logger.debug("Total unique features before filtering: " + igs.size)
+
+    // sort all features in descending order of their IG
+    val fb = new ListBuffer[(Int, Double)]
+    for(f <- igs.keySet) fb += new Tuple2(f, igs.get(f).get.ig(total))
+    val sortedFeats = fb.sortBy(- _._2).toArray
+
+    // keep the top pctToKeep
+    val maxLen = (pctToKeep * sortedFeats.length.toDouble).ceil.toInt
+    assert(maxLen > 0 && maxLen <= sortedFeats.length)
+    logger.debug(s"Will keep $maxLen features after filtering by IG.")
+
+    // these are the features to keep
+    val featsToKeep = new mutable.HashSet[Int]()
+    for(i <- 0 until maxLen) featsToKeep += sortedFeats(i)._1
+
+    // keep only these features in the dataset
+    keepOnly(featsToKeep.toSet)
+  }
+
+  def computeInformationGains(fs:ArrayBuffer[Array[Int]], ls:ArrayBuffer[Int]):(InformationGain, Map[Int, InformationGain]) = {
+    val igs = new mutable.HashMap[Int, InformationGain]()
+    val total = new InformationGain()
+
+    // count occurrence of f with label l
+    for(i <- fs.indices) {
+      val d = fs(i)
+      val l = ls(i)
+
+      total.datumCount += 1
+      total.datumsByClass.incrementCount(l)
+
+      for(f <- d) {
+        val ig = igs.getOrElseUpdate(f, new InformationGain)
+        ig.datumCount += 1
+        ig.datumsByClass.incrementCount(l)
+      }
+    }
+
+    (total, igs.toMap)
+  }
+
+
+  override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
+    // compute feature frequencies and keep the ones above threshold
+    val counts = countFeatures(features, threshold)
+
+    keepOnly(counts)
+  }
+
+  override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {
     // map old feature ids to new ids, over the filtered set
     val featureIndexMap = new mutable.HashMap[Int, Int]()
     var newId = 0
     for(f <- 0 until featureLexicon.size) {
-      if(counts.getCount(f) >= threshold) {
+      if(featuresToKeep.contains(f)) {
         featureIndexMap += f -> newId
         newId += 1
       }
@@ -116,32 +179,25 @@ class BVFDataset[L, F] (
 
     // construct the new dataset with the filtered features
     val newFeatures = new ArrayBuffer[Array[Int]]
-    for(i <- 0 until size) {
-      val feats = features(i)
-      val filteredFeats = removeByFreq(feats, counts, threshold, featureIndexMap)
-      newFeatures += filteredFeats
+    for(row <- features.indices) {
+      val nfs = keepOnlyRow(features(row), featureIndexMap)
+      newFeatures += nfs
     }
-    logger.debug("Total features after filtering: " + countFeatures(newFeatures).size)
 
     new BVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures)
   }
 
-  private def removeByFreq(fs:Array[Int],
-                           counts:Counter[Int],
-                           threshold:Int,
-                           featureIndexMap:mutable.HashMap[Int, Int]):Array[Int] = {
-    val filtered = new ArrayBuffer[Int]()
-    for(f <- fs) {
-      if(counts.getCount(f) >= threshold) {
-        assert(featureIndexMap.contains(f))
-        filtered += featureIndexMap.get(f).get
+  def keepOnlyRow(feats:Array[Int], featureIndexMap:mutable.HashMap[Int, Int]):Array[Int] = {
+    val newFeats = new ArrayBuffer[Int]()
+
+    for(i <- feats.indices) {
+      val f = feats(i)
+      if(featureIndexMap.contains(f)) {
+        newFeats += featureIndexMap.get(f).get
       }
     }
-    filtered.toArray
-  }
 
-  override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {
-    throw new RuntimeException("Not supported yet!")
+    newFeats.toArray
   }
 
   override def toCounterDataset:CounterDataset[L, F] = {
@@ -201,56 +257,6 @@ class RVFDataset[L, F] (
       c.incrementCount(fs(i), vs(i))
     }
     c
-  }
-
-  override def removeFeaturesByFrequency(threshold:Int):Dataset[L, F] = {
-
-    // compute feature frequencies
-    val counts = countFeatures(features)
-    logger.debug("Total unique features before filtering: " + counts.size)
-
-    // map old feature ids to new ids, over the filtered set
-    val featureIndexMap = new mutable.HashMap[Int, Int]()
-    var newId = 0
-    for(f <- 0 until featureLexicon.size) {
-      if(counts.getCount(f) >= threshold) {
-        featureIndexMap += f -> newId
-        newId += 1
-      }
-    }
-
-    // construct the new dataset with the filtered features
-    val newFeatures = new ArrayBuffer[Array[Int]]
-    val newValues = new ArrayBuffer[Array[Double]]()
-    for(i <- 0 until size) {
-      val feats = features(i)
-      val vals = values(i)
-      val (filteredFeats, filteredVals) = removeByFreq(feats, vals, counts, threshold, featureIndexMap)
-      newFeatures += filteredFeats
-      newValues += filteredVals
-    }
-    logger.debug("Total features after filtering: " + countFeatures(newFeatures).size)
-
-    new RVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures, newValues)
-  }
-
-  private def removeByFreq(fs:Array[Int],
-                           vs:Array[Double],
-                           counts:Counter[Int],
-                           threshold:Int,
-                           featureIndexMap:mutable.HashMap[Int, Int]):(Array[Int], Array[Double]) = {
-    val filteredFeats = new ArrayBuffer[Int]()
-    val filteredVals = new ArrayBuffer[Double]()
-    for(i <- fs.indices) {
-      val f = fs(i)
-      val v = vs(i)
-      if(counts.getCount(f) >= threshold) {
-        assert(featureIndexMap.contains(f))
-        filteredFeats += featureIndexMap.get(f).get
-        filteredVals += v
-      }
-    }
-    (filteredFeats.toArray, filteredVals.toArray)
   }
 
   override def mkDatum(row:Int): Datum[L, F] = {
@@ -336,6 +342,32 @@ class RVFDataset[L, F] (
     }
     new CounterDataset[L, F](labelLexicon, featureLexicon, labels, cfs)
   }
+}
+
+class InformationGain( var datumCount:Int = 0,
+                       val datumsByClass:Counter[Int] = new Counter[Int]) {
+  def ig(total:InformationGain):Double = {
+    var pos = 0.0
+    var neg = 0.0
+    if(pWith(total) != 0) {
+      for (c <- datumsByClass.keySet) {
+        val p = datumsByClass.getCount(c) / datumCount.toDouble
+        pos += p * math.log(p)
+      }
+      pos *= pWith(total)
+    }
+    if(pWithout(total) != 0) {
+      for(c <- total.datumsByClass.keySet) {
+        val p = (total.datumsByClass.getCount(c) - datumsByClass.getCount(c)) / (total.datumCount - datumCount).toDouble
+        neg += p * math.log(p)
+      }
+      neg *= pWithout(total)
+    }
+    pos + neg
+  }
+
+  def pWith(total:InformationGain) = datumCount.toDouble / total.datumCount.toDouble
+  def pWithout(total:InformationGain) = (total.datumCount - datumCount).toDouble / total.datumCount.toDouble
 }
 
 object RVFDataset {
@@ -502,7 +534,11 @@ class CounterDataset[L, F](ll:Lexicon[L],
 
   /** Removes features that appear less than threshold times in this dataset. */
   override def removeFeaturesByFrequency(threshold: Int): Dataset[L, F] = {
-    throw new RuntimeException("ERROR: removeFeaturesByFrequency not supported yet!")
+    throw new RuntimeException("ERROR: removeFeaturesByFrequency not supported in CounterDataset yet!")
+  }
+
+  override def removeFeaturesByInformationGain(pctToKeep:Double):Dataset[L, F] = {
+    throw new RuntimeException("removeFeaturesByInformationGain not supported in CounterDataset yet!")
   }
 
   override def featuresCounter(datumOffset: Int): Counter[Int] = features(datumOffset)
