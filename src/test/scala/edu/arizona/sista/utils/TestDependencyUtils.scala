@@ -2,7 +2,7 @@ package edu.arizona.sista.utils
 
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.utils.DependencyUtils._
-import edu.arizona.sista.struct.Interval
+import edu.arizona.sista.struct.{DirectedGraph, Interval}
 import org.scalatest._
 
 /**
@@ -68,4 +68,14 @@ class TestDependencyUtils extends FlatSpec with Matchers {
   text3 should "produce no heads using findHeadsStrict" in {
     findHeadsStrict(Interval(0, 1), sent3) should have size (0)
   }
+
+  "dependencyUtils" should "handle cycles in the dependencyGraph correctly" in {
+    val edges = List((1, 0, "det"),(1,3,"rcmod"),(3,1,"nsubj"),(3,6,"prep_at"),(6,5,"nn"),
+      (8,1,"nsubj"),(8,7,"advmod"),(8,12,"dobj"),(8,20,"prep_in"),(12,9,"det"),(12,10,"nn"),
+      (12,11,"nn"),(12,13,"partmod"),(13,16,"prep_for"),(16,15,"nn"),(20,19,"amod"))
+    val depGraph = new DirectedGraph[String](edges, Set(8))
+    val tokenInterval = Interval(0, 2)
+    noException shouldBe thrownBy (DependencyUtils.findHeads(tokenInterval, depGraph))
+  }
+
 }
