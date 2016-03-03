@@ -99,7 +99,7 @@ class RSTParser {
 
     if(verbose) {
       println("Found EDUs:")
-      for(i <- 0 until edus.size) {
+      for(i <- edus.indices) {
         print(s"\tS$i:")
         for(edu <- edus(i)) {
           print(s" (${edu._1}, ${edu._2})")
@@ -116,8 +116,8 @@ class RSTParser {
     // these are used during feature generation
     val connectiveBIOs = ConnectiveMatcher.matchConnectives(doc)
 
-    val eduBuffer = new Array[ArrayBuffer[(Int, Int)]](doc.sentences.size)
-    for(si <- 0 until doc.sentences.size) {
+    val eduBuffer = new Array[ArrayBuffer[(Int, Int)]](doc.sentences.length)
+    for(si <- doc.sentences.indices) {
       eduBuffer(si) = new ArrayBuffer[(Int, Int)]()
       val sent = doc.sentences(si)
       var start = 0
@@ -134,8 +134,8 @@ class RSTParser {
       eduBuffer(si) += new Tuple2(start, sent.size - 1)
     }
 
-    val edus = new Array[Array[(Int, Int)]](eduBuffer.size)
-    for(i <- 0 until eduBuffer.size) {
+    val edus = new Array[Array[(Int, Int)]](eduBuffer.length)
+    for(i <- eduBuffer.indices) {
       edus(i) = eduBuffer(i).toArray
     }
     edus

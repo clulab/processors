@@ -6,6 +6,8 @@ import edu.arizona.sista.struct.{Counter, DirectedGraph}
 
 import ArgumentFeatureExtractor._
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
  * Creates features for the binary classification of tokens as potential arguments
  * User: mihais
@@ -67,7 +69,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     }
   }
 
-  def mkFeatures(sent:Sentence, position:Int, pred:Int):Counter[String] = {
+  def mkFeatures(sent:Sentence, position:Int, pred:Int, history:ArrayBuffer[Int]):Counter[String] = {
     val features = new Counter[String]
 
     val predLemma = lemmaAt(sent, pred)
@@ -109,6 +111,12 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       features.incrementCount(s"tag:$i:$tag:$predTag:$before")
     }
 
+    //
+    // history features
+    // history stores the positive predictions seen to the left of this candidate
+    //
+    features.incrementCount(s"history:${mkHistorySeq(history, pred, position)}")
+
     // addEmbeddingsFeatures(features, "AE", sent, position)
 
     /*
@@ -149,6 +157,40 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     */
 
     features
+  }
+
+  def mkHistorySeq(history:ArrayBuffer[Int], pred:Int, position:Int):String = {
+    val f = new StringBuilder
+
+    var first = true
+    var predIncluded = false
+    for(h <- history) {
+      if(! first) f.append('+')
+      if(! predIncluded && h > pred) {
+        f.append('P')
+        f.append('+')
+        predIncluded = true
+      }
+      f.append('A')
+      if(f == pred) f.append("=P")
+      first = false
+    }
+
+    if(! first) f.append('+')
+    if(position < pred) {
+      f.append("*+P")
+    } else if(position == pred) {
+      f.append("*=P")
+    } else {
+      if(! predIncluded) {
+        f.append("P+*")
+      } else {
+        f.append("*")
+      }
+    }
+
+    // println(s"History: ${f.toString()}")
+    f.toString()
   }
 
   def wordAt(sent:Sentence, position:Int):String = {
