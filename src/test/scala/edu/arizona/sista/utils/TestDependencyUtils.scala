@@ -82,4 +82,16 @@ class TestDependencyUtils extends FlatSpec with Matchers {
     noException shouldBe thrownBy (DependencyUtils.findHeads(tokenInterval, depGraph))
   }
 
+  it should "handle roots with incoming dependencies" in {
+    val edges = List(
+      (7, 1, "advmod"), (7, 2, "nsubj"), (7, 3, "cop"), (7, 4, "det"), (7, 5, "amod"),
+      (7, 6, "nn"), (7, 9, "rcmod"), (9, 7, "nsubj"), (9, 10, "dobj"), (10, 13, "prep_for"),
+      (10, 15, "prep_for"), (13, 12, "det"), (13, 15, "conj_and"), (13, 18, "prep_of"),
+      (18, 17, "det")
+    )
+    val graph = new DirectedGraph(edges, Set(7))
+    val interval = Interval(4, 8)
+    noException shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
+  }
+
 }
