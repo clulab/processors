@@ -90,18 +90,9 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end))
 
   /** returns all syntactic heads */
-  def synHeads: Seq[Int] = {
-    if (tokenInterval.isEmpty) {
-      Nil
-    } else if (tokenInterval.size == 1) {
-      // we don't need dependencies, a single token is its own head
-      tokenInterval
-    } else {
-      sentenceObj.dependencies match {
-        case Some(deps) => DependencyUtils.findHeads(tokenInterval, deps)
-        case None => Nil
-      }
-    }
+  def synHeads: Seq[Int] = sentenceObj.dependencies match {
+    case Some(deps) => DependencyUtils.findHeads(tokenInterval, deps)
+    case None => Nil
   }
 
   /** returns the syntactic head of `mention`  */
@@ -117,16 +108,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   def synHeadLemma: Option[String] = synHead.flatMap(i => sentenceObj.lemmas.map(_(i)))
 
   /** returns all semantic heads */
-  def semHeads: Seq[Int] = {
-    if (tokenInterval.isEmpty) {
-      Nil
-    } else if (tokenInterval.size == 1) {
-      // we don't need dependencies, a single token is its own head
-      tokenInterval
-    } else {
-      DependencyUtils.findHeadsStrict(tokenInterval, sentenceObj)
-    }
-  }
+  def semHeads: Seq[Int] = DependencyUtils.findHeadsStrict(tokenInterval, sentenceObj)
 
   /** returns the syntactic head of `mention`  */
   def semHead: Option[Int] = semHeads.lastOption
