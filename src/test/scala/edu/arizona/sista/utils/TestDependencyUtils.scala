@@ -17,10 +17,14 @@ class TestDependencyUtils extends FlatSpec with Matchers {
   val doc1 = proc.annotate(text1, keepText = true)
   val sent1 = doc1.sentences.head
   text1 should "produce 'substrates' as the head of 'the substrates of Shp2'" in {
-    findHeadStrict(Interval(1, 5), sent1).get should be (2)
+    val result = findHeadStrict(Interval(1, 5), sent1)
+    result shouldBe defined
+    result.get should be (2)
   }
   it should "produce 'are' as the head of 'the substrates of Shp2 are'" in {
-    findHeadStrict(Interval(1, 6), sent1).get should be (5)
+    val result = findHeadStrict(Interval(1, 6), sent1)
+    result shouldBe defined
+    result.get should be (5)
   }
   it should "produce None for an empty Interval" in {
     findHeadStrict(Interval(0, 0), sent1) should be (None)
@@ -69,7 +73,7 @@ class TestDependencyUtils extends FlatSpec with Matchers {
     findHeadsStrict(Interval(0, 1), sent3) should have size (0)
   }
 
-  "dependencyUtils" should "handle cycles in the dependencyGraph correctly" in {
+  "DependencyUtils" should "handle cycles in the dependencyGraph correctly" in {
     val edges = List((1, 0, "det"),(1,3,"rcmod"),(3,1,"nsubj"),(3,6,"prep_at"),(6,5,"nn"),
       (8,1,"nsubj"),(8,7,"advmod"),(8,12,"dobj"),(8,20,"prep_in"),(12,9,"det"),(12,10,"nn"),
       (12,11,"nn"),(12,13,"partmod"),(13,16,"prep_for"),(16,15,"nn"),(20,19,"amod"))
