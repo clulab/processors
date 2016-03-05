@@ -2,7 +2,7 @@ package edu.arizona.sista.utils
 
 import edu.arizona.sista.processors.bionlp.BioNLPProcessor
 import edu.arizona.sista.utils.DependencyUtils._
-import edu.arizona.sista.struct.Interval
+import edu.arizona.sista.struct.{DirectedGraph, Interval}
 import org.scalatest._
 
 /**
@@ -17,10 +17,14 @@ class TestDependencyUtils extends FlatSpec with Matchers {
   val doc1 = proc.annotate(text1, keepText = true)
   val sent1 = doc1.sentences.head
   text1 should "produce 'substrates' as the head of 'the substrates of Shp2'" in {
-    findHeadStrict(Interval(1, 5), sent1).get should be (2)
+    val result = findHeadStrict(Interval(1, 5), sent1)
+    result shouldBe defined
+    result.get should be (2)
   }
   it should "produce 'are' as the head of 'the substrates of Shp2 are'" in {
-    findHeadStrict(Interval(1, 6), sent1).get should be (5)
+    val result = findHeadStrict(Interval(1, 6), sent1)
+    result shouldBe defined
+    result.get should be (5)
   }
   it should "produce None for an empty Interval" in {
     findHeadStrict(Interval(0, 0), sent1) should be (None)
@@ -68,4 +72,26 @@ class TestDependencyUtils extends FlatSpec with Matchers {
   text3 should "produce no heads using findHeadsStrict" in {
     findHeadsStrict(Interval(0, 1), sent3) should have size (0)
   }
+
+  "DependencyUtils" should "handle cycles in the dependencyGraph correctly" in {
+    val edges = List((1, 0, "det"),(1,3,"rcmod"),(3,1,"nsubj"),(3,6,"prep_at"),(6,5,"nn"),
+      (8,1,"nsubj"),(8,7,"advmod"),(8,12,"dobj"),(8,20,"prep_in"),(12,9,"det"),(12,10,"nn"),
+      (12,11,"nn"),(12,13,"partmod"),(13,16,"prep_for"),(16,15,"nn"),(20,19,"amod"))
+    val depGraph = new DirectedGraph[String](edges, Set(8))
+    val tokenInterval = Interval(0, 2)
+    noException shouldBe thrownBy (DependencyUtils.findHeads(tokenInterval, depGraph))
+  }
+
+  it should "handle roots with incoming dependencies" in {
+    val edges = List(
+      (7, 1, "advmod"), (7, 2, "nsubj"), (7, 3, "cop"), (7, 4, "det"), (7, 5, "amod"),
+      (7, 6, "nn"), (7, 9, "rcmod"), (9, 7, "nsubj"), (9, 10, "dobj"), (10, 13, "prep_for"),
+      (10, 15, "prep_for"), (13, 12, "det"), (13, 15, "conj_and"), (13, 18, "prep_of"),
+      (18, 17, "det")
+    )
+    val graph = new DirectedGraph(edges, Set(7))
+    val interval = Interval(4, 8)
+    noException shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
+  }
+
 }

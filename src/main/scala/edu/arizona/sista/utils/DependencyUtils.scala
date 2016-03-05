@@ -1,7 +1,7 @@
 package edu.arizona.sista.utils
 
 import edu.arizona.sista.processors.Sentence
-import edu.arizona.sista.struct.{DirectedGraph, Interval}
+import edu.arizona.sista.struct.{ DirectedGraph, Interval }
 
 /**
  * Utility functions for use with directed (dependency) graphs
@@ -10,7 +10,17 @@ import edu.arizona.sista.struct.{DirectedGraph, Interval}
  */
 object DependencyUtils {
 
-  val defaultPolicy: (Seq[Int]) => Int = _.last
+  // a dependency graph is a directed graph with strings as edges
+  type DependencyGraph = DirectedGraph[String]
+
+  // a policy is a function that chooses an int from a sequence
+  type Policy = Seq[Int] => Int
+
+  // get all the governors of the given token according to the dependency graph
+  def followIncoming(tok: Int, graph: DependencyGraph): Array[Int] = graph.incomingEdges.lift(tok).getOrElse(Array.empty).map(_._1)
+
+  // by default we choose the last element of the sequence
+  val defaultPolicy: Policy = _.last
 
   /**
    * Given an Interval, finds the minimal span covering all of the Interval's nodes' children (recursively).
@@ -53,7 +63,7 @@ object DependencyUtils {
    * @param chooseWhich a function deciding which of multiple heads is returned; the rightmost head selected by default
    * @return the single node which is closest to the root among those in span
    */
-  def findHead(span: Interval, graph: DirectedGraph[String], chooseWhich:(Seq[Int]) => Int = defaultPolicy): Int = {
+  def findHead(span: Interval, graph: DependencyGraph, chooseWhich: Policy = defaultPolicy): Int = {
     chooseWhich(findHeads(span, graph))
   }
 
@@ -65,36 +75,49 @@ object DependencyUtils {
    * @param graph a directed graph containing the nodes in span
    * @return the single node which is closest to the root among those in span
    */
-  def findHeads(span: Interval, graph: DirectedGraph[String]): Seq[Int] = {
-
-    def getIncoming(i: Int) = graph.incomingEdges.lift(i).getOrElse(Array.empty).map(_._1)
-
-    def followTrail (i: Int, heads:Seq[Int]): Seq[Int] = {
-
-      // dependents
-      val incoming = getIncoming(i)
-
-      incoming match {
-        case valid if valid.isEmpty | valid.contains(i) => Seq(i)
-        case found if found.min < span.start | found.max > (span.end - 1) => followTrailOut(found.head, heads ++ Seq(i), i)
-        case _ => followTrail(incoming.head, heads ++ Seq(i))
-      }
+  def findHeads(span: Interval, graph: DependencyGraph): Seq[Int] = {
+    @annotation.tailrec
+    def countSteps(toksWithDist: List[(Int, Double)], seen: Set[Int]): Double = toksWithDist match {
+      case Nil =>
+        // we couldn't find a root in the graph
+        // maybe it is not a valid dependency graph?
+        sys.error("can't find a root")
+      case (tok, dist) :: rest if seen contains tok =>
+        // we already explored this token, skip
+        countSteps(rest, seen)
+      case (tok, dist) :: rest if graph.roots contains tok =>
+        // found a root
+        // it is the closest one because we are searching breath-first
+        // return distance
+        dist
+      case (tok, dist) :: rest =>
+        // explore
+        val incoming = followIncoming(tok, graph)
+        if (incoming.isEmpty) {
+          // this token has no incomings, but it is not a root
+          // it looks like a collapsed dependency graph
+          // (it couldn't be farther from the root)
+          Double.PositiveInfinity
+        } else {
+          // keep looking, breadth-first
+          val nextStep = incoming.map(i => (i, dist + 1)).toList
+          countSteps(rest ::: nextStep, seen + tok)
+        }
     }
 
-    def followTrailOut (i: Int, heads:Seq[Int], highest: Int): Seq[Int] = {
+    // returns the distance to the closest root for a given token
+    def distToRoot(token: Int): Double = countSteps(List((token, 0)), Set.empty)
 
-      val incoming = getIncoming(i)
-
-      incoming match {
-        case valid if valid.isEmpty | valid.contains(i) => Seq(highest)
-        case outgoing if outgoing.min < span.start | outgoing.max > (span.end - 1) => followTrailOut (incoming.head, heads ++ Seq(i), highest)
-        case _ => followTrail (incoming.head, heads ++ Seq(i))
-      }
+    // get the distance to root for each token in span
+    val toksWithDist = span.map(t => (t, distToRoot(t)))
+    val dists = toksWithDist.map(_._2)
+    if (dists.isEmpty) {
+      Nil
+    } else {
+      // return all tokens with minimum distance
+      val minDist = dists.min
+      for ((t, d) <- toksWithDist if d == minDist) yield t
     }
-
-    val heads = for (i <- span.start until span.end) yield followTrail(i, Nil)
-
-    heads.flatten.distinct.sorted
   }
 
   /**
@@ -105,11 +128,11 @@ object DependencyUtils {
    * @param chooseWhich the function to adjudicate which is highest when there's a tie
    * @return Option containing the highest node index, or None if no such node is found
    */
-  def findHeadStrict(span: Interval, sent: Sentence, chooseWhich:(Seq[Int]) => Int = defaultPolicy): Option[Int] = {
+  def findHeadStrict(span: Interval, sent: Sentence, chooseWhich: Policy = defaultPolicy): Option[Int] = {
     val hds = findHeadsStrict(span, sent)
-    hds match{
-      case valid if valid.nonEmpty => Some(chooseWhich(valid))
-      case _ => None
+    hds match {
+      case Nil => None
+      case heads => Some(chooseWhich(heads))
     }
   }
 
@@ -120,41 +143,12 @@ object DependencyUtils {
    * @param sent the Sentence within which to look
    * @return Option containing a sequence of highest node indices, or None if no such node is found
    */
-  def findHeadsStrict(span: Interval, sent: Sentence): Seq[Int] = {
-
-    if (sent.dependencies.isEmpty) return Nil
-
-    val stopTags = "(.|,|\\(|\\)|:|''|``|#|$|CC|TO|IN)"
-
-    def getIncoming(i: Int) = sent.dependencies.get.incomingEdges.lift(i).getOrElse(Array.empty).map(_._1)
-
-    def followTrail (i: Int, heads:Seq[Int]): Seq[Int] = {
-
-      // dependents
-      val incoming = getIncoming(i)
-
-      incoming match {
-        case valid if valid.isEmpty | valid.contains(i) =>  Seq(i)
-        case found if found.min < span.start | found.max > (span.end - 1) => followTrailOut(found.head, heads ++ Seq(i), i)
-        case _ => followTrail(incoming.head, heads ++ Seq(i))
-      }
-    }
-
-    def followTrailOut (i: Int, heads:Seq[Int], highest: Int): Seq[Int] = {
-
-      val incoming = getIncoming(i)
-
-      incoming match {
-        case valid if valid.isEmpty | valid.contains(i) => Seq(highest)
-        case outgoing if outgoing.min < span.start | outgoing.max > (span.end - 1) => followTrailOut (incoming.head, heads ++ Seq(i), highest)
-        case _ => followTrail (incoming.head, heads ++ Seq(i))
-      }
-    }
-
-    val heads = for (i <- span.start until span.end) yield followTrail(i, Nil)
-
-    val filtered = heads.flatten.distinct.filter(x => !(sent.tags.get(x) matches stopTags)).sorted
-    filtered
+  def findHeadsStrict(span: Interval, sent: Sentence): Seq[Int] = sent.dependencies match {
+    case None => Nil
+    case Some(graph) =>
+      val stopTags = "(.|,|\\(|\\)|:|''|``|#|$|CC|TO|IN)"
+      val heads = findHeads(span, graph)
+      heads.filter(x => !(sent.tags.get(x) matches stopTags))
   }
 
 
@@ -170,7 +164,7 @@ object DependencyUtils {
    * @param chooseWhich a function deciding which of multiple heads is returned; the rightmost head selected by default
    * @return the single node which is closest to the root among those in span
    */
-  def findHeadLocal(span: Interval, graph: DirectedGraph[String], chooseWhich:(Seq[Int]) => Int = defaultPolicy): Int = {
+  def findHeadLocal(span: Interval, graph: DependencyGraph, chooseWhich: Policy = defaultPolicy): Int = {
     chooseWhich(findHeadsLocal(span, graph))
   }
 
@@ -185,7 +179,7 @@ object DependencyUtils {
    * @param graph a directed graph containing the nodes in span
    * @return the single node which is closest to the root among those in span
    */
-  def findHeadsLocal(span: Interval, graph: DirectedGraph[String]): Seq[Int] = {
+  def findHeadsLocal(span: Interval, graph: DependencyGraph): Seq[Int] = {
 
     def followTrail (i: Int, heads:Seq[Int]): Seq[Int] = {
 
