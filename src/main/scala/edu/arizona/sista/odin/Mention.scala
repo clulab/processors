@@ -89,24 +89,13 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   /** returns all chunks in mention */
   def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end))
 
-  /** Return all syntactic heads, where a head is a token in `mention`
-    * whose parent isn't contained in `mention`.
-    */
-  def synHeads: Seq[Int] = {
-    if (tokenInterval.isEmpty) {
-      Nil
-    } else if (tokenInterval.size == 1) {
-      // we don't need dependencies, a single token is its own head
-      tokenInterval
-    } else {
-      sentenceObj.dependencies match {
-        case Some(deps) => DependencyUtils.findHeads(tokenInterval, deps)
-        case None => Nil
-      }
-    }
+  /** returns all syntactic heads */
+  def synHeads: Seq[Int] = sentenceObj.dependencies match {
+    case Some(deps) => DependencyUtils.findHeads(tokenInterval, deps)
+    case None => Nil
   }
 
-  /** Return the syntactic head of `mention`  */
+  /** returns the syntactic head of `mention`  */
   def synHead: Option[Int] = synHeads.lastOption
 
   /** returns head token */
@@ -117,6 +106,21 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
 
   /** returns head lemma */
   def synHeadLemma: Option[String] = synHead.flatMap(i => sentenceObj.lemmas.map(_(i)))
+
+  /** returns all semantic heads */
+  def semHeads: Seq[Int] = DependencyUtils.findHeadsStrict(tokenInterval, sentenceObj)
+
+  /** returns the syntactic head of `mention`  */
+  def semHead: Option[Int] = semHeads.lastOption
+
+  /** returns head token */
+  def semHeadWord: Option[String] = semHead.map(i => sentenceObj.words(i))
+
+  /** returns head pos tag */
+  def semHeadTag: Option[String] = semHead.flatMap(i => sentenceObj.tags.map(_(i)))
+
+  /** returns head lemma */
+  def semHeadLemma: Option[String] = semHead.flatMap(i => sentenceObj.lemmas.map(_(i)))
 
   /** returns a string that contains the mention */
   def text: String = document.text match {
