@@ -81,7 +81,7 @@ object DependencyUtils {
       case Nil =>
         // we couldn't find a root in the graph
         // maybe it is not a valid dependency graph?
-        sys.error("can't find a root")
+        throw new DependencyUtilsException("can't find a root")
       case (tok, dist) :: rest if seen contains tok =>
         // we already explored this token, skip
         countSteps(rest, seen)
@@ -219,3 +219,7 @@ object DependencyUtils {
     else false
   }
 }
+
+/** Exception thrown by errors in DependencyUtils */
+class DependencyUtilsException(message: String = null, cause: Throwable = null)
+extends RuntimeException(message, cause)
