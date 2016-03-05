@@ -85,21 +85,19 @@ object DependencyUtils {
       case (tok, dist) :: rest if seen contains tok =>
         // we already explored this token, skip
         countSteps(rest, seen)
+      case (tok, dist) :: rest if graph.roots contains tok =>
+        // found a root
+        // it is the closest one because we are searching breath-first
+        // return distance
+        dist
       case (tok, dist) :: rest =>
         // explore
         val incoming = followIncoming(tok, graph)
         if (incoming.isEmpty) {
-          if (graph.roots contains tok) {
-            // found a root
-            // it is the closest one because we are searching breath-first
-            // return distance
-            dist
-          } else {
-            // this token has no incomings, but it is not a root
-            // it looks like a collapsed dependency graph
-            // (it couldn't be farther from the root)
-            Double.PositiveInfinity
-          }
+          // this token has no incomings, but it is not a root
+          // it looks like a collapsed dependency graph
+          // (it couldn't be farther from the root)
+          Double.PositiveInfinity
         } else {
           // keep looking, breadth-first
           val nextStep = incoming.map(i => (i, dist + 1)).toList
