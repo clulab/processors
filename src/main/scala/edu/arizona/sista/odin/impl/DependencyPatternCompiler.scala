@@ -46,18 +46,10 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
-    rep1sep(concatDepPattern, "|") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
-        case (lhs, rhs) => new DisjunctiveDependencyPattern(lhs, rhs)
-      }
-    }
+    rep1sep(concatDepPattern, "|") ^^ { new DisjunctiveDependencyPattern(_) }
 
   def concatDepPattern: Parser[DependencyPatternNode] =
-    rep1(stepDepPattern) ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
-        case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
-      }
-    }
+    rep1(stepDepPattern) ^^ { new ConcatDependencyPattern(_) }
 
   def stepDepPattern: Parser[DependencyPatternNode] =
     filterDepPattern | traversalDepPattern
@@ -74,15 +66,13 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
     atomicDepPattern ~ ("?" | "*" | "+") ^^ {
       case pat ~ "?" => new OptionalDependencyPattern(pat)
       case pat ~ "*" => new KleeneDependencyPattern(pat)
-      case pat ~ "+" => new ConcatDependencyPattern(pat, new KleeneDependencyPattern(pat))
+      case pat ~ "+" => new ConcatDependencyPattern(List(pat, new KleeneDependencyPattern(pat)))
     }
 
   // helper function that repeats a pattern N times
   private def repeatPattern(pattern: DependencyPatternNode, n: Int): DependencyPatternNode = {
     require(n > 0, "'n' must be greater than zero")
-    (pattern /: Seq.fill(n - 1)(pattern)) {
-      case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
-    }
+    new ConcatDependencyPattern(List.fill(n)(pattern))
   }
 
   def repeatDepPattern: Parser[DependencyPatternNode] =
@@ -100,12 +90,12 @@ class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) 
         case (Some(m), None) =>
           val req = repeatPattern(pat, m)
           val kleene = new KleeneDependencyPattern(pat)
-          new ConcatDependencyPattern(req, kleene)
+          new ConcatDependencyPattern(List(req, kleene))
         case (Some(m), Some(n)) =>
           require(n > m, "'to' must be greater than 'from'")
           val req = repeatPattern(pat, m)
           val opt = repeatPattern(new OptionalDependencyPattern(pat), n - m)
-          new ConcatDependencyPattern(req, opt)
+          new ConcatDependencyPattern(List(req, opt))
       }
     }
 
@@ -261,7 +251,28 @@ extends DependencyPatternNode with Dependencies {
   }
 }
 
-class ConcatDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
+class ConcatDependencyPattern(nodes: List[DependencyPatternNode])
+extends DependencyPatternNode {
+  def findAllIn(
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State,
+      path: SynPath
+  ): Seq[(Int, SynPath)] = {
+    var results = Seq((tok, path))
+    for (n <- nodes) {
+      val newResults = for {
+        (i, p) <- results
+        (j, q) <- n.findAllIn(i, sent, doc, state, p)
+      } yield (j, q)
+      results = distinct(newResults)
+    }
+    results
+  }
+}
+
+class DisjunctiveDependencyPattern(nodes: List[DependencyPatternNode])
 extends DependencyPatternNode {
   def findAllIn(
       tok: Int,
@@ -271,25 +282,10 @@ extends DependencyPatternNode {
       path: SynPath
   ): Seq[(Int, SynPath)] = {
     val results = for {
-      (i, p) <- lhs.findAllIn(tok, sent, doc, state, path)
-      (j, q) <- rhs.findAllIn(i, sent, doc, state, p)
-    } yield (j, q)
+      n <- nodes
+      (i, p) <- n.findAllIn(tok, sent, doc, state, path)
+    } yield (i, p)
     distinct(results)
-  }
-}
-
-class DisjunctiveDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
-extends DependencyPatternNode {
-  def findAllIn(
-      tok: Int,
-      sent: Int,
-      doc: Document,
-      state: State,
-      path: SynPath
-  ): Seq[(Int, SynPath)] = {
-    val leftResults = lhs.findAllIn(tok, sent, doc, state, path)
-    val rightResults = rhs.findAllIn(tok, sent, doc, state, path)
-    distinct(leftResults ++ rightResults)
   }
 }
 

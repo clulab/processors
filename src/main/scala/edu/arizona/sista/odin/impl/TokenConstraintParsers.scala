@@ -25,18 +25,10 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   }
 
   def disjunctiveConstraint: Parser[TokenConstraint] =
-    rep1sep(conjunctiveConstraint, "|") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
-        case (lhs, rhs) => new DisjunctiveConstraint(lhs, rhs)
-      }
-    }
+    rep1sep(conjunctiveConstraint, "|") ^^ { new DisjunctiveConstraint(_) }
 
   def conjunctiveConstraint: Parser[TokenConstraint] =
-    rep1sep(negatedConstraint, "&") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
-        case (lhs, rhs) => new ConjunctiveConstraint(lhs, rhs)
-      }
-    }
+    rep1sep(negatedConstraint, "&") ^^ { new ConjunctiveConstraint(_) }
 
   def negatedConstraint: Parser[TokenConstraint] = opt("!") ~ atomicConstraint ^^ {
     case None ~ constraint => constraint
@@ -116,12 +108,12 @@ class NegatedConstraint(constraint: TokenConstraint) extends TokenConstraint {
     !constraint.matches(tok, sent, doc, state)
 }
 
-class ConjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
+class ConjunctiveConstraint(constraints: List[TokenConstraint]) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    lhs.matches(tok, sent, doc, state) && rhs.matches(tok, sent, doc, state)
+    constraints.forall(_.matches(tok, sent, doc, state))
 }
 
-class DisjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
+class DisjunctiveConstraint(constraints: List[TokenConstraint]) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    lhs.matches(tok, sent, doc, state) || rhs.matches(tok, sent, doc, state)
+    constraints.exists(_.matches(tok, sent, doc, state))
 }
