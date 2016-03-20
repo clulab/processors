@@ -76,6 +76,6 @@ class PredicateFeatureExtractor {
 
 object PredicateFeatureExtractor {
   val PADDING = "##"
-  val UNKNOWN_THRESHOLD = 20
+  val UNKNOWN_THRESHOLD = 5
   val UNKNOWN_TOKEN = "*u*"
 }

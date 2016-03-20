@@ -50,10 +50,15 @@ class PredicateClassifier {
         lemmaCounts.incrementCount(l)
       }
     }
-    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset.")
+    var avgLen = 0.0
+    for (l <- lemmaCounts.keySet) {
+      avgLen += l.length
+    }
+    avgLen /= lemmaCounts.size
+    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset, with an avg length of $avgLen.")
     var count = 0
     for(l <- lemmaCounts.keySet) {
-      if(lemmaCounts.getCount(l) > ArgumentFeatureExtractor.UNKNOWN_THRESHOLD)
+      if(lemmaCounts.getCount(l) > PredicateFeatureExtractor.UNKNOWN_THRESHOLD)
         count += 1
     }
     logger.debug(s"$count of these lemmas will be kept as such. The rest will mapped to Unknown.")
@@ -68,7 +73,7 @@ class PredicateClassifier {
         i <- s.words.indices) {
       val g = goldLabel(s, i)
       val scores = classify(s, i)
-      val p = (scores.getCount(POS_LABEL) >= POS_THRESHOLD) match {
+      val p = scores.getCount(POS_LABEL) >= POS_THRESHOLD match {
         case true => POS_LABEL
         case false => NEG_LABEL
       }

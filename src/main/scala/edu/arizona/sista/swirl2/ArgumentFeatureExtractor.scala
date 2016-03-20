@@ -80,8 +80,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
       return features
     }
 
-    val argTag = tagAt(sent, position, MAX_TAG_SIZE)
-    val before = position < pred
+    val before: Boolean = position < pred
 
     addDepFeatures(features, "B", sent, sent.stanfordBasicDependencies.get, position, pred)
     addDepFeatures(features, "C", sent, sent.stanfordCollapsedDependencies.get, position, pred)
@@ -172,7 +171,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
         predIncluded = true
       }
       f.append('A')
-      if(f == pred) f.append("=P")
+      if(h == pred) f.append("=P")
       first = false
     }
 
@@ -238,6 +237,7 @@ object ArgumentFeatureExtractor {
   val PADDING = "##"
 
   val MAX_TAG_SIZE = 2
+
   val UNKNOWN_THRESHOLD = 5
   val UNKNOWN_TOKEN = "*u*"
 }
