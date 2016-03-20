@@ -47,11 +47,11 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     paths.foreach(path => {
       // path including POS tags
       val pst = pathToString(path, sent, useTags = true)
-      features.incrementCount(s"path$prefix:$before:$predTag-$pst")
+      features.incrementCount(s"path$prefix:$before:$predTag-$pst-$argTag")
 
       // path including lemmas along the way
       val psl = pathToString(path, sent, useTags = false)
-      features.incrementCount(s"path$prefix:$before:$predLemma-$psl")
+      features.incrementCount(s"path$prefix:$before:$predLemma-$psl-$argLemma")
     })
   }
 
