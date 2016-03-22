@@ -297,9 +297,15 @@ object Counter {
 
   def loadFrom[T](r:Reader):Counter[T] = {
     val reader = Files.toBufferedReader(r)
-    val hline = reader.readLine()
-    //println("COUNTER HLINE: " + hline)
+    var hline = reader.readLine()
+
+    // sometimes, the input comes with an empty head line
+    // (this happens when the counter is serialized in the same file with a LibLinear model; see SRL)
+    if(hline.trim.isEmpty) hline = reader.readLine()
+
+    // println("COUNTER HLINE: " + hline)
     val bits = hline.split("\\s+")
+
     val defaultReturnValue = bits(0).toDouble
     val c = new Counter[T](defaultReturnValue)
     val size = bits(1).toInt

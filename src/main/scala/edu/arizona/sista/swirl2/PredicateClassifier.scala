@@ -20,8 +20,9 @@ import scala.collection.mutable.ListBuffer
  */
 class PredicateClassifier {
   lazy val featureExtractor = new PredicateFeatureExtractor
-  var classifier:Classifier[String, String] = null
-  val lemmaCounts = new Counter[String]
+
+  var classifier:Option[Classifier[String, String]] = None
+  var lemmaCounts:Option[Counter[String]] = None
 
   def train(trainPath:String): Unit = {
     val reader = new Reader
@@ -29,40 +30,19 @@ class PredicateClassifier {
 
     computePredStats(doc)
 
-    countLemmas(doc)
-    featureExtractor.lemmaCounts = Some(lemmaCounts)
+    lemmaCounts = Some(Utils.countLemmas(doc, PredicateFeatureExtractor.UNKNOWN_THRESHOLD))
+    featureExtractor.lemmaCounts = lemmaCounts
 
     var dataset = createDataset(doc)
-    dataset = dataset.removeFeaturesByFrequency(2)
+    dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //dataset = dataset.removeFeaturesByInformationGain(0.75)
-    classifier = new LogisticRegressionClassifier[String, String]()
-    //classifier = new RFClassifier[String, String](numTrees = 10, howManyFeaturesPerNode = featuresPerNode, nilLabel = Some(NEG_LABEL))
-    //classifier = new RandomForestClassifier[String, String](numTrees = 100)
-    //classifier = new LinearSVMClassifier[String, String]()
-    classifier.train(dataset)
+    classifier = Some(new LogisticRegressionClassifier[String, String]())
+    //classifier = Some(new RFClassifier[String, String](numTrees = 10, howManyFeaturesPerNode = featuresPerNode, nilLabel = Some(NEG_LABEL)))
+    //classifier = Some(new LinearSVMClassifier[String, String]())
+    classifier.get.train(dataset)
   }
 
   def featuresPerNode(total:Int):Int = (total * 0.66).toInt
-
-  def countLemmas(doc:Document): Unit = {
-    for(s <- doc.sentences) {
-      for(l <- s.lemmas.get) {
-        lemmaCounts.incrementCount(l)
-      }
-    }
-    var avgLen = 0.0
-    for (l <- lemmaCounts.keySet) {
-      avgLen += l.length
-    }
-    avgLen /= lemmaCounts.size
-    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset, with an avg length of $avgLen.")
-    var count = 0
-    for(l <- lemmaCounts.keySet) {
-      if(lemmaCounts.getCount(l) > PredicateFeatureExtractor.UNKNOWN_THRESHOLD)
-        count += 1
-    }
-    logger.debug(s"$count of these lemmas will be kept as such. The rest will mapped to Unknown.")
-  }
 
   def test(testPath:String): Unit = {
     val reader = new Reader
@@ -86,7 +66,7 @@ class PredicateClassifier {
   def classify(sent:Sentence, position:Int):Counter[String] = {
     if(filter(sent, position)) {
       val datum = mkDatum(sent, position, NEG_LABEL)
-      val s = classifier.scoresOf(datum)
+      val s = classifier.get.scoresOf(datum)
       //println(s"Scores for datum: $s")
       s
     } else {
@@ -152,7 +132,14 @@ class PredicateClassifier {
   }
 
   def saveTo(w:Writer): Unit = {
-    classifier.saveTo(w)
+    lemmaCounts.foreach { x =>
+      x.saveTo(w)
+      //logger.debug("Saved the lemma dictionary.")
+    }
+    classifier.foreach { x =>
+      x.saveTo(w)
+      //logger.debug("Saved the classifier.")
+    }
   }
 }
 
@@ -162,6 +149,7 @@ object PredicateClassifier {
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
   val POS_THRESHOLD = 0.50 // lower this to boost recall
+  val FEATURE_THRESHOLD = 2
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
@@ -190,8 +178,13 @@ object PredicateClassifier {
     val pc = new PredicateClassifier
     val reader = Files.toBufferedReader(r)
 
+    val lc = Counter.loadFrom[String](reader)
+    logger.debug(s"Successfully loaded lemma count hash for the predicate classifier, with ${lc.size} keys.")
     val c = LiblinearClassifier.loadFrom[String, String](reader)
-    pc.classifier = c
+    logger.debug(s"Successfully loaded the predicate classifier.")
+    pc.classifier = Some(c)
+    pc.lemmaCounts = Some(lc)
+    pc.featureExtractor.lemmaCounts = pc.lemmaCounts
 
     pc
   }

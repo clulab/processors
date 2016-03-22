@@ -67,6 +67,7 @@ class Reader {
       val line = l.trim
       if(line.length > 0) {
         val bits = l.split("\\t")
+        // e println(s"LINE: $line")
         assert(bits.size >= 14)
         val token = mkToken(bits)
         sentence += token

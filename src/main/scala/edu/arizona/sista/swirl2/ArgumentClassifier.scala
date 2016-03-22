@@ -4,7 +4,7 @@ import java.io._
 
 import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.{Sentence, Document}
-import edu.arizona.sista.struct.Counter
+import edu.arizona.sista.struct.{DirectedGraphEdgeIterator, DirectedGraph, Counter}
 import edu.arizona.sista.utils.Files
 import edu.arizona.sista.utils.StringUtils._
 import org.slf4j.LoggerFactory
@@ -21,11 +21,12 @@ import scala.util.Random
   */
 class ArgumentClassifier {
   lazy val featureExtractor = new ArgumentFeatureExtractor("vectors.txt")
-  var classifier:Classifier[String, String] = null
-  val lemmaCounts = new Counter[String]
+
+  var classifier:Option[Classifier[String, String]] = None
+  var lemmaCounts:Option[Counter[String]] = None
 
   def train(trainPath:String): Unit = {
-    val datasetFileName = "dataset.ser"
+    val datasetFileName = "swirl2_argument_classification_dataset.ser"
     val useSerializedDataset = true
     var dataset:Dataset[String, String] = null
 
@@ -35,8 +36,8 @@ class ArgumentClassifier {
       val is = new ObjectInputStream(new FileInputStream(datasetFileName))
       dataset = is.readObject().asInstanceOf[Dataset[String, String]]
       val lc = is.readObject().asInstanceOf[Counter[String]]
-      for(l <- lc.keySet) lemmaCounts.setCount(l, lc.getCount(l))
-      featureExtractor.lemmaCounts = Some(lemmaCounts)
+      lemmaCounts = Some(lc)
+      featureExtractor.lemmaCounts = lemmaCounts
       is.close()
 
     } else {
@@ -45,8 +46,8 @@ class ArgumentClassifier {
       var doc = reader.load(trainPath)
       computeArgStats(doc)
 
-      countLemmas(doc)
-      featureExtractor.lemmaCounts = Some(lemmaCounts)
+      lemmaCounts = Some(Utils.countLemmas(doc, ArgumentFeatureExtractor.UNKNOWN_THRESHOLD))
+      featureExtractor.lemmaCounts = lemmaCounts
 
       logger.debug("Constructing dataset...")
       dataset = createDataset(doc)
@@ -58,53 +59,42 @@ class ArgumentClassifier {
         logger.info(s"Writing dataset to $datasetFileName...")
         val os = new ObjectOutputStream(new FileOutputStream(datasetFileName))
         os.writeObject(dataset)
-        os.writeObject(lemmaCounts)
+        os.writeObject(lemmaCounts.get)
         os.close()
       }
     }
 
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //dataset = dataset.removeFeaturesByInformationGain(0.05)
-    classifier = new LogisticRegressionClassifier[String, String]()
-    //classifier = new LinearSVMClassifier[String, String]()
-    //classifier = new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode)
-    //classifier = new PerceptronClassifier[String, String](epochs = 5)
+    classifier = Some(new LogisticRegressionClassifier[String, String](C = 1000))
+    //classifier = Some(new LinearSVMClassifier[String, String]())
+    //classifier = Some(new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode))
+    //classifier = Some(new PerceptronClassifier[String, String](epochs = 5))
 
-    classifier match {
+    classifier.get match {
       case rfc:RFClassifier[String, String] =>
         val counterDataset = dataset.toCounterDataset
         dataset = null
         rfc.train(counterDataset)
       case oc:Classifier[String, String] =>
-        classifier.train(dataset)
+        oc.train(dataset)
     }
   }
 
   def featuresPerNode(total:Int):Int = RFClassifier.featuresPerNodeTwoThirds(total)// (10.0 * math.sqrt(total.toDouble)).toInt
 
-  def countLemmas(doc:Document): Unit = {
-    for(s <- doc.sentences) {
-      for(l <- s.lemmas.get) {
-        lemmaCounts.incrementCount(l)
-      }
-    }
-    logger.debug(s"Found ${lemmaCounts.size} unique lemmas in the training dataset.")
-    var count = 0
-    for(l <- lemmaCounts.keySet) {
-      if(lemmaCounts.getCount(l) > ArgumentFeatureExtractor.UNKNOWN_THRESHOLD)
-        count += 1
-    }
-    logger.debug(s"$count of these lemmas will be kept as such. The rest will mapped to Unknown.")
-  }
-
   def test(testPath:String): Unit = {
     val reader = new Reader
     val doc = reader.load(testPath)
+    printDoc(doc)
     val distHist = new Counter[Int]()
 
     var totalCands = 0
     val output = new ListBuffer[(String, String)]
     for(s <- doc.sentences) {
+      println("Working on this sentence:")
+      printSentence(s)
+
       val outEdges = s.semanticRoles.get.outgoingEdges
       for (pred <- s.words.indices if isPred(pred, s)) {
         val args = outEdges(pred).map(_._1).toSet
@@ -121,10 +111,13 @@ class ArgumentClassifier {
               case true => POS_LABEL
               case false => NEG_LABEL
             }
-            if(predLabel == POS_LABEL)
+            if(predLabel == POS_LABEL) {
+              // println(s"Found arg: $pred -> $arg")
               history += arg
+            }
           }
           if(goldLabel == POS_LABEL && predLabel != POS_LABEL) {
+            println(s"Missed argument: $pred (${s.words(pred)}) -> $arg (${s.words(arg)})")
             distHist.incrementCount(math.abs(arg - pred))
 
             // debug output
@@ -139,6 +132,8 @@ class ArgumentClassifier {
             }
             */
 
+          } else if(goldLabel != POS_LABEL && predLabel == POS_LABEL) {
+            println(s"Spurious argument: $pred (${s.words(pred)}) -> $arg (${s.words(arg)})")
           }
           output += new Tuple2(goldLabel, predLabel)
           totalCands += 1
@@ -151,9 +146,47 @@ class ArgumentClassifier {
     logger.debug(s"Distance histogram for missed arguments: $distHist")
   }
 
+  def printDoc(doc:Document): Unit = {
+    var sentenceCount = 0
+    for (sentence <- doc.sentences) {
+      println("Sentence #" + sentenceCount + ":")
+      printSentence(sentence: Sentence)
+      sentenceCount += 1
+    }
+  }
+
+  def printSentence(sentence:Sentence) {
+    println("Tokens: " + sentence.words.zip(sentence.tags.get).zipWithIndex.mkString(" "))
+    sentence.stanfordBasicDependencies.foreach(dependencies => {
+      println("Syntactic dependencies:")
+      val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+      while (iterator.hasNext) {
+        val dep = iterator.next
+        // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+        println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+      }
+    })
+    sentence.syntacticTree.foreach(tree => {
+      println("Constituent tree: " + tree.toStringDepth(showHead = false))
+      // see the edu.arizona.sista.struct.Tree class for more information
+      // on syntactic trees, including access to head phrases/words
+    })
+    sentence.semanticRoles.foreach(printGraph("Semantic dependencies:", sentence, _))
+    println("\n")
+  }
+
+  def printGraph(header:String, s:Sentence, graph:DirectedGraph[String]) {
+    println("Semantic dependencies:")
+    val iterator = new DirectedGraphEdgeIterator[String](graph)
+    while (iterator.hasNext) {
+      val dep = iterator.next
+      println(s" head:${dep._1} (${s.words(dep._1)}) modifier:${dep._2} (${s.words(dep._2)}) label:${dep._3}")
+    }
+  }
+
   def classify(sent:Sentence, arg:Int, pred:Int, history:ArrayBuffer[Int]):Counter[String] = {
     val datum = mkDatum(sent, arg, pred, history, NEG_LABEL)
-    val s = classifier.scoresOf(datum)
+    val s = classifier.get.scoresOf(datum)
     s
   }
 
@@ -224,7 +257,14 @@ class ArgumentClassifier {
   }
 
   def saveTo(w:Writer): Unit = {
-    classifier.saveTo(w)
+    lemmaCounts.foreach { x =>
+      x.saveTo(w)
+      //logger.debug("Saved the lemma dictionary.")
+    }
+    classifier.foreach { x =>
+      x.saveTo(w)
+      //logger.debug("Saved the classifier.")
+    }
   }
 }
 
@@ -233,21 +273,21 @@ object ArgumentClassifier {
 
   val FEATURE_THRESHOLD = 2
   val DOWNSAMPLE_PROB = 0.50
-  val MAX_TRAINING_DATUMS = 0
+  val MAX_TRAINING_DATUMS = 0 // 0 means all data
 
   val POS_LABEL = "+"
   val NEG_LABEL = "-"
 
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
-    val ac = new ArgumentClassifier
+    var ac = new ArgumentClassifier
 
     if(props.containsKey("train")) {
       ac.train(props.getProperty("train"))
 
       if(props.containsKey("model")) {
         val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
-        //ac.saveTo(os)
+        ac.saveTo(os)
         os.close()
       }
     }
@@ -255,7 +295,7 @@ object ArgumentClassifier {
     if(props.containsKey("test")) {
       if(props.containsKey("model")) {
         val is = new BufferedReader(new FileReader(props.getProperty("model")))
-        //ac = loadFrom(is)
+        ac = loadFrom(is)
         is.close()
       }
 
@@ -267,8 +307,14 @@ object ArgumentClassifier {
     val ac = new ArgumentClassifier
     val reader = Files.toBufferedReader(r)
 
+    val lc = Counter.loadFrom[String](reader)
+    logger.debug(s"Successfully loaded lemma count hash for the argument classifier, with ${lc.size} keys.")
     val c = LiblinearClassifier.loadFrom[String, String](reader)
-    ac.classifier = c
+    logger.debug(s"Successfully loaded the argument classifier.")
+
+    ac.classifier = Some(c)
+    ac.lemmaCounts = Some(lc)
+    ac.featureExtractor.lemmaCounts = ac.lemmaCounts
 
     ac
   }
