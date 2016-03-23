@@ -64,10 +64,10 @@ class LiblinearClassifier[L, F](
     val problem = new Problem()
     problem.l = indices.length
     logger.debug(s"Using ${problem.l} datums.")
-    var labelHist = new Counter[L]
+    val labelHist = new Counter[L]
     for(l <- dataset.labels)
       labelHist.incrementCount(dataset.labelLexicon.get(l))
-    logger.debug(s"Label distribution: ${labelHist.toShortString}")
+    logger.debug(s"Label distribution (${labelHist.size}): ${labelHist.toShortString}")
     problem.n = bias match {
       case true => dataset.numFeatures + 1
       case false => dataset.numFeatures
@@ -94,12 +94,12 @@ class LiblinearClassifier[L, F](
     }
     dataset match {
       case rvfDataset:RVFDataset[L, F] => {
-        for(i <- 0 until indices.length) {
+        for(i <- indices.indices) {
           problem.x(i) = rvfDataToFeatures(rvfDataset.features(indices(i)), rvfDataset.values(indices(i)), sorted = true)
         }
       }
       case bvfDataset:BVFDataset[L, F] => {
-        for(i <- 0 until indices.length) {
+        for(i <- indices.indices) {
           problem.x(i) = bvfDataToFeatures(bvfDataset.features(indices(i)))
         }
       }
@@ -178,7 +178,7 @@ class LiblinearClassifier[L, F](
     var size = 0
     var prev = -1
     var i = 0
-    while(i < feats.size) {
+    while(i < feats.length) {
       if(feats(i) != prev) size += 1
       prev = feats(i)
       i += 1
@@ -188,7 +188,7 @@ class LiblinearClassifier[L, F](
     prev = -1
     var j = 0
     val features = new Array[Feature](size)
-    while(i < feats.size) {
+    while(i < feats.length) {
       if(feats(i) != prev) {
         features(j) = new FeatureNode(convertToLiblinearFeaturesIndices(feats(i)), 1.0)
         j += 1
@@ -220,11 +220,11 @@ class LiblinearClassifier[L, F](
     vals:Array[Double],
     sorted:Boolean): Array[Feature] = {
     // Unlike BVF features, RVF features are not supposed to repeat, because values are stored separately!
-    var size = feats.size
+    var size = feats.length
     if(bias) size += 1
     val features = new Array[Feature](size)
     var i = 0
-    while(i < feats.size) {
+    while(i < feats.length) {
       features(i) = new FeatureNode(convertToLiblinearFeaturesIndices(feats(i)), vals(i))
       i += 1
     }

@@ -19,8 +19,15 @@ import Reader._
  * Date: 5/5/15
  */
 class Reader {
-  class CoNLLToken(val word:String, val pos:String, val pred:Int, val frameBits:Array[String]) {
-    override def toString:String = word + "/" + pos + "/" + pred  }
+  class CoNLLToken(
+    val word:String,
+    val pos:String,
+    val lemma:String,
+    val dep:(Int, String), // head, label
+    val pred:Int,
+    val frameBits:Array[String]) {
+    override def toString:String = word + "/" + pos + "/" + dep._1 + "/" + dep._2 + "/" + pred
+  }
 
   var argConflictCount = 0
   var multiPredCount = 0
@@ -102,7 +109,7 @@ class Reader {
     // assign the semantic roles to sentences in the created Document
     //
     assert(document.sentences.length == semDependencies.size)
-    for(i <- 0 until document.sentences.length) {
+    for(i <- document.sentences.indices) {
       document.sentences(i).setDependencies(DependencyMap.SEMANTIC_ROLES, semDependencies(i))
     }
 
@@ -119,12 +126,61 @@ class Reader {
 
     val tokens = sentences.map(_.map(_.word).toList).toList
     val doc = proc.mkDocumentFromTokens(tokens, keepText = false)
+
+    /*
+    if(USE_GOLD_SYNTAX) {
+      // this only works with the original tokenization. TODO: fix this
+      assert(USE_CONLL_TOKENIZATION)
+      for(i <- sentences.indices) {
+        val conllTokens = sentences(i)
+        val sent = doc.sentences(i)
+        sent.tags = Some(toTags(conllTokens))
+        println(s"Using tags: ${sent.tags.get.toList}")
+        sent.lemmas = Some(toLemmas(conllTokens))
+      }
+    } else {
+      proc.tagPartsOfSpeech(doc)
+      proc.lemmatize(doc)
+    }
+    */
+
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
     proc.recognizeNamedEntities(doc)
-    proc.parse(doc)
+
+    if(USE_GOLD_SYNTAX) {
+      // this only works with the original tokenization. TODO: fix this
+      assert(USE_CONLL_TOKENIZATION)
+      for(i <- sentences.indices) {
+        val conllTokens = sentences(i)
+        val sent = doc.sentences(i)
+        val depGraph = toDirectedGraph(conllTokens)
+        //println(depGraph)
+        // we set the gold CoNLL syntax as Stanford basic dependencies (hack)
+        sent.dependenciesByType += DependencyMap.STANFORD_BASIC -> depGraph
+      }
+    } else {
+      proc.parse(doc)
+    }
 
     doc
+  }
+
+  def toTags(tokens:Array[CoNLLToken]):Array[String] = tokens.map(_.pos)
+
+  def toLemmas(tokens:Array[CoNLLToken]):Array[String] = tokens.map(_.lemma)
+
+  def toDirectedGraph(tokens:Array[CoNLLToken]):DirectedGraph[String] = {
+    val edges = new mutable.ListBuffer[(Int, Int, String)] // head, modifier, label
+    val roots = new mutable.HashSet[Int]()
+    for(modifier <- tokens.indices) {
+      val head = tokens(modifier).dep._1
+      if(head >= 0)
+        edges += new Tuple3(head, modifier, tokens(modifier).dep._2)
+      else
+        roots += modifier
+    }
+    new DirectedGraph[String](edges.toList, roots.toSet)
   }
 
   def mkSemanticDependencies(sentence:Array[CoNLLToken]):DirectedGraph[String] = {
@@ -133,13 +189,13 @@ class Reader {
     val modifiers = new mutable.HashSet[Int]()
 
     var columnOffset = -1
-    for(p <- 0 until sentence.length) {
+    for(p <- sentence.indices) {
       if(sentence(p).pred > 0) { // found a head
         val head = p
         heads += head
         predCount += 1
         columnOffset += sentence(p).pred // in case of multiple predicates squished in one token, use the last
-        for(i <- 0 until sentence.length) {
+        for(i <- sentence.indices) {
           if(sentence(i).frameBits(columnOffset) != "_") {
             val modifier = i
             val label = sentence(i).frameBits(columnOffset)
@@ -164,12 +220,15 @@ class Reader {
   def mkToken(bits:Array[String]):CoNLLToken = {
     val word = bits(1)
     val pos = bits(4)
+    val lemma = bits(2)
+    val head = bits(8).toInt - 1 // CoNLL offsets start at 1; ours start at 0
+    val depLabel = bits(10)
     val isPred = bits(13) match {
       case "_" => 0
       case _ => 1
     }
     val frameBits =  bits.slice(14, bits.length)
-    new CoNLLToken(word, pos, isPred, frameBits)
+    new CoNLLToken(word, pos, lemma, new Tuple2(head, depLabel), isPred, frameBits)
   }
 
   /**
@@ -177,6 +236,8 @@ class Reader {
    * We need this because most parsers behave horribly if hyphenated words are tokenized around dashes
    */
   def collapseHyphens(origSentence:Array[CoNLLToken], verbose:Boolean):Array[CoNLLToken] = {
+    if(USE_CONLL_TOKENIZATION) return origSentence
+
     val sent = new ArrayBuffer[CoNLLToken]()
 
     var start = 0
@@ -207,6 +268,7 @@ class Reader {
     val phrase = sent.slice(start, end)
     val word = phrase.map(_.word).mkString("")
     val pos = phrase.last.pos // this one doesn't really matter; we retag the entire data with our Processor anyway...
+    val lemma = phrase.map(_.lemma).mkString("")
     val pred = mergePredicates(phrase, verbose)
     val frameBits = mergeFrames(phrase, verbose)
 
@@ -214,7 +276,7 @@ class Reader {
       //logger.debug("Merging tokens: " + phrase.mkString(" ") + " as: " + word + "/" + isPred)
     }
 
-    new CoNLLToken(word, pos, pred, frameBits)
+    new CoNLLToken(word, pos, lemma, sent(start).dep, pred, frameBits) // TODO: fix this, generate correct collapsed CoNLL dependencies
   }
 
   def mergePredicates(phrase:Array[CoNLLToken], verbose:Boolean):Int = {
@@ -235,7 +297,7 @@ class Reader {
 
   def mergeFrames(phrase:Array[CoNLLToken], verbose:Boolean):Array[String] = {
     val frameBits = new Array[String](phrase(0).frameBits.length)
-    for(i <- 0 until frameBits.length) {
+    for(i <- frameBits.indices) {
       frameBits(i) = mergeFrame(phrase, i, verbose)
     }
     frameBits
@@ -265,6 +327,9 @@ class Reader {
 
 object Reader {
   val logger = LoggerFactory.getLogger(classOf[Reader])
+
+  val USE_CONLL_TOKENIZATION = true
+  val USE_GOLD_SYNTAX = true
 
   def main(args:Array[String]) {
     val reader = new Reader

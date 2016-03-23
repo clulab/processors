@@ -44,13 +44,13 @@ class ArgumentClassifier {
       // generate the dataset online
       val reader = new Reader
       var doc = reader.load(trainPath)
-      computeArgStats(doc)
+      val labelStats = computeArgStats(doc)
 
       lemmaCounts = Some(Utils.countLemmas(doc, ArgumentFeatureExtractor.UNKNOWN_THRESHOLD))
       featureExtractor.lemmaCounts = lemmaCounts
 
       logger.debug("Constructing dataset...")
-      dataset = createDataset(doc)
+      dataset = createDataset(doc, labelStats)
       doc = null // the raw data is no longer needed
       logger.debug("Finished constructing dataset.")
 
@@ -66,10 +66,10 @@ class ArgumentClassifier {
 
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //dataset = dataset.removeFeaturesByInformationGain(0.05)
-    classifier = Some(new LogisticRegressionClassifier[String, String](C = 1000))
+    //classifier = Some(new LogisticRegressionClassifier[String, String](C = 1))
     //classifier = Some(new LinearSVMClassifier[String, String]())
     //classifier = Some(new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode))
-    //classifier = Some(new PerceptronClassifier[String, String](epochs = 5))
+    classifier = Some(new PerceptronClassifier[String, String](epochs = 5))
 
     classifier.get match {
       case rfc:RFClassifier[String, String] =>
@@ -97,26 +97,25 @@ class ArgumentClassifier {
 
       val outEdges = s.semanticRoles.get.outgoingEdges
       for (pred <- s.words.indices if isPred(pred, s)) {
-        val args = outEdges(pred).map(_._1).toSet
-        val history = new ArrayBuffer[Int]()
+        val args = outEdges(pred)
+        val history = new ArrayBuffer[(Int, String)]()
+
         for(arg <- s.words.indices) {
-          val goldLabel = args.contains(arg) match {
-            case true => POS_LABEL
-            case false => NEG_LABEL
-          }
+          val goldLabel = findArgLabel(arg, args)
           var predLabel = NEG_LABEL
           if(ValidCandidate.isValid(s, arg, pred)) {
-            val scores = classify(s, arg, pred, history)
-            predLabel = scores.getCount(POS_LABEL) >= scores.getCount(NEG_LABEL) match {
-              case true => POS_LABEL
-              case false => NEG_LABEL
-            }
-            if(predLabel == POS_LABEL) {
+            val scores = classify(s, arg, pred, history).sorted
+
+            // TODO: implement domain constraints!
+
+            predLabel = scores.head._1
+            if(predLabel != NEG_LABEL) {
               // println(s"Found arg: $pred -> $arg")
-              history += arg
+              history += new Tuple2(arg, predLabel)
             }
           }
-          if(goldLabel == POS_LABEL && predLabel != POS_LABEL) {
+          /*
+          if(goldLabel.isDefined && goldLabel == POS_LABEL && predLabel != POS_LABEL) {
             println(s"Missed argument: $pred (${s.words(pred)}) -> $arg (${s.words(arg)})")
             distHist.incrementCount(math.abs(arg - pred))
 
@@ -135,15 +134,19 @@ class ArgumentClassifier {
           } else if(goldLabel != POS_LABEL && predLabel == POS_LABEL) {
             println(s"Spurious argument: $pred (${s.words(pred)}) -> $arg (${s.words(arg)})")
           }
-          output += new Tuple2(goldLabel, predLabel)
+          */
+          if(goldLabel.isDefined)
+            output += new Tuple2(goldLabel.get, predLabel)
+          else
+            output += new Tuple2(NEG_LABEL, predLabel)
           totalCands += 1
         }
       }
     }
 
-    BinaryScorer.score(output, POS_LABEL)
+    BinaryScorer.score(output, NEG_LABEL)
     logger.debug(s"Total number of candidates investigated: $totalCands")
-    logger.debug(s"Distance histogram for missed arguments: $distHist")
+    logger.debug(s"Distance histogram for missed arguments: ${distHist.sorted.sortBy(_._1)}")
   }
 
   def printDoc(doc:Document): Unit = {
@@ -184,13 +187,13 @@ class ArgumentClassifier {
     }
   }
 
-  def classify(sent:Sentence, arg:Int, pred:Int, history:ArrayBuffer[Int]):Counter[String] = {
+  def classify(sent:Sentence, arg:Int, pred:Int, history:ArrayBuffer[(Int, String)]):Counter[String] = {
     val datum = mkDatum(sent, arg, pred, history, NEG_LABEL)
     val s = classifier.get.scoresOf(datum)
     s
   }
 
-  def createDataset(doc:Document): Dataset[String, String] = {
+  def createDataset(doc:Document, labelStats:Counter[String]): Dataset[String, String] = {
     val dataset = new RVFDataset[String, String]()
     val random = new Random(0)
     var sentCount = 0
@@ -199,13 +202,14 @@ class ArgumentClassifier {
     for(s <- doc.sentences if ! done) {
       val outEdges = s.semanticRoles.get.outgoingEdges
       for(pred <- s.words.indices if isPred(pred, s)) {
-        val history = new ArrayBuffer[Int]
-        val args = outEdges(pred).map(_._1).toSet
+        val history = new ArrayBuffer[(Int, String)] // position of arg, label of arg
+        val args = outEdges(pred)
         for(arg <- s.words.indices) {
           if(ValidCandidate.isValid(s, arg, pred)) {
-            if (args.contains(arg)) {
-              dataset += mkDatum(s, arg, pred, history, POS_LABEL)
-              history += arg
+            val label = findArgLabel(arg, args)
+            if (label.isDefined && labelStats.getCount(label.get) > LABEL_THRESHOLD) {
+              dataset += mkDatum(s, arg, pred, history, label.get)
+              history += new Tuple2(arg, label.get)
             } else {
               // down sample negatives
               if (random.nextDouble() < DOWNSAMPLE_PROB) {
@@ -229,31 +233,45 @@ class ArgumentClassifier {
     dataset
   }
 
+  def findArgLabel(arg:Int, args:Array[(Int, String)]):Option[String] = {
+    for(i <- args.indices) {
+      if(args(i)._1 == arg)
+        return Some(args(i)._2)
+    }
+    None
+  }
+
   def isPred(position:Int, s:Sentence):Boolean = {
     val oes = s.semanticRoles.get.outgoingEdges
     position < oes.length && oes(position) != null && oes(position).nonEmpty
   }
 
-  def mkDatum(sent:Sentence, arg:Int, pred:Int, history:ArrayBuffer[Int], label:String): RVFDatum[String, String] = {
+  def mkDatum(sent:Sentence, arg:Int, pred:Int, history:ArrayBuffer[(Int, String)], label:String): RVFDatum[String, String] =
     new RVFDatum[String, String](label, featureExtractor.mkFeatures(sent, arg, pred, history))
-  }
 
-  def computeArgStats(doc:Document): Unit = {
+  def computeArgStats(doc:Document): Counter[String] = {
     val posStats = new Counter[String]()
+    val labelStats = new Counter[String]()
     var count = 0
     for(s <- doc.sentences) {
       val g = s.semanticRoles.get
       for(i <- g.outgoingEdges.indices) {
         for(a <- g.outgoingEdges(i)) {
           val pos = s.tags.get(a._1)
+          val label = a._2
           if(pos.length < 2) posStats.incrementCount(pos)
           else posStats.incrementCount(pos.substring(0, 2))
+          labelStats += label
           count += 1
         }
       }
     }
     logger.info("Arguments by POS tag: " + posStats.sorted)
+    logger.info("Argument label stats: " + labelStats.sorted)
+    logger.info(s"${labelStats.sorted.filter(_._2 > LABEL_THRESHOLD).size} labels have a frequency over $LABEL_THRESHOLD.")
     logger.info("Total number of arguments: " + count)
+
+    labelStats
   }
 
   def saveTo(w:Writer): Unit = {
@@ -271,11 +289,12 @@ class ArgumentClassifier {
 object ArgumentClassifier {
   val logger = LoggerFactory.getLogger(classOf[ArgumentClassifier])
 
+  val LABEL_THRESHOLD = 1000
   val FEATURE_THRESHOLD = 2
-  val DOWNSAMPLE_PROB = 0.50
+  val DOWNSAMPLE_PROB = 0.25
   val MAX_TRAINING_DATUMS = 0 // 0 means all data
 
-  val POS_LABEL = "+"
+  // val POS_LABEL = "+"
   val NEG_LABEL = "-"
 
   def main(args:Array[String]): Unit = {

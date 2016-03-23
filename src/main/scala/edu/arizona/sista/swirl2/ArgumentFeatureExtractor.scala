@@ -69,7 +69,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     }
   }
 
-  def mkFeatures(sent:Sentence, position:Int, pred:Int, history:ArrayBuffer[Int]):Counter[String] = {
+  def mkFeatures(sent:Sentence, position:Int, pred:Int, history:ArrayBuffer[(Int, String)]):Counter[String] = {
     val features = new Counter[String]
 
     val predLemma = lemmaAt(sent, pred)
@@ -82,8 +82,10 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
 
     val before: Boolean = position < pred
 
-    addDepFeatures(features, "B", sent, sent.stanfordBasicDependencies.get, position, pred)
-    addDepFeatures(features, "C", sent, sent.stanfordCollapsedDependencies.get, position, pred)
+    if(sent.stanfordBasicDependencies.isDefined)
+      addDepFeatures(features, "B", sent, sent.stanfordBasicDependencies.get, position, pred)
+    if(sent.stanfordCollapsedDependencies.isDefined)
+      addDepFeatures(features, "C", sent, sent.stanfordCollapsedDependencies.get, position, pred)
 
     // unigrams
     for (i <- Range(-1, 2)) {
@@ -158,20 +160,20 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     features
   }
 
-  def mkHistorySeq(history:ArrayBuffer[Int], pred:Int, position:Int):String = {
+  def mkHistorySeq(history:ArrayBuffer[(Int, String)], pred:Int, position:Int):String = {
     val f = new StringBuilder
 
     var first = true
     var predIncluded = false
-    for(h <- history) {
+    for(argIndexAndLabel <- history) {
       if(! first) f.append('+')
-      if(! predIncluded && h > pred) {
+      if(! predIncluded && argIndexAndLabel._1 > pred) {
         f.append('P')
         f.append('+')
         predIncluded = true
       }
-      f.append('A')
-      if(h == pred) f.append("=P")
+      f.append(argIndexAndLabel._2) // the label of the preceding arg, represented as an index in the label lexicon
+      if(argIndexAndLabel._1 == pred) f.append("=P")
       first = false
     }
 

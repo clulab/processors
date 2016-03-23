@@ -16,15 +16,14 @@ object ValidCandidate {
 
   val VALID_ARG_POS = "NN|IN|PR|JJ|TO|RB|VB|MD|WD|CD|\\$|WP|DT".r
   val MAX_TOKENS_BETWEEN_PRED_AND_ARG = 25
-  val MAX_PATH_LEN_BETWEEN_PRED_AND_ARG = 4
+  val MAX_PATH_LEN_BETWEEN_PRED_AND_ARG = 6
 
   def isValid(sent:Sentence, arg:Int, pred:Int):Boolean = {
     // the POS of the argument must start with this pattern
-    if(VALID_ARG_POS.findFirstIn(sent.tags.get(arg)).isEmpty)
-      return false
+    // if(VALID_ARG_POS.findFirstIn(sent.tags.get(arg)).isEmpty) return false
 
     // the number of tokens between pred and arg cannot be too large
-    if(math.abs(pred - arg) > MAX_TOKENS_BETWEEN_PRED_AND_ARG) return false
+    // if(math.abs(pred - arg) > MAX_TOKENS_BETWEEN_PRED_AND_ARG) return false
 
     // the dep path between predicate and argument cannot be too long
     val deps = sent.stanfordBasicDependencies.get

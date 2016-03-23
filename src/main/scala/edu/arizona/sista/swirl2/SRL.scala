@@ -90,6 +90,7 @@ class SRL {
     val edges = new ListBuffer[(Int, Int, String)]
 
     // first, find predicates
+    /*
     for(i <- sentence.words.indices) {
       val scores = predClassifier.get.classify(sentence, i)
       val isPredicate = scores.getCount(PredicateClassifier.POS_LABEL) >= PredicateClassifier.POS_THRESHOLD
@@ -97,32 +98,24 @@ class SRL {
         roots += i
       }
     }
-    /*
+    */
     for(i <- sentence.words.indices) {
       if(argClassifier.get.isPred(i, sentence)) {
         roots += i
       }
     }
-    */
 
     // second, find arguments for each predicate
     for(pred <- roots) {
-      val history = new ArrayBuffer[Int]()
+      val history = new ArrayBuffer[(Int, String)]()
       for(arg <- sentence.words.indices) {
         var predLabel = ArgumentClassifier.NEG_LABEL
         if (ValidCandidate.isValid(sentence, arg, pred)) {
-          val scores = argClassifier.get.classify(sentence, arg, pred, history)
-          predLabel = scores.getCount(ArgumentClassifier.POS_LABEL) >= scores.getCount(ArgumentClassifier.NEG_LABEL) match {
-            case true => ArgumentClassifier.POS_LABEL
-            case false => ArgumentClassifier.NEG_LABEL
-          }
-          if (predLabel == ArgumentClassifier.POS_LABEL) {
-            history += arg
-
-            // TODO: add labeling
-            val label = "A"
-
-            edges += new Tuple3(pred, arg, label)
+          val scores = argClassifier.get.classify(sentence, arg, pred, history).sorted
+          predLabel = scores.head._1
+          if (predLabel != ArgumentClassifier.NEG_LABEL) {
+            history += new Tuple2(arg, predLabel)
+            edges += new Tuple3(pred, arg, predLabel)
           }
         }
       }

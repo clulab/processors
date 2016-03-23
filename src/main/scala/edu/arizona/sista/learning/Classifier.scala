@@ -2,7 +2,7 @@ package edu.arizona.sista.learning
 
 import java.io._
 
-import edu.arizona.sista.struct.{Lexicon, Counter}
+import edu.arizona.sista.struct.Counter
 import edu.arizona.sista.learning.Datasets._
 
 /**
