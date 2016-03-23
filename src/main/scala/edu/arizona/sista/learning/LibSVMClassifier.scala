@@ -152,7 +152,7 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
     var size = 0
     var prev = -1
     var i = 0
-    while(i < feats.size) {
+    while(i < feats.length) {
       if(feats(i) != prev) size += 1
       prev = feats(i)
       i += 1
@@ -162,7 +162,7 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
     prev = -1
     var j = 0
     val nodes = new Array[svm_node](size)
-    while(i < feats.size) {
+    while(i < feats.length) {
       if(feats(i) != prev) {
         nodes(j) = new svm_node { index = convertToLibsvmFeaturesIndices(feats(i)); value =  1.0 }
         j += 1
@@ -186,11 +186,11 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
                              vals:Array[Double],
                              sorted:Boolean): Array[svm_node] = {
     // Unlike BVF features, RVF features are not supposed to repeat, because values are stored separately!
-    var size = feats.size
+    val size = feats.length
     // if(bias) size += 1
     val features = new Array[svm_node](size)
     var i = 0
-    while(i < feats.size) {
+    while(i < feats.length) {
       features(i) = new svm_node { index = convertToLibsvmFeaturesIndices(feats(i)); value = vals(i) }
       i += 1
     }
