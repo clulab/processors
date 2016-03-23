@@ -66,7 +66,8 @@ class ArgumentClassifier {
 
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //dataset = dataset.removeFeaturesByInformationGain(0.05)
-    classifier = Some(new LogisticRegressionClassifier[String, String](C = 1))
+    //classifier = Some(new LogisticRegressionClassifier[String, String](C = 1))
+    classifier = Some(new LibSVMClassifier[String, String](PolynomialKernel))
     //classifier = Some(new LinearSVMClassifier[String, String]())
     //classifier = Some(new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode))
     //classifier = Some(new PerceptronClassifier[String, String](epochs = 5))
@@ -306,7 +307,7 @@ object ArgumentClassifier {
 
       if(props.containsKey("model")) {
         val os = new PrintWriter(new BufferedWriter(new FileWriter(props.getProperty("model"))))
-        ac.saveTo(os)
+        // ac.saveTo(os)
         os.close()
       }
     }
@@ -314,7 +315,7 @@ object ArgumentClassifier {
     if(props.containsKey("test")) {
       if(props.containsKey("model")) {
         val is = new BufferedReader(new FileReader(props.getProperty("model")))
-        ac = loadFrom(is)
+        // ac = loadFrom(is)
         is.close()
       }
 
@@ -330,6 +331,7 @@ object ArgumentClassifier {
     logger.debug(s"Successfully loaded lemma count hash for the argument classifier, with ${lc.size} keys.")
     val c = LiblinearClassifier.loadFrom[String, String](reader)
     // val c = PerceptronClassifier.loadFrom[String, String](reader)
+    // val c = LibSVMClassifier.loadFrom[String, String](reader)
     logger.debug(s"Successfully loaded the argument classifier.")
 
     ac.classifier = Some(c)
