@@ -66,10 +66,10 @@ class ArgumentClassifier {
 
     dataset = dataset.removeFeaturesByFrequency(FEATURE_THRESHOLD)
     //dataset = dataset.removeFeaturesByInformationGain(0.05)
-    //classifier = Some(new LogisticRegressionClassifier[String, String](C = 1))
+    classifier = Some(new LogisticRegressionClassifier[String, String](C = 1))
     //classifier = Some(new LinearSVMClassifier[String, String]())
     //classifier = Some(new RFClassifier[String, String](numTrees = 10, maxTreeDepth = 100, howManyFeaturesPerNode = featuresPerNode))
-    classifier = Some(new PerceptronClassifier[String, String](epochs = 5))
+    //classifier = Some(new PerceptronClassifier[String, String](epochs = 5))
 
     classifier.get match {
       case rfc:RFClassifier[String, String] =>
@@ -329,6 +329,7 @@ object ArgumentClassifier {
     val lc = Counter.loadFrom[String](reader)
     logger.debug(s"Successfully loaded lemma count hash for the argument classifier, with ${lc.size} keys.")
     val c = LiblinearClassifier.loadFrom[String, String](reader)
+    // val c = PerceptronClassifier.loadFrom[String, String](reader)
     logger.debug(s"Successfully loaded the argument classifier.")
 
     ac.classifier = Some(c)
