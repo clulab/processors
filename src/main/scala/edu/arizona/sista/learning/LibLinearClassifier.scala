@@ -20,7 +20,8 @@ class LiblinearClassifier[L, F](
   val solverType:SolverType = SolverType.L2R_LR,
   val C:Double = 1.0,
   val eps:Double = 0.01,
-  val bias:Boolean = false) extends Classifier[L, F] with Serializable {
+  val bias:Boolean = false,
+  val classWeights:Option[Array[(L, Double)]] = None) extends Classifier[L, F] with Serializable {
 
   /** Model learned during training */
   private var model:Model = null
@@ -112,6 +113,16 @@ class LiblinearClassifier[L, F](
 
     // ... and train
     val parameter = new Parameter(solverType, C, eps)
+    // set penalty weights by class; useful for unbalanced data!
+    if(classWeights.isDefined) {
+      val weights = new Array[Double](classWeights.get.length)
+      val weightLabels = new Array[Int](classWeights.get.length)
+      for(i <- classWeights.get.indices) {
+        weights(i) = classWeights.get(i)._2
+        weightLabels(i) = labelLexicon.get.get(classWeights.get(i)._1).get
+      }
+      parameter.setWeights(weights, weightLabels)
+    }
     model = Linear.train(problem, parameter)
 
     logger.debug(s"Model contains ${model.getNrClass} classes.")
@@ -281,8 +292,19 @@ class LiblinearClassifier[L, F](
 class LogisticRegressionClassifier[L, F] (
   C:Double = 1.0,
   eps:Double = 0.01,
-  bias:Boolean = false)
-  extends LiblinearClassifier[L, F](SolverType.L2R_LR, C, eps, bias)
+  bias:Boolean = false,
+  classWeights:Option[Array[(L, Double)]] = None)
+  extends LiblinearClassifier[L, F](SolverType.L2R_LR, C, eps, bias, classWeights)
+
+/**
+  * LR with L1 regularization
+  */
+class L1LogisticRegressionClassifier[L, F] (
+  C:Double = 1.0,
+  eps:Double = 0.01,
+  bias:Boolean = false,
+  classWeights:Option[Array[(L, Double)]] = None)
+  extends LiblinearClassifier[L, F](SolverType.L1R_LR, C, eps, bias, classWeights)
 
 /**
  * Linear SVM with L2 regularization
@@ -290,8 +312,19 @@ class LogisticRegressionClassifier[L, F] (
 class LinearSVMClassifier[L, F] (
   C:Double = 1.0,
   eps:Double = 0.01,
-  bias:Boolean = false)
+  bias:Boolean = false,
+  classWeights:Option[Array[(L, Double)]] = None)
   extends LiblinearClassifier[L, F](SolverType.L2R_L2LOSS_SVC, C, eps, bias)
+
+/**
+  * Linear SVM with L1 regularization
+  */
+class L1LinearSVMClassifier[L, F] (
+  C:Double = 1.0,
+  eps:Double = 0.01,
+  bias:Boolean = false,
+  classWeights:Option[Array[(L, Double)]] = None)
+  extends LiblinearClassifier[L, F](SolverType.L1R_L2LOSS_SVC, C, eps, bias)
 
 object LiblinearClassifier {
   val logger = LoggerFactory.getLogger(classOf[LiblinearClassifier[String, String]])

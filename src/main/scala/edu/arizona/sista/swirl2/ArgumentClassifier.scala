@@ -16,12 +16,6 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.Random
 
-class L1LogisticRegressionClassifier[L, F] (
-  C:Double = 1.0,
-  eps:Double = 0.01,
-  bias:Boolean = false)
-  extends LiblinearClassifier[L, F](SolverType.L1R_LR, C, eps, bias)
-
 /**
   * Identifies the arguments in SR frames
   * User: mihais
