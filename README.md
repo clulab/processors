@@ -19,10 +19,9 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **5.8.2** - Implemented unrestricted lookbehind for Odin's surface patterns. Updated to bioresources 1.1.1.
 + **5.8.1** - Improved Odin's variables compatibility with YAML. Switched BioNLPProcessor to using bioresources rather than the local resources. Bug fix: RuleNER was not producing the longest possible match all the time.
 + **5.8.0** - Added in-house random forest implementation. Removed Weka dependency and its RF classifier. Removed RF reranking classifier. Bug fix in Odin: allow `$` and `\` in variable values. Restricted Odin variable names to valid Java identifiers. Added object Serializer. We no longer intern Strings by default in BioNLPProcessor.
-+ **5.7.3** - Added support for context entities: species, organs, cell lines, cell types.
-+ **5.7.2** - Keep matched syntactic paths in event/relation mentions. Added support for trigger matching from the state.
 + [more...](CHANGES.md)
 
 # Citations
