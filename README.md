@@ -19,7 +19,7 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
-+ **5.8.2** - Implemented unrestricted lookbehind for Odin's surface patterns. Updated to bioresources 1.1.1.
++ **5.8.2** - Implemented unrestricted lookbehind for Odin's surface patterns. Updated to bioresources 1.1.1. Added support for unbalanced data to LibLinearClassifier. Incremental improvements to the SRL system.
 + **5.8.1** - Improved Odin's variables compatibility with YAML. Switched BioNLPProcessor to using bioresources rather than the local resources. Bug fix: RuleNER was not producing the longest possible match all the time.
 + **5.8.0** - Added in-house random forest implementation. Removed Weka dependency and its RF classifier. Removed RF reranking classifier. Bug fix in Odin: allow `$` and `\` in variable values. Restricted Odin variable names to valid Java identifiers. Added object Serializer. We no longer intern Strings by default in BioNLPProcessor.
 + [more...](CHANGES.md)
@@ -48,12 +48,12 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.8.1</version>
+   <version>5.8.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.8.1</version>
+   <version>5.8.2</version>
    <classifier>models</classifier>
 </dependency>
 ```
@@ -62,8 +62,8 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors" % "5.8.1",
-    "org.clulab" %% "processors" % "5.8.1" classifier "models"
+    "org.clulab" %% "processors" % "5.8.2",
+    "org.clulab" %% "processors" % "5.8.2" classifier "models"
 )
 ```
 
