@@ -116,7 +116,7 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
     // history features
     // history stores the positive predictions seen to the left of this candidate
     //
-    features.incrementCount(s"history:${mkHistorySeq(history, pred, position)}")
+    // features.incrementCount(s"history:${mkHistorySeq(history, pred, position)}")
 
     // addEmbeddingsFeatures(features, "AE", sent, position)
 
@@ -240,6 +240,6 @@ object ArgumentFeatureExtractor {
 
   val MAX_TAG_SIZE = 2
 
-  val UNKNOWN_THRESHOLD = 5
+  val UNKNOWN_THRESHOLD = 1
   val UNKNOWN_TOKEN = "*u*"
 }

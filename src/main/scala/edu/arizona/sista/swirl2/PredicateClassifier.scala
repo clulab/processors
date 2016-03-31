@@ -60,7 +60,7 @@ class PredicateClassifier {
       output += new Tuple2(g, p)
     }
 
-    BinaryScorer.score(output.toList, POS_LABEL)
+    BinaryScorer.score(output.toList, NEG_LABEL)
   }
 
   def classify(sent:Sentence, position:Int):Counter[String] = {
