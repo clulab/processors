@@ -67,6 +67,16 @@ libraryDependencies ++= Seq(
 )
 ```
 
+# External Dependencies
+
+Most of the `processors` dependencies are captured in the build file. However, a few `processors` unit tests depend also on `svm-rank`, which should be installed separately. Simply installing the `svm-rank` binaries to `/usr/local/bin` (or another generic location on your OS) solves the problem:
+
+https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html
+
+Alternatively, you can run just the unit tests that do not require external binaries with the following command:
+
+`sbt 'test-only -- -l NeedsExternalBinary'`
+
 # Why you should use this code
 + **Simple API** - the APIs provided are, at least in my opinion, simpler than those provided for the original code. For example, when using CoreNLP you won't have to deal with hash maps that take class objects as keys. Instead, we use mostly arrays of integers or strings, which are self explanatory.
 + **Memory efficient** - arrays are more memory efficient than hash maps. Furthermore, we used our own implementation to intern strings (i.e., avoiding the storage of duplicated strings multiple times). Due to these changes, I measured up to 99% decrease in memory for the annotations corresponding to a typical natural language text, when compared to the original CoreNLP code. (Note: this reduction takes effect only _after_ CoreNLP finishes its work.)
