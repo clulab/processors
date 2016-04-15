@@ -348,13 +348,36 @@ object BioNLPProcessor {
     tas.foreach{ ta =>
       val text = ta.originalText()
       text match {
-        case ubiq if ubiq.toLowerCase.endsWith("ubiquitinates") => ta.setTag("VBZ")
-        case ubiqNom if ubiqNom.toLowerCase.endsWith("ubiquitinate") => ta.setTag("VB")
-        case hydro if hydro.toLowerCase.endsWith("hydrolyzes") => ta.setTag("VBZ")
         case aids if aids.toLowerCase == "aids" && aids != "AIDS" => ta.setTag("VBZ")
-        case human if human.toLowerCase == "human" => ta.setTag("NN") // Modified by Enrique for context 07/20/15
-        case glyc if glyc.toLowerCase == "glycosylates" => ta.setTag("VBZ")
         case mutant if mutant.toLowerCase == "mutant" => ta.setTag("NN")
+
+        // Modified by Enrique for context 07/20/15:
+        case human if human.toLowerCase == "human" => ta.setTag("NN")
+
+        // make sure that these verbs are treated as verbs with correct POS tag:
+        case vb if vb.toLowerCase.endsWith("acetylate")      => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("fanesylate")     => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("glycosylate")    => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("hydrolyze")      => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("hydroxylate")    => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("methylate")      => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("phosphorylate")  => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("ribosylate")     => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("sumoylate")      => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("translocate")    => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("ubiquitinate")   => ta.setTag("VB")
+        case vb if vb.toLowerCase.endsWith("acetylates")     => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("fanesylates")    => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("glycosylates")   => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("hydrolyzes")     => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("hydroxylates")   => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("methylates")     => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("phosphorylates") => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("ribosylates")    => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("sumoylates")     => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("translocates")   => ta.setTag("VBZ")
+        case vb if vb.toLowerCase.endsWith("ubiquitinates")  => ta.setTag("VBZ")
+
         case _ => ()
       }
     }
