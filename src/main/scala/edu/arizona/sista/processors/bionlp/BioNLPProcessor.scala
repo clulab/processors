@@ -181,7 +181,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
   }
 
   def beginsContext(label:String):Boolean = {
-    if(label == "B-Species" || label == "B-Organ" || label == "B-CellType" || label == "B-CellLine") true
+    if(label == "B-Species" || label == "B-Organ" || label == "B-CellType" || label == "B-CellLine" || label == "B-TissueType") true
     else false
   }
 
