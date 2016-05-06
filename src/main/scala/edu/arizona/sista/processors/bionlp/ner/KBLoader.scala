@@ -13,23 +13,24 @@ import scala.collection.mutable.ArrayBuffer
 /**
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
   * These must be generated offline by KBGenerator; see bioresources/ner_kb.sh
-  * User: mihais
-  * Date: 2/7/16
+  * User: mihais. 2/7/16.
+  * Last Modified: Update KB load order to match ner_kb.conf, add tissue type file.
   */
 object KBLoader {
   val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
 
   val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
-    "org/clulab/reach/kb/ner/Gene_or_gene_product.tsv.gz",
     "org/clulab/reach/kb/ner/Family.tsv.gz",
-    "org/clulab/reach/kb/ner/Site.tsv.gz",
+    "org/clulab/reach/kb/ner/Gene_or_gene_product.tsv.gz",
     "org/clulab/reach/kb/ner/Cellular_component.tsv.gz",
     "org/clulab/reach/kb/ner/Simple_chemical.tsv.gz",
-    "org/clulab/reach/kb/ner/Organ.tsv.gz",
-    "org/clulab/reach/kb/ner/CellType.tsv.gz",
-    "org/clulab/reach/kb/ner/CellLine.tsv.gz",
+    "org/clulab/reach/kb/ner/Site.tsv.gz",
+    "org/clulab/reach/kb/ner/BioProcess.tsv.gz",
     "org/clulab/reach/kb/ner/Species.tsv.gz",
-    "org/clulab/reach/kb/ner/BioProcess.tsv.gz"
+    "org/clulab/reach/kb/ner/CellLine.tsv.gz",
+    "org/clulab/reach/kb/ner/TissueType.tsv.gz",
+    "org/clulab/reach/kb/ner/CellType.tsv.gz",
+    "org/clulab/reach/kb/ner/Organ.tsv.gz"
   )
 
   def loadAll:RuleNER = {
