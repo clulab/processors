@@ -1,4 +1,5 @@
 # Changes
++ **5.8.4** - Updated to bioresources 1.1.6. Add and load TissueType KB. Synch the KBLoader with NER configuration in Bioresources.
 + **5.8.3** - Updated to bioresources 1.1.4. The BioNLPProcessor POS tagger now correctly tags verbs for biochemical interactions as verbs. 
 + **5.8.2** - Implemented unrestricted lookbehind for Odin's surface patterns. Updated to bioresources 1.1.1. Added support for unbalanced data to LibLinearClassifier. Incremental improvements to the SRL system.
 + **5.8.1** - Improved Odin's variables compatibility with YAML. Switched BioNLPProcessor to using bioresources rather than the local resources. Bug fix: RuleNER was not producing the longest possible match all the time.
