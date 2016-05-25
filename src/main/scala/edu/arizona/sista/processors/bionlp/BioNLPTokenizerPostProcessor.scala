@@ -6,6 +6,7 @@ import edu.stanford.nlp.ling.CoreLabel
 import BioNLPTokenizerPostProcessor._
 import edu.stanford.nlp.process.CoreLabelTokenFactory
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -43,6 +44,18 @@ class BioNLPTokenizerPostProcessor {
       tokens = breakThreeModifications(tokens, DOUBLESLASH_PATTERN)
     }
 
+    if(CONTEXTUAL_COMPLEX_TOKENIZATION) {
+      // break complexes if the parts appear as distinct tokens somewhere else in the sequence of tokens
+      // for example, this breaks "A-B-C complex" into "A, B, and C complex" if "A", "B", and "C" appear
+      // as distinct tokens somewhere else in this document
+
+      // find unique tokens
+      val uniqueTokens = new mutable.HashSet[String]()
+      for(t <- tokens) uniqueTokens += t.word()
+
+      tokens = breakComplexesUsingContext(tokens, uniqueTokens.toSet)
+    }
+
     // re-join trailing or preceding - or + to previous digit
     tokens = joinSigns(tokens)
 
@@ -51,7 +64,7 @@ class BioNLPTokenizerPostProcessor {
 
   def breakOnPattern(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
-    for(i <- 0 until tokens.size) {
+    for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
       if (matcher.matches()) {
@@ -83,7 +96,7 @@ class BioNLPTokenizerPostProcessor {
 
   def breakOneSlash(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
-    for(i <- 0 until tokens.size) {
+    for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
       if (matcher.matches()) {
@@ -113,7 +126,7 @@ class BioNLPTokenizerPostProcessor {
 
   def breakTwoModifications(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
-    for(i <- 0 until tokens.size) {
+    for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
       if (matcher.matches()) {
@@ -134,7 +147,7 @@ class BioNLPTokenizerPostProcessor {
   }
   def breakThreeModifications(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
-    for(i <- 0 until tokens.size) {
+    for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
       if (matcher.matches()) {
@@ -161,11 +174,11 @@ class BioNLPTokenizerPostProcessor {
 
   def breakComplex(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
-    for(i <- 0 until tokens.size) {
+    for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
       if (matcher.matches() && // contains a dash or some known separator
-        ((i < tokens.size - 1 && isComplex(tokens(i + 1).word())) || // followed by "complex", or
+        ((i < tokens.length - 1 && isComplex(tokens(i + 1).word())) || // followed by "complex", or
           (i > 0 && isComplex(tokens(i - 1).word())))){ // preceded by "complex"
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
@@ -181,13 +194,17 @@ class BioNLPTokenizerPostProcessor {
     output.toArray
   }
 
+  def breakComplexesUsingContext(tokens:Array[CoreLabel], uniqueTokens:Set[String]):Array[CoreLabel] = {
+    tokens
+  }
+
   def breakMutant(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
-    for(i <- 0 until tokens.size) {
+    for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
       if (matcher.matches() && // contains a dash or some known separator
-        ((i < tokens.size - 1 && isMutant(tokens(i + 1).word())) || // followed by "mutant", or
+        ((i < tokens.length - 1 && isMutant(tokens(i + 1).word())) || // followed by "mutant", or
           (i > 0 && isMutant(tokens(i - 1).word())))){ // preceded by mutant
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
@@ -206,9 +223,9 @@ class BioNLPTokenizerPostProcessor {
   def joinSigns(tokens:Array[CoreLabel]):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
     var i = 0
-    while(i < tokens.size) {
+    while(i < tokens.length) {
       // -/-
-      if(i < tokens.size - 3 &&
+      if(i < tokens.length - 3 &&
         tokens(i).endPosition == tokens(i + 1).beginPosition &&
         tokens(i + 1).word == "-" &&
         tokens(i + 2).word == "/" &&
@@ -221,7 +238,7 @@ class BioNLPTokenizerPostProcessor {
         i += 4
 
       // - or +
-      } else if(i < tokens.size - 1) {
+      } else if(i < tokens.length - 1) {
         val crt = tokens(i)
         val nxt = tokens(i + 1)
 
@@ -235,7 +252,7 @@ class BioNLPTokenizerPostProcessor {
 
         // trailing -
         else if(crt.endPosition == nxt.beginPosition &&
-          (i + 2 >= tokens.size || nxt.endPosition != tokens(i + 2).beginPosition) &&
+          (i + 2 >= tokens.length || nxt.endPosition != tokens(i + 2).beginPosition) &&
           ! isParen(crt.word) && nxt.word == "-"){
           val word = crt.word + nxt.word
           output += tokenFactory.makeToken(word, crt.beginPosition, word.length)
@@ -280,6 +297,7 @@ object BioNLPTokenizerPostProcessor {
 
   val DISCARD_STANDALONE_DASHES = true
   val AGGRESSIVE_SLASH_TOKENIZATION = true
+  val CONTEXTUAL_COMPLEX_TOKENIZATION = true
 
   val VALID_DASH_SUFFIXES = Set(
     "\\w+ed", "\\w+ing", // tokenize for all suffix verbs, e.g., "ABC-mediated"
@@ -325,7 +343,7 @@ object BioNLPTokenizerPostProcessor {
   def makeRegexOr(pieces: Set[String]):String = {
     val suffixBuilder = new StringBuilder()
     for (suffix <- pieces) {
-      if (suffixBuilder.length > 0) suffixBuilder.append("|")
+      if (suffixBuilder.nonEmpty) suffixBuilder.append("|")
       suffixBuilder.append("(" + suffix + ")")
     }
     suffixBuilder.toString()
