@@ -94,9 +94,11 @@ libraryDependencies ++= Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1" classifier "models",
   "ch.qos.logback" % "logback-classic" % "1.0.10",
   "org.slf4j" % "slf4j-api" % "1.7.10",
-  "log4j" % "log4j" % "1.2.17", // this is used by our maltparser clone; otherwise not in use
   "de.bwaldvogel" % "liblinear" % "1.94",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
   "org.yaml" % "snakeyaml" % "1.14",
-  "jline" % "jline" % "2.12.1"
+  "jline" % "jline" % "2.12.1",
+  "log4j" % "log4j" % "1.2.17", // this is used by our maltparser clone; otherwise not in use
+  "commons-logging" % "commons-logging" % "1.2", // this is needed by xgboost; otherwise not in use
+  "com.esotericsoftware.kryo" % "kryo" % "2.21" // this is needed by xgboost; otherwise not in use
 )
