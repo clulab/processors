@@ -33,6 +33,30 @@ object KBLoader {
     "org/clulab/reach/kb/ner/Organ.tsv.gz"
   )
 
+  /**
+    * A horrible hack to keep track of entities that should not be labeled when in lower case
+    */
+  val NOT_ENTITY_IN_LOWER_CASE = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
+
+  def loadEntityStopList(kb:String):Set[String] = {
+    val stops = new mutable.HashSet[String]()
+    val reader = loadStreamFromClasspath(kb)
+    var done = false
+    while(! done) {
+      val line = reader.readLine()
+      if(line == null) {
+        done = true
+      } else {
+        val l = line.trim
+        if(! l.isEmpty && ! l.startsWith("#")) {
+          stops += l
+        }
+      }
+    }
+    reader.close()
+    stops.toSet
+  }
+
   def loadAll:RuleNER = {
     load(RULE_NER_KBS, useLemmas = false, caseInsensitive = true)
   }

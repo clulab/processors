@@ -249,7 +249,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
       if (seq(i).startsWith("B-") &&
         (i == seq.length - 1 || !seq(i + 1).startsWith("I-")) &&
         isLowerCase(words(i)) &&
-        RuleNER.NOT_ENTITY_IN_LOWER_CASE.contains(words(i))) {
+        KBLoader.NOT_ENTITY_IN_LOWER_CASE.contains(words(i))) {
         seq(i) = RuleNER.OUTSIDE_LABEL
       }
       i += 1

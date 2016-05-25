@@ -1,14 +1,9 @@
 package edu.arizona.sista.processors.bionlp.ner
 
-import java.io.{FileInputStream, File, InputStreamReader, BufferedReader}
-import java.util.zip.GZIPInputStream
-
-import edu.arizona.sista.processors.{Processor, Sentence}
-import edu.arizona.sista.processors.bionlp.BioNLPProcessor
+import edu.arizona.sista.processors.Sentence
 import edu.arizona.sista.struct.HashTrie
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 import RuleNER._
@@ -238,10 +233,4 @@ object RuleNER {
     }
     false
   }
-
-  /**
-   * A horrible hack to keep track of entities that should not be labeled when in lower case
-   * TODO: This is more a placeholder, so we remember we need a more general solution here
-   */
-  val NOT_ENTITY_IN_LOWER_CASE = Set("blot", "prey")
 }
