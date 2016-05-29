@@ -34,9 +34,9 @@ object KBLoader {
   )
 
   /**
-    * A horrible hack to keep track of entities that should not be labeled when in lower case
+    * A horrible hack to keep track of entities that should not be labeled when in lower case, or upper initial
     */
-  val NOT_ENTITY_IN_LOWER_CASE = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
+  val ENTITY_STOPLIST = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
 
   def loadEntityStopList(kb:String):Set[String] = {
     val stops = new mutable.HashSet[String]()

@@ -13,7 +13,8 @@ scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
 parallelExecution in Test := false
 
-// options for forked jvm
+// options for forked jvm. No longer needed since we don't fork anymore.
+// see .sbtopts for the JVM configuration that is used.
 // javaOptions += "-Xmx6G"
 // javaOptions += "-Xss100m"
 
