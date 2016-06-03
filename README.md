@@ -19,7 +19,6 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
-+ **5.8.5** - Updated to bioresources 1.1.8. Improved the handling of stop-list entities in the bio NER.
 + **5.8.4** - Updated to bioresources 1.1.6. Add and load TissueType KB. Synch the KBLoader with NER configuration in Bioresources.
 + **5.8.3** - Updated to bioresources 1.1.4. The BioNLPProcessor POS tagger now correctly tags verbs for biochemical interactions as verbs.
 + [more...](CHANGES.md)
@@ -48,12 +47,12 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.8.5</version>
+   <version>5.8.4</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.8.5</version>
+   <version>5.8.4</version>
    <classifier>models</classifier>
 </dependency>
 ```
@@ -62,8 +61,8 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors" % "5.8.5",
-    "org.clulab" %% "processors" % "5.8.5" classifier "models"
+    "org.clulab" %% "processors" % "5.8.4",
+    "org.clulab" %% "processors" % "5.8.4" classifier "models"
 )
 ```
 
