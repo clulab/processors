@@ -59,6 +59,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
 
   /**
    * Implements the bio-specific post-processing steps from McClosky et al. (2011)
+ *
    * @param originalTokens Input CoreNLP sentence
    * @return The modified tokens
    */
@@ -72,6 +73,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
 
   /**
    * Improve POS tagging in the Bio domain
+ *
    * @param annotation The CoreNLP annotation
    */
   override def postprocessTags(annotation:Annotation) {
@@ -242,14 +244,14 @@ class BioNLPProcessor (internStrings:Boolean = false,
     }
 
     //
-    // Some single-token entities should not be labeled when in lower case
+    // Some single-token entities should not be labeled when in lower case, or upper initial
     //
     i = 0
     while(i < seq.length) {
       if (seq(i).startsWith("B-") &&
         (i == seq.length - 1 || !seq(i + 1).startsWith("I-")) &&
-        isLowerCase(words(i)) &&
-        RuleNER.NOT_ENTITY_IN_LOWER_CASE.contains(words(i))) {
+        (isLowerCase(words(i)) || isUpperInitial(words(i))) &&
+        KBLoader.ENTITY_STOPLIST.contains(words(i))) {
         seq(i) = RuleNER.OUTSIDE_LABEL
       }
       i += 1
@@ -259,6 +261,19 @@ class BioNLPProcessor (internStrings:Boolean = false,
 
   def isLowerCase(s:String):Boolean = {
     for(i <- 0 until s.length) {
+      val c = s.charAt(i)
+      if(Character.isLetter(c) && ! Character.isLowerCase(c))
+        return false
+    }
+    true
+  }
+
+  def isUpperInitial(s:String):Boolean = {
+    if(s.length < 1) return false
+    if(Character.isLetter(s.charAt(0)) && ! Character.isUpperCase(s.charAt(0)))
+      return false
+
+    for(i <- 1 until s.length) {
       val c = s.charAt(i)
       if(Character.isLetter(c) && ! Character.isLowerCase(c))
         return false
