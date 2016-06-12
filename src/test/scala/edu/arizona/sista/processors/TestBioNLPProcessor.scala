@@ -185,6 +185,28 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(8) should be ("O")
   }
 
+  it should "not annotate NEs from the stop list when upper initial" in {
+    val doc = proc.mkDocument("Role of blot.", keepText = false)
+    annotate(doc)
+
+    /*
+    val s = doc.sentences(0)
+    for(i <- 0 until s.size) {
+      println(s"${s.words(i)} ${s.tags.get(i)} ${s.lemmas.get(i)} ${s.entities.get(i)}")
+    }
+    */
+
+    var i = 0
+    for(s <- doc.sentences) {
+      println(s"Labels for sentence #$i: " + s.entities.get.mkString(" "))
+      i += 1
+    }
+
+    doc.sentences(0).entities.get(0) should be ("O")
+    doc.sentences(0).entities.get(1) should be ("O")
+    doc.sentences(0).entities.get(2) should be ("O")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
