@@ -34,16 +34,8 @@ class BioNLPTokenizerPostProcessor {
     // break mutations
     tokens = breakMutant(tokens, SINGLEDASH_PATTERN)
 
-    if(AGGRESSIVE_SLASH_TOKENIZATION) {
-      // break all tokens containing 1 slash; try to replace them with an enumeration
-      tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
-    } else {
-      // break / separated complexes
-      tokens = breakComplex(tokens, SINGLESLASH_PATTERN)
-      // tokenize around slashes for modifications
-      tokens = breakTwoModifications(tokens, SINGLESLASH_PATTERN)
-      tokens = breakThreeModifications(tokens, DOUBLESLASH_PATTERN)
-    }
+    // break all tokens containing 1 slash; try to replace them with an enumeration
+    tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
 
     if(CONTEXTUAL_COMPLEX_TOKENIZATION) {
       // break complexes if the parts appear as distinct tokens somewhere else in the sequence of tokens
@@ -135,54 +127,6 @@ class BioNLPTokenizerPostProcessor {
     false
   }
 
-  def breakTwoModifications(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
-    val output = new ArrayBuffer[CoreLabel]
-    for(i <- tokens.indices) {
-      val token = tokens(i)
-      val matcher = pattern.matcher(token.word())
-      if (matcher.matches()) {
-        val sepPos = matcher.start(2)
-        val s1 = token.word().substring(0, sepPos)
-        val s3 = token.word().substring(sepPos + 1)
-
-        if(isModification(s1) && isModification(s3)) {
-          output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos)
-          output += tokenFactory.makeToken("and", token.beginPosition() + sepPos, 1) // replace "/" with "and"; it parses better
-          output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos + 1, token.endPosition() - token.beginPosition() - sepPos - 1)
-        }
-      } else {
-        output += token
-      }
-    }
-    output.toArray
-  }
-  def breakThreeModifications(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
-    val output = new ArrayBuffer[CoreLabel]
-    for(i <- tokens.indices) {
-      val token = tokens(i)
-      val matcher = pattern.matcher(token.word())
-      if (matcher.matches()) {
-        val sepPos1 = matcher.start(2)
-        val sepPos2 = matcher.start(4)
-        val s1 = token.word().substring(0, sepPos1)
-        val s3 = token.word().substring(sepPos1 + 1, sepPos2)
-        val s5 = token.word().substring(sepPos2 + 1)
-
-        if(isModification(s1) && isModification(s3) && isModification(s5)) {
-          output += tokenFactory.makeToken(s1, token.beginPosition(), sepPos1)
-          output += tokenFactory.makeToken(",", token.beginPosition() + sepPos1, 1) // replace first "/" with ","; it parses better
-          output += tokenFactory.makeToken(s3, token.beginPosition() + sepPos1 + 1, sepPos2 - sepPos1 - 1)
-          output += tokenFactory.makeToken(",", token.beginPosition() + sepPos2, 1) // replace second "/" with "," "and"; it parses better
-          output += tokenFactory.makeToken("and", token.beginPosition() + sepPos2, 1)
-          output += tokenFactory.makeToken(s5, token.beginPosition() + sepPos2 + 1, token.endPosition() - token.beginPosition() - sepPos2 - 1)
-        }
-      } else {
-        output += token
-      }
-    }
-    output.toArray
-  }
-
   def breakComplex(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
     for(i <- tokens.indices) {
@@ -206,7 +150,64 @@ class BioNLPTokenizerPostProcessor {
   }
 
   def breakComplexesUsingContext(tokens:Array[CoreLabel], uniqueTokens:Set[String]):Array[CoreLabel] = {
-    tokens
+    val output = new ArrayBuffer[CoreLabel]
+    for(i <- tokens.indices) {
+      val token = tokens(i)
+      val word = token.word()
+      val sepMatcher = VALID_COMPLEX_SEPARATOR_PATTERN.matcher(token.word())
+      if (sepMatcher.find() && // contains a dash or some known separator
+          ((i < tokens.length - 1 && isComplex(tokens(i + 1).word())) || // followed by "complex", or
+           (i > 0 && isComplex(tokens(i - 1).word())))){ // preceded by "complex"
+
+        // start breaking down the token into sub-tokens based on separators such as "-" or "/"
+        //println("Tokenizing " + word + " with other tokens: " + uniqueTokens)
+        var offset = 0 // for the matcher
+        var tokenStart = 0 // where the current sub-token starts
+        sepMatcher.reset()
+        val subTokens = new ArrayBuffer[(String, Int, Int)]() // token, start, length
+
+        // find all valid sub-tokens inside this word, e.g., "Mek/Ras/Akt1" is broken into "Mek", "Ras", and "Akt1"
+        //   *if* the corresponding sub-tokens appear standalone somewhere else in the text (i.e., in uniqueTokens)
+        while(sepMatcher.find(offset)) {
+          val sepPos = sepMatcher.start()
+          val subToken = word.substring(tokenStart, sepPos)
+          if(uniqueTokens.contains(subToken)) {
+            val t = new Tuple3(subToken, token.beginPosition() + tokenStart, sepPos - tokenStart)
+            subTokens += t
+            //println("\tsubToken: " + t)
+            tokenStart = sepMatcher.end()
+          }
+          offset = sepMatcher.end()
+        }
+        // left over at the end of the word
+        if(tokenStart < word.length) {
+          val subToken = word.substring(tokenStart)
+          val t = new Tuple3(subToken, token.beginPosition() + tokenStart, word.length - tokenStart)
+          subTokens += t
+          //println("\tsubToken: " + t)
+        }
+
+        // now create actual tokens from all these sub-tokens
+        for(i <- subTokens.indices) {
+          // add a "," or "and" before each non-start token
+          if(i > 0) {
+            val prev = subTokens(i - 1)
+            if(i < subTokens.length - 1) {
+              output += tokenFactory.makeToken(",", prev._2 + prev._3, 1)
+            } else {
+              output += tokenFactory.makeToken("and", prev._2 + prev._3, 1)
+            }
+          }
+          // add the actual token
+          val crt = subTokens(i)
+          output += tokenFactory.makeToken(crt._1, crt._2, crt._3)
+        }
+
+      } else {
+        output += token
+      }
+    }
+    output.toArray
   }
 
   def breakMutant(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
@@ -307,7 +308,6 @@ object BioNLPTokenizerPostProcessor {
   val tokenFactory = new CoreLabelTokenFactory()
 
   val DISCARD_STANDALONE_DASHES = true
-  val AGGRESSIVE_SLASH_TOKENIZATION = true
   val CONTEXTUAL_COMPLEX_TOKENIZATION = true
 
   val VALID_DASH_SUFFIXES = Set(
@@ -326,10 +326,11 @@ object BioNLPTokenizerPostProcessor {
   val dashSuffixes = mkDashSuffixes
 
   val VALID_PROTEIN = "[a-z][\\w\\-_]+"
-  val VALID_PROTEIN_PATTERN = Pattern.compile(VALID_PROTEIN, Pattern.CASE_INSENSITIVE)
+  val VALID_PROTEIN_NO_DASH = "[a-z][\\w_]+"
+  val VALID_COMPLEX_SEPARATOR_PATTERN = Pattern.compile("[/\\-]")
+
   val SINGLESLASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(/)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
-  val DOUBLESLASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(/)($VALID_PROTEIN)(/)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
-  val SINGLEDASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(\\-)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
+  val SINGLEDASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN_NO_DASH)(\\-)($VALID_PROTEIN_NO_DASH)", Pattern.CASE_INSENSITIVE)
 
   val SITE1 = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+", Pattern.CASE_INSENSITIVE)
   val SITE2 = Pattern.compile("glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine", Pattern.CASE_INSENSITIVE)
