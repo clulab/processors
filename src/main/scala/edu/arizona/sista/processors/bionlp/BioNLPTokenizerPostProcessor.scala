@@ -30,11 +30,12 @@ class BioNLPTokenizerPostProcessor {
 
     // break binary complexes
     tokens = breakComplex(tokens, SINGLEDASH_PATTERN)
+
     // break mutations
     tokens = breakMutant(tokens, SINGLEDASH_PATTERN)
 
     if(AGGRESSIVE_SLASH_TOKENIZATION) {
-      // break all tokens containing slashes; try to replace them with an enumeration
+      // break all tokens containing 1 slash; try to replace them with an enumeration
       tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
     } else {
       // break / separated complexes
@@ -96,6 +97,11 @@ class BioNLPTokenizerPostProcessor {
 
   def breakOneSlash(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
+
+//    print("Before breakOneSlash:")
+//    for(i <- tokens.indices) print(" " + tokens(i).word())
+//    println
+
     for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
@@ -112,6 +118,11 @@ class BioNLPTokenizerPostProcessor {
         output += token
       }
     }
+
+//    print("After breakOneSlash:")
+//    for(i <- output.indices) print(" " + output(i).word())
+//    println
+
     output.toArray
   }
 
@@ -314,10 +325,11 @@ object BioNLPTokenizerPostProcessor {
 
   val dashSuffixes = mkDashSuffixes
 
-  val SINGLESLASH_PATTERN = Pattern.compile("([\\w\\-_]+)(/)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
-  val DOUBLESLASH_PATTERN = Pattern.compile("([\\w\\-_]+)(/)([\\w\\-_]+)(/)([\\w\\-_]+)", Pattern.CASE_INSENSITIVE)
-
-  val SINGLEDASH_PATTERN = Pattern.compile("([\\w_]+)(\\-)([\\w_]+)", Pattern.CASE_INSENSITIVE)
+  val VALID_PROTEIN = "[a-z][\\w\\-_]+"
+  val VALID_PROTEIN_PATTERN = Pattern.compile(VALID_PROTEIN, Pattern.CASE_INSENSITIVE)
+  val SINGLESLASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(/)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
+  val DOUBLESLASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(/)($VALID_PROTEIN)(/)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
+  val SINGLEDASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(\\-)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
 
   val SITE1 = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+", Pattern.CASE_INSENSITIVE)
   val SITE2 = Pattern.compile("glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine", Pattern.CASE_INSENSITIVE)

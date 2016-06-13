@@ -207,6 +207,36 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(2) should be ("O")
   }
 
+  it should "tokenize complexes correctly" in {
+    var doc = proc.mkDocument("The Mek-Ras complex", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).words.length should be (5)
+    doc.sentences(0).words(1) should be ("Mek")
+    doc.sentences(0).words(2) should be ("and")
+    doc.sentences(0).words(3) should be ("Ras")
+
+    doc = proc.mkDocument("The Mek/Ras1 complex", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).words.length should be (5)
+    doc.sentences(0).words(1) should be ("Mek")
+    doc.sentences(0).words(2) should be ("and")
+    doc.sentences(0).words(3) should be ("Ras1")
+
+    /*
+    doc = proc.mkDocument("The Mek/Ras/Akt1 complex", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).words.length should be (5)
+    doc.sentences(0).words(1) should be ("Mek")
+    doc.sentences(0).words(2) should be (",")
+    doc.sentences(0).words(3) should be ("Ras")
+    doc.sentences(0).words(4) should be ("and")
+    doc.sentences(0).words(5) should be ("Akt1")
+    */
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
