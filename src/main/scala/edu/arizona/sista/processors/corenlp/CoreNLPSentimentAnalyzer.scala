@@ -1,15 +1,16 @@
-package edu.arizona.sista.sentiment
+package edu.arizona.sista.processors.corenlp
 
 import java.util.Properties
-import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
-import edu.stanford.nlp.pipeline.StanfordCoreNLP
-import scala.collection.JavaConverters._
+
 import edu.arizona.sista.processors.corenlp.CoreNLPUtils._
-import edu.arizona.sista.processors.{Sentence, Document}
+import edu.arizona.sista.processors.{Document, Sentence}
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
+import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
+
+import scala.collection.JavaConverters._
 
 
 object CoreNLPSentimentAnalyzer {
@@ -50,7 +51,7 @@ object CoreNLPSentimentAnalyzer {
     // needs to be a Stanford parse
     val tree = proc.stanfordParse(sa)
     sa.set(classOf[TreeAnnotation], tree)
-    
+
     sentimentAnalyzer.annotate(a)
 
     val sentimentTree = sa.get(classOf[SentimentCoreAnnotations.AnnotatedTree])

@@ -1,6 +1,4 @@
-package edu.arizona.sista.sentiment
-
-import edu.arizona.sista.processors.{Sentence, Document}
+package edu.arizona.sista.processors
 
 /**
  * skeleton for sentiment analysis

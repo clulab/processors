@@ -1,7 +1,7 @@
-package edu.arizona.sista.sentiment
+package edu.arizona.sista.processors
 
-import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
-import org.scalatest.{Matchers, FlatSpec}
+import edu.arizona.sista.processors.corenlp.{CoreNLPSentimentAnalyzer, CoreNLPProcessor}
+import org.scalatest.{FlatSpec, Matchers}
 
 
 class TestCoreNLPSentimentAnalyzer extends FlatSpec with Matchers {
