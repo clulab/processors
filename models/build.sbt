@@ -1,6 +1,6 @@
 name := "models"
 
-version := "5.8.6"
+version := "5.8.7-SNAPSHOT"
 
 organization := "org.clulab"
 

@@ -1,5 +1,5 @@
 # Changes
-+ **5.8.6** - Global tokenization for complexes in BioNLPProcessor.
++ **5.8.6** - Global tokenization for complexes in BioNLPProcessor. Added support for sentiment analysis in CoreNLPSentimentAnalyzer.
 + **5.8.5** - Updated to bioresources 1.1.9. Improved the handling of stop-list entities in the bio NER.
 + **5.8.4** - Updated to bioresources 1.1.6. Add and load TissueType KB. Synch the KBLoader with NER configuration in Bioresources.
 + **5.8.3** - Updated to bioresources 1.1.4. The BioNLPProcessor POS tagger now correctly tags verbs for biochemical interactions as verbs. 
