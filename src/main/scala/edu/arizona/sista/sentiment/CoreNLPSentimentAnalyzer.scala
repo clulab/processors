@@ -47,13 +47,10 @@ object CoreNLPSentimentAnalyzer {
     val a = sentenceToAnnotation(s)
     val sa = a.get(classOf[SentencesAnnotation]).asScala.toVector.head
 
-    // TODO: convert existing parse back to Tree
+    // needs to be a Stanford parse
     val tree = proc.stanfordParse(sa)
     sa.set(classOf[TreeAnnotation], tree)
-    // binarize tree
-    //val binTree = ???
-    //sa.set(classOf[BinarizedTreeAnnotation], binTree)
-
+    
     sentimentAnalyzer.annotate(a)
 
     val sentimentTree = sa.get(classOf[SentimentCoreAnnotations.AnnotatedTree])
