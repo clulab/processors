@@ -299,7 +299,7 @@ def annotate(doc:Document): Document = {
 }
 ```
 
-(Note that CoreNLP currently does not support chunking and semantic role labeling.)
+(Note that CoreNLP currently does not support semantic role labeling.)
 You can use just a few of these annotators. For example, if you need just POS tags, lemmas and named entities, you could use
 the following code:
 
