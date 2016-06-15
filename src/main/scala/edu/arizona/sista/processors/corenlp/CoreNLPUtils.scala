@@ -110,23 +110,21 @@ object CoreNLPUtils {
     val coreLabels: Seq[CoreLabel] = for {
       (w: String, i: Int) <- s.words.zipWithIndex
     } yield {
-        val crtTok = new CoreLabel()
-        // set word
-        crtTok.setWord(w)
-        crtTok.setValue(w)
-        // set lemma
-        // TOOD: make this safe
-        crtTok.setLemma(s.lemmas.get(i))
-        // set ner
-        // TOOD: make this safe
-        crtTok.setNER(s.entities.get(i))
-        // set positions
-        crtTok.setBeginPosition(s.startOffsets(i))
-        crtTok.setEndPosition(s.endOffsets(i))
-        crtTok.setIndex(i + 1) // Stanford counts tokens starting from 1
-        crtTok.setSentIndex(i) // Stanford counts sentences starting from 0...
-        crtTok
-      }
+      val crtTok = new CoreLabel()
+      // set word
+      crtTok.setWord(w)
+      crtTok.setValue(w)
+      // set lemma
+      if (s.lemmas.nonEmpty) crtTok.setLemma(s.lemmas.get(i))
+      // set ner
+      if (s.entities.nonEmpty) crtTok.setNER(s.entities.get(i))
+      // set positions
+      crtTok.setBeginPosition(s.startOffsets(i))
+      crtTok.setEndPosition(s.endOffsets(i))
+      crtTok.setIndex(i + 1) // Stanford counts tokens starting from 1
+      crtTok.setSentIndex(i) // Stanford counts sentences starting from 0...
+      crtTok
+    }
 
     // attach the CoreLabels
     val sa: CoreMap = new ArrayCoreMap()
@@ -137,10 +135,7 @@ object CoreNLPUtils {
     // make Annotation
     val sas: util.List[CoreMap] = List(sa).asJava
     val annotation = new Annotation(sas)
-
-    // TODO: how would I add the Tree (Stanford Tree here?)
-    // some .annotate calls expect a parse to be available, right?
-    // Do we have code to go from our DirectedGraph to a Tree?
+    
     annotation
   }
 
