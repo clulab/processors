@@ -11,7 +11,7 @@ import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
  * Date: 3/3/13
  */
 class TestCoreNLPProcessor extends FlatSpec with Matchers {
-  var proc:Processor = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
+  val proc = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
 
   "CoreNLPProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)
@@ -268,5 +268,17 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
   it should "create document text correctly" in {
     val doc = proc.annotateFromSentences(List("Sentence 1.", "Sentence 2."), keepText = true)
     doc.text.get should be ("Sentence 1. Sentence 2.")
+  }
+
+  it should "assign sentiment scores" in {
+    val negDoc = proc.annotate("The grumpy goblin toiled away in the fetid mines.")
+    val negSent = negDoc.sentences.head
+    val negScore = proc.sentiment(negSent)
+    negScore should be < (3)
+
+    val posDoc = proc.annotate("The majestic unicorn cantered across the rainbow.")
+    val posSent = posDoc.sentences.head
+    val posScore = proc.sentiment(posSent)
+    posScore should be >= (3)
   }
 }
