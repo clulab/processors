@@ -1,8 +1,5 @@
 package edu.arizona.sista.processors.corenlp
 
-import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
-import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
-import scala.collection.JavaConverters._
 import edu.arizona.sista.discourse.rstparser.RSTParser
 import edu.arizona.sista.processors._
 import edu.arizona.sista.processors.shallownlp.ShallowNLPProcessor
@@ -20,7 +17,6 @@ import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
-import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.arizona.sista.discourse.rstparser.Utils._
 import CoreNLPUtils._
 
@@ -38,7 +34,6 @@ class CoreNLPProcessor(
 
   lazy val coref = mkCoref
   lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
-  private lazy val sentimentAnalyzer = mkSentimentAnalyzer
 
   //
   // we maintain our own copy of a LexicalizedParser to control which sentences are parsed
@@ -199,52 +194,6 @@ class CoreNLPProcessor(
     doc.discourseTree = Some(out._1)
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)
-  }
-
-  /** Create a pipeline for sentiment analysis */
-  def mkSentimentAnalyzer: StanfordCoreNLP = {
-    val props = new Properties()
-    // NOTE: CoreNLP requires parse trees to be "binarized"
-    // in order to be used for sentiment analysis
-    //props.put("annotators", "sentiment")
-    props.put("annotators", "binarizer, sentiment")
-    props.put("customAnnotatorClass.binarizer", "edu.stanford.nlp.pipeline.BinarizerAnnotator")
-    props.put("binarizer.tlppClass", "edu.stanford.nlp.parser.lexparser.EnglishTreebankParserParams")
-    new StanfordCoreNLP(props, false)
-  }
-
-  /** Get a sentiment score from [[Document]] */
-  def sentiment(doc: Document): Seq[Int] = for {
-    s <- doc.sentences
-  } yield sentiment(s)
-
-  /** Get a sentiment score for a [[Sentence]] */
-  def sentiment(s: Sentence): Int = {
-    val a = sentenceToAnnotation(s)
-
-    val sa = a.get(classOf[SentencesAnnotation]).asScala.toVector.head
-
-    // TODO: convert existing parse back to Tree
-    val tree = stanfordParse(sa)
-    sa.set(classOf[TreeAnnotation], tree)
-    // binarize tree
-    //val binTree = ???
-    //sa.set(classOf[BinarizedTreeAnnotation], binTree)
-
-    sentimentAnalyzer.annotate(a)
-
-    val sentimentTree = sa.get(classOf[SentimentCoreAnnotations.AnnotatedTree])
-    val score = RNNCoreAnnotations.getPredictedClass(sentimentTree)
-    score
-  }
-
-  /**
-   * Get a Sentiment score for each [[Sentence]] in a span of text
-   * @param text a String
-   */
-  def sentiment(text: String): Seq[Int] = {
-    val doc = annotate(text)
-    sentiment(doc)
   }
 }
 
