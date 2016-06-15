@@ -17,17 +17,21 @@ import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
-import CoreNLPUtils._
 import edu.arizona.sista.discourse.rstparser.Utils._
+import CoreNLPUtils._
+
 
 /**
  * API for Stanford's CoreNLP tools
  * User: mihais
  * Date: 3/1/13
  */
-class CoreNLPProcessor(internStrings:Boolean = true,
-                       val withDiscourse:Boolean = false,
-                       val maxSentenceLength:Int = 100) extends ShallowNLPProcessor(internStrings) {
+class CoreNLPProcessor(
+  internStrings:Boolean = true,
+  val withDiscourse:Boolean = false,
+  val maxSentenceLength:Int = 100
+) extends ShallowNLPProcessor(internStrings) {
+
   lazy val coref = mkCoref
   lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
 

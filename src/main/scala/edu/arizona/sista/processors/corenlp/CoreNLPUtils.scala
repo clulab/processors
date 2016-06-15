@@ -1,12 +1,16 @@
 package edu.arizona.sista.processors.corenlp
 
 import java.util
-
+import scala.collection.JavaConverters._
+import edu.arizona.sista.processors.{Document, Sentence}
 import edu.arizona.sista.struct._
-import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation
+import edu.stanford.nlp.ling.CoreAnnotations.{TokensAnnotation, IndexAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
+import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraph
 import edu.stanford.nlp.trees.SemanticHeadFinder
+import edu.stanford.nlp.trees.TreeCoreAnnotations.{TreeAnnotation, BinarizedTreeAnnotation}
+import edu.stanford.nlp.util.{ArrayCoreMap, CoreMap}
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -18,6 +22,7 @@ import edu.stanford.nlp.trees.{Tree => StanfordTree}
  * Date: 2/25/15
  */
 object CoreNLPUtils {
+
   private def setWord(w:CoreLabel, label:String): Unit = {
     w.setWord(label)
     w.setLemma(label)
@@ -96,4 +101,48 @@ object CoreNLPUtils {
     nt.setHead(head)
     nt
   }
+
+  /**
+   * Create an Annotation from a Sentence
+   */
+  def sentenceToAnnotation(s: Sentence): Annotation = {
+
+    val coreLabels: Seq[CoreLabel] = for {
+      (w: String, i: Int) <- s.words.zipWithIndex
+    } yield {
+      val crtTok = new CoreLabel()
+      // set word
+      crtTok.setWord(w)
+      crtTok.setValue(w)
+      // set lemma
+      if (s.lemmas.nonEmpty) crtTok.setLemma(s.lemmas.get(i))
+      // set ner
+      if (s.entities.nonEmpty) crtTok.setNER(s.entities.get(i))
+      // set positions
+      crtTok.setBeginPosition(s.startOffsets(i))
+      crtTok.setEndPosition(s.endOffsets(i))
+      crtTok.setIndex(i + 1) // Stanford counts tokens starting from 1
+      crtTok.setSentIndex(i) // Stanford counts sentences starting from 0...
+      crtTok
+    }
+
+    // attach the CoreLabels
+    val sa: CoreMap = new ArrayCoreMap()
+    sa.set(classOf[TokensAnnotation], coreLabels.toList.asJava)
+
+    // TODO attach parse to sa
+
+    // make Annotation
+    val sas: util.List[CoreMap] = List(sa).asJava
+    val annotation = new Annotation(sas)
+    
+    annotation
+  }
+
+  /**
+   * Create an Annotation from a Document
+   */
+  def docToAnnotations(doc: Document): Seq[Annotation] = for {
+    s <- doc.sentences
+  } yield sentenceToAnnotation(s)
 }
