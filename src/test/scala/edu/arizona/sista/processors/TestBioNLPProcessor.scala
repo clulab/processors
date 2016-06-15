@@ -207,6 +207,51 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(2) should be ("O")
   }
 
+  it should "tokenize complexes correctly" in {
+    var doc = proc.mkDocument("The Mek-Ras complex", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).words.length should be (5)
+    doc.sentences(0).words(1) should be ("Mek")
+    doc.sentences(0).words(2) should be ("and")
+    doc.sentences(0).words(3) should be ("Ras")
+
+    doc = proc.mkDocument("The Mek/Ras1 complex", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).words.length should be (5)
+    doc.sentences(0).words(1) should be ("Mek")
+    doc.sentences(0).words(2) should be ("and")
+    doc.sentences(0).words(3) should be ("Ras1")
+
+    /*
+    doc = proc.mkDocument("We analyze the Mek/Ras/Akt1 complex in light of recent work on the Mek, Ras, and Akt2 proteins.", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).words(3) should be ("Mek")
+    doc.sentences(0).startOffsets(3) should be (15)
+    doc.sentences(0).words(4) should be (",")
+    doc.sentences(0).words(5) should be ("Ras")
+    doc.sentences(0).words(6) should be ("and")
+    doc.sentences(0).startOffsets(6) should be (22)
+    doc.sentences(0).endOffsets(6) should be (23)
+    doc.sentences(0).words(7) should be ("Akt1")
+    */
+
+    doc = proc.mkDocument("We analyze the Mek-Ras-Akt1 complex in light of recent work on the Mek, Ras, and Akt1 proteins.", keepText = false)
+    annotate(doc)
+
+    println(s"""Words: ${doc.sentences(0).words.mkString(" ")}""")
+    doc.sentences(0).words(3) should be ("Mek")
+    doc.sentences(0).startOffsets(3) should be (15)
+    doc.sentences(0).words(4) should be (",")
+    doc.sentences(0).words(5) should be ("Ras")
+    doc.sentences(0).words(6) should be ("and")
+    doc.sentences(0).startOffsets(6) should be (22)
+    doc.sentences(0).endOffsets(6) should be (23)
+    doc.sentences(0).words(7) should be ("Akt1")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
