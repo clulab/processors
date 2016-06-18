@@ -4,10 +4,10 @@
 
 This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
-+ A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `edu.arizona.sista.odin` package, together with a grammar tailored for the biomedical domain. See [Odin's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
-+ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (~2 F1 points lower for the complete task) but it is much faster. You can test our discourse parsers online [here](http://agathon.sista.arizona.edu:8080/discp/).
-+ A machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
-+ A suite of NL processors in the `edu.arizona.sista.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
++ A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `org.clulab.odin` package. See [Odin's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
++ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (< 1 F1 point lower for the complete task) but it is much faster. You can test our discourse parsers online [here](http://agathon.sista.arizona.edu:8080/discp/).
++ A machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
++ A suite of NL processors in the `org.clulab.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
 that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford parser and our own NER based on the Stanford CRF).
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
@@ -19,9 +19,9 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **5.9.0** - Changed top package from org.clulab to org.clulab.
 + **5.8.6** - Global tokenization for complexes in BioNLPProcessor. Added support for sentiment analysis in CoreNLPSentimentAnalyzer.
 + **5.8.5** - Updated to bioresources 1.1.9. Improved the handling of stop-list entities in the bio NER.
-+ **5.8.4** - Updated to bioresources 1.1.6. Add and load TissueType KB. Synch the KBLoader with NER configuration in Bioresources.
 + [more...](CHANGES.md)
 
 # Citations
@@ -48,12 +48,12 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.8.6</version>
+   <version>5.9.0</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.8.6</version>
+   <version>5.9.0</version>
    <classifier>models</classifier>
 </dependency>
 ```
@@ -62,8 +62,8 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors" % "5.8.6",
-    "org.clulab" %% "processors" % "5.8.6" classifier "models"
+    "org.clulab" %% "processors" % "5.9.0",
+    "org.clulab" %% "processors" % "5.9.0" classifier "models"
 )
 ```
 
@@ -133,7 +133,7 @@ for (sentence <- doc.sentences) {
   })
   sentence.syntacticTree.foreach(tree => {
     println("Constituent tree: " + tree)
-    // see the edu.arizona.sista.utils.Tree class for more information
+    // see the org.clulab.utils.Tree class for more information
     // on syntactic trees, including access to head phrases/words
   })
 
@@ -215,7 +215,7 @@ elaboration (LeftToRight)
   TEXT:He visited Beijing , on January 10th , 2013 .
 ```
 
-For more details about the annotation data structures, please see the `edu/arizona/sista/processor/Document.scala` file.
+For more details about the annotation data structures, please see the `org/clulab/processor/Document.scala` file.
 
 Changing processors is trivial: just replace the first line in the above example with:
 
@@ -371,10 +371,10 @@ val processor = new CoreNLPProcessor(internStrings = false)
 Scala is (largely) compatible with Java, so this library can be directly used from Java. Below is Java code that translates most of the functionality from the first Scala example in this document to Java:
 
 ```java
-import edu.arizona.sista.struct.DirectedGraphEdgeIterator;
-import edu.arizona.sista.processors.*;
-import edu.arizona.sista.processors.corenlp.CoreNLPProcessor;
-import edu.arizona.sista.processors.fastnlp.FastNLPProcessor;
+import org.clulab.struct.DirectedGraphEdgeIterator;
+import org.clulab.processors.*;
+import org.clulab.processors.corenlp.CoreNLPProcessor;
+import org.clulab.processors.fastnlp.FastNLPProcessor;
 
 public class ProcessorJavaExample {
     public static void main(String [] args) throws Exception {
@@ -424,7 +424,7 @@ public class ProcessorJavaExample {
             }
             if(sentence.syntacticTree().isDefined()) {
                 System.out.println("Constituent tree: " + sentence.syntacticTree().get());
-                // see the edu.arizona.sista.struct.Tree class for more information
+                // see the org.clulab.struct.Tree class for more information
                 // on syntactic trees, including access to head phrases/words
             }
 
@@ -580,15 +580,15 @@ Peter Jansen, Mihai Surdeanu, and Peter Clark. [Discourse Complements Lexical Se
 
 Developers only: For more details on the discourse parsers, please see [this Wiki page](https://github.com/sistanlp/processors/wiki/Discourse-Parsers-Details).
 
-## The `edu.arizona.sista.learning` package
+## The `org.clulab.learning` package
 
-`processors` now contains a machine learning (ML) package (`edu.arizona.sista.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
+`processors` now contains a machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 
 The structure of this package is heavily inspired by Stanford's CoreNLP. Similar to CoreNLP, we use a `Datum` trait to store a single data point, which is implemented by `BVFDatum` to store binary-valued-feature datums, or by `RVFDatum` to store real-valued-feature datums. A collection of data points is stored as a `Dataset`, which is similarly implemented by `BVFDataset` or `RVFDataset`. All classifiers implement the `Classifier` trait, which has three main methods: `train`, which trains a model a given dataset, `classOf`, which returns the most likely prediction for a given datum, and `scoresOf`, which returns the scores for all known labels for a given datum. We currently support the following classifiers: large-margin Perceptron (`PerceptronClassifier`), linear SVMs and logistic regression from [liblinear](http://www.csie.ntu.edu.tw/~cjlin/liblinear/) (`LibLinearClassifier`), dual SVMs from [libsvm](http://www.csie.ntu.edu.tw/~cjlin/libsvm/) (`LibSVMClassifier`), and random forests from [fast-random-forest](https://code.google.com/p/fast-random-forest/) (`RandomForestClassifier`).
 
 A similar structure exists for ranking problems, with `RankingDataset` used to store a corpus of ranking examples, and  `RankingClassifier` as the API to be implemented by all ranking classifiers. We currently support the following classifiers: ranking Perceptron (`PerceptronRankingClassifier`), ranking SVMs from [svm-rank](http://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html) (`SVMRankingClassifier`), and boosted decision trees from [jforests](https://code.google.com/p/jforests/) (`JForestsRankingClassifier`).
 
-For usage examples, including how to create datums and datasets from scratch or import them from the svm-light format, please take a look at the examples under `src/test/scala/edu/arizona/sista/learning`.
+For usage examples, including how to create datums and datasets from scratch or import them from the svm-light format, please take a look at the examples under `src/test/scala/org/clulab/learning`.
 
 ## The Odin event extraction framework
 
