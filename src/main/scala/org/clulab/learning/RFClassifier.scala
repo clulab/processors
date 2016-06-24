@@ -110,6 +110,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   /**
     * Computes the value thresholds for all features in this dataset
+    *
     * @param dataset The dataset
     * @return An array of thresholds (Double) for each feature in the dataset; feature indices are used for indexing
     */
@@ -123,7 +124,10 @@ class RFClassifier[L, F](numTrees:Int = 100,
     for(i <- dataset.indices) {
       val c = dataset.featuresCounter(i)
       for(f <- c.keySet) {
-        featureValues(f).incrementCount(c.getCount(f))
+        val v = c.getCount(f)
+        if(v != 0.0) { // 0s are added explicitly below
+          featureValues(f).incrementCount(c.getCount(f))
+        }
       }
     }
     // because we have a sparse representation, 0 values must be explicitly added for all features
