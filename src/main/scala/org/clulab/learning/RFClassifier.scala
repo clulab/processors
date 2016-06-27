@@ -151,6 +151,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
         if(sortedValues.length <= 1) {
           println(s"ERROR: found invalid set of feature values for feature $f: ${sortedValues.mkString(", ")}")
         }
+        Console.flush()
         assert(sortedValues.length > 1)
         for (i <- 0 until sortedValues.length - 1) {
           featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
