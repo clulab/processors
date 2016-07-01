@@ -125,7 +125,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
       val c = dataset.featuresCounter(i)
       for(f <- c.keySet) {
         val v = c.getCount(f)
-        if(v != 0.0) { // 0s are added explicitly below
+        if(v != 0) { // 0s are added explicitly below
           featureValues(f).incrementCount(c.getCount(f))
         }
       }
@@ -150,6 +150,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
         val sortedValues = featureValues(f).sorted(descending = false).map(_._1)
         if(sortedValues.length <= 1) {
           println(s"ERROR: found invalid set of feature values for feature $f: ${sortedValues.mkString(", ")}")
+          System.out.flush()
         }
         assert(sortedValues.length > 1)
         for (i <- 0 until sortedValues.length - 1) {
