@@ -33,6 +33,9 @@ object KBLoader {
     "org/clulab/reach/kb/ner/Organ.tsv.gz"
   )
 
+  val NER_OVERRIDE_KB =
+    "org/clulab/reach/kb/NMZ-NER-aux_160624.tsv.gz"
+
   /**
     * A horrible hack to keep track of entities that should not be labeled when in lower case, or upper initial
     */
@@ -58,24 +61,47 @@ object KBLoader {
   }
 
   def loadAll:RuleNER = {
-    load(RULE_NER_KBS, useLemmas = false, caseInsensitive = true)
+    load(RULE_NER_KBS,
+      Some(NER_OVERRIDE_KB), // allow overriding for some key entities
+      useLemmas = false,
+      caseInsensitive = true)
   }
 
   /**
     * Loads all KBs; KBs must be listed in descending order of their priorities
     */
-  def load(kbs:List[String], useLemmas:Boolean = false, caseInsensitive:Boolean = true):RuleNER = {
+  def load(
+    kbs:List[String],
+    overrideKB:Option[String],
+    useLemmas:Boolean = false,
+    caseInsensitive:Boolean = true):RuleNER = {
+
     logger.info("Beginning to load the KBs for the rule-based bio NER...")
     val matchers = new ArrayBuffer[(String, HashTrie)]
     val knownCaseInsensitives = new mutable.HashSet[String]()
+
+    // load the override KBs first, so they take priority during matching
+    overrideKB.foreach(okb => {
+      val reader = loadStreamFromClasspath(okb)
+      val overrideMatchers = loadOverrideKB(reader, caseInsensitive, knownCaseInsensitives)
+      for(name <- overrideMatchers.keySet.toList.sorted) {
+        val matcher = overrideMatchers.get(name).get
+        logger.info(s"Loaded OVERRIDE matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
+        matchers += new Tuple2(name, matcher)
+      }
+      reader.close()
+    })
+
+    // load the standard KBs
     for(kb <- kbs) {
       val name = extractKBName(kb)
       val reader = loadStreamFromClasspath(kb)
       val matcher = loadKB(reader, caseInsensitive, knownCaseInsensitives)
-      logger.info(s"Loaded matcher for label $name. This matchers contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
+      logger.info(s"Loaded matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
       matchers += new Tuple2(name, matcher)
       reader.close()
     }
+
     logger.info("KB loading completed.")
     new RuleNER(matchers.toArray, knownCaseInsensitives.toSet, useLemmas)
   }
@@ -94,18 +120,59 @@ object KBLoader {
           new BufferedInputStream(is)))
   }
 
+  private def loadOverrideKB(
+    reader:BufferedReader,
+    caseInsensitive:Boolean,
+    knownCaseInsensitives:mutable.HashSet[String]): Map[String, HashTrie] = {
+    val matchers = new mutable.HashMap[String, HashTrie]()
+    var done = false
+    while(! done) {
+      val line = reader.readLine()
+      if(line == null) {
+        done = true
+      } else {
+        addOverrideLine(line, matchers, caseInsensitive, knownCaseInsensitives)
+      }
+    }
+    matchers.toMap
+  }
+
+  private def addOverrideLine(
+    inputLine:String,
+    matchers:mutable.HashMap[String, HashTrie],
+    caseInsensitive:Boolean,
+    knownCaseInsensitives:mutable.HashSet[String]): Unit = {
+    val line = inputLine.trim
+    if(! line.startsWith("#")) { // skip comments starting with #
+      val blocks = line.split("\t")
+      val entity = blocks(0) // this is where the text of the named entity is specified
+      val label = blocks(3) // this is where the label of the above NE is specified
+
+      val tokens = entity.split("\\s+")
+      if(tokens.length == 1 && line.toLowerCase == line) { // keep track of all lower case ents that are single letter
+        knownCaseInsensitives.add(line)
+      }
+      val matcher = matchers.getOrElseUpdate(label,
+        new HashTrie(caseInsensitive = caseInsensitive, internStrings = true))
+      matcher.add(tokens)
+    }
+  }
+
   private def addLine(inputLine:String, matcher:HashTrie, knownCaseInsensitives:mutable.HashSet[String]): Unit = {
     val line = inputLine.trim
     if(! line.startsWith("#")) {
       val tokens = line.split("\\s+")
       matcher.add(tokens)
-      if(tokens.length == 1 && line.toLowerCase == line) {
+      if(tokens.length == 1 && line.toLowerCase == line) { // keep track of all lower case ents that are single letter
         knownCaseInsensitives.add(line)
       }
     }
   }
 
-  private def loadKB(reader:BufferedReader, caseInsensitive:Boolean, knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
+  private def loadKB(
+    reader:BufferedReader,
+    caseInsensitive:Boolean,
+    knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
     val matcher = new HashTrie(caseInsensitive = caseInsensitive, internStrings = true)
     var done = false
     while(! done) {

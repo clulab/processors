@@ -1,2 +1,2 @@
 #!/bin/bash
-sbt 'run-main edu.arizona.sista.processors.ProcessorShell'
+sbt 'run-main org.clulab.processors.ProcessorShell'

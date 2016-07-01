@@ -12,6 +12,7 @@ import RuleNER._
  * Rule-based NER for the Bio domain
  * If useLemmas is true, tokens are matched using lemmas, otherwise using words
  * knownCaseInsensitives contains single-token entities that can be spelled using lower case, according to the KB(s)
+ * The order of the matchers is important: it indicates priority during ties (first has higher priority)
  * User: mihais
  * Date: 5/11/15
  */

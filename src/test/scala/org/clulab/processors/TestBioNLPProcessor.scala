@@ -252,6 +252,15 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).words(7) should be ("Akt1")
   }
 
+  it should "override named entities" in {
+    val doc = proc.mkDocument("ROS p85 p110", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).entities.get(0) should be ("B-Simple_chemical")
+    doc.sentences(0).entities.get(1) should be ("B-Family")
+    doc.sentences(0).entities.get(2) should be ("B-Family")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
