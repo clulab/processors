@@ -6,7 +6,6 @@ import edu.stanford.nlp.ling.CoreLabel
 import BioNLPTokenizerPostProcessor._
 import edu.stanford.nlp.process.CoreLabelTokenFactory
 
-import scala.StringBuilder
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -15,7 +14,7 @@ import scala.collection.mutable.ArrayBuffer
  * User: mihais
  * Date: 11/16/14
  */
-class BioNLPTokenizerPostProcessor {
+class BioNLPTokenizerPostProcessor(val specialTokens:Set[String]) {
 
   def process(input:Array[CoreLabel]):Array[CoreLabel] = {
     var tokens = input
@@ -56,6 +55,8 @@ class BioNLPTokenizerPostProcessor {
 
     tokens
   }
+
+  def isSpecialToken(s:String) = specialTokens.contains(s.toLowerCase)
 
   def breakOnPattern(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
@@ -99,7 +100,9 @@ class BioNLPTokenizerPostProcessor {
     for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
-      if (matcher.matches() && ! isMeasurementUnit(token.word())) {
+      if (matcher.matches() &&
+          ! isMeasurementUnit(token.word()) && // skip measurement units such as "ng/ml"
+          ! isSpecialToken(token.word())) { // skip special tokens such as family names containing slash such as "MEK1/MEK2"
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
         val s3 = token.word().substring(sepPos + 1)
@@ -249,7 +252,7 @@ class BioNLPTokenizerPostProcessor {
         crtToken.append(tokens(i + 1).word())
         i += 2
       } else {
-        if(crtToken.size > 0) {
+        if(crtToken.nonEmpty) {
           val word = crtToken.toString()
           output += tokenFactory.makeToken(word, crtTokenBeginPosition, word.length)
           crtToken = new StringBuilder
@@ -259,7 +262,7 @@ class BioNLPTokenizerPostProcessor {
         i += 1
       }
     }
-    if(crtToken.size > 0) {
+    if(crtToken.nonEmpty) {
       val word = crtToken.toString()
       output += tokenFactory.makeToken(word, crtTokenBeginPosition, word.length)
     }
@@ -328,14 +331,6 @@ class BioNLPTokenizerPostProcessor {
     output.toArray
   }
 
-  def isComplex(word:String):Boolean = {
-    val m = COMPLEX.matcher(word)
-    m.matches()
-  }
-  def isMutant(word:String):Boolean = {
-    val m = MUTANT.matcher(word)
-    m.matches()
-  }
 }
 
 object BioNLPTokenizerPostProcessor {
@@ -384,6 +379,15 @@ object BioNLPTokenizerPostProcessor {
   def isParen(s:String) = PARENS.contains(s)
 
   def isMeasurementUnit(s:String):Boolean = MEASUREMENT_UNIT_WITHSLASH.matcher(s).matches()
+
+  def isComplex(word:String):Boolean = {
+    val m = COMPLEX.matcher(word)
+    m.matches()
+  }
+  def isMutant(word:String):Boolean = {
+    val m = MUTANT.matcher(word)
+    m.matches()
+  }
 
   def mkDashSuffixes:Pattern = {
     val allSuffixes = makeRegexOr(VALID_DASH_SUFFIXES)

@@ -33,7 +33,8 @@ class BioNLPProcessor (internStrings:Boolean = false,
   extends CoreNLPProcessor(internStrings, withDiscourse, maxSentenceLength) {
 
   //lazy val banner = new BannerWrapper
-  lazy val postProcessor = new BioNLPTokenizerPostProcessor
+  lazy val specialTokens = KBLoader.loadSpecialTokens
+  lazy val postProcessor = new BioNLPTokenizerPostProcessor(specialTokens)
   lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences)
   lazy val bioNer = BioNER.load(CRF_MODEL_PATH)
   lazy val ruleNer = KBLoader.loadAll

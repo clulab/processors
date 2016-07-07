@@ -19,6 +19,9 @@ import scala.collection.mutable.ArrayBuffer
 object KBLoader {
   val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
 
+  val NAME_POSITION = 0 // position of the NE's name in our KBs
+  val LABEL_POSITION = 3 // position of the NE's label in our KBs
+
   val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
     "org/clulab/reach/kb/ner/Gene_or_gene_product.tsv.gz",
     "org/clulab/reach/kb/ner/Family.tsv.gz",
@@ -34,12 +37,49 @@ object KBLoader {
   )
 
   val NER_OVERRIDE_KB =
-    "org/clulab/reach/kb/NMZ-NER-aux_160624.tsv.gz"
+    "org/clulab/reach/kb/NER-Grounding-Override.tsv.gz"
+
+  val TOKENIZATION_KBS = List( // knowledge to be used by the tokenizer to avoid aggressive tokenization
+    NER_OVERRIDE_KB,
+    "org/clulab/reach/kb/ProteinFamilies.tsv.gz", // these must be KBs BEFORE KBGenerator converts them to NER ready
+    "org/clulab/reach/kb/PFAM-families.tsv.gz"    // because those (i.e., under kb/ner) are post tokenization
+  )
 
   /**
     * A horrible hack to keep track of entities that should not be labeled when in lower case, or upper initial
     */
   val ENTITY_STOPLIST = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
+
+  /**
+    * Finds special tokens such as family names containing slash
+    * These tokens are maintained as case insensitive
+    */
+  def loadSpecialTokens:Set[String] = {
+    val specialTokens = new mutable.HashSet[String]()
+    for (tkb <- TOKENIZATION_KBS) {
+      val reader = loadStreamFromClasspath(tkb)
+      var done = false
+      while(! done) {
+        val line = reader.readLine()
+        if(line == null) {
+          done = true
+        } else {
+          val trimmed = line.trim
+          if(! trimmed.startsWith("#")) {
+            val name = trimmed.split("\t")(NAME_POSITION)
+            val tokens = name.split("\\s+") // vanilla tokenization because the bio tokenizer is not set up yet
+            for(token <- tokens) {
+              if(token.contains('/')) {
+                specialTokens += token.toLowerCase // kept as lower case
+              }
+            }
+          }
+        }
+      }
+      reader.close()
+    }
+    specialTokens.toSet
+  }
 
   def loadEntityStopList(kb:String):Set[String] = {
     val stops = new mutable.HashSet[String]()
@@ -145,8 +185,8 @@ object KBLoader {
     val line = inputLine.trim
     if(! line.startsWith("#")) { // skip comments starting with #
       val blocks = line.split("\t")
-      val entity = blocks(0) // this is where the text of the named entity is specified
-      val label = blocks(3) // this is where the label of the above NE is specified
+      val entity = blocks(NAME_POSITION) // this is where the text of the named entity is specified
+      val label = blocks(LABEL_POSITION) // this is where the label of the above NE is specified
 
       val tokens = entity.split("\\s+")
       if(tokens.length == 1 && line.toLowerCase == line) { // keep track of all lower case ents that are single letter
