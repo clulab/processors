@@ -6,6 +6,7 @@ import edu.stanford.nlp.ling.CoreLabel
 import BioNLPTokenizerPostProcessor._
 import edu.stanford.nlp.process.CoreLabelTokenFactory
 
+import scala.StringBuilder
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -19,22 +20,23 @@ class BioNLPTokenizerPostProcessor {
   def process(input:Array[CoreLabel]):Array[CoreLabel] = {
     var tokens = input
 
+    // reattach / that is attached to prev/next tokens; CoreNLP is too aggressive on slash tokenization
+    tokens = reattachSlash(tokens)
+
     // non is a special prefix, because it drives negation detection
     tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
 
-    // we now handle common English prefixes much better; see COMMON_PREFIXES
-    // tokens = breakOnPattern(tokens, Pattern.compile("(anti)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
-
-    // tokenize around "-" shen the suffix is a known verb, noun, or other important word
+    // tokenize around "-" when the suffix is a known verb, noun, or other important word
     tokens = breakOnPattern(tokens, dashSuffixes)
 
     // break binary complexes
     tokens = breakComplex(tokens, SINGLEDASH_PATTERN)
 
     // break mutations
+    // TODO: this needs improvement, see Dane's comments
     tokens = breakMutant(tokens, SINGLEDASH_PATTERN)
 
-    // break all tokens containing 1 slash; try to replace them with an enumeration
+    // break all (well, most) tokens containing a single slash; try to replace them with an enumeration
     tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
 
     if(CONTEXTUAL_COMPLEX_TOKENIZATION) {
@@ -97,7 +99,7 @@ class BioNLPTokenizerPostProcessor {
     for(i <- tokens.indices) {
       val token = tokens(i)
       val matcher = pattern.matcher(token.word())
-      if (matcher.matches()) {
+      if (matcher.matches() && ! isMeasurementUnit(token.word())) {
         val sepPos = matcher.start(2)
         val s1 = token.word().substring(0, sepPos)
         val s3 = token.word().substring(sepPos + 1)
@@ -232,6 +234,38 @@ class BioNLPTokenizerPostProcessor {
     output.toArray
   }
 
+  def reattachSlash(tokens:Array[CoreLabel]):Array[CoreLabel] = {
+    val output = new ArrayBuffer[CoreLabel]
+    var crtToken = new StringBuilder
+    var crtTokenBeginPosition = 0
+    var i = 0
+    while (i < tokens.length) {
+      if(i > 0 && i < tokens.length - 1 &&
+         tokens(i).word() == "/" && // found a slash
+         tokens(i - 1).endPosition == tokens(i).beginPosition && // attached to the previous token
+         tokens(i).endPosition == tokens(i + 1).beginPosition) { // attached to the next token
+        // found an aggressive separation for this slash; revert it
+        crtToken.append(tokens(i).word())
+        crtToken.append(tokens(i + 1).word())
+        i += 2
+      } else {
+        if(crtToken.size > 0) {
+          val word = crtToken.toString()
+          output += tokenFactory.makeToken(word, crtTokenBeginPosition, word.length)
+          crtToken = new StringBuilder
+        }
+        crtToken.append(tokens(i).word())
+        crtTokenBeginPosition = tokens(i).beginPosition
+        i += 1
+      }
+    }
+    if(crtToken.size > 0) {
+      val word = crtToken.toString()
+      output += tokenFactory.makeToken(word, crtTokenBeginPosition, word.length)
+    }
+    output.toArray
+  }
+
   def joinSigns(tokens:Array[CoreLabel]):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
     var i = 0
@@ -345,11 +379,15 @@ object BioNLPTokenizerPostProcessor {
   val COMPLEX = Pattern.compile("complex|dimer|heterodimer")
   val MUTANT = Pattern.compile("mutant|mutants|mutation|mutations")
 
+  val MEASUREMENT_UNIT_WITHSLASH = Pattern.compile("\\w+/(ml|l|cm|m)", Pattern.CASE_INSENSITIVE)
+
   def isParen(s:String) = PARENS.contains(s)
+
+  def isMeasurementUnit(s:String):Boolean = MEASUREMENT_UNIT_WITHSLASH.matcher(s).matches()
 
   def mkDashSuffixes:Pattern = {
     val allSuffixes = makeRegexOr(VALID_DASH_SUFFIXES)
-    val allSuffixesRegex = "(\\w+)(-)(" + allSuffixes + ")"
+    val allSuffixesRegex = "([\\w/]+)(-)(" + allSuffixes + ")"
     Pattern.compile(allSuffixesRegex, Pattern.CASE_INSENSITIVE)
   }
 
