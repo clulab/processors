@@ -14,13 +14,13 @@ import scala.collection.mutable.ArrayBuffer
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
   * These must be generated offline by KBGenerator; see bioresources/ner_kb.sh
   * User: mihais. 2/7/16.
-  * Last Modified: Revert KB load order to prioritize proteins over families.
+  * Last Modified: Update for 5-column NER override file format and rename.
   */
 object KBLoader {
   val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
 
-  val NAME_POSITION = 0 // position of the NE's name in our KBs
-  val LABEL_POSITION = 3 // position of the NE's label in our KBs
+  val NAME_FIELD_NDX = 0                    // where the text of the NE is specified
+  val LABEL_FIELD_NDX = 4                   // where the label of the NE is specified
 
   val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
     "org/clulab/reach/kb/ner/Gene_or_gene_product.tsv.gz",
@@ -66,7 +66,7 @@ object KBLoader {
         } else {
           val trimmed = line.trim
           if(! trimmed.startsWith("#")) {
-            val name = trimmed.split("\t")(NAME_POSITION)
+            val name = trimmed.split("\t")(NAME_FIELD_NDX)
             val tokens = name.split("\\s+") // vanilla tokenization because the bio tokenizer is not set up yet
             for(token <- tokens) {
               if(token.contains('/')) {
@@ -185,8 +185,8 @@ object KBLoader {
     val line = inputLine.trim
     if(! line.startsWith("#")) { // skip comments starting with #
       val blocks = line.split("\t")
-      val entity = blocks(NAME_POSITION) // this is where the text of the named entity is specified
-      val label = blocks(LABEL_POSITION) // this is where the label of the above NE is specified
+      val entity = blocks(NAME_FIELD_NDX)   // grab the text of the named entity
+      val label = blocks(LABEL_FIELD_NDX)   // grab the label of the named entity
 
       val tokens = entity.split("\\s+")
       if(tokens.length == 1 && line.toLowerCase == line) { // keep track of all lower case ents that are single letter
