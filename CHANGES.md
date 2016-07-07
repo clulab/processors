@@ -1,4 +1,5 @@
 # Changes
++ **5.9.1** - Improved tokenization of protein families and other edge cases.
 + **5.9.1** - Bug fix in the RF classifier: handle features that appear only with 0 values during training.
 + **5.9.1** - Updated to use bioresources 1.1.10.
 + **5.9.0** - Changed top package from edu.arizona.sista to org.clulab.
