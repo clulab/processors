@@ -1,2 +1,6 @@
 #!/bin/bash
 sbt 'run-main org.clulab.processors.ProcessorShell'
+<<<<<<< HEAD
+=======
+
+>>>>>>> master

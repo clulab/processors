@@ -8,7 +8,7 @@ import org.scalatest.{Matchers, FlatSpec}
  * User: mihais
  * Date: 8/14/15
  */
-class TextBioNLPPreProcessor extends FlatSpec with Matchers {
+class TestBioNLPPreProcessor extends FlatSpec with Matchers {
   val pp = new BioNLPPreProcessor(true)
 
   "BioNLPPreProcessor" should "convert Unicode to ASCII" in {

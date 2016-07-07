@@ -88,7 +88,11 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+<<<<<<< HEAD
   "org.clulab" % "bioresources" % "1.1.11-SNAPSHOT",
+=======
+  "org.clulab" % "bioresources" % "1.1.10",
+>>>>>>> master
   "com.io7m.xom" % "xom" % "1.2.10",
   "org.json4s" %% "json4s-native" % "3.2.11",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",
