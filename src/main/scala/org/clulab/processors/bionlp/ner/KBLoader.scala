@@ -14,7 +14,7 @@ import scala.collection.mutable.ArrayBuffer
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
   * These must be generated offline by KBGenerator; see bioresources/ner_kb.sh
   * User: mihais. 2/7/16.
-  * Last Modified: Update for 5-column NER override file format and rename.
+  * Last Modified: Check for minimum number of fields in override lines.
   */
 object KBLoader {
   val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
@@ -181,20 +181,24 @@ object KBLoader {
     inputLine:String,
     matchers:mutable.HashMap[String, HashTrie],
     caseInsensitive:Boolean,
-    knownCaseInsensitives:mutable.HashSet[String]): Unit = {
+    knownCaseInsensitives:mutable.HashSet[String]
+  ): Unit = {
     val line = inputLine.trim
     if(! line.startsWith("#")) { // skip comments starting with #
       val blocks = line.split("\t")
-      val entity = blocks(NAME_FIELD_NDX)   // grab the text of the named entity
-      val label = blocks(LABEL_FIELD_NDX)   // grab the label of the named entity
+      if (blocks.size >= (1 + LABEL_FIELD_NDX)) {
+        val entity = blocks(NAME_FIELD_NDX)   // grab the text of the named entity
+        val label = blocks(LABEL_FIELD_NDX)   // grab the label of the named entity
 
-      val tokens = entity.split("\\s+")
-      if(tokens.length == 1 && line.toLowerCase == line) { // keep track of all lower case ents that are single letter
-        knownCaseInsensitives.add(line)
+        val tokens = entity.split("\\s+")
+        // keep track of all lower case ents that are single letter
+        if (tokens.length == 1 && line.toLowerCase == line) {
+          knownCaseInsensitives.add(line)
+        }
+        val matcher = matchers.getOrElseUpdate(label,
+          new HashTrie(caseInsensitive = caseInsensitive, internStrings = true))
+        matcher.add(tokens)
       }
-      val matcher = matchers.getOrElseUpdate(label,
-        new HashTrie(caseInsensitive = caseInsensitive, internStrings = true))
-      matcher.add(tokens)
     }
   }
 
