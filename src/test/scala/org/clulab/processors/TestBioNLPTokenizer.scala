@@ -61,5 +61,25 @@ class TestBioNLPTokenizer extends FlatSpec with Matchers {
     s.words(4) should be ("MAPK1/MAPK3")
   }
 
+  it should "tokenize complex names around slash" in {
+    val doc = proc.mkDocument("Highly purified DNA-PKcs, Ku70/Ku80 heterodimer and the two documented XRCC1 binding partners LigIII and DNA polbeta were dot-blotted.")
+    proc.annotate(doc)
+
+    val s = doc.sentences(0)
+    s.words(4) should be ("Ku70")
+    s.words(5) should be ("and")
+    s.words(6) should be ("Ku80")
+  }
+
+  it should "tokenize complex names around dash" in {
+    val doc = proc.mkDocument("Highly purified DNA-PKcs, Ku70-Ku80 heterodimer and the two documented XRCC1 binding partners LigIII and DNA polbeta were dot-blotted.")
+    proc.annotate(doc)
+
+    val s = doc.sentences(0)
+    s.words(4) should be ("Ku70")
+    s.words(5) should be ("and")
+    s.words(6) should be ("Ku80")
+  }
+
   // TODO: add tests for the tokenization of mutations - DANE
 }
