@@ -1,4 +1,6 @@
 # Changes
++ **5.9.1** - Bug fixes for KBLoader and X/Y heterodimer bugs. Update some BioNLP* tests.
++ **5.9.1** - Added override capability to the rule NER in BioNLPProcessor. 
 + **5.9.1** - Improved tokenization of protein families and other edge cases.
 + **5.9.1** - Bug fix in the RF classifier: handle features that appear only with 0 values during training.
 + **5.9.1** - Updated to use bioresources 1.1.10.

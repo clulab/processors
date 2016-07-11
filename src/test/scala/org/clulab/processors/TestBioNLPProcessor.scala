@@ -25,7 +25,7 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     }
 
     doc.sentences(0).entities.get(4) should be ("B-Gene_or_gene_product")
-    doc.sentences(0).entities.get(7) should be ("B-Family")
+    doc.sentences(0).entities.get(7) should be ("B-Gene_or_gene_product")
     doc.sentences(0).entities.get(8) should be ("O")
 
     doc.sentences(1).entities.get(1) should be ("B-Family")
@@ -63,7 +63,7 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
       i += 1
     }
 
-    doc.sentences(0).entities.get(7) should be ("B-Simple_chemical")
+    doc.sentences(0).entities.get(7) should be ("B-Site")
     doc.sentences(0).entities.get(11) should be ("B-Species")
     doc.sentences(0).entities.get(12) should be ("B-Gene_or_gene_product")
     doc.sentences(1).entities.get(1) should be ("B-Gene_or_gene_product")
@@ -250,6 +250,15 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).startOffsets(6) should be (22)
     doc.sentences(0).endOffsets(6) should be (23)
     doc.sentences(0).words(7) should be ("Akt1")
+  }
+
+  it should "override named entities" in {
+    val doc = proc.mkDocument("ROS p85 p110", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).entities.get(0) should be ("B-Simple_chemical")
+    doc.sentences(0).entities.get(1) should be ("B-Family")
+    doc.sentences(0).entities.get(2) should be ("B-Family")
   }
 
   def annotate(doc:Document) {

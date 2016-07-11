@@ -21,9 +21,14 @@ case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
   *
   * User: mihais
   * Date: 2/7/16
+  * Last Modified: Update for 5-column NER override file format.
   */
 object KBGenerator {
   val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
+
+  val NAME_FIELD_NDX = 0                    // config column containing the KB name
+  val LABEL_FIELD_NDX = 1                   // config column containing the type label
+  val SPECIES_FIELD_NDX = 2                 // KB column containing the species of the name entity
 
   /** Minimal processor, used solely for the tokenization of resources */
   lazy val processor = new BioNLPProcessor(
@@ -61,8 +66,8 @@ object KBGenerator {
       if(! trimmedLine.isEmpty && ! trimmedLine.startsWith("#")) {
         val tokens = trimmedLine.split("\t")
         assert(tokens.length >= 2)
-        val kbName = tokens(0)
-        val neLabel = tokens(1)
+        val kbName = tokens(NAME_FIELD_NDX)
+        val neLabel = tokens(LABEL_FIELD_NDX)
         val species = new mutable.HashSet[String]()
         for(i <- 2 until tokens.length) {
           species += tokens(i)
@@ -151,8 +156,8 @@ object KBGenerator {
     if(entry.validSpecies.isEmpty)
       return true
 
-    // if mentioned, the species must be token at position 1 (i.e., the second token in the line)
-    if(entry.validSpecies.contains(tokens(1)))
+    // if mentioned, the species must be a token at the correct zero-indexed position.
+    if(entry.validSpecies.contains(tokens(SPECIES_FIELD_NDX)))
       return true
 
     false
