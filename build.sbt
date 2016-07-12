@@ -1,6 +1,6 @@
 name := "processors"
 
-version := "5.8.2-SNAPSHOT"
+version := "5.9.1-SNAPSHOT"
 
 organization := "org.clulab"
 
@@ -9,17 +9,20 @@ scalaVersion := "2.11.6"
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
 // fork jvm to separate process
-fork := true
+// fork := true
 
-// options for forked jvm
-javaOptions += "-Xmx6G"
-javaOptions += "-Xss100m"
+parallelExecution in Test := false
+
+// options for forked jvm. No longer needed since we don't fork anymore.
+// see .sbtopts for the JVM configuration that is used.
+// javaOptions += "-Xmx6G"
+// javaOptions += "-Xss100m"
 
 // forward sbt's stdin to forked process
-connectInput in run := true
+// connectInput in run := true
 
 // don't show output prefix
-outputStrategy := Some(StdoutOutput)
+// outputStrategy := Some(StdoutOutput)
 
 lazy val core = project in file(".")
 
@@ -85,7 +88,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "org.clulab" % "bioresources" % "1.1.0",
+  "org.clulab" % "bioresources" % "1.1.11",
   "com.io7m.xom" % "xom" % "1.2.10",
   "org.json4s" %% "json4s-native" % "3.2.11",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",

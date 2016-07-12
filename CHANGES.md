@@ -1,5 +1,15 @@
 # Changes
-+ **5.8.2** - Implemented unrestricted lookbehind for Odin's surface patterns.
++ **5.9.1** - Bug fixes for KBLoader and X/Y heterodimer bugs. Update some BioNLP* tests.
++ **5.9.1** - Added override capability to the rule NER in BioNLPProcessor. 
++ **5.9.1** - Improved tokenization of protein families and other edge cases.
++ **5.9.1** - Bug fix in the RF classifier: handle features that appear only with 0 values during training.
++ **5.9.1** - Updated to use bioresources 1.1.10.
++ **5.9.0** - Changed top package from edu.arizona.sista to org.clulab.
++ **5.8.6** - Global tokenization for complexes in BioNLPProcessor. Added support for sentiment analysis in CoreNLPSentimentAnalyzer.
++ **5.8.5** - Updated to bioresources 1.1.9. Improved the handling of stop-list entities in the bio NER.
++ **5.8.4** - Updated to bioresources 1.1.6. Add and load TissueType KB. Synch the KBLoader with NER configuration in Bioresources.
++ **5.8.3** - Updated to bioresources 1.1.4. The BioNLPProcessor POS tagger now correctly tags verbs for biochemical interactions as verbs. 
++ **5.8.2** - Implemented unrestricted lookbehind for Odin's surface patterns. Updated to bioresources 1.1.1. Added support for unbalanced data to LibLinearClassifier. Incremental improvements to the SRL system.
 + **5.8.1** - Improved Odin's variables compatibility with YAML. Switched BioNLPProcessor to using bioresources rather than the local resources. Bug fix: RuleNER was not producing the longest possible match all the time.
 + **5.8.0** - Added in-house random forest implementation. Removed Weka dependency and its RF classifier. Removed RF reranking classifier. Bug fix in Odin: allow `$` and `\` in variable values. Restricted Odin variable names to valid Java identifiers. Added object Serializer. We no longer intern Strings by default in BioNLPProcessor.
 + **5.7.3** - Added support for context entities: species, organs, cell lines, cell types.
