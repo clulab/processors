@@ -1,6 +1,6 @@
 resources:
   # use sample of w2v embeddings generated from gigaword
-  - embeddings: /org/clulab/odin/embeddings/w2v-gigaword-sample.txt
+  embeddings: org/clulab/odin/embeddings/w2v-gigaword-sample.txt
 
 taxonomy:
   - Plant:
