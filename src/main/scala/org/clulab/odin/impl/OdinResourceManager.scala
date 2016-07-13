@@ -25,7 +25,7 @@ object OdinResourceManager {
   }
 
   def getInputStream(p: String): BufferedInputStream = {
-    println(s"Path to resources is $p")
+    //println(s"Path to resources is $p")
     val streamFromResources: InputStream = getClass.getClassLoader.getResourceAsStream(p)
     // try resource-based loading, fall back to system file path otherwise
     if (streamFromResources == null) new BufferedInputStream(new FileInputStream(p))
