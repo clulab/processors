@@ -9,7 +9,10 @@ class TestDistributionalSimilarityPatterns extends FlatSpec with Matchers {
 
   val proc = new FastNLPProcessor
 
-  val rules = readFile(embeddingsFile)
+  // the rule file containing the path to the embeddings resources
+  val rf = "src/test/resources/org/clulab/odin/grammars/embeddings.yml"
+
+  val rules = readFile(rf)
   val ee = ExtractorEngine(rules)
 
   val felineText = "I saw a leopard climbing a tree."
@@ -19,7 +22,6 @@ class TestDistributionalSimilarityPatterns extends FlatSpec with Matchers {
     val mentions = ee.extractFrom(doc)
     val canines = mentions filter(_ matches "Canine")
     val felines = mentions filter(_ matches "Feline")
-    felines foreach (m => println(m.text))
     // we shouldn't find any Canines
     canines should be (empty)
     felines should have size (1)

@@ -3,9 +3,11 @@ package org.clulab.odin
 
 object TestUtils {
 
-  // the rule file containing the path to the embeddings resources
-  val embeddingsFile = "src/test/resources/org/clulab/odin/grammars/embeddings.yml"
-
+  /**
+    * Read contents of rule file, given some path
+    * @param filename the path to a file
+    * @return file contents as a String
+    */
   def readFile(filename: String) = {
     val source = io.Source.fromFile(filename)
     val data = source.mkString
