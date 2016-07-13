@@ -14,7 +14,7 @@ taxonomy:
     - Reptile
 
 
-# note that these rules are not truly mmodeling hypo/hypernymy
+# note that these rules are not truly modeling hypo/hypernymy
 # simScore() measures distributional similarity
 rules:
   # this rule finds words similar to "cat" and "dog"
