@@ -21,14 +21,15 @@ class TestDistributionalSimilarityPatterns extends FlatSpec with Matchers {
   val rules = readFile(mf)
   val ee = ExtractorEngine(rules)
 
-  val felineText = "leopards can climb trees"
+  val felineText = "I saw a leopard climbing a tree."
 
   felineText should "produce a mention with the label \"Feline\" for the word \"leopards\"" in {
     val doc = proc annotate felineText
     val mentions = ee.extractFrom(doc)
-    val mammals = mentions filter(_ matches "Mammal")
-    val felines = mentions.filter(_ matches "Feline")
-    mammals should have size (1)
+    val canines = mentions filter(_ matches "Canine")
+    val felines = mentions filter(_ matches "Feline")
+    felines foreach (m => println(m.text))
+    canines should be (empty)
     felines should have size (1)
   }
 }

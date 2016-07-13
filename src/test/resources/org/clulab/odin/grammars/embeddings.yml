@@ -30,4 +30,4 @@ rules:
     type: token
     pattern: |
       # similar to "cat", but dissimilar to "dog"
-      [simScore("cat") >= 0.5 & simScore("dog") <= 0.4]
+      [(simScore("cat") >= 0.4) & (simScore("cat") >= simScore("dog"))]
