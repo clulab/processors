@@ -394,6 +394,10 @@ object BioNLPProcessor {
         case vb if vb.toLowerCase.endsWith("translocates")   => ta.setTag("VBZ")
         case vb if vb.toLowerCase.endsWith("ubiquitinates")  => ta.setTag("VBZ")
 
+        // his and pro are amino acids (pos: nn)
+        case aa if aa == "His" => ta.setTag("NN")
+        case aa if aa == "Pro" => ta.setTag("NN")
+
         case _ => ()
       }
     }
