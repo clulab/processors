@@ -4,7 +4,7 @@ version := "5.9.3-SNAPSHOT"
 
 organization := "org.clulab"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.8"
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
