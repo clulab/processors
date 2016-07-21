@@ -165,7 +165,7 @@ class RuleReader(val actions: Actions) {
 
   // reads resources from data, and constructs an OdinResourceManager instance
   private def readResources(data: Map[String, Any]): OdinResourceManager = {
-    println(s"resources: ${data.get("resources")}")
+    //println(s"resources: ${data.get("resources")}")
     val resourcesMap: Map[String, String] = data.get("resources") match {
       case Some(m: JMap[_, _]) => m.asScala.map(pair => (pair._1.toString, pair._2.toString)).toMap
       case _ => Map.empty
