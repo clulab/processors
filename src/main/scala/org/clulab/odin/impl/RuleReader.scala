@@ -1,8 +1,7 @@
 package org.clulab.odin.impl
 
-import java.io.File
 import java.util.{ Collection, Map => JMap }
-import scala.beans.BeanProperty
+
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 import org.yaml.snakeyaml.Yaml
@@ -26,7 +25,9 @@ class RuleReader(val actions: Actions) {
   def readSimpleFile(input: String): Vector[Extractor] = {
     val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
     val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
-    val rules = readRules(jRules, None, Map.empty)
+    // no resources are specified
+    val resources = OdinResourceManager(Map.empty)
+    val rules = readRules(jRules, None, Map.empty, resources)
     mkExtractors(rules)
   }
 
@@ -35,8 +36,9 @@ class RuleReader(val actions: Actions) {
     val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
     val taxonomy = master.get("taxonomy").map(readTaxonomy)
     val vars = getVars(master)
+    val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
-    val rules = readRules(jRules, taxonomy, vars)
+    val rules = readRules(jRules, taxonomy, vars, resources)
     mkExtractors(rules)
   }
 
@@ -61,7 +63,8 @@ class RuleReader(val actions: Actions) {
   def mkRule(
       data: Map[String, Any],
       expand: String => Seq[String],
-      template: Any => String
+      template: Any => String,
+      resources: OdinResourceManager
   ): Rule = {
 
     // name is required
@@ -111,14 +114,15 @@ class RuleReader(val actions: Actions) {
     val unit = tmpl(data.getOrElse("unit", DefaultUnit))
 
     // make intermediary rule
-    new Rule(name, labels, ruleType, unit, priority, keep, action, pattern)
+    new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, resources)
 
   }
 
   private def readRules(
       rules: Collection[JMap[String, Any]],
       taxonomy: Option[Taxonomy],
-      vars: Map[String, String]
+      vars: Map[String, String],
+      resources: OdinResourceManager
   ): Seq[Rule] = {
 
     // return Rule objects
@@ -126,7 +130,7 @@ class RuleReader(val actions: Actions) {
       val m = r.asScala.toMap
       if (m contains "import") {
         // import rules from a file and return them
-        importRules(m, taxonomy, vars)
+        importRules(m, taxonomy, vars, resources)
       } else {
         // gets a label and returns it and all its hypernyms
         val expand: String => Seq[String] = label => taxonomy match {
@@ -140,7 +144,7 @@ class RuleReader(val actions: Actions) {
             .replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1))))
         }
         // return the rule (in a Seq because this is a flatMap)
-        Seq(mkRule(m, expand, template))
+        Seq(mkRule(m, expand, template, resources))
       }
     }
 
@@ -159,10 +163,22 @@ class RuleReader(val actions: Actions) {
       Taxonomy(data)
   }
 
+  // reads resources from data, and constructs an OdinResourceManager instance
+  private def readResources(data: Map[String, Any]): OdinResourceManager = {
+    println(s"resources: ${data.get("resources")}")
+    val resourcesMap: Map[String, String] = data.get("resources") match {
+      case Some(m: JMap[_, _]) => m.asScala.map(pair => (pair._1.toString, pair._2.toString)).toMap
+      case _ => Map.empty
+    }
+    OdinResourceManager(resourcesMap)
+  }
+
+
   private def importRules(
       data: Map[String, Any],
       taxonomy: Option[Taxonomy],
-      importerVars: Map[String, String]
+      importerVars: Map[String, String],
+      resources: OdinResourceManager
   ): Seq[Rule] = {
     val path = data("import").toString
     val url = getClass.getClassLoader.getResource(path)
@@ -193,7 +209,7 @@ class RuleReader(val actions: Actions) {
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
     // - a call to `import` can include variables (`importVars`) that override `importerVars`
-    readRules(jRules, taxonomy, localVars ++ importerVars ++ importVars)
+    readRules(jRules, taxonomy, localVars ++ importerVars ++ importVars, resources)
   }
 
   // compiles a rule into an extractor
@@ -202,7 +218,7 @@ class RuleReader(val actions: Actions) {
       rule.ruleType match {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
-        case _ => 
+        case _ =>
           val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
           throw new OdinNamedCompileException(msg, rule.name)
       }
@@ -220,7 +236,7 @@ class RuleReader(val actions: Actions) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val compiler = new TokenPatternParsers(rule.unit)
+    val compiler = new TokenPatternParsers(rule.unit, rule.resources)
     val pattern = compiler.compileTokenPattern(rule.pattern)
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
@@ -232,7 +248,7 @@ class RuleReader(val actions: Actions) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val compiler = new DependencyPatternCompiler(rule.unit)
+    val compiler = new DependencyPatternCompiler(rule.unit, rule.resources)
     val pattern = compiler.compileDependencyPattern(rule.pattern)
     new DependencyExtractor(name, labels, priority, keep, action, pattern)
   }
@@ -254,13 +270,15 @@ object RuleReader {
 
   // rule intermediary representation
   class Rule(
-    val name: String,
-    val labels: Seq[String],
-    val ruleType: String,
-    val unit: String,
-    val priority: String,
-    val keep: Boolean,
-    val action: String,
-    val pattern: String
+      val name: String,
+      val labels: Seq[String],
+      val ruleType: String,
+      val unit: String,
+      val priority: String,
+      val keep: Boolean,
+      val action: String,
+      val pattern: String,
+      val resources: OdinResourceManager
   )
+
 }

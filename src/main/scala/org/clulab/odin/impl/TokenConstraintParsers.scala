@@ -1,8 +1,8 @@
 package org.clulab.odin.impl
 
-import scala.util.parsing.combinator._
 import org.clulab.processors.Document
 import org.clulab.odin._
+
 
 trait TokenConstraintParsers extends StringMatcherParsers {
 
@@ -11,6 +11,9 @@ trait TokenConstraintParsers extends StringMatcherParsers {
       case Some(constraint) => constraint
       case None => TokenWildcard
     }
+
+  /** access to resources (w2v embeddings, wordnet, etc) */
+  def resources: OdinResourceManager
 
   /** the field that should be used by unitConstraint */
   def unit: String
@@ -44,7 +47,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   }
 
   def atomicConstraint: Parser[TokenConstraint] =
-    fieldConstraint | "(" ~> disjunctiveConstraint <~ ")"
+    numericConstraint | fieldConstraint | "(" ~> disjunctiveConstraint <~ ")"
 
   def fieldConstraint: Parser[TokenConstraint] = identifier ~ "=" ~ stringMatcher ^^ {
     case "word" ~ _ ~ matcher => new WordConstraint(matcher)
@@ -58,10 +61,176 @@ trait TokenConstraintParsers extends StringMatcherParsers {
     case _ => sys.error("unrecognized token field")
   }
 
+  /** for numerical comparisons */
+  def numericExpression: Parser[NumericExpression] =
+    productExpression ~ rep(("+" | "-") ~ productExpression) ^^ {
+      case prod ~ list => (prod /: list) {
+        case (lhs, "+" ~ rhs) => new Addition(lhs, rhs)
+        case (lhs, "-" ~ rhs) => new Subtraction(lhs, rhs)
+      }
+    }
+
+  def productExpression: Parser[NumericExpression] =
+    termExpression ~ rep(("*" | "//" | "/" | "%") ~ termExpression) ^^ {
+      case prod ~ list => (prod /: list) {
+        case (lhs, "*" ~ rhs) => new Multiplication(lhs, rhs)
+        case (lhs, "/" ~ rhs) => new Division(lhs, rhs)
+        case (lhs, "//" ~ rhs) => new EuclideanQuotient(lhs, rhs)
+        case (lhs, "%" ~ rhs) => new EuclideanRemainder(lhs, rhs)
+      }
+    }
+
+  def termExpression: Parser[NumericExpression] = opt("-" | "+") ~ atomicExpression ^^ {
+    case Some("-") ~ expr => new NegativeExpression(expr)
+    case Some("+") ~ expr => expr
+    case None ~ expr => expr
+  }
+
+  def atomicExpression: Parser[NumericExpression] =
+    numberConstant | numericFunction | "(" ~> numericExpression <~ ")"
+
+  // an equality/inequality symbol
+  // the longest strings must come first
+  def compareOps: Parser[String] = ">=" | "<=" | "==" | "!=" | ">" | "<"
+
+  def numberConstant: Parser[NumericExpression] = numberLiteral ^^ { new Constant(_) }
+
+  def numberLiteral: Parser[Double] =
+    """(?:\d*\.?\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?""".r ^^ { _.toDouble }
+
+  /** update as needed.  Currently only a distributional similarity comparison */
+  def numericFunction: Parser[NumericExpression] = simScore
+
+  def numericConstraint: Parser[TokenConstraint] =
+    numericExpression ~ compareOps ~ numericExpression ~ rep(compareOps ~ numericExpression) ^^ {
+      case lhs ~ op ~ rhs ~ rest =>
+        var prev = rhs
+        val first = mkCompare(lhs, op, rhs)
+        (first /: rest) {
+          case (l, op ~ expr) =>
+            val r = mkCompare(prev, op, expr)
+            prev = expr
+            new ConjunctiveConstraint(l, r)
+        }
+    }
+
+  def mkCompare(lhs: NumericExpression, op: String, rhs: NumericExpression): TokenConstraint =
+    op match {
+      case ">" => new GreaterThan(lhs, rhs)
+      case "<" => new LessThan(lhs, rhs)
+      case ">=" => new GreaterThanOrEqual(lhs, rhs)
+      case "<=" => new LessThanOrEqual(lhs, rhs)
+      case "==" => new Equal(lhs, rhs)
+      case "!=" => new NotEqual(lhs, rhs)
+    }
+
+  /**
+   * ex. get the distributional similarity score (dot product of L2 normed vectors)
+   * for a specified word and the current token
+   * */
+  def simScore: Parser[NumericExpression] = "simScore" ~> "(" ~> stringLiteral <~ ")" ^^ {
+    case w2 if resources.embeddings.nonEmpty => new SimilarityConstraint(w2, resources.embeddings.get)
+    case missing if resources.embeddings.isEmpty =>
+      throw new OdinCompileException("Error compiling pattern using 'simTo'. No embeddings specified in 'resources'")
+  }
+
 }
+
 
 sealed trait TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean
+}
+
+/** for numerical comparisons */
+sealed trait NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double
+}
+
+class Constant(val value: Double) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double = value
+}
+
+class Addition(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
+    lhs.number(tok, sent, doc, state) + rhs.number(tok, sent, doc, state)
+}
+
+class Subtraction(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
+    lhs.number(tok, sent, doc, state) - rhs.number(tok, sent, doc, state)
+}
+
+class Multiplication(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
+    lhs.number(tok, sent, doc, state) * rhs.number(tok, sent, doc, state)
+}
+
+class Division(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
+    lhs.number(tok, sent, doc, state) / rhs.number(tok, sent, doc, state)
+}
+
+class EuclideanQuotient(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
+    val a = lhs.number(tok, sent, doc, state)
+    val n = rhs.number(tok, sent, doc, state)
+    math.signum(n) * math.floor(a / math.abs(n))
+  }
+}
+
+class EuclideanRemainder(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
+    val a = lhs.number(tok, sent, doc, state)
+    val n = math.abs(rhs.number(tok, sent, doc, state))
+    a - n * math.floor(a / n)
+  }
+}
+
+class NegativeExpression(expr: NumericExpression) extends NumericExpression {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double =
+    -expr.number(tok, sent, doc, state)
+}
+
+/** matcher must be an exact string matcher, so that a particular word vector can be retrieved */
+class SimilarityConstraint(w1: String, embeddings: EmbeddingsResource) extends NumericExpression with Values {
+  def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
+    // current word
+    val w2 = word(tok, sent, doc)
+
+    // no need to check to see if w1 & w2 in embeddings
+    // this is handled by the EmbeddingsResource
+    embeddings.similarity(w1, w2)
+  }
+}
+
+class GreaterThan(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    lhs.number(tok, sent, doc, state) > rhs.number(tok, sent, doc, state)
+}
+
+class LessThan(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    lhs.number(tok, sent, doc, state) < rhs.number(tok, sent, doc, state)
+}
+
+class GreaterThanOrEqual(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    lhs.number(tok, sent, doc, state) >= rhs.number(tok, sent, doc, state)
+}
+
+class LessThanOrEqual(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    lhs.number(tok, sent, doc, state) <= rhs.number(tok, sent, doc, state)
+}
+
+class Equal(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    lhs.number(tok, sent, doc, state) == rhs.number(tok, sent, doc, state)
+}
+
+class NotEqual(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    lhs.number(tok, sent, doc, state) != rhs.number(tok, sent, doc, state)
 }
 
 /** matches any token, provided that it exists */

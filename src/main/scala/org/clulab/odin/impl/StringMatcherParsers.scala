@@ -9,12 +9,12 @@ trait StringMatcherParsers extends RegexParsers {
   def stringMatcher: Parser[StringMatcher] = exactStringMatcher | regexStringMatcher
 
   // a StringMatcher that compares to a string
-  def exactStringMatcher: Parser[StringMatcher] = stringLiteral ^^ {
+  def exactStringMatcher: Parser[ExactStringMatcher] = stringLiteral ^^ {
     string => new ExactStringMatcher(string)
   }
 
   // a StringMatcher that uses a regex
-  def regexStringMatcher: Parser[StringMatcher] = regexLiteral ^^ {
+  def regexStringMatcher: Parser[RegexStringMatcher] = regexLiteral ^^ {
     regex => new RegexStringMatcher(regex)
   }
 
