@@ -1,4 +1,6 @@
 # Changes
++ **5.9.3** - Improved tokenization of n-ary complexes for BioNLPProcessor.
++ **5.9.2** - Improved tokenization for BioNLPProcessor.
 + **5.9.1** - Bug fixes for KBLoader and X/Y heterodimer bugs. Update some BioNLP* tests.
 + **5.9.1** - Added override capability to the rule NER in BioNLPProcessor. 
 + **5.9.1** - Improved tokenization of protein families and other edge cases.
