@@ -81,5 +81,61 @@ class TestBioNLPTokenizer extends FlatSpec with Matchers {
     s.words(6) should be ("Ku80")
   }
 
+  it should "tokenize n-ary complexes correctly around dash or slash" in {
+    var doc = proc.mkDocument("We analyze 4 proteins: 953, ASPP2, Mek, and Ras. We found the p53-ASPP2-Mek-Ras complex.")
+    proc.annotate(doc)
+
+    var s = doc.sentences(1)
+    s.words(3) should be ("p53")
+    s.words(5) should be ("ASPP2")
+    s.words(7) should be ("Mek")
+    s.words(10) should be ("Ras")
+
+    doc = proc.mkDocument("We found the p53-ASPP2-Smad-2-Ras complex.")
+    proc.annotate(doc)
+
+    s = doc.sentences(0)
+    s.words(3) should be ("p53")
+    s.words(5) should be ("ASPP2")
+    s.words(7) should be ("Smad-2")
+    s.words(10) should be ("Ras")
+
+    doc = proc.mkDocument("We found the p53-ASPP2-Smad-2-Smad-3 complex.")
+    proc.annotate(doc)
+
+    s = doc.sentences(0)
+    s.words(3) should be ("p53")
+    s.words(5) should be ("ASPP2")
+    s.words(7) should be ("Smad-2")
+    s.words(10) should be ("Smad-3")
+
+    doc = proc.mkDocument("We found the p53/ASPP2/Smad2/Smad3 complex.")
+    proc.annotate(doc)
+
+    s = doc.sentences(0)
+    s.words(3) should be ("p53")
+    s.words(5) should be ("ASPP2")
+    s.words(7) should be ("Smad2")
+    s.words(10) should be ("Smad3")
+
+    doc = proc.mkDocument("We found the p53/ASPP2/Smad-2/Smad-3 complex.")
+    proc.annotate(doc)
+
+    s = doc.sentences(0)
+    s.words(3) should be ("p53")
+    s.words(5) should be ("ASPP2")
+    s.words(7) should be ("Smad-2")
+    s.words(10) should be ("Smad-3")
+
+    doc = proc.mkDocument("We found the p53/ASPP2/Smad-2-Smad-3 complex.")
+    proc.annotate(doc)
+
+    s = doc.sentences(0)
+    s.words(3) should be ("p53")
+    s.words(5) should be ("ASPP2")
+    s.words(7) should be ("Smad-2")
+    s.words(10) should be ("Smad-3")
+  }
+
   // TODO: add tests for the tokenization of mutations - DANE
 }

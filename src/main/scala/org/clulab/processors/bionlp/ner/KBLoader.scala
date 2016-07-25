@@ -39,7 +39,8 @@ object KBLoader {
   val NER_OVERRIDE_KB =
     "org/clulab/reach/kb/NER-Grounding-Override.tsv.gz"
 
-  val TOKENIZATION_KBS = List( // knowledge to be used by the tokenizer to avoid aggressive tokenization
+  // knowledge to be used by the tokenizer to avoid aggressive tokenization around "/"
+  val UNSLASHABLE_TOKENS_KBS = List(
     NER_OVERRIDE_KB,
     "org/clulab/reach/kb/ProteinFamilies.tsv.gz", // these must be KBs BEFORE KBGenerator converts them to NER ready
     "org/clulab/reach/kb/PFAM-families.tsv.gz"    // because those (i.e., under kb/ner) are post tokenization
@@ -56,7 +57,7 @@ object KBLoader {
     */
   def loadSpecialTokens:Set[String] = {
     val specialTokens = new mutable.HashSet[String]()
-    for (tkb <- TOKENIZATION_KBS) {
+    for (tkb <- UNSLASHABLE_TOKENS_KBS) {
       val reader = loadStreamFromClasspath(tkb)
       var done = false
       while(! done) {
