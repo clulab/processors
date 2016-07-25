@@ -1,6 +1,7 @@
 # Changes
-+ **5.9.3** - Improved tokenization of n-ary complexes for BioNLPProcessor.
-+ **5.9.2** - Improved tokenization for BioNLPProcessor.
++ **5.9.3** - Improved tokenization of n-ary complexes for BioNLPProcessor. Reverts some of CoreNLP's aggressive tokenization.
++ **5.9.2** - Add numeric comparisons and distributional similarity comparisons via word embeddings to Odin (word2vec).
++ **5.9.2** - Ensure amino acid abbreviations parse correctly. Tokenize sites that appear as prefixes; e.g. "Tyr-phosphorylated". Use Bioresources 1.1.13.
 + **5.9.1** - Bug fixes for KBLoader and X/Y heterodimer bugs. Update some BioNLP* tests.
 + **5.9.1** - Added override capability to the rule NER in BioNLPProcessor. 
 + **5.9.1** - Improved tokenization of protein families and other edge cases.

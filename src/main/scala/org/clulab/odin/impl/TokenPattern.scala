@@ -7,8 +7,12 @@ import org.clulab.odin._
 object TokenPattern {
   val GlobalCapture = "--GLOBAL--"
 
-  def compile(input: String, unit: String = "word"): TokenPattern = {
-    val compiler = new TokenPatternParsers(unit)
+  def compile(
+      input: String,
+      unit: String = "word",
+      resources: OdinResourceManager = OdinResourceManager(Map.empty)
+  ): TokenPattern = {
+    val compiler = new TokenPatternParsers(unit, resources)
     compiler.compileTokenPattern(input)
   }
 

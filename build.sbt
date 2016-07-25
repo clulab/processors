@@ -1,10 +1,10 @@
 name := "processors"
 
-version := "5.9.2-SNAPSHOT"
+version := "5.9.3-SNAPSHOT"
 
 organization := "org.clulab"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.8"
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
@@ -88,7 +88,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "org.clulab" % "bioresources" % "1.1.12",
+  "org.clulab" % "bioresources" % "1.1.13",
   "com.io7m.xom" % "xom" % "1.2.10",
   "org.json4s" %% "json4s-native" % "3.2.11",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",

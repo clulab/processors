@@ -4,7 +4,7 @@ import org.clulab.struct.Interval
 import org.clulab.processors.Document
 import org.clulab.odin._
 
-class DependencyPatternCompiler(unit: String) extends TokenPatternParsers(unit) {
+class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) extends TokenPatternParsers(unit, resources) {
 
   def compileDependencyPattern(input: String): DependencyPattern =
     parseAll(dependencyPattern, input) match {

@@ -1,6 +1,6 @@
 package org.clulab.odin.impl
 
-class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
+class TokenPatternParsers(val unit: String, val resources: OdinResourceManager) extends TokenConstraintParsers {
 
   // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r
@@ -55,8 +55,7 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
     ("(?=" | "(?!") ~ splitPattern <~ ")" ^^ {
       case op ~ frag =>
         frag.setOut(Done)
-        val negative = op.endsWith("!")
-        ProgramFragment(MatchLookAhead(frag.in, negative))
+        ProgramFragment(MatchLookAhead(frag.in, op.endsWith("!")))
     }
 
   // MatchLookBehind builds the pattern in reverse
@@ -64,8 +63,7 @@ class TokenPatternParsers(val unit: String) extends TokenConstraintParsers {
     ("(?<=" | "(?<!") ~ splitPatternRev <~ ")" ^^ {
       case op ~ frag =>
         frag.setOut(Done)
-        val negative = op.endsWith("!")
-        ProgramFragment(MatchLookBehind(frag.in, negative))
+        ProgramFragment(MatchLookBehind(frag.in, op.endsWith("!")))
     }
 
   def capturePattern: Parser[ProgramFragment] =

@@ -19,17 +19,30 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
   def process(input:Array[CoreLabel]):Array[CoreLabel] = {
     var tokens = input
 
+<<<<<<< HEAD
     // revert CoreNLP's tokenization that is too aggressive
     tokens = revertAggressiveTokenization(tokens)
+=======
+    // reattach "/" that is attached to prev/next tokens; CoreNLP is too aggressive on slash tokenization
+    tokens = reattachSlash(tokens)
+>>>>>>> master
 
-    // non is a special prefix, because it drives negation detection
+    // "non" is a special prefix, because it drives negation detection
     tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
 
     // tokenize around "-" when the suffix is a known verb, noun, or other important word
     tokens = breakOnPattern(tokens, dashSuffixes)
 
+<<<<<<< HEAD
     // break n-ary complexes
     tokens = breakNaryComplex(tokens)
+=======
+    // tokenize around "-" when the prefix is a known site, such as "Tyr" in "Tyr-phosphorylated"
+    tokens = breakOnPattern(tokens, sitePrefixes)
+
+    // break binary complexes
+    tokens = breakComplex(tokens, SINGLESLASHORDASH_PATTERN)
+>>>>>>> master
 
     // break mutations
     // TODO: this needs improvement, see Dane's comments
@@ -347,13 +360,17 @@ object BioNLPTokenizerPostProcessor {
   val SINGLESLASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(/)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
   val SINGLEDASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN_NO_DASH)(\\-)($VALID_PROTEIN_NO_DASH)", Pattern.CASE_INSENSITIVE)
 
-  val SITE1 = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+", Pattern.CASE_INSENSITIVE)
-  val SITE2 = Pattern.compile("glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine", Pattern.CASE_INSENSITIVE)
-  val SITE3 = Pattern.compile("(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)\\d*", Pattern.CASE_INSENSITIVE)
-  val MUTATION1 = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+[ACDEFGHIKLMNPQRSTVWY]", Pattern.CASE_INSENSITIVE)
-  val MUTATION2 = Pattern.compile("P\\d+[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]")
-  val MUTATION3 = Pattern.compile("(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)\\d+(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)", Pattern.CASE_INSENSITIVE)
-  val MODIFICATIONS = Set(SITE1, SITE2, SITE3, MUTATION1, MUTATION2, MUTATION3)
+  val SITE1_PATTERN = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+", Pattern.CASE_INSENSITIVE)
+  val SITE2 = "glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine"
+  val SITE3 = "Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val"
+  val SITE2_PATTERN = Pattern.compile(SITE2, Pattern.CASE_INSENSITIVE)
+  val SITE3_PATTERN = Pattern.compile(s"($SITE3)\\d*", Pattern.CASE_INSENSITIVE)
+  val MUTATION1_PATTERN = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+[ACDEFGHIKLMNPQRSTVWY]", Pattern.CASE_INSENSITIVE)
+  val MUTATION2_PATTERN = Pattern.compile("P\\d+[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]")
+  val MUTATION3_PATTERN = Pattern.compile("(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)\\d+(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)", Pattern.CASE_INSENSITIVE)
+  val MODIFICATIONS = Set(SITE1_PATTERN, SITE2_PATTERN, SITE3_PATTERN, MUTATION1_PATTERN, MUTATION2_PATTERN, MUTATION3_PATTERN)
+
+  val sitePrefixes = Pattern.compile(s"($SITE2|$SITE3)(-)([\\w/]+)", Pattern.CASE_INSENSITIVE)
 
   val PARENS = Set("(", ")", "[", "]")
 
