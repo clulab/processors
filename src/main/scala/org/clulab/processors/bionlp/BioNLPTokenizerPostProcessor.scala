@@ -19,13 +19,8 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
   def process(input:Array[CoreLabel]):Array[CoreLabel] = {
     var tokens = input
 
-<<<<<<< HEAD
     // revert CoreNLP's tokenization that is too aggressive
     tokens = revertAggressiveTokenization(tokens)
-=======
-    // reattach "/" that is attached to prev/next tokens; CoreNLP is too aggressive on slash tokenization
-    tokens = reattachSlash(tokens)
->>>>>>> master
 
     // "non" is a special prefix, because it drives negation detection
     tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
@@ -33,16 +28,11 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
     // tokenize around "-" when the suffix is a known verb, noun, or other important word
     tokens = breakOnPattern(tokens, dashSuffixes)
 
-<<<<<<< HEAD
-    // break n-ary complexes
-    tokens = breakNaryComplex(tokens)
-=======
     // tokenize around "-" when the prefix is a known site, such as "Tyr" in "Tyr-phosphorylated"
     tokens = breakOnPattern(tokens, sitePrefixes)
 
-    // break binary complexes
-    tokens = breakComplex(tokens, SINGLESLASHORDASH_PATTERN)
->>>>>>> master
+    // break n-ary complexes
+    tokens = breakNaryComplex(tokens)
 
     // break mutations
     // TODO: this needs improvement, see Dane's comments
@@ -131,9 +121,9 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
   }
 
   def breakNaryComplex(tokens:Array[CoreLabel]):Array[CoreLabel] = {
-    print("TOKENIZING SENTENCE:")
-    for(token <- tokens) print(" [" + token.word() + "]")
-    println()
+    //print("TOKENIZING SENTENCE:")
+    //for(token <- tokens) print(" [" + token.word() + "]")
+    //println()
 
     val output = new ArrayBuffer[CoreLabel]
     for(i <- tokens.indices) {
@@ -160,7 +150,7 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
           appendSubToken(subTokens, token, tokenStart, token.word().length)
         }
 
-        println("SUBTOKENS: " + subTokens.mkString(", "))
+        //println("SUBTOKENS: " + subTokens.mkString(", "))
 
         // now create actual tokens from all these sub-tokens
         for(i <- subTokens.indices) {
@@ -233,9 +223,9 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
     * Scans the text left-to-right and reattaches tokens that were tokenized too aggresively by CoreNLP
     */
   def revertAggressiveTokenization(tokens:Array[CoreLabel]):Array[CoreLabel] = {
-    print("SENTENCE BEFORE REVERT:")
-    for(token <- tokens) print(" [" + token.word() + "]")
-    println()
+    //print("SENTENCE BEFORE REVERT:")
+    //for(token <- tokens) print(" [" + token.word() + "]")
+    //println()
 
     val output = new ArrayBuffer[CoreLabel]
     var crtToken = new StringBuilder
@@ -405,7 +395,8 @@ object BioNLPTokenizerPostProcessor {
       howManyConnecting.value += 1
       i += 1
     }
-    (howManyConnecting.value > 0)
+
+    howManyConnecting.value > 0
   }
 
   def isConnectingToken(word:String):Boolean = {

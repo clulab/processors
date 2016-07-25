@@ -257,10 +257,11 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).startOffsets(3) should be (15)
     doc.sentences(0).words(4) should be (",")
     doc.sentences(0).words(5) should be ("Ras")
-    doc.sentences(0).words(6) should be ("and")
-    doc.sentences(0).startOffsets(6) should be (22)
-    doc.sentences(0).endOffsets(6) should be (23)
-    doc.sentences(0).words(7) should be ("Akt1")
+    doc.sentences(0).words(6) should be (",")
+    doc.sentences(0).words(7) should be ("and")
+    doc.sentences(0).startOffsets(7) should be (22)
+    doc.sentences(0).endOffsets(7) should be (23)
+    doc.sentences(0).words(8) should be ("Akt1")
   }
 
   it should "override named entities" in {
