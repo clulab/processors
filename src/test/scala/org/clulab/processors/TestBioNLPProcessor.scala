@@ -273,6 +273,23 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(2) should be ("B-Family")
   }
 
+  it should "recognize 'Smad 2' as a protein" in {
+    val doc = proc.mkDocument("Smad 2 is doing something.", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).entities.get(0) should be ("B-Gene_or_gene_product")
+    doc.sentences(0).entities.get(1) should be ("I-Gene_or_gene_product")
+    doc.sentences(0).entities.get(2) should be ("O")
+  }
+
+  it should "recognize 'Smad' as a family" in {
+    val doc = proc.mkDocument("Smad is doing something.", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).entities.get(0) should be ("B-Family")
+    doc.sentences(0).entities.get(1) should be ("O")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
