@@ -1,6 +1,6 @@
-name := "processors"
+import ReleaseTransformations._
 
-version := "5.9.3-SNAPSHOT"
+name := "processors"
 
 organization := "org.clulab"
 
@@ -38,6 +38,24 @@ addArtifact(Artifact("processors", "models"), modelsTask in models)
 unmanagedJars in Compile += (modelsTask in models).value
 
 unmanagedClasspath in Runtime += baseDirectory.value
+
+
+// release steps
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  ReleaseStep(action = Command.process("publishSigned", _)),
+  setNextVersion,
+  commitNextVersion,
+  ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+  pushChanges
+)
+
 
 //
 // publishing settings

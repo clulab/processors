@@ -1,11 +1,5 @@
 name := "models"
 
-version := "5.9.1-SNAPSHOT"
-
-organization := "org.clulab"
-
-scalaVersion := "2.11.6"
-
 artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
   s"processors_${sv.binary}-${module.revision}-${module.name}.${artifact.extension}"
 }
