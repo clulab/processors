@@ -22,44 +22,69 @@ trait DependencyPattern {
       ruleName: String
   ): Seq[Mention]
 
-  // extract the arguments of a token interval
   protected def extractArguments(
-      interval: Interval,
-      sent: Int,
-      doc: Document,
-      state: State
-  ): Seq[(Args, Paths)] = for {
-    tok <- interval
-    mp <- extractArguments(tok, sent, doc, state)
-  } yield mp
-
-  // extract arguments for one of the tokens in the trigger
-  private def extractArguments(
-      tok: Int,
+      tokens: Interval,
       sent: Int,
       doc: Document,
       state: State
   ): Seq[(Args, Paths)] = {
-    // variable to collect paths
-    var paths: Map[String, Map[Mention, SynPath]] = Map.empty
-    // extract all required arguments
-    val req = for (a <- required) yield {
-      val results: Seq[Seq[(Mention, SynPath)]] = a.extract(tok, sent, doc, state)
-      // if a required argument is not present stop extraction
-      if (results.isEmpty) return Nil
-      paths += (a.name -> results.flatten.toMap) // collect paths
-      results.map(a.name -> _.map(_._1))
-    }
+
+    // extract required arguments
+    val reqExtractions = extractArguments(required, tokens, sent, doc, state)
+
+    // if not all required arguments were found, return Nil
+    val reqNames = required.map(_.name)
+    val foundAllRequired = reqNames.forall(reqExtractions.contains)
+    if (!foundAllRequired) return Nil
+
+    // get the arguments out of the extraction
+    // while preserving the extraction groups
+    val reqArgs: Seq[Seq[(String, Seq[Mention])]] = for {
+      (name, mentionsWithPathsGroups) <- reqExtractions.toSeq
+    } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
+
+    // get the paths
+    val reqPaths = reqExtractions.mapValues(_.flatten.toMap)
+
     // extract optional arguments
-    val opt = for (a <- optional) yield {
-      val results: Seq[Seq[(Mention, SynPath)]] = a.extract(tok, sent, doc, state)
-      paths += (a.name -> results.flatten.toMap) // collect paths
-      results.map(a.name -> _.map(_._1))
-    }
-    // drop empty optional arguments
-    val args = req ++ opt.filter(_.nonEmpty)
+    val optExtractions = extractArguments(optional, tokens, sent, doc, state)
+
+    // get the arguments out of the extraction
+    val optArgs: Seq[Seq[(String, Seq[Mention])]] = for {
+      (name, mentionsWithPathsGroups) <- optExtractions.toSeq
+    } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
+
+    // get the paths
+    val optPaths = optExtractions.mapValues(_.flatten.toMap)
+
+    // group the paths together
+    val paths: Paths = reqPaths ++ optPaths
+    // group the arguments together
+    val args: Seq[Seq[(String, Seq[Mention])]] = reqArgs ++ optArgs
     // return cartesian product of arguments
     product(args).map(a => (a.toMap, paths))
+
+  }
+
+  // Extracts the given arguments from any of the tokens in the interval.
+  // Recall that each argument has arity, and their extractions are grouped
+  // according to this arity. The extraction is represented as Seq[Seq[(Mention, SynPath)]]]
+  // containing a sequence of extracted groups, each group has one or more (mention, syntactic path) tuples.
+  // This function returns a map from argument name to extraction.
+  private def extractArguments(
+      arguments: Seq[ArgumentPattern],
+      tokens: Interval,
+      sent: Int,
+      doc: Document,
+      state: State
+  ): Map[String, Seq[Seq[(Mention, SynPath)]]] = {
+    val extractions = for {
+      a <- arguments
+      t <- tokens
+      results = a.extract(t, sent, doc, state)
+      if results.nonEmpty
+    } yield (a.name -> results)
+    extractions.toMap
   }
 
   // cartesian product
