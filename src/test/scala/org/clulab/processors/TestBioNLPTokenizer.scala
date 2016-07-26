@@ -137,5 +137,22 @@ class TestBioNLPTokenizer extends FlatSpec with Matchers {
     s.words(10) should be ("Smad-3")
   }
 
+  it should "not tokenize up, down, re" in {
+    var doc = proc.mkDocument("up-regulation")
+    proc.annotate(doc)
+    var s = doc.sentences(0)
+    s.words(0) should be ("up-regulation")
+
+    doc = proc.mkDocument("down-regulation")
+    proc.annotate(doc)
+    s = doc.sentences(0)
+    s.words(0) should be ("down-regulation")
+
+    doc = proc.mkDocument("re-regulation")
+    proc.annotate(doc)
+    s = doc.sentences(0)
+    s.words(0) should be ("re-regulation")
+  }
+
   // TODO: add tests for the tokenization of mutations - DANE
 }

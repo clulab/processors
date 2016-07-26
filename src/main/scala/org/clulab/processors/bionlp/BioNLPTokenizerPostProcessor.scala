@@ -338,7 +338,7 @@ object BioNLPTokenizerPostProcessor {
     "mechanisms?", "agonist", "heterozygous", "homozygous")
 
   // "non" is excluded from this set; it should be tokenized because it drives negation detection
-  val COMMON_PREFIXES = Set("anti", "auto", "bi", "co", "de", "dis", "extra", "homo", "hetero", "hyper", "macro", "micro", "mono", "omni", "over", "poly", "pre", "post", "re", "semi", "sub", "super", "trans", "under")
+  val COMMON_PREFIXES = Set("anti", "auto", "bi", "co", "de", "dis", "down", "extra", "homo", "hetero", "hyper", "macro", "micro", "mono", "omni", "over", "poly", "pre", "post", "re", "semi", "sub", "super", "trans", "under", "up")
 
   val dashSuffixes = mkDashSuffixes
 
