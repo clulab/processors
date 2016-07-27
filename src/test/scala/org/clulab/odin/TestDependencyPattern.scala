@@ -69,4 +69,31 @@ class TestDependencyPattern extends FlatSpec with Matchers {
 
   }
 
+  it should "handle multitoken triggers" in {
+    val text = "We found that prolonged expression of active Ras resulted in upregulation of the MKP3 gene."
+    val doc = proc.annotate(text)
+
+    val rule = """
+      |- name: Positive_activation_syntax_8_verb
+      |  priority: 2
+      |  label: Positive_activation
+      |  pattern: |
+      |    trigger = [lemma=result] in [word=/(?i)^(upregul)/]
+      |    controlled:Protein = prep_of nn
+      |    controller:Protein = nsubj prep_of
+      |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(7), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(13), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc, state)
+
+    results.filter(_ matches "Positive_activation") should have size (1)
+
+  }
+
 }
