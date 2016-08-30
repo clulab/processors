@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <define name="loglevel" class="org.clulab.TypesafeConfigPropertyDefiner">
+        <!-- defined in application.conf -->
+        <propertyName>logging.loglevel</propertyName>
+    </define>
+    <define name="logfile" class="org.clulab.TypesafeConfigPropertyDefiner">
+        <!-- defined in application.conf -->
+        <propertyName>logging.logfile</propertyName>
+    </define>
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <param name="Append" value="false" />
+        <file>${logfile}</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="${loglevel}">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </root>
+
+</configuration>
