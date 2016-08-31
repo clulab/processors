@@ -10,7 +10,6 @@ import org.clulab.struct.MutableNumber
 import RelationDirection._
 import TreeKind._
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import Reader._
 import scala.collection.mutable
 
 /**
@@ -19,6 +18,9 @@ import scala.collection.mutable
  * Date: 8/6/13
  */
 class Reader extends LazyLogging {
+
+  import Reader._
+
   var tokenizationMistakes = 0
   var totalTokens = 0
 
@@ -559,6 +561,7 @@ class Token (val kind:String, val value:String) {
 class TokenPattern(val pattern:Pattern, val kind:String, val hasValue:Boolean)
 
 object Reader extends LazyLogging {
+
   val TOKENIZATION_PATTERNS = Array[TokenPattern](
     new TokenPattern(Pattern.compile("\\(text\\s+_!(.+?)_!\\)", Pattern.CASE_INSENSITIVE), "TEXT", true),
     new TokenPattern(Pattern.compile("\\(rel2par\\s+([a-z\\-A-Z]*)\\)", Pattern.CASE_INSENSITIVE), "LABEL", true),
@@ -597,6 +600,7 @@ object Reader extends LazyLogging {
   val P = Pattern.compile("<P>", Pattern.CASE_INSENSITIVE)
   val TT_ERR = Pattern.compile("//\\s*TT_ERR", Pattern.CASE_INSENSITIVE)
 
+  
   def main(args:Array[String]) {
     val reader = new Reader
     val proc = new FastNLPProcessor()
