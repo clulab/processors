@@ -2,7 +2,7 @@ package org.clulab.discourse.rstparser
 
 import java.io._
 import org.clulab.processors.{Processor, Document}
-import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.LazyLogging
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.ClassLoaderObjectInputStream
@@ -12,9 +12,7 @@ import org.clulab.utils.ClassLoaderObjectInputStream
  * User: mihais
  * Date: 5/25/14
  */
-object CacheReader {
-  val logger = LoggerFactory.getLogger(classOf[CacheReader])
-
+object CacheReader extends LazyLogging{
   lazy val CORENLP_PROCESSOR = new CoreNLPProcessor(withDiscourse = false)
   lazy val FASTNLP_PROCESSOR = new FastNLPProcessor(useMalt = false, withDiscourse = false)
 
@@ -32,7 +30,7 @@ object CacheReader {
     val os = new ObjectOutputStream(new FileOutputStream(path))
     os.writeObject(output)
     os.close()
-    println("Cache saved in file: " + path)
+    logger.info("Cache saved in file: " + path)
   }
 
   private def loadCache(path:String):List[(DiscourseTree, Document)] = {
@@ -51,7 +49,7 @@ object CacheReader {
       logger.info("Data loaded from cache: " + path)
     } catch {
       case e:Exception => {
-        logger.debug("WARNING: Could not load documents from cache. Error was:")
+        logger.warn("Could not load documents from cache. Error was:")
         e.printStackTrace()
         logger.debug("Parsing documents online...")
         val reader = new Reader

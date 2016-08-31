@@ -4,31 +4,30 @@ import org.clulab.struct.Counter
 
 import scala.collection.mutable
 
+import com.typesafe.scalalogging.LazyLogging
+
 /**
  * Scores predicted structures against a gold tree
  * User: mihais
  * Date: 5/24/14
  */
-class DiscourseScorer {
+class DiscourseScorer extends LazyLogging {
   def score(sys:DiscourseTree,
             gold:DiscourseTree,
             score:DiscourseScore,
             scoreType:ScoreType.Value,
             verbose:Boolean = false) {
-    if(verbose) {
-      println(s"System tree:\n$sys")
-      println(s"Gold tree:\n$gold")
-    }
+    logger.debug(s"System tree:\n$sys")
+    logger.debug(s"Gold tree:\n$gold")
+
 
     val sysUnits = toDiscourseUnits(sys, scoreType)
     val goldUnits = toDiscourseUnits(gold, scoreType)
 
-    if(verbose) {
-      println("System units:")
-      for (u <- sysUnits) println(u)
-      println("Gold units:")
-      for (u <- goldUnits) println(u)
-    }
+    logger.debug("System units:")
+    for (u <- sysUnits) logger.debug(u.toString)
+    logger.debug("Gold units:")
+    for (u <- goldUnits) logger.debug(u.toString)
 
     score.total += goldUnits.size
     for(u <- goldUnits) score.incTotal(u.label)

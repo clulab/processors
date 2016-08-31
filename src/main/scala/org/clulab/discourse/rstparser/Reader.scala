@@ -4,7 +4,7 @@ import java.io.File
 import scala.io.Source
 import java.util.regex.{Pattern,Matcher}
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.LazyLogging
 import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.MutableNumber
 import RelationDirection._
@@ -18,7 +18,7 @@ import scala.collection.mutable
  * User: mihais
  * Date: 8/6/13
  */
-class Reader {
+class Reader extends LazyLogging {
   var tokenizationMistakes = 0
   var totalTokens = 0
 
@@ -44,41 +44,38 @@ class Reader {
 
     // tokenize the file
     val tokens = tokenizeDis(sb.toString())
-    if(verbose) {
-      var i = 0
-      while(i < tokens.length) {
-        println((i + 1) + ": " + tokens(i))
-        i += 1
-      }
+
+    var i = 0
+    while(i < tokens.length) {
+      logger.debug((i + 1) + ": " + tokens(i))
+      i += 1
     }
 
     // and now parse the sequence of tokens into a tree
     val offset: MutableNumber[Int] = new MutableNumber[Int](0)
     var root = parseDisTokens(tokens, offset)
-    if(verbose) {
-      println("Raw tree:\n" + root.toString(printChildren = true, printKind = true))
-    }
+
+    logger.debug("Raw tree:\n" + root.toString(printChildren = true, printKind = true))
+
 
     // move labels from the children nodes to parents, where they should be
     propagateLabels(root)
-    if(verbose) {
-      println("After label propagation:\n" + root)
-    }
+
+    logger.debug("After label propagation:\n" + root)
+
 
     // simplify labels to the set of 18 coarse relations
     if(simplifyRelationLabels) {
       simplifyLabels(root)
-      if(verbose) {
-        println("After label simplification:\n" + root)
-      }
+      logger.debug("After label simplification:\n" + root)
     }
 
     // make sure every node has exactly two children
     root = binarizeTree(root)
     checkBinary(root)
-    if(verbose) {
-      println("After binarization:\n" + root)
-    }
+
+    logger.debug("After binarization:\n" + root)
+
 
     // count character offsets for the raw text
     val charOffset = new MutableNumber[Int](0)
@@ -89,21 +86,19 @@ class Reader {
     textBuilder += new StringBuilder
     concatenateEDUTexts(root, textBuilder)
     val text = constructText(textBuilder)
-    if(verbose) {
-      println("TEXT:")
-      for(i <- 0 until text.size) {
-        print(s"Sentence #$i: " + text(i))
-      }
+
+    logger.debug("TEXT:")
+    for(i <- 0 until text.size) {
+      logger.debug(s"Sentence #$i: " + text(i))
     }
 
     // parse the whole text
     val doc = annotate(text, proc)
     for(s <- doc.sentences) totalTokens += s.size
-    if(verbose) {
-      println("DOC:")
-      printDocTokens(doc)
-      println()
-    }
+
+    logger.debug("DOC:")
+    logger.debug(doc.toString)
+    logger.debug("\n")
 
     // align annotations with EDUs
     if(doc != null) {
@@ -273,17 +268,14 @@ class Reader {
         tokenizationMistakes += 1
       }
 
-      if(verbose)
-        println("Aligning EDU: " + t.rawText + " [" + t.charOffsets._1 + ", " + t.charOffsets._2 + "]")
+      logger.debug("Aligning EDU: " + t.rawText + " [" + t.charOffsets._1 + ", " + t.charOffsets._2 + "]")
       t.firstToken = new TokenOffset(senOffset.value, tokOffset.value)
-      if(verbose)
-        println("\tFound FIRST token in sentence " + senOffset.value + " at token " + tokOffset.value)
+      logger.debug("\tFound FIRST token in sentence " + senOffset.value + " at token " + tokOffset.value)
       if(! advanceToCharacterOffset(d, t.charOffsets._2, senOffset, tokOffset))
         throw new RuntimeException("ERROR: tree cannot be aligned with annotation: " +
           "could not find end character offset " + t.charOffsets._2)
       t.lastToken = new TokenOffset(senOffset.value, tokOffset.value)
-      if(verbose)
-        println("\tFound LAST token in sentence " + senOffset.value + " at token " + tokOffset.value)
+      logger.debug("\tFound LAST token in sentence " + senOffset.value + " at token " + tokOffset.value)
 
       // move to the next token, if necessary
       if(d.sentences(senOffset.value).endOffsets(tokOffset.value) == t.charOffsets._2) {
@@ -566,9 +558,7 @@ class Token (val kind:String, val value:String) {
 
 class TokenPattern(val pattern:Pattern, val kind:String, val hasValue:Boolean)
 
-object Reader {
-  val logger = LoggerFactory.getLogger(classOf[Reader])
-
+object Reader extends LazyLogging {
   val TOKENIZATION_PATTERNS = Array[TokenPattern](
     new TokenPattern(Pattern.compile("\\(text\\s+_!(.+?)_!\\)", Pattern.CASE_INSENSITIVE), "TEXT", true),
     new TokenPattern(Pattern.compile("\\(rel2par\\s+([a-z\\-A-Z]*)\\)", Pattern.CASE_INSENSITIVE), "LABEL", true),
@@ -615,7 +605,8 @@ object Reader {
     if(top.isDirectory) {
       for(f <- top.listFiles()){
         if(f.getName.endsWith(".dis")){
-          println("Parsing file " + f)
+          // Intellij doesn't recognize logger
+          logger.info("Parsing file " + f)
           val p = reader.read(f, proc, simplifyRelationLabels=true, verbose=true)
           println(p._1)
         }

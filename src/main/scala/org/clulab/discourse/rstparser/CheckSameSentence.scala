@@ -2,12 +2,14 @@ package org.clulab.discourse.rstparser
 
 import org.clulab.processors.Document
 
+import com.typesafe.scalalogging.LazyLogging
+
 /**
  * Verifies is segments within a sentence are only connected to other segments in the same sentence
  * User: mihais
  * Date: 6/24/14
  */
-object CheckSameSentence {
+object CheckSameSentence extends LazyLogging {
   def main(args:Array[String]) {
     val trees = CacheReader.load(args(0), CacheReader.CORENLP_PROCESSOR)
     var inc = 0
@@ -17,7 +19,7 @@ object CheckSameSentence {
       inc += i
       total += t
     }
-    println(s"Found $inc inconsistencies out of $total attachments.")
+    logger.info(s"Found $inc inconsistencies out of $total attachments.")
   }
 
   def checkTree(tree:DiscourseTree, doc:Document, verbose:Boolean = false):(Int, Int) = {
@@ -33,8 +35,8 @@ object CheckSameSentence {
         } else {
           inc += 1
           if(verbose) {
-            println("INCONSISTENCY FOR LEFT:")
-            println(s"LEFT:\n$l\nRIGHT:$r")
+            logger.info("INCONSISTENCY FOR LEFT:")
+            logger.info(s"LEFT:\n$l\nRIGHT:$r")
           }
         }
       }
@@ -44,8 +46,8 @@ object CheckSameSentence {
         } else {
           inc += 1
           if(verbose) {
-            println("INCONSISTENCY FOR RIGHT:")
-            println(s"LEFT:\n$l\nRIGHT:$r")
+            logger.info("INCONSISTENCY FOR RIGHT:")
+            logger.info(s"LEFT:\n$l\nRIGHT:$r")
           }
         }
       }

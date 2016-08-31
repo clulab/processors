@@ -1,6 +1,6 @@
 package org.clulab.discourse.rstparser
 
-import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.LazyLogging
 import org.clulab.utils.{Files, StringUtils}
 import org.clulab.processors.Document
 import scala.collection.mutable.ListBuffer
@@ -16,7 +16,7 @@ import Utils._
  * User: mihais
  * Date: 4/12/14
  */
-class EDUClassifier {
+class EDUClassifier extends LazyLogging {
   var classifier:Classifier[String, String] = null
   var scaleRanges:ScaleRange[String] = null
 
@@ -68,11 +68,11 @@ class EDUClassifier {
 
       if(datum.label == POS && l == NEG) {
         assert(token.eduStart)
-        println("MISSED THIS TOKEN:")
+        logger.debug("MISSED THIS TOKEN:")
         report(token, "FN")
       } else if(datum.label == NEG && l == POS) {
         assert(! token.eduStart)
-        println("FALSE POSITIVE:")
+        logger.debug("FALSE POSITIVE:")
         report(token, "FP")
       }
 
@@ -98,18 +98,18 @@ class EDUClassifier {
       print(sent.words(i))
       if(i == offset) print("]]")
     }
-    println("...")
-    println("Incoming dependencies for token:")
+    logger.info("...")
+    logger.info("Incoming dependencies for token:")
     val inc = deps(sent).incomingEdges
     if(offset < inc.size) {
       for (d <- inc(offset)) {
-        println("\t" + sent.words(d._1) + "\t" + d._2)
+        logger.info("\t" + sent.words(d._1) + "\t" + d._2)
       }
     }
     if(offset < deps(sent).outgoingEdges.size) {
       val (_, top) = featureExtractor.pathToRoot(offset, deps(sent).incomingEdges)
       val leftMost = deps(sent).outgoingEdges(offset).size == 0
-      println(errType + "\tleftmost:" + top + "|" + leftMost)
+      logger.info(errType + "\tleftmost:" + top + "|" + leftMost)
     }
   }
 
@@ -178,13 +178,13 @@ class EDUClassifier {
       }
     }
 
-    println("HISTOGRAM OF POS TAGS:")
+    logger.info("HISTOGRAM OF POS TAGS:")
     val tags = posCounts.sorted
-    for(t <- tags) println(t._1 + "\t" + t._2)
+    for(t <- tags) logger.info(t._1 + "\t" + t._2)
 
-    println("HISTOGRAM OF DECILE COUNTS:")
+    logger.info("HISTOGRAM OF DECILE COUNTS:")
     val decs = decileCounts.sorted
-    for(d <- decs) println(d._1 + "\t" + d._2)
+    for(d <- decs) logger.info(d._1 + "\t" + d._2)
 
   }
 
@@ -198,14 +198,14 @@ class EDUClassifier {
         var next = "END"
         if(t.position.token < s.size - 1)
           next = s.words(t.position.token + 1)
-        println("... " + prev + " " + crt + " " + next + " ...")
+        logger.info("... " + prev + " " + crt + " " + next + " ...")
         if(next == "END") {
-          print("ENDSENT: ")
+          logger.info("ENDSENT: ")
           for(w <- s.words) print(w + " ")
           println()
         }
         if(crtTag == ":") {
-          print("COLONSENT: ")
+          logger.info("COLONSENT: ")
           for(w <- s.words) print(w + " ")
           println()
         }
@@ -324,7 +324,6 @@ class EDUClassifier {
 class EDUToken (val position:TokenOffset, val doc:Document, val connectives:Array[Array[String]], val eduStart:Boolean)
 
 object EDUClassifier {
-  val logger = LoggerFactory.getLogger(classOf[EDUClassifier])
   val featureExtractor = new EDUFeatureExtractor
 
   val POS = "+"
