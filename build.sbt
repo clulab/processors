@@ -119,6 +119,7 @@ libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.14",
   "jline" % "jline" % "2.12.1",
   // logging
+  "com.typesafe" % "config" % "1.2.1",
   "ch.qos.logback" %  "logback-classic" % "1.1.7",
   "com.typesafe.scala-logging" %%  "scala-logging" % "3.4.0"
 )
