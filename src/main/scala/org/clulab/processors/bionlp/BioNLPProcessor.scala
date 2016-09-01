@@ -245,6 +245,18 @@ class BioNLPProcessor (internStrings:Boolean = false,
     }
 
     //
+    // XML tag leftovers should not be labeled
+    //
+    i = 0
+    while(i < seq.length) {
+      if ((seq(i).startsWith("B-") || seq(i).startsWith("I-")) &&
+          words(i).startsWith("XREF_")) {
+        seq(i) = RuleNER.OUTSIDE_LABEL
+      }
+      i += 1
+    }
+
+    //
     // Some single-token entities should not be labeled when in lower case, or upper initial
     //
     i = 0
