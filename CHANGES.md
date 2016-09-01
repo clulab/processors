@@ -1,4 +1,5 @@
 # Changes
++ **5.9.5** - Bug fix release: do not tag XML tags such as XREF... as named entities.
 + **5.9.4** - Update to use bioresources 1.1.15.
 + **5.9.3** - Improved support for multi-token triggers in dependency patterns in Odin.
 + **5.9.3** - Improved tokenization of n-ary complexes for BioNLPProcessor. Reverts some of CoreNLP's aggressive tokenization.
