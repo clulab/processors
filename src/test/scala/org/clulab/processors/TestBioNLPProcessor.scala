@@ -290,6 +290,14 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(1) should be ("O")
   }
 
+  it should "not label XREFs as entities" in {
+    val doc = proc.mkDocument("XREF_BIBR and XREF_FIG are not proteins.", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).entities.get(0) should be ("O")
+    doc.sentences(0).entities.get(2) should be ("O")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
