@@ -1,9 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.discourse.rstparser.DiscourseTree
-import org.clulab.struct.{Tree, DirectedGraph, DependencyMap, CorefChains}
-import org.clulab.struct.DependencyMap._
-import collection.mutable
+import org.clulab.struct.CorefChains
 
 
 /**
@@ -27,39 +25,6 @@ class Document( var id:Option[String],
 
   /** Clears any internal state potentially constructed by the annotators */
   def clear() { }
-}
-
-/** Stores the annotations for a single sentence */
-class Sentence(
-  /** Actual tokens in this sentence */
-  val words:Array[String],
-  /** Start character offsets for the words; start at 0 */
-  val startOffsets:Array[Int],
-  /** End character offsets for the words; start at 0 */
-  val endOffsets:Array[Int],
-  /** POS tags for words */
-  var tags:Option[Array[String]],
-  /** Lemmas */
-  var lemmas:Option[Array[String]],
-  /** NE labels */
-  var entities:Option[Array[String]],
-  /** Normalized values of named/numeric entities, such as dates */
-  var norms:Option[Array[String]],
-  /** Shallow parsing labels */
-  var chunks:Option[Array[String]],
-  /** Constituent tree of this sentence; includes head words */
-  var syntacticTree:Option[Tree],
-  /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  var dependenciesByType:DependencyMap) extends Serializable {
-
-  def this(
-    words:Array[String],
-    startOffsets:Array[Int],
-    endOffsets:Array[Int]) =
-    this(words, startOffsets, endOffsets,
-      None, None, None, None, None, None, new DependencyMap)
-
-  def size:Int = words.length
 
   /**
     * Default dependencies: first Stanford collapsed, then Stanford basic, then None
