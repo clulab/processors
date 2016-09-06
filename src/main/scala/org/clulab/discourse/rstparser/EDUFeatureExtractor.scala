@@ -239,7 +239,7 @@ class EDUFeatureExtractor {
     var root = false
     var pos = start
     var top:String = ""
-    // CoreNLP may have cycles...
+    // Some dependency representations may have cycles... Must keep track of visited nodes.
     val seen = new mutable.HashSet[Int]()
     while(! root) {
       if(pos >=in.length || in(pos).isEmpty) {

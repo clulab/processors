@@ -606,23 +606,4 @@ object Reader {
   val EOS = Pattern.compile("[\\.|\\?|!]+(\\s|\"|'|`|\\))*", Pattern.CASE_INSENSITIVE)
   val P = Pattern.compile("<P>", Pattern.CASE_INSENSITIVE)
   val TT_ERR = Pattern.compile("//\\s*TT_ERR", Pattern.CASE_INSENSITIVE)
-
-  def main(args:Array[String]) {
-    val reader = new Reader
-    val proc = new FastNLPProcessor()
-    //val proc = new CoreNLPProcessor()
-    val top = new File(args(0))
-    if(top.isDirectory) {
-      for(f <- top.listFiles()){
-        if(f.getName.endsWith(".dis")){
-          println("Parsing file " + f)
-          val p = reader.read(f, proc, simplifyRelationLabels=true, verbose=true)
-          println(p._1)
-        }
-      }
-    } else {
-      val p = reader.read(top, proc, simplifyRelationLabels=true, verbose=true)
-      println(p._1)
-    }
-  }
 }
