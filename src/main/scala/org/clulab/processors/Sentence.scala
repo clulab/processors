@@ -3,6 +3,7 @@ package org.clulab.processors
 import org.clulab.struct.{DirectedGraph, GraphMap, Tree}
 import org.clulab.struct.GraphMap._
 import scala.collection.mutable
+import scala.util.hashing.MurmurHash3._
 
 
 /** Stores the annotations for a single sentence */
@@ -31,6 +32,39 @@ class Sentence(
   var dependenciesByType: GraphMap = new GraphMap
 
   def size:Int = words.length
+
+  /**
+    * Used to compare Sentences.
+    * @return a hash (Int) based on the contents of a sentence
+    */
+  def equivalenceHash: Int = {
+
+    val stringCode = "org.clulab.processors.Sentence"
+
+    def getAnnotationsHash(labels: Option[Array[_]]): Int = labels match {
+      case Some(lbls) =>
+        val h0 = stringHash(s"$stringCode.annotations")
+        val hs = lbls.map(_.hashCode)
+        val h = mixLast(h0, unorderedHash(hs))
+        finalizeHash(h, lbls.length)
+      case None => None.hashCode
+    }
+
+    // the seed (not counted in the length of finalizeHash)
+    // decided to use the class name
+    val h0 = stringHash(stringCode)
+    // NOTE: words.hashCode will produce inconsistent values
+    val h1 = mix(h0, getAnnotationsHash(Some(words)))
+    val h2 = mix(h1, getAnnotationsHash(Some(startOffsets)))
+    val h3 = mix(h2, getAnnotationsHash(Some(endOffsets)))
+    val h4 = mix(h3, getAnnotationsHash(tags))
+    val h5 = mix(h4, getAnnotationsHash(lemmas))
+    val h6 = mix(h5, getAnnotationsHash(entities))
+    val h7 = mix(h6, getAnnotationsHash(norms))
+    val h8 = mix(h7, getAnnotationsHash(chunks))
+    val h9 = mix(h8, if (dependencies.nonEmpty) dependencies.get.equivalenceHash else None.hashCode)
+    finalizeHash(h9, 9)
+  }
 
   /**
     * Default dependencies: first Stanford collapsed, then Stanford basic, then None

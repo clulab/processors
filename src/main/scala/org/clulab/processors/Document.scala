@@ -2,6 +2,7 @@ package org.clulab.processors
 
 import org.clulab.discourse.rstparser.DiscourseTree
 import org.clulab.struct.CorefChains
+import scala.util.hashing.MurmurHash3._
 
 
 /**
@@ -19,42 +20,33 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   def clear() { }
 
   /**
-    * Default dependencies: first Stanford collapsed, then Stanford basic, then None
-    * @return A directed graph of dependencies if any exist, otherwise None
+    * Used to compare Documents.
+    * @return a hash (Int) based primarily on the sentences
     */
-  def dependencies:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
+  def equivalenceHash: Int = {
 
-    if(dependenciesByType.contains(STANFORD_COLLAPSED))
-      dependenciesByType.get(STANFORD_COLLAPSED)
-    else if(dependenciesByType.contains(STANFORD_BASIC))
-      dependenciesByType.get(STANFORD_BASIC)
-    else
-      None
-  }
+    val stringCode = "org.clulab.processors.Document"
 
-  /** Fetches the Stanford basic dependencies */
-  def stanfordBasicDependencies:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
-    dependenciesByType.get(STANFORD_BASIC)
-  }
+    /**
+      * Hash representing the [[sentences]]. <br>
+      * Used by [[equivalenceHash]].
+      * @return an Int hash based on the [[Sentence.equivalenceHash]] of each sentence
+      */
+    def sentencesHash: Int = {
+      val h0 = stringHash(s"$stringCode.sentences")
+      val hs = sentences.map(_.equivalenceHash)
+      val h = mixLast(h0, unorderedHash(hs))
+      finalizeHash(h, sentences.length)
+    }
 
-  /** Fetches the Stanford collapsed dependencies */
-  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
-    dependenciesByType.get(STANFORD_COLLAPSED)
+    // the seed (not counted in the length of finalizeHash)
+    // decided to use the class name
+    val h0 = stringHash(stringCode)
+    // comprised of the equiv. hash of sentences
+    val h1 = mix(h0, sentencesHash)
+    finalizeHash(h1, 1)
   }
-
-  def semanticRoles:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
-    dependenciesByType.get(SEMANTIC_ROLES)
-  }
-
-  def setDependencies(depType:Int, deps:DirectedGraph[String]): Unit = {
-    if(dependenciesByType == null)
-      dependenciesByType = new DependencyMap
-    dependenciesByType += (depType -> deps)
-  }
+}
 
 object Document {
 

@@ -2,6 +2,7 @@ package org.clulab.struct
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.util.hashing.MurmurHash3._
 
 
 /**
@@ -18,7 +19,19 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
 
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
 
-  def allEdges(): List[(Int, Int, E)] = edges
+  /**
+    * Used to compare DirectedGraphs.
+    * @return a hash (Int) based on the [[edges]] and [[roots]]
+    */
+  def equivalenceHash: Int = {
+    val stringCode = "org.clulab.struct.DirectedGraph"
+    // the seed (not counted in the length of finalizeHash)
+    // decided to use the class name
+    val h0 = stringHash(stringCode)
+    val h1 = mix(h0, edges.hashCode)
+    val h2 = mix(h1, roots.hashCode)
+    finalizeHash(h2, 2)
+  }
 
   private def computeSize(edges:List[Edge[_]]):Int = {
     var size = 0
