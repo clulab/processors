@@ -1,13 +1,11 @@
 package org.clulab.processors.fastnlp
 
-import java.util.Properties
-
+import org.clulab.processors.{Document, Sentence}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.discourse.rstparser.RSTParser
+import org.clulab.discourse.rstparser.Utils._
 import org.clulab.processors.corenlp.CoreNLPUtils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.processors.{DependencyMap, Sentence, Document}
-import org.clulab.struct.DirectedGraph
-import org.clulab.utils.Files
 import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.parser.nndep.DependencyParser
@@ -15,12 +13,14 @@ import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraphFactory
 import edu.stanford.nlp.trees.GrammaticalStructure
 import org.maltparserx.MaltParserService
-import FastNLPProcessor._
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import scala.collection.mutable
 import org.maltparserx
+import java.util.Properties
+import org.clulab.utils.Files
 import scala.collection.JavaConversions._
-import org.clulab.discourse.rstparser.Utils._
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable
+import FastNLPProcessor._
+
 
 /**
  * Fast NLP tools
@@ -31,10 +31,10 @@ import org.clulab.discourse.rstparser.Utils._
  * User: mihais
  * Date: 1/4/14
  */
-class FastNLPProcessor(internStrings:Boolean = true,
-                       useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
-                       withDiscourse:Boolean = false)
-  extends ShallowNLPProcessor(internStrings) {
+class FastNLPProcessor(
+  internStrings:Boolean = true,
+  useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
+  withDiscourse:Boolean = false) extends ShallowNLPProcessor(internStrings) {
 
   /**
    * One maltparser instance for each thread
@@ -77,7 +77,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
       }
       val dg = parseSentence(sentence)
       // Note: malt only support basic Stanford dependencies!
-      sentence.setDependencies(DependencyMap.STANFORD_BASIC, dg)
+      sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
       if (debug) {
         println("DONE.")
       }
@@ -102,8 +102,8 @@ class FastNLPProcessor(internStrings:Boolean = true,
       val collapsedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, true, null)
 
       // convert to our own directed graph
-      doc.sentences(offset).setDependencies(DependencyMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-      doc.sentences(offset).setDependencies(DependencyMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
+      doc.sentences(offset).setDependencies(GraphMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+      doc.sentences(offset).setDependencies(GraphMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
 
       //println("Output directed graph:")
       //println(dg)
@@ -124,7 +124,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
     val output = getService.parseTokens(tokens)
 
     // convert malt's output into our dependency graph
-    val edgeBuffer = new ListBuffer[(Int, Int, String)]
+    val edgeBuffer = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]
     for(o <- output) {
       //println(o)
@@ -142,7 +142,7 @@ class FastNLPProcessor(internStrings:Boolean = true,
       if(head == -1) {
         roots += modifier
       } else {
-        edgeBuffer += new Tuple3(head, modifier, in(label))
+        edgeBuffer += Edge(source = head, destination = modifier, relation = in(label))
       }
     }
 

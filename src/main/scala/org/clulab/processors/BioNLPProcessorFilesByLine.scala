@@ -1,8 +1,9 @@
 package org.clulab.processors
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
 import org.clulab.processors.bionlp.BioNLPProcessor
+import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.Files
 
 import scala.collection.mutable.ListBuffer

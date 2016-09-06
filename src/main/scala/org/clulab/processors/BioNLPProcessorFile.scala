@@ -3,6 +3,7 @@ package org.clulab.processors
 import java.io.PrintWriter
 
 import org.clulab.processors.bionlp.BioNLPProcessor
+import org.clulab.serialization.DocumentSerializer
 
 /**
  * Runs BioNLPProcessor on a single text file. The output is serialized in a .ser output file.

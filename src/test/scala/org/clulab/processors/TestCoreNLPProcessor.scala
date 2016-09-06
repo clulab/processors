@@ -2,8 +2,10 @@ package org.clulab.processors
 
 import org.clulab.discourse.rstparser.RelationDirection
 import org.scalatest._
+
 import collection.JavaConversions.asJavaCollection
 import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.struct.CorefMention
 
 /**
  * 
