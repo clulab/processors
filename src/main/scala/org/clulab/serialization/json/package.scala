@@ -38,6 +38,20 @@ package object json {
       case em: EventMention => EventMentionOps(em).jsonAST
       case rm: RelationMention => RelationMentionOps(rm).jsonAST
     }
+
+    // A mention only only contains a pointer to a document, so
+    // create a Seq[Mention] whose jsonAST includes
+    // an accompanying json map of docEquivHash -> doc's json
+    def completeAST: JValue = Seq(m).jsonAST
+
+    /**
+      * Serialize mentions to json file
+      */
+    def saveJSON(file: String, pretty: Boolean): Unit = {
+      require(file.endsWith(".json"), "file should have .json extension")
+      Files.write(Paths.get(file), Seq(m).json(pretty).getBytes(StandardCharsets.UTF_8))
+    }
+    def saveJSON(file: File, pretty: Boolean): Unit = saveJSON(file.getAbsolutePath, pretty)
   }
 
   implicit class TextBoundMentionOps(tb: TextBoundMention) extends JSONSerialization {
