@@ -7,6 +7,7 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
 import java.io.File
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
+import org.clulab.processors.examples.ProcessorExample
 
 /**
  * A simple interactive shell

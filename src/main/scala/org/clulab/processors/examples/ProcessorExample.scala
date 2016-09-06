@@ -1,6 +1,8 @@
-package org.clulab.processors
+package org.clulab.processors.examples
 
-import corenlp.CoreNLPProcessor
+import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.serialization.DocumentSerializer
+import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.DirectedGraphEdgeIterator
 
 /**

@@ -1,33 +1,10 @@
 package org.clulab.processors
 
-import org.clulab.discourse.rstparser.DiscourseTree
-import org.clulab.struct.{Tree, DirectedGraph, DependencyMap, CorefChains}
-import org.clulab.struct.DependencyMap._
-import collection.mutable
+import org.clulab.struct.{DependencyMap, DirectedGraph, Tree}
+import org.clulab.struct.GraphMap._
 
+import scala.collection.mutable
 
-/**
-  * Stores all annotations for one document
-  * User: mihais
-  * Date: 3/1/13
-  */
-class Document( var id:Option[String],
-  val sentences:Array[Sentence],
-  var coreferenceChains:Option[CorefChains],
-  var discourseTree:Option[DiscourseTree],
-  var text:Option[String]) extends Serializable {
-
-  def this(sa:Array[Sentence], cc:Option[CorefChains], dt:Option[DiscourseTree]) {
-    this(None, sa, cc, dt, None)
-  }
-
-  def this(sa: Array[Sentence]) {
-    this(None, sa, None, None, None)
-  }
-
-  /** Clears any internal state potentially constructed by the annotators */
-  def clear() { }
-}
 
 /** Stores the annotations for a single sentence */
 class Sentence(

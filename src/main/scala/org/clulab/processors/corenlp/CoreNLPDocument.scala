@@ -1,8 +1,9 @@
 package org.clulab.processors.corenlp
 
 import org.clulab.discourse.rstparser.DiscourseTree
-import org.clulab.processors.{CorefChains, Sentence, Document}
+import org.clulab.processors.{Document, Sentence}
 import edu.stanford.nlp.pipeline.Annotation
+import org.clulab.struct.CorefChains
 
 
 /**

@@ -1,6 +1,7 @@
-package org.clulab.processors
+package org.clulab.processors.examples
 
 import org.clulab.processors.fastnlp.FastNLPProcessor
+
 import scala.io.Source
 
 /**

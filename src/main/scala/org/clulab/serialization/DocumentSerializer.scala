@@ -1,11 +1,13 @@
-package org.clulab.processors
+package org.clulab.serialization
 
 import java.io._
-import org.clulab.discourse.rstparser.{TreeKind, TokenOffset, RelationDirection, DiscourseTree}
-import org.clulab.processors.DocumentSerializer._
+
+import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
+import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
-import collection.mutable.{ListBuffer, ArrayBuffer}
-import collection.mutable
+
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 
 /**
