@@ -6,22 +6,14 @@ import org.clulab.struct.CorefChains
 
 /**
   * Stores all annotations for one document
-  * User: mihais
-  * Date: 3/1/13
   */
-class Document( var id:Option[String],
-  val sentences:Array[Sentence],
-  var coreferenceChains:Option[CorefChains],
-  var discourseTree:Option[DiscourseTree],
-  var text:Option[String]) extends Serializable {
+class Document(val sentences: Array[Sentence]) extends Serializable {
 
-  def this(sa:Array[Sentence], cc:Option[CorefChains], dt:Option[DiscourseTree]) {
-    this(None, sa, cc, dt, None)
-  }
-
-  def this(sa: Array[Sentence]) {
-    this(None, sa, None, None, None)
-  }
+  var id: Option[String] = None
+  // FIXME: are coreferenceChains needed? Seems like a CoreNLP-specific thing...
+  var coreferenceChains: Option[CorefChains] = None
+  var discourseTree: Option[DiscourseTree] = None
+  var text: Option[String] = None
 
   /** Clears any internal state potentially constructed by the annotators */
   def clear() { }
@@ -64,30 +56,15 @@ class Document( var id:Option[String],
     dependenciesByType += (depType -> deps)
   }
 
-  /**
-    * Recreates the text of the sentence, preserving the original number of white spaces between tokens
-    * @return the text of the sentence
-    */
-  def getSentenceText():String =  getSentenceFragmentText(0, words.length)
+object Document {
 
-  def getSentenceFragmentText(start:Int, end:Int):String = {
-    // optimize the single token case
-    if(end - start == 1) words(start)
-
-    val text = new mutable.StringBuilder()
-    for(i <- start until end) {
-      if(i > start) {
-        // add as many white spaces as recorded between tokens
-        // sometimes this space is negative: in BioNLPProcessor we replace "/" with "and"
-        //   in these cases, let's make sure we print 1 space, otherwise the text is hard to read
-        val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
-        for (j <- 0 until numberOfSpaces) {
-          text.append(" ")
-        }
-      }
-      text.append(words(i))
-    }
-    text.toString()
+  def apply(sentences: Array[Sentence]): Document = new Document(sentences)
+  def apply(id: Option[String], sentences: Array[Sentence], coref: Option[CorefChains], dtree: Option[DiscourseTree], text: Option[String]): Document = {
+    val d = Document(sentences)
+    d.id = id
+    d.coreferenceChains = coref
+    d.discourseTree = dtree
+    d.text = text
+    d
   }
-
 }

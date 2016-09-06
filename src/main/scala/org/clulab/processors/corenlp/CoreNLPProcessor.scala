@@ -82,8 +82,8 @@ class CoreNLPProcessor(
         // save syntactic dependencies
         val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
         val collapsedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
-        doc.sentences(offset).setDependencies(DependencyMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-        doc.sentences(offset).setDependencies(DependencyMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
+        doc.sentences(offset).setDependencies(GraphMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+        doc.sentences(offset).setDependencies(GraphMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
       } else {
         doc.sentences(offset).syntacticTree = None
       }
