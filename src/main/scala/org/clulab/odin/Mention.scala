@@ -6,9 +6,7 @@ import org.clulab.struct.Interval
 import org.clulab.processors.Document
 import org.clulab.utils.DependencyUtils
 import org.clulab.odin.impl.StringMatcher
-import org.json4s._
-import org.json4s.JsonDSL._
-import org.json4s.native._
+
 
 @SerialVersionUID(1L)
 trait Mention extends Equals with Ordered[Mention] with Serializable {
@@ -135,12 +133,6 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
       bits.mkString
   }
 
-  def jsonAST: JValue
-
-  def json(pretty: Boolean = false): String =
-    if (pretty) prettyJson(renderJValue(jsonAST))
-    else compactJson(renderJValue(jsonAST))
-
   override def canEqual(a: Any) = a.isInstanceOf[Mention]
 
   override def equals(that: Any): Boolean = that match {
@@ -180,12 +172,12 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
 }
 
 class TextBoundMention(
-    val labels: Seq[String],
-    val tokenInterval: Interval,
-    val sentence: Int,
-    val document: Document,
-    val keep: Boolean,
-    val foundBy: String
+  val labels: Seq[String],
+  val tokenInterval: Interval,
+  val sentence: Int,
+  val document: Document,
+  val keep: Boolean,
+  val foundBy: String
 ) extends Mention {
 
   def this(
@@ -200,15 +192,6 @@ class TextBoundMention(
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
   val paths: Map[String, Map[Mention, SynPath]] = Map.empty
-
-  def jsonAST: JValue = {
-    ("type" -> "TextBound") ~
-    ("tokenInterval" -> List(start, end)) ~
-    ("characterOffsets" -> List(startOffset, endOffset)) ~
-    ("labels" -> labels) ~
-    ("sentence" -> sentence) ~
-    ("foundBy" -> foundBy)
-  }
 
   // Copy constructor for TextBoundMention
   def copy(
@@ -225,15 +208,15 @@ class TextBoundMention(
 // NOTE that event mentions *may* have no arguments
 // this is allowed because it is useful for coreference
 class EventMention(
-    val labels: Seq[String],
-    val tokenInterval: Interval,
-    val trigger: TextBoundMention,
-    val arguments: Map[String, Seq[Mention]],
-    val paths: Map[String, Map[Mention, SynPath]],
-    val sentence: Int,
-    val document: Document,
-    val keep: Boolean,
-    val foundBy: String
+  val labels: Seq[String],
+  val tokenInterval: Interval,
+  val trigger: TextBoundMention,
+  val arguments: Map[String, Seq[Mention]],
+  val paths: Map[String, Map[Mention, SynPath]],
+  val sentence: Int,
+  val document: Document,
+  val keep: Boolean,
+  val foundBy: String
 ) extends Mention {
 
   def this(
@@ -284,18 +267,6 @@ class EventMention(
     finalizeHash(h2, 2)
   }
 
-  def jsonAST: JValue = {
-    val args = arguments.map {
-      case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
-    }
-    ("type" -> "Event") ~
-    ("labels" -> labels) ~
-    ("sentence" -> sentence) ~
-    ("foundBy" -> foundBy) ~
-    ("trigger" -> trigger.jsonAST) ~
-    ("arguments" -> JObject(args.toList))
-  }
-
   // Copy constructor for EventMention
   def copy(
       labels: Seq[String] = this.labels,
@@ -321,7 +292,6 @@ class EventMention(
       this.keep,
       s"${this.foundBy} + toRelationMention"
     )
-
   }
 
   // scatters the args named `argName` into N mentions each with `size` args named `argName`
@@ -387,17 +357,6 @@ class RelationMention(
       keep: Boolean,
       foundBy: String
   ) = this(labels, mkTokenInterval(arguments), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
-
-  def jsonAST: JValue = {
-    val args = arguments.map {
-      case (name, mentions) => (name -> JArray(mentions.map(_.jsonAST).toList))
-    }
-    ("type" -> "Relation") ~
-    ("labels" -> labels) ~
-    ("sentence" -> sentence) ~
-    ("foundBy" -> foundBy) ~
-    ("arguments" -> JObject(args.toList))
-  }
 
   // Copy constructor for RelationMention
   def copy(
