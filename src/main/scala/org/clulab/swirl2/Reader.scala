@@ -1,17 +1,16 @@
 package org.clulab.swirl2
 
-import java.io.{FileReader, BufferedReader, PrintWriter, File}
-
+import java.io.{BufferedReader, File, FileReader, PrintWriter}
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.processors.{DependencyMap, DocumentSerializer, Document, Processor}
-import org.clulab.struct.DirectedGraph
+import org.clulab.processors.{Document, Processor}
+import org.clulab.struct.{GraphMap, DirectedGraph}
 import org.slf4j.LoggerFactory
-
 import scala.collection.mutable
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
-
 import Reader._
+import org.clulab.serialization.DocumentSerializer
+
 
 /**
  * Reads a CoNLL formatted file and converts it to our own representation
@@ -110,7 +109,7 @@ class Reader {
     //
     assert(document.sentences.length == semDependencies.size)
     for(i <- document.sentences.indices) {
-      document.sentences(i).setDependencies(DependencyMap.SEMANTIC_ROLES, semDependencies(i))
+      document.sentences(i).setDependencies(GraphMap.SEMANTIC_ROLES, semDependencies(i))
     }
 
     logger.debug(s"Found a total of $predCount predicates with $argCount arguments.")
@@ -157,7 +156,7 @@ class Reader {
         val depGraph = toDirectedGraph(conllTokens)
         //println(depGraph)
         // we set the gold CoNLL syntax as Stanford basic dependencies (hack)
-        sent.dependenciesByType += DependencyMap.STANFORD_BASIC -> depGraph
+        sent.dependenciesByType += GraphMap.STANFORD_BASIC -> depGraph
       }
     } else {
       proc.parse(doc)
@@ -180,7 +179,7 @@ class Reader {
       else
         roots += modifier
     }
-    new DirectedGraph[String](edges.toList, roots.toSet)
+    DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
   }
 
   def mkSemanticDependencies(sentence:Array[CoNLLToken]):DirectedGraph[String] = {
@@ -214,7 +213,7 @@ class Reader {
       }
     }
 
-    new DirectedGraph[String](edges.toList, roots.toSet)
+    DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
   }
 
   def mkToken(bits:Array[String]):CoNLLToken = {

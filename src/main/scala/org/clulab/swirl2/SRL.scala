@@ -1,14 +1,12 @@
 package org.clulab.swirl2
 
 import java.io._
-
 import org.clulab.processors.Sentence
-import org.clulab.struct.DirectedGraph
+import org.clulab.struct.{DirectedGraph, Edge}
 import org.clulab.utils.Files
 import org.clulab.utils.StringUtils._
 import org.slf4j.LoggerFactory
 import SRL._
-
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
@@ -87,7 +85,7 @@ class SRL {
 
   def classifySentence(sentence:Sentence):DirectedGraph[String] = {
     val roots = new mutable.HashSet[Int]()
-    val edges = new ListBuffer[(Int, Int, String)]
+    val edges = new ListBuffer[Edge[String]]
 
     // first, find predicates
     /*
@@ -115,13 +113,13 @@ class SRL {
           predLabel = scores.head._1
           if (predLabel != ArgumentClassifier.NEG_LABEL) {
             history += new Tuple2(arg, predLabel)
-            edges += new Tuple3(pred, arg, predLabel)
+            edges += Edge[String](source = pred , destination = arg, predLabel)
           }
         }
       }
     }
 
-    new DirectedGraph[String](edges.toList, roots.toSet)
+    DirectedGraph[String](edges.toList, roots.toSet)
   }
 
   def score(output:List[(DirectedGraph[String], DirectedGraph[String])]): Unit = {
@@ -130,8 +128,8 @@ class SRL {
     var correctUnlabeled = 0
 
     for(o <- output) {
-      val gold = o._1.allEdges()
-      val pred = o._2.allEdges()
+      val gold = o._1.allEdges
+      val pred = o._2.allEdges
 
       total += gold.size
       predicted += pred.size

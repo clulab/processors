@@ -1,7 +1,8 @@
 package org.clulab.struct
 
 import scala.collection.mutable
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+
 
 /**
  * A generic graph where the nodes have Int identifiers and edges have type E
@@ -11,22 +12,26 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer}
  * User: mihais
  * Date: 3/5/13
  */
-class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable.Set[Int]) extends Serializable {
-  val outgoingEdges:Array[Array[(Int, E)]] = mkOutgoing(edges)
-  val incomingEdges:Array[Array[(Int, E)]] = mkIncoming(edges)
+case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Set[Int]) extends Serializable {
+  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges)
+  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges)
+
+  val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
 
   def allEdges(): List[(Int, Int, E)] = edges
 
-  private def computeSize(edges:List[(Int, Int, E)]):Int = {
+  private def computeSize(edges:List[Edge[_]]):Int = {
     var size = 0
     for (e <- edges) {
-      size = math.max(e._1 + 1, size)
-      size = math.max(e._2 + 1, size)
+      size = math.max(e.source + 1, size)
+      size = math.max(e.destination + 1, size)
     }
     size
   }
 
-  private def mkOutgoing(edges:List[(Int, Int, E)]): Array[Array[(Int, E)]] = {
+  // (src, dest, rel) <- allEdges
+
+  private def mkOutgoing(edges:List[Edge[E]]): Array[Array[(Int, E)]] = {
     //println("EDGES:")
     //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
     val size = computeSize(edges)
@@ -39,8 +44,8 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     }
 
     for (edge <- edges) {
-      //println("storing edge: " + edge)
-      nodes(edge._1).+=((edge._2, edge._3))
+      //logger.debug("storing edge: " + edge)
+      nodes(edge.source).+=((edge.destination, edge.relation))
     }
 
     val outgoing = new Array[Array[(Int, E)]](size)
@@ -53,7 +58,7 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     outgoing
   }
 
-  private def mkIncoming(edges:List[(Int, Int, E)]): Array[Array[(Int, E)]] = {
+  private def mkIncoming(edges:List[Edge[E]]): Array[Array[(Int, E)]] = {
     val size = computeSize(edges)
     //println("size = " + size)
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)
@@ -64,8 +69,8 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
     }
 
     for (edge <- edges) {
-      //println("storing edge: " + edge)
-      nodes(edge._2).+=((edge._1, edge._3))
+      //logger.debug("storing edge: " + edge)
+      nodes(edge.destination).+=((edge.source, edge.relation))
     }
 
     val incoming = new Array[Array[(Int, E)]](size)
@@ -126,11 +131,11 @@ class DirectedGraph[E](edges:List[(Int, Int, E)], val roots:collection.immutable
   }
 
   // gets edges between nodes, optionally ignoring direction
-  def getEdges(n1: Int, n2: Int, ignoreDirection: Boolean = false): Seq[(Int, Int, E)] = edges filter {
-    case (`n1`, `n2`, _) => true
-    case (`n2`, `n1`, _) if ignoreDirection => true
-    case _ => false
-  }
+  def getEdges(n1: Int, n2: Int, ignoreDirection: Boolean = false): Seq[(Int, Int, E)] = allEdges.filter {
+        case (`n1`, `n2`, _) => true
+        case (`n2`, `n1`, _) if ignoreDirection => true
+        case _ => false
+      }
 
   // Gets a single path represented as a sequence in which each element
   // is a sequence of edges connecting two tokens, and returns a sequence in which
@@ -211,9 +216,7 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
     return graph.size
   }
 
-  def hasNext:Boolean = {
-    return (node < graph.size)
-  }
+  def hasNext:Boolean = node < graph.size
 
   def next:(Int, Int, E) = {
     val edge = graph.getOutgoingEdges(node)(nodeEdgeOffset)
@@ -229,20 +232,25 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
 }
 
 object DirectedGraph {
+
+  def triplesToEdges[E](triples: List[(Int, Int, E)]): List[Edge[E]] = for {
+    triple <- triples
+  } yield Edge[E](source = triple._1, destination = triple._2, relation = triple._3)
+
   /**
    * Constructs a graph from Stanford dependencies
    * Note: Stanford indices start at 1, so we will decrement all indices by 1
    */
   def mkGraph(dependencies: Array[String]): DirectedGraph[String] = {
-    val edges = new ListBuffer[(Int, Int, String)]
+    val edges = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]()
     for (depLine <- dependencies) {
       parseDep(depLine).foreach(dep => {
-        edges += dep
+        edges += Edge(dep._1, dep._2, dep._3)
         if (dep._1 == -1) roots.add(dep._2)
       })
     }
-    new DirectedGraph[String](edges.toList, roots.toSet)
+    DirectedGraph[String](edges.toList, roots.toSet)
   }
 
   /** Parses a line of the form "nsubjpass(expressed-15, CDK6-13)" into a tuple(14, 12, nsubjpass) */
@@ -278,3 +286,9 @@ object DirectedGraph {
     b.toString()
   }
 }
+
+case class Edge[E](
+  source: Int,
+  destination: Int,
+  relation: E
+)

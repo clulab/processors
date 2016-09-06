@@ -1,8 +1,7 @@
 package org.clulab.processors
 
-import org.clulab.struct.{DependencyMap, DirectedGraph, Tree}
+import org.clulab.struct.{DirectedGraph, GraphMap, Tree}
 import org.clulab.struct.GraphMap._
-
 import scala.collection.mutable
 
 
@@ -42,39 +41,21 @@ class Sentence(
     * Default dependencies: first Stanford collapsed, then Stanford basic, then None
     * @return A directed graph of dependencies if any exist, otherwise None
     */
-  def dependencies:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
-
-    if(dependenciesByType.contains(STANFORD_COLLAPSED))
-      dependenciesByType.get(STANFORD_COLLAPSED)
-    else if(dependenciesByType.contains(STANFORD_BASIC))
-      dependenciesByType.get(STANFORD_BASIC)
-    else
-      None
+  def dependencies:Option[DirectedGraph[String]] = dependenciesByType match {
+    case collapsed if collapsed.contains(STANFORD_COLLAPSED) => collapsed.get(STANFORD_COLLAPSED)
+    case basic if basic.contains(STANFORD_BASIC) => basic.get(STANFORD_BASIC)
+    case _ => None
   }
 
   /** Fetches the Stanford basic dependencies */
-  def stanfordBasicDependencies:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
-    dependenciesByType.get(STANFORD_BASIC)
-  }
+  def stanfordBasicDependencies:Option[DirectedGraph[String]] = dependenciesByType.get(STANFORD_BASIC)
 
   /** Fetches the Stanford collapsed dependencies */
-  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
-    dependenciesByType.get(STANFORD_COLLAPSED)
-  }
+  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = dependenciesByType.get(STANFORD_COLLAPSED)
 
-  def semanticRoles:Option[DirectedGraph[String]] = {
-    if(dependenciesByType == null) return None
-    dependenciesByType.get(SEMANTIC_ROLES)
-  }
+  def semanticRoles:Option[DirectedGraph[String]] = dependenciesByType.get(SEMANTIC_ROLES)
 
-  def setDependencies(depType:Int, deps:DirectedGraph[String]): Unit = {
-    if(dependenciesByType == null)
-      dependenciesByType = new DependencyMap
-    dependenciesByType += (depType -> deps)
-  }
+  def setDependencies(depType: String, deps: DirectedGraph[String]): Unit = dependenciesByType += (depType -> deps)
 
   /**
     * Recreates the text of the sentence, preserving the original number of white spaces between tokens

@@ -77,7 +77,7 @@ class TestDependencyUtils extends FlatSpec with Matchers {
     val edges = List((1, 0, "det"),(1,3,"rcmod"),(3,1,"nsubj"),(3,6,"prep_at"),(6,5,"nn"),
       (8,1,"nsubj"),(8,7,"advmod"),(8,12,"dobj"),(8,20,"prep_in"),(12,9,"det"),(12,10,"nn"),
       (12,11,"nn"),(12,13,"partmod"),(13,16,"prep_for"),(16,15,"nn"),(20,19,"amod"))
-    val depGraph = new DirectedGraph[String](edges, Set(8))
+    val depGraph = new DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges), Set(8))
     val tokenInterval = Interval(0, 2)
     noException shouldBe thrownBy (DependencyUtils.findHeads(tokenInterval, depGraph))
   }
@@ -89,7 +89,7 @@ class TestDependencyUtils extends FlatSpec with Matchers {
       (10, 15, "prep_for"), (13, 12, "det"), (13, 15, "conj_and"), (13, 18, "prep_of"),
       (18, 17, "det")
     )
-    val graph = new DirectedGraph(edges, Set(7))
+    val graph = DirectedGraph(DirectedGraph.triplesToEdges[String](edges), Set(7))
     val interval = Interval(4, 8)
     noException shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
   }
@@ -105,7 +105,7 @@ class TestDependencyUtils extends FlatSpec with Matchers {
       (11, 22, "prep_about"), (11, 26, "prep_with"), (14, 13, "det"), (14, 16, "prep_of"), (16, 19, "prep_in"),
       (19, 18, "det"), (22, 21, "amod"), (26, 25, "det"), (30, 29, "det"), (32, 34, "dobj"), (34, 33, "amod")
     )
-    val graph = new DirectedGraph(edges, Set(5))
+    val graph = DirectedGraph(DirectedGraph.triplesToEdges[String](edges), Set(5))
     val interval = Interval(21, 23)
     a [DependencyUtilsException] shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
   }
