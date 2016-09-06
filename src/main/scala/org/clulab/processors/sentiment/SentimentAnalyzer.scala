@@ -1,4 +1,6 @@
-package org.clulab.processors
+package org.clulab.processors.sentiment
+
+import org.clulab.processors.{Document, Sentence}
 
 /**
  * skeleton for sentiment analysis

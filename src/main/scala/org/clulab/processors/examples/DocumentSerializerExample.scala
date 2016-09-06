@@ -1,6 +1,8 @@
-package org.clulab.processors
+package org.clulab.processors.examples
 
-import java.io.{FileReader, BufferedReader}
+import java.io.{BufferedReader, FileReader}
+
+import org.clulab.serialization.DocumentSerializer
 
 /**
  *

@@ -5,13 +5,11 @@ import java.io._
 import de.bwaldvogel.liblinear.SolverType
 import org.clulab.learning._
 import org.clulab.processors.{Sentence, Document}
-import org.clulab.struct.{DirectedGraphEdgeIterator, DirectedGraph, Counter}
+import org.clulab.struct.{DirectedGraphEdgeIterator, DirectedGraph, Edge, Counter}
 import org.clulab.utils.Files
 import org.clulab.utils.StringUtils._
 import org.slf4j.LoggerFactory
-
 import ArgumentClassifier._
-
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.Random
@@ -111,8 +109,8 @@ class ArgumentClassifier {
     var correctLabeled = 0
 
     for(o <- output) {
-      val gold = o._1.allEdges()
-      val pred = o._2.allEdges()
+      val gold = o._1.allEdges
+      val pred = o._2.allEdges
 
       total += gold.size
       predicted += pred.size
@@ -159,7 +157,7 @@ class ArgumentClassifier {
 
   def classifySentence(sentence:Sentence):DirectedGraph[String] = {
     val roots = new mutable.HashSet[Int]()
-    val edges = new ListBuffer[(Int, Int, String)]
+    val edges = new ListBuffer[Edge[String]]
 
     // first, get gold predicates
     for(i <- sentence.words.indices) {
@@ -179,7 +177,7 @@ class ArgumentClassifier {
           predLabel = scores.head._1
           if (predLabel != ArgumentClassifier.NEG_LABEL) {
             history += new Tuple2(arg, predLabel) // TODO: we do not use history for now
-            edges += new Tuple3(pred, arg, predLabel)
+            edges += Edge[String](source = pred, destination = arg, predLabel)
             // argCandidates += new Tuple2(arg, scores)
           }
         }
@@ -193,7 +191,7 @@ class ArgumentClassifier {
       */
     }
 
-    new DirectedGraph[String](edges.toList, roots.toSet)
+    DirectedGraph[String](edges.toList, roots.toSet)
   }
 
   def pickWithDomainConstraints(argCands:ArrayBuffer[(Int, List[(String, Double)])]):Set[(Int, String)] = {

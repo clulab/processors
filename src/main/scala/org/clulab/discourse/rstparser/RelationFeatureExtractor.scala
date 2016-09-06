@@ -1,8 +1,7 @@
 package org.clulab.discourse.rstparser
 
-import org.clulab.processors.{CorefMention, Document}
-import org.clulab.struct.Counter
-import org.clulab.struct.Tree
+import org.clulab.processors.Document
+import org.clulab.struct.{CorefMention, Counter, Tree}
 import Utils._
 
 /**

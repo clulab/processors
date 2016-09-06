@@ -1,12 +1,13 @@
-package org.clulab.processors
+package org.clulab.serialization
 
 import java.io._
-import org.clulab.discourse.rstparser.{TreeKind, TokenOffset, RelationDirection, DiscourseTree}
-import org.clulab.processors.DocumentSerializer._
+import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
+import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
-import collection.mutable.{ListBuffer, ArrayBuffer}
-import collection.mutable
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
+
 
 /**
  * Saves/loads a Document to/from a stream
@@ -16,6 +17,8 @@ import scala.reflect.ClassTag
  * Date: 3/5/13
  */
 class DocumentSerializer {
+
+  import DocumentSerializer._
 
   /**
    * This is deprecated! Please use load(r:BufferedReader) instead!
@@ -58,7 +61,10 @@ class DocumentSerializer {
       assert(bits(0) == END_OF_DOCUMENT)
     }
 
-    new Document(sents.toArray, coref, discourse)
+    val doc = Document(sents.toArray)
+    doc.coreferenceChains = coref
+    doc.discourseTree = discourse
+    doc
   }
 
   private def read(r:BufferedReader, howManyTokens:Int = 0): Array[String] = {
@@ -128,12 +134,12 @@ class DocumentSerializer {
     assert(normBuffer.isEmpty || normBuffer.size == tokenCount)
     assert(chunkBuffer.isEmpty || chunkBuffer.size == tokenCount)
 
-    var deps = new DependencyMap
+    var deps = new GraphMap
     var tree:Option[Tree] = None
     do {
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
-        val dt = bits(1).toInt
+        val dt = bits(1)
         val sz = bits(2).toInt
         val d = loadDependencies(r, sz)
         deps += (dt -> d)
@@ -144,7 +150,7 @@ class DocumentSerializer {
       }
     } while(bits(0) != END_OF_SENTENCE)
 
-    new Sentence(
+    Sentence(
       wordBuffer.toArray,
       startOffsetBuffer.toArray,
       endOffsetBuffer.toArray,
@@ -158,7 +164,7 @@ class DocumentSerializer {
   }
 
   private def loadDependencies(r:BufferedReader, sz:Int):DirectedGraph[String] = {
-    val edges = new ListBuffer[(Int, Int, String)]
+    val edges = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]()
     var bits = read(r)
     var offset = 0
@@ -169,7 +175,7 @@ class DocumentSerializer {
     do {
       bits = read(r)
       if (bits(0) != END_OF_DEPENDENCIES) {
-        val edge = new Tuple3(bits(0).toInt, bits(1).toInt, bits(2))
+        val edge = Edge(source = bits(0).toInt, destination = bits(1).toInt, relation = bits(2))
         //println("adding edge: " + edge)
         edges += edge
       }
@@ -300,7 +306,7 @@ class DocumentSerializer {
     os.println()
   }
 
-  private def saveDependencies(dg:DirectedGraph[String], dependencyType:Int, os:PrintWriter) {
+  private def saveDependencies(dg: DirectedGraph[String], dependencyType: String, os: PrintWriter) {
     os.println(START_DEPENDENCIES + SEP + dependencyType + SEP + dg.size)
     os.println(dg.roots.mkString(sep = SEP))
     val it = new DirectedGraphEdgeIterator[String](dg)

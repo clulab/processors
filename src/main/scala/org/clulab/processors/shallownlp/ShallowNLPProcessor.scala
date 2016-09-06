@@ -117,7 +117,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       sa.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
     }
 
-    val doc = new CoreNLPDocument(sentences, Some(annotation))
+    val doc = CoreNLPDocument(sentences, annotation)
     if(keepText) doc.text = Some(text)
 
     doc
@@ -136,10 +136,11 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       endOffsetBuffer += ta.endPosition()
     }
 
-    new Sentence(
+    Sentence(
       wordBuffer.toArray,
       startOffsetBuffer.toArray,
-      endOffsetBuffer.toArray)
+      endOffsetBuffer.toArray
+    )
   }
 
   def in(s:String):String = {
@@ -193,7 +194,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       sentOffset += 1
     }
 
-    val doc = new CoreNLPDocument(docSents, Some(docAnnotation))
+    val doc = CoreNLPDocument(docSents, docAnnotation)
     if(keepText) doc.text = Some(origText)
 
     doc
@@ -250,7 +251,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
       sentOffset += 1
     }
 
-    val doc = new CoreNLPDocument(docSents, Some(docAnnotation))
+    val doc = CoreNLPDocument(docSents, docAnnotation)
     if(keepText) doc.text = Some(origText)
 
     doc

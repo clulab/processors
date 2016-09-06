@@ -1,6 +1,7 @@
-package org.clulab.processors
+package org.clulab.serialization
 
-import corenlp.CoreNLPProcessor
+import org.clulab.processors.Processor
+import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.scalatest._
 
 class TestDocumentSerializer extends FlatSpec with Matchers {

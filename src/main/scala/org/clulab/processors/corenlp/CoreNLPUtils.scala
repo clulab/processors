@@ -45,14 +45,14 @@ object CoreNLPUtils {
   }
 
   def toDirectedGraph(sg:SemanticGraph, interning: (String) => String):DirectedGraph[String] = {
-    val edgeBuffer = new ListBuffer[(Int, Int, String)]
+    val edgeBuffer = new ListBuffer[Edge[String]]
     for (edge <- sg.edgeIterable()) {
       val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
       val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
       var label = edge.getRelation.getShortName
       val spec = edge.getRelation.getSpecific
       if (spec != null) label = label + "_" + spec
-      edgeBuffer.add((head - 1, modifier - 1, interning(label)))
+      edgeBuffer.add(Edge(head - 1, modifier - 1, interning(label)))
     }
 
     val roots = new mutable.HashSet[Int]
