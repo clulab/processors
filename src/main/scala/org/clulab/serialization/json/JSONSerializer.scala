@@ -25,7 +25,7 @@ object JSONSerializer {
   def jsonAST(f: File): JValue = parse(scala.io.Source.fromFile(f).getLines.mkString)
 
   /** Produce a sequence of mentions from json */
-  def mkMentions(json: JValue): Seq[Mention] = {
+  def toMentions(json: JValue): Seq[Mention] = {
 
     require(json \ "documents" != JNothing, "\"documents\" key missing from json")
     require(json \ "mentions" != JNothing, "\"mentions\" key missing from json")
@@ -36,7 +36,7 @@ object JSONSerializer {
     mmjson.arr.map(mjson => toMention(mjson, djson))
   }
   /** Produce a sequence of mentions from a json file */
-  def toMentions(file: File): Seq[Mention] = mkMentions(jsonAST(file))
+  def toMentions(file: File): Seq[Mention] = toMentions(jsonAST(file))
 
   /** Build mention from json of mention and corresponding json map of documents <br>
     * Since a single Document can be quite large and may be shared by multiple mentions,
