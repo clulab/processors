@@ -70,7 +70,7 @@ object JSONSerializer {
 
     // build Mention
     mjson \ "type" match {
-      case JString("EventMention") =>
+      case JString(EventMention.string) =>
         new EventMention(
           labels,
           // trigger must be TextBoundMention
@@ -81,7 +81,7 @@ object JSONSerializer {
           keep,
           foundBy
         )
-      case JString("RelationMention") =>
+      case JString(RelationMention.string) =>
         new RelationMention(
           labels,
           mkArgumentsFromJsonAST(mjson \ "arguments"),
@@ -90,9 +90,7 @@ object JSONSerializer {
           keep,
           foundBy
         )
-      // Assume TextBoundMention
-      //case JString("TextBoundMention") =>
-      case _ =>
+      case JString(TextBoundMention.string) =>
         new TextBoundMention(
           labels,
           tokInterval,
@@ -101,6 +99,7 @@ object JSONSerializer {
           keep,
           foundBy
         )
+      case other => throw new Exception(s"unrecognized mention type '${other.toString}'")
     }
   }
 
@@ -115,7 +114,6 @@ object JSONSerializer {
     d.text = getStringOption(json, "text")
     d
   }
-
   def toDocument(docHash: String, djson: JValue): Document = toDocument(djson \ docHash)
   def toDocument(f: File): Document = toDocument(jsonAST(f))
 
