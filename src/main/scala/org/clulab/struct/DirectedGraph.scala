@@ -250,6 +250,10 @@ object DirectedGraph {
     triple <- triples
   } yield Edge[E](source = triple._1, destination = triple._2, relation = triple._3)
 
+  def edgesToTriples[E](edges: Seq[Edge[E]]): Seq[(Int, Int, E)] = for {
+    edge <- edges
+  } yield (edge.source, edge.destination, edge.relation)
+
   /**
    * Constructs a graph from Stanford dependencies
    * Note: Stanford indices start at 1, so we will decrement all indices by 1
