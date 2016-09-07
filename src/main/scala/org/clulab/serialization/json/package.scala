@@ -1,6 +1,7 @@
 package org.clulab.serialization
 
 import org.clulab.odin._
+import org.clulab.odin
 import org.clulab.processors.{Document, Sentence}
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -168,10 +169,14 @@ package object json {
 
     def jsonAST: JValue = {
       ("type" -> EventMention.string) ~
+      // used for paths map
+      ("id" -> em.id) ~
       ("text" -> em.text) ~
       ("labels" -> em.labels) ~
       ("trigger" -> em.trigger.jsonAST) ~
       ("arguments" -> argsAST(em.arguments)) ~
+      // paths are encoded as (arg name -> (mentionID -> path))
+      ("paths" -> pathsAST(em.paths)) ~
       ("tokenInterval" -> Map("start" -> em.tokenInterval.start, "end" -> em.tokenInterval.end)) ~
       ("characterStartOffset" -> em.startOffset) ~
       ("characterEndOffset" -> em.endOffset) ~
@@ -208,9 +213,13 @@ package object json {
 
     def jsonAST: JValue = {
       ("type" -> RelationMention.string) ~
+      // used for paths map
+      ("id" -> rm.id) ~
       ("text" -> rm.text) ~
       ("labels" -> rm.labels) ~
       ("arguments" -> argsAST(rm.arguments)) ~
+      // paths are encoded as (arg name -> (mentionID -> path))
+      ("paths" -> pathsAST(rm.paths)) ~
       ("tokenInterval" -> Map("start" -> rm.tokenInterval.start, "end" -> rm.tokenInterval.end)) ~
       ("characterStartOffset" -> rm.startOffset) ~
       ("characterEndOffset" -> rm.endOffset) ~
@@ -236,6 +245,21 @@ package object json {
     def saveJSON(file: File, pretty: Boolean): Unit = saveJSON(file.getAbsolutePath, pretty)
   }
 
+  // Syntactic paths generalized are graph paths
+  implicit class OdinPathOps(paths: Map[String, Map[Mention, odin.SynPath]]) extends JSONSerialization {
+    // simplify paths by ignoring Mentions
+    def jsonAST: JValue = {
+      val simplePathMap: Map[String, Map[String, List[JValue]]] = paths.mapValues{ innermap =>
+        val pairs = for {
+          (m: Mention, path: odin.SynPath) <- innermap.toList
+          edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
+        } yield (m.id, edgeAST)
+        pairs.toMap
+      }
+      simplePathMap
+    }
+  }
+
   // Arrays cannot be directly converted to JValue
   implicit class ArrayOps(s: Option[Array[String]]) {
     def toSerializableJSON: Option[List[String]] = s match {
@@ -243,7 +267,7 @@ package object json {
       case None => None
     }
   }
-
+  
   implicit class ODirectedGraphOps(odg: Option[DirectedGraph[String]]) {
     def toSerializableJSON: Option[JValue] = odg match {
       case Some(g) => Some(g.jsonAST)
