@@ -168,6 +168,7 @@ package object json {
 
     def jsonAST: JValue = {
       ("type" -> EventMention.string) ~
+      ("text" -> em.text) ~
       ("labels" -> em.labels) ~
       ("trigger" -> em.trigger.jsonAST) ~
       ("arguments" -> argsAST(em.arguments)) ~
@@ -207,6 +208,7 @@ package object json {
 
     def jsonAST: JValue = {
       ("type" -> RelationMention.string) ~
+      ("text" -> rm.text) ~
       ("labels" -> rm.labels) ~
       ("arguments" -> argsAST(rm.arguments)) ~
       ("tokenInterval" -> Map("start" -> rm.tokenInterval.start, "end" -> rm.tokenInterval.end)) ~
