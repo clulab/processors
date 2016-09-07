@@ -28,7 +28,8 @@ object CoreNLPDocument {
     sentences: Array[Sentence],
     coref: Option[CorefChains],
     dtree: Option[DiscourseTree],
-    annotation: Option[Annotation]
+    annotation: Option[Annotation],
+    text: Option[String]
   ): CoreNLPDocument = {
     val coreDoc = new CoreNLPDocument(sentences)
     coreDoc.coreferenceChains = coref
