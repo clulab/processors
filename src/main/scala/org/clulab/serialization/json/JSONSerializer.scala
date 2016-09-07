@@ -87,14 +87,11 @@ object JSONSerializer {
               mnsjson: JArray <- something.extract[Map[String, JArray]].values
               mjson <- mnsjson.arr
               if (mjson \ "id").extract[String] == mentionID
-            //_ = println(s"mjson: ${pretty(render(mjson))}\n")
             } yield mjson
 
             argsjson.toList match {
               case Nil => None
-              case j :: _ =>
-                println(s"j: ${pretty(render(j))}\n")
-                Some(toMention(j, djson))
+              case j :: _ => Some(toMention(j, djson))
             }
         }
       }
