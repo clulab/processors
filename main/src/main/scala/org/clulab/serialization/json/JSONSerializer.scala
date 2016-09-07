@@ -1,9 +1,10 @@
 package org.clulab.serialization.json
 
 import java.io.File
+import org.clulab.odin
 import org.clulab.odin._
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct.{DirectedGraph, GraphMap, Interval}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap, Interval}
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.native.JsonMethods._
@@ -68,31 +69,82 @@ object JSONSerializer {
       case e: org.json4s.MappingException => Map.empty[String, Seq[Mention]]
     }
 
+
+
+    /** Build mention paths from json */
+    def toPaths(json: JValue, djson: JValue): Map[String, Map[Mention, odin.SynPath]] = {
+
+      /** Create mention from args json for given id */
+      def findMention(mentionID: String, json: JValue, djson: JValue): Option[Mention] = {
+        // inspect arguments for matching ID
+        json \ "arguments" match {
+          // if we don't have arguments, we can't produce a Mention
+          case JNothing => None
+          // Ahoy! There be args!
+          case something =>
+            // flatten the Seq[Mention.jsonAST] for each arg
+            val argsjson: Iterable[JValue] = for {
+              mnsjson: JArray <- something.extract[Map[String, JArray]].values
+              mjson <- mnsjson.arr
+              if (mjson \ "id").extract[String] == mentionID
+            } yield mjson
+
+            argsjson.toList match {
+              case Nil => None
+              case j :: _ => Some(toMention(j, djson))
+            }
+        }
+      }
+
+      // build paths
+      json \ "paths" match {
+        case JNothing => Map.empty[String, Map[Mention, odin.SynPath]]
+        case contents => for {
+          (role, innermap) <- contents.extract[Map[String, Map[String, JValue]]]
+        } yield {
+          // make inner map (Map[Mention, odin.SynPath])
+          val pathMap = for {
+            (mentionID: String, pathJSON: JValue) <- innermap.toSeq
+            mOp = findMention(mentionID, json, djson)
+            // were we able to recover a mention?
+            if mOp.nonEmpty
+            m = mOp.get
+            edges: Seq[Edge[String]] = pathJSON.extract[Seq[Edge[String]]]
+            synPath: odin.SynPath = DirectedGraph.edgesToTriples[String](edges)
+          } yield m -> synPath
+          // marry role with (arg -> path) info
+          role -> pathMap.toMap
+        }
+      }
+    }
+
     // build Mention
     mjson \ "type" match {
-      case JString("EventMention") =>
+      case JString(EventMention.string) =>
         new EventMention(
           labels,
+          tokInterval,
           // trigger must be TextBoundMention
           toMention(mjson \ "trigger", djson).asInstanceOf[TextBoundMention],
           mkArgumentsFromJsonAST(mjson \ "arguments"),
+          paths = toPaths(mjson, djson),
           sentence,
           document,
           keep,
           foundBy
         )
-      case JString("RelationMention") =>
+      case JString(RelationMention.string) =>
         new RelationMention(
           labels,
+          tokInterval,
           mkArgumentsFromJsonAST(mjson \ "arguments"),
+          paths = toPaths(mjson, djson),
           sentence,
           document,
           keep,
           foundBy
         )
-      // Assume TextBoundMention
-      //case JString("TextBoundMention") =>
-      case _ =>
+      case JString(TextBoundMention.string) =>
         new TextBoundMention(
           labels,
           tokInterval,
@@ -101,6 +153,7 @@ object JSONSerializer {
           keep,
           foundBy
         )
+      case other => throw new Exception(s"unrecognized mention type '${other.toString}'")
     }
   }
 
@@ -115,7 +168,6 @@ object JSONSerializer {
     d.text = getStringOption(json, "text")
     d
   }
-
   def toDocument(docHash: String, djson: JValue): Document = toDocument(djson \ docHash)
   def toDocument(f: File): Document = toDocument(jsonAST(f))
 

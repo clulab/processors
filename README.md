@@ -16,7 +16,7 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 
 (c) Mihai Surdeanu, 2013 -
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), Marco Valenzuela, Gustave Hanh-Powell, Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
 + **5.9.5** - Bug fix release: do not tag XML tags such as XREF... as named entities.
@@ -49,12 +49,12 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.9.0</version>
+   <version>5.9.5</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors_2.11</artifactId>
-   <version>5.9.0</version>
+   <version>5.9.5</version>
    <classifier>models</classifier>
 </dependency>
 ```
@@ -63,8 +63,8 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors" % "5.9.0",
-    "org.clulab" %% "processors" % "5.9.0" classifier "models"
+    "org.clulab" %% "processors" % "5.9.5",
+    "org.clulab" %% "processors" % "5.9.5" classifier "models"
 )
 ```
 
@@ -346,6 +346,10 @@ val someAnnotation = serializer.load(fromString)
 Note that space required for these serialized annotations is considerably smaller (8 to 10 times) than the corresponding
 serialized Java objects. This is because we store only the information required to recreate these annotations (e.g., words, lemmas, etc.)
 without storing any of the Java/Scala objects and classes.
+
+### Serialization to/from `json`
+
+As of v5.9.6, `Document` and `Mention` instances can be serialized to/from `json` ([see the complete working example](https://gist.github.com/myedibleenso/87a3191c73938840b8ed768ec305db38)).  
 
 ## Cleaning up the interned strings
 
