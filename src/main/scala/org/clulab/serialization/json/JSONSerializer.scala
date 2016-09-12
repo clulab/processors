@@ -31,10 +31,11 @@ object JSONSerializer {
     require(json \ "documents" != JNothing, "\"documents\" key missing from json")
     require(json \ "mentions" != JNothing, "\"mentions\" key missing from json")
 
-    val djson = json \ "documents"
+    // build the documents once
+    val docMap = mkDocumentMap(json \ "documents")
     val mmjson = (json \ "mentions").asInstanceOf[JArray]
 
-    mmjson.arr.map(mjson => toMention(mjson, djson))
+    mmjson.arr.map(mjson => toMention(mjson, docMap))
   }
   /** Produce a sequence of mentions from a json file */
   def toMentions(file: File): Seq[Mention] = toMentions(jsonAST(file))
@@ -44,7 +45,7 @@ object JSONSerializer {
     * only a reference to the document json is contained within each mention.
     * A map from doc reference to document json is used to avoid redundancies and reduce file size during serialization.
     * */
-  def toMention(mjson: JValue, djson: JValue): Mention = {
+  def toMention(mjson: JValue, docMap: Map[String, Document]): Mention = {
 
     val tokInterval = Interval(
       (mjson \ "tokenInterval" \ "start").extract[Int],
@@ -54,7 +55,7 @@ object JSONSerializer {
     val labels = (mjson \ "labels").extract[List[String]]
     val sentence = (mjson \ "sentence").extract[Int]
     val docHash = (mjson \ "document").extract[String]
-    val document = toDocument(docHash, djson)
+    val document = docMap(docHash)
     val keep = (mjson \ "keep").extract[Boolean]
     val foundBy = (mjson \ "foundBy").extract[String]
 
@@ -62,7 +63,7 @@ object JSONSerializer {
       val args = json.extract[Map[String, JArray]]
       val argPairs = for {
         (k: String, v: JValue) <- args
-        mns: Seq[Mention] = v.arr.map(m => toMention(m, djson))
+        mns: Seq[Mention] = v.arr.map(m => toMention(m, docMap))
       } yield (k, mns)
       argPairs
     } catch {
@@ -72,10 +73,10 @@ object JSONSerializer {
 
 
     /** Build mention paths from json */
-    def toPaths(json: JValue, djson: JValue): Map[String, Map[Mention, odin.SynPath]] = {
+    def toPaths(json: JValue, docMap: Map[String, Document]): Map[String, Map[Mention, odin.SynPath]] = {
 
       /** Create mention from args json for given id */
-      def findMention(mentionID: String, json: JValue, djson: JValue): Option[Mention] = {
+      def findMention(mentionID: String, json: JValue, docMap: Map[String, Document]): Option[Mention] = {
         // inspect arguments for matching ID
         json \ "arguments" match {
           // if we don't have arguments, we can't produce a Mention
@@ -91,7 +92,7 @@ object JSONSerializer {
 
             argsjson.toList match {
               case Nil => None
-              case j :: _ => Some(toMention(j, djson))
+              case j :: _ => Some(toMention(j, docMap))
             }
         }
       }
@@ -105,7 +106,7 @@ object JSONSerializer {
           // make inner map (Map[Mention, odin.SynPath])
           val pathMap = for {
             (mentionID: String, pathJSON: JValue) <- innermap.toSeq
-            mOp = findMention(mentionID, json, djson)
+            mOp = findMention(mentionID, json, docMap)
             // were we able to recover a mention?
             if mOp.nonEmpty
             m = mOp.get
@@ -125,9 +126,9 @@ object JSONSerializer {
           labels,
           tokInterval,
           // trigger must be TextBoundMention
-          toMention(mjson \ "trigger", djson).asInstanceOf[TextBoundMention],
+          toMention(mjson \ "trigger", docMap).asInstanceOf[TextBoundMention],
           mkArgumentsFromJsonAST(mjson \ "arguments"),
-          paths = toPaths(mjson, djson),
+          paths = toPaths(mjson, docMap),
           sentence,
           document,
           keep,
@@ -138,7 +139,7 @@ object JSONSerializer {
           labels,
           tokInterval,
           mkArgumentsFromJsonAST(mjson \ "arguments"),
-          paths = toPaths(mjson, djson),
+          paths = toPaths(mjson, docMap),
           sentence,
           document,
           keep,
@@ -157,6 +158,17 @@ object JSONSerializer {
     }
   }
 
+  /** create a map pointing from a Doc.equivalenceHash -> Document */
+  def mkDocumentMap(djson: JValue): Map[String, Document] = {
+    val kvPairs: List[(String, Document)] = for {
+      JObject(kvpair) <- djson
+      JField(docHash: String, docjson) <- kvpair
+      // this child should contain sentences
+      if (docjson \ "sentences") != JNothing
+    } yield docHash -> JSONSerializer.toDocument(docjson)
+
+    kvPairs.toMap
+  }
   def toDocument(json: JValue): Document = {
     // recover sentences
     val sentences = (json \ "sentences").asInstanceOf[JArray].arr.map(sjson => toSentence(sjson)).toArray
