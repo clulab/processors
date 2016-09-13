@@ -16,12 +16,13 @@ object JSONSerializer {
   implicit val formats = DefaultFormats
 
   def jsonAST(mentions: Seq[Mention]): JValue = {
-    val docsMap = mentions.toSet
+    val docsMap: Map[String, JValue] = {
       // create a set of Documents
       // in order to avoid calling jsonAST for duplicate docs
-      .map(m => m.document)
-      .map(doc => doc.equivalenceHash.toString -> doc.jsonAST)
-      .toMap
+      val docs: Set[Document] = mentions.map(m => m.document).toSet
+      docs.map(doc => doc.equivalenceHash.toString -> doc.jsonAST)
+        .toMap
+    }
     val mentionList = JArray(mentions.map(_.jsonAST).toList)
 
     ("documents" -> docsMap) ~
