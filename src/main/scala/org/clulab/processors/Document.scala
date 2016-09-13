@@ -27,11 +27,9 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
 
     val stringCode = "org.clulab.processors.Document"
 
-    /**
-      * Hash representing the [[sentences]]. <br>
-      * Used by [[equivalenceHash]].
-      * @return an Int hash based on the [[Sentence.equivalenceHash]] of each sentence
-      */
+    // Hash representing the sentences.
+    // Used by equivalenceHash.
+    // return an Int hash based on the Sentence.equivalenceHash of each sentence
     def sentencesHash: Int = {
       val h0 = stringHash(s"$stringCode.sentences")
       val hs = sentences.map(_.equivalenceHash)
