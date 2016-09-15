@@ -1,5 +1,7 @@
 package org.clulab.processors
 
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
+
 import scala.collection.immutable.ListMap
 import org.clulab.processors.bionlp.BioNLPProcessor
 import org.clulab.processors.corenlp.CoreNLPProcessor
@@ -33,8 +35,8 @@ object ProcessorShell extends App {
   )
 
   // create the processor
-  lazy val core: Processor = new CoreNLPProcessor() // this uses the slow but better discourse parser
-  lazy val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
+  lazy val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
+  lazy val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the faster dependency parser
   lazy val bio: Processor = new BioNLPProcessor(removeFigTabReferences = true)
 
   var proc = core
