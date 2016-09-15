@@ -33,8 +33,9 @@ import FastNLPProcessor._
  */
 class FastNLPProcessor(
   internStrings:Boolean = true,
+  withChunks:Boolean = true,
   useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
-  withDiscourse:Boolean = false) extends ShallowNLPProcessor(internStrings) {
+  withDiscourse:Boolean = false) extends ShallowNLPProcessor(internStrings, withChunks) {
 
   /**
    * One maltparser instance for each thread

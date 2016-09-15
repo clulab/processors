@@ -30,9 +30,10 @@ import CoreNLPUtils._
  */
 class CoreNLPProcessor(
   internStrings:Boolean = true,
+  withChunks:Boolean = true,
   val withDiscourse:Boolean = false,
   val maxSentenceLength:Int = 100
-) extends ShallowNLPProcessor(internStrings) {
+) extends ShallowNLPProcessor(internStrings, withChunks) {
 
   lazy val coref = mkCoref
   lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)

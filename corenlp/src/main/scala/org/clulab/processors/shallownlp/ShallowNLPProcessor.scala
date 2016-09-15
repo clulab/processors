@@ -22,7 +22,7 @@ import scala.reflect.ClassTag
  * User: mihais
  * Date: 2/25/15
  */
-class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
+class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boolean = true) extends Processor {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
   lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
   lazy val posTagger = mkPosTagger
@@ -370,11 +370,13 @@ class ShallowNLPProcessor(val internStrings:Boolean = true) extends Processor {
   }
 
   def chunking(doc:Document) {
-    for (s <- doc.sentences) {
-      val words = s.words
-      val tags = s.tags.get
-      val chunks = chunker.classify(words, tags)
-      s.chunks = Some(chunks)
+    if (withChunks) {
+      for (s <- doc.sentences) {
+        val words = s.words
+        val tags = s.tags.get
+        val chunks = chunker.classify(words, tags)
+        s.chunks = Some(chunks)
+      }
     }
   }
 

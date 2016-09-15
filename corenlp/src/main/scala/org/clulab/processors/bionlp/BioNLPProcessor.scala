@@ -24,13 +24,14 @@ import BioNLPProcessor._
  * Date: 10/27/14
  */
 class BioNLPProcessor (internStrings:Boolean = false,
+                       withChunks:Boolean = true,
                        withCRFNER:Boolean = true,
                        withRuleNER:Boolean = true,
                        withContext:Boolean = true,
                        withDiscourse:Boolean = false,
                        maxSentenceLength:Int = 100,
                        removeFigTabReferences:Boolean = true)
-  extends CoreNLPProcessor(internStrings, withDiscourse, maxSentenceLength) {
+  extends CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength) {
 
   //lazy val banner = new BannerWrapper
   lazy val specialTokens = KBLoader.loadSpecialTokens
