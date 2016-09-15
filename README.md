@@ -19,6 +19,7 @@ All our own code is licensed under Apache License Version 2.0. **However, some o
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **5.9.6** - Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.
 + **5.9.5** - Bug fix release: do not tag XML tags such as XREF... as named entities.
 + **5.9.4** - Update to use bioresources 1.1.15.
 + **5.9.3** - Improved support for multi-token triggers in dependency patterns in Odin.
