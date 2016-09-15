@@ -261,6 +261,9 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
     doc.clear()
 
+    println("Discourse tree:")
+    println(doc.discourseTree.get)
+
     val d = doc.discourseTree.get
     d.relationLabel should be ("elaboration")
     d.relationDirection should be (RelationDirection.LeftToRight)
