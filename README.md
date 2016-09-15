@@ -12,18 +12,21 @@ that cherry picks fast components from multiple sources (Stanford and [MaltParse
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
-All our own code is licensed under Apache License Version 2.0. **However, some of the libraries used here, most notably CoreNLP, are GPL v2.** If `CoreNLPProcessor` is not removed from this package, technically our whole code becomes GPL v2. Soon, we will split the code into multiple components, so licensing becomes less ambiguous.
+Our code is licensed as follows:
++ **main, models** - Apache License Version 2.0.
++ **corenlp** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/).
 
 (c) Mihai Surdeanu, 2013 -
 
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **6.0.0** - Reorganization into 3 subprojects with different licenses: main, corenlp, models.
++ **6.0.0** - Updated to Stanford CoreNLP 3.6.0.
++ **6.0.0** - Optimizations to `json` serialization/deserialization.
++ **5.9.6** - Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.
 + **5.9.6** - Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.
 + **5.9.5** - Bug fix release: do not tag XML tags such as XREF... as named entities.
-+ **5.9.4** - Update to use bioresources 1.1.15.
-+ **5.9.3** - Improved support for multi-token triggers in dependency patterns in Odin.
-+ **5.9.3** - Improved tokenization of n-ary complexes for BioNLPProcessor. Reverts some of CoreNLP's aggressive tokenization.
 + [more...](CHANGES.md)
 
 # Citations

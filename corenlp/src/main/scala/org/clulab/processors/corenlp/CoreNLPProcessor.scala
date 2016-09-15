@@ -1,5 +1,7 @@
 package org.clulab.processors.corenlp
 
+import java.util
+
 import org.clulab.discourse.rstparser.RSTParser
 import org.clulab.processors._
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
@@ -71,7 +73,9 @@ class CoreNLPProcessor(
       val stanfordTree = stanfordParse(sa)
 
       // store Stanford annotations; Stanford dependencies are created here!
-      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, stanfordTree, GrammaticalStructure.Extras.NONE)
+      val javaTrees = new util.ArrayList[edu.stanford.nlp.trees.Tree]()
+      javaTrees.add(stanfordTree)
+      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, javaTrees, GrammaticalStructure.Extras.NONE)
 
       // save our own structures
       if (stanfordTree != null) {

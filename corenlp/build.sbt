@@ -5,9 +5,8 @@ libraryDependencies ++= Seq(
   "org.clulab" % "bioresources" % "1.1.15",
   "com.io7m.xom" % "xom" % "1.2.10",
   "org.json4s" %% "json4s-native" % "3.2.11",
-  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",
-  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1" classifier "models",
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.6.0",
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.6.0" classifier "models",
   "ch.qos.logback" % "logback-classic" % "1.0.10",
-  "org.slf4j" % "slf4j-api" % "1.7.10",
-  "log4j" % "log4j" % "1.2.17" // this is used by our maltparser clone; otherwise not in use
+  "org.slf4j" % "slf4j-api" % "1.7.10"
 )
