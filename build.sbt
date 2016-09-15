@@ -1,15 +1,11 @@
 import ReleaseTransformations._
 
-name := "processors"
-
 lazy val commonSettings = Seq(
   organization := "org.clulab",
-
   scalaVersion := "2.11.8",
-
   scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation"),
-
   parallelExecution in Test := false,
+  scalacOptions in (Compile, doc) += "-no-link-warnings", // suppresses problems with scaladoc @throws links
 
   //
   // publishing settings
@@ -56,43 +52,31 @@ lazy val commonSettings = Seq(
   //
 )
 
-lazy val main = (project in file("main"))
-  .settings (
-    commonSettings: _*
-  )
-
-lazy val corenlp = (project in file("corenlp"))
-  .dependsOn (main)
-  .settings (
-    commonSettings: _*
-  )
-
-lazy val models = (project in file("models"))
-  .settings (
-    commonSettings: _*
-  )
+lazy val root = (project in file("."))
+  .settings(commonSettings: _*)
   .settings(
-    publish := {},
-    publishLocal := {},
-    publishM2 := {}
-  )
-
-addArtifact(Artifact("processors", "models"), modelsTask in models)
-
-unmanagedJars in Compile += (modelsTask in models).value
-
-unmanagedClasspath in Runtime += baseDirectory.value
-
-lazy val common = (project in file("."))
-  .settings (
     publishArtifact := false,
     publishTo := Some("dummy" at "nowhere"),
     publish := {},
-    publishLocal := {}
-  ).aggregate (
-    main,
-    corenlp
+    publishLocal := {},
+    publishM2 := {},
+    Keys.`package` := {
+      // avoid generating an empty jar for the root project
+      (Keys.`package` in (main, Compile)).value
+    }
   )
+  .aggregate(main, corenlp, models)
+  .dependsOn(main, corenlp, models) // so that we can import from the console
+
+lazy val main = project
+  .settings(commonSettings: _*)
+
+lazy val corenlp = project
+  .settings(commonSettings: _*)
+  .dependsOn(main)
+
+lazy val models = project
+  .settings(commonSettings: _*)
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
