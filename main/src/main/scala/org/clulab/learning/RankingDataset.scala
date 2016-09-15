@@ -275,18 +275,33 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
 object RVFRankingDataset {
   val logger = LoggerFactory.getLogger(classOf[RVFRankingDataset[String]])
 
-  def mkDatasetFromSvmRankFormat(fn:String):RVFRankingDataset[String] = {
+  def mkDatasetFromSvmRankResource(path: String): RVFRankingDataset[String] = {
+    val stream = getClass.getClassLoader.getResourceAsStream(path)
+    val source = if (path endsWith ".gz") {
+      io.Source.fromInputStream(new GZIPInputStream(stream))
+    } else {
+      io.Source.fromInputStream(stream)
+    }
+    mkDatasetFromSvmRankFormat(source)
+  }
+
+  /** reads dataset from a file */
+  def mkDatasetFromSvmRankFormat(filename: String): RVFRankingDataset[String] = {
+    val source = if (filename endsWith ".gz") {
+      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      io.Source.fromInputStream(stream)
+    } else {
+      io.Source.fromFile(filename)
+    }
+    mkDatasetFromSvmRankFormat(source)
+  }
+
+  def mkDatasetFromSvmRankFormat(source: BufferedSource): RVFRankingDataset[String] = {
     val dataset = new RVFRankingDataset[String]
     var crtQid = ""
     var crtBlock:ArrayBuffer[Datum[Int, String]] = null
     var blockCount = 0
     var datumCount = 0
-
-    var source:BufferedSource = null
-    if(fn.endsWith(".gz"))
-      source = io.Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(fn))))
-    else
-      source = io.Source.fromFile(fn)
 
     for(line <- source.getLines()) {
       // strip comments following #
@@ -339,18 +354,33 @@ object RVFRankingDataset {
     dataset
   }
 
-  def mkDatumsFromSvmRankFormat(fn:String):Iterable[Iterable[Datum[Int, String]]] = {
+  def mkDatumsFromSvmRankResource(path: String): Iterable[Iterable[Datum[Int, String]]] = {
+    val stream = getClass.getClassLoader.getResourceAsStream(path)
+    val source = if (path endsWith ".gz") {
+      io.Source.fromInputStream(new GZIPInputStream(stream))
+    } else {
+      io.Source.fromInputStream(stream)
+    }
+    mkDatumsFromSvmRankFormat(source)
+  }
+
+  /** reads dataset from a file */
+  def mkDatumsFromSvmRankFormat(filename: String): Iterable[Iterable[Datum[Int, String]]] = {
+    val source = if (filename endsWith ".gz") {
+      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      io.Source.fromInputStream(stream)
+    } else {
+      io.Source.fromFile(filename)
+    }
+    mkDatumsFromSvmRankFormat(source)
+  }
+
+  def mkDatumsFromSvmRankFormat(source: BufferedSource): Iterable[Iterable[Datum[Int, String]]] = {
     val queries = new ArrayBuffer[Iterable[Datum[Int, String]]]()
     var crtQid = ""
     var crtBlock:ArrayBuffer[Datum[Int, String]] = null
     var blockCount = 0
     var datumCount = 0
-
-    var source:BufferedSource = null
-    if(fn.endsWith(".gz"))
-      source = io.Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(fn))))
-    else
-      source = io.Source.fromFile(fn)
 
     for(line <- source.getLines()) {
       // strip comments following #

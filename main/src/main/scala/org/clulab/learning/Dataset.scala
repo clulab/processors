@@ -373,15 +373,31 @@ class InformationGain( var datumCount:Int = 0,
 object RVFDataset {
   val logger = LoggerFactory.getLogger(classOf[RVFDataset[String, String]])
 
-  def mkDatasetFromSvmLightFormat(fn:String):RVFDataset[Int, String] = {
+  def mkDatasetFromSvmLightResource(path: String): RVFDataset[Int, String] = {
+    val stream = getClass.getClassLoader.getResourceAsStream(path)
+    val source = if (path endsWith ".gz") {
+      io.Source.fromInputStream(new GZIPInputStream(stream))
+    } else {
+      io.Source.fromInputStream(stream)
+    }
+    mkDatasetFromSvmLightFormat(source)
+  }
+
+  /** reads dataset from a file */
+  def mkDatasetFromSvmLightFormat(filename: String): RVFDataset[Int, String] = {
+    val source = if (filename endsWith ".gz") {
+      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      io.Source.fromInputStream(stream)
+    } else {
+      io.Source.fromFile(filename)
+    }
+    mkDatasetFromSvmLightFormat(source)
+  }
+
+  /** reads dataset from a BufferedSource */
+  def mkDatasetFromSvmLightFormat(source: BufferedSource): RVFDataset[Int, String] = {
     val dataset = new RVFDataset[Int, String]
     var datumCount = 0
-
-    var source:BufferedSource = null
-    if(fn.endsWith(".gz"))
-      source = io.Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(fn))))
-    else
-      source = io.Source.fromFile(fn)
 
     for(line <- source.getLines()) {
       // strip comments following #
@@ -443,15 +459,30 @@ object RVFDataset {
     os.close()
   }
 
-  def mkDatumsFromSvmLightFormat(fn:String):Iterable[Datum[Int, String]] = {
+  def mkDatumsFromSvmLightResource(path: String): Iterable[Datum[Int, String]] = {
+    val stream = getClass.getClassLoader.getResourceAsStream(path)
+    val source = if (path endsWith ".gz") {
+      io.Source.fromInputStream(new GZIPInputStream(stream))
+    } else {
+      io.Source.fromInputStream(stream)
+    }
+    mkDatumsFromSvmLightFormat(source)
+  }
+
+  /** reads dataset from a file */
+  def mkDatumsFromSvmLightFormat(filename: String): Iterable[Datum[Int, String]] = {
+    val source = if (filename endsWith ".gz") {
+      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      io.Source.fromInputStream(stream)
+    } else {
+      io.Source.fromFile(filename)
+    }
+    mkDatumsFromSvmLightFormat(source)
+  }
+
+  def mkDatumsFromSvmLightFormat(source: BufferedSource): Iterable[Datum[Int, String]] = {
     val datums = new ArrayBuffer[Datum[Int, String]]()
     var datumCount = 0
-
-    var source:BufferedSource = null
-    if(fn.endsWith(".gz"))
-      source = io.Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(fn))))
-    else
-      source = io.Source.fromFile(fn)
 
     for(line <- source.getLines()) {
       // strip comments following #
@@ -485,6 +516,7 @@ object RVFDataset {
     }
     datums
   }
+
 }
 
 /**
