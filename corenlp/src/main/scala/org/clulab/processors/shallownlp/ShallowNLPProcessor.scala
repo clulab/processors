@@ -392,3 +392,9 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
     // nothing here
   }
 }
+
+object ShallowNLPProcessor {
+  val NO_DISCOURSE = 0 // discourse parsing is disabled
+  val WITH_DISCOURSE = 1 // discourse parsing is enabled
+  val JUST_EDUS = 2 // only the generation of elementary discourse units is enabled
+}

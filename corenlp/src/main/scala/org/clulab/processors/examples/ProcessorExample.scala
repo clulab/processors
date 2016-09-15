@@ -1,6 +1,7 @@
 package org.clulab.processors.examples
 
 import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.DirectedGraphEdgeIterator
@@ -13,7 +14,7 @@ import org.clulab.struct.DirectedGraphEdgeIterator
 object ProcessorExample {
   def main(args:Array[String]) {
     // create the processor
-    val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
+    val proc:Processor = new CoreNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
     //val proc:Processor = new FastNLPProcessor()
 
     // for much faster processing, use FastNLPProcessor

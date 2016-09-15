@@ -3,6 +3,7 @@ package org.clulab.processors.bionlp.ner
 import java.util
 import java.util.Properties
 
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.processors.{Sentence, Processor}
 import org.clulab.processors.bionlp.BioNLPProcessor
 import org.clulab.utils.StringUtils
@@ -47,6 +48,7 @@ class BioNER {
 
   /**
    * Classifies a sentence in the Stanford format
+ *
    * @param sentence Input sentence; each token must contain: word, lemma, POS tag
    * @return The IOB predictions for this sentence
    */
@@ -117,6 +119,7 @@ object BioNER {
 
   /**
     * Fixes common POS tagging mistakes, using the same code used by BioNLPProcessor at runtime
+ *
     * @param sentence List of tokens in one sentence
     */
   def postProcessTags(sentence:JavaList[CoreLabel]): Unit = {
@@ -187,7 +190,7 @@ object BioNER {
   }
 
   def shell(ner:BioNER) {
-    val proc:Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
+    val proc:Processor = new BioNLPProcessor()
     while(true) {
       print("> ")
       val text = StdIn.readLine()

@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest._
 import org.clulab.odin.TestUtils
 
@@ -13,7 +14,7 @@ import scala.io.Source
  * Date: 2/25/15
  */
 class TestFastNLPProcessorSpeed extends FlatSpec with Matchers {
-  var proc:Processor = new FastNLPProcessor(internStrings = true, withDiscourse = false, useMalt = false)
+  var proc:Processor = new FastNLPProcessor(internStrings = true, withDiscourse = ShallowNLPProcessor.NO_DISCOURSE, useMalt = false)
 
   "FastNLPProcessor" should "process a file successfully" in {
     val text = TestUtils.readFile("org/clulab/processors/raw_text.txt")

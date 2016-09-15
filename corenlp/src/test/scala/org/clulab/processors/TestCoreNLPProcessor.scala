@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.discourse.rstparser.RelationDirection
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest._
 
 import collection.JavaConversions.asJavaCollection
@@ -13,7 +14,7 @@ import org.clulab.struct.CorefMention
  * Date: 3/3/13
  */
 class TestCoreNLPProcessor extends FlatSpec with Matchers {
-  val proc = new CoreNLPProcessor(internStrings = true, withDiscourse = true)
+  val proc = new CoreNLPProcessor(internStrings = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "CoreNLPProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)

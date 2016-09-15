@@ -90,6 +90,7 @@ class RSTParser {
   }
 
   def parse(doc:Document,
+            justEdus:Boolean = false,
             verbose:Boolean = false):(DiscourseTree, Array[Array[(Int, Int)]]) = {
     val edus = predictEDUs(doc)
 
@@ -104,8 +105,17 @@ class RSTParser {
       }
     }
 
-    val tree = structModel.mkTree(edus, doc, relModel, verbose)
+    val tree = justEdus match {
+      case true => mkTreeFromEDUs(edus, doc)
+      case _ => structModel.mkTree(edus, doc, relModel, verbose)
+    }
+
     (tree, edus)
+  }
+
+  def mkTreeFromEDUs(edus: Array[Array[(Int, Int)]], doc:Document): DiscourseTree = {
+    val trees = structModel.edusToTerminalTrees(doc, edus, 0, edus.length)
+    new DiscourseTree("edus", RelationDirection.None, trees)
   }
 
   def predictEDUs(doc:Document):Array[Array[(Int, Int)]] = {

@@ -33,9 +33,9 @@ object ProcessorShell extends App {
   )
 
   // create the processor
-  lazy val core: Processor = new CoreNLPProcessor(withDiscourse = false) // this uses the slow but better discourse parser
+  lazy val core: Processor = new CoreNLPProcessor() // this uses the slow but better discourse parser
   lazy val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the fast but slightly worse discourse parser
-  lazy val bio: Processor = new BioNLPProcessor(withDiscourse = false, removeFigTabReferences = true)
+  lazy val bio: Processor = new BioNLPProcessor(removeFigTabReferences = true)
 
   var proc = core
   reader.setPrompt("(core)>>> ")

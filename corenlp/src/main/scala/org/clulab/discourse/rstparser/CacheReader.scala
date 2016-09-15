@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory
 object CacheReader {
   val logger = LoggerFactory.getLogger(classOf[CacheReader])
 
-  lazy val CORENLP_PROCESSOR = new CoreNLPProcessor(withDiscourse = false)
-  lazy val FASTNLP_PROCESSOR = new FastNLPProcessor(useMalt = false, withDiscourse = false)
+  lazy val CORENLP_PROCESSOR = new CoreNLPProcessor()
+  lazy val FASTNLP_PROCESSOR = new FastNLPProcessor(useMalt = false)
 
   def getProcessor(dependencySyntax:Boolean):Processor =
     dependencySyntax match {

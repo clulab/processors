@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.discourse.rstparser.RelationDirection
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.DirectedGraphEdgeIterator
 import org.scalatest._
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -11,7 +12,7 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends FlatSpec with Matchers {
-  var proc:Processor = new FastNLPProcessor(internStrings = true, withDiscourse = true)
+  var proc:Processor = new FastNLPProcessor(internStrings = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {
     val doc = proc.annotate("John Smith went to China.")

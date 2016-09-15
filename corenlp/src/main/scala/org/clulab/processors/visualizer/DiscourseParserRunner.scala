@@ -1,5 +1,7 @@
 package org.clulab.processors.visualizer
 
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
+
 import scala.collection.JavaConverters._
 
 import org.json4s._
@@ -19,9 +21,9 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
 class DiscourseParserRunner (useProcessor:String = "core") {
   val processor:Processor =
     if (useProcessor == "fast")             // fast but slightly worse discourse parser
-      new FastNLPProcessor(withDiscourse = true)
+      new FastNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
     else                                    // default: slow but better discourse parser
-      new CoreNLPProcessor(withDiscourse = true)
+      new CoreNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
 
   /**
