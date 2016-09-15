@@ -54,7 +54,7 @@ object CoreNLPSentimentAnalyzer {
 
     sentimentAnalyzer.annotate(a)
 
-    val sentimentTree = sa.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
+    val sentimentTree = sa.get(classOf[SentimentCoreAnnotations.AnnotatedTree])
     val score = RNNCoreAnnotations.getPredictedClass(sentimentTree)
     score
   }

@@ -74,9 +74,7 @@ class CoreNLPProcessor(
       val stanfordTree = stanfordParse(sa)
 
       // store Stanford annotations; Stanford dependencies are created here!
-      val javaTrees = new util.ArrayList[edu.stanford.nlp.trees.Tree]()
-      javaTrees.add(stanfordTree)
-      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, javaTrees, GrammaticalStructure.Extras.NONE)
+      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, stanfordTree, GrammaticalStructure.Extras.NONE)
 
       // save our own structures
       if (stanfordTree != null) {
@@ -157,29 +155,31 @@ class CoreNLPProcessor(
     coref.annotate(annotation.get)
 
     val chains = annotation.get.get(classOf[CorefChainAnnotation])
-    val mentions = new ListBuffer[CorefMention]
+    if(chains != null) {
+      val mentions = new ListBuffer[CorefMention]
 
-    for (cid <- chains.keySet()) {
-      // println("cluster " + cid)
-      val mentionMap = chains.get(cid).getMentionMap
-      for (mid <- mentionMap.keySet()) {
-        for (mention <- mentionMap.get(mid)) {
-          // val isRep = mention == cluster.getRepresentativeMention
-          // println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + isRep + " [" + mention.mentionSpan + "]")
+      for (cid <- chains.keySet()) {
+        // println("cluster " + cid)
+        val mentionMap = chains.get(cid).getMentionMap
+        for (mid <- mentionMap.keySet()) {
+          for (mention <- mentionMap.get(mid)) {
+            // val isRep = mention == cluster.getRepresentativeMention
+            // println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + isRep + " [" + mention.mentionSpan + "]")
 
-          // Processor indexes things from 0 not 1!
-          val m = new CorefMention(
-            mid.getSource - 1,
-            mid.getTarget - 1,
-            mention.startIndex - 1,
-            mention.endIndex - 1,
-            cid)
-          mentions += m
+            // Processor indexes things from 0 not 1!
+            val m = new CorefMention(
+              mid.getSource - 1,
+              mid.getTarget - 1,
+              mention.startIndex - 1,
+              mention.endIndex - 1,
+              cid)
+            mentions += m
+          }
         }
       }
-    }
 
-    doc.coreferenceChains = Some(new CorefChains(mentions.toList))
+      doc.coreferenceChains = Some(new CorefChains(mentions.toList))
+    }
   }
 
   override def discourse(doc:Document) {
