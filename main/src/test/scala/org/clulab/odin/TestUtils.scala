@@ -4,12 +4,13 @@ package org.clulab.odin
 object TestUtils {
 
   /**
-    * Read contents of rule file, given some path
-    * @param filename the path to a file
+    * Read contents of rule file in the classpath, given some path
+    * @param path the path to a file
     * @return file contents as a String
     */
-  def readFile(filename: String) = {
-    val source = io.Source.fromFile(filename)
+  def readFile(path: String) = {
+    val stream = getClass.getClassLoader.getResourceAsStream(path)
+    val source = io.Source.fromInputStream(stream)
     val data = source.mkString
     source.close()
     data
