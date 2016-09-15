@@ -77,14 +77,12 @@ class TestSVMRankingClassifier extends FlatSpec with Matchers {
   }
 
   it should "perform better than 0.50 P@1 on this dataset" taggedAs (NeedsExternalBinary) in {
-    val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
-      "src/test/resources/org/clulab/learning/ranking_train.txt.gz")
+    val dataset = RVFRankingDataset.mkDatasetFromSvmRankResource("org/clulab/learning/ranking_train.txt.gz")
 
     val classifier = new SVMRankingClassifier[String](".", keepIntermediateFiles = true)
     classifier.train(dataset)
 
-    val queries = RVFRankingDataset.mkDatumsFromSvmRankFormat(
-      "src/test/resources/org/clulab/learning/ranking_test.txt.gz")
+    val queries = RVFRankingDataset.mkDatumsFromSvmRankResource("org/clulab/learning/ranking_test.txt.gz")
     val queryScores = new ArrayBuffer[Array[Double]]()
     for(query <- queries) {
       val scores = classifier.scoresOf(query)

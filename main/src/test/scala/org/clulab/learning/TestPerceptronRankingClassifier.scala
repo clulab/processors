@@ -11,8 +11,7 @@ import java.io.{OutputStreamWriter, PrintWriter}
  */
 class TestPerceptronRankingClassifier extends FlatSpec with Matchers {
   "PerceptronRankingClassifier" should "have a P@1 > .50 on this dataset" in {
-    val dataset = RVFRankingDataset.mkDatasetFromSvmRankFormat(
-      "src/test/resources/org/clulab/learning/ranking_train.txt.gz")
+    val dataset = RVFRankingDataset.mkDatasetFromSvmRankResource("org/clulab/learning/ranking_train.txt.gz")
 
     val classifier = new PerceptronRankingClassifier[String](epochs = 1)
     classifier.train(dataset)
@@ -21,8 +20,7 @@ class TestPerceptronRankingClassifier extends FlatSpec with Matchers {
     classifier.displayModel(pw)
     pw.flush()
 
-    val queries = RVFRankingDataset.mkDatumsFromSvmRankFormat(
-      "src/test/resources/org/clulab/learning/ranking_test.txt.gz")
+    val queries = RVFRankingDataset.mkDatumsFromSvmRankResource("org/clulab/learning/ranking_test.txt.gz")
     val queryScores = new ArrayBuffer[Array[Double]]()
     for(query <- queries) {
       val scores = classifier.scoresOf(query)

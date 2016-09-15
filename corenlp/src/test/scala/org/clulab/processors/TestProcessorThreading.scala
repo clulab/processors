@@ -8,6 +8,7 @@ import scala.io.Source
 import java.util.concurrent.{TimeUnit, Executors}
 import java.lang.Long
 import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.odin.TestUtils
 import TestProcessorThreading._
 
 /**
@@ -85,7 +86,7 @@ class TestProcessorThreading extends FlatSpec with Matchers {
     // produced dependencies; position 0 is the output of the sequential run
     val outputs = new ListBuffer[String]()
 
-    val text = Source.fromFile("src/test/resources/org/clulab/processors/raw_text.txt").getLines.mkString(" ")
+    val text = TestUtils.readFile("org/clulab/processors/raw_text.txt")
     //println(s"Read a text with ${text.length} characters:\n${text}")
     // run the annotation pipeline once to load all models in memory
     procs(0).annotate("This is a simple sentence.")

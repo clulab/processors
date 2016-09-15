@@ -8,7 +8,8 @@ import org.scalatest._
  * Date: 4/3/13
  */
 class TestArgsToProperties extends FlatSpec with Matchers {
-  val props = StringUtils.argsToProperties(List("-props", "src/test/resources/org/clulab/utils/test.properties").toArray)
+  // NOTE we are reading from the filesystem on purpose, that is the test
+  val props = StringUtils.argsToProperties(List("-props", "main/src/test/resources/org/clulab/utils/test.properties").toArray)
 
   "properties" should "contain p1 with value /some/path" in {
     val p1 = props.getProperty("p1")

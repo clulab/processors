@@ -31,11 +31,11 @@ class TestRandomForestClassifier extends FlatSpec with Matchers {
     //val classifier = new RandomForestClassifier[Int, String](numTrees = 50, maxTreeDepth = 0)
     val classifier = new RFClassifier[Int, String]
 
-    var dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/org/clulab/learning/classification_train.txt.gz").asInstanceOf[Dataset[Int, String]]
+    var dataset = RVFDataset.mkDatasetFromSvmLightResource("org/clulab/learning/classification_train.txt.gz").asInstanceOf[Dataset[Int, String]]
     dataset = dataset.removeFeaturesByInformationGain(0.75)
     classifier.train(dataset)
 
-    val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/test/resources/org/clulab/learning/classification_test.txt.gz")
+    val datums = RVFDataset.mkDatumsFromSvmLightResource("org/clulab/learning/classification_test.txt.gz")
     var total = 0
     var correct = 0
     for(datum <- datums) {

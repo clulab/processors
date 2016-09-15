@@ -2,6 +2,7 @@ package org.clulab.processors
 
 import java.io.{FileReader, BufferedReader}
 
+import org.clulab.odin.TestUtils
 import org.clulab.processors.bionlp.BioNLPProcessor
 import org.scalatest._
 
@@ -14,7 +15,7 @@ class TestBioNLPProcessor2 extends FlatSpec with Matchers {
   var proc:Processor = new BioNLPProcessor()
 
   "BioNLPProcessor" should "parse abstract text" in {
-    val text = textFileToString("src/test/resources/org/clulab/processors/PLoS_One_2013_Dec_18_8_12_e84604.abstract.txt")
+    val text = TestUtils.readFile("org/clulab/processors/PLoS_One_2013_Dec_18_8_12_e84604.abstract.txt")
     val doc = proc.annotate(text)
     //println(s"Generated a doc with ${doc.sentences.size} sentences.")
     doc.sentences.size should be (7)
@@ -22,7 +23,7 @@ class TestBioNLPProcessor2 extends FlatSpec with Matchers {
   }
 
   it should "parse body text" in {
-    val text = textFileToString("src/test/resources/org/clulab/processors/PLoS_One_2013_Dec_18_8_12_e84604.body.txt")
+    val text = TestUtils.readFile("org/clulab/processors/PLoS_One_2013_Dec_18_8_12_e84604.body.txt")
     val doc = annotate(text)
     doc.sentences(0).syntacticTree.isDefined should be (true)
   }
@@ -38,20 +39,4 @@ class TestBioNLPProcessor2 extends FlatSpec with Matchers {
     doc
   }
 
-  def textFileToString(fn:String):String = {
-    val b = new BufferedReader(new FileReader(fn))
-    val out = new StringBuilder
-    var done = false
-    while(! done) {
-      val l = b.readLine()
-      if(l == null) {
-        done = true
-      } else {
-        out.append(l)
-        out.append("\n")
-      }
-    }
-    b.close()
-    out.toString()
-  }
 }

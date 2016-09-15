@@ -146,9 +146,9 @@ class TestLibSVMClassifier extends FlatSpec with Matchers {
   it should "have an accuracy > .60 on this dataset" in {
     for (kernel <- List(LinearKernel, PolynomialKernel, RBFKernel, SigmoidKernel)) {
       val classifier = new LibSVMClassifier[Int, String](kernel, degree=1)
-      val dataset = RVFDataset.mkDatasetFromSvmLightFormat("src/test/resources/org/clulab/learning/classification_train.txt.gz")
+      val dataset = RVFDataset.mkDatasetFromSvmLightResource("org/clulab/learning/classification_train.txt.gz")
       classifier.train(dataset)
-      val datums = RVFDataset.mkDatumsFromSvmLightFormat("src/test/resources/org/clulab/learning/classification_test.txt.gz")
+      val datums = RVFDataset.mkDatumsFromSvmLightResource("org/clulab/learning/classification_test.txt.gz")
       var total = 0
       var correct = 0
       for(datum <- datums) {

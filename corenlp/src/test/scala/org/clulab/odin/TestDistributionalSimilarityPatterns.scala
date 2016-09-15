@@ -10,7 +10,7 @@ class TestDistributionalSimilarityPatterns extends FlatSpec with Matchers {
   val proc = new FastNLPProcessor
 
   // the rule file containing the path to the embeddings resources
-  val rf = "src/test/resources/org/clulab/odin/grammars/embeddings.yml"
+  val rf = "org/clulab/odin/grammars/embeddings.yml"
 
   val rules = readFile(rf)
   val ee = ExtractorEngine(rules)
