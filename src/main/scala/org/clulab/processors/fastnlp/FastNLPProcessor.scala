@@ -34,7 +34,7 @@ import FastNLPProcessor._
 class FastNLPProcessor(
   internStrings:Boolean = true,
   useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
-  withDiscourse:Boolean = false) extends ShallowNLPProcessor(internStrings) {
+  withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) extends ShallowNLPProcessor(internStrings) {
 
   /**
    * One maltparser instance for each thread
@@ -179,7 +179,7 @@ class FastNLPProcessor(
   }
 
   override def discourse(doc:Document) {
-    if(! withDiscourse) return
+    if(withDiscourse == ShallowNLPProcessor.NO_DISCOURSE) return
     basicSanityCheck(doc, checkAnnotation = false)
 
     if (doc.sentences.head.tags.isEmpty)
@@ -189,7 +189,7 @@ class FastNLPProcessor(
     if(! hasDeps(doc.sentences.head))
       throw new RuntimeException("ERROR: you have to run the dependency parser before discourse parsing!")
 
-    val out = rstDependencyParser.parse(doc)
+    val out = rstDependencyParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
     doc.discourseTree = Some(out._1)
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)

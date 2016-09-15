@@ -28,7 +28,7 @@ import CoreNLPUtils._
  */
 class CoreNLPProcessor(
   internStrings:Boolean = true,
-  val withDiscourse:Boolean = false,
+  val withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
   val maxSentenceLength:Int = 100
 ) extends ShallowNLPProcessor(internStrings) {
 
@@ -178,7 +178,7 @@ class CoreNLPProcessor(
   }
 
   override def discourse(doc:Document) {
-    if(! withDiscourse) return
+    if(withDiscourse == ShallowNLPProcessor.NO_DISCOURSE) return
     basicSanityCheck(doc, checkAnnotation = false)
 
     if (doc.sentences.head.tags.isEmpty)
@@ -190,7 +190,7 @@ class CoreNLPProcessor(
     if(doc.sentences.head.syntacticTree.isEmpty)
       throw new RuntimeException("ERROR: you have to run the constituent parser before discourse parsing!")
 
-    val out = rstConstituentParser.parse(doc)
+    val out = rstConstituentParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
     doc.discourseTree = Some(out._1)
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)

@@ -8,6 +8,7 @@ import java.util.zip.{GZIPOutputStream, GZIPInputStream}
 import org.clulab.processors.bionlp.BioNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation
 import edu.stanford.nlp.pipeline.Annotation
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -35,7 +36,7 @@ object KBGenerator {
     withCRFNER = false,
     withContext = false,
     withRuleNER = false,
-    withDiscourse = false)
+    withDiscourse = ShallowNLPProcessor.NO_DISCOURSE)
 
   def main (args: Array[String]) {
     val configFile = args(0)
@@ -138,6 +139,7 @@ object KBGenerator {
   /**
     * Tokenizes a resource line with BioNLPProcessor
     * This is important! We must guarantee that KB text is processed similarly to raw text!
+ *
     * @param line The KB line
     * @return The tokenized line
     */

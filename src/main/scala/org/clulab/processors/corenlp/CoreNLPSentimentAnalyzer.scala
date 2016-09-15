@@ -15,7 +15,7 @@ import scala.collection.JavaConverters._
 
 object CoreNLPSentimentAnalyzer {
 
-  private lazy val proc = new CoreNLPProcessor(withDiscourse = false)
+  private lazy val proc = new CoreNLPProcessor()
   private lazy val sentimentAnalyzer = mkSentimentAnalyzer
 
   /** Get a sentiment score from [[Document]] */

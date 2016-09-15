@@ -5,6 +5,7 @@ import java.util.Properties
 import java.util.regex.Pattern
 
 import org.clulab.processors.bionlp.ner.{KBLoader, BioNER, RuleNER}
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.processors.{Sentence, Document}
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.struct.MutableNumber
@@ -27,7 +28,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
                        withCRFNER:Boolean = true,
                        withRuleNER:Boolean = true,
                        withContext:Boolean = true,
-                       withDiscourse:Boolean = false,
+                       withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
                        maxSentenceLength:Int = 100,
                        removeFigTabReferences:Boolean = true)
   extends CoreNLPProcessor(internStrings, withDiscourse, maxSentenceLength) {
@@ -365,6 +366,7 @@ object BioNLPProcessor {
     * Fixes some common POS tagging mistakes (in place, using CoreLabel.setTag)
     * Note: this function is used by the CRF-based BioNER to cleanup its training data (from BioCreative 2).
     *       This means that everytime there are changes here, the CRF should be retrained. Tell Mihai.
+ *
     * @param tas arrays of tokens stored as CoreNLP CoreLabel
     */
   def postprocessCoreLabelTags(tas:Array[CoreLabel]): Unit = {

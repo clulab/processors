@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TestCoreNLPSentimentAnalyzer extends FlatSpec with Matchers {
 
-  val proc = new CoreNLPProcessor(withDiscourse = false)
+  val proc = new CoreNLPProcessor()
 
   this.getClass.getSimpleName should "correctly assign sentiment scores for negative cases" in {
     val doc = proc.annotate("The grumpy goblin toiled away in the fetid mines.")
