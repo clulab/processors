@@ -70,10 +70,11 @@ lazy val root = (project in file("."))
 
 lazy val main = project
   .settings(commonSettings: _*)
+  .dependsOn(models % "test")
 
 lazy val corenlp = project
   .settings(commonSettings: _*)
-  .dependsOn(main)
+  .dependsOn(main % "test->test;compile->compile", models % "test")
 
 lazy val models = project
   .settings(commonSettings: _*)
