@@ -23,8 +23,7 @@ Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https
 # Changes
 + **6.0.0** - Reorganization into 3 subprojects with different licenses: main, corenlp, models.
 + **6.0.0** - Optimizations to `json` serialization/deserialization.
-+ **5.9.6** - Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.
-+ **5.9.6** - Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.
++ **5.9.6** - [Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.](https://gist.github.com/myedibleenso/87a3191c73938840b8ed768ec305db38)
 + **5.9.5** - Bug fix release: do not tag XML tags such as XREF... as named entities.
 + [more...](CHANGES.md)
 
