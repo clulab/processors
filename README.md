@@ -13,8 +13,8 @@ that cherry picks fast components from multiple sources (Stanford and [MaltParse
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
 Our code is licensed as follows:
-+ **main, models** - Apache License Version 2.0. Please note that these subprojects do not interact with the `corenlp` subproject below.
-+ **corenlp** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/).
++ **`main, models`** - Apache License Version 2.0. Please note that these subprojects do not interact with the `corenlp` subproject below.
++ **`corenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/).
 
 (c) Mihai Surdeanu, 2013 -
 
