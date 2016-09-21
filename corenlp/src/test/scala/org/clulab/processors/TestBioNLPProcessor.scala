@@ -298,6 +298,13 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(2) should be ("O")
   }
 
+  it should "label E2F as a protein" in {
+    val doc = proc.mkDocument("E2F is doing something.", keepText = false)
+    annotate(doc)
+
+    doc.sentences(0).entities.get(0) should be ("B-Gene_or_gene_product")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
