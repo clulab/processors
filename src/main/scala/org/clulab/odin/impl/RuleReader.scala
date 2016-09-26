@@ -62,6 +62,7 @@ class RuleReader(val actions: Actions) {
 
   def mkRule(
       data: Map[String, Any],
+      taxonomy: Option[Taxonomy],
       expand: String => Seq[String],
       template: Any => String,
       resources: OdinResourceManager
@@ -144,7 +145,7 @@ class RuleReader(val actions: Actions) {
             .replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1))))
         }
         // return the rule (in a Seq because this is a flatMap)
-        Seq(mkRule(m, expand, template, resources))
+        Seq(mkRule(m, taxonomy, expand, template, resources))
       }
     }
 
@@ -272,6 +273,7 @@ object RuleReader {
   class Rule(
       val name: String,
       val labels: Seq[String],
+      val taxonomy: Option[Taxonomy],
       val ruleType: String,
       val unit: String,
       val priority: String,
