@@ -1,12 +1,12 @@
 package org.clulab.odin.impl
 
-import java.util.{ Collection, Map => JMap }
-
+import java.util.{Collection, Map => JMap}
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
+import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
 import org.clulab.odin._
+
 
 class RuleReader(val actions: Actions) {
 
