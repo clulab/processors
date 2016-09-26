@@ -262,15 +262,18 @@ class RuleReader(val actions: Actions) {
     // ...to Seq[(role, Rule)]
     val rolesWithRules: Seq[(String, Rule)] = for {
       (argPattern, i) <- rule.pattern.split("\n").zipWithIndex
+      // ignore empty lines
       if argPattern.trim.nonEmpty
+      // ignore comments
+      if ! argPattern.trim.startsWith("#")
     } yield {
       // split arg pattern into 'argName1:ArgType', 'tokenpattern'
       // apply split only once
-      val contents: Seq[String] = argPattern.split("\\s+=\\s+", 2)
+      val contents: Seq[String] = argPattern.split("\\s*=\\s*", 2)
       if (contents.size != 2) throw OdinException(s"'$argPattern' for rule '${rule.name}' must have the form 'argName:ArgType = tokenpattern'")
       // split 'argName1:ArgType' into 'argName1', 'ArgType'
       // apply split only once
-      val argNameContents = contents.head.split("\\s+:\\s+", 2)
+      val argNameContents = contents.head.split("\\s*:\\s*", 2)
       if (argNameContents.size != 2) throw OdinException(s"'${contents.head}' for rule '${rule.name}' must have the form 'argName:ArgType'")
       val role = argNameContents.head.trim
       val label = argNameContents.last.trim
@@ -283,6 +286,7 @@ class RuleReader(val actions: Actions) {
         case Some(t) => t.hypernymsFor(label)
         case None => Seq(label)
       }
+      //println(s"labels for '$ruleName' with pattern '$pattern': '$labels'")
       (role, new Rule(ruleName, labels, rule.taxonomy, "token", rule.unit, rule.priority, rule.keep, rule.action, pattern, rule.resources))
     }
 

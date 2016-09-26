@@ -107,7 +107,7 @@ class MultiSentenceExtractor(
         val mentions = for {
           i <- nextSent until nextSent + window
           // is the sentence within the allotted window?
-          if doc.sentences.length < i
+          if i < doc.sentences.length
           // attempt to match pattern2
           pattern2Mentions = pattern2.findAllIn(i, doc, state)
           before <- pattern1Mentions
