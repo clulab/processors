@@ -115,7 +115,12 @@ class RuleReader(val actions: Actions) {
     val unit = tmpl(data.getOrElse("unit", DefaultUnit))
 
     // make intermediary rule
-    new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, resources)
+    data.getOrElse("window", None) match {
+      case window: Int =>
+        new MultiSentenceRule(name, labels, taxonomy, ruleType, window, unit, priority, keep, action, pattern, resources)
+      case _ =>
+        new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+    }
 
   }
 
@@ -219,6 +224,7 @@ class RuleReader(val actions: Actions) {
       rule.ruleType match {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
+        case "cross-sentence" => mkMultiSentenceExtractor(rule)
         case _ =>
           val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
           throw new OdinNamedCompileException(msg, rule.name)
@@ -242,6 +248,61 @@ class RuleReader(val actions: Actions) {
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
 
+  private def mkMultiSentenceExtractor(rule: Rule): MultiSentenceExtractor = {
+
+    val w = rule match {
+      case msr: MultiSentenceRule => msr.window
+      case other => DefaultWindow
+    }
+
+    // convert multi-sentence pattern...
+    // pattern: |
+    //   argName1:ArgType = tokenpattern
+    //   argName2: ArgType = tokenpattern
+    // ...to Seq[(role, Rule)]
+    val rolesWithRules: Seq[(String, Rule)] = for {
+      (argPattern, i) <- rule.pattern.split("\n").zipWithIndex
+      if argPattern.trim.nonEmpty
+    } yield {
+      // split arg pattern into 'argName1:ArgType', 'tokenpattern'
+      // apply split only once
+      val contents: Seq[String] = argPattern.split("\\s+=\\s+", 2)
+      if (contents.size != 2) throw OdinException(s"'$argPattern' for rule '${rule.name}' must have the form 'argName:ArgType = tokenpattern'")
+      // split 'argName1:ArgType' into 'argName1', 'ArgType'
+      // apply split only once
+      val argNameContents = contents.head.split("\\s+:\\s+", 2)
+      if (argNameContents.size != 2) throw OdinException(s"'${contents.head}' for rule '${rule.name}' must have the form 'argName:ArgType'")
+      val role = argNameContents.head.trim
+      val label = argNameContents.last.trim
+      // pattern for argument
+      val pattern = contents.last.trim
+      // make rule name
+      val ruleName = s"${rule.name}_$i"
+      // labels from label
+      val labels = rule.taxonomy match {
+        case Some(t) => t.hypernymsFor(label)
+        case None => Seq(label)
+      }
+      (role, new Rule(ruleName, labels, rule.taxonomy, "token", rule.unit, rule.priority, rule.keep, rule.action, pattern, rule.resources))
+    }
+
+    if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
+
+    new MultiSentenceExtractor(
+      rule.name,
+      rule.labels,
+      Priority(rule.priority),
+      rule.keep,
+      mirror.reflect(rule.action),
+      // the maximum number of sentences to look ahead for pattern2
+      w,
+      pattern1 = mkTokenExtractor(rolesWithRules.head._2),
+      pattern2 = mkTokenExtractor(rolesWithRules.last._2),
+      arg1 = rolesWithRules.head._1,
+      arg2 = rolesWithRules.last._1
+    )
+  }
+
   // compiles a dependency extractor
   private def mkDependencyExtractor(rule: Rule): DependencyExtractor = {
     val name = rule.name
@@ -258,6 +319,7 @@ class RuleReader(val actions: Actions) {
 object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
+  val DefaultWindow = 1
   val DefaultKeep = "true"
   val DefaultAction = "default"
   val DefaultUnit = "word"
@@ -281,6 +343,36 @@ object RuleReader {
       val action: String,
       val pattern: String,
       val resources: OdinResourceManager
-  )
+  ) {
+    def copy(
+      name: String = this.name,
+      labels: Seq[String] = this.labels,
+      taxonomy: Option[Taxonomy] = this.taxonomy,
+      ruleType: String = this.ruleType,
+      unit: String = this.unit,
+      priority: String = this.priority,
+      keep: Boolean = this.keep,
+      action: String = this.action,
+      pattern: String = this.pattern,
+      resources: OdinResourceManager = this.resources
+    ): Rule = new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+  }
 
+  /**
+    * Intermediate representation for a rule spanning multiple sentences
+    */
+  class MultiSentenceRule(
+    name: String,
+    labels: Seq[String],
+    taxonomy: Option[Taxonomy],
+    ruleType: String,
+    // the maximum number of sentences to look ahead for pattern2
+    val window: Int = DefaultWindow,
+    unit: String,
+    priority: String,
+    keep: Boolean,
+    action: String,
+    pattern: String,
+    resources: OdinResourceManager
+  ) extends Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
 }
