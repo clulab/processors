@@ -1,44 +1,83 @@
 import ReleaseTransformations._
 
-name := "processors"
+lazy val commonSettings = Seq(
+  organization := "org.clulab",
+  scalaVersion := "2.11.8",
+  scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation"),
+  parallelExecution in Test := false,
+  scalacOptions in (Compile, doc) += "-no-link-warnings", // suppresses problems with scaladoc @throws links
 
-organization := "org.clulab"
+  //
+  // publishing settings
+  //
+  // publish to a maven repo
+  publishMavenStyle := true,
 
-scalaVersion := "2.11.8"
+  // the standard maven repository
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  },
 
-scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
+  // let’s remove any repositories for optional dependencies in our artifact
+  pomIncludeRepository := { _ => false },
 
-// fork jvm to separate process
-// fork := true
+  // mandatory stuff to add to the pom for publishing
+  pomExtra :=
+    <url>https://github.com/clulab/processors</url>
+    <licenses>
+      <license>
+        <name>Apache License, Version 2.0</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
+    <scm>
+      <url>https://github.com/clulab/processors</url>
+      <connection>https://github.com/clulab/processors</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>mihai.surdeanu</id>
+        <name>Mihai Surdeanu</name>
+        <email>mihai@surdeanu.info</email>
+      </developer>
+    </developers>
 
-parallelExecution in Test := false
+  //
+  // end publishing settings
+  //
+)
 
-// options for forked jvm. No longer needed since we don't fork anymore.
-// see .sbtopts for the JVM configuration that is used.
-// javaOptions += "-Xmx6G"
-// javaOptions += "-Xss100m"
-
-// forward sbt's stdin to forked process
-// connectInput in run := true
-
-// don't show output prefix
-// outputStrategy := Some(StdoutOutput)
-
-lazy val core = project in file(".")
-
-lazy val models = (project in file("models"))
+lazy val root = (project in file("."))
+  .settings(commonSettings: _*)
   .settings(
+    publishArtifact := false,
+    publishTo := Some("dummy" at "nowhere"),
     publish := {},
     publishLocal := {},
-    publishM2 := {}
+    publishM2 := {},
+    Keys.`package` := {
+      // avoid generating an empty jar for the root project
+      (Keys.`package` in (main, Compile)).value
+    }
   )
+  .aggregate(main, corenlp, models)
+  .dependsOn(main, corenlp, models) // so that we can import from the console
 
-addArtifact(Artifact("processors", "models"), modelsTask in models)
+lazy val main = project
+  .settings(commonSettings: _*)
+  .dependsOn(models % "test")
 
-unmanagedJars in Compile += (modelsTask in models).value
+lazy val corenlp = project
+  .settings(commonSettings: _*)
+  .dependsOn(main % "test->test;compile->compile", models % "test")
 
-unmanagedClasspath in Runtime += baseDirectory.value
-
+lazy val models = project
+  .settings(commonSettings: _*)
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
@@ -54,68 +93,4 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
   pushChanges
-)
-
-
-//
-// publishing settings
-//
-
-// publish to a maven repo
-publishMavenStyle := true
-
-// the standard maven repository
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-
-// let’s remove any repositories for optional dependencies in our artifact
-pomIncludeRepository := { _ => false }
-
-// mandatory stuff to add to the pom for publishing
-pomExtra :=
-  <url>https://github.com/clulab/processors</url>
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <url>https://github.com/clulab/processors</url>
-    <connection>https://github.com/clulab/processors</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>mihai.surdeanu</id>
-      <name>Mihai Surdeanu</name>
-      <email>mihai@surdeanu.info</email>
-    </developer>
-  </developers>
-
-//
-// end publishing settings
-//
-
-libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "org.clulab" % "bioresources" % "1.1.15",
-  "com.io7m.xom" % "xom" % "1.2.10",
-  "org.json4s" %% "json4s-native" % "3.2.11",
-  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",
-  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1" classifier "models",
-  "ch.qos.logback" % "logback-classic" % "1.0.10",
-  "org.slf4j" % "slf4j-api" % "1.7.10",
-  "log4j" % "log4j" % "1.2.17", // this is used by our maltparser clone; otherwise not in use
-  "de.bwaldvogel" % "liblinear" % "1.94",
-  "tw.edu.ntu.csie" % "libsvm" % "3.17",
-  "org.yaml" % "snakeyaml" % "1.14",
-  "jline" % "jline" % "2.12.1"
 )

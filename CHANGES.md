@@ -1,4 +1,6 @@
 # Changes
++ **6.0.0** - Reorganization into 3 subprojects with different licenses: main, corenlp, models.
++ **6.0.0** - Optimizations to `json` serialization/deserialization.
 + **5.9.6** - Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.
 + **5.9.5** - Bug fix release: do not tag XML tags such as XREF... as named entities.
 + **5.9.4** - Update to use bioresources 1.1.15.
