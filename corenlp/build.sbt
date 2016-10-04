@@ -8,5 +8,6 @@ libraryDependencies ++= Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1" classifier "models",
   "ch.qos.logback" % "logback-classic" % "1.0.10",
-  "org.slf4j" % "slf4j-api" % "1.7.10"
+  "org.slf4j" % "slf4j-api" % "1.7.10",
+  "com.typesafe" % "config" % "1.2.1"
 )
