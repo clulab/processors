@@ -305,6 +305,15 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(0) should be ("B-Gene_or_gene_product")
   }
 
+  it should "not produce empty tokens" in {
+    val doc = proc.mkDocument("These interactions may be quite complex - partially antagonistic, partially superadditive - and they surely will not be limited to interactions between two genes respectively, but there will be interactions between multiple genes.")
+    annotate(doc)
+
+    for (w <- doc.sentences(0).words) {
+      w.length > 0 should be (true)
+    }
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)

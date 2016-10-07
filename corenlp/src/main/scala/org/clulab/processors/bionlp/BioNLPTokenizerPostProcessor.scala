@@ -129,7 +129,7 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
     for(i <- tokens.indices) {
       val token = tokens(i)
       val sepMatcher = VALID_COMPLEX_SEPARATOR_PATTERN.matcher(token.word())
-      if (sepMatcher.find() && // contains a dash or some known separator
+      if (sepMatcher.find() && token.word.length > 2 && // contains a dash or some known separator
           ((i < tokens.length - 1 && isComplex(tokens(i + 1).word())) || // followed by "complex", or
            (i > 0 && isComplex(tokens(i - 1).word())))){ // preceded by "complex"
 
