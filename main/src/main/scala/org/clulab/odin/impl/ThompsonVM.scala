@@ -119,8 +119,7 @@ object ThompsonVM {
         }
       case i: MatchMention =>
         val bundles = for {
-          m <- state.mentionsFor(sent, t.tok)
-          if m.matches(i.m)
+          m <- retrieveMentions(state, sent, t.tok, i.m, i.arg)
           if (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
           captures = mkMentionCapture(t.mentions, i.name, m)
           nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
@@ -132,6 +131,28 @@ object ThompsonVM {
         }
       case Done => Seq(t)
       case _ => Nil  // thread died with no match
+    }
+
+    def retrieveMentions(
+        state: State,
+        sentence: Int,
+        token: Int,
+        matcher: StringMatcher,
+        argument: Option[String]
+    ): Seq[Mention] = {
+      for {
+        mention <- state.mentionsFor(sentence, token)
+        if mention matches matcher
+        result <- argument match {
+          case Some(name) if name equalsIgnoreCase "trigger" =>
+            mention match {
+              case event: EventMention => Seq(event.trigger)
+              case _ => Nil
+            }
+          case Some(name) => mention.arguments.getOrElse(name, Nil)
+          case None => Seq(mention)
+        }
+      } yield result
     }
 
     def mkMentionCapture(
@@ -238,7 +259,11 @@ case class MatchToken(c: TokenConstraint) extends Inst {
 }
 
 // matches mention by label using string matcher
-case class MatchMention(m: StringMatcher, name: Option[String]) extends Inst {
+case class MatchMention(
+    m: StringMatcher,
+    name: Option[String],
+    arg: Option[String]
+) extends Inst {
   def dup() = copy()
 }
 

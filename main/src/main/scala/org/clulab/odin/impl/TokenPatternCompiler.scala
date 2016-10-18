@@ -72,8 +72,8 @@ class TokenPatternParsers(val unit: String, val resources: OdinResourceManager) 
     }
 
   def mentionPattern: Parser[ProgramFragment] =
-    "@" ~> opt(stringLiteral <~ ":") ~ exactStringMatcher ^^ {
-      case name ~ matcher => ProgramFragment(MatchMention(matcher, name))
+    "@" ~> opt(stringLiteral <~ ":") ~ exactStringMatcher ~ opt("." ~> stringLiteral) ^^ {
+      case name ~ matcher ~ arg => ProgramFragment(MatchMention(matcher, name, arg))
     }
 
   def atomicPattern: Parser[ProgramFragment] =
