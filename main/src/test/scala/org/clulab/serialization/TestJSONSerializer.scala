@@ -1,7 +1,7 @@
 package org.clulab.serialization
 
+import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
-import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.serialization.json._
 import org.json4s._
 import org.scalatest._
@@ -9,7 +9,6 @@ import org.scalatest._
 
 class TestJSONSerializer extends FlatSpec with Matchers {
 
-  val proc = new FastNLPProcessor
   val rules =
     """
       |# NE rules
@@ -35,7 +34,7 @@ class TestJSONSerializer extends FlatSpec with Matchers {
     """.stripMargin
   val engine = ExtractorEngine(rules)
   val text = "Gonzo married Camilla."
-  val doc = proc.annotate(text)
+  val doc = jsonStringToDocument(""" {"sentences":[{"words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
   val mentions = engine.extractFrom(doc)
 
   "JSONSerializer" should "serialize/deserialize a Document to/from json correctly" in {
@@ -64,24 +63,24 @@ class TestJSONSerializer extends FlatSpec with Matchers {
   }
 
   "A Document with an ID" should "produce json with an \"id\" field" in {
-    val d = proc.annotate(text)
+    val d = jsonStringToDocument(""" {"sentences":[{"words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
     d.id = Some("this-is-an-id")
     (d.jsonAST \ "id") should equal (JString("this-is-an-id"))
   }
 
   "A Document without an ID" should "produce json without an \"id\" field" in {
-    val d = proc.annotate(text)
+    val d = jsonStringToDocument(""" {"sentences":[{"words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
     (d.jsonAST \ "id") should equal (JNothing)
   }
 
   "A Document with text" should "produce json with a \"text\" field" in {
-    val d = proc.annotate(text)
+    val d = jsonStringToDocument(""" {"sentences":[{"words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
     d.text = Some(text)
     (d.jsonAST \ "text") should equal (JString(text))
   }
 
   "A Document without text" should "produce json without a \"text\" field" in {
-    val d = proc.annotate(text)
+    val d = jsonStringToDocument(""" {"sentences":[{"words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
     (d.jsonAST \ "text") should equal (JNothing)
   }
 
