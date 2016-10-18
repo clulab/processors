@@ -49,15 +49,15 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   def atomicConstraint: Parser[TokenConstraint] =
     numericConstraint | fieldConstraint | "(" ~> disjunctiveConstraint <~ ")"
 
-  def fieldConstraint: Parser[TokenConstraint] = identifier ~ "=" ~ stringMatcher ^^ {
-    case "word" ~ _ ~ matcher => new WordConstraint(matcher)
-    case "lemma" ~ _ ~ matcher => new LemmaConstraint(matcher)
-    case "tag" ~ _ ~ matcher => new TagConstraint(matcher)
-    case "entity" ~ _ ~ matcher => new EntityConstraint(matcher)
-    case "chunk" ~ _ ~ matcher => new ChunkConstraint(matcher)
-    case "incoming" ~ _ ~ matcher => new IncomingConstraint(matcher)
-    case "outgoing" ~ _ ~ matcher => new OutgoingConstraint(matcher)
-    case "mention" ~ _ ~ matcher => new MentionConstraint(matcher)
+  def fieldConstraint: Parser[TokenConstraint] = identifier ~ "=" ~ stringMatcher ~ opt("." ~> stringLiteral) ^^ {
+    case "word"     ~ "=" ~ matcher ~ None => new WordConstraint(matcher)
+    case "lemma"    ~ "=" ~ matcher ~ None => new LemmaConstraint(matcher)
+    case "tag"      ~ "=" ~ matcher ~ None => new TagConstraint(matcher)
+    case "entity"   ~ "=" ~ matcher ~ None => new EntityConstraint(matcher)
+    case "chunk"    ~ "=" ~ matcher ~ None => new ChunkConstraint(matcher)
+    case "incoming" ~ "=" ~ matcher ~ None => new IncomingConstraint(matcher)
+    case "outgoing" ~ "=" ~ matcher ~ None => new OutgoingConstraint(matcher)
+    case "mention"  ~ "=" ~ matcher ~ arg  => new MentionConstraint(matcher, arg)
     case _ => sys.error("unrecognized token field")
   }
 
@@ -275,9 +275,19 @@ class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with De
 }
 
 // checks that a token is inside a mention
-class MentionConstraint(matcher: StringMatcher) extends TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    state.mentionsFor(sent, tok) exists (_ matches matcher)
+class MentionConstraint(matcher: StringMatcher, arg: Option[String]) extends TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean = {
+    val mentions = state.mentionsFor(sent, tok).filter(_ matches matcher)
+    val results = arg match {
+      case None => mentions
+      case Some(name) if name equalsIgnoreCase "trigger" => mentions.flatMap {
+        case e: EventMention => Some(e.trigger)
+        case _ => None
+      }
+      case Some(name) => mentions.flatMap(_.arguments.getOrElse(name, Nil))
+    }
+    results.exists(_.tokenInterval contains tok)
+  }
 }
 
 class NegatedConstraint(constraint: TokenConstraint) extends TokenConstraint {
