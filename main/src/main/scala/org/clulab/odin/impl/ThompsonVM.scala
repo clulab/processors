@@ -140,7 +140,7 @@ object ThompsonVM {
         matcher: StringMatcher,
         argument: Option[String]
     ): Seq[Mention] = {
-      for {
+      val mentions = for {
         mention <- state.mentionsFor(sentence, token)
         if mention matches matcher
         result <- argument match {
@@ -153,6 +153,9 @@ object ThompsonVM {
           case None => Seq(mention)
         }
       } yield result
+      // the same mention may be the argument of many mentions
+      // so we may encounter it many times
+      mentions.distinct
     }
 
     def mkMentionCapture(

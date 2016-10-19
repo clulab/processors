@@ -286,6 +286,7 @@ class MentionConstraint(matcher: StringMatcher, arg: Option[String]) extends Tok
       }
       case Some(name) => mentions.flatMap(_.arguments.getOrElse(name, Nil))
     }
+    // we only need to know if there is at least one mention that matches
     results.exists(_.tokenInterval contains tok)
   }
 }

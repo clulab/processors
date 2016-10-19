@@ -837,7 +837,7 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val state = State(mentions)
     val results = p.findAllIn(0, doc, state)
 
-    results.distinct should have size (1)
+    results should have size (1)
     results.head.interval should have (
       'start (0),
       'end (4)
