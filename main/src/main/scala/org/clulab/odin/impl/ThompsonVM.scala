@@ -144,13 +144,13 @@ object ThompsonVM {
         mention <- state.mentionsFor(sentence, token)
         if mention matches matcher
         result <- argument match {
+          case None => Seq(mention)
           case Some(name) if name equalsIgnoreCase "trigger" =>
             mention match {
               case event: EventMention => Seq(event.trigger)
               case _ => Nil
             }
           case Some(name) => mention.arguments.getOrElse(name, Nil)
-          case None => Seq(mention)
         }
       } yield result
       // the same mention may be the argument of many mentions
