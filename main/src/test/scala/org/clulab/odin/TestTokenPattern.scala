@@ -845,4 +845,55 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
   }
 
+  val argPattern2 = "@Binding.theme [mention=Binding.trigger & tag=VBD] @Binding.theme [mention=Binding.trigger & tag=VBZ]"
+  argPattern2 should s"""match "$exampleSentence"""" in {
+    val p = TokenPattern.compile(argPattern2)
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["MEK","bound","Ras","binds","with","Kras"],"startOffsets":[0,4,10,14,20,25],"endOffsets":[3,9,13,19,24,29],"tags":["NN","VBD","NN","VBZ","IN","NNP"],"lemmas":["mek","bind","ra","bind","with","Kras"],"entities":["B-Family","O","B-Family","O","O","B-Gene_or_gene_product"],"chunks":["B-NP","B-VP","B-NP","B-VP","B-PP","B-NP"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":3,"relation":"ccomp"},{"source":3,"destination":2,"relation":"nsubj"},{"source":3,"destination":4,"relation":"prep"},{"source":4,"destination":5,"relation":"pobj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":3,"relation":"ccomp"},{"source":3,"destination":2,"relation":"nsubj"},{"source":3,"destination":5,"relation":"prep_with"}],"roots":[1]}}}]} """)
+
+    // proteins
+    val prot1 = new TextBoundMention("Protein", Interval(0), 0, doc, false, "<MANUAL>")
+    val prot2 = new TextBoundMention("Protein", Interval(2), 0, doc, false, "<MANUAL>")
+    val prot3 = new TextBoundMention("Protein", Interval(5), 0, doc, false, "<MANUAL>")
+    // triggers
+    val trigger1 = new TextBoundMention("BindingTrigger", Interval(1), 0, doc, false, "<MANUAL>")
+    val trigger2 = new TextBoundMention("BindingTrigger", Interval(3), 0, doc, false, "<MANUAL>")
+
+    // initialize state
+    val mentions = Seq(
+      // proteins
+      prot1, prot2, prot3,
+      // binding triggers
+      trigger1, trigger2,
+      // first binding
+      new EventMention(
+        label = "Binding",
+        trigger = trigger1,
+        arguments = Map("theme" -> Seq(prot1, prot2)),
+        sentence = 0,
+        document = doc,
+        keep = true,
+        foundBy = "<MANUAL>"
+      ),
+      // second binding
+      new EventMention(
+        label = "Binding",
+        trigger = trigger2,
+        arguments = Map("theme" -> Seq(prot2, prot3)),
+        sentence = 0,
+        document = doc,
+        keep = true,
+        foundBy = "<MANUAL>"
+      )
+    )
+
+    val state = State(mentions)
+    val results = p.findAllIn(0, doc, state)
+
+    results should have size (1)
+    results.head.interval should have (
+      'start (0),
+      'end (4)
+    )
+
+  }
 }
