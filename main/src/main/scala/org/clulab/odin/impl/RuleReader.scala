@@ -115,13 +115,27 @@ class RuleReader(val actions: Actions) {
     val unit = tmpl(data.getOrElse("unit", DefaultUnit))
 
     // make intermediary rule
-    data.getOrElse("window", None) match {
-      case window: Int =>
-        new MultiSentenceRule(name, labels, taxonomy, ruleType, window, unit, priority, keep, action, pattern, resources)
-      case _ =>
+    ruleType match {
+      case DefaultType =>
         new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+      case "token" =>
+        new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+      // cross-sentence cases
+      case "cross-sentence" =>
+        (data.getOrElse("left-window", None), data.getOrElse("right-window", None)) match {
+          case (leftWindow: Int, rightWindow: Int) =>
+            new MultiSentenceRule(name, labels, taxonomy, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+          case (leftWindow: Int, None) =>
+            new MultiSentenceRule(name, labels, taxonomy, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, resources)
+          case (None, rightWindow: Int) =>
+            new MultiSentenceRule(name, labels, taxonomy, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+          case _ =>
+            throw OdinCompileException(s""""cross-sentence" rule '$name' requires a "left-window" and/or "right-window"""")
+        }
+      // unrecognized rule type
+      case other =>
+        throw OdinCompileException(s"""type '$other' not recognized for rule '$name'""")
     }
-
   }
 
   private def readRules(
