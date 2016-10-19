@@ -250,8 +250,13 @@ class RuleReader(val actions: Actions) {
 
   private def mkMultiSentenceExtractor(rule: Rule): MultiSentenceExtractor = {
 
-    val w = rule match {
-      case msr: MultiSentenceRule => msr.window
+    val lw: Int = rule match {
+      case msr: MultiSentenceRule => msr.leftWindow
+      case other => DefaultWindow
+    }
+
+    val rw: Int = rule match {
+      case msr: MultiSentenceRule => msr.rightWindow
       case other => DefaultWindow
     }
 
@@ -293,17 +298,19 @@ class RuleReader(val actions: Actions) {
     if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
 
     new MultiSentenceExtractor(
-      rule.name,
-      rule.labels,
-      Priority(rule.priority),
-      rule.keep,
-      mirror.reflect(rule.action),
+      name = rule.name,
+      labels = rule.labels,
+      priority = Priority(rule.priority),
+      keep = rule.keep,
+      action = mirror.reflect(rule.action),
+      // the maximum number of sentences to look behind for pattern2
+      leftWindow = lw,
       // the maximum number of sentences to look ahead for pattern2
-      w,
-      pattern1 = mkTokenExtractor(rolesWithRules.head._2),
-      pattern2 = mkTokenExtractor(rolesWithRules.last._2),
-      arg1 = rolesWithRules.head._1,
-      arg2 = rolesWithRules.last._1
+      rightWindow = rw,
+      anchorPattern = mkTokenExtractor(rolesWithRules.head._2),
+      neighborPattern = mkTokenExtractor(rolesWithRules.last._2),
+      anchorRole = rolesWithRules.head._1,
+      neighborRole = rolesWithRules.last._1
     )
   }
 
@@ -323,7 +330,7 @@ class RuleReader(val actions: Actions) {
 object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
-  val DefaultWindow = 1
+  val DefaultWindow = -1 // -1 means don't use a window
   val DefaultKeep = "true"
   val DefaultAction = "default"
   val DefaultUnit = "word"
@@ -364,14 +371,17 @@ object RuleReader {
 
   /**
     * Intermediate representation for a rule spanning multiple sentences
+    * Produces a RelationMention with exactly two args: anchor and neighbor
     */
   class MultiSentenceRule(
     name: String,
     labels: Seq[String],
     taxonomy: Option[Taxonomy],
     ruleType: String,
+    // the maximum number of sentences to look behind for pattern2
+    val leftWindow: Int = DefaultWindow,
     // the maximum number of sentences to look ahead for pattern2
-    val window: Int = DefaultWindow,
+    val rightWindow: Int = DefaultWindow,
     unit: String,
     priority: String,
     keep: Boolean,

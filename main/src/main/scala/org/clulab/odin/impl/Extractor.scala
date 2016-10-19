@@ -1,8 +1,8 @@
 package org.clulab.odin.impl
 
-import org.clulab.struct.Interval
 import org.clulab.processors.Document
 import org.clulab.odin._
+
 
 trait Extractor {
   def name: String
@@ -91,36 +91,66 @@ class MultiSentenceExtractor(
   val priority: Priority,
   val keep: Boolean,
   val action: Action,
+  // the maximum number of sentences to look behind for pattern2
+  val leftWindow: Int,
   // the maximum number of sentences to look ahead for pattern2
-  val window: Int,
-  val pattern1: TokenExtractor,
-  val pattern2: TokenExtractor,
-  val arg1: String,
-  val arg2: String
+  val rightWindow: Int,
+  val anchorPattern: TokenExtractor,
+  val neighborPattern: TokenExtractor,
+  val anchorRole: String,
+  val neighborRole: String
 ) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
-    pattern1.findAllIn(sent, doc, state) match {
+    anchorPattern.findAllIn(sent, doc, state) match {
+      // the rule failed
       case Nil => Nil
+      // the anchor matched something
       case pattern1Mentions =>
-        val nextSent = sent + 1
-        val mentions = for {
-          i <- nextSent until nextSent + window
-          // is the sentence within the allotted window?
-          if i < doc.sentences.length
-          // attempt to match pattern2
-          pattern2Mentions = pattern2.findAllIn(i, doc, state)
-          before <- pattern1Mentions
-          after <- pattern2Mentions
-        } yield mkMention(before, after)
 
-        action(mentions, state)
+        val leftWindowMatches = leftWindow match {
+          // -1 means don't attempt to match anything to the left
+          case -1 => Nil
+          case lw if lw >= 0 =>
+            for {
+              i <- sent - leftWindow until sent
+              // is the sentence within the allotted window?
+              if 0 <= i && i < doc.sentences.length
+              // attempt to match pattern2
+              pattern2Mentions = neighborPattern.findAllIn(i, doc, state)
+              anchor <- pattern1Mentions
+              neighbor <- pattern2Mentions
+              // for left window, neighbor must precede anchor
+              if neighbor precedes anchor
+            } yield mkMention(anchor, neighbor)
+          case _ => throw OdinCompileException(""""left-window" value for '$name' must be >= -1""")
+        }
+
+        val rightWindowMatches = rightWindow match {
+          // -1 means don't attempt to match anything to the right
+          case -1 => Nil
+          case rw if rw >= 0 =>
+            for {
+              i <- sent until sent + rightWindow
+              // is the sentence within the allotted window?
+              if 0 <= i && i < doc.sentences.length
+              // attempt to match pattern2
+              pattern2Mentions = neighborPattern.findAllIn(i, doc, state)
+              anchor <- pattern1Mentions
+              neighbor <- pattern2Mentions
+              // for right window, anchor must precede neighbor
+              if anchor precedes neighbor
+            } yield mkMention(anchor, neighbor)
+          case _ => throw OdinCompileException(""""right-window" value for '$name' must be >= -1""")
+        }
+
+        action(leftWindowMatches ++ rightWindowMatches , state)
     }
   }
 
-  def mkMention(before: Mention, after: Mention): Mention = {
-    val args = Map(arg1 -> Seq(before), arg2 -> Seq(after))
+  def mkMention(anchor: Mention, neighbor: Mention): Mention = {
+    val args = Map(anchorRole -> Seq(anchor), neighborRole -> Seq(neighbor))
     // FIXME: we should redo Mention's interval (and sentence)
-    new RelationMention(labels, before.tokenInterval, args, Map.empty, before.sentence, before.document, keep, name)
+    new RelationMention(labels, anchor.tokenInterval, args, Map.empty, anchor.sentence, anchor.document, keep, name)
   }
 }
