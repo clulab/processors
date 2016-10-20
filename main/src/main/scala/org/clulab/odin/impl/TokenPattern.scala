@@ -16,6 +16,16 @@ object TokenPattern {
     compiler.compileTokenPattern(input)
   }
 
+  // returns true if the next `Match*` instruction is a `MatchMention`
+  def startsWithMatchMention(inst: Inst): Boolean = inst match {
+    case i: MatchMention => true
+    case i: Pass => startsWithMatchMention(i.next)
+    case i: Split => startsWithMatchMention(i.lhs) || startsWithMatchMention(i.rhs)
+    case i: SaveStart => startsWithMatchMention(i.next)
+    case i: SaveEnd => startsWithMatchMention(i.next) // not sure about this one
+    case _ => false
+  }
+
   case class Result(
       interval: Interval,
       groups: Map[String, Seq[Interval]],
@@ -28,6 +38,11 @@ object TokenPattern {
 
 class TokenPattern(val start: Inst) {
   import TokenPattern._
+
+  // We want to advance token by token when the first match in the pattern is a MatchMention.
+  // This allows us to find overlapping mentions that start in different tokens but end in the same one.
+  // e.g. [ASPP1 and [ASPP2 are phosphorylated]] in response to EGFR
+  val conservativeAdvance = startsWithMatchMention(start)
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     ThompsonVM.evaluate(start, tok, sent, doc, state) map {
@@ -49,13 +64,22 @@ class TokenPattern(val start: Inst) {
 
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     @annotation.tailrec
-    def collect(i: Int, collected: Seq[Result]): Seq[Result] =
-      findFirstIn(i, sent, doc, state) match {
-        case Nil => collected
-        case results =>
-          val r = results minBy (_.interval.size)
-          collect(r.end, collected ++ results)
-      }
+    def collect(i: Int, collected: Seq[Result]): Seq[Result] = conservativeAdvance match {
+      case true =>
+        val n = doc.sentences(sent).size
+        for {
+          j <- i until n // the rest of the tokens
+          r <- findPrefixOf(j, sent, doc, state)
+        } yield r
+
+      case false =>
+        findFirstIn(i, sent, doc, state) match {
+          case Nil => collected
+          case results =>
+            val r = results minBy (_.interval.size)
+            collect(r.end, collected ++ results)
+        }
+    }
     collect(tok, Nil)
   }
 
