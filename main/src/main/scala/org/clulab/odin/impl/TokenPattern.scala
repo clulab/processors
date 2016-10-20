@@ -64,23 +64,25 @@ class TokenPattern(val start: Inst) {
 
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     @annotation.tailrec
-    def collect(i: Int, collected: Seq[Result]): Seq[Result] = conservativeAdvance match {
-      case true =>
-        val n = doc.sentences(sent).size
-        for {
-          j <- i until n // the rest of the tokens
-          r <- findPrefixOf(j, sent, doc, state)
-        } yield r
-
-      case false =>
-        findFirstIn(i, sent, doc, state) match {
-          case Nil => collected
-          case results =>
-            val r = results minBy (_.interval.size)
-            collect(r.end, collected ++ results)
-        }
+    def collect(i: Int, collected: Seq[Result]): Seq[Result] = {
+      findFirstIn(i, sent, doc, state) match {
+        case Nil => collected
+        case results =>
+          val r = results minBy (_.interval.size)
+          collect(r.end, collected ++ results)
+      }
     }
-    collect(tok, Nil)
+    if (conservativeAdvance) {
+      // move forward one token at a time
+      val n = doc.sentences(sent).size
+      for {
+        i <- tok until n // the rest of the tokens
+        r <- findPrefixOf(i, sent, doc, state)
+      } yield r
+    } else {
+      // move forward one match at a time
+      collect(tok, Nil)
+    }
   }
 
   def findPrefixOf(sent: Int, doc: Document, state: State = new State): Seq[Result] =
