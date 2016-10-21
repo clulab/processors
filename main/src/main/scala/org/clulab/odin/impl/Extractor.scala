@@ -85,7 +85,7 @@ class DependencyExtractor(
 }
 
 
-class MultiSentenceExtractor(
+class CrossSentenceExtractor(
   val name: String,
   val labels: Seq[String],
   val priority: Priority,
@@ -101,6 +101,11 @@ class MultiSentenceExtractor(
   val neighborRole: String
 ) extends Extractor {
 
+  // inspect windows
+  if (leftWindow == 0 && rightWindow == 0) {
+    throw OdinException(s"cross-sentence pattern for '$name' must have window > 0 either to the left or to the right")
+  }
+
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
     anchorPattern.findAllIn(sent, doc, state) match {
       // the rule failed
@@ -109,8 +114,7 @@ class MultiSentenceExtractor(
       case pattern1Mentions =>
 
         val leftWindowMatches = leftWindow match {
-          // -1 means don't attempt to match anything to the left
-          case -1 => Nil
+          case invalid if invalid < 0 => throw OdinException(s"left-window for '$name' must be >= 0")
           case lw if lw >= 0 =>
             for {
               i <- sent - leftWindow until sent
@@ -123,12 +127,10 @@ class MultiSentenceExtractor(
               // for left window, neighbor must precede anchor
               if neighbor precedes anchor
             } yield mkMention(anchor, neighbor)
-          case _ => throw OdinCompileException(""""left-window" value for '$name' must be >= -1""")
         }
 
         val rightWindowMatches = rightWindow match {
-          // -1 means don't attempt to match anything to the right
-          case -1 => Nil
+          case invalid if invalid < 0 => throw OdinException(s"right-window for '$name' must be >= 0")
           case rw if rw >= 0 =>
             for {
               i <- sent until sent + rightWindow
@@ -141,16 +143,22 @@ class MultiSentenceExtractor(
               // for right window, anchor must precede neighbor
               if anchor precedes neighbor
             } yield mkMention(anchor, neighbor)
-          case _ => throw OdinCompileException(""""right-window" value for '$name' must be >= -1""")
         }
 
         action(leftWindowMatches ++ rightWindowMatches , state)
     }
   }
 
-  def mkMention(anchor: Mention, neighbor: Mention): Mention = {
-    val args = Map(anchorRole -> Seq(anchor), neighborRole -> Seq(neighbor))
+  def mkMention(anchor: Mention, neighbor: Mention): CrossSentenceMention = {
     // FIXME: we should redo Mention's interval (and sentence)
-    new RelationMention(labels, anchor.tokenInterval, args, Map.empty, anchor.sentence, anchor.document, keep, name)
+    new CrossSentenceMention(
+      labels,
+      anchor = anchor,
+      neighbor = neighbor,
+      arguments = Map(anchorRole -> Seq(anchor), neighborRole -> Seq(neighbor)),
+      anchor.document,
+      keep,
+      name
+    )
   }
 }

@@ -124,11 +124,11 @@ class RuleReader(val actions: Actions) {
       case "cross-sentence" =>
         (data.getOrElse("left-window", None), data.getOrElse("right-window", None)) match {
           case (leftWindow: Int, rightWindow: Int) =>
-            new MultiSentenceRule(name, labels, taxonomy, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+            new CrossSentenceRule(name, labels, taxonomy, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, resources)
           case (leftWindow: Int, None) =>
-            new MultiSentenceRule(name, labels, taxonomy, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, resources)
+            new CrossSentenceRule(name, labels, taxonomy, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, resources)
           case (None, rightWindow: Int) =>
-            new MultiSentenceRule(name, labels, taxonomy, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+            new CrossSentenceRule(name, labels, taxonomy, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, resources)
           case _ =>
             throw OdinCompileException(s""""cross-sentence" rule '$name' requires a "left-window" and/or "right-window"""")
         }
@@ -238,7 +238,7 @@ class RuleReader(val actions: Actions) {
       rule.ruleType match {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
-        case "cross-sentence" => mkMultiSentenceExtractor(rule)
+        case "cross-sentence" => mkCrossSentenceExtractor(rule)
         case _ =>
           val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
           throw new OdinNamedCompileException(msg, rule.name)
@@ -262,19 +262,19 @@ class RuleReader(val actions: Actions) {
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
 
-  private def mkMultiSentenceExtractor(rule: Rule): MultiSentenceExtractor = {
+  private def mkCrossSentenceExtractor(rule: Rule): CrossSentenceExtractor = {
 
     val lw: Int = rule match {
-      case msr: MultiSentenceRule => msr.leftWindow
+      case csr: CrossSentenceRule => csr.leftWindow
       case other => DefaultWindow
     }
 
     val rw: Int = rule match {
-      case msr: MultiSentenceRule => msr.rightWindow
+      case csr: CrossSentenceRule => csr.rightWindow
       case other => DefaultWindow
     }
 
-    // convert multi-sentence pattern...
+    // convert cross-sentence pattern...
     // pattern: |
     //   argName1:ArgType = tokenpattern
     //   argName2: ArgType = tokenpattern
@@ -299,7 +299,7 @@ class RuleReader(val actions: Actions) {
       // pattern for argument
       val pattern = contents.last.trim
       // make rule name
-      val ruleName = s"${rule.name}_$i"
+      val ruleName = s"${rule.name}_arg:$role"
       // labels from label
       val labels = rule.taxonomy match {
         case Some(t) => t.hypernymsFor(label)
@@ -311,7 +311,7 @@ class RuleReader(val actions: Actions) {
 
     if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
 
-    new MultiSentenceExtractor(
+    new CrossSentenceExtractor(
       name = rule.name,
       labels = rule.labels,
       priority = Priority(rule.priority),
@@ -344,7 +344,7 @@ class RuleReader(val actions: Actions) {
 object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
-  val DefaultWindow = -1 // -1 means don't use a window
+  val DefaultWindow = 0 // 0 means don't use a window
   val DefaultKeep = "true"
   val DefaultAction = "default"
   val DefaultUnit = "word"
@@ -387,15 +387,15 @@ object RuleReader {
     * Intermediate representation for a rule spanning multiple sentences
     * Produces a RelationMention with exactly two args: anchor and neighbor
     */
-  class MultiSentenceRule(
+  class CrossSentenceRule(
     name: String,
     labels: Seq[String],
     taxonomy: Option[Taxonomy],
     ruleType: String,
     // the maximum number of sentences to look behind for pattern2
-    val leftWindow: Int = DefaultWindow,
+    val leftWindow: Int,
     // the maximum number of sentences to look ahead for pattern2
-    val rightWindow: Int = DefaultWindow,
+    val rightWindow: Int,
     unit: String,
     priority: String,
     keep: Boolean,
