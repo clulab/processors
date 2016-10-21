@@ -20,9 +20,9 @@ object TokenPattern {
   def startsWithMatchMention(inst: Inst): Boolean = inst match {
     case i: MatchMention => true
     case i: Pass => startsWithMatchMention(i.next)
-    case i: Split => startsWithMatchMention(i.lhs) || startsWithMatchMention(i.rhs)
+    case i: Split => startsWithMatchMention(i.lhs) && startsWithMatchMention(i.rhs)
     case i: SaveStart => startsWithMatchMention(i.next)
-    case i: SaveEnd => startsWithMatchMention(i.next) // not sure about this one
+    case i: SaveEnd => startsWithMatchMention(i.next)
     case _ => false
   }
 
@@ -42,7 +42,7 @@ class TokenPattern(val start: Inst) {
   // We want to advance token by token when the first match in the pattern is a MatchMention.
   // This allows us to find overlapping mentions that start in different tokens but end in the same one.
   // e.g. [ASPP1 and [ASPP2 are phosphorylated]] in response to EGFR
-  val conservativeAdvance = startsWithMatchMention(start)
+  val cautiousAdvance = startsWithMatchMention(start)
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     ThompsonVM.evaluate(start, tok, sent, doc, state) map {
@@ -72,7 +72,7 @@ class TokenPattern(val start: Inst) {
           collect(r.end, collected ++ results)
       }
     }
-    if (conservativeAdvance) {
+    if (cautiousAdvance) {
       // move forward one token at a time
       val n = doc.sentences(sent).size
       for {
