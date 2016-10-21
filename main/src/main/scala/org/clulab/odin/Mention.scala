@@ -411,3 +411,37 @@ class RelationMention(
     copy(arguments = this.arguments + arg)
 
 }
+
+
+class CrossSentenceMention(
+  val labels: Seq[String],
+  val anchor: Mention,
+  val neighbor: Mention,
+  val arguments: Map[String, Seq[Mention]],
+  val document: Document,
+  val keep: Boolean,
+  val foundBy: String
+) extends Mention {
+
+  require(arguments.size == 2, "CrossSentenceMention must have exactly two arguments")
+
+  // cross-sentence mention cannot be produced by syntactic traversal
+  val paths: Map[String, Map[Mention, SynPath]] = Map.empty
+
+  // use anchor for sentence and tokenInterval
+  val sentence: Int = anchor.sentence
+  val tokenInterval: Interval = anchor.tokenInterval
+
+  override def precedes(that: Mention): Boolean = anchor.compare(that) < 0 || neighbor.compare(that) < 0
+
+  /** returns a string that contains the mention */
+  override def text: String = {
+    val SEP = " . . . "
+    anchor precedes neighbor match {
+      case true =>
+        s"${anchor.text}$SEP${neighbor.text}"
+      case false =>
+        s"${neighbor.text}$SEP${anchor.text}"
+    }
+  }
+}

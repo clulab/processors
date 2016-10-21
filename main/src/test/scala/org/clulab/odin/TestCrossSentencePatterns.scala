@@ -56,6 +56,8 @@ class TestMultiSentencePatterns extends FlatSpec with Matchers {
     val mentions2 = ee2.extractFrom(doc)
     mentions2 should have size (1)
     (mentions2.head matches "Coref") should be (true)
+    import org.clulab.serialization.json._
+    JSONSerializer.toMentions(mentions2.jsonAST) should have size (mentions2.size)
 
     // try with rule3
     val rule3 =
