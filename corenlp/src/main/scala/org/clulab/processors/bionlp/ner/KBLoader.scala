@@ -8,7 +8,7 @@ import org.clulab.struct.HashTrie
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 
 /**
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
@@ -50,6 +50,9 @@ object KBLoader {
     * A horrible hack to keep track of entities that should not be labeled when in lower case, or upper initial
     */
   val ENTITY_STOPLIST = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
+
+  /** Should we automatically produce lexical variations of entity names? */
+  val PRODUCE_LEXICAL_VARIATIONS = true
 
   /**
     * Finds special tokens such as family names containing slash
@@ -198,16 +201,23 @@ object KBLoader {
         }
         val matcher = matchers.getOrElseUpdate(label,
           new HashTrie(caseInsensitive = caseInsensitive, internStrings = true))
-        matcher.add(tokens)
+
+        addWithLexicalVariations(tokens, matcher)
+
       }
     }
+  }
+
+  private def addWithLexicalVariations(tokens:Array[String], matcher:HashTrie): Unit = {
+    for(ts <- KBLoader.lexicalVariations(tokens))
+      matcher.add(ts)
   }
 
   private def addLine(inputLine:String, matcher:HashTrie, knownCaseInsensitives:mutable.HashSet[String]): Unit = {
     val line = inputLine.trim
     if(! line.startsWith("#")) {
       val tokens = line.split("\\s+")
-      matcher.add(tokens)
+      addWithLexicalVariations(tokens, matcher)
       if(tokens.length == 1 && line.toLowerCase == line) { // keep track of all lower case ents that are single letter
         knownCaseInsensitives.add(line)
       }
@@ -236,5 +246,25 @@ object KBLoader {
     val dot = kb.indexOf('.')
     val name = kb.substring(slash + 1, dot)
     name
+  }
+
+  /**
+    * Generates all accepted lexical variations for this entity
+    *   For example: "insulin receptor substrate 1" => "insulin receptor substrate-1"
+    *
+    * @param tokens The original form of the entity
+    * @return All accepted lexical variations, including the original form
+    */
+  def lexicalVariations(tokens:Array[String]):Seq[Array[String]] = {
+    val variations = new ListBuffer[Array[String]]
+
+    // the default
+    variations += tokens
+
+    if(PRODUCE_LEXICAL_VARIATIONS) {
+      // TODO: add all NER variations here!
+    }
+
+    variations.toSeq
   }
 }
