@@ -4,7 +4,7 @@ import org.scalatest._
 import org.clulab.TestUtils.jsonStringToDocument
 
 
-class TestMultiSentencePatterns extends FlatSpec with Matchers {
+class TestCrossSentencePatterns extends FlatSpec with Matchers {
 
   val text1 = "Barack Obama is the 44th President of the United States. He was born on August 4, 1961 in Honolulu, Hawaii."
 
@@ -21,7 +21,6 @@ class TestMultiSentencePatterns extends FlatSpec with Matchers {
         |  # the maximum number of sentences to search to the left of the anchor
         |  left-window: 1
         |  # don't attempt to match anywhere to the right of the anchor
-        |  right-window: -1
         |  example: "Barack Obama is the 44th President of the United States. He was born on August 4, 1961 in Honolulu, Hawaii."
         |  type: cross-sentence
         |  pattern: |
@@ -43,7 +42,8 @@ class TestMultiSentencePatterns extends FlatSpec with Matchers {
         |  priority: 2
         |  # the maximum number of sentences to search to the left of the anchor
         |  left-window: 1
-        |  # don't attempt to match anywhere to the right of the anchor
+        |  # only attempt neighbor matches to the right of the anchor in the current sentence
+        |  right-window: 0
         |  example: "Barack Obama is the 44th President of the United States. He was born on August 4, 1961 in Honolulu, Hawaii."
         |  type: cross-sentence
         |  pattern: |
@@ -56,31 +56,6 @@ class TestMultiSentencePatterns extends FlatSpec with Matchers {
     val mentions2 = ee2.extractFrom(doc)
     mentions2 should have size (1)
     (mentions2.head matches "Coref") should be (true)
-    import org.clulab.serialization.json._
-    JSONSerializer.toMentions(mentions2.jsonAST) should have size (mentions2.size)
-
-    // try with rule3
-    val rule3 =
-      """
-        |- name: coref-example
-        |  label: Coref
-        |  priority: 2
-        |  # the maximum number of sentences to search to the left of the anchor
-        |  left-window: 1
-        |  # only attempt neighbor matches to the right of the anchor in the current sentence
-        |  right-window: 0
-        |  example: "Barack Obama is the 44th President of the United States. He was born on August 4, 1961 in Honolulu, Hawaii."
-        |  type: cross-sentence
-        |  pattern: |
-        |    # start here at the pattern's anchor
-        |    # the pronoun to be resolved
-        |    anaphor: Entity = [lemma="he"]
-        |    antecedent: Entity = Barack Obama
-      """.stripMargin
-    val ee3 = ExtractorEngine(rule3)
-    val mentions3 = ee3.extractFrom(doc)
-    mentions3 should have size (1)
-    (mentions3.head matches "Coref") should be (true)
 
   }
 
