@@ -51,8 +51,8 @@ object KBLoader {
     */
   val ENTITY_STOPLIST = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
 
-  /** Should we automatically produce lexical variations of entity names? */
-  val PRODUCE_LEXICAL_VARIATIONS = true
+  /** Engine to automatically produce lexical variations of entity names */
+  val lexicalVariationEngine = Some(new LexicalVariations)
 
   /**
     * Finds special tokens such as family names containing slash
@@ -209,6 +209,10 @@ object KBLoader {
   }
 
   private def addWithLexicalVariations(tokens:Array[String], matcher:HashTrie): Unit = {
+    // add the original form
+    matcher.add(tokens)
+
+    // add the lexical variations
     for(ts <- KBLoader.lexicalVariations(tokens))
       matcher.add(ts)
   }
@@ -256,15 +260,9 @@ object KBLoader {
     * @return All accepted lexical variations, including the original form
     */
   def lexicalVariations(tokens:Array[String]):Seq[Array[String]] = {
-    val variations = new ListBuffer[Array[String]]
-
-    // the default
-    variations += tokens
-
-    if(PRODUCE_LEXICAL_VARIATIONS) {
-      // TODO: add all NER variations here!
+    lexicalVariationEngine match {
+      case Some(e) => e.lexicalVariations(tokens)
+      case _ => Seq.empty
     }
-
-    variations.toSeq
   }
 }
