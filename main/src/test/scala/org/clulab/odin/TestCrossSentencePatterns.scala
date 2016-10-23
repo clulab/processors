@@ -66,7 +66,7 @@ class TestCrossSentencePatterns extends FlatSpec with Matchers {
 
   }
 
-  "Arguments of cross-sentence patterns" should "point to existing mentions with the given label in the state" in {
+  "Anchor and neighbor" should "point to existing mentions with the given label in the state" in {
 
     val text = "Akt interacts with Raf and phosphorylates it at Ser259 .  Furthermore , phosphorylation of Raf by Akt inhibits activation of the Raf-MEK-ERK signaling pathway and has been shown to alter the cellular response in a human breast cancer cell line from cell cycle arrest to proliferation ."
     val doc = jsonStringToDocument(""" {"sentences":[{"words":["Akt","interacts","with","Raf","and","phosphorylates","it","at","Ser259","."],"startOffsets":[0,4,14,19,23,27,42,45,48,55],"endOffsets":[3,13,18,22,26,41,44,47,54,56],"tags":["NN","VBZ","IN","NN","CC","VBZ","PRP","IN","NN","."],"lemmas":["akt","interact","with","raf","and","phosphorylate","it","at","ser259","."],"entities":["O","O","O","PERSON","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","B-VP","B-PP","B-NP","O","B-VP","B-NP","B-PP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"prep"},{"source":1,"destination":4,"relation":"cc"},{"source":1,"destination":5,"relation":"conj"},{"source":1,"destination":9,"relation":"punct"},{"source":2,"destination":3,"relation":"pobj"},{"source":5,"destination":6,"relation":"dobj"},{"source":5,"destination":7,"relation":"prep"},{"source":7,"destination":8,"relation":"pobj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":3,"relation":"prep_with"},{"source":1,"destination":5,"relation":"conj_and"},{"source":1,"destination":9,"relation":"punct"},{"source":5,"destination":0,"relation":"nsubj"},{"source":5,"destination":6,"relation":"dobj"},{"source":5,"destination":8,"relation":"prep_at"}],"roots":[1]}}},{"words":["Furthermore",",","phosphorylation","of","Raf","by","Akt","inhibits","activation","of","the","Raf-MEK-ERK","signaling","pathway","and","has","been","shown","to","alter","the","cellular","response","in","a","human","breast","cancer","cell","line","from","cell","cycle","arrest","to","proliferation","."],"startOffsets":[58,70,72,88,91,95,98,102,111,122,125,129,141,151,159,163,167,172,178,181,187,191,200,209,212,214,220,227,234,239,244,249,254,260,267,270,284],"endOffsets":[69,71,87,90,94,97,101,110,121,124,128,140,150,158,162,166,171,177,180,186,190,199,208,211,213,219,226,233,238,243,248,253,259,266,269,283,285],"tags":["RB",",","NN","IN","NN","IN","NN","VBZ","NN","IN","DT","NN","NN","NN","CC","VBZ","VBN","VBN","TO","VB","DT","JJ","NN","IN","DT","JJ","NN","NN","NN","NN","IN","NN","NN","NN","TO","NN","."],"lemmas":["furthermore",",","phosphorylation","of","raf","by","akt","inhibit","activation","of","the","raf-mek-erk","signaling","pathway","and","have","be","show","to","alter","the","cellular","response","in","a","human","breast","cancer","cell","line","from","cell","cycle","arrest","to","proliferation","."],"entities":["O","O","O","O","O","O","PERSON","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-ADVP","O","B-NP","B-PP","B-NP","B-PP","B-NP","I-NP","I-NP","B-PP","B-NP","I-NP","I-NP","I-NP","O","B-VP","I-VP","I-VP","B-VP","I-VP","B-NP","I-NP","I-NP","B-PP","B-NP","I-NP","I-NP","I-NP","I-NP","I-NP","B-PP","B-NP","I-NP","I-NP","B-PP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":34,"destination":35,"relation":"pobj"},{"source":2,"destination":3,"relation":"prep"},{"source":2,"destination":5,"relation":"prep"},{"source":3,"destination":4,"relation":"pobj"},{"source":5,"destination":6,"relation":"pobj"},{"source":7,"destination":2,"relation":"nsubj"},{"source":7,"destination":36,"relation":"punct"},{"source":7,"destination":8,"relation":"dobj"},{"source":7,"destination":14,"relation":"cc"},{"source":7,"destination":0,"relation":"advmod"},{"source":7,"destination":1,"relation":"punct"},{"source":7,"destination":17,"relation":"conj"},{"source":8,"destination":9,"relation":"prep"},{"source":9,"destination":13,"relation":"pobj"},{"source":13,"destination":10,"relation":"det"},{"source":13,"destination":11,"relation":"nn"},{"source":13,"destination":12,"relation":"nn"},{"source":17,"destination":19,"relation":"xcomp"},{"source":17,"destination":15,"relation":"aux"},{"source":17,"destination":16,"relation":"auxpass"},{"source":19,"destination":18,"relation":"aux"},{"source":19,"destination":22,"relation":"dobj"},{"source":22,"destination":34,"relation":"prep"},{"source":22,"destination":20,"relation":"det"},{"source":22,"destination":21,"relation":"amod"},{"source":22,"destination":23,"relation":"prep"},{"source":23,"destination":29,"relation":"pobj"},{"source":29,"destination":24,"relation":"det"},{"source":29,"destination":25,"relation":"amod"},{"source":29,"destination":26,"relation":"nn"},{"source":29,"destination":27,"relation":"nn"},{"source":29,"destination":28,"relation":"nn"},{"source":29,"destination":30,"relation":"prep"},{"source":30,"destination":33,"relation":"pobj"},{"source":33,"destination":31,"relation":"nn"},{"source":33,"destination":32,"relation":"nn"}],"roots":[7]},"stanford-collapsed":{"edges":[{"source":2,"destination":4,"relation":"prep_of"},{"source":2,"destination":6,"relation":"prep_by"},{"source":7,"destination":2,"relation":"nsubj"},{"source":7,"destination":36,"relation":"punct"},{"source":7,"destination":8,"relation":"dobj"},{"source":7,"destination":0,"relation":"advmod"},{"source":7,"destination":1,"relation":"punct"},{"source":7,"destination":17,"relation":"conj_and"},{"source":8,"destination":13,"relation":"prep_of"},{"source":13,"destination":10,"relation":"det"},{"source":13,"destination":11,"relation":"nn"},{"source":13,"destination":12,"relation":"nn"},{"source":17,"destination":2,"relation":"nsubjpass"},{"source":17,"destination":19,"relation":"xcomp"},{"source":17,"destination":15,"relation":"aux"},{"source":17,"destination":16,"relation":"auxpass"},{"source":19,"destination":18,"relation":"aux"},{"source":19,"destination":22,"relation":"dobj"},{"source":22,"destination":35,"relation":"prep_to"},{"source":22,"destination":20,"relation":"det"},{"source":22,"destination":21,"relation":"amod"},{"source":22,"destination":29,"relation":"prep_in"},{"source":29,"destination":24,"relation":"det"},{"source":29,"destination":25,"relation":"amod"},{"source":29,"destination":26,"relation":"nn"},{"source":29,"destination":27,"relation":"nn"},{"source":29,"destination":28,"relation":"nn"},{"source":29,"destination":33,"relation":"prep_from"},{"source":33,"destination":31,"relation":"nn"},{"source":33,"destination":32,"relation":"nn"}],"roots":[7]}}}]} """)
@@ -151,4 +151,69 @@ class TestCrossSentencePatterns extends FlatSpec with Matchers {
     after matches "Positive_regulation" should be(true)
   }
 
+  it should "not match in the same sentence" in {
+
+    val text = "Furthermore , phosphorylation of Raf by Akt inhibits activation of the Raf-MEK-ERK signaling pathway and has been shown to alter the cellular response in a human breast cancer cell line from cell cycle arrest to proliferation ."
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["Furthermore",",","phosphorylation","of","Raf","by","Akt","inhibits","activation","of","the","Raf-MEK-ERK","signaling","pathway","and","has","been","shown","to","alter","the","cellular","response","in","a","human","breast","cancer","cell","line","from","cell","cycle","arrest","to","proliferation","."],"startOffsets":[0,12,14,30,33,37,40,44,53,64,67,71,83,93,101,105,109,114,120,123,129,133,142,151,154,156,162,169,176,181,186,191,196,202,209,212,226],"endOffsets":[11,13,29,32,36,39,43,52,63,66,70,82,92,100,104,108,113,119,122,128,132,141,150,153,155,161,168,175,180,185,190,195,201,208,211,225,227],"tags":["RB",",","NN","IN","NN","IN","NN","VBZ","NN","IN","DT","NN","NN","NN","CC","VBZ","VBN","VBN","TO","VB","DT","JJ","NN","IN","DT","JJ","NN","NN","NN","NN","IN","NN","NN","NN","TO","NN","."],"lemmas":["furthermore",",","phosphorylation","of","raf","by","akt","inhibit","activation","of","the","raf-mek-erk","signaling","pathway","and","have","be","show","to","alter","the","cellular","response","in","a","human","breast","cancer","cell","line","from","cell","cycle","arrest","to","proliferation","."],"entities":["O","O","O","O","O","O","PERSON","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-ADVP","O","B-NP","B-PP","B-NP","B-PP","B-NP","I-NP","I-NP","B-PP","B-NP","I-NP","I-NP","I-NP","O","B-VP","I-VP","I-VP","B-VP","I-VP","B-NP","I-NP","I-NP","B-PP","B-NP","I-NP","I-NP","I-NP","I-NP","I-NP","B-PP","B-NP","I-NP","I-NP","B-PP","B-NP","O"],"graphs":{"stanford-collapsed":{"edges":[{"source":2,"destination":4,"relation":"prep_of"},{"source":2,"destination":6,"relation":"prep_by"},{"source":7,"destination":0,"relation":"advmod"},{"source":7,"destination":1,"relation":"punct"},{"source":7,"destination":17,"relation":"conj_and"},{"source":7,"destination":2,"relation":"nsubj"},{"source":7,"destination":36,"relation":"punct"},{"source":7,"destination":8,"relation":"dobj"},{"source":8,"destination":13,"relation":"prep_of"},{"source":13,"destination":10,"relation":"det"},{"source":13,"destination":11,"relation":"nn"},{"source":13,"destination":12,"relation":"nn"},{"source":17,"destination":15,"relation":"aux"},{"source":17,"destination":16,"relation":"auxpass"},{"source":17,"destination":2,"relation":"nsubjpass"},{"source":17,"destination":19,"relation":"xcomp"},{"source":19,"destination":18,"relation":"aux"},{"source":19,"destination":22,"relation":"dobj"},{"source":22,"destination":35,"relation":"prep_to"},{"source":22,"destination":20,"relation":"det"},{"source":22,"destination":21,"relation":"amod"},{"source":22,"destination":29,"relation":"prep_in"},{"source":29,"destination":33,"relation":"prep_from"},{"source":29,"destination":24,"relation":"det"},{"source":29,"destination":25,"relation":"amod"},{"source":29,"destination":26,"relation":"nn"},{"source":29,"destination":27,"relation":"nn"},{"source":29,"destination":28,"relation":"nn"},{"source":33,"destination":31,"relation":"nn"},{"source":33,"destination":32,"relation":"nn"}],"roots":[7]}}}]} """)
+
+    // mentions
+    val protein1 = new TextBoundMention(Seq("Protein", "Entity"), Interval(4), 0, doc, false, "<MANUAL>")
+    val protein2 = new TextBoundMention(Seq("Protein", "Entity"), Interval(6), 0, doc, false, "<MANUAL>")
+
+    val phosphoTrigger = new TextBoundMention("PhosphoTrigger", Interval(2), 0, doc, false, "<MANUAL>")
+    val phosphorylation = new EventMention(
+      labels = Seq("Phosphorylation", "SimpleEvent", "Event", "PossibleController"),
+      trigger =  phosphoTrigger,
+      arguments = Map("theme" -> Seq(protein1)),
+      sentence = 0,
+      document = doc,
+      keep = false,
+      foundBy = "phospho-rule"
+    )
+    val posreg = new RelationMention(
+      labels = Seq("Positive_regulation", "Regulation", "ComplexEvent", "Event", "PossibleController"),
+      arguments = Map("controller" -> Seq(protein2), "controlled" -> Seq(phosphorylation)),
+      sentence = 0,
+      document = doc,
+      keep = false,
+      foundBy = "reg-rule"
+    )
+
+    val state = State(Seq(protein1, protein2, phosphorylation, posreg))
+
+    val rules =
+      """
+        |taxonomy:
+        |  - PossibleController:
+        |      - Event:
+        |          - SimpleEvent:
+        |              - Binding
+        |              - Phosphorylation
+        |          - ComplexEvent:
+        |              - Regulation:
+        |                  - Positive_regulation
+        |                  - Negative_regulation
+        |              - ActivationEvent:
+        |                  - Positive_activation
+        |                  - Negative_activation
+        |      - Entity:
+        |        - Protein
+        |      - Precedence
+        |
+        |rules:
+        |  - name: cross-sentence-furthermore
+        |    label: Precedence
+        |    priority: 2
+        |    type: "cross-sentence"
+        |    right-window: 1
+        |    example: "Furthermore , phosphorylation of Raf by Akt inhibits activation of the Raf-MEK-ERK signaling pathway and has been shown to alter the cellular response in a human breast cancer cell line from cell cycle arrest to proliferation ."
+        |    pattern: |
+        |      before:Event = @Event
+        |      after:ComplexEvent = (?<= [lemma=furthermore] ",") @ComplexEvent
+      """.stripMargin
+
+    val ee = ExtractorEngine(rules)
+    val mentions = ee.extractFrom(doc, state).filter(_ matches "Precedence")
+    mentions should have size (0)
+  }
 }
