@@ -121,43 +121,29 @@ class CrossSentenceExtractor(
       // the rule failed
       case Nil => Nil
       // the anchor matched something
-      case pattern1Mentions =>
+      case anchorMentions =>
 
-        val leftWindowMatches = leftWindow match {
-          case invalid if invalid < 0 => throw OdinException(s"left-window for '$name' must be >= 0")
-          case lw if lw >= 0 =>
-            for {
-              i <- sent - leftWindow until sent
-              // is the sentence within the allotted window?
-              if 0 <= i && i < doc.sentences.length
-              // attempt to match pattern2
-              pattern2Mentions = neighborPattern.findAllIn(i, doc, state)
-              // find the mentions in the state that match the given span and label
-              anchor <- pattern1Mentions.flatMap(getMentionsWithLabel)
-              neighbor <- pattern2Mentions.flatMap(getMentionsWithLabel)
-              // for left window, neighbor must precede anchor
-              if neighbor precedes anchor
-            } yield mkMention(anchor, neighbor)
-        }
+        // check for valid window values
+        if (leftWindow < 0)  throw OdinException(s"left-window for '$name' must be >= 0")
+        if (rightWindow < 0) throw OdinException(s"right-window for '$name' must be >= 0")
 
-        val rightWindowMatches = rightWindow match {
-          case invalid if invalid < 0 => throw OdinException(s"right-window for '$name' must be >= 0")
-          case rw if rw >= 0 =>
-            for {
-              i <- sent until sent + rightWindow
-              // is the sentence within the allotted window?
-              if 0 <= i && i < doc.sentences.length
-              // attempt to match pattern2
-              pattern2Mentions = neighborPattern.findAllIn(i, doc, state)
-              // find the mentions in the state that match the given span and label
-              anchor <- pattern1Mentions.flatMap(getMentionsWithLabel)
-              neighbor <- pattern2Mentions.flatMap(getMentionsWithLabel)
-              // for right window, anchor must precede neighbor
-              if anchor precedes neighbor
-            } yield mkMention(anchor, neighbor)
-        }
+        val mentions = for {
+          i <- sent - leftWindow to sent + rightWindow
+          // is the sentence within the allotted window?
+          if 0 <= i && i < doc.sentences.length
+          // the neighbor cannot be in the same sentence as the anchor
+          if i != sent
+          // find the mentions in the state that match the given span and label
+          anchor <- anchorMentions.flatMap(getMentionsWithLabel)
+          //_ = println(s"Anchor:${anchor.labels}: '${anchor.text}' foundBy ${anchor.foundBy}")
+          // attempt to match the neighbor's pattern
+          neighbor <- neighborPattern.findAllIn(i, doc, state).flatMap(getMentionsWithLabel)
+          //_ = println(s"Neighbor:${neighbor.labels}: '${neighbor.text}' foundBy ${neighbor.foundBy}")
+          // the anchor and neighbor cannot be in the same sentence
+          // if anchor.sentence != neighbor.sentence
+        } yield mkMention(anchor, neighbor)
 
-        action(leftWindowMatches ++ rightWindowMatches , state)
+        action(mentions, state)
     }
   }
 
