@@ -107,6 +107,16 @@ class CrossSentenceExtractor(
   }
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
+
+    def getMentionsWithLabel(m: Mention): Seq[Mention] = {
+      state.mentionsFor(m.sentence, m.tokenInterval).filter{ mention =>
+        // the span should match exactly
+        (mention.tokenInterval == m.tokenInterval) &&
+        // the label should match
+        (mention matches m.label)
+      }
+    }
+
     anchorPattern.findAllIn(sent, doc, state) match {
       // the rule failed
       case Nil => Nil
@@ -122,8 +132,9 @@ class CrossSentenceExtractor(
               if 0 <= i && i < doc.sentences.length
               // attempt to match pattern2
               pattern2Mentions = neighborPattern.findAllIn(i, doc, state)
-              anchor <- pattern1Mentions
-              neighbor <- pattern2Mentions
+              // find the mentions in the state that match the given span and label
+              anchor <- pattern1Mentions.flatMap(getMentionsWithLabel)
+              neighbor <- pattern2Mentions.flatMap(getMentionsWithLabel)
               // for left window, neighbor must precede anchor
               if neighbor precedes anchor
             } yield mkMention(anchor, neighbor)
@@ -138,8 +149,9 @@ class CrossSentenceExtractor(
               if 0 <= i && i < doc.sentences.length
               // attempt to match pattern2
               pattern2Mentions = neighborPattern.findAllIn(i, doc, state)
-              anchor <- pattern1Mentions
-              neighbor <- pattern2Mentions
+              // find the mentions in the state that match the given span and label
+              anchor <- pattern1Mentions.flatMap(getMentionsWithLabel)
+              neighbor <- pattern2Mentions.flatMap(getMentionsWithLabel)
               // for right window, anchor must precede neighbor
               if anchor precedes neighbor
             } yield mkMention(anchor, neighbor)
