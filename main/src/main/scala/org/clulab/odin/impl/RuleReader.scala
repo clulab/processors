@@ -306,7 +306,9 @@ class RuleReader(val actions: Actions) {
         case None => Seq(label)
       }
       //println(s"labels for '$ruleName' with pattern '$pattern': '$labels'")
-      (role, new Rule(ruleName, labels, rule.taxonomy, "token", rule.unit, rule.priority, rule.keep, rule.action, pattern, rule.resources))
+      // Do not apply cross-sentence rule's action to anchor and neighbor
+      // This does not need to be stored
+      (role, new Rule(ruleName, labels, rule.taxonomy, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.resources))
     }
 
     if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
