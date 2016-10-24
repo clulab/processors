@@ -213,8 +213,9 @@ object KBLoader {
     matcher.add(tokens)
 
     // add the lexical variations
-    for(ts <- KBLoader.lexicalVariations(tokens))
+    for(ts <- KBLoader.lexicalVariations(tokens)) {
       matcher.add(ts)
+    }
   }
 
   private def addLine(inputLine:String, matcher:HashTrie, knownCaseInsensitives:mutable.HashSet[String]): Unit = {
