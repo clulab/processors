@@ -22,6 +22,9 @@ class LexicalVariations {
       if(variations.contains(MERGE_DASH_DIGIT)) {
         addMergeDashDigit(tokens, newForms)
       }
+      if(variations.contains(SPLIT_DASH_DIGIT)) {
+        addSplitDashDigit(tokens, newForms)
+      }
       newForms.toSeq
     } else {
       Seq.empty
@@ -42,7 +45,10 @@ class LexicalVariations {
       vars += MERGE_DASH_DIGIT
     }
 
-    // TODO: check for split dash digit
+    // check for split dash digit; applies to only last token for now
+    if(tokens.nonEmpty && ENDS_WITH_DASH_DIGITS.matcher(tokens.last).find()) {
+      vars += SPLIT_DASH_DIGIT
+    }
 
     vars.toSet
   }
@@ -55,6 +61,22 @@ class LexicalVariations {
 
     newForms += nts.toArray
   }
+
+  def addSplitDashDigit(tokens: Array[String], newForms:ListBuffer[Array[String]]): Unit = {
+    var nts = new ArrayBuffer[String]()
+
+    for(i <- 0 until tokens.length - 1) nts += tokens(i)
+
+    val last = tokens.last
+    val dashPos = last.lastIndexOf('-')
+    assert(dashPos > 0 && dashPos < last.length - 1)
+    nts += last.substring(0, dashPos)
+    nts += last.substring(dashPos + 1)
+
+    // println(s"ORIG: ${tokens.mkString(" ")} TO ${nts.mkString(" ")}")
+
+    newForms += nts.toArray
+  }
 }
 
 object LexicalVariations {
@@ -62,4 +84,5 @@ object LexicalVariations {
   val SPLIT_DASH_DIGIT = 2
 
   val IS_NUMBER = Pattern.compile("[0-9]+")
+  val ENDS_WITH_DASH_DIGITS = Pattern.compile(".+\\-[0-9]+$")
 }
