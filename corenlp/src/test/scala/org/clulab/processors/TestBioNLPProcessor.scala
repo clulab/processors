@@ -325,6 +325,16 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
 
   }
 
+  it should "NOT recognize \"Mdm2 binding\" as a protein family" in {
+    val doc = proc.mkDocument("FOXO3a phosphorylation by ERK through an unknown mechanism induces Mdm2 binding to FOXO3a .")
+    annotate(doc)
+
+    val es = doc.sentences(0).entities.get
+    println("MDM2 ENTS: " + es.mkString(", "))
+
+    es(10) should be ("O")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
