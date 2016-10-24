@@ -383,6 +383,7 @@ val processor = new CoreNLPProcessor(internStrings = false)
 Scala is (largely) compatible with Java, so this library can be directly used from Java. Below is Java code that translates most of the functionality from the first Scala example in this document to Java:
 
 ```java
+import org.clulab.struct.CorefMention;
 import org.clulab.struct.DirectedGraphEdgeIterator;
 import org.clulab.processors.*;
 import org.clulab.processors.corenlp.CoreNLPProcessor;
@@ -391,7 +392,7 @@ import org.clulab.processors.fastnlp.FastNLPProcessor;
 public class ProcessorJavaExample {
     public static void main(String [] args) throws Exception {
         // create the processor
-        Processor proc = new CoreNLPProcessor(true, false, false, 100);
+        Processor proc = new CoreNLPProcessor(true, false, 0, 100);
         // for much faster processing, use FastNLPProcessor
         // Processor proc = new FastNLPProcessor(true, false);
 

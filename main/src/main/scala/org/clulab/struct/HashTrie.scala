@@ -61,10 +61,10 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
   }
 
   private def addTokenToTree(parent:TrieNode, newChild:TrieNode):TrieNode = {
-    if(parent.children == None) parent.children = Some(new ListBuffer[TrieNode])
+    if(parent.children.isEmpty) parent.children = Some(new ListBuffer[TrieNode])
     // keep children in alphabetical order
     val children = parent.children.get
-    for(i <- 0 until children.size) {
+    for(i <- children.indices) {
       val child = children(i)
       val compare = newChild.token.compareTo(child.token)
       if(compare < 0) {
@@ -134,6 +134,8 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
       }
     }
 
+    //println(s"LONGEST MATCH: ${longestMatch.value}")
+
     // we did not find anything in the children paths, but this is a complete match as is
     if(longestMatch.value < 0 && tree.completePath)
       longestMatch.value = 1
@@ -173,9 +175,13 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
 
     // the text matches this node; so far so good
     if(comp == 0) {
+      //println(s"MATCHED $token at offset $offset! completePath = $completePath")
+      //println(s"current longestMatch is ${longestMatch.value}, and currentSpan is $currentSpanLength")
+
       // this is a complete path
-      if(completePath && currentSpanLength > longestMatch.value) {
+      if(completePath && currentSpanLength + 1 > longestMatch.value) {
         longestMatch.value = currentSpanLength + 1
+        //println(s"LONGEST MATCH SET to ${longestMatch.value}")
       }
 
       // continue matching along the children
