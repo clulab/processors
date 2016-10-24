@@ -1,4 +1,6 @@
 # Changes
++ **6.0.1** - Added automated lexical variations to the BioNLPProcessor RuleNER.
++ **6.0.1** - Bug fix in multi-world entity matching in the RuleNER.
 + **6.0.0** - Reorganization into 3 subprojects with different licenses: main, corenlp, models.
 + **6.0.0** - Optimizations to `json` serialization/deserialization.
 + **5.9.6** - Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.

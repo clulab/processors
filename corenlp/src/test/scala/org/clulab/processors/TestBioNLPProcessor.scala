@@ -314,6 +314,17 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     }
   }
 
+  it should "recognize \"insulin receptor substrate-1\" as an entity" in {
+    val doc = proc.mkDocument("We now show that mTOR inhibition induces insulin receptor substrate-1 expression and abrogates feedback inhibition of the pathway.")
+    annotate(doc)
+
+    val es = doc.sentences(0).entities.get
+    es(7) should be ("B-Gene_or_gene_product")
+    es(8) should be ("I-Gene_or_gene_product")
+    es(9) should be ("I-Gene_or_gene_product")
+
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
