@@ -896,4 +896,135 @@ class TestTokenPattern extends FlatSpec with Matchers {
     )
 
   }
+
+  "overlapping mentions" should "all be considered for matching" in {
+    // ASPP1 and ASPP2 are phosphorylated in response to EGFR
+    val doc = jsonStringToDocument("""{"sentences":[{"words":["ASPP1","and","ASPP2","are","phosphorylated","in","response","to","EGFR"],"startOffsets":[0,6,10,16,20,35,38,47,50],"endOffsets":[5,9,15,19,34,37,46,49,54],"tags":["NN","CC","NN","VBP","VBN","IN","NN","TO","NN"],"lemmas":["aspp1","and","aspp2","be","phosphorylate","in","response","to","egfr"],"entities":["B-Gene_or_gene_product","O","B-Gene_or_gene_product","O","O","O","O","O","B-Gene_or_gene_product"],"chunks":["B-NP","I-NP","I-NP","B-VP","I-VP","B-PP","B-NP","B-PP","B-NP"],"graphs":{"stanford-basic":{"edges":[{"source":0,"destination":1,"relation":"cc"},{"source":0,"destination":2,"relation":"conj"},{"source":4,"destination":0,"relation":"nsubjpass"},{"source":4,"destination":3,"relation":"auxpass"},{"source":4,"destination":5,"relation":"prep"},{"source":4,"destination":7,"relation":"prep"},{"source":5,"destination":6,"relation":"pobj"},{"source":7,"destination":8,"relation":"pobj"}],"roots":[4]},"stanford-collapsed":{"edges":[{"source":0,"destination":2,"relation":"conj_and"},{"source":4,"destination":0,"relation":"nsubjpass"},{"source":4,"destination":2,"relation":"nsubjpass"},{"source":4,"destination":3,"relation":"auxpass"},{"source":4,"destination":6,"relation":"prep_in"},{"source":4,"destination":8,"relation":"prep_to"}],"roots":[4]}}}]}""")
+
+    // proteins
+    val prot1 = new TextBoundMention("Protein", Interval(0), 0, doc, false, "<MANUAL>")
+    val prot2 = new TextBoundMention("Protein", Interval(2), 0, doc, false, "<MANUAL>")
+    val prot3 = new TextBoundMention("Protein", Interval(8), 0, doc, false, "<MANUAL>")
+    // triggers
+    val trigger1 = new TextBoundMention("PhosphoTrigger", Interval(4), 0, doc, false, "<MANUAL>")
+    // state
+    val mentions = Seq(
+      // proteins
+      prot1, prot2, prot3,
+      // binding triggers
+      trigger1,
+      // first phosphorylation
+      new EventMention(
+        label = "Phosphorylation",
+        trigger = trigger1,
+        arguments = Map("theme" -> Seq(prot1)),
+        sentence = 0,
+        document = doc,
+        keep = false,
+        foundBy = "<MANUAL>"
+      ),
+      // second phosphorylation
+      new EventMention(
+        label = "Phosphorylation",
+        trigger = trigger1,
+        arguments = Map("theme" -> Seq(prot2)),
+        sentence = 0,
+        document = doc,
+        keep = false,
+        foundBy = "<MANUAL>"
+      )
+    )
+
+    val state = State(mentions)
+    val p = TokenPattern.compile("@Phosphorylation in response to @Protein")
+    val results = p.findAllIn(0, doc, state)
+
+    results should have size (2)
+    val Seq(p1, p2) = results
+
+    p1.interval should have (
+      'start (0),
+      'end (9)
+    )
+
+    p2.interval should have (
+      'start (2),
+      'end (9)
+    )
+
+  }
+
+  it should "all be considered for matching here too" in {
+    // ASPP1 and ASPP2 complex are phosphorylated in response to EGFR
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["ASPP1","and","ASPP2","complex","are","phosphorylated","in","response","to","EGFR"],"startOffsets":[0,6,10,16,24,28,43,46,55,58],"endOffsets":[5,9,15,23,27,42,45,54,57,62],"tags":["NN","CC","NN","NN","VBP","VBN","IN","NN","TO","NN"],"lemmas":["aspp1","and","aspp2","complex","be","phosphorylate","in","response","to","egfr"],"entities":["B-Gene_or_gene_product","O","B-Gene_or_gene_product","O","O","O","O","O","O","B-Gene_or_gene_product"],"chunks":["B-NP","I-NP","I-NP","I-NP","B-VP","I-VP","B-PP","B-NP","B-PP","B-NP"],"graphs":{"stanford-basic":{"edges":[{"source":0,"destination":1,"relation":"cc"},{"source":0,"destination":2,"relation":"conj"},{"source":3,"destination":0,"relation":"nn"},{"source":5,"destination":3,"relation":"nsubjpass"},{"source":5,"destination":4,"relation":"auxpass"},{"source":5,"destination":6,"relation":"prep"},{"source":5,"destination":8,"relation":"prep"},{"source":6,"destination":7,"relation":"pobj"},{"source":8,"destination":9,"relation":"pobj"}],"roots":[5]},"stanford-collapsed":{"edges":[{"source":0,"destination":2,"relation":"conj_and"},{"source":3,"destination":0,"relation":"nn"},{"source":3,"destination":2,"relation":"nn"},{"source":5,"destination":3,"relation":"nsubjpass"},{"source":5,"destination":4,"relation":"auxpass"},{"source":5,"destination":7,"relation":"prep_in"},{"source":5,"destination":9,"relation":"prep_to"}],"roots":[5]}}}]} """)
+
+    // proteins
+    val prot1 = new TextBoundMention("Protein", Interval(0), 0, doc, false, "<MANUAL>")
+    val prot2 = new TextBoundMention("Protein", Interval(2), 0, doc, false, "<MANUAL>")
+    val prot3 = new TextBoundMention("Protein", Interval(0, 4), 0, doc, false, "<MANUAL>")
+    val prot4 = new TextBoundMention("Protein", Interval(9), 0, doc, false, "<MANUAL>")
+    // triggers
+    val trigger1 = new TextBoundMention("PhosphoTrigger", Interval(5), 0, doc, false, "<MANUAL>")
+    // state
+    val mentions = Seq(
+      // proteins
+      prot1, prot2, prot3, prot4,
+      // binding triggers
+      trigger1,
+      // first phosphorylation
+      new EventMention(
+        label = "Phosphorylation",
+        trigger = trigger1,
+        arguments = Map("theme" -> Seq(prot1)),
+        sentence = 0,
+        document = doc,
+        keep = false,
+        foundBy = "<MANUAL>"
+      ),
+      // second phosphorylation
+      new EventMention(
+        label = "Phosphorylation",
+        trigger = trigger1,
+        arguments = Map("theme" -> Seq(prot2)),
+        sentence = 0,
+        document = doc,
+        keep = false,
+        foundBy = "<MANUAL>"
+      ),
+      // third phosphorylation
+      new EventMention(
+        label = "Phosphorylation",
+        trigger = trigger1,
+        arguments = Map("theme" -> Seq(prot3)),
+        sentence = 0,
+        document = doc,
+        keep = false,
+        foundBy = "<MANUAL>"
+      )
+    )
+
+    val state = State(mentions)
+    val p = TokenPattern.compile("@Phosphorylation in response to @Protein")
+    val results = p.findAllIn(0, doc, state)
+
+    results should have size (3)
+    val Seq(p1, p2, p3) = results
+
+    p1.interval should have (
+      'start (0),
+      'end (10)
+    )
+
+    p2.interval should have (
+      'start (0),
+      'end (10)
+    )
+
+    p3.interval should have (
+      'start (2),
+      'end (10)
+    )
+
+  }
+
 }
