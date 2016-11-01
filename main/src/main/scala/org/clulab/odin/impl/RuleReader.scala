@@ -205,11 +205,20 @@ class RuleReader(val actions: Actions) {
     }
     // variables specified by the call to `import`
     val importVars = getVars(data)
-    // this map concatenation implements variable scope:
+    // variable scope:
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
     // - a call to `import` can include variables (`importVars`) that override `importerVars`
-    readRules(jRules, taxonomy, localVars ++ importerVars ++ importVars, resources)
+    readRules(jRules, taxonomy, mergeVariables(localVars, importerVars, importVars), resources)
+  }
+
+  private def mergeVariables(vs1: Map[String, String], vs2: Map[String, String], vs3: Map[String, String]): Map[String, String] = {
+    def template(s: String, vars: Map[String, String]): String = {
+      """\$\{\s*(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*)\s*\}""".r
+        .replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1))))
+    }
+    val vars1 = vs1 ++ vs2.mapValues(template(_, vs2))
+    vars1 ++ vs3.mapValues(template(_, vars1))
   }
 
   // compiles a rule into an extractor
