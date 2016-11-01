@@ -159,10 +159,7 @@ class RuleReader(val actions: Actions) {
         }
         // interpolates a template variable with ${variableName} notation
         // note that $variableName is not supported and $ can't be escaped
-        val template: Any => String = { s =>
-          """\$\{\s*(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*)\s*\}""".r
-            .replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1))))
-        }
+        val template: Any => String = a => replaceVars(a.toString(), vars)
         // return the rule (in a Seq because this is a flatMap)
         Seq(mkRule(m, taxonomy, expand, template, resources))
       }
@@ -225,11 +222,25 @@ class RuleReader(val actions: Actions) {
     }
     // variables specified by the call to `import`
     val importVars = getVars(data)
-    // this map concatenation implements variable scope:
+    // variable scope:
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
     // - a call to `import` can include variables (`importVars`) that override `importerVars`
-    readRules(jRules, taxonomy, localVars ++ importerVars ++ importVars, resources)
+    readRules(jRules, taxonomy, mergeVariables(localVars, importerVars, importVars), resources)
+  }
+
+  // merges variables from different scopes, applying substitution as needed
+  // vs1 - outer scope
+  // vs2 - intermediary scope
+  // vs3 - inner scope
+  private def mergeVariables(vs1: Map[String, String], vs2: Map[String, String], vs3: Map[String, String]): Map[String, String] = {
+    val vars2 = vs1 ++ vs2.map { case (k, v) => k -> replaceVars(v, vs1) }
+    vars2 ++ vs3.map { case (k, v) => k -> replaceVars(v, vars2) }
+  }
+
+  private def replaceVars(s: String, vars: Map[String, String]): String = {
+    """\$\{\s*(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*)\s*\}""".r
+      .replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1))))
   }
 
   // compiles a rule into an extractor

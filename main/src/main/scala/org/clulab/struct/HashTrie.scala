@@ -117,7 +117,7 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
    * When multiple paths are found, the longest one is kept
    * Text must be normalized (i.e., case folding) BEFORE this call, if necessary!
    */
-  def findAt(sequenceNormalized:Array[String], offset:Int):Int = {
+  def findAt(sequenceNormalized:Array[String], offset:Int, validator:Option[EntityValidator] = None):Int = {
     if(! entries.contains(sequenceNormalized(offset))) {
       return -1 // first token in the sequence does not exist in the first layer
     }
@@ -130,14 +130,15 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     if(tree.children.isDefined) {
       var shouldStop = false
       for (child <- tree.children.get if ! shouldStop) {
-        shouldStop = child.find(sequenceNormalized, offset + 1, 1, longestMatch)
+        shouldStop = child.find(sequenceNormalized, offset, 1, validator, longestMatch)
       }
     }
 
     //println(s"LONGEST MATCH: ${longestMatch.value}")
 
     // we did not find anything in the children paths, but this is a complete match as is
-    if(longestMatch.value < 0 && tree.completePath)
+    if(longestMatch.value < 0 && tree.completePath &&
+       validator.getOrElse(EntityValidator.TRUE_VALIDATOR).validMatch(offset, offset + 1))
       longestMatch.value = 1
 
     longestMatch.value
@@ -145,50 +146,56 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
 }
 
 case class TrieNode(token:String, var completePath:Boolean, var children:Option[ListBuffer[TrieNode]]) {
-  def this(token:String, complete:Boolean) = this(token, complete, None)
+  def this(token: String, complete: Boolean) = this(token, complete, None)
 
-  override def toString:String = {
+  override def toString: String = {
     val os = new StringBuilder
     os.append(token)
-    if(completePath) os.append("*")
+    if (completePath) os.append("*")
     children.foreach(cs => os.append(" (" + cs.mkString(" | ") + ")"))
     os.toString()
   }
 
   /**
-    * @param sequence Text to match against
-    * @param offset Start token in the sequence
+    * @param sequence          Text to match against
+    * @param startOffset            Start token in the sequence
     * @param currentSpanLength How many tokens have we matched so far
-    * @param longestMatch The value of the longest match interval
+    * @param longestMatch      The value of the longest match interval
     * @return true if search should stop here; false otherwise
     */
-  def find(sequence:Array[String], offset:Int, currentSpanLength:Int, longestMatch:MutableNumber[Int]):Boolean = {
-    if(offset >= sequence.length) {
+  def find(sequence: Array[String],
+           startOffset: Int,
+           currentSpanLength: Int,
+           validator:Option[EntityValidator],
+           longestMatch: MutableNumber[Int]): Boolean = {
+    if (startOffset + currentSpanLength >= sequence.length) {
       return true
     }
 
-    val comp = sequence(offset).compareTo(token)
-    if(comp < 0) {
+    val comp = sequence(startOffset + currentSpanLength).compareTo(token)
+    if (comp < 0) {
       // we can stop here, since children are sorted alphabetically
       return true
     }
 
     // the text matches this node; so far so good
-    if(comp == 0) {
+    if (comp == 0) {
       //println(s"MATCHED $token at offset $offset! completePath = $completePath")
       //println(s"current longestMatch is ${longestMatch.value}, and currentSpan is $currentSpanLength")
 
-      // this is a complete path
-      if(completePath && currentSpanLength + 1 > longestMatch.value) {
+      // this is a complete and valid path
+      if (completePath &&
+          currentSpanLength + 1 > longestMatch.value &&
+          validator.getOrElse(EntityValidator.TRUE_VALIDATOR).validMatch(startOffset, startOffset + currentSpanLength + 1)) {
         longestMatch.value = currentSpanLength + 1
         //println(s"LONGEST MATCH SET to ${longestMatch.value}")
       }
 
       // continue matching along the children
-      if(children.isDefined) {
+      if (children.isDefined) {
         var shouldStop = false
-        for(child <- children.get if ! shouldStop) {
-          shouldStop = child.find(sequence, offset + 1, currentSpanLength + 1, longestMatch)
+        for (child <- children.get if !shouldStop) {
+          shouldStop = child.find(sequence, startOffset, currentSpanLength + 1, validator, longestMatch)
         }
       }
 
@@ -199,3 +206,5 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
     false
   }
 }
+
+
