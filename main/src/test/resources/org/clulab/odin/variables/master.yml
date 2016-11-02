@@ -1,0 +1,8 @@
+vars:
+  var1: ${var1}_global
+  var2: ${var2}_global
+
+rules:
+  - import: org/clulab/odin/variables/template.yml
+    vars:
+      var1: ${var1}_import

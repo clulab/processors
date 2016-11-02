@@ -1,7 +1,7 @@
 package org.clulab.processors.bionlp.ner
 
 import org.clulab.processors.Sentence
-import org.clulab.struct.HashTrie
+import org.clulab.struct.{EntityValidator, HashTrie}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ArrayBuffer
@@ -41,6 +41,7 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
   def findLongestMatch(sentence:Sentence):Array[String] = {
     val tokens = getTokens(sentence)
     val caseInsensitiveWords = tokens.map(_.toLowerCase)
+    val validator = new RuleEntityValidator(sentence, knownCaseInsensitives)
 
     var offset = 0
     val labels = new ArrayBuffer[String]()
@@ -50,7 +51,7 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
 
       // attempt to match each category at this offset
       for (i <- matchers.indices) {
-        spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, sentence)
+        spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, validator)
         // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
       }
 
@@ -89,59 +90,12 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
                      caseInsensitiveSeq:Array[String],
                      matcher:HashTrie,
                      offset:Int,
-                     sentence:Sentence):Int = {
+                     validator:EntityValidator):Int = {
     val span = matcher.caseInsensitive match {
-      case true => matcher.findAt(caseInsensitiveSeq, offset)
-      case _ => matcher.findAt(seq, offset)
+      case true => matcher.findAt(caseInsensitiveSeq, offset, Some(validator))
+      case _ => matcher.findAt(seq, offset, Some(validator))
     }
-
-    if(span > 0 && validMatch(offset, offset + span, sentence)) span
-    else -1
-  }
-
-  private def validMatch(start:Int, end:Int, sentence:Sentence):Boolean = {
-    // must contain at least one NN*
-    // see also removeSinglePrepositions, for deprecated code
-    var nouns = 0
-    for(i <- start until end)
-      if(sentence.tags.get(i).startsWith("NN"))
-        nouns += 1
-    if(nouns == 0)
-      return false
-
-    // the text must contain at least one letter AND (the letter must be upper case OR the text contains at least 1 digit)
-    val text = sentence.getSentenceFragmentText(start, end)
-    val (letters, digits, upperCaseLetters, spaces) = scanText(text)
-    if(letters > 0 && (digits > 0 || upperCaseLetters > 0 || spaces > 0)) {
-      //println("Found valid match: " + text)
-      return true
-    }
-
-    // have we seen this single token as lower case in the KB; if so, accept it in the text
-    if(letters > 0 && knownCaseInsensitives.contains(text)) {
-      return true
-    }
-
-    // if at least 1 letter and length > 3 accept (e.g., "rapamycin")
-    if(letters > 0 && text.length > 3)
-      return true
-
-    false
-  }
-
-  private def scanText(text:String):(Int, Int, Int, Int) = {
-    var letters = 0
-    var digits = 0
-    var upperCaseLetters = 0
-    var spaces = 0
-    for(i <- text.indices) {
-      val c = text.charAt(i)
-      if(Character.isLetter(c)) letters += 1
-      if(Character.isUpperCase(c)) upperCaseLetters += 1
-      if(Character.isDigit(c)) digits += 1
-      if(Character.isWhitespace(c)) spaces += 1
-    }
-    (letters, digits, upperCaseLetters, spaces)
+    span
   }
 
   /**

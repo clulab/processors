@@ -305,6 +305,36 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(0) should be ("B-Gene_or_gene_product")
   }
 
+  it should "not produce empty tokens" in {
+    val doc = proc.mkDocument("These interactions may be quite complex - partially antagonistic, partially superadditive - and they surely will not be limited to interactions between two genes respectively, but there will be interactions between multiple genes.")
+    annotate(doc)
+
+    for (w <- doc.sentences(0).words) {
+      w.length > 0 should be (true)
+    }
+  }
+
+  it should "recognize \"insulin receptor substrate-1\" as an entity" in {
+    val doc = proc.mkDocument("We now show that mTOR inhibition induces insulin receptor substrate-1 expression and abrogates feedback inhibition of the pathway.")
+    annotate(doc)
+
+    val es = doc.sentences(0).entities.get
+    es(7) should be ("B-Gene_or_gene_product")
+    es(8) should be ("I-Gene_or_gene_product")
+    es(9) should be ("I-Gene_or_gene_product")
+
+  }
+
+  it should "NOT recognize \"Mdm2 binding\" as a protein family" in {
+    val doc = proc.mkDocument("FOXO3a phosphorylation by ERK through an unknown mechanism induces Mdm2 binding to FOXO3a .")
+    annotate(doc)
+
+    val es = doc.sentences(0).entities.get
+    println("MDM2 ENTS: " + es.mkString(", "))
+
+    es(10) should be ("O")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)

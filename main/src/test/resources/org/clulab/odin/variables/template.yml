@@ -1,0 +1,20 @@
+vars:
+  var1: template
+  var2: template
+  var3: template
+
+rules:
+  - name: ${var1}_1
+    label: TEST
+    type: token
+    pattern: TEST
+
+  - name: ${var2}_2
+    label: TEST
+    type: token
+    pattern: TEST
+
+  - name: ${var3}_3
+    label: TEST
+    type: token
+    pattern: TEST
