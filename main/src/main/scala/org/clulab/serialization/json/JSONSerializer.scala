@@ -160,6 +160,21 @@ object JSONSerializer {
           keep,
           foundBy
         )
+      case JString(CrossSentenceMention.string) =>
+        val args = mkArgumentsFromJsonAST(mjson \ "arguments")
+        val anchorID = (mjson \ "anchor").extract[String]
+        val neighborID = (mjson \ "neighbor").extract[String]
+        //toMention(mjson \ "neighbor", docMap)
+        new CrossSentenceMention(
+          labels,
+          anchor = args.values.flatten.find(_.id == anchorID).get,
+          neighbor = args.values.flatten.find(_.id == neighborID).get,
+          mkArgumentsFromJsonAST(mjson \ "arguments"),
+          document,
+          keep,
+          foundBy
+        )
+
       case other => throw new Exception(s"unrecognized mention type '${other.toString}'")
     }
   }

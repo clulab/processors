@@ -68,24 +68,28 @@ package object json {
       case tb: TextBoundMention => TextBoundMentionOps(tb).jsonAST
       case em: EventMention => EventMentionOps(em).jsonAST
       case rm: RelationMention => RelationMentionOps(rm).jsonAST
+      case csm: CrossSentenceMention => CrossSentenceMentionOps(csm).jsonAST
     }
 
     val stringCode: String = m match {
       case tb: TextBoundMention => TextBoundMentionOps(tb).stringCode
       case em: EventMention => EventMentionOps(em).stringCode
       case rm: RelationMention => RelationMentionOps(rm).stringCode
+      case csm: CrossSentenceMention => CrossSentenceMentionOps(csm).stringCode
     }
 
     def equivalenceHash: Int = m match {
       case tb: TextBoundMention => TextBoundMentionOps(tb).equivalenceHash
       case em: EventMention => EventMentionOps(em).equivalenceHash
       case rm: RelationMention => RelationMentionOps(rm).equivalenceHash
+      case csm: CrossSentenceMention => CrossSentenceMentionOps(csm).equivalenceHash
     }
 
     override def id: String = m match {
       case tb: TextBoundMention => TextBoundMentionOps(tb).id
       case em: EventMention => EventMentionOps(em).id
       case rm: RelationMention => RelationMentionOps(rm).id
+      case csm: CrossSentenceMention => CrossSentenceMentionOps(csm).id
     }
 
     // A mention only only contains a pointer to a document, so
@@ -230,6 +234,47 @@ package object json {
     }
   }
 
+  implicit class CrossSentenceMentionOps(csm: CrossSentenceMention) extends JSONSerialization with Equivalency {
+
+    val stringCode = s"org.clulab.odin.${CrossSentenceMention.string}"
+
+    def equivalenceHash: Int = {
+      // the seed (not counted in the length of finalizeHash)
+      val h0 = stringHash(stringCode)
+      // labels
+      val h1 = mix(h0, csm.labels.hashCode)
+      // interval.start
+      val h2 = mix(h1, csm.tokenInterval.start)
+      // interval.end
+      val h3 = mix(h2, csm.tokenInterval.end)
+      // sentence index
+      val h4 = mix(h3, csm.sentence)
+      // document.equivalenceHash
+      val h5 = mix(h4, csm.document.equivalenceHash)
+      // args
+      val h6 = mix(h5, argsHash(csm.arguments))
+      finalizeHash(h6, 6)
+    }
+
+    override def id: String = s"${CrossSentenceMention.shortString}:$equivalenceHash"
+
+    def jsonAST: JValue = {
+      ("type" -> CrossSentenceMention.string) ~
+      // used for paths map
+      ("id" -> csm.id) ~
+      ("text" -> csm.text) ~
+      ("labels" -> csm.labels) ~
+      ("anchor" -> csm.anchor.id) ~
+      ("neighbor" -> csm.anchor.id) ~
+      ("arguments" -> argsAST(csm.arguments)) ~
+      ("tokenInterval" -> Map("start" -> csm.tokenInterval.start, "end" -> csm.tokenInterval.end)) ~
+      ("sentence" -> csm.sentence) ~
+      ("document" -> csm.document.equivalenceHash.toString) ~
+      ("keep" -> csm.keep) ~
+      ("foundBy" -> csm.foundBy)
+    }
+  }
+
   /** For sequences of mentions */
   implicit class MentionSeq(mentions: Seq[Mention]) extends JSONSerialization {
 
@@ -357,5 +402,10 @@ package object json {
   object RelationMention {
     val string = "RelationMention"
     val shortString = "R"
+  }
+
+  object CrossSentenceMention {
+    val string = "CrossSentenceMention"
+    val shortString = "CS"
   }
 }
