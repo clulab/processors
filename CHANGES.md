@@ -1,6 +1,7 @@
 # Changes
 + **6.0.1** - Added support to odin for redefining variables.
 + **6.0.1** - Added support to odin for matching mention arguments.
++ **6.0.1** - Added support to odin for cross-sentence patterns.
 + **6.0.1** - Fixed odin bug when matching overlapping entities with same end at the beginning of a pattern.
 + **6.0.1** - Improved validation of named entities in RuleNER.
 + **6.0.1** - Added automated lexical variations to the BioNLPProcessor RuleNER.
