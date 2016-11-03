@@ -61,6 +61,23 @@ class TestJSONSerializer extends FlatSpec with Matchers {
 
     val rule =
       """
+        |# NE rules
+        |
+        |- name: "anaphor"
+        |  label: Anaphor
+        |  priority: 1
+        |  keep: false
+        |  type: token
+        |  pattern: |
+        |   [lemma=he]
+        |
+        |- name: "el-presidente"
+        |  label: Entity
+        |  keep: false
+        |  type: token
+        |  pattern: |
+        |    "Barack"? "Obama"
+        |
         |- name: coref-example
         |  label: Coref
         |  priority: 2
@@ -72,8 +89,8 @@ class TestJSONSerializer extends FlatSpec with Matchers {
         |  pattern: |
         |    # start here at the pattern's anchor
         |    # the pronoun to be resolved
-        |    anaphor: Entity = [lemma="he"]
-        |    antecedent: Entity = Barack Obama
+        |    anaphor: Anaphor = @Anaphor
+        |    antecedent: Entity = @Entity
       """.stripMargin
     val ee = ExtractorEngine(rule)
     val mentions = ee.extractFrom(doc)
