@@ -97,7 +97,7 @@ object ThompsonVM {
       case i: MatchToken if doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state) =>
         val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
         mkThreads(nextTok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
-      case i: MatchSentenceStart if t.tok == 0 =>
+      case i: MatchSentenceStart if (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1) =>
         mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
         mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
