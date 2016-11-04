@@ -21,6 +21,13 @@ Our code is licensed as follows:
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **6.0.1** - Added support to odin for redefining variables.
++ **6.0.1** - Added support to odin for matching mention arguments.
++ **6.0.1** - Added support to odin for cross-sentence patterns.
++ **6.0.1** - Fixed odin bug when matching overlapping entities with same end at the beginning of a pattern.
++ **6.0.1** - Improved validation of named entities in RuleNER.
++ **6.0.1** - Added automated lexical variations to the BioNLPProcessor RuleNER.
++ **6.0.1** - Bug fix in multi-world entity matching in the RuleNER.
 + **6.0.0** - Reorganization into 3 subprojects with different licenses: main, corenlp, models.
 + **6.0.0** - Optimizations to `json` serialization/deserialization.
 + **5.9.6** - [Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.](https://gist.github.com/myedibleenso/87a3191c73938840b8ed768ec305db38)
@@ -51,17 +58,17 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-corenlp_2.11</artifactId>
-   <version>6.0.0</version>
+   <version>6.0.1</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-main_2.11</artifactId>
-   <version>6.0.0</version>
+   <version>6.0.1</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-models_2.11</artifactId>
-   <version>6.0.0</version>
+   <version>6.0.1</version>
 </dependency>
 ```
 
@@ -69,9 +76,9 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors-corenlp" % "6.0.0",
-    "org.clulab" %% "processors-main" % "6.0.0",
-    "org.clulab" %% "processors-models" % "6.0.0"
+    "org.clulab" %% "processors-corenlp" % "6.0.1",
+    "org.clulab" %% "processors-main" % "6.0.1",
+    "org.clulab" %% "processors-models" % "6.0.1"
 )
 ```
 
