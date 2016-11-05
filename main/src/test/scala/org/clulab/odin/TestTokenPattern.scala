@@ -635,10 +635,33 @@ class TestTokenPattern extends FlatSpec with Matchers {
   // test for variable-length lookbehind assertions
   //////////////////////////////////////////////////
 
+  val posLookbehindPattern = """(?<= ^ [lemma=/(?i)^doctor$/] "Robert") Doback""""
+  // match Doback if immediately preceded by "doctor robert" at the start of a sentence
+
+  posLookbehindPattern should "allow for multi-token positive lookbehind assertions at the beginning of a sentence" in {
+    val grammar = """
+                    |- name: house_of_learned_doctors
+                    |  priority: 1
+                    |  type: token
+                    |  label: LearnedDoctor
+                    |  pattern: |
+                    |    (?<= ^ [lemma=/(?i)^doctor$/] "Robert") Doback
+                    |""".stripMargin
+
+    val ee = ExtractorEngine(grammar)
+
+    val text = "Doctor Robert Doback lost his dinosaur."
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["Doctor","Robert","Doback","lost","his","dinosaur","."],"startOffsets":[0,7,14,21,26,30,38],"endOffsets":[6,13,20,25,29,38,39],"tags":["NN","NNP","NNP","VBD","PRP$","NN","."],"lemmas":["doctor","Robert","Doback","lose","he","dinosaur","."],"entities":["O","PERSON","PERSON","O","O","O","O"],"norms":["O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","I-NP","B-VP","B-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":2,"destination":0,"relation":"nn"},{"source":2,"destination":1,"relation":"nn"},{"source":3,"destination":2,"relation":"nsubj"},{"source":3,"destination":5,"relation":"dobj"},{"source":3,"destination":6,"relation":"punct"},{"source":5,"destination":4,"relation":"poss"}],"roots":[3]},"stanford-collapsed":{"edges":[{"source":2,"destination":0,"relation":"nn"},{"source":2,"destination":1,"relation":"nn"},{"source":3,"destination":2,"relation":"nsubj"},{"source":3,"destination":5,"relation":"dobj"},{"source":3,"destination":6,"relation":"punct"},{"source":5,"destination":4,"relation":"poss"}],"roots":[3]}}}]} """)
+    val results = ee.extractFrom(doc)
+
+    results should have size (1)
+    results.count(_ matches "LearnedDoctor") should equal(1)
+  }
+
   // match person if it is not preceded by a sequence of titles (starting at beginning of sentence)
   val negLookbehindPattern = "(?<! ^ @Title+) @person:Person"
 
-  negLookbehindPattern should "should allow for variable-length negative lookbehind assertion" in {
+  negLookbehindPattern should "allow for variable-length negative lookbehind assertion" in {
     val grammar = """
                  |# our rule for capturing titles
                  |- name: title_rule
@@ -656,12 +679,19 @@ class TestTokenPattern extends FlatSpec with Matchers {
                  |  pattern: |
                  |    Faust
                  |
-                 |- name: fellow_without_title_rule
+                 |- name: fellow_without_title_rule_1
                  |  priority: 2
                  |  type: token
                  |  label: TitlelessDude
                  |  pattern: |
                  |    (?<! ^ @Title+) @titleless:Person
+                 |
+                 |- name: fellow_without_title_rule_2
+                 |  priority: 2
+                 |  type: token
+                 |  label: TitlelessDude
+                 |  pattern: |
+                 |    (?<! [word=/(?i)^(herr|doktor|professor)$/]+) @titleless:Person
                  |
                  |""".stripMargin
 

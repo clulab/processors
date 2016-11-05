@@ -1,4 +1,5 @@
 # Changes
++ **6.0.2** - Fixed odin bug related to` ^` in lookbehinds
 + **6.0.1** - Added support to odin for redefining variables.
 + **6.0.1** - Added support to odin for matching mention arguments.
 + **6.0.1** - Added support to odin for cross-sentence patterns.
