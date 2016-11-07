@@ -60,7 +60,19 @@ object EvaluateUtils {
       }
     }
     // how many of the predicted edges were incorrect?
-    val fp: Seq[Edge[String]] = predicted.edges.filterNot(p => tp contains p)
+    val fp: Seq[Edge[String]] = predicted.edges.filterNot { p =>
+      // check if edge not in true positives
+      tp.exists { g =>
+        withEdgeLabel match {
+          // consider the relation label
+          case true =>
+            g.source == p.source && g.destination == p.destination && g.relation == p.relation
+          // ignore the relation label
+          case false =>
+            g.source == p.source && g.destination == p.destination
+        }
+      }
+    }
 
     require(tp.size + fp.size == predicted.edges.size, "TP + FP should equal number of predicted edges")
 
