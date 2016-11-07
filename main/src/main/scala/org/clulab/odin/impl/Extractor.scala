@@ -1,8 +1,8 @@
 package org.clulab.odin.impl
 
-import org.clulab.struct.Interval
 import org.clulab.processors.Document
 import org.clulab.odin._
+
 
 trait Extractor {
   def name: String
@@ -81,5 +81,82 @@ class DependencyExtractor(
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
     val mentions = pattern.getMentions(sent, doc, state, labels, keep, name)
     action(mentions, state)
+  }
+}
+
+
+class CrossSentenceExtractor(
+  val name: String,
+  val labels: Seq[String],
+  val priority: Priority,
+  val keep: Boolean,
+  val action: Action,
+  // the maximum number of sentences to look behind for pattern2
+  val leftWindow: Int,
+  // the maximum number of sentences to look ahead for pattern2
+  val rightWindow: Int,
+  val anchorPattern: TokenExtractor,
+  val neighborPattern: TokenExtractor,
+  val anchorRole: String,
+  val neighborRole: String
+) extends Extractor {
+
+  // inspect windows
+  if (leftWindow == 0 && rightWindow == 0) {
+    throw OdinException(s"cross-sentence pattern for '$name' must have window > 0 either to the left or to the right")
+  }
+
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
+
+    def getMentionsWithLabel(m: Mention): Seq[Mention] = {
+      state.mentionsFor(m.sentence, m.tokenInterval).filter{ mention =>
+        // the span should match exactly
+        (mention.tokenInterval == m.tokenInterval) &&
+        // the label should match
+        (mention matches m.label)
+      }
+    }
+
+    anchorPattern.findAllIn(sent, doc, state) match {
+      // the rule failed
+      case Nil => Nil
+      // the anchor matched something
+      case anchorMentions =>
+
+        // check for valid window values
+        if (leftWindow < 0)  throw OdinException(s"left-window for '$name' must be >= 0")
+        if (rightWindow < 0) throw OdinException(s"right-window for '$name' must be >= 0")
+
+        val mentions = for {
+          i <- sent - leftWindow to sent + rightWindow
+          // is the sentence within the allotted window?
+          if 0 <= i && i < doc.sentences.length
+          // the neighbor cannot be in the same sentence as the anchor
+          if i != sent
+          // find the mentions in the state that match the given span and label
+          anchor <- anchorMentions.flatMap(getMentionsWithLabel)
+          //_ = println(s"Anchor:${anchor.labels}: '${anchor.text}' foundBy ${anchor.foundBy}")
+          // attempt to match the neighbor's pattern
+          neighbor <- neighborPattern.findAllIn(i, doc, state).flatMap(getMentionsWithLabel)
+          //_ = println(s"Neighbor:${neighbor.labels}: '${neighbor.text}' foundBy ${neighbor.foundBy}")
+          // the anchor and neighbor cannot be in the same sentence
+          // if anchor.sentence != neighbor.sentence
+        } yield mkMention(anchor, neighbor)
+
+        action(mentions, state)
+    }
+  }
+
+  def mkMention(anchor: Mention, neighbor: Mention): CrossSentenceMention = {
+    // FIXME: we should redo Mention's interval (and sentence)
+    new CrossSentenceMention(
+      labels,
+      anchor = anchor,
+      neighbor = neighbor,
+      arguments = Map(anchorRole -> Seq(anchor), neighborRole -> Seq(neighbor)),
+      anchor.document,
+      keep,
+      name
+    )
   }
 }

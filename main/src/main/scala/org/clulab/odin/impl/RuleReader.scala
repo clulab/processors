@@ -1,12 +1,12 @@
 package org.clulab.odin.impl
 
-import java.util.{ Collection, Map => JMap }
-
+import java.util.{Collection, Map => JMap}
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
+import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
 import org.clulab.odin._
+
 
 class RuleReader(val actions: Actions) {
 
@@ -62,6 +62,7 @@ class RuleReader(val actions: Actions) {
 
   def mkRule(
       data: Map[String, Any],
+      taxonomy: Option[Taxonomy],
       expand: String => Seq[String],
       template: Any => String,
       resources: OdinResourceManager
@@ -114,8 +115,27 @@ class RuleReader(val actions: Actions) {
     val unit = tmpl(data.getOrElse("unit", DefaultUnit))
 
     // make intermediary rule
-    new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, resources)
-
+    ruleType match {
+      case DefaultType =>
+        new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+      case "token" =>
+        new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+      // cross-sentence cases
+      case "cross-sentence" =>
+        (data.getOrElse("left-window", None), data.getOrElse("right-window", None)) match {
+          case (leftWindow: Int, rightWindow: Int) =>
+            new CrossSentenceRule(name, labels, taxonomy, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+          case (leftWindow: Int, None) =>
+            new CrossSentenceRule(name, labels, taxonomy, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, resources)
+          case (None, rightWindow: Int) =>
+            new CrossSentenceRule(name, labels, taxonomy, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+          case _ =>
+            throw OdinCompileException(s""""cross-sentence" rule '$name' requires a "left-window" and/or "right-window"""")
+        }
+      // unrecognized rule type
+      case other =>
+        throw OdinCompileException(s"""type '$other' not recognized for rule '$name'""")
+    }
   }
 
   private def readRules(
@@ -141,7 +161,7 @@ class RuleReader(val actions: Actions) {
         // note that $variableName is not supported and $ can't be escaped
         val template: Any => String = a => replaceVars(a.toString(), vars)
         // return the rule (in a Seq because this is a flatMap)
-        Seq(mkRule(m, expand, template, resources))
+        Seq(mkRule(m, taxonomy, expand, template, resources))
       }
     }
 
@@ -229,6 +249,7 @@ class RuleReader(val actions: Actions) {
       rule.ruleType match {
         case "token" => mkTokenExtractor(rule)
         case "dependency" => mkDependencyExtractor(rule)
+        case "cross-sentence" => mkCrossSentenceExtractor(rule)
         case _ =>
           val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
           throw new OdinNamedCompileException(msg, rule.name)
@@ -252,6 +273,74 @@ class RuleReader(val actions: Actions) {
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
 
+  private def mkCrossSentenceExtractor(rule: Rule): CrossSentenceExtractor = {
+
+    val lw: Int = rule match {
+      case csr: CrossSentenceRule => csr.leftWindow
+      case other => DefaultWindow
+    }
+
+    val rw: Int = rule match {
+      case csr: CrossSentenceRule => csr.rightWindow
+      case other => DefaultWindow
+    }
+
+    // convert cross-sentence pattern...
+    // pattern: |
+    //   argName1:ArgType = tokenpattern
+    //   argName2: ArgType = tokenpattern
+    // ...to Seq[(role, Rule)]
+    val rolesWithRules: Seq[(String, Rule)] = for {
+      (argPattern, i) <- rule.pattern.split("\n").zipWithIndex
+      // ignore empty lines
+      if argPattern.trim.nonEmpty
+      // ignore comments
+      if ! argPattern.trim.startsWith("#")
+    } yield {
+      // split arg pattern into 'argName1:ArgType', 'tokenpattern'
+      // apply split only once
+      val contents: Seq[String] = argPattern.split("\\s*=\\s*", 2)
+      if (contents.size != 2) throw OdinException(s"'$argPattern' for rule '${rule.name}' must have the form 'argName:ArgType = tokenpattern'")
+      // split 'argName1:ArgType' into 'argName1', 'ArgType'
+      // apply split only once
+      val argNameContents = contents.head.split("\\s*:\\s*", 2)
+      if (argNameContents.size != 2) throw OdinException(s"'${contents.head}' for rule '${rule.name}' must have the form 'argName:ArgType'")
+      val role = argNameContents.head.trim
+      val label = argNameContents.last.trim
+      // pattern for argument
+      val pattern = contents.last.trim
+      // make rule name
+      val ruleName = s"${rule.name}_arg:$role"
+      // labels from label
+      val labels = rule.taxonomy match {
+        case Some(t) => t.hypernymsFor(label)
+        case None => Seq(label)
+      }
+      //println(s"labels for '$ruleName' with pattern '$pattern': '$labels'")
+      // Do not apply cross-sentence rule's action to anchor and neighbor
+      // This does not need to be stored
+      (role, new Rule(ruleName, labels, rule.taxonomy, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.resources))
+    }
+
+    if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
+
+    new CrossSentenceExtractor(
+      name = rule.name,
+      labels = rule.labels,
+      priority = Priority(rule.priority),
+      keep = rule.keep,
+      action = mirror.reflect(rule.action),
+      // the maximum number of sentences to look behind for pattern2
+      leftWindow = lw,
+      // the maximum number of sentences to look ahead for pattern2
+      rightWindow = rw,
+      anchorPattern = mkTokenExtractor(rolesWithRules.head._2),
+      neighborPattern = mkTokenExtractor(rolesWithRules.last._2),
+      anchorRole = rolesWithRules.head._1,
+      neighborRole = rolesWithRules.last._1
+    )
+  }
+
   // compiles a dependency extractor
   private def mkDependencyExtractor(rule: Rule): DependencyExtractor = {
     val name = rule.name
@@ -268,6 +357,7 @@ class RuleReader(val actions: Actions) {
 object RuleReader {
   val DefaultType = "dependency"
   val DefaultPriority = "1+"
+  val DefaultWindow = 0 // 0 means don't use a window
   val DefaultKeep = "true"
   val DefaultAction = "default"
   val DefaultUnit = "word"
@@ -283,6 +373,7 @@ object RuleReader {
   class Rule(
       val name: String,
       val labels: Seq[String],
+      val taxonomy: Option[Taxonomy],
       val ruleType: String,
       val unit: String,
       val priority: String,
@@ -290,6 +381,39 @@ object RuleReader {
       val action: String,
       val pattern: String,
       val resources: OdinResourceManager
-  )
+  ) {
+    def copy(
+      name: String = this.name,
+      labels: Seq[String] = this.labels,
+      taxonomy: Option[Taxonomy] = this.taxonomy,
+      ruleType: String = this.ruleType,
+      unit: String = this.unit,
+      priority: String = this.priority,
+      keep: Boolean = this.keep,
+      action: String = this.action,
+      pattern: String = this.pattern,
+      resources: OdinResourceManager = this.resources
+    ): Rule = new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+  }
 
+  /**
+    * Intermediate representation for a rule spanning multiple sentences
+    * Produces a RelationMention with exactly two args: anchor and neighbor
+    */
+  class CrossSentenceRule(
+    name: String,
+    labels: Seq[String],
+    taxonomy: Option[Taxonomy],
+    ruleType: String,
+    // the maximum number of sentences to look behind for pattern2
+    val leftWindow: Int,
+    // the maximum number of sentences to look ahead for pattern2
+    val rightWindow: Int,
+    unit: String,
+    priority: String,
+    keep: Boolean,
+    action: String,
+    pattern: String,
+    resources: OdinResourceManager
+  ) extends Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
 }

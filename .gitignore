@@ -4,7 +4,9 @@
 .idea/*
 *.iml
 core/*.iml
+.#*
 .DS_Store
+Makefile
 
 # sbt specific
 dist/*
