@@ -32,6 +32,7 @@ object TrainDependencyParser extends App {
 
   // train parser
   dep.train(tf, df, mf, ef, null)
+
 }
 
 // FIXME: WIP
