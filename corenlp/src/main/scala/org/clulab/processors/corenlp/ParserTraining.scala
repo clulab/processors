@@ -3,17 +3,16 @@ package org.clulab.processors.corenlp
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Edge
 
-/**
-  * Created by Terron on 11/7/16.
-  */
+
 object ParserTraining {
+
 
   def main(args: Array[String]): Unit = {
 
     // initialize a processor for tagging, parsing, etc.
-    val proc = new FastNLPProcessor
+    val proc = new FastNLPProcessor(withChunks = false)
 
-    val text = "I saw the cat with the telescope. My name is Terron Ishihara."
+    val text = "I saw the cat with the telescope."
     // tokenize, tag, parse, etc.
     val doc = proc.annotate(text)
 
