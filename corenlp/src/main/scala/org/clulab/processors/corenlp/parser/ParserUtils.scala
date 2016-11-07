@@ -1,11 +1,11 @@
-package org.clulab.processors.corenlp
+package org.clulab.processors.corenlp.parser
 
+import java.io.Reader
+import java.util.Properties
 import com.typesafe.config.ConfigFactory
-import scala.collection.JavaConverters._
 import edu.stanford.nlp.parser.nndep.DependencyParser
 import edu.stanford.nlp.trees._
-import java.util.Properties
-import java.io.Reader
+import scala.collection.JavaConverters._
 
 
 object TrainDependencyParser extends App {

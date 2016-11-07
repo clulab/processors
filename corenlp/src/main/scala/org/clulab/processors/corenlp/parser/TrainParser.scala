@@ -1,13 +1,19 @@
-package org.clulab.processors.corenlp
+package org.clulab.processors.corenlp.parser
 
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Edge
 
 
-object ParserTraining {
+object TrainParser extends App {
+
+  // print some dependencies
+  dependencyExample
 
 
-  def main(args: Array[String]): Unit = {
+  /**
+    * An example demonstrating how to access the dependencies in a [[org.clulab.processors.Sentence]]
+    */
+  def dependencyExample: Unit = {
 
     // initialize a processor for tagging, parsing, etc.
     val proc = new FastNLPProcessor(withChunks = false)
@@ -40,6 +46,6 @@ object ParserTraining {
     // display the dependencies
     println(text)
     println(s"""Basic dependencies:\n${collapsedDeps.edges.map(e => s"\t${formatEdge(e, words)}").mkString("\n")}""")
-    println("""Collapsed dependencies:\n${collapsedDeps.edges.map(e => s"\t${formatEdge(e, words)}").mkString("\n")}""")
+    println(s"""Collapsed dependencies:\n${collapsedDeps.edges.map(e => s"\t${formatEdge(e, words)}").mkString("\n")}""")
   }
 }
