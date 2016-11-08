@@ -74,7 +74,7 @@ lazy val main = project
 
 lazy val corenlp = project
   .settings(commonSettings: _*)
-  .dependsOn(main % "test->test;compile->compile", models % "test")
+  .dependsOn(main % "test->test;compile->compile", models)
 
 lazy val models = project
   .settings(commonSettings: _*)
