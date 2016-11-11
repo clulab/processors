@@ -45,7 +45,7 @@ object TrainParser extends App {
 
     // display the dependencies
     println(text)
-    println(s"""Basic dependencies:\n${collapsedDeps.edges.map(e => s"\t${formatEdge(e, words)}").mkString("\n")}""")
+    println(s"""Basic dependencies:\n${basicDeps.edges.map(e => s"\t${formatEdge(e, words)}").mkString("\n")}""")
     println(s"""Collapsed dependencies:\n${collapsedDeps.edges.map(e => s"\t${formatEdge(e, words)}").mkString("\n")}""")
   }
 }
