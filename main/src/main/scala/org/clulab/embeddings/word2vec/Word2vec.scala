@@ -516,6 +516,8 @@ object Word2Vec {
     (m.toMap, dims)
   }
 
+  def fromBinary(filename: String): Word2Vec = fromBinary(new File(filename))
+
   def fromBinary(file: File): Word2Vec = {
     new Word2Vec(readBinaryMatrix(FileUtils.readFileToByteArray(file)))
   }
