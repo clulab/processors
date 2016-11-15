@@ -544,7 +544,7 @@ object Word2Vec {
   private def readBinaryMatrix(bytes: Array[Byte]): Map[String, Array[Double]] = {
     val m = new collection.mutable.HashMap[String, Array[Double]]
     val bb = ByteBuffer.wrap(bytes)
-    bb.order(ByteOrder.LITTLE_ENDIAN) // NOTE is this always the case for w2v binary files?
+    bb.order(ByteOrder.nativeOrder())
     // read number of words
     val words = readNonSpace(bb).toLong
     // read number of dimensions
