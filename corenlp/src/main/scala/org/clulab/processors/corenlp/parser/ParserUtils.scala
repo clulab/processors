@@ -5,12 +5,15 @@ import java.util.Properties
 
 import com.typesafe.config.ConfigFactory
 import edu.stanford.nlp.parser.nndep.DependencyParser
+import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.trees._
+import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct.{GraphMap, MutableNumber, Tree}
+import org.clulab.struct.{Tree => _, _}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 
 
@@ -75,24 +78,45 @@ class ConllxReader {
   val NIL = "_"
   val SEP = "\t"
   val NUM_COLS = 10
+  val READ_AHEAD_LIMIT = 300
+
+  val ID = 0
+  val FORM = 1
+  val LEMMA = 2
+  val CPOSTAG = 3
+  val POSTAG = 4
+  val FEATS = 5
+  val HEAD = 6
+  val DEPREL = 7
+  val PHEAD = 8
+  val PDEPREL = 9
 
   def load(r:BufferedReader): Document = {
     var line:String = null
     val sents = new ArrayBuffer[Sentence]
     var sent:Sentence = null
 
-    while ((sent = loadSentence(r)) != null) {
+    val textBuffer = new ArrayBuffer[String]
+
+    while ({sent = loadSentence(r); sent != null}) {
       sents += sent
+      textBuffer ++= sent.words
     }
 
-    val doc = Document(sents.toArray)
+    r.close()
+
+    val annotation = new Annotation(textBuffer.mkString(" "))
+
+    val doc = CoreNLPDocument(sents.toArray)
+    doc.annotation = Some(annotation)
     doc
   }
 
   private def loadSentence(r:BufferedReader): Sentence = {
     // Ensure there is something to read
+    r.mark(READ_AHEAD_LIMIT)
     if (r.readLine == null) return null
-    r.reset // resets to most recent mark, not the beginning
+    r.reset
 
     val wordBuffer = new ArrayBuffer[String]
     val startOffsetBuffer = new ArrayBuffer[Int]
@@ -104,7 +128,14 @@ class ConllxReader {
 
     var line:String = null
     var tokenCount = 0
-    while((line = r.readLine) != null && line != "") {
+
+    var deps = new GraphMap
+    val edges = new ListBuffer[Edge[String]]
+    val roots = new mutable.HashSet[Int]()
+
+    var offset = 0
+
+    while({line = r.readLine; line != null && line != ""}) {
       val bits = line.split(SEP)
 
       if(bits.length != NUM_COLS) {
@@ -112,13 +143,24 @@ class ConllxReader {
       }
 
       assert(bits.length == NUM_COLS)
-      startOffsetBuffer += bits(0).toInt - 1
-      endOffsetBuffer += bits(6).toInt - 1 // may end up being -1 (root), which should be ignored
-      wordBuffer += bits(1)
-      lemmaBuffer += bits(2)
-      if (bits(2) != NIL) nilLemmas = false
-      tagBuffer += bits(4) // fine-grained POS tag (coarse-grained is column 3)
-      if (bits(4) != NIL) nilTags = false
+
+      startOffsetBuffer += offset
+      offset += bits(FORM).length + 1 // include a space
+      endOffsetBuffer += offset - 1
+
+      wordBuffer += bits(FORM)
+      lemmaBuffer += bits(LEMMA)
+      if (bits(LEMMA) != NIL) nilLemmas = false
+      tagBuffer += bits(POSTAG) // fine-grained POS tag (coarse-grained is column 3)
+      if (bits(POSTAG) != NIL) nilTags = false
+
+      // Only create edges for non-roots
+      if (bits(HEAD).toInt != 0) {
+        val edge = Edge(source = bits(HEAD).toInt-1, destination = bits(ID).toInt-1, relation = bits(DEPREL))
+        println("adding edge: " + edge)
+        edges += edge
+      }
+      else roots.add(bits(ID).toInt-1)
 
       tokenCount += 1
     }
@@ -129,22 +171,9 @@ class ConllxReader {
     assert(tagBuffer.isEmpty || tagBuffer.size == tokenCount)
     assert(lemmaBuffer.isEmpty || lemmaBuffer.size == tokenCount)
 
-    var deps = new GraphMap
-    var tree:Option[Tree] = None
-    // FIXME: build dependency tree
-//    do {
-//      bits = read(r)
-//      if (bits(0) == START_DEPENDENCIES) {
-//        val dt = bits(1)
-//        val sz = bits(2).toInt
-//        val d = loadDependencies(r, sz)
-//        deps += (dt -> d)
-//      } else if (bits(0) == START_CONSTITUENTS) {
-//        val position = new MutableNumber[Int](0)
-//        bits = read(r)
-//        tree = Some(loadTree(bits, position))
-//      }
-//    } while(bits(0) != END_OF_SENTENCE)
+    val dg = new DirectedGraph[String](edges.toList, roots.toSet)
+    deps += (GraphMap.STANFORD_BASIC -> dg)
+    //println(dg)
 
     Sentence(
       wordBuffer.toArray,
@@ -152,10 +181,11 @@ class ConllxReader {
       endOffsetBuffer.toArray,
       bufferOption(tagBuffer, nilTags),
       bufferOption(lemmaBuffer, nilLemmas),
-      None,
-      None,
-      None,
-      tree, deps
+      None, // entities
+      None, // norms
+      None, // chunks
+      None, // tree
+      deps
     )
   }
 

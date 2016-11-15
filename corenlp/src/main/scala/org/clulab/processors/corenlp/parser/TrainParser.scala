@@ -1,13 +1,26 @@
 package org.clulab.processors.corenlp.parser
 
+import java.io.{BufferedReader, FileReader}
+
+import com.typesafe.config.ConfigFactory
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.Edge
 
 
 object TrainParser extends App {
 
-  // print some dependencies
-  dependencyExample
+  override def main(args: Array[String]): Unit = {
+    val config = ConfigFactory.load()
+    val file = config.getString("corenlp.parser.genia.testFile")
+    val r = new BufferedReader(new FileReader(file))
+
+    println(s"Reading ${file}...\n")
+    val reader = new ConllxReader
+    val testDoc = reader.load(r)
+
+    val proc = new FastNLPProcessor(withChunks = false)
+    proc.parse(testDoc)
+  }
 
 
   /**
