@@ -5,6 +5,8 @@ import scala.collection.mutable.ArrayBuffer
 import org.slf4j.LoggerFactory
 import java.io._
 import org.clulab.utils.MathUtils
+import java.nio.ByteBuffer
+import org.apache.commons.io.{ IOUtils, FileUtils }
 
 /**
  * Implements similarity metrics using the word2vec matrix
@@ -512,6 +514,56 @@ object Word2Vec {
     }
     logger.debug("Completed matrix loading.")
     (m.toMap, dims)
+  }
+
+  def fromBinary(file: File): Word2Vec = {
+    new Word2Vec(readBinaryMatrix(FileUtils.readFileToByteArray(file)))
+  }
+
+  def fromBinary(inputStream: InputStream): Word2Vec = {
+    new Word2Vec(readBinaryMatrix(IOUtils.toByteArray(inputStream)))
+  }
+
+  def fromBinary(bytes: Array[Byte]): Word2Vec = {
+    new Word2Vec(readBinaryMatrix(bytes))
+  }
+
+  def readBinaryMatrix(bytes: Array[Byte]): Map[String, Array[Double]] = {
+    val m = new collection.mutable.HashMap[String, Array[Double]]
+    val bb = ByteBuffer.wrap(bytes)
+    // read number of words
+    val words = bb.getLong()
+    // read number of dimensions
+    val size = bb.getLong()
+    // consume spaces
+    var c = bb.getChar()
+    while (c.isSpaceChar) {
+      c = bb.getChar()
+    }
+    // start reading words
+    var w = 0L
+    while (w < words) {
+      w += 1
+      // read word
+      val wordChars = new ArrayBuffer[Char]
+      while (!c.isSpaceChar) {
+        wordChars += c
+      }
+      val embedding = new ArrayBuffer[Double]
+      var s = 0
+      while (s < size) {
+        s += 1
+        val f = bb.getFloat()
+      }
+      // consume spaces
+      c = bb.getChar()
+      while (c.isSpaceChar) {
+        c = bb.getChar()
+      }
+      val word = new String(wordChars.toArray)
+      m.put(word, embedding.toArray)
+    }
+    m.toMap
   }
 
   def main(args:Array[String]) {
