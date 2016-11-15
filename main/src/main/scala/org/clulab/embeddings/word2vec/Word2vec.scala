@@ -5,7 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import org.slf4j.LoggerFactory
 import java.io._
 import org.clulab.utils.MathUtils
-import java.nio.ByteBuffer
+import java.nio.{ ByteBuffer, ByteOrder }
 import org.apache.commons.io.{ IOUtils, FileUtils }
 
 /**
@@ -530,40 +530,59 @@ object Word2Vec {
     new Word2Vec(readBinaryMatrix(bytes))
   }
 
-  def readBinaryMatrix(bytes: Array[Byte]): Map[String, Array[Double]] = {
+  // reads non-space chars
+  private def readNonSpace(bb: ByteBuffer): String = {
+    val buffer = new ArrayBuffer[Byte]
+    var byte = bb.get()
+    while (byte != ' '.toByte && byte != '\n'.toByte) {
+      buffer += byte
+      byte = bb.get()
+    }
+    new String(buffer.toArray)
+  }
+
+  private def readBinaryMatrix(bytes: Array[Byte]): Map[String, Array[Double]] = {
     val m = new collection.mutable.HashMap[String, Array[Double]]
     val bb = ByteBuffer.wrap(bytes)
+    bb.order(ByteOrder.LITTLE_ENDIAN) // NOTE is this always the case for w2v binary files?
     // read number of words
-    val words = bb.getLong()
+    val words = readNonSpace(bb).toLong
     // read number of dimensions
-    val size = bb.getLong()
+    val size = readNonSpace(bb).toLong
     // consume spaces
-    var c = bb.getChar()
-    while (c.isSpaceChar) {
-      c = bb.getChar()
+    var byte = bb.get()
+    while (byte == ' '.toByte || byte == '\n'.toByte) {
+      byte = bb.get()
     }
+    // rewind one byte
+    bb.position(bb.position() - 1)
     // start reading words
     var w = 0L
     while (w < words) {
       w += 1
       // read word
-      val wordChars = new ArrayBuffer[Char]
-      while (!c.isSpaceChar) {
-        wordChars += c
-      }
-      val embedding = new ArrayBuffer[Double]
+      val word = readNonSpace(bb)
+      // populate embedding
+      val embedding = new Array[Double](size.toInt)
       var s = 0
       while (s < size) {
+        embedding(s) = bb.getFloat()
         s += 1
-        val f = bb.getFloat()
       }
-      // consume spaces
-      c = bb.getChar()
-      while (c.isSpaceChar) {
-        c = bb.getChar()
+      // normalize
+      norm(embedding)
+      // add word to map
+      m.put(word, embedding)
+      // skip spaces if needed
+      if (bb.hasRemaining) {
+        // consume spaces
+        byte = bb.get()
+        while (byte == ' '.toByte || byte == '\n'.toByte) {
+          byte = bb.get()
+        }
+        // rewind 1 byte
+        bb.position(bb.position() - 1)
       }
-      val word = new String(wordChars.toArray)
-      m.put(word, embedding.toArray)
     }
     m.toMap
   }
