@@ -5,6 +5,8 @@ import scala.collection.mutable.ArrayBuffer
 import org.slf4j.LoggerFactory
 import java.io._
 import org.clulab.utils.MathUtils
+import java.nio.{ ByteBuffer, ByteOrder }
+import org.apache.commons.io.{ IOUtils, FileUtils }
 
 /**
  * Implements similarity metrics using the word2vec matrix
@@ -512,6 +514,77 @@ object Word2Vec {
     }
     logger.debug("Completed matrix loading.")
     (m.toMap, dims)
+  }
+
+  def fromBinary(filename: String): Word2Vec = fromBinary(new File(filename))
+
+  def fromBinary(file: File): Word2Vec = {
+    new Word2Vec(readBinaryMatrix(FileUtils.readFileToByteArray(file)))
+  }
+
+  def fromBinary(inputStream: InputStream): Word2Vec = {
+    new Word2Vec(readBinaryMatrix(IOUtils.toByteArray(inputStream)))
+  }
+
+  def fromBinary(bytes: Array[Byte]): Word2Vec = {
+    new Word2Vec(readBinaryMatrix(bytes))
+  }
+
+  // reads non-space chars
+  private def readNonSpace(bb: ByteBuffer): String = {
+    val buffer = new ArrayBuffer[Byte]
+    var byte = bb.get()
+    while (byte != ' '.toByte && byte != '\n'.toByte) {
+      buffer += byte
+      byte = bb.get()
+    }
+    new String(buffer.toArray)
+  }
+
+  private def readBinaryMatrix(bytes: Array[Byte]): Map[String, Array[Double]] = {
+    val m = new collection.mutable.HashMap[String, Array[Double]]
+    val bb = ByteBuffer.wrap(bytes)
+    bb.order(ByteOrder.nativeOrder())
+    // read number of words
+    val words = readNonSpace(bb).toLong
+    // read number of dimensions
+    val size = readNonSpace(bb).toLong
+    // consume spaces
+    var byte = bb.get()
+    while (byte == ' '.toByte || byte == '\n'.toByte) {
+      byte = bb.get()
+    }
+    // rewind one byte
+    bb.position(bb.position() - 1)
+    // start reading words
+    var w = 0L
+    while (w < words) {
+      w += 1
+      // read word
+      val word = readNonSpace(bb)
+      // populate embedding
+      val embedding = new Array[Double](size.toInt)
+      var s = 0
+      while (s < size) {
+        embedding(s) = bb.getFloat()
+        s += 1
+      }
+      // normalize
+      norm(embedding)
+      // add word to map
+      m.put(word, embedding)
+      // skip spaces if needed
+      if (bb.hasRemaining) {
+        // consume spaces
+        byte = bb.get()
+        while (byte == ' '.toByte || byte == '\n'.toByte) {
+          byte = bb.get()
+        }
+        // rewind 1 byte
+        bb.position(bb.position() - 1)
+      }
+    }
+    m.toMap
   }
 
   def main(args:Array[String]) {
