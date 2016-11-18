@@ -114,6 +114,29 @@ class Sentence(
     text.toString()
   }
 
+  def copy(
+    words: Array[String] = this.words,
+    startOffsets: Array[Int] = this.startOffsets,
+    endOffsets: Array[Int] = this.endOffsets,
+    tags: Option[Array[String]] = this.tags,
+    lemmas: Option[Array[String]] = this.lemmas,
+    entities: Option[Array[String]] = this.entities,
+    norms: Option[Array[String]] = this.norms,
+    chunks: Option[Array[String]] = this.chunks,
+    syntacticTree: Option[Tree] = this.syntacticTree,
+    dependenciesByType: GraphMap = this.dependenciesByType
+  ): Sentence = Sentence(
+    words: Array[String],
+    startOffsets: Array[Int],
+    endOffsets: Array[Int],
+    tags: Option[Array[String]],
+    lemmas: Option[Array[String]],
+    entities: Option[Array[String]],
+    norms: Option[Array[String]],
+    chunks: Option[Array[String]],
+    syntacticTree: Option[Tree],
+    dependenciesByType: GraphMap
+  )
 }
 
 object Sentence {
