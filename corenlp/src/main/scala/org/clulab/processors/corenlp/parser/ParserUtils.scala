@@ -6,12 +6,7 @@ import java.util.Properties
 import com.typesafe.config.ConfigFactory
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.parser.nndep.DependencyParser
-import edu.stanford.nlp.pipeline.Annotation
-import edu.stanford.nlp.trees._
-import edu.stanford.nlp.util.CoreMap
-import org.clulab.processors.corenlp.{CoreNLPDocument, CoreNLPUtils}
-import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.processors.{Document, Sentence}
+import org.clulab.processors.Sentence
 import org.clulab.struct.{Tree => _, _}
 
 import scala.collection.JavaConverters._
@@ -19,6 +14,9 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 
+object ParserUtils {
+  def copyWithoutDependencies(s: Sentence): Sentence = s.copy(dependenciesByType = new GraphMap)
+}
 
 object TrainDependencyParser extends App {
 
