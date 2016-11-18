@@ -3,7 +3,9 @@ package org.clulab.processors.corenlp
 import org.clulab.discourse.rstparser.DiscourseTree
 import org.clulab.processors.{Document, Sentence}
 import edu.stanford.nlp.pipeline.Annotation
+import edu.stanford.nlp.util.CoreMap
 import org.clulab.struct.CorefChains
+import scala.collection.JavaConverters._
 
 
 /**
@@ -44,6 +46,17 @@ object CoreNLPDocument {
   ): CoreNLPDocument = {
     val coreDoc = new CoreNLPDocument(sentences)
     coreDoc.annotation = Some(annotation)
+    coreDoc
+  }
+
+  def fromSentences(sentences: Seq[Sentence]): CoreNLPDocument = {
+    val doc = Document(sentences.toArray)
+    fromDocument(doc)
+  }
+
+  def fromDocument(doc: Document): CoreNLPDocument = {
+    val coreDoc = CoreNLPDocument(doc.sentences)
+    coreDoc.annotation = Some(new Annotation(CoreNLPUtils.docToAnnotations(coreDoc).toList.map(a => a.asInstanceOf[CoreMap]).asJava))
     coreDoc
   }
 }
