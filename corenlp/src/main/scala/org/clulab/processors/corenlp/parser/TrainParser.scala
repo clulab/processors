@@ -1,26 +1,44 @@
 package org.clulab.processors.corenlp.parser
 
-import java.io.{BufferedReader, FileReader}
+import java.io.{BufferedReader, FileInputStream, InputStreamReader}
 
 import com.typesafe.config.ConfigFactory
+import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.struct.Edge
+import org.clulab.struct.{Edge, GraphMap}
 
 
 object TrainParser extends App {
 
-  override def main(args: Array[String]): Unit = {
-    val config = ConfigFactory.load()
-    val file = config.getString("corenlp.parser.genia.testFile")
-    val r = new BufferedReader(new FileReader(file))
+  val config = ConfigFactory.load()
+  val file = config.getString("corenlp.parser.genia.testFile")
+  val r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))
 
-    println(s"Reading ${file}...\n")
-    val reader = new ConllxReader
-    val testDoc = reader.load(r)
+  println(s"Reading ${file}...\n")
+  val reader = new ConllxReader
+  val doc = reader.load(r)
+  r.close()
 
-    val proc = new FastNLPProcessor(withChunks = false)
-    proc.parse(testDoc)
+  val copy = CoreNLPDocument(doc.sentences, doc.annotation.get)
+
+  val proc = new FastNLPProcessor(withChunks = false)
+  proc.tagPartsOfSpeech(copy)
+  proc.lemmatize(copy)
+  proc.parse(copy)
+
+  var results = EvaluateUtils.Performance(0,0,0,0,"WithEdgeLabel")
+  for (i <- doc.sentences.indices) {
+    results += EvaluateUtils.evaluate(
+      doc.sentences(i).dependenciesByType(GraphMap.STANFORD_BASIC),
+      copy.sentences(i).dependenciesByType(GraphMap.STANFORD_BASIC),
+      withEdgeLabel = true
+    )
   }
+
+  println(s"Results: tp: ${results.tp}, fp: ${results.fp}, tn: ${results.tn}, fn: ${results.fn}")
+  println(s"Precision: ${results.precision}")
+  println(s"Recall: ${results.recall}")
+  println(s"F1: ${results.f1}")
 
 
   /**

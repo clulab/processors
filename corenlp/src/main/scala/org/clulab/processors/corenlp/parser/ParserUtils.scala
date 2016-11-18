@@ -4,10 +4,13 @@ import java.io.{BufferedReader, Reader}
 import java.util.Properties
 
 import com.typesafe.config.ConfigFactory
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.parser.nndep.DependencyParser
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.trees._
-import org.clulab.processors.corenlp.CoreNLPDocument
+import edu.stanford.nlp.util.CoreMap
+import org.clulab.processors.corenlp.{CoreNLPDocument, CoreNLPUtils}
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.{Tree => _, _}
 
@@ -91,7 +94,9 @@ class ConllxReader {
   val PHEAD = 8
   val PDEPREL = 9
 
-  def load(r:BufferedReader): Document = {
+  val proc = new FastNLPProcessor()
+
+  def load(r:BufferedReader): CoreNLPDocument = {
     var line:String = null
     val sents = new ArrayBuffer[Sentence]
     var sent:Sentence = null
@@ -103,12 +108,8 @@ class ConllxReader {
       textBuffer ++= sent.words
     }
 
-    r.close()
-
-    val annotation = new Annotation(textBuffer.mkString(" "))
-
     val doc = CoreNLPDocument(sents.toArray)
-    doc.annotation = Some(annotation)
+    doc.annotation = Some(new Annotation(CoreNLPUtils.docToAnnotations(doc).toList.map(a => a.asInstanceOf[CoreMap]).asJava))
     doc
   }
 
@@ -122,9 +123,7 @@ class ConllxReader {
     val startOffsetBuffer = new ArrayBuffer[Int]
     val endOffsetBuffer = new ArrayBuffer[Int]
     val tagBuffer = new ArrayBuffer[String]
-    var nilTags = true
     val lemmaBuffer = new ArrayBuffer[String]
-    var nilLemmas = true
 
     var line:String = null
     var tokenCount = 0
@@ -138,7 +137,7 @@ class ConllxReader {
     while({line = r.readLine; line != null && line != ""}) {
       val bits = line.split(SEP)
 
-      if(bits.length != NUM_COLS) {
+      if (bits.length != NUM_COLS) {
         throw new RuntimeException("ERROR: invalid line: " + bits.mkString(" "))
       }
 
@@ -150,14 +149,13 @@ class ConllxReader {
 
       wordBuffer += bits(FORM)
       lemmaBuffer += bits(LEMMA)
-      if (bits(LEMMA) != NIL) nilLemmas = false
       tagBuffer += bits(POSTAG) // fine-grained POS tag (coarse-grained is column 3)
-      if (bits(POSTAG) != NIL) nilTags = false
+
 
       // Only create edges for non-roots
       if (bits(HEAD).toInt != 0) {
         val edge = Edge(source = bits(HEAD).toInt-1, destination = bits(ID).toInt-1, relation = bits(DEPREL))
-        println("adding edge: " + edge)
+//        println("adding edge: " + edge)
         edges += edge
       }
       else roots.add(bits(ID).toInt-1)
@@ -179,8 +177,8 @@ class ConllxReader {
       wordBuffer.toArray,
       startOffsetBuffer.toArray,
       endOffsetBuffer.toArray,
-      bufferOption(tagBuffer, nilTags),
-      bufferOption(lemmaBuffer, nilLemmas),
+      Some(tagBuffer.toArray),
+      Some(lemmaBuffer.toArray),
       None, // entities
       None, // norms
       None, // chunks
@@ -188,11 +186,4 @@ class ConllxReader {
       deps
     )
   }
-
-  private def bufferOption[T: ClassTag](b:ArrayBuffer[T], allNils:Boolean): Option[Array[T]] = {
-    if (b.isEmpty) return None
-    if (allNils) return None
-    Some(b.toArray)
-  }
-
 }
