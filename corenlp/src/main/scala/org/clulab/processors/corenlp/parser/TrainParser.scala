@@ -1,29 +1,26 @@
 package org.clulab.processors.corenlp.parser
 
-import java.io.{BufferedReader, FileInputStream, InputStreamReader}
-
 import com.typesafe.config.ConfigFactory
 import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.utils.ConllxReader
 import org.clulab.struct.{Edge, GraphMap}
+import java.io.File
 
 
 object TrainParser extends App {
 
   val config = ConfigFactory.load()
-  val file = config.getString("corenlp.parser.genia.testFile")
-  val r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))
-
-  println(s"Reading ${file}...\n")
-  val reader = new ConllxReader
-  val doc = reader.load(r)
-  r.close()
-
-  val copy = CoreNLPDocument(doc.sentences, doc.annotation.get)
+  val file = new File(config.getString("corenlp.parser.genia.testFile"))
 
   val proc = new FastNLPProcessor(withChunks = false)
-  proc.tagPartsOfSpeech(copy)
-  proc.lemmatize(copy)
+
+  println(s"Reading ${file.getCanonicalPath}...\n")
+  val doc = ConllxReader.load(file)
+
+  // we must erase the parse in order to produce a new parse with
+  val sentencesWithoutParses = doc.sentences.map(ParserUtils.copyWithoutDependencies)
+  val copy = CoreNLPDocument.fromSentences(sentencesWithoutParses)
   proc.parse(copy)
 
   var results = EvaluateUtils.Performance(0,0,0,0,"WithEdgeLabel")
