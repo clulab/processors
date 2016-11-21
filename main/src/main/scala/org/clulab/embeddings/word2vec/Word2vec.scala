@@ -49,24 +49,6 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     pw.close()
   }
 
-  /** Normalizes this vector to length 1, in place */
-  def norm(weights:Array[Double]) {
-    var i = 0
-    var len = 0.0
-    while(i < weights.length) {
-      len += weights(i) * weights(i)
-      i += 1
-    }
-    len = math.sqrt(len)
-    i = 0
-    if(len != 0) {
-      while (i < weights.length) {
-        weights(i) /= len
-        i += 1
-      }
-    }
-  }
-
   /**
    * Computes the similarity between two given words
    * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
@@ -79,18 +61,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     if(v1o.isEmpty) return -1
     val v2o = matrix.get(w2)
     if(v2o.isEmpty) return -1
-    dotProduct(v1o.get, v2o.get)
-  }
-
-  private def dotProduct(v1:Array[Double], v2:Array[Double]):Double = {
-    assert(v1.length == v2.length) //should we always assume that v2 is longer? perhaps set shorter to length of longer...
-    var sum = 0.0
-    var i = 0
-    while(i < v1.length) {
-      sum += v1(i) * v2(i)
-      i += 1
-    }
-    sum
+    Word2Vec.dotProduct(v1o.get, v2o.get)
   }
 
   /** Adds the content of src to dest, in place */
@@ -108,7 +79,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
       case None => matrix.keys
       case Some(p) => matrix.keys.filter(p)
     }
-    MathUtils.nBest[String](word => dotProduct(v, matrix(word)))(words, howMany)
+    MathUtils.nBest[String](word => Word2Vec.dotProduct(v, matrix(word)))(words, howMany)
   }
 
   /**
@@ -176,7 +147,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   def sanitizedTextSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val v1 = makeCompositeVector(t1)
     val v2 = makeCompositeVector(t2)
-    dotProduct(v1, v2)
+    Word2Vec.dotProduct(v1, v2)
   }
 
   /**
@@ -206,7 +177,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
           val v2 = matrix.get(w2)
           if(v1.isDefined && v2.isDefined) {
             // *multiply* rather than add similarities!
-            sim *= dotProduct(v1.get, v2.get)
+            sim *= Word2Vec.dotProduct(v1.get, v2.get)
           }
         }
       }
@@ -232,7 +203,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     val sims = for {
       v1 <- t1Vecs
       v2 <- t2Vecs
-      cosSim = dotProduct(v1, v2)
+      cosSim = Word2Vec.dotProduct(v1, v2)
       toYield = method match {
         case 'linear => math.log(cosSim + 1)
         case 'linear_scaled => math.log((cosSim + 1) / 2)
@@ -277,7 +248,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
         for(s2 <- t2) {
           val v2 = matrix.get(s2)
           if(v2.isDefined) {
-            val s = dotProduct(v1.get, v2.get)
+            val s = Word2Vec.dotProduct(v1.get, v2.get)
             if(s > max) max = s
           }
         }
@@ -298,7 +269,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
         for(s2 <- t2) {
           val v2 = matrix.get(s2)
           if(v2.isDefined) {
-            val s = dotProduct(v1.get, v2.get)
+            val s = Word2Vec.dotProduct(v1.get, v2.get)
             if(s < min) min = s
           }
         }
@@ -350,7 +321,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
         for(s2 <- t2) {
           val v2 = matrix.get(s2)
           if(v2.isDefined) {
-            val s = dotProduct(v1.get, v2.get)
+            val s = Word2Vec.dotProduct(v1.get, v2.get)
             avg += s
             count += 1
 
@@ -440,21 +411,32 @@ object Word2Vec {
   }
 
   /** Normalizes this vector to length 1, in place */
-  private def norm(weights:Array[Double]) {
+  def norm(weights:Array[Double]) {
     var i = 0
     var len = 0.0
-    while(i < weights.length) {
+    while (i < weights.length) {
       len += weights(i) * weights(i)
       i += 1
     }
     len = math.sqrt(len)
     i = 0
     if (len != 0) {
-      while(i < weights.length) {
+      while (i < weights.length) {
         weights(i) /= len
         i += 1
       }
     }
+  }
+
+  def dotProduct(v1:Array[Double], v2:Array[Double]):Double = {
+    assert(v1.length == v2.length) //should we always assume that v2 is longer? perhaps set shorter to length of longer...
+    var sum = 0.0
+    var i = 0
+    while(i < v1.length) {
+      sum += v1(i) * v2(i)
+      i += 1
+    }
+    sum
   }
 
   private def loadMatrix(mf: String, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
