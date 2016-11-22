@@ -108,7 +108,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     case None => List()
   }
 
-  private def makeCompositeVector(t:Iterable[String]):Array[Double] = {
+  def makeCompositeVector(t:Iterable[String]):Array[Double] = {
     val vTotal = new Array[Double](dimensions)
     for(s <- t) {
       val v = matrix.get(s)
