@@ -121,8 +121,9 @@ object ConllxReader extends conll {
       wordBuffer.toArray,
       startOffsetBuffer.toArray,
       endOffsetBuffer.toArray,
-      Some(tagBuffer.toArray),
-      Some(lemmaBuffer.toArray),
+      // check if other annotations were provided
+      if (tagBuffer.forall(_ == NIL)) None else Some(tagBuffer.toArray),
+      if (lemmaBuffer.forall(_ == NIL)) None else Some(lemmaBuffer.toArray),
       None, // entities
       None, // norms
       None, // chunks
