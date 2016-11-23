@@ -21,6 +21,10 @@ object TrainParser extends App {
   // we must erase the parse in order to produce a new parse with
   val sentencesWithoutParses = doc.sentences.map(ParserUtils.copyWithoutDependencies)
   val copy = CoreNLPDocument.fromSentences(sentencesWithoutParses)
+  // ignore the gold PoS tags
+  // the parser requires tagged tokens, so tag the doc with the current model
+  proc.tagPartsOfSpeech(copy)
+  proc.lemmatize(copy)
   proc.parse(copy)
 
   var results = EvaluateUtils.Performance(0,0,0,0,"WithEdgeLabel")
