@@ -4,13 +4,13 @@ import java.util
 import scala.collection.JavaConverters._
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
-import edu.stanford.nlp.ling.CoreAnnotations.{TokensAnnotation, IndexAnnotation}
-import edu.stanford.nlp.ling.CoreLabel
+import edu.stanford.nlp.ling.{ CoreAnnotations, CoreLabel }
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraph
 import edu.stanford.nlp.trees.SemanticHeadFinder
-import edu.stanford.nlp.trees.TreeCoreAnnotations.{TreeAnnotation, BinarizedTreeAnnotation}
+import edu.stanford.nlp.trees.TreeCoreAnnotations.{BinarizedTreeAnnotation, TreeAnnotation}
 import edu.stanford.nlp.util.{ArrayCoreMap, CoreMap}
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -18,27 +18,39 @@ import edu.stanford.nlp.trees.{Tree => StanfordTree}
 
 /**
  * Utilities for manipulating CoreNLP data structures
- * User: mihais
- * Date: 2/25/15
+ * User: mihais, gus
+ * Date: 11/2016, 2/25/15
  */
 object CoreNLPUtils {
 
-  private def setWord(w:CoreLabel, label:String): Unit = {
+  private def setAnnotations(w: CoreLabel, label: String): Unit = {
     w.setWord(label)
     w.setLemma(label)
     w.setValue(label)
   }
 
-  def parensToSymbols(words:java.util.List[CoreLabel]):java.util.List[CoreLabel] = {
+  /** generates the symbol for the provided word <br>
+    * used to match the preprocessing performed by corenlp <br>
+    * default is simply the word itself
+    * */
+  def wordToSymbol(word: String): String = word match {
+    // convert parens to Penn Treebank symbols because this is what the parser has seen in training
+    case "(" => "-LRB-"
+    case ")" => "-RRB-"
+      // do nothing
+    case w => w
+  }
+
+  /** correct annotations to match settings used when training corenlp models */
+  def normalizeAnnotations(words: java.util.List[CoreLabel]): java.util.List[CoreLabel] = {
     val processedWords = new util.ArrayList[CoreLabel]()
     for(w <- words) {
       val nw = new CoreLabel(w)
-      if(nw.word() == "(") {
-        setWord(nw, "-LRB-")
-      }
-      else if(nw.word() == ")") {
-        setWord(nw, "-RRB-")
-      }
+      // retrieve the symbol for the provided word
+      // default is simply the word itself
+      val word = nw.word()
+      val symbol = wordToSymbol(word)
+      if (symbol != word) setAnnotations(nw, symbol)
       processedWords.add(nw)
     }
     processedWords
@@ -47,8 +59,8 @@ object CoreNLPUtils {
   def toDirectedGraph(sg:SemanticGraph, interning: (String) => String):DirectedGraph[String] = {
     val edgeBuffer = new ListBuffer[Edge[String]]
     for (edge <- sg.edgeIterable()) {
-      val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
-      val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
+      val head:Int = edge.getGovernor.get(classOf[CoreAnnotations.IndexAnnotation])
+      val modifier:Int = edge.getDependent.get(classOf[CoreAnnotations.IndexAnnotation])
       var label = edge.getRelation.getShortName
       val spec = edge.getRelation.getSpecific
       if (spec != null) label = label + "_" + spec
@@ -57,7 +69,7 @@ object CoreNLPUtils {
 
     val roots = new mutable.HashSet[Int]
     for (iw <- sg.getRoots) {
-      roots.add(iw.get(classOf[IndexAnnotation]) - 1)
+      roots.add(iw.get(classOf[CoreAnnotations.IndexAnnotation]) - 1)
     }
 
     val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
@@ -105,15 +117,17 @@ object CoreNLPUtils {
   /**
    * Create an Annotation from a Sentence
    */
-  def sentenceToAnnotation(s: Sentence): Annotation = {
+  def sentenceToCoreMap(s: Sentence): CoreMap = {
 
     val coreLabels: Seq[CoreLabel] = for {
       (w: String, i: Int) <- s.words.zipWithIndex
     } yield {
       val crtTok = new CoreLabel()
       // set word
-      crtTok.setWord(w)
+      crtTok.setWord(wordToSymbol(w))
       crtTok.setValue(w)
+      // set tag
+      if (s.tags.nonEmpty) crtTok.setTag(s.tags.get(i))
       // set lemma
       if (s.lemmas.nonEmpty) crtTok.setLemma(s.lemmas.get(i))
       // set ner
@@ -128,21 +142,20 @@ object CoreNLPUtils {
 
     // attach the CoreLabels
     val sa: CoreMap = new ArrayCoreMap()
-    sa.set(classOf[TokensAnnotation], coreLabels.toList.asJava)
+    sa.set(classOf[CoreAnnotations.TokensAnnotation], coreLabels.toList.asJava)
 
-    // TODO attach parse to sa
-
-    // make Annotation
-    val sas: util.List[CoreMap] = List(sa).asJava
-    val annotation = new Annotation(sas)
-    
-    annotation
+    sa
   }
 
+  def sentenceToAnnotation(s: Sentence): Annotation = new Annotation(List(sentenceToCoreMap(s)))
+
   /**
-   * Create an Annotation from a Document
+   * Creates an Annotation (one per sentence) from a Document
    */
-  def docToAnnotations(doc: Document): Seq[Annotation] = for {
-    s <- doc.sentences
-  } yield sentenceToAnnotation(s)
+  def docToAnnotation(doc: Document): Annotation = {
+    val cms = for {
+      s <- doc.sentences
+    } yield sentenceToCoreMap(s)
+    new Annotation(cms.toList.asJava)
+  }
 }

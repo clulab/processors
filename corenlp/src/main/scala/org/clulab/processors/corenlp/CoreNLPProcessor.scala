@@ -96,7 +96,8 @@ class CoreNLPProcessor(
 
   def stanfordParse(sentence:CoreMap):StanfordTree = {
     val constraints = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
-    val words = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
+    // transform parentheses, etc.
+    val words = normalizeAnnotations(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
 
     var tree:StanfordTree = null
 

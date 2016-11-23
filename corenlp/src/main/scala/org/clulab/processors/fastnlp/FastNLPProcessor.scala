@@ -6,7 +6,6 @@ import org.clulab.discourse.rstparser.RSTParser
 import org.clulab.discourse.rstparser.Utils._
 import org.clulab.processors.corenlp.CoreNLPUtils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.parser.nndep.DependencyParser
 import edu.stanford.nlp.pipeline.Annotation
@@ -20,6 +19,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.collection.mutable
 import FastNLPProcessor._
+import edu.stanford.nlp.ling.CoreAnnotations
 
 
 /**
@@ -85,14 +85,16 @@ class FastNLPProcessor(
     }
   }
 
-  private def parseWithStanford(doc:Document, annotation:Annotation) {
-    val sas = annotation.get(classOf[SentencesAnnotation])
+  private def parseWithStanford(doc: Document, annotation: Annotation) {
+    val updatedAnnotation = CoreNLPUtils.docToAnnotation(doc)
+    val sas = updatedAnnotation.get(classOf[SentencesAnnotation])
     var offset = 0
     for (sa <- sas) {
       // convert parens to Penn Treebank symbols because this is what the parser has seen in training
-      val words = CoreNLPUtils.parensToSymbols(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
+      val words = CoreNLPUtils.normalizeAnnotations(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
       sa.set(classOf[CoreAnnotations.TokensAnnotation], words)
-
+      // FIXME: check if tags exist
+      //sa.get(classOf[CoreAnnotations.TagLabelAnnotation])
       // println("Parsing sentence: " + words.map(_.word()).mkString(" "))
 
       // the actual parsing job

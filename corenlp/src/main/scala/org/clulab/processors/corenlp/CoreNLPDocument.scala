@@ -56,7 +56,7 @@ object CoreNLPDocument {
 
   def fromDocument(doc: Document): CoreNLPDocument = {
     val coreDoc = CoreNLPDocument(doc.sentences)
-    coreDoc.annotation = Some(new Annotation(CoreNLPUtils.docToAnnotations(coreDoc).toList.map(a => a.asInstanceOf[CoreMap]).asJava))
+    coreDoc.annotation = Some(CoreNLPUtils.docToAnnotation(doc))
     coreDoc
   }
 }
