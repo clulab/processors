@@ -7,6 +7,7 @@ import org.scalatest._
   *
   * User: mihais
   * Date: 10/29/14
+  * Last Modified: Update for BE KBs.
   */
 class TestBioNLPProcessor extends FlatSpec with Matchers {
   var proc:Processor = new BioNLPProcessor()
@@ -298,11 +299,11 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(2) should be ("O")
   }
 
-  it should "label E2F as a protein" in {
+  it should "label E2F as a family" in {
     val doc = proc.mkDocument("E2F is doing something.", keepText = false)
     annotate(doc)
 
-    doc.sentences(0).entities.get(0) should be ("B-Gene_or_gene_product")
+    doc.sentences(0).entities.get(0) should be ("B-Family")
   }
 
   it should "not produce empty tokens" in {
