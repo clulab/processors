@@ -1,7 +1,7 @@
 package org.clulab.processors.corenlp.parser
 
 import com.typesafe.config.ConfigFactory
-import org.clulab.processors.corenlp.CoreNLPDocument
+import org.clulab.processors.corenlp.{CoreNLPDocument, CoreNLPProcessor}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.ConllxReader
 import org.clulab.struct.{Edge, GraphMap}
@@ -13,7 +13,8 @@ object TrainParser extends App {
   val config = ConfigFactory.load()
   val file = new File(config.getString("corenlp.parser.genia.testFile"))
 
-  val proc = new FastNLPProcessor(withChunks = false)
+//  val proc = new CoreNLPProcessor()
+  val proc = new FastNLPProcessor()
 
   println(s"Reading ${file.getCanonicalPath}...\n")
   val doc = ConllxReader.load(file)
@@ -27,7 +28,7 @@ object TrainParser extends App {
   proc.lemmatize(copy)
   proc.parse(copy)
 
-  var results = EvaluateUtils.Performance(0,0,0,0,"WithEdgeLabel")
+  var results = EvaluateUtils.Performance(0,0,0,0,"withEdgeLabel")
   for (i <- doc.sentences.indices) {
     results += EvaluateUtils.evaluate(
       doc.sentences(i).dependenciesByType(GraphMap.STANFORD_BASIC),
@@ -36,11 +37,15 @@ object TrainParser extends App {
     )
   }
 
-  println(s"Results: tp: ${results.tp}, fp: ${results.fp}, tn: ${results.tn}, fn: ${results.fn}")
-  println(s"Precision: ${results.precision}")
-  println(s"Recall: ${results.recall}")
-  println(s"F1: ${results.f1}")
+  printResults(results)
 
+  private def printResults(results: EvaluateUtils.Performance): Unit = {
+    println(s"Results for ${results.label}:")
+    println(s"  tp: ${results.tp}, fp: ${results.fp}, tn: ${results.tn}, fn: ${results.fn}")
+    println(s"  Precision: ${results.precision}")
+    println(s"  Recall: ${results.recall}")
+    println(s"  F1: ${results.f1}")
+  }
 
   /**
     * An example demonstrating how to access the dependencies in a [[org.clulab.processors.Sentence]]

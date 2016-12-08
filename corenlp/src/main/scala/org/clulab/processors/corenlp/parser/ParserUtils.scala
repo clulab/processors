@@ -16,11 +16,11 @@ object TrainDependencyParser extends App {
   val config = ConfigFactory.load()
 
   val language = config.getString("corenlp.language")
-  val tf = config.getString("corenlp.parser.trainFile")
-  val df = config.getString("corenlp.parser.devFile")
+  val tf = config.getString("corenlp.parser.wsj.trainFile")
+  val df = config.getString("corenlp.parser.wsj.devFile")
   val ef = config.getString("corenlp.parser.embeddings")
   val es = config.getString("corenlp.parser.embeddingsDim")
-  val mf = config.getString("corenlp.parser.model")
+  val mf = config.getString("corenlp.parser.wsj.model")
 
   // prepare dependency parser
   val props = new Properties()
