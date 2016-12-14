@@ -18,8 +18,8 @@ object TrainDependencyParser extends App {
   val language = config.getString("corenlp.language")
   val tf = config.getString("corenlp.parser.wsj.trainFile")
   val df = config.getString("corenlp.parser.wsj.devFile")
-  val ef = config.getString("corenlp.parser.embeddings")
-  val es = config.getString("corenlp.parser.embeddingsDim")
+  val ef = config.getString("corenlp.parser.w2v.embeddings")
+  val es = config.getString("corenlp.parser.w2v.embeddingsDim")
   val mf = config.getString("corenlp.parser.wsj.model")
 
   // prepare dependency parser
@@ -35,5 +35,4 @@ object TrainDependencyParser extends App {
 
   // train parser
   dep.train(tf, df, mf, ef, null)
-
 }
