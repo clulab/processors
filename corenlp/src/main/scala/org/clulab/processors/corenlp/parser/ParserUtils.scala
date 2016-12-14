@@ -31,8 +31,23 @@ object TrainDependencyParser extends App {
   //  println(s"embeddingSize will be retrieved as '${PropertiesUtils.getInt(props, "embeddingSize")}'")
   props.put("model", mf)
   println(s"props: $props")
+
+//  import java.io.File
+
   val dep = new DependencyParser(props)
+  dep.loadModelFile("/net/kate/storage/work/tishihara/en-bio-dep-genia-parser.model.txt.gz")
+  println("Loaded model!")
+
+  import org.clulab.processors.fastnlp.FastNLPProcessor
+  val proc = new FastNLPProcessor(withChunks = false)
+  val doc = proc.annotate("My name is Terron.")
+  println(s"Num of sentences: ${doc.sentences.length}")
+
+  import org.clulab.processors.corenlp.CoreNLPUtils
+  val cm = CoreNLPUtils.sentenceToCoreMap(doc.sentences.head)
+  val gs = dep.predict(cm)
+  println(s"${gs}")
 
   // train parser
-  dep.train(tf, df, mf, ef, null)
+//  dep.train(tf, df, mf, ef, null)
 }

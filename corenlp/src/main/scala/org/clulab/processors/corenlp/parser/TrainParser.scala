@@ -11,7 +11,7 @@ import java.io.File
 object TrainParser extends App {
 
   val config = ConfigFactory.load()
-  val file = new File(config.getString("corenlp.parser.genia.testFile"))
+  val file = new File(config.getString("corenlp.parser.genia.trainFile"))
 
 //  val proc = new CoreNLPProcessor()
   val proc = new FastNLPProcessor()
