@@ -1,16 +1,21 @@
 package org.clulab.odin.impl
 
-import java.util.{Collection, Map => JMap}
+import java.util.{ Collection, Map => JMap }
+import java.nio.charset.Charset
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
+import scala.io.Codec
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
+import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
 import org.clulab.odin._
 
 
-class RuleReader(val actions: Actions) {
+class RuleReader(val actions: Actions, val charset: Charset) {
 
   import RuleReader._
+
+  // codec to be used by io.Source
+  implicit val codec: Codec = new Codec(charset)
 
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)

@@ -1,5 +1,7 @@
 package org.clulab.odin
 
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets.UTF_8
 import scala.reflect.ClassTag
 import org.clulab.processors.Document
 import org.clulab.odin.impl.{ RuleReader, Extractor }
@@ -69,9 +71,15 @@ object ExtractorEngine {
    *  @param actions an object that contains all the actions used by the rules
    *  @param globalAction an action that will be applied to the extracted
    *                      mentions at the end of each iteration
+   *  @param charset encoding to use for reading files
    */
-  def apply(rules: String, actions: Actions, globalAction: Action): ExtractorEngine = {
-    val reader = new RuleReader(actions)
+  def apply(
+      rules: String,
+      actions: Actions = new Actions,
+      globalAction: Action = identityAction,
+      charset: Charset = UTF_8
+  ): ExtractorEngine = {
+    val reader = new RuleReader(actions, charset)
     val extractors = reader.read(rules)
     new ExtractorEngine(extractors, globalAction)
   }
@@ -80,24 +88,36 @@ object ExtractorEngine {
    *
    *  @param rules a yaml formatted string with the extraction rules
    */
-  def apply(rules: String): ExtractorEngine =
-    apply(rules, new Actions, identityAction)
+  def fromRules(rules: String): ExtractorEngine = {
+    apply(rules)
+  }
+
+  /** Create a new ExtractorEngine.
+   *
+   *  @param rules a yaml formatted string with the extraction rules
+   *  @param charset encoding to use for reading files
+   */
+  def fromRules(rules: String, charset: Charset): ExtractorEngine = {
+    apply(rules, charset = charset)
+  }
 
   /** Create a new ExtractorEngine.
    *
    *  @param rules a yaml formatted string with the extraction rules
    *  @param actions an object that contains all the actions used by the rules
    */
-  def apply(rules: String, actions: Actions): ExtractorEngine =
-    apply(rules, actions, identityAction)
+  def fromRules(rules: String, actions: Actions): ExtractorEngine = {
+    apply(rules, actions = actions)
+  }
 
   /** Create a new ExtractorEngine.
    *
    *  @param rules a yaml formatted string with the extraction rules
-   *  @param globalAction an action that will be applied to the extracted
-   *                      mentions at the end of each iteration
+   *  @param actions an object that contains all the actions used by the rules
+   *  @param charset encoding to use for reading files
    */
-  def apply(rules: String, globalAction: Action): ExtractorEngine =
-    apply(rules, new Actions, globalAction)
+  def fromRules(rules: String, actions: Actions, charset: Charset): ExtractorEngine = {
+    apply(rules, actions = actions, charset = charset)
+  }
 
 }
