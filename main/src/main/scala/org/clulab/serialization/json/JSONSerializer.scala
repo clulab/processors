@@ -29,7 +29,12 @@ object JSONSerializer {
     ("mentions" -> mentionList)
   }
 
-  def jsonAST(f: File): JValue = parse(scala.io.Source.fromFile(f).getLines.mkString)
+  def jsonAST(f: File): JValue = {
+    val source = scala.io.Source.fromFile(f)
+    val contents = source.getLines.mkString
+    source.close()
+    parse(contents)
+  }
 
   /** Produce a sequence of mentions from json */
   def toMentions(json: JValue): Seq[Mention] = {
