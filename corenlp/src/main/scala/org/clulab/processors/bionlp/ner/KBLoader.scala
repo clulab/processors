@@ -14,7 +14,7 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer}
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
   * These must be generated offline by KBGenerator; see bioresources/ner_kb.sh
   * User: mihais. 2/7/16.
-  * Last Modified: Check for minimum number of fields in override lines.
+  * Last Modified: Begin adding Phase3 override file.
   */
 object KBLoader {
   val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
@@ -36,15 +36,17 @@ object KBLoader {
     "org/clulab/reach/kb/ner/Organ.tsv.gz"
   )
 
-  val NER_OVERRIDE_KB =
+  val NER_OVERRIDE_KBS = List(
+    "org/clulab/reach/kb/Phase3-Override.tsv.gz",
     "org/clulab/reach/kb/NER-Grounding-Override.tsv.gz"
+  )
 
   // knowledge to be used by the tokenizer to avoid aggressive tokenization around "/"
-  val UNSLASHABLE_TOKENS_KBS = List(
-    NER_OVERRIDE_KB,
+  val UNSLASHABLE_TOKENS_KBS = NER_OVERRIDE_KBS ++
+    List(
     "org/clulab/reach/kb/ProteinFamilies.tsv.gz", // these must be KBs BEFORE KBGenerator converts them to NER ready
     "org/clulab/reach/kb/PFAM-families.tsv.gz"    // because those (i.e., under kb/ner) are post tokenization
-  )
+    )
 
   /**
     * A horrible hack to keep track of entities that should not be labeled when in lower case, or upper initial
@@ -106,7 +108,7 @@ object KBLoader {
 
   def loadAll:RuleNER = {
     load(RULE_NER_KBS,
-      Some(NER_OVERRIDE_KB), // allow overriding for some key entities
+      Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
       useLemmas = false,
       caseInsensitive = true)
   }
@@ -114,27 +116,29 @@ object KBLoader {
   /**
     * Loads all KBs; KBs must be listed in descending order of their priorities
     */
-  def load(
+  def load (
     kbs:List[String],
-    overrideKB:Option[String],
+    overrideKBs:Option[List[String]],
     useLemmas:Boolean = false,
-    caseInsensitive:Boolean = true):RuleNER = {
-
+    caseInsensitive:Boolean = true
+  ): RuleNER = {
     logger.info("Beginning to load the KBs for the rule-based bio NER...")
     val matchers = new ArrayBuffer[(String, HashTrie)]
     val knownCaseInsensitives = new mutable.HashSet[String]()
 
     // load the override KBs first, so they take priority during matching
-    overrideKB.foreach(okb => {
-      val reader = loadStreamFromClasspath(okb)
-      val overrideMatchers = loadOverrideKB(reader, caseInsensitive, knownCaseInsensitives)
-      for(name <- overrideMatchers.keySet.toList.sorted) {
-        val matcher = overrideMatchers.get(name).get
-        logger.info(s"Loaded OVERRIDE matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-        matchers += new Tuple2(name, matcher)
-      }
-      reader.close()
-    })
+    if (overrideKBs.isDefined) {
+      overrideKBs.get.foreach(okb => {
+        val reader = loadStreamFromClasspath(okb)
+        val overrideMatchers = loadOverrideKB(reader, caseInsensitive, knownCaseInsensitives)
+        for(name <- overrideMatchers.keySet.toList.sorted) {
+          val matcher = overrideMatchers.get(name).get
+          logger.info(s"Loaded OVERRIDE matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
+          matchers += new Tuple2(name, matcher)
+        }
+        reader.close()
+      })
+    }
 
     // load the standard KBs
     for(kb <- kbs) {
