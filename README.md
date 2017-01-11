@@ -113,10 +113,19 @@ Add the generated jar files under `target/` to your $CLASSPATH, along with the o
 Most of the examples here use Scala. However, this software can be used as is from Java as well! Scroll down towards the end of this document to see a Java usage example.
 
 ### Annotating entire documents
+
+(see [`corenlp/src/main/scala/org/clulab/processors/examples/ProcessorExample.scala`](https://github.com/clulab/processors/blob/master/corenlp/src/main/scala/org/clulab/processors/examples/ProcessorExample.scala) for a complete running example)
+
 ```scala
+import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
+import org.clulab.processors.{Document, Processor}
+import org.clulab.struct.DirectedGraphEdgeIterator
+
 // create the processor
 // any processor works here! Try FastNLPProcessor or BioNLPProcessor.
-val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
+// use no arguments in the c'tor if you don't need the discourse parser
+val proc:Processor = new CoreNLPProcessor(ShallowNLPProcessor.WITH_DISCOURSE) 
 
 // the actual work is done here
 val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
