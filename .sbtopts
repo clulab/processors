@@ -1,3 +1,2 @@
 -J-Xmx6G
 -J-XX:+UseG1GC
--J-XX:+UseStringDeduplication
