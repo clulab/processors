@@ -6,6 +6,9 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.ConllxReader
 import org.clulab.struct.{Edge, GraphMap}
 import java.io.File
+import java.util.Properties
+
+import edu.stanford.nlp.parser.nndep.DependencyParser
 
 
 object TrainParser extends App {
@@ -16,12 +19,36 @@ object TrainParser extends App {
 //  val proc = new CoreNLPProcessor()
   val proc = new FastNLPProcessor()
 
+  // wsj w2v
+  var language = config.getString("corenlp.language")
+  var tf = config.getString("corenlp.parser.wsj.trainFile")
+  var df = config.getString("corenlp.parser.wsj.devFile")
+  var ef = config.getString("corenlp.parser.w2v.embeddings")
+  var es = config.getString("corenlp.parser.w2v.embeddingsDim")
+  var mf = config.getString("corenlp.parser.wsj.model")
+
+  // prepare dependency parser
+  val props = new Properties()
+  props.put("language", language)
+  props.put("trainFile", tf)
+  props.put("embedFile", ef)
+  props.put("embeddingSize", es)
+  //  println(s"embeddingSize will be retrieved as '${PropertiesUtils.getInt(props, "embeddingSize")}'")
+  props.put("model", mf)
+  println(s"props: $props")
+
+  val dep = new DependencyParser(props)
+  val model = config.getString("corenlp.parser.wsj.model")
+  dep.loadModelFile(model)
+  println("Loaded model!")
+
   println(s"Reading ${file.getCanonicalPath}...\n")
   val doc = ConllxReader.load(file)
 
   // we must erase the parse in order to produce a new parse with
   val sentencesWithoutParses = doc.sentences.map(ParserUtils.copyWithoutDependencies)
   val copy = CoreNLPDocument.fromSentences(sentencesWithoutParses)
+
   // ignore the gold PoS tags
   // the parser requires tagged tokens, so tag the doc with the current model
   proc.tagPartsOfSpeech(copy)
