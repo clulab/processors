@@ -4,10 +4,10 @@ import java.util
 import java.util.Properties
 import java.util.regex.Pattern
 
-import org.clulab.processors.bionlp.ner.{KBLoader, BioNER, RuleNER}
+import org.clulab.processors.bionlp.ner.{BioNER, KBLoader, RuleNER}
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.processors.{Sentence, Document}
-import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.MutableNumber
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
@@ -16,23 +16,28 @@ import edu.stanford.nlp.util.CoreMap
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
-
 import BioNLPProcessor._
 
 /**
  * A processor for biomedical texts, based on CoreNLP, but with different tokenization and NER
  * User: mihais
  * Date: 10/27/14
+ * Last modified: 12/08/2016 by Gus.  Extend FastNLPProcessor instead of CoreNLProcessor. <br>
+ * FastNLPProcessor uses a parsing model that is both faster and performs 12 pts (F1) better than CoreNLPProcessor on GENIA.
  */
-class BioNLPProcessor (internStrings:Boolean = false,
-                       withChunks:Boolean = true,
-                       withCRFNER:Boolean = true,
-                       withRuleNER:Boolean = true,
-                       withContext:Boolean = true,
-                       withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
-                       maxSentenceLength:Int = 100,
-                       removeFigTabReferences:Boolean = true)
-  extends CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength) {
+class BioNLPProcessor (
+    internStrings:Boolean = false,
+    withChunks:Boolean = true,
+    withCRFNER:Boolean = true,
+    withRuleNER:Boolean = true,
+    withContext:Boolean = true,
+    withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
+    removeFigTabReferences:Boolean = true)
+  extends FastNLPProcessor(
+  internStrings,
+  withChunks,
+  useMalt = false, // if false it uses the new Stanford dependency parser
+  withDiscourse) {
 
   //lazy val banner = new BannerWrapper
   lazy val specialTokens = KBLoader.loadSpecialTokens
