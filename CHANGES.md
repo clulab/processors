@@ -1,6 +1,7 @@
 # Changes
 + **6.0.2** - Update to use Bioresources 1.1.21 containing updated MITRE PhaseIII override KB.
 + **6.0.2** - Enhance NER to load multiple override files. Update to use Bioresources 1.1.20 containing MITRE PhaseIII override KB.
++ **6.0.2** -  file I/O fix related to `json` deserialization.
 + **6.0.2** - Fixed odin bug related to` ^` in lookbehinds. Update to use Bioresources 1.1.19 containing Bioentities project KBs.
 + **6.0.1** - Added support to odin for redefining variables.
 + **6.0.1** - Added support to odin for matching mention arguments.
