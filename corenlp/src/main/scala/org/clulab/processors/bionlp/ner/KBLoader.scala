@@ -14,7 +14,7 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer}
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
   * These must be generated offline by KBGenerator; see bioresources/ner_kb.sh
   * User: mihais. 2/7/16.
-  * Last Modified: Begin adding Phase3 override file.
+  * Last Modified: Remove Phase3 override file to phase3 branch only.
   */
 object KBLoader {
   val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
@@ -37,7 +37,6 @@ object KBLoader {
   )
 
   val NER_OVERRIDE_KBS = List(
-    "org/clulab/reach/kb/Phase3-Override.tsv.gz",
     "org/clulab/reach/kb/NER-Grounding-Override.tsv.gz"
   )
 
