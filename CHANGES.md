@@ -1,4 +1,5 @@
 # Changes
++ **6.0.3** - Remove use of Phase3 override file to phase3 branch only.
 + **6.0.2** - Update to use Bioresources 1.1.21 containing updated MITRE PhaseIII override KB.
 + **6.0.2** - Enhance NER to load multiple override files. Update to use Bioresources 1.1.20 containing MITRE PhaseIII override KB.
 + **6.0.2** -  file I/O fix related to `json` deserialization.
