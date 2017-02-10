@@ -16,6 +16,11 @@ import scala.collection.mutable.ArrayBuffer
  */
 class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
 
+  /**
+    * Implements the bio-specific post-processing steps from McClosky et al. (2011)
+    * @param input  Input CoreNLP sentence
+    * @return  The modified tokens
+    */
   def process(input:Array[CoreLabel]):Array[CoreLabel] = {
     var tokens = input
 
@@ -48,7 +53,7 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
     tokens
   }
 
-  def isSpecialToken(s:String) = unslashableTokens.contains(s.toLowerCase)
+  def isSpecialToken(s:String):Boolean = unslashableTokens.contains(s.toLowerCase)
 
   def breakOnPattern(tokens:Array[CoreLabel], pattern:Pattern):Array[CoreLabel] = {
     val output = new ArrayBuffer[CoreLabel]
@@ -323,11 +328,11 @@ class BioNLPTokenizerPostProcessor(val unslashableTokens:Set[String]) {
 }
 
 object BioNLPTokenizerPostProcessor {
-  val tokenFactory = new CoreLabelTokenFactory()
+  private val tokenFactory = new CoreLabelTokenFactory()
 
-  val DISCARD_STANDALONE_DASHES = true
+  private val DISCARD_STANDALONE_DASHES = true
 
-  val VALID_DASH_SUFFIXES = Set(
+  private val VALID_DASH_SUFFIXES = Set(
     "\\w+ed", "\\w+ing", // tokenize for all suffix verbs, e.g., "ABC-mediated"
     "\\w+ation", // tokenize for all nominalization of simple events, e.g., "p53-phosphorylation"
     "(in)?dependent", "deficient", "response", "protein", "by", "specific", "like",
@@ -338,56 +343,56 @@ object BioNLPTokenizerPostProcessor {
     "mechanisms?", "agonist", "heterozygous", "homozygous")
 
   // "non" is excluded from this set; it should be tokenized because it drives negation detection
-  val COMMON_PREFIXES = Set("anti", "auto", "bi", "co", "de", "dis", "down", "extra", "homo", "hetero", "hyper", "macro", "micro", "mono", "omni", "over", "poly", "pre", "post", "re", "semi", "sub", "super", "trans", "under", "up")
+  private val COMMON_PREFIXES = Set("anti", "auto", "bi", "co", "de", "dis", "down", "extra", "homo", "hetero", "hyper", "macro", "micro", "mono", "omni", "over", "poly", "pre", "post", "re", "semi", "sub", "super", "trans", "under", "up")
 
-  val dashSuffixes = mkDashSuffixes
+  private val dashSuffixes = mkDashSuffixes
 
   // A valid protein name must start with a letter, and contain at least 3 \w characters overall
-  val VALID_PROTEIN = "[a-z][\\w\\-][\\w\\-]+"
-  val VALID_PROTEIN_NO_DASH = "[a-z][\\w][\\w]+"
-  val VALID_COMPLEX_SEPARATOR_PATTERN = Pattern.compile("[/\\-]")
+  private val VALID_PROTEIN = "[a-z][\\w\\-][\\w\\-]+"
+  private val VALID_PROTEIN_NO_DASH = "[a-z][\\w][\\w]+"
+  private val VALID_COMPLEX_SEPARATOR_PATTERN = Pattern.compile("[/\\-]")
 
-  val SINGLESLASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(/)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
-  val SINGLEDASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN_NO_DASH)(\\-)($VALID_PROTEIN_NO_DASH)", Pattern.CASE_INSENSITIVE)
+  private val SINGLESLASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN)(/)($VALID_PROTEIN)", Pattern.CASE_INSENSITIVE)
+  private val SINGLEDASH_PATTERN = Pattern.compile(s"($VALID_PROTEIN_NO_DASH)(\\-)($VALID_PROTEIN_NO_DASH)", Pattern.CASE_INSENSITIVE)
 
-  val SITE1_PATTERN = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+", Pattern.CASE_INSENSITIVE)
-  val SITE2 = "glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine"
-  val SITE3 = "Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val"
-  val SITE2_PATTERN = Pattern.compile(SITE2, Pattern.CASE_INSENSITIVE)
-  val SITE3_PATTERN = Pattern.compile(s"($SITE3)\\d*", Pattern.CASE_INSENSITIVE)
-  val MUTATION1_PATTERN = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+[ACDEFGHIKLMNPQRSTVWY]", Pattern.CASE_INSENSITIVE)
-  val MUTATION2_PATTERN = Pattern.compile("P\\d+[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]")
-  val MUTATION3_PATTERN = Pattern.compile("(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)\\d+(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)", Pattern.CASE_INSENSITIVE)
-  val MODIFICATIONS = Set(SITE1_PATTERN, SITE2_PATTERN, SITE3_PATTERN, MUTATION1_PATTERN, MUTATION2_PATTERN, MUTATION3_PATTERN)
+  private val SITE1_PATTERN = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+", Pattern.CASE_INSENSITIVE)
+  private val SITE2 = "glycine|phenylalanine|leucine|serine|tyrosine|cysteine|tryptophan|proline|histidine|arginine|soleucine|methionine|threonine|asparagine|lysine|serine|arginine|valine|alanine|aspartate|glutamate|glycine"
+  private val SITE3 = "Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val"
+  private val SITE2_PATTERN = Pattern.compile(SITE2, Pattern.CASE_INSENSITIVE)
+  private val SITE3_PATTERN = Pattern.compile(s"($SITE3)\\d*", Pattern.CASE_INSENSITIVE)
+  private val MUTATION1_PATTERN = Pattern.compile("[ACDEFGHIKLMNQRSTVWY]\\d+[ACDEFGHIKLMNPQRSTVWY]", Pattern.CASE_INSENSITIVE)
+  private val MUTATION2_PATTERN = Pattern.compile("P\\d+[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]")
+  private val MUTATION3_PATTERN = Pattern.compile("(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)\\d+(Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)", Pattern.CASE_INSENSITIVE)
+  private val MODIFICATIONS = Set(SITE1_PATTERN, SITE2_PATTERN, SITE3_PATTERN, MUTATION1_PATTERN, MUTATION2_PATTERN, MUTATION3_PATTERN)
 
-  val sitePrefixes = Pattern.compile(s"($SITE2|$SITE3)(-)([\\w/]+)", Pattern.CASE_INSENSITIVE)
+  private val sitePrefixes = Pattern.compile(s"($SITE2|$SITE3)(-)([\\w/]+)", Pattern.CASE_INSENSITIVE)
 
-  val PARENS = Set("(", ")", "[", "]")
+  private val PARENS = Set("(", ")", "[", "]")
 
-  val COMPLEX = Pattern.compile("complex|dimer|heterodimer")
-  val MUTANT = Pattern.compile("mutant|mutants|mutation|mutations")
+  private val COMPLEX = Pattern.compile("complex|dimer|heterodimer")
+  private val MUTANT = Pattern.compile("mutant|mutants|mutation|mutations")
 
-  val MEASUREMENT_UNIT_WITHSLASH = Pattern.compile("\\w+/(ml|l|cm|m)", Pattern.CASE_INSENSITIVE)
+  private val MEASUREMENT_UNIT_WITHSLASH = Pattern.compile("\\w+/(ml|l|cm|m)", Pattern.CASE_INSENSITIVE)
 
-  def isParen(s:String) = PARENS.contains(s)
+  private def isParen(s:String) = PARENS.contains(s)
 
-  def isMeasurementUnit(s:String):Boolean = MEASUREMENT_UNIT_WITHSLASH.matcher(s).matches()
+  private def isMeasurementUnit(s:String):Boolean = MEASUREMENT_UNIT_WITHSLASH.matcher(s).matches()
 
-  def isComplex(word:String):Boolean = {
+  private def isComplex(word:String):Boolean = {
     val m = COMPLEX.matcher(word)
     m.matches()
   }
-  def isMutant(word:String):Boolean = {
+  private def isMutant(word:String):Boolean = {
     val m = MUTANT.matcher(word)
     m.matches()
   }
 
-  def isValidProtein(word:String):Boolean = {
+  private def isValidProtein(word:String):Boolean = {
     val m = Pattern.compile(VALID_PROTEIN, Pattern.CASE_INSENSITIVE).matcher(word)
     m.matches()
   }
 
-  def countConnectingTokens(tokens:Array[CoreLabel], offset:Int, howManyConnecting:MutableNumber[Int]):Boolean = {
+  private def countConnectingTokens(tokens:Array[CoreLabel], offset:Int, howManyConnecting:MutableNumber[Int]):Boolean = {
     var i = offset
     while(i < tokens.length - 1 && isConnectingToken(tokens(i).word()) && // found connecting token(s) that CoreNLP tokenized too aggressively
       tokens(i - 1).endPosition == tokens(i).beginPosition && // attached to the previous token
@@ -399,7 +404,7 @@ object BioNLPTokenizerPostProcessor {
     howManyConnecting.value > 0
   }
 
-  def isConnectingToken(word:String):Boolean = {
+  private def isConnectingToken(word:String):Boolean = {
     // is "/" or "-" or "-" followed by some digit(s)
     if(Pattern.compile("[\\-/]|\\-\\d+", Pattern.CASE_INSENSITIVE).matcher(word).matches())
       return true
@@ -411,13 +416,13 @@ object BioNLPTokenizerPostProcessor {
     false
   }
 
-  def mkDashSuffixes:Pattern = {
+  private def mkDashSuffixes:Pattern = {
     val allSuffixes = makeRegexOr(VALID_DASH_SUFFIXES)
     val allSuffixesRegex = "([\\w/]+)(-)(" + allSuffixes + ")"
     Pattern.compile(allSuffixesRegex, Pattern.CASE_INSENSITIVE)
   }
 
-  def makeRegexOr(pieces: Set[String]):String = {
+  private def makeRegexOr(pieces: Set[String]):String = {
     val suffixBuilder = new StringBuilder()
     for (suffix <- pieces) {
       if (suffixBuilder.nonEmpty) suffixBuilder.append("|")

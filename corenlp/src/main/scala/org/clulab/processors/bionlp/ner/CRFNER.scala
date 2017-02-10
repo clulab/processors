@@ -3,16 +3,15 @@ package org.clulab.processors.bionlp.ner
 import java.util
 import java.util.Properties
 
-import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.processors.{Sentence, Processor}
-import org.clulab.processors.bionlp.BioNLPProcessor
+import org.clulab.processors.{Processor, Sentence}
+import org.clulab.processors.bionlp.{BioNLPPOSTaggerPostProcessor, BioNLPProcessor}
 import org.clulab.utils.StringUtils
 import edu.stanford.nlp.ie.crf.CRFClassifier
 import edu.stanford.nlp.ling.CoreAnnotations.AnswerAnnotation
 import edu.stanford.nlp.ling.CoreLabel
+
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-
 import java.util.{List => JavaList}
 
 import org.slf4j.LoggerFactory
@@ -38,7 +37,7 @@ class CRFNER {
     crf
   }
 
-  def train(path:String) = {
+  def train(path:String) {
     crfClassifier = Some(mkClassifier())
     val trainCorpus = readData(path)
     crfClassifier.foreach(_.train(trainCorpus))
@@ -78,7 +77,8 @@ class CRFNER {
 }
 
 object CRFNER {
-  val logger = LoggerFactory.getLogger(classOf[CRFNER])
+  private val logger = LoggerFactory.getLogger(classOf[CRFNER])
+  private val posPostProcessor = new BioNLPPOSTaggerPostProcessor
 
   /** Reads IOB data directly into Java lists, because the CRF needs the data of this type */
   def readData(path: String): JavaList[JavaList[CoreLabel]] = {
@@ -127,14 +127,15 @@ object CRFNER {
     for(i <- 0 until sentence.size()) {
       tokens(i) = sentence.get(i)
     }
-    BioNLPProcessor.postprocessCoreLabelTags(tokens)
+
+    posPostProcessor.postprocessCoreLabelTags(tokens)
   }
 
   /** Splits a line into k tokens, knowing that the left-most one might contain spaces */
   def robustSplit(line:String, k:Int):Array[String] = {
     val bits = new ListBuffer[String]
     var pos = line.length - 1
-    for(i <- 0 until k - 1) {
+    for(_ <- 0 until k - 1) {
       val newPos = line.lastIndexOf(' ', pos)
       assert(newPos > 0)
       val bit = line.substring(newPos + 1, pos + 1)

@@ -10,7 +10,6 @@ import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.struct.MutableNumber
-import org.slf4j.LoggerFactory
 
 
 import scala.collection.JavaConversions._
