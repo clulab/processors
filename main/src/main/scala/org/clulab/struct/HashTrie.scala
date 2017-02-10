@@ -7,6 +7,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
  * A more efficient trie implementation, where the first layer is stored as a hash map for efficiency (the rest are the usual trees)
+ * The find* methods are thread safe
  * User: mihais
  * Date: 5/12/15
  */

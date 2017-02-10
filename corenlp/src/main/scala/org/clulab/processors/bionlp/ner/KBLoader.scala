@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
+class KBLoader
+
 /**
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
   * These must be generated offline by KBGenerator; see bioresources/ner_kb.sh
@@ -17,7 +19,7 @@ import scala.collection.mutable.ArrayBuffer
   * Last Modified: Remove Phase3 override file to phase3 branch only.
   */
 object KBLoader {
-  private val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
+  private val logger = LoggerFactory.getLogger(classOf[KBLoader])
 
   val NAME_FIELD_NDX = 0                    // where the text of the NE is specified
   val LABEL_FIELD_NDX = 4                   // where the label of the NE is specified
