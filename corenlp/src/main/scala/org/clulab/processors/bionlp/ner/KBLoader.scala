@@ -20,6 +20,7 @@ class KBLoader
   */
 object KBLoader {
   private val logger = LoggerFactory.getLogger(classOf[KBLoader])
+  private val lock = new KBLoader // to be used for the singleton in loadAll
 
   val NAME_FIELD_NDX = 0                    // where the text of the NE is specified
   val LABEL_FIELD_NDX = 4                   // where the label of the NE is specified
@@ -107,11 +108,19 @@ object KBLoader {
     stops.toSet
   }
 
+  // Load the rule NER just once, so multiple processors can share it
+  var ruleNerSingleton: Option[RuleNER] = None
+
   def loadAll:RuleNER = {
-    load(RULE_NER_KBS,
-      Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
-      useLemmas = false,
-      caseInsensitive = true)
+    lock.synchronized {
+      if(ruleNerSingleton.isEmpty) {
+        ruleNerSingleton = Some(load(RULE_NER_KBS,
+          Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
+          useLemmas = false,
+          caseInsensitive = true))
+      }
+      ruleNerSingleton.get
+    }
   }
 
   /**
