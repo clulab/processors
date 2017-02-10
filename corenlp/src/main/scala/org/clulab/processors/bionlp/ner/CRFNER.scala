@@ -16,7 +16,7 @@ import scala.collection.JavaConverters._
 import java.util.{List => JavaList}
 
 import org.slf4j.LoggerFactory
-import BioNER._
+import CRFNER._
 
 import scala.collection.mutable.ListBuffer
 import scala.io.StdIn
@@ -27,7 +27,7 @@ import scala.io.StdIn
  * User: mihais
  * Date: 2/27/15
  */
-class BioNER {
+class CRFNER {
   var crfClassifier:Option[CRFClassifier[CoreLabel]] = None
 
   private def mkClassifier(): CRFClassifier[CoreLabel] = {
@@ -77,8 +77,8 @@ class BioNER {
   }
 }
 
-object BioNER {
-  val logger = LoggerFactory.getLogger(classOf[BioNER])
+object CRFNER {
+  val logger = LoggerFactory.getLogger(classOf[CRFNER])
 
   /** Reads IOB data directly into Java lists, because the CRF needs the data of this type */
   def readData(path: String): JavaList[JavaList[CoreLabel]] = {
@@ -156,8 +156,8 @@ object BioNER {
     golds
   }
 
-  def load(path:String):BioNER = {
-    val ner = new BioNER
+  def load(path:String):CRFNER = {
+    val ner = new CRFNER
     ner.crfClassifier = Some(ner.mkClassifier())
     ner.crfClassifier.get.loadClassifier(path)
     ner
@@ -167,7 +167,7 @@ object BioNER {
     val props = StringUtils.argsToProperties(args)
 
     if(props.containsKey("train")) {
-      val ner = new BioNER
+      val ner = new CRFNER
       ner.train(props.getProperty("train"))
       if(props.containsKey("model")) {
         ner.save(props.getProperty("model"))
@@ -189,7 +189,7 @@ object BioNER {
     }
   }
 
-  def shell(ner:BioNER) {
+  def shell(ner:CRFNER) {
     val proc:Processor = new BioNLPProcessor()
     while(true) {
       print("> ")
@@ -202,7 +202,7 @@ object BioNER {
     }
   }
 
-  def evalSent(ner:BioNER, sentence:Sentence) {
+  def evalSent(ner:CRFNER, sentence:Sentence) {
     println("Evaluating sentence: " + sentence.words.mkString(" "))
     val tokens = new util.ArrayList[CoreLabel]()
     for(i <- 0 until sentence.size) {
