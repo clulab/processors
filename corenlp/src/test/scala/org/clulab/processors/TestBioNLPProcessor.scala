@@ -4,7 +4,7 @@ import org.clulab.processors.bionlp.BioNLPProcessor
 import org.scalatest._
 
 /**
-  *
+  * Tests BioNLPProcessor
   * User: mihais
   * Date: 10/29/14
   * Last Modified: Update for BE KBs.
