@@ -8,7 +8,9 @@ import org.clulab.struct.HashTrie
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.collection.mutable.ArrayBuffer
+
+class KBLoader
 
 /**
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
@@ -17,7 +19,8 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer}
   * Last Modified: Remove Phase3 override file to phase3 branch only.
   */
 object KBLoader {
-  val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
+  private val logger = LoggerFactory.getLogger(classOf[KBLoader])
+  private val lock = new KBLoader // to be used for the singleton in loadAll
 
   val NAME_FIELD_NDX = 0                    // where the text of the NE is specified
   val LABEL_FIELD_NDX = 4                   // where the label of the NE is specified
@@ -41,7 +44,7 @@ object KBLoader {
   )
 
   // knowledge to be used by the tokenizer to avoid aggressive tokenization around "/"
-  val UNSLASHABLE_TOKENS_KBS = NER_OVERRIDE_KBS ++
+  val UNSLASHABLE_TOKENS_KBS:List[String] = NER_OVERRIDE_KBS ++
     List(
     "org/clulab/reach/kb/ProteinFamilies.tsv.gz", // these must be KBs BEFORE KBGenerator converts them to NER ready
     "org/clulab/reach/kb/PFAM-families.tsv.gz"    // because those (i.e., under kb/ner) are post tokenization
@@ -50,7 +53,7 @@ object KBLoader {
   /**
     * A horrible hack to keep track of entities that should not be labeled when in lower case, or upper initial
     */
-  val ENTITY_STOPLIST = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
+  val ENTITY_STOPLIST:Set[String] = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
 
   /** Engine to automatically produce lexical variations of entity names */
   val lexicalVariationEngine = Some(new LexicalVariations)
@@ -105,11 +108,19 @@ object KBLoader {
     stops.toSet
   }
 
+  // Load the rule NER just once, so multiple processors can share it
+  var ruleNerSingleton: Option[RuleNER] = None
+
   def loadAll:RuleNER = {
-    load(RULE_NER_KBS,
-      Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
-      useLemmas = false,
-      caseInsensitive = true)
+    lock.synchronized {
+      if(ruleNerSingleton.isEmpty) {
+        ruleNerSingleton = Some(load(RULE_NER_KBS,
+          Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
+          useLemmas = false,
+          caseInsensitive = true))
+      }
+      ruleNerSingleton.get
+    }
   }
 
   /**
@@ -131,9 +142,9 @@ object KBLoader {
         val reader = loadStreamFromClasspath(okb)
         val overrideMatchers = loadOverrideKB(reader, caseInsensitive, knownCaseInsensitives)
         for(name <- overrideMatchers.keySet.toList.sorted) {
-          val matcher = overrideMatchers.get(name).get
+          val matcher = overrideMatchers(name)
           logger.info(s"Loaded OVERRIDE matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-          matchers += new Tuple2(name, matcher)
+          matchers += Tuple2(name, matcher)
         }
         reader.close()
       })
@@ -145,7 +156,7 @@ object KBLoader {
       val reader = loadStreamFromClasspath(kb)
       val matcher = loadKB(reader, caseInsensitive, knownCaseInsensitives)
       logger.info(s"Loaded matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-      matchers += new Tuple2(name, matcher)
+      matchers += Tuple2(name, matcher)
       reader.close()
     }
 
