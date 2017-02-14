@@ -1,14 +1,16 @@
 package org.clulab.processors.bionlp.ner
 
-import java.io.{BufferedInputStream, InputStreamReader, BufferedReader}
+import java.io.{BufferedInputStream, File, InputStreamReader, BufferedReader}
 import java.util.zip.GZIPInputStream
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+import com.typesafe.config._
+import ai.lum.common.ConfigUtils._
 
 import org.clulab.processors.bionlp.BioNLPProcessor
 import org.clulab.struct.HashTrie
 import org.slf4j.LoggerFactory
-
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 class KBLoader
 
@@ -16,44 +18,45 @@ class KBLoader
   * Loads the KBs from bioresources under org/clulab/reach/kb/ner
   * These must be generated offline by KBGenerator; see bioresources/ner_kb.sh
   * User: mihais. 2/7/16.
-  * Last Modified: Remove Phase3 override file to phase3 branch only.
+  * Last Modified: Update to use external configuration file.
   */
 object KBLoader {
+  val config = ConfigFactory.load()         // load the configuration file
+
   private val logger = LoggerFactory.getLogger(classOf[KBLoader])
   private val lock = new KBLoader // to be used for the singleton in loadAll
 
   val NAME_FIELD_NDX = 0                    // where the text of the NE is specified
   val LABEL_FIELD_NDX = 4                   // where the label of the NE is specified
 
-  val RULE_NER_KBS = List( // knowledge for the rule-based NER; order is important: it indicates priority!
-    "org/clulab/reach/kb/ner/Gene_or_gene_product.tsv.gz",
-    "org/clulab/reach/kb/ner/Family.tsv.gz",
-    "org/clulab/reach/kb/ner/Cellular_component.tsv.gz",
-    "org/clulab/reach/kb/ner/Simple_chemical.tsv.gz",
-    "org/clulab/reach/kb/ner/Site.tsv.gz",
-    "org/clulab/reach/kb/ner/BioProcess.tsv.gz",
-    "org/clulab/reach/kb/ner/Species.tsv.gz",
-    "org/clulab/reach/kb/ner/CellLine.tsv.gz",
-    "org/clulab/reach/kb/ner/TissueType.tsv.gz",
-    "org/clulab/reach/kb/ner/CellType.tsv.gz",
-    "org/clulab/reach/kb/ner/Organ.tsv.gz"
-  )
+  /** List of entity labeling files for the rule-based NER. If missing, an error is thrown.
+    * NB: file order is important: it indicates priority! */
+  val RULE_NER_KBS: List[String] = config[List[String]]("kbloader.nerKBs")
+  logger.debug(s"KBLoader.init): RULE_NER_KBS=${RULE_NER_KBS}")
 
-  val NER_OVERRIDE_KBS = List(
-    "org/clulab/reach/kb/NER-Grounding-Override.tsv.gz"
-  )
+  /** List of KB override files to be used. */
+  val NER_OVERRIDE_KBS: List[String] =
+    if (config.hasPath("kbloader.overrides")) config[List[String]]("kbloader.overrides")
+    else List.empty[String]
+  logger.debug(s"KBLoader.init): NER_OVERRIDE_KBS=${NER_OVERRIDE_KBS}")
 
-  // knowledge to be used by the tokenizer to avoid aggressive tokenization around "/"
-  val UNSLASHABLE_TOKENS_KBS:List[String] = NER_OVERRIDE_KBS ++
-    List(
-    "org/clulab/reach/kb/ProteinFamilies.tsv.gz", // these must be KBs BEFORE KBGenerator converts them to NER ready
-    "org/clulab/reach/kb/PFAM-families.tsv.gz"    // because those (i.e., under kb/ner) are post tokenization
-    )
+  /** These must be KBs BEFORE KBGenerator converts them to NER-ready, because
+    * the files under kb/ner are post tokenization. */
+  private val unslashable =
+    if (config.hasPath("kbloader.unslashables")) config[List[String]]("kbloader.unslashables")
+    else List.empty[String]
+  val UNSLASHABLE_TOKENS_KBS: List[String] = NER_OVERRIDE_KBS ++ unslashable
+  logger.debug(s"KBLoader.init): UNSLASHABLE_TOKENS_KBS=${UNSLASHABLE_TOKENS_KBS}")
 
-  /**
-    * A horrible hack to keep track of entities that should not be labeled when in lower case, or upper initial
-    */
-  val ENTITY_STOPLIST:Set[String] = loadEntityStopList("org/clulab/reach/kb/ner_stoplist.txt")
+  /** A horrible hack to keep track of entities that should not be labeled when in
+    * lower case, or upper initial case. */
+  private val stopListFile: Option[String] =
+    if (config.hasPath("kbloader.stopListFile")) Option(config[String]("kbloader.stopListFile"))
+    else None
+  val ENTITY_STOPLIST: Set[String] =
+    if (stopListFile.isDefined) loadEntityStopList(stopListFile.get)
+    else Set.empty[String]
+  logger.debug(s"KBLoader.init): ENTITY_STOPLIST=${ENTITY_STOPLIST}")
 
   /** Engine to automatically produce lexical variations of entity names */
   val lexicalVariationEngine = Some(new LexicalVariations)
