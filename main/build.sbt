@@ -4,7 +4,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "org.clulab" % "bioresources" % "1.1.21",
+  "org.clulab" % "bioresources" % "1.1.22",
   "com.io7m.xom" % "xom" % "1.2.10",
   "org.json4s" %% "json4s-native" % "3.2.11",
   "ch.qos.logback" % "logback-classic" % "1.0.10",

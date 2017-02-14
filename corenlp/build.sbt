@@ -3,7 +3,7 @@ name := "processors-corenlp"
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "ai.lum" %% "common" % "0.0.7",
-  "org.clulab" % "bioresources" % "1.1.21",
+  "org.clulab" % "bioresources" % "1.1.22",
   "com.io7m.xom" % "xom" % "1.2.10",
   "com.typesafe" % "config" % "1.2.1",
   "org.json4s" %% "json4s-native" % "3.2.11",

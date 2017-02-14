@@ -1,5 +1,5 @@
 # Changes
-+ **6.0.3** - Added FastBioNLPProcessor.
++ **6.0.3** - Added FastBioNLPProcessor. Update for Bioresources 1.1.22 containing updated MITRE Phase3 override KB.
 + **6.0.3** - The rule NER is now a singleton object, so it can be shared between different processor objects.
 + **6.0.3** - Remove use of Phase3 override file to phase3 branch only.
 + **6.0.2** - Update to use Bioresources 1.1.21 containing updated MITRE PhaseIII override KB.
