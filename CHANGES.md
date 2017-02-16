@@ -1,4 +1,5 @@
 # Changes
++ **6.0.4** - Use consistent SBT version across projects. Fix lib clash: allow ai.lum.common to dicate typesafe.config version.
 + **6.0.3** - Added FastBioNLPProcessor. Update for Bioresources 1.1.22 containing updated MITRE Phase3 override KB.
 + **6.0.3** - The rule NER is now a singleton object, so it can be shared between different processor objects.
 + **6.0.3** - Remove use of Phase3 override file to phase3 branch only.

@@ -5,7 +5,6 @@ libraryDependencies ++= Seq(
   "ai.lum" %% "common" % "0.0.7",
   "org.clulab" % "bioresources" % "1.1.22",
   "com.io7m.xom" % "xom" % "1.2.10",
-  "com.typesafe" % "config" % "1.2.1",
   "org.json4s" %% "json4s-native" % "3.2.11",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.5.1" classifier "models",
