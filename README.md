@@ -494,7 +494,7 @@ public class ProcessorsJavaExample {
             }
         }
 	
-	// let's print the discourse tree
+        // let's print the discourse tree
         if(doc.discourseTree().isDefined()) {
             DiscourseTree tree = doc.discourseTree().get();
             System.out.println("Discourse tree:\n" + tree);
