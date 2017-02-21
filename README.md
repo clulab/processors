@@ -616,7 +616,7 @@ The output of this code is:
     Discourse tree:
     elaboration (LeftToRight)
     	TEXT:John Smith went to China .
-	TEXT:He visited Beijing , on January 10th , 2013 .
+        TEXT:He visited Beijing , on January 10th , 2013 .
 
 ## The discourse parser
 
