@@ -411,13 +411,16 @@ val processor = new CoreNLPProcessor(internStrings = false)
 Scala is (largely) compatible with Java, so this library can be directly used from Java. Below is Java code that translates most of the functionality from the first Scala example in this document to Java:
 
 ```java
+package org.clulab.processors;
+
+
+import org.clulab.discourse.rstparser.DiscourseTree;
+import org.clulab.processors.fastnlp.FastNLPProcessor;
+import org.clulab.processors.corenlp.CoreNLPProcessor;
 import org.clulab.struct.CorefMention;
 import org.clulab.struct.DirectedGraphEdgeIterator;
-import org.clulab.processors.*;
-import org.clulab.processors.corenlp.CoreNLPProcessor;
-import org.clulab.processors.fastnlp.FastNLPProcessor;
 
-public class ProcessorJavaExample {
+public class ProcessorsJavaExample {
     public static void main(String [] args) throws Exception {
         // create the processor
         Processor proc = new CoreNLPProcessor(true, false, 0, 100);
@@ -489,6 +492,12 @@ public class ProcessorJavaExample {
                         " endTokenOffset:" + mention.endOffset());
                 }
             }
+        }
+	
+	// let's print the discourse tree
+        if(doc.discourseTree().isDefined()) {
+            DiscourseTree tree = doc.discourseTree().get();
+            System.out.println("Discourse tree:\n" + tree);
         }
     }
 
@@ -604,6 +613,10 @@ The output of this code is:
 		sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5
     Found one coreference chain containing the following mentions:
 		sentenceIndex:1 headIndex:8 startTokenOffset:8 endTokenOffset:9
+    Discourse tree:
+    elaboration (LeftToRight)
+    	TEXT:John Smith went to China .
+	TEXT:He visited Beijing , on January 10th , 2013 .
 
 ## The discourse parser
 
