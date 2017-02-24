@@ -15,13 +15,17 @@ import scala.util.hashing.MurmurHash3._
 
 package object json {
 
+  /** Method for debugging json */
+  def stringify(json: JValue, pretty: Boolean): String = pretty match {
+    case true => prettyJson(renderJValue(json))
+    case false => compactJson(renderJValue(json))
+  }
+
   trait JSONSerialization {
 
     def jsonAST: JValue
 
-    def json(pretty: Boolean = false): String =
-      if (pretty) prettyJson(renderJValue(jsonAST))
-      else compactJson(renderJValue(jsonAST))
+    def json(pretty: Boolean = false): String = stringify(jsonAST, pretty)
 
   }
 
