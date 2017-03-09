@@ -3,20 +3,19 @@ package org.clulab.processors.bionlp.ner
 import java.util
 import java.util.Properties
 
-import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.processors.{Sentence, Processor}
-import org.clulab.processors.bionlp.BioNLPProcessor
+import org.clulab.processors.{Processor, Sentence}
+import org.clulab.processors.bionlp.{BioNLPPOSTaggerPostProcessor, BioNLPProcessor}
 import org.clulab.utils.StringUtils
 import edu.stanford.nlp.ie.crf.CRFClassifier
 import edu.stanford.nlp.ling.CoreAnnotations.AnswerAnnotation
 import edu.stanford.nlp.ling.CoreLabel
+
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-
 import java.util.{List => JavaList}
 
 import org.slf4j.LoggerFactory
-import BioNER._
+import CRFNER._
 
 import scala.collection.mutable.ListBuffer
 import scala.io.StdIn
@@ -27,7 +26,7 @@ import scala.io.StdIn
  * User: mihais
  * Date: 2/27/15
  */
-class BioNER {
+class CRFNER {
   var crfClassifier:Option[CRFClassifier[CoreLabel]] = None
 
   private def mkClassifier(): CRFClassifier[CoreLabel] = {
@@ -38,7 +37,7 @@ class BioNER {
     crf
   }
 
-  def train(path:String) = {
+  def train(path:String) {
     crfClassifier = Some(mkClassifier())
     val trainCorpus = readData(path)
     crfClassifier.foreach(_.train(trainCorpus))
@@ -77,8 +76,9 @@ class BioNER {
   }
 }
 
-object BioNER {
-  val logger = LoggerFactory.getLogger(classOf[BioNER])
+object CRFNER {
+  private val logger = LoggerFactory.getLogger(classOf[CRFNER])
+  private val posPostProcessor = new BioNLPPOSTaggerPostProcessor
 
   /** Reads IOB data directly into Java lists, because the CRF needs the data of this type */
   def readData(path: String): JavaList[JavaList[CoreLabel]] = {
@@ -127,14 +127,15 @@ object BioNER {
     for(i <- 0 until sentence.size()) {
       tokens(i) = sentence.get(i)
     }
-    BioNLPProcessor.postprocessCoreLabelTags(tokens)
+
+    posPostProcessor.postprocessCoreLabelTags(tokens)
   }
 
   /** Splits a line into k tokens, knowing that the left-most one might contain spaces */
   def robustSplit(line:String, k:Int):Array[String] = {
     val bits = new ListBuffer[String]
     var pos = line.length - 1
-    for(i <- 0 until k - 1) {
+    for(_ <- 0 until k - 1) {
       val newPos = line.lastIndexOf(' ', pos)
       assert(newPos > 0)
       val bit = line.substring(newPos + 1, pos + 1)
@@ -156,8 +157,8 @@ object BioNER {
     golds
   }
 
-  def load(path:String):BioNER = {
-    val ner = new BioNER
+  def load(path:String):CRFNER = {
+    val ner = new CRFNER
     ner.crfClassifier = Some(ner.mkClassifier())
     ner.crfClassifier.get.loadClassifier(path)
     ner
@@ -167,7 +168,7 @@ object BioNER {
     val props = StringUtils.argsToProperties(args)
 
     if(props.containsKey("train")) {
-      val ner = new BioNER
+      val ner = new CRFNER
       ner.train(props.getProperty("train"))
       if(props.containsKey("model")) {
         ner.save(props.getProperty("model"))
@@ -189,7 +190,7 @@ object BioNER {
     }
   }
 
-  def shell(ner:BioNER) {
+  def shell(ner:CRFNER) {
     val proc:Processor = new BioNLPProcessor()
     while(true) {
       print("> ")
@@ -202,7 +203,7 @@ object BioNER {
     }
   }
 
-  def evalSent(ner:BioNER, sentence:Sentence) {
+  def evalSent(ner:CRFNER, sentence:Sentence) {
     println("Evaluating sentence: " + sentence.words.mkString(" "))
     val tokens = new util.ArrayList[CoreLabel]()
     for(i <- 0 until sentence.size) {

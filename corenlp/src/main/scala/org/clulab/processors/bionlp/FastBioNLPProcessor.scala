@@ -1,29 +1,29 @@
 package org.clulab.processors.bionlp
 
-import org.clulab.processors.bionlp.ner.{HybridNER, KBLoader}
-import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.processors.Document
-import org.clulab.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
+import org.clulab.processors.Document
+import org.clulab.processors.bionlp.ner.{HybridNER, KBLoader}
+import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 
 import scala.collection.JavaConversions._
 
 /**
- * A processor for biomedical texts, based on CoreNLP, but with different tokenization and NER
- * User: mihais
- * Date: 10/27/14
- */
-class BioNLPProcessor (internStrings:Boolean = false,
-                       withChunks:Boolean = true,
-                       withCRFNER:Boolean = true,
-                       withRuleNER:Boolean = true,
-                       withContext:Boolean = true,
-                       withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
-                       maxSentenceLength:Int = 100,
-                       removeFigTabReferences:Boolean = true)
-  extends CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength) {
+  * A processor for biomedical texts, based on FastNLP with the NN parser, but with different tokenization and NER
+  * User: mihais
+  * Date: 2/9/17
+  */
+class FastBioNLPProcessor (internStrings:Boolean = false,
+                           withChunks:Boolean = true,
+                           withCRFNER:Boolean = true,
+                           withRuleNER:Boolean = true,
+                           withContext:Boolean = true,
+                           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
+                           maxSentenceLength:Int = 100,
+                           removeFigTabReferences:Boolean = true)
+  extends FastNLPProcessor(internStrings, withChunks, useMalt = false, withDiscourse) {
 
   //lazy val banner = new BannerWrapper
   private lazy val specialTokens = KBLoader.loadSpecialTokens
@@ -45,9 +45,9 @@ class BioNLPProcessor (internStrings:Boolean = false,
   }
 
   /**
-   * Improve POS tagging in the Bio domain
-   * @param annotation The CoreNLP annotation
-   */
+    * Improve POS tagging in the Bio domain
+    * @param annotation The CoreNLP annotation
+    */
   override def postprocessTags(annotation:Annotation) {
     val sas = annotation.get(classOf[SentencesAnnotation])
 
@@ -60,6 +60,4 @@ class BioNLPProcessor (internStrings:Boolean = false,
   override def recognizeNamedEntities(doc:Document) {
     hybridNER.recognizeNamedEntities(doc, namedEntitySanityCheck(doc))
   }
-
 }
-

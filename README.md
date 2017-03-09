@@ -21,6 +21,9 @@ Our code is licensed as follows:
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
++ **6.0.2** - Enhance NER to load multiple override files.
++ **6.0.2** -  file I/O fix related to `json` deserialization.
++ **6.0.2** - Fixed odin bug related to` ^` in lookbehinds. Update to use Bioresources 1.1.19 containing Bioentities project KBs.
 + **6.0.1** - Added support to odin for redefining variables.
 + **6.0.1** - Added support to odin for matching mention arguments.
 + **6.0.1** - Added support to odin for cross-sentence patterns.
@@ -58,17 +61,17 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-corenlp_2.11</artifactId>
-   <version>6.0.1</version>
+   <version>6.0.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-main_2.11</artifactId>
-   <version>6.0.1</version>
+   <version>6.0.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-models_2.11</artifactId>
-   <version>6.0.1</version>
+   <version>6.0.2</version>
 </dependency>
 ```
 
@@ -76,9 +79,9 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors-corenlp" % "6.0.1",
-    "org.clulab" %% "processors-main" % "6.0.1",
-    "org.clulab" %% "processors-models" % "6.0.1"
+    "org.clulab" %% "processors-corenlp" % "6.0.2",
+    "org.clulab" %% "processors-main" % "6.0.2",
+    "org.clulab" %% "processors-models" % "6.0.2"
 )
 ```
 
@@ -87,6 +90,15 @@ libraryDependencies ++= Seq(
 Most of the `processors` dependencies are captured in the build file. However, a few `processors` unit tests depend also on `svm-rank`, which should be installed separately. Simply installing the `svm-rank` binaries to `/usr/local/bin` (or another generic location on your OS) solves the problem:
 
 https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html
+
+## Installing external dependencies on Mac OS X via `homebrew`
+```bash
+brew tap myedibleenso/nlp/svmlight
+brew tap myedibleenso/nlp/svmrank
+brew install svmlight svmrank
+```
+
+## Skipping tests involving external dependencies
 
 Alternatively, you can run just the unit tests that do not require external binaries with the following command:
 
@@ -113,10 +125,19 @@ Add the generated jar files under `target/` to your $CLASSPATH, along with the o
 Most of the examples here use Scala. However, this software can be used as is from Java as well! Scroll down towards the end of this document to see a Java usage example.
 
 ### Annotating entire documents
+
+(see [`corenlp/src/main/scala/org/clulab/processors/examples/ProcessorExample.scala`](https://github.com/clulab/processors/blob/master/corenlp/src/main/scala/org/clulab/processors/examples/ProcessorExample.scala) for a complete running example)
+
 ```scala
+import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
+import org.clulab.processors.{Document, Processor}
+import org.clulab.struct.DirectedGraphEdgeIterator
+
 // create the processor
 // any processor works here! Try FastNLPProcessor or BioNLPProcessor.
-val proc:Processor = new CoreNLPProcessor(withDiscourse = true)
+// use no arguments in the c'tor if you don't need the discourse parser
+val proc:Processor = new CoreNLPProcessor(ShallowNLPProcessor.WITH_DISCOURSE) 
 
 // the actual work is done here
 val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
@@ -239,7 +260,7 @@ val proc:Processor = new FastNLPProcessor()
 // everything else stays the same
 ```
 
-FastNLPProcessor uses the Stanford tokenizer, POS tagger, and NER, but replaces its parser with maltparser, trained to generated Stanford "basic" (rather than "collapsed") dependencies. This means that this annotator does not produce constituent trees and coreference chains. However, because of the faster parser, you should see a speedup increase of at least one order of magnitude. The output of the above code with `FastNLPProcessor` is:
+`FastNLPProcessor` uses the Stanford tokenizer, POS tagger, and NER, but replaces its parser with maltparser, trained to generated Stanford "basic" (rather than "collapsed") dependencies. This means that this annotator does not produce constituent trees and coreference chains. However, because of the faster parser, you should see a speedup increase of at least one order of magnitude. The output of the above code with `FastNLPProcessor` is:
 
     Sentence #0:
     Tokens: John Smith went to China .
