@@ -2,9 +2,9 @@ sudo: required
 dist: trusty
 language: scala
 scala:
-  - 2.11.6
-script:
-  - sbt 'test-only -- -l NeedsExternalBinary'
+  - 2.11.8
 branches:
   only:
     - master
+script:
+  - sbt 'test-only -- -l NeedsExternalBinary'

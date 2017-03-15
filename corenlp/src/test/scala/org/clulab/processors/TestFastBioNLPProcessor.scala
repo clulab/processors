@@ -2,6 +2,7 @@ package org.clulab.processors
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.clulab.processors.bionlp.FastBioNLPProcessor
+import org.clulab.struct.DirectedGraphEdgeIterator
 
 
 /**
@@ -94,19 +95,40 @@ class TestFastBioNLPProcessor extends FlatSpec with Matchers {
 
   it should "parse dependencies correctly" in {
     val doc = proc.mkDocument("MEK phosphorylates KRas.")
-    println("Words: " + doc.sentences(0).words.mkString(", "))
-    val deps = doc.sentences(0).dependencies.get
-    println("Dependencies:\n" + deps)
+    annotate(doc)
+    val sentence = doc.sentences(0)
 
+    println("Words: " + sentence.words.mkString(", "))
+    sentence.stanfordBasicDependencies.foreach(dependencies => {
+      println("Basic syntactic dependencies:")
+      val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+      while(iterator.hasNext) {
+        val dep = iterator.next
+        // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+        println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+      }
+    })
+    sentence.stanfordCollapsedDependencies.foreach(dependencies => {
+      println("Collapsed syntactic dependencies:")
+      val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+      while(iterator.hasNext) {
+        val dep = iterator.next
+        // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+        println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+      }
+    })
+
+    val deps = sentence.stanfordBasicDependencies.get
     deps.hasEdge(1, 0, "nsubj") should be (true)
     deps.hasEdge(1, 2, "dobj") should be (true)
+
+    val cdeps = sentence.stanfordCollapsedDependencies.get
+    cdeps.hasEdge(1, 0, "nsubj") should be (true)
+    cdeps.hasEdge(1, 2, "dobj") should be (true)
   }
 
   def annotate(doc:Document) {
-    proc.tagPartsOfSpeech(doc)
-    proc.lemmatize(doc)
-    proc.recognizeNamedEntities(doc)
-    proc.parse(doc)
+    proc.annotate(doc)
     doc.clear()
   }
 }

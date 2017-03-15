@@ -64,6 +64,12 @@ object ProcessorShell extends App {
         proc = fast
         proc.annotate("initialize me!")
 
+      case ":fastbio" =>
+        reader.setPrompt("(fastbio)>>> ")
+        println("Preparing FastBioNLPProcessor...\n")
+        proc = fastbio
+        proc.annotate("initialize me!")
+
       case ":bio" =>
         reader.setPrompt("(bio)>>> ")
         println("Preparing BioNLPProcessor...\n")
