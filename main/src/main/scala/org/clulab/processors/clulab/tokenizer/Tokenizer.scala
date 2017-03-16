@@ -11,7 +11,7 @@ import org.clulab.processors.Sentence
 class Tokenizer {
   def tokenize(text:String):Array[Sentence] = {
     println(s"Tokenizing text: $text")
-    val lexer = new OpenDomainLexer(new ANTLRInputStream(text))
+    val lexer = new OpenDomainLexer(new ANTLRInputStream(text)) // TODO: customize lexer grammar here
     val tokens = new CommonTokenStream(lexer)
     var done = false
     while(! done) {
@@ -25,5 +25,12 @@ class Tokenizer {
       }
     }
     null
+  }
+}
+
+object Tokenizer {
+  def tokenize(text:String):Array[Sentence] = {
+    val tokenizer = new Tokenizer
+    tokenizer.tokenize(text)
   }
 }

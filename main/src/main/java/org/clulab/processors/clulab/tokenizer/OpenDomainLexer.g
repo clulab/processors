@@ -17,13 +17,16 @@ options {
 
 THE: 'the' ;
 
+NUM: (DIGIT+ '/' DIGIT+) | (DIGIT+ '.' DIGIT+);
+
 // some other token
-OTHER: (ALPHANUM)+ ;
+WORD: ALPHANUM+ ;
 
-PERIOD: '.' ;
+// punctuation
+EOS: PUNCTUATION+ ;
 
-// catch all: unknown sequence of non-whitespace characters are captured here
-CATCH_ALL: ( ~( '\t' | ' ' | '\r' | '\n'| '\u000C' ) )+ ;
+// not alphanum and not punctuation
+// OTHER: ~('a'..'z'|'A'..'Z'|'0'..'9'|'.'|'?'|'!'|';'|','|'\t'|' '|'\r'|'\n'|'\u000C');
 
 // skip all white spaces
 WHITESPACES : ( '\t' | ' ' | '\r' | '\n'| '\u000C' )+ -> skip ;
@@ -33,3 +36,4 @@ fragment LOWER_CASE_LETTER: 'a'..'z';
 fragment UPPER_CASE_LETTER: 'A'..'Z';
 fragment DIGIT: '0'..'9';
 fragment ALPHANUM: LOWER_CASE_LETTER | UPPER_CASE_LETTER | DIGIT;
+fragment PUNCTUATION: '.'|'?'|'!'|';'|',';

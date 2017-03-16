@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
   */
 class TestTokenizer extends FlatSpec with Matchers {
   "the tokenizer" should "tokenizer correctly the sentence" in {
-    val s = "the of $ ."
-    (new Tokenizer).tokenize(s)
+    val s = "the of $><1/2 1.3 ."
+    Tokenizer.tokenize(s)
   }
 }
