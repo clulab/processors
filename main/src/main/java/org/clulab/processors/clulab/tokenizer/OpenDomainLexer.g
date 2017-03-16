@@ -25,11 +25,11 @@ WORD: ALPHANUM+ ;
 // punctuation
 EOS: PUNCTUATION+ ;
 
-// not alphanum and not punctuation
-// OTHER: ~('a'..'z'|'A'..'Z'|'0'..'9'|'.'|'?'|'!'|';'|','|'\t'|' '|'\r'|'\n'|'\u000C');
-
 // skip all white spaces
-WHITESPACES : ( '\t' | ' ' | '\r' | '\n'| '\u000C' )+ -> skip ;
+WHITESPACE: ('\t'|' '|'\r'|'\n'|'\u000C')+ -> skip ;
+
+// handle characters which failed to match any other token
+ErrorCharacter: . ;
 
 // self-explanatory fragments
 fragment LOWER_CASE_LETTER: 'a'..'z';
