@@ -15,9 +15,17 @@ options {
   package org.clulab.processors.clulab.tokenizer;
 }
 
-THE: 'the' ;
+// parentheses in Treebank and OntoNotes
+PARENS: '-LRB-' | '-RRB-' | '-LCB-' | '-RCB-' | '-LSB-' | '-RSB-';
 
-NUM: (DIGIT+ '/' DIGIT+) | (DIGIT+ '.' DIGIT+);
+// common date formats
+DATE: ONE_TO_TWO_DIGITS ('-'|'/') ONE_TO_TWO_DIGITS ('-'|'/') TWO_TO_FOUR_DIGITS;
+
+// positive or negative numbers
+NUMBER: ('-'|'+')? NUM;
+
+// numeric fractions
+FRACTION: ONE_TO_FOUR_DIGITS ('/' | '\u2044') ONE_TO_FOUR_DIGITS;
 
 // some other token
 WORD: ALPHANUM+ ;
@@ -26,14 +34,21 @@ WORD: ALPHANUM+ ;
 EOS: PUNCTUATION+ ;
 
 // skip all white spaces
-WHITESPACE: ('\t'|' '|'\r'|'\n'|'\u000C')+ -> skip ;
+WHITESPACE: ('\t'|' '|'\r'|'\n'|'\u000C'| '\u2028'|'\u2029'|'\u000B'|'\u0085'|'\u00A0'|('\u2000'..'\u200A')|'\u3000')+ -> skip ;
 
 // handle characters which failed to match any other token
 ErrorCharacter: . ;
 
-// self-explanatory fragments
+//
+// self-explanatory fragments used to construct more complex lexer rules
+//
 fragment LOWER_CASE_LETTER: 'a'..'z';
 fragment UPPER_CASE_LETTER: 'A'..'Z';
-fragment DIGIT: '0'..'9';
+// TODO: fragment LETTER: 
+fragment DIGIT: ('0'..'9')|('\u07C0'..'\u07C9');
+fragment NUM: DIGIT+ | (DIGIT* (('.'|':'|','|'\u00AD'|'\u066B'|'\u066C') DIGIT+)+);
+fragment ONE_TO_TWO_DIGITS: DIGIT DIGIT?;
+fragment TWO_TO_FOUR_DIGITS: DIGIT DIGIT DIGIT? DIGIT?;
+fragment ONE_TO_FOUR_DIGITS: DIGIT DIGIT? DIGIT? DIGIT?;
 fragment ALPHANUM: LOWER_CASE_LETTER | UPPER_CASE_LETTER | DIGIT;
 fragment PUNCTUATION: '.'|'?'|'!'|';'|',';

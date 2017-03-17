@@ -33,7 +33,7 @@ class Tokenizer {
       } else {
         // info on the current token
         //println(s"${t.getText}\t${t.getStartIndex}\t${t.getStopIndex}\t${t.getType}")
-        val word = t.getText
+        val word = normalizeToken(t.getText)
         val startOffset = t.getStartIndex
         val endOffset = t.getStopIndex + 1 // antlr is inclusive, we are exclusive
 
@@ -42,7 +42,7 @@ class Tokenizer {
         startOffsets += startOffset
         endOffsets += endOffset
 
-        // found end of sentence
+        // found a regular end of sentence
         if(EOS.findFirstIn(word).isDefined) {
           sentences += Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray)
           words = new ArrayBuffer[String]()
@@ -55,6 +55,11 @@ class Tokenizer {
       }
     }
     sentences.toArray
+  }
+
+  def normalizeToken(t:String):String = {
+    // TODO: add token normalizations, e.g., converting Unicode chars to ASCII here
+    t
   }
 }
 
