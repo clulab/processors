@@ -33,7 +33,7 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents = tok("3M is a company")
     sents(0).size should be (4)
 
-    sents = tok("con't nat'l program")
+    sents = tok("cont'd nat'l program")
     sents(0).size should be (3)
 
     sents = tok("@user_1 likes #havingfun")
@@ -43,6 +43,9 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents(0).size should be (5)
 
     sents = tok("http://google.com is Google's home page")
+    sents(0).size should be (6)
+
+    sents = tok("won't isn't hadn't")
     sents(0).size should be (6)
   }
 
