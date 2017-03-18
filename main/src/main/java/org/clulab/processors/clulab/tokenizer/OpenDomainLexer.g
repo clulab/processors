@@ -44,8 +44,16 @@ FILENAME: ALPHANUM+ ('.' ALPHANUM+)* ('.' FILENAME_EXT);
 PROGRAMMING_LANGUAGES: (('c'|'C') '+''+') | (('c'|'C') '#') | (('f'|'F') '#');
 
 // URLs
-FULLURL: 'http' 's'? '://' (~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'))+ ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}') ;
-// TODO: LIKELYURL: 
+FULLURL: 'http' 's'? '://' URL_BLOCK1+ URL_END1 ;
+LIKELYURL_WWW: 'www.' (URL_BLOCK2+ '.')+ ((LOWER_CASE_LETTER|UPPER_CASE_LETTER) (LOWER_CASE_LETTER|UPPER_CASE_LETTER) (LOWER_CASE_LETTER|UPPER_CASE_LETTER)? (LOWER_CASE_LETTER|UPPER_CASE_LETTER)?) ;
+LIKELYURL_COM: ((URL_BLOCK3+ '.')+ ('com'|'net'|'org'|'edu'|'name'|'info')) ('/' URL_END2+ URL_END3)? ;
+
+// Email addresses
+// TODO: EMAIL:
+
+//
+// TODO: SGML, HTML tags
+//
 
 // punctuation
 EOS: PUNCTUATION+ ;
@@ -71,3 +79,9 @@ fragment TWO_TO_FOUR_DIGITS: DIGIT DIGIT DIGIT? DIGIT?;
 fragment ONE_TO_FOUR_DIGITS: DIGIT DIGIT? DIGIT? DIGIT?;
 fragment PUNCTUATION: '.'|'?'|'!'|';'|',';
 fragment FILENAME_EXT:  'bat'|'bmp'|'c'|'class'|'cgi'|'cpp'|'dll'|'doc'|'docx'|'exe'|'gif'|'gz'|'h'|'htm'|'html'|'jar'|'java'|'jpeg'|'jpg'|'mov'|'mp3'|'pdf'|'php'|'pl'|'png'|'ppt'|'pptx'|'ps'|'py'|'scala'|'sql'|'tar'|'tgz'|'txt'|'wav'|'xml'|'zip';
+fragment URL_BLOCK1: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}');
+fragment URL_BLOCK2: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'.'|','|'!'|'?'|'('|')'|'{'|'}');
+fragment URL_BLOCK3: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'`'|'\''|'<'|'>'|'|'|'.'|','|'!'|'?'|'-'|'_'|'$'|'('|')'|'{'|'}');
+fragment URL_END1:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'|'-'|'.'|'!'|'?'|',');
+fragment URL_END2:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')');
+fragment URL_END3:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'.'|'!'|'?'|','|'-'|'('|')'|'{'|'}');

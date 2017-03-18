@@ -45,8 +45,14 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents = tok("http://google.com is Google's home page")
     sents(0).size should be (6)
 
+    sents = tok("so is www.google.com and google.com")
+    sents(0).size should be (5)
+
     sents = tok("won't isn't hadn't")
     sents(0).size should be (6)
+
+    sents = tok("IBM is Co. not Ltd.")
+    sents(0).size should be (5)
   }
 
   def tok(s:String):Array[Sentence] = {
