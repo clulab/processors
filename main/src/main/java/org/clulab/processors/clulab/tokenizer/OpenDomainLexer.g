@@ -49,7 +49,7 @@ LIKELYURL_WWW: 'www.' (URL_BLOCK2+ '.')+ ((LOWER_CASE_LETTER|UPPER_CASE_LETTER) 
 LIKELYURL_COM: ((URL_BLOCK3+ '.')+ ('com'|'net'|'org'|'edu'|'name'|'info')) ('/' URL_END2+ URL_END3)? ;
 
 // Email addresses
-// TODO: EMAIL:
+EMAIL: ('&lt;'|'<')? EMAIL_USER '@' (EMAIL_DOMAIN '.')* EMAIL_DOMAIN ('&gt;'|'>')? ;
 
 //
 // TODO: SGML, HTML tags
@@ -85,3 +85,5 @@ fragment URL_BLOCK3: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'`'|'\''|'<'|'>'|'|'|'.'|','|
 fragment URL_END1:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'|'-'|'.'|'!'|'?'|',');
 fragment URL_END2:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')');
 fragment URL_END3:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'.'|'!'|'?'|','|'-'|'('|')'|'{'|'}');
+fragment EMAIL_USER: (('a'..'z')|('A'..'Z')|('0'..'9')) ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'|'\u00A0')* ;
+fragment EMAIL_DOMAIN: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'|'.'|'\u00A0'|',')+ ;
