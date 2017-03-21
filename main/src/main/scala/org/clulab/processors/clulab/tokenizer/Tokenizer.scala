@@ -1,10 +1,15 @@
 package org.clulab.processors.clulab.tokenizer
 
+import java.io.{BufferedReader, InputStreamReader}
+import java.util.zip.GZIPInputStream
+
 import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream}
 import org.clulab.processors.Sentence
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import Tokenizer._
+
+import scala.util.matching.Regex
 
 /**
   *
@@ -106,10 +111,36 @@ class Tokenizer {
   def isEndOfSentenceAbbreviation(tokens:Array[RawToken], offset:Int):Boolean = false // TODO: implement me
 }
 
-case class RawToken(val text:String, val startOffset:Int, val endOffset:Int)
+case class RawToken(text:String, startOffset:Int, endOffset:Int)
 
 object Tokenizer {
-  val EOS = """^[\.!\?]+$""".r
+  val EOS: Regex = """^[\.!\?]+$""".r
+
+  val IS_ENGLISH_ABBREVIATION: Regex = loadAbbreviations("org/clulab/processors/clulab/tokenizer/english.abbreviations")
+
+  /** Reads all abbreviations and converts them into a single regex for efficiency */
+  def loadAbbreviations(rn:String): Regex = {
+    val is = Tokenizer.getClass.getClassLoader.getResourceAsStream(rn)
+    assert(is != null, s"Failed to find resource $rn in the classpath!")
+    val reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(is)))
+    val regex = new StringBuilder
+
+    var done = false
+    var first = true
+    while(! done) {
+      val line = reader.readLine()
+      if(line == null) {
+        done = true
+      } else if(! line.startsWith("#")) { // skip comments
+        if(! first) regex.append("|")
+
+        first = false
+      }
+    }
+
+    reader.close()
+    regex.toString.r
+  }
 
   def tokenize(text:String):Array[Sentence] = {
     val tokenizer = new Tokenizer
