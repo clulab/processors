@@ -31,6 +31,7 @@ NUMBER: ('-'|'+')? NUM;
 FRACTION: ONE_TO_FOUR_DIGITS ('/' | '\u2044') ONE_TO_FOUR_DIGITS;
 
 // some other token
+// note that, unlike CoreNLP, we do not hard code abbreviations here. They are handled in the Tokenizer class.
 WORD: ALPHANUM+ (('.'|'!'|'?'|'-'|'_'|'\'') ALPHANUM+ )* ;
 
 // Twitter user names and hashtags
@@ -51,9 +52,11 @@ LIKELYURL_COM: ((URL_BLOCK3+ '.')+ ('com'|'net'|'org'|'edu'|'name'|'info')) ('/'
 // Email addresses
 EMAIL: ('&lt;'|'<')? EMAIL_USER '@' (EMAIL_DOMAIN '.')* EMAIL_DOMAIN ('&gt;'|'>')? ;
 
-//
-// TODO: SGML, HTML tags
-//
+// SGML tags
+SGML: '<' '/'? ~('<'|'>'|'.'|','|'!'|'?'|'|'|'('|')'|'{'|'}')+ '>' ;
+
+// HTML characters
+HTML_CODE: '&' (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? ';' ;
 
 // punctuation
 EOS: PUNCTUATION+ ;
