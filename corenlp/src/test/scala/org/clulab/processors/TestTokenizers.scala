@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 3/21/17
   */
 class TestTokenizers extends FlatSpec with Matchers {
-  val shallow = new ShallowNLPProcessor
+  val shallow = new ShallowNLPProcessor(internStrings = false)
   val clu = new OpenDomainEnglishTokenizer
 
   "tokenizers" should "have similar outputs" in {
