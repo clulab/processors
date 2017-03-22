@@ -78,6 +78,14 @@ class Tokenizer(lexer:TokenizerLexer, abbreviations:Regex, sentStarts:Regex) {
       tokens += RawToken("not", raw.startOffset + raw.text.length - 3, raw.endOffset)
       return tokens
     }
+    // other words ending with "'m"
+    if("""'[mM]$""".r.findFirstIn(raw.text).isDefined) {
+      val tokens = new ListBuffer[RawToken]
+      tokens += RawToken(raw.text.substring(0, raw.text.length - 2), raw.startOffset, raw.endOffset - 2)
+      tokens += RawToken("am", raw.startOffset + raw.text.length - 2, raw.endOffset)
+      return tokens
+    }
+    // TODO: how to handle words ending with "'d"?
 
     List(raw)
   }
@@ -92,6 +100,11 @@ class Tokenizer(lexer:TokenizerLexer, abbreviations:Regex, sentStarts:Regex) {
     for(i <- tokens.indices) {
       val crt = tokens(i)
 
+      //
+      // we handle end-of-sentence markers (periods, etc.) here
+      // this includes detecting if a period belongs to the previous token (if it's an abbreviation)
+      // and understanding if this token actually marks the end of a sentence
+      //
       if(EOS.findFirstIn(crt.text).isDefined) {
         // found a token that normally indicates end of sentence
 
@@ -102,12 +115,13 @@ class Tokenizer(lexer:TokenizerLexer, abbreviations:Regex, sentStarts:Regex) {
         if(i > 0) prev = Some(tokens(i - 1))
 
         var isEos = true
-        if(crt.text == "." && prev.isDefined && isAbbreviation(prev.get.text) && crt.startOffset == endOffsets.last) {
+        if(crt.text == "." && prev.isDefined && isAbbreviation(prev.get.text) && crt.startOffset == prev.get.endOffset) {
           // found a period that should be attached to the previous abbreviation
           endOffsets(endOffsets.size - 1) = crt.endOffset
           words(words.size - 1) = words.last + crt.text
 
-          // we may still have an end of sentence here
+          // this is not an end of sentence if the next token does NOT look like the start of a sentence
+          // TODO: maybe this should be handled with a binary classifier instead?
           if(next.isDefined && ! isSentStart(next.get.text)) {
             isEos = false
           }

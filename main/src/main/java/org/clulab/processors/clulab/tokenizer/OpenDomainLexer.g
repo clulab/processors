@@ -58,7 +58,10 @@ SGML: '<' '/'? ~('<'|'>'|'.'|','|'!'|'?'|'|'|'('|')'|'{'|'}')+ '>' ;
 // HTML characters
 HTML_CODE: '&' (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? ';' ;
 
-// TODO: smileys, phone numbers
+// Common smileys
+SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('('|')'|'D'|'P'|'d'|'p'|'O'|'\\'|'{'|'@'|'|'|'['|']') ;
+
+// TODO: phone numbers
 
 // punctuation
 EOS: PUNCTUATION+ ;

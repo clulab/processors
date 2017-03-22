@@ -62,6 +62,9 @@ class TestTokenizer extends FlatSpec with Matchers {
 
     sents = tok("A.M. Bancorp. A.T.B.") // known abbreviations
     sents(0).size should be (3)
+
+    sents = tok("I'm happy :) not sad :(.")
+    sents(0).size should be (8)
   }
 
   def tok(s:String):Array[Sentence] = {
