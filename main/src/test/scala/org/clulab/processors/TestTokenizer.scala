@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clulab.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
+import org.clulab.processors.clulab.tokenizer.OpenDomainEnglishTokenizer
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -17,7 +17,7 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents(0).size should be (7)
 
     sents = tok("first sentence. second sentence.")
-    sents.size should be (2)
+    sents.length should be (2)
 
     sents = tok("today is 12/25/2017")
     sents(0).size should be (3)
@@ -65,6 +65,8 @@ class TestTokenizer extends FlatSpec with Matchers {
 
     sents = tok("I'm happy :) not sad :(.")
     sents(0).size should be (8)
+
+    
   }
 
   def tok(s:String):Array[Sentence] = {
@@ -72,7 +74,7 @@ class TestTokenizer extends FlatSpec with Matchers {
     val t = new OpenDomainEnglishTokenizer
     val sents = t.tokenize(s)
     for(i <- sents.indices) {
-      println(s"\tSentence #${i}: " + sents(i).words.mkString(", "))
+      println(s"\tSentence #$i: " + sents(i).words.mkString(", "))
     }
     sents
   }

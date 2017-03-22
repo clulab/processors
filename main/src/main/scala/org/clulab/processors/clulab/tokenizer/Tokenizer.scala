@@ -11,6 +11,7 @@ import scala.util.matching.Regex
 /** English open domain tokenizer */
 class OpenDomainEnglishTokenizer extends Tokenizer(
   lexer = new OpenDomainEnglishLexer,
+  normalizer = new EnglishNormalizer,
   abbreviations = IS_ENGLISH_ABBREVIATION,
   sentStarts = IS_ENGLISH_SENTSTART)
 
@@ -19,7 +20,12 @@ class OpenDomainEnglishTokenizer extends Tokenizer(
   * Author: mihais
   * Date: 3/15/17
   */
-class Tokenizer(lexer:TokenizerLexer, abbreviations:Regex, sentStarts:Regex) {
+class Tokenizer(
+  lexer:TokenizerLexer,
+  normalizer:Normalizer,
+  abbreviations:Regex,
+  sentStarts:Regex) {
+  
   /** Tokenization and sentence splitting */
   def tokenize(text:String):Array[Sentence] = {
     val tokens = lexer.mkLexer(text)
@@ -40,7 +46,7 @@ class Tokenizer(lexer:TokenizerLexer, abbreviations:Regex, sentStarts:Regex) {
         val endOffset = t.getStopIndex + 1 // antlr is inclusive, we are exclusive
 
         // add to raw stream
-        rawTokens ++= normalizeToken(RawToken(word, startOffset, endOffset))
+        rawTokens ++= normalizer.normalizeToken(RawToken(word, startOffset, endOffset))
 
         // advance to next token in stream
         tokens.consume()
@@ -51,46 +57,10 @@ class Tokenizer(lexer:TokenizerLexer, abbreviations:Regex, sentStarts:Regex) {
     sentenceSplitting(rawTokens.toArray)
   }
 
-  /** Local normalization of a given token */
-  def normalizeToken(raw:RawToken): Seq[RawToken] = {
-    //
-    // Unlike CoreNLP, we allow single quotes inside words
-    // We must separate important linguistic constructs here
-    //
-    // genitive
-    if("""'[sS]$""".r.findFirstIn(raw.text).isDefined) {
-      val tokens = new ListBuffer[RawToken]
-      tokens += RawToken(raw.text.substring(0, raw.text.length - 2), raw.startOffset, raw.endOffset - 2)
-      tokens += RawToken(raw.text.substring(raw.text.length - 2), raw.startOffset + raw.text.length - 2, raw.endOffset)
-      return tokens
-    }
-    // "won't"
-    if("""^[wW][oO][nN]'[tT]$""".r.findFirstIn(raw.text).isDefined) {
-      val tokens = new ListBuffer[RawToken]
-      tokens += RawToken("will", raw.startOffset, 2)
-      tokens += RawToken("not", raw.startOffset + 2, raw.endOffset)
-      return tokens
-    }
-    // other words ending with "n't"
-    if("""[nN]'[tT]$""".r.findFirstIn(raw.text).isDefined) {
-      val tokens = new ListBuffer[RawToken]
-      tokens += RawToken(raw.text.substring(0, raw.text.length - 3), raw.startOffset, raw.endOffset - 3)
-      tokens += RawToken("not", raw.startOffset + raw.text.length - 3, raw.endOffset)
-      return tokens
-    }
-    // other words ending with "'m"
-    if("""'[mM]$""".r.findFirstIn(raw.text).isDefined) {
-      val tokens = new ListBuffer[RawToken]
-      tokens += RawToken(raw.text.substring(0, raw.text.length - 2), raw.startOffset, raw.endOffset - 2)
-      tokens += RawToken("am", raw.startOffset + raw.text.length - 2, raw.endOffset)
-      return tokens
-    }
-    // TODO: how to handle words ending with "'d"?
-
-    List(raw)
-  }
-
-  /** Sentence splitting over a stream of tokens */
+  /**
+    * Sentence splitting over a stream of tokens
+    * This includes detection of abbreviations as well
+    **/
   def sentenceSplitting(tokens:Array[RawToken]):Array[Sentence] = {
     val sentences = new ArrayBuffer[Sentence]()
     var words = new ArrayBuffer[String]()
@@ -167,7 +137,7 @@ class Tokenizer(lexer:TokenizerLexer, abbreviations:Regex, sentStarts:Regex) {
 case class RawToken(text:String, startOffset:Int, endOffset:Int)
 
 object Tokenizer {
-  val EOS: Regex = """^[\.!\?]+$""".r
+  val EOS: Regex = """^[\.!\?\s]+$""".r
 
   val IS_ENGLISH_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clulab/tokenizer/english.abbreviations")
   val IS_ENGLISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clulab/tokenizer/english.sentstarts")
