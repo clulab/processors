@@ -1,5 +1,6 @@
 package org.clulab.processors
 
+import org.clulab.processors.clulab.CluProcessor
 import org.clulab.processors.clulab.tokenizer.OpenDomainEnglishTokenizer
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest.{FlatSpec, Matchers}
@@ -11,7 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
   */
 class TestTokenizers extends FlatSpec with Matchers {
   val shallow = new ShallowNLPProcessor(internStrings = false)
-  val clu = new OpenDomainEnglishTokenizer
+  val clu = new CluProcessor(internStrings = false)
 
   "tokenizers" should "have similar outputs" in {
     val text =
@@ -57,16 +58,20 @@ class TestTokenizers extends FlatSpec with Matchers {
       """.stripMargin
 
     var start = System.currentTimeMillis()
-    val cluSents = clu.tokenize(text)
+    val cluDoc = clu.mkDocument(text, keepText = false)
     var end = System.currentTimeMillis()
+    val cluTime = end - start
     println(s"Time: ${end - start} ms.")
-    printSents(cluSents)
+    printSents(cluDoc.sentences)
 
     start = System.currentTimeMillis()
     val coreDoc = shallow.mkDocument(text, keepText = false)
     end = System.currentTimeMillis()
     println(s"Time: ${end - start} ms.")
+    val coreTime = end - start
     printSents(coreDoc.sentences)
+
+    (coreTime > cluTime) should be (true)
   }
 
   def printSents(sents:Array[Sentence]): Unit = {

@@ -31,7 +31,8 @@ NUMBER: ('-'|'+')? NUM;
 FRACTION: ONE_TO_FOUR_DIGITS ('/' | '\u2044') ONE_TO_FOUR_DIGITS;
 
 // some other token
-// note that, unlike CoreNLP, we do not hard code abbreviations here. They are handled in the Tokenizer class.
+// note that, unlike CoreNLP, we do not hard code abbreviations here.
+//   Abbreviations are handled in the org.clulab.processors.clulab.tokenizer.Tokenizer class.
 WORD: ALPHANUM+ (('.'|'!'|'?'|'-'|'_'|'\'') ALPHANUM+ )* ;
 
 // Twitter user names and hashtags
