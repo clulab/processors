@@ -27,7 +27,7 @@ class Tokenizer(
   sentStarts:Regex) {
   
   /** Tokenization and sentence splitting */
-  def tokenize(text:String):Array[Sentence] = {
+  def tokenize(text:String, sentenceSplit:Boolean = true):Array[Sentence] = {
     val tokens = lexer.mkLexer(text)
     var done = false
 
@@ -54,14 +54,14 @@ class Tokenizer(
     }
 
     // sentence splitting, including detection of abbreviations
-    sentenceSplitting(rawTokens.toArray)
+    sentenceSplitting(rawTokens.toArray, sentenceSplit)
   }
 
   /**
     * Sentence splitting over a stream of tokens
     * This includes detection of abbreviations as well
     **/
-  def sentenceSplitting(tokens:Array[RawToken]):Array[Sentence] = {
+  def sentenceSplitting(tokens:Array[RawToken], sentenceSplit:Boolean):Array[Sentence] = {
     val sentences = new ArrayBuffer[Sentence]()
     var words = new ArrayBuffer[String]()
     var startOffsets = new ArrayBuffer[Int]()
@@ -84,7 +84,7 @@ class Tokenizer(
         var prev:Option[RawToken] = None
         if(i > 0) prev = Some(tokens(i - 1))
 
-        var isEos = true
+        var isEos = sentenceSplit
         if(crt.text == "." && prev.isDefined && isAbbreviation(prev.get.text) && crt.startOffset == prev.get.endOffset) {
           // found a period that should be attached to the previous abbreviation
           endOffsets(endOffsets.size - 1) = crt.endOffset
@@ -92,7 +92,7 @@ class Tokenizer(
 
           // this is not an end of sentence if the next token does NOT look like the start of a sentence
           // TODO: maybe this should be handled with a binary classifier instead?
-          if(next.isDefined && ! isSentStart(next.get.text)) {
+          if(isEos && next.isDefined && ! isSentStart(next.get.text)) {
             isEos = false
           }
         } else {
