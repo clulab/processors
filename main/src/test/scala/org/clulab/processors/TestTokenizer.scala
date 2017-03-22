@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clulab.tokenizer.Tokenizer
+import org.clulab.processors.clulab.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -66,7 +66,8 @@ class TestTokenizer extends FlatSpec with Matchers {
 
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
-    val sents = Tokenizer.tokenize(s)
+    val t = new OpenDomainEnglishTokenizer
+    val sents = t.tokenize(s)
     for(i <- sents.indices) {
       println(s"\tSentence #${i}: " + sents(i).words.mkString(", "))
     }
