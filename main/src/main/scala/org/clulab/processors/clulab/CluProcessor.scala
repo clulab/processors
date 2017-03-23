@@ -1,11 +1,6 @@
 package org.clulab.processors.clulab
 
-import java.util
-
-import edu.stanford.nlp.ling.CoreLabel
-import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.processors.clulab.tokenizer.OpenDomainEnglishTokenizer
-import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.{Document, Processor, Sentence}
 
 import scala.collection.mutable
@@ -43,35 +38,27 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
                            charactersBetweenTokens:Int = 1): Document = {
     var charOffset = 0
     var sents = new ArrayBuffer[Sentence]()
+    val text = new StringBuilder
     for(sentence <- sentences) {
-      val crtTokens:util.List[CoreLabel] = new util.ArrayList[CoreLabel]()
-      for (w <- sentence) {
-        val crtTok = new CoreLabel()
-        crtTok.setWord(w)
-        crtTok.setValue(w)
-        crtTok.setBeginPosition(charOffset)
-        charOffset += w.length
-        crtTok.setEndPosition(charOffset)
-        crtTok.setIndex(tokOffset + 1) // Stanford counts tokens starting from 1
-        crtTok.setSentIndex(sentOffset) // Stanford counts sentences starting from 0...
-        crtTokens.add(crtTok)
-        tokOffset += 1
+      val startOffsets = new ArrayBuffer[Int]()
+      val endOffsets = new ArrayBuffer[Int]()
+      for(word <- sentence) {
+        startOffsets += charOffset
+        charOffset += word.length
+        endOffsets += charOffset
         charOffset += charactersBetweenTokens
       }
-
-      val crtSent = new Annotation(sentenceTexts(sentOffset))
-      crtSent.set(classOf[TokensAnnotation], crtTokens)
-      crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
-      tokenOffset += crtTokens.size()
-      crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
-
-      sentencesAnnotation.add(crtSent)
-      docSents(sentOffset) = mkSentence(crtSent)
-      sentOffset += 1
+      sents += new Sentence(sentence.toArray, startOffsets.toArray, endOffsets.toArray)
+      charOffset += charactersBetweenSentences
+      if(keepText) {
+        text.append(sentence.mkString(mkSep(charactersBetweenTokens)))
+        text.append(mkSep(charactersBetweenSentences))
+      }
     }
 
     val doc = new Document(sents.toArray)
-    if(keepText) doc.text = Some(
+    if(keepText) doc.text = Some(text.toString)
+    doc
   }
 
   private def mkSep(size:Int):String = {
