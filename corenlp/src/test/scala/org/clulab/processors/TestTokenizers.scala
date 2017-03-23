@@ -8,6 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
   *
   * User: mihais
   * Date: 3/21/17
+  * Last Modified: Modify timing test to try and get the test to pass.
   */
 class TestTokenizers extends FlatSpec with Matchers {
   val shallow = new ShallowNLPProcessor(internStrings = false)
@@ -60,14 +61,14 @@ class TestTokenizers extends FlatSpec with Matchers {
     val cluDoc = clu.mkDocument(text, keepText = false)
     var end = System.currentTimeMillis()
     val cluTime = end - start
-    println(s"Time: ${end - start} ms.")
+    println(s"CLU Time: ${cluTime} ms.")
     printSents(cluDoc.sentences)
 
     start = System.currentTimeMillis()
     val coreDoc = shallow.mkDocument(text, keepText = false)
     end = System.currentTimeMillis()
-    println(s"Time: ${end - start} ms.")
     val coreTime = end - start
+    println(s"Core Time: ${coreTime} ms.")
     printSents(coreDoc.sentences)
 
     println("coreTime = " + coreTime)
