@@ -11,9 +11,10 @@ import jline.console.history.FileHistory
 import org.clulab.processors.examples.ProcessorExample
 
 /**
- * A simple interactive shell
- * User: mihais
- * Date: 3/13/14
+  * A simple interactive shell
+  * User: mihais
+  * Date: 3/13/14
+  * Last Modified: Fix compiler warning: remove redundant match case clause.
  */
 object ProcessorShell extends App {
 
@@ -62,12 +63,6 @@ object ProcessorShell extends App {
         reader.setPrompt("(fast)>>> ")
         println("Preparing FastNLPProcessor...\n")
         proc = fast
-        proc.annotate("initialize me!")
-
-      case ":fastbio" =>
-        reader.setPrompt("(fastbio)>>> ")
-        println("Preparing FastBioNLPProcessor...\n")
-        proc = fastbio
         proc.annotate("initialize me!")
 
       case ":bio" =>
