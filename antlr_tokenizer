@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#
+# antlr4 is simply a script that contains this: 
+#  java -jar <full path to your antlr-4.x-complete.jar file>
+#
+
+antlr4 main/src/main/java/org/clulab/processors/clulab/tokenizer/OpenDomainLexer.g

@@ -149,7 +149,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   }
 
   def arrayOrNone[T: ClassTag](b:ArrayBuffer[T]): Option[Array[T]] = {
-    if (b.size > 0) new Some[Array[T]](b.toArray)
+    if (b.nonEmpty) new Some[Array[T]](b.toArray)
     else None
   }
 
@@ -305,7 +305,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   def lemmatize(doc:Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
-    if (doc.sentences.head.tags == None)
+    if (doc.sentences.head.tags.isEmpty)
       throw new RuntimeException("ERROR: you have to run the POS tagger before lemmatization!")
 
     lemmatizer.annotate(annotation.get)
@@ -326,9 +326,9 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   def namedEntitySanityCheck(doc:Document):Option[Annotation] = {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return None
-    if (doc.sentences.head.tags == None)
+    if (doc.sentences.head.tags.isEmpty)
       throw new RuntimeException("ERROR: you have to run the POS tagger before NER!")
-    if (doc.sentences.head.lemmas == None)
+    if (doc.sentences.head.lemmas.isEmpty)
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
     annotation
   }
