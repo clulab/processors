@@ -18,6 +18,7 @@ class EnglishNormalizer extends Normalizer {
     //
     // Unlike CoreNLP, we allow single quotes inside words
     // We must separate important linguistic constructs here
+    // TODO: this is slow. This should be handled in the Antlr grammar
     //
     // genitive
     if("""'[sS]$""".r.findFirstIn(raw.text).isDefined) {

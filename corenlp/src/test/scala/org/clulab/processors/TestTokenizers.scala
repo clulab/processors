@@ -57,18 +57,19 @@ class TestTokenizers extends FlatSpec with Matchers {
         |
       """.stripMargin
 
+    clu.mkDocument("initialize me")
+    shallow.mkDocument("initialize me")
+
     var start = System.currentTimeMillis()
     val cluDoc = clu.mkDocument(text, keepText = false)
     var end = System.currentTimeMillis()
     val cluTime = end - start
-    println(s"CLU Time: ${cluTime} ms.")
     printSents(cluDoc.sentences)
 
     start = System.currentTimeMillis()
     val coreDoc = shallow.mkDocument(text, keepText = false)
     end = System.currentTimeMillis()
     val coreTime = end - start
-    println(s"Core Time: ${coreTime} ms.")
     printSents(coreDoc.sentences)
 
     println("coreTime = " + coreTime)
