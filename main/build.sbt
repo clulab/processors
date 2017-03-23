@@ -13,6 +13,7 @@ libraryDependencies ++= Seq(
   "log4j" % "log4j" % "1.2.17", // this is used by our maltparser clone; otherwise not in use
   "de.bwaldvogel" % "liblinear" % "1.94",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
+  "org.antlr" % "antlr4-runtime" % "4.6",
   "org.yaml" % "snakeyaml" % "1.14",
   "jline" % "jline" % "2.12.1",
   "commons-io" % "commons-io" % "2.5"
