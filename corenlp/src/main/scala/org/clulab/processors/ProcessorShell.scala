@@ -38,7 +38,7 @@ object ProcessorShell extends App {
   lazy val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
   lazy val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the faster dependency parser
   lazy val bio: Processor = new BioNLPProcessor(removeFigTabReferences = true)
-  lazy val fastbio: Processor = new FastBioNLPProcessor()
+  lazy val fastbio: Processor = new FastBioNLPProcessor(removeFigTabReferences = true)
 
   var proc = core
   reader.setPrompt("(core)>>> ")
@@ -74,6 +74,12 @@ object ProcessorShell extends App {
         reader.setPrompt("(bio)>>> ")
         println("Preparing BioNLPProcessor...\n")
         proc = bio
+        proc.annotate("initialize me!")
+
+      case ":fastbio" =>
+        reader.setPrompt("(fastbio)>>> ")
+        println("Preparing FastBioNLPProcessor...\n")
+        proc = fastbio
         proc.annotate("initialize me!")
 
       case ":exit" | null =>
