@@ -1,0 +1,4 @@
+- name: "lingüística"
+  label: test
+  type: token
+  pattern: test
