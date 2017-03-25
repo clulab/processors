@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
   "de.bwaldvogel" % "liblinear" % "1.94",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
   "org.antlr" % "antlr4-runtime" % "4.6",
+  "cc.mallet" % "mallet" % "2.0.8",
   "org.yaml" % "snakeyaml" % "1.14",
   "jline" % "jline" % "2.12.1",
   "commons-io" % "commons-io" % "2.5"
