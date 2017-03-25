@@ -1,10 +1,10 @@
 package org.clulab.processors.clulab.sequences
 
-import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct.Counter
+import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -14,9 +14,9 @@ import scala.collection.mutable.ArrayBuffer
   */
 class PartOfSpeechTagger extends SequenceTagger[String, String] {
 
-  def featureExtractor(sentence: Sentence, offset:Int):Counter[String] = {
+  def featureExtractor(sentence: Sentence, offset:Int):Set[String] = {
     val words = sentence.words
-    val c = new Counter[String]()
+    val c = new mutable.HashSet[String]()
 
     c += words(offset)
 
@@ -25,7 +25,7 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
 
     // TODO: add more features here
 
-    c
+    c.toSet
   }
 
   def labelExtractor(sentence:Sentence): Array[String] = {
@@ -47,6 +47,8 @@ object PartOfSpeechTagger {
       tagger.train(List(doc))
     }
   }
+
+  private def in(s:String):String = Processor.internString(s)
 
   def twoColumnToDocument(fn:String): Document = {
     val source = io.Source.fromFile(fn)
@@ -76,7 +78,7 @@ object PartOfSpeechTagger {
         if (bits.length != 2)
           throw new RuntimeException(s"ERROR: invalid line [$l]!")
         words += bits(0)
-        tags += bits(1)
+        tags += in(bits(1))
         startOffsets += charOffset
         charOffset = bits(0).length
         endOffsets += charOffset
