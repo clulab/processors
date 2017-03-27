@@ -13,7 +13,7 @@ import org.slf4j.{Logger, LoggerFactory}
 abstract class SequenceTagger[L, F] {
   def verbose = true
 
-  def train(docs:Seq[Document]) {
+  def train(docs:Iterator[Document]) {
     for(doc <- docs; sentence <- doc.sentences) {
       // labels and features for one sentence
       val labels = labelExtractor(sentence)
