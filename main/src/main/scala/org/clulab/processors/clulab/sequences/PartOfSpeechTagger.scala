@@ -44,7 +44,7 @@ object PartOfSpeechTagger {
     if(props.containsKey("train")) {
       val doc = twoColumnToDocument(props.getProperty("train"))
       val tagger = new PartOfSpeechTagger
-      tagger.train(List(doc))
+      tagger.train(List(doc).iterator)
     }
   }
 
