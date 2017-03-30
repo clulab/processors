@@ -39,7 +39,7 @@ abstract class SequenceTagger[L, F] {
       }
       pw.println()
     }
-    logger.debug(s"Saved training file ${f.getAbsolutePath}")
+    logger.info(s"Saved training file ${f.getAbsolutePath}")
     pw.close()
 
     // actual CRF training
@@ -47,7 +47,7 @@ abstract class SequenceTagger[L, F] {
 
     // cleanup
     f.delete()
-    logger.debug(s"Deleted temporary training file ${f.getAbsolutePath}")
+    logger.info(s"Deleted temporary training file ${f.getAbsolutePath}")
   }
 
   def trainCRF(trainFile:File):Boolean = {
@@ -63,7 +63,7 @@ abstract class SequenceTagger[L, F] {
       val targets = pipe.getTargetAlphabet
       val buf = new StringBuilder("Training for labels:")
       for (i <- 0 until targets.size) buf.append(" " + targets.lookupObject(i).toString)
-      logger.debug(buf.toString)
+      logger.info(buf.toString)
     }
 
     // initialize the CRF
@@ -74,7 +74,7 @@ abstract class SequenceTagger[L, F] {
       crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT)
     }
     crf.getState(startName).setInitialWeight(0.0)
-    logger.debug(s"Training on ${trainingData.size()} instances.")
+    logger.info(s"Training on ${trainingData.size()} instances.")
 
     // the actual training
     val crft = new CRFTrainerByThreadedLabelLikelihood(crf, numThreads)
@@ -84,7 +84,7 @@ abstract class SequenceTagger[L, F] {
     // these 2 lines correspond to the "some-dense" SimpleTagger option
     var converged = false
     for (i <- 1 to iterations if !converged) {
-      logger.debug(s"Training iteration #$i...")
+      logger.info(s"Training iteration #$i...")
       converged = crft.train(trainingData, 1)
     }
     crft.shutdown()
