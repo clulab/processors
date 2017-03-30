@@ -1,6 +1,6 @@
 package org.clulab.processors.clulab.sequences
 
-import java.io.{File, FileReader, FileWriter, PrintWriter}
+import java.io._
 import java.util.regex.Pattern
 
 import cc.mallet.pipe.Pipe
@@ -8,6 +8,7 @@ import cc.mallet.types.{Alphabet, Instance, InstanceList, LabelAlphabet}
 import org.clulab.processors.{Document, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 import SequenceTagger._
+import cc.mallet.fst.{CRF, CRFTrainerByThreadedLabelLikelihood, Transducer}
 import cc.mallet.fst.SimpleTagger._
 import cc.mallet.pipe.iterator.LineGroupIterator
 
@@ -18,6 +19,8 @@ import cc.mallet.pipe.iterator.LineGroupIterator
   */
 abstract class SequenceTagger[L, F] {
   def verbose = true
+
+  var crfModel:Option[CRF] = None
 
   def train(docs:Iterator[Document]) {
 
@@ -47,7 +50,7 @@ abstract class SequenceTagger[L, F] {
     logger.debug(s"Deleted temporary training file ${f.getAbsolutePath}")
   }
 
-  def trainCRF(trainFile:File) {
+  def trainCRF(trainFile:File):Boolean = {
     // read training data from file
     val pipe = new SimpleTaggerSentence2FeatureVectorSequence
     pipe.getTargetAlphabet.lookupIndex(defaultLabel)
@@ -55,31 +58,42 @@ abstract class SequenceTagger[L, F] {
     val trainingData = new InstanceList(pipe)
     trainingData.addThruPipe(new LineGroupIterator(new FileReader(trainFile), Pattern.compile("^\\s*$"), true))
 
+    // some logging
+    if (pipe.isTargetProcessing) {
+      val targets = pipe.getTargetAlphabet
+      val buf = new StringBuilder("Training for labels:")
+      for (i <- 0 until targets.size) buf.append(" " + targets.lookupObject(i).toString)
+      logger.debug(buf.toString)
+    }
 
-    if (p.isTargetProcessing) {
-      val targets = p.getTargetAlphabet
-      val buf = new StringBuffer("Labels:")
-      var i = 0
-      while (i < targets.size) buf.append(" ").append(targets.lookupObject(i).toString) {
-        i += 1; i - 1
-      }
-      logger.info(buf.toString)
+    // initialize the CRF
+    val crf = new CRF(trainingData.getPipe, null.asInstanceOf[Pipe])
+    val startName = crf.addOrderNStates(trainingData, orders, null,
+      defaultLabel, forbiddenPattern, allowedPattern, fullyConnected)
+    for (i <- 0 until crf.numStates()) {
+      crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT)
     }
-    if (trainOption.value) {
-      crf = train(trainingData, testData, eval,
-        ordersOption.value, defaultOption.value,
-        forbiddenOption.value, allowedOption.value,
-        connectedOption.value, iterationsOption.value,
-        gaussianVarianceOption.value, crf)
-      if (modelOption.value != null) {
-        ObjectOutputStream s =
-          new ObjectOutputStream(new FileOutputStream(modelOption.value))
-        s.writeObject(crf)
-        s.close()
-      }
+    crf.getState(startName).setInitialWeight(0.0)
+    logger.debug(s"Training on ${trainingData.size()} instances.")
+
+    // the actual training
+    val crft = new CRFTrainerByThreadedLabelLikelihood(crf, numThreads)
+    crft.setGaussianPriorVariance(gaussianVariance)
+    crft.setUseSparseWeights(true)
+    crft.setUseSomeUnsupportedTrick(true)
+    // these 2 lines correspond to the "some-dense" SimpleTagger option
+    var converged = false
+    for (i <- 1 to iterations if !converged) {
+      logger.debug(s"Training iteration #$i...")
+      converged = crft.train(trainingData, 1)
     }
+    crft.shutdown()
+
+    // keep the model
+    crfModel = Some(crf)
+    true
   }
-
+  
   def classesOf(sentence: Sentence):Array[L] = {
     // TODO
     null
@@ -90,7 +104,15 @@ abstract class SequenceTagger[L, F] {
 
   /** Abstract method that extracts the training labels for a given sentence */
   def labelExtractor(sentence:Sentence): Array[L]
+
+  def save(fn:File) {
+    assert(crfModel.isDefined)
+    val os = new ObjectOutputStream(new FileOutputStream(fn))
+    os.writeObject(crfModel.get)
+    os.close()
+  }
 }
+
 
 class SentenceLabelsFeatures[L, F] (val labels: Array[L], val features:Array[Set[F]]) {
   override def toString: String = {
@@ -113,5 +135,23 @@ class ToFeatureVector extends Pipe(new Alphabet(), new LabelAlphabet())  {
 object SequenceTagger {
   val logger:Logger = LoggerFactory.getLogger(classOf[PartOfSpeechTagger])
 
+  //
+  // Default options taken from SimpleTagger
+  //
   val defaultLabel = "O"
+  // label1,label2 transition forbidden if it matches this
+  val forbiddenPattern = Pattern.compile("\\s")
+  // label1,label2 transition allowed only if it matches this
+  val allowedPattern = Pattern.compile(".*")
+  // list of label Markov orders (main and backoff)
+  val orders = Array(1)
+  // number of training iterations
+  val iterations = 500
+  // include all allowed transitions, even those not in training data
+  val fullyConnected = true
+  // the gaussian prior variance used for training
+  val gaussianVariance = 10.0
+  // how many threads to use during training
+  val numThreads = 2
+  
 }

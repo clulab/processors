@@ -1,5 +1,7 @@
 package org.clulab.processors.clulab.sequences
 
+import java.io.File
+
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -45,6 +47,10 @@ object PartOfSpeechTagger {
       val doc = twoColumnToDocument(props.getProperty("train"))
       val tagger = new PartOfSpeechTagger
       tagger.train(List(doc).iterator)
+
+      if(props.containsKey("model")) {
+        tagger.save(new File(props.getProperty("model")))
+      }
     }
   }
 
