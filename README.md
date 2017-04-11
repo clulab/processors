@@ -92,9 +92,9 @@ Most of the `processors` dependencies are captured in the build file. However, a
 https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html
 
 ## Installing external dependencies on Mac OS X via `homebrew`
+
 ```bash
-brew tap myedibleenso/nlp/svmlight
-brew tap myedibleenso/nlp/svmrank
+brew tap myedibleenso/nlp
 brew install svmlight svmrank
 ```
 
