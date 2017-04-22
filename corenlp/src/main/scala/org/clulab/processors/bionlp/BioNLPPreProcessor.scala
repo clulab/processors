@@ -10,9 +10,9 @@ import scala.collection.mutable
   * Preprocesses bio text, including Unicode normalization, and removing figure and table references
   * User: mihais
   * Date: 8/14/15
-  * Last Modified: Add logic to remove bibliographic references.
+  * Last Modified: Default to removing bibliographic references.
   */
-class BioNLPPreProcessor (removeFigTabReferences:Boolean, removeBibReferences:Boolean) {
+class BioNLPPreProcessor (removeFigTabReferences:Boolean, removeBibReferences:Boolean=true) {
   val unicodes = BioNLPPreProcessor.loadUnicodes
 
   def preprocess(origText:String):String = {
