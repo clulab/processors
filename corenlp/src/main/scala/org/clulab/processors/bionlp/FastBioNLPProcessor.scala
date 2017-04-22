@@ -22,13 +22,15 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
                            withContext:Boolean = true,
                            withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
                            maxSentenceLength:Int = 100,
-                           removeFigTabReferences:Boolean = true)
+                           removeFigTabReferences:Boolean = true,
+                           removeBibReferences:Boolean = true
+)
   extends FastNLPProcessor(internStrings, withChunks, useMalt = false, withDiscourse) {
 
   //lazy val banner = new BannerWrapper
   private lazy val specialTokens = KBLoader.loadSpecialTokens
   private lazy val postProcessor = new BioNLPTokenizerPostProcessor(specialTokens)
-  private lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences)
+  private lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences, removeBibReferences)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
 
