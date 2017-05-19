@@ -50,7 +50,7 @@ abstract class SequenceTagger[L, F] {
     logger.info(s"Deleted temporary training file ${f.getAbsolutePath}")
   }
 
-  def trainCRF(trainFile:File):Boolean = {
+  private def trainCRF(trainFile:File):Boolean = {
     // read training data from file
     val pipe = new SimpleTaggerSentence2FeatureVectorSequence
     pipe.getTargetAlphabet.lookupIndex(defaultLabel)
@@ -99,7 +99,7 @@ abstract class SequenceTagger[L, F] {
     null
   }
 
-  /** Abstract method that generates the features for a given sentence */
+  /** Abstract method that generates the features for the word at the position offset in the given sentence */
   def featureExtractor(sentence: Sentence, offset:Int):Set[F]
 
   /** Abstract method that extracts the training labels for a given sentence */
