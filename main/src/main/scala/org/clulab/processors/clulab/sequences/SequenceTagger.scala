@@ -1,16 +1,19 @@
 package org.clulab.processors.clulab.sequences
 
 import java.io._
+import java.util
 import java.util.regex.Pattern
 
 import cc.mallet.pipe.Pipe
-import cc.mallet.types.{Alphabet, Instance, InstanceList, LabelAlphabet}
+import cc.mallet.types._
 import org.clulab.processors.{Document, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 import SequenceTagger._
 import cc.mallet.fst.{CRF, CRFTrainerByThreadedLabelLikelihood, Transducer}
 import cc.mallet.fst.SimpleTagger._
 import cc.mallet.pipe.iterator.LineGroupIterator
+
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Generic sequence tagger over words implemented using the mallet CRF
@@ -21,6 +24,7 @@ abstract class SequenceTagger[L, F] {
   def verbose = true
 
   var crfModel:Option[CRF] = None
+  var testPipe:Option[ToFeatureVectorPipe[F]] = None
 
   def train(docs:Iterator[Document]) {
 
@@ -91,12 +95,34 @@ abstract class SequenceTagger[L, F] {
 
     // keep the model
     crfModel = Some(crf)
+    testPipe = Some(new ToFeatureVectorPipe[F](crf.getInputAlphabet, crf.getOutputAlphabet))
+    testPipe.get.setTargetProcessing(false)
     true
   }
   
   def classesOf(sentence: Sentence):Array[L] = {
-    // TODO
-    null
+    assert(crfModel.isDefined)
+    assert(testPipe.isDefined)
+
+    // convert the sentence into 1 mallet Instance
+    val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
+    val instance = new Instance(features, null, "test sentence", null)
+    val instances = new util.ArrayList[Instance]()
+    instances.add(instance)
+
+    // add the Instance corresponding to this sentence to the testData
+    val testData = new InstanceList(testPipe.get)
+    testData.addThruPipe(instances.iterator)
+
+    // run the CRF on this Instance
+    val input = testData.get(0).getData.asInstanceOf[Sequence[_]]
+    val output = crfModel.get.transduce(input)
+    assert(output.size == sentence.size)
+    val labels = new ArrayBuffer[L]()
+    for(i <- 0 until output.size) {
+      labels += output.get(i).asInstanceOf[L]
+    }
+    labels.toArray
   }
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
@@ -111,23 +137,27 @@ abstract class SequenceTagger[L, F] {
     os.writeObject(crfModel.get)
     os.close()
   }
-}
 
-
-class SentenceLabelsFeatures[L, F] (val labels: Array[L], val features:Array[Set[F]]) {
-  override def toString: String = {
-    val b = new StringBuilder
-    b.append(labels.mkString(", "))
-    b.append("\n")
-    b.append(features.mkString(", "))
-    b.append("\n")
-    b.toString()
+  def load(fn:File) {
+    val s = new ObjectInputStream(new FileInputStream(fn))
+    val model = s.readObject.asInstanceOf[CRF]
+    s.close()
+    crfModel = Some(model)
+    testPipe = Some(new ToFeatureVectorPipe(model.getInputAlphabet, model.getOutputAlphabet))
+    testPipe.get.setTargetProcessing(false)
   }
 }
 
-class ToFeatureVector extends Pipe(new Alphabet(), new LabelAlphabet())  {
+
+class ToFeatureVectorPipe[F](featureAlphabet:Alphabet, labelAlphabet:Alphabet) extends Pipe(featureAlphabet, labelAlphabet)  {
   override def pipe(carrier: Instance):Instance = {
-    // TODO
+    val data = carrier.getData
+    assert(data.isInstanceOf[Array[Set[F]]])
+    val dataFeats = data.asInstanceOf[Array[Set[F]]]
+    val fvs = new Array[FeatureVector](dataFeats.length)
+    // TODO: add feats here
+    carrier.setData(fvs)
+    carrier.setTarget(new LabelSequence(getTargetAlphabet))
     null
   }
 }
@@ -140,18 +170,17 @@ object SequenceTagger {
   //
   val defaultLabel = "O"
   // label1,label2 transition forbidden if it matches this
-  val forbiddenPattern = Pattern.compile("\\s")
+  val forbiddenPattern: Pattern = Pattern.compile("\\s")
   // label1,label2 transition allowed only if it matches this
-  val allowedPattern = Pattern.compile(".*")
+  val allowedPattern: Pattern = Pattern.compile(".*")
   // list of label Markov orders (main and backoff)
-  val orders = Array(1)
+  val orders: Array[Int] = Array(1)
   // number of training iterations
-  val iterations = 500
+  val iterations = 50
   // include all allowed transitions, even those not in training data
   val fullyConnected = true
   // the gaussian prior variance used for training
   val gaussianVariance = 10.0
   // how many threads to use during training
-  val numThreads = 2
-  
+  val numThreads = 4
 }
