@@ -122,7 +122,7 @@ abstract class SequenceTagger[L, F] {
     for(i <- 0 until output.size) {
       labels += output.get(i).asInstanceOf[L]
     }
-    labels.toArray
+    null // labels.toArray // TODO: fix this: "No ClassTag available for L"
   }
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
