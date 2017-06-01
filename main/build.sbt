@@ -1,7 +1,6 @@
 name := "processors-main"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "org.clulab" % "bioresources" % "1.1.22",
@@ -14,7 +13,6 @@ libraryDependencies ++= Seq(
   "de.bwaldvogel" % "liblinear" % "1.94",
   "tw.edu.ntu.csie" % "libsvm" % "3.17",
   "org.antlr" % "antlr4-runtime" % "4.6",
-  "org.yaml" % "snakeyaml" % "1.14",
   "jline" % "jline" % "2.12.1",
   "commons-io" % "commons-io" % "2.5"
 )
