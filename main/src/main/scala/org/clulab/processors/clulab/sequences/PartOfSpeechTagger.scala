@@ -2,6 +2,8 @@ package org.clulab.processors.clulab.sequences
 
 import java.io.File
 
+import jline.console.ConsoleReader
+import jline.console.history.FileHistory
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -52,6 +54,52 @@ object PartOfSpeechTagger {
         tagger.save(new File(props.getProperty("model")))
       }
     }
+
+    if(props.containsKey("shell")) {
+      assert(props.containsKey("model"))
+      val tagger = new PartOfSpeechTagger
+      tagger.load(new File(props.getProperty("model")))
+      shell(tagger)
+    }
+  }
+
+  def shell(tagger:PartOfSpeechTagger): Unit = {
+    val history = new FileHistory(new File(System.getProperty("user.home"), ".posshellhistory"))
+    sys addShutdownHook {
+      history.flush() // flush file before exiting
+    }
+
+    val reader = new ConsoleReader
+    reader.setHistory(history)
+
+    var running = true
+    while (running) {
+      reader.setPrompt(">> ")
+      reader.readLine match {
+        case ":exit" | null =>
+          running = false
+
+        case text =>
+          parse(text, tagger)
+      }
+    }
+
+    // manual terminal cleanup
+    reader.getTerminal.restore()
+    reader.shutdown()
+  }
+
+  def parse(text:String, tagger:PartOfSpeechTagger): Unit = {
+    val sent = mkSent(text)
+    println("Tokens: " + sent.words.mkString(", "))
+    tagger.classesOf(sent)
+  }
+
+  def mkSent(text:String): Sentence = {
+    val tokens = text.split("\\s+")
+    val startOffsets = new Array[Int](tokens.length)
+    val endOffsets = new Array[Int](tokens.length)
+    new Sentence(tokens, startOffsets, endOffsets)
   }
 
   private def in(s:String):String = Processor.internString(s)
