@@ -8,7 +8,7 @@ import scala.io.Source
 import java.util.concurrent.{TimeUnit, Executors}
 import java.lang.Long
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.odin.TestUtils
+import org.clulab.TestUtils
 import TestProcessorThreading._
 
 /**
