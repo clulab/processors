@@ -1,5 +1,6 @@
 package org.clulab.odin.impl
 
+import java.net.URL
 import java.util.{ Collection, Map => JMap }
 import java.nio.charset.Charset
 import scala.collection.JavaConverters._
@@ -32,7 +33,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
     // no resources are specified
     val resources = OdinResourceManager(Map.empty)
-    val rules = readRules(jRules, None, Map.empty, resources)
+    val rules = readRules(jRules, config)
     mkExtractors(rules)
   }
 
@@ -43,7 +44,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val vars = getVars(master)
     val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
-    val rules = readRules(jRules, taxonomy, vars, resources)
+    val rules = readRules(jRules, config)
     mkExtractors(rules)
   }
 
@@ -176,8 +177,8 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   private def readTaxonomy(data: Any): Taxonomy = data match {
     case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
     case path: String =>
-      val url = getClass.getClassLoader.getResource(path)
-      val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+      val url = mkURL(path)
+      val source = io.Source.fromURL(url)
       val input = source.mkString
       source.close()
       val yaml = new Yaml(new Constructor(classOf[Collection[Any]]))
@@ -198,14 +199,11 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   private def importRules(
       data: Map[String, Any],
-      taxonomy: Option[Taxonomy],
-      importerVars: Map[String, String],
-      resources: OdinResourceManager
+      config: OdinConfig
   ): Seq[Rule] = {
     val path = data("import").toString
-    val url = getClass.getClassLoader.getResource(path)
-    // try to read a resource or else a file
-    val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+    val url = mkURL(path)
+    val source = io.Source.fromURL(url)
     val input = source.mkString // slurp
     source.close()
     // read rules and vars from file
@@ -372,6 +370,20 @@ object RuleReader {
     case "y" | "Y" | "yes" | "Yes" | "YES" | "true" | "True" | "TRUE" | "on" | "On" | "ON" => true
     case "n" | "N" | "no" | "No" | "NO" | "false" | "False" | "FALSE" | "off" | "Off" | "OFF" => false
     case b => sys.error(s"invalid boolean literal '$b'")
+  }
+
+  val CLASSPATH_PROTOCOL = "classpath:"
+
+  /**
+    * Makes a url from an odin import that considers the custom classpath protocol
+    * @param url: String representing the URL
+    * @return URL
+    */
+  def mkURL(url: String): URL = url match {
+    case cp if cp startsWith CLASSPATH_PROTOCOL =>
+      val path = cp.drop(CLASSPATH_PROTOCOL.length)
+      getClass.getResource(path)
+    case other => new URL(other)
   }
 
   // rule intermediary representation
