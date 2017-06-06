@@ -4,30 +4,31 @@ package org.clulab.coserver
 
 import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
 
+import org.clulab.processors._
+
 /**
   * Implement Akka message objects for the CoreNLP Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Initial creation.
+  *   Last Modified: Rename this misnamed file.
   */
 object CoreServerMessages {
 
   sealed trait CoreServerMessage
 
-  def props = Props[CoreServerMessages]
 }
 
 
 object CoreProcessorCommands {
 
   sealed trait CoreProcessorCommand
+  case class AnnotateCmd (text:String, keepText:Boolean = false) extends CoreProcessorCommand
 
-  def props = Props[CoreProcessorCommands]
 }
 
 
 object CoreProcessorReplies {
 
   sealed trait CoreProcessorReply
+  case class DocumentMsg (doc:Document) extends CoreProcessorReply
 
-  def props = Props[CoreProcessorReplies]
 }
