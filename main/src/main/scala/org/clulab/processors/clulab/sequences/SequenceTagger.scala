@@ -13,14 +13,14 @@ import cc.mallet.fst.{CRF, CRFTrainerByThreadedLabelLikelihood, Transducer}
 import cc.mallet.fst.SimpleTagger._
 import cc.mallet.pipe.iterator.LineGroupIterator
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Generic sequence tagger over words implemented using the mallet CRF
   * Author: mihais
   * Date: 3/24/17
   */
-abstract class SequenceTagger[L, F] {
+abstract class SequenceTagger[+L, F] {
   def verbose = true
 
   var crfModel:Option[CRF] = None
@@ -100,13 +100,12 @@ abstract class SequenceTagger[L, F] {
     true
   }
   
-  def classesOf(sentence: Sentence):Array[L] = {
+  def classesOf[U >: L](sentence: Sentence):List[U] = {
     assert(crfModel.isDefined)
     assert(testPipe.isDefined)
 
     // convert the sentence into 1 mallet Instance
     val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
-    // TODO: first param of Instance must be AlphabetCarrying
     val instance = new Instance(features, null, "test sentence", null)
     val instances = new util.ArrayList[Instance]()
     instances.add(instance)
@@ -116,21 +115,23 @@ abstract class SequenceTagger[L, F] {
     testData.addThruPipe(instances.iterator)
 
     // run the CRF on this Instance
-    val input = testData.get(0).getData.asInstanceOf[Sequence[_]]
+    val input = testData.get(0).getData.asInstanceOf[FeatureVectorSequence]
     val output = crfModel.get.transduce(input)
     assert(output.size == sentence.size)
-    val labels = new ArrayBuffer[L]()
+    val labels = new ListBuffer[U] // (output.size)
     for(i <- 0 until output.size) {
-      labels += output.get(i).asInstanceOf[L]
+      labels += output.get(i).asInstanceOf[U]
     }
-    null // labels.toArray // TODO: fix this: "No ClassTag available for L"
+
+    println(s"LABELS: ${labels.mkString(", ")}")
+    labels.toList
   }
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
   def featureExtractor(sentence: Sentence, offset:Int):Set[F]
 
   /** Abstract method that extracts the training labels for a given sentence */
-  def labelExtractor(sentence:Sentence): Array[L]
+  def labelExtractor(sentence:Sentence): List[L]
 
   def save(fn:File) {
     assert(crfModel.isDefined)
@@ -148,7 +149,6 @@ abstract class SequenceTagger[L, F] {
     testPipe.get.setTargetProcessing(false)
   }
 }
-
 
 class ToFeatureVectorPipe[F](featureAlphabet:Alphabet, labelAlphabet:Alphabet) extends Pipe(featureAlphabet, labelAlphabet)  {
   override def pipe(carrier: Instance):Instance = {
@@ -181,9 +181,9 @@ class ToFeatureVectorPipe[F](featureAlphabet:Alphabet, labelAlphabet:Alphabet) e
       val featureVector = new FeatureVector(featureAlphabet, featureIndices.toArray)
       fvs(i) = featureVector
     }
-    carrier.setData(fvs)
+    carrier.setData(new FeatureVectorSequence(fvs))
     carrier.setTarget(new LabelSequence(getTargetAlphabet))
-    null
+    carrier
   }
 }
 

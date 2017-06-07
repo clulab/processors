@@ -32,10 +32,10 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
     c.toSet
   }
 
-  def labelExtractor(sentence:Sentence): Array[String] = {
+  def labelExtractor(sentence:Sentence): List[String] = {
     // labels are the tags for this task
     assert(sentence.tags.isDefined)
-    sentence.tags.get
+    sentence.tags.get.toList
   }
 }
 
