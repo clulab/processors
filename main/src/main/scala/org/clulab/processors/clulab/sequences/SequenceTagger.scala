@@ -155,7 +155,31 @@ class ToFeatureVectorPipe[F](featureAlphabet:Alphabet, labelAlphabet:Alphabet) e
     assert(data.isInstanceOf[Array[Set[F]]])
     val dataFeats = data.asInstanceOf[Array[Set[F]]]
     val fvs = new Array[FeatureVector](dataFeats.length)
-    // TODO: add feats here
+
+    /*
+    println("FEATURES:")
+    for(i <- dataFeats.indices) {
+      print(s"#$i:")
+      for(f <- dataFeats(i)) print(s" ${f}")
+      println
+    }
+    */
+
+    for(i <- 0 until dataFeats.length) {
+      //print(s"#$i:")
+      val feats = dataFeats(i)
+      val featureIndices = new ArrayBuffer[Int]
+      for(f <- feats) {
+        val fi = featureAlphabet.lookupIndex(f)
+        if(fi != -1) {
+          featureIndices += fi
+          //print(s" ${fi}")
+        }
+      }
+      //println
+      val featureVector = new FeatureVector(featureAlphabet, featureIndices.toArray)
+      fvs(i) = featureVector
+    }
     carrier.setData(fvs)
     carrier.setTarget(new LabelSequence(getTargetAlphabet))
     null
