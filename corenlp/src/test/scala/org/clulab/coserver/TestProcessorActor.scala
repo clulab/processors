@@ -1,5 +1,7 @@
 package org.clulab.coserver
 
+import scala.concurrent.duration._
+
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
 
@@ -17,7 +19,7 @@ import CoreProcessorReplies._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2016.
-  *   Last Modified: Initial creation: tests of stubs methods only (to test infrastructure).
+  *   Last Modified: Really call Processor, expect Document return.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -26,25 +28,24 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with MustMatchers
 {
   val core: Processor = new CoreNLPProcessor()
+  val procActor = system.actorOf(ProcessorActor.props(core))
 
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
   }
 
   "ProcessorActor" should "round-trip zero-length message" in {
-    val procActor = system.actorOf(ProcessorActor.props(core))
     val sender = TestProbe()
     sender.send(procActor, AnnotateCmd(""))
-    val state = sender.expectMsgType[TextMsg]
-    state must equal(TextMsg("Length 0"))
+    val state = sender.expectMsgClass(1.minute, classOf[DocumentMsg])
+//    state must equal(TextMsg("Length 0"))
   }
 
-  "ProcessorActor" should "round-trip non-empty message" in {
-    val procActor = system.actorOf(ProcessorActor.props(core))
+  it should "round-trip non-empty message" in {
     val sender = TestProbe()
-    sender.send(procActor, AnnotateCmd("Test test test"))
-    val state = sender.expectMsgType[TextMsg]
-    state must equal(TextMsg("Length 14"))
+    sender.send(procActor, AnnotateCmd("This is a sentence to annotate with annotations"))
+    val state = sender.expectMsgClass(1.minute, classOf[DocumentMsg])
+//    state must equal(TextMsg("Length 14"))
   }
 
 }
