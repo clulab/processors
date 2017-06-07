@@ -123,7 +123,7 @@ abstract class SequenceTagger[L, F] {
       labels += output.get(i).asInstanceOf[L]
     }
 
-    println(s"LABELS: ${labels.mkString(", ")}")
+    //println(s"LABELS: ${labels.mkString(", ")}")
     labels.toList
   }
 
