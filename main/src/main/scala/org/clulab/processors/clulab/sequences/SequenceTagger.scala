@@ -106,6 +106,7 @@ abstract class SequenceTagger[L, F] {
 
     // convert the sentence into 1 mallet Instance
     val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
+    // TODO: first param of Instance must be AlphabetCarrying
     val instance = new Instance(features, null, "test sentence", null)
     val instances = new util.ArrayList[Instance]()
     instances.add(instance)

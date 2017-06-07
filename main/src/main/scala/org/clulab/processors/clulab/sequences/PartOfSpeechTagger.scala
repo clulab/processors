@@ -92,7 +92,8 @@ object PartOfSpeechTagger {
   def parse(text:String, tagger:PartOfSpeechTagger): Unit = {
     val sent = mkSent(text)
     println("Tokens: " + sent.words.mkString(", "))
-    tagger.classesOf(sent)
+    val labels = tagger.classesOf(sent)
+    println("Labels: " + labels.mkString(", "))
   }
 
   def mkSent(text:String): Sentence = {
