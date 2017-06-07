@@ -12,7 +12,7 @@ import CoreProcessorReplies._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Initial creation.
+  *   Last Modified: Return dummy value for testing.
   */
 class ProcessorActor (
 
@@ -24,10 +24,15 @@ class ProcessorActor (
   val log = Logging(context.system, this)
 
   def receive = {
-    case cmd: AnnotateCmd =>
+    case cmd: AnnotateCmd => {
       log.info(s"Receive: annotate(text=${cmd.text}, keep=${cmd.keepText}")
-    case unknown =>
+      val msgLen = cmd.text.length
+      sender ! TextMsg(s"Length ${msgLen}")
+    }
+
+    case unknown => {
       log.warning(s"Receive: unrecognized msg: ${unknown}")
+    }
   }
 
 }
