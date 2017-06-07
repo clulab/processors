@@ -20,7 +20,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * Author: mihais
   * Date: 3/24/17
   */
-abstract class SequenceTagger[+L, F] {
+abstract class SequenceTagger[L, F] {
   def verbose = true
 
   var crfModel:Option[CRF] = None
@@ -37,7 +37,7 @@ abstract class SequenceTagger[+L, F] {
       val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
 
       // save this sentence to disk; features first, then labels
-      assert(features.length == labels.length)
+      assert(features.size == labels.size)
       for(i <- labels.indices) {
         pw.println(s"${features(i).mkString(" ")} ${labels(i)}")
       }
@@ -100,7 +100,7 @@ abstract class SequenceTagger[+L, F] {
     true
   }
   
-  def classesOf[U >: L](sentence: Sentence):List[U] = {
+  def classesOf(sentence: Sentence):List[L] = {
     assert(crfModel.isDefined)
     assert(testPipe.isDefined)
 
@@ -118,9 +118,9 @@ abstract class SequenceTagger[+L, F] {
     val input = testData.get(0).getData.asInstanceOf[FeatureVectorSequence]
     val output = crfModel.get.transduce(input)
     assert(output.size == sentence.size)
-    val labels = new ListBuffer[U] // (output.size)
+    val labels = new ListBuffer[L] // (output.size)
     for(i <- 0 until output.size) {
-      labels += output.get(i).asInstanceOf[U]
+      labels += output.get(i).asInstanceOf[L]
     }
 
     println(s"LABELS: ${labels.mkString(", ")}")
@@ -131,7 +131,7 @@ abstract class SequenceTagger[+L, F] {
   def featureExtractor(sentence: Sentence, offset:Int):Set[F]
 
   /** Abstract method that extracts the training labels for a given sentence */
-  def labelExtractor(sentence:Sentence): List[L]
+  def labelExtractor(sentence:Sentence): Array[L]
 
   def save(fn:File) {
     assert(crfModel.isDefined)
