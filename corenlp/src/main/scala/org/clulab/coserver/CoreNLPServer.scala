@@ -1,23 +1,19 @@
 package org.clulab.coserver
 
-import org.slf4j.LoggerFactory
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
 
 import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
 import akka.event.Logging
-import akka.routing.{ FromConfig, RoundRobinPool }
+import akka.routing.FromConfig
 
-import org.clulab.processors._              // REMOVE LATER
-import org.clulab.processors.corenlp._      // REMOVE LATER
-
-import CoreProcessorCommands._              // REMOVE LATER
-import CoreProcessorReplies._               // REMOVE LATER
+import org.clulab.processors._
+import org.clulab.processors.corenlp._
 
 /**
   * Application to wrap and server various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Build & test initial actor structure.
+  *   Last Modified: Move tests to test file. Cleanup.
   */
 object CoreNLPServer extends App with LazyLogging {
 
@@ -35,12 +31,5 @@ object CoreNLPServer extends App with LazyLogging {
 
   // create a pool of processor actors waiting for work
   val procPool = system.actorOf(FromConfig.props(ProcessorActor.props(core)), "proc-actor-pool")
-
-  // send some messages to test the infrastructure (REMOVE LATER):
-  procPool ! AnnotateCmd("This sentence should be annotated by a child actor.")
-  procPool ! AnnotateCmd("Another sentence to be annotated by a child actor.", false)
-  procPool ! AnnotateCmd("This last sentence is to be annotated by a child actor, too.", true)
-  Thread.sleep(100)
-  system.terminate()
 
 }
