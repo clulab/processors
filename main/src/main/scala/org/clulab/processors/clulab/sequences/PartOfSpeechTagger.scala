@@ -59,51 +59,9 @@ object PartOfSpeechTagger {
       assert(props.containsKey("model"))
       val tagger = new PartOfSpeechTagger
       tagger.load(new File(props.getProperty("model")))
-      shell(tagger)
+      SequenceTaggerShell.shell[String, String](tagger)
     }
   }
-
-  def shell(tagger:PartOfSpeechTagger): Unit = {
-    val history = new FileHistory(new File(System.getProperty("user.home"), ".posshellhistory"))
-    sys addShutdownHook {
-      history.flush() // flush file before exiting
-    }
-
-    val reader = new ConsoleReader
-    reader.setHistory(history)
-
-    var running = true
-    while (running) {
-      reader.setPrompt(">> ")
-      reader.readLine match {
-        case ":exit" | null =>
-          running = false
-
-        case text =>
-          parse(text, tagger)
-      }
-    }
-
-    // manual terminal cleanup
-    reader.getTerminal.restore()
-    reader.shutdown()
-  }
-
-  def parse(text:String, tagger:PartOfSpeechTagger): Unit = {
-    val sent = mkSent(text)
-    println("Tokens: " + sent.words.mkString(", "))
-    val labels = tagger.classesOf(sent)
-    println("Labels: " + labels.mkString(", "))
-  }
-
-  def mkSent(text:String): Sentence = {
-    val tokens = text.split("\\s+")
-    val startOffsets = new Array[Int](tokens.length)
-    val endOffsets = new Array[Int](tokens.length)
-    new Sentence(tokens, startOffsets, endOffsets)
-  }
-
-  private def in(s:String):String = Processor.internString(s)
 
   def twoColumnToDocument(fn:String): Document = {
     val source = io.Source.fromFile(fn)
@@ -149,4 +107,6 @@ object PartOfSpeechTagger {
     logger.debug(s"Loaded ${sentences.size} sentences from file $fn.")
     new Document(sentences.toArray)
   }
+
+  private def in(s:String):String = Processor.internString(s)
 }
