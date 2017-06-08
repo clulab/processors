@@ -62,8 +62,8 @@ object PartOfSpeechTagger {
       if(props.containsKey("shell")) {
         SequenceTaggerShell.shell[String, String](tagger)
       } else if(props.containsKey("test")) {
-        val doc = ColumnsToDocument.read(props.getProperty("train"), 0, 1)
-        SequenceTaggerEvaluator.accuracy(tagger, List(doc).iterator)
+        val doc = ColumnsToDocument.read(props.getProperty("test"), 0, 1)
+        (new SequenceTaggerEvaluator[String, String]).accuracy(tagger, List(doc).iterator)
       }
     }
 

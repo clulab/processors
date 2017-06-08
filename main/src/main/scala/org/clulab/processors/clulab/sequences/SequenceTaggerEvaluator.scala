@@ -1,13 +1,32 @@
 package org.clulab.processors.clulab.sequences
 
 import org.clulab.processors.Document
+import org.slf4j.{Logger, LoggerFactory}
+import SequenceTaggerEvaluator._
 
 /**
   * Implements evaluation of a sequence tagger
   * Created by mihais on 6/8/17.
   */
-object SequenceTaggerEvaluator {
-  def accuracy(tagger:SequenceTagger[String, String], docs:Iterator[Document]): Unit = {
+class SequenceTaggerEvaluator[L, F] {
+  def accuracy(tagger:SequenceTagger[L, F], docs:Iterator[Document]): Unit = {
+    var correct = 0
+    var total = 0
+    for(doc <- docs; sentence <- doc.sentences) {
+      val goldLabels = tagger.labelExtractor(sentence)
+      val predLabels = tagger.classesOf(sentence)
+      assert(goldLabels.size == predLabels.size)
 
+      total += goldLabels.size
+      for(i <- goldLabels.indices)
+        if(goldLabels(i) == predLabels(i))
+          correct += 1
+    }
+
+    logger.info(s"Accuracy = ${100.0 * correct.toDouble / total} ($correct/$total)")
   }
+}
+
+object SequenceTaggerEvaluator {
+  val logger:Logger = LoggerFactory.getLogger(classOf[SequenceTaggerEvaluator[String, String]])
 }
