@@ -11,7 +11,7 @@ import CoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Redo annotate command as document annotate.
+  *   Last Modified: Add tagPartsOfSpeech as model of side-effecting annotator methods.
   */
 class ProcessorActor (
 
@@ -24,9 +24,15 @@ class ProcessorActor (
 
   def receive = {
     case cmd: AnnotateCmd => {
-      log.info(s"Receive: annotate(doc=${cmd.doc}")
+      log.info(s"Receive: annotate(doc=${cmd.doc}") // to DEBUG LATER
       val doc = processor.annotate(cmd.doc)
       sender ! DocumentMsg(doc)
+    }
+
+    case cmd: TagPartsOfSpeechCmd => {
+      log.info(s"Receive: tagPartsOfSpeech(doc=${cmd.doc}") // to DEBUG LATER
+      processor.tagPartsOfSpeech(cmd.doc)   // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
     }
 
     case unknown => {
