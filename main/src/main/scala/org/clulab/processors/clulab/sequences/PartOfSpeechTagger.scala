@@ -55,13 +55,18 @@ object PartOfSpeechTagger {
       }
     }
 
-    if(props.containsKey("shell")) {
-      assert(props.containsKey("model"))
+    if(props.containsKey("model")) {
       val tagger = new PartOfSpeechTagger
       tagger.load(new File(props.getProperty("model")))
-      SequenceTaggerShell.shell[String, String](tagger)
-    }
-  }
 
+      if(props.containsKey("shell")) {
+        SequenceTaggerShell.shell[String, String](tagger)
+      } else if(props.containsKey("test")) {
+        val doc = ColumnsToDocument.read(props.getProperty("train"), 0, 1)
+        SequenceTaggerEvaluator.accuracy(tagger, List(doc).iterator)
+      }
+    }
+
+  }
 
 }
