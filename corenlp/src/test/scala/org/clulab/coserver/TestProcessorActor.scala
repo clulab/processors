@@ -13,13 +13,12 @@ import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, MustMatchers }
 import org.clulab.processors._
 import org.clulab.processors.corenlp._
 
-import CoreProcessorCommands._
-import CoreProcessorReplies._
+import CoreServerMessages._
 
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2016.
-  *   Last Modified: Really call Processor, expect Document return.
+  *   Last Modified: Update for message consolidation.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
