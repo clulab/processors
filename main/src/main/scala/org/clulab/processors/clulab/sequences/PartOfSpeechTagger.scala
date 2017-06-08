@@ -19,17 +19,18 @@ import scala.collection.mutable.ArrayBuffer
 class PartOfSpeechTagger extends SequenceTagger[String, String] {
 
   def featureExtractor(sentence: Sentence, offset:Int):Set[String] = {
-    val words = sentence.words
-    val c = new mutable.HashSet[String]()
+    val features = new mutable.HashSet[String]()
+    val fe = new FeatureExtractor(sentence, offset, features)
 
-    c += words(offset)
+    for(offset <- List(-1, 0, 1)) {
+      fe.word(offset)
+      fe.casing(offset)
+      fe.suffixes(offset, 2, 3)
 
-    if(Character.isUpperCase(words(offset)(0)))
-      c += "*UP*"
+      // TODO: add more features here
+    }
 
-    // TODO: add more features here
-
-    c.toSet
+    features.toSet
   }
 
   def labelExtractor(sentence:Sentence): Array[String] = {
