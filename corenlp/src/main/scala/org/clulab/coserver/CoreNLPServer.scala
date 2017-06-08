@@ -13,23 +13,30 @@ import org.clulab.processors.corenlp._
 /**
   * Application to wrap and server various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Move tests to test file. Cleanup.
+  *   Last Modified: Hide vals. Add getInstance to return actor ref of pool.
   */
 object CoreNLPServer extends App with LazyLogging {
 
   // save any command line arguments
-  val argsList = args.toList
+  private val argsList = args.toList
 
   // load application configuration from the configuration file
-  val config = ConfigFactory.load()
+  private val config = ConfigFactory.load()
 
-  // create a new faster dependency parser
-  val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
+  // private lazy val processor: Processor = new FastNLPProcessor(useMalt = false)
+  // private lazy val processor: Processor = new BioNLPProcessor(removeFigTabReferences = true)
+  // private lazy val processor: Processor = new FastBioNLPProcessor(removeFigTabReferences = true)
+  // create a slower constituent parser
+  private val processor: Processor = new CoreNLPProcessor()
 
   // fire up the actor system
-  val system = ActorSystem("core-server")
+  private val system = ActorSystem("core-server")
 
   // create a pool of processor actors waiting for work
-  val procPool = system.actorOf(FromConfig.props(ProcessorActor.props(core)), "proc-actor-pool")
+  private val procPool = system.actorOf(
+    FromConfig.props(ProcessorActor.props(processor)), "proc-actor-pool")
+
+  // return an ActorRef to the current instance of the processor pool. */
+  def getInstance: ActorRef = procPool
 
 }
