@@ -11,7 +11,7 @@ import CoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Update for message consolidation.
+  *   Last Modified: Redo annotate command as document annotate.
   */
 class ProcessorActor (
 
@@ -24,8 +24,8 @@ class ProcessorActor (
 
   def receive = {
     case cmd: AnnotateCmd => {
-      log.info(s"Receive: annotate(text=${cmd.text}, keep=${cmd.keepText}")
-      val doc = processor.annotate(cmd.text, cmd.keepText)
+      log.info(s"Receive: annotate(doc=${cmd.doc}")
+      val doc = processor.annotate(cmd.doc)
       sender ! DocumentMsg(doc)
     }
 

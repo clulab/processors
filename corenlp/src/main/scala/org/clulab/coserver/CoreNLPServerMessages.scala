@@ -7,7 +7,7 @@ import org.clulab.processors._
 /**
   * Implement Akka message objects for the CoreNLP Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Consolidate messages into one object.
+  *   Last Modified: Redo annotate command as document annotate.
   */
 object CoreServerMessages {
 
@@ -15,7 +15,8 @@ object CoreServerMessages {
 
   // message for request side of server communication:
   sealed trait CoreProcessorCommand
-  case class AnnotateCmd (text:String, keepText:Boolean = false) extends CoreProcessorCommand
+  // case class AnnotateCmd (text:String, keepText:Boolean = false) extends CoreProcessorCommand
+  case class AnnotateCmd (doc:Document) extends CoreProcessorCommand
 
 
   // messages for response side of server communication:

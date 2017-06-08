@@ -18,7 +18,7 @@ import CoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2016.
-  *   Last Modified: Update for message consolidation.
+  *   Last Modified: Redo/expand annotate test as document annotate.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -26,24 +26,38 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with BeforeAndAfterAll
     with MustMatchers
 {
-  val core: Processor = new CoreNLPProcessor()
-  val procActor = system.actorOf(ProcessorActor.props(core))
+  val processor: Processor = new CoreNLPProcessor()
+  val procActor = system.actorOf(ProcessorActor.props(processor))
+  val doc0 = processor.mkDocument("")
+  val doc1 = processor.mkDocument("This is a document with a single sentence.")
+  val doc3 = processor.mkDocument(
+    """This document has multiple sentences. Each should be processed by the processor.
+       A Reach document should be returned.""")
+
+  val timeout: FiniteDuration = 2.minutes
 
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
   }
 
-  "ProcessorActor" should "round-trip zero-length message" in {
+  "ProcessorActor" should "round-trip zero-length document" in {
     val sender = TestProbe()
-    sender.send(procActor, AnnotateCmd(""))
-    val state = sender.expectMsgClass(1.minute, classOf[DocumentMsg])
-//    state must equal(TextMsg("Length 0"))
+    sender.send(procActor, AnnotateCmd(doc0))
+    val state = sender.expectMsgClass(timeout, classOf[DocumentMsg])
+    // state must equal(TextMsg("Length 0"))
   }
 
-  it should "round-trip non-empty message" in {
+  it should "round-trip single sentence document" in {
     val sender = TestProbe()
-    sender.send(procActor, AnnotateCmd("This is a sentence to annotate with annotations"))
-    val state = sender.expectMsgClass(1.minute, classOf[DocumentMsg])
+    sender.send(procActor, AnnotateCmd(doc1))
+    val state = sender.expectMsgClass(timeout, classOf[DocumentMsg])
+//    state must equal(TextMsg("Length 14"))
+  }
+
+  it should "round-trip multi-sentence document" in {
+    val sender = TestProbe()
+    sender.send(procActor, AnnotateCmd(doc3))
+    val state = sender.expectMsgClass(timeout, classOf[DocumentMsg])
 //    state must equal(TextMsg("Length 14"))
   }
 
