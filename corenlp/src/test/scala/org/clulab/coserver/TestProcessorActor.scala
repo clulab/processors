@@ -18,7 +18,7 @@ import CoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2016.
-  *   Last Modified: Redo/expand annotate test as document annotate.
+  *   Last Modified: Check number of sentences on result document.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -44,21 +44,21 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     val sender = TestProbe()
     sender.send(procActor, AnnotateCmd(doc0))
     val state = sender.expectMsgClass(timeout, classOf[DocumentMsg])
-    // state must equal(TextMsg("Length 0"))
+    (state.doc.sentences.size) must equal(0)
   }
 
   it should "round-trip single sentence document" in {
     val sender = TestProbe()
     sender.send(procActor, AnnotateCmd(doc1))
     val state = sender.expectMsgClass(timeout, classOf[DocumentMsg])
-//    state must equal(TextMsg("Length 14"))
+    (state.doc.sentences.size) must equal(1)
   }
 
   it should "round-trip multi-sentence document" in {
     val sender = TestProbe()
     sender.send(procActor, AnnotateCmd(doc3))
     val state = sender.expectMsgClass(timeout, classOf[DocumentMsg])
-//    state must equal(TextMsg("Length 14"))
+    (state.doc.sentences.size) must equal(3)
   }
 
 }
