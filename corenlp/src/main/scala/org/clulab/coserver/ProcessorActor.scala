@@ -6,7 +6,7 @@ import akka.event.Logging
 import org.clulab.processors._
 import org.clulab.processors.corenlp._
 
-import CoreServerMessages._
+import ProcessorCoreServerMessages._
 
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.

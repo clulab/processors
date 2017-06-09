@@ -13,9 +13,9 @@ import org.clulab.processors.corenlp._
 /**
   * Application to wrap and server various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Hide vals. Add getInstance to return actor ref of pool.
+  *   Last Modified: Rename this class.
   */
-object CoreNLPServer extends App with LazyLogging {
+object ProcessorCoreServer extends App with LazyLogging {
 
   // save any command line arguments
   private val argsList = args.toList

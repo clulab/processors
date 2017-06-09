@@ -15,12 +15,12 @@ import org.clulab.processors._
 import org.clulab.processors.corenlp._
 import org.clulab.processors.shallownlp._
 
-import CoreServerMessages._
+import ProcessorCoreServerMessages._
 
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2016.
-  *   Last Modified: Add tests for remaining annotator methods.
+  *   Last Modified: Update for class renames.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
