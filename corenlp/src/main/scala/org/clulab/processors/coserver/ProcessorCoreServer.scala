@@ -1,4 +1,4 @@
-package org.clulab.coserver
+package org.clulab.processors.coserver
 
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
@@ -13,7 +13,7 @@ import org.clulab.processors.corenlp._
 /**
   * Application to wrap and serve various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Initialize actor system from config.
+  *   Last Modified: Move coserver package.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 

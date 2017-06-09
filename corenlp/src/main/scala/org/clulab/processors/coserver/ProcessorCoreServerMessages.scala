@@ -1,11 +1,11 @@
-package org.clulab.coserver
+package org.clulab.processors.coserver
 
 import org.clulab.processors._
 
 /**
   * Implement Akka message objects for the CoreNLP Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Add remaining processor commands. Remove unused import.
+  *   Last Modified: Move coserver package.
   */
 object ProcessorCoreServerMessages {
 

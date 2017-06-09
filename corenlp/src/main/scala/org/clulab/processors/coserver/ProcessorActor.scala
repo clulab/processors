@@ -1,4 +1,4 @@
-package org.clulab.coserver
+package org.clulab.processors.coserver
 
 import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
 import akka.event.Logging
@@ -11,7 +11,7 @@ import ProcessorCoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Cleanup log & doc strings.
+  *   Last Modified: Move coserver package.
   */
 class ProcessorActor (
 

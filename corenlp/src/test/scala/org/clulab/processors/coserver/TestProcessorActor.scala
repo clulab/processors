@@ -1,4 +1,4 @@
-package org.clulab.coserver
+package org.clulab.processors.coserver
 
 import scala.concurrent.duration._
 
@@ -20,7 +20,7 @@ import ProcessorCoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2016.
-  *   Last Modified: Update for class renames.
+  *   Last Modified: Move coserver package.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
