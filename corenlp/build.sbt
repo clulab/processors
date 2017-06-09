@@ -3,19 +3,19 @@ name := "processors-corenlp"
 libraryDependencies ++= {
   val akkaV = "2.5.2"
   Seq (
-    "ai.lum"             %%   "common"            % "0.0.7",
-    "edu.stanford.nlp"    %   "stanford-corenlp"  % "3.5.1",
-    "edu.stanford.nlp"    %   "stanford-corenlp"  % "3.5.1" classifier "models",
-    "org.clulab"          %   "bioresources"      % "1.1.22",
+    "ai.lum"             %%  "common"            % "0.0.7",
+    "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1",
+    "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1" classifier "models",
+    "org.clulab"          %  "bioresources"      % "1.1.22",
 
     // logging
-    "com.typesafe.scala-logging"  %%  "scala-logging"     % "3.4.0",
-    "ch.qos.logback"               %   "logback-classic"  % "1.0.10",
-    "org.slf4j"                    %   "slf4j-api"        % "1.7.10",
+    "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.4.0",
+    "ch.qos.logback"               %  "logback-classic"  % "1.0.10",
+    "org.slf4j"                    %  "slf4j-api"        % "1.7.10",
 
     // AKKA
     "com.typesafe.akka"   %%  "akka-actor"   % akkaV,
-    "com.typesafe.akka"   %%  "akka-stream"  % akkaV,
+//  "com.typesafe.akka"   %%  "akka-stream"  % akkaV,
     "com.typesafe.akka"   %%  "akka-slf4j"   % akkaV,
 
     // testing
