@@ -13,7 +13,7 @@ import org.clulab.processors.corenlp._
 /**
   * Application to wrap and serve various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Rename actor system.
+  *   Last Modified: Initialize actor system from config.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -30,7 +30,7 @@ object ProcessorCoreServer extends App with LazyLogging {
   private val processor: Processor = new CoreNLPProcessor()
 
   // fire up the actor system
-  private val system = ActorSystem("proc-core-server")
+  private val system = ActorSystem("proc-core-server", config.getConfig("ProcessorCoreService"))
 
   // create a pool of processor actors waiting for work
   private val procPool = system.actorOf(
