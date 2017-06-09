@@ -11,7 +11,7 @@ import CoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Add tagPartsOfSpeech as model of side-effecting annotator methods.
+  *   Last Modified: Add remaining annotator methods.
   */
 class ProcessorActor (
 
@@ -32,6 +32,48 @@ class ProcessorActor (
     case cmd: TagPartsOfSpeechCmd => {
       log.info(s"Receive: tagPartsOfSpeech(doc=${cmd.doc}") // to DEBUG LATER
       processor.tagPartsOfSpeech(cmd.doc)   // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
+    }
+
+    case cmd: LemmatizeCmd => {
+      log.info(s"Receive: lemmatize(doc=${cmd.doc}") // to DEBUG LATER
+      processor.lemmatize(cmd.doc)          // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
+    }
+
+    case cmd: RecognizeNamedEntitiesCmd => {
+      log.info(s"Receive: recognizeNamedEntities(doc=${cmd.doc}") // to DEBUG LATER
+      processor.recognizeNamedEntities(cmd.doc)  // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
+    }
+
+    case cmd: ParseCmd => {
+      log.info(s"Receive: parse(doc=${cmd.doc}") // to DEBUG LATER
+      processor.parse(cmd.doc)              // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
+    }
+
+    case cmd: ChunkingCmd => {
+      log.info(s"Receive: chunking(doc=${cmd.doc}") // to DEBUG LATER
+      processor.chunking(cmd.doc)           // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
+    }
+
+    case cmd: LabelSemanticRolesCmd => {
+      log.info(s"Receive: labelSemanticRoles(doc=${cmd.doc}") // to DEBUG LATER
+      processor.labelSemanticRoles(cmd.doc) // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
+    }
+
+    case cmd: ResolveCoreferenceCmd => {
+      log.info(s"Receive: resolveCoreference(doc=${cmd.doc}") // to DEBUG LATER
+      processor.resolveCoreference(cmd.doc) // works by side-effect
+      sender ! DocumentMsg(cmd.doc)
+    }
+
+    case cmd: DiscourseCmd => {
+      log.info(s"Receive: discourse(doc=${cmd.doc}") // to DEBUG LATER
+      processor.discourse(cmd.doc)          // works by side-effect
       sender ! DocumentMsg(cmd.doc)
     }
 
