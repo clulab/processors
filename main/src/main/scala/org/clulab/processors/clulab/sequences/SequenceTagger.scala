@@ -72,8 +72,10 @@ abstract class SequenceTagger[L, F] {
 
     // initialize the CRF
     val crf = new CRF(trainingData.getPipe, null.asInstanceOf[Pipe])
-    val startName = crf.addOrderNStates(trainingData, orders, null,
-      defaultLabel, forbiddenPattern, allowedPattern, fullyConnected)
+    val startName = crf.addOrderNStates(trainingData, orders, null, defaultLabel, forbiddenPattern, allowedPattern, fullyConnected)
+    //crf.addStatesForThreeQuarterLabelsConnectedAsIn(trainingData) // TODO
+    //crf.addStatesForBiLabelsConnectedAsIn(trainingData) // TODO
+    //crf.addStatesForHalfLabelsConnectedAsIn(trainingData) // XXX
     for (i <- 0 until crf.numStates()) {
       crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT)
     }
@@ -199,7 +201,7 @@ object SequenceTagger {
   // label1,label2 transition allowed only if it matches this
   val allowedPattern: Pattern = Pattern.compile(".*")
   // list of label Markov orders (main and backoff)
-  val orders: Array[Int] = Array(1)
+  val orders: Array[Int] = Array(1, 2)
   // number of training iterations
   val iterations = 50
   // include all allowed transitions, even those not in training data

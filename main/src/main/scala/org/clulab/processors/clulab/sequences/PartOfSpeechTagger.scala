@@ -22,10 +22,10 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
     val features = new mutable.HashSet[String]()
     val fe = new FeatureExtractor(sentence, offset, features)
 
-    for(offset <- List(-1, 0, 1)) {
+    for(offset <- List(-2, -1, 0, 1, 2)) {
       fe.word(offset)
       fe.casing(offset)
-      fe.suffixes(offset, 2, 3)
+      fe.suffixes(offset, 1, 3)
 
       // TODO: add more features here
     }

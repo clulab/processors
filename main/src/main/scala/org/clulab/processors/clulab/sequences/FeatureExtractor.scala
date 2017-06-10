@@ -11,6 +11,10 @@ import scala.collection.mutable
 class FeatureExtractor(val sentence:Sentence, val position:Int, val features:mutable.HashSet[String]) {
   def word(offset:Int) {
     val i = position + offset
+    if(i == -1)
+      features += s"w[$offset]:-BOS-"
+    else if(i == sentence.size)
+      features += s"w[$offset]:-EOS-"
     if(validPosition(i))
       features += s"w[$offset]:${sentence.words(i)}"
   }
