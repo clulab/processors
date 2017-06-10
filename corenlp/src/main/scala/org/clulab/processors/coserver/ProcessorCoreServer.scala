@@ -8,12 +8,15 @@ import akka.event.Logging
 import akka.routing.FromConfig
 
 import org.clulab.processors._
+import org.clulab.processors.bionlp._
 import org.clulab.processors.corenlp._
+import org.clulab.processors.fastnlp._
+import org.clulab.processors.shallownlp._
 
 /**
   * Application to wrap and serve various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Move coserver package.
+  *   Last Modified: Select/instantiate Processor from config.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -21,22 +24,28 @@ object ProcessorCoreServer extends App with LazyLogging {
   private val argsList = args.toList
 
   // load application configuration from the configuration file
-  private val config = ConfigFactory.load()
+  private val config = ConfigFactory.load().getConfig("ProcessorCoreService")
 
-  // private lazy val processor: Processor = new FastNLPProcessor(useMalt = false)
-  // private lazy val processor: Processor = new BioNLPProcessor(removeFigTabReferences = true)
-  // private lazy val processor: Processor = new FastBioNLPProcessor(removeFigTabReferences = true)
-  // create a slower constituent parser
-  private val processor: Processor = new CoreNLPProcessor()
+  // create the Processor engine specified by the configuration and used by this server
+  private val processor: Processor = {
+    val proc = config.getString("server.processor")
+    proc.toLowerCase match {
+      case "bio" => new BioNLPProcessor(removeFigTabReferences = true)
+      case "core" => new CoreNLPProcessor()
+      case "fast" => new FastNLPProcessor(useMalt = false)
+      case "fastbio" => new FastBioNLPProcessor(removeFigTabReferences = true)
+      case _ => new ShallowNLPProcessor()
+    }
+  }
 
   // fire up the actor system
-  private val system = ActorSystem("proc-core-server", config.getConfig("ProcessorCoreService"))
+  private val system = ActorSystem("proc-core-server", config)
 
   // create a pool of processor actors waiting for work
   private val procPool = system.actorOf(
     FromConfig.props(ProcessorActor.props(processor)), "proc-actor-pool")
 
-  // return an ActorRef to the current instance of the processor pool. */
-  def getInstance: ActorRef = procPool
+  // return an actor path to the current instance of the processor pool. */
+  def getInstance = procPool.path
 
 }

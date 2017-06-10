@@ -11,8 +11,9 @@ import akka.testkit.{ TestKit, TestActorRef, TestProbe, ImplicitSender }
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, MustMatchers }
 
 import org.clulab.processors._
-// import org.clulab.processors.bionlp._
+import org.clulab.processors.bionlp._
 import org.clulab.processors.corenlp._
+import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
 
 import ProcessorCoreServerMessages._
@@ -20,7 +21,7 @@ import ProcessorCoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2016.
-  *   Last Modified: Move coserver package.
+  *   Last Modified: Select/instantiate Processor from config.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -28,12 +29,20 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with BeforeAndAfterAll
     with MustMatchers
 {
-  val processor:Processor = new CoreNLPProcessor()
-  // val processor:Processor = new BioNLPProcessor (
-  //   withCRFNER = false,
-  //   withRuleNER = false,
-  //   withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE
-  // )
+  val config = ConfigFactory.load().getConfig("ProcessorCoreService")
+
+  // create the Processor engine specified by the configuration and used by this server
+  val processor: Processor = {
+    val proc = config.getString("server.processor")
+    proc.toLowerCase match {
+      case "bio" => new BioNLPProcessor(removeFigTabReferences = true)
+      case "core" => new CoreNLPProcessor()
+      case "fast" => new FastNLPProcessor(useMalt = false)
+      case "fastbio" => new FastBioNLPProcessor(removeFigTabReferences = true)
+      case _ => new ShallowNLPProcessor()
+    }
+  }
+
   val procActor = system.actorOf(ProcessorActor.props(processor))
   val timeout: FiniteDuration = 1.minutes
 
