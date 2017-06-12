@@ -5,13 +5,11 @@ import org.clulab.processors._
 /**
   * Implement Akka message objects for the CoreNLP Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Move coserver package.
+  *   Last Modified: Add response messages. Some msg cleanups.
   */
 object ProcessorCoreServerMessages {
 
-  sealed trait ProcessorCoreServerMessage
-
-  // message for request side of server communication:
+  // messages for request side of server communication:
   sealed trait ProcessorCoreCommand
 
   case class MkDocumentCmd (text:String, keepText:Boolean = false) extends ProcessorCoreCommand
@@ -29,9 +27,9 @@ object ProcessorCoreServerMessages {
     charactersBetweenTokens:Int = 1
   ) extends ProcessorCoreCommand
 
-  case class PreprocessTextCmd (origText:String) extends ProcessorCoreCommand
-  case class PreprocessSentencesCmd (origSentences:Iterable[String]) extends ProcessorCoreCommand
-  case class PreprocessTokensCmd (origSentences:Iterable[Iterable[String]]) extends ProcessorCoreCommand
+  case class PreprocessTextCmd (text:String) extends ProcessorCoreCommand
+  case class PreprocessSentencesCmd (sentences:Iterable[String]) extends ProcessorCoreCommand
+  case class PreprocessTokensCmd (sentences:Iterable[Iterable[String]]) extends ProcessorCoreCommand
 
   case class TagPartsOfSpeechCmd (doc:Document) extends ProcessorCoreCommand
   case class LemmatizeCmd (doc:Document) extends ProcessorCoreCommand
@@ -52,16 +50,15 @@ object ProcessorCoreServerMessages {
     keepText:Boolean = false
   ) extends ProcessorCoreCommand
 
-  case class AnnotateStringCmd (text:String, keepText:Boolean = false) extends ProcessorCoreCommand
+  case class AnnotateTextCmd (text:String, keepText:Boolean = false) extends ProcessorCoreCommand
   case class AnnotateCmd (doc:Document) extends ProcessorCoreCommand
 
 
   // messages for response side of server communication:
   sealed trait ProcessorCoreReply
-  case class TextMsg (text: String) extends ProcessorCoreReply
-
-
-  // messages which are both commands and replies
-  case class DocumentMsg (doc: Document) extends ProcessorCoreCommand with ProcessorCoreReply
+  case class DocumentMsg (doc: Document) extends ProcessorCoreReply
+  case class SentencesMsg (sentences:Iterable[String]) extends ProcessorCoreReply
+  case class TextMsg (text:String) extends ProcessorCoreReply
+  case class TokensMsg (tokens:Iterable[Iterable[String]]) extends ProcessorCoreReply
 
 }
