@@ -73,13 +73,12 @@ abstract class SequenceTagger[L, F] {
     // initialize the CRF
     val crf = new CRF(trainingData.getPipe, null.asInstanceOf[Pipe])
     val startName = crf.addOrderNStates(trainingData, orders, null, defaultLabel, forbiddenPattern, allowedPattern, fullyConnected)
-    //crf.addStatesForThreeQuarterLabelsConnectedAsIn(trainingData) // TODO
-    //crf.addStatesForBiLabelsConnectedAsIn(trainingData) // TODO
-    //crf.addStatesForHalfLabelsConnectedAsIn(trainingData) // XXX
     for (i <- 0 until crf.numStates()) {
       crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT)
     }
     crf.getState(startName).setInitialWeight(0.0)
+    //crf.addStatesForThreeQuarterLabelsConnectedAsIn(trainingData) // TODO
+    //crf.addStatesForBiLabelsConnectedAsIn(trainingData) // TODO
     logger.info(s"Training on ${trainingData.size()} instances.")
 
     // the actual training
@@ -92,6 +91,13 @@ abstract class SequenceTagger[L, F] {
     for (i <- 1 to iterations if !converged) {
       logger.info(s"Training iteration #$i...")
       converged = crft.train(trainingData, 1)
+
+      if(i % 50 == 0) {
+        val dfn = trainFile + s".model.$i"
+        val os = new ObjectOutputStream(new FileOutputStream(dfn))
+        os.writeObject(crf)
+        os.close()
+      }
     }
     crft.shutdown()
 
@@ -201,9 +207,9 @@ object SequenceTagger {
   // label1,label2 transition allowed only if it matches this
   val allowedPattern: Pattern = Pattern.compile(".*")
   // list of label Markov orders (main and backoff)
-  val orders: Array[Int] = Array(1, 2)
+  val orders: Array[Int] = Array(1)
   // number of training iterations
-  val iterations = 50
+  val iterations = 500
   // include all allowed transitions, even those not in training data
   val fullyConnected = true
   // the gaussian prior variance used for training
