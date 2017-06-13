@@ -1,13 +1,14 @@
 package org.clulab.odin.impl
 
 import java.net.URL
-import java.util.{ Collection, Map => JMap }
+import java.util.{Collection, Map => JMap}
 import java.nio.charset.Charset
+
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 import scala.io.Codec
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
+import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
 import org.clulab.odin._
 
 
@@ -45,7 +46,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val vars = getVars(master)
     val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
-    val config = OdinConfig(resources = resources)
+    val config = OdinConfig(resources = resources, variables = vars)
     val rules = readRules(jRules, config)
     mkExtractors(rules)
   }
@@ -376,14 +377,19 @@ object RuleReader {
 
   /**
     * Makes a url from an odin import that considers the custom classpath protocol
-    * @param url: String representing the URL
+    * @param path: String representing the URL
     * @return URL
     */
-  def mkURL(url: String): URL = url match {
-    case cp if cp startsWith CLASSPATH_PROTOCOL =>
-      val path = cp.drop(CLASSPATH_PROTOCOL.length)
-      getClass.getResource(path)
-    case other => new URL(other)
+  def mkURL(path: String): URL = {
+    // check if path is relative to resources
+    val resource = getClass.getClassLoader.getResource(path)
+    path match {
+      case hasResource if resource != null => resource
+      case cp if cp startsWith CLASSPATH_PROTOCOL =>
+        val path = cp.drop(CLASSPATH_PROTOCOL.length)
+        getClass.getResource(path)
+      case other => new URL(other)
+    }
   }
 
   // rule intermediary representation
