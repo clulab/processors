@@ -7,7 +7,7 @@ import java.nio.file.{Files, Paths}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.native._
+import org.json4s.jackson._
 
 
 package object json {
