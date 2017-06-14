@@ -20,7 +20,7 @@ import ProcessorCoreServerMessages._
 
 /**
   * Unit tests of the ProcessorActor class.
-  *   Written by: Tom Hicks. 6/6/2016.
+  *   Written by: Tom Hicks. 6/6/2017.
   *   Last Modified: Add tests for remaining methods.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
