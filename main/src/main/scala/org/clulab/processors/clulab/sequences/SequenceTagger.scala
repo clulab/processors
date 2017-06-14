@@ -92,11 +92,13 @@ abstract class SequenceTagger[L, F] {
       logger.info(s"Training iteration #$i...")
       converged = crft.train(trainingData, 1)
 
-      if(i % 50 == 0) {
-        val dfn = trainFile + s".model.$i"
+      if(i % 2 == 0) {
+        val dfn = trainFile.getAbsolutePath + s".model.$i"
+        logger.info(s"Saving intermediate model file to $dfn...")
         val os = new ObjectOutputStream(new FileOutputStream(dfn))
         os.writeObject(crf)
         os.close()
+        logger.info("Saved successfully.")
       }
     }
     crft.shutdown()
