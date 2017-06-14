@@ -16,7 +16,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Select/instantiate Processor from config.
+  *   Last Modified: Split core server into object/class.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -25,6 +25,22 @@ object ProcessorCoreServer extends App with LazyLogging {
 
   // load application configuration from the configuration file
   private val config = ConfigFactory.load().getConfig("ProcessorCoreService")
+
+  // create an instance of the server
+  private val server = new ProcessorCoreServer(config)
+
+  /** Return an actor path to the current instance of the processor pool. */
+  def getPath = server.getPath
+
+}
+
+
+class ProcessorCoreServer (
+
+  /** Application-specific portion of the configuration file. */
+  val config: Config
+
+) extends LazyLogging {
 
   // create the Processor engine specified by the configuration and used by this server
   private val processor: Processor = {
@@ -37,15 +53,20 @@ object ProcessorCoreServer extends App with LazyLogging {
       case _ => new ShallowNLPProcessor()
     }
   }
+  logger.debug(s"(ProcessorCoreServer.Class): processor=${processor}")
 
   // fire up the actor system
   private val system = ActorSystem("proc-core-server", config)
+
+  logger.debug(s"(ProcessorCoreServer.Class): system=${system}")
 
   // create a pool of processor actors waiting for work
   private val procPool = system.actorOf(
     FromConfig.props(ProcessorActor.props(processor)), "proc-actor-pool")
 
-  // return an actor path to the current instance of the processor pool. */
-  def getInstance = procPool.path
+  logger.debug(s"(ProcessorCoreServer.Class): procPoll=${procPool}")
+
+  /** Return an actor path to the current instance of the processor pool. */
+  def getPath = procPool.path
 
 }
