@@ -3,7 +3,7 @@ package org.clulab
 import java.io.File
 
 import org.clulab.processors.Document
-import org.json4s.native.JsonMethods._
+import org.json4s.jackson.JsonMethods._
 import org.clulab.serialization.json.JSONSerializer
 
 
