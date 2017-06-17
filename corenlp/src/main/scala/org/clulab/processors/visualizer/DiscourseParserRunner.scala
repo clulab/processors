@@ -1,17 +1,13 @@
 package org.clulab.processors.visualizer
 
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-
-import scala.collection.JavaConverters._
-
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.native.JsonMethods._
-
+import org.json4s.jackson.JsonMethods._
 import org.clulab.processors._
-import org.clulab.processors.bionlp.BioNLPProcessor
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
+
 
 /**
  * External API for running different discourse parsers for visualization.

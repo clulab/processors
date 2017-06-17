@@ -1,13 +1,10 @@
 package org.clulab.serialization
 
 import org.clulab.processors.{Document, Sentence}
-import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.native._
+import org.json4s.jackson._
 
 
 package object json {
@@ -65,15 +62,6 @@ package object json {
       // TODO: handle discourse tree
       //("discourse-tree" -> discourseTree)
     }
-
-    /**
-      * Serialize Document to json file
-      */
-    def saveJSON(file: String, pretty: Boolean): Unit = {
-      require(file.endsWith(".json"), "file should have .json extension")
-      Files.write(Paths.get(file), doc.json(pretty).getBytes(StandardCharsets.UTF_8))
-    }
-    def saveJSON(file: File, pretty: Boolean): Unit = saveJSON(file.getAbsolutePath, pretty)
   }
 
 
@@ -94,13 +82,6 @@ package object json {
       //("syntactic-tree") -> syntacticTree)
     }
 
-    /**
-      * Serialize Sentence to json file
-      */
-    def saveJSON(file: String, pretty: Boolean): Unit = {
-      require(file.endsWith(".json"), "file should have .json extension")
-      Files.write(Paths.get(file), s.json(pretty).getBytes(StandardCharsets.UTF_8))
-    }
-    def saveJSON(file: File, pretty: Boolean): Unit = saveJSON(file.getAbsolutePath, pretty)
   }
+
 }
