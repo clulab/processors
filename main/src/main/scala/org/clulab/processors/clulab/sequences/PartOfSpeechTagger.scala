@@ -2,14 +2,11 @@ package org.clulab.processors.clulab.sequences
 
 import java.io.File
 
-import jline.console.ConsoleReader
-import jline.console.history.FileHistory
-import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.processors.Sentence
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 /**
   * Part of speech tagger 
@@ -42,6 +39,20 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
 
 object PartOfSpeechTagger {
   val logger:Logger = LoggerFactory.getLogger(classOf[PartOfSpeechTagger])
+
+  val DEFAULT_MODEL_RESOURCE = "org/clulab/processors/clu/pos.dat"
+
+  def loadFromFile(fn:String): PartOfSpeechTagger = {
+    val tagger = new PartOfSpeechTagger
+    tagger.loadFromFile(new File(fn))
+    tagger
+  }
+
+  def loadFromResource(rn:String): PartOfSpeechTagger = {
+    val tagger = new PartOfSpeechTagger
+    tagger.loadFromResource(rn)
+    tagger
+  }
   
   def main(args:Array[String]) {
     val props = StringUtils.argsToProperties(args)
@@ -57,8 +68,7 @@ object PartOfSpeechTagger {
     }
 
     if(props.containsKey("model")) {
-      val tagger = new PartOfSpeechTagger
-      tagger.load(new File(props.getProperty("model")))
+      val tagger = loadFromFile(props.getProperty("model"))
 
       if(props.containsKey("shell")) {
         SequenceTaggerShell.shell[String, String](tagger)

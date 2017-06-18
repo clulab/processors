@@ -1,6 +1,7 @@
 package org.clulab.processors.clulab
 
-import org.clulab.processors.clulab.tokenizer.OpenDomainEnglishTokenizer
+import org.clulab.processors.clulab.sequences.PartOfSpeechTagger
+import org.clulab.processors.clulab.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
 
 import scala.collection.mutable
@@ -8,7 +9,11 @@ import scala.collection.mutable.ArrayBuffer
 
 class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
-  lazy val tokenizer = new OpenDomainEnglishTokenizer
+  lazy val tokenizer: Tokenizer =
+    new OpenDomainEnglishTokenizer
+
+  lazy val posTagger: PartOfSpeechTagger =
+    PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(text:String, keepText:Boolean = false): Document = {
@@ -74,7 +79,10 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
   /** Part of speech tagging */
   def tagPartsOfSpeech(doc:Document) {
-    // TODO
+    for(sent <- doc.sentences) {
+      val tags = posTagger.classesOf(sent).toArray
+      sent.tags = Some(tags)
+    }
   }
 
   /** Lematization; modifies the document in place */

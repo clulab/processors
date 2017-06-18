@@ -150,8 +150,18 @@ abstract class SequenceTagger[L, F] {
     os.close()
   }
 
-  def load(fn:File) {
-    val s = new ObjectInputStream(new FileInputStream(fn))
+  def loadFromFile(fn:File) {
+    val is = new FileInputStream(fn)
+    load(is)
+  }
+
+  def loadFromResource(rn:String) {
+    val is = SequenceTagger.getClass.getClassLoader.getResourceAsStream(rn)
+    load(is)
+  }
+
+  def load(is:InputStream) {
+    val s = new ObjectInputStream(is)
     val model = s.readObject.asInstanceOf[CRF]
     s.close()
     crfModel = Some(model)
