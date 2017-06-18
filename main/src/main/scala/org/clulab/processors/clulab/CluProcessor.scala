@@ -7,6 +7,11 @@ import org.clulab.processors.{Document, Processor, Sentence}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
+/**
+  * Processor that uses only tools that are under Apache License
+  * Currently supports tokenization (in-house), and POS tagging (based on Mallet)
+  * @param internStrings If true, intern strings
+  */
 class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
   lazy val tokenizer: Tokenizer =
