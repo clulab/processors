@@ -1,6 +1,7 @@
 package org.clulab.odin
 
 import org.clulab.TestUtils.jsonStringToDocument
+import org.clulab.odin.impl.OdinCompileException
 import org.clulab.struct.Interval
 import org.scalatest._
 
@@ -38,9 +39,9 @@ class TestDependencyPattern extends FlatSpec with Matchers {
 
   }
 
-  it should "support quantified arguments" in {
+  it should "support exact quantifiers for arguments" in {
 
-    val text = "The binding of Ras, TGFBR1, MEK and TGFBR2."
+    // "The binding of Ras, TGFBR1, MEK and TGFBR2."
     val doc = jsonStringToDocument(""" {"sentences":[{"words":["The","binding","of","Ras",",","TGFBR1",",","MEK","and","TGFBR2","."],"startOffsets":[0,4,12,15,18,20,26,28,32,36,42],"endOffsets":[3,11,14,18,19,26,27,31,35,42,43],"tags":["DT","NN","IN","NN",",","NN",",","NN","CC","NN","."],"lemmas":["the","binding","of","ra",",","tgfbr1",",","mek","and","tgfbr2","."],"entities":["O","O","O","PERSON","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-PP","B-NP","O","B-NP","I-NP","I-NP","I-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"prep"},{"source":1,"destination":10,"relation":"punct"},{"source":2,"destination":3,"relation":"pobj"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj"},{"source":3,"destination":8,"relation":"cc"},{"source":3,"destination":9,"relation":"conj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":3,"relation":"prep_of"},{"source":1,"destination":5,"relation":"prep_of"},{"source":1,"destination":7,"relation":"prep_of"},{"source":1,"destination":9,"relation":"prep_of"},{"source":1,"destination":10,"relation":"punct"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj_and"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj_and"},{"source":3,"destination":9,"relation":"conj_and"}],"roots":[1]}}}]} """)
 
     val rule = """
@@ -65,6 +66,215 @@ class TestDependencyPattern extends FlatSpec with Matchers {
     results should have size (6)
 
   }
+
+  it should "support * for arguments" in {
+
+    // "The binding of Ras, TGFBR1, MEK and TGFBR2."
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["The","binding","of","Ras",",","TGFBR1",",","MEK","and","TGFBR2","."],"startOffsets":[0,4,12,15,18,20,26,28,32,36,42],"endOffsets":[3,11,14,18,19,26,27,31,35,42,43],"tags":["DT","NN","IN","NN",",","NN",",","NN","CC","NN","."],"lemmas":["the","binding","of","ra",",","tgfbr1",",","mek","and","tgfbr2","."],"entities":["O","O","O","PERSON","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-PP","B-NP","O","B-NP","I-NP","I-NP","I-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"prep"},{"source":1,"destination":10,"relation":"punct"},{"source":2,"destination":3,"relation":"pobj"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj"},{"source":3,"destination":8,"relation":"cc"},{"source":3,"destination":9,"relation":"conj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":3,"relation":"prep_of"},{"source":1,"destination":5,"relation":"prep_of"},{"source":1,"destination":7,"relation":"prep_of"},{"source":1,"destination":9,"relation":"prep_of"},{"source":1,"destination":10,"relation":"punct"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj_and"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj_and"},{"source":3,"destination":9,"relation":"conj_and"}],"roots":[1]}}}]} """)
+
+    val rule = """
+                 |- name: dep-kleene-star
+                 |  label: Binding
+                 |  pattern: |
+                 |    trigger = binding
+                 |    theme:Protein* = prep_of conj?
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(3), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(7), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(9), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc, state)
+
+    results should have size (1)
+
+  }
+
+  it should "support throw an OdinException for *? with an argument" in {
+
+    val rule = """
+                 |- name: dep-kleene-star-lazy
+                 |  label: Binding
+                 |  pattern: |
+                 |    trigger = binding
+                 |    theme:Protein*? = prep_of conj?
+                 |""".stripMargin
+
+    intercept[OdinCompileException] { ExtractorEngine(rule) }
+
+  }
+
+  it should "support + for arguments" in {
+
+    // "The binding of Ras, TGFBR1, MEK and TGFBR2."
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["The","binding","of","Ras",",","TGFBR1",",","MEK","and","TGFBR2","."],"startOffsets":[0,4,12,15,18,20,26,28,32,36,42],"endOffsets":[3,11,14,18,19,26,27,31,35,42,43],"tags":["DT","NN","IN","NN",",","NN",",","NN","CC","NN","."],"lemmas":["the","binding","of","ra",",","tgfbr1",",","mek","and","tgfbr2","."],"entities":["O","O","O","PERSON","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-PP","B-NP","O","B-NP","I-NP","I-NP","I-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"prep"},{"source":1,"destination":10,"relation":"punct"},{"source":2,"destination":3,"relation":"pobj"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj"},{"source":3,"destination":8,"relation":"cc"},{"source":3,"destination":9,"relation":"conj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":3,"relation":"prep_of"},{"source":1,"destination":5,"relation":"prep_of"},{"source":1,"destination":7,"relation":"prep_of"},{"source":1,"destination":9,"relation":"prep_of"},{"source":1,"destination":10,"relation":"punct"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj_and"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj_and"},{"source":3,"destination":9,"relation":"conj_and"}],"roots":[1]}}}]} """)
+
+    val rule = """
+                 |- name: dep-kleene-one-or-more-greedy
+                 |  label: Binding
+                 |  pattern: |
+                 |    trigger = binding
+                 |    theme:Protein+ = prep_of conj?
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(3), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(7), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(9), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc, state)
+
+    results should have size (1)
+
+  }
+
+  it should "support +? for arguments" in {
+
+    // "The binding of Ras, TGFBR1, MEK and TGFBR2."
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["The","binding","of","Ras",",","TGFBR1",",","MEK","and","TGFBR2","."],"startOffsets":[0,4,12,15,18,20,26,28,32,36,42],"endOffsets":[3,11,14,18,19,26,27,31,35,42,43],"tags":["DT","NN","IN","NN",",","NN",",","NN","CC","NN","."],"lemmas":["the","binding","of","ra",",","tgfbr1",",","mek","and","tgfbr2","."],"entities":["O","O","O","PERSON","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-PP","B-NP","O","B-NP","I-NP","I-NP","I-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"prep"},{"source":1,"destination":10,"relation":"punct"},{"source":2,"destination":3,"relation":"pobj"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj"},{"source":3,"destination":8,"relation":"cc"},{"source":3,"destination":9,"relation":"conj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":3,"relation":"prep_of"},{"source":1,"destination":5,"relation":"prep_of"},{"source":1,"destination":7,"relation":"prep_of"},{"source":1,"destination":9,"relation":"prep_of"},{"source":1,"destination":10,"relation":"punct"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj_and"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj_and"},{"source":3,"destination":9,"relation":"conj_and"}],"roots":[1]}}}]} """)
+
+    val rule = """
+                 |- name: dep-kleene-one-or-more-lazy
+                 |  label: Binding
+                 |  pattern: |
+                 |    trigger = binding
+                 |    theme:Protein+? = prep_of conj?
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(3), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(7), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(9), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc, state)
+
+    results should have size (4)
+
+  }
+
+  it should "support greedy open range quantifiers for arguments" in {
+
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["The","binding","of","Ras",",","TGFBR1",",","MEK","and","TGFBR2","."],"startOffsets":[0,4,12,15,18,20,26,28,32,36,42],"endOffsets":[3,11,14,18,19,26,27,31,35,42,43],"tags":["DT","NN","IN","NN",",","NN",",","NN","CC","NN","."],"lemmas":["the","binding","of","ra",",","tgfbr1",",","mek","and","tgfbr2","."],"entities":["O","O","O","PERSON","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-PP","B-NP","O","B-NP","I-NP","I-NP","I-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"prep"},{"source":1,"destination":10,"relation":"punct"},{"source":2,"destination":3,"relation":"pobj"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj"},{"source":3,"destination":8,"relation":"cc"},{"source":3,"destination":9,"relation":"conj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":3,"relation":"prep_of"},{"source":1,"destination":5,"relation":"prep_of"},{"source":1,"destination":7,"relation":"prep_of"},{"source":1,"destination":9,"relation":"prep_of"},{"source":1,"destination":10,"relation":"punct"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj_and"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj_and"},{"source":3,"destination":9,"relation":"conj_and"}],"roots":[1]}}}]} """)
+
+    val rule1 = """
+                 |- name: "greedy-open-range-quant-1"
+                 |  label: Binding
+                 |  pattern: |
+                 |    trigger = binding
+                 |    theme:Protein{2,} = prep_of conj?
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(3), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(7), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(9), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee1 = ExtractorEngine(rule1)
+    val results1 = ee1.extractFrom(doc, state)
+
+    results1 should have size (1)
+    results1.foreach{ res =>
+      res.arguments("theme") should have size (4)
+    }
+
+    val rule2 = """
+                  |- name: "greedy-open-range-quant-2"
+                  |  label: Event
+                  |  pattern: |
+                  |    trigger = binding
+                  |    theme:Protein{,2} = prep_of conj?
+                  |""".stripMargin
+
+
+    val ee2 = ExtractorEngine(rule2)
+    val results2 = ee2.extractFrom(doc, state)
+
+    results2 should have size (6)
+    results2.foreach{ res =>
+      res.arguments("theme") should have size (2)
+    }
+
+  }
+
+  it should "support lazy open range quantifiers for arguments" in {
+
+    val doc = jsonStringToDocument(""" {"sentences":[{"words":["The","binding","of","Ras",",","TGFBR1",",","MEK","and","TGFBR2","."],"startOffsets":[0,4,12,15,18,20,26,28,32,36,42],"endOffsets":[3,11,14,18,19,26,27,31,35,42,43],"tags":["DT","NN","IN","NN",",","NN",",","NN","CC","NN","."],"lemmas":["the","binding","of","ra",",","tgfbr1",",","mek","and","tgfbr2","."],"entities":["O","O","O","PERSON","O","O","O","O","O","O","O"],"norms":["O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-PP","B-NP","O","B-NP","I-NP","I-NP","I-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"prep"},{"source":1,"destination":10,"relation":"punct"},{"source":2,"destination":3,"relation":"pobj"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj"},{"source":3,"destination":8,"relation":"cc"},{"source":3,"destination":9,"relation":"conj"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":3,"relation":"prep_of"},{"source":1,"destination":5,"relation":"prep_of"},{"source":1,"destination":7,"relation":"prep_of"},{"source":1,"destination":9,"relation":"prep_of"},{"source":1,"destination":10,"relation":"punct"},{"source":3,"destination":4,"relation":"punct"},{"source":3,"destination":5,"relation":"conj_and"},{"source":3,"destination":6,"relation":"punct"},{"source":3,"destination":7,"relation":"conj_and"},{"source":3,"destination":9,"relation":"conj_and"}],"roots":[1]}}}]} """)
+
+    val rule1 = """
+                  |- name: "lazy-open-range-quant-1"
+                  |  label: Binding
+                  |  pattern: |
+                  |    trigger = binding
+                  |    theme:Protein{2,}? = prep_of conj?
+                  |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(3), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(7), 0, doc, false, "<test>"),
+      new TextBoundMention("Protein", Interval(9), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee1 = ExtractorEngine(rule1)
+    val results1 = ee1.extractFrom(doc, state)
+
+    results1 should have size (6)
+    results1.foreach{ res =>
+      res.arguments("theme") should have size (2)
+    }
+
+    val rule2 = """
+                  |- name: "lazy-open-range-quant-2"
+                  |  label: Event
+                  |  pattern: |
+                  |    trigger = binding
+                  |    theme:Protein{,2}? = prep_of conj?
+                  |""".stripMargin
+
+
+    val ee2 = ExtractorEngine(rule2)
+    val results2 = ee2.extractFrom(doc, state)
+
+    // no args so no mentions
+    results2 should have size (0)
+
+    val rule3 = """
+                  |- name: "lazy-open-range-quant-3"
+                  |  label: Event
+                  |  pattern: |
+                  |    trigger = binding
+                  |    theme:Protein{1,2}? = prep_of conj?
+                  |""".stripMargin
+
+
+    val ee3 = ExtractorEngine(rule3)
+    val results3 = ee3.extractFrom(doc, state)
+
+    // no args so no mentions
+    results3 should have size (4)
+    results3.foreach{ res =>
+      res.arguments("theme") should have size (1)
+    }
+
+  }
+
 
   it should "handle multitoken triggers" in {
     val text = "We found that prolonged expression of active Ras resulted in upregulation of the MKP3 gene."
