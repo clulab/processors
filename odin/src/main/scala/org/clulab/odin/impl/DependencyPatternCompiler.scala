@@ -197,35 +197,29 @@ class ArgumentPattern(
       case (_, OneOrMore(true)) => Seq(matches)
       case (_, OneOrMore(false)) => matches.combinations(1).toList
       // greedy ranged quantifier w/ min and max reps
-      case (_, RangedQuantifier(Some(minRep), Some(maxRep), true)) =>  {
+      case (_, RangedQuantifier(Some(minRep), Some(maxRep), true)) =>
         val reps = (Seq(matches.size) ++ (0 to maxRep)).filter(_ <= matches.size).max
         matches.combinations(reps).toList
-      }
       // non-greedy ranged quantifier w/ min and max reps
-      case (_, RangedQuantifier(Some(minRep), Some(maxRep), false)) =>  {
+      case (_, RangedQuantifier(Some(minRep), Some(maxRep), false)) =>
         val reps = (minRep to maxRep).filter(_ <= matches.size).min
         matches.combinations(reps).toList
-      }
       // greedy ranged quantifier w/ min reps
-      case (_, RangedQuantifier(Some(minRep), None, true)) =>  {
+      case (_, RangedQuantifier(Some(minRep), None, true)) =>
         val reps = (minRep to matches.size).filter(_ <= matches.size).max
         matches.combinations(reps).toList
-      }
       // non-greedy ranged quantifier w/ min reps
-      case (_, RangedQuantifier(Some(minRep), None, false)) =>  {
+      case (_, RangedQuantifier(Some(minRep), None, false)) =>
         val reps = (minRep to matches.size).filter(_ <= matches.size).min
         matches.combinations(reps).toList
-      }
       // greedy ranged quantifier w/ max reps
-      case (_, RangedQuantifier(None, Some(maxRep), true)) =>  {
+      case (_, RangedQuantifier(None, Some(maxRep), true)) =>
         val reps = (0 to maxRep).filter(_ <= matches.size).max
         matches.combinations(reps).toList
-      }
       // non-greedy ranged quantifier w/ max reps
-      case (_, RangedQuantifier(None, Some(maxRep), false)) =>  {
+      case (_, RangedQuantifier(None, Some(maxRep), false)) =>
         val reps = (0 to maxRep).filter(_ <= matches.size).min
         if (reps == 0) Nil else matches.combinations(reps).toList
-      }
     }
   }
 }
