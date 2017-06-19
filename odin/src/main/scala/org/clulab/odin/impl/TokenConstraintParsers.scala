@@ -264,12 +264,12 @@ class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Value
     matcher matches chunk(tok, sent, doc)
 }
 
-class IncomingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
+class IncomingConstraint(matcher: StringMatcher) extends TokenConstraint with Graph {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     incoming(tok, sent, doc) exists matcher.matches
 }
 
-class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
+class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with Graph {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     outgoing(tok, sent, doc) exists matcher.matches
 }

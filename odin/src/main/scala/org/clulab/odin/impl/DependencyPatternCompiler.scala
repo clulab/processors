@@ -185,7 +185,7 @@ sealed trait DependencyPatternNode {
 
 }
 
-object OutgoingWildcard extends DependencyPatternNode with Dependencies {
+object OutgoingWildcard extends DependencyPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,
@@ -203,7 +203,7 @@ object OutgoingWildcard extends DependencyPatternNode with Dependencies {
   }
 }
 
-object IncomingWildcard extends DependencyPatternNode with Dependencies {
+object IncomingWildcard extends DependencyPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,
@@ -222,7 +222,7 @@ object IncomingWildcard extends DependencyPatternNode with Dependencies {
 }
 
 class OutgoingDependencyPattern(matcher: StringMatcher)
-extends DependencyPatternNode with Dependencies {
+extends DependencyPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,
@@ -242,7 +242,7 @@ extends DependencyPatternNode with Dependencies {
 }
 
 class IncomingDependencyPattern(matcher: StringMatcher)
-extends DependencyPatternNode with Dependencies {
+extends DependencyPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,

@@ -227,9 +227,9 @@ class DocumentSerializer {
       saveToken(sent, offset, os)
       offset += 1
     }
-    if (sent.dependenciesByType.nonEmpty) {
-      for(t <- sent.dependenciesByType.keySet) {
-        saveDependencies(sent.dependenciesByType.get(t).get, t, os)
+    if (sent.graphs.nonEmpty) {
+      for(t <- sent.graphs.keySet) {
+        saveDependencies(sent.graphs.get(t).get, t, os)
       }
     }
     if (sent.syntacticTree.nonEmpty) {
