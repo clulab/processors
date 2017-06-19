@@ -4,7 +4,7 @@ import org.clulab.struct.Interval
 import org.clulab.processors.Document
 import org.clulab.odin._
 
-trait DependencyPattern {
+trait GraphPattern {
   def arguments: Seq[ArgumentPattern]
 
   // separate the required and optional arguments
@@ -12,6 +12,7 @@ trait DependencyPattern {
 
   type Args = Map[String, Seq[Mention]]
   type Paths = Map[String, Map[Mention, SynPath]]
+  val config: OdinConfig
 
   def getMentions(
       sent: Int,
@@ -96,10 +97,11 @@ trait DependencyPattern {
 }
 
 // creates an EventMention using a TokenPattern for the trigger
-class TriggerPatternDependencyPattern(
+class TriggerPatternGraphPattern(
     val trigger: TokenPattern,
-    val arguments: Seq[ArgumentPattern]
-) extends DependencyPattern {
+    val arguments: Seq[ArgumentPattern],
+    val config: OdinConfig
+) extends GraphPattern {
   def getMentions(
       sent: Int,
       doc: Document,
@@ -115,10 +117,11 @@ class TriggerPatternDependencyPattern(
 }
 
 // creates an EventMention by matching trigger mentions
-class TriggerMentionDependencyPattern(
+class TriggerMentionGraphPattern(
     val triggerLabel: String,
-    val arguments: Seq[ArgumentPattern]
-) extends DependencyPattern {
+    val arguments: Seq[ArgumentPattern],
+    val config: OdinConfig
+) extends GraphPattern {
   def getMentions(
       sent: Int,
       doc: Document,
@@ -136,11 +139,12 @@ class TriggerMentionDependencyPattern(
 }
 
 // creates a RelationMention by matching mentions
-class RelationDependencyPattern(
+class RelationGraphPattern(
     val anchorName: String,
     val anchorLabel: String,
-    val arguments: Seq[ArgumentPattern]
-) extends DependencyPattern {
+    val arguments: Seq[ArgumentPattern],
+    val config: OdinConfig
+) extends GraphPattern {
   def getMentions(
       sent: Int,
       doc: Document,

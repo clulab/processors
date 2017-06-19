@@ -46,9 +46,18 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val vars = getVars(master)
     val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
-    val config = OdinConfig(resources = resources, variables = vars)
+    val graph = getGraph(master)
+    val config = OdinConfig(resources = resources, variables = vars, graph = graph)
     val rules = readRules(jRules, config)
     mkExtractors(rules)
+  }
+
+  def getGraph(
+    data: Map[String, Any],
+    default: String = OdinConfig.DEFAULT_GRAPH
+  ): String = data.get("graph") match {
+    case None => default
+    case Some(g) => g.asInstanceOf[String]
   }
 
   def getVars(data: Map[String, Any]): Map[String, String] = {
@@ -121,22 +130,26 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val keep = strToBool(tmpl(data.getOrElse("keep", DefaultKeep)))
     // unit is relevant to TokenPattern only
     val unit = tmpl(data.getOrElse("unit", DefaultUnit))
-
+    // the graph to match against
+    val graph: String = getGraph(data, config.graph)
+    val updatedConfig = config.copy(graph = graph)
     // make intermediary rule
     ruleType match {
       case DefaultType =>
-        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config)
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
+      case "dependency" =>
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
       case "token" =>
-        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config)
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
       // cross-sentence cases
       case "cross-sentence" =>
         (data.getOrElse("left-window", None), data.getOrElse("right-window", None)) match {
           case (leftWindow: Int, rightWindow: Int) =>
-            new CrossSentenceRule(name, labels, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, config)
+            new CrossSentenceRule(name, labels, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig)
           case (leftWindow: Int, None) =>
-            new CrossSentenceRule(name, labels, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, config)
+            new CrossSentenceRule(name, labels, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, updatedConfig)
           case (None, rightWindow: Int) =>
-            new CrossSentenceRule(name, labels, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, config)
+            new CrossSentenceRule(name, labels, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig)
           case _ =>
             throw OdinCompileException(s""""cross-sentence" rule '$name' requires a "left-window" and/or "right-window"""")
         }
@@ -252,7 +265,9 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     try {
       rule.ruleType match {
         case "token" => mkTokenExtractor(rule)
-        case "dependency" => mkDependencyExtractor(rule)
+        case DefaultType => mkGraphExtractor(rule)
+        // FIXME: should this be deprecated?
+        case "dependency" => mkGraphExtractor(rule)
         case "cross-sentence" => mkCrossSentenceExtractor(rule)
         case _ =>
           val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
@@ -272,7 +287,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val compiler = new TokenPatternParsers(rule.unit, rule.resources)
+    val compiler = new TokenPatternParsers(rule.unit, rule.config)
     val pattern = compiler.compileTokenPattern(rule.pattern)
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
@@ -346,20 +361,20 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   }
 
   // compiles a dependency extractor
-  private def mkDependencyExtractor(rule: Rule): DependencyExtractor = {
+  private def mkGraphExtractor(rule: Rule): GraphExtractor = {
     val name = rule.name
     val labels = rule.labels
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val compiler = new DependencyPatternCompiler(rule.unit, rule.resources)
-    val pattern = compiler.compileDependencyPattern(rule.pattern)
-    new DependencyExtractor(name, labels, priority, keep, action, pattern)
+    val compiler = new GraphPatternCompiler(rule.unit, rule.config)
+    val pattern = compiler.compileGraphPattern(rule.pattern)
+    new GraphExtractor(name, labels, priority, keep, action, pattern, rule.config)
   }
 }
 
 object RuleReader {
-  val DefaultType = "dependency"
+  val DefaultType = "graph"
   val DefaultPriority = "1+"
   val DefaultWindow = 0 // 0 means don't use a window
   val DefaultKeep = "true"
