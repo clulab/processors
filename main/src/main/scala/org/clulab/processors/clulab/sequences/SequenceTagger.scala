@@ -72,13 +72,26 @@ abstract class SequenceTagger[L, F] {
 
     // initialize the CRF
     val crf = new CRF(trainingData.getPipe, null.asInstanceOf[Pipe])
+
+    //
+    // different ways to construct the CRF:
+    //
+
+    // first-order CRF that creates many transitions + factors, and is MUCH slower to train
+    /*
     val startName = crf.addOrderNStates(trainingData, orders, null, defaultLabel, forbiddenPattern, allowedPattern, fullyConnected)
     for (i <- 0 until crf.numStates()) {
       crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT)
     }
     crf.getState(startName).setInitialWeight(0.0)
-    //crf.addStatesForThreeQuarterLabelsConnectedAsIn(trainingData) // TODO
-    //crf.addStatesForBiLabelsConnectedAsIn(trainingData) // TODO
+    */
+
+    // first-order CRF, with the minimal number of factors; trains fast, performs well
+    crf.addStatesForThreeQuarterLabelsConnectedAsIn(trainingData)
+
+    // second-order CRF; TODO
+    //crf.addStatesForBiLabelsConnectedAsIn(trainingData) 
+
     logger.info(s"Training on ${trainingData.size()} instances.")
 
     // the actual training
