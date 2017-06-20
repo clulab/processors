@@ -32,6 +32,8 @@ object ProcessorCoreServer extends App with LazyLogging {
   /** Return an actor path to the current instance of the processor pool. */
   def getPath = server.getPath
 
+  // TODO: create processor core server Factory method?
+  // Factory takes optional configuration -- defaults to Processors config if not given?
 }
 
 
@@ -65,6 +67,8 @@ class ProcessorCoreServer (
     FromConfig.props(ProcessorActor.props(processor)), "proc-actor-pool")
 
   logger.debug(s"(ProcessorCoreServer.Class): procPoll=${procPool}")
+
+  // TODO: set supervisory strategy property of the pool to handle errors
 
   /** Return an actor path to the current instance of the processor pool. */
   def getPath = procPool.path

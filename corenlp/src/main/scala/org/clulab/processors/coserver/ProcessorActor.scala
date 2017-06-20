@@ -11,7 +11,7 @@ import ProcessorCoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Add remaining commands to receive method.
+  *   Last Modified: Comment out annotator actions with mutable arguments.
   */
 class ProcessorActor (
 
@@ -61,49 +61,48 @@ class ProcessorActor (
       val pptoks = processor.preprocessTokens(cmd.sentences)
       sender ! TokensMsg(pptoks)
 
-    case cmd: TagPartsOfSpeechCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): tagPartsOfSpeech(doc=${cmd.doc}")
-      processor.tagPartsOfSpeech(cmd.doc)   // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
 
-    case cmd: LemmatizeCmd =>
-      log.info(s"(ProcessorActor.receive): lemmatize(doc=${cmd.doc}") // set to DEBUG LATER
-      processor.lemmatize(cmd.doc)          // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
+    // The following annotators modify the document in place, which does not work with Akka
+    // case cmd: TagPartsOfSpeechCmd =>
+    //   log.debug(s"(ProcessorActor.receive): tagPartsOfSpeech(doc=${cmd.doc}")
+    //   processor.tagPartsOfSpeech(cmd.doc)   // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
 
-    case cmd: RecognizeNamedEntitiesCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): recognizeNamedEntities(doc=${cmd.doc}")
-        processor.recognizeNamedEntities(cmd.doc)  // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
+    // case cmd: LemmatizeCmd =>
+    //   log.debug(s"(ProcessorActor.receive): lemmatize(doc=${cmd.doc}")
+    //   processor.lemmatize(cmd.doc)          // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
 
-    case cmd: ParseCmd =>
-      log.info(s"(ProcessorActor.receive): parse(doc=${cmd.doc}") // set to DEBUG LATER
-      processor.parse(cmd.doc)              // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
+    // case cmd: RecognizeNamedEntitiesCmd =>
+    //   log.debug(s"(ProcessorActor.receive): recognizeNamedEntities(doc=${cmd.doc}")
+    //     processor.recognizeNamedEntities(cmd.doc)  // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
 
-    case cmd: ChunkingCmd =>
-      log.info(s"(ProcessorActor.receive): chunking(doc=${cmd.doc}") // set to DEBUG LATER
-      processor.chunking(cmd.doc)           // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
+    // case cmd: ParseCmd =>
+    //   log.debug(s"(ProcessorActor.receive): parse(doc=${cmd.doc}")
+    //   processor.parse(cmd.doc)              // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
 
-    case cmd: LabelSemanticRolesCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): labelSemanticRoles(doc=${cmd.doc}")
-      processor.labelSemanticRoles(cmd.doc) // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
+    // case cmd: ChunkingCmd =>
+    //   log.debug(s"(ProcessorActor.receive): chunking(doc=${cmd.doc}")
+    //   processor.chunking(cmd.doc)           // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
 
-    case cmd: ResolveCoreferenceCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): resolveCoreference(doc=${cmd.doc}")
-      processor.resolveCoreference(cmd.doc) // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
+    // case cmd: LabelSemanticRolesCmd =>
+    //   log.debug(s"(ProcessorActor.receive): labelSemanticRoles(doc=${cmd.doc}")
+    //   processor.labelSemanticRoles(cmd.doc) // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
 
-    case cmd: DiscourseCmd =>
-      log.info(s"(ProcessorActor.receive): discourse(doc=${cmd.doc}") // set to DEBUG LATER
-      processor.discourse(cmd.doc)          // works by side-effect
-      sender ! DocumentMsg(cmd.doc)
+    // case cmd: ResolveCoreferenceCmd =>
+    //   log.debug(s"(ProcessorActor.receive): resolveCoreference(doc=${cmd.doc}")
+    //   processor.resolveCoreference(cmd.doc) // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
+
+    // case cmd: DiscourseCmd =>
+    //   log.debug(s"(ProcessorActor.receive): discourse(doc=${cmd.doc}") // set to DEBUG LATER
+    //   processor.discourse(cmd.doc)          // works by side-effect
+    //   sender ! DocumentMsg(cmd.doc)
+
 
     case cmd: AnnotateFromSentencesCmd =>
       log.info(s"(ProcessorActor.receive): annotateFromSentences(sents=${cmd.sentences}, keep=${cmd.keepText}") // set to DEBUG LATER
