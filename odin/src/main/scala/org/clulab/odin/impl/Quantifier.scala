@@ -9,10 +9,10 @@ trait Quantifier {
 }
 
 /** No quantifier */
-case class NullQuantifier() extends Quantifier
+case object NullQuantifier extends Quantifier
 
 /** Equiv. to regex ? */
-case class OptionalQuantifier() extends Quantifier { override val greedy: Boolean = false }
+case object OptionalQuantifier extends Quantifier { override val greedy: Boolean = false }
 
 /** Encodes regex * and *? */
 case class KleeneStar(override val greedy: Boolean) extends Quantifier
@@ -24,11 +24,16 @@ case class OneOrMore(override val greedy: Boolean) extends Quantifier
 case class ExactQuantifier(repeat: Int) extends Quantifier {
   require(repeat > 0, "ExactQuantifier must be a positive number")
 }
-/** Encodes regex {,e} {s,} {s,e} and lazy variants */
+/**
+  * Encodes regex {,e} {s,} {s,e} and lazy variants
+  * @param minRepeat
+  * @param maxRepeat
+  * @param allBundlesInRange whether or not all bundles in the given range should be produced (ex. {1,3} -> matches.combination(1) ++ matches.combinations(2) ++ .. )
+  */
 case class RangedQuantifier(
   minRepeat: Option[Int] = None,
   maxRepeat: Option[Int] = None,
-  override val greedy: Boolean = true
+  allBundlesInRange: Boolean
 ) extends Quantifier {
   require(minRepeat.nonEmpty || maxRepeat.nonEmpty, "RangedQuantifier must have either either a minRepeat or maxRepeat")
   require(if (minRepeat.nonEmpty) minRepeat.get >= 0 else true, "minRepeat for RangedQuantifier cannot be negative")

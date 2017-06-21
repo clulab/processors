@@ -32,46 +32,54 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
   def argPattern: Parser[ArgumentPattern] =
     identifier ~ ":" ~ identifier ~ opt("?" ||| "*" ||| "*?" ||| "+" ||| "+?" |||
       "{" ~> int <~ "}" |||
-      "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}?" )
+      "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}&" ||| "}?" )
     ) ~ "=" ~ disjunctiveDepPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name equalsIgnoreCase "trigger" =>
         sys.error(s"'$name' is not a valid argument name")
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier())
+        new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier)
       case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = NullQuantifier())
+        new ArgumentPattern(name, label, pat, required = false, quantifier = OptionalQuantifier)
       // Kleene star
       case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = false, quantifier = KleeneStar(greedy = true))
       // Don't allow lazy Kleene star for args
       case name ~ ":" ~ label ~ Some("*?") ~ "=" ~ pat =>
-        throw OdinCompileException("Lazy Kleene star (*?) used for argument in graph pattern rule.  Remove argument from rule.")
+        throw OdinCompileException(s"Lazy Kleene star (*?) used for argument '$name'.  Remove argument pattern from rule.")
         //new ArgumentPattern(name, label, pat, required = false, quantifier = KleeneStar(greedy = false))
       // one or more (greedy)
       case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, quantifier = OneOrMore(greedy = true))
       // one or more (lazy)
+      // NOTE: instead of throwing an exception, a warning could be printed and the +? could simply be dropped in compilation
       case name ~ ":" ~ label ~ Some("+?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = OneOrMore(greedy = false))
+        throw OdinCompileException(s"+? used for argument '$name', but it is superfluous in this context.  Quantifier will be ignored.  Remove +? quantifier from argument.")
+        //println(Console.RED + s"Odin Warning: +? used for argument '$name', but it is superfluous in this context.  Quantifier will be ignored.  Remove +? quantifier from argument." + Console.RESET)
+        //new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier)
       // exact count
       case name ~ ":" ~ label ~ Some(exact: Int) ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, quantifier = ExactQuantifier(exact))
-      // open range quantifier (greedy)
+      // open range quantifier
+      // make combinations of the largest value found in the range (i.e., in {2,5} if 5 matches found, create combos of 5)
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~ "," ~ None ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, greedy = true))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, allBundlesInRange = false))
       case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep), greedy = true))
-      // open range quantifier (non-greedy)
-      case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}?" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep), greedy = false))
-      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ None ~ "}?" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, greedy = false))
-      // closed range quantifier (greedy)
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep), allBundlesInRange = false))
+      // open range quantifier w/ modifier
+      // for range {s,e}, make combinations from s to e or max found.
+      case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}&" ) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep), allBundlesInRange = true))
+      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ None ~ "}&" ) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, allBundlesInRange = true))
+      // closed range quantifier
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, greedy = true))
-      // closed range quantifier (non-greedy)
-      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}?" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = Some(maxRep), greedy = false))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, allBundlesInRange = false))
+      // closed range quantifier w/ modifier
+      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}&" ) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = Some(maxRep), allBundlesInRange = true))
+      // better errors
+      case name ~ ":" ~ label ~ Some( _ ~ "}?" ) ~ "=" ~ pat =>
+        throw OdinCompileException("? used to modify a ranged quantifier for a graph pattern argument.  Use an exact value (ex. {3} for 3)")
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
@@ -187,8 +195,8 @@ class ArgumentPattern(
       // no matches
       case (Nil, _) => Nil
       // no quantifier w/ some matches
-      case (_, NullQuantifier()) => Seq(matches)
-      case (_, OptionalQuantifier()) => Seq(matches)
+      case (_, NullQuantifier) => matches.combinations(1).toList
+      case (_, OptionalQuantifier) => Seq(matches)
       case (_, ExactQuantifier(n)) => matches.combinations(n).toList
       // Kleene star
       case (_, KleeneStar(true)) => Seq(matches)
@@ -196,33 +204,34 @@ class ArgumentPattern(
       // One or more
       case (_, OneOrMore(true)) => Seq(matches)
       case (_, OneOrMore(false)) => matches.combinations(1).toList
-      // greedy ranged quantifier w/ min and max reps
-      case (_, RangedQuantifier(Some(minRep), Some(maxRep), true)) =>
+      // ranged quantifier w/ min and max reps
+      case (_, RangedQuantifier(Some(minRep), Some(maxRep), false)) =>
         val reps = (Seq(matches.size) ++ (0 to maxRep)).filter(_ <= matches.size).max
         matches.combinations(reps).toList
-      // non-greedy ranged quantifier w/ min and max reps
-      case (_, RangedQuantifier(Some(minRep), Some(maxRep), false)) =>
-        val reps = (minRep to maxRep).filter(_ <= matches.size).min
-        matches.combinations(reps).toList
-      // greedy ranged quantifier w/ min reps
-      case (_, RangedQuantifier(Some(minRep), None, true)) =>
+      // ranged quantifier w/ min reps
+      case (_, RangedQuantifier(Some(minRep), None, false)) =>
         val reps = (minRep to matches.size).filter(_ <= matches.size).max
         matches.combinations(reps).toList
-      // non-greedy ranged quantifier w/ min reps
-      case (_, RangedQuantifier(Some(minRep), None, false)) =>
-        val reps = (minRep to matches.size).filter(_ <= matches.size).min
-        matches.combinations(reps).toList
-      // greedy ranged quantifier w/ max reps
-      case (_, RangedQuantifier(None, Some(maxRep), true)) =>
+      // ranged quantifier w/ max reps
+      case (_, RangedQuantifier(None, Some(maxRep), false)) =>
+        // TODO: verify the semantics
         val reps = (0 to maxRep).filter(_ <= matches.size).max
         matches.combinations(reps).toList
-      // non-greedy ranged quantifier w/ max reps
-      case (_, RangedQuantifier(None, Some(maxRep), false)) =>
-        val reps = (0 to maxRep).filter(_ <= matches.size).min
-        if (reps == 0) Nil else matches.combinations(reps).toList
+      // modified open range quantifier w/ min reps
+      case (_, RangedQuantifier(Some(minRep), None, true)) =>
+        val start: Int = (minRep to matches.size).filter(_ <= matches.size).min
+        (start to matches.size).flatMap(i => matches.combinations(i))
+      // modified open range quantifier w/ max reps
+      case (_, RangedQuantifier(None, Some(maxRep), true)) =>
+        val end = if (maxRep < matches.size) maxRep else matches.size
+        (0 to end).flatMap(i => matches.combinations(i))
+      // modified closed range quantifier
+      case (_, RangedQuantifier(Some(minRep), Some(maxRep), true)) =>
+        (minRep to maxRep).flatMap(i => matches.combinations(i))
     }
   }
 }
+
 
 sealed trait DependencyPatternNode {
 
