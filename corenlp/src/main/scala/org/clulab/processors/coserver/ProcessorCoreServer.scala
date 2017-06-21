@@ -3,7 +3,7 @@ package org.clulab.processors.coserver
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
 
-import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
+import akka.actor._
 import akka.event.Logging
 import akka.routing.FromConfig
 
@@ -16,24 +16,28 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Split core server into object/class.
+  *   Last Modified: Use explicit single instance.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
   // save any command line arguments
   private val argsList = args.toList
 
-  // load application configuration from the configuration file
-  private val config = ConfigFactory.load().getConfig("ProcessorCoreService")
-
-  // create an instance of the server
-  private val server = new ProcessorCoreServer(config)
+  // THE instance of the the processor core server
+  private var _server: ProcessorCoreServer = _
 
   /** Return an actor path to the current instance of the processor pool. */
-  def getPath = server.getPath
+  def getPath: ActorPath = instance
 
-  // TODO: create processor core server Factory method?
-  // Factory takes optional configuration -- defaults to Processors config if not given?
+  /** Create a single instance of the processor core server, only if it has been created. */
+  def instance: ActorPath = {
+    val config = ConfigFactory.load().getConfig("ProcessorCoreService")
+    logger.debug(s"(ProcessorCoreServer.instance): config=${config}")
+    if (_server == null)
+      _server = new ProcessorCoreServer(config)
+    _server.getPath
+  }
+
 }
 
 
@@ -44,9 +48,13 @@ class ProcessorCoreServer (
 
 ) extends LazyLogging {
 
+  if (config == null)
+    throw new RuntimeException("Unable to read configuration from configuration file.")
+
   // create the Processor engine specified by the configuration and used by this server
   private val processor: Processor = {
-    val proc = config.getString("server.processor")
+    val proc = if (config.hasPath("server.processor")) config.getString("server.processor")
+               else "core"
     proc.toLowerCase match {
       case "bio" => new BioNLPProcessor(removeFigTabReferences = true)
       case "core" => new CoreNLPProcessor()
@@ -68,9 +76,9 @@ class ProcessorCoreServer (
 
   logger.debug(s"(ProcessorCoreServer.Class): procPoll=${procPool}")
 
-  // TODO: set supervisory strategy property of the pool to handle errors
+  // TODO: set supervisory strategy property of the pool to handle errors LATER
 
   /** Return an actor path to the current instance of the processor pool. */
-  def getPath = procPool.path
+  def getPath: ActorPath = procPool.path
 
 }
