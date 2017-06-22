@@ -253,7 +253,7 @@ object SequenceTagger {
   // list of label Markov orders (main and backoff)
   val orders: Array[Int] = Array(1)
   // number of training iterations
-  val iterations = 500
+  val iterations = 1000
   // include all allowed transitions, even those not in training data
   val fullyConnected = true
   // the gaussian prior variance used for training
