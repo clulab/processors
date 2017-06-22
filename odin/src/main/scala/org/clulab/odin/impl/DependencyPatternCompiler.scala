@@ -32,7 +32,7 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
   def argPattern: Parser[ArgumentPattern] =
     identifier ~ ":" ~ identifier ~ opt("?" ||| "*" ||| "*?" ||| "+" ||| "+?" |||
       "{" ~> int <~ "}" |||
-      "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}&" ||| "}?" )
+      "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}?" )
     ) ~ "=" ~ disjunctiveDepPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name equalsIgnoreCase "trigger" =>
         sys.error(s"'$name' is not a valid argument name")
@@ -62,21 +62,12 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
       // open range quantifier
       // make combinations of the largest value found in the range (i.e., in {2,5} if 5 matches found, create combos of 5)
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~ "," ~ None ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, allBundlesInRange = false))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
       case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep), allBundlesInRange = false))
-      // open range quantifier w/ modifier
-      // for range {s,e}, make combinations from s to e or max found.
-      case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}&" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep), allBundlesInRange = true))
-      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ None ~ "}&" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, allBundlesInRange = true))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep)))
       // closed range quantifier
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None, allBundlesInRange = false))
-      // closed range quantifier w/ modifier
-      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}&" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = Some(maxRep), allBundlesInRange = true))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
       // better errors
       case name ~ ":" ~ label ~ Some( _ ~ "}?" ) ~ "=" ~ pat =>
         throw OdinCompileException("? used to modify a ranged quantifier for a graph pattern argument.  Use an exact value (ex. {3} for 3)")
@@ -205,29 +196,17 @@ class ArgumentPattern(
       case (_, OneOrMore(true)) => Seq(matches)
       case (_, OneOrMore(false)) => matches.combinations(1).toList
       // ranged quantifier w/ min and max reps
-      case (_, RangedQuantifier(Some(minRep), Some(maxRep), false)) =>
+      case (_, RangedQuantifier(Some(minRep), Some(maxRep))) =>
         val reps = (Seq(matches.size) ++ (0 to maxRep)).filter(_ <= matches.size).max
         matches.combinations(reps).toList
       // ranged quantifier w/ min reps
-      case (_, RangedQuantifier(Some(minRep), None, false)) =>
+      case (_, RangedQuantifier(Some(minRep), None)) =>
         val reps = (minRep to matches.size).filter(_ <= matches.size).max
         matches.combinations(reps).toList
       // ranged quantifier w/ max reps
-      case (_, RangedQuantifier(None, Some(maxRep), false)) =>
-        // TODO: verify the semantics
+      case (_, RangedQuantifier(None, Some(maxRep))) =>
         val reps = (0 to maxRep).filter(_ <= matches.size).max
         matches.combinations(reps).toList
-      // modified open range quantifier w/ min reps
-      case (_, RangedQuantifier(Some(minRep), None, true)) =>
-        val start: Int = (minRep to matches.size).filter(_ <= matches.size).min
-        (start to matches.size).flatMap(i => matches.combinations(i))
-      // modified open range quantifier w/ max reps
-      case (_, RangedQuantifier(None, Some(maxRep), true)) =>
-        val end = if (maxRep < matches.size) maxRep else matches.size
-        (0 to end).flatMap(i => matches.combinations(i))
-      // modified closed range quantifier
-      case (_, RangedQuantifier(Some(minRep), Some(maxRep), true)) =>
-        (minRep to maxRep).flatMap(i => matches.combinations(i))
     }
   }
 }

@@ -26,14 +26,10 @@ case class ExactQuantifier(repeat: Int) extends Quantifier {
 }
 /**
   * Encodes regex {,e} {s,} {s,e} and lazy variants
-  * @param minRepeat
-  * @param maxRepeat
-  * @param allBundlesInRange whether or not all bundles in the given range should be produced (ex. {1,3} -> matches.combination(1) ++ matches.combinations(2) ++ .. )
   */
 case class RangedQuantifier(
   minRepeat: Option[Int] = None,
-  maxRepeat: Option[Int] = None,
-  allBundlesInRange: Boolean
+  maxRepeat: Option[Int] = None
 ) extends Quantifier {
   require(minRepeat.nonEmpty || maxRepeat.nonEmpty, "RangedQuantifier must have either either a minRepeat or maxRepeat")
   require(if (minRepeat.nonEmpty) minRepeat.get >= 0 else true, "minRepeat for RangedQuantifier cannot be negative")
