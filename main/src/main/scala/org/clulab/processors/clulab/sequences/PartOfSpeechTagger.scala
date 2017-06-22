@@ -21,6 +21,7 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
       fe.word(offset)
+      fe.lemma(offset)
       fe.casing(offset)
       fe.suffixes(offset, 1, 3)
 

@@ -15,8 +15,18 @@ class FeatureExtractor(val sentence:Sentence, val position:Int, val features:mut
       features += s"w[$offset]:-BOS-"
     else if(i == sentence.size)
       features += s"w[$offset]:-EOS-"
-    if(validPosition(i))
+    else if(validPosition(i))
       features += s"w[$offset]:${sentence.words(i)}"
+  }
+
+  def lemma(offset:Int) {
+    val i = position + offset
+    if(i == -1)
+      features += s"l[$offset]:-BOS-"
+    else if(i == sentence.size)
+      features += s"l[$offset]:-EOS-"
+    else if(validPosition(i))
+      features += s"l[$offset]:${sentence.lemmas.get(i)}"
   }
 
   def casing(offset:Int) {

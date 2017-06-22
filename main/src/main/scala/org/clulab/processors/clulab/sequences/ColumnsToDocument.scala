@@ -56,6 +56,9 @@ object ColumnsToDocument {
     }
     source.close()
     logger.debug(s"Loaded ${sentences.size} sentences from file $fn.")
+
+    // TODO: add lemmas
+
     new Document(sentences.toArray)
   }
 
