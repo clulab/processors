@@ -1,5 +1,6 @@
 package org.clulab.processors.clulab.sequences
 
+import org.clulab.processors.clulab.CluProcessor
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -13,6 +14,8 @@ class ColumnsToDocument
   */
 object ColumnsToDocument {
   val logger:Logger = LoggerFactory.getLogger(classOf[ColumnsToDocument])
+
+  val proc = new CluProcessor()
 
   def read(fn:String, wordPos:Int, tagPos:Int): Document = {
     val source = io.Source.fromFile(fn)
@@ -57,9 +60,14 @@ object ColumnsToDocument {
     source.close()
     logger.debug(s"Loaded ${sentences.size} sentences from file $fn.")
 
-    // TODO: add lemmas
+    val d = new Document(sentences.toArray)
+    annotate(d)
 
-    new Document(sentences.toArray)
+    d
+  }
+
+  def annotate(doc:Document) {
+    proc.lemmatize(doc) // some features use lemmas, which are not available in the CoNLL data
   }
 
   private def in(s:String):String = Processor.internString(s)

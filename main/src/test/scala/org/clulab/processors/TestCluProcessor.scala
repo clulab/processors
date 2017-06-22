@@ -45,6 +45,7 @@ class TestCluProcessor extends FlatSpec with Matchers {
 
   it should "POS tag correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
+    proc.lemmatize(doc)
     proc.tagPartsOfSpeech(doc)
     doc.clear()
     
@@ -61,5 +62,16 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).tags.get(4) should be ("NNP")
     doc.sentences(1).tags.get(5) should be (".")
     println("POS tagging is fine.")
+  }
+
+  it should "lemmatize text correctly" in {
+    val doc = proc.mkDocument("John Doe went to the shops.")
+    proc.lemmatize(doc)
+    doc.clear()
+
+    doc.sentences(0).lemmas.get(0) should be ("john")
+    doc.sentences(0).lemmas.get(2) should be ("go")
+    doc.sentences(0).lemmas.get(5) should be ("shop")
+    println("Lemmatization is fine.")
   }
 }

@@ -1,8 +1,10 @@
 package org.clulab.processors.clulab
 
+import edu.knowitall.tool.stem.MorphaStemmer
 import org.clulab.processors.clulab.sequences.PartOfSpeechTagger
 import org.clulab.processors.clulab.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
+import uk.ac.susx.informatics.Morpha
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -92,7 +94,13 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
   /** Lematization; modifies the document in place */
   def lemmatize(doc:Document) {
-    // TODO
+    for(sent <- doc.sentences) {
+      val lemmas = new Array[String](sent.size)
+      for(i <- sent.words.indices) {
+        lemmas(i) = MorphaStemmer.lemmatize(sent.words(i))
+      }
+      sent.lemmas = Some(lemmas)
+    }
   }
 
   /** NER; modifies the document in place */
