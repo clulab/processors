@@ -8,7 +8,12 @@ import scala.collection.mutable
   * Implements common features used in sequence tagging
   * Created by mihais on 6/8/17.
   */
-class FeatureExtractor(val sentence:Sentence, val position:Int, val features:mutable.HashSet[String]) {
+class FeatureExtractor(
+  val sentence:Sentence,
+  val allowableLabels:mutable.HashMap[String, mutable.HashSet[String]],
+  val position:Int,
+  val features:mutable.HashSet[String]) {
+
   def word(offset:Int) {
     val i = position + offset
     if(i == -1)
@@ -54,6 +59,20 @@ class FeatureExtractor(val sentence:Sentence, val position:Int, val features:mut
           val suff = w.substring(w.length - len)
           features += s"suff[$offset,$len]:$suff"
         }
+      }
+    }
+  }
+
+  def allowable(offset:Int) {
+    val i = position + offset
+    if(validPosition(i)) {
+      val w = sentence.words(i).toLowerCase
+      if(allowableLabels.contains(w)) {
+        val a = allowableLabels.get(w).get.toList.sorted.mkString("-")
+        println(s"allowable($w) = $a")
+        features += s"a[$offset]:$a"
+      } else {
+        features += s"a[$offset]:unk"
       }
     }
   }

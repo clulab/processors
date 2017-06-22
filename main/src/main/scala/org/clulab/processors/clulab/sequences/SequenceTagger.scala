@@ -13,6 +13,7 @@ import cc.mallet.fst.{CRF, CRFTrainerByThreadedLabelLikelihood, Transducer}
 import cc.mallet.fst.SimpleTagger._
 import cc.mallet.pipe.iterator.LineGroupIterator
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
@@ -26,8 +27,26 @@ abstract class SequenceTagger[L, F] {
   var crfModel:Option[CRF] = None
   var testPipe:Option[ToFeatureVectorPipe[F]] = None
 
-  def train(docs:Iterator[Document]) {
+  val allowable = new mutable.HashMap[String, mutable.HashSet[L]]
 
+  def preprocess(docs:Iterator[Document]) {
+    for(doc <- docs; sentence <- doc.sentences) {
+      val labels = labelExtractor(sentence)
+      val words = sentence.words.map(_.toLowerCase())
+      assert(words.length == labels.length)
+
+      for(i <- words.indices) {
+        addAllowable(words(i), labels(i))
+      }
+    }
+  }
+
+  def addAllowable(word:String, label:L) {
+    val aw = allowable.getOrElseUpdate(word, new mutable.HashSet[L]())
+    aw += label
+  }
+
+  def train(docs:Iterator[Document]) {
     // generate features for all sentences in all docs, and save them to disk
     val f = File.createTempFile("sequence_tagger", ".train")
     val pw = new PrintWriter(new FileWriter(f))
