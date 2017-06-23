@@ -38,35 +38,35 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
         sys.error(s"'$name' is not a valid argument name")
       // no quantifier
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = ArgumentQuantifier(Some(1), Some(1)))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier)
       // optional
       case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = ArgumentQuantifier(None, Some(1)))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, Some(1)))
       // Kleene star
       case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = ArgumentQuantifier(None, None))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, None))
       // Don't allow lazy Kleene star for args
       case name ~ ":" ~ label ~ Some("*?") ~ "=" ~ pat =>
         throw OdinCompileException(s"Lazy Kleene star (*?) used for argument '$name'.  Remove argument pattern from rule.")
       // one or more (greedy)
       case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = ArgumentQuantifier(Some(1), None))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(Some(1), None))
       // one or more (lazy)
       // NOTE: instead of throwing an exception, a warning could be printed and the +? could simply be dropped in compilation
       case name ~ ":" ~ label ~ Some("+?") ~ "=" ~ pat =>
         throw OdinCompileException(s"+? used for argument '$name', but it is superfluous in this context. Remove +? quantifier from argument.")
       // exact count
       case name ~ ":" ~ label ~ Some(exact: Int) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = ArgumentQuantifier(Some(exact), Some(exact)))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = ExactQuantifier(exact))
       // open range quantifier
       // make combinations of the largest value found in the range (i.e., in {2,5} if 5 matches found, create combos of 5)
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~ "," ~ None ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = ArgumentQuantifier(minRepeat = Some(minRep), maxRepeat = None))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
       case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = ArgumentQuantifier(minRepeat = None, maxRepeat = Some(maxRep)))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep)))
       // closed range quantifier
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = ArgumentQuantifier(minRepeat = Some(minRep), maxRepeat = None))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
       // better errors
       case name ~ ":" ~ label ~ Some( _ ~ "}?" ) ~ "=" ~ pat =>
         throw OdinCompileException("? used to modify a ranged quantifier for a graph pattern argument.  Use an exact value (ex. {3} for 3)")
@@ -185,25 +185,25 @@ class ArgumentPattern(
       // no matches
       case (Nil, _) => Nil
       // no quantifier w/ some matches
-      case (_, ArgumentQuantifier(Some(1), Some(1))) => matches.combinations(1).toList
+      case (_, NullQuantifier) => matches.combinations(1).toList
       // optional
-      case (_, ArgumentQuantifier(None, Some(1))) => matches.combinations(1).toList // at most one per mention
+      case (_, RangedQuantifier(None, Some(1))) => matches.combinations(1).toList // at most one per mention
       // Kleene star (greedy)
-      case (_, ArgumentQuantifier(None, None)) => Seq(matches)
+      case (_, RangedQuantifier(None, None)) => Seq(matches)
       // One or more
-      case (_, ArgumentQuantifier(Some(1), None)) => Seq(matches)
+      case (_, RangedQuantifier(Some(1), None)) => Seq(matches)
       // exact
-      case (_, ArgumentQuantifier(Some(s), Some(e))) if s == e => matches.combinations(s).toList
+      case (_, ExactQuantifier(exact)) => matches.combinations(exact).toList
       // ranged quantifier w/ min and max reps
-      case (_, ArgumentQuantifier(Some(minRep), Some(maxRep))) =>
+      case (_, RangedQuantifier(Some(minRep), Some(maxRep))) =>
         if (matches.size < minRep) Nil
         else if (matches.size > maxRep) matches.combinations(maxRep).toList
         else Seq(matches)
       // ranged quantifier w/ min reps
-      case (_, ArgumentQuantifier(Some(minRep), None)) =>
+      case (_, RangedQuantifier(Some(minRep), None)) =>
         if (matches.size < minRep) Nil else Seq(matches)
       // ranged quantifier w/ max reps
-      case (_, ArgumentQuantifier(None, Some(maxRep))) =>
+      case (_, RangedQuantifier(None, Some(maxRep))) =>
         if (matches.size > maxRep) matches.combinations(maxRep).toList
         else Seq(matches)
     }
