@@ -24,7 +24,7 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
       fe.lemma(offset)
       fe.casing(offset)
       fe.suffixes(offset, 1, 3)
-      fe.allowable(offset)
+      // fe.allowable(offset)
     }
 
     // TODO: add bigrams
