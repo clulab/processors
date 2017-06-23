@@ -42,20 +42,17 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
         new ArgumentPattern(name, label, pat, required = false, quantifier = OptionalQuantifier)
       // Kleene star
       case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = KleeneStar(greedy = true))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = KleeneStar)
       // Don't allow lazy Kleene star for args
       case name ~ ":" ~ label ~ Some("*?") ~ "=" ~ pat =>
         throw OdinCompileException(s"Lazy Kleene star (*?) used for argument '$name'.  Remove argument pattern from rule.")
-        //new ArgumentPattern(name, label, pat, required = false, quantifier = KleeneStar(greedy = false))
       // one or more (greedy)
       case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = OneOrMore(greedy = true))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = OneOrMore)
       // one or more (lazy)
       // NOTE: instead of throwing an exception, a warning could be printed and the +? could simply be dropped in compilation
       case name ~ ":" ~ label ~ Some("+?") ~ "=" ~ pat =>
-        throw OdinCompileException(s"+? used for argument '$name', but it is superfluous in this context.  Quantifier will be ignored.  Remove +? quantifier from argument.")
-        //println(Console.RED + s"Odin Warning: +? used for argument '$name', but it is superfluous in this context.  Quantifier will be ignored.  Remove +? quantifier from argument." + Console.RESET)
-        //new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier)
+        throw OdinCompileException(s"+? used for argument '$name', but it is superfluous in this context. Remove +? quantifier from argument.")
       // exact count
       case name ~ ":" ~ label ~ Some(exact: Int) ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, quantifier = ExactQuantifier(exact))
@@ -64,7 +61,7 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~ "," ~ None ~ "}" ) ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
       case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep)))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep)))
       // closed range quantifier
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}" ) ~ "=" ~ pat =>
         new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
@@ -174,7 +171,7 @@ class ArgumentPattern(
     val label: String,
     val pattern: DependencyPatternNode,
     val required: Boolean,
-    val quantifier: Quantifier
+    val quantifier: ArgumentQuantifier
 ) {
   // extracts mentions and groups them according to `size`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[(Mention, SynPath)]] = {
@@ -187,26 +184,24 @@ class ArgumentPattern(
       case (Nil, _) => Nil
       // no quantifier w/ some matches
       case (_, NullQuantifier) => matches.combinations(1).toList
-      case (_, OptionalQuantifier) => Seq(matches)
+      case (_, OptionalQuantifier) => matches.combinations(1).toList // at most one per mention
       case (_, ExactQuantifier(n)) => matches.combinations(n).toList
-      // Kleene star
-      case (_, KleeneStar(true)) => Seq(matches)
-      case (_, KleeneStar(false)) => Nil
+      // Kleene star (greedy)
+      case (_, KleeneStar) => Seq(matches)
       // One or more
-      case (_, OneOrMore(true)) => Seq(matches)
-      case (_, OneOrMore(false)) => matches.combinations(1).toList
+      case (_, OneOrMore) => Seq(matches)
       // ranged quantifier w/ min and max reps
       case (_, RangedQuantifier(Some(minRep), Some(maxRep))) =>
-        val reps = (Seq(matches.size) ++ (0 to maxRep)).filter(_ <= matches.size).max
-        matches.combinations(reps).toList
+        if (matches.size < minRep) Nil
+        else if (matches.size > maxRep) matches.combinations(maxRep).toList
+        else Seq(matches)
       // ranged quantifier w/ min reps
       case (_, RangedQuantifier(Some(minRep), None)) =>
-        val reps = (minRep to matches.size).filter(_ <= matches.size).max
-        matches.combinations(reps).toList
+        if (matches.size < minRep) Nil else Seq(matches)
       // ranged quantifier w/ max reps
       case (_, RangedQuantifier(None, Some(maxRep))) =>
-        val reps = (0 to maxRep).filter(_ <= matches.size).max
-        matches.combinations(reps).toList
+        if (matches.size > maxRep) matches.combinations(maxRep).toList
+        else Seq(matches)
     }
   }
 }
