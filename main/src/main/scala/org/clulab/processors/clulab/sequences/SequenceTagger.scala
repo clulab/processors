@@ -76,7 +76,7 @@ abstract class SequenceTagger[L, F] {
   private def trainCRF(trainFile:File):Boolean = {
     // read training data from file
     val pipe = new SimpleTaggerSentence2FeatureVectorSequence
-    pipe.getTargetAlphabet.lookupIndex(defaultLabel)
+    // pipe.getTargetAlphabet.lookupIndex(defaultLabel) // TODO: is this actually needed?
     pipe.setTargetProcessing(true)
     val trainingData = new InstanceList(pipe)
     trainingData.addThruPipe(new LineGroupIterator(new FileReader(trainFile), Pattern.compile("^\\s*$"), true))
@@ -118,7 +118,7 @@ abstract class SequenceTagger[L, F] {
     crft.setGaussianPriorVariance(gaussianVariance)
     crft.setUseSparseWeights(true)
     crft.setUseSomeUnsupportedTrick(true)
-    // these 2 lines correspond to the "some-dense" SimpleTagger option
+    // these 2 lines above correspond to the "some-dense" SimpleTagger option
     var converged = false
     for (i <- 1 to iterations if !converged) {
       logger.info(s"Training iteration #$i...")
