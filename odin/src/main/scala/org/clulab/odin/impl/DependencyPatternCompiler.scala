@@ -1,8 +1,8 @@
 package org.clulab.odin.impl
 
-import org.clulab.struct.Interval
 import org.clulab.processors.Document
 import org.clulab.odin._
+
 
 class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) extends TokenPatternParsers(unit, resources) {
 
@@ -30,19 +30,46 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
     }
 
   def argPattern: Parser[ArgumentPattern] =
-    identifier ~ ":" ~ identifier ~ opt("?" | "*" | "+" | "{" ~> int <~ "}") ~ "=" ~ disjunctiveDepPattern ^^ {
+    identifier ~ ":" ~ identifier ~ opt("?" ||| "*" ||| "*?" ||| "+" ||| "+?" |||
+      "{" ~> int <~ "}" |||
+      "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}?" )
+    ) ~ "=" ~ disjunctiveDepPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name equalsIgnoreCase "trigger" =>
         sys.error(s"'$name' is not a valid argument name")
+      // no quantifier
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, size = Some(1))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier)
+      // optional
       case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, size = Some(1))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, Some(1)))
+      // Kleene star
       case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, size = None)
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, None))
+      // Don't allow lazy Kleene star for args
+      case name ~ ":" ~ label ~ Some("*?") ~ "=" ~ pat =>
+        throw OdinCompileException(s"Lazy Kleene star (*?) used for argument '$name'.  Remove argument pattern from rule.")
+      // one or more (greedy)
       case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, size = None)
-      case name ~ ":" ~ label ~ Some(n:Int) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, size = Some(n))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(Some(1), None))
+      // one or more (lazy)
+      // NOTE: instead of throwing an exception, a warning could be printed and the +? could simply be dropped in compilation
+      case name ~ ":" ~ label ~ Some("+?") ~ "=" ~ pat =>
+        throw OdinCompileException(s"+? used for argument '$name', but it is superfluous in this context. Remove +? quantifier from argument.")
+      // exact count
+      case name ~ ":" ~ label ~ Some(exact: Int) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, quantifier = ExactQuantifier(exact))
+      // open range quantifier
+      // make combinations of the largest value found in the range (i.e., in {2,5} if 5 matches found, create combos of 5)
+      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~ "," ~ None ~ "}" ) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
+      case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}" ) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep)))
+      // closed range quantifier
+      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}" ) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
+      // better errors
+      case name ~ ":" ~ label ~ Some( _ ~ "}?" ) ~ "=" ~ pat =>
+        throw OdinCompileException("? used to modify a ranged quantifier for a graph pattern argument.  Use an exact value (ex. {3} for 3)")
     }
 
   def disjunctiveDepPattern: Parser[DependencyPatternNode] =
@@ -146,7 +173,7 @@ class ArgumentPattern(
     val label: String,
     val pattern: DependencyPatternNode,
     val required: Boolean,
-    val size: Option[Int]
+    val quantifier: ArgumentQuantifier
 ) {
   // extracts mentions and groups them according to `size`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[(Mention, SynPath)]] = {
@@ -154,11 +181,31 @@ class ArgumentPattern(
       (tok, path) <- pattern.findAllIn(tok, sent, doc, state)
       m <- state.mentionsFor(sent, tok, label)
     } yield (m, path.reverse) // paths were collected in reverse
-    if (matches.isEmpty) Nil
-    else if (size.isDefined) matches.combinations(size.get).toList
-    else Seq(matches)
+    (matches, quantifier) match {
+      // no matches
+      case (Nil, _) => Nil
+      // no quantifier w/ some matches
+      case (_, NullQuantifier) => matches.combinations(1).toList
+      // Kleene star (greedy)
+      case (_, RangedQuantifier(None, None)) => Seq(matches)
+      // exact
+      case (_, ExactQuantifier(exact)) => matches.combinations(exact).toList
+      // ranged quantifier w/ min and max reps
+      case (_, RangedQuantifier(Some(minRep), Some(maxRep))) =>
+        if (matches.size < minRep) Nil
+        else if (matches.size > maxRep) matches.combinations(maxRep).toList
+        else Seq(matches)
+      // ranged quantifier w/ min reps || One or more
+      case (_, RangedQuantifier(Some(minRep), None)) =>
+        if (matches.size < minRep) Nil else Seq(matches)
+      // ranged quantifier w/ max reps  || optional (?)
+      case (_, RangedQuantifier(None, Some(maxRep))) =>
+        if (matches.size > maxRep) matches.combinations(maxRep).toList
+        else Seq(matches)
+    }
   }
 }
+
 
 sealed trait DependencyPatternNode {
 
