@@ -1,8 +1,5 @@
 package org.clulab.odin.serialization
 
-import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
 import org.clulab.odin
 import org.clulab.odin._
 import org.clulab.struct.DirectedGraph
@@ -75,14 +72,6 @@ package object json {
     // an accompanying json map of docEquivHash -> doc's json
     def completeAST: JValue = Seq(m).jsonAST
 
-    /**
-      * Serialize mentions to json file
-      */
-    def saveJSON(file: String, pretty: Boolean): Unit = {
-      require(file.endsWith(".json"), "file should have .json extension")
-      Files.write(Paths.get(file), Seq(m).json(pretty).getBytes(StandardCharsets.UTF_8))
-    }
-    def saveJSON(file: File, pretty: Boolean): Unit = saveJSON(file.getAbsolutePath, pretty)
   }
 
   implicit class TextBoundMentionOps(tb: TextBoundMention) extends JSONSerialization with Equivalency {
@@ -258,14 +247,6 @@ package object json {
 
     def jsonAST: JValue = JSONSerializer.jsonAST(mentions)
 
-    /**
-      * Serialize mentions to json file
-      */
-    def saveJSON(file: String, pretty: Boolean): Unit = {
-      require(file.endsWith(".json"), "file should have .json extension")
-      Files.write(Paths.get(file), mentions.json(pretty).getBytes(StandardCharsets.UTF_8))
-    }
-    def saveJSON(file: File, pretty: Boolean): Unit = saveJSON(file.getAbsolutePath, pretty)
   }
 
   // Syntactic paths generalized are graph paths
