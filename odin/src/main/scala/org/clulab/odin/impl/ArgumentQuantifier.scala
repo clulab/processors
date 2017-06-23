@@ -20,4 +20,5 @@ case class RangedQuantifier(
 ) extends ArgumentQuantifier {
   require(if (minRepeat.nonEmpty) minRepeat.get >= 0 else true, "minRepeat for RangedQuantifier cannot be negative")
   require(if (maxRepeat.nonEmpty) maxRepeat.get >= 0 else true, "maxRepeat for RangedQuantifier cannot be negative")
+  require(if (minRepeat.isDefined && maxRepeat.isDefined) minRepeat.get < maxRepeat.get else true, "minRepeat for RangedQuantifier must be less than maxRepeat")
 }

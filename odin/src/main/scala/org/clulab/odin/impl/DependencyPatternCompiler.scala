@@ -186,12 +186,8 @@ class ArgumentPattern(
       case (Nil, _) => Nil
       // no quantifier w/ some matches
       case (_, NullQuantifier) => matches.combinations(1).toList
-      // optional
-      case (_, RangedQuantifier(None, Some(1))) => matches.combinations(1).toList // at most one per mention
       // Kleene star (greedy)
       case (_, RangedQuantifier(None, None)) => Seq(matches)
-      // One or more
-      case (_, RangedQuantifier(Some(1), None)) => Seq(matches)
       // exact
       case (_, ExactQuantifier(exact)) => matches.combinations(exact).toList
       // ranged quantifier w/ min and max reps
@@ -199,10 +195,10 @@ class ArgumentPattern(
         if (matches.size < minRep) Nil
         else if (matches.size > maxRep) matches.combinations(maxRep).toList
         else Seq(matches)
-      // ranged quantifier w/ min reps
+      // ranged quantifier w/ min reps || One or more
       case (_, RangedQuantifier(Some(minRep), None)) =>
         if (matches.size < minRep) Nil else Seq(matches)
-      // ranged quantifier w/ max reps
+      // ranged quantifier w/ max reps  || optional (?)
       case (_, RangedQuantifier(None, Some(maxRep))) =>
         if (matches.size > maxRep) matches.combinations(maxRep).toList
         else Seq(matches)
