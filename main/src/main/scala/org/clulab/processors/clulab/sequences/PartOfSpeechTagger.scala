@@ -19,15 +19,15 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
     val features = new mutable.HashSet[String]()
     val fe = new FeatureExtractor(sentence, allowable, offset, features)
 
-    for(offset <- List(-2, -1, 0, 1, 2)) {
+    for(offset <- List(-2, -1, 0, 1, 2)) { // TODO: -1, 1
       fe.word(offset)
       fe.lemma(offset)
       fe.casing(offset)
-      fe.suffixes(offset, 1, 3)
-      // fe.allowable(offset)
+      fe.suffixes(offset, 1, 3) // TODO: 2, 3?
     }
 
-    // TODO: add bigrams
+    fe.wordBigrams(0)
+    fe.wordBigrams(1)
 
     features.toSet
   }
@@ -62,7 +62,7 @@ object PartOfSpeechTagger {
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.read(props.getProperty("train"), 0, 1)
       val tagger = new PartOfSpeechTagger
-      tagger.preprocess(List(doc).iterator)
+      //tagger.preprocess(List(doc).iterator)
       tagger.train(List(doc).iterator)
 
       if(props.containsKey("model")) {

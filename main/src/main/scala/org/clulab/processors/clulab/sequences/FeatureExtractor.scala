@@ -24,6 +24,20 @@ class FeatureExtractor(
       features += s"w[$offset]:${sentence.words(i)}"
   }
 
+  def wordBigrams(offset:Int) {
+    val i = position + offset
+    if(validPosition(i) && validPosition(i - 1)) {
+      features += s"wb[$offset]:${sentence.words(i - 1)}-${sentence.words(i)}"
+    }
+  }
+
+  def lemmaBigrams(offset:Int) {
+    val i = position + offset
+    if(validPosition(i) && validPosition(i - 1)) {
+      features += s"wb[$offset]:${sentence.lemmas.get(i - 1)}-${sentence.lemmas.get(i)}"
+    }
+  }
+
   def lemma(offset:Int) {
     val i = position + offset
     if(validPosition(i))
