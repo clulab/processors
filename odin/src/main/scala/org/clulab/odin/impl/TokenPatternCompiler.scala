@@ -2,7 +2,7 @@ package org.clulab.odin.impl
 
 class TokenPatternParsers(val unit: String, val config: OdinConfig) extends TokenConstraintParsers {
 
-  // xcomments are considered whitespace
+  // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r
 
   def compileTokenPattern(input: String): TokenPattern = parseAll(tokenPattern, input) match {

@@ -7,6 +7,7 @@ trait Graph {
   def retrieveGraph(sent: Int, doc: Document, graphType: String): Option[DirectedGraph[String]] =
     doc.sentences(sent).graphs.get(graphType) match {
       case Some(graph) => Some(graph)
+      // FIXME: for some reason the sentence is missing the specified graphType.  Log this...
       case None => None
       //throw new OdinException(s"sentence does not have graph with name '$graphType'")
     }

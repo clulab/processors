@@ -57,7 +57,14 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     default: String = OdinConfig.DEFAULT_GRAPH
   ): String = data.get("graph") match {
     case None => default
-    case Some(g) => g.asInstanceOf[String]
+    case Some(g) =>
+      val graph = g.asInstanceOf[String]
+      // graph must be of the registered types
+      if (! OdinConfig.VALID_GRAPHS.contains(graph))
+        throw OdinException(s"'$graph' is not a valid graph type. Valid options: ${
+          OdinConfig.VALID_GRAPHS.map(s => s"'$s'").mkString(", ")
+        }")
+      graph
   }
 
   def getVars(data: Map[String, Any]): Map[String, String] = {
@@ -137,8 +144,9 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     ruleType match {
       case DefaultType =>
         new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
+      // ignore specification of 'graph' when using "type: dependency"
       case "dependency" =>
-        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig.copy(graph = OdinConfig.DEFAULT_GRAPH))
       case "token" =>
         new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
       // cross-sentence cases

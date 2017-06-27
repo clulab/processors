@@ -1,9 +1,10 @@
 package org.clulab.odin
 
 import org.clulab.TestUtils.jsonStringToDocument
-import org.clulab.odin.impl.OdinCompileException
+import org.clulab.odin.impl.{OdinCompileException, OdinException}
 import org.clulab.struct.Interval
 import org.scalatest._
+
 
 class TestGraphPattern extends FlatSpec with Matchers {
 
@@ -481,5 +482,51 @@ class TestGraphPattern extends FlatSpec with Matchers {
     results6 should have size (1)
   }
 
-  //'type: graph'
+  it should "ignore 'graph: ' when 'type: dependency'" in {
+
+
+    // "In 1987, Phillip Jeffries disappeared in a Buenos Aires hotel."
+    val doc = jsonStringToDocument(""" { "sentences": [ { "endOffsets": [ 2, 7, 8, 16, 25, 37, 40, 42, 49, 55, 61, 62 ], "entities": [ "O", "DATE", "O", "PERSON", "PERSON", "O", "O", "O", "LOCATION", "LOCATION", "O", "O" ], "graphs": { "stanford-basic": { "edges": [ { "destination": 1, "relation": "pobj", "source": 0 }, { "destination": 3, "relation": "nn", "source": 4 }, { "destination": 0, "relation": "prep", "source": 5 }, { "destination": 2, "relation": "punct", "source": 5 }, { "destination": 4, "relation": "nsubj", "source": 5 }, { "destination": 6, "relation": "prep", "source": 5 }, { "destination": 11, "relation": "punct", "source": 5 }, { "destination": 10, "relation": "pobj", "source": 6 }, { "destination": 7, "relation": "det", "source": 10 }, { "destination": 8, "relation": "nn", "source": 10 }, { "destination": 9, "relation": "nn", "source": 10 } ], "roots": [ 5 ] }, "stanford-collapsed": { "edges": [ { "destination": 3, "relation": "nn", "source": 4 }, { "destination": 1, "relation": "prep_in", "source": 5 }, { "destination": 2, "relation": "punct", "source": 5 }, { "destination": 4, "relation": "nsubj", "source": 5 }, { "destination": 10, "relation": "prep_in", "source": 5 }, { "destination": 11, "relation": "punct", "source": 5 }, { "destination": 7, "relation": "det", "source": 10 }, { "destination": 8, "relation": "nn", "source": 10 }, { "destination": 9, "relation": "nn", "source": 10 } ], "roots": [ 5 ] } }, "lemmas": [ "in", "1987", ",", "Phillip", "Jeffries", "disappear", "in", "a", "Buenos", "Aires", "hotel", "." ], "startOffsets": [ 0, 3, 7, 9, 17, 26, 38, 41, 43, 50, 56, 61 ], "tags": [ "IN", "CD", ",", "NNP", "NNP", "VBD", "IN", "DT", "NNP", "NNP", "NN", "." ], "words": [ "In", "1987", ",", "Phillip", "Jeffries", "disappeared", "in", "a", "Buenos", "Aires", "hotel", "." ] } ], "text": "In 1987, Phillip Jeffries disappeared in a Buenos Aires hotel." } """)
+
+    val mentions = Seq(
+      new TextBoundMention("Person", Interval(3, 5), 0, doc, false, "<test>"),
+      new TextBoundMention("Location", Interval(8, 10), 0, doc, false, "<test>"),
+      new TextBoundMention("Date", Interval(1), 0, doc, false, "<test>")
+    )
+
+    val rule = """
+                  |- name: "ignore-me"
+                  |  label: Event
+                  |  type: dependency
+                  |  # to preserve old behavior, graph will be ignored when type: dependency
+                  |  graph: "stanford-basic"
+                  |  pattern: |
+                  |    trigger = [lemma="disappear"]
+                  |    person: Person = nsubj
+                  |    location: Location = prep [lemma="in"] pobj nn?
+                  |    date: Date = prep [lemma="in"] pobj
+                  |""".stripMargin
+
+    val ee = ExtractorEngine(rule)
+    val res = ee.extractFrom(doc, State(mentions))
+
+    res shouldBe empty
+  }
+
+  it should "require a registered graph type wherever 'graph: ' is specified" in {
+
+    val rule = """
+                  |- name: "invalid-graph"
+                  |  label: Event
+                  |  graph: "poo" # this graph type is invalid
+                  |  pattern: |
+                  |    trigger = [lemma="disappear"]
+                  |    person: Person = nsubj
+                  |    location: Location = prep [lemma="in"] pobj nn?
+                  |    date: Date = prep [lemma="in"] pobj
+                  |""".stripMargin
+
+    intercept[OdinException] { ExtractorEngine(rule) }
+  }
+
 }
