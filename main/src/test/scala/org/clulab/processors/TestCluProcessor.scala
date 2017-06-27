@@ -51,7 +51,7 @@ class TestCluProcessor extends FlatSpec with Matchers {
     
     doc.sentences(0).tags.get(0) should be ("NNP")
     doc.sentences(0).tags.get(1) should be ("NNP")
-    doc.sentences(0).tags.get(2) should be ("NN") // TODO: VBD
+    doc.sentences(0).tags.get(2) should be ("VBD")
     doc.sentences(0).tags.get(3) should be ("TO")
     doc.sentences(0).tags.get(4) should be ("NNP")
     doc.sentences(0).tags.get(5) should be (".")
