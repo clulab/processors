@@ -29,7 +29,7 @@ class Sentence(
   /** Constituent tree of this sentence; includes head words */
   var syntacticTree: Option[Tree] = None
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  var dependenciesByType: GraphMap = new GraphMap
+  var graphs: GraphMap = new GraphMap
 
   def size:Int = words.length
 
@@ -71,21 +71,21 @@ class Sentence(
     *
     * @return A directed graph of dependencies if any exist, otherwise None
     */
-  def dependencies:Option[DirectedGraph[String]] = dependenciesByType match {
+  def dependencies:Option[DirectedGraph[String]] = graphs match {
     case collapsed if collapsed.contains(STANFORD_COLLAPSED) => collapsed.get(STANFORD_COLLAPSED)
     case basic if basic.contains(STANFORD_BASIC) => basic.get(STANFORD_BASIC)
     case _ => None
   }
 
   /** Fetches the Stanford basic dependencies */
-  def stanfordBasicDependencies:Option[DirectedGraph[String]] = dependenciesByType.get(STANFORD_BASIC)
+  def stanfordBasicDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_BASIC)
 
   /** Fetches the Stanford collapsed dependencies */
-  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = dependenciesByType.get(STANFORD_COLLAPSED)
+  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_COLLAPSED)
 
-  def semanticRoles:Option[DirectedGraph[String]] = dependenciesByType.get(SEMANTIC_ROLES)
+  def semanticRoles:Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
 
-  def setDependencies(depType: String, deps: DirectedGraph[String]): Unit = dependenciesByType += (depType -> deps)
+  def setDependencies(depType: String, deps: DirectedGraph[String]): Unit = graphs += (depType -> deps)
 
   /**
     * Recreates the text of the sentence, preserving the original number of white spaces between tokens
@@ -143,7 +143,7 @@ object Sentence {
     s.norms = norms
     s.chunks = chunks
     s.syntacticTree = tree
-    s.dependenciesByType = deps
+    s.graphs = deps
     s
   }
 }

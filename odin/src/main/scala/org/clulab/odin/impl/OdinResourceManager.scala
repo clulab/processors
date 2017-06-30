@@ -1,6 +1,6 @@
 package org.clulab.odin.impl
 
-import java.io.{BufferedInputStream, FileInputStream, InputStream}
+import java.io.{BufferedInputStream, InputStream}
 
 /**
  * Manage resources for Odin
@@ -26,16 +26,15 @@ object OdinResourceManager {
 
   def getInputStream(p: String): BufferedInputStream = {
     //println(s"Path to resources is $p")
-    val streamFromResources: InputStream = getClass.getClassLoader.getResourceAsStream(p)
-    // try resource-based loading, fall back to system file path otherwise
-    if (streamFromResources == null) new BufferedInputStream(new FileInputStream(p))
-    else new BufferedInputStream(streamFromResources)
+    val url = RuleReader.mkURL(p)
+    val streamFromResources: InputStream = url.openStream()
+    new BufferedInputStream(streamFromResources)
   }
 
   // YOU NEED TO CLOSE ME!!!
   def getSource(path: String): io.Source = {
-    val url = getClass.getClassLoader.getResource(path)
-    if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+    val url = RuleReader.mkURL(path)
+    io.Source.fromURL(url)
   }
 
   def buildResources(resourcesMap: Map[String, String]): Map[String, Option[OdinResource]] = {

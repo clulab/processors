@@ -1,4 +1,5 @@
 # Changes
++ **6.0.6** - Added `graph` field to Odin rules, which denotes the graph (ex. stanford collapsed dependencies) used within the pattern (`incoming`, `outgoing`, etc.).
 + **6.0.6** - Added ranged quantifiers to Odin graph pattern arguments.
 + **6.0.5** - Added charset parameter to ExtractorEngine methods.
 + **6.0.5** - Added CluProcessor, which contains only in-house tools. Currently contains English tokenization.

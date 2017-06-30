@@ -69,13 +69,14 @@ class TokenExtractor(
   }
 }
 
-class DependencyExtractor(
+class GraphExtractor(
     val name: String,
     val labels: Seq[String],
     val priority: Priority,
     val keep: Boolean,
     val action: Action,
-    val pattern: DependencyPattern
+    val pattern: GraphPattern,
+    val config: OdinConfig
 ) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {

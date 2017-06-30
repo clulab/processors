@@ -12,8 +12,10 @@ trait TokenConstraintParsers extends StringMatcherParsers {
       case None => TokenWildcard
     }
 
+  def config: OdinConfig
+
   /** access to resources (w2v embeddings, wordnet, etc) */
-  def resources: OdinResourceManager
+  val resources = config.resources
 
   /** the field that should be used by unitConstraint */
   def unit: String
@@ -55,8 +57,8 @@ trait TokenConstraintParsers extends StringMatcherParsers {
     case "tag"      ~ "=" ~ matcher ~ None => new TagConstraint(matcher)
     case "entity"   ~ "=" ~ matcher ~ None => new EntityConstraint(matcher)
     case "chunk"    ~ "=" ~ matcher ~ None => new ChunkConstraint(matcher)
-    case "incoming" ~ "=" ~ matcher ~ None => new IncomingConstraint(matcher)
-    case "outgoing" ~ "=" ~ matcher ~ None => new OutgoingConstraint(matcher)
+    case "incoming" ~ "=" ~ matcher ~ None => new IncomingConstraint(matcher, config.graph)
+    case "outgoing" ~ "=" ~ matcher ~ None => new OutgoingConstraint(matcher, config.graph)
     case "mention"  ~ "=" ~ matcher ~ arg  => new MentionConstraint(matcher, arg)
     case _ => sys.error("unrecognized token field")
   }
@@ -264,14 +266,14 @@ class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Value
     matcher matches chunk(tok, sent, doc)
 }
 
-class IncomingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
+class IncomingConstraint(matcher: StringMatcher, graphName: String) extends TokenConstraint with Graph {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    incoming(tok, sent, doc) exists matcher.matches
+    incoming(tok, sent, doc, graphName) exists matcher.matches
 }
 
-class OutgoingConstraint(matcher: StringMatcher) extends TokenConstraint with Dependencies {
+class OutgoingConstraint(matcher: StringMatcher, graphName: String) extends TokenConstraint with Graph {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    outgoing(tok, sent, doc) exists matcher.matches
+    outgoing(tok, sent, doc, graphName) exists matcher.matches
 }
 
 // checks that a token is inside a mention

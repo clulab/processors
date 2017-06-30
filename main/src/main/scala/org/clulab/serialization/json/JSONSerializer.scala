@@ -44,7 +44,7 @@ object JSONSerializer {
     val s = json.extract[Sentence]
     // build dependencies
     val graphs = (json \ "graphs").extract[Map[String, DirectedGraph[String]]]
-    s.dependenciesByType = GraphMap(graphs)
+    s.graphs = GraphMap(graphs)
     // build labels
     s.tags = getLabels(json, "tags")
     s.lemmas = getLabels(json, "lemmas")

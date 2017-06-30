@@ -4,166 +4,166 @@ import org.clulab.processors.Document
 import org.clulab.odin._
 
 
-class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) extends TokenPatternParsers(unit, resources) {
+class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatternParsers(unit, config) {
 
-  def compileDependencyPattern(input: String): DependencyPattern =
+  def compileGraphPattern(input: String): GraphPattern =
     parseAll(dependencyPattern, input) match {
       case Success(result, _) => result
       case failure: NoSuccess => sys.error(failure.msg)
     }
 
-  def dependencyPattern: Parser[DependencyPattern] =
-    triggerPatternDependencyPattern | triggerMentionDependencyPattern
+  def dependencyPattern: Parser[GraphPattern] =
+    triggerPatternGraphPattern | triggerMentionGraphPattern
 
-  def triggerPatternDependencyPattern: Parser[DependencyPattern] =
+  def triggerPatternGraphPattern: Parser[GraphPattern] =
     "(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern) ^^ {
-      case trigger ~ arguments => new TriggerPatternDependencyPattern(trigger, arguments)
+      case trigger ~ arguments => new TriggerPatternGraphPattern(trigger, arguments, config)
     }
 
-  def triggerMentionDependencyPattern: Parser[DependencyPattern] =
+  def triggerMentionGraphPattern: Parser[GraphPattern] =
     identifier ~ ":" ~ identifier ~ rep1(argPattern) ^^ {
       case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName equalsIgnoreCase "trigger" =>
-        new TriggerMentionDependencyPattern(anchorLabel, arguments)
+        new TriggerMentionGraphPattern(anchorLabel, arguments, config)
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
         // if anchorName is not "trigger" then return a RelationMention
-        new RelationDependencyPattern(anchorName, anchorLabel, arguments)
+        new RelationGraphPattern(anchorName, anchorLabel, arguments, config)
     }
 
   def argPattern: Parser[ArgumentPattern] =
     identifier ~ ":" ~ identifier ~ opt("?" ||| "*" ||| "*?" ||| "+" ||| "+?" |||
       "{" ~> int <~ "}" |||
       "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}?" )
-    ) ~ "=" ~ disjunctiveDepPattern ^^ {
+    ) ~ "=" ~ disjunctiveGraphPattern ^^ {
       case name ~ _ ~ _ ~ _ ~ _ ~ _ if name equalsIgnoreCase "trigger" =>
         sys.error(s"'$name' is not a valid argument name")
       // no quantifier
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier)
+        new ArgumentPattern(name, label, pat, required = true, quantifier = NullQuantifier, config)
       // optional
       case name ~ ":" ~ label ~ Some("?") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, Some(1)))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, Some(1)), config)
       // Kleene star
       case name ~ ":" ~ label ~ Some("*") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, None))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(None, None), config)
       // Don't allow lazy Kleene star for args
       case name ~ ":" ~ label ~ Some("*?") ~ "=" ~ pat =>
         throw OdinCompileException(s"Lazy Kleene star (*?) used for argument '$name'.  Remove argument pattern from rule.")
       // one or more (greedy)
       case name ~ ":" ~ label ~ Some("+") ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(Some(1), None))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(Some(1), None), config)
       // one or more (lazy)
       // NOTE: instead of throwing an exception, a warning could be printed and the +? could simply be dropped in compilation
       case name ~ ":" ~ label ~ Some("+?") ~ "=" ~ pat =>
         throw OdinCompileException(s"+? used for argument '$name', but it is superfluous in this context. Remove +? quantifier from argument.")
       // exact count
       case name ~ ":" ~ label ~ Some(exact: Int) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = ExactQuantifier(exact))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = ExactQuantifier(exact), config)
       // open range quantifier
       // make combinations of the largest value found in the range (i.e., in {2,5} if 5 matches found, create combos of 5)
       case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~ "," ~ None ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None), config)
       case name ~ ":" ~ label ~ Some( "{" ~ None ~ "," ~ Some(maxRep: Int) ~ "}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep)))
+        new ArgumentPattern(name, label, pat, required = false, quantifier = RangedQuantifier(minRepeat = None, maxRepeat = Some(maxRep)), config)
       // closed range quantifier
-      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~"}" ) ~ "=" ~ pat =>
-        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None))
+      case name ~ ":" ~ label ~ Some( "{" ~ Some(minRep: Int) ~  "," ~ Some(maxRep: Int) ~ "}" ) ~ "=" ~ pat =>
+        new ArgumentPattern(name, label, pat, required = true, quantifier = RangedQuantifier(minRepeat = Some(minRep), maxRepeat = None), config)
       // better errors
       case name ~ ":" ~ label ~ Some( _ ~ "}?" ) ~ "=" ~ pat =>
         throw OdinCompileException("? used to modify a ranged quantifier for a graph pattern argument.  Use an exact value (ex. {3} for 3)")
     }
 
-  def disjunctiveDepPattern: Parser[DependencyPatternNode] =
-    rep1sep(concatDepPattern, "|") ^^ { chunks =>
+  def disjunctiveGraphPattern: Parser[GraphPatternNode] =
+    rep1sep(concatGraphPattern, "|") ^^ { chunks =>
       (chunks.head /: chunks.tail) {
-        case (lhs, rhs) => new DisjunctiveDependencyPattern(lhs, rhs)
+        case (lhs, rhs) => new DisjunctiveGraphPattern(lhs, rhs)
       }
     }
 
-  def concatDepPattern: Parser[DependencyPatternNode] =
-    rep1(stepDepPattern) ^^ { chunks =>
+  def concatGraphPattern: Parser[GraphPatternNode] =
+    rep1(stepGraphPattern) ^^ { chunks =>
       (chunks.head /: chunks.tail) {
-        case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
+        case (lhs, rhs) => new ConcatGraphPattern(lhs, rhs)
       }
     }
 
-  def stepDepPattern: Parser[DependencyPatternNode] =
-    filterDepPattern | traversalDepPattern
+  def stepGraphPattern: Parser[GraphPatternNode] =
+    filterGraphPattern | traversalGraphPattern
 
   /** token constraint */
-  def filterDepPattern: Parser[DependencyPatternNode] =
-    tokenConstraint ^^ { new TokenConstraintDependencyPattern(_) }
+  def filterGraphPattern: Parser[GraphPatternNode] =
+    tokenConstraint ^^ { new TokenConstraintGraphPattern(_) }
 
   /** any pattern that represents graph traversal */
-  def traversalDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ||| repeatDepPattern ||| rangeDepPattern ||| quantifiedDepPattern
+  def traversalGraphPattern: Parser[GraphPatternNode] =
+    atomicGraphPattern ||| repeatGraphPattern ||| rangeGraphPattern ||| quantifiedGraphPattern
 
-  def quantifiedDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ ("?" | "*" | "+") ^^ {
-      case pat ~ "?" => new OptionalDependencyPattern(pat)
-      case pat ~ "*" => new KleeneDependencyPattern(pat)
-      case pat ~ "+" => new ConcatDependencyPattern(pat, new KleeneDependencyPattern(pat))
+  def quantifiedGraphPattern: Parser[GraphPatternNode] =
+    atomicGraphPattern ~ ("?" | "*" | "+") ^^ {
+      case pat ~ "?" => new OptionalGraphPattern(pat)
+      case pat ~ "*" => new KleeneGraphPattern(pat)
+      case pat ~ "+" => new ConcatGraphPattern(pat, new KleeneGraphPattern(pat))
     }
 
   // helper function that repeats a pattern N times
-  private def repeatPattern(pattern: DependencyPatternNode, n: Int): DependencyPatternNode = {
+  private def repeatPattern(pattern: GraphPatternNode, n: Int): GraphPatternNode = {
     require(n > 0, "'n' must be greater than zero")
     (pattern /: Seq.fill(n - 1)(pattern)) {
-      case (lhs, rhs) => new ConcatDependencyPattern(lhs, rhs)
+      case (lhs, rhs) => new ConcatGraphPattern(lhs, rhs)
     }
   }
 
-  def repeatDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ ("{" ~> int <~ "}") ^^ {
+  def repeatGraphPattern: Parser[GraphPatternNode] =
+    atomicGraphPattern ~ ("{" ~> int <~ "}") ^^ {
       case pat ~ n => repeatPattern(pat, n)
     }
 
-  def rangeDepPattern: Parser[DependencyPatternNode] =
-    atomicDepPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ "}" ^^ {
+  def rangeGraphPattern: Parser[GraphPatternNode] =
+    atomicGraphPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ "}" ^^ {
       case pat ~ "{" ~ from ~ "," ~ to ~ "}" => (from, to) match {
         case (None, None) =>
           sys.error("invalid range")
         case (None, Some(n)) =>
-          repeatPattern(new OptionalDependencyPattern(pat), n)
+          repeatPattern(new OptionalGraphPattern(pat), n)
         case (Some(m), None) =>
           val req = repeatPattern(pat, m)
-          val kleene = new KleeneDependencyPattern(pat)
-          new ConcatDependencyPattern(req, kleene)
+          val kleene = new KleeneGraphPattern(pat)
+          new ConcatGraphPattern(req, kleene)
         case (Some(m), Some(n)) =>
           require(n > m, "'to' must be greater than 'from'")
           val req = repeatPattern(pat, m)
-          val opt = repeatPattern(new OptionalDependencyPattern(pat), n - m)
-          new ConcatDependencyPattern(req, opt)
+          val opt = repeatPattern(new OptionalGraphPattern(pat), n - m)
+          new ConcatGraphPattern(req, opt)
       }
     }
 
-  def lookaroundDepPattern: Parser[DependencyPatternNode] =
-    ("(?=" | "(?!") ~ disjunctiveDepPattern <~ ")" ^^ {
-      case op ~ pat => new LookaroundDependencyPattern(pat, op.endsWith("!"))
+  def lookaroundGraphPattern: Parser[GraphPatternNode] =
+    ("(?=" | "(?!") ~ disjunctiveGraphPattern <~ ")" ^^ {
+      case op ~ pat => new LookaroundGraphPattern(pat, op.endsWith("!"))
     }
 
-  def atomicDepPattern: Parser[DependencyPatternNode] =
-    outgoingPattern | incomingPattern | lookaroundDepPattern |
-    "(" ~> disjunctiveDepPattern <~ ")"
+  def atomicGraphPattern: Parser[GraphPatternNode] =
+    outgoingPattern | incomingPattern | lookaroundGraphPattern |
+    "(" ~> disjunctiveGraphPattern <~ ")"
 
-  def outgoingPattern: Parser[DependencyPatternNode] =
+  def outgoingPattern: Parser[GraphPatternNode] =
     outgoingMatcher | outgoingWildcard
 
-  def incomingPattern: Parser[DependencyPatternNode] =
+  def incomingPattern: Parser[GraphPatternNode] =
     incomingMatcher | incomingWildcard
 
   // there is ambiguity between an outgoingMatcher with an implicit '>'
   // and the name of the next argument, we solve this by ensuring that
   // the outgoingMatcher is not followed by ':'
-  def outgoingMatcher: Parser[DependencyPatternNode] =
-    opt(">") ~> stringMatcher <~ not(":") ^^ { new OutgoingDependencyPattern(_) }
+  def outgoingMatcher: Parser[GraphPatternNode] =
+    opt(">") ~> stringMatcher <~ not(":") ^^ { new OutgoingGraphPattern(_) }
 
-  def incomingMatcher: Parser[DependencyPatternNode] =
-    "<" ~> stringMatcher ^^ { new IncomingDependencyPattern(_) }
+  def incomingMatcher: Parser[GraphPatternNode] =
+    "<" ~> stringMatcher ^^ { new IncomingGraphPattern(_) }
 
-  def outgoingWildcard: Parser[DependencyPatternNode] =
+  def outgoingWildcard: Parser[GraphPatternNode] =
     ">>" ^^^ OutgoingWildcard
 
-  def incomingWildcard: Parser[DependencyPatternNode] =
+  def incomingWildcard: Parser[GraphPatternNode] =
     "<<" ^^^ IncomingWildcard
 
 }
@@ -171,14 +171,15 @@ class DependencyPatternCompiler(unit: String, resources: OdinResourceManager) ex
 class ArgumentPattern(
     val name: String,
     val label: String,
-    val pattern: DependencyPatternNode,
+    val pattern: GraphPatternNode,
     val required: Boolean,
-    val quantifier: ArgumentQuantifier
+    val quantifier: ArgumentQuantifier,
+    val config: OdinConfig
 ) {
   // extracts mentions and groups them according to `size`
   def extract(tok: Int, sent: Int, doc: Document, state: State): Seq[Seq[(Mention, SynPath)]] = {
     val matches = for {
-      (tok, path) <- pattern.findAllIn(tok, sent, doc, state)
+      (tok, path) <- pattern.findAllIn(tok, sent, doc, state, config)
       m <- state.mentionsFor(sent, tok, label)
     } yield (m, path.reverse) // paths were collected in reverse
     (matches, quantifier) match {
@@ -206,11 +207,10 @@ class ArgumentPattern(
   }
 }
 
+sealed trait GraphPatternNode {
 
-sealed trait DependencyPatternNode {
-
-  def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[(Int, SynPath)] = {
-    findAllIn(tok, sent, doc, state, Nil)
+  def findAllIn(tok: Int, sent: Int, doc: Document, state: State, config: OdinConfig): Seq[(Int, SynPath)] = {
+    findAllIn(tok, sent, doc, state, Nil, config)
   }
 
   def findAllIn(
@@ -218,7 +218,8 @@ sealed trait DependencyPatternNode {
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)]
 
   // return distinct results considering Int only and ignoring SynPath
@@ -232,15 +233,16 @@ sealed trait DependencyPatternNode {
 
 }
 
-object OutgoingWildcard extends DependencyPatternNode with Dependencies {
+object OutgoingWildcard extends GraphPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
-    val edges = outgoingEdges(sent, doc)
+    val edges = outgoingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
         (nextTok, label) <- edges(tok)
@@ -250,15 +252,16 @@ object OutgoingWildcard extends DependencyPatternNode with Dependencies {
   }
 }
 
-object IncomingWildcard extends DependencyPatternNode with Dependencies {
+object IncomingWildcard extends GraphPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
-    val edges = incomingEdges(sent, doc)
+    val edges = incomingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
         (nextTok, label) <- edges(tok)
@@ -268,16 +271,17 @@ object IncomingWildcard extends DependencyPatternNode with Dependencies {
   }
 }
 
-class OutgoingDependencyPattern(matcher: StringMatcher)
-extends DependencyPatternNode with Dependencies {
+class OutgoingGraphPattern(matcher: StringMatcher)
+extends GraphPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
-    val edges = outgoingEdges(sent, doc)
+    val edges = outgoingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
         (nextTok, label) <- edges(tok)
@@ -288,16 +292,17 @@ extends DependencyPatternNode with Dependencies {
   }
 }
 
-class IncomingDependencyPattern(matcher: StringMatcher)
-extends DependencyPatternNode with Dependencies {
+class IncomingGraphPattern(matcher: StringMatcher)
+extends GraphPatternNode with Graph {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
-    val edges = incomingEdges(sent, doc)
+    val edges = incomingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
         (nextTok, label) <- edges(tok)
@@ -308,86 +313,92 @@ extends DependencyPatternNode with Dependencies {
   }
 }
 
-class ConcatDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
-extends DependencyPatternNode {
+class ConcatGraphPattern(lhs: GraphPatternNode, rhs: GraphPatternNode)
+extends GraphPatternNode {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
     val results = for {
-      (i, p) <- lhs.findAllIn(tok, sent, doc, state, path)
-      (j, q) <- rhs.findAllIn(i, sent, doc, state, p)
+      (i, p) <- lhs.findAllIn(tok, sent, doc, state, path, config)
+      (j, q) <- rhs.findAllIn(i, sent, doc, state, p, config)
     } yield (j, q)
     distinct(results)
   }
 }
 
-class DisjunctiveDependencyPattern(lhs: DependencyPatternNode, rhs: DependencyPatternNode)
-extends DependencyPatternNode {
+class DisjunctiveGraphPattern(lhs: GraphPatternNode, rhs: GraphPatternNode)
+extends GraphPatternNode {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
-    val leftResults = lhs.findAllIn(tok, sent, doc, state, path)
-    val rightResults = rhs.findAllIn(tok, sent, doc, state, path)
+    val leftResults = lhs.findAllIn(tok, sent, doc, state, path, config)
+    val rightResults = rhs.findAllIn(tok, sent, doc, state, path, config)
     distinct(leftResults ++ rightResults)
   }
 }
 
-class TokenConstraintDependencyPattern(constraint: TokenConstraint)
-extends DependencyPatternNode {
+class TokenConstraintGraphPattern(constraint: TokenConstraint)
+extends GraphPatternNode {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
     if (constraint.matches(tok, sent, doc, state)) Seq((tok, path)) else Nil
   }
 }
 
-class LookaroundDependencyPattern(lookaround: DependencyPatternNode, negative: Boolean)
-extends DependencyPatternNode {
+class LookaroundGraphPattern(lookaround: GraphPatternNode, negative: Boolean)
+extends GraphPatternNode {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
-    val results = lookaround.findAllIn(tok, sent, doc, state)
+    val results = lookaround.findAllIn(tok, sent, doc, state, config)
     if (results.isEmpty == negative) Seq((tok, path)) else Nil
   }
 }
 
-class OptionalDependencyPattern(pattern: DependencyPatternNode)
-extends DependencyPatternNode {
+class OptionalGraphPattern(pattern: GraphPatternNode)
+extends GraphPatternNode {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
-    distinct((tok, path) +: pattern.findAllIn(tok, sent, doc, state, path))
+    distinct((tok, path) +: pattern.findAllIn(tok, sent, doc, state, path, config))
   }
 }
 
-class KleeneDependencyPattern(pattern: DependencyPatternNode)
-extends DependencyPatternNode {
+class KleeneGraphPattern(pattern: GraphPatternNode)
+extends GraphPatternNode {
   def findAllIn(
       tok: Int,
       sent: Int,
       doc: Document,
       state: State,
-      path: SynPath
+      path: SynPath,
+      config: OdinConfig
   ): Seq[(Int, SynPath)] = {
     @annotation.tailrec
     def collect(
@@ -398,7 +409,7 @@ extends DependencyPatternNode {
       case Seq() => results
       case (t, p) +: rest if seen contains t => collect(rest, seen, results)
       case (t, p) +: rest =>
-        collect(rest ++ pattern.findAllIn(t, sent, doc, state, p), seen + t, (t, p) +: results)
+        collect(rest ++ pattern.findAllIn(t, sent, doc, state, p, config), seen + t, (t, p) +: results)
     }
     collect(Seq((tok, path)), Set.empty, Nil)
   }
