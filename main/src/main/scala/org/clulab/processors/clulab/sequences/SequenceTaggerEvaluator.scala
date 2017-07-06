@@ -9,7 +9,7 @@ import SequenceTaggerEvaluator._
   * Created by mihais on 6/8/17.
   */
 class SequenceTaggerEvaluator[L, F] {
-  def accuracy(tagger:SequenceTagger[L, F], docs:Iterator[Document]): Unit = {
+  def accuracy(tagger:SequenceTagger[L, F], docs:Iterator[Document]): Double = {
     var correct = 0
     var total = 0
     for(doc <- docs; sentence <- doc.sentences) {
@@ -23,7 +23,9 @@ class SequenceTaggerEvaluator[L, F] {
           correct += 1
     }
 
-    logger.info(s"Accuracy = ${100.0 * correct.toDouble / total} ($correct/$total)")
+    val acc = 100.0 * correct.toDouble / total
+    logger.info(s"Accuracy = $acc ($correct/$total)")
+    acc
   }
 }
 
