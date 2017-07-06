@@ -111,7 +111,9 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
   def parse(doc:Document) { }
 
   /** Shallow parsing; modifies the document in place */
-  def chunking(doc:Document) { }
+  def chunking(doc:Document) {
+    // TODO
+  }
 
   /** SRL; modifies the document in place */
   def labelSemanticRoles(doc:Document) { }
