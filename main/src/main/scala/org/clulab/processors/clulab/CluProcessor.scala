@@ -4,7 +4,6 @@ import edu.knowitall.tool.stem.MorphaStemmer
 import org.clulab.processors.clulab.sequences.PartOfSpeechTagger
 import org.clulab.processors.clulab.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
-import uk.ac.susx.informatics.Morpha
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
