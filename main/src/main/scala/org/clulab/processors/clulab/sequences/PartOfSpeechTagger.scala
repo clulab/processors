@@ -19,15 +19,16 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
     val features = new mutable.HashSet[String]()
     val fe = new FeatureExtractor(sentence, allowable, offset, features)
 
-    for(offset <- List(-2, -1, 0, 1, 2)) { // TODO: -1, 1
+    for(offset <- List(-2, -1, 0, 1, 2)) {
       fe.word(offset)
       fe.lemma(offset)
       fe.casing(offset)
-      fe.suffixes(offset, 1, 3) // TODO: 2, 3?
+      fe.suffixes(offset, 1, 3) 
     }
 
-    fe.wordBigrams(0)
-    fe.wordBigrams(1)
+    // word bigrams yield less than 0.10% accuracy boost at the double the model size...
+    //fe.wordBigrams(0)
+    //fe.wordBigrams(1)
 
     features.toSet
   }
