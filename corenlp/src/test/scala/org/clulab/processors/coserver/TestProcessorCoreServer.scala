@@ -8,12 +8,12 @@ import org.scalatest.{ Matchers, FlatSpec }
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Initial creation.
+  *   Last Modified: Update config section name.
   */
 class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
 
   // load application configuration from the configuration file
-  val config = ConfigFactory.load().getConfig("ProcessorCoreService")
+  val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
   logger.debug(s"(TestProcessorCoreServer): config=${config}")
 
   // create a processor core server instance

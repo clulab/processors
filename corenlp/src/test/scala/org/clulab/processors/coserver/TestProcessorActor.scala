@@ -21,7 +21,7 @@ import ProcessorCoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Comment out annotator tests with mutable arguments.
+  *   Last Modified: Update config section name.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -29,7 +29,7 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with BeforeAndAfterAll
     with MustMatchers
 {
-  val config = ConfigFactory.load().getConfig("ProcessorCoreService")
+  val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
 
   // create the Processor engine specified by the configuration and used by this server
   val processor: Processor = {
