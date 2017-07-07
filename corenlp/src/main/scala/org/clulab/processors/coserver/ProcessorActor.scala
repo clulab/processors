@@ -11,7 +11,7 @@ import ProcessorCoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Comment out annotator actions with mutable arguments.
+  *   Last Modified: Add lifecycle method stubs for tracing.
   */
 class ProcessorActor (
 
@@ -21,6 +21,23 @@ class ProcessorActor (
 ) extends Actor {
 
   val log = Logging(context.system, this)
+
+  override def preStart (): Unit =
+    log.info(s"Actor ${self} starting")
+
+  override def preRestart (reason: Throwable, msg: Option[Any]): Unit = {
+    log.info(s"Actor ${self} restarting...")
+    super.preRestart(reason, msg)
+  }
+
+  override def postRestart (reason: Throwable): Unit = {
+    log.info(s"Actor ${self} ...restarted")
+    super.postRestart(reason)
+  }
+
+  override def postStop (): Unit =
+    log.info(s"Actor ${self} stopped")
+
 
   def receive = {
     case cmd: MkDocumentCmd =>
