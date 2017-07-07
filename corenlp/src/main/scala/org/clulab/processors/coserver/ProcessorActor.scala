@@ -11,7 +11,7 @@ import ProcessorCoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Add lifecycle method stubs for tracing.
+  *   Last Modified: Change tracing to debug level.
   */
 class ProcessorActor (
 
@@ -23,58 +23,52 @@ class ProcessorActor (
   val log = Logging(context.system, this)
 
   override def preStart (): Unit =
-    log.info(s"Actor ${self} starting")
+    log.debug(s"Actor ${self} starting")
 
   override def preRestart (reason: Throwable, msg: Option[Any]): Unit = {
-    log.info(s"Actor ${self} restarting...")
+    log.debug(s"Actor ${self} restarting...")
     super.preRestart(reason, msg)
   }
 
   override def postRestart (reason: Throwable): Unit = {
-    log.info(s"Actor ${self} ...restarted")
+    log.debug(s"Actor ${self} ...restarted")
     super.postRestart(reason)
   }
 
   override def postStop (): Unit =
-    log.info(s"Actor ${self} stopped")
+    log.debug(s"Actor ${self} stopped")
 
 
   def receive = {
     case cmd: MkDocumentCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): mkDocument(text=${cmd.text}, keep=${cmd.keepText}")
+      log.debug(s"(ProcessorActor.receive): mkDocument(text=${cmd.text}, keep=${cmd.keepText}")
       val doc = processor.mkDocument(cmd.text, cmd.keepText)
       sender ! DocumentMsg(doc)
 
     case cmd: MkDocumentFromSentencesCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): mkDocumentFromSentences(sents=${cmd.sentences}, keep=${cmd.keepText}, charsBTWSents=${cmd.charactersBetweenSentences}")
+      log.debug(s"(ProcessorActor.receive): mkDocumentFromSentences(sents=${cmd.sentences}, keep=${cmd.keepText}, charsBTWSents=${cmd.charactersBetweenSentences}")
       val doc = processor.mkDocumentFromSentences(
         cmd.sentences, cmd.keepText, cmd.charactersBetweenSentences)
       sender ! DocumentMsg(doc)
 
     case cmd: MkDocumentFromTokensCmd =>
-    // set to DEBUG LATER
-      log.info(s"(ProcessorActor.receive): mkDocumentFromTokens(sents=${cmd.sentences}, keep=${cmd.keepText}, charsBTWSents=${cmd.charactersBetweenSentences}, charsBTWToks=${cmd.charactersBetweenTokens}")
+      log.debug(s"(ProcessorActor.receive): mkDocumentFromTokens(sents=${cmd.sentences}, keep=${cmd.keepText}, charsBTWSents=${cmd.charactersBetweenSentences}, charsBTWToks=${cmd.charactersBetweenTokens}")
       val doc = processor.mkDocumentFromTokens(
         cmd.sentences, cmd.keepText, cmd.charactersBetweenSentences, cmd.charactersBetweenTokens)
       sender ! DocumentMsg(doc)
 
     case cmd: PreprocessTextCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): preprocessText(text=${cmd.text}")
+      log.debug(s"(ProcessorActor.receive): preprocessText(text=${cmd.text}")
       val pptext = processor.preprocessText(cmd.text)
       sender ! TextMsg(pptext)
 
     case cmd: PreprocessSentencesCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): preprocessSentences(sents=${cmd.sentences}")
+      log.debug(s"(ProcessorActor.receive): preprocessSentences(sents=${cmd.sentences}")
       val ppsents = processor.preprocessSentences(cmd.sentences)
       sender ! SentencesMsg(ppsents)
 
     case cmd: PreprocessTokensCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): preprocessTokens(sents=${cmd.sentences}")
+      log.debug(s"(ProcessorActor.receive): preprocessTokens(sents=${cmd.sentences}")
       val pptoks = processor.preprocessTokens(cmd.sentences)
       sender ! TokensMsg(pptoks)
 
@@ -116,29 +110,28 @@ class ProcessorActor (
     //   sender ! DocumentMsg(cmd.doc)
 
     // case cmd: DiscourseCmd =>
-    //   log.debug(s"(ProcessorActor.receive): discourse(doc=${cmd.doc}") // set to DEBUG LATER
+    //   log.debug(s"(ProcessorActor.receive): discourse(doc=${cmd.doc}")
     //   processor.discourse(cmd.doc)          // works by side-effect
     //   sender ! DocumentMsg(cmd.doc)
 
 
     case cmd: AnnotateFromSentencesCmd =>
-      log.info(s"(ProcessorActor.receive): annotateFromSentences(sents=${cmd.sentences}, keep=${cmd.keepText}") // set to DEBUG LATER
+      log.debug(s"(ProcessorActor.receive): annotateFromSentences(sents=${cmd.sentences}, keep=${cmd.keepText}")
       val doc = processor.annotateFromSentences(cmd.sentences, cmd.keepText)
       sender ! DocumentMsg(doc)
 
     case cmd: AnnotateFromTokensCmd =>
-      log.info(s"(ProcessorActor.receive): annotateFromTokens(sents=${cmd.sentences}, keep=${cmd.keepText}") // set to DEBUG LATER
+      log.debug(s"(ProcessorActor.receive): annotateFromTokens(sents=${cmd.sentences}, keep=${cmd.keepText}")
       val doc = processor.annotateFromTokens(cmd.sentences, cmd.keepText)
       sender ! DocumentMsg(doc)
 
     case cmd: AnnotateTextCmd =>
-      // set next to DEBUG LATER:
-      log.info(s"(ProcessorActor.receive): annotateText(text=${cmd.text}, keep=${cmd.keepText}")
+      log.debug(s"(ProcessorActor.receive): annotateText(text=${cmd.text}, keep=${cmd.keepText}")
       val doc = processor.annotate(cmd.text, cmd.keepText)
       sender ! DocumentMsg(doc)
 
     case cmd: AnnotateCmd =>
-      log.info(s"(ProcessorActor.receive): annotate(doc=${cmd.doc}") // set to DEBUG LATER
+      log.debug(s"(ProcessorActor.receive): annotate(doc=${cmd.doc}")
       val doc = processor.annotate(cmd.doc)
       sender ! DocumentMsg(doc)
 
