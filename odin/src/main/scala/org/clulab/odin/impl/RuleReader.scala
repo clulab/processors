@@ -1,14 +1,15 @@
 package org.clulab.odin.impl
 
 import java.net.URL
-import java.util.{Collection, Map => JMap}
+import java.util.{ Collection, Map => JMap }
 import java.nio.charset.Charset
 
+import org.apache.commons.text.StrSubstitutor
+
 import scala.collection.JavaConverters._
-import scala.util.matching.Regex
 import scala.io.Codec
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
+import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
 import org.clulab.odin._
 
 
@@ -264,8 +265,17 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   }
 
   private def replaceVars(s: String, vars: Map[String, String]): String = {
-    """\$\{\s*(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*)\s*\}""".r
-      .replaceAllIn(s.toString(), m => Regex.quoteReplacement(vars(m.group(1))))
+    val valuesMap: java.util.Map[String, String] = {
+      val vm = new java.util.HashMap[String, String]()
+      vars.foreach(pair => vm.put(pair._1, pair._2))
+      vm
+    }
+
+    // NOTE: StrSubstitutor is NOT threadsafe
+    val sub = new StrSubstitutor(valuesMap)
+    // allow for recursive substitution
+    sub.setEnableSubstitutionInVariables(true)
+    sub.replace(s)
   }
 
   // compiles a rule into an extractor

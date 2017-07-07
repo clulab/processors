@@ -1,7 +1,9 @@
 name := "processors-main"
 
 libraryDependencies ++= {
+
   val json4sVersion = "3.5.2"
+
   Seq(
     "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
     "org.scalatest" %% "scalatest" % "2.2.4" % "test",
@@ -16,6 +18,8 @@ libraryDependencies ++= {
     "tw.edu.ntu.csie" % "libsvm" % "3.17",
     "org.antlr" % "antlr4-runtime" % "4.6",
     "jline" % "jline" % "2.12.1",
-    "commons-io" % "commons-io" % "2.5"
+    "commons-io" % "commons-io" % "2.5",
+    "org.apache.commons" % "commons-text" % "1.1"
   )
+
 }
