@@ -265,12 +265,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   }
 
   private def replaceVars(s: String, vars: Map[String, String]): String = {
-    val valuesMap: java.util.Map[String, String] = {
-      val vm = new java.util.HashMap[String, String]()
-      vars.foreach(pair => vm.put(pair._1, pair._2))
-      vm
-    }
-
+    val valuesMap = vars.asJava
     // NOTE: StrSubstitutor is NOT threadsafe
     val sub = new StrSubstitutor(valuesMap)
     // allow for recursive substitution
