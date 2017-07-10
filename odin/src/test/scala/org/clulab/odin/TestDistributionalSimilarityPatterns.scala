@@ -1,6 +1,6 @@
 package org.clulab.odin
 
-import org.clulab.odin.TestUtils._
+import org.clulab.TestUtils._
 import org.clulab.TestUtils.jsonStringToDocument
 import org.scalatest.{FlatSpec, Matchers}
 

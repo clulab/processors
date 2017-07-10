@@ -10,9 +10,9 @@ object TokenPattern {
   def compile(
       input: String,
       unit: String = "word",
-      resources: OdinResourceManager = OdinResourceManager(Map.empty)
+      config: OdinConfig = OdinConfig.empty
   ): TokenPattern = {
-    val compiler = new TokenPatternParsers(unit, resources)
+    val compiler = new TokenPatternParsers(unit, config)
     compiler.compileTokenPattern(input)
   }
 

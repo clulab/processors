@@ -1,12 +1,14 @@
 package org.clulab.odin.impl
 
-import java.util.{ Collection, Map => JMap }
+import java.net.URL
+import java.util.{Collection, Map => JMap}
 import java.nio.charset.Charset
+
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 import scala.io.Codec
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
+import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
 import org.clulab.odin._
 
 
@@ -32,7 +34,8 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
     // no resources are specified
     val resources = OdinResourceManager(Map.empty)
-    val rules = readRules(jRules, None, Map.empty, resources)
+    val config = OdinConfig(resources = resources)
+    val rules = readRules(jRules, config)
     mkExtractors(rules)
   }
 
@@ -43,8 +46,25 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val vars = getVars(master)
     val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
-    val rules = readRules(jRules, taxonomy, vars, resources)
+    val graph = getGraph(master)
+    val config = OdinConfig(resources = resources, variables = vars, graph = graph)
+    val rules = readRules(jRules, config)
     mkExtractors(rules)
+  }
+
+  def getGraph(
+    data: Map[String, Any],
+    default: String = OdinConfig.DEFAULT_GRAPH
+  ): String = data.get("graph") match {
+    case None => default
+    case Some(g) =>
+      val graph = g.asInstanceOf[String]
+      // graph must be of the registered types
+      if (! OdinConfig.VALID_GRAPHS.contains(graph))
+        throw OdinException(s"'$graph' is not a valid graph type. Valid options: ${
+          OdinConfig.VALID_GRAPHS.map(s => s"'$s'").mkString(", ")
+        }")
+      graph
   }
 
   def getVars(data: Map[String, Any]): Map[String, String] = {
@@ -67,10 +87,9 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   def mkRule(
       data: Map[String, Any],
-      taxonomy: Option[Taxonomy],
       expand: String => Seq[String],
       template: Any => String,
-      resources: OdinResourceManager
+      config: OdinConfig
   ): Rule = {
 
     // name is required
@@ -118,22 +137,27 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val keep = strToBool(tmpl(data.getOrElse("keep", DefaultKeep)))
     // unit is relevant to TokenPattern only
     val unit = tmpl(data.getOrElse("unit", DefaultUnit))
-
+    // the graph to match against
+    val graph: String = getGraph(data, config.graph)
+    val updatedConfig = config.copy(graph = graph)
     // make intermediary rule
     ruleType match {
       case DefaultType =>
-        new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
+      // ignore specification of 'graph' when using "type: dependency"
+      case "dependency" =>
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig.copy(graph = OdinConfig.DEFAULT_GRAPH))
       case "token" =>
-        new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
       // cross-sentence cases
       case "cross-sentence" =>
         (data.getOrElse("left-window", None), data.getOrElse("right-window", None)) match {
           case (leftWindow: Int, rightWindow: Int) =>
-            new CrossSentenceRule(name, labels, taxonomy, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+            new CrossSentenceRule(name, labels, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig)
           case (leftWindow: Int, None) =>
-            new CrossSentenceRule(name, labels, taxonomy, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, resources)
+            new CrossSentenceRule(name, labels, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, updatedConfig)
           case (None, rightWindow: Int) =>
-            new CrossSentenceRule(name, labels, taxonomy, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, resources)
+            new CrossSentenceRule(name, labels, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig)
           case _ =>
             throw OdinCompileException(s""""cross-sentence" rule '$name' requires a "left-window" and/or "right-window"""")
         }
@@ -145,9 +169,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   private def readRules(
       rules: Collection[JMap[String, Any]],
-      taxonomy: Option[Taxonomy],
-      vars: Map[String, String],
-      resources: OdinResourceManager
+      config: OdinConfig
   ): Seq[Rule] = {
 
     // return Rule objects
@@ -155,18 +177,18 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       val m = r.asScala.toMap
       if (m contains "import") {
         // import rules from a file and return them
-        importRules(m, taxonomy, vars, resources)
+        importRules(m, config)
       } else {
         // gets a label and returns it and all its hypernyms
-        val expand: String => Seq[String] = label => taxonomy match {
+        val expand: String => Seq[String] = label => config.taxonomy match {
           case Some(t) => t.hypernymsFor(label)
           case None => Seq(label)
         }
         // interpolates a template variable with ${variableName} notation
         // note that $variableName is not supported and $ can't be escaped
-        val template: Any => String = a => replaceVars(a.toString(), vars)
+        val template: Any => String = a => replaceVars(a.toString(), config.variables)
         // return the rule (in a Seq because this is a flatMap)
-        Seq(mkRule(m, taxonomy, expand, template, resources))
+        Seq(mkRule(m, expand, template, config))
       }
     }
 
@@ -176,8 +198,8 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   private def readTaxonomy(data: Any): Taxonomy = data match {
     case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
     case path: String =>
-      val url = getClass.getClassLoader.getResource(path)
-      val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+      val url = mkURL(path)
+      val source = io.Source.fromURL(url)
       val input = source.mkString
       source.close()
       val yaml = new Yaml(new Constructor(classOf[Collection[Any]]))
@@ -198,14 +220,11 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   private def importRules(
       data: Map[String, Any],
-      taxonomy: Option[Taxonomy],
-      importerVars: Map[String, String],
-      resources: OdinResourceManager
+      config: OdinConfig
   ): Seq[Rule] = {
     val path = data("import").toString
-    val url = getClass.getClassLoader.getResource(path)
-    // try to read a resource or else a file
-    val source = if (url == null) io.Source.fromFile(path) else io.Source.fromURL(url)
+    val url = mkURL(path)
+    val source = io.Source.fromURL(url)
     val input = source.mkString // slurp
     source.close()
     // read rules and vars from file
@@ -231,7 +250,8 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
     // - a call to `import` can include variables (`importVars`) that override `importerVars`
-    readRules(jRules, taxonomy, mergeVariables(localVars, importerVars, importVars), resources)
+    val newConf = config.copy(variables = mergeVariables(localVars, config.variables, importVars))
+    readRules(jRules, newConf)
   }
 
   // merges variables from different scopes, applying substitution as needed
@@ -253,7 +273,9 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     try {
       rule.ruleType match {
         case "token" => mkTokenExtractor(rule)
-        case "dependency" => mkDependencyExtractor(rule)
+        case DefaultType => mkGraphExtractor(rule)
+        // FIXME: should this be deprecated?
+        case "dependency" => mkGraphExtractor(rule)
         case "cross-sentence" => mkCrossSentenceExtractor(rule)
         case _ =>
           val msg = s"rule '${rule.name}' has unsupported type '${rule.ruleType}'"
@@ -273,7 +295,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val compiler = new TokenPatternParsers(rule.unit, rule.resources)
+    val compiler = new TokenPatternParsers(rule.unit, rule.config)
     val pattern = compiler.compileTokenPattern(rule.pattern)
     new TokenExtractor(name, labels, priority, keep, action, pattern)
   }
@@ -324,7 +346,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       //println(s"labels for '$ruleName' with pattern '$pattern': '$labels'")
       // Do not apply cross-sentence rule's action to anchor and neighbor
       // This does not need to be stored
-      (role, new Rule(ruleName, labels, rule.taxonomy, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.resources))
+      (role, new Rule(ruleName, labels, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.config))
     }
 
     if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
@@ -347,20 +369,20 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   }
 
   // compiles a dependency extractor
-  private def mkDependencyExtractor(rule: Rule): DependencyExtractor = {
+  private def mkGraphExtractor(rule: Rule): GraphExtractor = {
     val name = rule.name
     val labels = rule.labels
     val priority = Priority(rule.priority)
     val keep = rule.keep
     val action = mirror.reflect(rule.action)
-    val compiler = new DependencyPatternCompiler(rule.unit, rule.resources)
-    val pattern = compiler.compileDependencyPattern(rule.pattern)
-    new DependencyExtractor(name, labels, priority, keep, action, pattern)
+    val compiler = new GraphPatternCompiler(rule.unit, rule.config)
+    val pattern = compiler.compileGraphPattern(rule.pattern)
+    new GraphExtractor(name, labels, priority, keep, action, pattern, rule.config)
   }
 }
 
 object RuleReader {
-  val DefaultType = "dependency"
+  val DefaultType = "graph"
   val DefaultPriority = "1+"
   val DefaultWindow = 0 // 0 means don't use a window
   val DefaultKeep = "true"
@@ -374,31 +396,52 @@ object RuleReader {
     case b => sys.error(s"invalid boolean literal '$b'")
   }
 
+  val CLASSPATH_PROTOCOL = "classpath:"
+
+  /**
+    * Makes a url from an odin import that considers the custom classpath protocol
+    * @param path: String representing the URL
+    * @return URL
+    */
+  def mkURL(path: String): URL = {
+    // check if path is relative to resources
+    val resource = getClass.getClassLoader.getResource(path)
+    path match {
+      case hasResource if resource != null => resource
+      case cp if cp startsWith CLASSPATH_PROTOCOL =>
+        val path = cp.drop(CLASSPATH_PROTOCOL.length)
+        getClass.getResource(path)
+      case other => new URL(other)
+    }
+  }
+
   // rule intermediary representation
   class Rule(
       val name: String,
       val labels: Seq[String],
-      val taxonomy: Option[Taxonomy],
       val ruleType: String,
       val unit: String,
       val priority: String,
       val keep: Boolean,
       val action: String,
       val pattern: String,
-      val resources: OdinResourceManager
+      val config: OdinConfig
   ) {
+
+    val taxonomy: Option[Taxonomy] = config.taxonomy
+    val resources = config.resources
+
     def copy(
       name: String = this.name,
       labels: Seq[String] = this.labels,
-      taxonomy: Option[Taxonomy] = this.taxonomy,
       ruleType: String = this.ruleType,
       unit: String = this.unit,
       priority: String = this.priority,
       keep: Boolean = this.keep,
       action: String = this.action,
       pattern: String = this.pattern,
-      resources: OdinResourceManager = this.resources
-    ): Rule = new Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+      config: OdinConfig = this.config
+    ): Rule = new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config)
   }
 
   /**
@@ -408,7 +451,6 @@ object RuleReader {
   class CrossSentenceRule(
     name: String,
     labels: Seq[String],
-    taxonomy: Option[Taxonomy],
     ruleType: String,
     // the maximum number of sentences to look behind for pattern2
     val leftWindow: Int,
@@ -419,6 +461,6 @@ object RuleReader {
     keep: Boolean,
     action: String,
     pattern: String,
-    resources: OdinResourceManager
-  ) extends Rule(name, labels, taxonomy, ruleType, unit, priority, keep, action, pattern, resources)
+    config: OdinConfig
+  ) extends Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config)
 }

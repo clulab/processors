@@ -3,7 +3,7 @@ package org.clulab.processors
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest._
-import org.clulab.odin.TestUtils
+import org.clulab.TestUtils
 
 
 import scala.io.Source

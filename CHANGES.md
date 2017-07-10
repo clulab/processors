@@ -1,5 +1,7 @@
 # Changes
 + **6.0.6** - Added CluProcessor, which contains only in-house tools under the Apache license. Currently contains English tokenization, lemmatization, and POS tagging.
++ **6.0.6** - Added `graph` field to Odin rules, which denotes the graph (ex. stanford collapsed dependencies) used within the pattern (`incoming`, `outgoing`, etc.).
++ **6.0.6** - Added ranged quantifiers to Odin graph pattern arguments.
 + **6.0.5** - Added charset parameter to ExtractorEngine methods.
 + **6.0.5** - The FastBioNLPProcessor is available in the ProcessorsShell.
 + **6.0.4** - Use consistent SBT version across projects. Fix lib clash: allow ai.lum.common to dicate typesafe.config version.
