@@ -17,7 +17,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Replace selection with ref. Rename things, cleanup.
+  *   Last Modified: Reset one leftover debug statement.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -37,7 +37,7 @@ object ProcessorCoreServer extends App with LazyLogging {
       logger.debug(s"(ProcessorCoreServer.instance): config=${config}")
       _pcs = new ProcessorCoreServer(config)
     }
-    logger.info(s"(ProcessorCoreServer.instance): pcs => ${_pcs}") // LATER: set to debug
+    logger.debug(s"(ProcessorCoreServer.instance): pcs => ${_pcs}")
     _pcs
   }
 
