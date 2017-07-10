@@ -1,5 +1,5 @@
 # Changes
-+ **6.0.6** - Added CluProcessor, which contains only in-house tools. Currently contains English tokenization and POS tagging.
++ **6.0.6** - Added CluProcessor, which contains only in-house tools under the Apache license. Currently contains English tokenization, lemmatization, and POS tagging.
 + **6.0.5** - Added charset parameter to ExtractorEngine methods.
 + **6.0.5** - The FastBioNLPProcessor is available in the ProcessorsShell.
 + **6.0.4** - Use consistent SBT version across projects. Fix lib clash: allow ai.lum.common to dicate typesafe.config version.
