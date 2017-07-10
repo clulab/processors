@@ -1,10 +1,13 @@
 package org.clulab.processors.clulab.sequences
 
+import java.io.InputStream
+
 import org.clulab.processors.clulab.CluProcessor
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 
 class ColumnsToDocument
 
@@ -17,8 +20,17 @@ object ColumnsToDocument {
 
   val proc = new CluProcessor()
 
-  def read(fn:String, wordPos:Int, tagPos:Int): Document = {
+  def readFromFile(fn:String, wordPos:Int, tagPos:Int): Document = {
     val source = io.Source.fromFile(fn)
+    readFromSource(source, wordPos, tagPos)
+  }
+
+  def readFromStream(stream:InputStream, wordPos:Int, tagPos:Int): Document = {
+    val source = io.Source.fromInputStream(stream)
+    readFromSource(source, wordPos, tagPos)
+  }
+
+  def readFromSource(source:Source, wordPos:Int, tagPos:Int): Document = {
     var words = new ArrayBuffer[String]()
     var startOffsets = new ArrayBuffer[Int]()
     var endOffsets = new ArrayBuffer[Int]()
@@ -58,7 +70,7 @@ object ColumnsToDocument {
       sentences += s
     }
     source.close()
-    logger.debug(s"Loaded ${sentences.size} sentences from file $fn.")
+    logger.debug(s"Loaded ${sentences.size} sentences.")
 
     val d = new Document(sentences.toArray)
     annotate(d)
