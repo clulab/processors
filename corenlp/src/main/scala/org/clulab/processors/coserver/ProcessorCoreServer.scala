@@ -15,9 +15,9 @@ import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
 
 /**
-  * Application to wrap and serve various processor capabilities.
+  * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Set supervisory strategy on router. Redo instance creation.
+  *   Last Modified: Replace selection with ref. Rename things, cleanup.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -25,25 +25,24 @@ object ProcessorCoreServer extends App with LazyLogging {
   private val argsList = args.toList
 
   // THE instance of the the processor core server
-  private var _server: ProcessorCoreServer = _
-
-  /** Return an actor path to the current instance of the processor pool. */
-  def getPath: ActorPath = instance
+  private var _pcs: ProcessorCoreServer = _
 
   /** Create a single instance of the processor core server, only if it has been created. */
-  def instance: ActorPath = {
-    logger.debug(s"(ProcessorCoreServer.instance): server = ${_server}")
-    if (_server == null) {                  // create server, iff not already created
+  def instance: ProcessorCoreServer = {
+    logger.debug(s"(ProcessorCoreServer.instance): pcs = ${_pcs}")
+    if (_pcs == null) {                     // create server, iff not already created
       val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
       if (config == null)
         throw new RuntimeException("(ProcessorCoreServer.instance): Unable to read configuration from configuration file.")
       logger.debug(s"(ProcessorCoreServer.instance): config=${config}")
-      _server = new ProcessorCoreServer(config)
+      _pcs = new ProcessorCoreServer(config)
     }
-    logger.debug(s"(ProcessorCoreServer.instance): server => ${_server}")
-    _server.getPath                         // return actor path to processor pool
+    logger.info(s"(ProcessorCoreServer.instance): pcs => ${_pcs}") // LATER: set to debug
+    _pcs
   }
 
+  /** Return an actor ref to the current instance of the router. */
+  def router: ActorRef = instance.router
 }
 
 
@@ -76,19 +75,18 @@ class ProcessorCoreServer (
 
   logger.debug(s"(ProcessorCoreServer.ctor): system=${system}")
 
-  // set supervisory strategy property of the pool to handle errors
+  // create supervisory strategy for the router to handle errors
   private final val restartEachStrategy: SupervisorStrategy =
     OneForOneStrategy() { case _ => Restart }
 
-  // create a pool of processor actors waiting for work
-  private val procPool = system.actorOf(
+  // create a router to a pool of processor actors waiting for work
+  private val procPool: ActorRef = system.actorOf(
     ProcessorActor.props(processor).withRouter(
       FromConfig.withSupervisorStrategy(restartEachStrategy)),
     "proc-actor-pool")
 
   logger.debug(s"(ProcessorCoreServer.ctor): procPool=${procPool}")
 
-
-  /** Returns an actor path to the current instance of the processor pool. */
-  val getPath: ActorPath = procPool.path
+  /** Returns an actor ref to the internal instance of the pooled router. */
+  val router: ActorRef = procPool
 }
