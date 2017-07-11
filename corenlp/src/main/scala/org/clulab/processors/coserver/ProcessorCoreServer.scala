@@ -60,6 +60,7 @@ class ProcessorCoreServer (
   private val processor: Processor = {
     val proc = if (config.hasPath("server.processor")) config.getString("server.processor")
                else "core"
+    // TODO: read arguments for various processors
     proc.toLowerCase match {
       case "bio" => new BioNLPProcessor(removeFigTabReferences = true)
       case "core" => new CoreNLPProcessor()
