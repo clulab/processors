@@ -2,15 +2,17 @@ package org.clulab.processors.clulab
 
 import edu.knowitall.tool.stem.MorphaStemmer
 import org.clulab.processors.clulab.sequences.PartOfSpeechTagger
+import org.clulab.processors.clulab.syntax.MaltWrapper
 import org.clulab.processors.clulab.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.struct.GraphMap
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /**
   * Processor that uses only tools that are under Apache License
-  * Currently supports tokenization (in-house), and POS tagging (based on Mallet)
+  * Currently supports tokenization (in-house), lemmatization (Morpha), POS tagging (based on Mallet), dependency parsing (Malt)
   * @param internStrings If true, intern strings
   */
 class CluProcessor (val internStrings:Boolean = false) extends Processor {
@@ -20,6 +22,9 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
   lazy val posTagger: PartOfSpeechTagger =
     PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
+
+  lazy val depParser =
+    new MaltWrapper(internStrings)
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(text:String, keepText:Boolean = false): Document = {
@@ -85,6 +90,7 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
   /** Part of speech tagging */
   def tagPartsOfSpeech(doc:Document) {
+    basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       val tags = posTagger.classesOf(sent).toArray
       sent.tags = Some(tags)
@@ -93,6 +99,7 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
   /** Lematization; modifies the document in place */
   def lemmatize(doc:Document) {
+    basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
@@ -108,8 +115,20 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
   }
 
   /** Syntactic parsing; modifies the document in place */
-  def parse(doc:Document) { }
+  def parse(doc:Document) {
+    basicSanityCheck(doc)
+    if (doc.sentences.head.tags.isEmpty)
+      throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
+    if (doc.sentences.head.lemmas.isEmpty)
+      throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
 
+    for (sentence <- doc.sentences) {
+      val dg = depParser.parseSentence(sentence)
+      // Note: malt only support basic Stanford dependencies!
+      sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
+    }
+  }
+  
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document) {
     // TODO
@@ -123,4 +142,11 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
   /** Discourse parsing; modifies the document in place */
   def discourse(doc:Document) { }
+
+  private def basicSanityCheck(doc:Document): Unit = {
+    if (doc.sentences == null)
+      throw new RuntimeException("ERROR: Document.sentences == null!")
+    if (doc.sentences.length != 0 && doc.sentences(0).words == null)
+      throw new RuntimeException("ERROR: Sentence.words == null!")
+  }
 }

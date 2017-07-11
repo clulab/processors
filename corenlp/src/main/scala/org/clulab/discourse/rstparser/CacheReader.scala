@@ -4,7 +4,7 @@ import java.io._
 
 import org.clulab.discourse.rstparser.Utils._
 import org.clulab.processors.corenlp.CoreNLPProcessor
-import org.clulab.processors.fastnlp.{Dependency, FastNLPProcessor}
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.slf4j.LoggerFactory
