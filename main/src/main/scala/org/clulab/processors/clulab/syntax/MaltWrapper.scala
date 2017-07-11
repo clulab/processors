@@ -14,7 +14,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * User: mihais
   * Date: 7/11/17
   */
-class MaltWrapper(val internStrings:Boolean = false) {
+class MaltWrapper(val internStrings:Boolean = false) extends Parser {
   /**
     * One maltparser instance for each thread
     * MUST have one separate malt instance per thread!
@@ -49,7 +49,6 @@ class MaltWrapper(val internStrings:Boolean = false) {
 
       // sometimes malt generates dependencies from root with a different label than "root"
       // not sure why this happens, but let's manage this: create a root node for all
-      // if(label == "root" && head == -1) {
       if(head == -1) {
         roots += modifier
       } else {

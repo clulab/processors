@@ -2,7 +2,7 @@ package org.clulab.processors.clulab
 
 import edu.knowitall.tool.stem.MorphaStemmer
 import org.clulab.processors.clulab.sequences.PartOfSpeechTagger
-import org.clulab.processors.clulab.syntax.MaltWrapper
+import org.clulab.processors.clulab.syntax.{MaltWrapper, Parser}
 import org.clulab.processors.clulab.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
@@ -23,8 +23,20 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
   lazy val posTagger: PartOfSpeechTagger =
     PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
 
-  lazy val depParser =
+  lazy val depParser: Parser =
     new MaltWrapper(internStrings)
+
+  override def annotate(doc:Document): Document = {
+    lemmatize(doc)
+    tagPartsOfSpeech(doc)
+    recognizeNamedEntities(doc)
+    parse(doc)
+    chunking(doc)
+    resolveCoreference(doc)
+    discourse(doc)
+    doc.clear()
+    doc
+  }
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(text:String, keepText:Boolean = false): Document = {
@@ -133,9 +145,6 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
   def chunking(doc:Document) {
     // TODO
   }
-
-  /** SRL; modifies the document in place */
-  def labelSemanticRoles(doc:Document) { }
 
   /** Coreference resolution; modifies the document in place */
   def resolveCoreference(doc:Document) { }

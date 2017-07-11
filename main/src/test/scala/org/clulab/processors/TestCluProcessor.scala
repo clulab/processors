@@ -74,4 +74,16 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).lemmas.get(5) should be ("shop")
     println("Lemmatization is fine.")
   }
+
+  /*
+  it should "parse text correctly" in {
+    val doc = proc.annotate("John Doe went to China")
+
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(1, 0, "nn") should be(true)
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "prep") should be(true)
+    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "obj") should be(false)
+    println("Parsing is fine.")
+  }
+  */
 }
