@@ -10,6 +10,7 @@ import akka.event.Logging
 
 import org.clulab.processors._
 import org.clulab.processors.bionlp._
+// import org.clulab.processors.clulab._       // TBD: enable when merged
 import org.clulab.processors.corenlp._
 import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
@@ -17,7 +18,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Reset one leftover debug statement.
+  *   Last Modified: Read arguments for the various Processors.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -58,17 +59,60 @@ class ProcessorCoreServer (
 
   // create the Processor engine specified by the configuration and used by this server
   private val processor: Processor = {
-    val proc = if (config.hasPath("server.processor")) config.getString("server.processor")
-               else "core"
-    // TODO: read arguments for various processors
-    proc.toLowerCase match {
-      case "bio" => new BioNLPProcessor(removeFigTabReferences = true)
-      case "core" => new CoreNLPProcessor()
-      case "fast" => new FastNLPProcessor(useMalt = false)
-      case "fastbio" => new FastBioNLPProcessor(removeFigTabReferences = true)
-      case _ => new ShallowNLPProcessor()
+
+    // read all possible arguments for the various processors
+    val prefix = "server.processor"
+    val internStrings = getArgBoolean(s"${prefix}.internStrings", true)
+    val maxSentenceLength = getArgInt(s"${prefix}.maxSentenceLength", 100)
+    val removeFigTabReferences = getArgBoolean(s"${prefix}.removeFigTabReferences", true)
+    val removeBibReferences = getArgBoolean(s"${prefix}.removeBibReferences", true)
+    val useMalt = getArgBoolean(s"${prefix}.useMalt", false)
+    val withChunks = getArgBoolean(s"${prefix}.withChunks", true)
+    val withContext = getArgBoolean(s"${prefix}.withContext", true)
+    val withCRFNER = getArgBoolean(s"${prefix}.withCRFNER", true)
+    val withRuleNER = getArgBoolean(s"${prefix}.withRuleNER", true)
+    val withDiscourse = {
+      getArgString(s"${prefix}.withDiscourse", "NO_DISCOURSE") match {
+        case "WITH_DISCOURSE" => ShallowNLPProcessor.WITH_DISCOURSE
+        case "JUST_EDUS" => ShallowNLPProcessor.JUST_EDUS
+        case _ => ShallowNLPProcessor.NO_DISCOURSE
+      }
+    }
+
+    // select the processor to use
+    val proc = if (config.hasPath(s"${prefix}.type")) config.getString(s"${prefix}.type") else "core"
+
+    proc.toLowerCase match {                // return instantiated processor
+      case "bio" => new BioNLPProcessor(internStrings,
+                                        withChunks,
+                                        withCRFNER,
+                                        withRuleNER,
+                                        withContext,
+                                        withDiscourse,
+                                        maxSentenceLength,
+                                        removeFigTabReferences,
+                                        removeBibReferences)
+
+//      case "clu" => new CluProcessor(internStrings) // TODO: enable when merged
+
+      case "core" => new CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength)
+
+      case "fast" => new FastNLPProcessor(internStrings, withChunks, useMalt, withDiscourse)
+
+      case "fastbio" => new FastBioNLPProcessor(internStrings,
+                                                withChunks,
+                                                withCRFNER,
+                                                withRuleNER,
+                                                withContext,
+                                                withDiscourse,
+                                                maxSentenceLength,
+                                                removeFigTabReferences,
+                                                removeBibReferences)
+
+      case _ => new ShallowNLPProcessor(internStrings, withChunks)
     }
   }
+
   logger.debug(s"(ProcessorCoreServer.ctor): processor=${processor}")
 
   // fire up the actor system
@@ -90,4 +134,17 @@ class ProcessorCoreServer (
 
   /** Returns an actor ref to the internal instance of the pooled router. */
   val router: ActorRef = procPool
+
+
+  private def getArgBoolean (argPath: String, defaultValue: Boolean): Boolean =
+    if (config.hasPath(argPath)) config.getBoolean(argPath)
+    else defaultValue
+
+  private def getArgInt (argPath: String, defaultValue: Int): Int =
+    if (config.hasPath(argPath)) config.getInt(argPath)
+    else defaultValue
+
+  private def getArgString (argPath: String, defaultValue: String): String =
+    if (config.hasPath(argPath)) config.getString(argPath)
+    else defaultValue
 }

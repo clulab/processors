@@ -21,7 +21,7 @@ import ProcessorCoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Restore most annotator tests.
+  *   Last Modified: Update for processor argument configuration.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -33,7 +33,7 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
 
   // create the Processor engine specified by the configuration and used by this server
   val processor: Processor = {
-    val proc = config.getString("server.processor")
+    val proc = config.getString("server.processor.type")
     proc.toLowerCase match {
       case "bio" => new BioNLPProcessor(removeFigTabReferences = true)
       case "core" => new CoreNLPProcessor()
