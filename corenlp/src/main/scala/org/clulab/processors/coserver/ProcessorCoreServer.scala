@@ -18,7 +18,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Read arguments for the various Processors.
+  *   Last Modified: Allow access to embedded Processor.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -58,7 +58,7 @@ class ProcessorCoreServer (
     throw new RuntimeException("(ProcessorCoreServer.ctor): Empty configuration argument not allowed.")
 
   // create the Processor engine specified by the configuration and used by this server
-  private val processor: Processor = {
+  val processor: Processor = {
 
     // read all possible arguments for the various processors
     val prefix = "server.processor"
