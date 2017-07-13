@@ -18,7 +18,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Allow access to embedded Processor.
+  *   Last Modified: Rename actor system and router.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -116,7 +116,7 @@ class ProcessorCoreServer (
   logger.debug(s"(ProcessorCoreServer.ctor): processor=${processor}")
 
   // fire up the actor system
-  private val system = ActorSystem("proc-core-server", config)
+  private val system = ActorSystem("procCoreServer", config)
 
   logger.debug(s"(ProcessorCoreServer.ctor): system=${system}")
 
@@ -128,7 +128,7 @@ class ProcessorCoreServer (
   private val procPool: ActorRef = system.actorOf(
     ProcessorActor.props(processor).withRouter(
       FromConfig.withSupervisorStrategy(restartEachStrategy)),
-    "proc-actor-pool")
+    "procActorPool")
 
   logger.debug(s"(ProcessorCoreServer.ctor): procPool=${procPool}")
 

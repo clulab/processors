@@ -21,12 +21,12 @@ import org.clulab.processors.coserver.ProcessorCoreServerMessages._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Add a couple of full Akka tests of PCS router.
+  *   Last Modified: Rename actor system.
   */
 class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
 
   // fire up the actor system
-  private val system = ActorSystem("proc-core-server")
+  private val system = ActorSystem("procCoreServer")
 
   // create a processor core server instance
   val pcs = ProcessorCoreServer.instance

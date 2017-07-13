@@ -1,6 +1,6 @@
 package org.clulab.processors.coserver
 
-import akka.actor.{ ActorRef, ActorSystem, Props, Actor }
+import akka.actor.{ ActorRef, Props, Actor }
 import akka.event.Logging
 
 import org.clulab.processors._
