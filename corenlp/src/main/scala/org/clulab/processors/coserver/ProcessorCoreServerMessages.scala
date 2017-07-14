@@ -5,12 +5,14 @@ import org.clulab.processors._
 /**
   * Implement Akka message objects for the CoreNLP Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Restore annotator messages.
+  *   Last Modified: Add internal error message reply and error test command.
   */
 object ProcessorCoreServerMessages {
 
   // messages for request side of server communication:
   sealed trait ProcessorCoreCommand
+
+  case class ErrorTestCmd() extends ProcessorCoreCommand
 
   case class MkDocumentCmd (text:String, keepText:Boolean = false) extends ProcessorCoreCommand
 
@@ -56,9 +58,11 @@ object ProcessorCoreServerMessages {
 
   // messages for response side of server communication:
   sealed trait ProcessorCoreReply
+
+  case class ServerExceptionMsg (exception: Exception) extends ProcessorCoreReply
+
   case class DocumentMsg (doc: Document) extends ProcessorCoreReply
   case class SentencesMsg (sentences:Iterable[String]) extends ProcessorCoreReply
   case class TextMsg (text:String) extends ProcessorCoreReply
   case class TokensMsg (tokens:Iterable[Iterable[String]]) extends ProcessorCoreReply
-
 }

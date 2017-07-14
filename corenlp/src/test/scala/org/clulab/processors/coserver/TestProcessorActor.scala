@@ -21,7 +21,7 @@ import ProcessorCoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Update for processor argument configuration.
+  *   Last Modified: Add error message return test.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -49,6 +49,29 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
   }
+
+  // ErrorTest
+  "ProcessorActor" should "return error upon error test" in {
+    val probe = TestProbe()
+    probe.send(procActor, ErrorTestCmd())
+    val reply = probe.expectMsgClass(timeout, classOf[ServerExceptionMsg])
+    (reply) must not be (null)
+    (reply.exception) must not be (null)
+    (reply.exception.isInstanceOf[RuntimeException]) must be (true)
+    (reply.exception.getMessage()) must be ("This is a fake error from the ErrorTest command.")
+  }
+
+  // error on unknown message
+  it should "return error upon unknown message" in {
+    val probe = TestProbe()
+    probe.send(procActor, "UNKNOWN")
+    val reply = probe.expectMsgClass(timeout, classOf[ServerExceptionMsg])
+    (reply) must not be (null)
+    (reply.exception) must not be (null)
+    (reply.exception.isInstanceOf[RuntimeException]) must be (true)
+    (reply.exception.getMessage()) must be ("ProcessorActor: received unrecognized message: UNKNOWN")
+  }
+
 
   // mkDocument
   "ProcessorActor" should "make document from zero-length text, keep text" in {
