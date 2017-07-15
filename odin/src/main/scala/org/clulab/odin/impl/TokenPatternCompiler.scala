@@ -1,6 +1,6 @@
 package org.clulab.odin.impl
 
-class TokenPatternParsers(val unit: String, val resources: OdinResourceManager) extends TokenConstraintParsers {
+class TokenPatternParsers(val unit: String, val config: OdinConfig) extends TokenConstraintParsers {
 
   // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r

@@ -77,7 +77,7 @@ package object json {
       ("entities" -> s.entities.toSerializableJSON) ~
       ("norms" -> s.norms.toSerializableJSON) ~
       ("chunks" -> s.chunks.toSerializableJSON) ~
-      ("graphs" -> s.dependenciesByType.jsonAST)
+      ("graphs" -> s.graphs.jsonAST)
       // TODO: handle tree
       //("syntactic-tree") -> syntacticTree)
     }
