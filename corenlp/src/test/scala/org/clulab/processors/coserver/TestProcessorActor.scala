@@ -6,7 +6,6 @@ import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
 
 import akka.actor.{ ActorSystem, Props, Actor }
-import akka.event.Logging
 import akka.testkit.{ TestKit, TestActorRef, TestProbe, ImplicitSender }
 import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, MustMatchers }
 
@@ -21,30 +20,52 @@ import ProcessorCoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Add error message return test.
+  *   Last Modified: Update for default use of BioNLP, no co-reference.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
     with ImplicitSender
     with BeforeAndAfterAll
     with MustMatchers
+    with LazyLogging
 {
   val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
 
-  // create the Processor engine specified by the configuration and used by this server
+  // read which processor type is specified by the configuration
+  val procType = config.getString("server.processor.type")
+  logger.debug(s"processor type=${procType}")
+
+  // set default timeout: raise it for some processors (below)
+  var timeout: FiniteDuration = 30.seconds
+
+  // set default use of co-reference to false: only CoreNLP seems to use it
+  var usesCoreference = false
+
+  // create the Processor engine used by this server. increase timeout for slow processors.
   val processor: Processor = {
-    val proc = config.getString("server.processor.type")
-    proc.toLowerCase match {
-      case "bio" => new BioNLPProcessor(removeFigTabReferences = true)
-      case "core" => new CoreNLPProcessor()
-      case "fast" => new FastNLPProcessor(useMalt = false)
-      case "fastbio" => new FastBioNLPProcessor(removeFigTabReferences = true)
+    procType.toLowerCase match {
+      case "bio" =>
+        timeout = 3.minutes
+        new BioNLPProcessor(removeFigTabReferences = true)
+
+      case "core" =>
+        usesCoreference = true
+        new CoreNLPProcessor()
+
+      case "fast" =>
+        new FastNLPProcessor(useMalt = false)
+
+      case "fastbio" =>
+        timeout = 3.minutes
+        new FastBioNLPProcessor(removeFigTabReferences = true)
+
       case _ => new ShallowNLPProcessor()
     }
   }
 
   val procActor = system.actorOf(ProcessorActor.props(processor))
-  val timeout: FiniteDuration = 1.minutes
+  logger.debug(s"actor=${procActor}")
+
 
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
@@ -302,9 +323,9 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
   }
 
   // resolveCoreference
-  it should "resolve coreference in a small document" in {
+  it should "probably ignore coreference in a small document" in {
     val probe = TestProbe()
-    val doc1 = processor.mkDocument("This is a document and it has one sentence and we like it.")
+    val doc1 = processor.mkDocument("ASPP2 is common, it is well known, and BEF sumoylates it.")
     probe.send(procActor, TagPartsOfSpeechCmd(doc1))
     var reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
     probe.send(procActor, LemmatizeCmd(doc1))
@@ -317,7 +338,10 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
     val sentences = reply.doc.sentences
     (sentences.size) must equal(1)
-    (reply.doc.coreferenceChains) must not be (empty)
+    if (usesCoreference)
+      (reply.doc.coreferenceChains) must not be (empty)
+    else
+      (reply.doc.coreferenceChains) must be (empty)
   }
 
   // discourse

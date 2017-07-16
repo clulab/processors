@@ -21,12 +21,12 @@ import org.clulab.processors.coserver.ProcessorCoreServerMessages._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Rename actor system.
+  *   Last Modified: Update for default use of BioNLP. Cleanups.
   */
 class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
 
   // fire up the actor system
-  private val system = ActorSystem("procCoreServer")
+  val system = ActorSystem("procCoreServer")
 
   // create a processor core server instance
   val pcs = ProcessorCoreServer.instance
@@ -36,10 +36,11 @@ class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
   val router = pcs.router
   logger.debug(s"ProcessorCoreServer.router=${router}")
 
-  implicit val timeout = Timeout(30 seconds)
+  // set the timeout high for BioNLP, which is very slow to start
+  implicit val timeout = Timeout(3 minutes)
 
   /** Send the given message to the server and block until response comes back. */
-  private def callServer (request: ProcessorCoreCommand): ProcessorCoreReply = {
+  def callServer (request: ProcessorCoreCommand): ProcessorCoreReply = {
     val response = router ? request         // call returning Future
     Await.result(response, timeout.duration).asInstanceOf[ProcessorCoreReply]
   }

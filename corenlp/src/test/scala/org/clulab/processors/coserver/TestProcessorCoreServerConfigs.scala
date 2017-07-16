@@ -15,14 +15,14 @@ import org.clulab.processors.shallownlp._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 7/12/2017.
-  *   Last Modified: Initial creation.
+  *   Last Modified: Minor cleanups.
   */
 class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLogging {
 
   // load application configuration from the configuration file
-  private val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
+  val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
 
-  private val prefix = "server.processor"   // prefix string for all PCS config values
+  val prefix = "server.processor"   // prefix string for all PCS config values
 
   "ProcessorCoreServer configuration" should "should load all parameters" in {
     val prefix = "server.processor"
