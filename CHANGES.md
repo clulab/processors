@@ -1,4 +1,5 @@
 # Changes
++ **6.0.6** - Rename Odin subproject library artifact to processors-odin, for consistency.
 + **6.0.6** - Added CluProcessor, which contains only in-house tools under the Apache license. Currently contains English tokenization, lemmatization, and POS tagging.
 + **6.0.6** - Added `graph` field to Odin rules, which denotes the graph (ex. stanford collapsed dependencies) used within the pattern (`incoming`, `outgoing`, etc.).
 + **6.0.6** - Added ranged quantifiers to Odin graph pattern arguments.

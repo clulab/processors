@@ -1,4 +1,4 @@
-name := "odin"
+name := "processors-odin"
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
