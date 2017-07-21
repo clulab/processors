@@ -47,7 +47,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
     val graph = getGraph(master)
-    val config = OdinConfig(resources = resources, variables = vars, graph = graph)
+    val config = OdinConfig(taxonomy = taxonomy, resources = resources, variables = vars, graph = graph)
     val rules = readRules(jRules, config)
     mkExtractors(rules)
   }
