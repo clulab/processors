@@ -3,7 +3,7 @@ package org.clulab.processors.clulab.tokenizer
 import java.io.{BufferedReader, InputStreamReader}
 import org.clulab.processors.Sentence
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 import Tokenizer._
 
 import scala.util.matching.Regex
