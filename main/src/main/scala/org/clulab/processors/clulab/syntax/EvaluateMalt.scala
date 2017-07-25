@@ -1,10 +1,14 @@
 package org.clulab.processors.clulab.syntax
 
-import java.io.File
+import java.io.{BufferedReader, File, FileReader}
 
-import org.maltparserx.MaltConsoleEngine
+import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService, ConcurrentUtils}
+import org.maltparser.core.lw.helper.Utils
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ArrayBuffer
+
+class EvaluateMalt
 
 /**
  * Evaluates a model produced by TrainMalt
@@ -12,26 +16,60 @@ import scala.collection.mutable.ArrayBuffer
  * Date: 1/5/14
  */
 object EvaluateMalt {
-  val OUT_FILE = "malt.out"
+
+  val logger = LoggerFactory.getLogger(classOf[EvaluateMalt])
+  
+  def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
+    val modelURL = new File(modelName).toURI.toURL
+    println(s"modelURL: $modelURL")
+    val parserModelName = Utils.getInternalParserModelName(modelURL)
+    println(s"parserModelName: $parserModelName")
+    ConcurrentMaltParserService.initializeParserModel(modelURL)
+  }
 
   def main(args:Array[String]) {
     if(args.length != 2) {
-      println("Usage: org.clulab.processor.fastnlp.TrainMalt <model name> <testing file>")
+      println("Usage: org.clulab.processors.clulab.syntax.EvaluateMalt <model file name> <testing treebank in conllx format>")
       System.exit(1)
     }
     val modelName = args(0)
     val testFile = args(1)
-    val outFile = OUT_FILE
 
-    val engine = new MaltConsoleEngine
-    engine.startEngine(mkArgs(modelName, testFile, outFile))
+    val maltModel = mkMaltModel(modelName)
+    println(s"Successfully created malt model from $modelName.")
 
-    val goldDeps = readDependencies(testFile)
-    val sysDeps = readDependencies(outFile)
+    val reader = new BufferedReader(new FileReader(testFile))
+    val goldDeps = new ArrayBuffer[Dependency]()
+    val sysDeps = new ArrayBuffer[Dependency]()
+    var done = false
+    var count = 0
+    logger.info("Beginning parsing...")
+    while(! done) {
+      val goldTokens = ConcurrentUtils.readSentence(reader)
+      //println("GOLD:")
+      //for(t <- goldTokens) println(t)
+      goldDeps ++= toDeps(goldTokens)
+      if(goldTokens.isEmpty) {
+        done = true
+      } else {
+        count += 1
+        val inputTokens = ConcurrentUtils.stripGold(goldTokens, 4)
+        // for(t <- inputTokens) println(t)
+        val outputTokens = maltModel.parseTokens(inputTokens)
+        //println("SYS:")
+        //for(t <- outputTokens) println(t)
+        //println("\n")
+        //if(count == 2) System.exit(0)
+        sysDeps ++= toDeps(outputTokens)
+        if(count % 100 == 0)
+          logger.debug(s"Parsed $count sentences...")
+      }
+    }
+    logger.info(s"Finished parsing $count sentences.")
+    reader.close()
     assert(goldDeps.size == sysDeps.size)
-    new File(OUT_FILE).delete()
 
-    val (las, uas) = score(goldDeps, sysDeps)
+    val (las, uas) = score(goldDeps.toArray, sysDeps.toArray)
     println(s"LAS = $las")
     println(s"UAS = $uas")
   }
@@ -39,7 +77,7 @@ object EvaluateMalt {
   def score(goldDeps:Array[Dependency], sysDeps:Array[Dependency]):(Double, Double) = {
     var correctLabeled = 0
     var correctUnlabeled = 0
-    for(i <- 0 until goldDeps.size) {
+    for(i <- goldDeps.indices) {
       val g = goldDeps(i)
       val s = sysDeps(i)
       if(g.head == s.head) {
@@ -49,9 +87,23 @@ object EvaluateMalt {
       }
     }
 
-    val las = correctLabeled.toDouble / goldDeps.size.toDouble
-    val uas = correctUnlabeled.toDouble / goldDeps.size.toDouble
+    val las = correctLabeled.toDouble / goldDeps.length.toDouble
+    val uas = correctUnlabeled.toDouble / goldDeps.length.toDouble
     (las, uas)
+  }
+
+  def toDeps(sentence: Array[String]):ArrayBuffer[Dependency] = {
+    val deps = new ArrayBuffer[Dependency]()
+    for(line <- sentence) {
+      // println(s"Converting line: $line")
+      val tokens = line.split("\\s+")
+      if(tokens.size < 8)
+        throw new RuntimeException(s"ERROR: invalid output line: $line")
+      val label = tokens(7)
+      val head = tokens(6).toInt
+      deps += new Dependency(label, head)
+    }
+    deps
   }
 
   def readDependencies(fn:String):Array[Dependency] = {
@@ -70,51 +122,6 @@ object EvaluateMalt {
     deps.toArray
   }
 
-  def mkArgs(modelName:String, testFile:String, outFile:String):Array[String] = {
-    val args = new ArrayBuffer[String]()
-
-    args += "-m"
-    args += "parse"
-
-    args += "-l"
-    args += "liblinear"
-
-    val lastSep = modelName.lastIndexOf(File.separator)
-    if(lastSep == -1) {
-      args += "-w"
-      args += "."
-      args += "-c"
-      args += trimMco(modelName)
-    } else {
-      args += "-w"
-      args += modelName.substring(0, lastSep)
-      args += "-c"
-      args += trimMco(modelName.substring(lastSep + 1))
-    }
-
-    // if multi-threaded, add a unique working dir per thread (with -w)!
-
-    args += "-a"
-    args += "nivreeager"
-
-    args += "-i"
-    args += testFile
-
-    args += "-o"
-    args += outFile
-
-    args += "-v"
-    args += "error"
-
-    println("Using command line: " + args.toList)
-    args.toArray
-  }
-
-  private def trimMco(s:String):String = {
-    if(s.endsWith(".mco"))
-      return s.substring(0, s.length - 4)
-    s
-  }
 }
 
 class Dependency(val label:String, val head:Int)

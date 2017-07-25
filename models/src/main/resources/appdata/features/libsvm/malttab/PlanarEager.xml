@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<featuremodels>
+	<featuremodel name="planareager">
+		<feature>InputColumn(POSTAG, Stack[0])</feature>
+		<feature>InputColumn(POSTAG, Input[0])</feature>
+		<feature>InputColumn(POSTAG, Input[1])</feature>
+		<feature>InputColumn(POSTAG, Input[2])</feature>
+		<feature>InputColumn(POSTAG, Input[3])</feature>
+		<feature>InputColumn(POSTAG, Stack[1])</feature>
+		<feature>OutputColumn(DEPREL, Stack[0])</feature>
+		<feature>OutputColumn(DEPREL, ldep(Stack[0]))</feature>
+		<feature>OutputColumn(DEPREL, rdep(Stack[0]))</feature>
+		<feature>OutputColumn(DEPREL, ldep(Input[0]))</feature>
+		<feature>InputColumn(FORM, Stack[0])</feature>
+		<feature>InputColumn(FORM, Input[0])</feature>
+		<feature>InputColumn(FORM, Input[1])</feature>
+		<feature>InputColumn(FORM, head(Stack[0]))</feature>
+		<!--<feature>OutputColumn(DEPREL, Input[0])</feature>-->
+		<feature>InputColumn(POSTAG, head(Input[0]))</feature>
+		<feature>OutputArc(HEAD, Stack[0], Input[0])</feature>
+	</featuremodel>
+</featuremodels>

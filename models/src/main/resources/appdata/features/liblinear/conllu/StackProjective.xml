@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<featuremodels>
+	<featuremodel name="stackprojective">
+		<feature>InputColumn(UPOSTAG, Stack[0])</feature>
+		<feature>InputColumn(UPOSTAG, Stack[1])</feature>
+		<feature>InputColumn(UPOSTAG, Stack[2])</feature>
+		<feature>InputColumn(UPOSTAG, Lookahead[0])</feature>
+		<feature>InputColumn(UPOSTAG, Lookahead[1])</feature>
+		<feature>InputColumn(UPOSTAG, Lookahead[2])</feature>
+		<feature>Merge(InputColumn(UPOSTAG, Stack[1]), InputColumn(UPOSTAG, Stack[0]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Stack[2]), InputColumn(UPOSTAG, Stack[1]), InputColumn(UPOSTAG, Stack[0]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Stack[1]), InputColumn(UPOSTAG, Stack[0]), InputColumn(UPOSTAG, Lookahead[0]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Stack[0]), InputColumn(UPOSTAG, Lookahead[0]), InputColumn(UPOSTAG, Lookahead[1]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Lookahead[0]), InputColumn(UPOSTAG, Lookahead[1]), InputColumn(UPOSTAG, Lookahead[2]))</feature>
+		<feature>OutputColumn(DEPREL, ldep(Stack[0]))</feature>
+		<feature>OutputColumn(DEPREL, rdep(Stack[0]))</feature>
+		<feature>OutputColumn(DEPREL, ldep(Stack[1]))</feature>
+		<feature>OutputColumn(DEPREL, rdep(Stack[1]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Stack[0]), OutputColumn(DEPREL, ldep(Stack[0])), OutputColumn(DEPREL, rdep(Stack[0])))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Stack[1]), OutputColumn(DEPREL, ldep(Stack[1])), OutputColumn(DEPREL, rdep(Stack[1])))</feature>
+		<feature>InputColumn(FORM, Stack[0])</feature>
+		<feature>InputColumn(FORM, Stack[1])</feature>
+		<feature>InputColumn(FORM, Lookahead[0])</feature>
+	</featuremodel>
+</featuremodels>
+

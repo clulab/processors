@@ -22,7 +22,7 @@ class MaltWrapper(val internStrings:Boolean = false) extends Parser {
     * using ThreadLocal variables guarantees that each thread gets its own working directory
     */
   lazy val maltService = new ThreadLocal[MaltParserService]
-  
+
   /** Parses one sentence and stores the dependency graph in the sentence object */
   def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
