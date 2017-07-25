@@ -75,7 +75,6 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("Lemmatization is fine.")
   }
 
-  /*
   it should "parse text correctly" in {
     val doc = proc.annotate("John Doe went to China")
 
@@ -85,5 +84,4 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "obj") should be(false)
     println("Parsing is fine.")
   }
-  */
 }

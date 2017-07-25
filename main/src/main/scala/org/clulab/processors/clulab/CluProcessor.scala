@@ -24,7 +24,7 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
 
   lazy val depParser: Parser =
-    new MaltWrapper(internStrings)
+    new MaltWrapper(MaltWrapper.DEFAULT_FORWARD_MODEL_NAME, internStrings)
 
   override def annotate(doc:Document): Document = {
     lemmatize(doc)

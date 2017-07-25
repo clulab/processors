@@ -1,7 +1,7 @@
 package org.clulab.processors.fastnlp
 
-import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.processors.Document
+import org.clulab.struct.GraphMap
 import org.clulab.discourse.rstparser.RSTParser
 import org.clulab.discourse.rstparser.Utils._
 import org.clulab.processors.corenlp.CoreNLPUtils
@@ -12,22 +12,16 @@ import edu.stanford.nlp.parser.nndep.DependencyParser
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraphFactory
 import edu.stanford.nlp.trees.GrammaticalStructure
-import org.maltparserx.MaltParserService
-import org.maltparserx
 import java.util.Properties
-import org.clulab.utils.Files
 import scala.collection.JavaConversions._
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.collection.mutable
 import FastNLPProcessor._
 
 
 /**
  * Fast NLP tools
- * Extends ShallowNLP with a dependency parser based on maltparser or the Stanford NN dependency parser
- * This means that constituent trees and coreference, which depends on that, are not available
+ * Extends ShallowNLP with a dependency parser based on the Stanford NN dependency parser
+ * This means that constituent trees and coreference (which depends on constituent syntax) are not available
  * The default setting is to use the Stanford parser with "basic" dependencies
- * Malt produces ONLY Stanford "basic" dependencies, rather than "collapsed" ones
  * User: mihais
  * Date: 1/4/14
  */
