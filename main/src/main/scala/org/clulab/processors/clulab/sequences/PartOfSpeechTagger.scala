@@ -26,7 +26,7 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
       fe.suffixes(offset, 1, 3) 
     }
 
-    // word bigrams yield less than 0.10% accuracy boost at the double the model size...
+    // word bigrams yield less than 0.10% accuracy boost, but double the model size... Let's not use them.
     //fe.wordBigrams(0)
     //fe.wordBigrams(1)
 
@@ -61,7 +61,7 @@ object PartOfSpeechTagger {
     val props = StringUtils.argsToProperties(args)
 
     if(props.containsKey("train")) {
-      val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), 0, 1)
+      val doc = ColumnsToDocument.readFromFile(props.getProperty("train"))
       val tagger = new PartOfSpeechTagger
       //tagger.preprocess(List(doc).iterator)
       tagger.train(List(doc).iterator)
@@ -77,7 +77,7 @@ object PartOfSpeechTagger {
       if(props.containsKey("shell")) {
         SequenceTaggerShell.shell[String, String](tagger)
       } else if(props.containsKey("test")) {
-        val doc = ColumnsToDocument.readFromFile(props.getProperty("test"), 0, 1)
+        val doc = ColumnsToDocument.readFromFile(props.getProperty("test"))
         (new SequenceTaggerEvaluator[String, String]).accuracy(tagger, List(doc).iterator)
       }
     }

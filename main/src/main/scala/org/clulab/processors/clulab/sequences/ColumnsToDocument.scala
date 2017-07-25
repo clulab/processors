@@ -12,20 +12,23 @@ import scala.io.Source
 class ColumnsToDocument
 
 /**
-  * Converts a column CoNLL-like format to our Document
+  * Converts the CoNLLX column-based format to our Document by reading only words and POS tags
   * Created by mihais on 6/8/17.
   */
 object ColumnsToDocument {
   val logger:Logger = LoggerFactory.getLogger(classOf[ColumnsToDocument])
 
+  val WORD_POS_CONLLX = 1
+  val TAG_POS_CONLLX = 4
+
   val proc = new CluProcessor()
 
-  def readFromFile(fn:String, wordPos:Int, tagPos:Int): Document = {
+  def readFromFile(fn:String, wordPos:Int = WORD_POS_CONLLX, tagPos:Int = TAG_POS_CONLLX): Document = {
     val source = io.Source.fromFile(fn)
     readFromSource(source, wordPos, tagPos)
   }
 
-  def readFromStream(stream:InputStream, wordPos:Int, tagPos:Int): Document = {
+  def readFromStream(stream:InputStream, wordPos:Int = WORD_POS_CONLLX, tagPos:Int = TAG_POS_CONLLX): Document = {
     val source = io.Source.fromInputStream(stream)
     readFromSource(source, wordPos, tagPos)
   }
@@ -54,7 +57,7 @@ object ColumnsToDocument {
       } else {
         // within the same sentence
         val bits = l.split("\\s+")
-        if (bits.length != 2)
+        if (bits.length < 2)
           throw new RuntimeException(s"ERROR: invalid line [$l]!")
         words += bits(wordPos)
         tags += in(bits(tagPos))
