@@ -27,6 +27,7 @@ class TestVariables extends FlatSpec with Matchers {
 
     val ee = ExtractorEngine(mf)
     ee.extractors should have size (1)
+    ee.extractors.head.name should startWith ("test")
   }
 
   it should "be applied to imports" in {
@@ -61,7 +62,6 @@ class TestVariables extends FlatSpec with Matchers {
 
     val ee = ExtractorEngine(mf)
     ee.extractors should have size (1)
-    println(ee.extractors.head.name)
     ee.extractors.head.name should startWith ("highest-precedence")
   }
 
