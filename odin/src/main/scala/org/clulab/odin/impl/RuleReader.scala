@@ -68,10 +68,18 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       graph
   }
 
+  // StrSubstitutor doesn't support whitespace in var (ex. ${ varName } )
+  private def cleanVar(s: String): String = {
+    val clean = s.
+      replaceAll("\\$\\{\\s+", "\\$\\{").
+      replaceAll("\\s+\\}", "\\}")
+    clean
+  }
+
   def getVars(data: Map[String, Any]): Map[String, String] = {
     data
       .get("vars")
-      .map(_.asInstanceOf[JMap[String, Any]].asScala.mapValues(_.toString).toMap)
+      .map(_.asInstanceOf[JMap[String, Any]].asScala.mapValues(s => cleanVar(s.toString)).toMap)
       .getOrElse(Map.empty)
   }
 
@@ -187,7 +195,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
         }
         // interpolates a template variable with ${variableName} notation
         // note that $variableName is not supported and $ can't be escaped
-        val template: Any => String = a => replaceVars(a.toString(), config.variables)
+        val template: Any => String = a => replaceVars(a.toString, config.variables)
         // return the rule (in a Seq because this is a flatMap)
         Seq(mkRule(m, expand, template, config))
       }
@@ -223,7 +231,12 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       data: Map[String, Any],
       config: OdinConfig
   ): Seq[Rule] = {
-    val path = data("import").toString
+    // apply variable substitutions to import
+    val path = {
+      val p = data("import").toString
+      val res = replaceVars(p, config.variables)
+      res
+    }
     val url = mkURL(path)
     val source = io.Source.fromURL(url)
     val input = source.mkString // slurp
@@ -247,21 +260,16 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     }
     // variables specified by the call to `import`
     val importVars = getVars(data)
+//      .mapValues{ v =>
+//        println(s"Current var val: $v")
+//        replaceVars(v, config.variables)} // apply variable to vars
     // variable scope:
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
     // - a call to `import` can include variables (`importVars`) that override `importerVars`
-    val newConf = config.copy(variables = mergeVariables(localVars, config.variables, importVars))
+    val updatedVars = localVars ++ config.variables ++ importVars
+    val newConf = config.copy(variables = updatedVars)
     readRules(jRules, newConf)
-  }
-
-  // merges variables from different scopes, applying substitution as needed
-  // vs1 - outer scope
-  // vs2 - intermediary scope
-  // vs3 - inner scope
-  private def mergeVariables(vs1: Map[String, String], vs2: Map[String, String], vs3: Map[String, String]): Map[String, String] = {
-    val vars2 = vs1 ++ vs2.map { case (k, v) => k -> replaceVars(v, vs1) }
-    vars2 ++ vs3.map { case (k, v) => k -> replaceVars(v, vars2) }
   }
 
   private def replaceVars(s: String, vars: Map[String, String]): String = {
@@ -270,7 +278,8 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val sub = new StrSubstitutor(valuesMap)
     // allow for recursive substitution
     sub.setEnableSubstitutionInVariables(true)
-    sub.replace(s)
+    val clean = cleanVar(s)
+    sub.replace(clean)
   }
 
   // compiles a rule into an extractor
