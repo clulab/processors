@@ -15,7 +15,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 7/12/2017.
-  *   Last Modified: Minor cleanups.
+  *   Last Modified: Update for removal of Malt.
   */
 class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLogging {
 
@@ -32,7 +32,6 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
     (config.hasPath(s"${prefix}.maxSentenceLength")) should be (true)
     (config.hasPath(s"${prefix}.removeFigTabReferences")) should be (true)
     (config.hasPath(s"${prefix}.removeBibReferences")) should be (true)
-    (config.hasPath(s"${prefix}.useMalt")) should be (true)
     (config.hasPath(s"${prefix}.withChunks")) should be (true)
     (config.hasPath(s"${prefix}.withContext")) should be (true)
     (config.hasPath(s"${prefix}.withCRFNER")) should be (true)

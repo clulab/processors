@@ -5,7 +5,7 @@ import org.clulab.processors._
 /**
   * Implement Akka message objects for the CoreNLP Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Add internal error message reply and error test command.
+  *   Last Modified: Update for removal of semantic roles.
   */
 object ProcessorCoreServerMessages {
 
@@ -38,7 +38,6 @@ object ProcessorCoreServerMessages {
   case class RecognizeNamedEntitiesCmd (doc:Document) extends ProcessorCoreCommand
   case class ParseCmd (doc:Document) extends ProcessorCoreCommand
   case class ChunkingCmd (doc:Document) extends ProcessorCoreCommand
-  case class LabelSemanticRolesCmd (doc:Document) extends ProcessorCoreCommand
   case class ResolveCoreferenceCmd (doc:Document) extends ProcessorCoreCommand
   case class DiscourseCmd (doc:Document) extends ProcessorCoreCommand
 

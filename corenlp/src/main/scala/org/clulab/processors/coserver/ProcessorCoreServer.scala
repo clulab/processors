@@ -18,7 +18,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Rename actor system and router.
+  *   Last Modified: Update for removal of Malt.
   */
 object ProcessorCoreServer extends App with LazyLogging {
 
@@ -66,7 +66,6 @@ class ProcessorCoreServer (
     val maxSentenceLength = getArgInt(s"${prefix}.maxSentenceLength", 100)
     val removeFigTabReferences = getArgBoolean(s"${prefix}.removeFigTabReferences", true)
     val removeBibReferences = getArgBoolean(s"${prefix}.removeBibReferences", true)
-    val useMalt = getArgBoolean(s"${prefix}.useMalt", false)
     val withChunks = getArgBoolean(s"${prefix}.withChunks", true)
     val withContext = getArgBoolean(s"${prefix}.withContext", true)
     val withCRFNER = getArgBoolean(s"${prefix}.withCRFNER", true)
@@ -97,7 +96,7 @@ class ProcessorCoreServer (
 
       case "core" => new CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength)
 
-      case "fast" => new FastNLPProcessor(internStrings, withChunks, useMalt, withDiscourse)
+      case "fast" => new FastNLPProcessor(internStrings, withChunks, withDiscourse)
 
       case "fastbio" => new FastBioNLPProcessor(internStrings,
                                                 withChunks,

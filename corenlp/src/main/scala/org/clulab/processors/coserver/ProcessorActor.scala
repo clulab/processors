@@ -11,7 +11,7 @@ import ProcessorCoreServerMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Catch, wrap, and return processor exceptions.
+  *   Last Modified: Update for removal of semantic roles.
   */
 class ProcessorActor (
 
@@ -117,13 +117,6 @@ class ProcessorActor (
       log.debug(s"(ProcessorActor.receive): chunking(doc=${cmd.doc}")
       try {
         processor.chunking(cmd.doc)           // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
-      } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
-
-    case cmd: LabelSemanticRolesCmd =>
-      log.debug(s"(ProcessorActor.receive): labelSemanticRoles(doc=${cmd.doc}")
-      try {
-        processor.labelSemanticRoles(cmd.doc) // works by side-effect
         sender ! DocumentMsg(cmd.doc)
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 

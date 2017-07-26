@@ -20,7 +20,7 @@ import ProcessorCoreServerMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Update for default use of BioNLP, no co-reference.
+  *   Last Modified: Update for removal of semantic roles and Malt.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -53,7 +53,7 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
         new CoreNLPProcessor()
 
       case "fast" =>
-        new FastNLPProcessor(useMalt = false)
+        new FastNLPProcessor()
 
       case "fastbio" =>
         timeout = 3.minutes
@@ -308,18 +308,6 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     (sentences.size) must equal(2)
     (sentences(0).chunks) must not be (empty)
     (sentences(1).chunks) must not be (empty)
-  }
-
-  // label semantic roles
-  it should "label semantic roles in a small document" in {
-    val probe = TestProbe()
-    val doc1 = processor.mkDocument("Mary told John that Bill hit Sue.")
-    probe.send(procActor, LabelSemanticRolesCmd(doc1))
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    val sentences = reply.doc.sentences
-    (sentences.size) must equal(1)
-    // NOTE: following fails: no semantic labeling code in Processors yet.
-    // (sentences(0).stanfordBasicDependencies) must not be (empty)
   }
 
   // resolveCoreference
