@@ -4,7 +4,7 @@ import java.io._
 
 import org.clulab.discourse.rstparser.Utils._
 import org.clulab.processors.corenlp.CoreNLPProcessor
-import org.clulab.processors.fastnlp.{Dependency, FastNLPProcessor}
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.slf4j.LoggerFactory
@@ -18,7 +18,7 @@ object CacheReader {
   val logger = LoggerFactory.getLogger(classOf[CacheReader])
 
   lazy val CORENLP_PROCESSOR = new CoreNLPProcessor()
-  lazy val FASTNLP_PROCESSOR = new FastNLPProcessor(useMalt = false)
+  lazy val FASTNLP_PROCESSOR = new FastNLPProcessor()
 
   def getProcessor(dependencySyntax:Boolean):Processor =
     dependencySyntax match {

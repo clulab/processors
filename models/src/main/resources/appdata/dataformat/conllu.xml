@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataformat name="conllu">
+	<column name="ID" category="INPUT" type="INTEGER"/>
+	<column name="FORM" category="INPUT" type="STRING"/>
+	<column name="LEMMA" category="INPUT" type="STRING"/>
+	<column name="UPOSTAG" category="INPUT" type="STRING"/>
+	<column name="XPOSTAG" category="INPUT" type="STRING"/>
+	<column name="FEATS" category="INPUT" type="STRING"/>
+	<column name="HEAD" category="HEAD" type="INTEGER"/>
+	<column name="DEPREL" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
+	<column name="DEPS" category="IGNORE" type="STRING" default="_"/>
+	<column name="MISC" category="IGNORE" type="STRING" default="_"/>
+</dataformat>

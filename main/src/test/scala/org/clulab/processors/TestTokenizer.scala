@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clulab.tokenizer.OpenDomainEnglishTokenizer
+import org.clulab.processors.clu.tokenizer.OpenDomainEnglishTokenizer
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
