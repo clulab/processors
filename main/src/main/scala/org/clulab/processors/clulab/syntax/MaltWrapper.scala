@@ -32,6 +32,8 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     ConcurrentMaltParserService.initializeParserModel(modelURL)
   }
 
+  override def getModel: ConcurrentMaltParserModel = maltModel
+
   /** Parses one sentence and stores the dependency graph in the sentence object */
   def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)

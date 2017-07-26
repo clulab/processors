@@ -2,6 +2,7 @@ package org.clulab.processors.clulab.syntax
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.DirectedGraph
+import org.maltparser.concurrent.ConcurrentMaltParserModel
 
 /**
   * Generic interface for a syntactic dependency parser
@@ -10,4 +11,6 @@ import org.clulab.struct.DirectedGraph
   */
 trait Parser {
   def parseSentence(sentence:Sentence):DirectedGraph[String]
+
+  def getModel:ConcurrentMaltParserModel
 }

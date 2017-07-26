@@ -28,7 +28,7 @@ object EvaluateMalt {
   }
 
   def main(args:Array[String]) {
-    if(args.length != 2) {
+    if (args.length != 2) {
       println("Usage: org.clulab.processors.clulab.syntax.EvaluateMalt <model file name> <testing treebank in conllx format>")
       System.exit(1)
     }
@@ -39,6 +39,11 @@ object EvaluateMalt {
     println(s"Successfully created malt model from $modelName.")
 
     val reader = new BufferedReader(new FileReader(testFile))
+    evaluate(maltModel, reader)
+    reader.close()
+  }
+
+  def evaluate(maltModel:ConcurrentMaltParserModel, reader:BufferedReader): (Double, Double) = {
     val goldDeps = new ArrayBuffer[Dependency]()
     val sysDeps = new ArrayBuffer[Dependency]()
     var done = false
@@ -66,12 +71,13 @@ object EvaluateMalt {
       }
     }
     logger.info(s"Finished parsing $count sentences.")
-    reader.close()
     assert(goldDeps.size == sysDeps.size)
 
     val (las, uas) = score(goldDeps.toArray, sysDeps.toArray)
     println(s"LAS = $las")
     println(s"UAS = $uas")
+
+    (las, uas)
   }
 
   def score(goldDeps:Array[Dependency], sysDeps:Array[Dependency]):(Double, Double) = {
