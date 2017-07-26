@@ -1,4 +1,4 @@
-package org.clulab.processors.clulab.syntax
+package org.clulab.processors.clu.syntax
 
 import java.io.{BufferedReader, File, FileReader}
 

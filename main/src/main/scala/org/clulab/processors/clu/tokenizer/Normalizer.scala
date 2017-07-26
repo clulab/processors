@@ -1,4 +1,4 @@
-package org.clulab.processors.clulab.tokenizer
+package org.clulab.processors.clu.tokenizer
 
 import scala.collection.mutable.ListBuffer
 

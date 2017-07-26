@@ -1,8 +1,8 @@
-package org.clulab.processors.clulab.sequences
+package org.clulab.processors.clu.sequences
 
 import java.io.InputStream
 
-import org.clulab.processors.clulab.CluProcessor
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 

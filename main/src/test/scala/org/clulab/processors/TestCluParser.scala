@@ -2,8 +2,8 @@ package org.clulab.processors
 
 import java.io.{BufferedReader, InputStreamReader}
 
-import org.clulab.processors.clulab.CluProcessor
-import org.clulab.processors.clulab.syntax.EvaluateMalt
+import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.syntax.EvaluateMalt
 import org.scalatest.{FlatSpec, Matchers}
 
 /**

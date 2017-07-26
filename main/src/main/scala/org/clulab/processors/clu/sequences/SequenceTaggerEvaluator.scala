@@ -1,4 +1,4 @@
-package org.clulab.processors.clulab.sequences
+package org.clulab.processors.clu.sequences
 
 import org.clulab.processors.Document
 import org.slf4j.{Logger, LoggerFactory}

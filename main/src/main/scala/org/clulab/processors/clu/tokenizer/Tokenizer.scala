@@ -1,4 +1,4 @@
-package org.clulab.processors.clulab.tokenizer
+package org.clulab.processors.clu.tokenizer
 
 import java.io.{BufferedReader, InputStreamReader}
 import org.clulab.processors.Sentence
@@ -139,8 +139,8 @@ case class RawToken(text:String, startOffset:Int, endOffset:Int)
 object Tokenizer {
   val EOS: Regex = """^[\.!\?\s]+$""".r
 
-  val IS_ENGLISH_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clulab/tokenizer/english.abbreviations")
-  val IS_ENGLISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clulab/tokenizer/english.sentstarts")
+  val IS_ENGLISH_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.abbreviations")
+  val IS_ENGLISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.sentstarts")
 
   /** Reads all words in the given dictionary and converts them into a single disjunction regex for efficiency */
   private def loadDictionary(rn:String): Regex = {

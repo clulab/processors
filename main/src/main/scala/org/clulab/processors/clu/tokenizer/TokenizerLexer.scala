@@ -1,4 +1,4 @@
-package org.clulab.processors.clulab.tokenizer
+package org.clulab.processors.clu.tokenizer
 
 import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream}
 

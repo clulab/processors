@@ -1,7 +1,7 @@
 package org.clulab.processors
 
-import org.clulab.processors.clulab.CluProcessor
-import org.clulab.processors.clulab.sequences.{ColumnsToDocument, SequenceTaggerEvaluator}
+import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.sequences.{ColumnsToDocument, SequenceTaggerEvaluator}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
