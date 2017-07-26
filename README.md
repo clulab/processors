@@ -5,7 +5,7 @@
 This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
 + A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `org.clulab.odin` package. See [Odin's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
-+ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. The latter is marginally worse (< 1 F1 point lower for the complete task) but it is much faster. You can test our discourse parsers online [here](http://agathon.sista.arizona.edu:8080/discp/).
++ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster. 
 + A machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 + A suite of NL processors in the `org.clulab.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
 that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford parser and our own NER based on the Stanford CRF).
@@ -21,21 +21,7 @@ Our code is licensed as follows:
 Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
 
 # Changes
-+ **6.0.2** - Enhance NER to load multiple override files.
-+ **6.0.2** -  file I/O fix related to `json` deserialization.
-+ **6.0.2** - Fixed odin bug related to` ^` in lookbehinds. Update to use Bioresources 1.1.19 containing Bioentities project KBs.
-+ **6.0.1** - Added support to odin for redefining variables.
-+ **6.0.1** - Added support to odin for matching mention arguments.
-+ **6.0.1** - Added support to odin for cross-sentence patterns.
-+ **6.0.1** - Fixed odin bug when matching overlapping entities with same end at the beginning of a pattern.
-+ **6.0.1** - Improved validation of named entities in RuleNER.
-+ **6.0.1** - Added automated lexical variations to the BioNLPProcessor RuleNER.
-+ **6.0.1** - Bug fix in multi-world entity matching in the RuleNER.
-+ **6.0.0** - Reorganization into 3 subprojects with different licenses: main, corenlp, models.
-+ **6.0.0** - Optimizations to `json` serialization/deserialization.
-+ **5.9.6** - [Serialize/deserialize `Document`, `Mention`, etc. to/from `json`.](https://gist.github.com/myedibleenso/87a3191c73938840b8ed768ec305db38)
-+ **5.9.5** - Bug fix release: do not tag XML tags such as XREF... as named entities.
-+ [more...](CHANGES.md)
++ [Please see the CHANGES file](CHANGES.md)
 
 # Citations
 
@@ -61,17 +47,17 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-corenlp_2.11</artifactId>
-   <version>6.0.2</version>
+   <version>6.0.6</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-main_2.11</artifactId>
-   <version>6.0.2</version>
+   <version>6.0.6</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-models_2.11</artifactId>
-   <version>6.0.2</version>
+   <version>6.0.6</version>
 </dependency>
 ```
 
@@ -79,9 +65,9 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors-corenlp" % "6.0.2",
-    "org.clulab" %% "processors-main" % "6.0.2",
-    "org.clulab" %% "processors-models" % "6.0.2"
+    "org.clulab" %% "processors-corenlp" % "6.0.6",
+    "org.clulab" %% "processors-main" % "6.0.6",
+    "org.clulab" %% "processors-models" % "6.0.6"
 )
 ```
 
