@@ -58,7 +58,6 @@ class DiscourseParserRunner (useProcessor:String = "core") {
       "NER"   +: timeIt { processor.recognizeNamedEntities(doc) },
       "Parse" +: timeIt { processor.parse(doc) },
       "Chunk" +: timeIt { processor.chunking(doc) },
-      "Roles" +: timeIt { processor.labelSemanticRoles(doc) },
       "CoRef" +: timeIt { processor.resolveCoreference(doc) },
       "DiscP" +: timeIt { processor.discourse(doc) }
     )

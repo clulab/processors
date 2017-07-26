@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<featuremodels>
+	<featuremodel name="planareager">
+		<feature>InputColumn(POSTAG, ActiveStack[0])</feature>
+		<feature>InputColumn(POSTAG, Input[0])</feature>
+		<feature>InputColumn(POSTAG, Input[1])</feature>
+		<feature>InputColumn(POSTAG, Input[2])</feature>
+		<feature>InputColumn(POSTAG, Input[3])</feature>
+		<feature>InputColumn(POSTAG, ActiveStack[1])</feature>
+		<feature>Merge(InputColumn(POSTAG, ActiveStack[0]), InputColumn(POSTAG, Input[0]))</feature>
+		<feature>Merge3(InputColumn(POSTAG, ActiveStack[1]), InputColumn(POSTAG, ActiveStack[0]), InputColumn(POSTAG, Input[0]))</feature>
+		<feature>Merge3(InputColumn(POSTAG, ActiveStack[0]), InputColumn(POSTAG, Input[0]), InputColumn(POSTAG, Input[1]))</feature>
+		<feature>Merge3(InputColumn(POSTAG, Input[0]), InputColumn(POSTAG, Input[1]), InputColumn(POSTAG, Input[2]))</feature>
+		<feature>Merge3(InputColumn(POSTAG, Input[1]), InputColumn(POSTAG, Input[2]), InputColumn(POSTAG, Input[3]))</feature>
+		<feature>OutputColumn(DEPREL, ActiveStack[0])</feature>
+		<feature>OutputColumn(DEPREL, ldep(ActiveStack[0]))</feature>
+		<feature>OutputColumn(DEPREL, rdep(ActiveStack[0]))</feature>
+		<feature>OutputColumn(DEPREL, ldep(Input[0]))</feature>
+		<feature>Merge3(InputColumn(POSTAG, ActiveStack[0]), OutputColumn(DEPREL, ldep(ActiveStack[0])), OutputColumn(DEPREL, rdep(ActiveStack[0])))</feature>
+		<feature>Merge(InputColumn(POSTAG, ActiveStack[0]), OutputColumn(DEPREL, ActiveStack[0]))</feature>
+		<feature>Merge(InputColumn(POSTAG, Input[0]), OutputColumn(DEPREL, ldep(Input[0])))</feature>
+		<feature>InputColumn(FORM, ActiveStack[0])</feature>
+		<feature>InputColumn(FORM, Input[0])</feature>
+		<feature>InputColumn(FORM, Input[1])</feature>
+		<feature>InputColumn(FORM, head(ActiveStack[0]))</feature>
+		<!--<feature>OutputColumn(DEPREL, Input[0])</feature>-->
+		<feature>InputColumn(POSTAG, head(Input[0]))</feature>
+		<feature>OutputArc(HEAD, ActiveStack[0], Input[0])</feature>
+		<feature>InputColumn(POSTAG, InactiveStack[0])</feature>
+		<feature>InputColumn(POSTAG, InactiveStack[1])</feature>
+		<feature>Merge(InputColumn(POSTAG, InactiveStack[0]), InputColumn(POSTAG, InactiveStack[1]))</feature>
+	</featuremodel>
+</featuremodels>

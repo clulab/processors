@@ -74,9 +74,6 @@ trait Processor {
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document)
 
-  /** SRL; modifies the document in place */
-  def labelSemanticRoles(doc:Document)
-
   /** Coreference resolution; modifies the document in place */
   def resolveCoreference(doc:Document)
 
@@ -104,7 +101,6 @@ trait Processor {
     recognizeNamedEntities(doc)
     parse(doc)
     chunking(doc)
-    labelSemanticRoles(doc)
     resolveCoreference(doc)
     discourse(doc)
     doc.clear()

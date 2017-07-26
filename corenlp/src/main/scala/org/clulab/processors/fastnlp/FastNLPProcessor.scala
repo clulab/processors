@@ -1,7 +1,7 @@
 package org.clulab.processors.fastnlp
 
-import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.processors.Document
+import org.clulab.struct.GraphMap
 import org.clulab.discourse.rstparser.RSTParser
 import org.clulab.discourse.rstparser.Utils._
 import org.clulab.processors.corenlp.CoreNLPUtils
@@ -12,38 +12,23 @@ import edu.stanford.nlp.parser.nndep.DependencyParser
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraphFactory
 import edu.stanford.nlp.trees.GrammaticalStructure
-import org.maltparserx.MaltParserService
-import org.maltparserx
 import java.util.Properties
-import org.clulab.utils.Files
 import scala.collection.JavaConversions._
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.collection.mutable
 import FastNLPProcessor._
 
 
 /**
  * Fast NLP tools
- * Extends ShallowNLP with a dependency parser based on maltparser or the Stanford NN dependency parser
- * This means that constituent trees and coreference, which depends on that, are not available
+ * Extends ShallowNLP with a dependency parser based on the Stanford NN dependency parser
+ * This means that constituent trees and coreference (which depends on constituent syntax) are not available
  * The default setting is to use the Stanford parser with "basic" dependencies
- * Malt produces ONLY Stanford "basic" dependencies, rather than "collapsed" ones
  * User: mihais
  * Date: 1/4/14
  */
 class FastNLPProcessor(
   internStrings:Boolean = true,
   withChunks:Boolean = true,
-  useMalt:Boolean = false, // if false it uses the new Stanford dependency parser
   withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) extends ShallowNLPProcessor(internStrings) {
-
-  /**
-   * One maltparser instance for each thread
-   * MUST have one separate malt instance per thread!
-   * malt uses a working directory which is written at runtime
-   * using ThreadLocal variables guarantees that each thread gets its own working directory
-   */
-  lazy val maltService = new ThreadLocal[MaltParserService]
 
   /** RST discourse parser using only dependency based syntax */
   lazy val rstDependencyParser = fetchRSTParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)
@@ -55,34 +40,11 @@ class FastNLPProcessor(
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
     if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before NER!")
+      throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
     if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
+      throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
 
-    if (useMalt) {
-      // use the malt parser
-      parseWithMalt(doc)
-    } else {
-      parseWithStanford(doc, annotation.get)
-    }
-  }
-
-  private def parseWithMalt(doc:Document) {
-    // parse each individual sentence
-    val debug = false
-    for (sentence <- doc.sentences) {
-      if (debug) {
-        print("PARSING SENTENCE:")
-        for (i <- 0 until sentence.size) print(" " + sentence.words(i))
-        println()
-      }
-      val dg = parseSentence(sentence)
-      // Note: malt only support basic Stanford dependencies!
-      sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
-      if (debug) {
-        println("DONE.")
-      }
-    }
+    parseWithStanford(doc, annotation.get)
   }
 
   private def parseWithStanford(doc:Document, annotation:Annotation) {
@@ -113,72 +75,6 @@ class FastNLPProcessor(
     }
   }
 
-  /** Parses one sentence and stores the dependency graph in the sentence object */
-  private def parseSentence(sentence:Sentence):DirectedGraph[String] = {
-    // tokens stores the tokens in the input format expected by malt (CoNLL-X)
-    val tokens = new Array[String](sentence.words.length)
-    for(i <- tokens.indices) {
-      tokens(i) = s"${i + 1}\t${sentence.words(i)}\t${sentence.lemmas.get(i)}\t${sentence.tags.get(i)}\t${sentence.tags.get(i)}\t_"
-    }
-
-    // the actual parsing
-    val output = getService.parseTokens(tokens)
-
-    // convert malt's output into our dependency graph
-    val edgeBuffer = new ListBuffer[Edge[String]]
-    val roots = new mutable.HashSet[Int]
-    for(o <- output) {
-      //println(o)
-      val tokens = o.split("\\s+")
-      if(tokens.length < 8)
-        throw new RuntimeException("ERROR: Invalid malt output line: " + o)
-      // malt indexes tokens from 1; we index from 0
-      val modifier = tokens(0).toInt - 1
-      val head = tokens(6).toInt - 1
-      val label = tokens(7).toLowerCase
-
-      // sometimes malt generates dependencies from root with a different label than "root"
-      // not sure why this happens, but let's manage this: create a root node for all
-      // if(label == "root" && head == -1) {
-      if(head == -1) {
-        roots += modifier
-      } else {
-        edgeBuffer += Edge(source = head, destination = modifier, relation = in(label))
-      }
-    }
-
-    new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
-  }
-
-  private def getService:MaltParserService = {
-    if(maltService.get() == null) {
-      val service = new maltparserx.MaltParserService()
-      service.initializeParserModel(mkArgs(
-        Files.mkTmpDir("maltwdir", deleteOnExit = true),
-        DEFAULT_MODEL_NAME))
-      maltService.set(service)
-    }
-    maltService.get()
-  }
-
-  private def mkArgs(workDir:String, modelName:String):String = {
-    val args = new ArrayBuffer[String]()
-
-    args += "-m"
-    args += "parse"
-
-    args += "-w"
-    args += workDir
-
-    args += "-c"
-    args += modelName
-
-    args += "-v"
-    args += "error"
-
-    args.mkString(" ")
-  }
-
   override def discourse(doc:Document) {
     if(withDiscourse == ShallowNLPProcessor.NO_DISCOURSE) return
     basicSanityCheck(doc, checkAnnotation = false)
@@ -198,8 +94,6 @@ class FastNLPProcessor(
 }
 
 object FastNLPProcessor {
-  val DEFAULT_MODEL_NAME = "nivreeager-en-crammer"
-
   var stanfordDependencyParser:Option[DependencyParser] = None
 
   def fetchStanfordParser():DependencyParser = {

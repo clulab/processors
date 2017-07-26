@@ -59,21 +59,17 @@
 			<legalvalue name="testdata">Generates test instances to run experiments with a learner outside MaltParser. Use for example the flag <em>-li true</em> to save instances.</legalvalue>
 		</option>
 		<option type="class" name="type" flag="t" default="singlemalt" usage="both">
-			<desc><![CDATA[ MaltParser 1.7.2 has one available configuration type: <b>singlemalt</b>. Later releases 
+			<desc><![CDATA[ MaltParser @version@ has one available configuration type: <b>singlemalt</b>. Later releases 
 			may contain additional configuration types. For example, one type could be an ensemble parser configuration containing 
 many single malt configurations. ]]></desc>
 			<shortdesc>Configuration type</shortdesc>
-			<legalvalue name="singlemalt" class="org.maltparserx.parser.SingleMalt">Single Malt Parser configuration</legalvalue>
+			<legalvalue name="singlemalt" class="org.maltparser.parser.SingleMalt">Single Malt Parser configuration</legalvalue>
 		</option>
 		<option type="string" name="workingdir" flag="w" default="user.dir" usage="both">
 			<desc><![CDATA[By default the working directory is the directory where MaltParser is started from, but it is possible to
 			specify another directory with the <b>workingdir</b> option. ]]></desc>
 			<shortdesc>Working directory</shortdesc>
-		</option>
-        <option type="string" name="modeldir" flag="md" default="" usage="both">
-            <desc><![CDATA[Added by sista: directory that contains the .mco model files. If not set it is set to <b>workingdir</b>. ]]></desc>
-            <shortdesc>Model directory</shortdesc>
-        </option>
+		</option>	
 		<option type="enum" name="logging" flag="cl" default="info" usage="both">
 			<desc><![CDATA[In contrast to the <b>system-verbosity</b> option, the <b>logging</b> option controls the level of verbosity of an
 			individual configuration. The different verbosity or logging levels are the same as for the <b>system-verbosity</b> option. ]]></desc>
@@ -106,24 +102,24 @@ many single malt configurations. ]]></desc>
 			the behavior of the algorithm, Covington's algorithms have a corresponding option group called <b>covington</b>. For more information about the
 			parsing algorithm see the user guide: <a href="userguide.html#parsingalg">Parsing Algorithms</a>.]]></desc>
 			<shortdesc>Parsing algorithm</shortdesc>
-			<legalvalue name="nivreeager" class="org.maltparserx.parser.algorithm.nivre.NivreArcEagerFactory">Nivre arc-eager</legalvalue>
-			<legalvalue name="nivrestandard" class="org.maltparserx.parser.algorithm.nivre.NivreArcStandardFactory">Nivre arc-standard</legalvalue>
-			<legalvalue name="covnonproj" class="org.maltparserx.parser.algorithm.covington.CovingtonNonProjFactory">Covington non-projective</legalvalue>
-			<legalvalue name="covproj" class="org.maltparserx.parser.algorithm.covington.CovingtonProjFactory">Covington projective</legalvalue>
-			<legalvalue name="stackproj" class="org.maltparserx.parser.algorithm.stack.StackProjFactory">Stack projective</legalvalue>
-			<legalvalue name="stackeager" class="org.maltparserx.parser.algorithm.stack.StackSwapEagerFactory">Stack eager</legalvalue>
-			<legalvalue name="stacklazy" class="org.maltparserx.parser.algorithm.stack.StackSwapLazyFactory">Stack lazy</legalvalue>
-			<legalvalue name="planar" class="org.maltparserx.parser.algorithm.planar.NivrePlanarArcEagerFactory">Planar eager</legalvalue>
-			<legalvalue name="2planar" class="org.maltparserx.parser.algorithm.twoplanar.TwoPlanarArcEagerFactory">2-Planar eager</legalvalue>
+			<legalvalue name="nivreeager" class="org.maltparser.parser.algorithm.nivre.NivreArcEagerFactory">Nivre arc-eager</legalvalue>
+			<legalvalue name="nivrestandard" class="org.maltparser.parser.algorithm.nivre.NivreArcStandardFactory">Nivre arc-standard</legalvalue>
+			<legalvalue name="covnonproj" class="org.maltparser.parser.algorithm.covington.CovingtonNonProjFactory">Covington non-projective</legalvalue>
+			<legalvalue name="covproj" class="org.maltparser.parser.algorithm.covington.CovingtonProjFactory">Covington projective</legalvalue>
+			<legalvalue name="stackproj" class="org.maltparser.parser.algorithm.stack.StackProjFactory">Stack projective</legalvalue>
+			<legalvalue name="stackeager" class="org.maltparser.parser.algorithm.stack.StackSwapEagerFactory">Stack eager</legalvalue>	
+			<legalvalue name="stacklazy" class="org.maltparser.parser.algorithm.stack.StackSwapLazyFactory">Stack lazy</legalvalue>
+			<legalvalue name="planar" class="org.maltparser.parser.algorithm.planar.NivrePlanarArcEagerFactory">Planar eager</legalvalue>
+			<legalvalue name="2planar" class="org.maltparser.parser.algorithm.twoplanar.TwoPlanarArcEagerFactory">2-Planar eager</legalvalue>
 		</option>
 		<option type="class" name="guide_model" flag="gm" default="single" usage="save">
-			<desc><![CDATA[ MaltParser 1.7.2 has one available guide model type: <b>single</b>. Later releases 
+			<desc><![CDATA[ MaltParser @version@ has one available guide model type: <b>single</b>. Later releases 
 			may contain additional guide model types.  ]]></desc>
 			<shortdesc>Guide model type</shortdesc>
-			<legalvalue name="single" class="org.maltparserx.parser.guide.SingleGuide">Classic guide</legalvalue>
+			<legalvalue name="single" class="org.maltparser.parser.guide.SingleGuide">Classic guide</legalvalue>
 		</option>
 		<option type="enum" name="null_value" flag="nv" default="one" usage="save">
-			<desc><![CDATA[ MaltParser 1.7.2 and later versions (implemented in Java) have the possibility of distinguishing between 
+			<desc><![CDATA[ MaltParser @version@ and later versions (implemented in Java) have the possibility of distinguishing between 
 			different kinds of null-values when extracting the feature vector. For input columns like <code>POSTAG</code> it is possible to 
 			differentiate two null-values:
 			<ul>
@@ -175,7 +171,7 @@ many single malt configurations. ]]></desc>
 		</option>
 	</optiongroup>
 	<optiongroup groupname="input">
-		<desc><![CDATA[ The <b>input</b> option group contains options that control the input data. In MaltParser 1.7.2, the values of options in the 
+		<desc><![CDATA[ The <b>input</b> option group contains options that control the input data. In MaltParser @version@, the values of options in the 
 		<b>input</b> option group must match the values of corresponding options in the <b>output</b> option group.
 		This restriction is likely to be removed in later releases. ]]></desc>
 		<option type="string" name="infile" flag="i" default="" usage="both">
@@ -187,22 +183,24 @@ many single malt configurations. ]]></desc>
 		<option type="stringenum" name="format" flag="if" default="conllx" usage="save">
 			<desc><![CDATA[ This option tells the parser which format is used in the input data file. The format is defined in an XML file. For 
 			more information see the user guide: <a href="userguide.html#inout">Input and output format</a>. 
-			There are two data format specification files in the MaltParser distribution (included in maltparser-1.7.2.jar):
+			There are two data format specification files in the MaltParser distribution (included in maltparser-@version@.jar):
 			<ul> 
-			<li><b>conllx</b> defines the <a href="http://nextens.uvt.nl/depparse-wiki/DataFormat" target="_blank">CoNLL-X shared task format</a></li>
-			<li><b>malttab</b> defines the <a href="http://w3.msi.vxu.se/~nivre/research/MaltXML.html" target="_blank">Malt-TAB</a> format.</li>
+			<li><b>conllx</b> defines the <a href="http://ilk.uvt.nl/conll/#dataformat" target="_blank">CoNLL-X shared task format</a></li>
+			<li><b>conllu</b> defines the <a href="http://universaldependencies.org/format.html" target="_blank">CoNLL-U format</a></li>
+			<li><b>malttab</b> defines the <a href="http://stp.lingfil.uu.se/~nivre/research/MaltXML.html" target="_blank">Malt-TAB</a> format.</li>
 			</ul> ]]></desc>
 			<shortdesc>Path to format specification file</shortdesc>
 			<legalvalue name="conllx" mapto="/appdata/dataformat/conllx.xml">CoNLL-X data format</legalvalue>
+			<legalvalue name="conllu" mapto="/appdata/dataformat/conllu.xml">CoNLL-U data format</legalvalue>
 			<legalvalue name="malttab" mapto="/appdata/dataformat/malttab.xml">MaltTAB data format</legalvalue>
 		</option>
 		<option type="class" name="reader" flag="ir" default="tab" usage="both">
-			<desc><![CDATA[ In MaltParser 1.7.2 there are ine input reader:
+			<desc><![CDATA[ In MaltParser @version@ there are ine input reader:
 			<ul> 
 			<li><b>tab</b> reads tab-separated files and with columns defined by the input format.</a></li>
 			</ul> ]]></desc>
 			<shortdesc>Data reader</shortdesc>
-			<legalvalue name="tab" class="org.maltparserx.core.syntaxgraph.reader.TabReader">Tab-separated reader</legalvalue>
+			<legalvalue name="tab" class="org.maltparser.core.syntaxgraph.reader.TabReader">Tab-separated reader</legalvalue>
 		</option>
 		<option type="string" name="charset" flag="ic" default="UTF-8" usage="save">
 			<desc><![CDATA[ The <b>charset</b> option defines the character set of the input data file, for example, <code>UTF-8</code> or <code>ISO8858-1</code>.  ]]></desc>
@@ -218,7 +216,7 @@ many single malt configurations. ]]></desc>
 		</option>
 	</optiongroup>
 	<optiongroup groupname="output">
-		<desc><![CDATA[ The <b>output</b> option group contains options that control the output data. In MaltParser 1.7.2, the values of options in the 
+		<desc><![CDATA[ The <b>output</b> option group contains options that control the output data. In MaltParser @version@, the values of options in the 
 		<b>output</b> option group must match the values of corresponding options in the <b>input</b> option group.
 		This restriction is likely to be removed in later releases. ]]></desc>
 		<option type="string" name="outfile" flag="o" default="" usage="both">
@@ -228,23 +226,24 @@ many single malt configurations. ]]></desc>
 		<option type="stringenum" name="format" flag="of" default="" usage="both">
 			<desc><![CDATA[ This option tells the parser which format is used for the output data file. The format is defined in an XML file. 
 			For more information see the user guide: <a href="userguide.html#define_inout">Define your own input/output format</a>. 
-			There are two data format specification files in the MaltParser distribution (included in maltparser-1.7.2.jar):
+			There are two data format specification files in the MaltParser distribution (included in maltparser-@version@.jar):
 			<ul> 
-			<li><b>conllx</b> defines the <a href="http://nextens.uvt.nl/depparse-wiki/DataFormat" target="_blank">CoNLL-X shared task format</a></li>
-			<li><b>malttab</b> defines the <a href="http://w3.msi.vxu.se/~nivre/research/MaltXML.html" target="_blank">Malt-TAB</a> format.</li>
+			<li><b>conllx</b> defines the <a href="http://ilk.uvt.nl/conll/#dataformat" target="_blank">CoNLL-X shared task format</a></li>
+			<li><b>conllu</b> defines the <a href="http://universaldependencies.org/format.html" target="_blank">CoNLL-U format</a></li>
+			<li><b>malttab</b> defines the <a href="http://stp.lingfil.uu.se/~nivre/research/MaltXML.html" target="_blank">Malt-TAB</a> format.</li>
 			</ul>  ]]></desc>
 			<shortdesc>Path to format specification file</shortdesc>
 			<legalvalue name="conllx" mapto="/appdata/dataformat/conllx.xml">CoNLL-X data format</legalvalue>
+			<legalvalue name="conllu" mapto="/appdata/dataformat/conllu.xml">CoNLL-U data format</legalvalue>
 			<legalvalue name="malttab" mapto="/appdata/dataformat/malttab.xml">MaltTAB data format</legalvalue>
 		</option>
 		<option type="class" name="writer" flag="ow" default="tab" usage="both">
-			<desc><![CDATA[ In MaltParser 1.7.2 there is two output writer:
+			<desc><![CDATA[ In MaltParser @version@ there is two output writer:
 			<ul> 
-			<li><b>tab</b> reads tab-separated files with columns defined by the input format.</a></li>
-			<li><b>negra</b> reads line-oriented files similar to the Negra export format.</a></li>
+			<li><b>tab</b> writes tab-separated files with columns defined by the input format.</a></li>
 			</ul> ]]></desc>
 			<shortdesc>Data writer</shortdesc>
-			<legalvalue name="tab" class="org.maltparserx.core.syntaxgraph.writer.TabWriter">Tab-separated writer</legalvalue>
+			<legalvalue name="tab" class="org.maltparser.core.syntaxgraph.writer.TabWriter">Tab-separated writer</legalvalue>
 		</option>
 		<option type="string" name="charset" flag="oc" default="UTF-8" usage="save">
 			<desc><![CDATA[ The <b>charset</b> option defines the character set of the output data file, for example, <code>UTF-8</code> or <code>ISO8858-1</code>.   ]]></desc>
@@ -281,10 +280,15 @@ many single malt configurations. ]]></desc>
 	        <shortdesc>Allow root</shortdesc>
         </option>
         <option type="bool" name="allow_reduce" flag="ne" default="false" usage="save">
-                <desc><![CDATA[ If <b>allow_reduce=true</b>, the Reduce transition is permissible even if the node on top of the stack does not have a head. As 
+            <desc><![CDATA[ If <b>allow_reduce=true</b>, the Reduce transition is permissible even if the node on top of the stack does not have a head. As 
                 a result, this node will be attached to the special root node after parsing is completed, which may give rise to non-projective trees. ]]></desc>
-                <shortdesc>Allow root</shortdesc>
-        </option> 
+            <shortdesc>Allow reduce</shortdesc>
+        </option>
+        <option type="bool" name="enforce_tree" flag="nt" default="false" usage="process">
+            <desc><![CDATA[ If <b>enforce_tree=true</b>, the parser will use an extended transition system that makes sure that the output parse is a tree by 
+            (if necessary) unshifting unattached tokens remaining on the stack after the buffer has been emptied and forcing them to be attached. ]]></desc>
+            <shortdesc>Enforce tree constraint</shortdesc>
+        </option>
    	</optiongroup>
    	<optiongroup groupname="multiplanar">
 		<desc><![CDATA[ The <b>multiplanar</b> option group contains options that are common to the multiplanar family of algorithms (planar and 2-planar algorithms).  ]]></desc>
@@ -371,19 +375,19 @@ otherwise all tokens in Left must be inspected before the next token is shifted.
 		<option type="stringenum" name="features" flag="F" default="" usage="save">
 			<desc><![CDATA[ The <b>features</b> option is used for specifying the feature model specification file, which is an XML file 
 			(see user guide: <a href="userguide.html#featurespec">Feature model</a>) or a text file with the file suffix <b>.par</b> (see 
-			user guide of MaltParser 0.x (C-impl) <a href="http://w3.msi.vxu.se/~nivre/research/MaltParser.html#features">Feature Models</a>). If 
+			user guide of MaltParser 0.x (C-impl) <a href="http://stp.lingfil.uu.se/~nivre/research/MaltParser.html#features">Feature Models</a>). If 
 			no feature specification file is specified,  the parser will use a default feature model specification for the given parsing algorithm that is included in the
-			MaltParser distribution (included in the maltparser-1.7.2.jar file).  ]]></desc>
+			MaltParser distribution (included in the maltparser-@version@.jar file).  ]]></desc>
 			<shortdesc>Feature model specification</shortdesc>
-			<legalvalue name="nivreeager" mapto="/appdata/features/{learner}/NivreEager.xml">Nivre arc-eager default model</legalvalue>
-			<legalvalue name="nivrestandard" mapto="/appdata/features/{learner}/NivreStandard.xml">Nivre arc-standard default model</legalvalue>
-			<legalvalue name="covnonproj" mapto="/appdata/features/{learner}/CovingtonNonProjective.xml">Covington non-projective default model</legalvalue>
-			<legalvalue name="covproj" mapto="/appdata/features/{learner}/CovingtonProjective.xml">Covington projective default model</legalvalue>
-			<legalvalue name="stackproj" mapto="/appdata/features/{learner}/StackProjective.xml">Stack projective default model</legalvalue>
-			<legalvalue name="stackeager" mapto="/appdata/features/{learner}/StackSwap.xml">Stack projective default model</legalvalue>
-			<legalvalue name="stacklazy" mapto="/appdata/features/{learner}/StackSwap.xml">Stack projective default model</legalvalue>
-			<legalvalue name="planar" mapto="/appdata/features/{learner}/PlanarEager.xml">Planar arc-eager default model</legalvalue>
-			<legalvalue name="2planar" mapto="/appdata/features/{learner}/2PlanarEager.xml">2-Planar arc-eager default model</legalvalue>
+			<legalvalue name="nivreeager" mapto="/appdata/features/{learner}/{dataformat}/NivreEager.xml">Nivre arc-eager default model</legalvalue>
+			<legalvalue name="nivrestandard" mapto="/appdata/features/{learner}/{dataformat}/NivreStandard.xml">Nivre arc-standard default model</legalvalue>
+			<legalvalue name="covnonproj" mapto="/appdata/features/{learner}/{dataformat}/CovingtonNonProjective.xml">Covington non-projective default model</legalvalue>
+			<legalvalue name="covproj" mapto="/appdata/features/{learner}/{dataformat}/CovingtonProjective.xml">Covington projective default model</legalvalue>
+			<legalvalue name="stackproj" mapto="/appdata/features/{learner}/{dataformat}/StackProjective.xml">Stack projective default model</legalvalue>
+			<legalvalue name="stackeager" mapto="/appdata/features/{learner}/{dataformat}/StackSwap.xml">Stack projective default model</legalvalue>
+			<legalvalue name="stacklazy" mapto="/appdata/features/{learner}/{dataformat}/StackSwap.xml">Stack projective default model</legalvalue>
+			<legalvalue name="planar" mapto="/appdata/features/{learner}/{dataformat}/PlanarEager.xml">Planar arc-eager default model</legalvalue>
+			<legalvalue name="2planar" mapto="/appdata/features/{learner}/{dataformat}/2PlanarEager.xml">2-Planar arc-eager default model</legalvalue>
 		</option>
 		<option type="string" name="data_split_column" flag="d" default="" usage="save">
 			<desc><![CDATA[ For some learning methods (like LIBSVM) it is impractical to induce a single model based on all training instances. With
@@ -418,7 +422,7 @@ otherwise all tokens in Left must be inspected before the next token is shifted.
 		<option type="integer" name="kbest" flag="k" default="-1" usage="save">
 			<desc><![CDATA[ The classifier can produce a k-best list of predicted parser actions. The <b>kbest</b> option indicates how many 
 			items the k-best list should contain. If <code>-k -1</code>, all possible parser actions are ranked in the k-best list. 
-			If <code>-k 1</code>, there is only one prediction in the k-best list. MaltParser 1.7.2 (<b>behavior &ne; malt0.4</b>) only makes 
+			If <code>-k 1</code>, there is only one prediction in the k-best list. MaltParser @version@ (<b>behavior &ne; malt0.4</b>) only makes 
 			use of the k-best list when the parser action is not permissible. Later releases of MaltParser will make use of the k-best list
 			in a more intelligent way. If <b>--malt0.4-behavior=true</b>, this option will be overridden with <b>k=1</b>.   ]]></desc>
 			<shortdesc>Number of items in k-best list</shortdesc>
@@ -426,14 +430,14 @@ otherwise all tokens in Left must be inspected before the next token is shifted.
 		<option type="class" name="kbest_type" flag="kt" default="rank" usage="process">
 			<desc><![CDATA[ The classifier can produce a k-best list of predicted parser actions.    ]]></desc>
 			<shortdesc>Type of k-best list</shortdesc>
-			<legalvalue name="rank" class="org.maltparserx.parser.history.kbest.KBestList">Only ranked list</legalvalue>
+			<legalvalue name="rank" class="org.maltparser.parser.history.kbest.KBestList">Only ranked list</legalvalue>
 		</option>
 		<option type="class" name="learner" flag="l" default="liblinear"  usage="save">
-			<desc><![CDATA[ This option specifies the learning method (learner package). MaltParser 1.7.2 includes
+			<desc><![CDATA[ This option specifies the learning method (learner package). MaltParser @version@ includes
 			the LIBSVM learner and the LIBLINEAR learner. ]]></desc>
 			<shortdesc>Learner</shortdesc>
-			<legalvalue name="libsvm" class="org.maltparserx.ml.lib.LibSvm">LIBSVM learner</legalvalue>
-			<legalvalue name="liblinear" class="org.maltparserx.ml.lib.LibLinear">LIBLINEAR learner</legalvalue>
+			<legalvalue name="libsvm" class="org.maltparser.ml.lib.LibSvm">LIBSVM learner</legalvalue>
+			<legalvalue name="liblinear" class="org.maltparser.ml.lib.LibLinear">LIBLINEAR learner</legalvalue>
 		</option>
 		<option type="string" name="decision_settings" flag="gds" default="T.TRANS+A.DEPREL" usage="save">
 			<desc><![CDATA[ This option specifies how a parser action is combined or divided. By default, arc label(s) and transition are combined into

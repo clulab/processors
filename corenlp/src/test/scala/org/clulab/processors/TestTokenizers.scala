@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clulab.CluProcessor
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest.{FlatSpec, Matchers}
 

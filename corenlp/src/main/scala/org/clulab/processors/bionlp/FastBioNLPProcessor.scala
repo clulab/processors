@@ -25,7 +25,7 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
                            removeFigTabReferences:Boolean = true,
                            removeBibReferences:Boolean = true
 )
-  extends FastNLPProcessor(internStrings, withChunks, useMalt = false, withDiscourse) {
+  extends FastNLPProcessor(internStrings, withChunks, withDiscourse) {
 
   //lazy val banner = new BannerWrapper
   private lazy val specialTokens = KBLoader.loadSpecialTokens

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<featuremodels>
+	<featuremodel name="planareager">
+		<feature>InputColumn(UPOSTAG, ActiveStack[0])</feature>
+		<feature>InputColumn(UPOSTAG, Input[0])</feature>
+		<feature>InputColumn(UPOSTAG, Input[1])</feature>
+		<feature>InputColumn(UPOSTAG, Input[2])</feature>
+		<feature>InputColumn(UPOSTAG, Input[3])</feature>
+		<feature>InputColumn(UPOSTAG, ActiveStack[1])</feature>
+		<feature>Merge(InputColumn(UPOSTAG, ActiveStack[0]), InputColumn(UPOSTAG, Input[0]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, ActiveStack[1]), InputColumn(UPOSTAG, ActiveStack[0]), InputColumn(UPOSTAG, Input[0]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, ActiveStack[0]), InputColumn(UPOSTAG, Input[0]), InputColumn(UPOSTAG, Input[1]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Input[0]), InputColumn(UPOSTAG, Input[1]), InputColumn(UPOSTAG, Input[2]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, Input[1]), InputColumn(UPOSTAG, Input[2]), InputColumn(UPOSTAG, Input[3]))</feature>
+		<feature>OutputColumn(DEPREL, ActiveStack[0])</feature>
+		<feature>OutputColumn(DEPREL, ldep(ActiveStack[0]))</feature>
+		<feature>OutputColumn(DEPREL, rdep(ActiveStack[0]))</feature>
+		<feature>OutputColumn(DEPREL, ldep(Input[0]))</feature>
+		<feature>Merge3(InputColumn(UPOSTAG, ActiveStack[0]), OutputColumn(DEPREL, ldep(ActiveStack[0])), OutputColumn(DEPREL, rdep(ActiveStack[0])))</feature>
+		<feature>Merge(InputColumn(UPOSTAG, ActiveStack[0]), OutputColumn(DEPREL, ActiveStack[0]))</feature>
+		<feature>Merge(InputColumn(UPOSTAG, Input[0]), OutputColumn(DEPREL, ldep(Input[0])))</feature>
+		<feature>InputColumn(FORM, ActiveStack[0])</feature>
+		<feature>InputColumn(FORM, Input[0])</feature>
+		<feature>InputColumn(FORM, Input[1])</feature>
+		<feature>InputColumn(FORM, head(ActiveStack[0]))</feature>
+		<!--<feature>OutputColumn(DEPREL, Input[0])</feature>-->
+		<feature>InputColumn(UPOSTAG, head(Input[0]))</feature>
+		<feature>OutputArc(HEAD, ActiveStack[0], Input[0])</feature>
+		<feature>InputColumn(UPOSTAG, InactiveStack[0])</feature>
+		<feature>InputColumn(UPOSTAG, InactiveStack[1])</feature>
+		<feature>Merge(InputColumn(UPOSTAG, InactiveStack[0]), InputColumn(UPOSTAG, InactiveStack[1]))</feature>
+	</featuremodel>
+</featuremodels>

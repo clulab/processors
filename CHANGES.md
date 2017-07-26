@@ -1,4 +1,5 @@
 # Changes
++ **6.0.7** - Added basic Stanford dependencies to CluProcessor. These are implemented using maltparser trained on WSJ + Genia. Note that currently the CluProcessor POS tagger is trained just on WSJ.
 + **6.0.6** - Rename Odin subproject library artifact to processors-odin, for consistency.
 + **6.0.6** - Added CluProcessor, which contains only in-house tools under the Apache license. Currently contains English tokenization, lemmatization, and POS tagging.
 + **6.0.6** - Added `graph` field to Odin rules, which denotes the graph (ex. stanford collapsed dependencies) used within the pattern (`incoming`, `outgoing`, etc.).
