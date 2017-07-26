@@ -2,7 +2,7 @@
 
 First, download then maltparser from here: http://www.maltparser.org/download.html
 
-We are currently using version `1.9.0`. If you change the version number, please copy the `appdata/` directory from the malt distribution to this location in `processors`: `models/src/main/resources/appdata/`
+We are currently using version `1.9.0`. If you change the version number, please copy again the corresponding `appdata/` directory from the malt distribution to this location in `processors`: `models/src/main/resources/appdata/`
 
 Use the following commands to train the forward, i.e., left-to-right model:
 
