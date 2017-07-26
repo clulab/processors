@@ -61,7 +61,7 @@ object PartOfSpeechTagger {
     val props = StringUtils.argsToProperties(args)
 
     if(props.containsKey("train")) {
-      val doc = ColumnsToDocument.readFromFile(props.getProperty("train"))
+      val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), wordPos = 0, tagPos = 1)
       val tagger = new PartOfSpeechTagger
       //tagger.preprocess(List(doc).iterator)
       tagger.train(List(doc).iterator)
