@@ -10,7 +10,6 @@ import akka.event.Logging
 
 import org.clulab.processors._
 import org.clulab.processors.bionlp._
-// import org.clulab.processors.clulab._       // TBD: enable when merged
 import org.clulab.processors.corenlp._
 import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
@@ -18,17 +17,14 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Update for removal of Malt.
+  *   Last Modified: Cleanup tbd, demote from app.
   */
-object ProcessorCoreServer extends App with LazyLogging {
-
-  // save any command line arguments
-  private val argsList = args.toList
+object ProcessorCoreServer extends LazyLogging {
 
   // THE instance of the the processor core server
   private var _pcs: ProcessorCoreServer = _
 
-  /** Create a single instance of the processor core server, only if it has been created. */
+  /** Create a single instance of the processor core server, only if it has not been created. */
   def instance: ProcessorCoreServer = {
     logger.debug(s"(ProcessorCoreServer.instance): pcs = ${_pcs}")
     if (_pcs == null) {                     // create server, iff not already created
@@ -91,8 +87,6 @@ class ProcessorCoreServer (
                                         maxSentenceLength,
                                         removeFigTabReferences,
                                         removeBibReferences)
-
-//      case "clu" => new CluProcessor(internStrings) // TODO: enable when merged
 
       case "core" => new CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength)
 
