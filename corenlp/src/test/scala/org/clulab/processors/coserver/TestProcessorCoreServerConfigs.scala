@@ -7,7 +7,6 @@ import com.typesafe.scalalogging.LazyLogging
 
 import org.clulab.processors._
 import org.clulab.processors.bionlp._
-// import org.clulab.processors.clulab._       // TBD: enable when merged
 import org.clulab.processors.corenlp._
 import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
@@ -15,7 +14,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 7/12/2017.
-  *   Last Modified: Update for removal of Malt.
+  *   Last Modified: Cleanup tbd.
   */
 class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLogging {
 
@@ -64,15 +63,6 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
     (pcs.processor) should not be (null)
     (pcs.processor.isInstanceOf[BioNLPProcessor]) should be (true)
   }
-
-  // "CLU processor type" should "should instantiate a CluProcessor" in {
-  //   val modConfig = config.withValue(s"${prefix}.type", ConfigValueFactory.fromAnyRef("clu"))
-  //   val pcs = new ProcessorCoreServer(modConfig)
-  //   (pcs) should not be (null)
-  //   (pcs.router) should not be (null)
-  //   (pcs.processor) should not be (null)
-  //   (pcs.processor.isInstanceOf[CluProcessor]) should be (true)
-  // }
 
   "Fast processor type" should "should instantiate a FastNLPProcessor" in {
     val modConfig = config.withValue(s"${prefix}.type", ConfigValueFactory.fromAnyRef("fast"))

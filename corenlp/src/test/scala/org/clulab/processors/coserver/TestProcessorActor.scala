@@ -346,7 +346,7 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     probe.send(procActor, DiscourseCmd(doc1))
     reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
     // NOTE: following fails if the correct Processor type is not used:
-    // (reply.doc.discourseTree) must not be (empty) // TODO: LATER fix test
+    // (reply.doc.discourseTree) must not be (empty)
   }
 
 
