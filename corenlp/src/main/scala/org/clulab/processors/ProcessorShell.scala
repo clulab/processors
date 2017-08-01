@@ -91,7 +91,7 @@ object ProcessorShell extends App {
   reader.shutdown()
 
 
-  // summarize available commands
+  /** summarize available commands */
   def printCommands(): Unit = {
     println("\nCOMMANDS:")
     for ((cmd, msg) <- commands)
