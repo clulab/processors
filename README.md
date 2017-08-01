@@ -4,7 +4,7 @@
 
 This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains (in descending order of novelty):
 
-+ A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `org.clulab.odin` package. See [Odin's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
++ A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `org.clulab.odin` package. See [Odin's Wiki page](https://github.com/clulab/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
 + Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster. 
 + A machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 + A suite of NL processors in the `org.clulab.processors` package. We currently provide the following APIs: 
@@ -626,7 +626,7 @@ Following the conventions from other modern discourse parsing work, the discours
 + Stores the relation labels in the parent node (in `DiscourseTree.relationLabel`) rather than the satellite nodes (like the RST corpus). We use the same 18 labels as Feng and Hirst.
 + Stores the relation direction in `DiscourseTree.relationDirection`. The direction can be `LeftToRight` (meaning the nucleus is the left child), `RightToLeft` (the right node is the nucleus), or `None` (for paratactic relations).
 
-Developers only: For more details on the discourse parsers, please see [this Wiki page](https://github.com/sistanlp/processors/wiki/Discourse-Parsers-Details).
+Developers only: For more details on the discourse parsers, please see [this Wiki page](https://github.com/clulab/processors/wiki/Discourse-Parsers-Details).
 
 ## The `org.clulab.learning` package
 
@@ -634,13 +634,13 @@ Developers only: For more details on the discourse parsers, please see [this Wik
 
 The structure of this package is heavily inspired by Stanford's CoreNLP. Similar to CoreNLP, we use a `Datum` trait to store a single data point, which is implemented by `BVFDatum` to store binary-valued-feature datums, or by `RVFDatum` to store real-valued-feature datums. A collection of data points is stored as a `Dataset`, which is similarly implemented by `BVFDataset` or `RVFDataset`. All classifiers implement the `Classifier` trait, which has three main methods: `train`, which trains a model a given dataset, `classOf`, which returns the most likely prediction for a given datum, and `scoresOf`, which returns the scores for all known labels for a given datum. We currently support the following classifiers: large-margin Perceptron (`PerceptronClassifier`), linear SVMs and logistic regression from [liblinear](http://www.csie.ntu.edu.tw/~cjlin/liblinear/) (`LibLinearClassifier`), dual SVMs from [libsvm](http://www.csie.ntu.edu.tw/~cjlin/libsvm/) (`LibSVMClassifier`), and random forests, implemented in-house (`RFClassifier`).
 
-A similar structure exists for ranking problems, with `RankingDataset` used to store a corpus of ranking examples, and  `RankingClassifier` as the API to be implemented by all ranking classifiers. We currently support the following classifiers: ranking Perceptron (`PerceptronRankingClassifier`), ranking SVMs from [svm-rank](http://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html) (`SVMRankingClassifier`), and boosted decision trees from [jforests](https://code.google.com/p/jforests/) (`JForestsRankingClassifier`).
+A similar structure exists for ranking problems, with `RankingDataset` used to store a corpus of ranking examples, and  `RankingClassifier` as the API to be implemented by all ranking classifiers. We currently support the following classifiers: ranking Perceptron (`PerceptronRankingClassifier`), and ranking SVMs from [svm-rank](http://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html) (`SVMRankingClassifier`).
 
 For usage examples, including how to create datums and datasets from scratch or import them from the svm-light format, please take a look at the examples under `src/test/scala/org/clulab/learning`.
 
 ## The Odin event extraction framework
 
-Please see [Odin's Wiki](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) page for details.
+Please see [Odin's Wiki](https://github.com/clulab/processors/wiki/ODIN-(Open-Domain-INformer)) page for details.
 
 ## Other resources
 
