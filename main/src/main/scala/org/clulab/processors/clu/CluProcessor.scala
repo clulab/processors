@@ -2,7 +2,7 @@ package org.clulab.processors.clu
 
 import edu.knowitall.tool.stem.MorphaStemmer
 import org.clulab.processors.clu.sequences.PartOfSpeechTagger
-import org.clulab.processors.clu.syntax.{MaltWrapper, Parser}
+import org.clulab.processors.clu.syntax.{EnhancedDependencies, MaltWrapper, Parser}
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
@@ -137,8 +137,8 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
     for (sentence <- doc.sentences) {
       val dg = depParser.parseSentence(sentence)
-      // Note: malt only support basic Stanford dependencies!
       sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
+      sentence.setDependencies(GraphMap.STANFORD_COLLAPSED, EnhancedDependencies.generateEnhancedDependencies(dg))
     }
   }
   
