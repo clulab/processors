@@ -7,8 +7,12 @@ This is the main public code repository of the Computational Language Understand
 + A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `org.clulab.odin` package. See [Odin's Wiki page](https://github.com/sistanlp/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
 + Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster. 
 + A machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
-+ A suite of NL processors in the `org.clulab.processors` package. We currently provide three APIs: one for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), one for a faster processor (`FastNLPProcessor`)
-that cherry picks fast components from multiple sources (Stanford and [MaltParser](http://www.maltparser.org/)), and, lastly, one for biomedical texts (`BioNLPProcessor`), which integrates resources trained for this domain (Stanford parser and our own NER based on the Stanford CRF).
++ A suite of NL processors in the `org.clulab.processors` package. We currently provide the following APIs: 
+	+ `CoreNLPProcessor` - a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), using its constituent parser;
+	+ `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
+	+ `BioNLPProcessor` - a version of `CoreNLPProcessor` tuned for the biomedical domain: better tokenization for biomedical texts, improved POS tagging for the bio domain, and a custom NER for this domain that recognizes entities relevant in this domain such as proteins, chemical, and biological processes;
+	+ `FastBioNLPProcessor` - a version of `FastNLPProcessor` tuned for the biomedical domain, similarly to `BioNLPProcessor`; 
+	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization, lemmatization, POS tagging (using [Mallet](http://mallet.cs.umass.edu)), and syntax (using [maltparser](http://mallet.cs.umass.edu)). Performance is comparable to `FastNLPProcessor`, under a more permissive license.
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
@@ -47,17 +51,17 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-corenlp_2.11</artifactId>
-   <version>6.0.6</version>
+   <version>6.0.7</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-main_2.11</artifactId>
-   <version>6.0.6</version>
+   <version>6.0.7</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-models_2.11</artifactId>
-   <version>6.0.6</version>
+   <version>6.0.7</version>
 </dependency>
 ```
 
@@ -65,9 +69,9 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    "org.clulab" %% "processors-corenlp" % "6.0.6",
-    "org.clulab" %% "processors-main" % "6.0.6",
-    "org.clulab" %% "processors-models" % "6.0.6"
+    "org.clulab" %% "processors-corenlp" % "6.0.7",
+    "org.clulab" %% "processors-main" % "6.0.7",
+    "org.clulab" %% "processors-models" % "6.0.7"
 )
 ```
 
