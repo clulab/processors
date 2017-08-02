@@ -138,7 +138,8 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     for (sentence <- doc.sentences) {
       val dg = depParser.parseSentence(sentence)
       sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
-      sentence.setDependencies(GraphMap.STANFORD_COLLAPSED, EnhancedDependencies.generateEnhancedDependencies(dg))
+      sentence.setDependencies(GraphMap.STANFORD_COLLAPSED,
+        EnhancedDependencies.generateEnhancedDependencies(sentence, dg))
     }
   }
   

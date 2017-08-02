@@ -16,18 +16,28 @@ class DirectedGraphIndex[E](
   def this(len:Int) {
     this(
       new mutable.HashSet[Int],
-      new Array[ArrayBuffer[(Int, E)]](len),
+      DirectedGraphIndex.mkOutgoing(len),
       new mutable.HashMap[E, ArrayBuffer[(Int, Int)]]()
     )
   }
 
   def addEdge(head:Int, modifier:Int, label:E): Unit = {
-    outgoingEdges(head) += new Tuple2(modifier, label)
+    outgoingEdges(head) += Tuple2(modifier, label)
     val byLabel = edgesByName.getOrElseUpdate(label, new ArrayBuffer[(Int, Int)]())
-    byLabel += new Tuple2(head, modifier)
+    byLabel += Tuple2(head, modifier)
   }
 
   def addRoot(index:Int) { roots += index }
+
+  def findByName(label:E): Seq[Edge[E]] = {
+    val edges = new ListBuffer[Edge[E]]
+    edgesByName.get(label).foreach(ses =>
+      for(se <- ses) {
+        edges += Edge(se._1, se._2, label)
+      }
+    )
+    edges
+  }
 
   def toDirectedGraph: DirectedGraph[E] = {
     val edges = new ListBuffer[Edge[E]]
@@ -38,5 +48,14 @@ class DirectedGraphIndex[E](
       }
     }
     new DirectedGraph[E](edges.toList, roots.toSet)
+  }
+}
+
+object DirectedGraphIndex {
+  private def mkOutgoing[E](len:Int): Array[ArrayBuffer[(Int, E)]] = {
+    val outgoing = new Array[ArrayBuffer[(Int, E)]](len)
+    for(i <- outgoing.indices)
+      outgoing(i) = new ArrayBuffer[(Int, E)]()
+    outgoing
   }
 }
