@@ -59,7 +59,7 @@
 			<legalvalue name="testdata">Generates test instances to run experiments with a learner outside MaltParser. Use for example the flag <em>-li true</em> to save instances.</legalvalue>
 		</option>
 		<option type="class" name="type" flag="t" default="singlemalt" usage="both">
-			<desc><![CDATA[ MaltParser @version@ has one available configuration type: <b>singlemalt</b>. Later releases 
+			<desc><![CDATA[ MaltParser 1.9.0 has one available configuration type: <b>singlemalt</b>. Later releases 
 			may contain additional configuration types. For example, one type could be an ensemble parser configuration containing 
 many single malt configurations. ]]></desc>
 			<shortdesc>Configuration type</shortdesc>
@@ -113,13 +113,13 @@ many single malt configurations. ]]></desc>
 			<legalvalue name="2planar" class="org.maltparser.parser.algorithm.twoplanar.TwoPlanarArcEagerFactory">2-Planar eager</legalvalue>
 		</option>
 		<option type="class" name="guide_model" flag="gm" default="single" usage="save">
-			<desc><![CDATA[ MaltParser @version@ has one available guide model type: <b>single</b>. Later releases 
+			<desc><![CDATA[ MaltParser 1.9.0 has one available guide model type: <b>single</b>. Later releases 
 			may contain additional guide model types.  ]]></desc>
 			<shortdesc>Guide model type</shortdesc>
 			<legalvalue name="single" class="org.maltparser.parser.guide.SingleGuide">Classic guide</legalvalue>
 		</option>
 		<option type="enum" name="null_value" flag="nv" default="one" usage="save">
-			<desc><![CDATA[ MaltParser @version@ and later versions (implemented in Java) have the possibility of distinguishing between 
+			<desc><![CDATA[ MaltParser 1.9.0 and later versions (implemented in Java) have the possibility of distinguishing between 
 			different kinds of null-values when extracting the feature vector. For input columns like <code>POSTAG</code> it is possible to 
 			differentiate two null-values:
 			<ul>
@@ -171,7 +171,7 @@ many single malt configurations. ]]></desc>
 		</option>
 	</optiongroup>
 	<optiongroup groupname="input">
-		<desc><![CDATA[ The <b>input</b> option group contains options that control the input data. In MaltParser @version@, the values of options in the 
+		<desc><![CDATA[ The <b>input</b> option group contains options that control the input data. In MaltParser 1.9.0, the values of options in the 
 		<b>input</b> option group must match the values of corresponding options in the <b>output</b> option group.
 		This restriction is likely to be removed in later releases. ]]></desc>
 		<option type="string" name="infile" flag="i" default="" usage="both">
@@ -183,7 +183,7 @@ many single malt configurations. ]]></desc>
 		<option type="stringenum" name="format" flag="if" default="conllx" usage="save">
 			<desc><![CDATA[ This option tells the parser which format is used in the input data file. The format is defined in an XML file. For 
 			more information see the user guide: <a href="userguide.html#inout">Input and output format</a>. 
-			There are two data format specification files in the MaltParser distribution (included in maltparser-@version@.jar):
+			There are two data format specification files in the MaltParser distribution (included in maltparser-1.9.0.jar):
 			<ul> 
 			<li><b>conllx</b> defines the <a href="http://ilk.uvt.nl/conll/#dataformat" target="_blank">CoNLL-X shared task format</a></li>
 			<li><b>conllu</b> defines the <a href="http://universaldependencies.org/format.html" target="_blank">CoNLL-U format</a></li>
@@ -195,7 +195,7 @@ many single malt configurations. ]]></desc>
 			<legalvalue name="malttab" mapto="/appdata/dataformat/malttab.xml">MaltTAB data format</legalvalue>
 		</option>
 		<option type="class" name="reader" flag="ir" default="tab" usage="both">
-			<desc><![CDATA[ In MaltParser @version@ there are ine input reader:
+			<desc><![CDATA[ In MaltParser 1.9.0 there are ine input reader:
 			<ul> 
 			<li><b>tab</b> reads tab-separated files and with columns defined by the input format.</a></li>
 			</ul> ]]></desc>
@@ -216,7 +216,7 @@ many single malt configurations. ]]></desc>
 		</option>
 	</optiongroup>
 	<optiongroup groupname="output">
-		<desc><![CDATA[ The <b>output</b> option group contains options that control the output data. In MaltParser @version@, the values of options in the 
+		<desc><![CDATA[ The <b>output</b> option group contains options that control the output data. In MaltParser 1.9.0, the values of options in the 
 		<b>output</b> option group must match the values of corresponding options in the <b>input</b> option group.
 		This restriction is likely to be removed in later releases. ]]></desc>
 		<option type="string" name="outfile" flag="o" default="" usage="both">
@@ -226,7 +226,7 @@ many single malt configurations. ]]></desc>
 		<option type="stringenum" name="format" flag="of" default="" usage="both">
 			<desc><![CDATA[ This option tells the parser which format is used for the output data file. The format is defined in an XML file. 
 			For more information see the user guide: <a href="userguide.html#define_inout">Define your own input/output format</a>. 
-			There are two data format specification files in the MaltParser distribution (included in maltparser-@version@.jar):
+			There are two data format specification files in the MaltParser distribution (included in maltparser-1.9.0.jar):
 			<ul> 
 			<li><b>conllx</b> defines the <a href="http://ilk.uvt.nl/conll/#dataformat" target="_blank">CoNLL-X shared task format</a></li>
 			<li><b>conllu</b> defines the <a href="http://universaldependencies.org/format.html" target="_blank">CoNLL-U format</a></li>
@@ -238,7 +238,7 @@ many single malt configurations. ]]></desc>
 			<legalvalue name="malttab" mapto="/appdata/dataformat/malttab.xml">MaltTAB data format</legalvalue>
 		</option>
 		<option type="class" name="writer" flag="ow" default="tab" usage="both">
-			<desc><![CDATA[ In MaltParser @version@ there is two output writer:
+			<desc><![CDATA[ In MaltParser 1.9.0 there is two output writer:
 			<ul> 
 			<li><b>tab</b> writes tab-separated files with columns defined by the input format.</a></li>
 			</ul> ]]></desc>
@@ -377,7 +377,7 @@ otherwise all tokens in Left must be inspected before the next token is shifted.
 			(see user guide: <a href="userguide.html#featurespec">Feature model</a>) or a text file with the file suffix <b>.par</b> (see 
 			user guide of MaltParser 0.x (C-impl) <a href="http://stp.lingfil.uu.se/~nivre/research/MaltParser.html#features">Feature Models</a>). If 
 			no feature specification file is specified,  the parser will use a default feature model specification for the given parsing algorithm that is included in the
-			MaltParser distribution (included in the maltparser-@version@.jar file).  ]]></desc>
+			MaltParser distribution (included in the maltparser-1.9.0.jar file).  ]]></desc>
 			<shortdesc>Feature model specification</shortdesc>
 			<legalvalue name="nivreeager" mapto="/appdata/features/{learner}/{dataformat}/NivreEager.xml">Nivre arc-eager default model</legalvalue>
 			<legalvalue name="nivrestandard" mapto="/appdata/features/{learner}/{dataformat}/NivreStandard.xml">Nivre arc-standard default model</legalvalue>
@@ -422,7 +422,7 @@ otherwise all tokens in Left must be inspected before the next token is shifted.
 		<option type="integer" name="kbest" flag="k" default="-1" usage="save">
 			<desc><![CDATA[ The classifier can produce a k-best list of predicted parser actions. The <b>kbest</b> option indicates how many 
 			items the k-best list should contain. If <code>-k -1</code>, all possible parser actions are ranked in the k-best list. 
-			If <code>-k 1</code>, there is only one prediction in the k-best list. MaltParser @version@ (<b>behavior &ne; malt0.4</b>) only makes 
+			If <code>-k 1</code>, there is only one prediction in the k-best list. MaltParser 1.9.0 (<b>behavior &ne; malt0.4</b>) only makes 
 			use of the k-best list when the parser action is not permissible. Later releases of MaltParser will make use of the k-best list
 			in a more intelligent way. If <b>--malt0.4-behavior=true</b>, this option will be overridden with <b>k=1</b>.   ]]></desc>
 			<shortdesc>Number of items in k-best list</shortdesc>
@@ -433,7 +433,7 @@ otherwise all tokens in Left must be inspected before the next token is shifted.
 			<legalvalue name="rank" class="org.maltparser.parser.history.kbest.KBestList">Only ranked list</legalvalue>
 		</option>
 		<option type="class" name="learner" flag="l" default="liblinear"  usage="save">
-			<desc><![CDATA[ This option specifies the learning method (learner package). MaltParser @version@ includes
+			<desc><![CDATA[ This option specifies the learning method (learner package). MaltParser 1.9.0 includes
 			the LIBSVM learner and the LIBLINEAR learner. ]]></desc>
 			<shortdesc>Learner</shortdesc>
 			<legalvalue name="libsvm" class="org.maltparser.ml.lib.LibSvm">LIBSVM learner</legalvalue>
