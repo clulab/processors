@@ -75,7 +75,8 @@ object CluShell {
     var sentenceCount = 0
     for (sentence <- doc.sentences) {
       println("Sentence #" + sentenceCount + ":")
-      println("Tokens: " + sentence.words.mkString(" "))
+      val indices = 0 until sentence.size
+      println("Tokens: " + sentence.words.zip(indices).mkString(" "))
       
       sentence.stanfordBasicDependencies.foreach(dependencies => {
         println("Basic dependencies:")

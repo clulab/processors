@@ -11,8 +11,9 @@ import org.clulab.struct.DirectedGraph
   */
 object EnhancedDependencies {
   def generateEnhancedDependencies(dg:DirectedGraph[String]): DirectedGraph[String] = {
-    // TODO
-    dg
+    val dgi = dg.toDirectedGraphIndex
+
+    dgi.toDirectedGraph
   }
 
 }

@@ -213,6 +213,13 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     }
   }
 
+  def toDirectedGraphIndex: DirectedGraphIndex[E] = {
+    val dgi = new DirectedGraphIndex[E](size)
+    roots.foreach(dgi.addRoot(_))
+    allEdges.foreach(e => dgi.addEdge(e._1, e._2, e._3))
+    dgi
+  }
+
 }
 
 class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[(Int, Int, E)] {
