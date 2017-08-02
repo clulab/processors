@@ -9,6 +9,10 @@ import scala.collection.mutable.ListBuffer
   * Converts Stanford basic dependencies to collapsed ones
   * This follows the rules from http://universaldependencies.org/u/overview/enhanced-syntax.html
   *   (but applied to Stanford deps rather than universal ones)
+  * We support:
+  * - Collapsing of prepositions to the prep_* label
+  * - Controlled/raised subjects
+  * - 
   * User: mihais
   * Date: 8/1/17
   */
