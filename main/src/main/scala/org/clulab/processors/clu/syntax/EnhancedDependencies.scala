@@ -1,7 +1,9 @@
 package org.clulab.processors.clu.syntax
 
 import org.clulab.processors.Sentence
-import org.clulab.struct.{DirectedGraph, DirectedGraphIndex}
+import org.clulab.struct.{DirectedGraph, DirectedGraphIndex, Edge}
+
+import scala.collection.mutable.ListBuffer
 
 /**
   * Converts Stanford basic dependencies to collapsed ones
@@ -19,7 +21,17 @@ object EnhancedDependencies {
   }
 
   def collapsePrepositions(sentence:Sentence, dgi:DirectedGraphIndex[String]): Unit = {
-      
+    val toRemove = new ListBuffer[Edge[String]]
+    val preps = dgi.findByName("prep")
+    for(prep <- preps) {
+      toRemove += prep
+      val word = sentence.words(prep.destination)
+      for(pobj <- dgi.findByName("pobj").filter(_.source == prep.destination)) {
+        dgi.addEdge(prep.source, pobj.destination, s"prep_$word")
+        toRemove += pobj
+      }
+    }
+    toRemove.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))
   }
 
   def raiseSubjects(dgi:DirectedGraphIndex[String]) {

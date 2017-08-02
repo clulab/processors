@@ -9,22 +9,30 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * Date: 8/2/17
   */
 class DirectedGraphIndex[E](
-   val roots:mutable.HashSet[Int],
-   val outgoingEdges:Array[ArrayBuffer[(Int, E)]], // from head to modifier
-   val edgesByName:mutable.HashMap[E, ArrayBuffer[(Int, Int)]]) { // indexes edges by label
+  val roots:mutable.HashSet[Int],
+  val outgoingEdges:Array[mutable.HashSet[(Int, E)]], // from head to modifier
+  val edgesByName:mutable.HashMap[E, mutable.HashSet[(Int, Int)]]) { // indexes edges by label
 
   def this(len:Int) {
     this(
       new mutable.HashSet[Int],
       DirectedGraphIndex.mkOutgoing(len),
-      new mutable.HashMap[E, ArrayBuffer[(Int, Int)]]()
+      new mutable.HashMap[E, mutable.HashSet[(Int, Int)]]()
     )
   }
 
-  def addEdge(head:Int, modifier:Int, label:E): Unit = {
+  def addEdge(head:Int, modifier:Int, label:E) {
     outgoingEdges(head) += Tuple2(modifier, label)
-    val byLabel = edgesByName.getOrElseUpdate(label, new ArrayBuffer[(Int, Int)]())
+    val byLabel = edgesByName.getOrElseUpdate(label, new mutable.HashSet[(Int, Int)]())
     byLabel += Tuple2(head, modifier)
+  }
+
+  def removeEdge(head:Int, modifier:Int, label:E): Unit = {
+    outgoingEdges(head).remove(Tuple2(modifier, label))
+    val byLabel = edgesByName.get(label)
+    if(byLabel.nonEmpty) {
+      byLabel.get.remove(Tuple2(head, modifier))
+    }
   }
 
   def addRoot(index:Int) { roots += index }
@@ -52,10 +60,10 @@ class DirectedGraphIndex[E](
 }
 
 object DirectedGraphIndex {
-  private def mkOutgoing[E](len:Int): Array[ArrayBuffer[(Int, E)]] = {
-    val outgoing = new Array[ArrayBuffer[(Int, E)]](len)
+  private def mkOutgoing[E](len:Int): Array[mutable.HashSet[(Int, E)]] = {
+    val outgoing = new Array[mutable.HashSet[(Int, E)]](len)
     for(i <- outgoing.indices)
-      outgoing(i) = new ArrayBuffer[(Int, E)]()
+      outgoing(i) = new mutable.HashSet[(Int, E)]()
     outgoing
   }
 }
