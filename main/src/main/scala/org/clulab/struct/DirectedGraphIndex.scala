@@ -1,7 +1,7 @@
 package org.clulab.struct
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * An inverted index of the DirectedGraph, so we can efficiently implement enhanced dependencies
@@ -30,6 +30,13 @@ class DirectedGraphIndex[E](
   def addRoot(index:Int) { roots += index }
 
   def toDirectedGraph: DirectedGraph[E] = {
-    
+    val edges = new ListBuffer[Edge[E]]
+    for(head <- outgoingEdges.indices) {
+      for(ml <- outgoingEdges(head)) {
+        val e = new Edge[E](head, ml._1, ml._2)
+        edges += e
+      }
+    }
+    new DirectedGraph[E](edges.toList, roots.toSet)
   }
 }
