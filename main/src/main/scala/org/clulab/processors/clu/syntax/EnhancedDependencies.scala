@@ -59,7 +59,7 @@ object EnhancedDependencies {
     }
   }
 
-  def propagateSubjectsAndObjectsInConjVerbs(dgi:DirectedGraphIndex[String]) {
-    
+  def propagateSubjectsAndObjectsInConjVerbs(dgi:DirectedGraphIndex[String]): Unit = {
+    // TODO
   }
 }
