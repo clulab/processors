@@ -38,6 +38,10 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
   def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val inputTokens = new Array[String](sentence.words.length)
+
+    //println(s"WORDS: ${sentence.words.mkString(", ")}")
+    //println(s"LEMMAS: ${sentence.lemmas.get.mkString(", ")}")
+    //println(s"TAGS: ${sentence.tags.get.mkString(", ")}")
     for(i <- inputTokens.indices) {
       inputTokens(i) = s"${i + 1}\t${sentence.words(i)}\t${sentence.lemmas.get(i)}\t${sentence.tags.get(i)}\t${sentence.tags.get(i)}\t_"
     }
