@@ -12,7 +12,9 @@ import scala.collection.mutable.ListBuffer
   * We support:
   * - Collapsing of prepositions to the prep_* label
   * - Controlled/raised subjects
-  * - 
+  * - Propagate subjects and objects in conjoined verbs
+  * - Propagate conjoined subjects and objects to same verb
+  * - Push subjects/objects inside relative clauses
   * User: mihais
   * Date: 8/1/17
   */
@@ -22,6 +24,8 @@ object EnhancedDependencies {
     collapsePrepositions(sentence, dgi)
     raiseSubjects(dgi)
     propagateSubjectsAndObjectsInConjVerbs(dgi)
+    propagateConjSubjectsAndObjects(dgi)
+    pushSubjectsObjectsInsideRelativeClauses(dgi)
     dgi.toDirectedGraph
   }
 
@@ -31,7 +35,7 @@ object EnhancedDependencies {
     * @param sentence
     * @param dgi
     */
-  def collapsePrepositions(sentence:Sentence, dgi:DirectedGraphIndex[String]): Unit = {
+  def collapsePrepositions(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
     val toRemove = new ListBuffer[Edge[String]]
     val preps = dgi.findByName("prep")
     for(prep <- preps) {
@@ -59,7 +63,15 @@ object EnhancedDependencies {
     }
   }
 
-  def propagateSubjectsAndObjectsInConjVerbs(dgi:DirectedGraphIndex[String]): Unit = {
+  def propagateSubjectsAndObjectsInConjVerbs(dgi:DirectedGraphIndex[String]) {
+    // TODO
+  }
+
+  def propagateConjSubjectsAndObjects(dgi:DirectedGraphIndex[String]) {
+    // TODO
+  }
+  
+  def pushSubjectsObjectsInsideRelativeClauses(dgi:DirectedGraphIndex[String]) {
     // TODO
   }
 }
