@@ -23,7 +23,7 @@ object EnhancedDependencies {
     val dgi = dg.toDirectedGraphIndex
     collapsePrepositions(sentence, dgi)
     raiseSubjects(dgi)
-    propagateSubjectsAndObjectsInConjVerbs(dgi)
+    propagateSubjectsAndObjectsInConjVerbs(sentence, dgi)
     propagateConjSubjectsAndObjects(dgi)
     pushSubjectsObjectsInsideRelativeClauses(dgi)
     dgi.toDirectedGraph
@@ -68,8 +68,18 @@ object EnhancedDependencies {
     * The store buys and sells cameras => nsubj from 2 to 1 and from 4 to 1; dobj from 2 to 5 and from 4 to 5
     * @param dgi
     */
-  def propagateSubjectsAndObjectsInConjVerbs(dgi:DirectedGraphIndex[String]) {
-    // TODO
+  def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+    /*
+    val conjs = dgi.findByName("conj").sortBy(_.source)
+    val tags = sentence.tags.get
+    for(conj <- conjs) {
+      val left = math.min(conj.source, conj.destination)
+      val right = math.max(conj.source, conj.destination)
+      if(tags(left).startsWith("VB") && tags(right).startsWith("VB")) { // two verbs
+        // TODO
+      }
+    }
+    */
   }
 
   def propagateConjSubjectsAndObjects(dgi:DirectedGraphIndex[String]) {
