@@ -8,7 +8,7 @@ Use the following commands to train the forward, i.e., left-to-right model:
 
 `mkdir -p output`
 
-`java -jar maltparser-1.9.0/maltparser-1.9.0.jar -w output -c en-forward-nivre -i <COMBINED TRAIN FILE FROM WSJ AND GENIA> -a nivreeager -m learn -l liblinear -llo -s_4_-c_0.1 -d CPOSTAG -s Stack[0] -T 1000 -F NivreEager.xml`
+`java -jar maltparser-1.9.0/maltparser-1.9.0.jar -w output -c en-forward-nivre -i <COMBINED TRAIN FILE FROM WSJ AND GENIA> -a nivreeager -m learn -l liblinear -llo -s_4_-c_0.1 -d POSTAG -s Input[0] -T 1000 -F NivreEager.xml`
 
 where:
 * The combined train file is available on our servers at: `corpora/processors/deps/combined/wsjtrain-wsjdev-geniatrain-geniadev.conllx`
