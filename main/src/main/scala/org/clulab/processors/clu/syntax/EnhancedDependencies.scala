@@ -69,17 +69,35 @@ object EnhancedDependencies {
     * @param dgi
     */
   def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
-    /*
     val conjs = dgi.findByName("conj").sortBy(_.source)
     val tags = sentence.tags.get
     for(conj <- conjs) {
       val left = math.min(conj.source, conj.destination)
       val right = math.max(conj.source, conj.destination)
       if(tags(left).startsWith("VB") && tags(right).startsWith("VB")) { // two verbs
-        // TODO
+
+        // add the subject of the left verb to the right, if the right doesn't have a subject already
+        val leftSubjs = dgi.findByHeadAndName(left, "nsubj")
+        val rightSubjs = dgi.findByHeadAndName(right, "nsubj")
+        if(leftSubjs.nonEmpty && rightSubjs.isEmpty) {
+          for(s <- leftSubjs) {
+            dgi.addEdge(right, s.destination, "nsubj")
+          }
+        }
+
+        // add the dobj of the right verb to the left, if the left doesn't have a dobj already
+        val leftObjs = dgi.findByHeadAndName(left, "dobj")
+        val rightObjs = dgi.findByHeadAndName(right, "dobj")
+        if(leftObjs.isEmpty && rightObjs.nonEmpty) {
+          for(o <- rightObjs) {
+            dgi.addEdge(left, o.destination, "dobj")
+          }
+        }
+
+        // TODO: add nsubjpass, add prep_*
+
       }
     }
-    */
   }
 
   def propagateConjSubjectsAndObjects(dgi:DirectedGraphIndex[String]) {

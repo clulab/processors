@@ -68,4 +68,14 @@ class TestEnhancedDependencies extends FlatSpec with Matchers {
     val doc = proc.annotate("Mary wants to buy a book")
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(3, 0, "nsubj") should be(true)
   }
+
+  it should "propagate subjects and objects in conjoined verbs" in {
+    val doc = proc.annotate("The store buys and sells cameras.")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 1, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 5, "dobj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 5, "dobj") should be(true)
+
+    // TODO: add neg examples
+  }
 }
