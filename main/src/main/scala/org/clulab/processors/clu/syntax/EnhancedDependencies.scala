@@ -25,6 +25,12 @@ object EnhancedDependencies {
     dgi.toDirectedGraph
   }
 
+  /**
+    * Collapses prep + pobj into prep_x
+    * Mary gave a book to Jane => prep_to from 1 to 5
+    * @param sentence
+    * @param dgi
+    */
   def collapsePrepositions(sentence:Sentence, dgi:DirectedGraphIndex[String]): Unit = {
     val toRemove = new ListBuffer[Edge[String]]
     val preps = dgi.findByName("prep")
@@ -39,6 +45,11 @@ object EnhancedDependencies {
     toRemove.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))
   }
 
+  /**
+    * Pushes subjects inside xcomp clauses
+    * Mary wants to buy a book => nsubj from 3 to 0
+    * @param dgi
+    */
   def raiseSubjects(dgi:DirectedGraphIndex[String]) {
     val subjects = dgi.findByName("nsubj")
     for(se <- subjects) {

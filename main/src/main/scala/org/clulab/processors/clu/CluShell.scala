@@ -77,6 +77,7 @@ object CluShell {
       println("Sentence #" + sentenceCount + ":")
       val indices = 0 until sentence.size
       println("Tokens: " + sentence.words.zip(indices).mkString(" "))
+      println("Tags: " + sentence.tags.get.zip(indices).mkString(" "))
       
       sentence.stanfordBasicDependencies.foreach(dependencies => {
         println("Basic dependencies:")
