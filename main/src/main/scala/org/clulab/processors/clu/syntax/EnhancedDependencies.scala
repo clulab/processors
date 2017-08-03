@@ -21,6 +21,7 @@ object EnhancedDependencies {
     val dgi = dg.toDirectedGraphIndex
     collapsePrepositions(sentence, dgi)
     raiseSubjects(dgi)
+    propagateSubjectsAndObjectsInConjVerbs(dgi)
     dgi.toDirectedGraph
   }
 
@@ -45,5 +46,9 @@ object EnhancedDependencies {
         dgi.addEdge(xcomp.destination, se.destination, "nsubj")
       }
     }
+  }
+
+  def propagateSubjectsAndObjectsInConjVerbs(dgi:DirectedGraphIndex[String]) {
+    
   }
 }

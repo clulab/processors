@@ -116,7 +116,11 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     for(sent <- doc.sentences) {
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
-        lemmas(i) = MorphaStemmer.lemmatize(sent.words(i))
+        var lemma = MorphaStemmer.lemmatize(sent.words(i))
+        // for some strings, MorphaStemmer returns empty strings
+        if(lemma.isEmpty)
+          lemma = sent.words(i).toLowerCase()
+        lemmas(i) = lemma
       }
       sent.lemmas = Some(lemmas)
     }
