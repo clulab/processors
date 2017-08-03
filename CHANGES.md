@@ -1,4 +1,6 @@
 # Changes
++ **6.0.8** - Added collapsed Stanford dependencies to CluProcessor. See `org.clulab.processors.clu.syntax.EnhancedDependencies` for details.
++ **6.0.8** - Bug fix: the parsing model in CluProcessor was broken (maltparser was trained incorrectly).
 + **6.0.7** - Implement Akka-based processors server, with default configuration for BioNLP.
 + **6.0.7** - Added basic Stanford dependencies to CluProcessor. These are implemented using maltparser trained on WSJ + Genia. Note that currently the CluProcessor POS tagger is trained just on WSJ.
 + **6.0.6** - Rename Odin subproject library artifact to processors-odin, for consistency.

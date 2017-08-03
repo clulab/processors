@@ -63,6 +63,11 @@ object EnhancedDependencies {
     }
   }
 
+  /**
+    * Propagates subjects/objects between conjoined verbs
+    * The store buys and sells cameras => nsubj from 2 to 1 and from 4 to 1; dobj from 2 to 5 and from 4 to 5
+    * @param dgi
+    */
   def propagateSubjectsAndObjectsInConjVerbs(dgi:DirectedGraphIndex[String]) {
     // TODO
   }
