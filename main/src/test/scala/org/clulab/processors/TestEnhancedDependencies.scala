@@ -70,12 +70,27 @@ class TestEnhancedDependencies extends FlatSpec with Matchers {
   }
 
   it should "propagate subjects and objects in conjoined verbs" in {
-    val doc = proc.annotate("The store buys and sells cameras.")
+    var doc = proc.annotate("The store buys and sells cameras.")
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 1, "nsubj") should be(true)
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 5, "dobj") should be(true)
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 5, "dobj") should be(true)
 
-    // TODO: add neg examples
+    doc = proc.annotate("Cameras are bought and sold by the store")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 0, "nsubjpass") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 0, "nsubjpass") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 7, "prep_by") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 7, "prep_by") should be(true)
+
+    doc = proc.annotate("She was watching a movie or reading a book")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 0, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(6, 0, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 4, "dobj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(6, 8, "dobj") should be(true)
+
+    doc = proc.annotate("She was watching a movie or reading")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(6, 4, "dobj") should be(false)
   }
+
+  
 }

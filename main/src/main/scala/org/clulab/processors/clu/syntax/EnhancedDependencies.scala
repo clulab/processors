@@ -12,9 +12,9 @@ import scala.collection.mutable.ListBuffer
   * We support:
   * - Collapsing of prepositions to the prep_* label
   * - Controlled/raised subjects
-  * - Propagate subjects and objects in conjoined verbs
-  * - Propagate conjoined subjects and objects to same verb
-  * - Push subjects/objects inside relative clauses
+  * - Propagating subjects and objects in conjoined verbs
+  * - Propagating conjoined subjects and objects to same verb
+  * - Pushing subjects/objects inside relative clauses
   * User: mihais
   * Date: 8/1/17
   */
@@ -32,8 +32,8 @@ object EnhancedDependencies {
   /**
     * Collapses prep + pobj into prep_x
     * Mary gave a book to Jane => prep_to from 1 to 5
-    * @param sentence
-    * @param dgi
+    * @param sentence The sentence to operate on
+    * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def collapsePrepositions(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
     val toRemove = new ListBuffer[Edge[String]]
@@ -52,7 +52,7 @@ object EnhancedDependencies {
   /**
     * Pushes subjects inside xcomp clauses
     * Mary wants to buy a book => nsubj from 3 to 0
-    * @param dgi
+    * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def raiseSubjects(dgi:DirectedGraphIndex[String]) {
     val subjects = dgi.findByName("nsubj")
@@ -66,7 +66,7 @@ object EnhancedDependencies {
   /**
     * Propagates subjects/objects between conjoined verbs
     * The store buys and sells cameras => nsubj from 2 to 1 and from 4 to 1; dobj from 2 to 5 and from 4 to 5
-    * @param dgi
+    * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
     val conjs = dgi.findByName("conj").sortBy(_.source)
@@ -77,25 +77,35 @@ object EnhancedDependencies {
       if(tags(left).startsWith("VB") && tags(right).startsWith("VB")) { // two verbs
 
         // add the subject of the left verb to the right, if the right doesn't have a subject already
-        val leftSubjs = dgi.findByHeadAndName(left, "nsubj")
-        val rightSubjs = dgi.findByHeadAndName(right, "nsubj")
-        if(leftSubjs.nonEmpty && rightSubjs.isEmpty) {
-          for(s <- leftSubjs) {
-            dgi.addEdge(right, s.destination, "nsubj")
+        for(label <- List("nsubj", "nsubjpass", "agent")) {
+          val leftSubjs = dgi.findByHeadAndName(left, label)
+          val rightSubjs = dgi.findByHeadAndName(right, label)
+          if (leftSubjs.nonEmpty && rightSubjs.isEmpty) {
+            for (s <- leftSubjs) {
+              dgi.addEdge(right, s.destination, label)
+            }
           }
         }
 
         // add the dobj of the right verb to the left, if the left doesn't have a dobj already
-        val leftObjs = dgi.findByHeadAndName(left, "dobj")
-        val rightObjs = dgi.findByHeadAndName(right, "dobj")
-        if(leftObjs.isEmpty && rightObjs.nonEmpty) {
-          for(o <- rightObjs) {
-            dgi.addEdge(left, o.destination, "dobj")
+        for(label <- List("dobj")) {
+          val leftObjs = dgi.findByHeadAndName(left, label)
+          val rightObjs = dgi.findByHeadAndName(right, label)
+          if (leftObjs.isEmpty && rightObjs.nonEmpty) {
+            for (o <- rightObjs) {
+              dgi.addEdge(left, o.destination, label)
+            }
           }
         }
 
-        // TODO: add nsubjpass, add prep_*
-
+        // add the prep_x of the right verb to the left, if the left doesn't have a similar prep_x already
+        val rightPreps = dgi.findByHeadAndPattern(right, "^prep_*".r)
+        for(rightPrep <- rightPreps) {
+          val leftPreps = dgi.findByHeadAndName(left, rightPrep.relation)
+          if(leftPreps.isEmpty) {
+            dgi.addEdge(left, rightPrep.destination, rightPrep.relation)
+          }
+        }
       }
     }
   }
