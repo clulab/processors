@@ -23,9 +23,9 @@ object EnhancedDependencies {
     val dgi = dg.toDirectedGraphIndex
     collapsePrepositions(sentence, dgi)
     raiseSubjects(dgi)
+    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi)
     propagateConjSubjectsAndObjects(sentence, dgi)
-    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi)
     dgi.toDirectedGraph
   }
 
@@ -159,6 +159,24 @@ object EnhancedDependencies {
     val rels = dgi.findByName("rcmod")
     val tags = sentence.tags.get
 
-    // TODO
+    for(rel <- rels) {
+      val head = rel.source
+      val relVerb = rel.destination
+      if((tags(head).startsWith("NN") || tags(head).startsWith("PR")) &&
+         tags(relVerb).startsWith("VB")) {
+        var done = false
+        for(label <- List("nsubj", "nsubjpass", "dobj", "agent") if ! done) {
+          val deps = dgi.findByHeadAndName(relVerb, label)
+          for(dep <- deps if ! done) {
+            if((tags(dep.destination).startsWith("WP") || tags(dep.destination).startsWith("WD")) &&
+                head < dep.destination && dep.destination < relVerb) {
+              dgi.addEdge(relVerb, head, label)
+              dgi.removeEdge(dep.source, dep.destination, dep.relation)
+              done = true
+            }
+          }
+        }
+      }
+    }
   }
 }
