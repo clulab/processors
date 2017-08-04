@@ -106,6 +106,16 @@ class TestEnhancedDependencies extends FlatSpec with Matchers {
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(3, 2, "nsubj") should be(true)
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(5, 0, "nsubj") should be(true)
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(5, 2, "nsubj") should be(true)
+  }
 
+  it should "push subjects/objects inside relative clauses" in {
+    var doc = proc.annotate("the boy who lived")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(3, 1, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(3, 2, "nsubj") should be(false)
+
+    doc = proc.annotate("the book, which I read, was great.")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(5, 4, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(5, 1, "dobj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(5, 3, "dobj") should be(false)
   }
 }
