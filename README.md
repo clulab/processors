@@ -12,7 +12,7 @@ This is the main public code repository of the Computational Language Understand
 	+ `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
 	+ `BioNLPProcessor` - a version of `CoreNLPProcessor` tuned for the biomedical domain: better tokenization for biomedical texts, improved POS tagging for the bio domain, and a custom NER for this domain that recognizes entities relevant in this domain such as proteins, chemical, and biological processes;
 	+ `FastBioNLPProcessor` - a version of `FastNLPProcessor` tuned for the biomedical domain, similarly to `BioNLPProcessor`; 
-	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization, lemmatization, POS tagging (using [Mallet](http://mallet.cs.umass.edu)), and syntax (using [maltparser](http://mallet.cs.umass.edu)). Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines.
+	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization, lemmatization, POS tagging (using [Mallet](http://mallet.cs.umass.edu)), and syntax (using [maltparser](http://mallet.cs.umass.edu)) and supporting both basic and enhanced dependencies. Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines.
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
@@ -51,22 +51,22 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-corenlp_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.0</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-main_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.0</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-models_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.0</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-odin_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.0</version>
 </dependency>
 ```
 
@@ -74,7 +74,7 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    val procVer = "6.0.7"
+    val procVer = "6.1.0"
 
     "org.clulab" %% "processors-main" % procVer,
     "org.clulab" %% "processors-corenlp" % procVer,

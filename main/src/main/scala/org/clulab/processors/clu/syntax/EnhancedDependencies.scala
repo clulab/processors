@@ -25,7 +25,7 @@ object EnhancedDependencies {
     raiseSubjects(dgi)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi)
     propagateConjSubjectsAndObjects(sentence, dgi)
-    pushSubjectsObjectsInsideRelativeClauses(dgi)
+    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi)
     dgi.toDirectedGraph
   }
 
@@ -147,8 +147,18 @@ object EnhancedDependencies {
       }
     }
   }
-  
-  def pushSubjectsObjectsInsideRelativeClauses(dgi:DirectedGraphIndex[String]) {
+
+  /**
+    * Propagates subjects and objects inside relative clauses
+    * The boy who lived => nsubj from 3 to 1
+    * the book, which I read, was great. => dobj from 5 to 1
+    * @param sentence The sentence to operate on
+    * @param dgi The directed graph of collapsed dependencies at this stage
+    */
+  def pushSubjectsObjectsInsideRelativeClauses(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+    val rels = dgi.findByName("rcmod")
+    val tags = sentence.tags.get
+
     // TODO
   }
 }
