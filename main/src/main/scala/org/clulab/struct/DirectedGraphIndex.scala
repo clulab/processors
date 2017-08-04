@@ -1,7 +1,8 @@
 package org.clulab.struct
 
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
+import scala.util.matching.Regex
 
 /**
   * An inverted index of the DirectedGraph, so we can efficiently implement enhanced dependencies
@@ -44,6 +45,24 @@ class DirectedGraphIndex[E](
         edges += Edge(se._1, se._2, label)
       }
     )
+    edges
+  }
+
+  def findByHeadAndName(head:Int, label:E): Seq[Edge[E]] = {
+    findByName(label).filter(_.source == head)
+  }
+
+  def findByModifierAndName(modifier:Int, label:E): Seq[Edge[E]] = {
+    findByName(label).filter(_.destination == modifier)
+  }
+
+  def findByHeadAndPattern(head:Int, pattern:Regex): Seq[Edge[E]] = {
+    val edges = new ListBuffer[Edge[E]]
+    for(e <- outgoingEdges(head).toList) {
+      if(pattern.findFirstMatchIn(e._2.toString).nonEmpty) {
+        edges += new Edge[E](head, e._1, e._2)
+      }
+    }
     edges
   }
 
