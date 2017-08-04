@@ -92,5 +92,20 @@ class TestEnhancedDependencies extends FlatSpec with Matchers {
     doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(6, 4, "dobj") should be(false)
   }
 
-  
+  it should "propagate conjoined subjects and objects to same verb" in {
+    var doc = proc.annotate("Paul and Mary are reading a book")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 0, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(4, 2, "nsubj") should be(true)
+
+    doc = proc.annotate("John is reading a book and a newspaper")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 4, "dobj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(2, 7, "dobj") should be(true)
+
+    doc = proc.annotate("Mary and John wanted to buy a hat")
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(3, 0, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(3, 2, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(5, 0, "nsubj") should be(true)
+    doc.sentences.head.stanfordCollapsedDependencies.get.hasEdge(5, 2, "nsubj") should be(true)
+
+  }
 }

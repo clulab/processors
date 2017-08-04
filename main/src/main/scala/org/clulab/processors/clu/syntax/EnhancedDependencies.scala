@@ -24,7 +24,7 @@ object EnhancedDependencies {
     collapsePrepositions(sentence, dgi)
     raiseSubjects(dgi)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi)
-    propagateConjSubjectsAndObjects(dgi)
+    propagateConjSubjectsAndObjects(sentence, dgi)
     pushSubjectsObjectsInsideRelativeClauses(dgi)
     dgi.toDirectedGraph
   }
@@ -66,6 +66,7 @@ object EnhancedDependencies {
   /**
     * Propagates subjects/objects between conjoined verbs
     * The store buys and sells cameras => nsubj from 2 to 1 and from 4 to 1; dobj from 2 to 5 and from 4 to 5
+    * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
@@ -110,8 +111,41 @@ object EnhancedDependencies {
     }
   }
 
-  def propagateConjSubjectsAndObjects(dgi:DirectedGraphIndex[String]) {
-    // TODO
+  /**
+    * Propagates conjoined subjects and objects to same verb
+    * Paul and Mary are reading a book => nsubj from 4 to 0 and from 4 to 2
+    * John is reading a book and a newspaper => dobj from 2 to 4 and from 2 to 7
+    * @param sentence The sentence to operate on
+    * @param dgi The directed graph of collapsed dependencies at this stage
+    */
+  def propagateConjSubjectsAndObjects(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+    val conjs = dgi.findByName("conj").sortBy(_.source)
+    val tags = sentence.tags.get
+    for(conj <- conjs) {
+      val left = math.min(conj.source, conj.destination)
+      val right = math.max(conj.source, conj.destination)
+
+      if((tags(left).startsWith("NN") || tags(left).startsWith("PR")) &&
+         (tags(right).startsWith("NN") || tags(right).startsWith("NN"))) {
+
+        for(label <- List("nsubj", "nsubjpass", "agent", "dobj")) {
+          val leftDeps = dgi.findByModifierAndName(left, label)
+          val rightDeps = dgi.findByModifierAndName(right, label)
+
+          if(leftDeps.nonEmpty && rightDeps.isEmpty) {
+            for(s <- leftDeps) {
+              dgi.addEdge(s.source, right, label)
+            }
+          }
+          if(rightDeps.nonEmpty && leftDeps.isEmpty) {
+            for(s <- rightDeps) {
+              dgi.addEdge(s.source, left, label)
+            }
+          }
+        }
+
+      }
+    }
   }
   
   def pushSubjectsObjectsInsideRelativeClauses(dgi:DirectedGraphIndex[String]) {
