@@ -11,6 +11,7 @@ import MaltWrapper._
 
 /**
   * A thin wrapper over the Malt parser
+  * Works for both left-to-right and right-to-left parsing
   * User: mihais
   * Date: 7/11/17
   */
@@ -42,7 +43,7 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     ConcurrentMaltParserService.initializeParserModel(modelURL)
   }
 
-  /** Parses one sentence and stores the dependency graph in the sentence object */
+  /** Parses one sentence and creates the dependency graph for the resulting dependencies */
   override def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val inputTokens = MaltUtils.sentenceToConllx(sentence)
