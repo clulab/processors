@@ -83,5 +83,5 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
 object MaltWrapper {
   val logger = LoggerFactory.getLogger(classOf[MaltWrapper])
 
-  val DEFAULT_FORWARD_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivre.mco"
+  val DEFAULT_FORWARD_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivreeager.mco"
 }
