@@ -55,4 +55,12 @@ object MaltUtils {
     if (internStrings) Processor.internString(s)
     else s
   }
+
+  val FORWARD_NIVREEAGER_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivreeager.mco"
+  val FORWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivrestandard.mco"
+  val BACKWARD_NIVREEAGER_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivreeager.mco"
+  val BACKWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivrestandard.mco"
+
+  val DEFAULT_FORWARD_MODEL_NAME = FORWARD_NIVREEAGER_MODEL_NAME
+
 }
