@@ -19,14 +19,6 @@ object EvaluateMalt {
 
   val logger = LoggerFactory.getLogger(classOf[EvaluateMalt])
   
-  def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
-    val modelURL = new File(modelName).toURI.toURL
-    println(s"modelURL: $modelURL")
-    val parserModelName = Utils.getInternalParserModelName(modelURL)
-    println(s"parserModelName: $parserModelName")
-    ConcurrentMaltParserService.initializeParserModel(modelURL)
-  }
-
   def main(args:Array[String]) {
     if (args.length != 2) {
       println("Usage: org.clulab.processors.clulab.syntax.EvaluateMalt <model file name> <testing treebank in conllx format>")
@@ -35,7 +27,7 @@ object EvaluateMalt {
     val modelName = args(0)
     val testFile = args(1)
 
-    val maltModel = mkMaltModel(modelName)
+    val maltModel = new MaltWrapper(modelName)
     println(s"Successfully created malt model from $modelName.")
 
     val reader = new BufferedReader(new FileReader(testFile))
@@ -43,7 +35,7 @@ object EvaluateMalt {
     reader.close()
   }
 
-  def evaluate(maltModel:ConcurrentMaltParserModel, reader:BufferedReader): (Double, Double) = {
+  def evaluate(maltModel:Parser, reader:BufferedReader): (Double, Double) = {
     val goldDeps = new ArrayBuffer[Dependency]()
     val sysDeps = new ArrayBuffer[Dependency]()
     var done = false
@@ -60,7 +52,7 @@ object EvaluateMalt {
         count += 1
         val inputTokens = ConcurrentUtils.stripGold(goldTokens, 4)
         // for(t <- inputTokens) println(t)
-        val outputTokens = maltModel.parseTokens(inputTokens)
+        val outputTokens = maltModel.parseSentenceConllx(inputTokens)
         //println("SYS:")
         //for(t <- outputTokens) println(t)
         //println("\n")

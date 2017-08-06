@@ -15,7 +15,7 @@ class TestCluParser extends FlatSpec with Matchers {
   val proc = new CluProcessor
 
   "CluProcessor" should "parse WSJ with an accuracy over 87%" in {
-    val model = proc.depParser.getModel
+    val model = proc.depParser
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/wsj_test.conllx")
     val reader = new BufferedReader(new InputStreamReader(stream))
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
@@ -25,7 +25,7 @@ class TestCluParser extends FlatSpec with Matchers {
   }
 
   it should "parse Genia with an accuracy over 85%" in {
-    val model = proc.depParser.getModel
+    val model = proc.depParser
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/genia_test.conllx")
     val reader = new BufferedReader(new InputStreamReader(stream))
     val (las, uas) = EvaluateMalt.evaluate(model, reader)

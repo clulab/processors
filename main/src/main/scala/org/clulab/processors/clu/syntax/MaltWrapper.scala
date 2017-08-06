@@ -1,13 +1,14 @@
 package org.clulab.processors.clu.syntax
 
+import java.io.File
+
 import org.clulab.processors.{Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge}
 import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService}
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-
 import MaltWrapper._
 
 /**
@@ -24,6 +25,17 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     */
   lazy val maltModel:ConcurrentMaltParserModel = mkMaltModel(modelPath)
 
+  /**
+    * If the model name contains "backward", we flag this parsing model as right-to-left
+    */
+  val isRightToLeft:Boolean = detectReverse(modelPath)
+
+  def detectReverse(modelPath: String):Boolean = {
+    val name = new File(modelPath).getName
+    if(name.contains("backward")) true
+    else false
+  }
+
   def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
     val modelURL = MaltWrapper.getClass.getClassLoader.getResource(modelName)
     logger.debug(s"Using modelURL for parsing: $modelURL")
@@ -32,10 +44,8 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     ConcurrentMaltParserService.initializeParserModel(modelURL)
   }
 
-  override def getModel: ConcurrentMaltParserModel = maltModel
-
   /** Parses one sentence and stores the dependency graph in the sentence object */
-  def parseSentence(sentence:Sentence):DirectedGraph[String] = {
+  override def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val inputTokens = new Array[String](sentence.words.length)
 
@@ -47,8 +57,8 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     }
 
     // the actual parsing
-    val outputTokens = maltModel.parseTokens(inputTokens)
-    
+    val outputTokens = parseSentenceConllx(inputTokens)
+
     // convert malt's output into our dependency graph
     val edgeBuffer = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]
@@ -73,6 +83,13 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
 
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
   }
+
+  override def parseSentenceConllx(inputTokens: Array[String]):Array[String] = {
+    val actualTokens = if(isRightToLeft) ReverseTreebank.revertSentence(inputTokens) else inputTokens
+    val outputTokens = maltModel.parseTokens(actualTokens)
+    if(isRightToLeft) ReverseTreebank.revertSentence(outputTokens)
+    else outputTokens
+  }
   
   private def in(s:String):String = {
     if (internStrings) Processor.internString(s)
@@ -81,7 +98,12 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
 }
 
 object MaltWrapper {
-  val logger = LoggerFactory.getLogger(classOf[MaltWrapper])
+  val logger: Logger = LoggerFactory.getLogger(classOf[MaltWrapper])
 
-  val DEFAULT_FORWARD_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivreeager.mco"
+  val FORWARD_NIVREEAGER_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivreeager.mco"
+  val FORWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivrestandard.mco"
+  val BACKWARD_NIVREEAGER_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivreeager.mco"
+  val BACKWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivrestandard.mco"
+
+  val DEFAULT_FORWARD_MODEL_NAME = FORWARD_NIVREEAGER_MODEL_NAME
 }

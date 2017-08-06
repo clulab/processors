@@ -12,5 +12,5 @@ import org.maltparser.concurrent.ConcurrentMaltParserModel
 trait Parser {
   def parseSentence(sentence:Sentence):DirectedGraph[String]
 
-  def getModel:ConcurrentMaltParserModel
+  def parseSentenceConllx(inputTokens: Array[String]):Array[String]
 }

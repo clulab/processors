@@ -43,7 +43,7 @@ object ReverseTreebank {
     val rightToLeft = new Array[String](size)
     for(i <- raw.indices) {
       val tokens = raw(i).split("\\s+")
-      assert(tokens.length >= 8)
+      assert(tokens.length >= 5)
       val reverted = new Array[String](tokens.length)
       for(j <- tokens.indices) {
         if(Set(0, 6, 8).contains(j) && tokens(j) != "_" && tokens(j) != "0") {
