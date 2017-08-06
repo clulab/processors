@@ -2,13 +2,11 @@ package org.clulab.processors.clu.syntax
 
 import java.io.File
 
-import org.clulab.processors.{Processor, Sentence}
-import org.clulab.struct.{DirectedGraph, Edge}
+import org.clulab.processors.Sentence
+import org.clulab.struct.DirectedGraph
 import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService}
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import MaltWrapper._
 
 /**
@@ -47,41 +45,13 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
   /** Parses one sentence and stores the dependency graph in the sentence object */
   override def parseSentence(sentence:Sentence):DirectedGraph[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
-    val inputTokens = new Array[String](sentence.words.length)
-
-    //println(s"WORDS: ${sentence.words.mkString(", ")}")
-    //println(s"LEMMAS: ${sentence.lemmas.get.mkString(", ")}")
-    //println(s"TAGS: ${sentence.tags.get.mkString(", ")}")
-    for(i <- inputTokens.indices) {
-      inputTokens(i) = s"${i + 1}\t${sentence.words(i)}\t${sentence.lemmas.get(i)}\t${sentence.tags.get(i)}\t${sentence.tags.get(i)}\t_"
-    }
+    val inputTokens = MaltUtils.sentenceToConllx(sentence)
 
     // the actual parsing
     val outputTokens = parseSentenceConllx(inputTokens)
 
     // convert malt's output into our dependency graph
-    val edgeBuffer = new ListBuffer[Edge[String]]
-    val roots = new mutable.HashSet[Int]
-    for(o <- outputTokens) {
-      //println(o)
-      val tokens = o.split("\\s+")
-      if(tokens.length < 8)
-        throw new RuntimeException("ERROR: Invalid malt output line: " + o)
-      // malt indexes tokens from 1; we index from 0
-      val modifier = tokens(0).toInt - 1
-      val head = tokens(6).toInt - 1
-      val label = tokens(7).toLowerCase
-
-      // sometimes malt generates dependencies from root with a different label than "root"
-      // not sure why this happens, but let's manage this: create a root node in these cases
-      if(head == -1) {
-        roots += modifier
-      } else {
-        edgeBuffer += Edge(source = head, destination = modifier, relation = in(label))
-      }
-    }
-
-    new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
+    MaltUtils.conllxToDirectedGraph(outputTokens, internStrings)
   }
 
   override def parseSentenceConllx(inputTokens: Array[String]):Array[String] = {
@@ -91,10 +61,6 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     else outputTokens
   }
   
-  private def in(s:String):String = {
-    if (internStrings) Processor.internString(s)
-    else s
-  }
 }
 
 object MaltWrapper {
