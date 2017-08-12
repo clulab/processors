@@ -36,8 +36,8 @@ object EvaluateMalt {
   }
 
   def evaluate(maltModel:Parser, reader:BufferedReader): (Double, Double) = {
-    val goldDeps = new ArrayBuffer[Dependency]()
-    val sysDeps = new ArrayBuffer[Dependency]()
+    val goldDeps = new ArrayBuffer[EvalDependency]()
+    val sysDeps = new ArrayBuffer[EvalDependency]()
     var done = false
     var count = 0
     logger.info("Beginning parsing...")
@@ -72,7 +72,7 @@ object EvaluateMalt {
     (las, uas)
   }
 
-  def score(goldDeps:Array[Dependency], sysDeps:Array[Dependency]):(Double, Double) = {
+  def score(goldDeps:Array[EvalDependency], sysDeps:Array[EvalDependency]):(Double, Double) = {
     var correctLabeled = 0
     var correctUnlabeled = 0
     for(i <- goldDeps.indices) {
@@ -90,8 +90,8 @@ object EvaluateMalt {
     (las, uas)
   }
 
-  def toDeps(sentence: Array[String]):ArrayBuffer[Dependency] = {
-    val deps = new ArrayBuffer[Dependency]()
+  def toDeps(sentence: Array[String]):ArrayBuffer[EvalDependency] = {
+    val deps = new ArrayBuffer[EvalDependency]()
     for(line <- sentence) {
       // println(s"Converting line: $line")
       val tokens = line.split("\\s+")
@@ -99,13 +99,13 @@ object EvaluateMalt {
         throw new RuntimeException(s"ERROR: invalid output line: $line")
       val label = tokens(7)
       val head = tokens(6).toInt
-      deps += new Dependency(label, head)
+      deps += new EvalDependency(label, head)
     }
     deps
   }
 
-  def readDependencies(fn:String):Array[Dependency] = {
-    val deps = new ArrayBuffer[Dependency]()
+  def readDependencies(fn:String):Array[EvalDependency] = {
+    val deps = new ArrayBuffer[EvalDependency]()
     for(line <- io.Source.fromFile(fn).getLines()) {
       val content = line.trim
       if(content.length > 0) {
@@ -114,7 +114,7 @@ object EvaluateMalt {
           throw new RuntimeException(s"ERROR: invalid output line in file $fn: $line")
         val label = tokens(7)
         val head = tokens(6).toInt
-        deps += new Dependency(label, head)
+        deps += new EvalDependency(label, head)
       }
     }
     deps.toArray
@@ -122,4 +122,4 @@ object EvaluateMalt {
 
 }
 
-class Dependency(val label:String, val head:Int)
+class EvalDependency(val label:String, val head:Int)
