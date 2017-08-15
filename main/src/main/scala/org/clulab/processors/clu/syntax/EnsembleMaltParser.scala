@@ -25,15 +25,13 @@ class EnsembleMaltParser(val modelPaths:Seq[String], val internStrings:Boolean =
     val inputTokens = MaltUtils.sentenceToConllx(sentence)
 
     // the actual parsing
-    val outputTokens = parseSentenceConllx(inputTokens)
+    val dg = ensembleParse(inputTokens)
 
-    // convert malt's output into our dependency graph
-    MaltUtils.conllxToDirectedGraph(outputTokens, internStrings)
+    dg
   }
 
-  override def parseSentenceConllx(inputTokens: Array[String]): Array[String] = {
+  def ensembleParse(inputTokens: Array[String]):DirectedGraph[String] = {
     val parses = new ArrayBuffer[DirectedGraph[String]]()
-
     for(model <- maltModels) {
       val parse = model.parseSentenceConllx(inputTokens)
       parses += MaltUtils.conllxToDirectedGraph(parse, internStrings)
@@ -41,5 +39,10 @@ class EnsembleMaltParser(val modelPaths:Seq[String], val internStrings:Boolean =
 
     val eisner = new Eisner(parses.toArray)
     eisner.parse()
+  }
+
+  override def parseSentenceConllx(inputTokens: Array[String]): Array[String] = {
+    val dg = ensembleParse(inputTokens)
+    MaltUtils.directedGraphToConllx(dg, inputTokens)
   }
 }
