@@ -4,7 +4,7 @@ import org.clulab.processors.{Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge}
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Utils necessary for malt parsing
@@ -51,6 +51,44 @@ object MaltUtils {
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
   }
 
+  def directedGraphToConllx(dg:DirectedGraph[String], inputTokens: Array[String]):Array[String] = {
+
+    // dependency map from modifier to (head, label)
+    // we must have exactly 1 dependency for each modifier
+    val depMap = new mutable.HashMap[Int, (Int, String)]()
+    for(edge <- dg.allEdges) {
+      val head = edge._1 + 1
+      val mod = edge._2 + 2
+      val label = edge._3
+      depMap += mod -> (head, label)
+    }
+    for(root <- dg.roots) {
+      val head = 0
+      val mod = root
+      val label = "root"
+      depMap += mod -> (head, label)
+    }
+
+    // create CoNLL-X output including dependencies
+    val conllxDeps = new ArrayBuffer[String]
+    for(it <- inputTokens) {
+      val bits = it.split("\\s+")
+      val index = bits(0)
+      val word = bits(1)
+      val lemma = bits(2)
+      val pos1 = bits(3)
+      val pos2 = bits(4)
+      val dep = depMap.get(index.toInt)
+      assert(dep.nonEmpty)
+      val head = dep.get._1
+      val label = dep.get._2
+      val token = s"$index\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
+      conllxDeps += token
+    }
+
+    conllxDeps.toArray
+  }
+
   def in(s:String, internStrings:Boolean):String = {
     if (internStrings) Processor.internString(s)
     else s
@@ -62,5 +100,12 @@ object MaltUtils {
   val BACKWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivrestandard.mco"
 
   val DEFAULT_FORWARD_MODEL_NAME = FORWARD_NIVREEAGER_MODEL_NAME
+
+  val DEFAULT_ENSEMBLE_MODELS = List(
+    FORWARD_NIVREEAGER_MODEL_NAME,
+    FORWARD_NIVRESTANDARD_MODEL_NAME,
+    BACKWARD_NIVREEAGER_MODEL_NAME,
+    BACKWARD_NIVRESTANDARD_MODEL_NAME
+  )
 
 }

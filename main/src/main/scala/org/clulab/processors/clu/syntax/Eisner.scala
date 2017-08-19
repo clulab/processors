@@ -15,8 +15,8 @@ import scala.collection.mutable.ListBuffer
 class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
 
   def parse(): DirectedGraph[String] = {
-    val dependencies = toDependencies(individualOutputs)
-    val length = dependencies.length
+    val candTable = toDependencies(individualOutputs)
+    val length = candTable.length
     val chart = new Chart(length)
 
     for(spanLength <- 2 to length) {
@@ -24,7 +24,73 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
       while(start + spanLength <= length) {
         val end = start + spanLength - 1
         for(split <- start until end) {
-          // TODO
+
+          // 1. merge [start(m), split] and [split + 1, end(h)]
+          var l = chart.get(start, split, HEAD_LEFT)
+          var r = chart.get(split + 1, end, HEAD_RIGHT)
+          var d = candTable(start)(end)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(l, r, d))
+
+          // 2. merge [start(m), split] and [split + 1(h), end]
+          l = chart.get(start, split, HEAD_LEFT)
+          r = chart.get(split + 1, end, HEAD_RIGHT)
+          d = candTable(start)(split + 1)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(l, r, d))
+
+          // 3. merge [start(h), split] and [split + 1, end(m)]
+          l = chart.get(start, split, HEAD_LEFT)
+          r = chart.get(split + 1, end, HEAD_RIGHT)
+          d = candTable(end)(start)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_LEFT, new Span(l, r, d))
+
+          // 4. merge [start, split(h)] and [split + 1, end(m)]
+          l = chart.get(start, split, HEAD_LEFT)
+          r = chart.get(split + 1, end, HEAD_RIGHT)
+          d = candTable(end)(split)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_LEFT, new Span(l, r, d))
+
+          // 5. merge [start, split(m)] and [split + 1(h), end]
+          l = chart.get(start, split, HEAD_RIGHT)
+          r = chart.get(split + 1, end, HEAD_RIGHT)
+          d = candTable(split)(split + 1)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(l, r, d))
+
+          // 6. merge [start, split(m)] and [split + 1, end(h)]
+          l = chart.get(start, split, HEAD_RIGHT)
+          r = chart.get(split + 1, end, HEAD_RIGHT)
+          d = candTable(split)(end)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(l, r, d))
+
+          // 7. merge [start, split(h)] and [split + 1(m), end]
+          l = chart.get(start, split, HEAD_LEFT)
+          r = chart.get(split + 1, end, HEAD_LEFT)
+          d = candTable(split + 1)(split)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_LEFT, new Span(l, r, d))
+
+          // 8. merge [start(h), split] and [split + 1(m), end]
+          l = chart.get(start, split, HEAD_LEFT)
+          r = chart.get(split + 1, end, HEAD_LEFT)
+          d = candTable(split + 1)(start)
+          assert(l != null && r != null)
+          if(d != null) chart.set(start, end, HEAD_LEFT, new Span(l, r, d))
+
+          // 9. merge [start, split] and [split, end]
+          l = chart.get(start, split, HEAD_LEFT)
+          r = chart.get(split, end, HEAD_LEFT)
+          assert(l != null && r != null)
+          chart.set(start, end, HEAD_LEFT, new Span(l, r, null))
+
+          l = chart.get(start, split, HEAD_RIGHT)
+          r = chart.get(split, end, HEAD_RIGHT)
+          chart.set(start, end, HEAD_RIGHT, new Span(l, r, null))
+
         }
         start += 1
       }
@@ -80,7 +146,16 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
     val edges = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]()
 
-    // TODO
+    for(dep <- deps) {
+      if(dep.head == 0) {
+        assert(dep.modifier > 0)
+        roots += dep.modifier - 1
+      } else {
+        assert(dep.modifier > 0)
+        assert(dep.head > 0)
+        Edge[String](dep.head - 1, dep.modifier - 1, dep.label)
+      }
+    }
 
     new DirectedGraph[String](edges.toList, roots.toSet)
   }
@@ -95,6 +170,21 @@ case class Dependency(head:Int, modifier:Int, label:String, votes:Set[Int]) {
 
 class Span(val deps:List[Dependency], val score:Double) {
   def this() = this(null, 0.0)
+
+  def this(left:Span, right:Span, dep:Dependency) = this(
+    Span.addDependencies(left, right, dep),
+    left.score + right.score + (if (dep != null) dep.score else 0.0)
+  )
+}
+
+object Span {
+  private def addDependencies(left:Span, right:Span, dep:Dependency):List[Dependency] = {
+    val l = new ListBuffer[Dependency]
+    if(dep != null) l += dep
+    l ++= left.deps
+    l ++= right.deps
+    l.toList
+  }
 }
 
 class Chart(val dimension:Int) {
