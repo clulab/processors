@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
   * Processor that uses only tools that are under Apache License
-  * Currently supports tokenization (in-house), lemmatization (Morpha), POS tagging (based on Mallet), dependency parsing (Malt)
+  * Currently supports tokenization (in-house), lemmatization (Morpha), POS tagging (based on Mallet), dependency parsing (ensemble of Malt models)
   * @param internStrings If true, intern strings
   */
 class CluProcessor (val internStrings:Boolean = false) extends Processor {

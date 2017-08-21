@@ -15,7 +15,22 @@ import scala.collection.mutable.ListBuffer
 class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
 
   def parse(): DirectedGraph[String] = {
+
+    for(i <- individualOutputs.indices) {
+      println(s"Output #$i:")
+      println(individualOutputs(i))
+      println()
+    }
+
     val candTable = toDependencies(individualOutputs)
+
+    println("Dependency table:")
+    for(h <- candTable.indices) {
+      for(m <- candTable(h).indices) {
+        println(s"[$h, $m] = ${candTable(h)(m)}")
+      }
+    }
+
     val length = candTable.length
     val chart = new Chart(length)
 
@@ -97,6 +112,7 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
     }
 
     val top = chart.get(0, length - 1, HEAD_LEFT)
+    System.exit(1) // TODO
     toDirectedGraph(top.deps)
   }
 
@@ -166,6 +182,8 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
   */
 case class Dependency(head:Int, modifier:Int, label:String, votes:Set[Int]) {
   def score:Double = votes.size.toDouble
+
+  override def toString: String = s"($head, $modifier, $label, ${votes.size})"
 }
 
 class Span(val deps:List[Dependency], val score:Double) {
