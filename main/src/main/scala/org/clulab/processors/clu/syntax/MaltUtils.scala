@@ -53,21 +53,24 @@ object MaltUtils {
 
   def directedGraphToConllx(dg:DirectedGraph[String], inputTokens: Array[String]):Array[String] = {
 
+    //println("Ensemble DG:\n" + dg)
+
     // dependency map from modifier to (head, label)
     // we must have exactly 1 dependency for each modifier
     val depMap = new mutable.HashMap[Int, (Int, String)]()
     for(edge <- dg.allEdges) {
       val head = edge._1 + 1
-      val mod = edge._2 + 2
+      val mod = edge._2 + 1
       val label = edge._3
       depMap += mod -> (head, label)
     }
     for(root <- dg.roots) {
       val head = 0
-      val mod = root
+      val mod = root + 1
       val label = "root"
       depMap += mod -> (head, label)
     }
+    //println(s"depMap: ${depMap}")
 
     // create CoNLL-X output including dependencies
     val conllxDeps = new ArrayBuffer[String]
@@ -79,11 +82,18 @@ object MaltUtils {
       val pos1 = bits(3)
       val pos2 = bits(4)
       val dep = depMap.get(index.toInt)
-      assert(dep.nonEmpty)
-      val head = dep.get._1
-      val label = dep.get._2
-      val token = s"$index\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
-      conllxDeps += token
+      if(dep.isEmpty) {
+        println(s"Can't find dependency for index ${index} and token $it!")
+        val head = if(dg.roots.nonEmpty) dg.roots.head + 1 else 1
+        val label = "punct"
+        val token = s"$index\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
+        conllxDeps += token
+      } else {
+        val head = dep.get._1
+        val label = dep.get._2
+        val token = s"$index\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
+        conllxDeps += token
+      }
     }
 
     conllxDeps.toArray
@@ -103,8 +113,8 @@ object MaltUtils {
 
   val DEFAULT_ENSEMBLE_MODELS = List(
     FORWARD_NIVREEAGER_MODEL_NAME,
-    //FORWARD_NIVRESTANDARD_MODEL_NAME,
-    //BACKWARD_NIVREEAGER_MODEL_NAME,
+    FORWARD_NIVRESTANDARD_MODEL_NAME,
+    BACKWARD_NIVREEAGER_MODEL_NAME,
     BACKWARD_NIVRESTANDARD_MODEL_NAME
   )
 

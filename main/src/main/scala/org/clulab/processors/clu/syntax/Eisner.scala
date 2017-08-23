@@ -3,9 +3,9 @@ package org.clulab.processors.clu.syntax
 import org.clulab.struct.{DirectedGraph, Edge}
 
 import scala.collection.mutable
-import Chart._
-
 import scala.collection.mutable.ListBuffer
+
+import Chart._
 
 /**
   * Implements the Eisner dynamic-programmic parsing algorithm, which we use for the ensemble model
@@ -15,14 +15,32 @@ import scala.collection.mutable.ListBuffer
 class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
 
   def parse(): DirectedGraph[String] = {
+    val deps = toDependencyList(individualOutputs)
+    //  println(s"deps: ${deps.mkString(", ")}")
 
+    // map from modifier to Dependency
+    val depMap = new mutable.HashMap[Int, Dependency]()
+    for(dep <- deps) {
+      if(! depMap.contains(dep.modifier)) {
+        depMap += dep.modifier -> dep
+      } else if(depMap.get(dep.modifier).get.score < dep.score)
+        depMap += dep.modifier -> dep
+    }
+
+    toDirectedGraph(depMap.values.toList)
+  }
+
+  def parse2(): DirectedGraph[String] = {
+    val candTable = toDependencies(individualOutputs)
+    val length = candTable.length
+    val chart = new Chart(length)
+
+    /*
     for(i <- individualOutputs.indices) {
       println(s"Output #$i:")
       println(individualOutputs(i))
       println()
     }
-
-    val candTable = toDependencies(individualOutputs)
 
     println("Dependency table:")
     for(h <- candTable.indices) {
@@ -30,15 +48,19 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
         println(s"[$h, $m] = ${candTable(h)(m)}")
       }
     }
-
-    val length = candTable.length
-    val chart = new Chart(length)
+    */
 
     for(spanLength <- 2 to length) {
       var start = 0
+      println(s"\n\nspanLength = $spanLength")
       while(start + spanLength <= length) {
         val end = start + spanLength - 1
+        //println(s"Constructing chart[$start, $end]...")
+
         for(split <- start until end) {
+
+          val v = if(start == 6 && end == 8 && split == 7) true else false
+          if(v) println(s"merging [$start, $split] and [${split + 1}, $end]")
 
           // 1. merge [start(m), split] and [split + 1, end(h)]
           var l = chart.get(start, split, HEAD_LEFT)
@@ -105,16 +127,50 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
           l = chart.get(start, split, HEAD_RIGHT)
           r = chart.get(split, end, HEAD_RIGHT)
           chart.set(start, end, HEAD_RIGHT, new Span(l, r, null))
-
         }
+
+        println(s"Chart[$start, $end, head_left] = ${chart.get(start, end, HEAD_LEFT)}")
+        println(s"Chart[$start, $end, head_right] = ${chart.get(start, end, HEAD_RIGHT)}")
+
         start += 1
       }
     }
 
     val top = chart.get(0, length - 1, HEAD_LEFT)
-    System.exit(1) // TODO
+    println(s"top span: $top")
     toDirectedGraph(top.deps)
   }
+
+   def toDependencyList(individualOutputs:Array[DirectedGraph[String]]): List[Dependency] = {
+     // compute unique dependencies, and tally the number of votes received by each
+     val depMap = new mutable.HashMap[(Int, Int, String), mutable.HashSet[Int]]()
+     for(model <- individualOutputs.indices) {
+       // add non-root dependencies
+       for(edge <- individualOutputs(model).allEdges) {
+         val head = edge._1 + 1 // our offsets start at 0; the Eisner algorithm requires them to start at 1
+         val mod = edge._2 + 1
+         val label = edge._3
+         val votes = depMap.getOrElseUpdate(Tuple3(head, mod, label), new mutable.HashSet[Int]())
+         votes += model
+       }
+
+       // add dependency to root
+       val roots = individualOutputs(model).roots
+       assert(roots.nonEmpty) // TODO: handle the case of trees wo/ roots here
+       // we only consider 1 root, because we must have trees here
+       val votes = depMap.getOrElseUpdate(Tuple3(0, roots.toList.min + 1, "root"), new mutable.HashSet[Int]())
+       votes += model
+     }
+
+     val l = new ListBuffer[Dependency]
+     for(depKey <- depMap.keySet) {
+       val votes = depMap.get(depKey)
+       assert(votes.nonEmpty)
+       val dep = Dependency(depKey._1, depKey._2, depKey._3, votes.get.toSet)
+       l += dep
+     }
+     l.toList.sortBy(_.modifier)
+   }
 
   def toDependencies(individualOutputs:Array[DirectedGraph[String]]): Array[Array[Dependency]] = {
     val length = individualOutputs.head.size + 1 // one more entry for explicit root
@@ -135,7 +191,7 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
       val roots = individualOutputs(model).roots
       assert(roots.nonEmpty) // TODO: handle the case of trees wo/ roots here
       // we only consider 1 root, because we must have trees here
-      val votes = depMap.getOrElseUpdate(Tuple3(0, roots.toList.min, "root"), new mutable.HashSet[Int]())
+      val votes = depMap.getOrElseUpdate(Tuple3(0, roots.toList.min + 1, "root"), new mutable.HashSet[Int]())
       votes += model
     }
 
@@ -169,7 +225,7 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
       } else {
         assert(dep.modifier > 0)
         assert(dep.head > 0)
-        Edge[String](dep.head - 1, dep.modifier - 1, dep.label)
+        edges += Edge[String](dep.head - 1, dep.modifier - 1, dep.label)
       }
     }
 
@@ -193,14 +249,19 @@ class Span(val deps:List[Dependency], val score:Double) {
     Span.addDependencies(left, right, dep),
     left.score + right.score + (if (dep != null) dep.score else 0.0)
   )
+
+  override def toString: String = {
+    if(deps != null) "[" + deps.mkString(", ") + "]"
+    else "[]"
+  }
 }
 
 object Span {
   private def addDependencies(left:Span, right:Span, dep:Dependency):List[Dependency] = {
     val l = new ListBuffer[Dependency]
     if(dep != null) l += dep
-    l ++= left.deps
-    l ++= right.deps
+    if(left.deps != null) l ++= left.deps
+    if(right.deps != null) l ++= right.deps
     l.toList
   }
 }
@@ -215,6 +276,7 @@ class Chart(val dimension:Int) {
       for(j <- c(i).indices) {
         c(i)(j) = new Array[Span](2)
         c(i)(j)(0) = new Span()
+        c(i)(j)(1) = new Span()
       }
     }
     c
