@@ -43,7 +43,7 @@ class PartOfSpeechTagger extends SequenceTagger[String, String] {
 object PartOfSpeechTagger {
   val logger:Logger = LoggerFactory.getLogger(classOf[PartOfSpeechTagger])
 
-  val DEFAULT_MODEL_RESOURCE = "org/clulab/processors/clu/pos.dat"
+  val DEFAULT_MODEL_RESOURCE = "org/clulab/processors/clu/pos-wsj.dat"
 
   def loadFromFile(fn:String): PartOfSpeechTagger = {
     val tagger = new PartOfSpeechTagger
@@ -53,6 +53,7 @@ object PartOfSpeechTagger {
 
   def loadFromResource(rn:String): PartOfSpeechTagger = {
     val tagger = new PartOfSpeechTagger
+    logger.debug(s"Using modelURL for POS tagging: $rn")
     tagger.loadFromResource(rn)
     tagger
   }

@@ -1,4 +1,5 @@
 # Changes
++ **6.1.0** - Added the word-by-word voting ensemble model to the CluProcessor parser. Performance (with gold POS tags) is: LAS on WSJ: 89.2%, LAS on Genia: 87.4%.
 + **6.1.0** - Added collapsed Stanford dependencies to CluProcessor. See `org.clulab.processors.clu.syntax.EnhancedDependencies` for details.
 + **6.1.0** - Bug fix: the parsing model in CluProcessor was broken (maltparser was trained incorrectly).
 + **6.0.7** - Implement Akka-based processors server, with default configuration for BioNLP.
