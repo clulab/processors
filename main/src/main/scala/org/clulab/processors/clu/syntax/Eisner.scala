@@ -14,13 +14,13 @@ import Chart._
   */
 class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
 
-  def parse: DirectedGraph[String] = parseVoting
+  def parse(): DirectedGraph[String] = parseVoting()
 
   /**
     * Produces an ensemble parse using the word-by-word voting scheme from Surdeanu et al. (2010)
     * @return the DirectedGraph corresponding to the ensemble parse
     */
-  def parseVoting: DirectedGraph[String] = {
+  def parseVoting(): DirectedGraph[String] = {
     val deps = toDependencyList(individualOutputs)
 
     // keep only the best dependency for each modifier
@@ -41,7 +41,7 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
     * TODO: this is currently broken. Do not use.
     * @return the DirectedGraph corresponding to the ensemble parse
     */
-  def parseEisner: DirectedGraph[String] = {
+  def parseEisner(): DirectedGraph[String] = {
     val candTable = toDependencyTable(individualOutputs)
     val length = candTable.length
     val chart = new Chart(length)
