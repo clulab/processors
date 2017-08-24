@@ -53,6 +53,7 @@ object PartOfSpeechTagger {
 
   def loadFromResource(rn:String): PartOfSpeechTagger = {
     val tagger = new PartOfSpeechTagger
+    logger.debug(s"Using modelURL for POS tagging: $rn")
     tagger.loadFromResource(rn)
     tagger
   }

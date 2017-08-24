@@ -19,14 +19,6 @@ object EvaluateMalt {
 
   val logger = LoggerFactory.getLogger(classOf[EvaluateMalt])
   
-  def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
-    val modelURL = new File(modelName).toURI.toURL
-    println(s"modelURL: $modelURL")
-    val parserModelName = Utils.getInternalParserModelName(modelURL)
-    println(s"parserModelName: $parserModelName")
-    ConcurrentMaltParserService.initializeParserModel(modelURL)
-  }
-
   def main(args:Array[String]) {
     if (args.length != 2) {
       println("Usage: org.clulab.processors.clulab.syntax.EvaluateMalt <model file name> <testing treebank in conllx format>")
@@ -35,7 +27,7 @@ object EvaluateMalt {
     val modelName = args(0)
     val testFile = args(1)
 
-    val maltModel = mkMaltModel(modelName)
+    val maltModel = new MaltWrapper(modelName)
     println(s"Successfully created malt model from $modelName.")
 
     val reader = new BufferedReader(new FileReader(testFile))
@@ -43,9 +35,9 @@ object EvaluateMalt {
     reader.close()
   }
 
-  def evaluate(maltModel:ConcurrentMaltParserModel, reader:BufferedReader): (Double, Double) = {
-    val goldDeps = new ArrayBuffer[Dependency]()
-    val sysDeps = new ArrayBuffer[Dependency]()
+  def evaluate(maltModel:Parser, reader:BufferedReader): (Double, Double) = {
+    val goldDeps = new ArrayBuffer[EvalDependency]()
+    val sysDeps = new ArrayBuffer[EvalDependency]()
     var done = false
     var count = 0
     logger.info("Beginning parsing...")
@@ -60,7 +52,7 @@ object EvaluateMalt {
         count += 1
         val inputTokens = ConcurrentUtils.stripGold(goldTokens, 4)
         // for(t <- inputTokens) println(t)
-        val outputTokens = maltModel.parseTokens(inputTokens)
+        val outputTokens = maltModel.parseSentenceConllx(inputTokens)
         //println("SYS:")
         //for(t <- outputTokens) println(t)
         //println("\n")
@@ -80,7 +72,7 @@ object EvaluateMalt {
     (las, uas)
   }
 
-  def score(goldDeps:Array[Dependency], sysDeps:Array[Dependency]):(Double, Double) = {
+  def score(goldDeps:Array[EvalDependency], sysDeps:Array[EvalDependency]):(Double, Double) = {
     var correctLabeled = 0
     var correctUnlabeled = 0
     for(i <- goldDeps.indices) {
@@ -98,8 +90,8 @@ object EvaluateMalt {
     (las, uas)
   }
 
-  def toDeps(sentence: Array[String]):ArrayBuffer[Dependency] = {
-    val deps = new ArrayBuffer[Dependency]()
+  def toDeps(sentence: Array[String]):ArrayBuffer[EvalDependency] = {
+    val deps = new ArrayBuffer[EvalDependency]()
     for(line <- sentence) {
       // println(s"Converting line: $line")
       val tokens = line.split("\\s+")
@@ -107,13 +99,13 @@ object EvaluateMalt {
         throw new RuntimeException(s"ERROR: invalid output line: $line")
       val label = tokens(7)
       val head = tokens(6).toInt
-      deps += new Dependency(label, head)
+      deps += new EvalDependency(label, head)
     }
     deps
   }
 
-  def readDependencies(fn:String):Array[Dependency] = {
-    val deps = new ArrayBuffer[Dependency]()
+  def readDependencies(fn:String):Array[EvalDependency] = {
+    val deps = new ArrayBuffer[EvalDependency]()
     for(line <- io.Source.fromFile(fn).getLines()) {
       val content = line.trim
       if(content.length > 0) {
@@ -122,7 +114,7 @@ object EvaluateMalt {
           throw new RuntimeException(s"ERROR: invalid output line in file $fn: $line")
         val label = tokens(7)
         val head = tokens(6).toInt
-        deps += new Dependency(label, head)
+        deps += new EvalDependency(label, head)
       }
     }
     deps.toArray
@@ -130,4 +122,4 @@ object EvaluateMalt {
 
 }
 
-class Dependency(val label:String, val head:Int)
+class EvalDependency(val label:String, val head:Int)
