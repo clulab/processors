@@ -2,6 +2,7 @@ package org.clulab.processors.clu.syntax
 
 import org.clulab.processors.{Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -11,7 +12,11 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * User: mihais
   * Date: 8/6/17
   */
+class MaltUtils
+
 object MaltUtils {
+  val logger: Logger = LoggerFactory.getLogger(classOf[MaltUtils])
+
   def sentenceToConllx(sentence:Sentence): Array[String] = {
     // tokens stores the tokens in the input format expected by malt (CoNLL-X)
     val inputTokens = new Array[String](sentence.words.length)
@@ -83,7 +88,8 @@ object MaltUtils {
       val pos2 = bits(4)
       val dep = depMap.get(index.toInt)
       if(dep.isEmpty) {
-        println(s"Can't find dependency for index ${index} and token $it!")
+        logger.debug(s"Can't find dependency for index $index for token [$it]!")
+        // this happens usually for punctuation tokens
         val head = if(dg.roots.nonEmpty) dg.roots.head + 1 else 1
         val label = "punct"
         val token = s"$index\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
@@ -109,12 +115,13 @@ object MaltUtils {
   val BACKWARD_NIVREEAGER_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivreeager.mco"
   val BACKWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivrestandard.mco"
 
-  val DEFAULT_FORWARD_MODEL_NAME = FORWARD_NIVREEAGER_MODEL_NAME
+  val DEFAULT_FORWARD_MODEL_NAME = FORWARD_NIVRESTANDARD_MODEL_NAME
 
+  // Which models to use in the ensemble
+  // These models must be listed in descending order of performance; in case of ties the earlier model is preferred
   val DEFAULT_ENSEMBLE_MODELS = List(
-    FORWARD_NIVREEAGER_MODEL_NAME,
     FORWARD_NIVRESTANDARD_MODEL_NAME,
-    BACKWARD_NIVREEAGER_MODEL_NAME,
+    FORWARD_NIVREEAGER_MODEL_NAME,
     BACKWARD_NIVRESTANDARD_MODEL_NAME
   )
 
