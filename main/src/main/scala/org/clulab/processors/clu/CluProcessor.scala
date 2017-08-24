@@ -2,7 +2,7 @@ package org.clulab.processors.clu
 
 import edu.knowitall.tool.stem.MorphaStemmer
 import org.clulab.processors.clu.sequences.PartOfSpeechTagger
-import org.clulab.processors.clu.syntax.{EnhancedDependencies, MaltWrapper, Parser}
+import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
   * Processor that uses only tools that are under Apache License
-  * Currently supports tokenization (in-house), lemmatization (Morpha), POS tagging (based on Mallet), dependency parsing (Malt)
+  * Currently supports tokenization (in-house), lemmatization (Morpha), POS tagging (based on Mallet), dependency parsing (ensemble of Malt models)
   * @param internStrings If true, intern strings
   */
 class CluProcessor (val internStrings:Boolean = false) extends Processor {
@@ -24,7 +24,8 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
 
   lazy val depParser: Parser =
-    new MaltWrapper(MaltWrapper.DEFAULT_FORWARD_MODEL_NAME, internStrings)
+    //new MaltWrapper(MaltUtils.DEFAULT_FORWARD_MODEL_NAME, internStrings)
+    new EnsembleMaltParser(MaltUtils.DEFAULT_ENSEMBLE_MODELS)
 
   override def annotate(doc:Document): Document = {
     // with this processor, we lemmatize first, because this POS tagger uses lemmas as features
