@@ -9,7 +9,7 @@ import SequenceTaggerEvaluator._
   * Created by mihais on 6/8/17.
   */
 class SequenceTaggerEvaluator[L, F] {
-  def accuracy(tagger:CRFSequenceTagger[L, F], docs:Iterator[Document]): Double = {
+  def accuracy(tagger:SequenceTagger[L, F], docs:Iterator[Document]): Double = {
     var correct = 0
     var total = 0
     for(doc <- docs; sentence <- doc.sentences) {
