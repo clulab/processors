@@ -13,7 +13,7 @@ import scala.collection.mutable
   * Author: mihais
   * Date: 3/24/17
   */
-class PartOfSpeechTagger extends SequenceTagger[String, String] {
+class PartOfSpeechTagger extends CRFSequenceTagger[String, String] {
 
   def featureExtractor(sentence: Sentence, offset:Int):Set[String] = {
     val features = new mutable.HashSet[String]()

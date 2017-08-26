@@ -11,7 +11,7 @@ import org.clulab.processors.Sentence
   * Created by mihais on 6/7/17.
   */
 object SequenceTaggerShell {
-  def shell[L, F](tagger:SequenceTagger[L, F]): Unit = {
+  def shell[L, F](tagger:CRFSequenceTagger[L, F]): Unit = {
     val history = new FileHistory(new File(System.getProperty("user.home"), ".seqshellhistory"))
     sys addShutdownHook {
       history.flush() // flush file before exiting
@@ -37,7 +37,7 @@ object SequenceTaggerShell {
     reader.shutdown()
   }
 
-  def parse[L, F](text:String, tagger:SequenceTagger[L, F]) {
+  def parse[L, F](text:String, tagger:CRFSequenceTagger[L, F]) {
     val sent = mkSent(text)
     println("Tokens: " + sent.words.mkString(", "))
     val labels = tagger.classesOf(sent)
