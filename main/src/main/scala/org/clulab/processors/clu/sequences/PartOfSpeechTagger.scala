@@ -13,11 +13,11 @@ import scala.collection.mutable
   * Author: mihais
   * Date: 3/24/17
   */
-class PartOfSpeechTagger extends CRFSequenceTagger[String, String] {
+class PartOfSpeechTagger extends MEMMSequenceTagger[String, String]() {
 
   def featureExtractor(sentence: Sentence, offset:Int):Set[String] = {
     val features = new mutable.HashSet[String]()
-    val fe = new FeatureExtractor(sentence, allowable, offset, features)
+    val fe = new FeatureExtractor(sentence, offset, features)
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
       fe.word(offset)
@@ -38,6 +38,9 @@ class PartOfSpeechTagger extends CRFSequenceTagger[String, String] {
     assert(sentence.tags.isDefined)
     sentence.tags.get
   }
+
+  def mkFeatAtHistory(position:Int, label:String):String = s"h$position:$label"
+  def mkFeatAtBeginSent(position:Int):String = s"h$position:<s>"
 }
 
 object PartOfSpeechTagger {
@@ -64,7 +67,11 @@ object PartOfSpeechTagger {
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), wordPos = 0, tagPos = 1)
       val tagger = new PartOfSpeechTagger
-      //tagger.preprocess(List(doc).iterator)
+
+      if(props.containsKey("order")) {
+        tagger.order = props.getProperty("order").toInt
+      }
+
       tagger.train(List(doc).iterator)
 
       if(props.containsKey("model")) {
@@ -72,7 +79,7 @@ object PartOfSpeechTagger {
       }
     }
 
-    if(props.containsKey("model")) {
+    else if(props.containsKey("model")) {
       val tagger = loadFromFile(props.getProperty("model"))
 
       if(props.containsKey("shell")) {

@@ -7,8 +7,8 @@ import java.util.regex.Pattern
 import cc.mallet.pipe.Pipe
 import cc.mallet.types._
 import org.clulab.processors.{Document, Sentence}
-import org.slf4j.{Logger, LoggerFactory}
 import CRFSequenceTagger._
+import SequenceTaggerLogger._
 import cc.mallet.fst.{CRF, CRFTrainerByThreadedLabelLikelihood}
 import cc.mallet.fst.SimpleTagger._
 import cc.mallet.pipe.iterator.LineGroupIterator
@@ -222,8 +222,6 @@ class ToFeatureVectorPipe[F](featureAlphabet:Alphabet, labelAlphabet:Alphabet) e
 }
 
 object CRFSequenceTagger {
-  val logger:Logger = LoggerFactory.getLogger(classOf[PartOfSpeechTagger])
-
   //
   // Default options taken from SimpleTagger
   //

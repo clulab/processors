@@ -4,6 +4,8 @@ import java.io.{File, FileInputStream, InputStream}
 
 import org.clulab.processors.{Document, Sentence}
 
+import scala.collection.mutable
+
 /**
   * Trait for all sequence taggers
   * User: mihais
@@ -33,6 +35,26 @@ trait SequenceTagger[L, F] {
   }
 
   def load(is:InputStream)
+
+  def addHistoryFeatures(origFeatures:Set[F], order:Int, labels:Seq[L], offset:Int):Set[F] = {
+    val feats = new mutable.HashSet[F]()
+    feats ++= origFeatures
+
+    var reachedBos = false
+    for(o <- 1 to order if ! reachedBos) {
+      if(offset - o >= 0) {
+        feats += mkFeatAtHistory(o, labels(offset - o))
+      } else {
+        feats += mkFeatAtBeginSent(o)
+        reachedBos = true
+      }
+    }
+
+    feats.toSet
+  }
+  
+  def mkFeatAtHistory(position:Int, label:L):F
+  def mkFeatAtBeginSent(position:Int):F
 }
 
 object SequenceTaggerLoader
