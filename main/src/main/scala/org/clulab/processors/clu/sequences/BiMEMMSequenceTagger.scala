@@ -69,7 +69,30 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
     fold: (Int, Int),
     firstPass: Option[Classifier[L, F]],
     leftToRight: Boolean): Unit = {
-    // TODO
+    for(sentOffset <- fold._1 until fold._2) {
+      val sentence = sentences(sentOffset)
+      
+      // labels and features for one sentence
+      val labels = labelExtractor(sentence)
+      val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
+
+      // add history features: concatenate the labels of the previous <order> tokens to the features
+      for(i <- features.indices) {
+        // TODO: adapt for r-to-l
+        features(i) = addHistoryFeatures(features(i), order, labels, i)
+      }
+
+      // add first pass features: the label predicted by the first pass model
+      if(firstPass.nonEmpty) {
+        // TODO: get labels from first pass, add label(i) as feature
+      }
+
+      // add to dataset
+      for(i <- features.indices) {
+        val d = mkDatum(labels(i), features(i))
+        dataset += d
+      }
+    }
   }
 
   def mkFirstPassModelOnFold(fold: DatasetFold, sentences: ArrayBuffer[Sentence]): Classifier[L, F] = {
@@ -85,6 +108,7 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
   }
 
   private def mkDataset: Dataset[L, F] = new BVFDataset[L, F]()
+  private def mkDatum(label:L, features:Iterable[F]): Datum[L, F] = new BVFDatum[L, F](label, features)
   private def mkClassifier: Classifier[L, F] = new L1LogisticRegressionClassifier[L, F]()
 
   override def classesOf(sentence: Sentence):List[L] = {
