@@ -31,7 +31,7 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
 
     // create dataset for the second pass model
     // this creates a different first pass model for each fold
-    val dataset = new BVFDataset[L, F]()
+    val dataset = mkDataset
     var foldCount = 1
     for(fold <- folds) {
       logger.debug(s"In fold $foldCount: ${fold.testFold}...")
@@ -43,7 +43,7 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
     logger.debug("Finished processing all sentences for the second pass model.")
 
     // train second pass model
-    val classifier = new L1LogisticRegressionClassifier[L, F]()
+    val classifier = mkClassifier
     logger.debug("Started training the second pass classifier...")
     classifier.train(dataset)
     secondPassModel = Some(classifier)
@@ -51,11 +51,11 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
 
     // create dataset for the first pass model to be used in testing
     logger.debug("Preparing dataset for the complete first pass model...")
-    val firstPassDataset = new BVFDataset[L, F]()
+    val firstPassDataset = mkDataset
     addToDataset(firstPassDataset, sentences, Tuple2(0, sentences.size), None, leftToRight = false)
     logger.debug("Finished processing all sentences for the first pass model.")
     // train the first pass model to be used in testing
-    val firstPassClassifier = new L1LogisticRegressionClassifier[L, F]()
+    val firstPassClassifier = mkClassifier
     logger.debug("Started training the first pass classifier...")
     firstPassClassifier.train(dataset)
     firstPassModel = Some(firstPassClassifier)
@@ -64,17 +64,28 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
   }
 
   def addToDataset(
-    dataset: BVFDataset[L, F],
+    dataset: Dataset[L, F],
     sentences: ArrayBuffer[Sentence],
     fold: (Int, Int),
     firstPass: Option[Classifier[L, F]],
     leftToRight: Boolean): Unit = {
-    
+    // TODO
   }
 
   def mkFirstPassModelOnFold(fold: DatasetFold, sentences: ArrayBuffer[Sentence]): Classifier[L, F] = {
-    null // TODO
+    logger.debug("Training first pass model for this fold...")
+    val dataset = mkDataset
+    for(tf <- fold.trainFolds) {
+      addToDataset(dataset, sentences, tf, None, leftToRight = false)
+    }
+    val classifier = mkClassifier
+    classifier.train(dataset)
+    logger.debug("Finished training the first pass model for this fold.")
+    classifier
   }
+
+  private def mkDataset: Dataset[L, F] = new BVFDataset[L, F]()
+  private def mkClassifier: Classifier[L, F] = new L1LogisticRegressionClassifier[L, F]()
 
   override def classesOf(sentence: Sentence):List[L] = {
     null // TODO
