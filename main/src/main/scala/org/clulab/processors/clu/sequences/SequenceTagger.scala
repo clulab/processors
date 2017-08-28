@@ -55,6 +55,7 @@ trait SequenceTagger[L, F] {
   
   def mkFeatAtHistory(position:Int, label:L):F
   def mkFeatAtBeginSent(position:Int):F
+  def mkFeatAtEndSent(position:Int):F
 }
 
 object SequenceTaggerLoader

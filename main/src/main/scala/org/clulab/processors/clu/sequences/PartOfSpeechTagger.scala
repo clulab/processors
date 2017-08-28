@@ -13,7 +13,7 @@ import scala.collection.mutable
   * Author: mihais
   * Date: 3/24/17
   */
-class PartOfSpeechTagger extends MEMMSequenceTagger[String, String]() {
+class PartOfSpeechTagger extends BiMEMMSequenceTagger[String, String]() {
 
   def featureExtractor(sentence: Sentence, offset:Int):Set[String] = {
     val features = new mutable.HashSet[String]()
@@ -41,6 +41,7 @@ class PartOfSpeechTagger extends MEMMSequenceTagger[String, String]() {
 
   def mkFeatAtHistory(position:Int, label:String):String = s"h$position:$label"
   def mkFeatAtBeginSent(position:Int):String = s"h$position:<s>"
+  def mkFeatAtEndSent(position:Int):String = s"h$position:</s>"
 }
 
 object PartOfSpeechTagger {
@@ -86,7 +87,7 @@ object PartOfSpeechTagger {
         SequenceTaggerShell.shell[String, String](tagger)
       } else if(props.containsKey("test")) {
         val doc = ColumnsToDocument.readFromFile(props.getProperty("test"))
-        (new SequenceTaggerEvaluator[String, String]).accuracy(tagger, List(doc).iterator)
+        new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
       }
     }
 
