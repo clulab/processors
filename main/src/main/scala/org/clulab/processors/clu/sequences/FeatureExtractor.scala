@@ -1,8 +1,7 @@
 package org.clulab.processors.clu.sequences
 
 import org.clulab.processors.Sentence
-
-import scala.collection.mutable
+import org.clulab.struct.Counter
 
 /**
   * Implements common features used in sequence tagging
@@ -11,7 +10,7 @@ import scala.collection.mutable
 class FeatureExtractor(
   val sentence:Sentence,
   val position:Int,
-  val features:mutable.HashSet[String]) {
+  val features:Counter[String]) {
 
   def word(offset:Int) {
     val i = position + offset

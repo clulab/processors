@@ -3,6 +3,7 @@ package org.clulab.processors.clu.sequences
 import java.io.{File, FileInputStream, InputStream}
 
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.struct.Counter
 
 import scala.collection.mutable
 
@@ -17,7 +18,7 @@ trait SequenceTagger[L, F] {
   def classesOf(sentence: Sentence):List[L]
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
-  def featureExtractor(sentence: Sentence, offset:Int):Set[F]
+  def featureExtractor(features:Counter[F], sentence: Sentence, offset:Int):Set[F]
 
   /** Abstract method that extracts the training labels for a given sentence */
   def labelExtractor(sentence:Sentence): Array[L]
@@ -36,26 +37,23 @@ trait SequenceTagger[L, F] {
 
   def load(is:InputStream)
 
-  def addHistoryFeatures(origFeatures:Set[F], order:Int, labels:Seq[L], offset:Int):Set[F] = {
-    val feats = new mutable.HashSet[F]()
-    feats ++= origFeatures
-
+  def addHistoryFeatures(features:Counter[F], order:Int, labels:Seq[L], offset:Int):Unit = {
     var reachedBos = false
     for(o <- 1 to order if ! reachedBos) {
       if(offset - o >= 0) {
-        feats += mkFeatAtHistory(o, labels(offset - o))
+        features += mkFeatAtHistory(o, labels(offset - o))
       } else {
-        feats += mkFeatAtBeginSent(o)
+        features += mkFeatAtBeginSent(o)
         reachedBos = true
       }
     }
 
-    feats.toSet
   }
   
   def mkFeatAtHistory(position:Int, label:L):F
   def mkFeatAtBeginSent(position:Int):F
   def mkFeatAtEndSent(position:Int):F
+  def mkFeatFirstPass(label:L):F
 }
 
 object SequenceTaggerLoader

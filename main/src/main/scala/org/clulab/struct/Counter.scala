@@ -4,9 +4,10 @@ import java.io.{Reader, Writer}
 
 import org.clulab.utils.Files
 
-import collection.mutable
 import scala.collection.mutable.ListBuffer
 import java.text.DecimalFormat
+
+import scala.collection.mutable
 
 /**
  * Counts elements of type T
@@ -33,7 +34,7 @@ class Counter[T](
   }
 
   def proportion(key:T):Double = getCount(key) / total
-  def getTotal = total
+  def getTotal: Double = total
 
   def incrementCount(key:T, inc:Double = 1.0):Double = {
     val v = Counter.incrementCount(counts, key, inc)
@@ -49,9 +50,9 @@ class Counter[T](
   def decrementCount(key:T, inc:Double):Double = incrementCount(key, - inc)
   def decrementCount(key:T):Double = incrementCount(key, -1.0)
 
-  def keySet = counts.keySet
-  def size = counts.size
-  def contains(key:T) = keySet.contains(key)
+  def keySet = counts.keySet.toSet
+  def size: Int = counts.size
+  def contains(key:T):Boolean = keySet.contains(key)
 
   override def hashCode = counts.hashCode()
   override def equals(other:Any):Boolean = {
@@ -120,7 +121,7 @@ class Counter[T](
   /** Sorts counts in descending order */
   def sorted(descending:Boolean):List[(T, Double)] = {
     val vs = new ListBuffer[(T, Double)]
-    for(k <- keySet) vs += new Tuple2(k, getCount(k))
+    for(k <- keySet) vs += Tuple2(k, getCount(k))
     if(descending) vs.toList.sortBy(0 - _._2)
     else vs.toList.sortBy(_._2)
   }
@@ -181,6 +182,7 @@ class Counter[T](
   }
 
   def toSeq: Seq[(T, Double)] = for (key <- keySet.toSeq) yield (key, getCount(key))
+  def toSet: Set[T] = keySet
 
   def values: Seq[Double] = toSeq.map(_._2)
 
@@ -254,7 +256,7 @@ class Counter[T](
       writer.println("S") // this does not matter
     }
     for(k <- counts.keySet) {
-      writer.println(s"${counts.get(k).get.value} $k")
+      writer.println(s"${counts(k).value} $k")
     }
   }
 }

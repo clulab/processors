@@ -12,6 +12,7 @@ import SequenceTaggerLogger._
 import cc.mallet.fst.{CRF, CRFTrainerByThreadedLabelLikelihood}
 import cc.mallet.fst.SimpleTagger._
 import cc.mallet.pipe.iterator.LineGroupIterator
+import org.clulab.struct.Counter
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -51,7 +52,7 @@ abstract class CRFSequenceTagger[L, F] extends SequenceTagger[L, F] {
     for(doc <- docs; sentence <- doc.sentences) {
       // labels and features for one sentence
       val labels = labelExtractor(sentence)
-      val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
+      val features = (0 until sentence.size).map(mkFeatures(sentence, _)).toArray
 
       // save this sentence to disk; features first, then labels
       assert(features.length == labels.length)
@@ -140,12 +141,19 @@ abstract class CRFSequenceTagger[L, F] extends SequenceTagger[L, F] {
     true
   }
 
+  def mkFeatures(sentence: Sentence, offset:Int): Set[F] = {
+    val fs = new Counter[F]()
+    featureExtractor(fs, sentence, offset)
+    // We discard all counter values here! Not sure how to add feature values to Mallet
+    fs.toSet
+  }
+
   override def classesOf(sentence: Sentence):List[L] = {
     assert(crfModel.isDefined)
     assert(testPipe.isDefined)
 
     // convert the sentence into 1 mallet Instance
-    val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
+    val features = (0 until sentence.size).map(mkFeatures(sentence, _)).toArray
     val instance = new Instance(features, null, "test sentence", null)
     val instances = new util.ArrayList[Instance]()
     instances.add(instance)

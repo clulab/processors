@@ -3,10 +3,9 @@ package org.clulab.processors.clu.sequences
 import java.io.File
 
 import org.clulab.processors.Sentence
+import org.clulab.struct.Counter
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
-
-import scala.collection.mutable
 
 /**
   * Part of speech tagger 
@@ -15,8 +14,7 @@ import scala.collection.mutable
   */
 class PartOfSpeechTagger extends BiMEMMSequenceTagger[String, String]() {
 
-  def featureExtractor(sentence: Sentence, offset:Int):Set[String] = {
-    val features = new mutable.HashSet[String]()
+  def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int):Set[String] = {
     val fe = new FeatureExtractor(sentence, offset, features)
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
@@ -42,6 +40,7 @@ class PartOfSpeechTagger extends BiMEMMSequenceTagger[String, String]() {
   def mkFeatAtHistory(position:Int, label:String):String = s"h$position:$label"
   def mkFeatAtBeginSent(position:Int):String = s"h$position:<s>"
   def mkFeatAtEndSent(position:Int):String = s"h$position:</s>"
+  def mkFeatFirstPass(label:String):String = s"firstpass:$label"
 }
 
 object PartOfSpeechTagger {
@@ -77,6 +76,11 @@ object PartOfSpeechTagger {
 
       if(props.containsKey("model")) {
         tagger.save(new File(props.getProperty("model")))
+      }
+
+      if(props.containsKey("test")) {
+        val d2 = ColumnsToDocument.readFromFile(props.getProperty("test"))
+        new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
       }
     }
 

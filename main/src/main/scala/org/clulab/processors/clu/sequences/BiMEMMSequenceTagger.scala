@@ -7,16 +7,20 @@ import org.clulab.processors.{Document, Sentence}
 
 import scala.collection.mutable.ArrayBuffer
 import SequenceTaggerLogger._
+import org.clulab.struct.Counter
 
 /**
   * Bidirectional MEMM sequence tagger
   * User: mihais
   * Date: 8/27/17
   */
-abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagger[L, F] {
+abstract class BiMEMMSequenceTagger[L, F](
+  var order:Int = 1,
+  val numFoldsFirstPass:Int = 3,
+  val leftToRightFirstPass:Boolean = false,
+  val leftToRightSecondPass:Boolean = true) extends SequenceTagger[L, F] {
   var firstPassModel:Option[Classifier[L, F]] = None
   var secondPassModel:Option[Classifier[L, F]] = None
-  val numFolds = 3
 
   override def train(docs:Iterator[Document]): Unit = {
     val sentences = new ArrayBuffer[Sentence]()
@@ -26,8 +30,8 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
 
     logger.debug(s"Training on ${sentences.size} sentences.")
     logger.debug(s"Generating features using order $order...")
-    val folds = Datasets.mkFolds(numFolds, sentences.size)
-    logger.debug(s"Using $numFolds folds for the first pass model.")
+    val folds = Datasets.mkFolds(numFoldsFirstPass, sentences.size)
+    logger.debug(s"Using $numFoldsFirstPass folds for the first pass model.")
 
     // create dataset for the second pass model
     // this creates a different first pass model for each fold
@@ -38,7 +42,7 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
       foldCount += 1
 
       val firstPass = mkFirstPassModelOnFold(fold, sentences)
-      addToDataset(dataset, sentences, fold.testFold, Some(firstPass), leftToRight = true)
+      addToDataset(dataset, sentences, fold.testFold, Some(firstPass), leftToRight = leftToRightSecondPass)
     }
     logger.debug("Finished processing all sentences for the second pass model.")
 
@@ -52,7 +56,7 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
     // create dataset for the first pass model to be used in testing
     logger.debug("Preparing dataset for the complete first pass model...")
     val firstPassDataset = mkDataset
-    addToDataset(firstPassDataset, sentences, Tuple2(0, sentences.size), None, leftToRight = false)
+    addToDataset(firstPassDataset, sentences, Tuple2(0, sentences.size), None, leftToRight = leftToRightFirstPass)
     logger.debug("Finished processing all sentences for the first pass model.")
     // train the first pass model to be used in testing
     val firstPassClassifier = mkClassifier
@@ -70,21 +74,26 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
     firstPass: Option[Classifier[L, F]],
     leftToRight: Boolean): Unit = {
     for(sentOffset <- fold._1 until fold._2) {
-      val sentence = sentences(sentOffset)
-      
+      val sentence = if(leftToRight) sentences(sentOffset) else sentences(sentOffset).revert()
+
+      val features = new Array[Counter[F]](sentence.size)
+      for(i <- features.indices) features(i) = new Counter[F]()
+
       // labels and features for one sentence
       val labels = labelExtractor(sentence)
-      val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
+      (0 until sentence.size).map(i => featureExtractor(features(i), sentence, i))
 
       // add history features: concatenate the labels of the previous <order> tokens to the features
       for(i <- features.indices) {
-        // TODO: adapt for r-to-l
-        features(i) = addHistoryFeatures(features(i), order, labels, i)
+        addHistoryFeatures(features(i), order, labels, i)
       }
 
       // add first pass features: the label predicted by the first pass model
       if(firstPass.nonEmpty) {
-        // TODO: get labels from first pass, add label(i) as feature
+        val firstPassLabels = predict(firstPass.get, sentence, None, leftToRightFirstPass)
+        for(i <- features.indices) {
+          features(i) += mkFeatFirstPass(firstPassLabels(i))
+        }
       }
 
       // add to dataset
@@ -99,7 +108,7 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
     logger.debug("Training first pass model for this fold...")
     val dataset = mkDataset
     for(tf <- fold.trainFolds) {
-      addToDataset(dataset, sentences, tf, None, leftToRight = false)
+      addToDataset(dataset, sentences, tf, None, leftToRight = leftToRightFirstPass)
     }
     val classifier = mkClassifier
     classifier.train(dataset)
@@ -107,18 +116,43 @@ abstract class BiMEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTag
     classifier
   }
 
-  private def mkDataset: Dataset[L, F] = new BVFDataset[L, F]()
-  private def mkDatum(label:L, features:Iterable[F]): Datum[L, F] = new BVFDatum[L, F](label, features)
+  private def mkDataset: Dataset[L, F] = new RVFDataset[L, F]()
+  private def mkDatum(label:L, features:Counter[F]): Datum[L, F] = new RVFDatum[L, F](label, features)
   private def mkClassifier: Classifier[L, F] = new L1LogisticRegressionClassifier[L, F]()
 
   override def classesOf(sentence: Sentence):List[L] = {
-    null // TODO
+    val firstPassLabels = predict(firstPassModel.get, sentence, None, leftToRightFirstPass)
+    predict(secondPassModel.get, sentence, Some(firstPassLabels), leftToRightSecondPass)
+  }
+
+  private def predict(classifier:Classifier[L, F],
+                      origSentence: Sentence,
+                      firstPassLabels:Option[Seq[L]],
+                      leftToRight:Boolean): List[L] = {
+    val sent = if(leftToRight) origSentence else origSentence.revert()
+    val fpls = firstPassLabels // TODO: change to Array here
+
+    val history = new ArrayBuffer[L]()
+    for(i <- 0 until sent.size) {
+      val feats = new Counter[F]
+      featureExtractor(feats, sent, i)
+      addHistoryFeatures(feats, order, history, i)
+      if(fpls.nonEmpty) {
+        feats += mkFeatFirstPass(fpls.get(i))
+      }
+      val d = mkDatum(null.asInstanceOf[L], feats)
+      val label = classifier.classOf(d)
+      history += label
+    }
+    history.toList
   }
 
   override def save(fn:File): Unit = {
-    val w = new PrintWriter(new FileWriter(fn))
+    var w = new PrintWriter(new FileWriter(fn + ".first"))
     w.println(order)
     firstPassModel.get.saveTo(w)
+    w.close()
+    w = new PrintWriter(new FileWriter(fn + ".second"))
     secondPassModel.get.saveTo(w)
     w.close()
   }

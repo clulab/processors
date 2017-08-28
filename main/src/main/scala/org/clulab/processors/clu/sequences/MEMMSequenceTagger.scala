@@ -6,6 +6,8 @@ import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
 import SequenceTaggerLogger._
 
+import org.clulab.struct.Counter
+
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -16,15 +18,23 @@ import scala.collection.mutable.ArrayBuffer
 abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagger[L, F] {
   var model:Option[Classifier[L, F]] = None
 
+  private def mkDataset: Dataset[L, F] = new RVFDataset[L, F]()
+  private def mkDatum(label:L, features:Counter[F]): Datum[L, F] = new RVFDatum[L, F](label, features)
+  private def mkClassifier: Classifier[L, F] = new L1LogisticRegressionClassifier[L, F]()
+
   override def train(docs:Iterator[Document]): Unit = {
-    val dataset = new BVFDataset[L, F]()
+    val dataset = mkDataset
 
     logger.debug(s"Generating features using order $order...")
     var sentCount = 0
     for(doc <- docs; sentence <- doc.sentences) {
       // labels and features for one sentence
       val labels = labelExtractor(sentence)
-      val features = (0 until sentence.size).map(featureExtractor(sentence, _)).toArray
+
+      val features = new Array[Counter[F]](sentence.size)
+      for(i <- features.indices) features(i) = new Counter[F]()
+
+      (0 until sentence.size).map(i => featureExtractor(features(i), sentence, i))
 
       //
       // add history features:
@@ -32,8 +42,8 @@ abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagge
       // then store each example in the training dataset
       //
       for(i <- features.indices) {
-        features(i) = addHistoryFeatures(features(i), order, labels, i)
-        val d = new BVFDatum[L, F](labels(i), features(i))
+        addHistoryFeatures(features(i), order, labels, i)
+        val d = mkDatum(labels(i), features(i))
         dataset += d
       }
 
@@ -44,7 +54,7 @@ abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagge
     }
     logger.debug("Finished processing all sentences.")
 
-    val classifier = new L1LogisticRegressionClassifier[L, F]()
+    val classifier = mkClassifier
     logger.debug("Started training the classifier...")
     classifier.train(dataset)
     model = Some(classifier)
@@ -54,8 +64,10 @@ abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagge
   override def classesOf(sentence: Sentence):List[L] = {
     val history = new ArrayBuffer[L]()
     for(i <- 0 until sentence.size) {
-      val feats = addHistoryFeatures(featureExtractor(sentence, i), order, history, i)
-      val d = new BVFDatum[L, F](null.asInstanceOf[L], feats)
+      val feats = new Counter[F]
+      featureExtractor(feats, sentence, i)
+      addHistoryFeatures(feats, order, history, i)
+      val d = mkDatum(null.asInstanceOf[L], feats)
       val label = model.get.classOf(d)
       history += label
     }
