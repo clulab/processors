@@ -9,12 +9,14 @@ import scala.collection.mutable.ArrayBuffer
 import SequenceTaggerLogger._
 import org.clulab.struct.Counter
 
+import scala.reflect.ClassTag
+
 /**
   * Bidirectional MEMM sequence tagger
   * User: mihais
   * Date: 8/27/17
   */
-abstract class BiMEMMSequenceTagger[L, F](
+abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   var order:Int = 1,
   val numFoldsFirstPass:Int = 3,
   val leftToRightFirstPass:Boolean = false,
@@ -90,7 +92,7 @@ abstract class BiMEMMSequenceTagger[L, F](
 
       // add first pass features: the label predicted by the first pass model
       if(firstPass.nonEmpty) {
-        val firstPassLabels = predict(firstPass.get, sentence, None, leftToRightFirstPass)
+        val firstPassLabels = predict(firstPass.get, sentence, None, leftToRightFirstPass).toArray
         for(i <- features.indices) {
           addFirstPassFeatures(features(i), order, firstPassLabels, i)
         }
@@ -130,21 +132,29 @@ abstract class BiMEMMSequenceTagger[L, F](
                       firstPassLabels:Option[Seq[L]],
                       leftToRight:Boolean): List[L] = {
     val sent = if(leftToRight) origSentence else origSentence.revert()
-    val fpls = firstPassLabels // TODO: change to Array here
+    // makes sure first pass labels are stored as arrays, so we can access elements quickly
+    val fpls:Array[L] =
+      if(firstPassLabels.isEmpty) null
+      else firstPassLabels.get.toArray
 
     val history = new ArrayBuffer[L]()
     for(i <- 0 until sent.size) {
       val feats = new Counter[F]
       featureExtractor(feats, sent, i)
       addHistoryFeatures(feats, order, history, i)
-      if(fpls.nonEmpty) {
-        addFirstPassFeatures(feats, order, fpls.get, i)
+      if(fpls != null) {
+        addFirstPassFeatures(feats, order, fpls, i)
       }
       val d = mkDatum(null.asInstanceOf[L], feats)
       val label = classifier.classOf(d)
       history += label
     }
     history.toList
+  }
+
+  private def mkArray(labels:Option[Seq[L]]): Array[L] = {
+    if(labels.isEmpty) null
+    else labels.get.toArray
   }
 
   override def save(fn:File): Unit = {
