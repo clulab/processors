@@ -38,22 +38,42 @@ trait SequenceTagger[L, F] {
   def load(is:InputStream)
 
   def addHistoryFeatures(features:Counter[F], order:Int, labels:Seq[L], offset:Int):Unit = {
+    addLeftFeatures(features, order, "", labels, offset)
+  }
+
+  def addFirstPassFeatures(features:Counter[F], order:Int, labels:Seq[L], offset:Int):Unit = {
+    addLeftFeatures(features, order, "fp", labels, offset)
+    addRightFeatures(features, order, "fp", labels, offset)
+    features += mkFeatAtHistory(0, "fp", labels(offset))
+  }
+
+  def addLeftFeatures(features:Counter[F], order:Int, prefix:String, labels:Seq[L], offset:Int):Unit = {
     var reachedBos = false
     for(o <- 1 to order if ! reachedBos) {
       if(offset - o >= 0) {
-        features += mkFeatAtHistory(o, labels(offset - o))
+        features += mkFeatAtHistory(- o, prefix, labels(offset - o))
       } else {
-        features += mkFeatAtBeginSent(o)
+        features += mkFeatAtBeginSent(o, prefix)
         reachedBos = true
       }
     }
+  }
 
+  def addRightFeatures(features:Counter[F], order:Int, prefix:String, labels:Seq[L], offset:Int):Unit = {
+    var reachedEos = false
+    for(o <- 1 to order if ! reachedEos) {
+      if(offset + o < labels.size) {
+        features += mkFeatAtHistory(o, prefix, labels(offset + o))
+      } else {
+        features += mkFeatAtEndSent(o, prefix)
+        reachedEos = true
+      }
+    }
   }
   
-  def mkFeatAtHistory(position:Int, label:L):F
-  def mkFeatAtBeginSent(position:Int):F
-  def mkFeatAtEndSent(position:Int):F
-  def mkFeatFirstPass(label:L):F
+  def mkFeatAtHistory(position:Int, prefix:String, label:L):F
+  def mkFeatAtBeginSent(position:Int, prefix:String):F
+  def mkFeatAtEndSent(position:Int, prefix:String):F
 }
 
 object SequenceTaggerLoader

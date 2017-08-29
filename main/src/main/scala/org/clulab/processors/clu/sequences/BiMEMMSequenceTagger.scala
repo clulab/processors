@@ -92,7 +92,7 @@ abstract class BiMEMMSequenceTagger[L, F](
       if(firstPass.nonEmpty) {
         val firstPassLabels = predict(firstPass.get, sentence, None, leftToRightFirstPass)
         for(i <- features.indices) {
-          features(i) += mkFeatFirstPass(firstPassLabels(i))
+          addFirstPassFeatures(features(i), order, firstPassLabels, i)
         }
       }
 
@@ -138,7 +138,7 @@ abstract class BiMEMMSequenceTagger[L, F](
       featureExtractor(feats, sent, i)
       addHistoryFeatures(feats, order, history, i)
       if(fpls.nonEmpty) {
-        feats += mkFeatFirstPass(fpls.get(i))
+        addFirstPassFeatures(feats, order, fpls.get, i)
       }
       val d = mkDatum(null.asInstanceOf[L], feats)
       val label = classifier.classOf(d)
