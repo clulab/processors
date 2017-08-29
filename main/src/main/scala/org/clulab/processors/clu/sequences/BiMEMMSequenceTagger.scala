@@ -158,13 +158,28 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   }
 
   override def save(fn:File): Unit = {
-    var w = new PrintWriter(new FileWriter(fn + ".first"))
+
+    // save order + first pass model
+    var w = new PrintWriter(new FileWriter(fn))
     w.println(order)
     firstPassModel.get.saveTo(w)
     w.close()
-    w = new PrintWriter(new FileWriter(fn + ".second"))
+
+    // save second pass model in a separate file // TODO: this is not saved in the PrintWriter above; why?
+    val secPassFile = new File(fn + ".second.tmp")
+    w = new PrintWriter(new FileWriter(secPassFile))
     secondPassModel.get.saveTo(w)
     w.close()
+
+    // append second pass model to main file
+    w = new PrintWriter(new FileWriter(fn, true))
+    val source = io.Source.fromFile(secPassFile)
+    for(line <- source.getLines())
+      w.println(line)
+    source.close()
+    w.close()
+
+    secPassFile.delete()
   }
 
   override def load(is:InputStream) {

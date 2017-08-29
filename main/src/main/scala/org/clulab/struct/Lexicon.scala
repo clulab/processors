@@ -77,7 +77,7 @@ class Lexicon[T] extends Serializable {
 
   def saveTo(w:Writer) {
     val p = Files.toPrintWriter(w)
-    p.println("ZZZZZZZ" + index.size)
+    p.println(index.size)
     if(index.size > 0) {
       val first = index(0)
       first match {
