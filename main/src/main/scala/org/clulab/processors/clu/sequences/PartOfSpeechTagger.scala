@@ -79,7 +79,7 @@ object PartOfSpeechTagger {
 
       if(props.containsKey("test")) {
         val d2 = ColumnsToDocument.readFromFile(props.getProperty("test"))
-        new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
+        new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(d2).iterator)
       }
     }
 

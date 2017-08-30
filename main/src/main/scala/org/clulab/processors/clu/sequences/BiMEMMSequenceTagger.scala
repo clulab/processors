@@ -18,7 +18,7 @@ import scala.reflect.ClassTag
   */
 abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   var order:Int = 1,
-  val numFoldsFirstPass:Int = 3,
+  val numFoldsFirstPass:Int = 5,
   val leftToRightFirstPass:Boolean = false,
   val leftToRightSecondPass:Boolean = true) extends SequenceTagger[L, F] {
   var firstPassModel:Option[Classifier[L, F]] = None
@@ -187,6 +187,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     order = reader.readLine().toInt
     val fpc = LiblinearClassifier.loadFrom[L, F] (reader)
     firstPassModel = Some(fpc)
+    reader.readLine()
     val spc = LiblinearClassifier.loadFrom[L, F] (reader)
     secondPassModel = Some(spc)
   }
