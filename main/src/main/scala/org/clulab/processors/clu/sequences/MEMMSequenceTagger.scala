@@ -5,17 +5,18 @@ import java.io._
 import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
 import SequenceTaggerLogger._
-
 import org.clulab.struct.Counter
+import org.clulab.utils.SeqUtils
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 /**
   * Sequence tagger using a maximum entrop Markov model (MEMM)
   * User: mihais
   * Date: 8/26/17
   */
-abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagger[L, F] {
+abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, val leftToRight:Boolean = true) extends SequenceTagger[L, F] {
   var model:Option[Classifier[L, F]] = None
 
   private def mkDataset: Dataset[L, F] = new RVFDataset[L, F]()
@@ -27,9 +28,12 @@ abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagge
 
     logger.debug(s"Generating features using order $order...")
     var sentCount = 0
-    for(doc <- docs; sentence <- doc.sentences) {
+    for(doc <- docs; origSentence <- doc.sentences) {
       // labels and features for one sentence
-      val labels = labelExtractor(sentence)
+      val sentence = if(leftToRight) origSentence else origSentence.revert()
+      val labels =
+        if(leftToRight) labelExtractor(origSentence)
+        else SeqUtils.revert(labelExtractor(origSentence)).toArray
 
       val features = new Array[Counter[F]](sentence.size)
       for(i <- features.indices) features(i) = new Counter[F]()
@@ -61,7 +65,9 @@ abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagge
     logger.debug("Finished training.")
   }
 
-  override def classesOf(sentence: Sentence):List[L] = {
+  override def classesOf(origSentence: Sentence):List[L] = {
+    val sentence = if(leftToRight) origSentence else origSentence.revert()
+
     val history = new ArrayBuffer[L]()
     for(i <- 0 until sentence.size) {
       val feats = new Counter[F]
@@ -71,7 +77,8 @@ abstract class MEMMSequenceTagger[L, F](var order:Int = 1) extends SequenceTagge
       val label = model.get.classOf(d)
       history += label
     }
-    history.toList
+
+    if(leftToRight) history.toList else SeqUtils.revert(history).toList
   }
 
   override def save(fn:File): Unit = {
