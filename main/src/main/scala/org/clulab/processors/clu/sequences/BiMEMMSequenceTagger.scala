@@ -19,7 +19,7 @@ import scala.reflect.ClassTag
   */
 abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   var order:Int = 1,
-  val numFoldsFirstPass:Int = 5,
+  val numFoldsFirstPass:Int = 10,
   val leftToRightSecondPass:Boolean = true) extends SequenceTagger[L, F] {
   
   var firstPassModel:Option[Classifier[L, F]] = None
@@ -189,24 +189,6 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     w = new PrintWriter(new FileWriter(fn, true))
     secondPassModel.get.saveTo(w)
     w.close()
-
-    /*
-    // save second pass model in a separate file // TODO: this is not saved in the PrintWriter above; why?
-    val secPassFile = new File(fn + ".second.tmp")
-    w = new PrintWriter(new FileWriter(secPassFile))
-    secondPassModel.get.saveTo(w)
-    w.close()
-
-    // append second pass model to main file
-    w = new PrintWriter(new FileWriter(fn, true))
-    val source = io.Source.fromFile(secPassFile)
-    for(line <- source.getLines())
-      w.println(line)
-    source.close()
-    w.close()
-
-    secPassFile.delete()
-    */
   }
 
   override def load(is:InputStream) {
