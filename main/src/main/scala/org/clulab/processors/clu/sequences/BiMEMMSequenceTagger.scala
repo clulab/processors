@@ -8,6 +8,7 @@ import org.clulab.processors.{Document, Sentence}
 import scala.collection.mutable.ArrayBuffer
 import SequenceTaggerLogger._
 import org.clulab.struct.Counter
+import org.clulab.utils.SeqUtils
 
 import scala.reflect.ClassTag
 
@@ -19,8 +20,7 @@ import scala.reflect.ClassTag
 abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   var order:Int = 1,
   val numFoldsFirstPass:Int = 5,
-  val leftToRightFirstPass:Boolean = false,
-  val leftToRightSecondPass:Boolean = true) extends SequenceTagger[L, F] {
+  val leftToRightSecondPass:Boolean = false) extends SequenceTagger[L, F] {
   var firstPassModel:Option[Classifier[L, F]] = None
   var secondPassModel:Option[Classifier[L, F]] = None
 
@@ -29,132 +29,149 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     for(doc <- docs; sent <- doc.sentences) {
       sentences += sent
     }
+    logger.info(s"Training on ${sentences.size} sentences using order $order.")
 
-    logger.debug(s"Training on ${sentences.size} sentences.")
-    logger.debug(s"Generating features using order $order...")
+    // generate first-pass labels
+    val firstPassLabels = mkFirstPassLabels(sentences)
+    assert(firstPassLabels.length == sentences.size)
+
+    // make and save the first-pass classifier on the whole data
+    firstPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
+      ! leftToRightSecondPass, None))
+
+    // make the second-pass classifier
+    secondPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
+      leftToRightSecondPass, Some(firstPassLabels)))
+  }
+
+  def mkFirstPassLabels(sentences: ArrayBuffer[Sentence]): Array[Array[L]] = {
     val folds = Datasets.mkFolds(numFoldsFirstPass, sentences.size)
-    logger.debug(s"Using $numFoldsFirstPass folds for the first pass model.")
 
-    // create dataset for the second pass model
-    // this creates a different first pass model for each fold
-    val dataset = mkDataset
+    // generate first-pass labels through cross validation
+    logger.debug("Generating first pass labels...")
+    val labels = new Array[Array[L]](sentences.size)
     var foldCount = 1
     for(fold <- folds) {
       logger.debug(s"In fold $foldCount: ${fold.testFold}...")
       foldCount += 1
 
-      val firstPass = mkFirstPassModelOnFold(fold, sentences)
-      addToDataset(dataset, sentences, fold.testFold, Some(firstPass), leftToRight = leftToRightSecondPass)
+      val classifier = buildClassifier(sentences, fold, ! leftToRightSecondPass, None)
+      for(si <- fold.testFold._1 until fold.testFold._2) {
+        labels(si) = classesOf(classifier, sentences(si), None, ! leftToRightSecondPass)
+      }
     }
-    logger.debug("Finished processing all sentences for the second pass model.")
 
-    // train second pass model
-    val classifier = mkClassifier
-    logger.debug("Started training the second pass classifier...")
-    classifier.train(dataset)
-    secondPassModel = Some(classifier)
-    logger.debug("Finished training the second pass model.")
+    // check the accuracy of these labels
+    var total = 0
+    var correct = 0
+    for(i <- sentences.indices) {
+      val sent = sentences(i)
+      val gold = labelExtractor(sent)
+      val pred = labels(i)
+      assert(gold != null && pred != null)
+      assert(gold.length == pred.length)
+      total += gold.length
+      for(j <- gold.indices) {
+        if(gold(j) == pred(j)) correct += 1
+      }
+    }
+    logger.info(s"Accuracy of first pass classifier: ${100.0 * correct.toDouble / total.toDouble}% ($correct/$total)")
 
-    // create dataset for the first pass model to be used in testing
-    logger.debug("Preparing dataset for the complete first pass model...")
-    val firstPassDataset = mkDataset
-    addToDataset(firstPassDataset, sentences, Tuple2(0, sentences.size), None, leftToRight = leftToRightFirstPass)
-    logger.debug("Finished processing all sentences for the first pass model.")
-    // train the first pass model to be used in testing
-    val firstPassClassifier = mkClassifier
-    logger.debug("Started training the first pass classifier...")
-    firstPassClassifier.train(dataset)
-    firstPassModel = Some(firstPassClassifier)
-    logger.debug("Finished training the first pass model.")
-
+    labels
   }
 
-  def addToDataset(
-    dataset: Dataset[L, F],
+  def buildClassifier(
     sentences: ArrayBuffer[Sentence],
-    fold: (Int, Int),
-    firstPass: Option[Classifier[L, F]],
-    leftToRight: Boolean): Unit = {
-    for(sentOffset <- fold._1 until fold._2) {
-      val sentence = if(leftToRight) sentences(sentOffset) else sentences(sentOffset).revert()
+    fold: DatasetFold,
+    leftToRight:Boolean,
+    firstPassLabels:Option[Array[Array[L]]]): Classifier[L, F] = {
 
+    // construct the dataset from the training partitions
+    val dataset = mkDataset
+    var sentCount = 0
+    for (trainFold <- fold.trainFolds; sentOffset <- trainFold._1 until trainFold._2) {
+      val origSentence = sentences(sentOffset)
+      val sentence = if (leftToRight) origSentence else origSentence.revert()
+      val labels =
+        if (leftToRight) labelExtractor(origSentence)
+        else SeqUtils.revert(labelExtractor(origSentence)).toArray
+
+      //
+      // add features from observed data
+      //
       val features = new Array[Counter[F]](sentence.size)
-      for(i <- features.indices) features(i) = new Counter[F]()
+      for (i <- features.indices) features(i) = new Counter[F]()
+      for(i <- 0 until sentence.size)
+        featureExtractor(features(i), sentence, i)
 
-      // labels and features for one sentence
-      val labels = labelExtractor(sentence)
-      (0 until sentence.size).map(i => featureExtractor(features(i), sentence, i))
-
-      // add history features: concatenate the labels of the previous <order> tokens to the features
-      for(i <- features.indices) {
+      //
+      // add history features:
+      //   concatenate the labels of the previous <order> tokens to the features
+      // then store each example in the training dataset
+      //
+      for(i <- features.indices)
         addHistoryFeatures(features(i), order, labels, i)
+
+      //
+      // add features from first-pass labels (if any)
+      //
+      if(firstPassLabels.nonEmpty) {
+        val firstPass =
+          if (leftToRight) firstPassLabels.get(sentOffset)
+          else SeqUtils.revert(firstPassLabels.get(sentOffset)).toArray
+
+        for(i <- features.indices)
+          addFirstPassFeatures(features(i), order, firstPass, i)
       }
 
-      // add first pass features: the label predicted by the first pass model
-      if(firstPass.nonEmpty) {
-        val firstPassLabels = predict(firstPass.get, sentence, None, leftToRightFirstPass).toArray
-        for(i <- features.indices) {
-          addFirstPassFeatures(features(i), order, firstPassLabels, i)
-        }
-      }
-
-      // add to dataset
-      for(i <- features.indices) {
+      // add one datum for each word in the sentence
+      assert(labels.length == features.length)
+      for(i <- labels.indices) {
+        assert(labels(i) != null)
+        assert(features(i) != null)
         val d = mkDatum(labels(i), features(i))
         dataset += d
       }
-    }
-  }
 
-  def mkFirstPassModelOnFold(fold: DatasetFold, sentences: ArrayBuffer[Sentence]): Classifier[L, F] = {
-    logger.debug("Training first pass model for this fold...")
-    val dataset = mkDataset
-    for(tf <- fold.trainFolds) {
-      addToDataset(dataset, sentences, tf, None, leftToRight = leftToRightFirstPass)
+      sentCount += 1
+      if (sentCount % 100 == 0) {
+        logger.debug(s"Processed $sentCount sentences...")
+      }
     }
+
+    // train
     val classifier = mkClassifier
     classifier.train(dataset)
-    logger.debug("Finished training the first pass model for this fold.")
+
     classifier
+  }
+
+  def classesOf(classifier: Classifier[L, F],
+                origSentence: Sentence,
+                firstPassLabels:Option[Array[L]],
+                leftToRight:Boolean): Array[L] = {
+    val sentence = if(leftToRight) origSentence else origSentence.revert()
+
+    val history = new ArrayBuffer[L]()
+    for(i <- 0 until sentence.size) {
+      val feats = new Counter[F]
+      featureExtractor(feats, sentence, i)
+      addHistoryFeatures(feats, order, history, i)
+      val d = mkDatum(null.asInstanceOf[L], feats)
+      val label = classifier.classOf(d)
+      history += label
+    }
+
+    if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
   }
 
   private def mkDataset: Dataset[L, F] = new RVFDataset[L, F]()
   private def mkDatum(label:L, features:Counter[F]): Datum[L, F] = new RVFDatum[L, F](label, features)
   private def mkClassifier: Classifier[L, F] = new L1LogisticRegressionClassifier[L, F]()
+  private def mkFullFold(size:Int): DatasetFold =
+    new DatasetFold(testFold = Tuple2(-1, -1), trainFolds = List(Tuple2(0, size)))
 
   override def classesOf(sentence: Sentence):List[L] = {
-    val firstPassLabels = predict(firstPassModel.get, sentence, None, leftToRightFirstPass)
-    predict(secondPassModel.get, sentence, Some(firstPassLabels), leftToRightSecondPass)
-  }
-
-  private def predict(classifier:Classifier[L, F],
-                      origSentence: Sentence,
-                      firstPassLabels:Option[Seq[L]],
-                      leftToRight:Boolean): List[L] = {
-    val sent = if(leftToRight) origSentence else origSentence.revert()
-    // makes sure first pass labels are stored as arrays, so we can access elements quickly
-    val fpls:Array[L] =
-      if(firstPassLabels.isEmpty) null
-      else firstPassLabels.get.toArray
-
-    val history = new ArrayBuffer[L]()
-    for(i <- 0 until sent.size) {
-      val feats = new Counter[F]
-      featureExtractor(feats, sent, i)
-      addHistoryFeatures(feats, order, history, i)
-      if(fpls != null) {
-        addFirstPassFeatures(feats, order, fpls, i)
-      }
-      val d = mkDatum(null.asInstanceOf[L], feats)
-      val label = classifier.classOf(d)
-      history += label
-    }
-    history.toList
-  }
-
-  private def mkArray(labels:Option[Seq[L]]): Array[L] = {
-    if(labels.isEmpty) null
-    else labels.get.toArray
   }
 
   override def save(fn:File): Unit = {

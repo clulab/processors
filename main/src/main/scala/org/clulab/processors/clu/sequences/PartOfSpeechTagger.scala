@@ -12,7 +12,7 @@ import org.slf4j.{Logger, LoggerFactory}
   * Author: mihais
   * Date: 3/24/17
   */
-class PartOfSpeechTagger extends MEMMSequenceTagger[String, String]() {
+class PartOfSpeechTagger extends BiMEMMSequenceTagger[String, String]() {
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int):Set[String] = {
     val fe = new FeatureExtractor(sentence, offset, features)
