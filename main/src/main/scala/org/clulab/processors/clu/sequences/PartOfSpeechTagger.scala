@@ -76,14 +76,9 @@ object PartOfSpeechTagger {
       if(props.containsKey("model")) {
         tagger.save(new File(props.getProperty("model")))
       }
-
-      if(props.containsKey("test")) {
-        val d2 = ColumnsToDocument.readFromFile(props.getProperty("test"))
-        new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(d2).iterator)
-      }
     }
 
-    else if(props.containsKey("model")) {
+    if(props.containsKey("model")) {
       val tagger = loadFromFile(props.getProperty("model"))
 
       if(props.containsKey("shell")) {

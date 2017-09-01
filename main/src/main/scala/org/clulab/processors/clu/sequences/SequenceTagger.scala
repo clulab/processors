@@ -5,8 +5,6 @@ import java.io.{File, FileInputStream, InputStream}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Counter
 
-import scala.collection.mutable
-
 /**
   * Trait for all sequence taggers
   * User: mihais
@@ -15,7 +13,7 @@ import scala.collection.mutable
 trait SequenceTagger[L, F] {
   def train(docs:Iterator[Document])
 
-  def classesOf(sentence: Sentence):List[L]
+  def classesOf(sentence: Sentence):Array[L]
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
   def featureExtractor(features:Counter[F], sentence: Sentence, offset:Int):Set[F]

@@ -20,7 +20,8 @@ import scala.reflect.ClassTag
 abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   var order:Int = 1,
   val numFoldsFirstPass:Int = 5,
-  val leftToRightSecondPass:Boolean = false) extends SequenceTagger[L, F] {
+  val leftToRightSecondPass:Boolean = true) extends SequenceTagger[L, F] {
+  
   var firstPassModel:Option[Classifier[L, F]] = None
   var secondPassModel:Option[Classifier[L, F]] = None
 
@@ -165,14 +166,17 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
   }
 
+  override def classesOf(sentence: Sentence):Array[L] = {
+    val firstPassLabels = classesOf(firstPassModel.get, sentence, None, ! leftToRightSecondPass)
+    val secondPassLabels = classesOf(secondPassModel.get, sentence, Some(firstPassLabels), leftToRightSecondPass)
+    secondPassLabels
+  }
+
   private def mkDataset: Dataset[L, F] = new RVFDataset[L, F]()
   private def mkDatum(label:L, features:Counter[F]): Datum[L, F] = new RVFDatum[L, F](label, features)
   private def mkClassifier: Classifier[L, F] = new L1LogisticRegressionClassifier[L, F]()
   private def mkFullFold(size:Int): DatasetFold =
     new DatasetFold(testFold = Tuple2(-1, -1), trainFolds = List(Tuple2(0, size)))
-
-  override def classesOf(sentence: Sentence):List[L] = {
-  }
 
   override def save(fn:File): Unit = {
 
@@ -182,6 +186,11 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     firstPassModel.get.saveTo(w)
     w.close()
 
+    w = new PrintWriter(new FileWriter(fn, true))
+    secondPassModel.get.saveTo(w)
+    w.close()
+
+    /*
     // save second pass model in a separate file // TODO: this is not saved in the PrintWriter above; why?
     val secPassFile = new File(fn + ".second.tmp")
     w = new PrintWriter(new FileWriter(secPassFile))
@@ -197,6 +206,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     w.close()
 
     secPassFile.delete()
+    */
   }
 
   override def load(is:InputStream) {

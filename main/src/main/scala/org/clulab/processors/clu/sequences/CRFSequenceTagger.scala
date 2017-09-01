@@ -16,13 +16,14 @@ import org.clulab.struct.Counter
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.reflect.ClassTag
 
 /**
   * Generic sequence tagger over words implemented using the mallet CRF
   * Author: mihais
   * Date: 3/24/17
   */
-abstract class CRFSequenceTagger[L, F] extends SequenceTagger[L, F] {
+abstract class CRFSequenceTagger[L:ClassTag, F] extends SequenceTagger[L, F] {
   var crfModel:Option[CRF] = None
   var testPipe:Option[ToFeatureVectorPipe[F]] = None
 
@@ -148,7 +149,7 @@ abstract class CRFSequenceTagger[L, F] extends SequenceTagger[L, F] {
     fs.toSet
   }
 
-  override def classesOf(sentence: Sentence):List[L] = {
+  override def classesOf(sentence: Sentence):Array[L] = {
     assert(crfModel.isDefined)
     assert(testPipe.isDefined)
 
@@ -172,7 +173,7 @@ abstract class CRFSequenceTagger[L, F] extends SequenceTagger[L, F] {
     }
 
     //println(s"LABELS: ${labels.mkString(", ")}")
-    labels.toList
+    labels.toArray
   }
 
   override def save(fn:File) {

@@ -65,7 +65,7 @@ abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, val leftToRi
     logger.debug("Finished training.")
   }
 
-  override def classesOf(origSentence: Sentence):List[L] = {
+  override def classesOf(origSentence: Sentence):Array[L] = {
     val sentence = if(leftToRight) origSentence else origSentence.revert()
 
     val history = new ArrayBuffer[L]()
@@ -78,7 +78,7 @@ abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, val leftToRi
       history += label
     }
 
-    if(leftToRight) history.toList else SeqUtils.revert(history).toList
+    if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
   }
 
   override def save(fn:File): Unit = {
