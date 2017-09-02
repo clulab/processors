@@ -18,10 +18,15 @@ import scala.reflect.ClassTag
   * Date: 8/27/17
   */
 abstract class BiMEMMSequenceTagger[L: ClassTag, F](
-  var order:Int = 1,
-  val numFoldsFirstPass:Int = 10,
-  val leftToRightSecondPass:Boolean = true) extends SequenceTagger[L, F] {
-  
+  var order:Int,
+  var numFoldsFirstPass:Int, // if < 2, this reverts to a single-layer MEMM
+  var leftToRight:Boolean) extends SequenceTagger[L, F] {
+
+  /** C'tor for a single-layer. left-to-right MEMM of order 2 */
+  def this(order:Int = 2, leftToRight:Boolean = true) {
+    this(order, -1, leftToRight)
+  }
+
   var firstPassModel:Option[Classifier[L, F]] = None
   var secondPassModel:Option[Classifier[L, F]] = None
 
@@ -32,17 +37,28 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     }
     logger.info(s"Training on ${sentences.size} sentences using order $order.")
 
-    // generate first-pass labels
-    val firstPassLabels = mkFirstPassLabels(sentences)
-    assert(firstPassLabels.length == sentences.size)
+    var firstPassLabels:Option[Array[Array[L]]] = None
+    var acc = 0.0
+    if(numFoldsFirstPass > 1) {
+      // generate first-pass labels
+      firstPassLabels = Some(mkFirstPassLabels(sentences))
+      assert(firstPassLabels.get.length == sentences.size)
 
-    // make and save the first-pass classifier on the whole data
-    firstPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
-      ! leftToRightSecondPass, None))
+      // compute the accuracy of the first pass
+      acc = accuracy(sentences, firstPassLabels.get)
+
+      // make the first-pass classifier on the whole data
+      firstPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
+        !leftToRight, None))
+    }
 
     // make the second-pass classifier
     secondPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
-      leftToRightSecondPass, Some(firstPassLabels)))
+      leftToRight, firstPassLabels))
+
+    logger.info("Finished training.")
+    if(firstPassLabels.nonEmpty)
+      logger.info(s"The accuracy of the first pass classifier was $acc.")
   }
 
   def mkFirstPassLabels(sentences: ArrayBuffer[Sentence]): Array[Array[L]] = {
@@ -56,12 +72,16 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
       logger.debug(s"In fold $foldCount: ${fold.testFold}...")
       foldCount += 1
 
-      val classifier = buildClassifier(sentences, fold, ! leftToRightSecondPass, None)
+      val classifier = buildClassifier(sentences, fold, ! leftToRight, None)
       for(si <- fold.testFold._1 until fold.testFold._2) {
-        labels(si) = classesOf(classifier, sentences(si), None, ! leftToRightSecondPass)
+        labels(si) = classesOf(classifier, sentences(si), None, ! leftToRight)
       }
     }
 
+    labels
+  }
+
+  def accuracy(sentences: ArrayBuffer[Sentence], labels:Array[Array[L]]):Double = {
     // check the accuracy of these labels
     var total = 0
     var correct = 0
@@ -76,9 +96,34 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
         if(gold(j) == pred(j)) correct += 1
       }
     }
-    logger.info(s"Accuracy of first pass classifier: ${100.0 * correct.toDouble / total.toDouble}% ($correct/$total)")
+    val acc = 100.0 * correct.toDouble / total.toDouble
+    logger.info(s"Accuracy of first pass classifier: $acc% ($correct/$total)")
+    acc
+  }
 
-    labels
+  def mkFeatures(features:Counter[F],
+                 sentence:Sentence,
+                 offset:Int,
+                 history:Seq[L],
+                 firstPassLabels:Option[Array[L]]): Unit = {
+    //
+    // add features from observed data
+    //
+    featureExtractor(features, sentence, offset)
+
+    //
+    // add history features:
+    //   concatenate the labels of the previous <order> tokens to the features
+    // then store each example in the training dataset
+    //
+    addHistoryFeatures(features, order, history, offset)
+
+    //
+    // add features from first-pass labels (if any)
+    //
+    if (firstPassLabels.nonEmpty) {
+      addFirstPassFeatures(features, order, firstPassLabels.get, offset)
+    }
   }
 
   def buildClassifier(
@@ -91,45 +136,31 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     val dataset = mkDataset
     var sentCount = 0
     for (trainFold <- fold.trainFolds; sentOffset <- trainFold._1 until trainFold._2) {
+      // original sentence
       val origSentence = sentences(sentOffset)
+      // actual sentence to be used
       val sentence = if (leftToRight) origSentence else origSentence.revert()
+      // labels to be learned
       val labels =
         if (leftToRight) labelExtractor(origSentence)
         else SeqUtils.revert(labelExtractor(origSentence)).toArray
+      // labels from the first pass (if any)
+      val firstPass =
+        if(firstPassLabels.nonEmpty) {
+          if(leftToRight) Some(firstPassLabels.get(sentOffset))
+          else Some(SeqUtils.revert(firstPassLabels.get(sentOffset)).toArray)
+        } else {
+          None
+        }
 
-      //
-      // add features from observed data
-      //
       val features = new Array[Counter[F]](sentence.size)
-      for (i <- features.indices) features(i) = new Counter[F]()
-      for(i <- 0 until sentence.size)
-        featureExtractor(features(i), sentence, i)
-
-      //
-      // add history features:
-      //   concatenate the labels of the previous <order> tokens to the features
-      // then store each example in the training dataset
-      //
-      for(i <- features.indices)
-        addHistoryFeatures(features(i), order, labels, i)
-
-      //
-      // add features from first-pass labels (if any)
-      //
-      if(firstPassLabels.nonEmpty) {
-        val firstPass =
-          if (leftToRight) firstPassLabels.get(sentOffset)
-          else SeqUtils.revert(firstPassLabels.get(sentOffset)).toArray
-
-        for(i <- features.indices)
-          addFirstPassFeatures(features(i), order, firstPass, i)
-      }
-
-      // add one datum for each word in the sentence
       assert(labels.length == features.length)
-      for(i <- labels.indices) {
-        assert(labels(i) != null)
-        assert(features(i) != null)
+      for (i <- features.indices) features(i) = new Counter[F]()
+      for(i <- 0 until sentence.size) {
+        // add all features
+        mkFeatures(features(i), sentence, i, labels, firstPass)
+
+        // add one datum for each word in the sentence
         val d = mkDatum(labels(i), features(i))
         dataset += d
       }
@@ -153,11 +184,18 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
                 leftToRight:Boolean): Array[L] = {
     val sentence = if(leftToRight) origSentence else origSentence.revert()
 
+    val firstPass =
+      if(firstPassLabels.nonEmpty) {
+        if(leftToRight) firstPassLabels
+        else Some(SeqUtils.revert(firstPassLabels.get).toArray)
+      } else {
+        None
+      }
+
     val history = new ArrayBuffer[L]()
     for(i <- 0 until sentence.size) {
       val feats = new Counter[F]
-      featureExtractor(feats, sentence, i)
-      addHistoryFeatures(feats, order, history, i)
+      mkFeatures(feats, sentence, i, history, firstPass)
       val d = mkDatum(null.asInstanceOf[L], feats)
       val label = classifier.classOf(d)
       history += label
@@ -167,8 +205,10 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   }
 
   override def classesOf(sentence: Sentence):Array[L] = {
-    val firstPassLabels = classesOf(firstPassModel.get, sentence, None, ! leftToRightSecondPass)
-    val secondPassLabels = classesOf(secondPassModel.get, sentence, Some(firstPassLabels), leftToRightSecondPass)
+    var firstPassLabels:Option[Array[L]] = None
+    if(firstPassModel.nonEmpty)
+      firstPassLabels = Some(classesOf(firstPassModel.get, sentence, None, ! leftToRight))
+    val secondPassLabels = classesOf(secondPassModel.get, sentence, firstPassLabels, leftToRight)
     secondPassLabels
   }
 
@@ -179,25 +219,43 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     new DatasetFold(testFold = Tuple2(-1, -1), trainFolds = List(Tuple2(0, size)))
 
   override def save(fn:File): Unit = {
-
-    // save order + first pass model
+    // save meta data
     var w = new PrintWriter(new FileWriter(fn))
     w.println(order)
-    firstPassModel.get.saveTo(w)
+    w.println(leftToRight)
+
+    // save second pass model
+    secondPassModel.get.saveTo(w)
     w.close()
 
+    // save first pass model (if any)
     w = new PrintWriter(new FileWriter(fn, true))
-    secondPassModel.get.saveTo(w)
+    if(firstPassModel.nonEmpty) {
+      w.println(1)
+      firstPassModel.get.saveTo(w)
+    } else {
+      w.println(0)
+    }
     w.close()
   }
 
   override def load(is:InputStream) {
+    // load meta data
     val reader = new BufferedReader(new InputStreamReader(is))
     order = reader.readLine().toInt
-    val fpc = LiblinearClassifier.loadFrom[L, F] (reader)
-    firstPassModel = Some(fpc)
+    leftToRight = reader.readLine().toBoolean
+
+    // load second pass classifier
+    secondPassModel = Some(LiblinearClassifier.loadFrom[L, F] (reader))
     reader.readLine()
-    val spc = LiblinearClassifier.loadFrom[L, F] (reader)
-    secondPassModel = Some(spc)
+
+    // load first pass classifier (if any)
+    val hasFirstPass = reader.readLine().toInt
+    if(hasFirstPass == 1) {
+      firstPassModel = Some(LiblinearClassifier.loadFrom[L, F](reader))
+    } else {
+      firstPassModel = None
+    }
+    reader.close()
   }
 }

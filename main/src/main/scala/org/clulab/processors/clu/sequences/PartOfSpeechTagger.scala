@@ -8,11 +8,11 @@ import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
-  * Part of speech tagger 
+  * Part of speech tagger using a MEMM architecture
   * Author: mihais
   * Date: 3/24/17
   */
-class PartOfSpeechTagger extends BiMEMMSequenceTagger[String, String]() {
+class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int):Set[String] = {
     val fe = new FeatureExtractor(sentence, offset, features)
@@ -66,6 +66,8 @@ object PartOfSpeechTagger {
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), wordPos = 0, tagPos = 1)
       val tagger = new PartOfSpeechTagger
+      tagger.leftToRight = true
+      tagger.numFoldsFirstPass = 2
 
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
