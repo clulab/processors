@@ -40,8 +40,8 @@ trait SequenceTagger[L, F] {
   }
 
   def addFirstPassFeatures(features:Counter[F], order:Int, labels:Seq[L], offset:Int):Unit = {
-    //addLeftFeatures(features, order, "fp", labels, offset)
-    //addRightFeatures(features, order, "fp", labels, offset)
+    addLeftFeatures(features, order, "fp", labels, offset)
+    addRightFeatures(features, order, "fp", labels, offset)
     features += mkFeatAtHistory(0, "fp", labels(offset))
   }
 
