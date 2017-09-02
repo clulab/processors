@@ -67,7 +67,7 @@ object PartOfSpeechTagger {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), wordPos = 0, tagPos = 1)
       val tagger = new PartOfSpeechTagger
       tagger.leftToRight = true
-      tagger.numFoldsFirstPass = 10
+      tagger.numFoldsFirstPass = -1 
 
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
