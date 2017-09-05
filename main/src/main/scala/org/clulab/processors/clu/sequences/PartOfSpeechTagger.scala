@@ -21,7 +21,15 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
       fe.word(offset)
       fe.lemma(offset)
       fe.casing(offset)
-      fe.suffixes(offset, 1, 3) 
+      fe.suffixes(offset, 1, 3)
+
+      // TODO: prefixes
+
+      // TODO: intial Upper Case, all Upper Case, no initial Capital Letter(s), all Lower Case, contains a (period / number / hyphen ...)
+
+      // TODO: word length
+
+      // TODO: sentence info: punctuation (’.’, ’?’, ’!’)
     }
 
     // word bigrams yield less than 0.10% accuracy boost, but double the model size... Let's not use them.
@@ -37,7 +45,7 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
     sentence.tags.get
   }
 
-  def mkFeatAtHistory(position:Int, prefix:String, label:String):String = s"${prefix}h$position:$label"
+  def mkFeatAtHistory(position:Int, prefix:String, label:Seq[String]):String = s"${prefix}h$position:${label.mkString("-")}"
   def mkFeatAtBeginSent(position:Int, prefix:String):String = s"${prefix}h$position:<s>"
   def mkFeatAtEndSent(position:Int, prefix:String):String = s"${prefix}h$position:</s>"
 }

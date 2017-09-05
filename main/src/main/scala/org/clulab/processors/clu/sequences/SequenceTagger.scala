@@ -42,14 +42,17 @@ trait SequenceTagger[L, F] {
   def addFirstPassFeatures(features:Counter[F], order:Int, labels:Seq[L], offset:Int):Unit = {
     //addLeftFeatures(features, order, "fp", labels, offset)
     //addRightFeatures(features, order, "fp", labels, offset)
-    features += mkFeatAtHistory(0, "fp", labels(offset))
+    features += mkFeatAtHistory(0, "fp", Seq(labels(offset)))
   }
 
   def addLeftFeatures(features:Counter[F], order:Int, prefix:String, labels:Seq[L], offset:Int):Unit = {
     var reachedBos = false
     for(o <- 1 to order if ! reachedBos) {
       if(offset - o >= 0) {
-        features += mkFeatAtHistory(- o, prefix, labels(offset - o))
+        features += mkFeatAtHistory(- o, prefix, Seq(labels(offset - o)))
+        if(offset - o - 1 >= 0) {
+          features += mkFeatAtHistory(- o, prefix, Seq(labels(offset - o), labels(offset - o - 1)))
+        }
       } else {
         features += mkFeatAtBeginSent(o, prefix)
         reachedBos = true
@@ -61,7 +64,7 @@ trait SequenceTagger[L, F] {
     var reachedEos = false
     for(o <- 1 to order if ! reachedEos) {
       if(offset + o < labels.size) {
-        features += mkFeatAtHistory(o, prefix, labels(offset + o))
+        features += mkFeatAtHistory(o, prefix, Seq(labels(offset + o)))
       } else {
         features += mkFeatAtEndSent(o, prefix)
         reachedEos = true
@@ -69,7 +72,7 @@ trait SequenceTagger[L, F] {
     }
   }
   
-  def mkFeatAtHistory(position:Int, prefix:String, label:L):F
+  def mkFeatAtHistory(position:Int, prefix:String, labels:Seq[L]):F
   def mkFeatAtBeginSent(position:Int, prefix:String):F
   def mkFeatAtEndSent(position:Int, prefix:String):F
 }
