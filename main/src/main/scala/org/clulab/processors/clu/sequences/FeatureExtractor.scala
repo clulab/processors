@@ -25,14 +25,14 @@ class FeatureExtractor(
   def wordBigrams(offset:Int) {
     val i = position + offset
     if(validPosition(i) && validPosition(i - 1)) {
-      features += s"wb[$offset]:${sentence.words(i - 1)}-${sentence.words(i)}"
+      features += s"wb[$offset]:${sentence.words(i - 1).toLowerCase()}-${sentence.words(i).toLowerCase()}"
     }
   }
 
   def lemmaBigrams(offset:Int) {
     val i = position + offset
     if(validPosition(i) && validPosition(i - 1)) {
-      features += s"wb[$offset]:${sentence.lemmas.get(i - 1)}-${sentence.lemmas.get(i)}"
+      features += s"wb[$offset]:${sentence.lemmas.get(i - 1).toLowerCase()}-${sentence.lemmas.get(i).toLowerCase()}"
     }
   }
 
@@ -62,17 +62,76 @@ class FeatureExtractor(
     }
   }
 
+  def features(offset:Int) {
+    val i = position + offset
+    if(validPosition(i)) {
+      val w = sentence.words(i)
+      var containsPeriod = false
+      var containsNumber = false
+      var containsHyphen = false
+      var containsComma = false
+
+      for (j <- w.indices) {
+        val c = w.charAt(j)
+
+        if(c == '-') containsHyphen = true
+        else if(Character.isDigit(c)) containsNumber = true
+        else if(c == '.') containsPeriod = true
+        else if(c == ',') containsComma = true
+      }
+
+      if(containsPeriod) {
+        features += s"hasPeriod[$offset]"
+      }
+      if(containsNumber) {
+        features += s"hasNumber[$offset]"
+      }
+      if(containsHyphen) {
+        features += s"hasHyphen[$offset]"
+      }
+      if(containsComma) {
+        features += s"hasComma[$offset]"
+      }
+    }
+  }
+
+  def wordLen(offset:Int) {
+    val i = position + offset
+    if(validPosition(i)) {
+      val w = sentence.words(i)
+      features.setCount(s"wordLen[$offset]", w.length)
+    }
+  }
+
   def suffixes(offset:Int, minLen:Int, maxLen:Int) {
     val i = position + offset
     if(validPosition(i)) {
       val w = sentence.words(i).toLowerCase()
       for(len <- minLen to maxLen) {
-        if(len < w.length) {
+        if(len <= w.length) {
           val suff = w.substring(w.length - len)
           features += s"suff[$offset,$len]:$suff"
         }
       }
     }
+  }
+
+  def prefixes(offset:Int, minLen:Int, maxLen:Int) {
+    val i = position + offset
+    if(validPosition(i)) {
+      val w = sentence.words(i).toLowerCase()
+      for(len <- minLen to maxLen) {
+        if(len <= w.length) {
+          val prefix = w.substring(0, len)
+          features += s"pref[$offset,$len]:$prefix"
+        }
+      }
+    }
+  }
+
+  def sentenceInfo() {
+    val last = sentence.words.last
+    features += s"eos:$last"
   }
 
   private def validPosition(i:Int):Boolean = {

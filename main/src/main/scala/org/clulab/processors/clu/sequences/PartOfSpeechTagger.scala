@@ -22,19 +22,13 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
       fe.lemma(offset)
       fe.casing(offset)
       fe.suffixes(offset, 1, 3)
-
-      // TODO: prefixes
-
-      // TODO: intial Upper Case, all Upper Case, no initial Capital Letter(s), all Lower Case, contains a (period / number / hyphen ...)
-
-      // TODO: word length
-
-      // TODO: sentence info: punctuation (’.’, ’?’, ’!’)
+      fe.prefixes(offset, 1, 3)
+      fe.features(offset)
     }
 
-    // word bigrams yield less than 0.10% accuracy boost, but double the model size... Let's not use them.
-    //fe.wordBigrams(0)
-    //fe.wordBigrams(1)
+    // word bigrams yield less than 0.10% accuracy boost, but double the model size...
+    fe.wordBigrams(0)
+    fe.wordBigrams(1)
 
     features.toSet
   }
