@@ -45,7 +45,7 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
     sentence.tags.get
   }
 
-  def mkFeatAtHistory(position:Int, prefix:String, label:Seq[String]):String = s"${prefix}h$position:${label.mkString("-")}"
+  def mkFeatAtHistory(position:Int, prefix:String, label:String):String = s"${prefix}h$position:$label}"
   def mkFeatAtBeginSent(position:Int, prefix:String):String = s"${prefix}h$position:<s>"
   def mkFeatAtEndSent(position:Int, prefix:String):String = s"${prefix}h$position:</s>"
 }
