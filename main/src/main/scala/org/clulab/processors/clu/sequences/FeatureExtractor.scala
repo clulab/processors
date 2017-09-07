@@ -158,6 +158,7 @@ object FeatureExtractor {
     for(sentence <- sentences) {
       for(i <- 0 until sentence.size - 1) {
         bigrams.get += mkBigram(sentence, i)
+        println(mkBigram(sentence, i))
       }
     }
     SequenceTaggerLogger.logger.debug(s"Found ${bigrams.size} unique bigrams.")
