@@ -1,8 +1,8 @@
-package org.clulab.processors.clu.sequences
+package org.clulab.sequences
 
 import org.clulab.processors.Document
+import org.clulab.sequences.SequenceTaggerEvaluator._
 import org.slf4j.{Logger, LoggerFactory}
-import SequenceTaggerEvaluator._
 
 /**
   * Implements evaluation of a sequence tagger

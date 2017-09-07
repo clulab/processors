@@ -3,6 +3,7 @@ package org.clulab.processors.clu.sequences
 import java.io.File
 
 import org.clulab.processors.Sentence
+import org.clulab.sequences.{BiMEMMSequenceTagger, ColumnsToDocument, SequenceTaggerEvaluator, SequenceTaggerShell}
 import org.clulab.struct.Counter
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}

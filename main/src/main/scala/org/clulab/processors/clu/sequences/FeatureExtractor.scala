@@ -1,6 +1,7 @@
 package org.clulab.processors.clu.sequences
 
 import org.clulab.processors.Sentence
+import org.clulab.sequences.SequenceTaggerLogger
 import org.clulab.struct.Counter
 
 /**
