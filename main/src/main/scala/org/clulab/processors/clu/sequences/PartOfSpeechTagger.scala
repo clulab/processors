@@ -46,7 +46,7 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
 object PartOfSpeechTagger {
   val logger:Logger = LoggerFactory.getLogger(classOf[PartOfSpeechTagger])
 
-  val DEFAULT_MODEL_RESOURCE = "org/clulab/processors/clu/pos-wsj.dat"
+  val DEFAULT_MODEL_RESOURCE = "org/clulab/processors/clu/pos-memm-l1-o2-wsjgenia.dat"
 
   def loadFromFile(fn:String): PartOfSpeechTagger = {
     val tagger = new PartOfSpeechTagger
