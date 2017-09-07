@@ -22,12 +22,12 @@ class FeatureExtractor(
       features += s"w[$offset]:${FeatureExtractor.norm(sentence.words(i))}"
   }
 
-  def wordBigrams(offset:Int) {
+  def wordBigrams(offset:Int, threshold:Int) {
     val i = position + offset
     if(validPosition(i) && validPosition(i - 1)) {
       val bg = FeatureExtractor.mkBigram(sentence, i - 1)
-      if(FeatureExtractor.bigrams.isEmpty ||
-         FeatureExtractor.bigrams.get.getCount(bg) > FeatureExtractor.BIGRAM_THRESHOLD) {
+      if(FeatureExtractor.bigrams.isEmpty || // during testing
+         FeatureExtractor.bigrams.get.getCount(bg) > threshold) { // during training
         features += s"wb[$offset]:$bg"
       }
     }
@@ -138,8 +138,6 @@ class FeatureExtractor(
 }
 
 object FeatureExtractor {
-  val BIGRAM_THRESHOLD = 2
-
   var bigrams:Option[Counter[String]] = None
 
   /**

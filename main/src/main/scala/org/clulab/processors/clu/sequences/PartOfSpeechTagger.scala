@@ -26,9 +26,8 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
       fe.features(offset)
     }
 
-    // word bigrams yield less than 0.10% accuracy boost, but double the model size...
-    fe.wordBigrams(0)
-    fe.wordBigrams(1)
+    fe.wordBigrams(0, 2)
+    fe.wordBigrams(1, 2)
 
     features.toSet
   }
