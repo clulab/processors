@@ -26,9 +26,8 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
       fe.features(offset)
     }
 
-    // word bigrams yield less than 0.10% accuracy boost, but double the model size...
-    fe.wordBigrams(0)
-    fe.wordBigrams(1)
+    fe.wordBigrams(0, 2)
+    fe.wordBigrams(1, 2)
 
     features.toSet
   }
@@ -67,9 +66,7 @@ object PartOfSpeechTagger {
 
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), wordPos = 0, tagPos = 1)
-      val tagger = new PartOfSpeechTagger
-      tagger.leftToRight = true
-      tagger.numFoldsFirstPass = -1 
+      val tagger = new PartOfSpeechTagger // a single-pass model is sufficient for POS tagging
 
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
