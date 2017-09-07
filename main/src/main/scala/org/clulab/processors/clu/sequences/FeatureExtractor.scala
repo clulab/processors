@@ -26,7 +26,8 @@ class FeatureExtractor(
     val i = position + offset
     if(validPosition(i) && validPosition(i - 1)) {
       val bg = FeatureExtractor.mkBigram(sentence, i - 1)
-      if(FeatureExtractor.bigrams.get.getCount(bg) > FeatureExtractor.BIGRAM_THRESHOLD) {
+      if(FeatureExtractor.bigrams.isEmpty ||
+         FeatureExtractor.bigrams.get.getCount(bg) > FeatureExtractor.BIGRAM_THRESHOLD) {
         features += s"wb[$offset]:$bg"
       }
     }
