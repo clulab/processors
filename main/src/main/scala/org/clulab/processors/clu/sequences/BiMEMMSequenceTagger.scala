@@ -37,6 +37,9 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     }
     logger.info(s"Training on ${sentences.size} sentences using order $order.")
 
+    // count bigrams in the corpus
+    FeatureExtractor.countBigrams(sentences)
+
     var firstPassLabels:Option[Array[Array[L]]] = None
     var acc = 0.0
     if(numFoldsFirstPass > 1) {

@@ -25,7 +25,10 @@ class FeatureExtractor(
   def wordBigrams(offset:Int) {
     val i = position + offset
     if(validPosition(i) && validPosition(i - 1)) {
-      features += s"wb[$offset]:${sentence.words(i - 1).toLowerCase()}-${sentence.words(i).toLowerCase()}"
+      val bg = FeatureExtractor.mkBigram(sentence, i - 1)
+      if(FeatureExtractor.bigrams.get.getCount(bg) > FeatureExtractor.BIGRAM_THRESHOLD) {
+        features += s"wb[$offset]:$bg"
+      }
     }
   }
 
@@ -138,4 +141,28 @@ class FeatureExtractor(
     if(i >= 0 && i < sentence.size) true
     else false
   }
+}
+
+object FeatureExtractor {
+  val BIGRAM_THRESHOLD = 1
+
+  var bigrams:Option[Counter[String]] = None
+
+  /**
+    * Counts the bigrams seen in this corpus so we filter out the non-frequent ones
+    * @param sentences The training corpus
+    */
+  def countBigrams(sentences:Seq[Sentence]): Unit = {
+    SequenceTaggerLogger.logger.debug(s"Counting bigrams in ${sentences.size} sentences...")
+    bigrams = Some(new Counter[String]())
+    for(sentence <- sentences) {
+      for(i <- 0 until sentence.size - 1) {
+        bigrams.get += mkBigram(sentence, i)
+      }
+    }
+    SequenceTaggerLogger.logger.debug(s"Found ${bigrams.size} unique bigrams.")
+  }
+
+  def mkBigram(sentence:Sentence, i:Int):String =
+    s"${sentence.words(i).toLowerCase()}-${sentence.words(i + 1).toLowerCase()}"
 }
