@@ -145,7 +145,7 @@ class FeatureExtractor(
 }
 
 object FeatureExtractor {
-  val BIGRAM_THRESHOLD = 1
+  val BIGRAM_THRESHOLD = 2
 
   var bigrams:Option[Counter[String]] = None
 
