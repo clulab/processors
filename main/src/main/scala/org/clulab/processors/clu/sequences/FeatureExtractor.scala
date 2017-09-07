@@ -19,7 +19,7 @@ class FeatureExtractor(
     else if(i == sentence.size)
       features += s"w[$offset]:-EOS-"
     else if(validPosition(i))
-      features += s"w[$offset]:${sentence.words(i)}"
+      features += s"w[$offset]:${FeatureExtractor.norm(sentence.words(i))}"
   }
 
   def wordBigrams(offset:Int) {
@@ -33,17 +33,10 @@ class FeatureExtractor(
     }
   }
 
-  def lemmaBigrams(offset:Int) {
-    val i = position + offset
-    if(validPosition(i) && validPosition(i - 1)) {
-      features += s"wb[$offset]:${sentence.lemmas.get(i - 1).toLowerCase()}-${sentence.lemmas.get(i).toLowerCase()}"
-    }
-  }
-
   def lemma(offset:Int) {
     val i = position + offset
     if(validPosition(i))
-      features += s"l[$offset]:${sentence.lemmas.get(i)}"
+      features += s"l[$offset]:${FeatureExtractor.norm(sentence.lemmas.get(i))}"
   }
 
   def casing(offset:Int) {
@@ -164,6 +157,10 @@ object FeatureExtractor {
     SequenceTaggerLogger.logger.debug(s"Found ${bigrams.get.size} unique bigrams.")
   }
 
+  def norm(w:String):String = {
+    w.replaceAll("\\d", "N")
+  }
+
   def mkBigram(sentence:Sentence, i:Int):String =
-    s"${sentence.words(i).toLowerCase()}-${sentence.words(i + 1).toLowerCase()}"
+    s"${norm(sentence.words(i).toLowerCase())}-${norm(sentence.words(i + 1).toLowerCase())}"
 }

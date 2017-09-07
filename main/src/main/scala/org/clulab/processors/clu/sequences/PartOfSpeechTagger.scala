@@ -67,9 +67,7 @@ object PartOfSpeechTagger {
 
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), wordPos = 0, tagPos = 1)
-      val tagger = new PartOfSpeechTagger
-      tagger.leftToRight = true
-      tagger.numFoldsFirstPass = -1 
+      val tagger = new PartOfSpeechTagger // a single-pass model is sufficient for POS tagging
 
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
