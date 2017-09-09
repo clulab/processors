@@ -18,7 +18,7 @@ This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
 Our code is licensed as follows:
 + **`main, odin, models`** - Apache License Version 2.0. Please note that these subprojects do not interact with the `corenlp` subproject below.
-+ **`corenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/).
++ **`corenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/). If you use `CluProcessor`, this dependency does not have to be included in your project.
 
 (c) Mihai Surdeanu, 2013 -
 
