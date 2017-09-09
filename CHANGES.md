@@ -1,5 +1,6 @@
 # Changes
-+ **6.2.0** - Replaced the CRF model based on Mallet with an in-house BiMEMM model. Performance is 97% on WSJ and 98% on Genia.
++ **6.1.2** - Bug fix: made Counter.keySet efficient (again). This severely affected the performance of the discourse parser, which was extremely slow.
++ **6.1.2** - Replaced the CRF model based on Mallet with an in-house BiMEMM model. Performance is 97% on WSJ and 98% on Genia.
 + **6.1.0/1** - Added the word-by-word voting ensemble model to the CluProcessor parser. Performance (with gold POS tags) is: LAS on WSJ: 89.2%, LAS on Genia: 87.4%.
 + **6.1.0/1** - Added collapsed Stanford dependencies to CluProcessor. See `org.clulab.processors.clu.syntax.EnhancedDependencies` for details.
 + **6.1.0/1** - Bug fix: the parsing model in CluProcessor was broken (maltparser was trained incorrectly).

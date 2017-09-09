@@ -50,7 +50,7 @@ class Counter[T](
   def decrementCount(key:T, inc:Double):Double = incrementCount(key, - inc)
   def decrementCount(key:T):Double = incrementCount(key, -1.0)
 
-  def keySet = counts.keySet.toSet
+  def keySet = counts.keySet
   def size: Int = counts.size
   def contains(key:T):Boolean = keySet.contains(key)
 
@@ -182,7 +182,6 @@ class Counter[T](
   }
 
   def toSeq: Seq[(T, Double)] = for (key <- keySet.toSeq) yield (key, getCount(key))
-  def toSet: Set[T] = keySet
 
   def values: Seq[Double] = toSeq.map(_._2)
 

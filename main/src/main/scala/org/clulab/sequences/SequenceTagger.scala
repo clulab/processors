@@ -16,7 +16,7 @@ trait SequenceTagger[L, F] {
   def classesOf(sentence: Sentence):Array[L]
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
-  def featureExtractor(features:Counter[F], sentence: Sentence, offset:Int):Set[F]
+  def featureExtractor(features:Counter[F], sentence: Sentence, offset:Int)
 
   /** Abstract method that extracts the training labels for a given sentence */
   def labelExtractor(sentence:Sentence): Array[L]

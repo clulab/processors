@@ -15,7 +15,7 @@ import org.slf4j.{Logger, LoggerFactory}
   */
 class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
 
-  def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int):Set[String] = {
+  def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int) = {
     val fe = new FeatureExtractor(sentence, offset, features)
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
@@ -29,8 +29,6 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
 
     fe.wordBigrams(0, 2)
     fe.wordBigrams(1, 2)
-
-    features.toSet
   }
 
   def labelExtractor(sentence:Sentence): Array[String] = {
