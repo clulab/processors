@@ -1,8 +1,8 @@
 package org.clulab.processors.clu.sequences
 
 import org.clulab.processors.Sentence
-
-import scala.collection.mutable
+import org.clulab.sequences.SequenceTaggerLogger
+import org.clulab.struct.Counter
 
 /**
   * Implements common features used in sequence tagging
@@ -10,9 +10,8 @@ import scala.collection.mutable
   */
 class FeatureExtractor(
   val sentence:Sentence,
-  val allowableLabels:mutable.HashMap[String, mutable.HashSet[String]],
   val position:Int,
-  val features:mutable.HashSet[String]) {
+  val features:Counter[String]) {
 
   def word(offset:Int) {
     val i = position + offset
@@ -21,27 +20,24 @@ class FeatureExtractor(
     else if(i == sentence.size)
       features += s"w[$offset]:-EOS-"
     else if(validPosition(i))
-      features += s"w[$offset]:${sentence.words(i)}"
+      features += s"w[$offset]:${FeatureExtractor.norm(sentence.words(i))}"
   }
 
-  def wordBigrams(offset:Int) {
+  def wordBigrams(offset:Int, threshold:Int) {
     val i = position + offset
     if(validPosition(i) && validPosition(i - 1)) {
-      features += s"wb[$offset]:${sentence.words(i - 1)}-${sentence.words(i)}"
-    }
-  }
-
-  def lemmaBigrams(offset:Int) {
-    val i = position + offset
-    if(validPosition(i) && validPosition(i - 1)) {
-      features += s"wb[$offset]:${sentence.lemmas.get(i - 1)}-${sentence.lemmas.get(i)}"
+      val bg = FeatureExtractor.mkBigram(sentence, i - 1)
+      if(FeatureExtractor.bigrams.isEmpty || // during testing
+         FeatureExtractor.bigrams.get.getCount(bg) > threshold) { // during training
+        features += s"wb[$offset]:$bg"
+      }
     }
   }
 
   def lemma(offset:Int) {
     val i = position + offset
     if(validPosition(i))
-      features += s"l[$offset]:${sentence.lemmas.get(i)}"
+      features += s"l[$offset]:${FeatureExtractor.norm(sentence.lemmas.get(i))}"
   }
 
   def casing(offset:Int) {
@@ -64,12 +60,53 @@ class FeatureExtractor(
     }
   }
 
+  def features(offset:Int) {
+    val i = position + offset
+    if(validPosition(i)) {
+      val w = sentence.words(i)
+      var containsPeriod = false
+      var containsNumber = false
+      var containsHyphen = false
+      var containsComma = false
+
+      for (j <- w.indices) {
+        val c = w.charAt(j)
+
+        if(c == '-') containsHyphen = true
+        else if(Character.isDigit(c)) containsNumber = true
+        else if(c == '.') containsPeriod = true
+        else if(c == ',') containsComma = true
+      }
+
+      if(containsPeriod) {
+        features += s"hasPeriod[$offset]"
+      }
+      if(containsNumber) {
+        features += s"hasNumber[$offset]"
+      }
+      if(containsHyphen) {
+        features += s"hasHyphen[$offset]"
+      }
+      if(containsComma) {
+        features += s"hasComma[$offset]"
+      }
+    }
+  }
+
+  def wordLen(offset:Int) {
+    val i = position + offset
+    if(validPosition(i)) {
+      val w = sentence.words(i)
+      features.setCount(s"wordLen[$offset]", w.length)
+    }
+  }
+
   def suffixes(offset:Int, minLen:Int, maxLen:Int) {
     val i = position + offset
     if(validPosition(i)) {
       val w = sentence.words(i).toLowerCase()
       for(len <- minLen to maxLen) {
-        if(len < w.length) {
+        if(len <= w.length) {
           val suff = w.substring(w.length - len)
           features += s"suff[$offset,$len]:$suff"
         }
@@ -77,22 +114,52 @@ class FeatureExtractor(
     }
   }
 
-  def allowable(offset:Int) {
+  def prefixes(offset:Int, minLen:Int, maxLen:Int) {
     val i = position + offset
     if(validPosition(i)) {
-      val w = sentence.words(i).toLowerCase
-      if(allowableLabels.contains(w)) {
-        val a = allowableLabels.get(w).get.toList.sorted.mkString("-")
-        println(s"allowable($w) = $a")
-        features += s"a[$offset]:$a"
-      } else {
-        features += s"a[$offset]:unk"
+      val w = sentence.words(i).toLowerCase()
+      for(len <- minLen to maxLen) {
+        if(len <= w.length) {
+          val prefix = w.substring(0, len)
+          features += s"pref[$offset,$len]:$prefix"
+        }
       }
     }
+  }
+
+  def sentenceInfo() {
+    val last = sentence.words.last
+    features += s"eos:$last"
   }
 
   private def validPosition(i:Int):Boolean = {
     if(i >= 0 && i < sentence.size) true
     else false
   }
+}
+
+object FeatureExtractor {
+  var bigrams:Option[Counter[String]] = None
+
+  /**
+    * Counts the bigrams seen in this corpus so we filter out the non-frequent ones
+    * @param sentences The training corpus
+    */
+  def countBigrams(sentences:Seq[Sentence]): Unit = {
+    SequenceTaggerLogger.logger.debug(s"Counting bigrams in ${sentences.size} sentences...")
+    bigrams = Some(new Counter[String]())
+    for(sentence <- sentences) {
+      for(i <- 0 until sentence.size - 1) {
+        bigrams.get += mkBigram(sentence, i)
+      }
+    }
+    SequenceTaggerLogger.logger.debug(s"Found ${bigrams.get.size} unique bigrams.")
+  }
+
+  def norm(w:String):String = {
+    w.replaceAll("\\d", "N")
+  }
+
+  def mkBigram(sentence:Sentence, i:Int):String =
+    s"${norm(sentence.words(i).toLowerCase())}-${norm(sentence.words(i + 1).toLowerCase())}"
 }

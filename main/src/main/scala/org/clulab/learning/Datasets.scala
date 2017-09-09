@@ -2,10 +2,12 @@ package org.clulab.learning
 
 import java.io.{Reader, Writer}
 
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
+
 import scala.collection.mutable
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
+
 import scala.collection.parallel.ForkJoinTaskSupport
 
 /**
@@ -16,7 +18,7 @@ import scala.collection.parallel.ForkJoinTaskSupport
 class Datasets
 
 object Datasets {
-  val logger = LoggerFactory.getLogger(classOf[Datasets])
+  val logger: Logger = LoggerFactory.getLogger(classOf[Datasets])
 
   /** Creates dataset folds to be used for cross validation */
   def mkFolds(numFolds:Int, size:Int):Iterable[DatasetFold] = {
@@ -30,11 +32,11 @@ object Datasets {
 
       val trainFolds = new ArrayBuffer[(Int, Int)]
       if(startTest > 0)
-        trainFolds += new Tuple2(0, startTest)
+        trainFolds += Tuple2(0, startTest)
       if(endTest < size)
-        trainFolds += new Tuple2(endTest, size)
+        trainFolds += Tuple2(endTest, size)
 
-      folds += new DatasetFold(new Tuple2(startTest, endTest), trainFolds.toList)
+      folds += new DatasetFold(Tuple2(startTest, endTest), trainFolds.toList)
     }
     folds.toList
   }
@@ -52,7 +54,7 @@ object Datasets {
 
   private def mkFullFold(size:Int): Iterable[(Int, Int)] = {
     val folds = new Array[(Int, Int)](1)
-    folds(0) = new Tuple2(0, size)
+    folds(0) = Tuple2(0, size)
     folds
   }
 
@@ -115,7 +117,7 @@ object Datasets {
     // scan the dataset once and keep track of min/max for each feature
     val ranges = new ScaleRange[F]
     for(i <- 0 until dataset.size) {
-      for(j <- 0 until dataset.features(i).size) {
+      for(j <- dataset.features(i).indices) {
         val fi = dataset.features(i)(j)
         val v = dataset.values(i)(j)
         val f = dataset.featureLexicon.get(fi)
@@ -125,7 +127,7 @@ object Datasets {
 
     // traverse the dataset again and scale values for all features
     for(i <- 0 until dataset.size) {
-      for (j <- 0 until dataset.features(i).size) {
+      for (j <- dataset.features(i).indices) {
         val fi = dataset.features(i)(j)
         val v = dataset.values(i)(j)
         val f = dataset.featureLexicon.get(fi)
@@ -171,7 +173,7 @@ object Datasets {
       var bestGroup:String = null
       var bestFeatures:Set[Int] = null
 
-      val workingGroups = featureGroups.keySet.filter(! chosenGroups.contains(_)).toSet.par
+      val workingGroups = featureGroups.keySet.filter(! chosenGroups.contains(_)).par
       workingGroups.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(nCores))
 
       // this is parallelized!
@@ -179,13 +181,13 @@ object Datasets {
         featureGroups, chosenFeatures, dataset, classifierFactory, numFolds, scoringMetric)).toList
 
       for (gs <- scores) {
-        val group = gs._1
+        val group: String = gs._1
         val score = gs._2
 
         if(score > bestScore) {
           bestScore = score
           bestGroup = group
-          bestFeatures = featureGroups.get(group).get
+          bestFeatures = featureGroups(group)
           logger.debug(s"Iteration #$iteration: found new best group [$bestGroup] with score $bestScore.")
           if(iteration > 1) allBetterChosenGroups += bestGroup
         }
@@ -224,16 +226,16 @@ object Datasets {
 
     val features = Datasets.sortFeaturesByInformativeness(dataset, minFreq).sorted.toArray
     logger.debug("Top 20 most informative features:")
-    for(i <- 0 until math.min(20, features.size)) {
+    for(i <- 0 until math.min(20, features.length)) {
       logger.debug(dataset.featureLexicon.get(features(i)._1) + "\t" + features(i)._2)
     }
 
     var bestScore = Double.MinValue
     var bestCut = 0
 
-    var cut = math.min(step, features.size)
+    var cut = math.min(step, features.length)
     var meatLeftOnTheBone = true
-    while(cut <= features.size && meatLeftOnTheBone) {
+    while(cut <= features.length && meatLeftOnTheBone) {
       val smallDataset = dataset.keepOnly(features.slice(0, cut).map(_._1).toSet)
       val output = crossValidate(smallDataset, classifierFactory, numFolds)
       val score = scoringMetric(output)
@@ -246,10 +248,10 @@ object Datasets {
         meatLeftOnTheBone = false
       }
 
-      cut = math.min(features.size, cut + step)
+      cut = math.min(features.length, cut + step)
     }
 
-    logger.info(s"Cutting features at $bestCut out of ${features.size}.")
+    logger.info(s"Cutting features at $bestCut out of ${features.length}.")
     features.slice(0, bestCut).map(_._1).toSet
   }
 
@@ -271,7 +273,7 @@ object Datasets {
     var meatLeftOnTheBone = true
     for(t <- 1 until 100 if meatLeftOnTheBone) {
       val smallFeats = keepMoreFrequent(features, t)
-      if(smallFeats.size == 0) {
+      if(smallFeats.isEmpty) {
         meatLeftOnTheBone = false
       } else {
         val smallDataset = dataset.keepOnly(smallFeats)
@@ -310,7 +312,7 @@ object Datasets {
                        scoringMetric: (Iterable[(L, L)]) => Double):(String, Double) = {
     val currentFeatures = new mutable.HashSet[Int]()
     currentFeatures ++= chosenFeatures
-    currentFeatures ++= featureGroups.get(group).get
+    currentFeatures ++= featureGroups(group)
 
     val score = scoreFeatures(dataset, currentFeatures, classifierFactory, numFolds, scoringMetric)
 
@@ -345,7 +347,7 @@ object Datasets {
       for(i <- fold.testFold._1 until fold.testFold._2) {
         val sys = classifier.classOf(dataset.mkDatum(i))
         val gold = dataset.labels(i)
-        output += new Tuple2(dataset.labelLexicon.get(gold), sys)
+        output += Tuple2(dataset.labelLexicon.get(gold), sys)
       }
     }
 
@@ -392,7 +394,7 @@ object Datasets {
         rowsWithTerm.incrementCount(f)
         if(! labelsWithTerm.contains(f))
           labelsWithTerm.put(f, new Counter[Int]())
-        labelsWithTerm.get(f).get.incrementCount(l)
+        labelsWithTerm(f).incrementCount(l)
       }
 
       for(nf <- frequentFeatures) {
@@ -400,7 +402,7 @@ object Datasets {
           rowsWithoutTerm.incrementCount(nf)
           if(! labelsWithoutTerm.contains(nf))
             labelsWithoutTerm.put(nf, new Counter[Int]())
-          labelsWithoutTerm.get(nf).get.incrementCount(l)
+          labelsWithoutTerm(nf).incrementCount(l)
         }
       }
 
@@ -415,8 +417,8 @@ object Datasets {
       c.setCount(fi, informationGain(
         rowsWithTerm.getCount(fi),
         rowsWithoutTerm.getCount(fi),
-        labelsWithTerm.get(fi).getOrElse(new Counter[Int]),
-        labelsWithoutTerm.get(fi).getOrElse(new Counter[Int]),
+        labelsWithTerm.getOrElse(fi, new Counter[Int]),
+        labelsWithoutTerm.getOrElse(fi, new Counter[Int]),
         dataset.size,
         dataset.labelLexicon.size))
       fc += 1
@@ -467,9 +469,9 @@ class ScaleRange[F] extends Serializable {
       maxs.setCount(key, v)
   }
 
-  def contains(key:F) = mins.contains(key)
-  def min(key:F) = mins.getCount(key)
-  def max(key:F) = maxs.getCount(key)
+  def contains(key:F): Boolean = mins.contains(key)
+  def min(key:F): Double = mins.getCount(key)
+  def max(key:F): Double = maxs.getCount(key)
 
   def saveTo(w:Writer) {
     mins.saveTo(w)
