@@ -12,13 +12,13 @@ This is the main public code repository of the Computational Language Understand
 	+ `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
 	+ `BioNLPProcessor` - a version of `CoreNLPProcessor` tuned for the biomedical domain: better tokenization for biomedical texts, improved POS tagging for the bio domain, and a custom NER for this domain that recognizes entities relevant in this domain such as proteins, chemical, and biological processes;
 	+ `FastBioNLPProcessor` - a version of `FastNLPProcessor` tuned for the biomedical domain, similarly to `BioNLPProcessor`; 
-	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging (using [Mallet](http://mallet.cs.umass.edu)), and syntax (using [maltparser](http://mallet.cs.umass.edu)), which supports both basic and enhanced dependencies. Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines.
+	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging (using an in-house bidirectional maximum entropy Markov model), and syntax (using an ensemble of models built with [maltparser](http://mallet.cs.umass.edu)), which supports both basic and enhanced dependencies. Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines.
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
 Our code is licensed as follows:
 + **`main, odin, models`** - Apache License Version 2.0. Please note that these subprojects do not interact with the `corenlp` subproject below.
-+ **`corenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/).
++ **`corenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/). If you use `CluProcessor`, this dependency does not have to be included in your project.
 
 (c) Mihai Surdeanu, 2013 -
 
@@ -51,22 +51,22 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-corenlp_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-main_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-models_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-odin_2.11</artifactId>
-   <version>6.0.7</version>
+   <version>6.1.2</version>
 </dependency>
 ```
 
@@ -74,7 +74,7 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= Seq(
-    val procVer = "6.0.7"
+    val procVer = "6.1.2"
 
     "org.clulab" %% "processors-main" % procVer,
     "org.clulab" %% "processors-corenlp" % procVer,
