@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 8/2/17
   */
 class TestEnhancedDependencies extends FlatSpec with Matchers {
-  val proc = new CluProcessor
+  val proc = CluProcessor.mkOpenCluProcessor()
 
   "CluProcessor" should "parse some basic sentences correctly" in {
     var doc = proc.annotate("Ras1 is associated with cancer.")

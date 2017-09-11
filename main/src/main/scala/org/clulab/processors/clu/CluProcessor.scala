@@ -6,26 +6,35 @@ import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
+import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.utils.Configured
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /**
   * Processor that uses only tools that are under Apache License
-  * Currently supports tokenization (in-house), lemmatization (Morpha), POS tagging (based on Mallet), dependency parsing (ensemble of Malt models)
-  * @param internStrings If true, intern strings
+  * Currently supports tokenization (in-house),
+  *   lemmatization (Morpha),
+  *   POS tagging (in-house MEMM),
+  *   dependency parsing (ensemble of Malt models)
   */
-class CluProcessor (val internStrings:Boolean = false) extends Processor {
+class CluProcessor (val config: Config) extends Processor with Configured {
+
+  override def getConf: Config = config
+
+  val internStrings:Boolean = getArgBoolean("CluProcessor.internStrings", Some(false))
 
   lazy val tokenizer: Tokenizer =
     new OpenDomainEnglishTokenizer
 
   lazy val posTagger: PartOfSpeechTagger =
-    PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
+    PartOfSpeechTagger.loadFromResource(getArgString("CluProcessor.posModel", None))
 
   lazy val depParser: Parser =
-    //new MaltWrapper(MaltUtils.DEFAULT_FORWARD_MODEL_NAME, internStrings)
-    new EnsembleMaltParser(MaltUtils.DEFAULT_ENSEMBLE_MODELS)
+    //new MaltWrapper(getArgString("CluProcessor.parseModel", None), internStrings)
+    new EnsembleMaltParser(getArgStrings("CluProcessor.parseModels", None))
 
   override def annotate(doc:Document): Document = {
     // with this processor, we lemmatize first, because this POS tagger uses lemmas as features
@@ -106,7 +115,7 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
   def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val tags = posTagger.classesOf(sent).toArray
+      val tags = posTagger.classesOf(sent)
       sent.tags = Some(tags)
     }
   }
@@ -164,5 +173,20 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
       throw new RuntimeException("ERROR: Document.sentences == null!")
     if (doc.sentences.length != 0 && doc.sentences(0).words == null)
       throw new RuntimeException("ERROR: Sentence.words == null!")
+  }
+  
+}
+
+object CluProcessor {
+  val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
+
+  def mkOpenCluProcessor():CluProcessor = {
+    val config = ConfigFactory.load("cluprocessoropen")
+    new CluProcessor(config)
+  }
+
+  def mkBioCluProcessor():CluProcessor = {
+    val config = ConfigFactory.load("cluprocessorbio")
+    new CluProcessor(config)
   }
 }

@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 7/6/17
   */
 class TestCluPosTagger extends FlatSpec with Matchers {
-  val proc = new CluProcessor
+  val proc = CluProcessor.mkBioCluProcessor()
 
   "CluProcessor" should "POS tag WSJ with an accuracy over 96.9%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/wsj_test.conllx")
