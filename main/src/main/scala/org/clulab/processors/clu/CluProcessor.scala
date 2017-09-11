@@ -7,6 +7,7 @@ import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenize
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
 import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.processors.clu.bio.BioPreProcessor
 import org.clulab.utils.Configured
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -24,7 +25,18 @@ class CluProcessor (val config: Config) extends Processor with Configured {
 
   override def getConf: Config = config
 
+  // should we intern strings or not?
   val internStrings:Boolean = getArgBoolean("CluProcessor.internStrings", Some(false))
+
+  // this class preprocesses the text before any computation happens
+  lazy val preProcessor:Option[PreProcessor] =
+    getArgString("CluProcessor.pre.type", Some("none")) match {
+      case "bio" => Some(new BioPreProcessor(
+        removeFigTabReferences = getArgBoolean("CluProcessor.pre.removeFigTabReferences", Some(true)),
+        removeBibReferences = getArgBoolean("CluProcessor.pre.removeBibReferences", Some(true))))
+      case "none" => None
+      case _ => throw new RuntimeException("ERROR: Unknown argument value for CluProcessor.pre.type!")
+    }
 
   lazy val tokenizer: Tokenizer =
     new OpenDomainEnglishTokenizer
@@ -47,6 +59,11 @@ class CluProcessor (val config: Config) extends Processor with Configured {
     discourse(doc)
     doc.clear()
     doc
+  }
+
+  override def preprocessText(origText:String):String = {
+    if(preProcessor.nonEmpty) preProcessor.get.process(origText)
+    else origText
   }
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
@@ -175,6 +192,10 @@ class CluProcessor (val config: Config) extends Processor with Configured {
       throw new RuntimeException("ERROR: Sentence.words == null!")
   }
   
+}
+
+trait PreProcessor {
+  def process(text:String):String
 }
 
 object CluProcessor {
