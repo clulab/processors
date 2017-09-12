@@ -41,6 +41,10 @@ If you use `CoreNLPProcessor`, please cite Stanford's paper:
 
 Christopher D. Manning, Mihai Surdeanu, John Bauer, Jenny Finkel, Steven J. Bethard, and David McClosky. The Stanford CoreNLP Natural Language Processing Toolkit. In *Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL)*, 2014. [[pdf]](http://surdeanu.info/mihai/papers/acl2014-corenlp.pdf) [[bib]](http://surdeanu.info/mihai/papers/acl2014-corenlp.bib)
 
+If you use `CluProcessor`, please cite this paper:
+
+Mihai Surdeanu and Christopher D. Manning. Ensemble Models for Dependency Parsing: Cheap and Good? In *Proceedings of the North American Chapter of the Association for Computational Linguistics Conference (NAACL-2010)*, 2010. [[pdf]](http://surdeanu.info/mihai/papers/naacl10-parsing.pdf) [[bib]](http://surdeanu.info/mihai/papers/naacl10-parsing-surdeanu.bib)
+
 If you use anything else in this package, please link to this github page.
 
 # Installation
@@ -110,6 +114,7 @@ Alternatively, you can run just the unit tests that do not require external bina
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
 + **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface. We also offer event extraction tools for the biomedical domain.
 + **Rule-based event extraction** - we include Odin, an event extraction framework, which can be customized to various domains.
++ **Apache license** - our `CluProcessor` replicates most functionality of Stanford's CoreNLP (tokenization, POS tagging, dependency parsing, more soon!) under the more permissive Apache license. 
 
 # How to compile the source code
 
@@ -133,7 +138,7 @@ import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.DirectedGraphEdgeIterator
 
 // create the processor
-// any processor works here! Try FastNLPProcessor or BioNLPProcessor.
+// any processor works here! Try FastNLPProcessor, BioNLPProcessor, or our own CluProcessor
 // use no arguments in the c'tor if you don't need the discourse parser
 val proc:Processor = new CoreNLPProcessor(ShallowNLPProcessor.WITH_DISCOURSE) 
 
