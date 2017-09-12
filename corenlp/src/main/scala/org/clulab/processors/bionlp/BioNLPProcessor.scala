@@ -7,6 +7,7 @@ import org.clulab.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
+import org.clulab.processors.clu.bio.BioPreProcessor
 
 import scala.collection.JavaConversions._
 
@@ -30,7 +31,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
   //lazy val banner = new BannerWrapper
   private lazy val specialTokens = KBLoader.loadSpecialTokens
   private lazy val postProcessor = new BioNLPTokenizerPostProcessor(specialTokens)
-  private lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences, removeBibReferences)
+  private lazy val preProcessor = new BioPreProcessor(removeFigTabReferences, removeBibReferences)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
 

@@ -11,6 +11,7 @@ import scala.collection.mutable.ArrayBuffer
 
 /**
  * Post processes CoreNLP tokenization so it suits bio analysis
+ * @param unslashableTokens Some tokens may contain slashes (e.g., protein families); do not tokenize these
  * User: mihais
  * Date: 11/16/14
  */

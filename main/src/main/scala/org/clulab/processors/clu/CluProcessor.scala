@@ -62,7 +62,7 @@ class CluProcessor (val config: Config) extends Processor with Configured {
   }
 
   override def preprocessText(origText:String):String = {
-    if(preProcessor.nonEmpty) preProcessor.get.process(origText)
+    if(preProcessor.nonEmpty) preProcessor.get.preprocess(origText)
     else origText
   }
 
@@ -195,7 +195,7 @@ class CluProcessor (val config: Config) extends Processor with Configured {
 }
 
 trait PreProcessor {
-  def process(text:String):String
+  def preprocess(text:String):String
 }
 
 object CluProcessor {

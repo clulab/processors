@@ -18,6 +18,7 @@ class Eisner(val individualOutputs:Array[DirectedGraph[String]]) {
 
   /**
     * Produces an ensemble parse using the word-by-word voting scheme from Surdeanu et al. (2010)
+    * Note: this works well and fast, but it does not guarantee that the output is a tree
     * @return the DirectedGraph corresponding to the ensemble parse
     */
   def parseVoting(): DirectedGraph[String] = {

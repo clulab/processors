@@ -5,6 +5,7 @@ import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import org.clulab.processors.Document
 import org.clulab.processors.bionlp.ner.{HybridNER, KBLoader}
+import org.clulab.processors.clu.bio.BioPreProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 
@@ -30,7 +31,7 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
   //lazy val banner = new BannerWrapper
   private lazy val specialTokens = KBLoader.loadSpecialTokens
   private lazy val postProcessor = new BioNLPTokenizerPostProcessor(specialTokens)
-  private lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences, removeBibReferences)
+  private lazy val preProcessor = new BioPreProcessor(removeFigTabReferences, removeBibReferences)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
 
