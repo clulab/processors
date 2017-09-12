@@ -49,6 +49,7 @@ class BioTokenizerPostProcessor(val tokensWithValidSlash:Set[String]) {
     tokens = joinSigns(tokens)
 
     tokens
+    
   }
 
   def isSpecialToken(s:String):Boolean = tokensWithValidSlash.contains(s.toLowerCase)
