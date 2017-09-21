@@ -4,9 +4,8 @@ import java.io.File
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.DirectedGraph
-import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService}
+import org.maltparser.concurrent.ConcurrentMaltParserModel
 import org.slf4j.{Logger, LoggerFactory}
-
 import MaltWrapper._
 
 /**
@@ -38,8 +37,6 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
   def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
     val modelURL = MaltWrapper.getClass.getClassLoader.getResource(modelName)
     logger.debug(s"Using modelURL for parsing: $modelURL")
-    //val parserModelName = Utils.getInternalParserModelName(modelURL)
-    //logger.debug(s"parserModelName: $parserModelName")
     ConcurrentMaltParserService.initializeParserModel(modelURL)
   }
 
