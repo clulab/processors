@@ -40,23 +40,32 @@ object EvaluateMalt {
     val sysDeps = new ArrayBuffer[EvalDependency]()
     var done = false
     var count = 0
+    val verbose = false
     logger.info("Beginning parsing...")
     while(! done) {
       val goldTokens = ConcurrentUtils.readSentence(reader)
-      //println("GOLD:")
-      //for(t <- goldTokens) println(t)
+      if(verbose) {
+        println("GOLD:")
+        for (t <- goldTokens) println(t)
+      }
       goldDeps ++= toDeps(goldTokens)
       if(goldTokens.isEmpty) {
         done = true
       } else {
         count += 1
         val inputTokens = ConcurrentUtils.stripGold(goldTokens, 4)
-        // for(t <- inputTokens) println(t)
+        if(verbose) {
+          println("INPUT TOKENS:")
+          for (t <- inputTokens) println(t)
+        }
+
         val outputTokens = maltModel.parseSentenceConllx(inputTokens)
-        //println("SYS:")
-        //for(t <- outputTokens) println(t)
-        //println("\n")
-        //if(count == 2) System.exit(0)
+        if(verbose) {
+          println("SYS:")
+          for (t <- outputTokens) println(t)
+          println("\n")
+        }
+
         sysDeps ++= toDeps(outputTokens)
         if(count % 100 == 0)
           logger.debug(s"Parsed $count sentences...")

@@ -1,12 +1,15 @@
 package org.clulab.processors.clu.syntax
 
-import java.io.InputStreamReader
+import java.io.{FileOutputStream, FileWriter, InputStreamReader}
 import java.net.{JarURLConnection, URL}
 import java.util.jar.{JarEntry, JarFile}
+import java.util.zip.ZipOutputStream
 
 import org.maltparser.core.lw.helper.Utils
 import org.maltparser.core.options.OptionManager
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.Predef.StringFormat
 
 /**
   * This class replicates the org.maltparser.concurrent.ConcurrentMaltParserService class, with additional functionality to solve the jar-in-a-jar problem.
@@ -47,6 +50,10 @@ object ConcurrentMaltParserService {
       // we are already in a jar (we are in code external to processors)
       val path = mcoURL.toString
       assert(path.startsWith("jar:") && path.endsWith(".mco"))
+
+      extractJar(mcoURL)
+
+      println(path); System.exit(1)
       val jarEnd = path.lastIndexOf("!/")
       url = new URL(path.substring(4, jarEnd))
     }
@@ -56,6 +63,27 @@ object ConcurrentMaltParserService {
     OptionManager.instance.loadOptions(optionContainer, stream)
 
     ConcurrentMaltParserModel(optionContainer, url)
+  }
+
+  def extractJar(mcoURL:URL): Unit = {
+
+
+
+    val ir = mcoURL.openConnection().asInstanceOf[JarURLConnection].getInputStream
+
+    val fw = new ZipOutputStream(new FileOutputStream("tmp.mco"))
+    val buf = new Array[Byte](1000)
+    var done = false
+    while(! done) {
+      val num = ir.read(buf, 0, 1000)
+      if(num == -1) {
+        done = true
+      } else {
+        fw.write(buf, 0, num)
+      }
+    }
+    fw.close()
+    ir.close()
   }
 
   def getInputStreamReaderFromConfigFileEntry(
@@ -70,13 +98,13 @@ object ConcurrentMaltParserService {
   }
 
   def getConfigJarfile(mcoURL: URL): JarFile = {
-    val conn = new URL("jar:" + mcoURL.toString() + "!/").openConnection().asInstanceOf[JarURLConnection]
+    val conn = new URL("jar:" + mcoURL.toString + "!/").openConnection().asInstanceOf[JarURLConnection]
     conn.getJarFile
   }
 
   def getConfigFileEntry(mcoJarFile: JarFile, mcoName: String, fileName: String): JarEntry = {
     var entry = mcoJarFile.getJarEntry(mcoName + '/' + fileName)
-    if(entry == null) entry = mcoJarFile.getJarEntry(mcoName + '\\' + fileName)
+    // if(entry == null) entry = mcoJarFile.getJarEntry(mcoName + '\\' + fileName)
     entry
   }
 }

@@ -24,8 +24,8 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
 
   lazy val depParser: Parser =
-    //new MaltWrapper(MaltUtils.DEFAULT_FORWARD_MODEL_NAME, internStrings)
-    new EnsembleMaltParser(MaltUtils.DEFAULT_ENSEMBLE_MODELS)
+    new MaltWrapper(MaltUtils.DEFAULT_FORWARD_MODEL_NAME, internStrings)
+    //new EnsembleMaltParser(MaltUtils.DEFAULT_ENSEMBLE_MODELS)
 
   override def annotate(doc:Document): Document = {
     // with this processor, we lemmatize first, because this POS tagger uses lemmas as features
