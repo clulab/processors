@@ -42,17 +42,17 @@ object ConcurrentMaltParserService {
     val parserModelName = Utils.getInternalParserModelName(mcoURL)
     OptionManager.instance.parseCommandLine("-m parse", optionContainer)
 
-    var addJarPrefix = true
     var url = mcoURL
-    if(! mcoURL.toString.startsWith("file:")) {
-      addJarPrefix = false
+    if(mcoURL.toString.startsWith("jar:")) {
+      // we are already in a jar (we are in code external to processors)
       val path = mcoURL.toString
       assert(path.startsWith("jar:") && path.endsWith(".mco"))
-      url = new URL(path.substring(0, path.length - 4) + "/")
+      val jarEnd = path.lastIndexOf("!/")
+      url = new URL(path.substring(4, jarEnd))
     }
 
-    logger.debug(s"Actual model URL used: $url")
-    val stream = getInputStreamReaderFromConfigFileEntry(url, parserModelName, "savedoptions.sop", "UTF-8", addJarPrefix)
+    logger.debug(s"Using model URL: $url for parsing model: $parserModelName")
+    val stream = getInputStreamReaderFromConfigFileEntry(url, parserModelName, "savedoptions.sop", "UTF-8")
     OptionManager.instance.loadOptions(optionContainer, stream)
 
     ConcurrentMaltParserModel(optionContainer, url)
@@ -62,24 +62,19 @@ object ConcurrentMaltParserService {
     mcoURL: URL,
     mcoName: String,
     fileName: String,
-    charSet: String,
-    addJarPrefix:Boolean): InputStreamReader = {
-    val mcoJarFile = getConfigJarfile(mcoURL, addJarPrefix)
+    charSet: String): InputStreamReader = {
+    val mcoJarFile = getConfigJarfile(mcoURL)
     val entry = getConfigFileEntry(mcoJarFile, mcoName, fileName)
-    logger.debug(s"getConfigFileEntry: ${entry.toString}")
     val stream = mcoJarFile.getInputStream(entry)
     new InputStreamReader(stream, charSet)
   }
 
-  def getConfigJarfile(mcoURL: URL, addJarPrefix:Boolean): JarFile = {
-    val conn =
-      if(addJarPrefix) new URL("jar:" + mcoURL.toString() + "!/").openConnection().asInstanceOf[JarURLConnection]
-      else mcoURL.openConnection().asInstanceOf[JarURLConnection]
+  def getConfigJarfile(mcoURL: URL): JarFile = {
+    val conn = new URL("jar:" + mcoURL.toString() + "!/").openConnection().asInstanceOf[JarURLConnection]
     conn.getJarFile
   }
 
   def getConfigFileEntry(mcoJarFile: JarFile, mcoName: String, fileName: String): JarEntry = {
-    logger.debug(s"Looking for file ${mcoName + '/' + fileName}")
     var entry = mcoJarFile.getJarEntry(mcoName + '/' + fileName)
     if(entry == null) entry = mcoJarFile.getJarEntry(mcoName + '\\' + fileName)
     entry

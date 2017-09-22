@@ -35,7 +35,6 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
 
   def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
     val modelURL = MaltWrapper.getClass.getClassLoader.getResource(modelName)
-    logger.debug(s"Using modelURL for parsing: $modelURL")
     ConcurrentMaltParserService.initializeParserModel(modelURL)
   }
 
