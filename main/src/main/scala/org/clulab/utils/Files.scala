@@ -76,4 +76,29 @@ object Files {
 
     files.toList
   }
+
+  /**
+    * Extracts a file stored inside a jar
+    * @param jarFileName The name of the jar file
+    * @param entryName The name of the file to be extracted
+    * @param outFileName The extracted file will be saved here
+    */
+  def extractEntry(jarFileName:String, entryName:String, outFileName:String, bufSize:Int = 32768): Unit = {
+    val jar = new java.util.jar.JarFile(jarFileName)
+    val entry = jar.getEntry(entryName)
+    val is = jar.getInputStream(entry)
+    val fos = new FileOutputStream(outFileName)
+    val buffer = new Array[Byte](bufSize)
+    var done = false
+    while(! done) {
+      val num = is.read(buffer, 0, bufSize)
+      if(num > 0) {
+        fos.write(buffer, 0, num)
+      } else {
+        done = true
+      }
+    }
+    fos.close()
+    is.close()
+  }
 }

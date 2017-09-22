@@ -1,11 +1,14 @@
 package org.clulab.processors.clu.syntax
 
 import java.io.File
+import java.net.URL
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.DirectedGraph
 import org.slf4j.{Logger, LoggerFactory}
-import MaltWrapper._
+import org.clulab.utils.Files
+import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService}
+import org.maltparser.core.lw.helper.Utils
 
 /**
   * A thin wrapper over the Malt parser
@@ -35,7 +38,25 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
 
   def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
     val modelURL = MaltWrapper.getClass.getClassLoader.getResource(modelName)
-    ConcurrentMaltParserService.initializeParserModel(modelURL)
+    val parserModelName = Utils.getInternalParserModelName(modelURL)
+    val path = modelURL.toString
+
+    var url = modelURL
+    if(path.startsWith("jar:")) {
+      // we are already in a jar (we are in code external to processors)
+      // extract the .mco models from this jar and store them on disk 
+      assert(path.startsWith("jar:file:") && path.endsWith(".mco"))
+      val jarEnd = path.lastIndexOf("!/")
+      val jarFileName = path.substring(9, jarEnd)
+      val entryName = path.substring(jarEnd + 2)
+      //println("JAR file: " + jarFileName)
+      //println("Entry name: " + entryName)
+
+      Files.extractEntry(jarFileName, entryName, parserModelName + ".mco")
+      url = new URL("file:" + parserModelName + ".mco")
+    }
+
+    ConcurrentMaltParserService.initializeParserModel(url)
   }
 
   /** Parses one sentence and creates the dependency graph for the resulting dependencies */
