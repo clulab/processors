@@ -13,7 +13,7 @@ import scala.collection.mutable.ListBuffer
 object Files {
   val TEMP_DIR_ATTEMPTS = 100
 
-  def mkTmpDir(prefix:String, deleteOnExit:Boolean):String = {
+  def mkTmpDir(prefix:String, deleteOnExit:Boolean = true):String = {
     val baseDir = new File(System.getProperty("java.io.tmpdir"))
 
     // to minimize collisions, the dir name contains the time and the thread id
@@ -83,7 +83,8 @@ object Files {
     * @param entryName The name of the file to be extracted
     * @param outFileName The extracted file will be saved here
     */
-  def extractEntry(jarFileName:String, entryName:String, outFileName:String, bufSize:Int = 131072): Unit = {
+  def extractEntry(jarFileName:String, entryName:String, outFileName:String,
+                   deleteOnExit:Boolean = true, bufSize:Int = 131072): Unit = {
     val jar = new java.util.jar.JarFile(jarFileName)
     val entry = jar.getEntry(entryName)
     val is = jar.getInputStream(entry)
@@ -100,5 +101,8 @@ object Files {
     }
     fos.close()
     is.close()
+
+    if(deleteOnExit)
+      new File(outFileName).deleteOnExit()
   }
 }

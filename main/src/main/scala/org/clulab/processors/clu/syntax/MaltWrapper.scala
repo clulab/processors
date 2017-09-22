@@ -56,7 +56,7 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
 
       val tmpDir = Files.mkTmpDir("processors", deleteOnExit = true)
       val outFile = s"$tmpDir/$parserModelName.mco"
-      Files.extractEntry(jarFileName, entryName, outFile)
+      Files.extractEntry(jarFileName, entryName, outFile, deleteOnExit = true)
       url = new URL(s"file:$outFile")
     }
 
