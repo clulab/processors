@@ -9,8 +9,6 @@ import org.maltparser.core.lw.helper.Utils
 import org.maltparser.core.options.OptionManager
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.Predef.StringFormat
-
 /**
   * This class replicates the org.maltparser.concurrent.ConcurrentMaltParserService class, with additional functionality to solve the jar-in-a-jar problem.
   * This code may need to be updated whenever there is a version change in maltparser
@@ -50,11 +48,16 @@ object ConcurrentMaltParserService {
       // we are already in a jar (we are in code external to processors)
       val path = mcoURL.toString
       assert(path.startsWith("jar:") && path.endsWith(".mco"))
+      val jarEnd = path.lastIndexOf("!/")
+      val jarFileName = path.substring(9, jarEnd)
+      val entryName = path.substring(jarEnd + 2)
+      println("JAR file: " + jarFileName)
+      println("Entry name: " + entryName)
 
-      extractJar(mcoURL)
+      extractEntry(jarFileName, entryName, parserModelName + ".mco")
+      // extractJar(mcoURL)
 
       println(path); System.exit(1)
-      val jarEnd = path.lastIndexOf("!/")
       url = new URL(path.substring(4, jarEnd))
     }
 
@@ -65,9 +68,39 @@ object ConcurrentMaltParserService {
     ConcurrentMaltParserModel(optionContainer, url)
   }
 
+  def extractEntry(jarFileName:String, entryName:String, outFileName:String): Unit = {
+    val jar = new java.util.jar.JarFile(jarFileName)
+    val entry = jar.getEntry(entryName)
+    if(entry != null) println("FOUND ENTRY!")
+    val is = jar.getInputStream(entry)
+    val fos = new FileOutputStream(outFileName)
+    val buffer = new Array[Byte](16000)
+    var done = false
+    while(! done) {
+      val num = is.read(buffer, 0, 16000)
+      if(num > 0) {
+        fos.write(buffer, 0, num)
+      } else {
+        done = true
+      }
+    }
+    fos.close()
+    is.close()
+  }
+
+  /*
   def extractJar(mcoURL:URL): Unit = {
 
-    /*
+    val path = mcoURL.toString
+    assert(path.startsWith("jar:file:"))
+    var jarEnd = path.lastIndexOf("!/")
+    val jarFileName = path.substring(9, jarEnd)
+    val entryName = path.substring(jarEnd + 2)
+
+    println("JAR file: " + jarFileName)
+    println("Entry name: " + entryName)
+
+    //
     java.util.jar.JarFile jar = new java.util.jar.JarFile(jarFile);
     java.util.Enumeration enumEntries = jar.entries();
     while (enumEntries.hasMoreElements()) {
@@ -86,7 +119,7 @@ object ConcurrentMaltParserService {
       is.close();
     }
     jar.close();
-    */
+    //
 
     val ir = mcoURL.openConnection().asInstanceOf[JarURLConnection].getInputStream
 
@@ -104,6 +137,7 @@ object ConcurrentMaltParserService {
     fw.close()
     ir.close()
   }
+  */
 
   def getInputStreamReaderFromConfigFileEntry(
     mcoURL: URL,
