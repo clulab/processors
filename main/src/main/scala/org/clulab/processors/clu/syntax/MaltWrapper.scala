@@ -10,6 +10,8 @@ import org.clulab.utils.Files
 import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService}
 import org.maltparser.core.lw.helper.Utils
 
+import MaltWrapper._
+
 /**
   * A thin wrapper over the Malt parser
   * Works for both left-to-right and right-to-left parsing
@@ -44,7 +46,7 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     var url = modelURL
     if(path.startsWith("jar:")) {
       // we are already in a jar (we are in code external to processors)
-      // extract the .mco models from this jar and store them on disk 
+      // extract the .mco models from this jar and store them on disk
       assert(path.startsWith("jar:file:") && path.endsWith(".mco"))
       val jarEnd = path.lastIndexOf("!/")
       val jarFileName = path.substring(9, jarEnd)
@@ -52,10 +54,13 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
       //println("JAR file: " + jarFileName)
       //println("Entry name: " + entryName)
 
-      Files.extractEntry(jarFileName, entryName, parserModelName + ".mco")
-      url = new URL("file:" + parserModelName + ".mco")
+      val tmpDir = Files.mkTmpDir("processors", deleteOnExit = true)
+      val outFile = s"$tmpDir/$parserModelName.mco"
+      Files.extractEntry(jarFileName, entryName, outFile)
+      url = new URL(s"file:$outFile")
     }
 
+    logger.debug(s"Using modelURL for parsing model $parserModelName: $url")
     ConcurrentMaltParserService.initializeParserModel(url)
   }
 

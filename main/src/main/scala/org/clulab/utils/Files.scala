@@ -30,10 +30,10 @@ object Files {
 
     throw new IllegalStateException("ERROR: Failed to create directory within "
       + TEMP_DIR_ATTEMPTS + " attempts (tried "
-      + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')');
+      + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')')
   }
 
-  val FILE_CHARSET = Charset.forName("ISO-8859-1")
+  val FILE_CHARSET: Charset = Charset.forName("ISO-8859-1")
 
   def toPrintWriter(w:Writer):PrintWriter = {
     w match {
@@ -83,7 +83,7 @@ object Files {
     * @param entryName The name of the file to be extracted
     * @param outFileName The extracted file will be saved here
     */
-  def extractEntry(jarFileName:String, entryName:String, outFileName:String, bufSize:Int = 32768): Unit = {
+  def extractEntry(jarFileName:String, entryName:String, outFileName:String, bufSize:Int = 131072): Unit = {
     val jar = new java.util.jar.JarFile(jarFileName)
     val entry = jar.getEntry(entryName)
     val is = jar.getInputStream(entry)
