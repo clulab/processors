@@ -1,9 +1,20 @@
 package org.clulab.processors.clu.syntax
 
+import java.net.URL
+
+import org.maltparser.concurrent.graph.ConcurrentDependencyGraph
 import org.maltparser.concurrent.graph.dataformat.DataFormat
-import org.maltparser.core.io.dataformat.DataFormatInstance
+import org.maltparser.core.exception.MaltChainedException
+import org.maltparser.core.feature.FeatureModelManager
+import org.maltparser.core.feature.system.FeatureEngine
+import org.maltparser.core.io.dataformat.{DataFormatInstance, DataFormatManager}
+import org.maltparser.core.lw.graph.{LWDependencyGraph, LWDeprojectivizer}
 import org.maltparser.core.lw.parser.{LWSingleMalt, McoModel}
+import org.maltparser.core.options.OptionManager
+import org.maltparser.core.plugin.PluginLoader
 import org.maltparser.core.symbol.SymbolTableHandler
+import org.maltparser.core.symbol.hash.HashSymbolTableHandler
+import org.maltparser.core.symbol.parse.ParseSymbolTableHandler
 
 /**
   * This class replicates the org.maltparser.concurrent.ConcurrentMaltParserModel class, which is needed by our local ConcurrentMaltParserService.
@@ -14,93 +25,77 @@ class ConcurrentMaltParserModel {
   private var concurrentDataFormat:DataFormat = null
   private var parentSymbolTableHandler:SymbolTableHandler = null
   private var singleMalt:LWSingleMalt = null
-  private val optionContainer:Int = 0
+  private var optionContainer:Int = 0
   private var mcoModel:McoModel = null
   private var markingStrategy:Int = 0
   private var coveredRoot:Boolean = false
   private var defaultRootLabel:String = null
 
+  def parse(tokens: Array[String]): ConcurrentDependencyGraph = {
+    new ConcurrentDependencyGraph(concurrentDataFormat, internalParse(tokens), defaultRootLabel)
+  }
 
-}
+  def parseTokens(tokens: Array[String]): Array[String] = {
+    val outputGraph = internalParse(tokens)
+    val outputTokens = new Array[String](tokens.length)
+    for(i <- outputTokens.indices) {
+      outputTokens(i) = outputGraph.getDependencyNode(i+1).toString
+    }
+    outputTokens
+  }
 
-  /*
-protected ConcurrentMaltParserModel(int _optionContainer, URL _mcoURL) throws MaltChainedException {
-  this.optionContainer = _optionContainer;
-  this.mcoModel = new McoModel(_mcoURL);
-  String inputFormatName = OptionManager.instance().getOptionValue(optionContainer, "input", "format").toString().trim();
-  URL inputFormatURL = null;
-  try {
-  inputFormatURL = mcoModel.getMcoEntryURL(inputFormatName);
-} catch(IOException e) {
-  throw new MaltChainedException("Couldn't read file "+inputFormatName+" from mco-file ", e);
-}
-  DataFormatManager dataFormatManager = new DataFormatManager(inputFormatURL, inputFormatURL);
-  this.parentSymbolTableHandler = new HashSymbolTableHandler();
-  this.dataFormatInstance = dataFormatManager.getInputDataFormatSpec().createDataFormatInstance(this.parentSymbolTableHandler, OptionManager.instance().getOptionValueString(optionContainer, "singlemalt", "null_value"));
-  try {
-  this.parentSymbolTableHandler.load(mcoModel.getInputStreamReader("symboltables.sym", "UTF-8"));
-} catch(IOException e) {
-  throw new MaltChainedException("Couldn't read file symboltables.sym from mco-file ", e);
-}
-  this.defaultRootLabel = OptionManager.instance().getOptionValue(optionContainer, "graph", "root_label").toString().trim();
-  this.markingStrategy = LWDeprojectivizer.getMarkingStrategyInt(OptionManager.instance().getOptionValue(optionContainer, "pproj", "marking_strategy").toString().trim());
-  this.coveredRoot = !OptionManager.instance().getOptionValue(optionContainer, "pproj", "covered_root").toString().trim().equalsIgnoreCase("none");
-  //		final PropagationManager propagationManager = loadPropagationManager(this.optionContainer, mcoModel);
-  final FeatureModelManager featureModelManager = loadFeatureModelManager(this.optionContainer, mcoModel);
-  this.singleMalt = new LWSingleMalt(this.optionContainer, this.dataFormatInstance, mcoModel, null, featureModelManager);
-  this.concurrentDataFormat = DataFormat.parseDataFormatXMLfile(inputFormatURL);
-}
+  private def internalParse(tokens: Array[String]): LWDependencyGraph = {
+    if(tokens == null || tokens.length == 0)
+      throw new MaltChainedException("Nothing to parse.")
 
-  public ConcurrentDependencyGraph parse(String[] tokens) throws MaltChainedException {
-  return new ConcurrentDependencyGraph(concurrentDataFormat, internalParse(tokens), defaultRootLabel);
+    val parseGraph = new LWDependencyGraph(concurrentDataFormat,
+      new ParseSymbolTableHandler(parentSymbolTableHandler), tokens, defaultRootLabel, false)
+
+    singleMalt.parse(parseGraph)
+    
+    if (markingStrategy != 0 || coveredRoot) {
+      new LWDeprojectivizer().deprojectivize(parseGraph, markingStrategy)
+    }
+
+    parseGraph
+  }
 }
 
-  public String[] parseTokens(String[] tokens) throws MaltChainedException {
-  LWDependencyGraph outputGraph = internalParse(tokens);
-  String[] outputTokens = new String[tokens.length];
-  for (int i = 0; i < outputTokens.length; i++) {
-  outputTokens[i] = outputGraph.getDependencyNode(i+1).toString();
-}
-  return outputTokens;
-}
+object ConcurrentMaltParserModel {
+  def apply(_optionContainer:Int, _mcoURL:URL): ConcurrentMaltParserModel = {
+    val m = new ConcurrentMaltParserModel()
+    m.optionContainer = _optionContainer
+    m.mcoModel = new McoModel(_mcoURL)
+    val inputFormatName = OptionManager.instance().getOptionValue(m.optionContainer, "input", "format").toString.trim
+    val inputFormatURL:URL = m.mcoModel.getMcoEntryURL(inputFormatName)
+    val dataFormatManager = new DataFormatManager(inputFormatURL, inputFormatURL)
+    m.parentSymbolTableHandler = new HashSymbolTableHandler()
+    m.dataFormatInstance = dataFormatManager.getInputDataFormatSpec.createDataFormatInstance(
+      m.parentSymbolTableHandler,
+      OptionManager.instance().getOptionValueString(m.optionContainer, "singlemalt", "null_value"))
+    m.parentSymbolTableHandler.load(m.mcoModel.getInputStreamReader("symboltables.sym", "UTF-8"))
+    m.defaultRootLabel = OptionManager.instance().getOptionValue(m.optionContainer, "graph", "root_label").toString.trim
+    m.markingStrategy = LWDeprojectivizer.getMarkingStrategyInt(OptionManager.instance().getOptionValue(m.optionContainer, "pproj", "marking_strategy").toString.trim)
+    m.coveredRoot = !OptionManager.instance().getOptionValue(m.optionContainer, "pproj", "covered_root").toString.trim.equalsIgnoreCase("none")
+    val featureModelManager = loadFeatureModelManager(m.optionContainer, m.mcoModel)
+    m.singleMalt = new LWSingleMalt(m.optionContainer, m.dataFormatInstance, m.mcoModel, null, featureModelManager)
+    m.concurrentDataFormat = DataFormat.parseDataFormatXMLfile(inputFormatURL)
+    m
+  }
 
-  private LWDependencyGraph internalParse(String[] tokens) throws MaltChainedException {
-  if (tokens == null || tokens.length == 0) {
-  throw new MaltChainedException("Nothing to parse. ");
+  private def loadFeatureModelManager(optionContainer:Int, mcoModel:McoModel): FeatureModelManager = {
+    val system = new FeatureEngine
+    system.load("/appdata/features/ParserFeatureSystem.xml")
+    system.load(PluginLoader.instance())
+    val featureModelManager = new FeatureModelManager(system)
+    val featureModelFileName = OptionManager.instance().getOptionValue(optionContainer, "guide", "features").toString.trim
+    if (featureModelFileName.endsWith(".par")) {
+      val markingStrategy = OptionManager.instance().getOptionValue(optionContainer, "pproj", "marking_strategy").toString.trim
+      val coveredRoot = OptionManager.instance().getOptionValue(optionContainer, "pproj", "covered_root").toString.trim
+      featureModelManager.loadParSpecification(mcoModel.getMcoEntryURL(featureModelFileName), markingStrategy, coveredRoot)
+    } else {
+      featureModelManager.loadSpecification(mcoModel.getMcoEntryURL(featureModelFileName))
+    }
+    featureModelManager
+  }
 }
-
-  LWDependencyGraph parseGraph = new LWDependencyGraph(concurrentDataFormat, new ParseSymbolTableHandler(parentSymbolTableHandler), tokens, defaultRootLabel, false);
-
-  singleMalt.parse(parseGraph);
-  if (markingStrategy != 0 || coveredRoot) {
-  new LWDeprojectivizer().deprojectivize(parseGraph, markingStrategy);
-}
-
-  return parseGraph;
-}
-
-  public List<String[]> parseSentences(List<String[]> inputSentences) throws MaltChainedException {
-  return singleMalt.parseSentences(inputSentences, defaultRootLabel, markingStrategy, coveredRoot, parentSymbolTableHandler, concurrentDataFormat);
-}
-
-
-  private FeatureModelManager loadFeatureModelManager(int optionContainer, McoModel mcoModel) throws MaltChainedException {
-  final FeatureEngine system = new FeatureEngine();
-  system.load("/appdata/features/ParserFeatureSystem.xml");
-  system.load(PluginLoader.instance());
-  FeatureModelManager featureModelManager = new FeatureModelManager(system);
-  String featureModelFileName = OptionManager.instance().getOptionValue(optionContainer, "guide", "features").toString().trim();
-  try {
-  if (featureModelFileName.endsWith(".par")) {
-  String markingStrategy = OptionManager.instance().getOptionValue(optionContainer, "pproj", "marking_strategy").toString().trim();
-  String coveredRoot = OptionManager.instance().getOptionValue(optionContainer, "pproj", "covered_root").toString().trim();
-  featureModelManager.loadParSpecification(mcoModel.getMcoEntryURL(featureModelFileName), markingStrategy, coveredRoot);
-} else {
-  featureModelManager.loadSpecification(mcoModel.getMcoEntryURL(featureModelFileName));
-}
-} catch(IOException e) {
-  throw new MaltChainedException("Couldn't read file "+featureModelFileName+" from mco-file ", e);
-}
-  return featureModelManager;
-}
-  */

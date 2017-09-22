@@ -4,7 +4,6 @@ import java.io.File
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.DirectedGraph
-import org.maltparser.concurrent.ConcurrentMaltParserModel
 import org.slf4j.{Logger, LoggerFactory}
 import MaltWrapper._
 

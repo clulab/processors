@@ -2,7 +2,7 @@ package org.clulab.processors.clu.syntax
 
 import java.io.{BufferedReader, File, FileReader}
 
-import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService, ConcurrentUtils}
+import org.maltparser.concurrent.ConcurrentUtils
 import org.maltparser.core.lw.helper.Utils
 import org.slf4j.LoggerFactory
 
