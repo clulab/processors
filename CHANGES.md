@@ -1,4 +1,5 @@
 # Changes
++ **6.1.3** - Bug fix: fixed model loading for the maltparser models, which were not loading properly from the processors-models jar.
 + **6.1.2** - Update to use Bioresources 1.1.24 which includes the Harvard BioEntities updates of 8/22/2017.
 + **6.1.2** - Bug fix: made Counter.keySet efficient (again). This severely affected the performance of the discourse parser, which was extremely slow.
 + **6.1.2** - Replaced the CRF model based on Mallet with an in-house BiMEMM model. Performance is 97% on WSJ and 98% on Genia.
