@@ -2,7 +2,6 @@ package org.clulab.processors.clu.syntax
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.DirectedGraph
-import org.maltparser.concurrent.ConcurrentMaltParserModel
 
 /**
   * Generic interface for a syntactic dependency parser

@@ -13,7 +13,7 @@ import scala.collection.mutable.ListBuffer
 object Files {
   val TEMP_DIR_ATTEMPTS = 100
 
-  def mkTmpDir(prefix:String, deleteOnExit:Boolean):String = {
+  def mkTmpDir(prefix:String, deleteOnExit:Boolean = true):String = {
     val baseDir = new File(System.getProperty("java.io.tmpdir"))
 
     // to minimize collisions, the dir name contains the time and the thread id
@@ -30,10 +30,10 @@ object Files {
 
     throw new IllegalStateException("ERROR: Failed to create directory within "
       + TEMP_DIR_ATTEMPTS + " attempts (tried "
-      + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')');
+      + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')')
   }
 
-  val FILE_CHARSET = Charset.forName("ISO-8859-1")
+  val FILE_CHARSET: Charset = Charset.forName("ISO-8859-1")
 
   def toPrintWriter(w:Writer):PrintWriter = {
     w match {
@@ -75,5 +75,34 @@ object Files {
     }
 
     files.toList
+  }
+
+  /**
+    * Extracts a file stored inside a jar
+    * @param jarFileName The name of the jar file
+    * @param entryName The name of the file to be extracted
+    * @param outFileName The extracted file will be saved here
+    */
+  def extractEntry(jarFileName:String, entryName:String, outFileName:String,
+                   deleteOnExit:Boolean = true, bufSize:Int = 131072): Unit = {
+    val jar = new java.util.jar.JarFile(jarFileName)
+    val entry = jar.getEntry(entryName)
+    val is = jar.getInputStream(entry)
+    val fos = new FileOutputStream(outFileName)
+    val buffer = new Array[Byte](bufSize)
+    var done = false
+    while(! done) {
+      val num = is.read(buffer, 0, bufSize)
+      if(num > 0) {
+        fos.write(buffer, 0, num)
+      } else {
+        done = true
+      }
+    }
+    fos.close()
+    is.close()
+
+    if(deleteOnExit)
+      new File(outFileName).deleteOnExit()
   }
 }
