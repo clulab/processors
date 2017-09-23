@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BioCluProcessor
 import org.clulab.sequences.{ColumnsToDocument, SequenceTaggerEvaluator}
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 7/6/17
   */
 class TestCluPosTagger extends FlatSpec with Matchers {
-  val proc = CluProcessor.mkBioCluProcessor()
+  val proc = new BioCluProcessor()
 
   "CluProcessor" should "POS tag WSJ with an accuracy over 96.9%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/wsj_test.conllx")

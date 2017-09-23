@@ -21,7 +21,7 @@ object ColumnsToDocument {
   val WORD_POS_CONLLX = 1
   val TAG_POS_CONLLX = 4
 
-  val proc = CluProcessor.mkOpenCluProcessor()
+  val proc = new CluProcessor()
 
   def readFromFile(fn:String, wordPos:Int = WORD_POS_CONLLX, tagPos:Int = TAG_POS_CONLLX): Document = {
     val source = io.Source.fromFile(fn)

@@ -7,7 +7,7 @@ import org.clulab.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
-import org.clulab.processors.clu.bio.BioPreProcessor
+import org.clulab.processors.clu.bio.BioTokenizerPreProcessor
 
 import scala.collection.JavaConversions._
 
@@ -29,9 +29,8 @@ class BioNLPProcessor (internStrings:Boolean = false,
   extends CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength) {
 
   //lazy val banner = new BannerWrapper
-  private lazy val specialTokens = KBLoader.loadSpecialTokens
-  private lazy val postProcessor = new BioNLPTokenizerPostProcessor(specialTokens)
-  private lazy val preProcessor = new BioPreProcessor(removeFigTabReferences, removeBibReferences)
+  private lazy val postProcessor = new BioNLPTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)
+  private lazy val preProcessor = new BioTokenizerPreProcessor(removeFigTabReferences, removeBibReferences)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
 
@@ -41,7 +40,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
 
   override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = postProcessor.process(originalTokens)
 
-  override def preprocessText(origText:String):String = preProcessor.preprocess(origText)
+  override def preprocessText(origText:String):String = preProcessor.process(origText)
 
   override def resolveCoreference(doc:Document): Unit = {
     doc.coreferenceChains = None

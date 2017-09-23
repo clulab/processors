@@ -4,6 +4,7 @@ import org.clulab.struct.{DirectedGraph, GraphMap, Tree}
 import org.clulab.struct.GraphMap._
 import org.clulab.utils.SeqUtils
 
+import scala.collection.immutable.Range
 import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
 
@@ -34,6 +35,8 @@ class Sentence(
   var graphs: GraphMap = new GraphMap
 
   def size:Int = words.length
+
+  def indices: Range = 0 until size
 
   /**
     * Used to compare Sentences.

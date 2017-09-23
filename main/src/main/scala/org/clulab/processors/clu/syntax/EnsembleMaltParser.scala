@@ -37,7 +37,7 @@ class EnsembleMaltParser(val modelPaths:Seq[String], val internStrings:Boolean =
       parses += MaltUtils.conllxToDirectedGraph(parse, internStrings)
     }
 
-    val eisner = new Eisner(parses.toArray)
+    val eisner = new EnsembleModel(parses.toArray)
     eisner.parse()
   }
 

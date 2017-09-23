@@ -12,7 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
   */
 class TestTokenizers extends FlatSpec with Matchers {
   val shallow = new ShallowNLPProcessor(internStrings = false)
-  val clu = CluProcessor.mkOpenCluProcessor()
+  val clu = new CluProcessor()
 
   "tokenizers" should "have similar outputs" in {
     val text =

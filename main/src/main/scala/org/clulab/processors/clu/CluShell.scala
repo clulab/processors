@@ -29,7 +29,7 @@ object CluShell {
     val reader = new ConsoleReader
     reader.setHistory(history)
 
-    lazy val proc = CluProcessor.mkOpenCluProcessor()
+    lazy val proc = new CluProcessor()
     reader.setPrompt("(clu)>>> ")
     println("\nWelcome to the ProcessorShell!")
     printCommands()

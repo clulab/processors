@@ -3,8 +3,8 @@ package org.clulab.processors.clu.bio
 import java.io.{BufferedReader, InputStreamReader}
 import java.util.regex.Pattern
 
-import org.clulab.processors.clu.PreProcessor
-import org.clulab.processors.clu.bio.BioPreProcessor._
+import org.clulab.processors.clu.TokenizerPreProcessor
+import org.clulab.processors.clu.bio.BioTokenizerPreProcessor._
 
 import scala.collection.mutable
 
@@ -13,10 +13,10 @@ import scala.collection.mutable
   * User: mihais
   * Date: 9/10/17
   */
-class BioPreProcessor(removeFigTabReferences:Boolean, removeBibReferences:Boolean) extends PreProcessor {
+class BioTokenizerPreProcessor(removeFigTabReferences:Boolean, removeBibReferences:Boolean) extends TokenizerPreProcessor {
   val unicodes:Map[Char, String] = loadUnicodes
 
-  override def preprocess(origText: String): String = {
+  override def process(origText: String): String = {
     val textWithoutUnicode = replaceUnicodeWithAscii(origText)
     val textWithoutBibRefs = removeBibRefs(textWithoutUnicode)
     val textWithoutFigRefs = removeFigureAndTableReferences(textWithoutBibRefs)
@@ -103,7 +103,7 @@ class BioPreProcessor(removeFigTabReferences:Boolean, removeBibReferences:Boolea
   }
 }
 
-object BioPreProcessor {
+object BioTokenizerPreProcessor {
   /** Match a single text string bounded by non-nested parentheses. */
   val MATCHED_PARENS_NON_NESTED: Pattern = Pattern.compile("""\([^()]*\)""")
 

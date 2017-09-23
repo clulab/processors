@@ -2,6 +2,7 @@ package org.clulab.utils
 
 import java.io._
 import java.nio.charset.Charset
+import java.util.zip.GZIPInputStream
 
 import scala.collection.mutable.ListBuffer
 
@@ -104,5 +105,20 @@ object Files {
 
     if(deleteOnExit)
       new File(outFileName).deleteOnExit()
+  }
+
+  /** Creates a BufferedReader for this path in our $CLASSPATH */
+  def loadStreamFromClasspath(path: String):BufferedReader = {
+    val is = getClass.getClassLoader.getResourceAsStream(path)
+    if (is == null) throw new RuntimeException(s"ERROR: cannot find resource $path in classpath!")
+
+    if (path.endsWith(".gz"))
+      new BufferedReader(
+        new InputStreamReader(
+          new GZIPInputStream(new BufferedInputStream(is))))
+    else
+      new BufferedReader(
+        new InputStreamReader(
+          new BufferedInputStream(is)))
   }
 }

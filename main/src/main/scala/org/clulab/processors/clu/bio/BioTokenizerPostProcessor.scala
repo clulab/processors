@@ -4,16 +4,22 @@ import java.util.regex.Pattern
 
 import scala.collection.mutable.ArrayBuffer
 import BioTokenizerPostProcessor._
+import org.clulab.processors.clu.TokenizerPostProcessor
 import org.clulab.struct.MutableNumber
+import org.clulab.utils.Files._
+
+import scala.collection.mutable
 
 /**
   * Processes tokenization so it suits bio analysis
   *
-  * @param tokensWithValidSlash Some tokens may contain slashes (e.g., protein families); do not tokenize these
+  * @param kbsWithTokensWithValidSlashes Some tokens in these KBs may contain slashes (e.g., protein families); do not tokenize these
   * User: mihais
   * Date: 9/11/17
   */
-class BioTokenizerPostProcessor(val tokensWithValidSlash:Set[String]) {
+class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) extends TokenizerPostProcessor {
+  val tokensWithValidSlash:Set[String] = loadTokensWithValidSlash(kbsWithTokensWithValidSlashes)
+
   /**
     * Implements the bio-specific post-processing steps from McClosky et al. (2011)
     * @param input  Input CoreNLP sentence
@@ -67,20 +73,254 @@ class BioTokenizerPostProcessor(val tokensWithValidSlash:Set[String]) {
           output += token
         } else {
           if (!DISCARD_STANDALONE_DASHES || !s1.equals("-")) {
-            output += PostProcessorToken(s1, token.beginPosition, sepPos)
+            output += PostProcessorToken.mkWithLength(s1, token.beginPosition, sepPos)
           }
           val sep = matcher.group(2)
           if (!DISCARD_STANDALONE_DASHES || !sep.equals("-")) {
-            output += PostProcessorToken(sep, token.beginPosition + sepPos, 1)
+            output += PostProcessorToken.mkWithLength(sep, token.beginPosition + sepPos, 1)
           }
           val s3 = token.word.substring(sepPos + 1)
           if (!DISCARD_STANDALONE_DASHES || !s3.equals("-")) {
-            output += PostProcessorToken(s3, token.beginPosition + sepPos + 1,
+            output += PostProcessorToken.mkWithLength(s3, token.beginPosition + sepPos + 1,
               token.endPosition - token.beginPosition - sepPos - 1)
           }
         }
       } else {
         output += token
+      }
+    }
+    output.toArray
+  }
+
+  def breakOneSlash(tokens:Array[PostProcessorToken], pattern:Pattern):Array[PostProcessorToken] = {
+    val output = new ArrayBuffer[PostProcessorToken]
+
+    for(i <- tokens.indices) {
+      val token = tokens(i)
+      val matcher = pattern.matcher(token.word)
+      if (matcher.matches() &&
+        ! isMeasurementUnit(token.word) && // skip measurement units such as "ng/ml"
+        ! isSpecialToken(token.word)) { // skip special tokens such as family names containing slash such as "MEK1/MEK2"
+        val sepPos = matcher.start(2)
+        val s1 = token.word.substring(0, sepPos)
+        val s3 = token.word.substring(sepPos + 1)
+
+        output += PostProcessorToken.mkWithLength(s1, token.beginPosition, sepPos)
+        output += PostProcessorToken.mkWithLength("and", token.beginPosition + sepPos, 1) // replace "/" with "and"; it parses better
+        output += PostProcessorToken.mkWithLength(s3, token.beginPosition + sepPos + 1,
+          token.endPosition - token.beginPosition - sepPos - 1)
+      } else {
+        output += token
+      }
+    }
+
+    output.toArray
+  }
+
+  /** True if this a Site or some Mutation */
+  def isModification(s:String):Boolean = {
+    for(p <- MODIFICATIONS) {
+      val m = p.matcher(s)
+      if(m.matches()) return true
+    }
+    false
+  }
+
+  def breakNaryComplex(tokens:Array[PostProcessorToken]):Array[PostProcessorToken] = {
+    //print("TOKENIZING SENTENCE:")
+    //for(token <- tokens) print(" [" + token.word() + "]")
+    //println()
+
+    val output = new ArrayBuffer[PostProcessorToken]
+    for(i <- tokens.indices) {
+      val token = tokens(i)
+      val sepMatcher = VALID_COMPLEX_SEPARATOR_PATTERN.matcher(token.word)
+      if (sepMatcher.find() && token.word.length > 2 && // contains a dash or some known separator
+        ((i < tokens.length - 1 && isComplex(tokens(i + 1).word)) || // followed by "complex", or
+          (i > 0 && isComplex(tokens(i - 1).word)))){ // preceded by "complex"
+
+        // start breaking down the token into sub-tokens based on separators such as "-" or "/"
+        var tokenStart = 0 // where the current sub-token starts
+        sepMatcher.reset()
+        val subTokens = new ArrayBuffer[ComplexSubToken]()
+
+        // find all valid sub-tokens inside this word, e.g., "Mek/Ras/Akt1" is broken into "Mek", "Ras", and "Akt1"
+        // invalid protein names (e.g., the "2" suffix in "Mek-Smad-2) are appended to the previous token ("Smad")
+        while(sepMatcher.find(tokenStart)) {
+          val sepPos = sepMatcher.start()
+          appendSubToken(subTokens, token, tokenStart, sepPos)
+          tokenStart = sepMatcher.end()
+        }
+        // left over at the end of the word
+        if(tokenStart < token.word.length) {
+          appendSubToken(subTokens, token, tokenStart, token.word.length)
+        }
+
+        //println("SUBTOKENS: " + subTokens.mkString(", "))
+
+        // now create actual tokens from all these sub-tokens
+        for(i <- subTokens.indices) {
+          // add a "," or "and" before each non-start token
+          if(i > 0) {
+            val prev = subTokens(i - 1)
+            if(i < subTokens.length - 1) {
+              output += PostProcessorToken.mkWithLength(",", prev.start + prev.length, 1)
+            } else {
+              if(subTokens.length > 2)
+                output += PostProcessorToken.mkWithLength(",", prev.start + prev.length, 1) // Oxford commas parse better!
+              output += PostProcessorToken.mkWithLength("and", prev.start + prev.length, 1)
+            }
+          }
+          // add the actual token
+          val crt = subTokens(i)
+          output += PostProcessorToken.mkWithLength(crt.text, crt.start, crt.length)
+        }
+
+      } else {
+        output += token
+      }
+    }
+    output.toArray
+  }
+
+  private def appendSubToken(
+    subTokens:ArrayBuffer[ComplexSubToken],
+    token:PostProcessorToken,
+    tokenStart:Int,
+    sepPos:Int): Unit = {
+
+    val word = token.word
+    val subToken = word.substring(tokenStart, sepPos)
+
+    if(isValidProtein(subToken) || tokenStart == 0) { // found a valid protein name
+      val t = ComplexSubToken(subToken, token.beginPosition + tokenStart, sepPos - tokenStart)
+      subTokens += t
+    } else { // found a likely suffix; append it to the previous token
+      val lastToken = subTokens.last
+      val prevSep = word(tokenStart - 1) // the separator before the suffix
+      lastToken.text = lastToken.text + prevSep + subToken // the previous token extended with the suffix
+      lastToken.length += 1 + subToken.length
+    }
+  }
+
+  def breakMutant(tokens:Array[PostProcessorToken], pattern:Pattern):Array[PostProcessorToken] = {
+    val output = new ArrayBuffer[PostProcessorToken]
+    for(i <- tokens.indices) {
+      val token = tokens(i)
+      val matcher = pattern.matcher(token.word)
+      if (matcher.matches() && // contains a dash or some known separator
+        ((i < tokens.length - 1 && isMutant(tokens(i + 1).word)) || // followed by "mutant", or
+          (i > 0 && isMutant(tokens(i - 1).word)))){ // preceded by mutant
+        val sepPos = matcher.start(2)
+        val s1 = token.word.substring(0, sepPos)
+        output += PostProcessorToken.mkWithLength(s1, token.beginPosition, sepPos)
+        // "-" is simply removed for mutation modifications
+        val s3 = token.word.substring(sepPos + 1)
+        output += PostProcessorToken.mkWithLength(s3, token.beginPosition + sepPos + 1,
+          token.endPosition - token.beginPosition - sepPos - 1)
+      } else {
+        output += token
+      }
+    }
+    output.toArray
+  }
+
+  /**
+    * Scans the text left-to-right and reattaches tokens that were tokenized too aggresively by CoreNLP
+    */
+  def revertAggressiveTokenization(tokens:Array[PostProcessorToken]):Array[PostProcessorToken] = {
+    //print("SENTENCE BEFORE REVERT:")
+    //for(token <- tokens) print(" [" + token.word() + "]")
+    //println()
+
+    val output = new ArrayBuffer[PostProcessorToken]
+    var crtToken = new StringBuilder
+    var crtTokenBeginPosition = 0
+    var i = 0
+    while (i < tokens.length) {
+      val howManyConnectingTokens = new MutableNumber[Int](0)
+      if(i > 0 && i < tokens.length - 1 &&
+        countConnectingTokens(tokens, i, howManyConnectingTokens)) {
+        // found an aggressive tokenization for this sequence of tokens; revert it
+        for(j <- 0 to howManyConnectingTokens.value) {
+          crtToken.append(tokens(i + j).word)
+        }
+        i += howManyConnectingTokens.value + 1
+      } else {
+        if(crtToken.nonEmpty) {
+          val word = crtToken.toString()
+          output += PostProcessorToken.mkWithLength(word, crtTokenBeginPosition, word.length)
+          crtToken = new StringBuilder
+        }
+        crtToken.append(tokens(i).word)
+        crtTokenBeginPosition = tokens(i).beginPosition
+        i += 1
+      }
+    }
+    if(crtToken.nonEmpty) {
+      val word = crtToken.toString()
+      output += PostProcessorToken.mkWithLength(word, crtTokenBeginPosition, word.length)
+    }
+    output.toArray
+  }
+
+  def joinSigns(tokens:Array[PostProcessorToken]):Array[PostProcessorToken] = {
+    val output = new ArrayBuffer[PostProcessorToken]
+    var i = 0
+    while(i < tokens.length) {
+      // -/-
+      if(i < tokens.length - 3 &&
+        tokens(i).endPosition == tokens(i + 1).beginPosition &&
+        tokens(i + 1).word == "-" &&
+        tokens(i + 2).word == "/" &&
+        tokens(i + 3).word == "-"){
+        val word = tokens(i).word +
+          tokens(i + 1).word +
+          tokens(i + 2).word +
+          tokens(i + 3).word
+        output += PostProcessorToken.mkWithLength(word, tokens(i).beginPosition, word.length)
+        i += 4
+
+        // - or +
+      } else if(i < tokens.length - 1) {
+        val crt = tokens(i)
+        val nxt = tokens(i + 1)
+
+        // trailing +
+        if(crt.endPosition == nxt.beginPosition &&
+          ! isParen(crt.word) && nxt.word == "+"){
+          val word = crt.word + nxt.word
+          output += PostProcessorToken.mkWithLength(word, crt.beginPosition, word.length)
+          i += 2
+        }
+
+        // trailing -
+        else if(crt.endPosition == nxt.beginPosition &&
+          (i + 2 >= tokens.length || nxt.endPosition != tokens(i + 2).beginPosition) &&
+          ! isParen(crt.word) && nxt.word == "-"){
+          val word = crt.word + nxt.word
+          output += PostProcessorToken.mkWithLength(word, crt.beginPosition, word.length)
+          i += 2
+        }
+
+        // preceding -
+        else if(crt.endPosition == nxt.beginPosition &&
+          (i == 0 || crt.beginPosition != tokens(i - 1).endPosition) &&
+          ! isParen(nxt.word) && crt.word == "-"){
+          val word = crt.word + nxt.word
+          output += PostProcessorToken.mkWithLength(word, crt.beginPosition, word.length)
+          i += 2
+
+          // nothing interesting
+        } else {
+          output += tokens(i)
+          i += 1
+        }
+
+        // nothing interesting
+      } else {
+        output += tokens(i)
+        i += 1
       }
     }
     output.toArray
@@ -188,6 +428,49 @@ object BioTokenizerPostProcessor {
     }
     suffixBuilder.toString()
   }
+
+  /**
+    * Finds special tokens such as family names containing slash
+    * These tokens are maintained as case insensitive
+    * @param kbs Load from these KBs
+    * @return Set of tokens containing valid slashes, stored as case-insensitive
+    */
+  private def loadTokensWithValidSlash(kbs:Seq[String]):Set[String] = {
+    val specialTokens = new mutable.HashSet[String]()
+    for (tkb <- kbs) {
+      val reader = loadStreamFromClasspath(tkb)
+      var done = false
+      while(! done) {
+        val line = reader.readLine()
+        if(line == null) {
+          done = true
+        } else {
+          val trimmed = line.trim
+          if(! trimmed.startsWith("#")) {
+            val name = trimmed.split("\t")(0) // the strings for these entities must be on position 0!
+            val tokens = name.split("\\s+") // vanilla tokenization because the bio tokenizer is not set up yet
+            for(token <- tokens) {
+              if(token.contains('/')) {
+                specialTokens += token.toLowerCase // kept as lower case
+              }
+            }
+          }
+        }
+      }
+      reader.close()
+    }
+    specialTokens.toSet
+  }
 }
 
 case class PostProcessorToken(word:String, beginPosition:Int, endPosition:Int)
+
+object PostProcessorToken {
+  def mkWithLength(word:String, beginPosition:Int, length:Int): PostProcessorToken = {
+    PostProcessorToken(word, beginPosition, beginPosition + length)
+  }
+}
+
+case class ComplexSubToken(var text:String, var start:Int, var length:Int) {
+  override def toString:String = s"[$text, $start, $length]"
+}
