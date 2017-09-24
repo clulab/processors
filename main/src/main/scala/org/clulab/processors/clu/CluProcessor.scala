@@ -6,26 +6,72 @@ import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
+import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.processors.clu.bio.{BioPOSPostProcessor, BioTokenizerPostProcessor, BioTokenizerPreProcessor, PostProcessorToken}
+import org.clulab.utils.Configured
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
+import CluProcessor._
+
 /**
   * Processor that uses only tools that are under Apache License
-  * Currently supports tokenization (in-house), lemmatization (Morpha), POS tagging (based on Mallet), dependency parsing (ensemble of Malt models)
-  * @param internStrings If true, intern strings
+  * Currently supports:
+  *   tokenization (in-house),
+  *   lemmatization (Morpha),
+  *   POS tagging (in-house BiMEMM),
+  *   dependency parsing (ensemble of Malt models)
   */
-class CluProcessor (val internStrings:Boolean = false) extends Processor {
+class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen")) extends Processor with Configured {
 
+  override def getConf: Config = config
+
+  // should we intern strings or not?
+  val internStrings:Boolean = getArgBoolean(s"$prefix.internStrings", Some(false))
+
+  // this class pre-processes the text before any computation happens
+  lazy val tokenizerPreProcessor:Option[TokenizerPreProcessor] =
+    getArgString(s"$prefix.tokenizer.pre.type", Some("none")) match {
+      case "bio" => Some(new BioTokenizerPreProcessor(
+        removeFigTabReferences = getArgBoolean(s"$prefix.tokenizer.pre.removeFigTabReferences", Some(true)),
+        removeBibReferences = getArgBoolean(s"$prefix.tokenizer.pre.removeBibReferences", Some(true))))
+      case "none" => None
+      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.pre.type!")
+    }
+
+  // the actual tokenizer
   lazy val tokenizer: Tokenizer =
     new OpenDomainEnglishTokenizer
 
-  lazy val posTagger: PartOfSpeechTagger =
-    PartOfSpeechTagger.loadFromResource(PartOfSpeechTagger.DEFAULT_MODEL_RESOURCE)
+  // this class post-processes the tokens produced by the tokenizer
+  lazy val tokenizerPostProcessor:Option[TokenizerPostProcessor] =
+    getArgString(s"$prefix.tokenizer.post.type", Some("none")) match {
+      case "bio" => Some(new BioTokenizerPostProcessor(
+        getArgStrings(s"$prefix.tokenizer.post.tokensWithValidSlashes", None)
+      ))
+      case "none" => None
+      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.post.type!")
+    }
 
+  // the POS tagger
+  lazy val posTagger: PartOfSpeechTagger =
+    PartOfSpeechTagger.loadFromResource(getArgString(s"$prefix.pos.model", None))
+
+  // this class post-processes the POS tagger to avoid some common tagging mistakes for bio
+  lazy val posPostProcessor: Option[SentencePostProcessor] =
+    getArgString(s"$prefix.pos.post.type", Some("none")) match {
+      case "bio" => Some(new BioPOSPostProcessor())
+      case "none" => None
+      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.pos.post.type!")
+    }   
+
+  // the dependency parser
   lazy val depParser: Parser =
-    //new MaltWrapper(MaltUtils.DEFAULT_FORWARD_MODEL_NAME, internStrings)
-    new EnsembleMaltParser(MaltUtils.DEFAULT_ENSEMBLE_MODELS)
+    //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
+    new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models", None))
+
 
   override def annotate(doc:Document): Document = {
     // with this processor, we lemmatize first, because this POS tagger uses lemmas as features
@@ -40,12 +86,59 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     doc
   }
 
+  override def preprocessText(origText:String):String = {
+    if(tokenizerPreProcessor.nonEmpty) tokenizerPreProcessor.get.process(origText)
+    else origText
+  }
+
+  private def postProcess(document: Document): Document = {
+    if(tokenizerPostProcessor.isEmpty) return document
+    val sentences = new ArrayBuffer[Sentence]()
+    for(s <- document.sentences) {
+      // this method is called before any real NLP happens, so POS tags, NER, etc. should be empty
+      assert(s.tags.isEmpty)
+      assert(s.lemmas.isEmpty)
+      assert(s.entities.isEmpty)
+
+      val tokens = mkPostProcessorTokens(s)
+      val newTokens = tokenizerPostProcessor.get.process(tokens)
+      sentences += mkSentence(newTokens)
+    }
+
+    // this method is called before any real NLP happens, so coref and discourse should be empty
+    assert(document.coreferenceChains.isEmpty)
+    assert(document.discourseTree.isEmpty)
+    val d = new Document(sentences.toArray)
+    d.text = document.text
+    d
+  }
+
+  private def mkPostProcessorTokens(sentence: Sentence):Array[PostProcessorToken] = {
+    val tokens = new Array[PostProcessorToken](sentence.size)
+    for(i <- sentence.indices) {
+      tokens(i) = PostProcessorToken(sentence.words(i), sentence.startOffsets(i), sentence.endOffsets(i))
+    }
+    tokens
+  }
+
+  private def mkSentence(tokens:Array[PostProcessorToken]): Sentence = {
+    val words = new Array[String](tokens.length)
+    val startOffsets = new Array[Int](tokens.length)
+    val endOffsets = new Array[Int](tokens.length)
+    for(i <- tokens.indices) {
+      words(i) = tokens(i).word
+      startOffsets(i) = tokens(i).beginPosition
+      endOffsets(i) = tokens(i).endPosition
+    }
+    new Sentence(words, startOffsets, endOffsets)
+  }
+
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(text:String, keepText:Boolean = false): Document = {
     val sents = tokenizer.tokenize(text)
     val doc = new Document(sents)
     if(keepText) doc.text = Some(text)
-    doc
+    postProcess(doc)
   }
 
   /** Constructs a document of tokens from an array of untokenized sentences */
@@ -58,7 +151,7 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     }
     val doc = new Document(sents.toArray)
     if(keepText) doc.text = Some(sentences.mkString(mkSep(charactersBetweenSentences)))
-    doc
+    postProcess(doc)
   }
 
   /** Constructs a document of tokens from an array of tokenized sentences */
@@ -88,7 +181,7 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
 
     val doc = new Document(sents.toArray)
     if(keepText) doc.text = Some(text.toString)
-    doc
+    postProcess(doc)
   }
 
   private def mkSep(size:Int):String = {
@@ -106,8 +199,12 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
   def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val tags = posTagger.classesOf(sent).toArray
+      val tags = posTagger.classesOf(sent)
       sent.tags = Some(tags)
+
+      if(posPostProcessor.nonEmpty) {
+        posPostProcessor.get.process(sent)
+      }
     }
   }
 
@@ -147,17 +244,21 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
         EnhancedDependencies.generateEnhancedDependencies(sentence, dg))
     }
   }
-  
+
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document) {
     // TODO
   }
 
   /** Coreference resolution; modifies the document in place */
-  def resolveCoreference(doc:Document) { }
+  def resolveCoreference(doc:Document) {
+    // TODO
+  }
 
   /** Discourse parsing; modifies the document in place */
-  def discourse(doc:Document) { }
+  def discourse(doc:Document) {
+    // TODO
+  }
 
   private def basicSanityCheck(doc:Document): Unit = {
     if (doc.sentences == null)
@@ -165,4 +266,24 @@ class CluProcessor (val internStrings:Boolean = false) extends Processor {
     if (doc.sentences.length != 0 && doc.sentences(0).words == null)
       throw new RuntimeException("ERROR: Sentence.words == null!")
   }
+
+}
+
+trait TokenizerPreProcessor {
+  def process(text:String):String
+}
+
+trait TokenizerPostProcessor {
+  def process(tokens:Array[PostProcessorToken]):Array[PostProcessorToken]
+}
+
+trait SentencePostProcessor {
+  def process(sentence: Sentence)
+}
+
+class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
+
+object CluProcessor {
+  val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
+  val prefix:String = "CluProcessor"
 }

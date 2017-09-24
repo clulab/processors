@@ -114,14 +114,4 @@ object MaltUtils {
   val FORWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivrestandard.mco"
   val BACKWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivrestandard.mco"
 
-  val DEFAULT_FORWARD_MODEL_NAME = FORWARD_NIVRESTANDARD_MODEL_NAME
-
-  // Which models to use in the ensemble
-  // These models must be listed in descending order of performance; in case of ties the earlier model is preferred
-  val DEFAULT_ENSEMBLE_MODELS = List(
-    FORWARD_NIVRESTANDARD_MODEL_NAME,
-    FORWARD_NIVREEAGER_MODEL_NAME,
-    BACKWARD_NIVRESTANDARD_MODEL_NAME
-  )
-
 }

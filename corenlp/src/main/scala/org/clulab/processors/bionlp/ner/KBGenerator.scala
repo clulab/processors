@@ -19,7 +19,7 @@ import scala.collection.JavaConverters._
 case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
 
 /**
-  *
+  * This is used in bioresources to format the data into a format that is easy to load at runtime
   * User: mihais
   * Date: 2/7/16
   * Last Modified: Update for 5-column NER override file format.
@@ -139,7 +139,7 @@ object KBGenerator {
   /**
     * Tokenizes a resource line with BioNLPProcessor
     * This is important! We must guarantee that KB text is processed similarly to raw text!
- *
+    *
     * @param line The KB line
     * @return The tokenized line
     */

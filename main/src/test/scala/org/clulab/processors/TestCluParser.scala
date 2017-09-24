@@ -12,7 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 7/26/17
   */
 class TestCluParser extends FlatSpec with Matchers {
-  val proc = new CluProcessor
+  val proc = new CluProcessor()
 
   "CluProcessor" should "parse WSJ with an accuracy over 89%" in {
     val model = proc.depParser

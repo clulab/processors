@@ -1,14 +1,14 @@
 package org.clulab.processors.bionlp.ner
 
-import java.io.{BufferedInputStream, File, InputStreamReader, BufferedReader}
-import java.util.zip.GZIPInputStream
+import java.io.BufferedReader
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.config._
 import ai.lum.common.ConfigUtils._
 
-import org.clulab.processors.bionlp.BioNLPProcessor
+import org.clulab.utils.Files._
+
 import org.clulab.struct.HashTrie
 import org.slf4j.LoggerFactory
 
@@ -60,37 +60,6 @@ object KBLoader {
 
   /** Engine to automatically produce lexical variations of entity names */
   val lexicalVariationEngine = Some(new LexicalVariations)
-
-  /**
-    * Finds special tokens such as family names containing slash
-    * These tokens are maintained as case insensitive
-    */
-  def loadSpecialTokens:Set[String] = {
-    val specialTokens = new mutable.HashSet[String]()
-    for (tkb <- UNSLASHABLE_TOKENS_KBS) {
-      val reader = loadStreamFromClasspath(tkb)
-      var done = false
-      while(! done) {
-        val line = reader.readLine()
-        if(line == null) {
-          done = true
-        } else {
-          val trimmed = line.trim
-          if(! trimmed.startsWith("#")) {
-            val name = trimmed.split("\t")(NAME_FIELD_NDX)
-            val tokens = name.split("\\s+") // vanilla tokenization because the bio tokenizer is not set up yet
-            for(token <- tokens) {
-              if(token.contains('/')) {
-                specialTokens += token.toLowerCase // kept as lower case
-              }
-            }
-          }
-        }
-      }
-      reader.close()
-    }
-    specialTokens.toSet
-  }
 
   def loadEntityStopList(kb:String):Set[String] = {
     val stops = new mutable.HashSet[String]()
@@ -166,21 +135,7 @@ object KBLoader {
     logger.info("KB loading completed.")
     new RuleNER(matchers.toArray, knownCaseInsensitives.toSet, useLemmas)
   }
-
-  private def loadStreamFromClasspath(path: String):BufferedReader = {
-    val is = getClass.getClassLoader.getResourceAsStream(path)
-    if (is == null) throw new RuntimeException(s"ERROR: cannot find resource $path in classpath!")
-
-    if (path.endsWith(".gz"))
-      new BufferedReader(
-        new InputStreamReader(
-          new GZIPInputStream(new BufferedInputStream(is))))
-    else
-      new BufferedReader(
-        new InputStreamReader(
-          new BufferedInputStream(is)))
-  }
-
+  
   private def loadOverrideKB(
     reader:BufferedReader,
     caseInsensitive:Boolean,

@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 6/17/17
   */
 class TestCluProcessor extends FlatSpec with Matchers {
-  val proc = new CluProcessor
+  val proc = new CluProcessor()
   
   "CluProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")

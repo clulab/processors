@@ -119,7 +119,7 @@ object CRFNER {
 
   /**
     * Fixes common POS tagging mistakes, using the same code used by BioNLPProcessor at runtime
- *
+    *
     * @param sentence List of tokens in one sentence
     */
   def postProcessTags(sentence:JavaList[CoreLabel]): Unit = {
