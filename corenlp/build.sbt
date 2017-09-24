@@ -1,7 +1,7 @@
 name := "processors-corenlp"
 
 libraryDependencies ++= {
-  val akkaV = "2.5.2"
+  val akkaV = "2.5.4"
   Seq (
     "ai.lum"             %%  "common"            % "0.0.7",
     "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1",
