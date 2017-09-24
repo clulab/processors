@@ -7,12 +7,14 @@ import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenize
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.processors.clu.bio.{BioTokenizerPreProcessor, BioTokenizerPostProcessor, PostProcessorToken}
+import org.clulab.processors.clu.bio.{BioPOSPostProcessor, BioTokenizerPostProcessor, BioTokenizerPreProcessor, PostProcessorToken}
 import org.clulab.utils.Configured
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+
+import CluProcessor._
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -27,16 +29,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   override def getConf: Config = config
 
   // should we intern strings or not?
-  val internStrings:Boolean = getArgBoolean("CluProcessor.internStrings", Some(false))
+  val internStrings:Boolean = getArgBoolean(s"$prefix.internStrings", Some(false))
 
   // this class pre-processes the text before any computation happens
-  lazy val preProcessor:Option[TokenizerPreProcessor] =
-    getArgString("CluProcessor.tokenizer.pre.type", Some("none")) match {
+  lazy val tokenizerPreProcessor:Option[TokenizerPreProcessor] =
+    getArgString(s"$prefix.tokenizer.pre.type", Some("none")) match {
       case "bio" => Some(new BioTokenizerPreProcessor(
-        removeFigTabReferences = getArgBoolean("CluProcessor.tokenizer.pre.removeFigTabReferences", Some(true)),
-        removeBibReferences = getArgBoolean("CluProcessor.tokenizer.pre.removeBibReferences", Some(true))))
+        removeFigTabReferences = getArgBoolean(s"$prefix.tokenizer.pre.removeFigTabReferences", Some(true)),
+        removeBibReferences = getArgBoolean(s"$prefix.tokenizer.pre.removeBibReferences", Some(true))))
       case "none" => None
-      case _ => throw new RuntimeException("ERROR: Unknown argument value for CluProcessor.tokenizer.pre.type!")
+      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.pre.type!")
     }
 
   // the actual tokenizer
@@ -44,25 +46,33 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     new OpenDomainEnglishTokenizer
 
   // this class post-processes the tokens produced by the tokenizer
-  lazy val postProcessor:Option[TokenizerPostProcessor] =
-    getArgString("CluProcessor.tokenizer.post.type", Some("none")) match {
+  lazy val tokenizerPostProcessor:Option[TokenizerPostProcessor] =
+    getArgString(s"$prefix.tokenizer.post.type", Some("none")) match {
       case "bio" => Some(new BioTokenizerPostProcessor(
-        getArgStrings("CluProcessor.tokenizer.post.tokensWithValidSlashes", None)
+        getArgStrings(s"$prefix.tokenizer.post.tokensWithValidSlashes", None)
       ))
       case "none" => None
-      case _ => throw new RuntimeException("ERROR: Unknown argument value for CluProcessor.tokenizer.post.type!")
+      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.post.type!")
     }
 
   // the POS tagger
   lazy val posTagger: PartOfSpeechTagger =
-    PartOfSpeechTagger.loadFromResource(getArgString("CluProcessor.pos.model", None))
+    PartOfSpeechTagger.loadFromResource(getArgString(s"$prefix.pos.model", None))
+
+  // this class post-processes the POS tagger to avoid some common tagging mistakes for bio
+  lazy val posPostProcessor: Option[SentencePostProcessor] =
+    getArgString(s"$prefix.pos.post.type", Some("none")) match {
+      case "bio" => Some(new BioPOSPostProcessor())
+      case "none" => None
+      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.pos.post.type!")
+    }   
 
   // the dependency parser
   lazy val depParser: Parser =
-    //new MaltWrapper(getArgString("CluProcessor.parser.model", None), internStrings)
-    new EnsembleMaltParser(getArgStrings("CluProcessor.parser.models", None))
+    //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
+    new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models", None))
 
-  
+
   override def annotate(doc:Document): Document = {
     // with this processor, we lemmatize first, because this POS tagger uses lemmas as features
     lemmatize(doc)
@@ -77,12 +87,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   }
 
   override def preprocessText(origText:String):String = {
-    if(preProcessor.nonEmpty) preProcessor.get.process(origText)
+    if(tokenizerPreProcessor.nonEmpty) tokenizerPreProcessor.get.process(origText)
     else origText
   }
 
   private def postProcess(document: Document): Document = {
-    if(postProcessor.isEmpty) return document
+    if(tokenizerPostProcessor.isEmpty) return document
     val sentences = new ArrayBuffer[Sentence]()
     for(s <- document.sentences) {
       // this method is called before any real NLP happens, so POS tags, NER, etc. should be empty
@@ -91,7 +101,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       assert(s.entities.isEmpty)
 
       val tokens = mkPostProcessorTokens(s)
-      val newTokens = postProcessor.get.process(tokens)
+      val newTokens = tokenizerPostProcessor.get.process(tokens)
       sentences += mkSentence(newTokens)
     }
 
@@ -191,6 +201,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     for(sent <- doc.sentences) {
       val tags = posTagger.classesOf(sent)
       sent.tags = Some(tags)
+
+      if(posPostProcessor.nonEmpty) {
+        posPostProcessor.get.process(sent)
+      }
     }
   }
 
@@ -263,8 +277,13 @@ trait TokenizerPostProcessor {
   def process(tokens:Array[PostProcessorToken]):Array[PostProcessorToken]
 }
 
+trait SentencePostProcessor {
+  def process(sentence: Sentence)
+}
+
 class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
 
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
+  val prefix:String = "CluProcessor"
 }
