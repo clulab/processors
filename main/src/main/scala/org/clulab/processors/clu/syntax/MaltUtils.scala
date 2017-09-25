@@ -51,6 +51,7 @@ object MaltUtils {
       } else {
         edgeBuffer += Edge(source = head, destination = modifier, relation = in(label, internStrings))
       }
+      ()
     }
 
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)

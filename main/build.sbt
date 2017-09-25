@@ -3,8 +3,8 @@ name := "processors-main"
 libraryDependencies ++= {
   val json4sVersion = "3.5.2"
   Seq(
-    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
-    "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+    "org.scalatest" %% "scalatest" % "3.0.1" % "test",
     "org.clulab" % "bioresources" % "1.1.24",
     "com.io7m.xom" % "xom" % "1.2.10",
     "org.json4s" %% "json4s-core" % json4sVersion,
