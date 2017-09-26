@@ -107,7 +107,7 @@ object Files {
       new File(outFileName).deleteOnExit()
   }
 
-  /** Creates a BufferedReader for this path in our $CLASSPATH */
+  /** Creates a BufferedReader for this path in our CLASSPATH. */
   def loadStreamFromClasspath(path: String):BufferedReader = {
     val is = getClass.getClassLoader.getResourceAsStream(path)
     if (is == null) throw new RuntimeException(s"ERROR: cannot find resource $path in classpath!")
