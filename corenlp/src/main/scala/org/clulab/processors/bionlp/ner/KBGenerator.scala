@@ -3,17 +3,16 @@ package org.clulab.processors.bionlp.ner
 import java.io._
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.zip.{GZIPOutputStream, GZIPInputStream}
+import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
 import org.clulab.processors.bionlp.BioNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation
 import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-
 import scala.collection.JavaConverters._
 
 case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
@@ -25,7 +24,7 @@ case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
   * Last Modified: Update for 5-column NER override file format.
   */
 object KBGenerator {
-  val logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
+  val logger: Logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
 
   val NAME_FIELD_NDX = 0                    // config column containing the KB name
   val LABEL_FIELD_NDX = 1                   // config column containing the type label
@@ -119,7 +118,7 @@ object KBGenerator {
         new GZIPOutputStream(
           new FileOutputStream(mkOutputFile(entry, outputDir), true)))
     if(first) ow.println(s"# Created by ${getClass.getName} on $now.")
-    val uniqLines = outputLines.toSeq
+    val uniqLines = outputLines
       .filter(_.nonEmpty)
       .sorted
       .distinct
@@ -148,10 +147,6 @@ object KBGenerator {
     processor.tokenizerWithoutSentenceSplitting.annotate(annotation) // tokenization
     val origTokens = annotation.get(classOf[TokensAnnotation]).asScala.toArray
     processor.postprocessTokens(origTokens).map(_.word()) // tokenization post-processing
-
-    // old doc, with unnecessary overhead
-    //val doc = mkDocument(preprocessText(line), keepText = false)
-    //doc.sentences.flatMap(_.words)
   }
 
   def containsValidSpecies(entry:KBEntry, tokens:Array[String]):Boolean = {

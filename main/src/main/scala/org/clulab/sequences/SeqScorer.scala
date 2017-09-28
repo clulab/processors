@@ -1,9 +1,9 @@
-package org.clulab.processors.bionlp.ner
+package org.clulab.sequences
 
 import scala.collection.mutable
 
 /**
- * Computes P, R, F1 scores for the complete mentions produced by a sequence tagger
+ * Computes P, R, F1 scores for the complete mentions produced by a sequence tagger, in the BIO notation
  * User: mihais
  * Date: 2/27/15
  */

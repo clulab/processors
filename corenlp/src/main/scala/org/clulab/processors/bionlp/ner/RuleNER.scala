@@ -2,10 +2,9 @@ package org.clulab.processors.bionlp.ner
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.{EntityValidator, HashTrie}
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
-
 import RuleNER._
 
 /**
@@ -21,15 +20,15 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
   def this(matchers:Array[(String, HashTrie)], useLemmas:Boolean) { this(matchers, Set[String](), useLemmas) }
 
   def find(sentence:Sentence):Array[String] = {
-    // findByPriority(sentence)
     val seq = findLongestMatch(sentence)
     seq
   }
 
   def getTokens(sentence:Sentence):Array[String] = {
-    useLemmas match {
-      case true => sentence.lemmas.get
-      case _ => sentence.words
+    if (useLemmas) {
+      sentence.lemmas.get
+    } else {
+      sentence.words
     }
   }
 
@@ -91,62 +90,18 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
                      matcher:HashTrie,
                      offset:Int,
                      validator:EntityValidator):Int = {
-    val span = matcher.caseInsensitive match {
-      case true => matcher.findAt(caseInsensitiveSeq, offset, Some(validator))
-      case _ => matcher.findAt(seq, offset, Some(validator))
+    val span = if (matcher.caseInsensitive) {
+      matcher.findAt(caseInsensitiveSeq, offset, Some(validator))
+    } else {
+      matcher.findAt(seq, offset, Some(validator))
     }
     span
-  }
-
-  /**
-   * Inspects matchers in the order provided in the constructor
-   * This means that a matcher with higher priority is preferred even if a longer one (with lower priority) exists!
-   */
-  def findByPriority(sentence:Sentence):Array[String] = {
-    val overallLabels = new Array[String](sentence.size)
-    for(i <- overallLabels.indices) overallLabels(i) = OUTSIDE_LABEL
-    val tokens = getTokens(sentence)
-    for(matcher <- matchers) {
-      // the actual match
-      var labels = matcher._2.find(tokens, matcher._1, OUTSIDE_LABEL)
-
-      // some matchers are overmatching due to the case-insensitive setting,
-      // e.g., Gene_or_gene_product contains protein names that are identical to prepositions, such as "IN" and "TO"
-      labels = filterMatches(labels, sentence)
-      //println("LABELS: " + labels.mkString(" "))
-
-      // matchers must be stored in descending order of their priorities
-      // so we do not allow new labels to overwrite labels already generated
-      RuleNER.mergeLabels(overallLabels, labels)
-    }
-    overallLabels
-  }
-
-  def filterMatches(labels:Array[String], sentence:Sentence):Array[String] = {
-    val filtered = removeSinglePrepositions(labels, sentence)
-
-    filtered
-  }
-
-  /** Remove single tokens that are not tagged as nouns */
-  def removeSinglePrepositions(labels:Array[String], sentence:Sentence):Array[String] = {
-    val filtered = new Array[String](labels.length)
-    for(i <- labels.indices) {
-      if(labels(i).startsWith("B-") &&
-         (i == labels.length - 1 || ! labels(i + 1).startsWith("I-")) && // single token entity
-         ! sentence.tags.get(i).startsWith("NN")) { // not a noun
-        filtered(i) = RuleNER.OUTSIDE_LABEL
-      } else {
-        filtered(i) = labels(i)
-      }
-    }
-    filtered
   }
 
 }
 
 object RuleNER {
-  val logger = LoggerFactory.getLogger(classOf[RuleNER])
+  val logger: Logger = LoggerFactory.getLogger(classOf[RuleNER])
   val OUTSIDE_LABEL = "O"
 
   /** Merges labels in src into dst, without overlapping any existing labels in dst */
