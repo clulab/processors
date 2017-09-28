@@ -1,23 +1,33 @@
-package org.clulab.processors.bionlp.ner
+package org.clulab.sequences
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.{EntityValidator, HashTrie}
-import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
-import RuleNER._
+import LexiconNER._
+import org.slf4j.{Logger, LoggerFactory}
 
 /**
- * Rule-based NER for the Bio domain
- * If useLemmas is true, tokens are matched using lemmas, otherwise using words
- * knownCaseInsensitives contains single-token entities that can be spelled using lower case, according to the KB(s)
- * The order of the matchers is important: it indicates priority during ties (first has higher priority)
- * User: mihais
- * Date: 5/11/15
- */
-class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:Set[String], val useLemmas:Boolean = false) {
-
-  def this(matchers:Array[(String, HashTrie)], useLemmas:Boolean) { this(matchers, Set[String](), useLemmas) }
+  * Lexicon-based NER, which efficiently recognizes entities from large dictionaries
+  * This is a cleaned-up version of the old RuleNER
+  *
+  * @param matchers A map of tries to be matched for each given category label
+  *                 The order of the matchers is important: it indicates priority during ties (first has higher priority)
+  * @param knownCaseInsensitives Set of single-token entity names that can be spelled using lower case, according to the KB(s)
+  * @param useLemmas If true, tokens are matched using lemmas, otherwise using words
+  *
+  * Create a LexiconNER object using LexiconNER.apply() (not the c'tor, which is private).
+  * Use is by calling the find() method on a single sentence.
+  *
+  * Author: mihais
+  * Created: 5/11/15
+  * Modified: 9/27/17 - Clean up from RuleNER into LexiconNER
+  */
+class LexiconNER private (
+  val matchers:Array[(String, HashTrie)],
+  val knownCaseInsensitives:Set[String],
+  val useLemmas:Boolean,
+  val entityValidator: EntityValidator) {
 
   def find(sentence:Sentence):Array[String] = {
     val seq = findLongestMatch(sentence)
@@ -33,14 +43,13 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
   }
 
   /**
-   * Finds the longest match across all matchers.
-   * This means that the longest match is always chosen, even if coming from a matcher with lower priority
-   * Only ties are disambiguated according to the order provided in the constructor
-   */
+    * Finds the longest match across all matchers.
+    * This means that the longest match is always chosen, even if coming from a matcher with lower priority
+    * Only ties are disambiguated according to the order provided in the constructor
+    */
   def findLongestMatch(sentence:Sentence):Array[String] = {
     val tokens = getTokens(sentence)
     val caseInsensitiveWords = tokens.map(_.toLowerCase)
-    val validator = new RuleEntityValidator(sentence, knownCaseInsensitives)
 
     var offset = 0
     val labels = new ArrayBuffer[String]()
@@ -50,7 +59,7 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
 
       // attempt to match each category at this offset
       for (i <- matchers.indices) {
-        spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, validator)
+        spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, entityValidator)
         // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
       }
 
@@ -100,9 +109,13 @@ class RuleNER(val matchers:Array[(String, HashTrie)], val knownCaseInsensitives:
 
 }
 
-object RuleNER {
-  val logger: Logger = LoggerFactory.getLogger(classOf[RuleNER])
-  val OUTSIDE_LABEL = "O"
+object LexiconNER {
+  val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
+  val OUTSIDE_LABEL: String = "O"
+
+  def apply(): LexiconNER = {
+    
+  }
 
   /** Merges labels from src into dst, without overlapping any existing labels in dst */
   def mergeLabels(dst:Array[String], src:Array[String]) {
@@ -112,6 +125,7 @@ object RuleNER {
     while(offset < dst.length) {
       if(src(offset) != OUTSIDE_LABEL) {
         // no overlap allowed
+        // if overlap is detected, the corresponding labels in src are discarded
         if(! overlap(dst, src, offset)) {
           dst(offset) = src(offset)
           offset += 1
@@ -133,7 +147,8 @@ object RuleNER {
     }
   }
 
-  def overlap(dst:Array[String], src:Array[String], offset:Int):Boolean = {
+  // Used by mergeLabels above
+  private def overlap(dst:Array[String], src:Array[String], offset:Int):Boolean = {
     var position = offset
     if(dst(position) != OUTSIDE_LABEL) return true
     position += 1
@@ -144,3 +159,4 @@ object RuleNER {
     false
   }
 }
+
