@@ -260,9 +260,6 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     }
     // variables specified by the call to `import`
     val importVars = getVars(data)
-//      .mapValues{ v =>
-//        println(s"Current var val: $v")
-//        replaceVars(v, config.variables)} // apply variable to vars
     // variable scope:
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
