@@ -3,10 +3,13 @@ package org.clulab.odin
 import java.io._
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets.UTF_8
+
+import org.clulab.odin
+
 import scala.io.{ Codec, Source }
 import scala.reflect.ClassTag
 import org.clulab.processors.Document
-import org.clulab.odin.impl.{ RuleReader, Extractor }
+import org.clulab.odin.impl.{ Extractor, RuleReader }
 
 class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Action) {
 
@@ -78,7 +81,7 @@ object ExtractorEngine {
   def apply(
       rules: String,
       actions: Actions = new Actions,
-      globalAction: Action = identityAction,
+      globalAction: odin.Action = identityAction,
       charset: Charset = UTF_8
   ): ExtractorEngine = {
     val reader = new RuleReader(actions, charset)
