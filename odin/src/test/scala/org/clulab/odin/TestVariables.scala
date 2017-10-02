@@ -2,6 +2,7 @@ package org.clulab.odin
 
 import org.scalatest.{ Matchers, FlatSpec }
 
+
 class TestVariables extends FlatSpec with Matchers {
 
   def readResource(filename: String): String = {
@@ -57,10 +58,10 @@ class TestVariables extends FlatSpec with Matchers {
         |rules:
         |  - import: ${ path_prefix }/test_imports.yml
         |    vars:
-        |      name_prefix: ${my_prefix } # should be able to resolve from vars block
+        |      name_prefix: ${my_prefix } # should be able to resolve from top-level vars block
       """.stripMargin
 
-    val ee = ExtractorEngine(mf)
+    val ee = ExtractorEngine.fromRules(mf)
     ee.extractors should have size (1)
     ee.extractors.head.name should startWith ("highest-precedence")
   }
@@ -74,15 +75,34 @@ class TestVariables extends FlatSpec with Matchers {
         |  n2: "success"
         |
         |rules:
-        |  - name: "${ ${ n1}     }-1"  # name should equal to "success-1" after nested substitutions
+        |  - name: "${ ${ n1}     }-1"  # value of name should be "success-1" after nested substitutions
         |    label: Test
         |    type: token
         |    pattern: test
       """.stripMargin
 
-    val ee = ExtractorEngine(mf)
+    val ee = ExtractorEngine.fromRules(mf)
     ee.extractors should have size (1)
     println(ee.extractors.head.name)
     ee.extractors.head.name should startWith ("success")
   }
+
+  it should "disallow recursive definitions" in {
+
+    val mf =
+      """
+        |vars:
+        |  v1: ${v1}
+        |
+        |rules:
+        |  - name: "${v1}"
+        |    label: Test
+        |    type: token
+        |    pattern: test
+      """.stripMargin
+
+    an [java.lang.IllegalStateException] should be thrownBy ExtractorEngine.fromRules(mf)
+
+  }
+
 }
