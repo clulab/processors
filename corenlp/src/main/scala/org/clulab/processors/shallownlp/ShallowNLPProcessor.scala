@@ -380,10 +380,6 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
     }
   }
 
-  def labelSemanticRoles(doc:Document) {
-    // nothing here
-  }
-
   def resolveCoreference(doc:Document) {
     // nothing here
   }

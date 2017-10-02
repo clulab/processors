@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<options>
+	<optiongroup groupname="system">
+		<desc><![CDATA[The <b>system</b> option group contains options that have a special status, because they control the overall system. These 
+		options can only have one value each. For instance, you cannot specify more than one option file. ]]></desc>
+		<option type="string" name="option_file" flag="f" default="">
+			<desc><![CDATA[There are several ways to control MaltParser and one way is to supply all options 
+			in an <a href="userguide.html#optionfile">option file</a>.  
+			The <b>option_file</b> option can be used to specify the path to this option file. ]]></desc>
+			<shortdesc>Path to option file</shortdesc>
+		</option>
+		<option type="unary" name="help" flag="h">
+			<desc><![CDATA[ Displays a short description of all available options. ]]></desc>
+			<shortdesc>Show options</shortdesc>
+		</option>
+		<option type="enum" name="verbosity" flag="v" default="info">
+			<desc><![CDATA[There are several levels of verbosity for the system output stream, from showing all debugging messages (which can 
+			be useful when modifying or extending the source code of MaltParser) to turning off all messages. MaltParser uses 
+			<a href="http://logging.apache.org/log4j/1.2/download.html" target="_blank">Apache log4j logging services</a>. To find out more about
+			the different levels please consult the Apache log4j documentation. The default verbosity level is <b>info</b>, which means that 
+			all error, warning and informational messages are displayed. ]]></desc>
+			<shortdesc>Verbosity level</shortdesc>
+			<legalvalue name="off">Logging turned off</legalvalue>
+			<legalvalue name="fatal">Logging of very severe error events</legalvalue>
+			<legalvalue name="error">Logging of error events</legalvalue>
+			<legalvalue name="warn">Logging of harmful situations</legalvalue>
+			<legalvalue name="info">Logging of informational messages</legalvalue>
+			<legalvalue name="debug">Logging of debugging messages</legalvalue>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="config">
+		<desc><![CDATA[The <b>config</b> option group contains general options for a configuration.]]></desc>
+		<option type="string" name="name" flag="c" default="" usage="both">
+			<desc><![CDATA[The configuration name is the name of the configuration and also the name of the MaltParser configuration file, which ends 
+			with the file suffix <b>.mco</b>. 
+			The name is your own choice, but it is appropriate to give the configuration a name that reflects the content. This option must always be 
+			specified, except when the <b>url</b> option is used instead of <b>name</b>. ]]></desc>
+			<shortdesc>Configuration name</shortdesc>
+		</option>
+		<option type="string" name="url" flag="u" default="" usage="both">
+			<desc><![CDATA[It is possible to specify a <a href="http://en.wikipedia.org/wiki/URL" target="_blank">URL</a> to 
+			the configuration file instead of specifying the configuration name. For example, if you have a configuration 
+			file with the following URL: <code>http://maltparser.org/mco/test.mco</code> you can write 
+			<code>-u http://maltparser.org/mco/test.mco</code>.]]></desc>
+			<shortdesc>URL to configuration file</shortdesc>
+		</option>
+ 		<option type="enum" name="flowchart" flag="m" default="parse" usage="both">
+			<desc><![CDATA[ There are seven predefined flow charts. ]]></desc>
+			<shortdesc>Flow chart</shortdesc>
+			<legalvalue name="learn">Learn a Single MaltParser configuration</legalvalue>
+			<legalvalue name="parse">Parse with a Single MaltParser configuration</legalvalue>
+			<legalvalue name="info">Prints the info file of a configuration</legalvalue>
+			<legalvalue name="unpack">Unpacks a configuration</legalvalue>
+			<legalvalue name="convert">Simple format converter</legalvalue>
+			<legalvalue name="analyze"></legalvalue>
+			<legalvalue name="proj">Projectivizes input data using a configuration</legalvalue>
+			<legalvalue name="deproj">Deprojectivizes input data using a configuration</legalvalue>
+			<legalvalue name="learnwo">Same as <i>learn</i>, but also outputs the graphs to file specified by the flag -o</legalvalue>
+			<legalvalue name="testdata">Generates test instances to run experiments with a learner outside MaltParser. Use for example the flag <em>-li true</em> to save instances.</legalvalue>
+		</option>
+		<option type="class" name="type" flag="t" default="singlemalt" usage="both">
+			<desc><![CDATA[ MaltParser 1.9.0 has one available configuration type: <b>singlemalt</b>. Later releases 
+			may contain additional configuration types. For example, one type could be an ensemble parser configuration containing 
+many single malt configurations. ]]></desc>
+			<shortdesc>Configuration type</shortdesc>
+			<legalvalue name="singlemalt" class="org.maltparser.parser.SingleMalt">Single Malt Parser configuration</legalvalue>
+		</option>
+		<option type="string" name="workingdir" flag="w" default="user.dir" usage="both">
+			<desc><![CDATA[By default the working directory is the directory where MaltParser is started from, but it is possible to
+			specify another directory with the <b>workingdir</b> option. ]]></desc>
+			<shortdesc>Working directory</shortdesc>
+		</option>	
+		<option type="enum" name="logging" flag="cl" default="info" usage="both">
+			<desc><![CDATA[In contrast to the <b>system-verbosity</b> option, the <b>logging</b> option controls the level of verbosity of an
+			individual configuration. The different verbosity or logging levels are the same as for the <b>system-verbosity</b> option. ]]></desc>
+			<shortdesc>Configuration logging level</shortdesc>
+			<legalvalue name="off">Logging turned off</legalvalue>
+			<legalvalue name="fatal">Logging of very severe error events</legalvalue>
+			<legalvalue name="error">Logging of error events</legalvalue>
+			<legalvalue name="warn">Logging of harmful situations</legalvalue>
+			<legalvalue name="info">Logging of informational messages</legalvalue>
+			<legalvalue name="debug">Logging of debugging messages</legalvalue>
+		</option>
+		<option type="string" name="logfile" flag="lfi" default="stdout" usage="both">
+			<desc><![CDATA[By default the logging will be output to the <a href="http://en.wikipedia.org/wiki/Stdout" target="_blank">standard 
+			output stream</a>, but it is possible to direct this output stream to a logging file by specifying the <b>logfile</b> option. ]]></desc>
+			<shortdesc>Log file name (default: standard output)</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="singlemalt">
+		<desc><![CDATA[The <b>singlemalt</b> option group is used when the <b>singlemalt</b> configuration type is specified. ]]></desc>
+		<option type="enum" name="mode" flag="sm" default="parse" usage="both">
+			<desc><![CDATA[ This option is replaced by --config-flowchart and should not by used anymore. The value of this option will be mapped to --config-flowchart. ]]></desc>
+			<shortdesc>Single Malt Parser Configuration mode</shortdesc>
+			<legalvalue name="learn"></legalvalue>
+			<legalvalue name="parse"></legalvalue>
+		</option>
+		<option type="class" name="parsing_algorithm" flag="a" default="nivreeager" usage="save">
+			<desc><![CDATA[ The single malt configuration contains seven deterministic parsing algorithms. Four algorithms produce 
+			projective dependency graphs: Nivre arc-eager, Nivre arc-standard, Covington projective and Stack projective. Three algorithms are able to produce 
+			non-projective graphs: Covington non-projective, Stack eager and Stack lazy. Nivre's parsing algorithms have an option group called <b>nivre</b>, for controlling
+			the behavior of the algorithm, Covington's algorithms have a corresponding option group called <b>covington</b>. For more information about the
+			parsing algorithm see the user guide: <a href="userguide.html#parsingalg">Parsing Algorithms</a>.]]></desc>
+			<shortdesc>Parsing algorithm</shortdesc>
+			<legalvalue name="nivreeager" class="org.maltparser.parser.algorithm.nivre.NivreArcEagerFactory">Nivre arc-eager</legalvalue>
+			<legalvalue name="nivrestandard" class="org.maltparser.parser.algorithm.nivre.NivreArcStandardFactory">Nivre arc-standard</legalvalue>
+			<legalvalue name="covnonproj" class="org.maltparser.parser.algorithm.covington.CovingtonNonProjFactory">Covington non-projective</legalvalue>
+			<legalvalue name="covproj" class="org.maltparser.parser.algorithm.covington.CovingtonProjFactory">Covington projective</legalvalue>
+			<legalvalue name="stackproj" class="org.maltparser.parser.algorithm.stack.StackProjFactory">Stack projective</legalvalue>
+			<legalvalue name="stackeager" class="org.maltparser.parser.algorithm.stack.StackSwapEagerFactory">Stack eager</legalvalue>	
+			<legalvalue name="stacklazy" class="org.maltparser.parser.algorithm.stack.StackSwapLazyFactory">Stack lazy</legalvalue>
+			<legalvalue name="planar" class="org.maltparser.parser.algorithm.planar.NivrePlanarArcEagerFactory">Planar eager</legalvalue>
+			<legalvalue name="2planar" class="org.maltparser.parser.algorithm.twoplanar.TwoPlanarArcEagerFactory">2-Planar eager</legalvalue>
+		</option>
+		<option type="class" name="guide_model" flag="gm" default="single" usage="save">
+			<desc><![CDATA[ MaltParser 1.9.0 has one available guide model type: <b>single</b>. Later releases 
+			may contain additional guide model types.  ]]></desc>
+			<shortdesc>Guide model type</shortdesc>
+			<legalvalue name="single" class="org.maltparser.parser.guide.SingleGuide">Classic guide</legalvalue>
+		</option>
+		<option type="enum" name="null_value" flag="nv" default="one" usage="save">
+			<desc><![CDATA[ MaltParser 1.9.0 and later versions (implemented in Java) have the possibility of distinguishing between 
+			different kinds of null-values when extracting the feature vector. For input columns like <code>POSTAG</code> it is possible to 
+			differentiate two null-values:
+			<ul>
+			<li><code>NO NODE</code>: There exists no corresponding dependency graph node (e.g., because the lookahead extend beyond the end of the string), 
+			which means that the feature is really undefined.
+			<li><code>ROOT NODE</code>: The dependency graph node is a root node, which means that it is not possible to extract an input column value 
+			(for example, the word form or the part-of-speech). 
+			</ul>
+			In addition to the two null value categories for input columns, there is one more for the output columns:
+			<ul>
+			<li><code>NO VALUE</code>: The dependency graph node exists and is not the root, but has not yet been assigned a value for the output column
+			requested (e.g., has not been assigned a head and therefore does not have a dependency type).
+			</ul>
+			
+			With this option it is possible to specify the degree of differentiation of null-values.
+			<ul>
+			<li><code>none</code>: Excludes all kinds of null-values when extracting the feature vector, this option value is not possible for learning
+			methods that have symbolic feature vector encoding.
+			<li><code>one</code>: Maps all kinds of null values to one symbol.
+			<li><code>rootnode</code>: Distinguishes between <code>NO NODE</code> and <code>ROOT NODE</code>, and the <code>NO VALUE</code> null-value case is mapped 
+			to the <code>ROOT NODE</code> null-value for output columns. 
+			<li><code>novalue</code>: Distinguishes between <code>NO NODE</code> and <code>ROOT NODE</code> for both input and output columns, and <code>NO VALUE</code> for output columns. 
+			</ul>
+			]]></desc>
+			<shortdesc>The degree of differentiation of null-values</shortdesc>
+			<legalvalue name="none">Excludes all types of null values</legalvalue>
+			<legalvalue name="one">Maps all kinds of null values to one symbol</legalvalue>
+			<legalvalue name="rootnode">Distinguish between no node and root node</legalvalue>
+			<legalvalue name="novalue">Distinguish between no node and root node, and no value for output column</legalvalue>
+		</option>
+		<option type="bool" name="diagnostics" flag="di" default="false" usage="both">
+			<desc><![CDATA[ If <i>true</i> ,then diagnostics is written to standard out or the file specified by option diafile. By default this option is false.  ]]></desc>
+			<shortdesc>diagnostics</shortdesc>
+		</option>
+		<option type="string" name="diafile" flag="dif" default="stdout" usage="both">
+			<desc><![CDATA[By default the diagnostics will be output to the <a href="http://en.wikipedia.org/wiki/Stdout" target="_blank">standard 
+			output stream</a>, but it is possible to direct this output stream to a diagnostics file by specifying the <b>diafile</b> option. ]]></desc>
+			<shortdesc>Diagnostics file name (default: standard output)</shortdesc>
+		</option>
+		<option type="bool" name="use_partial_tree" flag="up" default="false" usage="save">
+			<desc><![CDATA[ If <i>true</i>, then partial trees are allowed as input and the parser will construct these partial trees before parsing. By default
+			this option is false. Please see the user guide: <a href="userguide.html#partial_trees">Partial trees</a> ]]></desc>
+			<shortdesc>Use partial trees during parsing</shortdesc>
+		</option>
+		<option type="string" name="propagation" flag="fp" default="" usage="save">
+			<desc><![CDATA[ The <b>propagation</b> option is used for specifying the propagation specification file, which is an XML file 
+			(see user guide: <a href="userguide.html#propagation">Propagation</a>) ]]></desc>
+			<shortdesc>Propagation specification file</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="input">
+		<desc><![CDATA[ The <b>input</b> option group contains options that control the input data. In MaltParser 1.9.0, the values of options in the 
+		<b>input</b> option group must match the values of corresponding options in the <b>output</b> option group.
+		This restriction is likely to be removed in later releases. ]]></desc>
+		<option type="string" name="infile" flag="i" default="" usage="both">
+			<desc><![CDATA[ The input data file is specified by the <b>infile</b> option. It is important that the input data file is formatted 
+			according to the format specified by the <b>format</b> option. For example, if <b>format=conllx</b> the input file should at least contain eight columns
+			during learning and six column during parsing. ]]></desc>
+			<shortdesc>Path to input file</shortdesc>
+		</option>
+		<option type="stringenum" name="format" flag="if" default="conllx" usage="save">
+			<desc><![CDATA[ This option tells the parser which format is used in the input data file. The format is defined in an XML file. For 
+			more information see the user guide: <a href="userguide.html#inout">Input and output format</a>. 
+			There are two data format specification files in the MaltParser distribution (included in maltparser-1.9.0.jar):
+			<ul> 
+			<li><b>conllx</b> defines the <a href="http://ilk.uvt.nl/conll/#dataformat" target="_blank">CoNLL-X shared task format</a></li>
+			<li><b>conllu</b> defines the <a href="http://universaldependencies.org/format.html" target="_blank">CoNLL-U format</a></li>
+			<li><b>malttab</b> defines the <a href="http://stp.lingfil.uu.se/~nivre/research/MaltXML.html" target="_blank">Malt-TAB</a> format.</li>
+			</ul> ]]></desc>
+			<shortdesc>Path to format specification file</shortdesc>
+			<legalvalue name="conllx" mapto="/appdata/dataformat/conllx.xml">CoNLL-X data format</legalvalue>
+			<legalvalue name="conllu" mapto="/appdata/dataformat/conllu.xml">CoNLL-U data format</legalvalue>
+			<legalvalue name="malttab" mapto="/appdata/dataformat/malttab.xml">MaltTAB data format</legalvalue>
+		</option>
+		<option type="class" name="reader" flag="ir" default="tab" usage="both">
+			<desc><![CDATA[ In MaltParser 1.9.0 there are ine input reader:
+			<ul> 
+			<li><b>tab</b> reads tab-separated files and with columns defined by the input format.</a></li>
+			</ul> ]]></desc>
+			<shortdesc>Data reader</shortdesc>
+			<legalvalue name="tab" class="org.maltparser.core.syntaxgraph.reader.TabReader">Tab-separated reader</legalvalue>
+		</option>
+		<option type="string" name="charset" flag="ic" default="UTF-8" usage="save">
+			<desc><![CDATA[ The <b>charset</b> option defines the character set of the input data file, for example, <code>UTF-8</code> or <code>ISO8858-1</code>.  ]]></desc>
+			<shortdesc>Character set</shortdesc>
+		</option>
+		<option type="string" name="reader_options" flag="iro" default="" usage="both">
+			<desc><![CDATA[ MaltParser has several data readers and with this option it is possible to control individual data readers.  ]]></desc>
+			<shortdesc>Specific reader options</shortdesc>
+		</option>
+		<option type="integer" name="iterations" flag="it" default="1" usage="both">
+			<desc><![CDATA[ Number of iterations over the input file.  ]]></desc>
+			<shortdesc>Number of iterations.</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="output">
+		<desc><![CDATA[ The <b>output</b> option group contains options that control the output data. In MaltParser 1.9.0, the values of options in the 
+		<b>output</b> option group must match the values of corresponding options in the <b>input</b> option group.
+		This restriction is likely to be removed in later releases. ]]></desc>
+		<option type="string" name="outfile" flag="o" default="" usage="both">
+			<desc><![CDATA[ The output data file is specified by the <b>outfile</b> option.  ]]></desc>
+			<shortdesc>Path to output file</shortdesc>
+		</option>
+		<option type="stringenum" name="format" flag="of" default="" usage="both">
+			<desc><![CDATA[ This option tells the parser which format is used for the output data file. The format is defined in an XML file. 
+			For more information see the user guide: <a href="userguide.html#define_inout">Define your own input/output format</a>. 
+			There are two data format specification files in the MaltParser distribution (included in maltparser-1.9.0.jar):
+			<ul> 
+			<li><b>conllx</b> defines the <a href="http://ilk.uvt.nl/conll/#dataformat" target="_blank">CoNLL-X shared task format</a></li>
+			<li><b>conllu</b> defines the <a href="http://universaldependencies.org/format.html" target="_blank">CoNLL-U format</a></li>
+			<li><b>malttab</b> defines the <a href="http://stp.lingfil.uu.se/~nivre/research/MaltXML.html" target="_blank">Malt-TAB</a> format.</li>
+			</ul>  ]]></desc>
+			<shortdesc>Path to format specification file</shortdesc>
+			<legalvalue name="conllx" mapto="/appdata/dataformat/conllx.xml">CoNLL-X data format</legalvalue>
+			<legalvalue name="conllu" mapto="/appdata/dataformat/conllu.xml">CoNLL-U data format</legalvalue>
+			<legalvalue name="malttab" mapto="/appdata/dataformat/malttab.xml">MaltTAB data format</legalvalue>
+		</option>
+		<option type="class" name="writer" flag="ow" default="tab" usage="both">
+			<desc><![CDATA[ In MaltParser 1.9.0 there is two output writer:
+			<ul> 
+			<li><b>tab</b> writes tab-separated files with columns defined by the input format.</a></li>
+			</ul> ]]></desc>
+			<shortdesc>Data writer</shortdesc>
+			<legalvalue name="tab" class="org.maltparser.core.syntaxgraph.writer.TabWriter">Tab-separated writer</legalvalue>
+		</option>
+		<option type="string" name="charset" flag="oc" default="UTF-8" usage="save">
+			<desc><![CDATA[ The <b>charset</b> option defines the character set of the output data file, for example, <code>UTF-8</code> or <code>ISO8858-1</code>.   ]]></desc>
+			<shortdesc>Character set</shortdesc>
+		</option>
+		<option type="string" name="writer_options" flag="owo" default="" usage="both">
+			<desc><![CDATA[ MaltParser has several data writers and with this option it is possible to control individual data writers.]]></desc>
+			<shortdesc>Specific writer options</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="graph">
+		<desc><![CDATA[ The <b>graph</b> option group controls internal data structures, such as the sentence and the dependency graph.  ]]></desc>
+		<option type="integer" name="max_sentence_length" flag="gsl" default="256" usage="both">
+			<desc><![CDATA[ By default, the maximum sentence length is 256 tokens. If the input data file has sentences that are longer 
+			than 256 tokens, this option may be used to adjust the internal data structures, so that longer sentences can be loaded. This option is deprecated, there is no upper limit of the sentence length. ]]></desc>
+			<shortdesc>Max sentence length</shortdesc>
+		</option>
+		<option type="string" name="root_label" flag="grl" default="ROOT" usage="save">
+			<desc><![CDATA[ Default label used for unattached tokens that are automatically attached to the special root node after parsing is completed.  ]]></desc>
+			<shortdesc>Default label for root dependents</shortdesc>
+		</option>
+		<option type="string" name="head_rules" flag="ghr" default="" usage="save">
+			<desc><![CDATA[ It is possible to define head finding rules to control the transformation from phrase structure to dependency structure.
+			For more information see the user guide: <a href="userguide.html#headfind">Head-finding rules</a>. ]]></desc>
+			<shortdesc>An URL or a file name to file that contains a list of head rules</shortdesc>
+		</option>
+	</optiongroup>
+    <optiongroup groupname="nivre">
+    	<desc><![CDATA[ The <b>nivre</b> option group controls the Nivre arc-eager and Nivre arc-standard parsing algorithms. ]]></desc>
+        <option type="bool" name="allow_root" flag="nr" default="true" usage="save">
+	        <desc><![CDATA[ If <b>allow_root=true</b>, the parser treats the special root node as a token during parsing, allowing root dependents 
+	        to be attached with a RightArc transition; otherwise root dependents are not attached during parsing. In both cases, unattached tokens are 
+	        attached to the special root node with the default label after parsing is completed. ]]></desc>
+	        <shortdesc>Allow root</shortdesc>
+        </option>
+        <option type="bool" name="allow_reduce" flag="ne" default="false" usage="save">
+            <desc><![CDATA[ If <b>allow_reduce=true</b>, the Reduce transition is permissible even if the node on top of the stack does not have a head. As 
+                a result, this node will be attached to the special root node after parsing is completed, which may give rise to non-projective trees. ]]></desc>
+            <shortdesc>Allow reduce</shortdesc>
+        </option>
+        <option type="bool" name="enforce_tree" flag="nt" default="false" usage="process">
+            <desc><![CDATA[ If <b>enforce_tree=true</b>, the parser will use an extended transition system that makes sure that the output parse is a tree by 
+            (if necessary) unshifting unattached tokens remaining on the stack after the buffer has been emptied and forcing them to be attached. ]]></desc>
+            <shortdesc>Enforce tree constraint</shortdesc>
+        </option>
+   	</optiongroup>
+   	<optiongroup groupname="multiplanar">
+		<desc><![CDATA[ The <b>multiplanar</b> option group contains options that are common to the multiplanar family of algorithms (planar and 2-planar algorithms).  ]]></desc>
+		<option type="enum" name="planar_root_handling" flag="prh" default="normal" usage="save">
+			<desc><![CDATA[ The <b>planar_root_handling</b> option specifies how dependents of the special root node are handled in the planar or 2-planar parser. ]]></desc>
+			<shortdesc>Root handling</shortdesc>
+			<legalvalue name="relaxed">Root dependents not attached during parsing (attached with default label afterwards).</legalvalue>
+			<legalvalue name="normal">Root dependents attached by RightArc transition during parsing (unattached tokens attached with default label afterwards).</legalvalue>
+		</option>
+	</optiongroup>
+   	<optiongroup groupname="planar">
+		<desc><![CDATA[ The <b>planar</b> option group controls the Nivre planar parsing algorithm.  ]]></desc>
+		<option type="enum" name="connectedness" flag="pcon" default="none" usage="save">
+			<desc><![CDATA[ If <b>connectedness=true</b>, the parser only generates connected dependency graphs. ]]></desc>
+			<shortdesc>Enforce connectedness</shortdesc>
+			<legalvalue name="none">Don't enforce connectedness at all, words whose head the parser doesn't know will be linked to the root node. With this option, the parser will work with planar dependency forests. A forest may be seen as a tree by considering all the roots linked to the dummy root node, but it needn't be planar when seen this way.</legalvalue>
+			<legalvalue name="reduceonly">The last node in a connected component cannot be reduced. No restrictions on shift transitions. This option guarantees that the dependency graph obtained counting links to the dummy root node is planar and connected. </legalvalue>
+			<legalvalue name="full">Enforce full connectedness by not only not allowing to reduce the last node in a component, but not allowing to shift the last word if the graph is not connected. The produced graph will be connected and planar even without considering the dummy root node.</legalvalue>
+		</option>
+		<option type="bool" name="acyclicity" flag="pacy" default="true" usage="save">
+			<desc><![CDATA[ If <b>acyclicity=true</b>, the parser only generates acyclic dependency graphs. ]]></desc>
+			<shortdesc>Enforce acyclicity</shortdesc>
+		</option>
+		<option type="bool" name="no_covered_roots" flag="pcov" default="false" usage="save">
+			<desc><![CDATA[ If <b>covered_roots=true</b>, the parser disallows covered roots (i.e. disallows non-projective structures, while with this option set to false, it allows planar structures that are not projective). ]]></desc>
+			<shortdesc>Disallow covered roots</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="2planar">
+		<desc><![CDATA[ The <b>2-planar</b> option group controls the 2-planar parsing algorithm.  ]]></desc>
+		<option type="bool" name="reduceonswitch" flag="2pr" default="false" usage="save">
+			<desc><![CDATA[ If <b>reduceonswitch=true</b>, the parser reduces the active stack immediately after switching stacks. ]]></desc>
+			<shortdesc>Force reduce after switch</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="covington">
+		<option type="bool" name="allow_root" flag="cr" default="true" usage="save">
+			<desc><![CDATA[ If <b>allow_root=true</b>, the parser treats the special root node as a token during parsing, allowing root dependents to be
+attached with a RightArc transition; otherwise root dependents are not attached during parsing. In both cases, unattached tokens are attached to the special root
+node with the default label after parsing is completed. ]]></desc>
+			<shortdesc>Allow root</shortdesc>
+		</option>
+		<option type="bool" name="allow_shift" flag="cs" default="false" usage="save">
+			<desc><![CDATA[ If <b>allow_shift=true</b>, Shift is a valid transition, allowing the parser to skip remaining tokens in Left; 
+otherwise all tokens in Left must be inspected before the next token is shifted. ]]></desc>
+			<shortdesc>Allow shift transition</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="lib">
+		<desc><![CDATA[ This group contains options that are specific for the liblinear and libsvm learner. ]]></desc>
+		<option type="string" name="options" flag="lo" default="" usage="save">
+			<desc><![CDATA[ There are many LIBSVM options (see <a href="http://www.csie.ntu.edu.tw/~cjlin/libsvm/" target="_blank">LIBSVM Documentation</a>).
+           Note that all whitespace is replaced by underscore if this option is specified in the command-line prompt.
+           For example, it could look like this: <code>-lo -s_0_-t_1_-d_2_-g_0.2_-c_1_-r_0_-e_1.0</code>.
+           Liblinear have several options (see <a href="http://www.csie.ntu.edu.tw/~cjlin/liblinear/" target="_blank">liblinear Documentation</a>) that
+           you can specify with this option.
+           Note that all whitespace is replaced by underscore if this option is specified in the command-line prompt.
+           For example, it could look like this: <code>-lo -s_4_-c_0.1</code> ]]></desc>
+			<shortdesc>LIBLINEAR options (see liblinear Documentation)</shortdesc>
+		</option>
+		<option type="string" name="external" flag="lx" default="" usage="train">
+			<desc><![CDATA[ Path to <code>train</code> or <code>svm-train</code> executable file of the liblinear or the libsvm package. ]]></desc>
+			<shortdesc>Path to <code>train</code> or <code>svm-train</code></shortdesc>
+		</option>
+		<option type="bool" name="save_instance_files" flag="li" default="false" usage="save">
+			<desc><![CDATA[ If <b>save_instance_files=true</b>, training instance files are saved in the configuration, otherwise
+           these files are deleted. The training instance files are not used during parsing. ]]></desc>
+			<shortdesc>If <b>save_instance_files=true</b>, instance files are saved in the configuration.</shortdesc>
+		</option>
+		<option type="enum" name="verbosity" flag="lv" default="silent" usage="train">
+		<desc><![CDATA[ Verbosity of the liblinear or the libsvm package ]]></desc>
+			<shortdesc>Verbosity of the liblinear or the libsvm package</shortdesc>
+			<legalvalue name="silent">No output from the liblinear or the libsvm package is logged.</legalvalue>
+			<legalvalue name="error">Only the error stream of the liblinear or the libsvm package is logged.</legalvalue>
+			<legalvalue name="all">All output of the liblinear or the libsvm package is logged.</legalvalue>
+		</option>
+	</optiongroup>
+
+	<optiongroup groupname="guide">
+		<desc><![CDATA[ Contains options that are specific for the guide, which can be seen as an interface (or glue) between the parsing algorithm
+		and the learner. During learning, the parsing algorithm sends training instances to the guide, which prepares the corresponding feature vectors 
+		that are sent to the learner. During parsing, the parsing algorithm requests the prediction of parser actions from the guide, which means that 
+		the guide prepares the feature vectors that are sent to the classifier (which makes use of the model induced in the learning phase).    ]]></desc>
+		<option type="stringenum" name="features" flag="F" default="" usage="save">
+			<desc><![CDATA[ The <b>features</b> option is used for specifying the feature model specification file, which is an XML file 
+			(see user guide: <a href="userguide.html#featurespec">Feature model</a>) or a text file with the file suffix <b>.par</b> (see 
+			user guide of MaltParser 0.x (C-impl) <a href="http://stp.lingfil.uu.se/~nivre/research/MaltParser.html#features">Feature Models</a>). If 
+			no feature specification file is specified,  the parser will use a default feature model specification for the given parsing algorithm that is included in the
+			MaltParser distribution (included in the maltparser-1.9.0.jar file).  ]]></desc>
+			<shortdesc>Feature model specification</shortdesc>
+			<legalvalue name="nivreeager" mapto="/appdata/features/{learner}/{dataformat}/NivreEager.xml">Nivre arc-eager default model</legalvalue>
+			<legalvalue name="nivrestandard" mapto="/appdata/features/{learner}/{dataformat}/NivreStandard.xml">Nivre arc-standard default model</legalvalue>
+			<legalvalue name="covnonproj" mapto="/appdata/features/{learner}/{dataformat}/CovingtonNonProjective.xml">Covington non-projective default model</legalvalue>
+			<legalvalue name="covproj" mapto="/appdata/features/{learner}/{dataformat}/CovingtonProjective.xml">Covington projective default model</legalvalue>
+			<legalvalue name="stackproj" mapto="/appdata/features/{learner}/{dataformat}/StackProjective.xml">Stack projective default model</legalvalue>
+			<legalvalue name="stackeager" mapto="/appdata/features/{learner}/{dataformat}/StackSwap.xml">Stack projective default model</legalvalue>
+			<legalvalue name="stacklazy" mapto="/appdata/features/{learner}/{dataformat}/StackSwap.xml">Stack projective default model</legalvalue>
+			<legalvalue name="planar" mapto="/appdata/features/{learner}/{dataformat}/PlanarEager.xml">Planar arc-eager default model</legalvalue>
+			<legalvalue name="2planar" mapto="/appdata/features/{learner}/{dataformat}/2PlanarEager.xml">2-Planar arc-eager default model</legalvalue>
+		</option>
+		<option type="string" name="data_split_column" flag="d" default="" usage="save">
+			<desc><![CDATA[ For some learning methods (like LIBSVM) it is impractical to induce a single model based on all training instances. With
+			the <b>data_split_column</b>, <b>data_split_structure</b> and <b>data_split_threshold</b> options it is possible to define how the guide 
+			should split up the training
+			instances to train several models. <b>Note</b>: Usually this will result in a slight drop in accuracy but a significant decrease in learning time. 
+			The option <b>data_split_column</b> indicates which input column in the data format specification file should be used for splitting up the training 
+			instances, for example, <code>-d POSTAG</code> or <code>-d CPOSTAG</code>. It
+			is not a good idea to use fine-grained features, such as LEMMA or FORM, since this would result in thousands of models. ]]></desc>
+			<shortdesc>Data split input column</shortdesc>
+		</option>
+		<option type="string" name="data_split_structure" flag="s" default="" usage="save">
+			<desc><![CDATA[ For some learning methods (like LIBSVM) it is impractical to induce a single model based on all training instances. With
+			the <b>data_split_column</b>, <b>data_split_structure</b> and <b>data_split_threshold</b> options it is possible to define how the guide 
+			should split up the training
+			instances to train several models. <b>Note</b>: Usually this will result in a slight drop in accuracy but a significant decrease in learning time.
+			The option <b>data_split_structure</b> specifies
+			the data structure that should be used for splitting up the traning instances. For example, with Nivre's parsing algorithm 
+			it is possible to use the top token on the stack (<code>-s Stack[0]</code>) or the next input token (<code>-s Input[0]</code>);
+			for Covington's algorithms it should be either <code>-s Left[0]</code> or <code>-s Right[0]</code>.  ]]></desc>
+			<shortdesc>Data split data structure</shortdesc>
+		</option>
+		<option type="integer" name="data_split_threshold" flag="T" default="50" usage="save">
+			<desc><![CDATA[ For some learning methods (like LIBSVM) it is impractical to induce a single model based on all training instances. With
+			the <b>data_split_column</b>, <b>data_split_structure</b> and <b>data_split_threshold</b> options it is possible to define how the guide 
+			should split up the training
+			instances to train several models. <b>Note</b>: Usually this will result in a slight drop in accuracy but a significant decrease in learning time.
+			The option <b>data_split_threshold</b> specifies the frequency threshold for training a separate model. For example, <code>-T 100</code> means that all
+			training sets that contain less than 100 instances will be merged into a default training set. ]]></desc>
+			<shortdesc>Data split threshold</shortdesc>
+		</option>
+		<option type="integer" name="kbest" flag="k" default="-1" usage="save">
+			<desc><![CDATA[ The classifier can produce a k-best list of predicted parser actions. The <b>kbest</b> option indicates how many 
+			items the k-best list should contain. If <code>-k -1</code>, all possible parser actions are ranked in the k-best list. 
+			If <code>-k 1</code>, there is only one prediction in the k-best list. MaltParser 1.9.0 (<b>behavior &ne; malt0.4</b>) only makes 
+			use of the k-best list when the parser action is not permissible. Later releases of MaltParser will make use of the k-best list
+			in a more intelligent way. If <b>--malt0.4-behavior=true</b>, this option will be overridden with <b>k=1</b>.   ]]></desc>
+			<shortdesc>Number of items in k-best list</shortdesc>
+		</option>
+		<option type="class" name="kbest_type" flag="kt" default="rank" usage="process">
+			<desc><![CDATA[ The classifier can produce a k-best list of predicted parser actions.    ]]></desc>
+			<shortdesc>Type of k-best list</shortdesc>
+			<legalvalue name="rank" class="org.maltparser.parser.history.kbest.KBestList">Only ranked list</legalvalue>
+		</option>
+		<option type="class" name="learner" flag="l" default="liblinear"  usage="save">
+			<desc><![CDATA[ This option specifies the learning method (learner package). MaltParser 1.9.0 includes
+			the LIBSVM learner and the LIBLINEAR learner. ]]></desc>
+			<shortdesc>Learner</shortdesc>
+			<legalvalue name="libsvm" class="org.maltparser.ml.lib.LibSvm">LIBSVM learner</legalvalue>
+			<legalvalue name="liblinear" class="org.maltparser.ml.lib.LibLinear">LIBLINEAR learner</legalvalue>
+		</option>
+		<option type="string" name="decision_settings" flag="gds" default="T.TRANS+A.DEPREL" usage="save">
+			<desc><![CDATA[ This option specifies how a parser action is combined or divided. By default, arc label(s) and transition are combined into
+			one individual decision. For more information see the user guide: <a href="userguide.html#predstrate">Prediction strategy</a>.]]></desc>
+			<shortdesc>Decision settings</shortdesc>
+		</option>
+		<option type="string" name="classitem_separator" flag="gcs" default="~" usage="save">
+			<desc><![CDATA[ By default the combination of transition and dependency type into one class is separated by an underscore. If 
+			some dependency label contains an underscore, this could mess up the separation of the class. 
+			Therefore another <b>classitem_separator</b> should be used in this case.  ]]></desc>
+			<shortdesc>Class item separator</shortdesc>
+		</option>
+	</optiongroup>
+	<optiongroup groupname="pproj">
+		<option type="enum" name="marking_strategy" flag="pp" default="none" usage="save">
+			<desc><![CDATA[ Marking strategy for pseudo-projective transformation.  ]]></desc>
+			<shortdesc>Marking strategy for pseudo-projective transformation</shortdesc>
+			<legalvalue name="none">No pseudo-projective transformation</legalvalue>
+			<legalvalue name="baseline">Projectivizes input data</legalvalue>
+			<legalvalue name="head">Projectivizes input data with head encoding for labels</legalvalue>
+			<legalvalue name="path">Projectivizes input data with path encoding for labels</legalvalue>
+			<legalvalue name="head+path">Projectivizes input data with head and path encoding for labels</legalvalue>
+		</option>
+		<option type="enum" name="covered_root" flag="pcr" default="none" usage="save">
+			<desc><![CDATA[ Attachment strategy for covered roots.  ]]></desc>
+			<shortdesc>Attachment strategy for covered roots</shortdesc>
+			<legalvalue name="none">No covered root transformation; covered roots treated as any other node</legalvalue>
+			<legalvalue name="ignore">No covered root transformation; covered roots ignored in projectivity tests (old implementation of none)</legalvalue>
+			<legalvalue name="left">Attach covered roots to the left end of the shortest covering arc</legalvalue>
+			<legalvalue name="right">Attach covered roots to the right end of the shortest covering arc</legalvalue>
+			<legalvalue name="head">Attach covered roots to the head of the shortest covering arc</legalvalue>
+		</option>
+		<option type="enum" name="lifting_order" flag="plo" default="shortest" usage="save">
+			<desc><![CDATA[ Lifting order, in case a dependency graph contains multiple non-projective arcs.  ]]></desc>
+			<shortdesc>Lifting order, in case a dependency graph contains multiple non-projective arcs</shortdesc>
+			<legalvalue name="shortest">Lift the shortest arcs first (break ties from left to right)</legalvalue>
+			<legalvalue name="deepest">Lift the most deeply nested arcs first (break ties from left to right)</legalvalue>
+		</option>
+	</optiongroup>
+</options>

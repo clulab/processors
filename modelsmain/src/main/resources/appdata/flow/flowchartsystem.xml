@@ -1,0 +1,46 @@
+<flowchartsystem>
+	<chartelements>
+		<chartelement item="configdir" class="org.maltparser.core.config.ConfigDirChartItem">
+			<attribute name="id" default="main"/>
+			<attribute name="task" default="info"/>
+		</chartelement>
+		<chartelement item="graph" class="org.maltparser.core.syntaxgraph.SyntaxGraphChartItem">
+			<attribute name="id" default="main"/>
+			<attribute name="task" default="create"/>
+			<attribute name="structure" default="gold"/>
+		</chartelement>
+		<chartelement item="read" class="org.maltparser.core.syntaxgraph.reader.ReadChartItem">
+			<attribute name="id" default="main"/>
+			<attribute name="target" default="gold"/>
+			<attribute name="optiongroup" default="input"/>
+		</chartelement>
+		<chartelement item="write" class="org.maltparser.core.syntaxgraph.writer.WriteChartItem">
+			<attribute name="id" default="main"/>
+			<attribute name="source"  default="gold"/>
+			<attribute name="optiongroup" default="output"/>
+		</chartelement>
+		<chartelement item="copy" class="org.maltparser.core.syntaxgraph.CopyChartItem">
+			<attribute name="id" default="main"/>
+			<attribute name="task" default="terminals"/>
+			<attribute name="source" default="gold"/>
+			<attribute name="target" default="system"/>
+		</chartelement>
+		<chartelement item="singlemalt" class="org.maltparser.parser.SingleMaltChartItem">
+			<attribute name="id" default="singlemalt"/>
+			<attribute name="mode" default="parse"/>
+			<attribute name="task" default="process"/>
+			<attribute name="source" default="gold"/>
+			<attribute name="target" default="system"/>
+		</chartelement>
+		<chartelement item="pseudoproj" class="org.maltparser.transform.pseudo.PseudoProjChartItem">
+			<attribute name="id" default="proj"/>
+			<attribute name="task" default="proj"/>
+			<attribute name="source" default="system"/>
+			<attribute name="target" default="system"/>
+		</chartelement>
+		<chartelement item="analyzer" class="org.maltparser.core.syntaxgraph.GraphAnalyzerChartItem">
+			<attribute name="id" default="analyzer"/>
+			<attribute name="source" default="input"/>
+		</chartelement>
+	</chartelements>
+</flowchartsystem>

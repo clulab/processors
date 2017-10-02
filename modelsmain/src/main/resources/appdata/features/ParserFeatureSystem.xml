@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<featuresystem>
+	<function class="org.maltparser.core.syntaxgraph.feature.DGraphAddressFunction" hasSubFunctions="true">
+		<desc><![CDATA[ The dependency graph address functions take a graph node as argument and navigates from this graph node to another 
+		graph node (if possible). There are seven dependency graph address functions: ]]></desc>
+		<subfunctions>
+			<subfunction name="head">Returns the head of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="ldep">Returns the leftmost (left) dependent of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="rdep">Returns the rightmost (right) dependent of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="rdep2"></subfunction>
+			<subfunction name="lsib">Returns the next left (same-side) sibling of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="rsib">Returns the next right (same-side) sibling of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="pred">Returns the predecessor of the graph node in the linear order of the input string if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="succ">Returns the successor of the graph node in the linear order of the input string if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="anc">Returns the ancestor of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="panc">Returns the proper ancestor of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="ldesc">Returns the leftmost descendant of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="pldesc">Returns the proper leftmost descendant of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="rdesc">Returns the rightmost descendant of the graph node if defined; otherwise, a null-value.</subfunction>
+			<subfunction name="prdesc">Returns the proper rightmost descendant of the graph node if defined; otherwise, a null-value.</subfunction>
+		</subfunctions>
+	</function>
+	<function class="org.maltparser.parser.algorithm.nivre.NivreFactory" hasSubFunctions="true" hasFactory="true">
+		<subfunctions>
+			<subfunction name="Stack"></subfunction>
+			<subfunction name="Input"></subfunction>
+		</subfunctions>
+	</function>
+	<function class="org.maltparser.parser.algorithm.planar.PlanarFactory" hasSubFunctions="true" hasFactory="true">
+		<subfunctions>
+			<subfunction name="Stack"></subfunction>
+			<subfunction name="Input"></subfunction>
+		</subfunctions>
+	</function>
+	<function class="org.maltparser.parser.algorithm.twoplanar.TwoPlanarFactory" hasSubFunctions="true" hasFactory="true">
+		<subfunctions>
+			<subfunction name="ActiveStack"></subfunction>
+			<subfunction name="InactiveStack"></subfunction>
+			<subfunction name="Input"></subfunction>
+		</subfunctions>
+	</function>
+	<function class="org.maltparser.parser.algorithm.stack.StackFactory" hasSubFunctions="true" hasFactory="true">
+		<subfunctions>
+			<subfunction name="Stack"></subfunction>
+			<subfunction name="Input"></subfunction>
+			<subfunction name="Lookahead"></subfunction>
+		</subfunctions>
+	</function>
+	<function class="org.maltparser.parser.algorithm.covington.CovingtonFactory" hasSubFunctions="true" hasFactory="true">
+		<subfunctions>
+			<subfunction name="Left"></subfunction>
+			<subfunction name="Right"></subfunction>
+			<subfunction name="LeftContext"></subfunction>
+			<subfunction name="RightContext"></subfunction>
+		</subfunctions>
+	</function>	
+	<function name="InputColumn" class="org.maltparser.core.syntaxgraph.feature.InputColumnFeature" hasSubFunctions="false">
+		<desc><![CDATA[ The column name must correspond to an input column in the data format and the address function 
+		must return a token node in the input string. (If the address function is undefined, a null-value is returned.) ]]></desc>
+	</function>
+	<function name="OutputColumn" class="org.maltparser.core.syntaxgraph.feature.OutputColumnFeature" hasSubFunctions="false">
+		<desc><![CDATA[ The column name must correspond to an output column in the data format and the address function 
+		must return a graph node in the dependency graph. (If the address function is undefined, a null-value is returned.) ]]></desc>
+	</function>
+	<function name="InputTable" class="org.maltparser.core.syntaxgraph.feature.InputTableFeature" hasSubFunctions="false">
+		<desc><![CDATA[ This is a internal feature for MaltParser to address internal symbol table. (If the address function is undefined, a null-value is returned.) ]]></desc>
+	</function>
+	<function name="OutputTable" class="org.maltparser.core.syntaxgraph.feature.OutputTableFeature" hasSubFunctions="false">
+		<desc><![CDATA[ This is a internal feature for MaltParser to address internal symbol table. (If the address function is undefined, a null-value is returned.) ]]></desc>
+	</function>
+	<function name="InputArc" class="org.maltparser.core.syntaxgraph.feature.InputArcFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Takes three arguments, a column name and two address functions, and returns LEFT, RIGHT or NULL depending on whether 
+		the column value defines a left-pointing, right-pointing or no arc between the two nodes identified by the address functions. The column name 
+		must correspond to an <b>input</b> column of integer type in the data format and the address functions must return token nodes in 
+		the input string. (If one of the address functions is undefined, a null-value is returned.) This feature function can be used to define 
+		features over the dependency graph predicted by another parser and given as input to MaltParser.]]></desc>
+	</function>
+	<function name="InputArcDir" class="org.maltparser.core.syntaxgraph.feature.InputArcDirFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Takes two arguments, a column name and an address function, and returns LEFT, RIGHT or ROOT depending on whether the column 
+		value defines the head of the node identified by the address function to be situated on the left or on the right or to be the artificial root 
+		node. The column name must correspond to an <b>input</b> column of integer type in the data format and the address function must return 
+		a token node in the input string. (If the address function is undefined, a null-value is returned.) This feature function can be used to define 
+		features over the dependency graph predicted by another parser and given as input to MaltParser.]]></desc>
+	</function>
+	<function name="Exists" class="org.maltparser.core.syntaxgraph.feature.ExistsFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Takes an address function as argument and returns TRUE if the address function returns an existing 
+		node (and FALSE otherwise).]]></desc>
+	</function>
+	<function name="Distance" class="org.maltparser.core.syntaxgraph.feature.DistanceFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Takes three arguments, two address functions and a normalization string, and returns the string distance (number of 
+		intervening words) between the words identified by the address functions. The normalization string is a list of integers (separated by "|") 
+		specifying the intervals used to discretize the distance metric. The list must start with 0 and be sorted in ascending order. The value 
+		returned is (a category corresponding to) the greatest integer in the normalization string that is smaller than or equal to the exact distance.  ]]></desc>
+	</function>
+	<function name="NumOf" class="org.maltparser.core.syntaxgraph.feature.NumOfFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Takes three arguments, an address function, a relation name, and a normalization string, and returns the 
+		number of nodes having the specified relation to the node identified by the address function. Valid relation names are <b>ldep</b>, 
+		<b>rdep</b> and <b>dep</b> (for left dependent, right dependent and dependent, respectively). The normalization string is a list 
+		of integers (separated by "|") specifying the intervals used to discretize the metric. The list must start with 0 and be sorted in 
+		ascending order. The value returned is (a category corresponding to) the greatest integer in the normalization string that is smaller 
+		than or equal to the exact number.   ]]></desc>
+	</function>
+	<function name="Split" class="org.maltparser.core.feature.map.SplitFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Splits the feature value into a set of feature values. In addition to 
+		a feature specification it takes a delimiter (regular expression) as an argument.  ]]></desc>
+	</function>
+	<function name="Suffix" class="org.maltparser.core.feature.map.SuffixFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Extract the suffix of a feature value with a suffix length n. By convention, if n = 0, the entire 
+		feature value is included; otherwise only the n last characters are included in the feature value.   ]]></desc>
+	</function>
+	<function name="Prefix" class="org.maltparser.core.feature.map.PrefixFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Extract the prefix of a feature value with a prefix length n. By convention, if n = 0, the entire 
+		feature value is included; otherwise only the n first characters are included in the feature value.   ]]></desc>
+	</function>
+	<function name="Merge" class="org.maltparser.core.feature.map.MergeFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Merge two feature value into one feature value.  ]]></desc>
+	</function>
+	<function name="Merge3" class="org.maltparser.core.feature.map.Merge3Feature" hasSubFunctions="false">
+		<desc><![CDATA[ Merge three feature value into one feature value.  ]]></desc>
+	</function>
+		<function name="OutputArc" class="org.maltparser.core.syntaxgraph.feature.OutputArcFeature" hasSubFunctions="false">
+		<desc><![CDATA[ Takes three arguments, a column name and two address functions, and returns LEFT, RIGHT or NULL depending on whether 
+		the column value defines a left-pointing, right-pointing or no arc between the two nodes identified by the address functions. The column name 
+		must correspond to an <b>output</b> column of integer type in the data format and the address functions must return token nodes in 
+		the input string. (If one of the address functions is undefined, a null-value is returned.) IMPORTANT NOTE: Currently the column name is
+		ignored, it only works for arcs described by the HEAD output column. ]]></desc>
+	</function>
+</featuresystem>
+

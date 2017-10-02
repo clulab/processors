@@ -28,9 +28,10 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
   }
 
   def in(s:String):String = {
-    var ns = caseInsensitive match {
-      case true => s.toLowerCase
-      case _ => s
+    var ns = if (caseInsensitive) {
+      s.toLowerCase
+    } else {
+      s
     }
     if(internStrings) ns = Processor.internString(ns)
     uniqueStrings.add(ns)
@@ -124,7 +125,7 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     }
 
     //println(s"Matched ${sequenceNormalized(offset)} at offset $offset")
-    val tree = entries.get(sequenceNormalized(offset)).get
+    val tree = entries(sequenceNormalized(offset))
     val longestMatch = new MutableNumber[Int](-1)
 
     // attempt to match more by inspecting the children

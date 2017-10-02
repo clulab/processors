@@ -5,6 +5,7 @@ import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import org.clulab.processors.Document
 import org.clulab.processors.bionlp.ner.{HybridNER, KBLoader}
+import org.clulab.processors.clu.bio.BioTokenizerPreProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 
@@ -25,12 +26,11 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
                            removeFigTabReferences:Boolean = true,
                            removeBibReferences:Boolean = true
 )
-  extends FastNLPProcessor(internStrings, withChunks, useMalt = false, withDiscourse) {
+  extends FastNLPProcessor(internStrings, withChunks, withDiscourse) {
 
   //lazy val banner = new BannerWrapper
-  private lazy val specialTokens = KBLoader.loadSpecialTokens
-  private lazy val postProcessor = new BioNLPTokenizerPostProcessor(specialTokens)
-  private lazy val preProcessor = new BioNLPPreProcessor(removeFigTabReferences, removeBibReferences)
+  private lazy val postProcessor = new BioNLPTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)
+  private lazy val preProcessor = new BioTokenizerPreProcessor(removeFigTabReferences, removeBibReferences)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
 
@@ -40,7 +40,7 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
 
   override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = postProcessor.process(originalTokens)
 
-  override def preprocessText(origText:String):String = preProcessor.preprocess(origText)
+  override def preprocessText(origText:String):String = preProcessor.process(origText)
 
   override def resolveCoreference(doc:Document): Unit = {
     doc.coreferenceChains = None

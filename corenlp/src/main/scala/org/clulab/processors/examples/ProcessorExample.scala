@@ -15,13 +15,16 @@ object ProcessorExample {
   def main(args:Array[String]) {
     // create the processor
     val proc:Processor = new CoreNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
-    //val proc:Processor = new FastNLPProcessor()
 
     // for much faster processing, use FastNLPProcessor
     // this processor does not support constituent parsing and coreference resolution, and
     //   the generated dependencies are Stanford's "basic" rather "collapsed" dependencies
     // it should run at least an order of magnitude faster than CoreNLPProcessor
     //val proc:Processor = new FastNLPProcessor()
+    
+    // other processors supported:
+    // BioNLPProcessor, and FastBioNLPProcessor - for the biomedical domain
+    // CluProcessor - similar to FastNLPProcessor, but using tools licensed under the Apache license
 
     // the actual work is done here
     val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")

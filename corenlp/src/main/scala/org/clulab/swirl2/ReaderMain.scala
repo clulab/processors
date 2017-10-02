@@ -14,7 +14,7 @@ import org.clulab.serialization.DocumentSerializer
 object ReaderMain {
   def main(args:Array[String]) {
     val reader = new Reader
-    val proc = new FastNLPProcessor(useMalt = false)
+    val proc = new FastNLPProcessor()
     val file = new File(args(0))
     val outputFile = new File(args(0) + ".ser")
 

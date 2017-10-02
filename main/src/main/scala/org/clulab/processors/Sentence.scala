@@ -2,6 +2,9 @@ package org.clulab.processors
 
 import org.clulab.struct.{DirectedGraph, GraphMap, Tree}
 import org.clulab.struct.GraphMap._
+import org.clulab.utils.SeqUtils
+
+import scala.collection.immutable.Range
 import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
 
@@ -32,6 +35,8 @@ class Sentence(
   var graphs: GraphMap = new GraphMap
 
   def size:Int = words.length
+
+  def indices: Range = 0 until size
 
   /**
     * Used to compare Sentences.
@@ -112,6 +117,28 @@ class Sentence(
       text.append(words(i))
     }
     text.toString()
+  }
+
+  /** Reverts the current sentence */
+  def revert():Sentence = {
+    val reverted = new Sentence(
+      SeqUtils.revert(words).toArray,
+      SeqUtils.revert(startOffsets).toArray,
+      SeqUtils.revert(endOffsets).toArray)
+    if(tags.nonEmpty)
+      reverted.tags = Some(SeqUtils.revert(tags.get).toArray)
+    if(lemmas.nonEmpty)
+      reverted.lemmas = Some(SeqUtils.revert(lemmas.get).toArray)
+    if(entities.nonEmpty)
+      reverted.entities = Some(SeqUtils.revert(entities.get).toArray)
+    if(norms.nonEmpty)
+      reverted.norms = Some(SeqUtils.revert(norms.get).toArray)
+    if(chunks.nonEmpty)
+      reverted.chunks = Some(SeqUtils.revert(chunks.get).toArray)
+
+    // TODO: revert syntacticTree and graphs!
+
+    reverted
   }
 
 }

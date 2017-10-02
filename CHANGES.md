@@ -1,4 +1,17 @@
 # Changes
++ **6.1.3** - Update core server parameters. Increment Akka version to 2.5.4.
++ **6.1.3** - Added BioCluProcessor, which has all the functionality of BioNLPProcessor, with the exception of the bio NER (to be added later).
++ **6.1.3** - Separated the `models` jar in two jars: `modelsmain`, which contains data relevant for `processors-main`, and `modelscorenlp`, which contains data relevant for `processors-corenlp`.
++ **6.1.3** - Bug fix: fixed model loading for the maltparser models, which were not loading properly from the processors-models jar.
++ **6.1.3** - `CluProcessor` can now be configured through Config.
++ **6.1.2** - Update to use Bioresources 1.1.24 which includes the Harvard BioEntities updates of 8/22/2017.
++ **6.1.2** - Bug fix: made Counter.keySet efficient (again). This severely affected the performance of the discourse parser, which was extremely slow.
++ **6.1.2** - Replaced the CRF model based on Mallet with an in-house BiMEMM model. Performance is 97% on WSJ and 98% on Genia.
++ **6.1.0/1** - Added the word-by-word voting ensemble model to the CluProcessor parser. Performance (with gold POS tags) is: LAS on WSJ: 89.2%, LAS on Genia: 87.4%.
++ **6.1.0/1** - Added collapsed Stanford dependencies to CluProcessor. See `org.clulab.processors.clu.syntax.EnhancedDependencies` for details.
++ **6.1.0/1** - Bug fix: the parsing model in CluProcessor was broken (maltparser was trained incorrectly).
++ **6.0.7** - Implement Akka-based processors server, with default configuration for BioNLP.
++ **6.0.7** - Added basic Stanford dependencies to CluProcessor. These are implemented using maltparser trained on WSJ + Genia. Note that currently the CluProcessor POS tagger is trained just on WSJ.
 + **6.0.6** - Rename Odin subproject library artifact to processors-odin, for consistency.
 + **6.0.6** - Added CluProcessor, which contains only in-house tools under the Apache license. Currently contains English tokenization, lemmatization, and POS tagging.
 + **6.0.6** - Added `graph` field to Odin rules, which denotes the graph (ex. stanford collapsed dependencies) used within the pattern (`incoming`, `outgoing`, etc.).

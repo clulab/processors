@@ -7,21 +7,21 @@ libraryDependencies ++= {
   Seq(
     "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
     "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-    "org.clulab" % "bioresources" % "1.1.23",
+    "org.clulab" % "bioresources" % "1.1.24",
     "com.io7m.xom" % "xom" % "1.2.10",
     "org.json4s" %% "json4s-core" % json4sVersion,
     "org.json4s" %% "json4s-jackson" % json4sVersion,
     "ch.qos.logback" % "logback-classic" % "1.0.10",
     "org.slf4j" % "slf4j-api" % "1.7.10",
-    "log4j" % "log4j" % "1.2.17", // this is used by our maltparser clone; otherwise not in use
     "de.bwaldvogel" % "liblinear" % "1.94",
     "tw.edu.ntu.csie" % "libsvm" % "3.17",
-    "org.antlr" % "antlr4-runtime" % "4.6",
-    "cc.mallet" % "mallet" % "2.0.8",
-    "edu.washington.cs.knowitall.nlptools" % "nlptools-stem-morpha_2.10" % "2.4.5",
+    "org.antlr" % "antlr4-runtime" % "4.6", // for tokenization
+    "edu.washington.cs.knowitall.nlptools" % "nlptools-stem-morpha_2.10" % "2.4.5", // for lemmatization
+    "org.maltparser" % "maltparser" % "1.9.0", // for dependency parsing
     "jline" % "jline" % "2.12.1",
     "commons-io" % "commons-io" % "2.5",
-    "org.apache.commons" % "commons-text" % "1.1"
+    "org.apache.commons" % "commons-text" % "1.1",
+    "com.typesafe" % "config" % "1.3.1"
   )
 
 }

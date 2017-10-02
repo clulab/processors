@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<featuremodels>
+	<featuremodel name="covnonproj">
+		<feature>InputColumn(UPOSTAG, Left[0])</feature>
+		<feature>InputColumn(UPOSTAG, Right[0])</feature>
+		<feature>InputColumn(UPOSTAG, Right[1])</feature>
+		<feature>InputColumn(UPOSTAG, Right[2])</feature>
+		<feature>InputColumn(UPOSTAG, Right[3])</feature>
+		<feature>InputColumn(UPOSTAG, Left[1])</feature>
+		<feature>InputColumn(UPOSTAG, LeftContext[0])</feature>
+		<feature>InputColumn(UPOSTAG, RightContext[0])</feature>
+		<feature>OutputColumn(DEPREL, Left[0])</feature>
+		<feature>OutputColumn(DEPREL, ldep(Left[0]))</feature>
+		<feature>OutputColumn(DEPREL, rdep(Left[0]))</feature>
+		<feature>OutputColumn(DEPREL, ldep(Right[0]))</feature>
+		<feature>OutputColumn(DEPREL, Right[0])</feature>
+		<feature>InputColumn(FORM, Left[0])</feature>
+		<feature>InputColumn(FORM, Right[0])</feature>
+		<feature>InputColumn(FORM, Right[1])</feature>
+		<feature>InputColumn(FORM, head(Left[0]))</feature>
+	</featuremodel>
+</featuremodels>

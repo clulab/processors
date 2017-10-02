@@ -37,7 +37,7 @@ object ProcessorShell extends App {
 
   // create the processor
   lazy val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
-  lazy val fast: Processor = new FastNLPProcessor(useMalt = false) // this uses the faster dependency parser
+  lazy val fast: Processor = new FastNLPProcessor() // this uses the faster dependency parser
   lazy val bio: Processor = new BioNLPProcessor(removeFigTabReferences = true)
   lazy val fastbio: Processor = new FastBioNLPProcessor(removeFigTabReferences = true)
 
@@ -91,7 +91,7 @@ object ProcessorShell extends App {
   reader.shutdown()
 
 
-  // summarize available commands
+  /** summarize available commands */
   def printCommands(): Unit = {
     println("\nCOMMANDS:")
     for ((cmd, msg) <- commands)

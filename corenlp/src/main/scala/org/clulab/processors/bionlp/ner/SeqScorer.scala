@@ -44,7 +44,7 @@ class SeqScorer {
           offset += 1
         }
         val end = offset
-        mentions.add(new Mention(start, end, label))
+        mentions.add(Mention(start, end, label))
       } else {
         offset += 1
       }
