@@ -20,7 +20,6 @@ libraryDependencies ++= {
     "org.maltparser" % "maltparser" % "1.9.0", // for dependency parsing
     "jline" % "jline" % "2.12.1",
     "commons-io" % "commons-io" % "2.5",
-    "org.apache.commons" % "commons-text" % "1.1",
     "com.typesafe" % "config" % "1.3.1"
   )
 
