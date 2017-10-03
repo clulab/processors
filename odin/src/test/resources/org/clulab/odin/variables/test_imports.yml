@@ -1,0 +1,8 @@
+vars:
+  name_prefix: "local"
+
+rules:
+  - name: "${name_prefix}-variables-test"
+    label: Test
+    type: token
+    pattern: test
