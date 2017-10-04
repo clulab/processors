@@ -9,8 +9,8 @@ import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotat
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.pipeline.Annotation
+import org.clulab.sequences.LexiconNER
 import org.clulab.struct.MutableNumber
-
 
 import scala.collection.JavaConversions._
 
@@ -79,7 +79,7 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
         // the rule-based NER labels take priority!
         // TODO: change to prefer longest entity here??
         if(ourSentence.entities.isDefined) {
-          RuleNER.mergeLabels(ourSentence.entities.get, bioNEs)
+          LexiconNER.mergeLabels(ourSentence.entities.get, bioNEs)
         } else {
           ourSentence.entities = Some(bioNEs)
         }
@@ -121,7 +121,7 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
         val contextEnd = findEntityEnd(i, labelsWithContext)
         while(i < contextEnd) {
           // Ok to set the context labels to O here; they will be picked again during the merge of ruleNer and CRF
-          bc2Labels(i) = RuleNER.OUTSIDE_LABEL
+          bc2Labels(i) = LexiconNER.OUTSIDE_LABEL
           i += 1
         }
         if(i < bc2Labels.length && bc2Labels(i) == s"I-$gene") {
@@ -159,8 +159,8 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
         isEntity(offset, seq) &&
         isCC(offset, tags) &&
         isEntity(offset, seq)) {
-        seq(i) = RuleNER.OUTSIDE_LABEL
-        seq(findEntityStart(i - 1, seq) - 1) = RuleNER.OUTSIDE_LABEL
+        seq(i) = LexiconNER.OUTSIDE_LABEL
+        seq(findEntityStart(i - 1, seq) - 1) = LexiconNER.OUTSIDE_LABEL
       }
       i += 1
     }
@@ -173,7 +173,7 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
       if(seq(i).startsWith("B-") &&
         (i == seq.length - 1 || ! seq(i + 1).startsWith("I-")) &&
         words(i).length == 1) {
-        seq(i) = RuleNER.OUTSIDE_LABEL
+        seq(i) = LexiconNER.OUTSIDE_LABEL
       }
       i += 1
     }
@@ -188,7 +188,7 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
         val end = findEntityEnd(i, seq)
         // println(s"FOUND fig ref from $start to $end")
         for(j <- start until end)
-          seq(j) = RuleNER.OUTSIDE_LABEL
+          seq(j) = LexiconNER.OUTSIDE_LABEL
         i = end
       } else {
         i += 1
@@ -202,7 +202,7 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
     while(i < seq.length) {
       if ((seq(i).startsWith("B-") || seq(i).startsWith("I-")) &&
         words(i).startsWith("XREF_")) {
-        seq(i) = RuleNER.OUTSIDE_LABEL
+        seq(i) = LexiconNER.OUTSIDE_LABEL
       }
       i += 1
     }
@@ -216,7 +216,7 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
         (i == seq.length - 1 || !seq(i + 1).startsWith("I-")) &&
         (isLowerCase(words(i)) || isUpperInitial(words(i))) &&
         KBLoader.ENTITY_STOPLIST.contains(words(i).toLowerCase)) {
-        seq(i) = RuleNER.OUTSIDE_LABEL
+        seq(i) = LexiconNER.OUTSIDE_LABEL
       }
       i += 1
     }

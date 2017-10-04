@@ -16,6 +16,7 @@ import java.util.{List => JavaList}
 
 import org.slf4j.LoggerFactory
 import CRFNER._
+import org.clulab.sequences.SeqScorer
 
 import scala.collection.mutable.ListBuffer
 import scala.io.StdIn
