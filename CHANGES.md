@@ -1,4 +1,5 @@
 # Changes
++ **6.1.4** - Added org.clulab.sequences.LexiconNER to match known entity names efficiently.
 + **6.1.3** - Update core server parameters. Increment Akka version to 2.5.4.
 + **6.1.3** - Added BioCluProcessor, which has all the functionality of BioNLPProcessor, with the exception of the bio NER (to be added later).
 + **6.1.3** - Separated the `models` jar in two jars: `modelsmain`, which contains data relevant for `processors-main`, and `modelscorenlp`, which contains data relevant for `processors-corenlp`.

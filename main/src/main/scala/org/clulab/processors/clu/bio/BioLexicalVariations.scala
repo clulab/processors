@@ -1,19 +1,21 @@
-package org.clulab.processors.bionlp.ner
+package org.clulab.processors.clu.bio
 
 import java.util.regex.Pattern
 
-import scala.collection.immutable.{HashSet, HashMap}
+import org.clulab.processors.clu.bio.BioLexicalVariations._
+import org.clulab.sequences.LexicalVariations
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import LexicalVariations._
 
 /**
-  *
+  * Generates all accepted lexical variations for this entity
+  *   For example: "insulin receptor substrate 1" => "insulin receptor substrate-1"
   * User: mihais
   * Date: 10/20/16
   */
-class LexicalVariations {
-  def lexicalVariations(tokens: Array[String]): Seq[Array[String]] = {
+class BioLexicalVariations extends LexicalVariations {
+  override def lexicalVariations(tokens: Array[String]): Seq[Array[String]] = {
 
     val variations = checkForVariations(tokens)
 
@@ -25,7 +27,7 @@ class LexicalVariations {
       if(variations.contains(SPLIT_DASH_DIGIT)) {
         addSplitDashDigit(tokens, newForms)
       }
-      newForms.toSeq
+      newForms
     } else {
       Seq.empty
     }
@@ -79,10 +81,10 @@ class LexicalVariations {
   }
 }
 
-object LexicalVariations {
+object BioLexicalVariations {
   val MERGE_DASH_DIGIT = 1
   val SPLIT_DASH_DIGIT = 2
 
-  val IS_NUMBER = Pattern.compile("[0-9]+")
-  val ENDS_WITH_DASH_DIGITS = Pattern.compile(".+\\-[0-9]+$")
+  val IS_NUMBER: Pattern = Pattern.compile("[0-9]+")
+  val ENDS_WITH_DASH_DIGITS: Pattern = Pattern.compile(".+\\-[0-9]+$")
 }
