@@ -5,13 +5,12 @@ import akka.event.Logging
 
 import org.clulab.processors._
 import org.clulab.processors.corenlp._
-
-import ProcessorCoreServerMessages._
+import org.clulab.processors.coshare.ProcessorCoreMessages._
 
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Update for removal of semantic roles.
+  *   Last Modified: Refactor for sharing.
   */
 class ProcessorActor (
 

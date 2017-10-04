@@ -9,58 +9,88 @@ import com.typesafe.scalalogging.LazyLogging
 
 import akka.actor._
 import akka.pattern.ask
+import akka.routing.Broadcast
 import akka.util.Timeout
 
-// import org.clulab.processors._
-import org.clulab.processors.coserver.ProcessorCoreServer
-import org.clulab.processors.coserver.ProcessorCoreServerMessages._
+import org.clulab.processors._
+import org.clulab.processors.coshare.ProcessorCoreMessages._
 
 /**
   * Reach client for the Processors Core Server.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Refactor to Processors.
+  *   Last Modified: Refactor for sharing.
   */
-class ProcessorCoreClient extends LazyLogging {
+object ProcessorCoreClient extends LazyLogging {
 
-  // load application configuration from the configuration file
-  private val config = ConfigFactory.load().getConfig("ProcessorCoreClient")
+  // THE instance of the the processor core client
+  private var _pcc: ProcessorCoreClient = _
 
-  // read acter system name from the configuration file
-  // private val systemName = if (config.hasPath("server.systemName"))
-  //                            config.getString("server.systemName")
-  //                          else "procCoreServer"
+  /** Create a single instance of the processor core client, only if it has not been created. */
+  def instance: ProcessorCoreClient = {
+    logger.debug(s"(ProcessorCoreClient.instance): pcc = ${_pcc}")
+    if (_pcc == null) {                     // create client, iff not already created
+      val config = ConfigFactory.load().getConfig("ProcessorCoreClient")
+      if (config == null)
+        throw new RuntimeException("(ProcessorCoreClient): Unable to read configuration from configuration file.")
+      _pcc = new ProcessorCoreClient(config)
+    }
+    logger.debug(s"(ProcessorCoreClient.instance): pcc => ${_pcc}")
+    _pcc
+  }
+
+  /** Expose the shutdown method from the instance. */
+  def shutdown: Unit = instance.shutdown
+}
+
+
+class ProcessorCoreClient (
+
+  /** Application-specific portion of the configuration file. */
+  val config: Config
+
+) extends LazyLogging {
+
+  // read actor system name from the configuration file
+  private val systemName = if (config.hasPath("server.systemName"))
+                             config.getString("server.systemName")
+                           else "procCoreServer"
 
   // fire up the actor system
-  // private val system = ActorSystem(systemName)
-  // logger.debug(s"system=${system}")
-
-  // figure out a good timeout value for requests to the server
-  private val patience = if (config.hasPath("askTimeout")) config.getInt("askTimeout") else 180
-  implicit val timeout = Timeout(patience seconds)
+  private val system = ActorSystem(systemName)
+  logger.debug(s"system=${system}")
 
   // fire up the processor core server and get a ref to the message router
-  // val router: ActorRef = getRouterRef(config)
-  val router: ActorRef = ProcessorCoreServer.router
-  logger.debug(s"(ProcessorCoreClient): router: ${router}")
+  val router: ActorRef = getRouterRef(config)
 
   /** Acquire actor ref via actor selection on the configured server path. */
-  // private def getRouterRef (config: Config): ActorRef = {
-  //   val serverPath = if (config.hasPath("server.path")) config.getString("server.path")
-  //                    else s"akka://${systemName}/user/procActorPool"
-  //   val ref = system.actorSelection(ActorPath.fromString(serverPath)).resolveOne()
-  //   Await.result(ref, timeout.duration).asInstanceOf[ActorRef]
-  // }
+  private def getRouterRef (config: Config): ActorRef = {
+    val serverPath = if (config.hasPath("server.path")) config.getString("server.path")
+                     else s"akka://${systemName}/user/procActorPool"
+    val ref = system.actorSelection(ActorPath.fromString(serverPath)).resolveOne()
+    Await.result(ref, 1.minute).asInstanceOf[ActorRef]
+  }
+
+  // simulate blocking RPC: finite duration is required so make it long
+  implicit val timeout = Timeout(8 hours)  // time limit to return Future from call
 
   /** Send the given message to the server and block until response comes back. */
   private def callServer (request: ProcessorCoreCommand): ProcessorCoreReply = {
-    val response = router ? request         // call returning Future
-    val result = Await.result(response, timeout.duration)
+    val response = router ? request         // call returns Future within long timeout
+    val result = Await.result(response, Duration.Inf) // blocking: wait forever
     if (result.isInstanceOf[ServerExceptionMsg]) {
       val exception = result.asInstanceOf[ServerExceptionMsg].exception
       throw new RuntimeException(exception.getMessage())
     }
     else
       result.asInstanceOf[ProcessorCoreReply]
+  }
+
+  /** Send the core server a message to shutdown actors and terminate the actor system. */
+  def shutdown: Unit = {
+    if (config.getBoolean("shutdownServerOnExit")) {
+      router ! Broadcast(PoisonPill)
+      router ! PoisonPill
+    }
   }
 
 

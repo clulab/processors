@@ -1,4 +1,4 @@
-package org.clulab.reach.coserver
+package org.clulab.processors.coclient
 
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
@@ -10,7 +10,7 @@ import org.clulab.processors.Document
 /**
   * Tests of the ProcessorCoreClient.
   *   Written by: Tom Hicks. 6/20/2017.
-  *   Last Modified: Update for use of BioNLP.
+  *   Last Modified: Update for refactoring.
   */
 class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
@@ -19,7 +19,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   logger.debug(s"(TestProcessorCoreClient): config=${config}")
 
   // create a processor core server instance
-  val client = new ProcessorCoreClient
+  val client = new ProcessorCoreClient(config)
   logger.debug(s"(TestProcessorCoreClient): client=${client}")
 
   "ProcessorCoreClient" should "not be null" in {

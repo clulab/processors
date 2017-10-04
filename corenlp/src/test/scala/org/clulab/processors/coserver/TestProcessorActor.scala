@@ -14,13 +14,12 @@ import org.clulab.processors.bionlp._
 import org.clulab.processors.corenlp._
 import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
-
-import ProcessorCoreServerMessages._
+import org.clulab.processors.coshare.ProcessorCoreMessages._
 
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Update for removal of semantic roles and Malt.
+  *   Last Modified: Refactor for sharing.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike

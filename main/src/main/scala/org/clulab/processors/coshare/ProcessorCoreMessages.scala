@@ -1,13 +1,13 @@
-package org.clulab.processors.coserver
+package org.clulab.processors.coshare
 
 import org.clulab.processors._
 
 /**
   * Implement Akka message objects for the CoreNLP Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Update for removal of semantic roles.
+  *   Last Modified: Refactor for sharing.
   */
-object ProcessorCoreServerMessages {
+object ProcessorCoreMessages {
 
   // messages for request side of server communication:
   sealed trait ProcessorCoreCommand

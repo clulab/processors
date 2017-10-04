@@ -16,12 +16,12 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import org.clulab.processors.Document
-import org.clulab.processors.coserver.ProcessorCoreServerMessages._
+import org.clulab.processors.coshare.ProcessorCoreMessages._
 
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Update for default use of BioNLP. Cleanups.
+  *   Last Modified: Refactor for sharing.
   */
 class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
 
