@@ -51,9 +51,6 @@ object KBLoader {
     else Set.empty[String]
   logger.debug(s"KBLoader.init): ENTITY_STOPLIST=$ENTITY_STOPLIST")
 
-  /** Engine to automatically produce lexical variations of entity names */
-  val lexicalVariationEngine = Some(new BioLexicalVariations)
-
   def loadEntityStopList(kb:String):Set[String] = {
     val stops = new mutable.HashSet[String]()
     val reader = loadStreamFromClasspath(kb)
