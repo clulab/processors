@@ -21,7 +21,7 @@ import org.clulab.processors.coshare.ProcessorCoreMessages._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Refactor for sharing.
+  *   Last Modified: Update timeouts to match client usage.
   */
 class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
 
@@ -36,13 +36,13 @@ class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
   val router = pcs.router
   logger.debug(s"ProcessorCoreServer.router=${router}")
 
-  // set the timeout high for BioNLP, which is very slow to start
-  implicit val timeout = Timeout(3 minutes)
+  // simulate blocking RPC: finite duration is required so make it long
+  implicit val timeout = Timeout(8 hours)  // time limit to return Future from call
 
   /** Send the given message to the server and block until response comes back. */
   def callServer (request: ProcessorCoreCommand): ProcessorCoreReply = {
     val response = router ? request         // call returning Future
-    Await.result(response, timeout.duration).asInstanceOf[ProcessorCoreReply]
+    Await.result(response, Duration.Inf).asInstanceOf[ProcessorCoreReply]
   }
 
   "ProcessorCoreServer" should "the pooled router should not be null" in {
