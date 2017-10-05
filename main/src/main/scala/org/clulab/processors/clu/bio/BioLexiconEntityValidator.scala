@@ -1,6 +1,7 @@
-package org.clulab.processors.bionlp.ner
+package org.clulab.processors.clu.bio
 
 import org.clulab.processors.Sentence
+import org.clulab.sequences.LexiconNER
 import org.clulab.struct.EntityValidator
 
 /**
@@ -8,9 +9,17 @@ import org.clulab.struct.EntityValidator
   * User: mihais
   * Date: 10/24/16
   */
-class RuleEntityValidator(val sentence:Sentence, val knownCaseInsensitives:Set[String]) extends EntityValidator {
+class BioLexiconEntityValidator extends EntityValidator {
 
-  def validMatch(start:Int, end:Int):Boolean = {
+  var sentence:Option[Sentence] = None
+  var knownCaseInsensitives:Option[Set[String]] = None
+
+  override def config(sentence: Sentence, lexNer: LexiconNER) {
+    this.knownCaseInsensitives = Some(lexNer.knownCaseInsensitives)
+    this.sentence = Some(sentence)
+  }
+
+  override def validMatch(start:Int, end:Int):Boolean = {
     if(start >= end)
       return false
 
@@ -18,7 +27,7 @@ class RuleEntityValidator(val sentence:Sentence, val knownCaseInsensitives:Set[S
     // see also removeSinglePrepositions, for deprecated code
     var nouns = 0
     for(i <- start until end)
-      if(sentence.tags.get(i).startsWith("NN"))
+      if(sentence.get.tags.get(i).startsWith("NN"))
         nouns += 1
     if(nouns == 0)
       return false
@@ -26,16 +35,16 @@ class RuleEntityValidator(val sentence:Sentence, val knownCaseInsensitives:Set[S
     // some entities end with -ing verbs (e.g., "binding")
     // do not accept them when followed by "to"
     // TODO: anything else?
-    if(end < sentence.words.length) {
-      val last = sentence.words(end - 1)
-      val to = sentence.words(end)
+    if(end < sentence.get.words.length) {
+      val last = sentence.get.words(end - 1)
+      val to = sentence.get.words(end)
       if(last.length > 3 && last.toLowerCase.endsWith("ing") && to.toLowerCase == "to") {
         return false
       }
     }
 
     // the text must contain at least one letter AND (the letter must be upper case OR the text contains at least 1 digit)
-    val text = sentence.getSentenceFragmentText(start, end)
+    val text = sentence.get.getSentenceFragmentText(start, end)
     val (letters, digits, upperCaseLetters, spaces) = scanText(text)
     if(letters > 0 && (digits > 0 || upperCaseLetters > 0 || spaces > 0)) {
       //println("Found valid match: " + text)
@@ -43,7 +52,7 @@ class RuleEntityValidator(val sentence:Sentence, val knownCaseInsensitives:Set[S
     }
 
     // have we seen this single token as lower case in the KB; if so, accept it in the text
-    if(letters > 0 && knownCaseInsensitives.contains(text)) {
+    if(letters > 0 && knownCaseInsensitives.get.contains(text)) {
       return true
     }
 
