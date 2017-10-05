@@ -16,9 +16,9 @@ import org.clulab.processors._
 import org.clulab.processors.coshare.ProcessorCoreMessages._
 
 /**
-  * Reach client for the Processors Core Server.
+  * Client to access the Processors Core Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Refactor for sharing.
+  *   Last Modified: Update by extension of the Processor2 trait.
   */
 object ProcessorCoreClient extends LazyLogging {
 
@@ -48,7 +48,7 @@ class ProcessorCoreClient (
   /** Application-specific portion of the configuration file. */
   val config: Config
 
-) extends LazyLogging {
+) extends Processor2 with LazyLogging {
 
   // read actor system name from the configuration file
   private val systemName = if (config.hasPath("server.systemName"))
@@ -129,19 +129,19 @@ class ProcessorCoreClient (
     * @param origText The original input text
     * @return The preprocessed text
     */
-  def preprocessText (origText:String): String = {
+  override def preprocessText (origText:String): String = {
     val reply = callServer(PreprocessTextCmd(origText))
     reply.asInstanceOf[TextMsg].text
   }
 
   /** Runs preprocessText on each sentence */
-  def preprocessSentences (origSentences:Iterable[String]): Iterable[String] = {
+  override def preprocessSentences (origSentences:Iterable[String]): Iterable[String] = {
     val reply = callServer(PreprocessSentencesCmd(origSentences))
     reply.asInstanceOf[SentencesMsg].sentences
   }
 
   /** Runs preprocessText on each token */
-  def preprocessTokens (origSentences:Iterable[Iterable[String]]): Iterable[Iterable[String]] = {
+  override def preprocessTokens (origSentences:Iterable[Iterable[String]]): Iterable[Iterable[String]] = {
     val reply = callServer(PreprocessTokensCmd(origSentences))
     reply.asInstanceOf[TokensMsg].tokens
   }
@@ -190,17 +190,17 @@ class ProcessorCoreClient (
   }
 
 
-  def annotate (text:String, keepText:Boolean = false): Document = {
+  override def annotate (text:String, keepText:Boolean = false): Document = {
     val reply = callServer(AnnotateTextCmd(text, keepText))
     reply.asInstanceOf[DocumentMsg].doc
   }
 
-  def annotateFromSentences (sentences:Iterable[String], keepText:Boolean = false): Document = {
+  override def annotateFromSentences (sentences:Iterable[String], keepText:Boolean = false): Document = {
     val reply = callServer(AnnotateFromSentencesCmd(sentences, keepText))
     reply.asInstanceOf[DocumentMsg].doc
   }
 
-  def annotateFromTokens (
+  override def annotateFromTokens (
     sentences:Iterable[Iterable[String]],
     keepText:Boolean = false
   ): Document = {
@@ -208,7 +208,7 @@ class ProcessorCoreClient (
     reply.asInstanceOf[DocumentMsg].doc
   }
 
-  def annotate (doc:Document): Document = {
+  override def annotate (doc:Document): Document = {
     val reply = callServer(AnnotateCmd(doc))
     reply.asInstanceOf[DocumentMsg].doc
   }
