@@ -1,11 +1,15 @@
 package org.clulab.odin.serialization.json
 
 import java.io.File
+
+import scala.io.Source
+
 import org.clulab.processors.Document
 import org.clulab.struct.{DirectedGraph, Edge, Interval}
 import org.clulab.odin
 import org.clulab.odin._
 import org.clulab.serialization.json.DocOps
+
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -32,7 +36,7 @@ object JSONSerializer {
   }
 
   def jsonAST(f: File): JValue = {
-    val source = scala.io.Source.fromFile(f)
+    val source = Source.fromFile(f)
     val contents = source.getLines.mkString
     source.close()
     parse(contents)

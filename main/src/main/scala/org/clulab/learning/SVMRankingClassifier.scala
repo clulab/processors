@@ -1,21 +1,25 @@
 package org.clulab.learning
 
 import java.io._
-import org.slf4j.LoggerFactory
-import SVMRankingClassifier.logger
-import org.clulab.struct.{Counters, Counter}
-import scala.sys.process._
-import scala.collection.mutable.ArrayBuffer
-import scala.Serializable
 import java.util.Properties
+import org.slf4j.LoggerFactory
+
+import scala.Serializable
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
+import scala.sys.process._
+
+import org.clulab.struct.{ Counters, Counter, Lexicon }
 import org.clulab.utils.StringUtils
-import org.clulab.struct.Lexicon
+
+import SVMRankingClassifier.logger
 
 /**
  * Wrapper for SVMrank: trains using svm_rank_learn but predicts using native Scala code
  * Only the linear kernel is supported
  * User: mihais
  * Date: 4/23/13
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 class SVMRankingClassifier[F] (
                                 val workingDir:String,
@@ -179,7 +183,7 @@ class SVMRankingClassifier[F] (
   def loadModelWeights(modelPath:String):Array[Double] = {
     var modelLine:Option[String] = None
     var numFeats:Int = 0
-    for(line <- scala.io.Source.fromFile(modelPath).getLines()) {
+    for(line <- Source.fromFile(modelPath).getLines()) {
       val (content, comment) = splitSVMLine(line)
       if(comment.contains("kernel type") &&
         content.toInt != 0) {

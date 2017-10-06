@@ -1,19 +1,21 @@
 package org.clulab.embeddings.word2vec
 
-import scala.io.Source
-import scala.collection.mutable.ArrayBuffer
-import org.slf4j.LoggerFactory
 import java.io._
-import org.clulab.utils.MathUtils
 import java.nio.{ ByteBuffer, ByteOrder }
+
+import org.slf4j.LoggerFactory
+import org.clulab.utils.MathUtils
 import org.apache.commons.io.{ IOUtils, FileUtils }
+
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 
 /**
  * Implements similarity metrics using the word2vec matrix
  * IMPORTANT: In our implementation, words are lower cased but NOT lemmatized or stemmed (see sanitizeWord)
  * User: mihais, dfried, gus
  * Date: 11/25/13
- *
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 
 // matrixConstructor is lazy, meant to save memory space if we're caching features
@@ -27,7 +29,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   }
 
   /** alternate constructor to allow loading from a source, possibly with a set of words to constrain the vocab */
-  def this(src: io.Source, wordsToUse: Option[Set[String]]) = {
+  def this(src: Source, wordsToUse: Option[Set[String]]) = {
     this(Word2Vec.loadMatrixFromSource(src, wordsToUse)._1)
   }
 
@@ -451,14 +453,14 @@ object Word2Vec {
 
   private def loadMatrixFromStream(is: InputStream, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load word2vec matrix from stream ...")
-    val src: Source = io.Source.fromInputStream(is, "iso-8859-1")
+    val src: Source = Source.fromInputStream(is, "iso-8859-1")
     val lines: Iterator[String] = src.getLines
     val matrix = buildMatrix(lines, wordsToUse)
     src.close()
     logger.debug("Completed matrix loading.")
     matrix
   }
-  private def loadMatrixFromSource(src: io.Source, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
+  private def loadMatrixFromSource(src: Source, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load word2vec matrix from source ...")
     val lines: Iterator[String] = src.getLines()
     val matrix = buildMatrix(lines, wordsToUse)

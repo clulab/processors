@@ -2,16 +2,18 @@ package org.clulab.processors
 
 import java.io.{File, PrintWriter}
 
+import scala.io.Source
+import scala.collection.mutable.ListBuffer
+
 import org.clulab.processors.bionlp.BioNLPProcessor
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.Files
-
-import scala.collection.mutable.ListBuffer
 
 /**
  * Runs BioNLPProcessor on a bunch of files, where each file stores one sentence per line
  * User: mihais
  * Date: 12/5/14
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 object BioNLPProcessorFilesByLine {
   val EXT = "sents" // extension of files to be processed
@@ -39,7 +41,7 @@ object BioNLPProcessorFilesByLine {
 
   def fileToSentences(file:File):List[String] = {
     val sents = new ListBuffer[String]
-    io.Source.fromFile(file).getLines().foreach(sents += _)
+    Source.fromFile(file).getLines().foreach(sents += _)
     sents.toList
   }
 }
