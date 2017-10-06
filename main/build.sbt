@@ -22,13 +22,12 @@ libraryDependencies ++= {
 
     // logging
     "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.4.0",
-//  "ch.qos.logback"               % "logback-classic"   % "1.0.10", // OLD: REMOVE LATER
     "ch.qos.logback"               %  "logback-classic"  % "1.1.7",
     "org.slf4j"                    %  "slf4j-api"        % "1.7.10",
 
     // AKKA
     "com.typesafe.akka"   %%  "akka-actor"   % akkaV,
-//  "com.typesafe.akka"   %%  "akka-remote"  % akkaV,
+    "com.typesafe.akka"   %%  "akka-remote"  % akkaV,
     "com.typesafe.akka"   %%  "akka-slf4j"   % akkaV,
 
     // testing
