@@ -1,17 +1,20 @@
 package org.clulab.learning
 
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import org.clulab.struct.Counter
-import org.clulab.struct.Lexicon
-import scala.io.BufferedSource
-import org.slf4j.LoggerFactory
 import java.util.zip.GZIPInputStream
 import java.io.{FileWriter, PrintWriter, FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream, BufferedInputStream}
+import org.slf4j.LoggerFactory
+
+import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.io.{ BufferedSource, Source }
+
+import org.clulab.struct.Counter
+import org.clulab.struct.Lexicon
 
 /**
  * Parent class for all datasets used for ranking problems
  * User: mihais
  * Date: 4/23/13
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 trait RankingDataset[F] {
   var featureLexicon = new Lexicon[F]
@@ -278,9 +281,9 @@ object RVFRankingDataset {
   def mkDatasetFromSvmRankResource(path: String): RVFRankingDataset[String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
     val source = if (path endsWith ".gz") {
-      io.Source.fromInputStream(new GZIPInputStream(stream))
+      Source.fromInputStream(new GZIPInputStream(stream))
     } else {
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     }
     mkDatasetFromSvmRankFormat(source)
   }
@@ -289,9 +292,9 @@ object RVFRankingDataset {
   def mkDatasetFromSvmRankFormat(filename: String): RVFRankingDataset[String] = {
     val source = if (filename endsWith ".gz") {
       val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     } else {
-      io.Source.fromFile(filename)
+      Source.fromFile(filename)
     }
     mkDatasetFromSvmRankFormat(source)
   }
@@ -357,9 +360,9 @@ object RVFRankingDataset {
   def mkDatumsFromSvmRankResource(path: String): Iterable[Iterable[Datum[Int, String]]] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
     val source = if (path endsWith ".gz") {
-      io.Source.fromInputStream(new GZIPInputStream(stream))
+      Source.fromInputStream(new GZIPInputStream(stream))
     } else {
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     }
     mkDatumsFromSvmRankFormat(source)
   }
@@ -368,9 +371,9 @@ object RVFRankingDataset {
   def mkDatumsFromSvmRankFormat(filename: String): Iterable[Iterable[Datum[Int, String]]] = {
     val source = if (filename endsWith ".gz") {
       val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     } else {
-      io.Source.fromFile(filename)
+      Source.fromFile(filename)
     }
     mkDatumsFromSvmRankFormat(source)
   }

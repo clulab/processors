@@ -1,19 +1,23 @@
 package org.clulab.swirl2
 
 import java.io._
+
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.Source
+
 import org.clulab.processors.Sentence
 import org.clulab.struct.{DirectedGraph, Edge}
 import org.clulab.utils.Files
 import org.clulab.utils.StringUtils._
 import org.slf4j.LoggerFactory
 import SRL._
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Implements the entire SRL pipeline
   * User: mihais
   * Date: 3/3/16
+  * Last Modified: Fix compiler issue: import scala.io.Source.
   */
 class SRL {
   var predClassifier:Option[PredicateClassifier] = None
@@ -46,7 +50,7 @@ class SRL {
   }
 
   def transferContent(fromFile:File, to:PrintWriter): Unit = {
-    val source = io.Source.fromFile(fromFile)
+    val source = Source.fromFile(fromFile)
     for(line <- source.getLines())
       to.println(line)
     source.close()

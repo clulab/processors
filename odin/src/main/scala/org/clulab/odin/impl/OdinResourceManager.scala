@@ -1,11 +1,14 @@
 package org.clulab.odin.impl
 
 import java.io.{BufferedInputStream, InputStream}
+import scala.io.Source
 
 /**
  * Manage resources for Odin
  * @param embeddings: handles a word embeddings resource for distributional similarity comparisons; standard word vector format?
- * */
+ * Author: Gus Hahn-Powell.
+ * Last Modified: Fix compiler issue: import scala.io.Source.
+ */
 class OdinResourceManager(val embeddings: Option[EmbeddingsResource])
 
 object OdinResourceManager {
@@ -32,9 +35,9 @@ object OdinResourceManager {
   }
 
   // YOU NEED TO CLOSE ME!!!
-  def getSource(path: String): io.Source = {
+  def getSource(path: String): Source = {
     val url = RuleReader.mkURL(path)
-    io.Source.fromURL(url)
+    Source.fromURL(url)
   }
 
   def buildResources(resourcesMap: Map[String, String]): Map[String, Option[OdinResource]] = {

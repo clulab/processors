@@ -1,16 +1,19 @@
 package org.clulab.discourse.rstparser
 
 import java.io.{InputStreamReader, BufferedReader}
-
-import org.slf4j.LoggerFactory
-import scala.collection.mutable.ArrayBuffer
 import java.util.regex.Pattern
+import org.slf4j.LoggerFactory
+
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
+
 import org.clulab.processors.{Sentence, Document}
 
 /**
  * Matches a set of known connectives in a given document
  * User: mihais
  * Date: 5/21/14
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 class ConnectiveMatcher
 
@@ -27,7 +30,7 @@ object ConnectiveMatcher {
 
   def loadConnectives(path:String):Iterable[Array[String]] = {
     val is = RSTParser.getClass.getClassLoader.getResourceAsStream(path)
-    val lines = io.Source.fromInputStream(is).getLines().toList.sortWith(desc)
+    val lines = Source.fromInputStream(is).getLines().toList.sortWith(desc)
     //println(lines)
     logger.debug("Loaded " + lines.length + " discourse connectives.")
     is.close()

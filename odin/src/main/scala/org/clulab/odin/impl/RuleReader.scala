@@ -7,7 +7,8 @@ import java.nio.charset.Charset
 import org.apache.commons.text.StrSubstitutor
 
 import scala.collection.JavaConverters._
-import scala.io.Codec
+import scala.io.{ Codec, Source }
+
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.{ Constructor, ConstructorException }
 import org.clulab.odin._
@@ -17,7 +18,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   import RuleReader._
 
-  // codec to be used by io.Source
+  // codec to be used by scala.io.Source
   implicit val codec: Codec = new Codec(charset)
 
   // invokes actions through reflection
@@ -208,7 +209,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
     case path: String =>
       val url = mkURL(path)
-      val source = io.Source.fromURL(url)
+      val source = Source.fromURL(url)
       val input = source.mkString
       source.close()
       val yaml = new Yaml(new Constructor(classOf[Collection[Any]]))
@@ -238,7 +239,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       res
     }
     val url = mkURL(path)
-    val source = io.Source.fromURL(url)
+    val source = Source.fromURL(url)
     val input = source.mkString // slurp
     source.close()
     // read rules and vars from file

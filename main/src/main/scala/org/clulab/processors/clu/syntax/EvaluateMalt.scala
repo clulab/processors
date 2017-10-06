@@ -2,11 +2,12 @@ package org.clulab.processors.clu.syntax
 
 import java.io.{BufferedReader, File, FileReader}
 
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
+
 import org.maltparser.concurrent.ConcurrentUtils
 import org.maltparser.core.lw.helper.Utils
 import org.slf4j.LoggerFactory
-
-import scala.collection.mutable.ArrayBuffer
 
 class EvaluateMalt
 
@@ -14,11 +15,12 @@ class EvaluateMalt
  * Evaluates a model produced by TrainMalt
  * User: mihais
  * Date: 1/5/14
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 object EvaluateMalt {
 
   val logger = LoggerFactory.getLogger(classOf[EvaluateMalt])
-  
+
   def main(args:Array[String]) {
     if (args.length != 2) {
       println("Usage: org.clulab.processors.clulab.syntax.EvaluateMalt <model file name> <testing treebank in conllx format>")
@@ -115,7 +117,7 @@ object EvaluateMalt {
 
   def readDependencies(fn:String):Array[EvalDependency] = {
     val deps = new ArrayBuffer[EvalDependency]()
-    for(line <- io.Source.fromFile(fn).getLines()) {
+    for(line <- Source.fromFile(fn).getLines()) {
       val content = line.trim
       if(content.length > 0) {
         val tokens = content.split("\\s+")
