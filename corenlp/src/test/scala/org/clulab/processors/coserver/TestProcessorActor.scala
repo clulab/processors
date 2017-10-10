@@ -19,7 +19,7 @@ import org.clulab.processors.coshare.ProcessorCoreMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Refactor for sharing.
+  *   Last Modified: Trivial move of afterAll method: this test is passing.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -29,6 +29,11 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with LazyLogging
 {
   val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
+
+  // shutdown the actor system when done testing
+  override def afterAll {
+    TestKit.shutdownActorSystem(system)
+  }
 
   // read which processor type is specified by the configuration
   val procType = config.getString("server.processor.type")
@@ -64,11 +69,6 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
 
   val procActor = system.actorOf(ProcessorActor.props(processor))
   logger.debug(s"actor=${procActor}")
-
-
-  override def afterAll = {
-    TestKit.shutdownActorSystem(system)
-  }
 
   // ErrorTest
   "ProcessorActor" should "return error upon error test" in {
