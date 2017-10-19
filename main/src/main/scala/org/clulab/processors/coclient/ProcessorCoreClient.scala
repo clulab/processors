@@ -18,7 +18,7 @@ import org.clulab.processors.coshare.ProcessorCoreMessages._
 /**
   * Client to access the Processors Core Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Update by extension of the Processor2 trait.
+  *   Last Modified: Set connect time. Get path or fail. Add debug messages.
   */
 object ProcessorCoreClient extends LazyLogging {
 
@@ -50,28 +50,29 @@ class ProcessorCoreClient (
 
 ) extends Processor2 with LazyLogging {
 
-  // read actor system name from the configuration file
-  private val systemName = if (config.hasPath("server.systemName"))
-                             config.getString("server.systemName")
-                           else "procCoreServer"
+  private val connectTime = 30.seconds
+
+  logger.debug(s"(ProcessorCoreClient): config=${config}")
 
   // fire up the actor system
-  private val system = ActorSystem(systemName)
-  logger.debug(s"system=${system}")
+  val system = ActorSystem("procCoreClient", config)
+  logger.debug(s"(ProcessorCoreClient): system=${system}")
+
+  // simulate blocking RPC: finite duration is required so make it long
+  implicit val timeout = Timeout(8 hours)  // time limit to return Future from call
 
   // fire up the processor core server and get a ref to the message router
   val router: ActorRef = getRouterRef(config)
 
   /** Acquire actor ref via actor selection on the configured server path. */
   private def getRouterRef (config: Config): ActorRef = {
-    val serverPath = if (config.hasPath("server.path")) config.getString("server.path")
-                     else s"akka://${systemName}/user/procActorPool"
-    val ref = system.actorSelection(ActorPath.fromString(serverPath)).resolveOne()
-    Await.result(ref, 1.minute).asInstanceOf[ActorRef]
+    val serverPath = if (config.hasPath("server.path"))
+      config.getString("server.path")
+    else
+      throw new RuntimeException("(ProcessorCoreClient): Configuration file must define server.path")
+    val ref = system.actorSelection(ActorPath.fromString(serverPath)).resolveOne(connectTime)
+    Await.result(ref, connectTime).asInstanceOf[ActorRef]
   }
-
-  // simulate blocking RPC: finite duration is required so make it long
-  implicit val timeout = Timeout(8 hours)  // time limit to return Future from call
 
   /** Send the given message to the server and block until response comes back. */
   private def callServer (request: ProcessorCoreCommand): ProcessorCoreReply = {
