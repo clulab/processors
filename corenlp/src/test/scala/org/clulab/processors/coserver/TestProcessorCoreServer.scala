@@ -5,7 +5,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-import org.scalatest.{ Matchers, FlatSpec }
+import org.scalatest.{ BeforeAndAfterAll, Matchers, FlatSpecLike }
 
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
@@ -13,6 +13,7 @@ import com.typesafe.scalalogging.LazyLogging
 import akka.actor._
 import akka.routing._
 import akka.pattern.ask
+import akka.testkit.{ TestKit, TestActorRef, TestProbe, ImplicitSender }
 import akka.util.Timeout
 
 import org.clulab.processors.Document
@@ -21,12 +22,20 @@ import org.clulab.processors.coshare.ProcessorCoreMessages._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Update timeouts to match client usage.
+  *   Last Modified: Use TestKit and shutdown actor system after tests.
   */
-class TestProcessorCoreServer extends FlatSpec with Matchers with LazyLogging {
+class TestProcessorCoreServer extends TestKit(ActorSystem("testProcCoreServer"))
+    with FlatSpecLike
+    with BeforeAndAfterAll
+    with Matchers
+    with LazyLogging
+{
+  val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
 
-  // fire up the actor system
-  val system = ActorSystem("procCoreServer")
+  // shutdown the actor system when done testing
+  override def afterAll {
+    TestKit.shutdownActorSystem(system)
+  }
 
   // create a processor core server instance
   val pcs = ProcessorCoreServer.instance
