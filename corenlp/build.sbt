@@ -3,13 +3,13 @@ name := "processors-corenlp"
 libraryDependencies ++= {
   val akkaV = "2.5.4"
   Seq (
-    "ai.lum"             %%  "common"            % "0.0.7",
+    "ai.lum"             %%  "common"            % "0.0.8",
     "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1",
     "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1" classifier "models",
     "org.clulab"          %  "bioresources"      % "1.1.24",
 
     // logging
-    "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.4.0",
+    "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.7.2",
     "ch.qos.logback"               %  "logback-classic"  % "1.0.10",
     "org.slf4j"                    %  "slf4j-api"        % "1.7.10",
 

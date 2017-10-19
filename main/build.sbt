@@ -17,11 +17,11 @@ libraryDependencies ++= {
     "org.json4s"              %%  "json4s-core"               % json4sVersion,
     "org.json4s"              %%  "json4s-jackson"            % json4sVersion,
     "org.maltparser"           %  "maltparser"                % "1.9.0", // for dependency parsing
-    "org.scala-lang.modules"  %%  "scala-parser-combinators"  % "1.0.3",
+    "org.scala-lang.modules"  %%  "scala-parser-combinators"  % "1.0.4",
     "tw.edu.ntu.csie"          %  "libsvm"                    % "3.17",
 
     // logging
-    "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.4.0",
+    "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.7.2",
     "ch.qos.logback"               %  "logback-classic"  % "1.1.7",
     "org.slf4j"                    %  "slf4j-api"        % "1.7.10",
 
@@ -31,7 +31,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-slf4j"   % akkaV,
 
     // testing
-    "org.scalatest"       %%  "scalatest"      % "2.2.4"  % "test",
+    "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test"
   )
 
