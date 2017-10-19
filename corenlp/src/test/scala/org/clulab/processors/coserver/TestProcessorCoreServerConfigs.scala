@@ -1,5 +1,9 @@
 package org.clulab.processors.coserver
 
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 import org.scalatest.{ Matchers, FlatSpec }
 
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
@@ -14,7 +18,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 7/12/2017.
-  *   Last Modified: Cleanup tbd.
+  *   Last Modified: Shutdown each server after testing it.
   */
 class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLogging {
 
@@ -44,6 +48,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
     (pcs.processor.isInstanceOf[CoreNLPProcessor]) should be (true)
+    Await.result(pcs.system.terminate(), 10.seconds)
   }
 
   "Bogus processor type" should "should instantiate a ShallowNLPProcessor" in {
@@ -53,6 +58,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
     (pcs.processor.isInstanceOf[ShallowNLPProcessor]) should be (true)
+    Await.result(pcs.system.terminate(), 10.seconds)
   }
 
   "Bio processor type" should "should instantiate a BioNLPProcessor" in {
@@ -62,6 +68,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
     (pcs.processor.isInstanceOf[BioNLPProcessor]) should be (true)
+    Await.result(pcs.system.terminate(), 10.seconds)
   }
 
   "Fast processor type" should "should instantiate a FastNLPProcessor" in {
@@ -71,6 +78,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
     (pcs.processor.isInstanceOf[FastNLPProcessor]) should be (true)
+    Await.result(pcs.system.terminate(), 10.seconds)
   }
 
   "FastBio processor type" should "should instantiate a FastBioNLPProcessor" in {
@@ -80,6 +88,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
     (pcs.processor.isInstanceOf[FastBioNLPProcessor]) should be (true)
+    Await.result(pcs.system.terminate(), 10.seconds)
   }
 
 }

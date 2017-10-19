@@ -17,7 +17,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processors capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Add main method to start server.
+  *   Last Modified: Expose actor system for test termination. Add shutdown method.
   */
 object ProcessorCoreServer extends LazyLogging {
 
@@ -113,7 +113,7 @@ class ProcessorCoreServer (
   logger.debug(s"(ProcessorCoreServer.ctor): processor=${processor}")
 
   // fire up the actor system
-  private val system = ActorSystem("procCoreServer", config)
+  val system = ActorSystem("procCoreServer", config)
 
   logger.debug(s"(ProcessorCoreServer.ctor): system=${system}")
 
@@ -132,6 +132,12 @@ class ProcessorCoreServer (
   /** Returns an actor ref to the internal instance of the pooled router. */
   val router: ActorRef = procPool
 
+
+  /** Shutdown the server: kill the routers actor children followed by the router itself. */
+  def shutdown: Unit = {
+    router ! Broadcast(PoisonPill)
+    router ! PoisonPill
+  }
 
   private def getArgBoolean (argPath: String, defaultValue: Boolean): Boolean =
     if (config.hasPath(argPath)) config.getBoolean(argPath)
