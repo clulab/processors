@@ -23,12 +23,19 @@ class BioLexiconEntityValidator extends EntityValidator {
     if(start >= end)
       return false
 
+    val verbose = false
+    if(verbose) {
+      println(s"validMatch for span [$start, $end)")
+      println(s"Tags: ${sentence.get.tags.get.mkString(", ")}")
+    }
+
     // must contain at least one NN*
     // see also removeSinglePrepositions, for deprecated code
     var nouns = 0
     for(i <- start until end)
       if(sentence.get.tags.get(i).startsWith("NN"))
         nouns += 1
+    if(verbose) println(s"Noun count: $nouns")
     if(nouns == 0)
       return false
 
