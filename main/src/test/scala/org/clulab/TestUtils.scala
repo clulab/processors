@@ -2,10 +2,11 @@ package org.clulab
 
 import java.io.File
 
-import org.clulab.processors.Document
-import org.json4s.jackson.JsonMethods._
-import org.clulab.serialization.json.JSONSerializer
+import scala.io.Source
 
+import org.clulab.processors.Document
+import org.clulab.serialization.json.JSONSerializer
+import org.json4s.jackson.JsonMethods._
 
 object TestUtils {
 
@@ -24,7 +25,7 @@ object TestUtils {
     */
   def readFile(path: String) = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = io.Source.fromInputStream(stream)
+    val source = Source.fromInputStream(stream)
     val data = source.mkString
     source.close()
     data

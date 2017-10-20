@@ -4,7 +4,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
-import scala.io.BufferedSource
+import scala.io.{BufferedSource, Source}
 import java.util.zip.GZIPInputStream
 import java.io.{FileWriter, PrintWriter, FileInputStream, BufferedInputStream}
 import org.slf4j.LoggerFactory
@@ -14,6 +14,7 @@ import RVFDataset._
  * Parent class for classification datasets
  * User: mihais
  * Date: 4/23/13
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 abstract class Dataset[L, F](
   val labelLexicon:Lexicon[L],
@@ -376,9 +377,9 @@ object RVFDataset {
   def mkDatasetFromSvmLightResource(path: String): RVFDataset[Int, String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
     val source = if (path endsWith ".gz") {
-      io.Source.fromInputStream(new GZIPInputStream(stream))
+      Source.fromInputStream(new GZIPInputStream(stream))
     } else {
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     }
     mkDatasetFromSvmLightFormat(source)
   }
@@ -387,9 +388,9 @@ object RVFDataset {
   def mkDatasetFromSvmLightFormat(filename: String): RVFDataset[Int, String] = {
     val source = if (filename endsWith ".gz") {
       val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     } else {
-      io.Source.fromFile(filename)
+      Source.fromFile(filename)
     }
     mkDatasetFromSvmLightFormat(source)
   }
@@ -462,9 +463,9 @@ object RVFDataset {
   def mkDatumsFromSvmLightResource(path: String): Iterable[Datum[Int, String]] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
     val source = if (path endsWith ".gz") {
-      io.Source.fromInputStream(new GZIPInputStream(stream))
+      Source.fromInputStream(new GZIPInputStream(stream))
     } else {
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     }
     mkDatumsFromSvmLightFormat(source)
   }
@@ -473,9 +474,9 @@ object RVFDataset {
   def mkDatumsFromSvmLightFormat(filename: String): Iterable[Datum[Int, String]] = {
     val source = if (filename endsWith ".gz") {
       val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
-      io.Source.fromInputStream(stream)
+      Source.fromInputStream(stream)
     } else {
-      io.Source.fromFile(filename)
+      Source.fromFile(filename)
     }
     mkDatumsFromSvmLightFormat(source)
   }

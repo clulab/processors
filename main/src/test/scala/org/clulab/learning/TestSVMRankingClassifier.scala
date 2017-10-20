@@ -1,8 +1,10 @@
 package org.clulab.learning
 
+import java.io.{File, PrintWriter}
+
 import org.scalatest._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import java.io.{File, PrintWriter}
+import scala.io.Source
 import scala.sys.process._
 
 object NeedsExternalBinary extends Tag("NeedsExternalBinary")
@@ -11,6 +13,7 @@ object NeedsExternalBinary extends Tag("NeedsExternalBinary")
   * Tests training svm_rank; needs the svm_rank_classify in the $PATH!
   * User: mihais
   * Date: 4/25/13
+  * Last Modified: Fix compiler issue: import scala.io.Source.
   */
 class TestSVMRankingClassifier extends FlatSpec with Matchers {
 
@@ -52,7 +55,7 @@ class TestSVMRankingClassifier extends FlatSpec with Matchers {
     exitCode should be (0)
 
     val svmRankClassifyScores =
-      io.Source.fromFile("./predictions").getLines().map(l => l.toDouble).toArray
+      Source.fromFile("./predictions").getLines().map(l => l.toDouble).toArray
     val ourScores = scores.toArray
     svmRankClassifyScores(0) should be (ourScores(0))
     svmRankClassifyScores(1) should be (ourScores(1))

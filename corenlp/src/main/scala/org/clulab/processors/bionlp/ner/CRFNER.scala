@@ -2,30 +2,31 @@ package org.clulab.processors.bionlp.ner
 
 import java.util
 import java.util.Properties
+import java.util.{List => JavaList}
 
-import org.clulab.processors.{Processor, Sentence}
-import org.clulab.processors.bionlp.{BioNLPPOSTaggerPostProcessor, BioNLPProcessor}
-import org.clulab.utils.StringUtils
+import org.slf4j.LoggerFactory
+
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
+import scala.io.{ Source, StdIn }
+
 import edu.stanford.nlp.ie.crf.CRFClassifier
 import edu.stanford.nlp.ling.CoreAnnotations.AnswerAnnotation
 import edu.stanford.nlp.ling.CoreLabel
 
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
-import java.util.{List => JavaList}
-
-import org.slf4j.LoggerFactory
-import CRFNER._
+import org.clulab.processors.{Processor, Sentence}
+import org.clulab.processors.bionlp.{BioNLPPOSTaggerPostProcessor, BioNLPProcessor}
 import org.clulab.sequences.SeqScorer
+import org.clulab.utils.StringUtils
 
-import scala.collection.mutable.ListBuffer
-import scala.io.StdIn
-
+import CRFNER._
 
 /**
  * Our own BIO NER trained on the BioCreative 2 dataset, using the Stanford CRF
  * User: mihais
  * Date: 2/27/15
+ * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 class CRFNER {
   var crfClassifier:Option[CRFClassifier[CoreLabel]] = None
@@ -86,7 +87,7 @@ object CRFNER {
     val sentences = new util.ArrayList[JavaList[CoreLabel]]()
     var crtSentence = new util.ArrayList[CoreLabel]()
     var totalTokens = 0
-    for (line <- io.Source.fromFile(path).getLines()) {
+    for (line <- Source.fromFile(path).getLines()) {
       val trimmed = line.trim
       if (trimmed.isEmpty) {
         if (crtSentence.size() > 0) {

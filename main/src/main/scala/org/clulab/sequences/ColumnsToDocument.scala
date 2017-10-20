@@ -2,18 +2,19 @@ package org.clulab.sequences
 
 import java.io.InputStream
 
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
+
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
-
-import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
 
 class ColumnsToDocument
 
 /**
   * Converts the CoNLLX column-based format to our Document by reading only words and POS tags
   * Created by mihais on 6/8/17.
+  * Last Modified: Fix compiler issue: import scala.io.Source.
   */
 object ColumnsToDocument {
   val logger:Logger = LoggerFactory.getLogger(classOf[ColumnsToDocument])
@@ -24,12 +25,12 @@ object ColumnsToDocument {
   val proc = new CluProcessor()
 
   def readFromFile(fn:String, wordPos:Int = WORD_POS_CONLLX, tagPos:Int = TAG_POS_CONLLX): Document = {
-    val source = io.Source.fromFile(fn)
+    val source = Source.fromFile(fn)
     readFromSource(source, wordPos, tagPos)
   }
 
   def readFromStream(stream:InputStream, wordPos:Int = WORD_POS_CONLLX, tagPos:Int = TAG_POS_CONLLX): Document = {
-    val source = io.Source.fromInputStream(stream)
+    val source = Source.fromInputStream(stream)
     readFromSource(source, wordPos, tagPos)
   }
 

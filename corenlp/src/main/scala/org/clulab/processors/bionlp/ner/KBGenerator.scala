@@ -5,15 +5,17 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
-import org.clulab.processors.bionlp.BioNLPProcessor
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation
-import edu.stanford.nlp.pipeline.Annotation
-import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.slf4j.{Logger, LoggerFactory}
-
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.collection.JavaConverters._
+import scala.io.Source
+
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation
+import edu.stanford.nlp.pipeline.Annotation
+
+import org.clulab.processors.bionlp.BioNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
+import org.slf4j.{Logger, LoggerFactory}
 
 case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
 
@@ -21,7 +23,7 @@ case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
   * This is used in bioresources to format the data into a format that is easy to load at runtime
   * User: mihais
   * Date: 2/7/16
-  * Last Modified: Update for 5-column NER override file format.
+  * Last Modified: Fix compiler issue: import scala.io.Source.
   */
 object KBGenerator {
   val logger: Logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
@@ -61,7 +63,7 @@ object KBGenerator {
 
   def loadConfig(configFile:String):Seq[KBEntry] = {
     val entries = new ListBuffer[KBEntry]
-    for(line <- io.Source.fromFile(configFile).getLines()) {
+    for(line <- Source.fromFile(configFile).getLines()) {
       val trimmedLine = line.trim
       if(! trimmedLine.isEmpty && ! trimmedLine.startsWith("#")) {
         val tokens = trimmedLine.split("\t")
