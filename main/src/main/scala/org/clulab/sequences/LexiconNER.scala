@@ -60,7 +60,6 @@ class LexiconNER private (
   protected def findLongestMatch(sentence:Sentence):Array[String] = {
     val tokens = getTokens(sentence)
     val caseInsensitiveWords = tokens.map(_.toLowerCase)
-    entityValidator.config(sentence, this)
 
     var offset = 0
     val labels = new ArrayBuffer[String]()
@@ -71,6 +70,15 @@ class LexiconNER private (
       // attempt to match each category at this offset
       for (i <- matchers.indices) {
         spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, entityValidator)
+
+        // the rules match but the span does not look like a valid entity
+        if(spans(i) > 0 &&
+          (! validSpan(sentence, offset, spans(i)) || // open-domain constraints on
+           ! entityValidator.validMatch(sentence, offset, spans(i))) { // domain specific constraints
+          // remove this match
+          spans(i) = -1
+        }
+
         // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
       }
 
@@ -111,9 +119,9 @@ class LexiconNER private (
                        offset:Int,
                        validator:EntityValidator):Int = {
     val span = if (matcher.caseInsensitive) {
-      matcher.findAt(caseInsensitiveSeq, offset, Some(validator))
+      matcher.findAt(caseInsensitiveSeq, offset)
     } else {
-      matcher.findAt(seq, offset, Some(validator))
+      matcher.findAt(seq, offset)
     }
     span
   }
