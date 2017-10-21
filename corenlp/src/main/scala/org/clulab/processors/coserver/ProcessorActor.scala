@@ -10,7 +10,7 @@ import org.clulab.processors.coshare.ProcessorCoreMessages._
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Add missing paren in actor debug messages.
+  *   Last Modified: Copy document before sending it as reply.
   */
 class ProcessorActor (
 
@@ -44,7 +44,7 @@ class ProcessorActor (
       log.debug(s"(ProcessorActor.receive): mkDocument(text=${cmd.text}, keep=${cmd.keepText})")
       try {
         val doc = processor.mkDocument(cmd.text, cmd.keepText)
-        sender ! DocumentMsg(doc)
+        sender ! DocumentMsg(Document(doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: MkDocumentFromSentencesCmd =>
@@ -52,7 +52,7 @@ class ProcessorActor (
       try {
         val doc = processor.mkDocumentFromSentences(
           cmd.sentences, cmd.keepText, cmd.charactersBetweenSentences)
-        sender ! DocumentMsg(doc)
+        sender ! DocumentMsg(Document(doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: MkDocumentFromTokensCmd =>
@@ -60,7 +60,7 @@ class ProcessorActor (
       try {
         val doc = processor.mkDocumentFromTokens(
           cmd.sentences, cmd.keepText, cmd.charactersBetweenSentences, cmd.charactersBetweenTokens)
-        sender ! DocumentMsg(doc)
+        sender ! DocumentMsg(Document(doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: PreprocessTextCmd =>
@@ -88,49 +88,49 @@ class ProcessorActor (
       log.debug(s"(ProcessorActor.receive): tagPartsOfSpeech(doc=${cmd.doc})")
       try {
         processor.tagPartsOfSpeech(cmd.doc)   // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
+        sender ! DocumentMsg(Document(cmd.doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: LemmatizeCmd =>
       log.debug(s"(ProcessorActor.receive): lemmatize(doc=${cmd.doc})")
       try {
         processor.lemmatize(cmd.doc)          // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
+        sender ! DocumentMsg(Document(cmd.doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: RecognizeNamedEntitiesCmd =>
       log.debug(s"(ProcessorActor.receive): recognizeNamedEntities(doc=${cmd.doc})")
       try {
         processor.recognizeNamedEntities(cmd.doc)  // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
+        sender ! DocumentMsg(Document(cmd.doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: ParseCmd =>
       log.debug(s"(ProcessorActor.receive): parse(doc=${cmd.doc})")
       try {
         processor.parse(cmd.doc)              // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
+        sender ! DocumentMsg(Document(cmd.doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: ChunkingCmd =>
       log.debug(s"(ProcessorActor.receive): chunking(doc=${cmd.doc})")
       try {
         processor.chunking(cmd.doc)           // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
+        sender ! DocumentMsg(Document(cmd.doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: ResolveCoreferenceCmd =>
       log.debug(s"(ProcessorActor.receive): resolveCoreference(doc=${cmd.doc})")
       try {
         processor.resolveCoreference(cmd.doc) // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
+        sender ! DocumentMsg(Document(cmd.doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: DiscourseCmd =>
       log.debug(s"(ProcessorActor.receive): discourse(doc=${cmd.doc})")
       try {
         processor.discourse(cmd.doc)          // works by side-effect
-        sender ! DocumentMsg(cmd.doc)
+        sender ! DocumentMsg(Document(cmd.doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
 
@@ -138,28 +138,28 @@ class ProcessorActor (
       log.debug(s"(ProcessorActor.receive): annotateFromSentences(sents=${cmd.sentences}, keep=${cmd.keepText})")
       try {
         val doc = processor.annotateFromSentences(cmd.sentences, cmd.keepText)
-        sender ! DocumentMsg(doc)
+        sender ! DocumentMsg(Document(doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: AnnotateFromTokensCmd =>
       log.debug(s"(ProcessorActor.receive): annotateFromTokens(sents=${cmd.sentences}, keep=${cmd.keepText})")
       try {
         val doc = processor.annotateFromTokens(cmd.sentences, cmd.keepText)
-        sender ! DocumentMsg(doc)
+        sender ! DocumentMsg(Document(doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: AnnotateTextCmd =>
       log.debug(s"(ProcessorActor.receive): annotateText(text=${cmd.text}, keep=${cmd.keepText})")
       try {
         val doc = processor.annotate(cmd.text, cmd.keepText)
-        sender ! DocumentMsg(doc)
+        sender ! DocumentMsg(Document(doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: AnnotateCmd =>
       log.debug(s"(ProcessorActor.receive): annotate(doc=${cmd.doc})")
       try {
         val doc = processor.annotate(cmd.doc)
-        sender ! DocumentMsg(doc)
+        sender ! DocumentMsg(Document(doc))
       } catch { case ex:Exception => sender ! ServerExceptionMsg(ex) }
 
     case cmd: ErrorTestCmd =>
