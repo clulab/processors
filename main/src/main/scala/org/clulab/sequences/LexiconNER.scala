@@ -70,15 +70,6 @@ class LexiconNER private (
       // attempt to match each category at this offset
       for (i <- matchers.indices) {
         spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, entityValidator)
-
-        // the rules match but the span does not look like a valid entity
-        if(spans(i) > 0 &&
-          (! validSpan(sentence, offset, spans(i)) || // open-domain constraints on
-           ! entityValidator.validMatch(sentence, offset, spans(i))) { // domain specific constraints
-          // remove this match
-          spans(i) = -1
-        }
-
         // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
       }
 
@@ -96,11 +87,20 @@ class LexiconNER private (
       // found something!
       if(bestSpanOffset != -1) {
         assert(bestSpan > 0)
-        val label = matchers(bestSpanOffset)._1
-        //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
-        labels += "B-" + label
-        for(i <- 1 until bestSpan) {
-          labels += "I-" + label
+
+        if(contentfulSpan(sentence, offset, bestSpan) && // does this look like a valid entity span?
+           entityValidator.validMatch(sentence, offset, bestSpan)) { // domain-specific constraints on entities
+
+          val label = matchers(bestSpanOffset)._1
+          //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
+          labels += "B-" + label
+          for (_ <- 1 until bestSpan) {
+            labels += "I-" + label
+          }
+        } else {
+          for(_ <- 0 until bestSpan) {
+            labels += OUTSIDE_LABEL
+          }
         }
         offset += bestSpan
         //println(s"Will continue matching starting at $offset")
@@ -110,9 +110,27 @@ class LexiconNER private (
       }
     }
 
+    assert(labels.length == sentence.size)
     labels.toArray
   }
 
+  protected def contentfulSpan(sentence: Sentence, start: Int, length: Int):Boolean = {
+    val (characters, letters, digits, upperCaseLetters, spaces) =
+      LexiconNER.scanText(sentence.words, start, start + length)
+
+    // a valid span must have letters > 0 and at least one of the other properties
+    if(letters > 0 &&
+       ( digits > 0 ||
+         upperCaseLetters > 0 ||
+         spaces > 0 ||
+         characters > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH ||
+         knownCaseInsensitives.contains(sentence.words(start)))) {
+      return true
+    }
+
+    false
+  }
+  
   protected def findAt(seq:Array[String],
                        caseInsensitiveSeq:Array[String],
                        matcher:HashTrie,
@@ -132,6 +150,7 @@ object LexiconNER {
   val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
   val OUTSIDE_LABEL: String = "O"
   val INTERN_STRINGS:Boolean = false
+  val KNOWN_CASE_INSENSITIVE_LENGTH:Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
 
   /**
     * Creates a LexiconNER from a list of KBs
@@ -350,5 +369,25 @@ object LexiconNER {
     }
     false
   }
+
+  def scanText(words:Array[String], start:Int, end:Int):(Int, Int, Int, Int, Int) = {
+    var letters = 0
+    var digits = 0
+    var upperCaseLetters = 0
+    var characters = 0
+    val spaces = words.length - 1
+    for(offset <- start until end) {
+      val word = words(offset)
+      for (i <- word.indices) {
+        val c = word.charAt(i)
+        characters += 1
+        if (Character.isLetter(c)) letters += 1
+        if (Character.isUpperCase(c)) upperCaseLetters += 1
+        if (Character.isDigit(c)) digits += 1
+      }
+    }
+    (characters, letters, digits, upperCaseLetters, spaces)
+  }
+
 }
 
