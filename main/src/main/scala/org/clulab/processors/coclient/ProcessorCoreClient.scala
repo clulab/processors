@@ -18,7 +18,7 @@ import org.clulab.processors.coshare.ProcessorCoreMessages._
 /**
   * Client to access the Processors Core Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Set connect time. Get path or fail. Add debug messages.
+  *   Last Modified: Throw full exception.
   */
 object ProcessorCoreClient extends LazyLogging {
 
@@ -80,7 +80,7 @@ class ProcessorCoreClient (
     val result = Await.result(response, Duration.Inf) // blocking: wait forever
     if (result.isInstanceOf[ServerExceptionMsg]) {
       val exception = result.asInstanceOf[ServerExceptionMsg].exception
-      throw new RuntimeException(exception.getMessage())
+      throw new RuntimeException(exception)
     }
     else
       result.asInstanceOf[ProcessorCoreReply]
