@@ -10,7 +10,7 @@ import org.clulab.struct.Counter
   * User: mihais
   * Date: 8/25/17
   */
-trait SequenceTagger[L, F] {
+trait SequenceTagger[L, F] extends Tagger[L] {
   def train(docs:Iterator[Document])
 
   def classesOf(sentence: Sentence):Array[L]
