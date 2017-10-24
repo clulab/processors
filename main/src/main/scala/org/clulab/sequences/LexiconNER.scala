@@ -167,7 +167,7 @@ object LexiconNER {
     * @return The new LexiconNER
     */
   def apply(kbs:Seq[String],
-            overrideKBs:Option[List[String]],
+            overrideKBs:Option[Seq[String]],
             entityValidator: EntityValidator,
             lexicalVariationEngine:LexicalVariations,
             useLemmasForMatching:Boolean,
