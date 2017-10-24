@@ -43,32 +43,9 @@ object KBLoader {
 
   /** A horrible hack to keep track of entities that should not be labeled when in
     * lower case, or upper initial case. */
-  private val stopListFile: Option[String] =
+  val stopListFile: Option[String] =
     if (config.hasPath("kbloader.stopListFile")) Option(config[String]("kbloader.stopListFile"))
     else None
-  val ENTITY_STOPLIST: Set[String] =
-    if (stopListFile.isDefined) loadEntityStopList(stopListFile.get)
-    else Set.empty[String]
-  logger.debug(s"KBLoader.init): ENTITY_STOPLIST=$ENTITY_STOPLIST")
-
-  def loadEntityStopList(kb:String):Set[String] = {
-    val stops = new mutable.HashSet[String]()
-    val reader = loadStreamFromClasspath(kb)
-    var done = false
-    while(! done) {
-      val line = reader.readLine()
-      if(line == null) {
-        done = true
-      } else {
-        val l = line.trim
-        if(! l.isEmpty && ! l.startsWith("#")) {
-          stops += l
-        }
-      }
-    }
-    reader.close()
-    stops.toSet
-  }
 
   // Load the rule NER just once, so multiple processors can share it
   var ruleNerSingleton: Option[LexiconNER] = None
