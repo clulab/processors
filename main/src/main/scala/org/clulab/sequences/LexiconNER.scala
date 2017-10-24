@@ -89,7 +89,7 @@ class LexiconNER private (
         assert(bestSpan > 0)
 
         if(contentfulSpan(sentence, offset, bestSpan) && // does this look like a valid entity span?
-           entityValidator.validMatch(sentence, offset, bestSpan)) { // domain-specific constraints on entities
+           entityValidator.validMatch(sentence, offset, offset + bestSpan)) { // domain-specific constraints on entities
 
           val label = matchers(bestSpanOffset)._1
           //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
