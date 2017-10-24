@@ -209,7 +209,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   private def mkSep(size:Int):String = {
     val os = new mutable.StringBuilder
-    for (i <- 0 until size) os.append(" ")
+    for (_ <- 0 until size) os.append(" ")
     os.toString()
   }
 
