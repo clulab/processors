@@ -49,12 +49,26 @@ object KBLoader {
     if (config.hasPath("kbloader.stopListFile")) Option(config[String]("kbloader.stopListFile"))
     else None
 
+  val serNerModel: Option[String] =
+    if(config.hasPath("kbloader.nerSerModel")) Option(config[String]("kbloader.nerSerModel"))
+    else None
+
   // Load the rule NER just once, so multiple processors can share it
   var ruleNerSingleton: Option[LexiconNER] = None
 
-  def loadAll:LexiconNER = {
+  def loadAll(fromSerializedModel:Boolean = true):LexiconNER = {
     lock.synchronized {
       if(ruleNerSingleton.isEmpty) {
+
+        // try the serialized model first
+        if(fromSerializedModel && serNerModel.nonEmpty) {
+          logger.debug(s"Loading LexiconNER from serialized model: ${serNerModel.get}")
+          val ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream(serNerModel.get)))
+          ruleNerSingleton = Some(ois.readObject().asInstanceOf[LexiconNER])
+          logger.debug("Completed NER loading.")
+        }
+
+        TODO
         ruleNerSingleton = Some(LexiconNER(
           RULE_NER_KBS,
           Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
