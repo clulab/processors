@@ -32,7 +32,9 @@ class LexiconNER private (
   val matchers:Array[(String, HashTrie)],
   val knownCaseInsensitives:Set[String],
   val useLemmas:Boolean,
-  val entityValidator: EntityValidator) {
+  val entityValidator: EntityValidator) extends Serializable {
+
+  val serialVersionUID = 1
 
   /**
     * Matches the lexicons against this sentence

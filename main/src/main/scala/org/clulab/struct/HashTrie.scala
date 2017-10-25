@@ -11,7 +11,9 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
  * User: mihais
  * Date: 5/12/15
  */
-class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = true) {
+class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = true) extends Serializable {
+  val serialVersionUID = 1
+
   /** Stores the first layer, i.e., the entry points in the trie */
   val entries = new mutable.HashMap[String, TrieNode]()
 

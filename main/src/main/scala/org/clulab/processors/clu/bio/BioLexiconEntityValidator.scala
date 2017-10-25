@@ -10,6 +10,8 @@ import org.clulab.struct.EntityValidator
   */
 class BioLexiconEntityValidator extends EntityValidator {
 
+  val serialVersionUID = 1
+
   override def validMatch(sentence: Sentence, start:Int, end:Int):Boolean = {
     assert(start < end)
 

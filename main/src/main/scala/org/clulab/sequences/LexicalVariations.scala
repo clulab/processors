@@ -5,7 +5,7 @@ package org.clulab.sequences
   * User: mihais
   * Date: 10/3/17
   */
-trait LexicalVariations {
+trait LexicalVariations extends Serializable {
   def lexicalVariations(tokens: Array[String]): Seq[Array[String]]
 }
 

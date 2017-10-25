@@ -1,12 +1,14 @@
 package org.clulab.processors.bionlp.ner
 
-import scala.collection.mutable
+import java.io.{FileWriter, PrintWriter}
+
 import com.typesafe.config._
 import ai.lum.common.ConfigUtils._
 import org.clulab.processors.clu.bio.{BioLexicalVariations, BioLexiconEntityValidator}
 import org.clulab.sequences.LexiconNER
-import org.clulab.utils.Files._
 import org.slf4j.LoggerFactory
+import java.io._
+import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
 class KBLoader
 
@@ -66,4 +68,19 @@ object KBLoader {
     }
   }
 
+  def main(args:Array[String]): Unit = {
+    /*
+    val ner = loadAll
+
+    val oos = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream("tmp.ser.gz")))
+    oos.writeObject(ner)
+    oos.close()
+    */
+
+    logger.debug("Starting NER loading...")
+    val ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream("tmp.ser.gz")))
+    ois.readObject().asInstanceOf[LexiconNER]
+    logger.debug("Completed NER loading.")
+
+  }
 }
