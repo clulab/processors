@@ -10,7 +10,7 @@ import org.clulab.struct.Counter
   * User: mihais
   * Date: 8/25/17
   */
-trait SequenceTagger[L, F] {
+trait SequenceTagger[L, F] extends Tagger[L] {
   def train(docs:Iterator[Document])
 
   def classesOf(sentence: Sentence):Array[L]
@@ -20,6 +20,8 @@ trait SequenceTagger[L, F] {
 
   /** Abstract method that extracts the training labels for a given sentence */
   def labelExtractor(sentence:Sentence): Array[L]
+
+  override def find(sentence: Sentence): Array[L] = labelExtractor(sentence)
 
   def save(fn:File)
 
