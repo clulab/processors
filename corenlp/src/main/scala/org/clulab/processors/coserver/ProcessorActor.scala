@@ -11,7 +11,7 @@ import org.clulab.utils.StringUtils
 /**
   * Actor which handles message to a Processor in the CoreNLPServer.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Log errors on the server side.
+  *   Last Modified: Expand processing chain for side-effecting calls.
   */
 class ProcessorActor (
 
@@ -116,10 +116,11 @@ class ProcessorActor (
       }
 
     case cmd: TagPartsOfSpeechCmd =>
-      log.error(s"(ProcessorActor.receive): tagPartsOfSpeech(doc=${cmd.doc})")
+      log.debug(s"(ProcessorActor.receive): tagPartsOfSpeech(doc=${cmd.doc})")
       try {
-        processor.tagPartsOfSpeech(cmd.doc)   // works by side-effect
-        sender ! DocumentMsg(Document(cmd.doc))
+        val doc = processor.mkDocument(cmd.doc.text.getOrElse(""))
+        processor.tagPartsOfSpeech(doc)     // works by side-effect
+        sender ! DocumentMsg(Document(doc))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.TagPartsOfSpeechCmd): ${StringUtils.exceptionToString(ex)}")
@@ -130,8 +131,10 @@ class ProcessorActor (
     case cmd: LemmatizeCmd =>
       log.debug(s"(ProcessorActor.receive): lemmatize(doc=${cmd.doc})")
       try {
-        processor.lemmatize(cmd.doc)          // works by side-effect
-        sender ! DocumentMsg(Document(cmd.doc))
+        val doc = processor.mkDocument(cmd.doc.text.getOrElse(""))
+        processor.tagPartsOfSpeech(doc)     // works by side-effect
+        processor.lemmatize(doc)            // works by side-effect
+        sender ! DocumentMsg(Document(doc))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.LemmatizeCmd): ${StringUtils.exceptionToString(ex)}")
@@ -142,8 +145,11 @@ class ProcessorActor (
     case cmd: RecognizeNamedEntitiesCmd =>
       log.debug(s"(ProcessorActor.receive): recognizeNamedEntities(doc=${cmd.doc})")
       try {
-        processor.recognizeNamedEntities(cmd.doc)  // works by side-effect
-        sender ! DocumentMsg(Document(cmd.doc))
+        val doc = processor.mkDocument(cmd.doc.text.getOrElse(""))
+        processor.tagPartsOfSpeech(doc)       // works by side-effect
+        processor.lemmatize(doc)              // works by side-effect
+        processor.recognizeNamedEntities(doc) // works by side-effect
+        sender ! DocumentMsg(Document(doc))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.RecognizeNamedEntitiesCmd): ${StringUtils.exceptionToString(ex)}")
@@ -154,8 +160,12 @@ class ProcessorActor (
     case cmd: ParseCmd =>
       log.debug(s"(ProcessorActor.receive): parse(doc=${cmd.doc})")
       try {
-        processor.parse(cmd.doc)              // works by side-effect
-        sender ! DocumentMsg(Document(cmd.doc))
+        val doc = processor.mkDocument(cmd.doc.text.getOrElse(""))
+        processor.tagPartsOfSpeech(doc)       // works by side-effect
+        processor.lemmatize(doc)              // works by side-effect
+//        processor.recognizeNamedEntities(doc) // works by side-effect
+        processor.parse(doc)                  // works by side-effect
+        sender ! DocumentMsg(Document(doc))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.ParseCmd): ${StringUtils.exceptionToString(ex)}")
@@ -166,8 +176,10 @@ class ProcessorActor (
     case cmd: ChunkingCmd =>
       log.debug(s"(ProcessorActor.receive): chunking(doc=${cmd.doc})")
       try {
-        processor.chunking(cmd.doc)           // works by side-effect
-        sender ! DocumentMsg(Document(cmd.doc))
+        val doc = processor.mkDocument(cmd.doc.text.getOrElse(""))
+        processor.tagPartsOfSpeech(doc)       // works by side-effect
+        processor.chunking(doc)               // works by side-effect
+        sender ! DocumentMsg(Document(doc))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.ChunkingCmd): ${StringUtils.exceptionToString(ex)}")
@@ -178,8 +190,13 @@ class ProcessorActor (
     case cmd: ResolveCoreferenceCmd =>
       log.debug(s"(ProcessorActor.receive): resolveCoreference(doc=${cmd.doc})")
       try {
-        processor.resolveCoreference(cmd.doc) // works by side-effect
-        sender ! DocumentMsg(Document(cmd.doc))
+        val doc = processor.mkDocument(cmd.doc.text.getOrElse(""))
+        processor.tagPartsOfSpeech(doc)       // works by side-effect
+        processor.lemmatize(doc)              // works by side-effect
+        processor.recognizeNamedEntities(doc) // works by side-effect
+        processor.parse(doc)                  // works by side-effect
+        processor.resolveCoreference(doc)     // works by side-effect
+        sender ! DocumentMsg(Document(doc))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.ResolveCoreferenceCmd): ${StringUtils.exceptionToString(ex)}")
@@ -190,8 +207,13 @@ class ProcessorActor (
     case cmd: DiscourseCmd =>
       log.debug(s"(ProcessorActor.receive): discourse(doc=${cmd.doc})")
       try {
-        processor.discourse(cmd.doc)          // works by side-effect
-        sender ! DocumentMsg(Document(cmd.doc))
+        val doc = processor.mkDocument(cmd.doc.text.getOrElse(""))
+        processor.tagPartsOfSpeech(doc)       // works by side-effect
+        processor.lemmatize(doc)              // works by side-effect
+        processor.recognizeNamedEntities(doc) // works by side-effect
+        processor.parse(doc)                  // works by side-effect
+        processor.discourse(doc)              // works by side-effect
+        sender ! DocumentMsg(Document(doc))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.DiscourseCmd): ${StringUtils.exceptionToString(ex)}")
@@ -237,10 +259,18 @@ class ProcessorActor (
       }
 
     case cmd: AnnotateCmd =>
-      log.error(s"(ProcessorActor.receive): annotate(doc=${cmd.doc})")
+      log.debug(s"(ProcessorActor.receive): annotate(doc=${cmd.doc})")
       try {
-        val doc = processor.annotate(cmd.doc)
-        sender ! DocumentMsg(Document(doc))
+        val doc = if (cmd.doc.text.isDefined)
+          processor.annotate(cmd.doc.text.get, true)
+        // else if (!cmd.doc.sentences.isEmpty)      // FIX LATER
+        //   processor.annotateFromSentences(cmd.doc.sentences.toIterable, true)
+        else
+          processor.annotate("", true)
+        val retDoc = Document(doc)
+        log.error(s"(AnnotateCmd):   RETDOC=${retDoc.sentences.size}") // REMOVE LATER
+        log.error(s"(AnnotateCmd):   RETDOC=${retDoc.text}")           // REMOVE LATER
+        sender ! DocumentMsg(retDoc)
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.AnnotateCmd): ${StringUtils.exceptionToString(ex)}")

@@ -12,7 +12,7 @@ import org.clulab.utils.StringUtils
 /**
   * Tests of the ProcessorCoreClient.
   *   Written by: Tom Hicks. 6/20/2017.
-  *   Last Modified: Add debug logging to core client test.
+  *   Last Modified: Move processing chain for side-effecting methods to server side.
   */
 class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
@@ -23,6 +23,17 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   // create a processor core server instance
   val client = new ProcessorCoreClient(config)
   logger.debug(s"(TestProcessorCoreClient): client=${client}")
+
+  def logDoc (doc: Document): Unit = {
+    val id = doc.id.getOrElse("")
+    val ssize = doc.sentences.size
+    val coref = doc.coreferenceChains.getOrElse(None)
+    val discT = doc.discourseTree.getOrElse(None)
+    val text = doc.text.getOrElse("")
+    val clazz = doc.getClass.getName
+    logger.error(s"DD[${clazz}](id=${id}, sents.size=${ssize}, coref=${coref}, discT=${discT}, text=${text})")
+  }
+
 
   "ProcessorCoreClient" should "not be null" in {
     (client) should not be (null)
@@ -188,8 +199,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   it should "tagPartsOfSpeech in a small document" in {
     logger.debug(s"(TestProcessorCoreClient): tagPartsOfSpeech in a small document")
     val text = "This is a document with a single sentence."
-    val doc1 = client.mkDocument(text, true)
-    val doc = client.tagPartsOfSpeech(doc1)
+    val doc = client.tagPartsOfSpeech(client.mkDocument(text, true))
     val sentences = doc.sentences
     (sentences.size) should equal(1)
     (sentences(0).tags) should not be (empty)
@@ -199,9 +209,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   it should "lemmatize a small document" in {
     logger.debug(s"(TestProcessorCoreClient): lemmatize in a small document")
     val text = "Children like smaller documents with smaller sentences."
-    val doc1 = client.mkDocument(text, true)
-    val doc2 = client.tagPartsOfSpeech(doc1)
-    val doc = client.lemmatize(doc2)
+    val doc = client.lemmatize(client.mkDocument(text, true))
     val sentences = doc.sentences
     (sentences.size) should equal(1)
     (sentences(0).lemmas) should not be (empty)
@@ -211,10 +219,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   it should "recognize named entities in a small document" in {
     logger.debug(s"(TestProcessorCoreClient): NER in a small document")
     val text = "On 6/8/2017, I sent a file containing some C# code to none@nowhere.com."
-    val doc1 = client.mkDocument(text, true)
-    val doc2 = client.tagPartsOfSpeech(doc1)
-    val doc3 = client.lemmatize(doc2)
-    val doc = client.recognizeNamedEntities(doc3)
+    val doc = client.recognizeNamedEntities(client.mkDocument(text, true))
     val sentences = doc.sentences
     (sentences.size) should equal(1)
     (sentences(0).tags) should not be (empty)
@@ -227,9 +232,8 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
     logger.debug(s"(TestProcessorCoreClient): parse a small document")
     val text =
 """This document has multiple sentences. Each should be processed by the processor.
-   A Reach document should be returned."""
-    val doc1 = client.mkDocument(text, true)
-    val doc = client.parse(doc1)
+   A Document should be returned."""
+    val doc = client.parse(client.mkDocument(text, true))
     val sentences = doc.sentences
     (sentences.size) should equal(3)
     (sentences(0).syntacticTree) should not be (empty)
@@ -241,9 +245,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   it should "chunk a small document" in {
     logger.debug(s"(TestProcessorCoreClient): chunk a small document")
     val text = "Each document can contain many sentences. This document has two sentences."
-    val doc1 = client.mkDocument(text, true)
-    val doc2 = client.tagPartsOfSpeech(doc1)
-    val doc = client.chunking(doc2)
+    val doc = client.chunking(client.mkDocument(text, true))
     val sentences = doc.sentences
     (sentences.size) should equal(2)
     (sentences(0).tags) should not be (empty)
@@ -255,12 +257,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   it should "resolve coreference in a small document" in {
     logger.debug(s"(TestProcessorCoreClient): resolve coreference in a small document")
     val text = "This is a document and it has one sentence and we like it."
-    val doc1 = client.mkDocument(text, true)
-    val doc2 = client.tagPartsOfSpeech(doc1)
-    val doc3 = client.lemmatize(doc2)
-    val doc4 = client.recognizeNamedEntities(doc3)
-    val doc5 = client.parse(doc4)
-    val doc = client.resolveCoreference(doc5)
+    val doc = client.resolveCoreference(client.mkDocument(text, true))
     val sentences = doc.sentences
     (sentences.size) should equal(1)
     (doc.coreferenceChains) should be (empty) // BioNLP does not use coreference
@@ -270,11 +267,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   it should "parse discourse in a small document" in {
     logger.debug(s"(TestProcessorCoreClient): parse discourse in a small document")
     val text = "Despite what he said, this is a simple document containing small sentences."
-    val doc1 = client.mkDocument(text, true)
-    val doc2 = client.tagPartsOfSpeech(doc1)
-    val doc3 = client.lemmatize(doc2)
-    val doc4 = client.parse(doc3)
-    val doc = client.discourse(doc4)
+    val doc = client.discourse(client.mkDocument(text, true))
     // NOTE: following fails if the correct Processor type is not used:
     // (doc.discourseTree) should not be (empty)
   }
@@ -419,7 +412,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
   it should "annotate multi-sentence Document, no text to propagate" in {
     logger.debug(s"(TestProcessorCoreClient): annotate multi-sentence document, no text")
-    val text = "This document has multiple sentences. Each should be processed by the processor. A Reach document should be returned."
+    val text = "This document has multiple sentences. Each should be processed by the processor. A Document should be returned."
     val docIn = client.mkDocument(text)    // doc w/o kept text
     val doc = client.annotate(docIn)
     (doc) should not be (null)
@@ -430,7 +423,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
   it should "annotate multi-sentence Document, keep text" in {
     logger.debug(s"(TestProcessorCoreClient): annotate multi-sentence document, keep text")
-    val text = "This document has multiple sentences. Each should be processed by the processor. A Reach document should be returned."
+    val text = "This document has multiple sentences. Each should be processed by the processor. A Document should be returned."
     val docIn = client.mkDocument(text, true) // doc with text kept
     val doc = client.annotate(docIn)
     (doc) should not be (null)
@@ -441,7 +434,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
   it should "annotate multi-sentence Document, discard text" in {
     logger.debug(s"(TestProcessorCoreClient): annotate multi-sentence document, discard text")
-    val text = "This document has multiple sentences. Each should be processed by the processor. A Reach document should be returned."
+    val text = "This document has multiple sentences. Each should be processed by the processor. A Document should be returned."
     val docIn = client.mkDocument(text)    // doc w/o kept text
     val doc = client.annotate(docIn)
     (doc) should not be (null)

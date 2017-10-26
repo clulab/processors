@@ -63,6 +63,6 @@ object Document {
 
   /** Return a new Document with relevant fields copied from the given Document. */
   def apply (doc: Document): Document =
-    Document.apply(doc.id, doc.sentences, doc.coreferenceChains, doc.discourseTree, doc.text)
+    Document(doc.id, doc.sentences, doc.coreferenceChains, doc.discourseTree, doc.text)
 
 }
