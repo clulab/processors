@@ -119,7 +119,7 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
    * When multiple paths are found, the longest one is kept
    * Text must be normalized (i.e., case folding) BEFORE this call, if necessary!
    */
-  def findAt(sequenceNormalized:Array[String], offset:Int, validator:Option[EntityValidator] = None):Int = {
+  def findAt(sequenceNormalized:Array[String], offset:Int):Int = {
     if(! entries.contains(sequenceNormalized(offset))) {
       return -1 // first token in the sequence does not exist in the first layer
     }
@@ -132,15 +132,14 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     if(tree.children.isDefined) {
       var shouldStop = false
       for (child <- tree.children.get if ! shouldStop) {
-        shouldStop = child.find(sequenceNormalized, offset, 1, validator, longestMatch)
+        shouldStop = child.find(sequenceNormalized, offset, 1, longestMatch)
       }
     }
 
     //println(s"LONGEST MATCH: ${longestMatch.value}")
 
     // we did not find anything in the children paths, but this is a complete match as is
-    if(longestMatch.value < 0 && tree.completePath &&
-       validator.getOrElse(EntityValidator.TRUE_VALIDATOR).validMatch(offset, offset + 1))
+    if(longestMatch.value < 0 && tree.completePath)
       longestMatch.value = 1
 
     longestMatch.value
@@ -168,7 +167,6 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
   def find(sequence: Array[String],
            startOffset: Int,
            currentSpanLength: Int,
-           validator:Option[EntityValidator],
            longestMatch: MutableNumber[Int]): Boolean = {
     if (startOffset + currentSpanLength >= sequence.length) {
       return true
@@ -187,8 +185,7 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
 
       // this is a complete and valid path
       if (completePath &&
-          currentSpanLength + 1 > longestMatch.value &&
-          validator.getOrElse(EntityValidator.TRUE_VALIDATOR).validMatch(startOffset, startOffset + currentSpanLength + 1)) {
+          currentSpanLength + 1 > longestMatch.value) {
         longestMatch.value = currentSpanLength + 1
         //println(s"LONGEST MATCH SET to ${longestMatch.value}")
       }
@@ -197,7 +194,7 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
       if (children.isDefined) {
         var shouldStop = false
         for (child <- children.get if !shouldStop) {
-          shouldStop = child.find(sequence, startOffset, currentSpanLength + 1, validator, longestMatch)
+          shouldStop = child.find(sequence, startOffset, currentSpanLength + 1, longestMatch)
         }
       }
 
