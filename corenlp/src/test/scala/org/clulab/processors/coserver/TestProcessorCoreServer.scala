@@ -22,7 +22,7 @@ import org.clulab.processors.coshare.ProcessorCoreMessages._
 /**
   * Tests of the ProcessorCoreServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Use TestKit and shutdown actor system after tests.
+  *   Last Modified: Update for implementation of processor annotator trait only.
   */
 class TestProcessorCoreServer extends TestKit(ActorSystem("testProcCoreServer"))
     with FlatSpecLike
@@ -58,17 +58,8 @@ class TestProcessorCoreServer extends TestKit(ActorSystem("testProcCoreServer"))
     (router) should not be (null)
   }
 
-  it should "make document from simple text, keep text" in {
-    val text = "This is some text sent from an application."
-    val reply = callServer(MkDocumentCmd(text, true)) // keep text
-    val doc = reply.asInstanceOf[DocumentMsg].doc
-    (doc) should not be (null)
-    (doc.sentences.size) should equal (1)
-    (doc.text).isDefined should be (true)
-    (doc.text) should equal (Some(text))
-  }
-
-  it should "annotate text, keep text" in {
+  /** Core Server is alive, now give it a simple test. */
+  it should "annotate single sentence, keep text" in {
     val text = "This is single sentence test."
     val reply = callServer(AnnotateTextCmd(text, true)) // keep text
     val doc = reply.asInstanceOf[DocumentMsg].doc
