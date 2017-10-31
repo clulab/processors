@@ -1,4 +1,4 @@
-package org.clulab.processors.coserver
+package org.clulab.processors.server
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -16,18 +16,18 @@ import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
 
 /**
-  * Tests of the ProcessorCoreServer.
+  * Tests of the ProcessorServer configurations.
   *   Written by: Tom Hicks. 7/12/2017.
-  *   Last Modified: Shutdown each server after testing it.
+  *   Last Modified: Rename client/server packages and classes.
   */
-class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLogging {
+class TestProcessorServerConfigs extends FlatSpec with Matchers with LazyLogging {
 
   // load application configuration from the configuration file
-  val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
+  val config = ConfigFactory.load().getConfig("ProcessorServer")
 
   val prefix = "server.processor"   // prefix string for all PCS config values
 
-  "ProcessorCoreServer configuration" should "should load all parameters" in {
+  "ProcessorServer configuration" should "should load all parameters" in {
     val prefix = "server.processor"
     (config) should not be (null)
     (config.hasPath(s"${prefix}.type")) should be (true)
@@ -43,7 +43,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
   }
 
   "Default configuration" should "should instantiate a CoreNLPProcessor" in {
-    val pcs = new ProcessorCoreServer(config)
+    val pcs = new ProcessorServer(config)
     (pcs) should not be (null)
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
@@ -53,7 +53,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
 
   "Bogus processor type" should "should instantiate a ShallowNLPProcessor" in {
     val modConfig = config.withValue(s"${prefix}.type", ConfigValueFactory.fromAnyRef("BAD"))
-    val pcs = new ProcessorCoreServer(modConfig)
+    val pcs = new ProcessorServer(modConfig)
     (pcs) should not be (null)
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
@@ -63,7 +63,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
 
   "Bio processor type" should "should instantiate a BioNLPProcessor" in {
     val modConfig = config.withValue(s"${prefix}.type", ConfigValueFactory.fromAnyRef("bio"))
-    val pcs = new ProcessorCoreServer(modConfig)
+    val pcs = new ProcessorServer(modConfig)
     (pcs) should not be (null)
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
@@ -73,7 +73,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
 
   "Fast processor type" should "should instantiate a FastNLPProcessor" in {
     val modConfig = config.withValue(s"${prefix}.type", ConfigValueFactory.fromAnyRef("fast"))
-    val pcs = new ProcessorCoreServer(modConfig)
+    val pcs = new ProcessorServer(modConfig)
     (pcs) should not be (null)
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)
@@ -83,7 +83,7 @@ class TestProcessorCoreServerConfigs extends FlatSpec with Matchers with LazyLog
 
   "FastBio processor type" should "should instantiate a FastBioNLPProcessor" in {
     val modConfig = config.withValue(s"${prefix}.type", ConfigValueFactory.fromAnyRef("fastbio"))
-    val pcs = new ProcessorCoreServer(modConfig)
+    val pcs = new ProcessorServer(modConfig)
     (pcs) should not be (null)
     (pcs.router) should not be (null)
     (pcs.processor) should not be (null)

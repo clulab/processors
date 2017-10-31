@@ -1,4 +1,4 @@
-package org.clulab.processors.coserver
+package org.clulab.processors.server
 
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
@@ -15,26 +15,26 @@ import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
 
 /**
-  * Application to wrap and serve various Processors capabilities.
+  * Application to wrap and serve various Processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Expose actor system for test termination. Add shutdown method.
+  *   Last Modified: Rename client/server packages and classes.
   */
-object ProcessorCoreServer extends LazyLogging {
+object ProcessorServer extends LazyLogging {
 
-  // THE instance of the the processor core server
-  private var _pcs: ProcessorCoreServer = _
+  // THE instance of the the processor server
+  private var _pcs: ProcessorServer = _
 
-  /** Create a single instance of the processor core server, only if it has not been created. */
-  def instance: ProcessorCoreServer = {
-    logger.debug(s"(ProcessorCoreServer.instance): pcs = ${_pcs}")
+  /** Create a single instance of the processor server, only if it has not been created. */
+  def instance: ProcessorServer = {
+    logger.debug(s"(ProcessorServer.instance): pcs = ${_pcs}")
     if (_pcs == null) {                     // create server, iff not already created
-      val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
+      val config = ConfigFactory.load().getConfig("ProcessorServer")
       if (config == null)
-        throw new RuntimeException("(ProcessorCoreServer.instance): Unable to read configuration from configuration file.")
-      logger.debug(s"(ProcessorCoreServer.instance): config=${config}")
-      _pcs = new ProcessorCoreServer(config)
+        throw new RuntimeException("(ProcessorServer.instance): Unable to read configuration from configuration file.")
+      logger.debug(s"(ProcessorServer.instance): config=${config}")
+      _pcs = new ProcessorServer(config)
     }
-    logger.debug(s"(ProcessorCoreServer.instance): pcs => ${_pcs}")
+    logger.debug(s"(ProcessorServer.instance): pcs => ${_pcs}")
     _pcs
   }
 
@@ -47,7 +47,7 @@ object ProcessorCoreServer extends LazyLogging {
 }
 
 
-class ProcessorCoreServer (
+class ProcessorServer (
 
   /** Application-specific portion of the configuration file. */
   val config: Config
@@ -55,7 +55,7 @@ class ProcessorCoreServer (
 ) extends LazyLogging {
 
   if (config == null)
-    throw new RuntimeException("(ProcessorCoreServer.ctor): Empty configuration argument not allowed.")
+    throw new RuntimeException("(ProcessorServer.ctor): Empty configuration argument not allowed.")
 
   // create the Processor engine specified by the configuration and used by this server
   val processor: Processor = {
@@ -110,12 +110,12 @@ class ProcessorCoreServer (
     }
   }
 
-  logger.debug(s"(ProcessorCoreServer.ctor): processor=${processor}")
+  logger.debug(s"(ProcessorServer.ctor): processor=${processor}")
 
   // fire up the actor system
-  val system = ActorSystem("procCoreServer", config)
+  val system = ActorSystem("procServer", config)
 
-  logger.debug(s"(ProcessorCoreServer.ctor): system=${system}")
+  logger.debug(s"(ProcessorServer.ctor): system=${system}")
 
   // create supervisory strategy for the router to handle errors
   private final val restartEachStrategy: SupervisorStrategy =
@@ -127,7 +127,7 @@ class ProcessorCoreServer (
       FromConfig.withSupervisorStrategy(restartEachStrategy)),
     "procActorPool")
 
-  logger.debug(s"(ProcessorCoreServer.ctor): procPool=${procPool}")
+  logger.debug(s"(ProcessorServer.ctor): procPool=${procPool}")
 
   /** Returns an actor ref to the internal instance of the pooled router. */
   val router: ActorRef = procPool

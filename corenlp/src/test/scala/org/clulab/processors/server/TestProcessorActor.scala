@@ -1,4 +1,4 @@
-package org.clulab.processors.coserver
+package org.clulab.processors.server
 
 import scala.concurrent.duration._
 
@@ -14,12 +14,12 @@ import org.clulab.processors.bionlp._
 import org.clulab.processors.corenlp._
 import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
-import org.clulab.processors.coshare.ProcessorCoreMessages._
+import org.clulab.processors.csshare.ProcessorCSMessages._
 
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Update for implementation of processor annotator trait only.
+  *   Last Modified: Rename client/server packages and classes.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -28,7 +28,7 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with MustMatchers
     with LazyLogging
 {
-  val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
+  val config = ConfigFactory.load().getConfig("ProcessorServer")
 
   // shutdown the actor system when done testing
   override def afterAll {

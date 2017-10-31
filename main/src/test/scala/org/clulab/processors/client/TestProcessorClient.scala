@@ -1,4 +1,4 @@
-package org.clulab.processors.coclient
+package org.clulab.processors.client
 
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
@@ -6,23 +6,23 @@ import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.{ Matchers, FlatSpec }
 
 import org.clulab.processors.Document
-import org.clulab.processors.coshare.ProcessorCoreMessages._
+import org.clulab.processors.csshare.ProcessorCSMessages._
 import org.clulab.utils.StringUtils
 
 /**
-  * Tests of the ProcessorCoreClient.
+  * Tests of the ProcessorClient.
   *   Written by: Tom Hicks. 6/20/2017.
-  *   Last Modified: Update for implementation of processor annotator trait only.
+  *   Last Modified: Rename client/server packages and classes.
   */
-class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
+class TestProcessorClient extends FlatSpec with Matchers with LazyLogging {
 
   // load application configuration from the configuration file
-  val config = ConfigFactory.load().getConfig("ProcessorCoreClient")
-  logger.debug(s"(TestProcessorCoreClient): config=${config}")
+  val config = ConfigFactory.load().getConfig("ProcessorClient")
+  logger.debug(s"(TestProcessorClient): config=${config}")
 
-  // create a processor core server instance
-  val client = new ProcessorCoreClient(config)
-  logger.debug(s"(TestProcessorCoreClient): client=${client}")
+  // create a processor server instance
+  val client = new ProcessorClient(config)
+  logger.debug(s"(TestProcessorClient): client=${client}")
 
   def logDoc (doc: Document): Unit = {
     val id = doc.id.getOrElse("")
@@ -35,13 +35,13 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   }
 
 
-  "ProcessorCoreClient" should "not be null" in {
+  "ProcessorClient" should "not be null" in {
     (client) should not be (null)
   }
 
   it should "get reference to the pooled router" in {
     val router = client.router
-    logger.debug(s"(TestProcessorCoreClient): router=${router}")
+    logger.debug(s"(TestProcessorClient): router=${router}")
     (router) should not be (null)
   }
 
@@ -53,7 +53,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
   // annotate(text)
   it should "annotate text, default keep" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate text, default keep")
+    logger.debug(s"(TestProcessorClient): annotate text, default keep")
     val text = "This is a document with a single sentence."
     val doc = client.annotate(text)
     (doc) should not be (null)
@@ -63,7 +63,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   }
 
   it should "annotate text, keep text" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate text, keep text")
+    logger.debug(s"(TestProcessorClient): annotate text, keep text")
     val text = "This is single sentence test."
     val doc = client.annotate(text, true)   // explicit keep
     (doc) should not be (null)
@@ -73,7 +73,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   }
 
   it should "annotate text, discard text" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate text, discard text")
+    logger.debug(s"(TestProcessorClient): annotate text, discard text")
     val text = "This is a document with a single sentence."
     val doc = client.annotate(text, false)  // explicit discard
     (doc) should not be (null)
@@ -84,7 +84,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
   // annotateFromSentences
   it should "annotate sentences, default keep" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate sentences, default keep")
+    logger.debug(s"(TestProcessorClient): annotate sentences, default keep")
     val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
     val doc = client.annotateFromSentences(sents)
     (doc) should not be (null)
@@ -94,7 +94,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   }
 
   it should "annotate sentences, keep text" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate sentences, keep text")
+    logger.debug(s"(TestProcessorClient): annotate sentences, keep text")
     val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
     val doc = client.annotateFromSentences(sents, true) // explicit keep
     (doc) should not be (null)
@@ -104,7 +104,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   }
 
   it should "annotate sentences, discard text" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate sentences, discard text")
+    logger.debug(s"(TestProcessorClient): annotate sentences, discard text")
     val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
     val doc = client.annotateFromSentences(sents, false) // explicit discard
     (doc) should not be (null)
@@ -115,7 +115,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
 
   // annotateFromTokens
   it should "annotate tokens, default keep" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate tokens, default keep")
+    logger.debug(s"(TestProcessorClient): annotate tokens, default keep")
     val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
     val doc = client.annotateFromTokens(toks)
     (doc) should not be (null)
@@ -125,7 +125,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   }
 
   it should "annotate tokens, keep text" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate tokens, keep text")
+    logger.debug(s"(TestProcessorClient): annotate tokens, keep text")
     val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
     val text = toks.map(t => t.mkString(" ")).mkString(" ")  // spacing: tok=1, sent=1
     val doc = client.annotateFromTokens(toks, true)       // explicit keep
@@ -136,7 +136,7 @@ class TestProcessorCoreClient extends FlatSpec with Matchers with LazyLogging {
   }
 
   it should "annotate tokens, discard text" in {
-    logger.debug(s"(TestProcessorCoreClient): annotate tokens, discard text")
+    logger.debug(s"(TestProcessorClient): annotate tokens, discard text")
     val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
     val doc = client.annotateFromTokens(toks, false) // explicit discard
     (doc) should not be (null)

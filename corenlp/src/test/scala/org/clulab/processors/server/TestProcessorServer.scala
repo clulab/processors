@@ -1,4 +1,4 @@
-package org.clulab.processors.coserver
+package org.clulab.processors.server
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,48 +17,48 @@ import akka.testkit.{ TestKit, TestActorRef, TestProbe, ImplicitSender }
 import akka.util.Timeout
 
 import org.clulab.processors.Document
-import org.clulab.processors.coshare.ProcessorCoreMessages._
+import org.clulab.processors.csshare.ProcessorCSMessages._
 
 /**
-  * Tests of the ProcessorCoreServer.
+  * Tests of the ProcessorServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Update for implementation of processor annotator trait only.
+  *   Last Modified: Rename client/server packages and classes.
   */
-class TestProcessorCoreServer extends TestKit(ActorSystem("testProcCoreServer"))
+class TestProcessorServer extends TestKit(ActorSystem("testProcServer"))
     with FlatSpecLike
     with BeforeAndAfterAll
     with Matchers
     with LazyLogging
 {
-  val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
+  val config = ConfigFactory.load().getConfig("ProcessorServer")
 
   // shutdown the actor system when done testing
   override def afterAll {
     TestKit.shutdownActorSystem(system)
   }
 
-  // create a processor core server instance
-  val pcs = ProcessorCoreServer.instance
-  logger.debug(s"ProcessorCoreServer.instance=${pcs}")
+  // create a processor server instance
+  val pcs = ProcessorServer.instance
+  logger.debug(s"ProcessorServer.instance=${pcs}")
 
-  // get a reference to the pooled router from the core server instance
+  // get a reference to the pooled router from the server instance
   val router = pcs.router
-  logger.debug(s"ProcessorCoreServer.router=${router}")
+  logger.debug(s"ProcessorServer.router=${router}")
 
   // simulate blocking RPC: finite duration is required so make it long
   implicit val timeout = Timeout(8 hours)  // time limit to return Future from call
 
   /** Send the given message to the server and block until response comes back. */
-  def callServer (request: ProcessorCoreCommand): ProcessorCoreReply = {
+  def callServer (request: ProcessorCSCommand): ProcessorCSReply = {
     val response = router ? request         // call returning Future
-    Await.result(response, Duration.Inf).asInstanceOf[ProcessorCoreReply]
+    Await.result(response, Duration.Inf).asInstanceOf[ProcessorCSReply]
   }
 
-  "ProcessorCoreServer" should "the pooled router should not be null" in {
+  "ProcessorServer" should "the pooled router should not be null" in {
     (router) should not be (null)
   }
 
-  /** Core Server is alive, now give it a simple test. */
+  /** Server is alive, now give it a simple test. */
   it should "annotate single sentence, keep text" in {
     val text = "This is single sentence test."
     val reply = callServer(AnnotateTextCmd(text, true)) // keep text

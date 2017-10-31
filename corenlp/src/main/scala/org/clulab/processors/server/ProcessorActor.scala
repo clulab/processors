@@ -1,17 +1,17 @@
-package org.clulab.processors.coserver
+package org.clulab.processors.server
 
 import akka.actor.{ ActorRef, Props, Actor }
 import akka.event.Logging
 
 import org.clulab.processors._
 import org.clulab.processors.corenlp._
-import org.clulab.processors.coshare.ProcessorCoreMessages._
+import org.clulab.processors.csshare.ProcessorCSMessages._
 import org.clulab.utils.StringUtils
 
 /**
-  * Actor which handles message to a Processor in the CoreNLPServer.
+  * Actor which handles message to a Processor in the Processors Client/Server.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Update to implement processor annotator trait only.
+  *   Last Modified: Rename client/server packages and classes.
   */
 class ProcessorActor (
 

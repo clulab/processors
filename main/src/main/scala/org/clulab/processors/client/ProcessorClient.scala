@@ -1,4 +1,4 @@
-package org.clulab.processors.coclient
+package org.clulab.processors.client
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -13,28 +13,28 @@ import akka.routing.Broadcast
 import akka.util.Timeout
 
 import org.clulab.processors._
-import org.clulab.processors.coshare.ProcessorCoreMessages._
+import org.clulab.processors.csshare.ProcessorCSMessages._
 
 /**
-  * Client to access the Processors Core Server remotely using Akka.
+  * Client to access the Processors Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Update to implement processor annotator trait only.
+  *   Last Modified: Rename client/server packages and classes.
   */
-object ProcessorCoreClient extends LazyLogging {
+object ProcessorClient extends LazyLogging {
 
-  // THE instance of the the processor core client
-  private var _pcc: ProcessorCoreClient = _
+  // THE instance of the the processor client
+  private var _pcc: ProcessorClient = _
 
-  /** Create a single instance of the processor core client, only if it has not been created. */
-  def instance: ProcessorCoreClient = {
-    logger.debug(s"(ProcessorCoreClient.instance): pcc = ${_pcc}")
+  /** Create a single instance of the processor client, only if it has not been created. */
+  def instance: ProcessorClient = {
+    logger.debug(s"(ProcessorClient.instance): pcc = ${_pcc}")
     if (_pcc == null) {                     // create client, iff not already created
-      val config = ConfigFactory.load().getConfig("ProcessorCoreClient")
+      val config = ConfigFactory.load().getConfig("ProcessorClient")
       if (config == null)
-        throw new RuntimeException("(ProcessorCoreClient): Unable to read configuration from configuration file.")
-      _pcc = new ProcessorCoreClient(config)
+        throw new RuntimeException("(ProcessorClient): Unable to read configuration from configuration file.")
+      _pcc = new ProcessorClient(config)
     }
-    logger.debug(s"(ProcessorCoreClient.instance): pcc => ${_pcc}")
+    logger.debug(s"(ProcessorClient.instance): pcc => ${_pcc}")
     _pcc
   }
 
@@ -43,7 +43,7 @@ object ProcessorCoreClient extends LazyLogging {
 }
 
 
-class ProcessorCoreClient (
+class ProcessorClient (
 
   /** Application-specific portion of the configuration file. */
   val config: Config
@@ -52,16 +52,16 @@ class ProcessorCoreClient (
 
   private val connectTime = 30.seconds
 
-  logger.debug(s"(ProcessorCoreClient): config=${config}")
+  logger.debug(s"(ProcessorClient): config=${config}")
 
   // fire up the actor system
-  val system = ActorSystem("procCoreClient", config)
-  logger.debug(s"(ProcessorCoreClient): system=${system}")
+  val system = ActorSystem("procClient", config)
+  logger.debug(s"(ProcessorClient): system=${system}")
 
   // simulate blocking RPC: finite duration is required so make it long
   implicit val timeout = Timeout(8 hours)  // time limit to return Future from call
 
-  // fire up the processor core server and get a ref to the message router
+  // fire up the processor server and get a ref to the message router
   val router: ActorRef = getRouterRef(config)
 
   /** Acquire actor ref via actor selection on the configured server path. */
@@ -69,13 +69,13 @@ class ProcessorCoreClient (
     val serverPath = if (config.hasPath("server.path"))
       config.getString("server.path")
     else
-      throw new RuntimeException("(ProcessorCoreClient): Configuration file must define server.path")
+      throw new RuntimeException("(ProcessorClient): Configuration file must define server.path")
     val ref = system.actorSelection(ActorPath.fromString(serverPath)).resolveOne(connectTime)
     Await.result(ref, connectTime).asInstanceOf[ActorRef]
   }
 
   /** Send the given message to the server and block until response comes back. */
-  private def callServer (request: ProcessorCoreCommand): ProcessorCoreReply = {
+  private def callServer (request: ProcessorCSCommand): ProcessorCSReply = {
     val response = router ? request         // call returns Future within long timeout
     val result = Await.result(response, Duration.Inf) // blocking: wait forever
     if (result.isInstanceOf[ServerExceptionMsg]) {
@@ -83,10 +83,10 @@ class ProcessorCoreClient (
       throw new RuntimeException(exception)
     }
     else
-      result.asInstanceOf[ProcessorCoreReply]
+      result.asInstanceOf[ProcessorCSReply]
   }
 
-  /** Send the core server a message to shutdown actors and terminate the actor system. */
+  /** Send the server a message to shutdown actors and terminate the actor system. */
   def shutdown: Unit = {
     if (config.getBoolean("shutdownServerOnExit")) {
       router ! Broadcast(PoisonPill)
