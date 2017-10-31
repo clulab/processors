@@ -1,20 +1,40 @@
 package org.clulab.processors.client
 
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
+import org.scalatest.{ BeforeAndAfterAll, Matchers, FlatSpecLike }
+
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
 
-import org.scalatest.{ Matchers, FlatSpec }
+import akka.testkit.{ TestKit, TestActorRef, TestProbe, ImplicitSender }
 
 import org.clulab.processors.Document
+import org.clulab.processors.server.ProcessorServer
 import org.clulab.processors.csshare.ProcessorCSMessages._
 import org.clulab.utils.StringUtils
 
 /**
-  * Tests of the ProcessorClient.
+  * Tests of the ProcessorClient. Even though this is a test of the *client*,
+  * it must be located in the server (corenlp) subproject because of the one-way dependency
+  * between the server code and the client (main) subproject.
   *   Written by: Tom Hicks. 6/20/2017.
-  *   Last Modified: Rename client/server packages and classes.
+  *   Last Modified: Move this test to the test area in the server (corenlp) subproject.
   */
-class TestProcessorClient extends FlatSpec with Matchers with LazyLogging {
+class TestProcessorClient extends FlatSpecLike
+    with Matchers
+    with BeforeAndAfterAll
+    with LazyLogging
+{
+  // load server configuration from the configuration file, specify a BioNLP processor
+  val sConfig = ConfigFactory.load().getConfig("ProcessorServer")
+  val pcsConfig = sConfig.withValue("server.processor.type", ConfigValueFactory.fromAnyRef("bio"))
+  logger.debug(s"(TestProcessorClient): pcsConfig=${pcsConfig}")
+
+  // fire up a server to run these tests against
+  val pcs = new ProcessorServer(pcsConfig)
 
   // load application configuration from the configuration file
   val config = ConfigFactory.load().getConfig("ProcessorClient")
@@ -23,6 +43,13 @@ class TestProcessorClient extends FlatSpec with Matchers with LazyLogging {
   // create a processor server instance
   val client = new ProcessorClient(config)
   logger.debug(s"(TestProcessorClient): client=${client}")
+
+  // shutdown the actor systems when done testing
+  override def afterAll {
+    TestKit.shutdownActorSystem(client.system)
+    TestKit.shutdownActorSystem(pcs.system)
+  }
+
 
   def logDoc (doc: Document): Unit = {
     val id = doc.id.getOrElse("")
