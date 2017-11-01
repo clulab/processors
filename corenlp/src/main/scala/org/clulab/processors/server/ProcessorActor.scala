@@ -11,7 +11,7 @@ import org.clulab.utils.StringUtils
 /**
   * Actor which handles message to a Processor in the Processors Client/Server.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Rename client/server packages and classes.
+  *   Last Modified: Restore preprocess* message handlers.
   */
 class ProcessorActor (
 
@@ -89,6 +89,42 @@ class ProcessorActor (
     //       sender ! ServerExceptionMsg(ex)
     //     }
     //   }
+
+    case cmd: PreprocessTextCmd =>
+      log.debug(s"(ProcessorActor.receive): preprocessText(text=${cmd.text})")
+      try {
+        val pptext = procAnnotator.preprocessText(cmd.text)
+        sender ! TextMsg(pptext)
+      } catch {
+        case ex:Exception => {
+          log.error(s"(ProcessorActor.PreprocessTextCmd): ${StringUtils.exceptionToString(ex)}")
+          sender ! ServerExceptionMsg(ex)
+        }
+      }
+
+    case cmd: PreprocessSentencesCmd =>
+      log.debug(s"(ProcessorActor.receive): preprocessSentences(sents=${cmd.sentences})")
+      try {
+        val ppsents = procAnnotator.preprocessSentences(cmd.sentences)
+        sender ! SentencesMsg(ppsents)
+      } catch {
+        case ex:Exception => {
+          log.error(s"(ProcessorActor.PreprocessSentencesCmd): ${StringUtils.exceptionToString(ex)}")
+          sender ! ServerExceptionMsg(ex)
+        }
+      }
+
+    case cmd: PreprocessTokensCmd =>
+      log.debug(s"(ProcessorActor.receive): preprocessTokens(sents=${cmd.sentences})")
+      try {
+        val pptoks = procAnnotator.preprocessTokens(cmd.sentences)
+        sender ! TokensMsg(pptoks)
+      } catch {
+        case ex:Exception => {
+          log.error(s"(ProcessorActor.PreprocessTokensCmd): ${StringUtils.exceptionToString(ex)}")
+          sender ! ServerExceptionMsg(ex)
+        }
+      }
 
     case cmd: ErrorTestCmd =>
       log.error(s"(ProcessorActor.receive): ErrorTest command")

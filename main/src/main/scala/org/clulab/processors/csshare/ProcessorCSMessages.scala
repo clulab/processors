@@ -5,11 +5,11 @@ import org.clulab.processors._
 /**
   * Implement Akka message objects for the Processors Client/Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Rename client/server packages and classes.
+  *   Last Modified: Restore preprocess* messages.
   */
 object ProcessorCSMessages {
 
-  // messages for request side of server communication:
+  // Messages for request side of server communication:
   sealed trait ProcessorCSCommand
 
   case class ErrorTestCmd() extends ProcessorCSCommand
@@ -28,8 +28,12 @@ object ProcessorCSMessages {
 
 //  case class AnnotateCmd (doc:Document) extends ProcessorCSCommand
 
+  case class PreprocessTextCmd (text:String) extends ProcessorCSCommand
+  case class PreprocessSentencesCmd (sentences:Iterable[String]) extends ProcessorCSCommand
+  case class PreprocessTokensCmd (sentences:Iterable[Iterable[String]]) extends ProcessorCSCommand
 
-  // messages for response side of server communication:
+
+  // Messages for response side of server communication:
   sealed trait ProcessorCSReply
 
   case class ServerExceptionMsg (exception: Exception) extends ProcessorCSReply

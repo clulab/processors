@@ -21,7 +21,7 @@ import org.clulab.utils.StringUtils
   * it must be located in the server (corenlp) subproject because of the one-way dependency
   * between the server code and the client (main) subproject.
   *   Written by: Tom Hicks. 6/20/2017.
-  *   Last Modified: Move this test to the test area in the server (corenlp) subproject.
+  *   Last Modified: Restore preprocess* tests.
   */
 class TestProcessorClient extends FlatSpecLike
     with Matchers
@@ -170,6 +170,45 @@ class TestProcessorClient extends FlatSpecLike
     (doc.sentences.size) should equal(2)
     (doc.text).isDefined should be (false)
     (doc.text) should equal(None)
+  }
+
+
+  // preprocessText
+  it should "preprocess text from zero-length text" in {
+    logger.debug(s"(TestProcessorCoreClient): preprocess text from zero-length text")
+    val text = ""
+    val reply = client.preprocessText(text)
+    (reply) should not be (null)
+    (reply) should equal(text)
+  }
+
+  it should "preprocess simple text" in {
+    logger.debug(s"(TestProcessorCoreClient): preprocess simple text")
+    val text = "Testing is performed."
+    val reply = client.preprocessText(text)
+    (reply) should not be (null)
+    (reply) should equal(text)
+  }
+
+  // preprocessSentences
+  it should "preprocess sentences" in {
+    logger.debug(s"(TestProcessorCoreClient): preprocess sentences")
+    val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
+    val reply = client.preprocessSentences(sents)
+    (reply) should not be (null)
+    (reply.size) should equal(3)
+    reply.zipWithIndex.foreach { case(sent, ndx) =>
+      (sent) should equal(sents(ndx))
+    }
+  }
+
+  // preprocessTokens
+  it should "preprocess tokens" in {
+    logger.debug(s"(TestProcessorCoreClient): preprocess tokens")
+    val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
+    val reply = client.preprocessTokens(toks)
+    (reply.size) should equal(2)
+    (reply.flatten) should equal(toks.flatten)
   }
 
 }

@@ -19,7 +19,7 @@ import org.clulab.processors.csshare.ProcessorCSMessages._
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Rename client/server packages and classes.
+  *   Last Modified: Restore preprocess* tests.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -185,6 +185,46 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     (reply.doc.sentences.size) must equal(2)
     (reply.doc.text).isDefined must be (false)
     (reply.doc.text) must equal(None)
+  }
+
+
+  // preprocessText
+  it should "preprocess text from zero-length text" in {
+    val probe = TestProbe()
+    val text = ""
+    probe.send(procActor, PreprocessTextCmd(text))
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    (reply.text) must equal(text)
+  }
+
+  it should "preprocess simple text" in {
+    val probe = TestProbe()
+    val text = "Testing is performed."
+    probe.send(procActor, PreprocessTextCmd(text))
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    (reply.text) must equal(text)
+  }
+
+  // preprocessSentences
+  it should "preprocess sentences" in {
+    val probe = TestProbe()
+    val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
+    probe.send(procActor, PreprocessSentencesCmd(sents))
+    val reply = probe.expectMsgClass(timeout, classOf[SentencesMsg])
+    (reply.sentences.size) must equal(3)
+    reply.sentences.zipWithIndex.foreach { case(replySent, ndx) =>
+      (replySent) must equal(sents(ndx))
+    }
+  }
+
+  // preprocessTokens
+  it should "preprocess tokens" in {
+    val probe = TestProbe()
+    val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
+    probe.send(procActor, PreprocessTokensCmd(toks))
+    val reply = probe.expectMsgClass(timeout, classOf[TokensMsg])
+    (reply.tokens.size) must equal(2)
+    (reply.tokens.flatten) must equal(toks.flatten)
   }
 
 }

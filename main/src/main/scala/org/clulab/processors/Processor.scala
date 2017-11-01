@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
 /**
   * User: mihais
   * Date: 3/1/13
-  * Last Modified: Update to extend base annotator trait.
+  *   Last Modified: Move preprocess* methods from here to ProcessorAnnotator.
   */
 trait Processor extends ProcessorAnnotator {
 
@@ -24,36 +24,6 @@ trait Processor extends ProcessorAnnotator {
                             keepText:Boolean = false,
                             charactersBetweenSentences:Int = 1,
                             charactersBetweenTokens:Int = 1): Document
-
-  /**
-    * Hook to allow the preprocessing of input text. This is useful for domain-specific
-    * corrections, such as the ones in BioNLPProcessor, where we remove Table and Fig references.
-    * Note that this is allowed to change character offsets.
-    *   @param origText The original input text
-    *   @return The preprocessed text
-    */
-  def preprocessText (origText:String): String = origText
-
-  /** Runs preprocessText on each sentence. */
-  def preprocessSentences (origSentences:Iterable[String]): Iterable[String] = {
-    val sents = new ListBuffer[String]()
-    for (os <- origSentences)
-      sents += preprocessText(os)
-    sents.toList
-  }
-
-  /** Runs preprocessText on each token. */
-  def preprocessTokens (origSentences:Iterable[Iterable[String]]): Iterable[Iterable[String]] = {
-    val sents = new ListBuffer[Iterable[String]]
-    for (origSentence <- origSentences) {
-      val sent = new ListBuffer[String]
-      for (origToken <- origSentence) {
-        sent += preprocessText(origToken)
-      }
-      sents += sent.toList
-    }
-    sents.toList
-  }
 
 
   // Side-effecting annotations. These modify the document in place, which is not too elegant.

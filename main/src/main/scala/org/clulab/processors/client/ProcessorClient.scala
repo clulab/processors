@@ -18,7 +18,7 @@ import org.clulab.processors.csshare.ProcessorCSMessages._
 /**
   * Client to access the Processors Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Rename client/server packages and classes.
+  *   Last Modified: Restore preprocess* methods.
   */
 object ProcessorClient extends LazyLogging {
 
@@ -118,6 +118,30 @@ class ProcessorClient (
     val reply = callServer(AnnotateFromTokensCmd(sentences, keepText))
     reply.asInstanceOf[DocumentMsg].doc
   }
+
+
+  /**
+    * Hook to allow the preprocessing of input text.
+    * @param origText The original input text
+    * @return The preprocessed text
+    */
+  override def preprocessText (origText:String): String = {
+    val reply = callServer(PreprocessTextCmd(origText))
+    reply.asInstanceOf[TextMsg].text
+  }
+
+  /** Runs preprocessText on each sentence */
+  override def preprocessSentences (origSentences:Iterable[String]): Iterable[String] = {
+    val reply = callServer(PreprocessSentencesCmd(origSentences))
+    reply.asInstanceOf[SentencesMsg].sentences
+  }
+
+  /** Runs preprocessText on each token */
+  override def preprocessTokens (origSentences:Iterable[Iterable[String]]): Iterable[Iterable[String]] = {
+    val reply = callServer(PreprocessTokensCmd(origSentences))
+    reply.asInstanceOf[TokensMsg].tokens
+  }
+
 
   // Only for error testing -- should not be exposed as part of API
   // def errorTest: Unit = {
