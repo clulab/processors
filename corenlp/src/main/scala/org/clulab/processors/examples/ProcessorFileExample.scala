@@ -13,7 +13,7 @@ object ProcessorFileExample {
   val proc = new FastNLPProcessor()
 
   def main(args:Array[String]) {
-    val text = Source.fromFile(args(0), "ISO-8859-1").getLines().mkString(" ")
+    val text = Source.fromFile(args(0), "UTF-8").getLines().mkString(" ")
     proc.annotate(text)
   }
 }
