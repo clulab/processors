@@ -10,12 +10,13 @@ import scala.reflect.ClassTag
 
 
 /**
- * Saves/loads a Document to/from a stream
- * An important focus here is to minimize the size of the serialized Document.
- * For this reason, we use a custom (compact) text format, rather than XML.
- * User: mihais
- * Date: 3/5/13
- */
+  * Saves/loads a Document to/from a stream
+  * An important focus here is to minimize the size of the serialized Document.
+  * For this reason, we use a custom (compact) text format, rather than XML.
+  * User: mihais
+  * Date: 3/5/13
+  * Last Modified: Add optional capability to save/load the Document text field.
+  */
 class DocumentSerializer {
 
   import DocumentSerializer._
@@ -30,7 +31,7 @@ class DocumentSerializer {
     load(r)
   }
 
-  def load(r:BufferedReader): Document = {
+  def load (r:BufferedReader): Document = {
     var bits:Array[String] = null
     try {
       bits = read(r)
@@ -38,32 +39,43 @@ class DocumentSerializer {
       case e:NullPointerException => return null // reached the end of stream
       case e:Exception => throw e // something else bad
     }
+
     assert(bits(0) == START_SENTENCES)
     val sentCount = bits(1).toInt
     val sents = new ArrayBuffer[Sentence]
+
     var offset = 0
     while(offset < sentCount) {
       sents += loadSentence(r)
       offset += 1
     }
+
     var coref:Option[CorefChains] = None
     do {
       bits = read(r)
       if (bits(0) == START_COREF) {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
-    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE)
+    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT)
 
     var discourse:Option[DiscourseTree] = None
-    if(bits(0) == START_DISCOURSE) {
+    if (bits(0) == START_DISCOURSE) {
       discourse = Some(loadDiscourse(r))
       bits = read(r)
-      assert(bits(0) == END_OF_DOCUMENT)
     }
+
+    var text: Option[String] = None
+    if (bits(0) == START_TEXT) {
+      text = Some(read(r)(0))
+      bits = read(r)
+    }
+
+    assert(bits(0) == END_OF_DOCUMENT)
 
     val doc = Document(sents.toArray)
     doc.coreferenceChains = coref
     doc.discourseTree = discourse
+    doc.text = text
     doc
   }
 
@@ -191,7 +203,9 @@ class DocumentSerializer {
     Some(b.toArray)
   }
 
-  def save(doc:Document, os:PrintWriter) {
+  def save(doc:Document, os:PrintWriter): Unit = save(doc, os, false)
+
+  def save(doc:Document, os:PrintWriter, keepText:Boolean): Unit = {
     os.println(START_SENTENCES + SEP + doc.sentences.length)
     for (s <- doc.sentences) {
       saveSentence(s, os)
@@ -202,18 +216,23 @@ class DocumentSerializer {
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
     }
 
-    if(doc.discourseTree.nonEmpty) {
+    if (doc.discourseTree.nonEmpty) {
       os.println(START_DISCOURSE)
       doc.discourseTree.foreach(d => saveDiscourse(d, os))
+    }
+
+    if (keepText && doc.text.nonEmpty) {
+      os.println(START_TEXT)
+      os.println(doc.text.get)
     }
 
     os.println(END_OF_DOCUMENT)
   }
 
-  def save(doc:Document, encoding:String = "UTF-8"): String = {
+  def save(doc:Document, encoding:String = "UTF-8", keepText:Boolean = false): String = {
     val byteOutput = new ByteArrayOutputStream
     val os = new PrintWriter(byteOutput)
-    save(doc, os)
+    save(doc, os, keepText)
     os.flush()
     os.close()
     byteOutput.close()
@@ -411,6 +430,7 @@ object DocumentSerializer {
   val SEP = "\t"
 
   val START_SENTENCES = "S"
+  val START_TEXT = "TX"
   val START_TOKENS = "T"
   val START_COREF = "C"
   val START_DEPENDENCIES = "D"
