@@ -74,7 +74,7 @@ class DocumentSerializer {
     line.split(SEP, howManyTokens)
   }
 
-  def load(s:String, encoding:String = "ISO-8859-1"): Document = {
+  def load(s:String, encoding:String = "UTF-8"): Document = {
     // println("Parsing annotation:\n" + s)
     val is = new ByteArrayInputStream(s.getBytes(encoding))
     val r = new BufferedReader(new InputStreamReader(is))
@@ -210,7 +210,7 @@ class DocumentSerializer {
     os.println(END_OF_DOCUMENT)
   }
 
-  def save(doc:Document, encoding:String = "ISO-8859-1"): String = {
+  def save(doc:Document, encoding:String = "UTF-8"): String = {
     val byteOutput = new ByteArrayOutputStream
     val os = new PrintWriter(byteOutput)
     save(doc, os)
