@@ -15,11 +15,12 @@ import org.clulab.processors.corenlp._
 import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
 import org.clulab.processors.csshare.ProcessorCSMessages._
+import org.clulab.serialization.DocumentSerializer
 
 /**
   * Unit tests of the ProcessorActor class.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Restore preprocess* tests.
+  *   Last Modified: Update for UTF-8 default and keepText flag in serializer.
   */
 class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     with FlatSpecLike
@@ -34,6 +35,9 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
   override def afterAll {
     TestKit.shutdownActorSystem(system)
   }
+
+  // serializer for unserializing response Documents
+  private val serializer = new DocumentSerializer
 
   // read which processor type is specified by the configuration
   val procType = config.getString("server.processor.type")
@@ -97,30 +101,33 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     val probe = TestProbe()
     val text = "This is a document with a single sentence."
     probe.send(procActor, AnnotateTextCmd(text))
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(1)
-    (reply.doc.text).isDefined must be (false)
-    (reply.doc.text) must equal(None)
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(1)
+    (doc.text).isDefined must be (false)
+    (doc.text) must equal(None)
   }
 
   it should "annotate text, keep text" in {
     val probe = TestProbe()
     val text = "This is single sentence test."
     probe.send(procActor, AnnotateTextCmd(text, true)) // explicit keep
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(1)
-    (reply.doc.text).isDefined must be (true)
-    (reply.doc.text) must equal(Some(text))
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(1)
+    (doc.text).isDefined must be (true)
+    (doc.text) must equal(Some(text))
   }
 
   it should "annotate text, discard text" in {
     val probe = TestProbe()
     val text = "This is a document with a single sentence."
     probe.send(procActor, AnnotateTextCmd(text, false)) // explicit discard
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(1)
-    (reply.doc.text).isDefined must be (false)
-    (reply.doc.text) must equal(None)
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(1)
+    (doc.text).isDefined must be (false)
+    (doc.text) must equal(None)
   }
 
   // annotateFromSentences
@@ -128,30 +135,33 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     val probe = TestProbe()
     val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
     probe.send(procActor, AnnotateFromSentencesCmd(sents))
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(3)
-    (reply.doc.text).isDefined must be (false)
-    (reply.doc.text) must equal(None)
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(3)
+    (doc.text).isDefined must be (false)
+    (doc.text) must equal(None)
   }
 
   it should "annotate sentences, keep text" in {
     val probe = TestProbe()
     val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
     probe.send(procActor, AnnotateFromSentencesCmd(sents, true)) // explicit keep
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(3)
-    (reply.doc.text).isDefined must be (true)
-    (reply.doc.text) must equal(Some(sents.mkString(" ")))
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(3)
+    (doc.text).isDefined must be (true)
+    (doc.text) must equal(Some(sents.mkString(" ")))
   }
 
   it should "annotate sentences, discard text" in {
     val probe = TestProbe()
     val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
     probe.send(procActor, AnnotateFromSentencesCmd(sents, false)) // explicit discard
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(3)
-    (reply.doc.text).isDefined must be (false)
-    (reply.doc.text) must equal(None)
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(3)
+    (doc.text).isDefined must be (false)
+    (doc.text) must equal(None)
   }
 
 
@@ -160,10 +170,11 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     val probe = TestProbe()
     val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
     probe.send(procActor, AnnotateFromTokensCmd(toks))
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(2)
-    (reply.doc.text).isDefined must be (false)
-    (reply.doc.text) must equal(None)
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(2)
+    (doc.text).isDefined must be (false)
+    (doc.text) must equal(None)
   }
 
   it should "annotate tokens, keep text" in {
@@ -171,20 +182,22 @@ class TestProcessorActor extends TestKit(ActorSystem("test-proc-actor"))
     val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
     val text = toks.map(t => t.mkString(" ")).mkString(" ")  // spacing: tok=1, sent=1
     probe.send(procActor, AnnotateFromTokensCmd(toks, true)) // explicit keep
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(2)
-    (reply.doc.text).isDefined must be (true)
-    (reply.doc.text) must equal(Some(text))
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(2)
+    (doc.text).isDefined must be (true)
+    (doc.text) must equal(Some(text))
   }
 
   it should "annotate tokens, discard text" in {
     val probe = TestProbe()
     val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
     probe.send(procActor, AnnotateFromTokensCmd(toks, false)) // explicit discard
-    val reply = probe.expectMsgClass(timeout, classOf[DocumentMsg])
-    (reply.doc.sentences.size) must equal(2)
-    (reply.doc.text).isDefined must be (false)
-    (reply.doc.text) must equal(None)
+    val reply = probe.expectMsgClass(timeout, classOf[TextMsg])
+    val doc = serializer.load(reply.asInstanceOf[TextMsg].text)
+    (doc.sentences.size) must equal(2)
+    (doc.text).isDefined must be (false)
+    (doc.text) must equal(None)
   }
 
 
