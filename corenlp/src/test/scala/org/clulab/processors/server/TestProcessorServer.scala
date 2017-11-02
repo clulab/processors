@@ -22,7 +22,7 @@ import org.clulab.processors.csshare.ProcessorCSMessages._
 /**
   * Tests of the ProcessorServer.
   *   Written by: Tom Hicks. 6/14/2017.
-  *   Last Modified: Rename client/server packages and classes.
+  *   Last Modified: Use Processors serialization/unserialization for Documents.
   */
 class TestProcessorServer extends TestKit(ActorSystem("testProcServer"))
     with FlatSpecLike
@@ -59,14 +59,13 @@ class TestProcessorServer extends TestKit(ActorSystem("testProcServer"))
   }
 
   /** Server is alive, now give it a simple test. */
-  it should "annotate single sentence, keep text" in {
-    val text = "This is single sentence test."
-    val reply = callServer(AnnotateTextCmd(text, true)) // keep text
-    val doc = reply.asInstanceOf[DocumentMsg].doc
-    (doc) should not be (null)
-    (doc.sentences.size) should equal(1)
-    (doc.text).isDefined should be (true)
-    (doc.text) should equal(Some(text))
+  it should "preprocess single sentence" in {
+    val input = "This is single sentence test."
+    val reply = callServer(PreprocessTextCmd(input))
+    (reply) should not be (null)
+    val text = reply.asInstanceOf[TextMsg].text
+    (text) should not be (empty)
+    (text) should equal(input)
   }
 
 }

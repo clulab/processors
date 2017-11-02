@@ -6,12 +6,13 @@ import akka.event.Logging
 import org.clulab.processors._
 import org.clulab.processors.corenlp._
 import org.clulab.processors.csshare.ProcessorCSMessages._
+import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.StringUtils
 
 /**
   * Actor which handles message to a Processor in the Processors Client/Server.
   *   Written by: Tom Hicks. 6/6/2017.
-  *   Last Modified: Restore preprocess* message handlers.
+  *   Last Modified: Use Processors serialization/unserialization for Documents.
   */
 class ProcessorActor (
 
@@ -21,6 +22,9 @@ class ProcessorActor (
 ) extends Actor {
 
   val log = Logging(context.system, this)
+
+  // serializer for serializing response Documents
+  private val serializer = new DocumentSerializer
 
   // lifecycle methods for tracing
   override def preStart (): Unit =
@@ -46,7 +50,7 @@ class ProcessorActor (
       log.debug(s"(ProcessorActor.receive): annotateFromSentences(sents=${cmd.sentences}, keep=${cmd.keepText})")
       try {
         val doc = procAnnotator.annotateFromSentences(cmd.sentences, cmd.keepText)
-        sender ! DocumentMsg(Document(doc))
+        sender ! TextMsg(serializer.save(doc, SERIALIZER_ENCODING))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.AnnotateFromSentencesCmd): ${StringUtils.exceptionToString(ex)}")
@@ -58,7 +62,7 @@ class ProcessorActor (
       log.debug(s"(ProcessorActor.receive): annotateFromTokens(sents=${cmd.sentences}, keep=${cmd.keepText})")
       try {
         val doc = procAnnotator.annotateFromTokens(cmd.sentences, cmd.keepText)
-        sender ! DocumentMsg(Document(doc))
+        sender ! TextMsg(serializer.save(doc, SERIALIZER_ENCODING))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.AnnotateFromTokensCmd): ${StringUtils.exceptionToString(ex)}")
@@ -70,7 +74,7 @@ class ProcessorActor (
       log.debug(s"(ProcessorActor.receive): annotateText(text=${cmd.text}, keep=${cmd.keepText})")
       try {
         val doc = procAnnotator.annotate(cmd.text, cmd.keepText)
-        sender ! DocumentMsg(Document(doc))
+        sender ! TextMsg(serializer.save(doc, SERIALIZER_ENCODING))
       } catch {
         case ex:Exception => {
           log.error(s"(ProcessorActor.AnnotateTextCmd): ${StringUtils.exceptionToString(ex)}")
@@ -82,7 +86,7 @@ class ProcessorActor (
     //   log.debug(s"(ProcessorActor.receive): annotate(text=${cmd.text}, keep=${cmd.keepText})")
     //   try {
     //     val doc = procAnnotator.annotate(cmd.text, cmd.keepText)
-    //     sender ! DocumentMsg(Document(doc))
+    //     sender ! TextMsg(serializer.save(doc, SERIALIZER_ENCODING))
     //   } catch {
     //     case ex:Exception => {
     //       log.error(s"(ProcessorActor.AnnotateCmd): ${StringUtils.exceptionToString(ex)}")

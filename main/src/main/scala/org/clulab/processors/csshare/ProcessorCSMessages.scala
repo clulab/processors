@@ -5,9 +5,12 @@ import org.clulab.processors._
 /**
   * Implement Akka message objects for the Processors Client/Server.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Restore preprocess* messages.
+  *   Last Modified: Add default serializer encoding constant.
   */
 object ProcessorCSMessages {
+
+  // Specify UTF-8 encoding for serializer, which, sadly, still uses archaic Latin 1 char set
+  val SERIALIZER_ENCODING = "UTF-8"
 
   // Messages for request side of server communication:
   sealed trait ProcessorCSCommand

@@ -14,11 +14,12 @@ import akka.util.Timeout
 
 import org.clulab.processors._
 import org.clulab.processors.csshare.ProcessorCSMessages._
+import org.clulab.serialization.DocumentSerializer
 
 /**
   * Client to access the Processors Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Separate client and server shutdown methods.
+  *   Last Modified: Use Processors serialization/unserialization for Documents.
   */
 object ProcessorClient extends LazyLogging {
 
@@ -49,6 +50,9 @@ class ProcessorClient (
   val config: Config
 
 ) extends ProcessorAnnotator with LazyLogging {
+
+  // serializer for unserializing response Documents
+  private val serializer = new DocumentSerializer
 
   private val connectTime = 30.seconds
 
@@ -104,7 +108,7 @@ class ProcessorClient (
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
   override def annotate (text:String, keepText:Boolean = false): Document = {
     val reply = callServer(AnnotateTextCmd(text, keepText))
-    reply.asInstanceOf[DocumentMsg].doc
+    serializer.load(reply.asInstanceOf[TextMsg].text, SERIALIZER_ENCODING)
   }
 
   /** Annotate the given sentences, specify whether to retain the text in the resultant Document. */
@@ -113,7 +117,7 @@ class ProcessorClient (
     keepText:Boolean = false): Document =
   {
     val reply = callServer(AnnotateFromSentencesCmd(sentences, keepText))
-    reply.asInstanceOf[DocumentMsg].doc
+    serializer.load(reply.asInstanceOf[TextMsg].text, SERIALIZER_ENCODING)
   }
 
   /** Annotate the given tokens, specify whether to retain the text in the resultant Document. */
@@ -122,7 +126,7 @@ class ProcessorClient (
     keepText:Boolean = false
   ): Document = {
     val reply = callServer(AnnotateFromTokensCmd(sentences, keepText))
-    reply.asInstanceOf[DocumentMsg].doc
+    serializer.load(reply.asInstanceOf[TextMsg].text, SERIALIZER_ENCODING)
   }
 
 
