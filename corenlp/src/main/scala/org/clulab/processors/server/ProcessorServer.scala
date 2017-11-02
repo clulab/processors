@@ -17,7 +17,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Rename client/server packages and classes.
+  *   Last Modified: Remove unneeded exposed router.
   */
 object ProcessorServer extends LazyLogging {
 
@@ -37,9 +37,6 @@ object ProcessorServer extends LazyLogging {
     logger.debug(s"(ProcessorServer.instance): pcs => ${_pcs}")
     _pcs
   }
-
-  /** Return an actor ref to the current instance of the router. */
-  def router: ActorRef = instance.router
 
   def main (args: Array[String]) {
     val _ = instance

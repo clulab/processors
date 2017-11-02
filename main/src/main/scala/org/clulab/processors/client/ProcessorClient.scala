@@ -18,7 +18,7 @@ import org.clulab.processors.csshare.ProcessorCSMessages._
 /**
   * Client to access the Processors Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Restore preprocess* methods.
+  *   Last Modified: Separate client and server shutdown methods.
   */
 object ProcessorClient extends LazyLogging {
 
@@ -86,8 +86,14 @@ class ProcessorClient (
       result.asInstanceOf[ProcessorCSReply]
   }
 
-  /** Send the server a message to shutdown actors and terminate the actor system. */
+  /** Shutdown this clients actors and terminate the actor system. */
   def shutdown: Unit = {
+    router ! Broadcast(PoisonPill)
+    system.terminate()
+  }
+
+  /** Send the server a message to shutdown actors and terminate the actor system. */
+  def shutdownServer: Unit = {
     if (config.getBoolean("shutdownServerOnExit")) {
       router ! Broadcast(PoisonPill)
       router ! PoisonPill
