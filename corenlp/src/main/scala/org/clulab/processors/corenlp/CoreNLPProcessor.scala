@@ -12,7 +12,6 @@ import edu.stanford.nlp.pipeline.{ParserAnnotatorUtils, StanfordCoreNLP}
 import java.util.Properties
 import collection.mutable.ListBuffer
 import edu.stanford.nlp.ling.CoreAnnotations._
-import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
@@ -21,12 +20,13 @@ import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
-
+import scala.collection.JavaConverters._
 
 /**
  * API for Stanford's CoreNLP tools
  * User: mihais
  * Date: 3/1/13
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 class CoreNLPProcessor(
   internStrings:Boolean = true,
@@ -67,7 +67,7 @@ class CoreNLPProcessor(
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
-    val sas = annotation.get.get(classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
     var offset = 0
     for (sa <- sas) {
       // run the actual parser here
@@ -158,11 +158,11 @@ class CoreNLPProcessor(
     if(chains != null) {
       val mentions = new ListBuffer[CorefMention]
 
-      for (cid <- chains.keySet()) {
+      for (cid <- chains.keySet().asScala) {
         // println("cluster " + cid)
         val mentionMap = chains.get(cid).getMentionMap
-        for (mid <- mentionMap.keySet()) {
-          for (mention <- mentionMap.get(mid)) {
+        for (mid <- mentionMap.keySet().asScala) {
+          for (mention <- mentionMap.get(mid).asScala) {
             // val isRep = mention == cluster.getRepresentativeMention
             // println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + isRep + " [" + mention.mentionSpan + "]")
 

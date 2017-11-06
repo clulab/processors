@@ -6,7 +6,6 @@ import java.util.{List => JavaList}
 
 import org.slf4j.LoggerFactory
 
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.io.{ Source, StdIn }
@@ -26,7 +25,7 @@ import CRFNER._
  * Our own BIO NER trained on the BioCreative 2 dataset, using the Stanford CRF
  * User: mihais
  * Date: 2/27/15
- * Last Modified: Fix compiler issue: import scala.io.Source.
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 class CRFNER {
   var crfClassifier:Option[CRFClassifier[CoreLabel]] = None
@@ -56,7 +55,7 @@ class CRFNER {
   def classify(sentence:JavaList[CoreLabel]):List[String] = {
     assert(crfClassifier.isDefined)
     val labels = new ListBuffer[String]
-    val predictions = crfClassifier.get.classify(sentence)
+    val predictions = crfClassifier.get.classify(sentence).asScala
     for(l <- predictions) {
       labels += l.getString(classOf[AnswerAnnotation])
     }
@@ -64,7 +63,7 @@ class CRFNER {
   }
 
   def test(path:String): List[List[(String, String)]] = {
-    val testCorpus = readData(path)
+    val testCorpus = readData(path).asScala
     val outputs = new ListBuffer[List[(String, String)]]
     for(sentence <- testCorpus) {
       val golds = fetchGoldLabels(sentence.asScala.toList)

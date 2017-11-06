@@ -12,12 +12,13 @@ import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.MutableNumber
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
   * Combines RuleNER and CRFNER into a, surprise surprise, hybrid NER
   * User: mihais
   * Date: 2/9/17
+  * Last Modified: Update for Scala 2.12: java converters.
   */
 class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
   lazy private val bioNer = CRFNER.load(CRF_MODEL_PATH)
@@ -38,11 +39,11 @@ class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
     if (withCRFNER) {
       // run the CRF NER on one sentence at a time
       // we are traversing our sentences and the CoreNLP sentences in parallel here!
-      val sas = annotation.get.get(classOf[SentencesAnnotation])
+      val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
       var sentenceOffset = 0
       for (sa: CoreMap <- sas) {
         val ourSentence = doc.sentences(sentenceOffset) // our sentence
-        val coreNLPSentence = sa.get(classOf[TokensAnnotation]) // the CoreNLP sentence
+        val coreNLPSentence = sa.get(classOf[TokensAnnotation]).asScala // the CoreNLP sentence
 
         // build the NER input
         val inputSent = mkSent(ourSentence)

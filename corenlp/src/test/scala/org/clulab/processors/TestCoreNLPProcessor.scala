@@ -4,14 +4,15 @@ import org.clulab.discourse.rstparser.RelationDirection
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest._
 
-import collection.JavaConversions.asJavaCollection
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.struct.CorefMention
 
+import scala.collection.JavaConverters._
+
 /**
- * 
  * User: mihais
  * Date: 3/3/13
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 class TestCoreNLPProcessor extends FlatSpec with Matchers {
   val proc = new CoreNLPProcessor(internStrings = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
@@ -216,20 +217,22 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
 
   it should "run the coreference resolver correctly" in {
     val doc = proc.annotate("John Smith went to China. He visited Beijing.")
-    (doc.coreferenceChains != None) should be (true)
+    (doc.coreferenceChains.isDefined) should be (true)
 
-    val mentions = doc.coreferenceChains.get.getMentions
+    val mentions = doc.coreferenceChains.get.getMentions.toList
     mentions.size should be (4)
 
-    val chain = doc.coreferenceChains.get.getChain(0, 1)
-    (chain != None) should be (true)
+    val chain1 = doc.coreferenceChains.get.getChain(0, 1)
+    (chain1.isDefined) should be (true)
+
+    val chain = chain1.get.toList
 
     val john = new CorefMention(0, 1, 0, 2, -1)
-    chain.get.contains(john) should be (true)
+    chain.contains(john) should be (true)
     mentions.contains(john) should be (true)
 
     val he = new CorefMention(1, 0, 0, 1, -1)
-    chain.get.contains(he) should be (true)
+    chain.contains(he) should be (true)
     mentions.contains(he) should be (true)
 
     val china = new CorefMention(0, 4, 4, 5, -1)

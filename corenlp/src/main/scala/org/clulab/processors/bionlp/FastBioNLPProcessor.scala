@@ -9,12 +9,13 @@ import org.clulab.processors.clu.bio.BioTokenizerPreProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
   * A processor for biomedical texts, based on FastNLP with the NN parser, but with different tokenization and NER
   * User: mihais
   * Date: 2/9/17
+  * Last Modified: Update for Scala 2.12: java converters.
   */
 class FastBioNLPProcessor (internStrings:Boolean = false,
                            withChunks:Boolean = true,
@@ -51,10 +52,10 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
     * @param annotation The CoreNLP annotation
     */
   override def postprocessTags(annotation:Annotation) {
-    val sas = annotation.get(classOf[SentencesAnnotation])
+    val sas = annotation.get(classOf[SentencesAnnotation]).asScala
 
     sas.foreach{ sa =>
-      val tas = sa.get(classOf[TokensAnnotation]).toList.toArray
+      val tas = sa.get(classOf[TokensAnnotation]).asScala.toList.toArray
       posPostProcessor.postprocessCoreLabelTags(tas)
     }
   }
