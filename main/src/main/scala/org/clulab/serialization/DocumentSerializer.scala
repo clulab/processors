@@ -18,7 +18,7 @@ import org.clulab.struct._
   * For this reason, we use a custom (compact) text format, rather than XML.
   * User: mihais
   * Date: 3/5/13
-  * Last Modified: Add messages to major asserts! Add/use loadText method.
+  * Last Modified: Redo text field serialization.
   */
 class DocumentSerializer extends LazyLogging {
 
@@ -69,7 +69,11 @@ class DocumentSerializer extends LazyLogging {
 
     var text: Option[String] = None
     if (bits(0) == START_TEXT) {
-      text = Some(loadText(r))
+      if (bits.length != 2)
+        throw new RuntimeException(
+          s"ERROR: Missing text length in start text line: " + bits.mkString(" "))
+      val charCount = bits(1).toInt
+      text = Some(loadText(r, charCount))
       bits = read(r)
     }
 
@@ -97,14 +101,12 @@ class DocumentSerializer extends LazyLogging {
     doc
   }
 
-  private def loadText (r:BufferedReader): String = {
-    val buf = new StringBuilder
-    var line = r.readLine()
-    while (line != END_OF_TEXT) {
-      buf.append(line)
-      line = r.readLine()
-    }
-    return buf.toString
+  private def loadText (r:BufferedReader, charCount:Int): String = {
+    if (charCount < 1) return ""            // sanity check
+    var buffer = new Array[Char](charCount)
+    r.read(buffer, 0, charCount)
+    r.skip(1)                               // skip over last newline
+    new String(buffer)
   }
 
   private def loadSentence(r:BufferedReader): Sentence = {
@@ -233,9 +235,8 @@ class DocumentSerializer extends LazyLogging {
     }
 
     if (keepText && doc.text.nonEmpty) {
-      os.println(START_TEXT)
-      os.println(doc.text.get)
-      os.println(END_OF_TEXT)
+      os.println(START_TEXT + SEP + doc.text.get.length)
+      os.println(doc.text.get)              // adds extra end-of-line character
     }
 
     os.println(END_OF_DOCUMENT)
@@ -451,6 +452,5 @@ object DocumentSerializer {
 
   val END_OF_SENTENCE = "EOS"
   val END_OF_DOCUMENT = "EOD"
-  val END_OF_TEXT = "EOTX"
   val END_OF_DEPENDENCIES = "EOX"
 }
