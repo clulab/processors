@@ -17,7 +17,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Remove unneeded exposed router.
+  *   Last Modified: Add shutdown for instance.
   */
 object ProcessorServer extends LazyLogging {
 
@@ -32,15 +32,25 @@ object ProcessorServer extends LazyLogging {
       if (config == null)
         throw new RuntimeException("(ProcessorServer.instance): Unable to read configuration from configuration file.")
       logger.debug(s"(ProcessorServer.instance): config=${config}")
-      _pcs = new ProcessorServer(config)
+      try {
+        _pcs = new ProcessorServer(config)
+      } catch {
+        case jnbe: Exception =>
+          throw new RuntimeException("(ProcessorServer.instance): Unable to bind to configured address. Is a server already running?")
+      }
     }
     logger.debug(s"(ProcessorServer.instance): pcs => ${_pcs}")
     _pcs
   }
 
+  /** Shutdown the current instance of the server, if any. */
+  def shutdown: Unit = if (_pcs != null) _pcs.shutdown
+
+  /** Start the single instance of the server. */
   def main (args: Array[String]) {
     val _ = instance
   }
+
 }
 
 
