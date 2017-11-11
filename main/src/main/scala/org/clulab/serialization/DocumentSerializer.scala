@@ -18,7 +18,7 @@ import org.clulab.struct._
   * For this reason, we use a custom (compact) text format, rather than XML.
   * User: mihais
   * Date: 3/5/13
-  * Last Modified: Redo text field serialization.
+  * Last Modified: Don't save zero-length text.
   */
 class DocumentSerializer extends LazyLogging {
 
@@ -235,8 +235,11 @@ class DocumentSerializer extends LazyLogging {
     }
 
     if (keepText && doc.text.nonEmpty) {
-      os.println(START_TEXT + SEP + doc.text.get.length)
-      os.println(doc.text.get)              // adds extra end-of-line character
+      val txtLen = doc.text.get.length
+      if (txtLen > 0) {
+        os.println(START_TEXT + SEP + txtLen)
+        os.println(doc.text.get)            // adds extra end-of-line character
+      }
     }
 
     os.println(END_OF_DOCUMENT)
