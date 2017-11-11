@@ -19,7 +19,7 @@ import org.clulab.serialization.DocumentSerializer
 /**
   * Client to access the Processors Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Use Processors serialization/unserialization for Documents.
+  *   Last Modified: Add termination: direct and remote poisoning via death watch actor. Log errors.
   */
 object ProcessorClient extends LazyLogging {
 
@@ -39,8 +39,15 @@ object ProcessorClient extends LazyLogging {
     _pcc
   }
 
-  /** Expose the shutdown method from the instance. */
-  def shutdown: Unit = instance.shutdown
+  /** Termindate the current instance of the client, if any. */
+  def terminate: Unit = if (_pcc != null) _pcc.terminate
+
+  /** Shutdown the remote processor server AND this instance of the client. */
+  def shutdownClientServer: Unit = if (_pcc != null) _pcc.shutdownClientServer
+
+  /** Send the server a message to shutdown actors and terminate the server router. */
+  def shutdownServer: Unit = if (_pcc != null) _pcc.shutdownServer
+
 }
 
 
@@ -72,10 +79,22 @@ class ProcessorClient (
   private def getRouterRef (config: Config): ActorRef = {
     val serverPath = if (config.hasPath("server.path"))
       config.getString("server.path")
-    else
-      throw new RuntimeException("(ProcessorClient): Configuration file must define server.path")
-    val ref = system.actorSelection(ActorPath.fromString(serverPath)).resolveOne(connectTime)
-    Await.result(ref, connectTime).asInstanceOf[ActorRef]
+    else {
+      logger.error("(ProcessorClient): Configuration file must define 'server.path'")
+      terminate                             // shutdown the client system
+      throw new RuntimeException("(ProcessorClient): Configuration file must define 'server.path'")
+    }
+
+    try {
+      val fut = system.actorSelection(ActorPath.fromString(serverPath)).resolveOne(connectTime)
+      val ref = Await.result(fut, connectTime).asInstanceOf[ActorRef]
+      return ref
+    } catch {
+      case anf:ActorNotFound =>
+        logger.error("(ProcessorClient): Unable to find or connect to the Server.")
+        terminate                           // shutdown the client system
+        throw new RuntimeException("(ProcessorClient): Unable to find or connect to the Server.")
+    }
   }
 
   /** Send the given message to the server and block until response comes back. */
@@ -84,24 +103,27 @@ class ProcessorClient (
     val result = Await.result(response, Duration.Inf) // blocking: wait forever
     if (result.isInstanceOf[ServerExceptionMsg]) {
       val exception = result.asInstanceOf[ServerExceptionMsg].exception
+      logger.error(exception.getMessage)
+      terminate                             // shutdown the client system
       throw new RuntimeException(exception)
     }
     else
       result.asInstanceOf[ProcessorCSReply]
   }
 
-  /** Shutdown this clients actors and terminate the actor system. */
-  def shutdown: Unit = {
-    router ! Broadcast(PoisonPill)
-    system.terminate()
+  /** Terminate this clients actor system. */
+  def terminate: Unit = system.terminate()
+
+  /** Shutdown the remote processor server AND this client. */
+  def shutdownClientServer: Unit = {
+    this.shutdownServer
+    this.terminate
   }
 
-  /** Send the server a message to shutdown actors and terminate the actor system. */
+  /** Send the server a message to shutdown actors and terminate the server router. */
   def shutdownServer: Unit = {
-    if (config.getBoolean("shutdownServerOnExit")) {
-      router ! Broadcast(PoisonPill)
-      router ! PoisonPill
-    }
+    router ! Broadcast(PoisonPill)
+    router ! PoisonPill
   }
 
 

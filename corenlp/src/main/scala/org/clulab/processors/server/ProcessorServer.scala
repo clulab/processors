@@ -17,7 +17,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Add shutdown for instance.
+  *   Last Modified: Add termination: direct and remote poisoning via death watch actor. Log errors.
   */
 object ProcessorServer extends LazyLogging {
 
@@ -36,15 +36,16 @@ object ProcessorServer extends LazyLogging {
         _pcs = new ProcessorServer(config)
       } catch {
         case jnbe: Exception =>
-          throw new RuntimeException("(ProcessorServer.instance): Unable to bind to configured address. Is a server already running?")
+          logger.error("(ProcessorServer.instance): Unable to bind to the configured address. Is a Server already running?")
+          throw new RuntimeException("(ProcessorServer.instance): Unable to bind to the configured address. Is a Server already running?")
       }
     }
     logger.debug(s"(ProcessorServer.instance): pcs => ${_pcs}")
     _pcs
   }
 
-  /** Shutdown the current instance of the server, if any. */
-  def shutdown: Unit = if (_pcs != null) _pcs.shutdown
+  /** Terminate the current instance of the server, if any. */
+  def terminate: Unit = if (_pcs != null) _pcs.terminate
 
   /** Start the single instance of the server. */
   def main (args: Array[String]) {
@@ -136,15 +137,15 @@ class ProcessorServer (
 
   logger.debug(s"(ProcessorServer.ctor): procPool=${procPool}")
 
+  /** A process to finally stop the server after the router dies. */
+  private val serverDeathWatcher = system.actorOf(
+    ServerDeathWatchActor.props(system, procPool), "serverDeathWatcher")
+
   /** Returns an actor ref to the internal instance of the pooled router. */
-  val router: ActorRef = procPool
+  def router: ActorRef = procPool
 
-
-  /** Shutdown the server: kill the routers actor children followed by the router itself. */
-  def shutdown: Unit = {
-    router ! Broadcast(PoisonPill)
-    router ! PoisonPill
-  }
+  /** Terminate the server: stop all children followed by the guardian actor. */
+  def terminate: Unit = system.terminate()
 
   private def getArgBoolean (argPath: String, defaultValue: Boolean): Boolean =
     if (config.hasPath(argPath)) config.getBoolean(argPath)
