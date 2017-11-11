@@ -29,6 +29,7 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     es(2) should be ("B-Gene_or_gene_product")
   }
 
+  /*
   "BioNLPProcessor" should "recognize correct NEs in text 1" in {
     val doc = proc.mkDocumentFromSentences(List(
       "Co-immunoprecipitation analysis confirmed that Bis interacted with Bcl-2 in vivo.",
@@ -352,6 +353,7 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
 
     es(10) should be ("O")
   }
+  */
 
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)

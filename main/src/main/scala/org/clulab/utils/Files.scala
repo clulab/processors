@@ -121,4 +121,17 @@ object Files {
         new InputStreamReader(
           new BufferedInputStream(is)))
   }
+
+  /** Creates an ObjectInputStream for this path in our CLASSPATH. */
+  def loadObjectStreamFromClasspath(path: String):ObjectInputStream = {
+    val is = getClass.getClassLoader.getResourceAsStream(path)
+    if (is == null) throw new RuntimeException(s"ERROR: cannot find resource $path in classpath!")
+
+    if (path.endsWith(".gz"))
+      new ObjectInputStream(
+        new GZIPInputStream(new BufferedInputStream(is)))
+    else
+      new ObjectInputStream(
+        new BufferedInputStream(is))
+  }
 }

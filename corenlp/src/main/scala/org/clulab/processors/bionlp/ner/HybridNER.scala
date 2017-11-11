@@ -1,7 +1,6 @@
 package org.clulab.processors.bionlp.ner
 
 import java.util
-import java.util.regex.Pattern
 
 import org.clulab.processors.{Document, Sentence}
 import HybridNER._
@@ -20,7 +19,7 @@ import scala.collection.JavaConversions._
   */
 class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
   lazy private val bioNer = CRFNER.load(CRF_MODEL_PATH)
-  lazy private val ruleNer = KBLoader.loadAll
+  lazy private val ruleNer = KBLoader.loadAll()
 
   /** Runs the NER, and stores the output in place, in the .entities field in the sentences in the given Document */
   def recognizeNamedEntities(doc:Document, annotation:Option[Annotation]) {

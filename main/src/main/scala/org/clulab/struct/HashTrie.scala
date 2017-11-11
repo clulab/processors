@@ -148,7 +148,9 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
   }
 }
 
-case class TrieNode(token:String, var completePath:Boolean, var children:Option[ListBuffer[TrieNode]]) {
+case class TrieNode(token:String, var completePath:Boolean, var children:Option[ListBuffer[TrieNode]]) extends Serializable {
+  val serialVersionUID = 1
+
   def this(token: String, complete: Boolean) = this(token, complete, None)
 
   override def toString: String = {

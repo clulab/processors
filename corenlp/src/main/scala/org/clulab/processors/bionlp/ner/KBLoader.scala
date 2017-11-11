@@ -1,7 +1,5 @@
 package org.clulab.processors.bionlp.ner
 
-import java.io.{FileWriter, PrintWriter}
-
 import com.typesafe.config._
 import ai.lum.common.ConfigUtils._
 import org.clulab.processors.clu.bio.{BioLexicalVariations, BioLexiconEntityValidator}
@@ -9,6 +7,8 @@ import org.clulab.sequences.LexiconNER
 import org.slf4j.LoggerFactory
 import java.io._
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
+
+import org.clulab.utils.Files
 
 class KBLoader
 
@@ -27,13 +27,13 @@ object KBLoader {
   /** List of entity labeling files for the rule-based NER. If missing, an error is thrown.
     * NB: file order is important: it indicates priority! */
   val RULE_NER_KBS: List[String] = config[List[String]]("kbloader.nerKBs")
-  logger.debug(s"KBLoader.init): RULE_NER_KBS=$RULE_NER_KBS")
+  // logger.debug(s"KBLoader.init): RULE_NER_KBS=$RULE_NER_KBS")
 
   /** List of KB override files to be used. */
   val NER_OVERRIDE_KBS: List[String] =
     if (config.hasPath("kbloader.overrides")) config[List[String]]("kbloader.overrides")
     else List.empty[String]
-  logger.debug(s"KBLoader.init): NER_OVERRIDE_KBS=$NER_OVERRIDE_KBS")
+  // logger.debug(s"KBLoader.init): NER_OVERRIDE_KBS=$NER_OVERRIDE_KBS")
 
   /** These must be KBs BEFORE KBGenerator converts them to NER-ready, because
     * the files under kb/ner are post tokenization. */
@@ -41,7 +41,7 @@ object KBLoader {
     if (config.hasPath("kbloader.unslashables")) config[List[String]]("kbloader.unslashables")
     else List.empty[String]
   val UNSLASHABLE_TOKENS_KBS: List[String] = NER_OVERRIDE_KBS ++ unslashable
-  logger.debug(s"KBLoader.init): UNSLASHABLE_TOKENS_KBS=$UNSLASHABLE_TOKENS_KBS")
+  // logger.debug(s"KBLoader.init): UNSLASHABLE_TOKENS_KBS=$UNSLASHABLE_TOKENS_KBS")
 
   /** A horrible hack to keep track of entities that should not be labeled when in
     * lower case, or upper initial case. */
@@ -63,38 +63,42 @@ object KBLoader {
         // try the serialized model first
         if(fromSerializedModel && serNerModel.nonEmpty) {
           logger.debug(s"Loading LexiconNER from serialized model: ${serNerModel.get}")
-          val ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream(serNerModel.get)))
+          val ois = Files.loadObjectStreamFromClasspath(serNerModel.get)
           ruleNerSingleton = Some(ois.readObject().asInstanceOf[LexiconNER])
+          ois.close()
+          val labels = ruleNerSingleton.get.matchers.map(_._1).sorted
+          logger.debug(s"Loaded tries for ${labels.size} labels (repeated labels are due to the override KB): ${labels.mkString(", ")}")
           logger.debug("Completed NER loading.")
         }
 
-        TODO
-        ruleNerSingleton = Some(LexiconNER(
-          RULE_NER_KBS,
-          Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
-          new BioLexiconEntityValidator,
-          new BioLexicalVariations,
-          useLemmasForMatching = false,
-          caseInsensitiveMatching = true
-        ))
+        if(ruleNerSingleton.isEmpty) {
+          logger.debug("Loading LexiconNER from knowledge bases...")
+          ruleNerSingleton = Some(LexiconNER(
+            RULE_NER_KBS,
+            Some(NER_OVERRIDE_KBS), // allow overriding for some key entities
+            new BioLexiconEntityValidator,
+            new BioLexicalVariations,
+            useLemmasForMatching = false,
+            caseInsensitiveMatching = true
+          ))
+          logger.debug("Completed NER loading.")
+        }
       }
       ruleNerSingleton.get
     }
   }
 
+  /**
+    * Creates the serialized LexiconNER model from the provided KBs
+    * This is called in bioresources/ner_kb.sh
+    * @param args The file in which to save the serialized model
+    */
   def main(args:Array[String]): Unit = {
-    /*
-    val ner = loadAll
+    val modelFile = args(0)
+    val ner = loadAll(fromSerializedModel = false)
 
-    val oos = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream("tmp.ser.gz")))
+    val oos = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(modelFile)))
     oos.writeObject(ner)
     oos.close()
-    */
-
-    logger.debug("Starting NER loading...")
-    val ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream("tmp.ser.gz")))
-    ois.readObject().asInstanceOf[LexiconNER]
-    logger.debug("Completed NER loading.")
-
   }
 }
