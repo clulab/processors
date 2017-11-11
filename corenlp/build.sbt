@@ -6,7 +6,7 @@ libraryDependencies ++= {
     "ai.lum"             %%  "common"            % "0.0.8",
     "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1",
     "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1" classifier "models",
-    "org.clulab"          %  "bioresources"      % "1.1.25-SNAPSHOT",
+    "org.clulab"          %  "bioresources"      % "1.1.25",
 
     // logging
     "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.7.2",
