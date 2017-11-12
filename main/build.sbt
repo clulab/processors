@@ -7,7 +7,7 @@ libraryDependencies ++= {
   Seq(
     "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
     "org.scalatest" %% "scalatest" % "3.0.1" % "test",
-    "org.clulab" % "bioresources" % "1.1.25",
+    "org.clulab" % "bioresources" % "1.1.26-SNAPSHOT",
     "com.io7m.xom" % "xom" % "1.2.10",
     "org.json4s" %% "json4s-core" % json4sVersion,
     "org.json4s" %% "json4s-jackson" % json4sVersion,

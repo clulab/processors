@@ -8,6 +8,7 @@ import org.clulab.sequences.LexiconNER
   * User: mihais
   * Date: 10/24/16
   */
+@SerialVersionUID(1000L)
 trait EntityValidator extends Serializable {
   def validMatch(sentence: Sentence, start:Int, end:Int):Boolean
 }
@@ -16,6 +17,7 @@ trait EntityValidator extends Serializable {
   * Any span is considered as a valid entity
   * See org.clulab.processors.clu.bio.BioLexiconEntityValidator for a more complicated validator.
   */
+@SerialVersionUID(1000L)  
 class TrueEntityValidator extends EntityValidator {
   override def validMatch(sentence: Sentence, start:Int, end:Int): Boolean = true
 }

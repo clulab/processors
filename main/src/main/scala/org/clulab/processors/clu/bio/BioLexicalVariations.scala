@@ -14,9 +14,8 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * User: mihais
   * Date: 10/20/16
   */
+@SerialVersionUID(1000L)  
 class BioLexicalVariations extends LexicalVariations {
-
-  val serialVersionUID = 1
 
   override def lexicalVariations(tokens: Array[String]): Seq[Array[String]] = {
 
