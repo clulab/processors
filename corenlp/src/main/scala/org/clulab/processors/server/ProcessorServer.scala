@@ -17,7 +17,7 @@ import org.clulab.processors.shallownlp._
 /**
   * Application to wrap and serve various Processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Add termination: direct and remote poisoning via death watch actor. Log errors.
+  *   Last Modified: Nullify internal instance on termination.
   */
 object ProcessorServer extends LazyLogging {
 
@@ -45,7 +45,10 @@ object ProcessorServer extends LazyLogging {
   }
 
   /** Terminate the current instance of the server, if any. */
-  def terminate: Unit = if (_pcs != null) _pcs.terminate
+  def terminate: Unit = if (_pcs != null) {
+    _pcs.terminate
+    _pcs = null
+  }
 
   /** Start the single instance of the server. */
   def main (args: Array[String]) {
@@ -141,7 +144,7 @@ class ProcessorServer (
   private val serverDeathWatcher = system.actorOf(
     ServerDeathWatchActor.props(system, procPool), "serverDeathWatcher")
 
-  /** Returns an actor ref to the internal instance of the pooled router. */
+  /** Return the reference to the internal instance of the pooled router. */
   def router: ActorRef = procPool
 
   /** Terminate the server: stop all children followed by the guardian actor. */

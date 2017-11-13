@@ -20,7 +20,7 @@ import org.clulab.serialization.DocumentSerializer
 /**
   * Client to access the Processors Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Update for refactor of shutdowns to processor annotator trait.
+  *   Last Modified: Nullify internal instance on shutdown.
   */
 object ProcessorClient extends ProcessorCSController with LazyLogging {
 
@@ -41,7 +41,10 @@ object ProcessorClient extends ProcessorCSController with LazyLogging {
   }
 
   /** Shutdown the current instance of this client: terminate the actor system. */
-  override def shutdownClient: Unit = if (_pcc != null) _pcc.shutdownClient
+  override def shutdownClient: Unit = if (_pcc != null) {
+    _pcc.shutdownClient
+    _pcc = null
+  }
 
   /** Shutdown the remote processor server AND this instance of the client. */
   override def shutdownClientServer: Unit = if (_pcc != null) _pcc.shutdownClientServer
