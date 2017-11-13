@@ -16,10 +16,10 @@ case class OdinConfig(
 
 object OdinConfig {
 
-  val DEFAULT_GRAPH = GraphMap.STANFORD_COLLAPSED
+  val DEFAULT_GRAPH = GraphMap.UNIVERSAL_COLLAPSED
 
   def empty: OdinConfig = OdinConfig()
 
   // add newly registered graph types here
-  var VALID_GRAPHS = Set[String](GraphMap.STANFORD_COLLAPSED, GraphMap.STANFORD_BASIC, GraphMap.SEMANTIC_ROLES)
+  var VALID_GRAPHS = Set[String](GraphMap.UNIVERSAL_COLLAPSED, GraphMap.UNIVERSAL_BASIC, GraphMap.SEMANTIC_ROLES)
 }

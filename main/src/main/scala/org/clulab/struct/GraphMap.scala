@@ -8,8 +8,8 @@ class GraphMap extends mutable.HashMap[String, DirectedGraph[String]] {
 }
 
 object GraphMap {
-  val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies
-  val STANFORD_COLLAPSED = "stanford-collapsed" // collapsed Stanford dependencies
+  val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
+  val UNIVERSAL_COLLAPSED = "universal-collapsed" // collapsed (or enhanced) Universal dependencies
   val SEMANTIC_ROLES = "semantic-roles" // semantic roles from CoNLL 2008-09, which includes PropBank and NomBank
 
   def apply(existing: Map[String, DirectedGraph[String]]): GraphMap = {

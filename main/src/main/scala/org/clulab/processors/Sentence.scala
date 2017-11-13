@@ -77,16 +77,16 @@ class Sentence(
     * @return A directed graph of dependencies if any exist, otherwise None
     */
   def dependencies:Option[DirectedGraph[String]] = graphs match {
-    case collapsed if collapsed.contains(STANFORD_COLLAPSED) => collapsed.get(STANFORD_COLLAPSED)
-    case basic if basic.contains(STANFORD_BASIC) => basic.get(STANFORD_BASIC)
+    case collapsed if collapsed.contains(UNIVERSAL_COLLAPSED) => collapsed.get(UNIVERSAL_COLLAPSED)
+    case basic if basic.contains(UNIVERSAL_BASIC) => basic.get(UNIVERSAL_BASIC)
     case _ => None
   }
 
-  /** Fetches the Stanford basic dependencies */
-  def stanfordBasicDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_BASIC)
+  /** Fetches the universal basic dependencies */
+  def universalBasicDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_BASIC)
 
-  /** Fetches the Stanford collapsed dependencies */
-  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_COLLAPSED)
+  /** Fetches the universal collapsed dependencies */
+  def universalCollapsedDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_COLLAPSED)
 
   def semanticRoles:Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
 

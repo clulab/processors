@@ -272,8 +272,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
     for (sentence <- doc.sentences) {
       val dg = depParser.parseSentence(sentence)
-      sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
-      sentence.setDependencies(GraphMap.STANFORD_COLLAPSED,
+      sentence.setDependencies(GraphMap.UNIVERSAL_BASIC, dg)
+      sentence.setDependencies(GraphMap.UNIVERSAL_COLLAPSED,
         EnhancedDependencies.generateEnhancedDependencies(sentence, dg))
     }
   }

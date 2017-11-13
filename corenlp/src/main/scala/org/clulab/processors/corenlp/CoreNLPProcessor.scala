@@ -74,7 +74,7 @@ class CoreNLPProcessor(
       val stanfordTree = stanfordParse(sa)
 
       // store Stanford annotations; Stanford dependencies are created here!
-      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, stanfordTree, GrammaticalStructure.Extras.NONE)
+      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
 
       // save our own structures
       if (stanfordTree != null) {
@@ -85,8 +85,8 @@ class CoreNLPProcessor(
         // save syntactic dependencies
         val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
         val collapsedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
-        doc.sentences(offset).setDependencies(GraphMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-        doc.sentences(offset).setDependencies(GraphMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
+        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
       } else {
         doc.sentences(offset).syntacticTree = None
       }
@@ -123,7 +123,7 @@ class CoreNLPProcessor(
       } catch {
         case e: Exception =>
           System.err.println("WARNING: Parsing of sentence failed, possibly because of out of memory. " +
-            "Will ignore and continue: " + edu.stanford.nlp.ling.Sentence.listToString(words))
+            "Will ignore and continue: " + edu.stanford.nlp.ling.SentenceUtils.listToString(words))
       }
 
       //println("SYNTACTIC TREE: " + tree)

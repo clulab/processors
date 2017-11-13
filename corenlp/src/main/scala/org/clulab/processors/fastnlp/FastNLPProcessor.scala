@@ -61,12 +61,12 @@ class FastNLPProcessor(
       val gs = stanfordDepParser.predict(sa)
 
       // convert to Stanford's semantic graph representation
-      val basicDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, true, null)
-      val collapsedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, true, null)
+      val basicDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, null)
+      val collapsedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, null)
 
       // convert to our own directed graph
-      doc.sentences(offset).setDependencies(GraphMap.STANFORD_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-      doc.sentences(offset).setDependencies(GraphMap.STANFORD_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
+      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
 
       //println("Output directed graph:")
       //println(dg)

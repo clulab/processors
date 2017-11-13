@@ -53,7 +53,7 @@ object ProcessorExample {
       sentence.chunks.foreach(chunks => println(s"Chunks: ${chunks.mkString(" ")}"))
       sentence.entities.foreach(entities => println(s"Named entities: ${entities.mkString(" ")}"))
       sentence.norms.foreach(norms => println(s"Normalized entities: ${norms.mkString(" ")}"))
-      sentence.stanfordBasicDependencies.foreach(dependencies => {
+      sentence.universalBasicDependencies.foreach(dependencies => {
         println("Syntactic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while(iterator.hasNext) {

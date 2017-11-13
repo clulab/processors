@@ -79,7 +79,7 @@ object CluShell {
       println("Tokens: " + sentence.words.zip(indices).mkString(" "))
       println("Tags: " + sentence.tags.get.zip(indices).mkString(" "))
       
-      sentence.stanfordBasicDependencies.foreach(dependencies => {
+      sentence.universalBasicDependencies.foreach(dependencies => {
         println("Basic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while (iterator.hasNext) {
@@ -89,7 +89,7 @@ object CluShell {
         }
       })
 
-      sentence.stanfordCollapsedDependencies.foreach(dependencies => {
+      sentence.universalCollapsedDependencies.foreach(dependencies => {
         println("Enhanced dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while (iterator.hasNext) {

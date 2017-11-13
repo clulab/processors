@@ -2,10 +2,12 @@ name := "processors-corenlp"
 
 libraryDependencies ++= {
   val akkaV = "2.5.4"
+  val corenlpV = "3.8.0"
+
   Seq (
     "ai.lum"             %%  "common"            % "0.0.8",
-    "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1",
-    "edu.stanford.nlp"    %  "stanford-corenlp"  % "3.5.1" classifier "models",
+    "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV,
+    "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV classifier "models",
     "org.clulab"          %  "bioresources"      % "1.1.24",
 
     // logging
