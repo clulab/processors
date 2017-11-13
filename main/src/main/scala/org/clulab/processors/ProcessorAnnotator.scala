@@ -1,15 +1,16 @@
 package org.clulab.processors
 
-import org.clulab.struct.Internalizer
-
 import scala.collection.mutable.ListBuffer
+
+import org.clulab.processors.csshare.ProcessorCSController
+import org.clulab.struct.Internalizer
 
 /**
   * Common interface for accessing either CLU Lab or CoreNLP processors.
   *   Written by: Tom Hicks. 10/3/2017.
-  *   Last Modified: Move preprocess* methods from Processor to ProcessorAnnotator.
+  *   Last Modified: Extend client/server controller trait.
   */
-trait ProcessorAnnotator {
+trait ProcessorAnnotator extends ProcessorCSController {
 
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
   def annotate (text:String, keepText:Boolean = false): Document

@@ -13,15 +13,16 @@ import akka.routing.Broadcast
 import akka.util.Timeout
 
 import org.clulab.processors._
+import org.clulab.processors.csshare.ProcessorCSController
 import org.clulab.processors.csshare.ProcessorCSMessages._
 import org.clulab.serialization.DocumentSerializer
 
 /**
   * Client to access the Processors Server remotely using Akka.
   *   Written by: Tom Hicks. 6/9/2017.
-  *   Last Modified: Add termination: direct and remote poisoning via death watch actor. Log errors.
+  *   Last Modified: Update for refactor of shutdowns to processor annotator trait.
   */
-object ProcessorClient extends LazyLogging {
+object ProcessorClient extends ProcessorCSController with LazyLogging {
 
   // THE instance of the the processor client
   private var _pcc: ProcessorClient = _
@@ -39,14 +40,14 @@ object ProcessorClient extends LazyLogging {
     _pcc
   }
 
-  /** Termindate the current instance of the client, if any. */
-  def terminate: Unit = if (_pcc != null) _pcc.terminate
+  /** Shutdown the current instance of this client: terminate the actor system. */
+  override def shutdownClient: Unit = if (_pcc != null) _pcc.shutdownClient
 
   /** Shutdown the remote processor server AND this instance of the client. */
-  def shutdownClientServer: Unit = if (_pcc != null) _pcc.shutdownClientServer
+  override def shutdownClientServer: Unit = if (_pcc != null) _pcc.shutdownClientServer
 
   /** Send the server a message to shutdown actors and terminate the server router. */
-  def shutdownServer: Unit = if (_pcc != null) _pcc.shutdownServer
+  override def shutdownServer: Unit = if (_pcc != null) _pcc.shutdownServer
 
 }
 
@@ -81,7 +82,7 @@ class ProcessorClient (
       config.getString("server.path")
     else {
       logger.error("(ProcessorClient): Configuration file must define 'server.path'")
-      terminate                             // shutdown the client system
+      shutdownClient                        // shutdown the client system
       throw new RuntimeException("(ProcessorClient): Configuration file must define 'server.path'")
     }
 
@@ -92,7 +93,7 @@ class ProcessorClient (
     } catch {
       case anf:ActorNotFound =>
         logger.error("(ProcessorClient): Unable to find or connect to the Server.")
-        terminate                           // shutdown the client system
+        shutdownClient                      // shutdown the client system
         throw new RuntimeException("(ProcessorClient): Unable to find or connect to the Server.")
     }
   }
@@ -104,28 +105,12 @@ class ProcessorClient (
     if (result.isInstanceOf[ServerExceptionMsg]) {
       val exception = result.asInstanceOf[ServerExceptionMsg].exception
       logger.error(exception.getMessage)
-      terminate                             // shutdown the client system
+      shutdownClient                        // shutdown the client system
       throw new RuntimeException(exception)
     }
     else
       result.asInstanceOf[ProcessorCSReply]
   }
-
-  /** Terminate this clients actor system. */
-  def terminate: Unit = system.terminate()
-
-  /** Shutdown the remote processor server AND this client. */
-  def shutdownClientServer: Unit = {
-    this.shutdownServer
-    this.terminate
-  }
-
-  /** Send the server a message to shutdown actors and terminate the server router. */
-  def shutdownServer: Unit = {
-    router ! Broadcast(PoisonPill)
-    router ! PoisonPill
-  }
-
 
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
   override def annotate (text:String, keepText:Boolean = false): Document = {
@@ -172,6 +157,22 @@ class ProcessorClient (
   override def preprocessTokens (origSentences:Iterable[Iterable[String]]): Iterable[Iterable[String]] = {
     val reply = callServer(PreprocessTokensCmd(origSentences))
     reply.asInstanceOf[TokensMsg].tokens
+  }
+
+
+  /** Shutdown this client: terminate the actor system. */
+  override def shutdownClient: Unit = system.terminate()
+
+  /** Shutdown the remote processor server AND this client. */
+  override def shutdownClientServer: Unit = {
+    this.shutdownServer
+    this.shutdownClient
+  }
+
+  /** Send the server a message to shutdown actors and terminate the server router. */
+  override def shutdownServer: Unit = {
+    router ! Broadcast(PoisonPill)
+    router ! PoisonPill
   }
 
 

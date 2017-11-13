@@ -8,7 +8,7 @@ import akka.event.Logging
 /**
   * Class to shutdown the actor system when the router dies.
   *   Written by: Tom Hicks. 11/10/2017.
-  *   Last Modified: Initial creation.
+  *   Last Modified: Correct props method docs.
   */
 class ServerDeathWatchActor (
 
@@ -36,7 +36,8 @@ class ServerDeathWatchActor (
 object ServerDeathWatchActor {
   /**
     * Constructor to create Props for an actor of this type.
-    *   @param The instance of the router to keep watch on.
+    *   @param system The actor system which created the router to be watched.
+    *   @param router The instance of the router to keep watch on.
     *   @return a Props for creating this actor.
     */
   def props (system: ActorSystem, router: ActorRef): Props =
