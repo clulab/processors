@@ -86,6 +86,10 @@ lazy val modelsmain = project
 lazy val modelscorenlp = project
   .settings(commonSettings: _*)  
 
+lazy val ie = project
+  .settings(commonSettings: _*)
+  .dependsOn(main, odin)
+
 // release steps
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
