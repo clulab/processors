@@ -8,6 +8,7 @@ import org.clulab.struct.EntityValidator
   * User: mihais
   * Date: 10/24/16
   */
+@SerialVersionUID(1000L)
 class BioLexiconEntityValidator extends EntityValidator {
 
   override def validMatch(sentence: Sentence, start:Int, end:Int):Boolean = {

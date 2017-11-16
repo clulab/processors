@@ -28,11 +28,12 @@ import scala.collection.mutable
   * Created: 5/11/15
   * Modified: 9/27/17 - Clean up from RuleNER into LexiconNER
   */
+@SerialVersionUID(1000L)  
 class LexiconNER private (
   val matchers:Array[(String, HashTrie)],
   val knownCaseInsensitives:Set[String],
   val useLemmas:Boolean,
-  val entityValidator: EntityValidator) extends Tagger[String] {
+  val entityValidator: EntityValidator) extends Tagger[String] with Serializable {
 
   /**
     * Matches the lexicons against this sentence
