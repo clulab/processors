@@ -1,0 +1,10 @@
+- Node:
+  - TransparentChunk
+  - NounPhrase
+- CausalEvent:
+  - IncreaseEvent:
+    - PositiveRegulation
+  - DecreaseEvent:
+    - NegativeRegulation
+# references, tables, etc.
+- Avoid
