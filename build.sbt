@@ -65,8 +65,8 @@ lazy val root = (project in file("."))
       (Keys.`package` in (main, Compile)).value
     }
   )
-  .aggregate(main, odin, corenlp, modelsmain, modelscorenlp)
-  .dependsOn(main, odin, corenlp, modelsmain, modelscorenlp) // so that we can import from the console
+  .aggregate(main, odin, corenlp, modelsmain, modelscorenlp, ie)
+  .dependsOn(main, odin, corenlp, modelsmain, modelscorenlp, ie) // so that we can import from the console
 
 lazy val main = project
   .settings(commonSettings: _*)
