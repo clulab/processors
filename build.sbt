@@ -88,7 +88,7 @@ lazy val modelscorenlp = project
 
 lazy val ie = project
   .settings(commonSettings: _*)
-  .dependsOn(main, odin)
+  .dependsOn(main % "test->test;compile->compile", odin)
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
