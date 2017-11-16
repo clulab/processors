@@ -56,7 +56,7 @@ object KBLoader {
   // Load the rule NER just once, so multiple processors can share it
   var ruleNerSingleton: Option[LexiconNER] = None
 
-  def loadAll(fromSerializedModel:Boolean = true):LexiconNER = {
+  def loadAll(fromSerializedModel:Boolean = false):LexiconNER = {
     lock.synchronized {
       if(ruleNerSingleton.isEmpty) {
 
