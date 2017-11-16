@@ -33,7 +33,7 @@ class LexiconNER private (
   val matchers:Array[(String, HashTrie)],
   val knownCaseInsensitives:Set[String],
   val useLemmas:Boolean,
-  val entityValidator: EntityValidator) extends Serializable {
+  val entityValidator: EntityValidator) extends Tagger[String] with Serializable {
 
   /**
     * Matches the lexicons against this sentence
@@ -168,7 +168,7 @@ object LexiconNER {
     * @return The new LexiconNER
     */
   def apply(kbs:Seq[String],
-            overrideKBs:Option[List[String]],
+            overrideKBs:Option[Seq[String]],
             entityValidator: EntityValidator,
             lexicalVariationEngine:LexicalVariations,
             useLemmasForMatching:Boolean,

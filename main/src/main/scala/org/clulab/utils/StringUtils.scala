@@ -1,16 +1,18 @@
 package org.clulab.utils
 
+import java.io.{ FileInputStream, BufferedInputStream, PrintWriter, StringWriter }
 import java.util.Properties
-import collection.mutable.ListBuffer
-import java.io.{FileInputStream, BufferedInputStream}
-import scala.collection.JavaConversions._
 import java.util.regex.Pattern
 
+import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
+
 /**
- * Converts a command line to properties; and other useful String utils
- * User: mihais
- * Date: 2/12/13
- */
+  * Converts a command line to properties; and other useful String utils
+  * User: mihais
+  * Date: 2/12/13
+  * Last modified: Add method to write exception to a string.
+  */
 object StringUtils {
   val PROPS = "props"
   val PROPERTIES = "properties"
@@ -130,6 +132,13 @@ object StringUtils {
       i += 1
     }
     ints
+  }
+
+  /** Format the given exception as a string and return the string. */
+  def exceptionToString (ex: Exception): String = {
+    val sw = new StringWriter
+    ex.printStackTrace(new PrintWriter(sw))
+    sw.toString
   }
 
 }

@@ -1,22 +1,26 @@
 package org.clulab.serialization
 
 import java.io._
-import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
-import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct._
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 
+import com.typesafe.scalalogging.LazyLogging
+
+import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
+import org.clulab.processors.{Document, Sentence}
+import org.clulab.struct._
 
 /**
- * Saves/loads a Document to/from a stream
- * An important focus here is to minimize the size of the serialized Document.
- * For this reason, we use a custom (compact) text format, rather than XML.
- * User: mihais
- * Date: 3/5/13
- */
-class DocumentSerializer {
+  * Saves/loads a Document to/from a stream
+  * An important focus here is to minimize the size of the serialized Document.
+  * For this reason, we use a custom (compact) text format, rather than XML.
+  * User: mihais
+  * Date: 3/5/13
+  * Last Modified: Don't save zero-length text.
+  */
+class DocumentSerializer extends LazyLogging {
 
   import DocumentSerializer._
 
@@ -30,7 +34,7 @@ class DocumentSerializer {
     load(r)
   }
 
-  def load(r:BufferedReader): Document = {
+  def load (r:BufferedReader): Document = {
     var bits:Array[String] = null
     try {
       bits = read(r)
@@ -38,32 +42,47 @@ class DocumentSerializer {
       case e:NullPointerException => return null // reached the end of stream
       case e:Exception => throw e // something else bad
     }
-    assert(bits(0) == START_SENTENCES)
+
+    assert(bits(0) == START_SENTENCES, s"START_SENTENCES expected, found ${bits(0)}")
     val sentCount = bits(1).toInt
     val sents = new ArrayBuffer[Sentence]
+
     var offset = 0
     while(offset < sentCount) {
       sents += loadSentence(r)
       offset += 1
     }
+
     var coref:Option[CorefChains] = None
     do {
       bits = read(r)
       if (bits(0) == START_COREF) {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
-    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE)
+    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT)
 
     var discourse:Option[DiscourseTree] = None
-    if(bits(0) == START_DISCOURSE) {
+    if (bits(0) == START_DISCOURSE) {
       discourse = Some(loadDiscourse(r))
       bits = read(r)
-      assert(bits(0) == END_OF_DOCUMENT)
     }
+
+    var text: Option[String] = None
+    if (bits(0) == START_TEXT) {
+      if (bits.length != 2)
+        throw new RuntimeException(
+          s"ERROR: Missing text length in start text line: " + bits.mkString(" "))
+      val charCount = bits(1).toInt
+      text = Some(loadText(r, charCount))
+      bits = read(r)
+    }
+
+    assert(bits(0) == END_OF_DOCUMENT, s"END_OF_DOCUMENT expected, found ${bits(0)}")
 
     val doc = Document(sents.toArray)
     doc.coreferenceChains = coref
     doc.discourseTree = discourse
+    doc.text = text
     doc
   }
 
@@ -74,8 +93,7 @@ class DocumentSerializer {
     line.split(SEP, howManyTokens)
   }
 
-  def load(s:String, encoding:String = "ISO-8859-1"): Document = {
-    // println("Parsing annotation:\n" + s)
+  def load(s:String, encoding:String = "UTF-8"): Document = {
     val is = new ByteArrayInputStream(s.getBytes(encoding))
     val r = new BufferedReader(new InputStreamReader(is))
     val doc = load(r)
@@ -83,9 +101,17 @@ class DocumentSerializer {
     doc
   }
 
+  private def loadText (r:BufferedReader, charCount:Int): String = {
+    if (charCount < 1) return ""            // sanity check
+    var buffer = new Array[Char](charCount)
+    r.read(buffer, 0, charCount)
+    r.skip(1)                               // skip over last newline
+    new String(buffer)
+  }
+
   private def loadSentence(r:BufferedReader): Sentence = {
     var bits = read(r)
-    assert(bits(0) == START_TOKENS)
+    assert(bits(0) == START_TOKENS, s"START_TOKENS expected, found ${bits(0)}")
     val tokenCount = bits(1).toInt
     val wordBuffer = new ArrayBuffer[String]
     val startOffsetBuffer = new ArrayBuffer[Int]
@@ -104,11 +130,10 @@ class DocumentSerializer {
     while(offset < tokenCount) {
       bits = read(r)
 
-      if(bits.length != 8) {
+      if (bits.length != 8) {
         throw new RuntimeException("ERROR: invalid line: " + bits.mkString(" "))
       }
 
-      assert(bits.length == 8)
       wordBuffer += bits(0)
       startOffsetBuffer += bits(1).toInt
       endOffsetBuffer += bits(2).toInt
@@ -191,7 +216,9 @@ class DocumentSerializer {
     Some(b.toArray)
   }
 
-  def save(doc:Document, os:PrintWriter) {
+  def save(doc:Document, os:PrintWriter): Unit = save(doc, os, false)
+
+  def save(doc:Document, os:PrintWriter, keepText:Boolean): Unit = {
     os.println(START_SENTENCES + SEP + doc.sentences.length)
     for (s <- doc.sentences) {
       saveSentence(s, os)
@@ -202,18 +229,26 @@ class DocumentSerializer {
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
     }
 
-    if(doc.discourseTree.nonEmpty) {
+    if (doc.discourseTree.nonEmpty) {
       os.println(START_DISCOURSE)
       doc.discourseTree.foreach(d => saveDiscourse(d, os))
+    }
+
+    if (keepText && doc.text.nonEmpty) {
+      val txtLen = doc.text.get.length
+      if (txtLen > 0) {
+        os.println(START_TEXT + SEP + txtLen)
+        os.println(doc.text.get)            // adds extra end-of-line character
+      }
     }
 
     os.println(END_OF_DOCUMENT)
   }
 
-  def save(doc:Document, encoding:String = "ISO-8859-1"): String = {
+  def save(doc:Document, encoding:String = "UTF-8", keepText:Boolean = false): String = {
     val byteOutput = new ByteArrayOutputStream
     val os = new PrintWriter(byteOutput)
-    save(doc, os)
+    save(doc, os, keepText)
     os.flush()
     os.close()
     byteOutput.close()
@@ -411,6 +446,7 @@ object DocumentSerializer {
   val SEP = "\t"
 
   val START_SENTENCES = "S"
+  val START_TEXT = "TX"
   val START_TOKENS = "T"
   val START_COREF = "C"
   val START_DEPENDENCIES = "D"

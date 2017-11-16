@@ -34,7 +34,7 @@ object Files {
       + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')')
   }
 
-  val FILE_CHARSET: Charset = Charset.forName("ISO-8859-1")
+  val FILE_CHARSET: Charset = Charset.forName("UTF-8")
 
   def toPrintWriter(w:Writer):PrintWriter = {
     w match {
