@@ -1,10 +1,5 @@
 taxonomy: org/clulab/openie/entities/grammar/taxonomy.yml
 
-vars:
-  # FIXME: For lack of a better solution the event trigger pattern (pos + neg) is replicated here.
-  eventTriggers: activ|regul|acceler|activat|aid|augment|cataly|caus|driv|elev|elicit|enabl|enhanc|exacerbat|increas|induc|initi|interconvert|lead|led|overexpress|potenti|produc|prolong|promot|rais|reactivat|re-express|releas|rescu|restor|signal|stimul|synerg|synthes|target|trigger|up-regul|upregul|abolish|abrog|antagon|attenu|block|deactiv|decreas|degrad|deplet|depress|deregul|diminish|disengag|disrupt|down-reg|downreg|dysregul|elimin|impair|imped|inactiv|inhibit|knockdown|limit|loss|lower|negat|neutraliz|nullifi|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|sequester|shutdown|slow|starv|supp?ress|uncoupl
-
-
 rules:
 
   - name: "coordinations"
@@ -25,48 +20,6 @@ rules:
     pattern: |
       # avoid verbs with arguments
       [outgoing=/^nsubj/]
-
-
-#  - name: "paren-and-brackets"
-#    label: Avoid
-#    priority: 1
-#    type: token
-#    pattern: |
-#      [tag="-LSB-"]
-#      |
-#      [tag="-RSB-"]
-#      |
-#      [tag="-LRB-"]
-#      |
-#      [tag="-RRB-"]
-
-  - name: "event-triggers"
-    label: Avoid
-    priority: 1
-    type: token
-    pattern: |
-      # only avoid tokens that look like triggers and are singular nouns or ing verbs
-      [lemma=/(?i)${eventTriggers}/ & tag=/^NN|VBG$/]+
-
-
-#  - name: "xref-1"
-#    label: Avoid
-#    priority: 2
-#    type: token
-#    pattern: |
-#      # avoid xrefs
-#      [word=/^XREF_[A-Z]+$/]
-#
-#  - name: "xref-2"
-#    label: Avoid
-#    priority: 2
-#    type: token
-#    example: "[ XREF_BIBR ]"
-#    pattern: |
-#      # avoid xrefs
-#      [tag="-LSB-"] @Avoid [tag="-RSB-"]
-#      |
-#      [tag="-LRB-"] @Avoid [tag="-RRB-"]
 
   - name: "references-et-al"
     label: Avoid

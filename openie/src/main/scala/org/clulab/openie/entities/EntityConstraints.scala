@@ -9,10 +9,6 @@ import org.clulab.odin.Mention
   */
 object EntityConstraints extends LazyLogging {
 
-  val eventTriggers = """(?i)activ|regul|acceler|activat|aid|augment|cataly|caus|driv|elev|elicit|enabl|enhanc|exacerbat|increas|induc|initi|interconvert|lead|led|overexpress|potenti|produc|prolong|promot|rais|reactivat|re-express|releas|rescu|restor|signal|stimul|synerg|synthes|target|trigger|up-regul|upregul|abolish|abrog|antagon|attenu|block|deactiv|decreas|degrad|deplet|deregul|diminish|disengag|disrupt|down-reg|downreg|dysregul|elimin|impair|imped|inactiv|inhibit|knockdown|limit|loss|lower|negat|neutraliz|nullifi|perturb|prevent|reduc|reliev|remov|repress|resist|restrict|revers|sequester|shutdown|slow|starv|supp?ress|uncoupl""".r
-
-  val XREF = """XREF_""".r
-
   val VALID_FINAL_TAG = """^(NN|VB|\-R[SR]B).*"""
 
   // POS tags for splitting conjunctions
@@ -20,15 +16,6 @@ object EntityConstraints extends LazyLogging {
     "CC",
     ","
   )
-
-  /** Checks to see if any tokens in the (expanded) Mention's span appear to be references  */
-  def containsReference(mention: Mention): Boolean = mention.words.exists(containsReference)
-  def containsReference(w: String): Boolean = XREF.findFirstMatchIn(w).nonEmpty
-
-  // NOTE: this is no longer used.  Now we filter this at the event level using InfluenceActions.disallowTriggerOverlap
-  /** Checks to see if any tokens in the (expanded) Mention's span appear to be an event trigger */
-  def containsEventTrigger(mention: Mention): Boolean = mention.words.exists(containsEventTrigger)
-  def containsEventTrigger(w: String): Boolean = eventTriggers.findFirstMatchIn(w).nonEmpty
 
   /** Ensure final token of mention span is valid */
   def validFinalTag(mention: Mention): Boolean = mention.tags match {

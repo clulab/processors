@@ -89,8 +89,7 @@ class TestEntityConstraints extends FlatSpec with Matchers {
 
   }
 
-  // TODO: test involvesCoreference constraint
-
+  // TODO: test avoidance of "et al."-style references
   // Barnaby et al. caused unrest within the community
   // TODO: test validFinalToken
 }
