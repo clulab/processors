@@ -1,9 +1,9 @@
-package org.clulab.ie
+package org.clulab.openie
 
 import java.io.InputStream
 
 
-object Utils {
+object ResourceUtils {
 
   // methods for reading rules
 

@@ -1,9 +1,9 @@
-package org.clulab.ie.entities
+package org.clulab.openie.entities
 
 import com.typesafe.scalalogging.LazyLogging
-import org.clulab.ie.Utils
-import org.clulab.odin.{ExtractorEngine, Mention, State, TextBoundMention}
-import org.clulab.processors.{Document, Sentence}
+import org.clulab.openie.ResourceUtils
+import org.clulab.odin.{ ExtractorEngine, Mention, State, TextBoundMention }
+import org.clulab.processors.{ Document, Sentence }
 import org.clulab.struct.Interval
 
 import scala.annotation.tailrec
@@ -208,8 +208,8 @@ class RuleBasedEntityFinder(
 object RuleBasedEntityFinder extends LazyLogging {
 
   def apply(maxHops: Int): RuleBasedEntityFinder = {
-    val entityRules = Utils.readResource("org/clulab/grammar/entities.yml")
-    val avoidRules = Utils.readResource("org/clulab/grammar/avoid.yml")
+    val entityRules = ResourceUtils.readResource("org/clulab/openie/entities/grammar/entities.yml")
+    val avoidRules = ResourceUtils.readResource("org/clulab/openie/entities/grammar/avoid.yml")
 
     val avoidEngine = ExtractorEngine(avoidRules)
     val entityEngine = ExtractorEngine(entityRules)

@@ -1,4 +1,4 @@
-taxonomy: org/clulab/grammar/taxonomy.yml
+taxonomy: org/clulab/openie/entities/grammar/taxonomy.yml
 
 vars:
   # FIXME: For lack of a better solution the event trigger pattern (pos + neg) is replicated here.

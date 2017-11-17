@@ -1,7 +1,8 @@
-package org.clulab.ie.entities
+package org.clulab.openie.entities
 
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.odin.Mention
+
 
 /**
   * Utilities for validating entities

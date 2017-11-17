@@ -1,7 +1,7 @@
 package org.clulab.ie
 
 
-import org.clulab.ie.entities.RuleBasedEntityFinder
+import org.clulab.openie.entities.RuleBasedEntityFinder
 import org.clulab.processors.Document
 import org.json4s.jackson.JsonMethods._
 import org.clulab.serialization.json.JSONSerializer

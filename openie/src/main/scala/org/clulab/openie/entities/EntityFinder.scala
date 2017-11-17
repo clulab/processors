@@ -1,4 +1,4 @@
-package org.clulab.ie.entities
+package org.clulab.openie.entities
 
 import org.clulab.odin.Mention
 import org.clulab.processors.Document

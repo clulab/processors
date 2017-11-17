@@ -1,11 +1,11 @@
-package org.clulab.ie.entities
+package org.clulab.openie.entities
 
 import org.clulab.odin.TextBoundMention
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
 import org.clulab.struct.Interval
 import org.json4s.jackson.JsonMethods.parse
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 
 class TestRuleBasedEntityFinder extends FlatSpec with Matchers {

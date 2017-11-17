@@ -1,16 +1,16 @@
-package org.clulab.ie.entities
+package org.clulab.openie.entities
 
 import org.clulab.odin.TextBoundMention
-import org.clulab.struct.Interval
-import org.scalatest.{FlatSpec, Matchers}
 import org.clulab.processors.Document
-import org.json4s.jackson.JsonMethods._
+import org.clulab.struct.Interval
 import org.clulab.serialization.json.JSONSerializer
+import org.json4s.jackson.JsonMethods._
+import org.scalatest.{ FlatSpec, Matchers }
+
 
 class TestEntityConstraints extends FlatSpec with Matchers {
 
   def jsonStringToDocument(jsonstr: String): Document = JSONSerializer.toDocument(parse(jsonstr, useBigDecimalForDouble = true))
-
 
   "Uneven parentheses" should "be disallowed in entities" in {
 

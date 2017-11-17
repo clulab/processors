@@ -1,4 +1,4 @@
-package org.clulab.ie
+package org.clulab.openie
 
 import java.util
 
@@ -14,7 +14,7 @@ import org.yaml.snakeyaml.constructor.Constructor
 object VocabularyConstraints {
 
   // Taxonomy object
-  val taxonomy = readTaxonomy("org/clulab/grammar/taxonomy.yml")
+  val taxonomy = readTaxonomy("org/clulab/openie/grammar/taxonomy.yml")
 
   private def readTaxonomy(path: String): Taxonomy = {
     val url = getClass.getClassLoader.getResource(path)
