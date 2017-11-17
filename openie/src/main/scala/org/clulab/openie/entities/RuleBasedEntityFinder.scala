@@ -14,11 +14,14 @@ import scala.annotation.tailrec
   *
   * @param entityEngine an ExtractorEngine for entities.  Runs AFTER avoidEngine.
   * @param avoidEngine an ExtractorEngine for tokens/spans to be avoided. Runs BEFORE entityEngine.
+  * @param maxHops the maximum number of dependencies relations to follow during expansion.
+  * @param maxLength the maximum allowed length of an entity in tokens.
   */
 class RuleBasedEntityFinder(
   val entityEngine: ExtractorEngine,
   val avoidEngine: ExtractorEngine,
-  val maxHops: Int
+  val maxHops: Int,
+  val maxLength: Int = RuleBasedEntityFinder.DEFAULT_MAX_LENGTH
 ) extends EntityFinder with LazyLogging {
 
   // avoid expanding along these dependencies
@@ -89,18 +92,17 @@ class RuleBasedEntityFinder(
   /**
     * Selects longest mentions among groups of overlapping entities
     * before applying a series of filtering constraints
-    * Filter criteria: no event predicate or references introduced during expansion, PoS tag validation of final token, bracket matching, max length, and conservative coref filter
+    * Filter criteria: PoS tag validation of final token, bracket matching, and max length
     * @param entities entities to filter
     */
   private def filterEntities(entities: Seq[Mention]): Seq[Mention] = {
     // ignore citations and remove any entity that is too long given our criteria
-    val filteredEntities = entities.filter(m => EntityConstraints.withinMaxLength(m) && ! EntityConstraints.containsXref(m))
+    val filteredEntities = entities.filter(m => EntityConstraints.withinMaxLength(m, maxLength) && ! EntityConstraints.containsReference(m))
     val longest = RuleBasedEntityFinder.keepLongest(filteredEntities, new State())
     for {
       m <- longest
       if EntityConstraints.validFinalTag(m)
       if EntityConstraints.matchingBrackets(m)
-      if ! EntityConstraints.involvesCoreference(m)
     } yield m
   }
 
@@ -207,7 +209,8 @@ class RuleBasedEntityFinder(
 
 object RuleBasedEntityFinder extends LazyLogging {
 
-  def apply(maxHops: Int): RuleBasedEntityFinder = {
+  val DEFAULT_MAX_LENGTH = 10 // maximum length (in tokens) for an entity
+  def apply(maxHops: Int, maxLength: Int = DEFAULT_MAX_LENGTH): RuleBasedEntityFinder = {
     val entityRules = ResourceUtils.readResource("org/clulab/openie/entities/grammar/entities.yml")
     val avoidRules = ResourceUtils.readResource("org/clulab/openie/entities/grammar/avoid.yml")
 
