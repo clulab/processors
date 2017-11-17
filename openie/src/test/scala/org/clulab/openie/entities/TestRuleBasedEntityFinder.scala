@@ -5,15 +5,11 @@ import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
 import org.clulab.struct.Interval
 import org.json4s.jackson.JsonMethods.parse
+import org.clulab.openie.IETestUtils._
 import org.scalatest.{ FlatSpec, Matchers }
 
 
 class TestRuleBasedEntityFinder extends FlatSpec with Matchers {
-
-  val entityFinder: RuleBasedEntityFinder = RuleBasedEntityFinder(maxHops = 2)
-
-  def jsonStringToDocument(jsonstr: String): Document = JSONSerializer.toDocument(parse(jsonstr, useBigDecimalForDouble = true))
-
 
   "Coordinated entities" should "be split into separate entities" in {
 

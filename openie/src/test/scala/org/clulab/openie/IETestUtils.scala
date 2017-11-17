@@ -1,4 +1,4 @@
-package org.clulab.ie
+package org.clulab.openie
 
 
 import org.clulab.openie.entities.RuleBasedEntityFinder
