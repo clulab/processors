@@ -42,8 +42,6 @@ class RuleBasedEntityFinder(
     "^amod$".r, "^advmod$".r, "^ccmod$".r,
     "^dobj$".r,
     "^nn$".r,
-    // TODO: consider more prepositions (ex. under)
-    //"prep_for", "prep_in", "prep_into", "prep_like", "prep_of", "prep_on",  "prep_such_as",  "prep_to", "prep_with",
     // ex.  "isotonic fluids may reduce the risk" -> "isotonic fluids may reduce the risk associated with X."
     "^vmod$".r,
     "^prep_".r
@@ -59,7 +57,6 @@ class RuleBasedEntityFinder(
     val avoid = avoidEngine.extractFrom(doc)
     val stateFromAvoid = State(avoid)
     val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filter{ entity => ! stateFromAvoid.contains(entity) }
-    //  logger.debug(s"Before expansion:\n ${entities.sortBy(_.start).foreach(e => println(s"${e.label} (${e.foundBy}): '${e.text} (${e.start}, ${e.end})"))}")
     val expandedEntities: Seq[Mention] = baseEntities.map(entity => expand(entity, maxHops))
     // split entities on likely coordinations
     val splitEntities = (baseEntities ++ expandedEntities).flatMap(splitCoordinatedEntities)
