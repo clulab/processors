@@ -63,17 +63,22 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
     val depMap = toDependencyMap(individualOutputs)
 
     // create the actual dependency list
-    depMap.map {
-      case (depKey, votes) =>
-        Dependency(depKey._1, depKey._2, depKey._3, votes.toSet)
-    }(collection.breakOut)
+    val l = new ListBuffer[Dependency]
+    for(depKey <- depMap.keySet) {
+      val votes = depMap.get(depKey)
+      assert(votes.nonEmpty)
+      val dep = Dependency(depKey._1, depKey._2, depKey._3, votes.get.toSet)
+      l += dep
+    }
+
+    l.toList
   }
 
   def toDirectedGraph(deps:List[Dependency]):DirectedGraph[String] = {
     val edges = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]()
 
-    deps.foreach { dep =>
+    for(dep <- deps) {
       if(dep.head == 0) {
         assert(dep.modifier > 0)
         roots += dep.modifier - 1
@@ -82,7 +87,6 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
         assert(dep.head > 0)
         edges += Edge[String](dep.head - 1, dep.modifier - 1, dep.label)
       }
-      ()
     }
 
     new DirectedGraph[String](edges.toList, roots.toSet)

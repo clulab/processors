@@ -1,4 +1,4 @@
-package org.clulab.processors.coserver
+package org.clulab.processors.server
 
 import com.typesafe.config.{ Config, ConfigValueFactory, ConfigFactory }
 import com.typesafe.scalalogging.LazyLogging
@@ -15,35 +15,50 @@ import org.clulab.processors.fastnlp._
 import org.clulab.processors.shallownlp._
 
 /**
-  * Application to wrap and serve various Processors capabilities.
+  * Application to wrap and serve various Processor capabilities.
   *   Written by: Tom Hicks. 6/5/2017.
-  *   Last Modified: Cleanup tbd, demote from app.
+  *   Last Modified: Nullify internal instance on termination.
   */
-object ProcessorCoreServer extends LazyLogging {
+object ProcessorServer extends LazyLogging {
 
-  // THE instance of the the processor core server
-  private var _pcs: ProcessorCoreServer = _
+  // THE instance of the the processor server
+  private var _pcs: ProcessorServer = _
 
-  /** Create a single instance of the processor core server, only if it has not been created. */
-  def instance: ProcessorCoreServer = {
-    logger.debug(s"(ProcessorCoreServer.instance): pcs = ${_pcs}")
+  /** Create a single instance of the processor server, only if it has not been created. */
+  def instance: ProcessorServer = {
+    logger.debug(s"(ProcessorServer.instance): pcs = ${_pcs}")
     if (_pcs == null) {                     // create server, iff not already created
-      val config = ConfigFactory.load().getConfig("ProcessorCoreServer")
+      val config = ConfigFactory.load().getConfig("ProcessorServer")
       if (config == null)
-        throw new RuntimeException("(ProcessorCoreServer.instance): Unable to read configuration from configuration file.")
-      logger.debug(s"(ProcessorCoreServer.instance): config=${config}")
-      _pcs = new ProcessorCoreServer(config)
+        throw new RuntimeException("(ProcessorServer.instance): Unable to read configuration from configuration file.")
+      logger.debug(s"(ProcessorServer.instance): config=${config}")
+      try {
+        _pcs = new ProcessorServer(config)
+      } catch {
+        case jnbe: Exception =>
+          logger.error("(ProcessorServer.instance): Unable to bind to the configured address. Is a Server already running?")
+          throw new RuntimeException("(ProcessorServer.instance): Unable to bind to the configured address. Is a Server already running?")
+      }
     }
-    logger.debug(s"(ProcessorCoreServer.instance): pcs => ${_pcs}")
+    logger.debug(s"(ProcessorServer.instance): pcs => ${_pcs}")
     _pcs
   }
 
-  /** Return an actor ref to the current instance of the router. */
-  def router: ActorRef = instance.router
+  /** Terminate the current instance of the server, if any. */
+  def terminate: Unit = if (_pcs != null) {
+    _pcs.terminate
+    _pcs = null
+  }
+
+  /** Start the single instance of the server. */
+  def main (args: Array[String]) {
+    val _ = instance
+  }
+
 }
 
 
-class ProcessorCoreServer (
+class ProcessorServer (
 
   /** Application-specific portion of the configuration file. */
   val config: Config
@@ -51,7 +66,7 @@ class ProcessorCoreServer (
 ) extends LazyLogging {
 
   if (config == null)
-    throw new RuntimeException("(ProcessorCoreServer.ctor): Empty configuration argument not allowed.")
+    throw new RuntimeException("(ProcessorServer.ctor): Empty configuration argument not allowed.")
 
   // create the Processor engine specified by the configuration and used by this server
   val processor: Processor = {
@@ -106,12 +121,12 @@ class ProcessorCoreServer (
     }
   }
 
-  logger.debug(s"(ProcessorCoreServer.ctor): processor=${processor}")
+  logger.debug(s"(ProcessorServer.ctor): processor=${processor}")
 
   // fire up the actor system
-  private val system = ActorSystem("procCoreServer", config)
+  val system = ActorSystem("procServer", config)
 
-  logger.debug(s"(ProcessorCoreServer.ctor): system=${system}")
+  logger.debug(s"(ProcessorServer.ctor): system=${system}")
 
   // create supervisory strategy for the router to handle errors
   private final val restartEachStrategy: SupervisorStrategy =
@@ -123,11 +138,17 @@ class ProcessorCoreServer (
       FromConfig.withSupervisorStrategy(restartEachStrategy)),
     "procActorPool")
 
-  logger.debug(s"(ProcessorCoreServer.ctor): procPool=${procPool}")
+  logger.debug(s"(ProcessorServer.ctor): procPool=${procPool}")
 
-  /** Returns an actor ref to the internal instance of the pooled router. */
-  val router: ActorRef = procPool
+  /** A process to finally stop the server after the router dies. */
+  private val serverDeathWatcher = system.actorOf(
+    ServerDeathWatchActor.props(system, procPool), "serverDeathWatcher")
 
+  /** Return the reference to the internal instance of the pooled router. */
+  def router: ActorRef = procPool
+
+  /** Terminate the server: stop all children followed by the guardian actor. */
+  def terminate: Unit = system.terminate()
 
   private def getArgBoolean (argPath: String, defaultValue: Boolean): Boolean =
     if (config.hasPath(argPath)) config.getBoolean(argPath)

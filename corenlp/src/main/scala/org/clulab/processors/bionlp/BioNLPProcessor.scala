@@ -7,7 +7,7 @@ import org.clulab.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
-import org.clulab.processors.clu.bio.BioTokenizerPreProcessor
+import org.clulab.processors.clu.bio.{BioNERPostProcessor, BioTokenizerPreProcessor}
 
 import scala.collection.JavaConverters._
 
@@ -34,6 +34,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
   private lazy val preProcessor = new BioTokenizerPreProcessor(removeFigTabReferences, removeBibReferences)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
+  private lazy val nerPostProcessor = new BioNERPostProcessor(KBLoader.stopListFile.get)
 
   override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = BioNLPUtils.mkTokenizerWithoutSentenceSplitting
 
@@ -62,6 +63,10 @@ class BioNLPProcessor (internStrings:Boolean = false,
 
   override def recognizeNamedEntities(doc:Document) {
     hybridNER.recognizeNamedEntities(doc, namedEntitySanityCheck(doc))
+
+    for(sentence <- doc.sentences) {
+      nerPostProcessor.process(sentence)
+    }
   }
 
 }

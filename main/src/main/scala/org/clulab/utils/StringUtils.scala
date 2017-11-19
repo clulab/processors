@@ -1,6 +1,6 @@
 package org.clulab.utils
 
-import java.io.{FileInputStream, BufferedInputStream}
+import java.io.{ FileInputStream, BufferedInputStream, PrintWriter, StringWriter }
 import java.util.Properties
 import java.util.regex.Pattern
 
@@ -132,6 +132,13 @@ object StringUtils {
       i += 1
     }
     ints
+  }
+
+  /** Format the given exception as a string and return the string. */
+  def exceptionToString (ex: Exception): String = {
+    val sw = new StringWriter
+    ex.printStackTrace(new PrintWriter(sw))
+    sw.toString
   }
 
 }

@@ -34,7 +34,7 @@ object Files {
       + baseName + "0 to " + baseName + (TEMP_DIR_ATTEMPTS - 1) + ')')
   }
 
-  val FILE_CHARSET: Charset = Charset.forName("ISO-8859-1")
+  val FILE_CHARSET: Charset = Charset.forName("UTF-8")
 
   def toPrintWriter(w:Writer):PrintWriter = {
     w match {
@@ -120,5 +120,18 @@ object Files {
       new BufferedReader(
         new InputStreamReader(
           new BufferedInputStream(is)))
+  }
+
+  /** Creates an ObjectInputStream for this path in our CLASSPATH. */
+  def loadObjectStreamFromClasspath(path: String):ObjectInputStream = {
+    val is = getClass.getClassLoader.getResourceAsStream(path)
+    if (is == null) throw new RuntimeException(s"ERROR: cannot find resource $path in classpath!")
+
+    if (path.endsWith(".gz"))
+      new ObjectInputStream(
+        new GZIPInputStream(new BufferedInputStream(is)))
+    else
+      new ObjectInputStream(
+        new BufferedInputStream(is))
   }
 }

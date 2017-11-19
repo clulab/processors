@@ -28,11 +28,12 @@ import scala.collection.mutable
   * Created: 5/11/15
   * Modified: 9/27/17 - Clean up from RuleNER into LexiconNER
   */
+@SerialVersionUID(1000L)  
 class LexiconNER private (
   val matchers:Array[(String, HashTrie)],
   val knownCaseInsensitives:Set[String],
   val useLemmas:Boolean,
-  val entityValidator: EntityValidator) {
+  val entityValidator: EntityValidator) extends Tagger[String] with Serializable {
 
   /**
     * Matches the lexicons against this sentence
@@ -60,7 +61,6 @@ class LexiconNER private (
   protected def findLongestMatch(sentence:Sentence):Array[String] = {
     val tokens = getTokens(sentence)
     val caseInsensitiveWords = tokens.map(_.toLowerCase)
-    entityValidator.config(sentence, this)
 
     var offset = 0
     val labels = new ArrayBuffer[String]()
@@ -88,11 +88,20 @@ class LexiconNER private (
       // found something!
       if(bestSpanOffset != -1) {
         assert(bestSpan > 0)
-        val label = matchers(bestSpanOffset)._1
-        //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
-        labels += "B-" + label
-        for(i <- 1 until bestSpan) {
-          labels += "I-" + label
+
+        if(contentfulSpan(sentence, offset, bestSpan) && // does this look like a valid entity span?
+           entityValidator.validMatch(sentence, offset, offset + bestSpan)) { // domain-specific constraints on entities
+
+          val label = matchers(bestSpanOffset)._1
+          //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
+          labels += "B-" + label
+          for (_ <- 1 until bestSpan) {
+            labels += "I-" + label
+          }
+        } else {
+          for(_ <- 0 until bestSpan) {
+            labels += OUTSIDE_LABEL
+          }
         }
         offset += bestSpan
         //println(s"Will continue matching starting at $offset")
@@ -102,18 +111,36 @@ class LexiconNER private (
       }
     }
 
+    assert(labels.length == sentence.size)
     labels.toArray
   }
 
+  protected def contentfulSpan(sentence: Sentence, start: Int, length: Int):Boolean = {
+    val (characters, letters, digits, upperCaseLetters, spaces) =
+      LexiconNER.scanText(sentence.words, start, start + length)
+
+    // a valid span must have letters > 0 and at least one of the other properties
+    if(letters > 0 &&
+       ( digits > 0 ||
+         upperCaseLetters > 0 ||
+         spaces > 0 ||
+         characters > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH ||
+         knownCaseInsensitives.contains(sentence.words(start)))) {
+      return true
+    }
+
+    false
+  }
+  
   protected def findAt(seq:Array[String],
                        caseInsensitiveSeq:Array[String],
                        matcher:HashTrie,
                        offset:Int,
                        validator:EntityValidator):Int = {
     val span = if (matcher.caseInsensitive) {
-      matcher.findAt(caseInsensitiveSeq, offset, Some(validator))
+      matcher.findAt(caseInsensitiveSeq, offset)
     } else {
-      matcher.findAt(seq, offset, Some(validator))
+      matcher.findAt(seq, offset)
     }
     span
   }
@@ -124,6 +151,7 @@ object LexiconNER {
   val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
   val OUTSIDE_LABEL: String = "O"
   val INTERN_STRINGS:Boolean = false
+  val KNOWN_CASE_INSENSITIVE_LENGTH:Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
 
   /**
     * Creates a LexiconNER from a list of KBs
@@ -140,7 +168,7 @@ object LexiconNER {
     * @return The new LexiconNER
     */
   def apply(kbs:Seq[String],
-            overrideKBs:Option[List[String]],
+            overrideKBs:Option[Seq[String]],
             entityValidator: EntityValidator,
             lexicalVariationEngine:LexicalVariations,
             useLemmasForMatching:Boolean,
@@ -342,5 +370,25 @@ object LexiconNER {
     }
     false
   }
+
+  def scanText(words:Array[String], start:Int, end:Int):(Int, Int, Int, Int, Int) = {
+    var letters = 0
+    var digits = 0
+    var upperCaseLetters = 0
+    var characters = 0
+    val spaces = words.length - 1
+    for(offset <- start until end) {
+      val word = words(offset)
+      for (i <- word.indices) {
+        val c = word.charAt(i)
+        characters += 1
+        if (Character.isLetter(c)) letters += 1
+        if (Character.isUpperCase(c)) upperCaseLetters += 1
+        if (Character.isDigit(c)) digits += 1
+      }
+    }
+    (characters, letters, digits, upperCaseLetters, spaces)
+  }
+
 }
 

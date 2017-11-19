@@ -8,19 +8,18 @@ import org.clulab.sequences.LexiconNER
   * User: mihais
   * Date: 10/24/16
   */
-trait EntityValidator {
-  def config(sentence: Sentence, lexNer:LexiconNER)
-
-  def validMatch(start:Int, end:Int):Boolean
+@SerialVersionUID(1000L)
+trait EntityValidator extends Serializable {
+  def validMatch(sentence: Sentence, start:Int, end:Int):Boolean
 }
 
 /**
   * Any span is considered as a valid entity
   * See org.clulab.processors.clu.bio.BioLexiconEntityValidator for a more complicated validator.
   */
+@SerialVersionUID(1000L)  
 class TrueEntityValidator extends EntityValidator {
-  override def config(sentence: Sentence, lexNer:LexiconNER) {}
-  override def validMatch(start:Int, end:Int): Boolean = true
+  override def validMatch(sentence: Sentence, start:Int, end:Int): Boolean = true
 }
 
 object EntityValidator {

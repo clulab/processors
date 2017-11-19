@@ -17,11 +17,12 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 
 /**
- * A Processor using only shallow analysis: tokenization, lemmatization, POS tagging, and NER. All implemented using Stanford's CoreNLP tools.
- * User: mihais
- * Date: 2/25/15
- * Last Modified: Update for Scala 2.12: java converters.
- */
+  * A Processor using only shallow analysis: tokenization, lemmatization, POS tagging, and NER.
+  * All implemented using Stanford's CoreNLP tools.
+  * User: mihais
+  * Date: 2/25/15
+  * Last Modified: Update for Scala 2.12: java converters.
+  */
 class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boolean = true) extends Processor {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
   lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
@@ -263,7 +264,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
     if (doc.sentences(0).words == null)
       throw new RuntimeException("ERROR: Sentence.words == null!")
 
-    if(checkAnnotation) {
+    if (checkAnnotation && doc.isInstanceOf[CoreNLPDocument]) {
       val annotation = doc.asInstanceOf[CoreNLPDocument].annotation.getOrElse(
         throw new RuntimeException("ERROR: annotator called after Document.clear()!"))
       Some(annotation)

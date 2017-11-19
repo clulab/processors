@@ -176,7 +176,6 @@ class Reader {
         edges += new Tuple3(head, modifier, tokens(modifier).dep._2)
       else
         roots += modifier
-      ()
     }
     DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
   }
