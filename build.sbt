@@ -2,7 +2,9 @@ import ReleaseTransformations._
 
 lazy val commonSettings = Seq(
   organization := "org.clulab",
-  scalaVersion := "2.11.11",
+  // scalaVersion := "2.11.11",
+  scalaVersion := "2.12.4",
+  crossScalaVersions := Seq("2.11.11", "2.12.4"),
   scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation"),
   parallelExecution in Test := false,
   scalacOptions in (Compile, doc) += "-no-link-warnings", // suppresses problems with scaladoc @throws links
@@ -84,20 +86,23 @@ lazy val modelsmain = project
   .settings(commonSettings: _*)
 
 lazy val modelscorenlp = project
-  .settings(commonSettings: _*)  
+  .settings(commonSettings: _*)
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
   runClean,
-  runTest,
+  // runTest,
+  releaseStepCommandAndRemaining("+test"),
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  ReleaseStep(action = Command.process("publishSigned", _)),
+  // ReleaseStep(action = Command.process("publishSigned", _)),
+  releaseStepCommandAndRemaining("+publishSigned"),
   setNextVersion,
   commitNextVersion,
-  ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+  // ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+  releaseStepCommandAndRemaining("sonatypeReleaseAll"),
   pushChanges
 )
