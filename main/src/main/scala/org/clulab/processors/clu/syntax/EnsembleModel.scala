@@ -9,6 +9,7 @@ import scala.collection.mutable.ListBuffer
   * Implements the word-by-word voting scheme from Surdeanu et al. (2010)
   * User: mihais
   * Date: 8/9/17
+  * Last Modified: Update for Scala 2.12: bug #10151 workaround.
   */
 class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
@@ -78,7 +79,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
     val edges = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]()
 
-    for(dep <- deps) {
+    deps.foreach { dep =>
       if(dep.head == 0) {
         assert(dep.modifier > 0)
         roots += dep.modifier - 1
@@ -87,6 +88,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
         assert(dep.head > 0)
         edges += Edge[String](dep.head - 1, dep.modifier - 1, dep.label)
       }
+      ()                                    // workaround for bug #10151
     }
 
     new DirectedGraph[String](edges.toList, roots.toSet)
