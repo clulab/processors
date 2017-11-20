@@ -65,8 +65,8 @@ lazy val root = (project in file("."))
       (Keys.`package` in (main, Compile)).value
     }
   )
-  .aggregate(main, odin, corenlp, modelsmain, modelscorenlp)
-  .dependsOn(main, odin, corenlp, modelsmain, modelscorenlp) // so that we can import from the console
+  .aggregate(main, odin, corenlp, modelsmain, modelscorenlp, openie)
+  .dependsOn(main, odin, corenlp, modelsmain, modelscorenlp, openie) // so that we can import from the console
 
 lazy val main = project
   .settings(commonSettings: _*)
@@ -85,6 +85,10 @@ lazy val modelsmain = project
 
 lazy val modelscorenlp = project
   .settings(commonSettings: _*)  
+
+lazy val openie = project
+  .settings(commonSettings: _*)
+  .dependsOn(main % "test->test;compile->compile", odin)
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
