@@ -11,10 +11,9 @@ import org.slf4j.LoggerFactory
 import RVFRegDataset._
 
 /**
-  * Parent class for regression datasets
-  * User: dane
+  * Parent class for regression datasets. For classification, see [[Dataset]].
+  * User: mihais, danebell
   * Date: 11/15/17
-  * Last Modified: Fix compiler issue: import scala.io.Source.
   */
 abstract class RegDataset[F](
                               val featureLexicon:Lexicon[F],

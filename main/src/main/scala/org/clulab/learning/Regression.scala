@@ -7,7 +7,7 @@ import org.clulab.learning.Datasets._
 /**
   * Trait for regression
   * Adapted from Classifier trait
-  * User: dane
+  * User: mihais, danebell
   * Date: 11/15/17
   */
 trait Regression[F] {

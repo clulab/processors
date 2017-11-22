@@ -1,28 +1,39 @@
 package org.clulab.learning
 
-import org.clulab.struct.Counter
 import libsvm._
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.Lexicon
 import org.slf4j.LoggerFactory
-import LibSVMRegression.logger
+import LibSvmRegression.logger
 import java.io._
 
 /**
-  * User: mihais, dfried, dane
+  * User: mihais, dfried, danebell
   * Date: 11/20/2017
   */
-class LibSVMRegression[F](val parameters: svm_parameter) extends Regression[F] with Serializable {
-  def this(kernelType: KernelType,
+class LibSvmRegression[F](val parameters: svm_parameter) extends Regression[F] with Serializable {
+  def this(svmType: SvmType = EpsilonSVR,
+           kernelType: KernelType,
            degree: Int = 3, // for poly
            gamma: Double = 0, // for poly/rbf/sigmoid. If 0, sets to 1 / num feats
            coef0: Double = 0, // for poly/sigmoid
            C: Double = 1,
+           nu: Double = 0.5,
+           p: Double = 0.1,
            eps: Double = 1e-3,
            shrinking: Boolean = true,
            probability: Boolean = true,
-           cacheSize: Int = 100) =
-    this(LibSVMRegression.makeParameters(kernelType, degree, gamma, coef0, C, eps, shrinking, probability, cacheSize))
+           cacheSize: Int = 100) = {
+    this(
+      LibSvmRegression
+        .makeParameters(
+          svmType, kernelType, degree,
+          gamma, coef0, C, nu, p, eps,
+          shrinking, probability,
+          cacheSize
+        )
+    )
+  }
 
   private var problem: svm_problem = null
   private var model: svm_model = null
@@ -209,27 +220,35 @@ class LibSVMRegression[F](val parameters: svm_parameter) extends Regression[F] w
   }
 }
 
-object LibSVMRegression {
+object LibSvmRegression {
   val logger = LoggerFactory.getLogger(this.getClass)
 
-  def loadFrom[F](fileName:String):LibSVMRegression[F] = {
+  def loadFrom[F](fileName:String):LibSvmRegression[F] = {
     val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[LibSVMRegression[F]]
+    val c = is.readObject().asInstanceOf[LibSvmRegression[F]]
     is.close()
     c
   }
 
-  def makeParameters(kernelType: KernelType,
-                     degree: Int, // for poly
-                     gamma: Double, // for poly/rbf/sigmoid
-                     coef0: Double, // for poly/sigmoid
-                     C: Double,
-                     eps: Double,
-                     shrinking: Boolean,
-                     probability: Boolean,
-                     cache_size : Int) = {
+  def makeParameters(
+                      svmType: SvmType,
+                      kernelType: KernelType,
+                      degree: Int, // for poly
+                      gamma: Double, // for poly/rbf/sigmoid
+                      coef0: Double, // for poly/sigmoid
+                      C: Double, // cost
+                      nu: Double, // for NU_SVR
+                      p: Double, // for EPSILON_SVR
+                      eps: Double, // "tolerance of termination criterion"
+                      shrinking: Boolean,
+                      probability: Boolean,
+                      cache_size : Int) = {
     val params = new svm_parameter
-    params.svm_type = svm_parameter.EPSILON_SVR
+
+    params.svm_type = svmType match {
+      case EpsilonSVR => svm_parameter.EPSILON_SVR
+      case NuSVR => svm_parameter.NU_SVR
+    }
 
     params.kernel_type = kernelType match {
       case LinearKernel => svm_parameter.LINEAR
@@ -242,10 +261,60 @@ object LibSVMRegression {
     params.gamma = gamma
     params.coef0 = coef0
     params.C = C
+    params.nu = nu
+    params.p = p
     params.eps = eps
     params.shrinking = if (shrinking) 1 else 0
     params.probability = if (probability) 1 else 0
     params.cache_size = cache_size
     params
+  }
+}
+
+class LibSvmEpsilonRegression[F](val p: svm_parameter) extends LibSvmRegression[F](p) {
+  def this(kernelType: KernelType,
+           degree: Int = 3, // for poly
+           gamma: Double = 0, // for poly/rbf/sigmoid. If 0, sets to 1 / num feats
+           coef0: Double = 0, // for poly/sigmoid
+           C: Double = 1,
+           nu: Double = 0.5,
+           p: Double = 0.1,
+           eps: Double = 1e-3,
+           shrinking: Boolean = true,
+           probability: Boolean = true,
+           cacheSize: Int = 100) = {
+    this(
+      LibSvmRegression
+        .makeParameters(
+          EpsilonSVR, kernelType, degree,
+          gamma, coef0, C, nu, p, eps,
+          shrinking, probability,
+          cacheSize
+        )
+    )
+  }
+}
+
+class LibSvmNuRegression[F](val p: svm_parameter) extends LibSvmRegression[F](p) {
+  def this(kernelType: KernelType,
+           degree: Int = 3, // for poly
+           gamma: Double = 0, // for poly/rbf/sigmoid. If 0, sets to 1 / num feats
+           coef0: Double = 0, // for poly/sigmoid
+           C: Double = 1,
+           nu: Double = 0.5,
+           p: Double = 0.1,
+           eps: Double = 1e-3,
+           shrinking: Boolean = true,
+           probability: Boolean = true,
+           cacheSize: Int = 100) = {
+    this(
+      LibSvmRegression
+        .makeParameters(
+          NuSVR, kernelType, degree,
+          gamma, coef0, C, nu, p, eps,
+          shrinking, probability,
+          cacheSize
+        )
+    )
   }
 }

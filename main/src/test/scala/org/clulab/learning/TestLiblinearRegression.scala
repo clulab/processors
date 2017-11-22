@@ -9,7 +9,7 @@ import org.clulab.TestUtils._
 
 /**
   * Adapted from TestLiblinearClassifier
-  * User: dane
+  * User: mihais, danebell
   * Date: 11/20/17
   */
 class TestLiblinearRegression extends FlatSpec with Matchers {

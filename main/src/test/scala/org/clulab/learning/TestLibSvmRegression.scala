@@ -6,13 +6,12 @@ import libsvm._
 import org.clulab.TestUtils._
 
 /**
-  *
-  * User: mihais, dfried, dane
+  * User: mihais, dfried, danebell
   * Date: 11/20/17
   */
-class TestLibSVMRegression extends FlatSpec with Matchers {
+class TestLibSvmRegression extends FlatSpec with Matchers {
   "LibSVMRegression" should "work with RVFDataset" in {
-    val regression = new LibSVMRegression[String](LinearKernel)
+    val regression = new LibSvmRegression[String](kernelType = LinearKernel)
     val dataset = new RVFRegDataset[String]()
 
     val d1 = mkRVFDatum(0.91, List("good", "great", "good"))
@@ -32,7 +31,7 @@ class TestLibSVMRegression extends FlatSpec with Matchers {
   }
 
   it should "work with BVFDataset" in {
-    val regression = new LibSVMRegression[String](LinearKernel)
+    val regression = new LibSvmRegression[String](kernelType = LinearKernel)
     val dataset = new BVFRegDataset[String]()
 
     //
@@ -113,12 +112,27 @@ class TestLibSVMRegression extends FlatSpec with Matchers {
     */
   }
 
-  it should "have an MSE < 0.02 on this dataset" in {
+  "LibSvmEpsilonRegression" should "have an MSE < 0.02 on this dataset" in {
+    val dataset = RVFRegDataset.mkRegDatasetFromSvmLightResource("org/clulab/learning/regression_train.txt.gz")
+    val datums = RVFRegDataset.mkDatumsFromSvmLightResource("org/clulab/learning/regression_test.txt.gz")
     for (kernel <- List(LinearKernel, PolynomialKernel, RBFKernel, SigmoidKernel)) {
-      val regression = new LibSVMRegression[String](kernel, degree=1)
-      val dataset = RVFRegDataset.mkRegDatasetFromSvmLightResource("org/clulab/learning/regression_train.txt.gz")
+      val regression = new LibSvmEpsilonRegression[String](kernelType = kernel, degree = 1)
       regression.train(dataset)
-      val datums = RVFRegDataset.mkDatumsFromSvmLightResource("org/clulab/learning/regression_test.txt.gz")
+      val scores = for (datum <- datums) yield {
+        val err = datum.label - regression.scoreOf(datum)
+        err * err
+      }
+      val mse = scores.sum / scores.toSeq.length.toDouble
+      mse should be < 0.02
+    }
+  }
+
+  "LibSvmNuRegression" should "have an MSE < 0.02 on this dataset" in {
+    val dataset = RVFRegDataset.mkRegDatasetFromSvmLightResource("org/clulab/learning/regression_train.txt.gz")
+    val datums = RVFRegDataset.mkDatumsFromSvmLightResource("org/clulab/learning/regression_test.txt.gz")
+    for (kernel <- List(LinearKernel, PolynomialKernel, RBFKernel, SigmoidKernel)) {
+      val regression = new LibSvmNuRegression[String](kernelType = kernel, degree = 1)
+      regression.train(dataset)
       val scores = for (datum <- datums) yield {
         val err = datum.label - regression.scoreOf(datum)
         err * err

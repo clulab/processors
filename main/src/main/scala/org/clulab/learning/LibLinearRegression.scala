@@ -11,9 +11,8 @@ import java.io._
 
 /**
   * Wrapper for liblinear regression, including LR and linear SVM
-  * Note: this only supports regression; it does not support classification by design
   * Adapted from LiblinearClassifier
-  * User: dane
+  * User: mihais, danebell
   * Date: 11/15/17
   */
 class LiblinearRegression[F](
