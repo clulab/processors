@@ -221,8 +221,8 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     val doc = proc.annotate("John Smith went to China. He visited Beijing.")
     (doc.coreferenceChains != None) should be (true)
 
-    val rawMentions = doc.coreferenceChains.get.rawMentions
-    println(s"Raw mentions: $rawMentions")
+    //val rawMentions = doc.coreferenceChains.get.rawMentions
+    //println(s"Raw mentions: $rawMentions")
 
     val mentions = doc.coreferenceChains.get.getMentions
     mentions.size should be (4)

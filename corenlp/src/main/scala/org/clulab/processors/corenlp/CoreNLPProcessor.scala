@@ -47,7 +47,7 @@ class CoreNLPProcessor(
   // the CoreNLP option parser.maxlen does not work well
   //
   lazy val stanfordParser: LexicalizedParser = mkLexicalizedParser
-  lazy val gsf = mkGSF
+  lazy val gsf:GrammaticalStructureFactory = mkGSF
   lazy val headFinder = new SemanticHeadFinder()
 
   def mkLexicalizedParser: LexicalizedParser = {
@@ -163,28 +163,20 @@ class CoreNLPProcessor(
       val mentions = new ListBuffer[CorefMention]
 
       for (cid <- chains.keySet()) {
-        // println("cluster " + cid)
-        val mentionMap = chains.get(cid).getMentionMap
-        for (mid <- mentionMap.keySet()) {
-          for (mention <- mentionMap.get(mid)) {
-            // val isRep = mention == cluster.getRepresentativeMention
-            println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + " [" + mention.mentionSpan + "]")
-            
-            // Processor indexes things from 0 not 1!
-            val m = CorefMention(
-              mid.getSource - 1,
-              mid.getTarget - 1,
-              mention.startIndex - 1,
-              mention.endIndex - 1,
-              cid)
-            println(s"Scala mention: $m")
-
-            mentions += m
-          }
+        for(mention <- chains.get(cid).getMentionsInTextualOrder) {
+          //println(s"""start = ${mention.startIndex}, end = ${mention.endIndex}, head = ${mention.headIndex}, sentence = ${mention.sentNum}""")
+          val m = CorefMention(
+            mention.sentNum - 1,
+            mention.headIndex - 1,
+            mention.startIndex - 1,
+            mention.endIndex - 1,
+            mention.corefClusterID
+          )
+          mentions += m
         }
       }
 
-      println(s"Mentions contains ${mentions.size} mentions.")
+      //println(s"Mentions contains ${mentions.size} mentions.")
       doc.coreferenceChains = Some(new CorefChains(mentions.toList))
     }
   }
