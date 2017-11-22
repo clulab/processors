@@ -8,6 +8,7 @@ import LibSvmRegression.logger
 import java.io._
 
 /**
+  * Wrapper for libsvm regression
   * User: mihais, dfried, danebell
   * Date: 11/20/2017
   */
@@ -193,7 +194,7 @@ class LibSvmRegression[F](val parameters: svm_parameter) extends Regression[F] w
 
   private def datumToNodes(d:Datum[Double, F]): Array[svm_node] = {
     d match {
-      case rvf:RVFDatum[Double, F] => {
+      case rvf:RVFDatum[Double, F] =>
         val fs = new ArrayBuffer[Int]()
         val vs = new ArrayBuffer[Double]()
         for(f <- rvf.featuresCounter.keySet) {
@@ -204,18 +205,18 @@ class LibSvmRegression[F](val parameters: svm_parameter) extends Regression[F] w
           }
         }
         rvfDataToNodes(fs.toArray, vs.toArray, sorted = false)
-      }
-      case bvf:BVFDatum[Double, F] => {
+
+      case bvf:BVFDatum[Double, F] =>
         val fs = new ArrayBuffer[Int]
         for(f <- bvf.features){
           val of = featureLexicon.get.get(f)
           if(of.isDefined) fs += of.get
         }
         bvfDataToNodes(fs.sorted.toArray)
-      }
-      case _ => {
+
+      case _ =>
         throw new RuntimeException("ERROR: do not know how to process this datum type!")
-      }
+
     }
   }
 }
@@ -277,7 +278,7 @@ class LibSvmEpsilonRegression[F](val p: svm_parameter) extends LibSvmRegression[
            gamma: Double = 0, // for poly/rbf/sigmoid. If 0, sets to 1 / num feats
            coef0: Double = 0, // for poly/sigmoid
            C: Double = 1,
-           nu: Double = 0.5,
+           nu: Double = 0.5, // not used
            p: Double = 0.1,
            eps: Double = 1e-3,
            shrinking: Boolean = true,
@@ -302,7 +303,7 @@ class LibSvmNuRegression[F](val p: svm_parameter) extends LibSvmRegression[F](p)
            coef0: Double = 0, // for poly/sigmoid
            C: Double = 1,
            nu: Double = 0.5,
-           p: Double = 0.1,
+           p: Double = 0.1, // not used
            eps: Double = 1e-3,
            shrinking: Boolean = true,
            probability: Boolean = true,

@@ -11,15 +11,15 @@ import java.io._
 
 /**
   * Wrapper for liblinear regression, including LR and linear SVM
-  * Adapted from LiblinearClassifier
   * User: mihais, danebell
   * Date: 11/15/17
   */
 class LiblinearRegression[F](
-                                 val solverType:SolverType = SolverType.L2R_L2LOSS_SVR,
-                                 val C:Double = 1.0,
-                                 val eps:Double = 0.01,
-                                 val bias:Boolean = false) extends Regression[F] with Serializable {
+                                 val solverType: SolverType = SolverType.L2R_L2LOSS_SVR,
+                                 val C: Double = 1.0,
+                                 val eps: Double = 0.01,
+                                 val p: Double = 0.1,
+                                 val bias: Boolean = false) extends Regression[F] with Serializable {
 
   /** Model learned during training */
   private var model:Model = null
@@ -84,7 +84,7 @@ class LiblinearRegression[F](
     */
 
     // ... and train
-    val parameter = new Parameter(solverType, C, eps)
+    val parameter = new Parameter(solverType, C, eps, p)
     model = Linear.train(problem, parameter)
 
     logger.debug(s"Model contains ${model.getNrFeature} features.")
@@ -108,7 +108,7 @@ class LiblinearRegression[F](
 
   /** Add 1: our feature indices start at 0, but liblinear's start at 1! */
   private def convertToLiblinearFeaturesIndices(i:Int): Int = i + 1
-  private def convertToOutFeatureIndices(i:Int): Int = i - 1
+  // private def convertToOutFeatureIndices(i:Int): Int = i - 1
 
   /*
   private def datumToString(y:Double, x:Array[Feature]): String = {
@@ -189,7 +189,7 @@ class LiblinearRegression[F](
 
   private def datumToFeatures(d:Datum[Double, F]): Array[Feature] = {
     d match {
-      case rvf:RVFDatum[Double, F] => {
+      case rvf:RVFDatum[Double, F] =>
         val fs = new ArrayBuffer[Int]()
         val vs = new ArrayBuffer[Double]()
         for(f <- rvf.featuresCounter.keySet) {
@@ -200,18 +200,18 @@ class LiblinearRegression[F](
           }
         }
         rvfDataToFeatures(fs.toArray, vs.toArray, sorted = false)
-      }
-      case bvf:BVFDatum[Double, F] => {
+
+      case bvf:BVFDatum[Double, F] =>
         val fs = new ArrayBuffer[Int]
         for(f <- bvf.features){
           val of = featureLexicon.get.get(f)
           if(of.isDefined) fs += of.get
         }
         bvfDataToFeatures(fs.sorted.toArray)
-      }
-      case _ => {
+
+      case _ =>
         throw new RuntimeException("ERROR: do not know how to process this datum type!")
-      }
+
     }
   }
 
@@ -228,28 +228,31 @@ class LiblinearRegression[F](
   * L2-regularized L2-loss support vector regression (primal)
   */
 class LinearSVMRegression[F] (
-                                  C:Double = 1.0,
-                                  eps:Double = 0.01,
-                                  bias:Boolean = false)
-  extends LiblinearRegression[F](SolverType.L2R_L2LOSS_SVC, C, eps, bias)
+                                  C: Double = 1.0,
+                                  eps: Double = 0.01,
+                                  p: Double = 0.1,
+                                  bias: Boolean = false)
+  extends LiblinearRegression[F](SolverType.L2R_L2LOSS_SVR, C, p, eps, bias)
 
 /**
   * L2-regularized L2-loss support vector regression (dual)
   */
 class LinearSVMRegressionDual[F] (
-                                  C:Double = 1.0,
-                                  eps:Double = 0.01,
-                                  bias:Boolean = false)
-  extends LiblinearRegression[F](SolverType.L2R_L2LOSS_SVR_DUAL, C, eps, bias)
+                                  C: Double = 1.0,
+                                  eps: Double = 0.01,
+                                  p: Double = 0.1, //not used
+                                  bias: Boolean = false)
+  extends LiblinearRegression[F](SolverType.L2R_L2LOSS_SVR_DUAL, C, p, eps, bias)
 
 /**
   * L2-regularized L1-loss support vector regression (dual)
   */
 class L1LinearSVMRegression[F] (
-                                  C:Double = 1.0,
-                                  eps:Double = 0.01,
-                                  bias:Boolean = false)
-  extends LiblinearRegression[F](SolverType.L2R_L1LOSS_SVR_DUAL, C, eps, bias)
+                                  C: Double = 1.0,
+                                  eps: Double = 0.01,
+                                  p: Double = 0.1, // not used
+                                  bias: Boolean = false)
+  extends LiblinearRegression[F](SolverType.L2R_L1LOSS_SVR_DUAL, C, p, eps, bias)
 
 
 object LiblinearRegression {
@@ -268,7 +271,7 @@ object LiblinearRegression {
     val bits = reader.readLine().split("\\s+")
     val bias = bits(0).toBoolean
     val biasFeatureIndex = bits(1).toInt
-    val c = new LiblinearRegression[F](SolverType.L2R_LR, 1.0, 0.01, bias) // only bias matters at prediction time
+    val c = new LiblinearRegression[F](SolverType.L2R_LR, 1.0, 0.01, 0.1, bias) // only bias matters at prediction time
     c.biasFeatureIndex = biasFeatureIndex
     c.featureLexicon = Some(fl)
     c.model = Linear.loadModel(reader)
