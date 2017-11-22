@@ -10,17 +10,19 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import edu.stanford.nlp.parser.common.{ParserAnnotations, ParserUtils}
 import edu.stanford.nlp.pipeline.{ParserAnnotatorUtils, StanfordCoreNLP}
 import java.util.Properties
+
 import collection.mutable.ListBuffer
 import edu.stanford.nlp.ling.CoreAnnotations._
+
 import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.CoreAnnotations
-import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
+import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
 
 
 /**
@@ -35,14 +37,16 @@ class CoreNLPProcessor(
   val maxSentenceLength:Int = 100
 ) extends ShallowNLPProcessor(internStrings, withChunks) {
 
-  lazy val coref = mkCoref
-  lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
+  lazy val coref: StanfordCoreNLP = mkCoref
+
+  // TODO Becky: uncomment this after retraining
+  // lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
 
   //
   // we maintain our own copy of a LexicalizedParser to control which sentences are parsed
   // the CoreNLP option parser.maxlen does not work well
   //
-  lazy val stanfordParser = mkLexicalizedParser
+  lazy val stanfordParser: LexicalizedParser = mkLexicalizedParser
   lazy val gsf = mkGSF
   lazy val headFinder = new SemanticHeadFinder()
 
@@ -164,20 +168,25 @@ class CoreNLPProcessor(
         for (mid <- mentionMap.keySet()) {
           for (mention <- mentionMap.get(mid)) {
             // val isRep = mention == cluster.getRepresentativeMention
-            // println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + isRep + " [" + mention.mentionSpan + "]")
+            println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + " [" + mention.mentionSpan + "]")
+
+            AICI
 
             // Processor indexes things from 0 not 1!
-            val m = new CorefMention(
+            val m = CorefMention(
               mid.getSource - 1,
               mid.getTarget - 1,
               mention.startIndex - 1,
               mention.endIndex - 1,
               cid)
+            println(s"Scala mention: $m")
+
             mentions += m
           }
         }
       }
 
+      println(s"Mentions contains ${mentions.size} mentions.")
       doc.coreferenceChains = Some(new CorefChains(mentions.toList))
     }
   }
@@ -195,8 +204,9 @@ class CoreNLPProcessor(
     if(doc.sentences.head.syntacticTree.isEmpty)
       throw new RuntimeException("ERROR: you have to run the constituent parser before discourse parsing!")
 
-    val out = rstConstituentParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
-    doc.discourseTree = Some(out._1)
+    // TODO Becky: uncomment these two lines after retraining
+    //val out = rstConstituentParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
+    //doc.discourseTree = Some(out._1)
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)
   }
