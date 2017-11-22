@@ -169,9 +169,7 @@ class CoreNLPProcessor(
           for (mention <- mentionMap.get(mid)) {
             // val isRep = mention == cluster.getRepresentativeMention
             println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + " [" + mention.mentionSpan + "]")
-
-            AICI
-
+            
             // Processor indexes things from 0 not 1!
             val m = CorefMention(
               mid.getSource - 1,
