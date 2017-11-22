@@ -263,8 +263,6 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     })
   }
 
-  // TODO Becky: uncomment these lines after retraining
-  /*
   it should "parse discourse relations correctly" in {
     val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
     doc.clear()
@@ -278,7 +276,6 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     d.isTerminal should be (false)
     d.children.length should be (2)
   }
-  */
 
   it should "create document text correctly" in {
     val doc = proc.annotateFromSentences(List("Sentence 1.", "Sentence 2."), keepText = true)

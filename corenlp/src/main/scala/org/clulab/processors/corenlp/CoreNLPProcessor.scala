@@ -40,7 +40,7 @@ class CoreNLPProcessor(
   lazy val coref: StanfordCoreNLP = mkCoref
 
   // TODO Becky: uncomment this after retraining
-  // lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
+  lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
 
   //
   // we maintain our own copy of a LexicalizedParser to control which sentences are parsed
@@ -195,8 +195,8 @@ class CoreNLPProcessor(
       throw new RuntimeException("ERROR: you have to run the constituent parser before discourse parsing!")
 
     // TODO Becky: uncomment these two lines after retraining
-    //val out = rstConstituentParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
-    //doc.discourseTree = Some(out._1)
+    val out = rstConstituentParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
+    doc.discourseTree = Some(out._1)
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)
   }
