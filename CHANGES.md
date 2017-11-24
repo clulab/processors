@@ -1,4 +1,6 @@
 # Changes
++ **6.1.6** - Added ability to add Modifications to mentions. 
++ **6.1.6** - Added openie package, which contains EntityFinder. 
 + **6.1.6** - Added wrappers for the regression functions in `liblinear` and `libsvm`. 
 + **6.1.6** - Added functionality to use a serialized model to LexiconNER. 
 + **6.1.4** - Added org.clulab.sequences.LexiconNER to match known entity names efficiently.
