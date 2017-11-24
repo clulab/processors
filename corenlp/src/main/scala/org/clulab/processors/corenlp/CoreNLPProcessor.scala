@@ -7,7 +7,7 @@ import org.clulab.processors._
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct._
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
-import edu.stanford.nlp.parser.common.{ParserAnnotations, ParserUtils}
+import edu.stanford.nlp.parser.common.{ParserAnnotations, ParserConstraint, ParserUtils}
 import edu.stanford.nlp.pipeline.{ParserAnnotatorUtils, StanfordCoreNLP}
 import java.util.Properties
 
@@ -16,13 +16,15 @@ import edu.stanford.nlp.ling.CoreAnnotations._
 
 import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
-import edu.stanford.nlp.ling.CoreAnnotations
+import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
 import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
+import org.slf4j.{Logger, LoggerFactory}
+import CoreNLPProcessor.logger
 
 
 /**
@@ -39,8 +41,7 @@ class CoreNLPProcessor(
 
   lazy val coref: StanfordCoreNLP = mkCoref
 
-  // TODO Becky: uncomment this after retraining
-  lazy val rstConstituentParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
+  lazy val rstConstituentParser:RSTParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
 
   //
   // we maintain our own copy of a LexicalizedParser to control which sentences are parsed
@@ -75,13 +76,15 @@ class CoreNLPProcessor(
     var offset = 0
     for (sa <- sas) {
       // run the actual parser here
-      val stanfordTree = stanfordParse(sa)
+      val constraints:java.util.List[ParserConstraint] = sa.get(classOf[ParserAnnotations.ConstraintAnnotation])
+      val words:java.util.List[CoreLabel] = parensToSymbols(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
+      val stanfordTree = stanfordParse(constraints, words)
 
-      // store Stanford annotations; Stanford dependencies are created here!
-      ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa, util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
-
-      // save our own structures
-      if (stanfordTree != null) {
+      if(stanfordTree != null) {
+        // store Stanford annotations; Stanford dependencies are created here!
+        ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa,
+          util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
+        
         // save the constituent tree, including head word information
         val position = new MutableNumber[Int](0)
         doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(stanfordTree, headFinder, position))
@@ -92,23 +95,30 @@ class CoreNLPProcessor(
         doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
         doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
       } else {
-        doc.sentences(offset).syntacticTree = None
+        // create a fake tree if the actual parsing failed
+        val xTree = ParserUtils.xTree(words)
+
+        // save the constituent tree, including head word information
+        val position = new MutableNumber[Int](0)
+        doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(xTree, headFinder, position))
+
+        // no dependencies to save here
       }
+      
       offset += 1
     }
   }
 
-  def stanfordParse(sentence:CoreMap):StanfordTree = {
-    val constraints = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
-    val words = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
-
+  def stanfordParse(constraints:java.util.List[ParserConstraint],
+                    words:java.util.List[CoreLabel]):StanfordTree = {
     var tree:StanfordTree = null
 
     //
-    // Do not parse sentences longer than this
-    // Those are likely coming from tables, so: (a) we don't know how to parse them anyway; (b) they would take forever
+    // Do not parse sentences that are too long or too short
+    // The long ones are likely coming from tables, so: (a) we don't know how to parse them anyway; (b) they would take forever
+    // Sentences of length 1 break the Stanford parser in version 3.8.0
     //
-    if(words.size < maxSentenceLength) {
+    if(words.size > 1 && words.size < maxSentenceLength) {
       // the actual parsing
       val pq = stanfordParser.parserQuery()
       pq.setConstraints(constraints)
@@ -132,15 +142,16 @@ class CoreNLPProcessor(
 
       //println("SYNTACTIC TREE: " + tree)
     } else {
-      System.err.println("Skipping sentence of length " + words.size)
+      logger.debug("Skipping sentence of length " + words.size)
     }
 
-    // create a fake tree if the actual parsing failed
-    if(tree == null)
-      tree = ParserUtils.xTree(words)
-
-    //println("TREE: " + tree)
     tree
+  }
+
+  def stanfordParse(sentence:CoreMap):StanfordTree = {
+    val constraints:java.util.List[ParserConstraint] = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
+    val words:java.util.List[CoreLabel] = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
+    stanfordParse(constraints, words)
   }
 
   override def resolveCoreference(doc:Document) {
@@ -204,6 +215,7 @@ class CoreNLPProcessor(
 
 object CoreNLPProcessor {
   var rstParser:Option[RSTParser] = None
+  val logger: Logger = LoggerFactory.getLogger(classOf[CoreNLPProcessor])
 
   def fetchParser(path:String):RSTParser = {
     this.synchronized {

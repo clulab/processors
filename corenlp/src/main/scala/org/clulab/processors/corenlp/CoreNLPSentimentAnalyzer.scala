@@ -49,6 +49,7 @@ object CoreNLPSentimentAnalyzer {
     val sa = a.get(classOf[SentencesAnnotation]).asScala.toVector.head
 
     // needs to be a Stanford parse
+
     val tree = proc.stanfordParse(sa)
     sa.set(classOf[TreeAnnotation], tree)
 
