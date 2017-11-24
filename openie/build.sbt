@@ -1,7 +1,7 @@
 name := "processors-ie"
 
 libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-    "com.typesafe.scala-logging" %%  "scala-logging" % "3.5.0",
-    "ch.qos.logback" %  "logback-classic" % "1.1.7"
+    "org.scalatest"               %%  "scalatest"        % "3.0.1"  % "test",
+    "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.7.2",
+    "ch.qos.logback"               %  "logback-classic"  % "1.0.10"
 )
