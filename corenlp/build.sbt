@@ -19,7 +19,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-slf4j"   % akkaV,
 
     // testing
-    "org.scalatest"       %%  "scalatest"      % "2.2.4"  % "test",
+    "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test"
   )
 }
