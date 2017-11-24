@@ -1,13 +1,16 @@
 package org.clulab.serialization
 
 import java.io._
-import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
-import org.clulab.processors.{Document, Sentence}
-import org.clulab.struct._
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 
+import com.typesafe.scalalogging.LazyLogging
+
+import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
+import org.clulab.processors.{Document, Sentence}
+import org.clulab.struct._
 
 /**
   * Saves/loads a Document to/from a stream
@@ -15,9 +18,9 @@ import scala.reflect.ClassTag
   * For this reason, we use a custom (compact) text format, rather than XML.
   * User: mihais
   * Date: 3/5/13
-  * Last Modified: Add optional capability to save/load the Document text field.
+  * Last Modified: Don't save zero-length text.
   */
-class DocumentSerializer {
+class DocumentSerializer extends LazyLogging {
 
   import DocumentSerializer._
 
@@ -40,7 +43,7 @@ class DocumentSerializer {
       case e:Exception => throw e // something else bad
     }
 
-    assert(bits(0) == START_SENTENCES)
+    assert(bits(0) == START_SENTENCES, s"START_SENTENCES expected, found ${bits(0)}")
     val sentCount = bits(1).toInt
     val sents = new ArrayBuffer[Sentence]
 
@@ -66,11 +69,15 @@ class DocumentSerializer {
 
     var text: Option[String] = None
     if (bits(0) == START_TEXT) {
-      text = Some(read(r)(0))
+      if (bits.length != 2)
+        throw new RuntimeException(
+          s"ERROR: Missing text length in start text line: " + bits.mkString(" "))
+      val charCount = bits(1).toInt
+      text = Some(loadText(r, charCount))
       bits = read(r)
     }
 
-    assert(bits(0) == END_OF_DOCUMENT)
+    assert(bits(0) == END_OF_DOCUMENT, s"END_OF_DOCUMENT expected, found ${bits(0)}")
 
     val doc = Document(sents.toArray)
     doc.coreferenceChains = coref
@@ -87,7 +94,6 @@ class DocumentSerializer {
   }
 
   def load(s:String, encoding:String = "UTF-8"): Document = {
-    // println("Parsing annotation:\n" + s)
     val is = new ByteArrayInputStream(s.getBytes(encoding))
     val r = new BufferedReader(new InputStreamReader(is))
     val doc = load(r)
@@ -95,9 +101,17 @@ class DocumentSerializer {
     doc
   }
 
+  private def loadText (r:BufferedReader, charCount:Int): String = {
+    if (charCount < 1) return ""            // sanity check
+    var buffer = new Array[Char](charCount)
+    r.read(buffer, 0, charCount)
+    r.skip(1)                               // skip over last newline
+    new String(buffer)
+  }
+
   private def loadSentence(r:BufferedReader): Sentence = {
     var bits = read(r)
-    assert(bits(0) == START_TOKENS)
+    assert(bits(0) == START_TOKENS, s"START_TOKENS expected, found ${bits(0)}")
     val tokenCount = bits(1).toInt
     val wordBuffer = new ArrayBuffer[String]
     val startOffsetBuffer = new ArrayBuffer[Int]
@@ -116,11 +130,10 @@ class DocumentSerializer {
     while(offset < tokenCount) {
       bits = read(r)
 
-      if(bits.length != 8) {
+      if (bits.length != 8) {
         throw new RuntimeException("ERROR: invalid line: " + bits.mkString(" "))
       }
 
-      assert(bits.length == 8)
       wordBuffer += bits(0)
       startOffsetBuffer += bits(1).toInt
       endOffsetBuffer += bits(2).toInt
@@ -222,8 +235,11 @@ class DocumentSerializer {
     }
 
     if (keepText && doc.text.nonEmpty) {
-      os.println(START_TEXT)
-      os.println(doc.text.get)
+      val txtLen = doc.text.get.length
+      if (txtLen > 0) {
+        os.println(START_TEXT + SEP + txtLen)
+        os.println(doc.text.get)            // adds extra end-of-line character
+      }
     }
 
     os.println(END_OF_DOCUMENT)

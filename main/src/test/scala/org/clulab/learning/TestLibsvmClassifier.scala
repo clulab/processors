@@ -1,8 +1,10 @@
 package org.clulab.learning
 
 import org.scalatest._
-import org.clulab.struct.Counter
 import libsvm._
+
+import org.clulab.struct.Counter
+import org.clulab.TestUtils._
 
 /**
  *
@@ -135,12 +137,6 @@ class TestLibSVMClassifier extends FlatSpec with Matchers {
     weights.get("+").get.getCount("great") should be > weights.get("+").get.getCount("bad")
     weights.get("+").get.getCount("great") should be > weights.get("+").get.getCount("meh")
     */
-  }
-
-  private def mkRVFDatum(label:String, features:List[String]):RVFDatum[String, String] = {
-    val c = new Counter[String]
-    for(f <- features) c.incrementCount(f)
-    new RVFDatum[String, String](label, c)
   }
 
   it should "have an accuracy > .60 on this dataset" in {

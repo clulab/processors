@@ -8,13 +8,6 @@ import org.slf4j.LoggerFactory
 import LibSVMClassifier.logger
 import java.io._
 
-class KernelType
-
-case object LinearKernel extends KernelType
-case object PolynomialKernel extends KernelType
-case object RBFKernel extends KernelType
-case object SigmoidKernel extends KernelType
-
 /**
  * Modified from mihais's Liblinear wrapper by dfried on 5/2/14
  */

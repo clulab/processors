@@ -17,7 +17,7 @@ libraryDependencies ++= {
 
     // AKKA
     "com.typesafe.akka"   %%  "akka-actor"   % akkaV,
-//  "com.typesafe.akka"   %%  "akka-remote"  % akkaV,
+    "com.typesafe.akka"   %%  "akka-remote"  % akkaV,
     "com.typesafe.akka"   %%  "akka-slf4j"   % akkaV,
 
     // testing

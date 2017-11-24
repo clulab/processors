@@ -6,7 +6,9 @@ import scala.util.hashing.MurmurHash3._
 
 
 /**
-  * Stores all annotations for one document
+  * Stores all annotations for one document.
+  *   Written by: Mihai Surdeanu and Gus Hahn-Powell.
+  *   Last Modified: Add apply method to copy Document.
   */
 class Document(val sentences: Array[Sentence]) extends Serializable {
 
@@ -49,6 +51,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
 object Document {
 
   def apply(sentences: Array[Sentence]): Document = new Document(sentences)
+
   def apply(id: Option[String], sentences: Array[Sentence], coref: Option[CorefChains], dtree: Option[DiscourseTree], text: Option[String]): Document = {
     val d = Document(sentences)
     d.id = id
@@ -57,4 +60,9 @@ object Document {
     d.text = text
     d
   }
+
+  /** Return a new Document with relevant fields copied from the given Document. */
+  def apply (doc: Document): Document =
+    Document(doc.id, doc.sentences, doc.coreferenceChains, doc.discourseTree, doc.text)
+
 }
