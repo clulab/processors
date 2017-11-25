@@ -1,6 +1,8 @@
 # Changes
-+ **6.1.6** - Added wrappers for the regression functions in `liblinear` and `libsvm`. 
-+ **6.1.6** - Added functionality to use a serialized model to LexiconNER. 
++ **6.2.0** - Added ability to add Modifications to mentions. 
++ **6.2.0** - Added openie package, which contains EntityFinder. 
++ **6.2.0** - Added wrappers for the regression functions in `liblinear` and `libsvm`. 
++ **6.2.0** - Added functionality to use a serialized model to LexiconNER. 
 + **6.1.4** - Added org.clulab.sequences.LexiconNER to match known entity names efficiently.
 + **6.1.4** - Allow for `odin` variable use in import paths.
 + **6.1.3** - Update core server parameters. Increment Akka version to 2.5.4.
