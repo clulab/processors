@@ -17,8 +17,7 @@ import edu.stanford.nlp.ling.CoreAnnotations._
 import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
-import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder}
-import edu.stanford.nlp.trees.{Tree => StanfordTree}
+import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder, TreeCoreAnnotations, Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
@@ -98,7 +97,10 @@ class CoreNLPProcessor(
         // create a fake tree if the actual parsing failed
         val xTree = ParserUtils.xTree(words)
 
-        // save the constituent tree, including head word information
+        // store the fake tree back in the CoreNLP annotation; the downstream processes (e.g., coref) expect it
+        sa.set(classOf[TreeCoreAnnotations.TreeAnnotation], xTree)
+
+        // save the constituent tree in our doc, including head word information
         val position = new MutableNumber[Int](0)
         doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(xTree, headFinder, position))
 
