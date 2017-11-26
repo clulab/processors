@@ -16,9 +16,9 @@ import edu.stanford.nlp.ling.CoreAnnotations._
 
 import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
-import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
+import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel, IndexedWord}
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder, TreeCoreAnnotations, Tree => StanfordTree}
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
+import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
 import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
@@ -75,44 +75,47 @@ class CoreNLPProcessor(
     var offset = 0
     for (sa <- sas) {
       // run the actual parser here
-      val constraints:java.util.List[ParserConstraint] = sa.get(classOf[ParserAnnotations.ConstraintAnnotation])
-      val words:java.util.List[CoreLabel] = parensToSymbols(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
-      val stanfordTree = stanfordParse(constraints, words)
+      val stanfordTree = stanfordParse(sa)
+      assert(stanfordTree != null) // even when we can't parse, we create a fake tree in stanfordParse()
 
-      if(stanfordTree != null) {
-        // store Stanford annotations; Stanford dependencies are created here!
+      // store Stanford annotations; Stanford dependencies are created here!
+      // note: this code breaks on sentences with 1 token
+      val words = sa.get(classOf[CoreAnnotations.TokensAnnotation])
+      if(words.size() > 1) {
         ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa,
           util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
-        
-        // save the constituent tree, including head word information
-        val position = new MutableNumber[Int](0)
-        doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(stanfordTree, headFinder, position))
+      } else { // exactly 1 token in the sentence
+        // save the constituent tree
+        sa.set(classOf[TreeCoreAnnotations.TreeAnnotation], stanfordTree)
 
-        // save syntactic dependencies
-        val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
-        val collapsedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
-        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
-      } else {
-        // create a fake tree if the actual parsing failed
-        val xTree = ParserUtils.xTree(words)
-
-        // store the fake tree back in the CoreNLP annotation; the downstream processes (e.g., coref) expect it
-        sa.set(classOf[TreeCoreAnnotations.TreeAnnotation], xTree)
-
-        // save the constituent tree in our doc, including head word information
-        val position = new MutableNumber[Int](0)
-        doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(xTree, headFinder, position))
-
-        // no dependencies to save here
+        // create and save a fake dependency graph
+        val head = words.head
+        val fakeDeps = new SemanticGraph()
+        fakeDeps.addRoot(new IndexedWord(head))
+        sa.set(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation], fakeDeps)
+        // TODO: change to whatever we end up using in the TODO below
+        sa.set(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation], fakeDeps)
       }
-      
+
+      // save the constituent tree in our doc, including head word information
+      val position = new MutableNumber[Int](0)
+      doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(stanfordTree, headFinder, position))
+
+      // save syntactic dependencies in our doc
+      val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
+      // TODO Mihai: should we fetch SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation or SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation here?
+      val enhancedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
+      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in))
+
       offset += 1
     }
   }
 
-  def stanfordParse(constraints:java.util.List[ParserConstraint],
-                    words:java.util.List[CoreLabel]):StanfordTree = {
+  def stanfordParse(sentence:CoreMap):StanfordTree = {
+    val constraints:java.util.List[ParserConstraint] = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
+    val words:java.util.List[CoreLabel] = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
+
     var tree:StanfordTree = null
 
     //
@@ -145,15 +148,10 @@ class CoreNLPProcessor(
       //println("SYNTACTIC TREE: " + tree)
     } else {
       logger.debug("Skipping sentence of length " + words.size)
+      tree = ParserUtils.xTree(words)
     }
 
     tree
-  }
-
-  def stanfordParse(sentence:CoreMap):StanfordTree = {
-    val constraints:java.util.List[ParserConstraint] = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
-    val words:java.util.List[CoreLabel] = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
-    stanfordParse(constraints, words)
   }
 
   override def resolveCoreference(doc:Document) {

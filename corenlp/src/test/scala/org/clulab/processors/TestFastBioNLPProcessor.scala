@@ -132,7 +132,7 @@ class TestFastBioNLPProcessor extends FlatSpec with Matchers {
         println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
       }
     })
-    sentence.universalCollapsedDependencies.foreach(dependencies => {
+    sentence.universalEnhancedDependencies.foreach(dependencies => {
       println("Collapsed syntactic dependencies:")
       val iterator = new DirectedGraphEdgeIterator[String](dependencies)
       while(iterator.hasNext) {
@@ -146,7 +146,7 @@ class TestFastBioNLPProcessor extends FlatSpec with Matchers {
     deps.hasEdge(1, 0, "nsubj") should be (true)
     deps.hasEdge(1, 2, "dobj") should be (true)
 
-    val cdeps = sentence.universalCollapsedDependencies.get
+    val cdeps = sentence.universalEnhancedDependencies.get
     cdeps.hasEdge(1, 0, "nsubj") should be (true)
     cdeps.hasEdge(1, 2, "dobj") should be (true)
   }

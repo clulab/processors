@@ -72,12 +72,12 @@ class Sentence(
   }
 
   /**
-    * Default dependencies: first Stanford collapsed, then Stanford basic, then None
+    * Default dependencies: first Universal enhanced, then Universal basic, then None
     *
     * @return A directed graph of dependencies if any exist, otherwise None
     */
   def dependencies:Option[DirectedGraph[String]] = graphs match {
-    case collapsed if collapsed.contains(UNIVERSAL_COLLAPSED) => collapsed.get(UNIVERSAL_COLLAPSED)
+    case collapsed if collapsed.contains(UNIVERSAL_ENHANCED) => collapsed.get(UNIVERSAL_ENHANCED)
     case basic if basic.contains(UNIVERSAL_BASIC) => basic.get(UNIVERSAL_BASIC)
     case _ => None
   }
@@ -85,8 +85,8 @@ class Sentence(
   /** Fetches the universal basic dependencies */
   def universalBasicDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_BASIC)
 
-  /** Fetches the universal collapsed dependencies */
-  def universalCollapsedDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_COLLAPSED)
+  /** Fetches the universal enhanced dependencies */
+  def universalEnhancedDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_ENHANCED)
 
   def semanticRoles:Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
 

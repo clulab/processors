@@ -31,10 +31,10 @@ class FastNLPProcessor(
   withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) extends ShallowNLPProcessor(internStrings) {
 
   /** RST discourse parser using only dependency based syntax */
-  lazy val rstDependencyParser = fetchRSTParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)
+  lazy val rstDependencyParser: RSTParser = fetchRSTParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)
 
   /** Stanford's NN dependency parser */
-  lazy val stanfordDepParser = fetchStanfordParser()
+  lazy val stanfordDepParser: DependencyParser = fetchStanfordParser()
 
   override def parse(doc:Document) {
     val annotation = basicSanityCheck(doc)
@@ -62,11 +62,12 @@ class FastNLPProcessor(
 
       // convert to Stanford's semantic graph representation
       val basicDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, null)
-      val collapsedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, null)
+      // TODO Mihai: should we fetch SemanticGraphFactory.Mode.ENHANCED or SemanticGraphFactory.Mode.ENHANCED_PLUS_PLUS here?
+      val enhancedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, null)
 
       // convert to our own directed graph
       doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_COLLAPSED, CoreNLPUtils.toDirectedGraph(collapsedDeps, in))
+      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in))
 
       //println("Output directed graph:")
       //println(dg)

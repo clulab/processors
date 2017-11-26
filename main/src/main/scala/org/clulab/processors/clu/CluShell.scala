@@ -89,7 +89,7 @@ object CluShell {
         }
       })
 
-      sentence.universalCollapsedDependencies.foreach(dependencies => {
+      sentence.universalEnhancedDependencies.foreach(dependencies => {
         println("Enhanced dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while (iterator.hasNext) {
