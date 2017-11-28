@@ -529,4 +529,26 @@ class TestGraphPattern extends FlatSpec with Matchers {
     intercept[OdinException] { ExtractorEngine(rule) }
   }
 
+  it should "handle colons in dependencies" in {
+    val doc = jsonStringToDocument(""" {"text":"The chair's office.","sentences":[{"words":["The","chair","'s","office","."],"startOffsets":[0,4,9,12,18],"endOffsets":[3,9,11,18,19],"tags":["DT","NN","POS","NN","."],"lemmas":["the","chair","'s","office","."],"entities":["O","O","O","O","O"],"norms":["O","O","O","O","O"],"chunks":["B-NP","I-NP","B-NP","I-NP","O"],"graphs":{"universal-enhanced":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"case"},{"source":3,"destination":1,"relation":"nmod:poss"}],"roots":[3]},"universal-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"case"},{"source":3,"destination":1,"relation":"nmod:poss"}],"roots":[3]}}}]} """)
+
+    // Note that the nmod:poss needs either quotes around it or to be a regex
+    val rule = """
+                 |- name: testRule
+                 |  label: Entity
+                 |  pattern: |
+                 |    trigger = [tag="NN"]
+                 |    theme:Entity = "nmod:poss"
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Entity", Interval(1), 0, doc, false, "<test>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc, state)
+
+    results should have size (1)
+  }
 }

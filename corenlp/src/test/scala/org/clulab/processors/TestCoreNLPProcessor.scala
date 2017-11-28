@@ -282,10 +282,5 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     doc.text.get should be ("Sentence 1. Sentence 2.")
   }
 
-  it should "handle colons in dependencies" in {
-    val doc = proc.annotate("The chair's office.", keepText = true)
-    //println(s"doc deps: ${doc.sentences.head.dependencies.get}")
-    //println(s"doc words ${doc.sentences.head.words.zipWithIndex.mkString(", ")}")
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 1, "nmod:poss") should be (true)
-  }
+
 }
