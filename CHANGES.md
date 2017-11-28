@@ -1,4 +1,5 @@
 # Changes
++ **7.0.0** - Retrained our two discourse parsers (constituent- and dependency-syntax based) to work with universal dependencies.
 + **7.0.0** - Retrained syntactic chunker used by CoreNLPProcessor and FastNLPProcessor to work with universal dependencies.
 + **7.0.0** - Switched to CoreNLP 3.8.0 and universal dependencies. 
 + **6.2.0** - Added ability to add Modifications to mentions. 
