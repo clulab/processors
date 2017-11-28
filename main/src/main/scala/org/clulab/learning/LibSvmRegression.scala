@@ -1,27 +1,40 @@
 package org.clulab.learning
 
-import org.clulab.struct.Counter
 import libsvm._
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.Lexicon
 import org.slf4j.LoggerFactory
-import LibSVMClassifier.logger
+import LibSvmRegression.logger
 import java.io._
 
 /**
- * Modified from mihais's Liblinear wrapper by dfried on 5/2/14
- */
-class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L,F] with Serializable {
-  def this(kernelType: KernelType,
+  * Wrapper for libsvm regression
+  * User: mihais, dfried, danebell
+  * Date: 11/20/2017
+  */
+class LibSvmRegression[F](val parameters: svm_parameter) extends Regression[F] with Serializable {
+  def this(svmType: SvmType = EpsilonSVR,
+           kernelType: KernelType,
            degree: Int = 3, // for poly
            gamma: Double = 0, // for poly/rbf/sigmoid. If 0, sets to 1 / num feats
            coef0: Double = 0, // for poly/sigmoid
            C: Double = 1,
+           nu: Double = 0.5,
+           p: Double = 0.1,
            eps: Double = 1e-3,
            shrinking: Boolean = true,
            probability: Boolean = true,
-           cacheSize: Int = 100) =
-     this(LibSVMClassifier.makeParameters(kernelType, degree, gamma, coef0, C, eps, shrinking, probability, cacheSize))
+           cacheSize: Int = 100) = {
+    this(
+      LibSvmRegression
+        .makeParameters(
+          svmType, kernelType, degree,
+          gamma, coef0, C, nu, p, eps,
+          shrinking, probability,
+          cacheSize
+        )
+    )
+  }
 
   private var problem: svm_problem = null
   private var model: svm_model = null
@@ -29,14 +42,11 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
   /** Feature lexicon */
   private var featureLexicon:Option[Lexicon[F]] = None
 
-  /** Label lexicon */
-  private var labelLexicon:Option[Lexicon[L]] = None
-
   /**
-   * Trains a classifier, using only the datums specified in indices
-   * indices is useful for bagging
-   */
-  def train(dataset: Dataset[L, F], indices: Array[Int]): Unit = {
+    * Trains a classifier, using only the datums specified in indices
+    * indices is useful for bagging
+    */
+  def train(dataset: RegDataset[F], indices: Array[Int]): Unit = {
     problem = new svm_problem
     problem.l = indices.length
     logger.debug(s"Using ${problem.l} datums.")
@@ -57,12 +67,11 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
     // set the labels
     problem.y = new Array[Double](problem.l)
     for(i <- 0 until problem.l)
-      problem.y(i) = dataset.labels(indices(i)).toDouble
+      problem.y(i) = dataset.labels(indices(i))
 
     // set the datums
     problem.x = new Array[Array[svm_node]](problem.l)
     featureLexicon = Some(Lexicon(dataset.featureLexicon))
-    labelLexicon = Some(Lexicon(dataset.labelLexicon))
     assert(problem.l == indices.length)
     /*
     if(bias) {
@@ -71,16 +80,16 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
     }
     */
     dataset match {
-      case rvfDataset:RVFDataset[L, F] => {
-        for(i <- 0 until indices.length) {
+      case rvfDataset:RVFRegDataset[F] =>
+        for(i <- indices.indices) {
           problem.x(i) = rvfDataToNodes(rvfDataset.features(indices(i)), rvfDataset.values(indices(i)), sorted = true)
         }
-      }
-      case bvfDataset:BVFDataset[L, F] => {
-        for(i <- 0 until indices.length) {
+
+      case bvfDataset:BVFRegDataset[F] =>
+        for(i <- indices.indices) {
           problem.x(i) = bvfDataToNodes(bvfDataset.features(indices(i)))
         }
-      }
+
     }
     /*
     for(i <- 0 until problem.x.length) {
@@ -99,31 +108,16 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
     }
     // ... and train
     model = svm.svm_train(problem, parameters)
-
-    logger.debug(s"Model contains ${model.nr_class} classes.")
-    // logger.debug(s"Model contains ${model.getNrFeature} features.")
-  }
-
-  /** Returns the argmax for this datum */
-  override def classOf(d:Datum[L, F]): L = {
-    val nodes = datumToNodes(d)
-    val li = svm.svm_predict(model, nodes)
-    labelLexicon.get.get(li.toInt)
   }
 
   /**
-   * Returns the scores of all possible labels for this datum
-   * Convention: if the classifier can return probabilities, these must be probabilities
-   **/
-  override def scoresOf(d:Datum[L, F]): Counter[L] = {
+    * Returns the scores of all possible labels for this datum
+    * Convention: if the classifier can return probabilities, these must be probabilities
+    **/
+  override def scoreOf(d:Datum[Double, F]): Double = {
     val nodes = datumToNodes(d)
-    val probs = new Array[Double](model.nr_class)
-    svm.svm_predict_probability(model, nodes, probs)
-    val probabilities = new Counter[L]
-    for(i <- 0 until model.nr_class) {
-      probabilities.setCount(labelLexicon.get.get(model.label(i)), probs(i))
-    }
-    probabilities
+    val predictedValue = svm.svm_predict(model, nodes)
+    predictedValue
   }
 
   /** Saves the current model to a file */
@@ -139,7 +133,7 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
   // private def convertToOutputFeaturesIndices(i: Int) = i - 1
 
   private def bvfDataToNodes(feats:Array[Int]): Array[svm_node] = {
-    // modified from LibLinearClassifier code
+    // modified from LibLinearRegression code
     // some of these discrete features may repeat to indicate values larger than 1; count each feature
     // we take advantage of the fact that features MUST be sorted in the dataset here
     var size = 0
@@ -198,9 +192,9 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
     else features
   }
 
-  private def datumToNodes(d:Datum[L, F]): Array[svm_node] = {
+  private def datumToNodes(d:Datum[Double, F]): Array[svm_node] = {
     d match {
-      case rvf:RVFDatum[L, F] => {
+      case rvf:RVFDatum[Double, F] =>
         val fs = new ArrayBuffer[Int]()
         val vs = new ArrayBuffer[Double]()
         for(f <- rvf.featuresCounter.keySet) {
@@ -211,43 +205,51 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
           }
         }
         rvfDataToNodes(fs.toArray, vs.toArray, sorted = false)
-      }
-      case bvf:BVFDatum[L, F] => {
+
+      case bvf:BVFDatum[Double, F] =>
         val fs = new ArrayBuffer[Int]
         for(f <- bvf.features){
           val of = featureLexicon.get.get(f)
           if(of.isDefined) fs += of.get
         }
         bvfDataToNodes(fs.sorted.toArray)
-      }
-      case _ => {
+
+      case _ =>
         throw new RuntimeException("ERROR: do not know how to process this datum type!")
-      }
+
     }
   }
 }
 
-object LibSVMClassifier {
-  val logger = LoggerFactory.getLogger(classOf[LibSVMClassifier[String, String]])
+object LibSvmRegression {
+  val logger = LoggerFactory.getLogger(this.getClass)
 
-  def loadFrom[L, F](fileName:String):LibSVMClassifier[L, F] = {
+  def loadFrom[F](fileName:String):LibSvmRegression[F] = {
     val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[LibSVMClassifier[L, F]]
+    val c = is.readObject().asInstanceOf[LibSvmRegression[F]]
     is.close()
     c
   }
 
-  def makeParameters(kernelType: KernelType,
-                             degree: Int, // for poly
-                             gamma: Double, // for poly/rbf/sigmoid
-                             coef0: Double, // for poly/sigmoid
-                             C: Double,
-                             eps: Double,
-                             shrinking: Boolean,
-                             probability: Boolean,
-                             cache_size : Int) = {
+  def makeParameters(
+                      svmType: SvmType,
+                      kernelType: KernelType,
+                      degree: Int, // for poly
+                      gamma: Double, // for poly/rbf/sigmoid
+                      coef0: Double, // for poly/sigmoid
+                      C: Double, // cost
+                      nu: Double, // for NU_SVR
+                      p: Double, // for EPSILON_SVR
+                      eps: Double, // "tolerance of termination criterion"
+                      shrinking: Boolean,
+                      probability: Boolean,
+                      cache_size : Int) = {
     val params = new svm_parameter
-    params.svm_type = svm_parameter.C_SVC
+
+    params.svm_type = svmType match {
+      case EpsilonSVR => svm_parameter.EPSILON_SVR
+      case NuSVR => svm_parameter.NU_SVR
+    }
 
     params.kernel_type = kernelType match {
       case LinearKernel => svm_parameter.LINEAR
@@ -260,10 +262,60 @@ object LibSVMClassifier {
     params.gamma = gamma
     params.coef0 = coef0
     params.C = C
+    params.nu = nu
+    params.p = p
     params.eps = eps
     params.shrinking = if (shrinking) 1 else 0
     params.probability = if (probability) 1 else 0
     params.cache_size = cache_size
     params
+  }
+}
+
+class LibSvmEpsilonRegression[F](val p: svm_parameter) extends LibSvmRegression[F](p) {
+  def this(kernelType: KernelType,
+           degree: Int = 3, // for poly
+           gamma: Double = 0, // for poly/rbf/sigmoid. If 0, sets to 1 / num feats
+           coef0: Double = 0, // for poly/sigmoid
+           C: Double = 1,
+           nu: Double = 0.5, // not used
+           p: Double = 0.1,
+           eps: Double = 1e-3,
+           shrinking: Boolean = true,
+           probability: Boolean = true,
+           cacheSize: Int = 100) = {
+    this(
+      LibSvmRegression
+        .makeParameters(
+          EpsilonSVR, kernelType, degree,
+          gamma, coef0, C, nu, p, eps,
+          shrinking, probability,
+          cacheSize
+        )
+    )
+  }
+}
+
+class LibSvmNuRegression[F](val p: svm_parameter) extends LibSvmRegression[F](p) {
+  def this(kernelType: KernelType,
+           degree: Int = 3, // for poly
+           gamma: Double = 0, // for poly/rbf/sigmoid. If 0, sets to 1 / num feats
+           coef0: Double = 0, // for poly/sigmoid
+           C: Double = 1,
+           nu: Double = 0.5,
+           p: Double = 0.1, // not used
+           eps: Double = 1e-3,
+           shrinking: Boolean = true,
+           probability: Boolean = true,
+           cacheSize: Int = 100) = {
+    this(
+      LibSvmRegression
+        .makeParameters(
+          NuSVR, kernelType, degree,
+          gamma, coef0, C, nu, p, eps,
+          shrinking, probability,
+          cacheSize
+        )
+    )
   }
 }

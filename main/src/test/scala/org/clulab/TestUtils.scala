@@ -2,6 +2,9 @@ package org.clulab
 
 import java.io.File
 
+import org.clulab.learning.RVFDatum
+import org.clulab.struct.Counter
+
 import scala.io.Source
 
 import org.clulab.processors.Document
@@ -9,6 +12,12 @@ import org.clulab.serialization.json.JSONSerializer
 import org.json4s.jackson.JsonMethods._
 
 object TestUtils {
+
+  def mkRVFDatum[L](label:L, features:List[String]):RVFDatum[L, String] = {
+    val c = new Counter[String]
+    for(f <- features) c.incrementCount(f)
+    new RVFDatum[L, String](label, c)
+  }
 
   def jsonStringToDocument(jsonstr: String): Document = JSONSerializer.toDocument(parse(jsonstr))
 
