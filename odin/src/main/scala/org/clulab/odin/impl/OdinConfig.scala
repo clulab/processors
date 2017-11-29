@@ -21,5 +21,11 @@ object OdinConfig {
   def empty: OdinConfig = OdinConfig()
 
   // add newly registered graph types here
-  var VALID_GRAPHS = Set[String](GraphMap.UNIVERSAL_ENHANCED, GraphMap.UNIVERSAL_BASIC, GraphMap.SEMANTIC_ROLES)
+  var VALID_GRAPHS = Set[String](
+    GraphMap.UNIVERSAL_ENHANCED,
+    GraphMap.UNIVERSAL_BASIC,
+    GraphMap.STANFORD_COLLAPSED,
+    GraphMap.STANFORD_BASIC,
+    GraphMap.SEMANTIC_ROLES
+  )
 }
