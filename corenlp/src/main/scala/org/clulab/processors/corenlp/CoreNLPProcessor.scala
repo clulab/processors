@@ -205,7 +205,6 @@ class CoreNLPProcessor(
     if(doc.sentences.head.syntacticTree.isEmpty)
       throw new RuntimeException("ERROR: you have to run the constituent parser before discourse parsing!")
 
-    // TODO Becky: uncomment these two lines after retraining
     val out = rstConstituentParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
     doc.discourseTree = Some(out._1)
 
