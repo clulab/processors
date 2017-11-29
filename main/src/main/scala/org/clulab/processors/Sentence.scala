@@ -88,6 +88,12 @@ class Sentence(
   /** Fetches the universal enhanced dependencies */
   def universalEnhancedDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_ENHANCED)
 
+  /** Fetches the Stanford basic dependencies */
+  def stanfordBasicDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_BASIC)
+
+  /** Fetches the Stanford collapsed dependencies */
+  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_COLLAPSED)
+  
   def semanticRoles:Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
 
   def setDependencies(depType: String, deps: DirectedGraph[String]): Unit = graphs += (depType -> deps)
