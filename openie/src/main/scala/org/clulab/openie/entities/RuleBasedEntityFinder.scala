@@ -26,25 +26,26 @@ class RuleBasedEntityFinder(
 
   // avoid expanding along these dependencies
   val INVALID_OUTGOING = Set[scala.util.matching.Regex](
-    "^prep_including$".r,
-    "^prep_without$".r
+    "^nmod_including$".r,
+    "^nmod_without$".r
   )
 
   val INVALID_INCOMING = Set[scala.util.matching.Regex](
-    "^prep_with$".r,
-    "^prep_without$".r,
-    "^prep_except$".r,
-    "^prep_despite$".r
+    "^nmod_with$".r,
+    "^nmod_without$".r,
+    "^nmod_except$".r,
+    "^nmod_despite$".r
   )
 
   // regexes describing valid outgoing dependencies
   val VALID_OUTGOING = Set[scala.util.matching.Regex](
-    "^amod$".r, "^advmod$".r, "^ccmod$".r,
+    "^amod$".r, "^advmod$".r,
     "^dobj$".r,
-    "^nn$".r,
+    "^compound".r, // replaces nn
+    "^name".r, // this is equivalent to compound when NPs are tagged as named entities, otherwise unpopulated
     // ex.  "isotonic fluids may reduce the risk" -> "isotonic fluids may reduce the risk associated with X."
-    "^vmod$".r,
-    "^prep_".r
+    "^acl$".r, // replaces vmod
+    "^nmod_".r // replaces prep_
   )
 
   /**
