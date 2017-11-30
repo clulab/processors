@@ -62,8 +62,7 @@ class FastNLPProcessor(
 
       // convert to Stanford's semantic graph representation
       val basicDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, null)
-      // TODO Mihai: should we fetch SemanticGraphFactory.Mode.ENHANCED or SemanticGraphFactory.Mode.ENHANCED_PLUS_PLUS here?
-      val enhancedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.CCPROCESSED, GrammaticalStructure.Extras.NONE, null)
+      val enhancedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.ENHANCED_PLUS_PLUS, GrammaticalStructure.Extras.NONE, null)
 
       // convert to our own directed graph
       doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))

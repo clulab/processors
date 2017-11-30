@@ -18,7 +18,7 @@ import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel, IndexedWord}
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder, TreeCoreAnnotations, Tree => StanfordTree}
-import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
+import edu.stanford.nlp.semgraph.{SemanticGraphFactory, SemanticGraph, SemanticGraphCoreAnnotations}
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
 import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
@@ -93,8 +93,7 @@ class CoreNLPProcessor(
         val fakeDeps = new SemanticGraph()
         fakeDeps.addRoot(new IndexedWord(head))
         sa.set(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation], fakeDeps)
-        // TODO: change to whatever we end up using in the TODO below
-        sa.set(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation], fakeDeps)
+        sa.set(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation], fakeDeps)
       }
 
       // save the constituent tree in our doc, including head word information
@@ -103,8 +102,8 @@ class CoreNLPProcessor(
 
       // save syntactic dependencies in our doc
       val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
-      // TODO Mihai: should we fetch SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation or SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation here?
-      val enhancedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
+      val enhancedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation])
+
       doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
       doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in))
 
