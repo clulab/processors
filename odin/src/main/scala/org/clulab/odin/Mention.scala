@@ -36,19 +36,19 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     */
   val arguments: Map[String, Seq[Mention]]
 
-  /** Modifications that can be attached to a Mention */
-  val modifications: Set[Modification]
+  /** Attachments that can modify a Mention. */
+  val attachments: Set[Attachment]
 
-  def withModification(mod: Modification): Mention = this match {
-    case m: TextBoundMention => m.newWithModification(mod)
-    case m: RelationMention => m.newWithModification(mod)
-    case m: EventMention => m.newWithModification(mod)
+  def withAttachment(mod: Attachment): Mention = this match {
+    case m: TextBoundMention => m.newWithAttachment(mod)
+    case m: RelationMention => m.newWithAttachment(mod)
+    case m: EventMention => m.newWithAttachment(mod)
   }
 
-  def withoutModification(mod: Modification): Mention = this match {
-    case m: TextBoundMention => m.newWithoutModification(mod)
-    case m: RelationMention => m.newWithoutModification(mod)
-    case m: EventMention => m.newWithoutModification(mod)
+  def withoutAttachment(mod: Attachment): Mention = this match {
+    case m: TextBoundMention => m.newWithoutAttachment(mod)
+    case m: RelationMention => m.newWithoutAttachment(mod)
+    case m: EventMention => m.newWithoutAttachment(mod)
   }
 
   val paths: Map[String, Map[Mention, SynPath]]
@@ -172,7 +172,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     val h3 = mix(h2, sentence.hashCode)
     val h4 = mix(h3, document.hashCode)
     val h5 = mix(h4, argumentsHashCode)
-    val h6 = mixLast(h5, unorderedHash(modifications))
+    val h6 = mixLast(h5, unorderedHash(attachments))
     finalizeHash(h6, 6)
   }
 
@@ -194,7 +194,7 @@ class TextBoundMention(
   val document: Document,
   val keep: Boolean,
   val foundBy: String,
-  val modifications: Set[Modification] = Set.empty
+  val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   def this(
@@ -218,15 +218,15 @@ class TextBoundMention(
       document: Document = this.document,
       keep: Boolean = this.keep,
       foundBy: String = this.foundBy,
-      modifications: Set[Modification] = this.modifications
-  ): TextBoundMention = new TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, modifications)
+      attachments: Set[Attachment] = this.attachments
+  ): TextBoundMention = new TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments)
 
-  def newWithModification(mod: Modification): TextBoundMention = {
-    copy(modifications = this.modifications + mod)
+  def newWithAttachment(mod: Attachment): TextBoundMention = {
+    copy(attachments = this.attachments + mod)
   }
 
-  def newWithoutModification(mod: Modification): TextBoundMention = {
-    copy(modifications = this.modifications - mod)
+  def newWithoutAttachment(mod: Attachment): TextBoundMention = {
+    copy(attachments = this.attachments - mod)
   }
 
 }
@@ -243,7 +243,7 @@ class EventMention(
   val document: Document,
   val keep: Boolean,
   val foundBy: String,
-  val modifications: Set[Modification] = Set.empty
+  val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   def this(
@@ -305,15 +305,15 @@ class EventMention(
       document: Document = this.document,
       keep: Boolean = this.keep,
       foundBy: String = this.foundBy,
-      modifications: Set[Modification] = this.modifications
-  ): EventMention = new EventMention(labels, tokenInterval, trigger, arguments, paths, sentence, document, keep, foundBy, modifications)
+      attachments: Set[Attachment] = this.attachments
+  ): EventMention = new EventMention(labels, tokenInterval, trigger, arguments, paths, sentence, document, keep, foundBy, attachments)
 
-  def newWithModification(mod: Modification): EventMention = {
-    copy(modifications = this.modifications + mod)
+  def newWithAttachment(mod: Attachment): EventMention = {
+    copy(attachments = this.attachments + mod)
   }
 
-  def newWithoutModification(mod: Modification): EventMention = {
-    copy(modifications = this.modifications - mod)
+  def newWithoutAttachment(mod: Attachment): EventMention = {
+    copy(attachments = this.attachments - mod)
   }
 
   // Convert an EventMention to a RelationMention by deleting the trigger
@@ -327,7 +327,7 @@ class EventMention(
       this.document,
       this.keep,
       s"${this.foundBy} + toRelationMention",
-      this.modifications
+      this.attachments
     )
   }
 
@@ -363,7 +363,7 @@ class RelationMention(
     val document: Document,
     val keep: Boolean,
     val foundBy: String,
-    val modifications: Set[Modification] = Set.empty
+    val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
@@ -406,15 +406,15 @@ class RelationMention(
       document: Document = this.document,
       keep: Boolean = this.keep,
       foundBy: String = this.foundBy,
-      modifications: Set[Modification] = this.modifications
-  ): RelationMention = new RelationMention(labels, tokenInterval, arguments, paths, sentence, document, keep, foundBy, modifications)
+      attachments: Set[Attachment] = this.attachments
+  ): RelationMention = new RelationMention(labels, tokenInterval, arguments, paths, sentence, document, keep, foundBy, attachments)
 
-  def newWithModification(mod: Modification): RelationMention = {
-    copy(modifications = this.modifications + mod)
+  def newWithAttachment(mod: Attachment): RelationMention = {
+    copy(attachments = this.attachments + mod)
   }
 
-  def newWithoutModification(mod: Modification): RelationMention = {
-    copy(modifications = this.modifications - mod)
+  def newWithoutAttachment(mod: Attachment): RelationMention = {
+    copy(attachments = this.attachments - mod)
   }
 
   // Convert a RelationMention to an EventMention by specifying a trigger
@@ -433,7 +433,7 @@ class RelationMention(
       this.document,
       this.keep,
       s"${this.foundBy} + toEventMention",
-      this.modifications
+      this.attachments
     )
   }
 
@@ -469,7 +469,7 @@ class CrossSentenceMention(
   val document: Document,
   val keep: Boolean,
   val foundBy: String,
-  val modifications: Set[Modification] = Set.empty
+  val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   require(arguments.size == 2, "CrossSentenceMention must have exactly two arguments")
