@@ -36,7 +36,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     */
   val arguments: Map[String, Seq[Mention]]
 
-  /** Bio attachments that can be attached to a Mention */
+  /** Attachments that can modify a Mention. */
   val attachments: Set[Attachment]
 
   def withAttachment(mod: Attachment): Mention = this match {
