@@ -1,4 +1,6 @@
 # Changes
++ **6.3.0** - Branched released version 6.3.0 as base for future Reach development (branch name 'reach').
++ **6.3.0** - Renamed modification trait to Attachment.
 + **6.2.0** - Added ability to add Modifications to mentions. 
 + **6.2.0** - Added openie package, which contains EntityFinder. 
 + **6.2.0** - Added wrappers for the regression functions in `liblinear` and `libsvm`. 
