@@ -35,6 +35,22 @@ class Lexicon[T] extends Serializable {
     }
   }
 
+  /**
+    * Removes a member from the lexicon and returns its (former) index, or -1 if it was not found in the lexicon
+    */
+  def remove(s:T): Int = synchronized {
+    if (lexicon.contains(s)) {
+      val i = lexicon(s)
+      lexicon.remove(s)
+      lexicon.foreach{
+        case (k, after) if after > i => lexicon(k) = after - 1
+        case before => ()
+      }
+      index.remove(i)
+      i
+    } else -1
+  }
+
   def exists(i:Int):Boolean = i < index.size
 
   def contains(f:T):Boolean = lexicon.contains(f)
@@ -45,7 +61,8 @@ class Lexicon[T] extends Serializable {
    * Fetches the string with the given index from the lexicon
    * This deliberately does NOT check for bounds for fast access.
    * Use exists() if you want to make sure that your index exists.
-   * @param i Index of the string in the lexicon
+    *
+    * @param i Index of the string in the lexicon
    * @return The string corresponding to the index
    */
   def get(i:Int):T = index(i)
@@ -99,6 +116,7 @@ class Lexicon[T] extends Serializable {
     * Maps feature indices from their old value to the new values given in the map
     * If an existing feature does not appear in the map, it is simply not included in the new lexicon
     *   (this is to support feature selection)
+    *
     * @param indexMap Map from old index to new index
     */
   def mapIndicesTo(indexMap:Map[Int, Int]): Lexicon[T] = {
