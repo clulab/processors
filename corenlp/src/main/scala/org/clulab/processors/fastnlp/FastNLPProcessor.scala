@@ -13,9 +13,8 @@ import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraphFactory
 import edu.stanford.nlp.trees.GrammaticalStructure
 import java.util.Properties
-import scala.collection.JavaConversions._
 import FastNLPProcessor._
-
+import scala.collection.JavaConverters._
 
 /**
  * Fast NLP tools
@@ -24,6 +23,7 @@ import FastNLPProcessor._
  * The default setting is to use the Stanford parser with "basic" dependencies
  * User: mihais
  * Date: 1/4/14
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 class FastNLPProcessor(
   internStrings:Boolean = true,
@@ -48,7 +48,7 @@ class FastNLPProcessor(
   }
 
   private def parseWithStanford(doc:Document, annotation:Annotation) {
-    val sas = annotation.get(classOf[SentencesAnnotation])
+    val sas = annotation.get(classOf[SentencesAnnotation]).asScala
     var offset = 0
     for (sa <- sas) {
       // convert parens to Penn Treebank symbols because this is what the parser has seen in training

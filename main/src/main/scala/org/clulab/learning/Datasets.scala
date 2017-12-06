@@ -1,6 +1,7 @@
 package org.clulab.learning
 
 import java.io.{Reader, Writer}
+import java.util.concurrent.ForkJoinPool
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
@@ -11,10 +12,11 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.parallel.ForkJoinTaskSupport
 
 /**
- * Operations on datasets
- * User: mihais
- * Date: 5/1/13
- */
+  * Operations on datasets
+  * User: mihais
+  * Date: 5/1/13
+  * Last Modified: Update for Scala 2.12: fork join changes.
+  */
 class Datasets
 
 object Datasets {
@@ -174,7 +176,7 @@ object Datasets {
       var bestFeatures:Set[Int] = null
 
       val workingGroups = featureGroups.keySet.filter(! chosenGroups.contains(_)).par
-      workingGroups.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(nCores))
+      workingGroups.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(nCores))
 
       // this is parallelized!
       val scores = workingGroups.map(scoreGroup(_,
