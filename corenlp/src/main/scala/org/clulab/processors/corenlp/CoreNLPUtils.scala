@@ -11,15 +11,16 @@ import edu.stanford.nlp.semgraph.SemanticGraph
 import edu.stanford.nlp.trees.SemanticHeadFinder
 import edu.stanford.nlp.trees.TreeCoreAnnotations.{TreeAnnotation, BinarizedTreeAnnotation}
 import edu.stanford.nlp.util.{ArrayCoreMap, CoreMap}
-import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
+import scala.collection.JavaConverters._
 
 /**
  * Utilities for manipulating CoreNLP data structures
  * User: mihais
  * Date: 2/25/15
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 object CoreNLPUtils {
 
@@ -31,7 +32,7 @@ object CoreNLPUtils {
 
   def parensToSymbols(words:java.util.List[CoreLabel]):java.util.List[CoreLabel] = {
     val processedWords = new util.ArrayList[CoreLabel]()
-    for(w <- words) {
+    for(w <- words.asScala) {
       val nw = new CoreLabel(w)
       if(nw.word() == "(") {
         setWord(nw, "-LRB-")
@@ -46,17 +47,17 @@ object CoreNLPUtils {
 
   def toDirectedGraph(sg:SemanticGraph, interning: (String) => String):DirectedGraph[String] = {
     val edgeBuffer = new ListBuffer[Edge[String]]
-    for (edge <- sg.edgeIterable()) {
+    for (edge <- sg.edgeIterable().asScala) {
       val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
       val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
       var label = edge.getRelation.getShortName
       val spec = edge.getRelation.getSpecific
       if (spec != null) label = label + "_" + spec
-      edgeBuffer.add(Edge(head - 1, modifier - 1, interning(label)))
+      edgeBuffer += Edge(head - 1, modifier - 1, interning(label))
     }
 
     val roots = new mutable.HashSet[Int]
-    for (iw <- sg.getRoots) {
+    for (iw <- sg.getRoots.asScala) {
       roots.add(iw.get(classOf[IndexAnnotation]) - 1)
     }
 

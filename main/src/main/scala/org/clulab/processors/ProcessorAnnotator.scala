@@ -1,14 +1,13 @@
 package org.clulab.processors
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.breakOut
 
 import org.clulab.processors.csshare.ProcessorCSController
-import org.clulab.struct.Internalizer
 
 /**
   * Common interface for accessing either CLU Lab or CoreNLP processors.
   *   Written by: Tom Hicks. 10/3/2017.
-  *   Last Modified: Extend client/server controller trait.
+  *   Last Modified: Let Scala efficiently determine conversion return types.
   */
 trait ProcessorAnnotator extends ProcessorCSController {
 
@@ -33,23 +32,14 @@ trait ProcessorAnnotator extends ProcessorCSController {
 
   /** Runs preprocessText on each sentence. */
   def preprocessSentences (origSentences:Iterable[String]): Iterable[String] = {
-    val sents = new ListBuffer[String]()
-    for (os <- origSentences)
-      sents += preprocessText(os)
-    sents.toList
+    origSentences.map(os => preprocessText(os))(breakOut)
   }
 
   /** Runs preprocessText on each token. */
   def preprocessTokens (origSentences:Iterable[Iterable[String]]): Iterable[Iterable[String]] = {
-    val sents = new ListBuffer[Iterable[String]]
-    for (origSentence <- origSentences) {
-      val sent = new ListBuffer[String]
-      for (origToken <- origSentence) {
-        sent += preprocessText(origToken)
-      }
-      sents += sent.toList
-    }
-    sents.toList
+    origSentences.map { os =>
+      os.map(token => preprocessText(token))(breakOut)
+    }(collection.breakOut)
   }
 
 }

@@ -4,15 +4,15 @@ import java.io.{ FileInputStream, BufferedInputStream, PrintWriter, StringWriter
 import java.util.Properties
 import java.util.regex.Pattern
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Converts a command line to properties; and other useful String utils
-  * User: mihais
-  * Date: 2/12/13
-  * Last modified: Add method to write exception to a string.
-  */
+ * Converts a command line to properties; and other useful String utils
+ * User: mihais
+ * Date: 2/12/13
+ * Last Modified: Update for Scala 2.12: java converters.
+ */
 object StringUtils {
   val PROPS = "props"
   val PROPERTIES = "properties"
@@ -40,7 +40,7 @@ object StringUtils {
           val propsFromFile = new Properties()
           propsFromFile.load(is)
           // trim all values, they may have trailing spaces
-          for (k <- propsFromFile.keySet()) {
+          for (k <- propsFromFile.keySet().asScala) {
             val v = propsFromFile.getProperty(k.asInstanceOf[String]).trim
             result.setProperty(k.asInstanceOf[String], v)
           }
@@ -64,7 +64,7 @@ object StringUtils {
 
     if (verbose) {
       println("Using the following properties:")
-      for (k <- normedProps.keySet()) {
+      for (k <- normedProps.keySet().asScala) {
         println("\t" + k + " = " + normedProps.getProperty(k.asInstanceOf[String]))
       }
     }
@@ -75,7 +75,7 @@ object StringUtils {
   private def instantiateVariables(props:Properties):Properties = {
     val newProps = new Properties()
 
-    for (key <- props.keySet()) {
+    for (key <- props.keySet().asScala) {
       val value = props.getProperty(key.asInstanceOf[String])
       val m = VARIABLE.matcher(value)
       var offset = 0

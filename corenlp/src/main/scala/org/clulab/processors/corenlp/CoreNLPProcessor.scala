@@ -13,23 +13,31 @@ import java.util.Properties
 
 import collection.mutable.ListBuffer
 import edu.stanford.nlp.ling.CoreAnnotations._
+<<<<<<< HEAD
 
 import scala.collection.JavaConversions._
+=======
+>>>>>>> master
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel, IndexedWord}
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder, TreeCoreAnnotations, Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.{SemanticGraphFactory, SemanticGraph, SemanticGraphCoreAnnotations}
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
+<<<<<<< HEAD
 import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
 import org.slf4j.{Logger, LoggerFactory}
 import CoreNLPProcessor.logger
 
+=======
+import scala.collection.JavaConverters._
+>>>>>>> master
 
 /**
  * API for Stanford's CoreNLP tools
  * User: mihais
  * Date: 3/1/13
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 class CoreNLPProcessor(
   internStrings:Boolean = true,
@@ -71,7 +79,7 @@ class CoreNLPProcessor(
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
-    val sas = annotation.get.get(classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
     var offset = 0
     for (sa <- sas) {
       // run the actual parser here
@@ -172,17 +180,23 @@ class CoreNLPProcessor(
     if(chains != null) {
       val mentions = new ListBuffer[CorefMention]
 
-      for (cid <- chains.keySet()) {
-        for(mention <- chains.get(cid).getMentionsInTextualOrder) {
-          //println(s"""start = ${mention.startIndex}, end = ${mention.endIndex}, head = ${mention.headIndex}, sentence = ${mention.sentNum}""")
-          val m = CorefMention(
-            mention.sentNum - 1,
-            mention.headIndex - 1,
-            mention.startIndex - 1,
-            mention.endIndex - 1,
-            mention.corefClusterID
-          )
-          mentions += m
+      for (cid <- chains.keySet().asScala) {
+        // println("cluster " + cid)
+        val mentionMap = chains.get(cid).getMentionMap
+        for (mid <- mentionMap.keySet().asScala) {
+          for (mention <- mentionMap.get(mid).asScala) {
+            // val isRep = mention == cluster.getRepresentativeMention
+            // println("\tmention " + mid.getSource + " " + mid.getTarget + " " + mention.startIndex + " " + mention.endIndex + " " + isRep + " [" + mention.mentionSpan + "]")
+
+            // Processor indexes things from 0 not 1!
+            val m = new CorefMention(
+              mid.getSource - 1,
+              mid.getTarget - 1,
+              mention.startIndex - 1,
+              mention.endIndex - 1,
+              cid)
+            mentions += m
+          }
         }
       }
 

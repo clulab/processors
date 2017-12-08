@@ -11,6 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * Utils necessary for malt parsing
   * User: mihais
   * Date: 8/6/17
+  * Last Modified: Update for Scala 2.12: bug #10151 workaround.
   */
 class MaltUtils
 
@@ -51,6 +52,7 @@ object MaltUtils {
       } else {
         edgeBuffer += Edge(source = head, destination = modifier, relation = in(label, internStrings))
       }
+      ()                                    // workaround for bug #10151
     }
 
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)

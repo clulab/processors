@@ -73,7 +73,7 @@ class RelationClassifier( val prefixes:String,
     }
 
     val chosenGroups = Datasets.incrementalFeatureSelection(
-      dataset, lrFactory, acc, featureGroups, numFolds = 3)
+      dataset, lrFactory _, acc, featureGroups, numFolds = 3)
     logger.info(s"Selected ${chosenGroups.size} feature groups: " + chosenGroups)
   }
 

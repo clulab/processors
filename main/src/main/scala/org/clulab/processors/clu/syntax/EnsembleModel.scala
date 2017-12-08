@@ -2,6 +2,7 @@ package org.clulab.processors.clu.syntax
 
 import org.clulab.struct.{DirectedGraph, Edge}
 
+import scala.collection.breakOut
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -9,6 +10,7 @@ import scala.collection.mutable.ListBuffer
   * Implements the word-by-word voting scheme from Surdeanu et al. (2010)
   * User: mihais
   * Date: 8/9/17
+  * Last Modified: Let Scala efficiently determine conversion return types.
   */
 class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
@@ -61,24 +63,17 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
   def toDependencyList(individualOutputs:Array[DirectedGraph[String]]): List[Dependency] = {
     val depMap = toDependencyMap(individualOutputs)
-
-    // create the actual dependency list
-    val l = new ListBuffer[Dependency]
-    for(depKey <- depMap.keySet) {
-      val votes = depMap.get(depKey)
-      assert(votes.nonEmpty)
-      val dep = Dependency(depKey._1, depKey._2, depKey._3, votes.get.toSet)
-      l += dep
-    }
-
-    l.toList
+    depMap.map {                           // create and return the actual dependency list
+      case (depKey, votes) =>
+        Dependency(depKey._1, depKey._2, depKey._3, votes.toSet)
+    }(breakOut)
   }
 
   def toDirectedGraph(deps:List[Dependency]):DirectedGraph[String] = {
     val edges = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]()
 
-    for(dep <- deps) {
+    deps.foreach { dep =>
       if(dep.head == 0) {
         assert(dep.modifier > 0)
         roots += dep.modifier - 1
@@ -87,6 +82,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
         assert(dep.head > 0)
         edges += Edge[String](dep.head - 1, dep.modifier - 1, dep.label)
       }
+      ()                                    // workaround for bug #10151
     }
 
     new DirectedGraph[String](edges.toList, roots.toSet)

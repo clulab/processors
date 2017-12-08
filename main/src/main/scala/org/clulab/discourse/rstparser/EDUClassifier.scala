@@ -306,18 +306,18 @@ class EDUClassifier {
     }
 
     val chosenGroups = Datasets.incrementalFeatureSelection(
-      dataset, Utils.svmFactory, simpleF1, featureGroups)
+      dataset, Utils.svmFactory _, simpleF1, featureGroups)
     logger.info(s"Selected ${chosenGroups.size} feature groups: " + chosenGroups)
   }
 
   def featureSelectionByInformativeness(trees:List[(DiscourseTree, Document)], corpusStats:CorpusStats) {
     val dataset = constructDataset(trees)
-    val chosenFeatures = Datasets.featureSelectionByInformativeness(dataset, Utils.svmFactory, simpleF1)
+    val chosenFeatures = Datasets.featureSelectionByInformativeness(dataset, Utils.svmFactory _, simpleF1)
   }
 
   def featureSelectionByFrequency(trees:List[(DiscourseTree, Document)], corpusStats:CorpusStats) {
     val dataset = constructDataset(trees)
-    val chosenFeatures = Datasets.featureSelectionByFrequency(dataset, Utils.svmFactory, simpleF1)
+    val chosenFeatures = Datasets.featureSelectionByFrequency(dataset, Utils.svmFactory _, simpleF1)
   }
 }
 

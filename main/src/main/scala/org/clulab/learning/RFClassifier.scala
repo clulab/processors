@@ -1,6 +1,7 @@
 package org.clulab.learning
 
 import java.io.{Writer, Serializable}
+import java.util.concurrent.ForkJoinPool
 
 import org.clulab.struct.{Lexicon, Counter}
 import org.clulab.utils.MathUtils
@@ -18,6 +19,7 @@ import scala.util.Random
   * An in-house implementation of random forests
   * User: mihais
   * Date: 11/23/15
+  * Last Modified: Update for Scala 2.12: fork join changes.
   */
 class RFClassifier[L, F](numTrees:Int = 100,
                          maxTreeDepth:Int = 20, // 0 means unlimited tree depth
@@ -92,7 +94,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
         trees = Some(bags.map(buildTreeMain).toArray)
       case _ => // use a specific number of threads
         val parBags = bags.toSet.par
-        parBags.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(numThreads))
+        parBags.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(numThreads))
         trees = Some(parBags.map(buildTreeMain).toArray)
     }
 

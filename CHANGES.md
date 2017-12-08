@@ -1,8 +1,9 @@
 # Changes
 + **7.0.0** - Retrained our two discourse parsers (constituent- and dependency-syntax based) to work with universal dependencies.
-+ **7.0.0** - Retrained syntactic chunker used by CoreNLPProcessor and FastNLPProcessor to work with universal dependencies.
-+ **7.0.0** - Switched to CoreNLP 3.8.0 and universal dependencies. 
-+ **6.2.0** - Added ability to add Modifications to mentions. 
++ **7.0.0** - Switched to CoreNLP 3.8.0 and universal dependencies.
++ **6.3.0** - Branched released version 6.3.0 as base for future Reach development (branch name 'reach').
++ **6.3.0** - Renamed modification trait to Attachment.
++ **6.2.0** - Added ability to add Modifications to mentions.
 + **6.2.0** - Added openie package, which contains EntityFinder. 
 + **6.2.0** - Added wrappers for the regression functions in `liblinear` and `libsvm`. 
 + **6.2.0** - Added functionality to use a serialized model to LexiconNER. 
