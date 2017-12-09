@@ -17,9 +17,9 @@ object Utils {
    * Fetches dependencies from a given sentence
    * Note: RST parsing works better with basic dependencies, so we ALWAYS use them here!
    */
-  def deps(s:Sentence):DirectedGraph[String] = s.stanfordBasicDependencies.get
+  def deps(s:Sentence):DirectedGraph[String] = s.universalBasicDependencies.get
 
-  def hasDeps(s:Sentence):Boolean = s.stanfordBasicDependencies.isDefined
+  def hasDeps(s:Sentence):Boolean = s.universalBasicDependencies.isDefined
 
   def tokenCount(doc:Document) = {
     var sum = 0

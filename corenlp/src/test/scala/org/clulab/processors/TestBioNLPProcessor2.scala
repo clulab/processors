@@ -1,7 +1,5 @@
 package org.clulab.processors
 
-import java.io.{FileReader, BufferedReader}
-
 import org.clulab.TestUtils
 import org.clulab.processors.bionlp.BioNLPProcessor
 import org.scalatest._

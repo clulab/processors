@@ -20,9 +20,9 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     println(s"Tricky entities: ${es.mkString(", ")}")
     es(5) should be ("B-Gene_or_gene_product")
 
-    doc = proc.mkDocument("XRCC1 stimulates DNA-PK enzymatic activity")
+    doc = proc.mkDocument("XRCC1 stimulates AP-3 enzymatic activity")
     annotate(doc)
-
+    
     es = doc.sentences(0).entities.get
     println(s"Tricky entities: ${es.mkString(", ")}")
     es(0) should be ("B-Gene_or_gene_product")

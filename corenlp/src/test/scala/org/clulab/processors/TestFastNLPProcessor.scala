@@ -17,12 +17,9 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {
     val doc = proc.annotate("John Smith went to China.")
 
-    // malt can generate only Stanford basic dependencies rather than collapsed ones
-    // so, for example, we will see "prep" labels rather than "prep_to"
-    //println(doc.sentences.head.dependencies)
-    doc.sentences.head.dependencies.get.hasEdge(1, 0, "nn") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(1, 0, "compound") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(2, 1, "nsubj") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(2, 4, "prep_to") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(2, 4, "nmod_to") should be (true)
 
     /*
     val it = new DirectedGraphEdgeIterator[String](doc.sentences.head.dependencies.get)

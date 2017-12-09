@@ -82,10 +82,10 @@ class ArgumentFeatureExtractor(word2vecFile:String) {
 
     val before: Boolean = position < pred
 
-    if(sent.stanfordBasicDependencies.isDefined)
-      addDepFeatures(features, "B", sent, sent.stanfordBasicDependencies.get, position, pred)
-    if(sent.stanfordCollapsedDependencies.isDefined)
-      addDepFeatures(features, "C", sent, sent.stanfordCollapsedDependencies.get, position, pred)
+    if(sent.universalBasicDependencies.isDefined)
+      addDepFeatures(features, "B", sent, sent.universalBasicDependencies.get, position, pred)
+    if(sent.universalEnhancedDependencies.isDefined)
+      addDepFeatures(features, "C", sent, sent.universalEnhancedDependencies.get, position, pred)
 
     // unigrams
     for (i <- Range(-1, 2)) {

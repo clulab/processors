@@ -155,7 +155,7 @@ class Reader {
         val depGraph = toDirectedGraph(conllTokens)
         //println(depGraph)
         // we set the gold CoNLL syntax as Stanford basic dependencies (hack)
-        sent.graphs += GraphMap.STANFORD_BASIC -> depGraph
+        sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
       }
     } else {
       proc.parse(doc)

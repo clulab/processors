@@ -304,7 +304,7 @@ class ArgumentClassifier {
 
   def printSentence(sentence:Sentence) {
     println("Tokens: " + sentence.words.zip(sentence.tags.get).zipWithIndex.mkString(" "))
-    sentence.stanfordBasicDependencies.foreach(dependencies => {
+    sentence.universalBasicDependencies.foreach(dependencies => {
       println("Syntactic dependencies:")
       val iterator = new DirectedGraphEdgeIterator[String](dependencies)
       while (iterator.hasNext) {
