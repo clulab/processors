@@ -1,4 +1,5 @@
 # Changes
++ **7.0.0** - Updated library to use Scala 2.12 by default. Add ability to remove lexicon members.
 + **7.0.0** - Retrained our two discourse parsers (constituent- and dependency-syntax based) to work with universal dependencies.
 + **7.0.0** - Switched to CoreNLP 3.8.0 and universal dependencies.
 + **6.3.0** - Branched released version 6.3.0 as base for future Reach development (branch name 'reach').
