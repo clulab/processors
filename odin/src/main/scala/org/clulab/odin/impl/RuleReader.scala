@@ -45,7 +45,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
     val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
     val taxonomy = master.get("taxonomy").map(readTaxonomy)
-    val vars = master.get("vars").map(readVars).getOrElse(Map.empty[String, String])
+    val vars = getVars(master)
     val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
     val graph = getGraph(master)
@@ -197,7 +197,13 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   }
 
-  def readVars(data: Any): Map[String, String] = data match {
+  /** gets the master file as a Map and returns the declared variables, if any */
+  def getVars(data: Map[String, Any]): Map[String, String] = {
+    data.get("vars").map(readOrImportVars).getOrElse(Map.empty)
+  }
+
+  /** Reads the variables declared directly or imports them from a file */
+  def readOrImportVars(data: Any): Map[String, String] = data match {
     case vars: JMap[String, Any] => vars.asScala.mapValues(s => cleanVar(s.toString)).toMap
     case path: String =>
       val url = mkURL(path)
@@ -255,7 +261,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       // read list of rules
       val jRules = data("rules").asInstanceOf[Collection[JMap[String, Any]]]
       // read optional vars
-      val localVars = data.get("vars").map(readVars).getOrElse(Map.empty[String, String])
+      val localVars = getVars(data)
       (jRules, localVars)
     } catch {
       case e: ConstructorException =>
@@ -265,7 +271,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
         (jRules, Map.empty)
     }
     // variables specified by the call to `import`
-    val importVars = data.get("vars").map(readVars).getOrElse(Map.empty[String, String])
+    val importVars = getVars(data)
     // variable scope:
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
