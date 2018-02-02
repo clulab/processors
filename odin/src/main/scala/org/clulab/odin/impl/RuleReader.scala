@@ -45,7 +45,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
     val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
     val taxonomy = master.get("taxonomy").map(readTaxonomy)
-    val vars = getVars(master)
+    val vars = master.get("vars").map(readVars).getOrElse(Map.empty[String, String])
     val resources = readResources(master)
     val jRules = master("rules").asInstanceOf[Collection[JMap[String, Any]]]
     val graph = getGraph(master)
@@ -75,13 +75,6 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       replaceAll("\\$\\{\\s+", "\\$\\{").
       replaceAll("\\s+\\}", "\\}")
     clean
-  }
-
-  def getVars(data: Map[String, Any]): Map[String, String] = {
-    data
-      .get("vars")
-      .map(_.asInstanceOf[JMap[String, Any]].asScala.mapValues(s => cleanVar(s.toString)).toMap)
-      .getOrElse(Map.empty)
   }
 
   def mkExtractors(rules: Seq[Rule]): Vector[Extractor] = {
@@ -204,6 +197,18 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   }
 
+  def readVars(data: Any): Map[String, String] = data match {
+    case vars: JMap[String, Any] => vars.asScala.mapValues(s => cleanVar(s.toString)).toMap
+    case path: String =>
+      val url = mkURL(path)
+      val source = Source.fromURL(url)
+      val input = source.mkString
+      source.close()
+      val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+      val vars = yaml.load(input).asInstanceOf[JMap[String, Any]]
+      vars.asScala.mapValues(s => cleanVar(s.toString)).toMap
+  }
+
   // reads a taxonomy from data, where data may be either a forest or a file path
   private def readTaxonomy(data: Any): Taxonomy = data match {
     case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
@@ -250,7 +255,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       // read list of rules
       val jRules = data("rules").asInstanceOf[Collection[JMap[String, Any]]]
       // read optional vars
-      val localVars = getVars(data)
+      val localVars = data.get("vars").map(readVars).getOrElse(Map.empty[String, String])
       (jRules, localVars)
     } catch {
       case e: ConstructorException =>
@@ -260,7 +265,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
         (jRules, Map.empty)
     }
     // variables specified by the call to `import`
-    val importVars = getVars(data)
+    val importVars = data.get("vars").map(readVars).getOrElse(Map.empty[String, String])
     // variable scope:
     // - an imported file may define its own variables (`localVars`)
     // - the importer file can define variables (`importerVars`) that override `localVars`
