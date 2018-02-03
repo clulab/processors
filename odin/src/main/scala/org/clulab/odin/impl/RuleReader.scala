@@ -77,13 +77,6 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     clean
   }
 
-  def getVars(data: Map[String, Any]): Map[String, String] = {
-    data
-      .get("vars")
-      .map(_.asInstanceOf[JMap[String, Any]].asScala.mapValues(s => cleanVar(s.toString)).toMap)
-      .getOrElse(Map.empty)
-  }
-
   def mkExtractors(rules: Seq[Rule]): Vector[Extractor] = {
     // count names occurrences
     val names = rules groupBy (_.name) transform ((k, v) => v.size)
@@ -202,6 +195,24 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       }
     }
 
+  }
+
+  /** gets the master file as a Map and returns the declared variables, if any */
+  def getVars(data: Map[String, Any]): Map[String, String] = {
+    data.get("vars").map(readOrImportVars).getOrElse(Map.empty)
+  }
+
+  /** Reads the variables declared directly or imports them from a file */
+  def readOrImportVars(data: Any): Map[String, String] = data match {
+    case vars: JMap[String, Any] => vars.asScala.mapValues(s => cleanVar(s.toString)).toMap
+    case path: String =>
+      val url = mkURL(path)
+      val source = Source.fromURL(url)
+      val input = source.mkString
+      source.close()
+      val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+      val vars = yaml.load(input).asInstanceOf[JMap[String, Any]]
+      vars.asScala.mapValues(s => cleanVar(s.toString)).toMap
   }
 
   // reads a taxonomy from data, where data may be either a forest or a file path
