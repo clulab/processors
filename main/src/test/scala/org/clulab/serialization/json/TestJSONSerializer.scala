@@ -1,5 +1,7 @@
 package org.clulab.serialization.json
 
+import org.clulab.processors.Document
+import org.clulab.serialization.DocumentSerializer
 import org.clulab.TestUtils.jsonStringToDocument
 import org.json4s._
 import org.scalatest._
@@ -53,6 +55,21 @@ class TestJSONSerializer extends FlatSpec with Matchers {
     doc.sentences should not be empty
     doc2.sentences should not be empty
     doc.sentences.head.equivalenceHash should equal (doc2.sentences.head.equivalenceHash)
+  }
+  
+  "A Document saved and loaded" should "have JSON equivalent to the original" in {
+    class Scratch(var document: Document) extends JSONSerialization {
+      def jsonAST: JValue = document.jsonAST
+    }
+    
+    doc.text = Some("This is a test") // Original failing test requires text
+    val documentSerializer = new DocumentSerializer()
+    val expectedDocAsJSON = new Scratch(doc).json()
+    val docSaved = documentSerializer.save(doc, keepText = true)
+    val docLoaded = documentSerializer.load(docSaved)
+    val actualDocAsJSON = new Scratch(docLoaded).json()
+    
+    actualDocAsJSON should equal (expectedDocAsJSON)
   }
 
 }
