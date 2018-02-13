@@ -131,13 +131,6 @@ class TestBioCluProcessor extends FlatSpec with Matchers {
     }
   }
 
-  it should "not produce dependency graphs with cycles" in {
-    val doc = proc.mkDocument("Ala, Arg, Asn, Asp, Cys, Gln, Glu, Gly, His, Ile, Leu, Lys, Met, Phe, Pro, Ser, Thr, Trp, Tyr, and Val are now labeled as Sites.")
-    annotate(doc)
-
-    // TODO: add checks for cycles here!
-  }
-
   def annotate(doc:Document) {
     proc.lemmatize(doc)
     proc.tagPartsOfSpeech(doc)

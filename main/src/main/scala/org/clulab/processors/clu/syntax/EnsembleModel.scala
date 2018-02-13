@@ -17,6 +17,15 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
   def parse(): DirectedGraph[String] = parseVoting()
 
   /**
+    * Produces an ensemble parse that is guaranteed to not have cycles (using the Attardi algorithm)
+    * @return the DirectedGraph corresponding to the ensemble parse
+    */
+  def parseAttardi(): DirectedGraph[String] = {
+    // TODO: implement me!
+    null
+  }
+
+  /**
     * Produces an ensemble parse using the word-by-word voting scheme from Surdeanu et al. (2010)
     * Note: this works well and fast, but it does not guarantee that the output is a tree
     * @return the DirectedGraph corresponding to the ensemble parse
