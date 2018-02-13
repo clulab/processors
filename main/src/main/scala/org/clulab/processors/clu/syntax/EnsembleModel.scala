@@ -4,7 +4,7 @@ import org.clulab.struct.{DirectedGraph, Edge}
 
 import scala.collection.breakOut
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Implements the word-by-word voting scheme from Surdeanu et al. (2010)
@@ -21,6 +21,58 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
     * @return the DirectedGraph corresponding to the ensemble parse
     */
   def parseAttardi(): DirectedGraph[String] = {
+    var deps = toDependencyList(individualOutputs)
+
+    // stores the ensembled tree wo/ cycles
+    val treeDeps = new ArrayBuffer[Dependency]()
+    // stores the nodes that have been traversed
+    // initialized with root (0) because this is a top-down traversal
+    val treeNodes = new mutable.HashSet[Int]()
+    treeNodes += 0 // root
+
+    // find all actual roots, i.e., nodes that are headed by 0
+    var F = new ListBuffer[Dependency]
+    val rootlessDeps = new ListBuffer[Dependency]
+    for(dep <- deps) {
+      if(dep.head == 0) {
+        F += dep
+      } else {
+        rootlessDeps += dep
+      }
+    }
+    deps = rootlessDeps.toList
+
+    // top-down traversal of the whole tree
+    while(F.nonEmpty) {
+      var bestScore = -1.0
+      var bestDep:Dependency = null
+
+      // find the best dependency whose head is in F
+      for(f <- F) {
+        if(treeNodes.contains(f.head) && f.score > bestScore) {
+          bestScore = f.score
+          bestDep = f
+        }
+      }
+      assert(bestDep != null)
+      treeDeps += bestDep
+      treeNodes += bestDep.modifier
+
+      // clean up F
+      var newF = new ListBuffer[Dependency]
+      for(f <- F) {
+        if(! treeNodes.contains(f.modifier) && f.head != 0) {
+          newF += f
+        }
+      }
+      F = newF
+
+      // removed edges that have been traversed from candidates
+      for(dep <- deps) {
+        // TODO: continue here!
+      }
+    }
+
     // TODO: implement me!
     null
   }
