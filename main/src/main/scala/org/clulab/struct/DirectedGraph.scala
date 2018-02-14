@@ -213,6 +213,28 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     }
   }
 
+  def containsCycles():Boolean = {
+    for(i <- 0 until size) {
+      val traversed = new mutable.HashSet[Int]
+      if(hasCycle(i, traversed)) {
+        return true
+      }
+    }
+    false
+  }
+
+  private def hasCycle(current:Int, traversed:mutable.HashSet[Int]):Boolean = {
+    if(traversed.contains(current)) {
+      // println(s"Found cycle on offset $current!")
+      return true
+    } else if(incomingEdges(current).nonEmpty) {
+      // assumption: each node has a single head (stored in incoming)
+      traversed += current
+      return hasCycle(incomingEdges(current)(0)._1, traversed)
+    }
+    false
+  }
+
   def toDirectedGraphIndex: DirectedGraphIndex[E] = {
     val dgi = new DirectedGraphIndex[E](size)
     roots.foreach(dgi.addRoot(_))
@@ -233,7 +255,7 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
         return n
       n += 1
     }
-    return graph.size
+    graph.size
   }
 
   def hasNext:Boolean = node < graph.size
@@ -247,7 +269,7 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
       node = findNextNodeWithEdges(node + 1)
       nodeEdgeOffset = 0
     }
-    return (from, edge._1, edge._2)
+    (from, edge._1, edge._2)
   }
 }
 

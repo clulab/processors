@@ -1,4 +1,5 @@
 # Changes
++ **7.0.2** - The ensemble parsing model in CluProcessor is now guaranteed to produce cycle-free outputs.
 + **7.0.1** - Added feature to Odin to import variables from a file. Works similarly to taxonomies.
 + **7.0.0** - Updated library to use Scala 2.12 by default. Add ability to remove lexicon members.
 + **7.0.0** - Retrained our two discourse parsers (constituent- and dependency-syntax based) to work with universal dependencies.
