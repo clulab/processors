@@ -56,27 +56,27 @@ This software is available on Maven Central. To use, simply add the following de
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-corenlp_2.11</artifactId>
-   <version>6.1.3</version>
+   <version>7.0.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-main_2.11</artifactId>
-   <version>6.1.3</version>
+   <version>7.0.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-odin_2.11</artifactId>
-   <version>6.1.3</version>
+   <version>7.0.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-modelsmain_2.11</artifactId>
-   <version>6.1.3</version>
+   <version>7.0.2</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
    <artifactId>processors-modelscorenlp_2.11</artifactId>
-   <version>6.1.3</version>
+   <version>7.0.2</version>
 </dependency>
 
 ```
@@ -85,7 +85,7 @@ The equivalent SBT dependencies are:
 
 ```scala
 libraryDependencies ++= {
-  val procVer = "6.1.3"
+  val procVer = "7.0.2"
 
   Seq(
     "org.clulab" %% "processors-main" % procVer,
