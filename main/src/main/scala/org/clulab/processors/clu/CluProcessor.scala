@@ -330,6 +330,8 @@ trait SentencePostProcessor {
 
 class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
 
+class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load("cluprocessoropenwithstanford"))
+
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
   val prefix:String = "CluProcessor"
