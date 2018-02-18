@@ -21,7 +21,7 @@ import scala.collection.mutable.ListBuffer
 object EnhancedDependencies {
   def generateStanfordEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex
-    collapsePrepositions(sentence, dgi)
+    collapsePrepositionsStanford(sentence, dgi)
     raiseSubjects(dgi)
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi)
@@ -31,6 +31,7 @@ object EnhancedDependencies {
 
   def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex
+    collapsePrepositionsUniversal(sentence, dgi)
 
     // TODO!!
 
@@ -38,12 +39,12 @@ object EnhancedDependencies {
   }
 
   /**
-    * Collapses prep + pobj into prep_x
+    * Collapses prep + pobj into prep_x (Stanford dependencies)
     * Mary gave a book to Jane => prep_to from 1 to 5
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def collapsePrepositions(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+  def collapsePrepositionsStanford(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
     val toRemove = new ListBuffer[Edge[String]]
     val preps = dgi.findByName("prep")
     for(prep <- preps) {
@@ -52,6 +53,25 @@ object EnhancedDependencies {
       for(pobj <- dgi.findByName("pobj").filter(_.source == prep.destination)) {
         dgi.addEdge(prep.source, pobj.destination, s"prep_$word")
         toRemove += pobj
+      }
+    }
+    toRemove.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))
+  }
+
+  /**
+    * Collapses nmod + case into nmod:x (universal dependencies)
+    * Mary gave a book to Jane => nmod:to from 1 to 5
+    * @param sentence The sentence to operate on
+    * @param dgi The directed graph of collapsed dependencies at this stage
+    */
+  def collapsePrepositionsUniversal(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+    val toRemove = new ListBuffer[Edge[String]]
+    val preps = dgi.findByName("nmod")
+    for(prep <- preps) {
+      toRemove += prep
+      for(c <- dgi.findByName("case").filter(_.source == prep.destination)) {
+        val word = sentence.words(c.destination).toLowerCase()
+        dgi.addEdge(prep.source, prep.destination, s"nmod:$word")
       }
     }
     toRemove.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))

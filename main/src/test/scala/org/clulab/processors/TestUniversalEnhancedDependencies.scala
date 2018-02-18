@@ -52,5 +52,12 @@ class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "dobj") should be(true)
   }
 
+  it should "collapse prepositions" in {
+    val doc = proc.annotate("Mary gave a book to Jane")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod:to") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be(false)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 4, "case") should be(true)
+  }
+
   // TODO
 }
