@@ -32,6 +32,7 @@ object EnhancedDependencies {
   def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex
     collapsePrepositionsUniversal(sentence, dgi)
+    raiseSubjects(dgi)
 
     // TODO!!
 
@@ -78,7 +79,7 @@ object EnhancedDependencies {
   }
 
   /**
-    * Pushes subjects inside xcomp clauses
+    * Pushes subjects inside xcomp clauses (works for both SD and UD)
     * Mary wants to buy a book => nsubj from 3 to 0
     * @param dgi The directed graph of collapsed dependencies at this stage
     */

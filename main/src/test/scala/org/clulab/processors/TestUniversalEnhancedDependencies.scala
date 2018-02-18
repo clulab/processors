@@ -59,5 +59,10 @@ class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 4, "case") should be(true)
   }
 
+  it should "capture raised subjects" in {
+    val doc = proc.annotate("Mary wants to buy a book")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 0, "nsubj") should be(true)
+  }
+
   // TODO
 }
