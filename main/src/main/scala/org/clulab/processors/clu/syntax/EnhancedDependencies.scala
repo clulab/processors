@@ -19,13 +19,21 @@ import scala.collection.mutable.ListBuffer
   * Date: 8/1/17
   */
 object EnhancedDependencies {
-  def generateEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
+  def generateStanfordEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex
     collapsePrepositions(sentence, dgi)
     raiseSubjects(dgi)
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi)
     propagateConjSubjectsAndObjects(sentence, dgi)
+    dgi.toDirectedGraph
+  }
+
+  def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
+    val dgi = dg.toDirectedGraphIndex
+
+    // TODO!!
+
     dgi.toDirectedGraph
   }
 

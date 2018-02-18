@@ -90,10 +90,17 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.post.stopListFile!")
     }
 
+  // should we use universal dependencies or Stanford ones?
+  val useUniversalDependencies:Boolean = getArgBoolean(s"$prefix.parser.universal", Some(true))
+
   // the dependency parser
   lazy val depParser: Parser =
-    //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
-    new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models", None))
+    if(useUniversalDependencies) {
+      //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
+      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-universal", None))
+    } else {
+      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-stanford", None))
+    }
 
 
   override def annotate(doc:Document): Document = {
@@ -272,9 +279,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
     for (sentence <- doc.sentences) {
       val dg = depParser.parseSentence(sentence)
-      sentence.setDependencies(GraphMap.UNIVERSAL_BASIC, dg)
-      sentence.setDependencies(GraphMap.UNIVERSAL_ENHANCED,
-        EnhancedDependencies.generateEnhancedDependencies(sentence, dg))
+
+      if(useUniversalDependencies) {
+        sentence.setDependencies(GraphMap.UNIVERSAL_BASIC, dg)
+        sentence.setDependencies(GraphMap.UNIVERSAL_ENHANCED,
+          EnhancedDependencies.generateUniversalEnhancedDependencies(sentence, dg))
+      } else {
+        sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
+        sentence.setDependencies(GraphMap.STANFORD_COLLAPSED,
+          EnhancedDependencies.generateStanfordEnhancedDependencies(sentence, dg))
+      }
     }
   }
 
