@@ -78,10 +78,13 @@ class TestCluProcessor extends FlatSpec with Matchers {
   it should "parse text correctly" in {
     val doc = proc.annotate("John Doe went to China")
 
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "nn") should be(true)
+    println("Basic universal dependencies:")
+    println(doc.sentences.head.universalBasicDependencies.get)
+
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 3, "prep") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 3, "obj") should be(false)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "nmod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "case") should be(true)
     println("Parsing is fine.")
   }
 }
