@@ -59,10 +59,64 @@ class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 4, "case") should be(true)
   }
 
+  it should "identify agents in passive voice" in {
+    val doc = proc.annotate("Mary was congratulated by Jane")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 4, "nmod:by") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 0, "nsubjpass") should be(true)
+  }
+
   it should "capture raised subjects" in {
     val doc = proc.annotate("Mary wants to buy a book")
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 0, "nsubj") should be(true)
   }
 
-  // TODO
+  it should "propagate subjects and objects in conjoined verbs" in {
+    var doc = proc.annotate("The store buys and sells cameras.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 1, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 5, "dobj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "dobj") should be(true)
+
+    doc = proc.annotate("Cameras are bought and sold by the store")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 0, "nsubjpass") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 0, "nsubjpass") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 7, "nmod:by") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 7, "nmod:by") should be(true)
+
+    doc = proc.annotate("She was watching a movie or reading a book")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 0, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(6, 0, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 4, "dobj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(6, 8, "dobj") should be(true)
+
+    doc = proc.annotate("She was watching a movie or reading")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(6, 4, "dobj") should be(false)
+  }
+
+  it should "propagate conjoined subjects and objects to same verb" in {
+    var doc = proc.annotate("Paul and Mary are reading a book")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 0, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 2, "nsubj") should be(true)
+
+    doc = proc.annotate("John is reading a book and a newspaper")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 4, "dobj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 7, "dobj") should be(true)
+
+    doc = proc.annotate("Mary and John wanted to buy a hat")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 0, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 2, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 0, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 2, "nsubj") should be(true)
+  }
+
+  it should "push subjects/objects inside relative clauses" in {
+    var doc = proc.annotate("the boy who lived")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 1, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 2, "nsubj") should be(false)
+
+    doc = proc.annotate("the book, which I read, was great.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 4, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 1, "dobj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 3, "dobj") should be(false)
+  }
 }

@@ -23,8 +23,8 @@ object EnhancedDependencies {
     val dgi = dg.toDirectedGraphIndex
     collapsePrepositionsStanford(sentence, dgi)
     raiseSubjects(dgi)
-    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi)
-    propagateSubjectsAndObjectsInConjVerbs(sentence, dgi)
+    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = false)
+    propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = false)
     propagateConjSubjectsAndObjects(sentence, dgi)
     dgi.toDirectedGraph
   }
@@ -33,9 +33,9 @@ object EnhancedDependencies {
     val dgi = dg.toDirectedGraphIndex
     collapsePrepositionsUniversal(sentence, dgi)
     raiseSubjects(dgi)
-
-    // TODO!!
-
+    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = true)
+    propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = true)
+    propagateConjSubjectsAndObjects(sentence, dgi)
     dgi.toDirectedGraph
   }
 
@@ -72,6 +72,8 @@ object EnhancedDependencies {
       toRemove += prep
       for(c <- dgi.findByName("case").filter(_.source == prep.destination)) {
         val word = sentence.words(c.destination).toLowerCase()
+
+        // TODO: add nmod:agent (if word == "by") and passive voice here?
         dgi.addEdge(prep.source, prep.destination, s"nmod:$word")
       }
     }
@@ -93,12 +95,12 @@ object EnhancedDependencies {
   }
 
   /**
-    * Propagates subjects/objects between conjoined verbs
+    * Propagates subjects/objects between conjoined verbs (works for both SD and UD)
     * The store buys and sells cameras => nsubj from 2 to 1 and from 4 to 1; dobj from 2 to 5 and from 4 to 5
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+  def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean) {
     val conjs = dgi.findByName("conj").sortBy(_.source)
     val tags = sentence.tags.get
     for(conj <- conjs) {
@@ -128,8 +130,10 @@ object EnhancedDependencies {
           }
         }
 
-        // add the prep_x of the right verb to the left, if the left doesn't have a similar prep_x already
-        val rightPreps = dgi.findByHeadAndPattern(right, "^prep_*".r)
+        // add the prep_x/nom:x of the right verb to the left, if the left doesn't have a similar prep_x/nomd:x already
+        var rightPreps =
+          if(universal) dgi.findByHeadAndPattern(right, "^nmod:*".r)
+          else dgi.findByHeadAndPattern(right, "^prep_*".r)
         for(rightPrep <- rightPreps) {
           val leftPreps = dgi.findByHeadAndName(left, rightPrep.relation)
           if(leftPreps.isEmpty) {
@@ -141,7 +145,7 @@ object EnhancedDependencies {
   }
 
   /**
-    * Propagates conjoined subjects and objects to same verb
+    * Propagates conjoined subjects and objects to same verb (works for SD and UD)
     * Paul and Mary are reading a book => nsubj from 4 to 0 and from 4 to 2
     * John is reading a book and a newspaper => dobj from 2 to 4 and from 2 to 7
     * @param sentence The sentence to operate on
@@ -178,14 +182,16 @@ object EnhancedDependencies {
   }
 
   /**
-    * Propagates subjects and objects inside relative clauses
+    * Propagates subjects and objects inside relative clauses (works for both SD and UD)
     * The boy who lived => nsubj from 3 to 1
     * the book, which I read, was great. => dobj from 5 to 1
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def pushSubjectsObjectsInsideRelativeClauses(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
-    val rels = dgi.findByName("rcmod")
+  def pushSubjectsObjectsInsideRelativeClauses(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean) {
+    val rels =
+      if(universal) dgi.findByName("acl:relcl")
+      else dgi.findByName("rcmod")
     val tags = sentence.tags.get
 
     for(rel <- rels) {
