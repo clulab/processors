@@ -40,6 +40,12 @@ class FeatureExtractor(
       features += s"l[$offset]:${FeatureExtractor.norm(sentence.lemmas.get(i))}"
   }
 
+  def tag(offset:Int) {
+    val i = position + offset
+    if(validPosition(i))
+      features += s"l[$offset]:${sentence.tags.get(i)}"
+  }
+
   def casing(offset:Int) {
     val i = position + offset
     if(validPosition(i)) {

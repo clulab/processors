@@ -3,17 +3,16 @@ package org.clulab.processors.clu.sequences
 import java.io.File
 
 import org.clulab.processors.Sentence
-import org.clulab.sequences.{BiMEMMSequenceTagger, ColumnsToDocument, SequenceTaggerEvaluator, SequenceTaggerShell}
+import org.clulab.sequences.{BiMEMMSequenceTagger, ColumnsToDocument, SequenceTaggerEvaluator}
 import org.clulab.struct.Counter
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
-  * Part of speech tagger using a MEMM architecture
-  * Author: mihais
-  * Date: 3/24/17
+  * Generates chunking (shallow syntax) labels
+  *
   */
-class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
+class Chunker() extends BiMEMMSequenceTagger[String, String]() {
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int) = {
     val fe = new FeatureExtractor(sentence, offset, features)
@@ -21,6 +20,7 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
     for(offset <- List(-2, -1, 0, 1, 2)) {
       fe.word(offset)
       fe.lemma(offset)
+      fe.tag(offset)
       fe.casing(offset)
       fe.suffixes(offset, 1, 3)
       fe.prefixes(offset, 1, 3)
@@ -33,8 +33,8 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
 
   def labelExtractor(sentence:Sentence): Array[String] = {
     // labels are the tags for this task
-    assert(sentence.tags.isDefined)
-    sentence.tags.get
+    assert(sentence.chunks.isDefined)
+    sentence.chunks.get
   }
 
   def mkFeatAtHistory(position:Int, prefix:String, label:String):String = s"${prefix}h$position:$label}"
@@ -42,31 +42,31 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
   def mkFeatAtEndSent(position:Int, prefix:String):String = s"${prefix}h$position:</s>"
 }
 
-object PartOfSpeechTagger {
+object Chunker {
   val logger:Logger = LoggerFactory.getLogger(classOf[PartOfSpeechTagger])
 
-  def loadFromFile(fn:String): PartOfSpeechTagger = {
-    val tagger = new PartOfSpeechTagger
+  def loadFromFile(fn:String): Chunker = {
+    val tagger = new Chunker
     tagger.loadFromFile(new File(fn))
     tagger
   }
 
-  def loadFromResource(rn:String): PartOfSpeechTagger = {
-    val tagger = new PartOfSpeechTagger
-    logger.debug(s"Using model for POS tagging: $rn")
+  def loadFromResource(rn:String): Chunker = {
+    val tagger = new Chunker
+    logger.debug(s"Using model for chunking: $rn")
     tagger.loadFromResource(rn)
     tagger
   }
-  
+
   def main(args:Array[String]) {
     val props = StringUtils.argsToProperties(args)
 
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"),
-        wordPos = 0, labelPos = 1,
-        ColumnsToDocument.setTags,
-        ColumnsToDocument.annotateLemmas)
-      val tagger = new PartOfSpeechTagger // a single-pass model is sufficient for POS tagging
+        wordPos = 0, labelPos = 2,
+        ColumnsToDocument.setChunks,
+        ColumnsToDocument.annotateLemmmaTags)
+      val tagger = new Chunker // TODO: a single-pass model is sufficient for chunking?
 
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
@@ -82,14 +82,11 @@ object PartOfSpeechTagger {
     if(props.containsKey("model")) {
       val tagger = loadFromFile(props.getProperty("model"))
 
-      if(props.containsKey("shell")) {
-        SequenceTaggerShell.shell[String, String](tagger)
-      } else if(props.containsKey("test")) {
+      if(props.containsKey("test")) {
         val doc = ColumnsToDocument.readFromFile(props.getProperty("test"),
-          wordPos = ColumnsToDocument.WORD_POS_CONLLX,
-          labelPos = ColumnsToDocument.TAG_POS_CONLLX,
-          ColumnsToDocument.setTags,
-          ColumnsToDocument.annotateLemmas)
+          wordPos = 0, labelPos = 2,
+          ColumnsToDocument.setChunks,
+          ColumnsToDocument.annotateLemmmaTags)
         new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
       }
     }
