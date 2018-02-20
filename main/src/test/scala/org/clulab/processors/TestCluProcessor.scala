@@ -64,6 +64,27 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("POS tagging is fine.")
   }
 
+  it should "recognize syntactic chunks correctly" in {
+    val doc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
+    proc.lemmatize(doc)
+    proc.tagPartsOfSpeech(doc)
+    proc.chunking(doc)
+    doc.clear()
+
+    doc.sentences(0).chunks.get(0) should be ("B-NP")
+    doc.sentences(0).chunks.get(1) should be ("B-VP")
+    doc.sentences(0).chunks.get(2) should be ("B-NP")
+    doc.sentences(0).chunks.get(3) should be ("I-NP")
+    doc.sentences(0).chunks.get(4) should be ("I-NP")
+    doc.sentences(0).chunks.get(5) should be ("I-NP")
+    doc.sentences(0).chunks.get(6) should be ("B-VP")
+    doc.sentences(0).chunks.get(7) should be ("I-VP")
+    doc.sentences(0).chunks.get(8) should be ("B-PP")
+    doc.sentences(0).chunks.get(9) should be ("B-NP")
+    doc.sentences(0).chunks.get(10) should be ("I-NP")
+    doc.sentences(0).chunks.get(11) should be ("I-NP")
+  }
+
   it should "lemmatize text correctly" in {
     val doc = proc.mkDocument("John Doe went to the shops.")
     proc.lemmatize(doc)

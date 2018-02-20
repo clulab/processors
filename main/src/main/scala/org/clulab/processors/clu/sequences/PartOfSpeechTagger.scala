@@ -62,7 +62,10 @@ object PartOfSpeechTagger {
     val props = StringUtils.argsToProperties(args)
 
     if(props.containsKey("train")) {
-      val doc = ColumnsToDocument.readFromFile(props.getProperty("train"), wordPos = 0, tagPos = 1)
+      val doc = ColumnsToDocument.readFromFile(props.getProperty("train"),
+        wordPos = 0, labelPos = 1,
+        ColumnsToDocument.setTags,
+        ColumnsToDocument.annotateLemmas)
       val tagger = new PartOfSpeechTagger // a single-pass model is sufficient for POS tagging
 
       if(props.containsKey("order")) {
@@ -82,7 +85,11 @@ object PartOfSpeechTagger {
       if(props.containsKey("shell")) {
         SequenceTaggerShell.shell[String, String](tagger)
       } else if(props.containsKey("test")) {
-        val doc = ColumnsToDocument.readFromFile(props.getProperty("test"))
+        val doc = ColumnsToDocument.readFromFile(props.getProperty("test"),
+          wordPos = ColumnsToDocument.WORD_POS_CONLLX,
+          labelPos = ColumnsToDocument.TAG_POS_CONLLX,
+          ColumnsToDocument.setTags,
+          ColumnsToDocument.annotateLemmas)
         new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
       }
     }
