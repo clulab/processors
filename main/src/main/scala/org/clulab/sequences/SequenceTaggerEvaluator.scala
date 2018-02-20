@@ -11,8 +11,10 @@ import org.slf4j.{Logger, LoggerFactory}
   * Created by mihais on 6/8/17.
   */
 class SequenceTaggerEvaluator[L, F] {
-  def accuracy(tagger:SequenceTagger[L, F], docs:Iterator[Document]): Double = {
-    val pw = new PrintWriter("output_for_conlleval.txt")
+  def accuracy(tagger:SequenceTagger[L, F], docs:Iterator[Document], saveOutput:Boolean = true): Double = {
+    val pw:Option[PrintWriter] =
+      if(saveOutput) Some(new PrintWriter("output_for_conlleval.txt"))
+      else None
     var correct = 0
     var total = 0
     for(doc <- docs; sentence <- doc.sentences) {
@@ -25,9 +27,9 @@ class SequenceTaggerEvaluator[L, F] {
           if(sentence.tags.isDefined) sentence.tags.get(i)
           else "X"
 
-        pw.println(s"${sentence.words(i)} $tag ${goldLabels(i)} ${predLabels(i)}")
+        if(pw.isDefined) pw.get.println(s"${sentence.words(i)} $tag ${goldLabels(i)} ${predLabels(i)}")
       }
-      pw.println()
+      if(pw.isDefined) pw.get.println()
 
       total += goldLabels.size
       for(i <- goldLabels.indices)
@@ -35,10 +37,12 @@ class SequenceTaggerEvaluator[L, F] {
           correct += 1
     }
 
-    pw.close()
+    if(pw.isDefined) {
+      logger.info("Scorable file in the CoNLL format saved to file: output_for_conlleval.txt")
+      pw.get.close()
+    }
     val acc = 100.0 * correct.toDouble / total
     logger.info(s"Accuracy = $acc ($correct/$total)")
-    logger.info("Scorable file in the CoNLL format saved to file: output_for_conlleval.txt")
     acc
   }
 }
