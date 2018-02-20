@@ -10,7 +10,6 @@ import org.slf4j.{Logger, LoggerFactory}
 
 /**
   * Generates chunking (shallow syntax) labels
-  *
   */
 class Chunker() extends BiMEMMSequenceTagger[String, String]() {
 
@@ -66,8 +65,15 @@ object Chunker {
         wordPos = 0, labelPos = 2,
         ColumnsToDocument.setChunks,
         ColumnsToDocument.annotateLemmmaTags)
-      val tagger = new Chunker // TODO: a single-pass model is sufficient for chunking?
+      val tagger = new Chunker
 
+      // how many folds to use in the first pass, for a bi-directional model
+      // if undefined, it uses a single pass MEMM
+      if(props.containsKey("bi")) {
+        tagger.numFoldsFirstPass = props.getProperty("bi").toInt
+      }
+
+      // length of label history
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
       }
