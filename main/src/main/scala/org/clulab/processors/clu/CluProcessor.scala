@@ -1,7 +1,7 @@
 package org.clulab.processors.clu
 
 import edu.knowitall.tool.stem.MorphaStemmer
-import org.clulab.processors.clu.sequences.PartOfSpeechTagger
+import org.clulab.processors.clu.sequences.{Chunker, PartOfSpeechTagger}
 import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
@@ -89,6 +89,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       case "none" => None
       case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.post.stopListFile!")
     }
+
+  // the syntactic chunker
+  lazy val chunker:Chunker =
+    Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None))
 
   // should we use universal dependencies or Stanford ones?
   val useUniversalDependencies:Boolean = getArgBoolean(s"$prefix.parser.universal", Some(true))
@@ -294,7 +298,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document) {
-    // TODO
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      val chunks = chunker.classesOf(sent)
+      sent.chunks = Some(chunks)
+    }
   }
 
   /** Coreference resolution; modifies the document in place */
