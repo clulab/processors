@@ -1,4 +1,5 @@
 # Changes
++ **7.1.0** - CluProcessor now contains a MEMM model for syntactic chunking.
 + **7.1.0** - CluProcessor now produces both universal and Stanford dependencies, both basic and enhanced.
 + **7.0.2** - The ensemble parsing model in CluProcessor is now guaranteed to produce cycle-free outputs.
 + **7.0.1** - Added feature to Odin to import variables from a file. Works similarly to taxonomies.
