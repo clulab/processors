@@ -99,8 +99,8 @@ class TestCluProcessor extends FlatSpec with Matchers {
   it should "parse text correctly" in {
     val doc = proc.annotate("John Doe went to China")
 
-    println("Basic universal dependencies:")
-    println(doc.sentences.head.universalBasicDependencies.get)
+    //println("Basic universal dependencies:")
+    //println(doc.sentences.head.universalBasicDependencies.get)
 
     doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
@@ -111,10 +111,21 @@ class TestCluProcessor extends FlatSpec with Matchers {
 
   it should "parse a long sentence correctly" in {
     val doc = proc.annotate("Her T score of 63 on the Attention Problems scale is in the At Risk range suggesting that she sometimes daydreams or is easily distracted and unable to concentrate more than momentarily .")
-    println(s"Sentence: ${doc.sentences(0).words.mkString(" ")}")
-    println("Basic universal dependencies:")
-    println(doc.sentences.head.universalBasicDependencies.get)
+    //println(s"Sentence: ${doc.sentences(0).words.mkString(" ")}")
+    //println("Basic universal dependencies:")
+    //println(doc.sentences.head.universalBasicDependencies.get)
 
-    false should be (true)
+    doc.sentences.head.universalBasicDependencies.isDefined should be (true)
+    val deps = doc.sentences.head.universalBasicDependencies.get
+
+    (deps.incomingEdges != null) should be (true)
+    (deps.outgoingEdges != null) should be (true)
+
+    deps.incomingEdges.length == 33 should be (true)
+    deps.outgoingEdges.length == 33 should be (true)
+
+    deps.hasEdge(2, 0, "nmod:poss") should be (true)
+    deps.hasEdge(2, 1, "compound") should be (true)
+    deps.hasEdge(2, 9, "nmod") should be (true)
   }
 }
