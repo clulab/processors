@@ -15,16 +15,25 @@ import org.clulab.struct.GraphMap
   *
   * @author Mihai
   */
-class TextToCoNLLU(val proc:Processor) {
+class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
   def convert(inDir:File, outDir:File): Unit = {
     val inFiles = inDir.listFiles(new TextFileFilter)
     logger.info(s"Found ${inFiles.length} text file(s) to process.")
     for(f <- inFiles) {
-      val doc = parseFile(f)
-      val ofn = outDir + "/" + f.getName.substring(0, f.getName.length - 4) + ".conllu"
-      val pw = new PrintWriter(ofn)
-      toCoNLLU(doc, pw)
-      pw.close()
+      logger.debug(s"Parsing file $f...")
+      try {
+        val doc = parseFile(f)
+        val ofn = outDir + "/" + f.getName.substring(0, f.getName.length - 4) + ".conllu"
+        val pw = new PrintWriter(ofn)
+        toCoNLLU(doc, pw)
+        pw.close()
+      } catch {
+        case e:Exception => {
+          logger.error(s"Parsing of file $f failed with error:")
+          e.printStackTrace()
+        }
+
+      }
     }
   }
 
@@ -36,6 +45,7 @@ class TextToCoNLLU(val proc:Processor) {
       pw.println(s"# ${sent.words.mkString(" ")}")
 
       val deps = sent.graphs(GraphMap.UNIVERSAL_BASIC).incomingEdges
+
       for(i <- 0 until sent.size) {
         val word = sent.words(i)
         val lemma = sent.lemmas.get(i)
@@ -43,10 +53,10 @@ class TextToCoNLLU(val proc:Processor) {
         val xpos = sent.tags.get(i)
         val feats = "_"
         val head =
-          if(deps(i).nonEmpty) deps(i).head._1 + 1
+          if(deps(i) != null && deps(i).nonEmpty) deps(i).head._1 + 1
           else "0"
         val deprel =
-          if(deps(i).nonEmpty) deps(i).head._2
+          if(deps(i) != null && deps(i).nonEmpty) deps(i).head._2
           else "root"
         pw.println(s"${i + 1}\t$word\t$lemma\t$upos\t$xpos\t$feats\t$head\t$deprel")
       }
@@ -55,7 +65,6 @@ class TextToCoNLLU(val proc:Processor) {
   }
 
   def parseFile(f:File):Document = {
-    logger.debug(s"Parsing file $f...")
     val s = scala.io.Source.fromFile(f)
     val buffer = new StringBuilder
     for(line <- s.getLines()) {
@@ -70,8 +79,13 @@ class TextToCoNLLU(val proc:Processor) {
   }
 
   def annotate(doc:Document): Unit = {
-    proc.lemmatize(doc)
-    proc.tagPartsOfSpeech(doc)
+    if(isCoreNLP) {
+      proc.tagPartsOfSpeech(doc)
+      proc.lemmatize(doc)
+    } else {
+      proc.lemmatize(doc)
+      proc.tagPartsOfSpeech(doc)
+    }
     proc.parse(doc)
     doc.clear()
   }
@@ -104,7 +118,10 @@ object TextToCoNLLU {
     val proc =
       if(props.containsKey("proc") && props.getProperty("proc") == "corenlp") new FastNLPProcessor()
       else new CluProcessor()
-    val converter = new TextToCoNLLU(proc)
+    val isCoreNLP =
+      if(props.containsKey("proc") && props.getProperty("proc") == "corenlp") true
+      else false
+    val converter = new TextToCoNLLU(proc, isCoreNLP)
 
     val inDirName = props.getProperty("indir", "")
     if(inDirName == "") {
