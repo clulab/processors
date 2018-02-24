@@ -108,4 +108,13 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "case") should be(true)
     println("Parsing is fine.")
   }
+
+  it should "parse a long sentence correctly" in {
+    val doc = proc.annotate("Her T score of 63 on the Attention Problems scale is in the At Risk range suggesting that she sometimes daydreams or is easily distracted and unable to concentrate more than momentarily .")
+    println(s"Sentence: ${doc.sentences(0).words.mkString(" ")}")
+    println("Basic universal dependencies:")
+    println(doc.sentences.head.universalBasicDependencies.get)
+
+    false should be (true)
+  }
 }
