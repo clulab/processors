@@ -16,7 +16,7 @@ import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel, IndexedWord}
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder, TreeCoreAnnotations, Tree => StanfordTree}
-import edu.stanford.nlp.semgraph.{SemanticGraphFactory, SemanticGraph, SemanticGraphCoreAnnotations}
+import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
 import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
 import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
