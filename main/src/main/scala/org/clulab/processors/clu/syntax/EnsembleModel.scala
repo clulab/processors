@@ -23,6 +23,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
     */
   def parseAttardi(): DirectedGraph[String] = {
     var deps = toDependencyList(individualOutputs)
+    val sentenceSize = individualOutputs(0).size
 
     // stores the ensembled tree wo/ cycles (T)
     val treeDeps = new ListBuffer[Dependency]()
@@ -48,6 +49,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
       }
     }
     deps = rootlessDeps.toList
+    //println(s"F = $F")
 
     // top-down traversal of the whole tree
     while(F.nonEmpty) {
@@ -73,11 +75,12 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
       assert(bestDep != null)
       treeDeps += bestDep
       treeNodes += bestDep.modifier
+      //println(s"bestDep = $bestDep")
 
       // step 2: remove from F all deps whose modifier is bestDep.modifier
       var newF = new ListBuffer[Dependency]
       for(f <- F) {
-        if(! treeNodes.contains(f.modifier) && f.head != 0) {
+        if(! treeNodes.contains(f.modifier)) {
           newF += f
         }
       }

@@ -1,6 +1,7 @@
 sudo: required
 dist: trusty
 group: deprecated-2017Q2
+install: travis_wait 30 mvn install
 language: scala
 scala:
   - 2.11.8
