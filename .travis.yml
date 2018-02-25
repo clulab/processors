@@ -8,4 +8,4 @@ branches:
   only:
     - master
 script:
-  - travis_wait 30 sbt 'test-only -- -l NeedsExternalBinary'
+  - travis_wait sbt 'test-only -- -l NeedsExternalBinary'
