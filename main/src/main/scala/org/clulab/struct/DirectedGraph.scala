@@ -14,8 +14,8 @@ import scala.util.hashing.MurmurHash3._
  * Date: 3/5/13
  */
 case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Set[Int]) extends Serializable {
-  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges)
-  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges)
+  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, roots)
+  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, roots)
 
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
 
@@ -33,21 +33,24 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     finalizeHash(h2, 2)
   }
 
-  private def computeSize(edges:List[Edge[_]]):Int = {
+  private def computeSize(edges:List[Edge[_]], roots: collection.immutable.Set[Int]):Int = {
     var size = 0
     for (e <- edges) {
       size = math.max(e.source + 1, size)
       size = math.max(e.destination + 1, size)
+    }
+    for(r <- roots) {
+      size = math.max(r + 1, size)
     }
     size
   }
 
   // (src, dest, rel) <- allEdges
 
-  private def mkOutgoing(edges:List[Edge[E]]): Array[Array[(Int, E)]] = {
+  private def mkOutgoing(edges:List[Edge[E]], roots: collection.immutable.Set[Int]): Array[Array[(Int, E)]] = {
     //println("EDGES:")
     //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
-    val size = computeSize(edges)
+    val size = computeSize(edges, roots)
     //println("size = " + size)
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)
     var offset = 0
@@ -71,8 +74,8 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     outgoing
   }
 
-  private def mkIncoming(edges:List[Edge[E]]): Array[Array[(Int, E)]] = {
-    val size = computeSize(edges)
+  private def mkIncoming(edges:List[Edge[E]], roots: collection.immutable.Set[Int]): Array[Array[(Int, E)]] = {
+    val size = computeSize(edges, roots)
     //println("size = " + size)
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)
     var offset = 0
