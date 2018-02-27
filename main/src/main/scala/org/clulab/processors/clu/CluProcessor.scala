@@ -246,6 +246,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   def lemmatize(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
+      //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
         var lemma = MorphaStemmer.lemmatize(sent.words(i))
