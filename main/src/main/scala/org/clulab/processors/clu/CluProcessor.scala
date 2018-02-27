@@ -283,6 +283,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
 
     for (sentence <- doc.sentences) {
+      //println(s"PARSING SENTENCE: ${sentence.words.mkString(", ")}")
       val dg = depParser.parseSentence(sentence)
 
       if(useUniversalDependencies) {
