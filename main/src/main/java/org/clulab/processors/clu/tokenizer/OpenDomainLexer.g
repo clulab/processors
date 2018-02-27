@@ -12,7 +12,7 @@ options {
 }
 
 @lexer::header {
-  package org.clulab.processors.clulab.tokenizer;
+  package org.clulab.processors.clu.tokenizer;
 }
 
 // parentheses in Treebank and OntoNotes
@@ -65,7 +65,7 @@ SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('('|')'|'D'|'P'|'d'|'p'|'O
 // TODO: phone numbers
 
 // punctuation
-EOS: PUNCTUATION (WHITESPACE? PUNCTUATION)* ;
+EOS: PUNCTUATION (PUNCTUATION)* ;
 
 // skip all white spaces
 WHITESPACE: ('\t'|' '|'\r'|'\n'|'\u000C'| '\u2028'|'\u2029'|'\u000B'|'\u0085'|'\u00A0'|('\u2000'..'\u200A')|'\u3000')+ -> skip ;

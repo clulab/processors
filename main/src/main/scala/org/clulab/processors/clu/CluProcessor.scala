@@ -246,6 +246,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   def lemmatize(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
+      //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
         var lemma = MorphaStemmer.lemmatize(sent.words(i))
@@ -282,6 +283,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
 
     for (sentence <- doc.sentences) {
+      //println(s"PARSING SENTENCE: ${sentence.words.mkString(", ")}")
       val dg = depParser.parseSentence(sentence)
 
       if(useUniversalDependencies) {
