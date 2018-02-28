@@ -204,7 +204,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   /** Reads the variables declared directly or imports them from a file */
   def readOrImportVars(data: Any): Map[String, String] = data match {
-    case vars: JMap[String, Any] => vars.asScala.mapValues(s => cleanVar(s.toString)).toMap
+    case vars: JMap[_, _] => vars.asScala.map{ case (k,v) => k.toString -> cleanVar(v.toString) }.toMap
     case path: String =>
       val url = mkURL(path)
       val source = Source.fromURL(url)

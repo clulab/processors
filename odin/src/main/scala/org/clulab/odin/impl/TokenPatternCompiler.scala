@@ -69,6 +69,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   def capturePattern: Parser[ProgramFragment] =
     "(?<" ~ stringLiteral ~ ">" ~ splitPattern ~ ")" ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
+      case _ => sys.error("unrecognized capturePattern")
     }
 
   def mentionPattern: Parser[ProgramFragment] =
@@ -88,6 +89,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
       case frag ~ "*?" => frag.lazyStar
       case frag ~ "+" => frag.greedyPlus
       case frag ~ "+?" => frag.lazyPlus
+      case _ => sys.error("unrecognized repeatedPattern operator")
     }
 
   // positive integer
@@ -98,6 +100,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?") ^^ {
       case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
       case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
+      case _ => sys.error("unrecognized rangePattern")
     }
 
   def exactPattern: Parser[ProgramFragment] =
@@ -129,6 +132,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   def capturePatternRev: Parser[ProgramFragment] =
     "(?<" ~ stringLiteral ~ ">" ~ splitPatternRev ~ ")" ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
+      case _ => sys.error("unrecognized capturePatternRev")
     }
 
   def atomicPatternRev: Parser[ProgramFragment] =
@@ -143,12 +147,14 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
       case frag ~ "*?" => frag.lazyStar
       case frag ~ "+" => frag.greedyPlus
       case frag ~ "+?" => frag.lazyPlus
+      case _ => sys.error("unrecognized repeatedPatternRev operator")
     }
 
   def rangePatternRev: Parser[ProgramFragment] =
     atomicPatternRev ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?") ^^ {
       case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
       case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
+      case _ => sys.error("unrecognized rangePatternRev")
     }
 
   def exactPatternRev: Parser[ProgramFragment] =
