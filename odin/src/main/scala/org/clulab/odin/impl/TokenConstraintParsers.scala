@@ -46,6 +46,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   def negatedConstraint: Parser[TokenConstraint] = opt("!") ~ atomicConstraint ^^ {
     case None ~ constraint => constraint
     case Some("!") ~ constraint => new NegatedConstraint(constraint)
+    case _ => sys.error("unrecognized negatedConstraint operator")
   }
 
   def atomicConstraint: Parser[TokenConstraint] =
@@ -69,6 +70,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
       case prod ~ list => (prod /: list) {
         case (lhs, "+" ~ rhs) => new Addition(lhs, rhs)
         case (lhs, "-" ~ rhs) => new Subtraction(lhs, rhs)
+        case _ => sys.error("unrecognized numericExpression operator")
       }
     }
 
@@ -79,13 +81,15 @@ trait TokenConstraintParsers extends StringMatcherParsers {
         case (lhs, "/" ~ rhs) => new Division(lhs, rhs)
         case (lhs, "//" ~ rhs) => new EuclideanQuotient(lhs, rhs)
         case (lhs, "%" ~ rhs) => new EuclideanRemainder(lhs, rhs)
+        case _ => sys.error("unrecognized productExpression operator")
       }
     }
 
   def termExpression: Parser[NumericExpression] = opt("-" | "+") ~ atomicExpression ^^ {
+    case None ~ expr => expr
     case Some("-") ~ expr => new NegativeExpression(expr)
     case Some("+") ~ expr => expr
-    case None ~ expr => expr
+    case _ => sys.error("unrecognized termExpression operator")
   }
 
   def atomicExpression: Parser[NumericExpression] =

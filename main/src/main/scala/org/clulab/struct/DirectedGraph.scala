@@ -212,6 +212,7 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
       for ((Seq(n1, n2), edge) <- pairs zip edgePath) yield edge match {
         case (`n1`, `n2`, dep) => (n1, n2, dep, ">")
         case (`n2`, `n1`, dep) => (n2, n1, dep, "<")
+        case _ => sys.error("unrecognized edge")
       }
     }
   }
