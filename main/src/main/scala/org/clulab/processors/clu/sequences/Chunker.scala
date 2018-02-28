@@ -42,7 +42,7 @@ class Chunker() extends BiMEMMSequenceTagger[String, String]() {
 }
 
 object Chunker {
-  val logger:Logger = LoggerFactory.getLogger(classOf[PartOfSpeechTagger])
+  val logger:Logger = LoggerFactory.getLogger(classOf[Chunker])
 
   def loadFromFile(fn:String): Chunker = {
     val tagger = new Chunker

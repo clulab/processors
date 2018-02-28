@@ -1,4 +1,5 @@
 # Changes
++ **7.2.0** - Added a BiMEMM named entity recognizer based on the CoNLL dataset to CluProcessor.
 + **7.1.1** - Multiple bug fixes to CluProcessor.
 + **7.1.1** - Added TextToCoNLLU, which converts raw text into the CoNLL-U format.
 + **7.1.0** - CluProcessor now contains a MEMM model for syntactic chunking.
