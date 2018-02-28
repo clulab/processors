@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class TestCluChunker extends FlatSpec with Matchers {
   val proc = new CluProcessor()
 
-  "CluProcessor" should "chunk text with an accuracy over 95.6%" in {
+  "CluProcessor" should "chunk text with an accuracy over 97%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/chunking_test.conllx")
     val doc = ColumnsToDocument.readFromStream(stream,
       wordPos = 0, labelPos = 2,

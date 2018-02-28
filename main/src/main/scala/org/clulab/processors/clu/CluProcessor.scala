@@ -1,7 +1,7 @@
 package org.clulab.processors.clu
 
 import edu.knowitall.tool.stem.MorphaStemmer
-import org.clulab.processors.clu.sequences.{Chunker, PartOfSpeechTagger}
+import org.clulab.processors.clu.sequences.{Chunker, NamedEntityRecognizer, PartOfSpeechTagger}
 import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
@@ -78,6 +78,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
         useLemmasForMatching = false,
         caseInsensitiveMatching = true
       ))
+      case "conll" => Some(NamedEntityRecognizer.loadFromResource(getArgString(s"$prefix.ner.model", None)))
       case "none" => None
       case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.type!")
     }
