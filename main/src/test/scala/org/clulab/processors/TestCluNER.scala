@@ -11,7 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class TestCluNER extends FlatSpec with Matchers {
   val proc = new CluProcessor()
 
-  "CluProcessor" should "recognize entities with an accuracy over 97.6%" in {
+  "CluProcessor" should "recognize entities with an accuracy over 97.7%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/eng.testa")
     val doc = ColumnsToDocument.readFromStream(stream,
       wordPos = 0, labelPos = 3,
@@ -20,7 +20,7 @@ class TestCluNER extends FlatSpec with Matchers {
     val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.ner.get.asInstanceOf[NamedEntityRecognizer],
       List(doc).iterator, saveOutput = false)
     println(s"NER accuracy is $acc")
-    (acc > 97.6) should be (true)
+    (acc > 97.7) should be (true)
   }
 
 }
