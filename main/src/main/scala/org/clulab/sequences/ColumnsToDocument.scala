@@ -102,6 +102,10 @@ object ColumnsToDocument {
     s.chunks = Some(chunks)
   }
 
+  def setEntities(s:Sentence, entities:Array[String]): Unit = {
+    s.entities = Some(entities)
+  }
+
   def annotateLemmas(doc:Document) {
     proc.lemmatize(doc) // some features use lemmas, which are not available in the CoNLL data
   }
