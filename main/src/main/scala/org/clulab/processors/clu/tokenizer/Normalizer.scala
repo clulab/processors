@@ -89,6 +89,12 @@ class EnglishNormalizer extends Normalizer {
       return tokens
     }
 
+    // some tokens may contain white spaces, e.g., SGML blocks
+    if("""\s""".r.findFirstIn(raw.text).isDefined) {
+      val token = RawToken(raw.text.replaceAll("\\s", "_"), raw.startOffset, raw.endOffset)
+      return List(token)
+    }
+
     List(raw)
   }
 }
