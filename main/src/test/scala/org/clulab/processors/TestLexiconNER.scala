@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * User: mihais
   * Date: 10/3/17
   */
-class TextLexiconNER extends FlatSpec with Matchers {
+class TestLexiconNER extends FlatSpec with Matchers {
   val proc = new CluProcessor()
 
   "LexiconNER" should "match categories correctly" in {
