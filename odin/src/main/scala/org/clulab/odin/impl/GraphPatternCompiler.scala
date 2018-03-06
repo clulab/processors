@@ -102,6 +102,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
       case pat ~ "?" => new OptionalGraphPattern(pat)
       case pat ~ "*" => new KleeneGraphPattern(pat)
       case pat ~ "+" => new ConcatGraphPattern(pat, new KleeneGraphPattern(pat))
+      case _ => sys.error("unrecognized quantifiedGraphPattern operator")
     }
 
   // helper function that repeats a pattern N times
@@ -134,6 +135,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
           val opt = repeatPattern(new OptionalGraphPattern(pat), n - m)
           new ConcatGraphPattern(req, opt)
       }
+      case _ => sys.error("unrecognized rangeGraphPattern")
     }
 
   def lookaroundGraphPattern: Parser[GraphPatternNode] =
@@ -203,6 +205,7 @@ class ArgumentPattern(
       case (_, RangedQuantifier(None, Some(maxRep))) =>
         if (matches.size > maxRep) matches.combinations(maxRep).toList
         else Seq(matches)
+      case _ => sys.error("unrecognized argument quantifier")
     }
   }
 }

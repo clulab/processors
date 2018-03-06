@@ -14,7 +14,9 @@ class TestCluPosTagger extends FlatSpec with Matchers {
 
   "CluProcessor" should "POS tag WSJ with an accuracy over 96.9%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/wsj_test.conllx")
-    val doc = ColumnsToDocument.readFromStream(stream)
+    val doc = ColumnsToDocument.readFromStream(stream,
+      setLabels = ColumnsToDocument.setTags,
+      annotate = ColumnsToDocument.annotateLemmas)
     val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.posTagger, List(doc).iterator)
     println(s"POS tagger accuracy is $acc")
     (acc > 96.9) should be (true)
@@ -22,7 +24,9 @@ class TestCluPosTagger extends FlatSpec with Matchers {
 
   it should "POS tag Genia with an accuracy over 98%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/genia_test.conllx")
-    val doc = ColumnsToDocument.readFromStream(stream)
+    val doc = ColumnsToDocument.readFromStream(stream,
+      setLabels = ColumnsToDocument.setTags,
+      annotate = ColumnsToDocument.annotateLemmas)
     val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.posTagger, List(doc).iterator)
     println(s"POS tagger accuracy is $acc")
     (acc > 98.0) should be (true)

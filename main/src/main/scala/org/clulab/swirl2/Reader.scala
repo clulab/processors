@@ -12,10 +12,11 @@ import org.clulab.serialization.DocumentSerializer
 
 
 /**
- * Reads a CoNLL formatted file and converts it to our own representation
- * User: mihais
- * Date: 5/5/15
- */
+  * Reads a CoNLL formatted file and converts it to our own representation
+  * User: mihais
+  * Date: 5/5/15
+  * Last Modified: Update for Scala 2.12: bug #10151 workaround.
+  */
 class Reader {
   class CoNLLToken(
     val word:String,
@@ -154,7 +155,7 @@ class Reader {
         val depGraph = toDirectedGraph(conllTokens)
         //println(depGraph)
         // we set the gold CoNLL syntax as Stanford basic dependencies (hack)
-        sent.graphs += GraphMap.STANFORD_BASIC -> depGraph
+        sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
       }
     } else {
       proc.parse(doc)
@@ -176,6 +177,7 @@ class Reader {
         edges += new Tuple3(head, modifier, tokens(modifier).dep._2)
       else
         roots += modifier
+      ()                                    // workaround for bug #10151
     }
     DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
   }

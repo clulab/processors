@@ -105,7 +105,7 @@ class DocumentSerializer extends LazyLogging {
     if (charCount < 1) return ""            // sanity check
     var buffer = new Array[Char](charCount)
     r.read(buffer, 0, charCount)
-    r.skip(1)                               // skip over last newline
+    r.skip(OS_INDEPENDENT_LINE_SEPARATOR.size) // skip over last line separator
     new String(buffer)
   }
 
@@ -238,7 +238,12 @@ class DocumentSerializer extends LazyLogging {
       val txtLen = doc.text.get.length
       if (txtLen > 0) {
         os.println(START_TEXT + SEP + txtLen)
-        os.println(doc.text.get)            // adds extra end-of-line character
+        // Do not add OS-specific separator with println in case client and server use different conventions.
+        os.print(doc.text.get)                 
+        // Instead, use a separator that is independent of operating system.
+        // Or at the very least, use system property line.separator to account for println.
+        // See loadText which must be coordinated with this decision.
+        os.print(OS_INDEPENDENT_LINE_SEPARATOR)
       }
     }
 
@@ -442,6 +447,8 @@ class DocumentSerializer extends LazyLogging {
 }
 
 object DocumentSerializer {
+  protected val OS_INDEPENDENT_LINE_SEPARATOR = "\n"
+
   val NIL = "_"
   val SEP = "\t"
 

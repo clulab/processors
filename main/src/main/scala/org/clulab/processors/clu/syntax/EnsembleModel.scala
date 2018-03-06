@@ -1,7 +1,8 @@
 package org.clulab.processors.clu.syntax
 
-import org.clulab.struct.{DirectedGraph, Edge}
+import org.clulab.struct.{Counter, DirectedGraph, Edge}
 
+import scala.collection.breakOut
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -9,14 +10,100 @@ import scala.collection.mutable.ListBuffer
   * Implements the word-by-word voting scheme from Surdeanu et al. (2010)
   * User: mihais
   * Date: 8/9/17
+  * Last Modified: Let Scala efficiently determine conversion return types.
   */
 class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
-  def parse(): DirectedGraph[String] = parseVoting()
+  def parse(): DirectedGraph[String] = parseAttardi()
+
+  /**
+    * Produces an ensemble parse that is guaranteed to not have cycles (using the Attardi algorithm)
+    * Based on the paper: "Reverse Revision and Linear Tree Combination for Dependency Parsing" by Attardi and Dell'Orletta
+    * @return the DirectedGraph corresponding to the ensemble parse
+    */
+  def parseAttardi(): DirectedGraph[String] = {
+    var deps = toDependencyList(individualOutputs)
+    val sentenceSize = individualOutputs(0).size
+
+    // stores the ensembled tree wo/ cycles (T)
+    val treeDeps = new ListBuffer[Dependency]()
+    // stores the nodes that have been traversed
+    // initialized with root (0) because this is a top-down traversal
+    val treeNodes = new mutable.HashSet[Int]()
+    treeNodes += 0 // root
+
+    // counts how many modifiers each head node has
+    val modifierCounts = new Counter[Int]()
+    for(dep <- deps) modifierCounts.incrementCount(dep.head)
+
+    // the fringe, i.e., the set of arcs whose parent is in T and that can be added to T without affecting the invariant.
+    var F = new ListBuffer[Dependency]
+
+    // find all actual roots, i.e., nodes that are headed by 0
+    val rootlessDeps = new ListBuffer[Dependency]
+    for(dep <- deps) {
+      if(dep.head == 0) {
+        F += dep
+      } else {
+        rootlessDeps += dep
+      }
+    }
+    deps = rootlessDeps.toList
+    //println(s"F = $F")
+
+    // top-down traversal of the whole tree
+    while(F.nonEmpty) {
+      var bestScore = -1.0
+      var bestModifierCount = -1
+      var bestDep:Dependency = null
+
+      // find the best dependency whose head is in F
+      // choose the dep with the highest score
+      //   break ties by keeping the dep whose modifier serves as head to most nodes (so we can grow the fringe faster)
+      //   (the above heuristic is different from Attardi's algorithm; it helps in practice)
+      for(f <- F) {
+        if(treeNodes.contains(f.head) &&
+           (f.score > bestScore ||
+             (f.score == bestScore && modifierCounts.getCount(f.modifier) > bestModifierCount))) {
+          bestScore = f.score
+          bestModifierCount = modifierCounts.getCount(f.modifier).toInt
+          bestDep = f
+        }
+      }
+
+      // step 1: add the best current dep to T
+      assert(bestDep != null)
+      treeDeps += bestDep
+      treeNodes += bestDep.modifier
+      //println(s"bestDep = $bestDep")
+
+      // step 2: remove from F all deps whose modifier is bestDep.modifier
+      var newF = new ListBuffer[Dependency]
+      for(f <- F) {
+        if(! treeNodes.contains(f.modifier)) {
+          newF += f
+        }
+      }
+      F = newF
+
+      // step 3: adds to F all arcs (h', d', r') in the original trees where h' \in T and d' not \in T
+      var newDeps = new ListBuffer[Dependency]
+      for(dep <- deps) {
+        if(treeNodes.contains(dep.head) && ! treeNodes.contains(dep.modifier)) {
+          F += dep
+        } else {
+          newDeps += dep
+        }
+      }
+      deps = newDeps.toList
+    }
+
+    toDirectedGraph(treeDeps.toList)
+  }
 
   /**
     * Produces an ensemble parse using the word-by-word voting scheme from Surdeanu et al. (2010)
-    * Note: this works well and fast, but it does not guarantee that the output is a tree
+    * Note: this works well and is fast, but it does not guarantee that the output is a tree
     * @return the DirectedGraph corresponding to the ensemble parse
     */
   def parseVoting(): DirectedGraph[String] = {
@@ -61,24 +148,17 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
   def toDependencyList(individualOutputs:Array[DirectedGraph[String]]): List[Dependency] = {
     val depMap = toDependencyMap(individualOutputs)
-
-    // create the actual dependency list
-    val l = new ListBuffer[Dependency]
-    for(depKey <- depMap.keySet) {
-      val votes = depMap.get(depKey)
-      assert(votes.nonEmpty)
-      val dep = Dependency(depKey._1, depKey._2, depKey._3, votes.get.toSet)
-      l += dep
-    }
-
-    l.toList
+    depMap.map {                           // create and return the actual dependency list
+      case (depKey, votes) =>
+        Dependency(depKey._1, depKey._2, depKey._3, votes.toSet)
+    }(breakOut)
   }
 
   def toDirectedGraph(deps:List[Dependency]):DirectedGraph[String] = {
     val edges = new ListBuffer[Edge[String]]
     val roots = new mutable.HashSet[Int]()
 
-    for(dep <- deps) {
+    deps.foreach { dep =>
       if(dep.head == 0) {
         assert(dep.modifier > 0)
         roots += dep.modifier - 1
@@ -87,6 +167,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
         assert(dep.head > 0)
         edges += Edge[String](dep.head - 1, dep.modifier - 1, dep.label)
       }
+      ()                                    // workaround for bug #10151
     }
 
     new DirectedGraph[String](edges.toList, roots.toSet)

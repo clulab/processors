@@ -26,7 +26,7 @@ object ValidCandidate {
     // if(math.abs(pred - arg) > MAX_TOKENS_BETWEEN_PRED_AND_ARG) return false
 
     // the dep path between predicate and argument cannot be too long
-    val deps = sent.stanfordBasicDependencies.get
+    val deps = sent.universalBasicDependencies.get
     val paths = deps.shortestPathEdges(pred, arg, ignoreDirection = true)
     var validPath = false
     paths.foreach(p => if(p.size < MAX_PATH_LEN_BETWEEN_PRED_AND_ARG) validPath = true)

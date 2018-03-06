@@ -11,7 +11,6 @@ import edu.stanford.nlp.ling.CoreAnnotations._
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -22,7 +21,7 @@ import scala.reflect.ClassTag
   * All implemented using Stanford's CoreNLP tools.
   * User: mihais
   * Date: 2/25/15
-  * Last Modified: Fix conversion assumption in basic sanity check.
+  * Last Modified: Update for Scala 2.12: java converters.
   */
 class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boolean = true) extends Processor {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
@@ -102,8 +101,8 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   def mkDocument(text:String, keepText:Boolean): Document = {
     val annotation = new Annotation(text)
     tokenizerWithSentenceSplitting.annotate(annotation)
-    val sas = annotation.get(classOf[SentencesAnnotation])
-    val sentences = new Array[Sentence](sas.size())
+    val sas = annotation.get(classOf[SentencesAnnotation]).asScala
+    val sentences = new Array[Sentence](sas.size)
     var offset = 0
     for (sa <- sas) {
       sentences(offset) = mkSentence(sa)
@@ -126,14 +125,13 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   }
 
   def mkSentence(annotation:CoreMap): Sentence = {
-    val tas = postprocessTokens(annotation)
-
     val wordBuffer = new ArrayBuffer[String]
     val startOffsetBuffer = new ArrayBuffer[Int]
     val endOffsetBuffer = new ArrayBuffer[Int]
 
+    val tas = postprocessTokens(annotation).asScala
     for (ta <- tas) {
-      wordBuffer.add(in(ta.word))
+      wordBuffer += in(ta.word)
       startOffsetBuffer += ta.beginPosition()
       endOffsetBuffer += ta.endPosition()
     }
@@ -291,11 +289,11 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
     postprocessTags(annotation.get)
 
     // convert CoreNLP Annotations to our data structures
-    val sas = annotation.get.get(classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
     var offset = 0
     for (sa <- sas) {
       val tb = new ArrayBuffer[String]
-      val tas = sa.get(classOf[TokensAnnotation])
+      val tas = sa.get(classOf[TokensAnnotation]).asScala
       for (ta <- tas) {
         tb += in(ta.tag())
       }
@@ -312,11 +310,11 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
 
     lemmatizer.annotate(annotation.get)
 
-    val sas = annotation.get.get(classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
     var offset = 0
     for (sa <- sas) {
       val tb = new ArrayBuffer[String]
-      val tas = sa.get(classOf[TokensAnnotation])
+      val tas = sa.get(classOf[TokensAnnotation]).asScala
       for (ta <- tas) {
         tb += in(ta.lemma())
       }
@@ -349,12 +347,12 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
     }
 
     // convert CoreNLP Annotations to our data structures
-    val sas = annotation.get.get(classOf[SentencesAnnotation])
+    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
     var offset = 0
     for (sa <- sas) {
       val tb = new ArrayBuffer[String]
       val nb = new ArrayBuffer[String]
-      val tas = sa.get(classOf[TokensAnnotation])
+      val tas = sa.get(classOf[TokensAnnotation]).asScala
       for (ta <- tas) {
         tb += in(ta.ner())
         val n = ta.get(classOf[NormalizedNamedEntityTagAnnotation])

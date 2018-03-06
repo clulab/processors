@@ -4,14 +4,15 @@ import org.clulab.discourse.rstparser.RelationDirection
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest._
 
-import collection.JavaConversions.asJavaCollection
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.struct.CorefMention
 
+import scala.collection.JavaConverters._
+
 /**
- * 
  * User: mihais
  * Date: 3/3/13
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 class TestCoreNLPProcessor extends FlatSpec with Matchers {
   val proc = new CoreNLPProcessor(internStrings = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
@@ -188,10 +189,13 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     proc.parse(doc)
     doc.clear()
 
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(1, 0, "nn") should be (true)
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 1, "nsubj") should be (true)
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "prep") should be (true)
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "obj") should be (false)
+    println("""Universal dependencies for the sentence "John Doe went to China":""")
+    println(doc.sentences.head.universalBasicDependencies.get)
+
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be (true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "nsubj") should be (true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "nmod") should be (true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "case") should be (true)
 
     doc.sentences.head.syntacticTree.foreach(t => {
       //println("Constituent parse tree: " + t)
@@ -216,26 +220,28 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
 
   it should "run the coreference resolver correctly" in {
     val doc = proc.annotate("John Smith went to China. He visited Beijing.")
-    (doc.coreferenceChains != None) should be (true)
+    (doc.coreferenceChains.isDefined) should be (true)
 
-    val mentions = doc.coreferenceChains.get.getMentions
+    val mentions = doc.coreferenceChains.get.getMentions.toList
     mentions.size should be (4)
 
-    val chain = doc.coreferenceChains.get.getChain(0, 1)
-    (chain != None) should be (true)
+    val chain1 = doc.coreferenceChains.get.getChain(0, 1)
+    (chain1.isDefined) should be (true)
+
+    val chain = chain1.get.toList
 
     val john = new CorefMention(0, 1, 0, 2, -1)
-    chain.get.contains(john) should be (true)
+    chain.contains(john) should be (true)
     mentions.contains(john) should be (true)
 
     val he = new CorefMention(1, 0, 0, 1, -1)
-    chain.get.contains(he) should be (true)
+    chain.contains(he) should be (true)
     mentions.contains(he) should be (true)
 
-    val china = new CorefMention(0, 4, 4, 5, -1)
+    val china = CorefMention(0, 4, 4, 5, -1)
     mentions.contains(china) should be (true)
 
-    val beijing = new CorefMention(1, 2, 2, 3, -1)
+    val beijing = CorefMention(1, 2, 2, 3, -1)
     mentions.contains(beijing) should be (true)
   }
 
@@ -274,5 +280,12 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
   it should "create document text correctly" in {
     val doc = proc.annotateFromSentences(List("Sentence 1.", "Sentence 2."), keepText = true)
     doc.text.get should be ("Sentence 1. Sentence 2.")
+  }
+
+  it should "handle colons in dependencies" in {
+    val doc = proc.annotate("The chair's office.", keepText = true)
+    //println(s"doc deps: ${doc.sentences.head.dependencies.get}")
+    //println(s"doc words ${doc.sentences.head.words.zipWithIndex.mkString(", ")}")
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 1, "nmod:poss") should be (true)
   }
 }

@@ -11,6 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * Utils necessary for malt parsing
   * User: mihais
   * Date: 8/6/17
+  * Last Modified: Update for Scala 2.12: bug #10151 workaround.
   */
 class MaltUtils
 
@@ -51,6 +52,7 @@ object MaltUtils {
       } else {
         edgeBuffer += Edge(source = head, destination = modifier, relation = in(label, internStrings))
       }
+      ()                                    // workaround for bug #10151
     }
 
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
@@ -109,9 +111,5 @@ object MaltUtils {
     if (internStrings) Processor.internString(s)
     else s
   }
-
-  val FORWARD_NIVREEAGER_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivreeager.mco"
-  val FORWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-forward-nivrestandard.mco"
-  val BACKWARD_NIVRESTANDARD_MODEL_NAME = "org/clulab/processors/clu/en-backward-nivrestandard.mco"
-
+  
 }

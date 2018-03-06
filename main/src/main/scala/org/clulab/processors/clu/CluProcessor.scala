@@ -1,7 +1,7 @@
 package org.clulab.processors.clu
 
 import edu.knowitall.tool.stem.MorphaStemmer
-import org.clulab.processors.clu.sequences.PartOfSpeechTagger
+import org.clulab.processors.clu.sequences.{Chunker, NamedEntityRecognizer, PartOfSpeechTagger}
 import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
@@ -78,6 +78,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
         useLemmasForMatching = false,
         caseInsensitiveMatching = true
       ))
+      case "conll" => Some(NamedEntityRecognizer.loadFromResource(getArgString(s"$prefix.ner.model", None)))
       case "none" => None
       case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.type!")
     }
@@ -90,10 +91,21 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.post.stopListFile!")
     }
 
+  // the syntactic chunker
+  lazy val chunker:Chunker =
+    Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None))
+
+  // should we use universal dependencies or Stanford ones?
+  val useUniversalDependencies:Boolean = getArgBoolean(s"$prefix.parser.universal", Some(true))
+
   // the dependency parser
   lazy val depParser: Parser =
-    //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
-    new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models", None))
+    if(useUniversalDependencies) {
+      //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
+      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-universal", None))
+    } else {
+      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-stanford", None))
+    }
 
 
   override def annotate(doc:Document): Document = {
@@ -235,6 +247,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   def lemmatize(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
+      //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
         var lemma = MorphaStemmer.lemmatize(sent.words(i))
@@ -271,16 +284,28 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
 
     for (sentence <- doc.sentences) {
+      //println(s"PARSING SENTENCE: ${sentence.words.mkString(", ")}")
       val dg = depParser.parseSentence(sentence)
-      sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
-      sentence.setDependencies(GraphMap.STANFORD_COLLAPSED,
-        EnhancedDependencies.generateEnhancedDependencies(sentence, dg))
+
+      if(useUniversalDependencies) {
+        sentence.setDependencies(GraphMap.UNIVERSAL_BASIC, dg)
+        sentence.setDependencies(GraphMap.UNIVERSAL_ENHANCED,
+          EnhancedDependencies.generateUniversalEnhancedDependencies(sentence, dg))
+      } else {
+        sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
+        sentence.setDependencies(GraphMap.STANFORD_COLLAPSED,
+          EnhancedDependencies.generateStanfordEnhancedDependencies(sentence, dg))
+      }
     }
   }
 
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document) {
-    // TODO
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      val chunks = chunker.classesOf(sent)
+      sent.chunks = Some(chunks)
+    }
   }
 
   /** Coreference resolution; modifies the document in place */
@@ -315,6 +340,8 @@ trait SentencePostProcessor {
 }
 
 class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
+
+class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load("cluprocessoropenwithstanford"))
 
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])

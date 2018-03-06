@@ -1,23 +1,24 @@
 package org.clulab.struct
 
 import java.io.{Reader, Writer}
-
-import org.clulab.utils.Files
-
-import scala.collection.mutable.ListBuffer
 import java.text.DecimalFormat
 
+import scala.collection.breakOut
 import scala.collection.mutable
+import scala.math.Ordering.{ Double => DoubleSortOrder }
+
+import org.clulab.utils.Files
 
 /**
  * Counts elements of type T
  * User: mihais
  * Date: 3/18/13
  */
-class Counter[T](
-                  private val counts:mutable.HashMap[T, MutableNumber[Double]],
-                  private val defaultReturnValue:Double = 0.0,
-                  private var total:Double = 0.0) extends Serializable {
+class Counter[T] (
+  private val counts:mutable.HashMap[T, MutableNumber[Double]],
+  private val defaultReturnValue:Double = 0.0,
+  private var total:Double = 0.0
+) extends Serializable {
 
   def this(elements:Iterable[T]) = this(Counter.mkCounts(elements), 0.0, elements.size)
 
@@ -27,10 +28,7 @@ class Counter[T](
   def this() = this(0.0)
 
   def getCount(key:T):Double = {
-    counts.get(key) match {
-      case Some(c) => c.value
-      case None => defaultReturnValue
-    }
+    counts.get(key).map(c => c.value).getOrElse(defaultReturnValue)
   }
 
   def proportion(key:T):Double = getCount(key) / total
@@ -64,6 +62,7 @@ class Counter[T](
 
   /** Equivalent to incrementCount with inc = 1 */
   def += (key:T) = incrementCount(key, 1)
+
   /** Equivalent to decrementCount */
   def -= (key:T) = decrementCount(key, 1)
 
@@ -111,19 +110,16 @@ class Counter[T](
   }
 
   def dotProduct(toDot:Counter[T]):Double = {
-    var dotproduct:Double = 0.0f
-    for (key <- keySet) dotproduct += getCount(key) * toDot.getCount(key)
-    dotproduct
+    keySet.foldLeft(0.0) { (acc, key) => acc + (getCount(key) * toDot.getCount(key)) }
   }
 
   def sorted:List[(T, Double)] = sorted(true)
 
-  /** Sorts counts in descending order */
+  /** Sorts counts in descending order, if argument is true. */
   def sorted(descending:Boolean):List[(T, Double)] = {
-    val vs = new ListBuffer[(T, Double)]
-    for(k <- keySet) vs += Tuple2(k, getCount(k))
-    if(descending) vs.toList.sortBy(0 - _._2)
-    else vs.toList.sortBy(_._2)
+    val vs:List[(T,Double)] = keySet.map(k => Tuple2(k, getCount(k)))(breakOut)
+    val sortOrder = if (descending) DoubleSortOrder.reverse else DoubleSortOrder
+    vs.sortBy(_._2)(sortOrder)
   }
 
   override def toString:String = {
@@ -164,10 +160,7 @@ class Counter[T](
 
   def flatMap(f: ((T, Double)) => Counter[T]): Counter[T] = {
     // this one's gonna be inefficient
-    val counters = for {
-      key <- keySet
-      count = getCount(key)
-    } yield f((key, count))
+    val counters = keySet.map { key => f((key, getCount(key))) }
     counters.reduce(_ + _)
   }
 
@@ -213,31 +206,9 @@ class Counter[T](
 
   def topKeys(n: Int) = sorted.take(n).map(_._1)
 
-  def argMax : (T, Double) = {
-    var maxValue = Double.MinValue
-    var maxKey = keySet.head
-    for(k <- keySet) {
-      val v = getCount(k)
-      if(v > maxValue) {
-        maxKey = k
-        maxValue = v
-      }
-    }
-    (maxKey, maxValue)
-  }
+  def argMax: (T, Double) = keySet.map(key => (key, getCount(key))).maxBy(_._2)
 
-  def argMin : (T, Double) = {
-    var minValue = Double.MaxValue
-    var minKey = keySet.head
-    for(k <- keySet) {
-      val v = getCount(k)
-      if(v < minValue) {
-        minKey = k
-        minValue = v
-      }
-    }
-    (minKey, minValue)
-  }
+  def argMin: (T, Double) = keySet.map(key => (key, getCount(key))).minBy(_._2)
 
   def saveTo(w:Writer) {
     val writer = Files.toPrintWriter(w)
@@ -262,14 +233,9 @@ class Counter[T](
 
 object Counter {
   private def incrementCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, inc:Double): Double = {
-    map.get(key) match {
-      case Some(c) =>
-        c.value += inc
-        c.value
-      case None =>
-        map.put(key, new MutableNumber[Double](inc))
-        inc
-    }
+    val incVal = inc + map.get(key).map(_.value).getOrElse(0.0)
+    setCount(map, key, incVal)
+    incVal
   }
 
   private def setCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, value:Double) {

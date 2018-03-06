@@ -1,5 +1,20 @@
 # Changes
-+ **6.1.6** - Added functionality to use a serialized model to LexiconNER.
++ **7.2.0** - Added a BiMEMM named entity recognizer based on the CoNLL dataset to CluProcessor.
++ **7.1.1** - Multiple bug fixes to CluProcessor.
++ **7.1.1** - Added TextToCoNLLU, which converts raw text into the CoNLL-U format.
++ **7.1.0** - CluProcessor now contains a MEMM model for syntactic chunking.
++ **7.1.0** - CluProcessor now produces both universal and Stanford dependencies, both basic and enhanced.
++ **7.0.2** - The ensemble parsing model in CluProcessor is now guaranteed to produce cycle-free outputs.
++ **7.0.1** - Added feature to Odin to import variables from a file. Works similarly to taxonomies.
++ **7.0.0** - Updated library to use Scala 2.12 by default. Add ability to remove lexicon members.
++ **7.0.0** - Retrained our two discourse parsers (constituent- and dependency-syntax based) to work with universal dependencies.
++ **7.0.0** - Switched to CoreNLP 3.8.0 and universal dependencies.
++ **6.3.0** - Branched released version 6.3.0 as base for future Reach development (branch name 'reach').
++ **6.3.0** - Renamed modification trait to Attachment.
++ **6.2.0** - Added ability to add Modifications to mentions.
++ **6.2.0** - Added openie package, which contains EntityFinder. 
++ **6.2.0** - Added wrappers for the regression functions in `liblinear` and `libsvm`. 
++ **6.2.0** - Added functionality to use a serialized model to LexiconNER. 
 + **6.1.4** - Added org.clulab.sequences.LexiconNER to match known entity names efficiently.
 + **6.1.4** - Allow for `odin` variable use in import paths.
 + **6.1.3** - Update core server parameters. Increment Akka version to 2.5.4.

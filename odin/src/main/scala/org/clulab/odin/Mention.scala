@@ -36,6 +36,21 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     */
   val arguments: Map[String, Seq[Mention]]
 
+  /** Attachments that can modify a Mention. */
+  val attachments: Set[Attachment]
+
+  def withAttachment(mod: Attachment): Mention = this match {
+    case m: TextBoundMention => m.newWithAttachment(mod)
+    case m: RelationMention => m.newWithAttachment(mod)
+    case m: EventMention => m.newWithAttachment(mod)
+  }
+
+  def withoutAttachment(mod: Attachment): Mention = this match {
+    case m: TextBoundMention => m.newWithoutAttachment(mod)
+    case m: RelationMention => m.newWithoutAttachment(mod)
+    case m: EventMention => m.newWithoutAttachment(mod)
+  }
+
   val paths: Map[String, Map[Mention, SynPath]]
 
   def getPath(argRole: String, mention: Mention): SynPath = paths(argRole)(mention)
@@ -156,8 +171,9 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     val h2 = mix(h1, tokenInterval.hashCode)
     val h3 = mix(h2, sentence.hashCode)
     val h4 = mix(h3, document.hashCode)
-    val h5 = mixLast(h4, argumentsHashCode)
-    finalizeHash(h5, 5)
+    val h5 = mix(h4, argumentsHashCode)
+    val h6 = mixLast(h5, unorderedHash(attachments))
+    finalizeHash(h6, 6)
   }
 
   private def argumentsHashCode: Int = {
@@ -177,7 +193,8 @@ class TextBoundMention(
   val sentence: Int,
   val document: Document,
   val keep: Boolean,
-  val foundBy: String
+  val foundBy: String,
+  val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   def this(
@@ -187,7 +204,7 @@ class TextBoundMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), tokenInterval, sentence, document, keep, foundBy)
+  ) = this(Seq(label), tokenInterval, sentence, document, keep, foundBy, Set.empty)
 
   // TextBoundMentions don't have arguments
   val arguments: Map[String, Seq[Mention]] = Map.empty
@@ -200,8 +217,17 @@ class TextBoundMention(
       sentence: Int = this.sentence,
       document: Document = this.document,
       keep: Boolean = this.keep,
-      foundBy: String = this.foundBy
-  ): TextBoundMention = new TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy)
+      foundBy: String = this.foundBy,
+      attachments: Set[Attachment] = this.attachments
+  ): TextBoundMention = new TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments)
+
+  def newWithAttachment(mod: Attachment): TextBoundMention = {
+    copy(attachments = this.attachments + mod)
+  }
+
+  def newWithoutAttachment(mod: Attachment): TextBoundMention = {
+    copy(attachments = this.attachments - mod)
+  }
 
 }
 
@@ -216,7 +242,8 @@ class EventMention(
   val sentence: Int,
   val document: Document,
   val keep: Boolean,
-  val foundBy: String
+  val foundBy: String,
+  val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   def this(
@@ -228,7 +255,7 @@ class EventMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, paths, sentence, document, keep, foundBy)
+  ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, paths, sentence, document, keep, foundBy, Set.empty)
 
   def this(
       label: String,
@@ -238,7 +265,7 @@ class EventMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
+  ) = this(Seq(label), mkTokenInterval(trigger, arguments), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy, Set.empty)
 
   def this(
       labels: Seq[String],
@@ -248,7 +275,7 @@ class EventMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(labels, mkTokenInterval(trigger, arguments), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
+  ) = this(labels, mkTokenInterval(trigger, arguments), trigger, arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy, Set.empty)
 
   override def isValid: Boolean = {
     // get token interval for trigger
@@ -277,8 +304,17 @@ class EventMention(
       sentence: Int = this.sentence,
       document: Document = this.document,
       keep: Boolean = this.keep,
-      foundBy: String = this.foundBy
-  ): EventMention = new EventMention(labels, tokenInterval, trigger, arguments, paths, sentence, document, keep, foundBy)
+      foundBy: String = this.foundBy,
+      attachments: Set[Attachment] = this.attachments
+  ): EventMention = new EventMention(labels, tokenInterval, trigger, arguments, paths, sentence, document, keep, foundBy, attachments)
+
+  def newWithAttachment(mod: Attachment): EventMention = {
+    copy(attachments = this.attachments + mod)
+  }
+
+  def newWithoutAttachment(mod: Attachment): EventMention = {
+    copy(attachments = this.attachments - mod)
+  }
 
   // Convert an EventMention to a RelationMention by deleting the trigger
   def toRelationMention: RelationMention = {
@@ -290,7 +326,8 @@ class EventMention(
       this.sentence,
       this.document,
       this.keep,
-      s"${this.foundBy} + toRelationMention"
+      s"${this.foundBy} + toRelationMention",
+      this.attachments
     )
   }
 
@@ -325,7 +362,8 @@ class RelationMention(
     val sentence: Int,
     val document: Document,
     val keep: Boolean,
-    val foundBy: String
+    val foundBy: String,
+    val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
@@ -338,7 +376,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), mkTokenInterval(arguments), arguments, paths, sentence, document, keep, foundBy)
+  ) = this(Seq(label), mkTokenInterval(arguments), arguments, paths, sentence, document, keep, foundBy, Set.empty)
 
   def this(
       label: String,
@@ -347,7 +385,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(Seq(label), mkTokenInterval(arguments), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
+  ) = this(Seq(label), mkTokenInterval(arguments), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy, Set.empty)
 
   def this(
       labels: Seq[String],
@@ -356,7 +394,7 @@ class RelationMention(
       document: Document,
       keep: Boolean,
       foundBy: String
-  ) = this(labels, mkTokenInterval(arguments), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy)
+  ) = this(labels, mkTokenInterval(arguments), arguments, Map.empty[String, Map[Mention, SynPath]], sentence, document, keep, foundBy, Set.empty)
 
   // Copy constructor for RelationMention
   def copy(
@@ -367,8 +405,17 @@ class RelationMention(
       sentence: Int = this.sentence,
       document: Document = this.document,
       keep: Boolean = this.keep,
-      foundBy: String = this.foundBy
-  ): RelationMention = new RelationMention(labels, tokenInterval, arguments, paths, sentence, document, keep, foundBy)
+      foundBy: String = this.foundBy,
+      attachments: Set[Attachment] = this.attachments
+  ): RelationMention = new RelationMention(labels, tokenInterval, arguments, paths, sentence, document, keep, foundBy, attachments)
+
+  def newWithAttachment(mod: Attachment): RelationMention = {
+    copy(attachments = this.attachments + mod)
+  }
+
+  def newWithoutAttachment(mod: Attachment): RelationMention = {
+    copy(attachments = this.attachments - mod)
+  }
 
   // Convert a RelationMention to an EventMention by specifying a trigger
   def toEventMention(trigger: TextBoundMention): EventMention = {
@@ -385,7 +432,8 @@ class RelationMention(
       this.sentence,
       this.document,
       this.keep,
-      s"${this.foundBy} + toEventMention"
+      s"${this.foundBy} + toEventMention",
+      this.attachments
     )
   }
 
@@ -420,7 +468,8 @@ class CrossSentenceMention(
   val arguments: Map[String, Seq[Mention]],
   val document: Document,
   val keep: Boolean,
-  val foundBy: String
+  val foundBy: String,
+  val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
 
   require(arguments.size == 2, "CrossSentenceMention must have exactly two arguments")
@@ -444,4 +493,5 @@ class CrossSentenceMention(
         s"${neighbor.text}$SEP${anchor.text}"
     }
   }
+
 }

@@ -24,21 +24,33 @@ object ColumnsToDocument {
 
   val proc = new CluProcessor()
 
-  def readFromFile(fn:String, wordPos:Int = WORD_POS_CONLLX, tagPos:Int = TAG_POS_CONLLX): Document = {
+  def readFromFile(fn:String,
+                   wordPos:Int = WORD_POS_CONLLX,
+                   labelPos:Int = TAG_POS_CONLLX,
+                   setLabels: (Sentence, Array[String]) => Unit,
+                   annotate: (Document) => Unit): Document = {
     val source = Source.fromFile(fn)
-    readFromSource(source, wordPos, tagPos)
+    readFromSource(source, wordPos, labelPos, setLabels, annotate)
   }
 
-  def readFromStream(stream:InputStream, wordPos:Int = WORD_POS_CONLLX, tagPos:Int = TAG_POS_CONLLX): Document = {
+  def readFromStream(stream:InputStream,
+                     wordPos:Int = WORD_POS_CONLLX,
+                     labelPos:Int = TAG_POS_CONLLX,
+                     setLabels: (Sentence, Array[String]) => Unit,
+                     annotate: (Document) => Unit): Document = {
     val source = Source.fromInputStream(stream)
-    readFromSource(source, wordPos, tagPos)
+    readFromSource(source, wordPos, labelPos, setLabels, annotate)
   }
 
-  def readFromSource(source:Source, wordPos:Int, tagPos:Int): Document = {
+  def readFromSource(source:Source,
+                     wordPos:Int,
+                     labelPos:Int,
+                     setLabels: (Sentence, Array[String]) => Unit,
+                     annotate: (Document) => Unit): Document = {
     var words = new ArrayBuffer[String]()
     var startOffsets = new ArrayBuffer[Int]()
     var endOffsets = new ArrayBuffer[Int]()
-    var tags = new ArrayBuffer[String]()
+    var labels = new ArrayBuffer[String]()
     var charOffset = 0
     val sentences = new ArrayBuffer[Sentence]()
     for(line <- source.getLines()) {
@@ -47,12 +59,12 @@ object ColumnsToDocument {
         // end of sentence
         if (words.nonEmpty) {
           val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray)
-          s.tags = Some(tags.toArray)
+          setLabels(s, labels.toArray)
           sentences += s
           words = new ArrayBuffer[String]()
           startOffsets = new ArrayBuffer[Int]()
           endOffsets = new ArrayBuffer[Int]()
-          tags = new ArrayBuffer[String]()
+          labels = new ArrayBuffer[String]()
           charOffset += 1
         }
       } else {
@@ -61,7 +73,7 @@ object ColumnsToDocument {
         if (bits.length < 2)
           throw new RuntimeException(s"ERROR: invalid line [$l]!")
         words += bits(wordPos)
-        tags += in(bits(tagPos))
+        labels += in(bits(labelPos))
         startOffsets += charOffset
         charOffset = bits(wordPos).length
         endOffsets += charOffset
@@ -70,7 +82,7 @@ object ColumnsToDocument {
     }
     if(words.nonEmpty) {
       val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray)
-      s.tags = Some(tags.toArray)
+      s.tags = Some(labels.toArray)
       sentences += s
     }
     source.close()
@@ -82,8 +94,25 @@ object ColumnsToDocument {
     d
   }
 
-  def annotate(doc:Document) {
+  def setTags(s:Sentence, tags:Array[String]): Unit = {
+    s.tags = Some(tags)
+  }
+
+  def setChunks(s:Sentence, chunks:Array[String]): Unit = {
+    s.chunks = Some(chunks)
+  }
+
+  def setEntities(s:Sentence, entities:Array[String]): Unit = {
+    s.entities = Some(entities)
+  }
+
+  def annotateLemmas(doc:Document) {
     proc.lemmatize(doc) // some features use lemmas, which are not available in the CoNLL data
+  }
+
+  def annotateLemmmaTags(doc:Document): Unit = {
+    proc.lemmatize(doc)
+    proc.tagPartsOfSpeech(doc)
   }
 
   private def in(s:String):String = Processor.internString(s)

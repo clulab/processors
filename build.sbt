@@ -2,7 +2,9 @@ import ReleaseTransformations._
 
 lazy val commonSettings = Seq(
   organization := "org.clulab",
-  scalaVersion := "2.11.11",
+  // scalaVersion := "2.11.11",
+  scalaVersion := "2.12.4",
+  // crossScalaVersions := Seq("2.11.11", "2.12.4"),
   scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation"),
   parallelExecution in Test := false,
   scalacOptions in (Compile, doc) += "-no-link-warnings", // suppresses problems with scaladoc @throws links
@@ -65,8 +67,8 @@ lazy val root = (project in file("."))
       (Keys.`package` in (main, Compile)).value
     }
   )
-  .aggregate(main, odin, corenlp, modelsmain, modelscorenlp)
-  .dependsOn(main, odin, corenlp, modelsmain, modelscorenlp) // so that we can import from the console
+  .aggregate(main, odin, corenlp, modelsmain, modelscorenlp, openie)
+  .dependsOn(main, odin, corenlp, modelsmain, modelscorenlp, openie) // so that we can import from the console
 
 lazy val main = project
   .settings(commonSettings: _*)
@@ -84,7 +86,11 @@ lazy val modelsmain = project
   .settings(commonSettings: _*)
 
 lazy val modelscorenlp = project
-  .settings(commonSettings: _*)  
+  .settings(commonSettings: _*)
+
+lazy val openie = project
+  .settings(commonSettings: _*)
+  .dependsOn(main % "test->test;compile->compile", odin)
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
@@ -92,12 +98,15 @@ releaseProcess := Seq[ReleaseStep](
   inquireVersions,
   runClean,
   runTest,
+  // releaseStepCommandAndRemaining("+test"),
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
   ReleaseStep(action = Command.process("publishSigned", _)),
+  // releaseStepCommandAndRemaining("+publishSigned"),
   setNextVersion,
   commitNextVersion,
   ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+  // releaseStepCommandAndRemaining("sonatypeReleaseAll"),
   pushChanges
 )

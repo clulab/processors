@@ -6,6 +6,8 @@ import org.scalatest._
 import org.clulab.struct.Counter
 import de.bwaldvogel.liblinear._
 
+import org.clulab.TestUtils._
+
 /**
  *
  * User: mihais
@@ -172,12 +174,6 @@ class TestLiblinearClassifier extends FlatSpec with Matchers {
     weights.get("+").get.getCount("great") should be > weights.get("+").get.getCount("awful")
     weights.get("-").get.getCount("great") should be < weights.get("-").get.getCount("awful")
     weights.get("-").get.getCount("good") should be < weights.get("-").get.getCount("awful")
-  }
-
-  private def mkRVFDatum(label:String, features:List[String]):RVFDatum[String, String] = {
-    val c = new Counter[String]
-    for(f <- features) c.incrementCount(f)
-    new RVFDatum[String, String](label, c)
   }
 
   "LogisticRegressionClassifier" should "have an accuracy > .97 in this dataset" in {

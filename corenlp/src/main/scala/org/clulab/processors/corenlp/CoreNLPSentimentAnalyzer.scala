@@ -49,12 +49,13 @@ object CoreNLPSentimentAnalyzer {
     val sa = a.get(classOf[SentencesAnnotation]).asScala.toVector.head
 
     // needs to be a Stanford parse
+
     val tree = proc.stanfordParse(sa)
     sa.set(classOf[TreeAnnotation], tree)
 
     sentimentAnalyzer.annotate(a)
 
-    val sentimentTree = sa.get(classOf[SentimentCoreAnnotations.AnnotatedTree])
+    val sentimentTree = sa.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
     val score = RNNCoreAnnotations.getPredictedClass(sentimentTree)
     score
   }

@@ -9,12 +9,13 @@ import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import org.clulab.processors.clu.bio.{BioNERPostProcessor, BioTokenizerPreProcessor}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
  * A processor for biomedical texts, based on CoreNLP, but with different tokenization and NER
  * User: mihais
  * Date: 10/27/14
+ * Last Modified: Update for Scala 2.12: java converters.
  */
 class BioNLPProcessor (internStrings:Boolean = false,
                        withChunks:Boolean = true,
@@ -52,10 +53,10 @@ class BioNLPProcessor (internStrings:Boolean = false,
    * @param annotation The CoreNLP annotation
    */
   override def postprocessTags(annotation:Annotation) {
-    val sas = annotation.get(classOf[SentencesAnnotation])
+    val sas = annotation.get(classOf[SentencesAnnotation]).asScala
 
     sas.foreach{ sa =>
-      val tas = sa.get(classOf[TokensAnnotation]).toList.toArray
+      val tas = sa.get(classOf[TokensAnnotation]).asScala.toList.toArray
       posPostProcessor.postprocessCoreLabelTags(tas)
     }
   }

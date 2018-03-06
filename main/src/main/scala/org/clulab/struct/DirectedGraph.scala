@@ -14,8 +14,8 @@ import scala.util.hashing.MurmurHash3._
  * Date: 3/5/13
  */
 case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Set[Int]) extends Serializable {
-  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges)
-  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges)
+  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, roots)
+  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, roots)
 
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
 
@@ -33,21 +33,24 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     finalizeHash(h2, 2)
   }
 
-  private def computeSize(edges:List[Edge[_]]):Int = {
+  private def computeSize(edges:List[Edge[_]], roots: collection.immutable.Set[Int]):Int = {
     var size = 0
     for (e <- edges) {
       size = math.max(e.source + 1, size)
       size = math.max(e.destination + 1, size)
+    }
+    for(r <- roots) {
+      size = math.max(r + 1, size)
     }
     size
   }
 
   // (src, dest, rel) <- allEdges
 
-  private def mkOutgoing(edges:List[Edge[E]]): Array[Array[(Int, E)]] = {
+  private def mkOutgoing(edges:List[Edge[E]], roots: collection.immutable.Set[Int]): Array[Array[(Int, E)]] = {
     //println("EDGES:")
     //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
-    val size = computeSize(edges)
+    val size = computeSize(edges, roots)
     //println("size = " + size)
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)
     var offset = 0
@@ -71,8 +74,8 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     outgoing
   }
 
-  private def mkIncoming(edges:List[Edge[E]]): Array[Array[(Int, E)]] = {
-    val size = computeSize(edges)
+  private def mkIncoming(edges:List[Edge[E]], roots: collection.immutable.Set[Int]): Array[Array[(Int, E)]] = {
+    val size = computeSize(edges, roots)
     //println("size = " + size)
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)
     var offset = 0
@@ -209,8 +212,31 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
       for ((Seq(n1, n2), edge) <- pairs zip edgePath) yield edge match {
         case (`n1`, `n2`, dep) => (n1, n2, dep, ">")
         case (`n2`, `n1`, dep) => (n2, n1, dep, "<")
+        case _ => sys.error("unrecognized edge")
       }
     }
+  }
+
+  def containsCycles():Boolean = {
+    for(i <- 0 until size) {
+      val traversed = new mutable.HashSet[Int]
+      if(hasCycle(i, traversed)) {
+        return true
+      }
+    }
+    false
+  }
+
+  private def hasCycle(current:Int, traversed:mutable.HashSet[Int]):Boolean = {
+    if(traversed.contains(current)) {
+      // println(s"Found cycle on offset $current!")
+      return true
+    } else if(incomingEdges(current).nonEmpty) {
+      // assumption: each node has a single head (stored in incoming)
+      traversed += current
+      return hasCycle(incomingEdges(current)(0)._1, traversed)
+    }
+    false
   }
 
   def toDirectedGraphIndex: DirectedGraphIndex[E] = {
@@ -233,7 +259,7 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
         return n
       n += 1
     }
-    return graph.size
+    graph.size
   }
 
   def hasNext:Boolean = node < graph.size
@@ -247,7 +273,7 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
       node = findNextNodeWithEdges(node + 1)
       nodeEdgeOffset = 0
     }
-    return (from, edge._1, edge._2)
+    (from, edge._1, edge._2)
   }
 }
 

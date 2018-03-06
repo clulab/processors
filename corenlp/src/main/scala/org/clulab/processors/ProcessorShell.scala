@@ -8,6 +8,7 @@ import java.io.File
 
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.examples.ProcessorExample
 
 /**
@@ -32,6 +33,7 @@ object ProcessorShell extends App {
     ":bio" -> "use BioNLPProcessor",
     ":fast" -> "use FastNLPProcessor",
     ":fastbio" -> "use FastBioNLPProcessor",
+    ":clu" -> "use CluProcessor",
     ":exit" -> "exit system"
   )
 

@@ -64,6 +64,27 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("POS tagging is fine.")
   }
 
+  it should "recognize syntactic chunks correctly" in {
+    val doc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
+    proc.lemmatize(doc)
+    proc.tagPartsOfSpeech(doc)
+    proc.chunking(doc)
+    doc.clear()
+
+    doc.sentences(0).chunks.get(0) should be ("B-NP")
+    doc.sentences(0).chunks.get(1) should be ("B-VP")
+    doc.sentences(0).chunks.get(2) should be ("B-NP")
+    doc.sentences(0).chunks.get(3) should be ("I-NP")
+    doc.sentences(0).chunks.get(4) should be ("I-NP")
+    doc.sentences(0).chunks.get(5) should be ("I-NP")
+    doc.sentences(0).chunks.get(6) should be ("B-VP")
+    doc.sentences(0).chunks.get(7) should be ("I-VP")
+    doc.sentences(0).chunks.get(8) should be ("B-PP")
+    doc.sentences(0).chunks.get(9) should be ("B-NP")
+    doc.sentences(0).chunks.get(10) should be ("I-NP")
+    doc.sentences(0).chunks.get(11) should be ("I-NP")
+  }
+
   it should "lemmatize text correctly" in {
     val doc = proc.mkDocument("John Doe went to the shops.")
     proc.lemmatize(doc)
@@ -78,10 +99,33 @@ class TestCluProcessor extends FlatSpec with Matchers {
   it should "parse text correctly" in {
     val doc = proc.annotate("John Doe went to China")
 
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(1, 0, "nn") should be(true)
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "prep") should be(true)
-    doc.sentences.head.stanfordBasicDependencies.get.hasEdge(2, 3, "obj") should be(false)
+    //println("Basic universal dependencies:")
+    //println(doc.sentences.head.universalBasicDependencies.get)
+
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "nmod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "case") should be(true)
     println("Parsing is fine.")
+  }
+
+  it should "parse a long sentence correctly" in {
+    val doc = proc.annotate("Her T score of 63 on the Attention Problems scale is in the At Risk range suggesting that she sometimes daydreams or is easily distracted and unable to concentrate more than momentarily .")
+    //println(s"Sentence: ${doc.sentences(0).words.mkString(" ")}")
+    //println("Basic universal dependencies:")
+    //println(doc.sentences.head.universalBasicDependencies.get)
+
+    doc.sentences.head.universalBasicDependencies.isDefined should be (true)
+    val deps = doc.sentences.head.universalBasicDependencies.get
+
+    (deps.incomingEdges != null) should be (true)
+    (deps.outgoingEdges != null) should be (true)
+
+    deps.incomingEdges.length == 33 should be (true)
+    deps.outgoingEdges.length == 33 should be (true)
+
+    deps.hasEdge(2, 0, "nmod:poss") should be (true)
+    deps.hasEdge(2, 1, "compound") should be (true)
+    deps.hasEdge(2, 9, "nmod") should be (true)
   }
 }
