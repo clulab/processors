@@ -2,7 +2,6 @@ package org.clulab.odin.serialization
 
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
-import org.clulab.struct.DirectedGraph
 import org.scalatest._
 
 // See TestJSONSerializer for the test upon which this is based.
