@@ -7,22 +7,30 @@ import org.scalatest._
 
 // See TestJSONSerializer for the test upon which this is based.
 class TestSerializer extends FlatSpec with Matchers {
-  // Make sure this is available
-  val directedGraph = DirectedGraph[String](Nil, Set.empty)
 
   object Serializer {
-    import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
+    import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream, ObjectStreamClass}
   
     def serialize(any: Any): Unit = {
       val streamOut = new ByteArrayOutputStream()
       val encoder = new ObjectOutputStream(streamOut)
       encoder.writeObject(any)
   
-//      val bytes = streamOut.toByteArray
-//      val streamIn = new ByteArrayInputStream(bytes)
-//      val decoder = new ObjectInputStream(streamIn)
-//      val mentionsIn = decoder.readObject()
-//      decoder.close()
+      val bytes = streamOut.toByteArray
+      val streamIn = new ByteArrayInputStream(bytes)
+      val decoder = new ObjectInputStream(streamIn) {
+        // See https://stackoverflow.com/questions/16386252/scala-deserialization-class-not-found
+        override def resolveClass(desc: ObjectStreamClass): Class[_] = {
+          try {
+            Class.forName(desc.getName, false, getClass.getClassLoader)
+          }
+          catch {
+            case ex: ClassNotFoundException => super.resolveClass(desc)
+          }
+        }
+      }
+      val mentionsIn = decoder.readObject()
+      decoder.close()
     }
   }
       
