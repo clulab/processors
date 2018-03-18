@@ -18,11 +18,11 @@ class TestSerializer extends FlatSpec with Matchers {
       val encoder = new ObjectOutputStream(streamOut)
       encoder.writeObject(any)
   
-      val bytes = streamOut.toByteArray
-      val streamIn = new ByteArrayInputStream(bytes)
-      val decoder = new ObjectInputStream(streamIn)  
-      val mentionsIn = decoder.readObject()
-      decoder.close()
+//      val bytes = streamOut.toByteArray
+//      val streamIn = new ByteArrayInputStream(bytes)
+//      val decoder = new ObjectInputStream(streamIn)
+//      val mentionsIn = decoder.readObject()
+//      decoder.close()
     }
   }
       
