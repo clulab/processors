@@ -2,11 +2,13 @@ package org.clulab.odin.serialization
 
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
-import org.json4s._
+import org.clulab.struct.DirectedGraph
 import org.scalatest._
 
 // See TestJSONSerializer for the test upon which this is based.
 class TestSerializer extends FlatSpec with Matchers {
+  // Make sure this is available
+  val directedGraph = DirectedGraph[String](Nil, Set.empty)
 
   object Serializer {
     import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
