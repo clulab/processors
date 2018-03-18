@@ -44,7 +44,7 @@ trait GraphPattern {
       (name, mentionsWithPathsGroups) <- reqExtractions.toSeq
     } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
 
-    // get the paths
+    // get the paths, resulting in an unserializable MapLike
     val reqPaths = reqExtractions.mapValues(_.flatten.toMap)
 
     // extract optional arguments
@@ -55,11 +55,11 @@ trait GraphPattern {
       (name, mentionsWithPathsGroups) <- optExtractions.toSeq
     } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
 
-    // get the paths
+    // get the paths, resulting in an unserializable MapLike
     val optPaths = optExtractions.mapValues(_.flatten.toMap)
 
-    // group the paths together
-    val paths: Paths = reqPaths ++ optPaths
+    // group the paths together, ensuring the result is a serializable Map
+    val paths: Paths = Map.empty ++ reqPaths ++ optPaths
     // group the arguments together
     val args: Seq[Seq[(String, Seq[Mention])]] = reqArgs ++ optArgs
     // return cartesian product of arguments
