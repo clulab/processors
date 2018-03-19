@@ -10,10 +10,10 @@ class TestSerializer extends FlatSpec with Matchers {
   object Serializer {
     import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream, ObjectStreamClass}
   
-    def serialize(any: Any): Unit = {
+    def serialize(anyOut: Any): Boolean = {
       val streamOut = new ByteArrayOutputStream()
       val encoder = new ObjectOutputStream(streamOut)
-      encoder.writeObject(any)
+      encoder.writeObject(anyOut)
   
       val bytes = streamOut.toByteArray
       val streamIn = new ByteArrayInputStream(bytes)
@@ -28,8 +28,9 @@ class TestSerializer extends FlatSpec with Matchers {
           }
         }
       }
-      val mentionsIn = decoder.readObject()
+      val anyIn = decoder.readObject()
       decoder.close()
+      anyIn == anyOut
     }
   }
       
@@ -63,7 +64,7 @@ class TestSerializer extends FlatSpec with Matchers {
     val mentions = engine.extractFrom(doc)
     
     it should "serialize/deserialize a Mention correctly " in {
-      Serializer.serialize(mentions)
+      Serializer.serialize(mentions) should be (true)
     }
   }
 
@@ -107,7 +108,7 @@ class TestSerializer extends FlatSpec with Matchers {
     val mentions = ee.extractFrom(doc)
     
     it should "serialize/deserialize a CrossSentenceMention correctly" in {
-      Serializer.serialize(mentions)
+      Serializer.serialize(mentions) should be (true)
     }
   }
 }
