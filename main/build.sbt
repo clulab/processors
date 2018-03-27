@@ -20,7 +20,6 @@ libraryDependencies ++= {
     "tw.edu.ntu.csie"          %  "libsvm"                    % "3.17",
 
     // NLP tools used by CluProcessor
-    "edu.washington.cs.knowitall.nlptools"  %  "nlptools-stem-morpha_2.10"  % "2.4.5", // for lemmatization
     "org.antlr"                %  "antlr4-runtime"            % "4.6",   // for tokenization
     "org.maltparser"           %  "maltparser"                % "1.9.0", // for dependency parsing
     "org.clulab"               %  "bioresources"              % "1.1.24", // for bio NER

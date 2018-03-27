@@ -1,6 +1,7 @@
 package org.clulab.processors.clu
 
-import edu.knowitall.tool.stem.MorphaStemmer
+import java.io.StringReader
+
 import org.clulab.processors.clu.sequences.{Chunker, NamedEntityRecognizer, PartOfSpeechTagger}
 import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer}
@@ -15,12 +16,15 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import CluProcessor._
 import org.clulab.sequences.{LexiconNER, Tagger}
+import uk.ac.susx.informatics.Morpha
+
+import scala.util.matching.Regex
 
 /**
   * Processor that uses only tools that are under Apache License
   * Currently supports:
   *   tokenization (in-house),
-  *   lemmatization (Morpha),
+  *   lemmatization (Morpha, copied in our repo to minimize dependencies),
   *   POS tagging (in-house BiMEMM),
   *   dependency parsing (ensemble of Malt models)
   */
@@ -243,6 +247,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     }
   }
 
+  def lemmatizeWord(word:String):String = {
+    val norm = CluProcessor.normalizeForLemmatization(word)
+    val morpha = new Morpha(new StringReader(norm))
+    val stem = morpha.yytext()
+    stem
+  }
+
   /** Lematization; modifies the document in place */
   def lemmatize(doc:Document) {
     basicSanityCheck(doc)
@@ -250,8 +261,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
-        var lemma = MorphaStemmer.lemmatize(sent.words(i))
-        // for some strings, MorphaStemmer returns empty strings
+        var lemma = lemmatizeWord(sent.words(i))
+        // in some case, Morpha returns empty strings
         if(lemma.isEmpty)
           lemma = sent.words(i).toLowerCase()
         lemmas(i) = lemma
@@ -346,4 +357,10 @@ class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load(
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
   val prefix:String = "CluProcessor"
+
+  /** Special characters to remove. */
+  val remove: Regex = """[()\[\].,;:"']""".r
+
+  /** Remove special characters and lowercase the string. */
+  def normalizeForLemmatization(word: String):String = CluProcessor.remove.replaceAllIn(word.trim.toLowerCase, "")
 }
