@@ -383,3 +383,5 @@ object CluProcessor {
   /** Remove special characters and lowercase the string. */
   def normalizeForLemmatization(word: String):String = CluProcessor.remove.replaceAllIn(word.trim.toLowerCase, "")
 }
+
+
