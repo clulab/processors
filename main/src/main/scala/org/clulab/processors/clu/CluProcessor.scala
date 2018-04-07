@@ -248,10 +248,26 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   }
 
   def lemmatizeWord(word:String):String = {
-    val norm = CluProcessor.normalizeForLemmatization(word)
-    val morpha = new Morpha(new StringReader(norm))
-    val stem = morpha.yytext()
-    stem
+    val norm = CluProcessor.normalizeForLemmatization(word).trim
+    if(norm.isEmpty) return ""
+    
+    val parts = norm.split(whitespaces)
+
+    val result = new mutable.StringBuilder()
+    for(part <- parts) {
+      val morpha = new Morpha(new StringReader(part), false)
+
+      var lemma = part
+      try {
+        lemma = morpha.next()
+      } catch {
+        case _:Throwable =>
+      }
+
+      if(result.length > 0) result.append(" ")
+      result.append(lemma)
+    }
+    result.toString()
   }
 
   /** Lematization; modifies the document in place */
@@ -360,6 +376,9 @@ object CluProcessor {
 
   /** Special characters to remove. */
   val remove: Regex = """[()\[\].,;:"']""".r
+
+  /** White spaces */
+  val whitespaces: String = "\\s+"
 
   /** Remove special characters and lowercase the string. */
   def normalizeForLemmatization(word: String):String = CluProcessor.remove.replaceAllIn(word.trim.toLowerCase, "")
