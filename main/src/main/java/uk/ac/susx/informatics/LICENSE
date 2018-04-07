@@ -1,0 +1,35 @@
+This licence accompanied the original LEX files from which Morpha.java was
+generated.
+
+All supplemental code is copyright under Apache 2.0.
+
+Copyright (c) 1995-2001 University of Sheffield, University of Sussex
+All rights reserved.
+
+Redistribution and use of source and derived binary forms are permitted
+provided that:
+- they are not used in commercial products
+- the above copyright notice and this paragraph are duplicated in
+all such forms
+- any documentation, advertising materials, and other materials
+related to such distribution and use acknowledge that the software
+was developed by Kevin Humphreys <kwh@dcs.shef.ac.uk> and John
+Carroll <john.carroll@cogs.susx.ac.uk> and Guido Minnen
+<Guido.Minnen@cogs.susx.ac.uk> and refer to the following related
+publication:
+
+ Guido Minnen, John Carroll and Darren Pearce. 2000. Robust, Applied
+ Morphological Generation. In Proceedings of the First International
+ Natural Language Generation Conference (INLG), Mitzpe Ramon, Israel.
+ 201-208.
+
+The name of University of Sheffield may not be used to endorse or
+promote products derived from this software without specific prior
+written permission.
+
+This software is provided "as is" and without any express or
+implied warranties, including, without limitation, the implied
+warranties of merchantibility and fitness for a particular purpose.
+
+If you make any changes, the authors would appreciate it
+if you sent them details of what you have done.
