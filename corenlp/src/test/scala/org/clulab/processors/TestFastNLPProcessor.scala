@@ -56,7 +56,7 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
   //   https://github.com/stanfordnlp/CoreNLP/issues/669
   //   https://github.com/stanfordnlp/CoreNLP/issues/83
   // This is fixed by props.put("maxAdditionalKnownLCWords", "0") in ShallowNLPProcessor.
-  "FastNLPProcessor" should "not have NER unaffected by state" in {
+  "FastNLPProcessor" should "have NER unaffected by state" in {
     val texts = Seq(
       "The highest potential areas for agricultural production are Western Equatoria and the southern half of Central Equatoria, or the so-called Green Belt, where annual rainfall ranges from 900 to 2,000 mm per year (Table 2.6).",
       "I have a green belt.",
