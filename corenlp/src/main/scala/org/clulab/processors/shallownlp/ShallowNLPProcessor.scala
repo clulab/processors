@@ -31,36 +31,43 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   lazy val ner = mkNer
   lazy val chunker = mkChunker
 
+  protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true) = {
+    // Prevent knownLCWords from changing on us.  To be safe, this is added every time
+    // because of potential caching of annotators in StanfordNLP.
+//    props.put("maxAdditionalKnownLCWords", "0")
+    new StanfordCoreNLP(props, enforceRequirements)
+  }
+
   def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "tokenize")
     props.put("tokenize.language", "English")
-    new StanfordCoreNLP(props)
+    newStanfordCoreNLP(props)
   }
 
   def mkTokenizerWithSentenceSplitting: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "tokenize, ssplit")
     props.put("tokenize.language", "English")
-    new StanfordCoreNLP(props)
+    newStanfordCoreNLP(props)
   }
 
   def mkPosTagger: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "pos")
-    new StanfordCoreNLP(props, false)
+    newStanfordCoreNLP(props, false)
   }
 
   def mkLemmatizer: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "lemma")
-    new StanfordCoreNLP(props, false)
+    newStanfordCoreNLP(props, false)
   }
 
   def mkNer: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "ner")
-    new StanfordCoreNLP(props, false)
+    newStanfordCoreNLP(props, false)
   }
 
   def mkChunker: CRFChunker = {
