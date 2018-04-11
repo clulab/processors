@@ -33,8 +33,8 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
 
   protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true) = {
     // Prevent knownLCWords from changing on us.  To be safe, this is added every time
-    // because of potential caching of annotators in StanfordNLP.
-//    props.put("maxAdditionalKnownLCWords", "0")
+    // because of potential caching of annotators.  Yes, the 0 must be a string.
+    props.put("maxAdditionalKnownLCWords", "0")
     new StanfordCoreNLP(props, enforceRequirements)
   }
 
