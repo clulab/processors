@@ -1,18 +1,17 @@
 package org.clulab.learning
 
-import java.io.{Writer, Serializable}
-import java.util.concurrent.ForkJoinPool
+import java.io.{Serializable, Writer}
 
-import org.clulab.struct.{Lexicon, Counter}
+import org.clulab.struct.{Counter, Lexicon}
 import org.clulab.utils.MathUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-
 import RFClassifier._
 
 import scala.collection.parallel.ForkJoinTaskSupport
+import scala.concurrent.forkjoin.ForkJoinPool
 import scala.util.Random
 
 /**
@@ -94,7 +93,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
         trees = Some(bags.map(buildTreeMain).toArray)
       case _ => // use a specific number of threads
         val parBags = bags.toSet.par
-        parBags.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(numThreads))
+        parBags.tasksupport = new ForkJoinTaskSupport(new ForkJoinPool(numThreads))
         trees = Some(parBags.map(buildTreeMain).toArray)
     }
 

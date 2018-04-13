@@ -3,7 +3,8 @@ dist: trusty
 group: deprecated-2017Q2
 language: scala
 scala:
-  - 2.11.8
+  - 2.12.4
+  - 2.11.11
 branches:
   only:
     - master
