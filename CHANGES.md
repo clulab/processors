@@ -1,5 +1,6 @@
 # Changes
 + **7.2.1** - Cross-compile for scala 2.11 and 2.12
++ **7.2.1** - Prevented NER from changing state for the ShallowNLPProcessor and FastNLPProcessor
 + **7.2.1** - Removed dependency to "edu.washington.cs.knowitall.nlptools"  %  "nlptools-stem-morpha_2.10", which was introducing dependency conflicts.
 + **7.2.0** - Added a BiMEMM named entity recognizer based on the CoNLL dataset to CluProcessor.
 + **7.1.1** - Multiple bug fixes to CluProcessor.
