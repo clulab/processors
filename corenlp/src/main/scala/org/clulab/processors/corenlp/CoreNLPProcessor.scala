@@ -12,7 +12,6 @@ import edu.stanford.nlp.pipeline.{ParserAnnotatorUtils, StanfordCoreNLP}
 import java.util.Properties
 import collection.mutable.ListBuffer
 import edu.stanford.nlp.ling.CoreAnnotations._
-import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel, IndexedWord}
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder, TreeCoreAnnotations, Tree => StanfordTree}
