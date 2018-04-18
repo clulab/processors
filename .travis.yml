@@ -9,4 +9,4 @@ branches:
   only:
     - master
 script:
-  - sbt 'test-only -- -l NeedsExternalBinary'
+  - sbt ++$TRAVIS_SCALA_VERSION 'test-only -- -l NeedsExternalBinary'
