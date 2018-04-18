@@ -87,7 +87,7 @@ class CoreNLPProcessor(
         sa.set(classOf[TreeCoreAnnotations.TreeAnnotation], stanfordTree)
 
         // create and save a fake dependency graph
-        val head = words.head
+        val head = words.asScala.head
         val fakeDeps = new SemanticGraph()
         fakeDeps.addRoot(new IndexedWord(head))
         sa.set(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation], fakeDeps)
@@ -170,8 +170,8 @@ class CoreNLPProcessor(
     if(chains != null) {
       val mentions = new ListBuffer[CorefMention]
 
-      for (cid <- chains.keySet()) {
-       for(mention <- chains.get(cid).getMentionsInTextualOrder) {
+      for (cid <- chains.keySet.asScala) {
+       for(mention <- chains.get(cid).getMentionsInTextualOrder.asScala) {
           //println(s"""start = ${mention.startIndex}, end = ${mention.endIndex}, head = ${mention.headIndex}, sentence = ${mention.sentNum}""")
           val m = CorefMention(
            mention.sentNum - 1,
