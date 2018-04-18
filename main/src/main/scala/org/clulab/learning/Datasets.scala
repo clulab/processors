@@ -177,7 +177,7 @@ object Datasets {
       var bestFeatures:Set[Int] = null
 
       val workingGroups = featureGroups.keySet.filter(! chosenGroups.contains(_)).par
-      workingGroups.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(nCores))
+      workingGroups.tasksupport = new ForkJoinTaskSupport(new ForkJoinPool(nCores))
 
       // this is parallelized!
       val scores = workingGroups.map(scoreGroup(_,
