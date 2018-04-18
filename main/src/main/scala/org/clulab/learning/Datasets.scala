@@ -1,7 +1,7 @@
 package org.clulab.learning
 
 import java.io.{Reader, Writer}
-import java.util.concurrent.ForkJoinPool
+import scala.concurrent.forkjoin.ForkJoinPool
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
@@ -20,6 +20,7 @@ import scala.collection.parallel.ForkJoinTaskSupport
 class Datasets
 
 object Datasets {
+
   val logger: Logger = LoggerFactory.getLogger(classOf[Datasets])
 
   /** Creates dataset folds to be used for cross validation */
@@ -176,7 +177,7 @@ object Datasets {
       var bestFeatures:Set[Int] = null
 
       val workingGroups = featureGroups.keySet.filter(! chosenGroups.contains(_)).par
-      workingGroups.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(nCores))
+      workingGroups.tasksupport = new ForkJoinTaskSupport(new ForkJoinPool(nCores))
 
       // this is parallelized!
       val scores = workingGroups.map(scoreGroup(_,
