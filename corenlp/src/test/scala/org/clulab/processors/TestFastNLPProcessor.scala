@@ -50,4 +50,35 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
     d.isTerminal should be (false)
     d.children.length should be (2)
   }
+
+  // For more information, see
+  //   https://github.com/clulab/eidos/issues/261
+  //   https://github.com/stanfordnlp/CoreNLP/issues/669
+  //   https://github.com/stanfordnlp/CoreNLP/issues/83
+  // This is fixed by props.put("maxAdditionalKnownLCWords", "0") in ShallowNLPProcessor.
+  "FastNLPProcessor" should "have NER unaffected by state" in {
+    val texts = Seq(
+      "The highest potential areas for agricultural production are Western Equatoria and the southern half of Central Equatoria, or the so-called Green Belt, where annual rainfall ranges from 900 to 2,000 mm per year (Table 2.6).",
+      "I have a green belt.",
+      "The highest potential areas for agricultural production are Western Equatoria and the southern half of Central Equatoria, or the so-called Green Belt, where annual rainfall ranges from 900 to 2,000 mm per year (Table 2.6)."
+    )
+
+    def getEntitiesForWord(documents: Seq[Document], searchWord: String): Seq[String] = {
+      val entities = for {
+        doc <- documents
+        sentence <- doc.sentences
+        i <- sentence.words.indices
+        if (sentence.words(i) == searchWord)
+      }
+      yield sentence.entities.get(i)
+
+      entities
+    }
+
+    val docs = texts.map { proc.annotate(_) }
+    val entities = getEntitiesForWord(docs, "Belt")
+
+    entities.size >= 2 should be (true)
+    entities.exists { entity => entity != entities.head } should be (false)
+  }
 }
