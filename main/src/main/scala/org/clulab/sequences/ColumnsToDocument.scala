@@ -21,6 +21,8 @@ object ColumnsToDocument {
 
   val WORD_POS_CONLLX = 1
   val TAG_POS_CONLLX = 4
+  val WORD_POS_CONLLU = 0
+  val TAG_POS_CONLLU = 1
 
   val proc = new CluProcessor()
 
