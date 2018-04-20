@@ -1,4 +1,5 @@
 # Changes
++ **7.2.2** - This is just a copy of 7.2.1, whose release on maven was broken
 + **7.2.1** - Cross-compile for scala 2.11 and 2.12
 + **7.2.1** - Prevented NER from changing state for the ShallowNLPProcessor and FastNLPProcessor
 + **7.2.1** - Removed dependency to "edu.washington.cs.knowitall.nlptools"  %  "nlptools-stem-morpha_2.10", which was introducing dependency conflicts.
