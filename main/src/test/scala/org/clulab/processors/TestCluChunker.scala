@@ -16,7 +16,7 @@ class TestCluChunker extends FlatSpec with Matchers {
       wordPos = 0, labelPos = 2,
       setLabels = ColumnsToDocument.setChunks,
       annotate = ColumnsToDocument.annotateLemmmaTags)
-    val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.chunker, List(doc).iterator, saveOutput = false)
+    val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.chunker.get, List(doc).iterator, saveOutput = false)
     println(s"Chunker accuracy is $acc")
     (acc > 95.6) should be (true)
   }

@@ -32,4 +32,6 @@ trait Configured {
     if (getConf.hasPath(argPath)) getConf.getStringList(argPath).asScala
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
+
+  protected def contains(argPath:String):Boolean = getConf.hasPath(argPath)
 }

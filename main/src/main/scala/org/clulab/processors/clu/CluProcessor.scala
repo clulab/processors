@@ -96,8 +96,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     }
 
   // the syntactic chunker
-  lazy val chunker:Chunker =
-    Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None))
+  lazy val chunker:Option[Chunker] =
+    if(contains(s"$prefix.chunker.model"))
+      Some(Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None)))
+    else
+      None
 
   // should we use universal dependencies or Stanford ones?
   val useUniversalDependencies:Boolean = getArgBoolean(s"$prefix.parser.universal", Some(true))
@@ -328,10 +331,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document) {
-    basicSanityCheck(doc)
-    for(sent <- doc.sentences) {
-      val chunks = chunker.classesOf(sent)
-      sent.chunks = Some(chunks)
+    if(chunker.isDefined) {
+      basicSanityCheck(doc)
+      for (sent <- doc.sentences) {
+        val chunks = chunker.get.classesOf(sent)
+        sent.chunks = Some(chunks)
+      }
     }
   }
 
@@ -369,6 +374,9 @@ trait SentencePostProcessor {
 class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
 
 class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load("cluprocessoropenwithstanford"))
+
+class SpanishCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorspanish"))
+class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorportuguese"))
 
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
