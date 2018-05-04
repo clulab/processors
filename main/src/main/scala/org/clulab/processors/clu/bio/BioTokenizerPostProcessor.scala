@@ -30,8 +30,9 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     // split complexes
     val res0: Seq[String] = words.flatMap{ word =>
       val words = word.split("/")
-      // add coordination to improve parsing
-      words.mkString(" and ").split("\\s+")
+      words
+//      // add coordination to improve parsing
+//      words.mkString(" and ").split("\\s+")
     }
 
     val dashPrefixPattern = s"(?<=^(${COMMON_PREFIXES.mkString("|")}))\\-"
