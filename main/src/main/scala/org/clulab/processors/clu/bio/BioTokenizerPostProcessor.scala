@@ -53,10 +53,13 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
       }
     }
 
+    // remove any empty tokens
+    val res4 = res3.map(_.trim).filterNot(_.isEmpty)
+
     val start = toks.head.beginPosition
     val end = toks.head.endPosition
 
-    val newToks = res2
+    val newToks = res4
     val offset = if (toks.nonEmpty) toks.head.beginPosition else 0
     newToks.indices.map{ i =>
       val wordLength = newToks(i).length
