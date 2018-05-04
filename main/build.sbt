@@ -14,8 +14,7 @@ libraryDependencies ++= {
     "jline"                    %  "jline"                     % "2.12.1",
     "commons-io"               %  "commons-io"                % "2.5",
     "ai.lum"                  %%  "common"                    % "0.0.8",
-
-    // for machine learning
+  // for machine learning
     "de.bwaldvogel"            %  "liblinear"                 % "1.94",
     "tw.edu.ntu.csie"          %  "libsvm"                    % "3.17",
 

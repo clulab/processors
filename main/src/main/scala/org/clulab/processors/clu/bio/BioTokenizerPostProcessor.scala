@@ -21,11 +21,54 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
   val tokensWithValidSlash:Set[String] = loadTokensWithValidSlash(kbsWithTokensWithValidSlashes)
 
   /**
+    * Tokenization tricks to more closely match BioNLP ST expectations <br>
+    * split complexes "A/B/C" -> ["A", "and", "B", "and", "C"] <br>
+    */
+  def processForBioNlpSharedTask(toks: Array[PostProcessorToken]): Array[PostProcessorToken] = {
+
+    val words = toks.map(_.word)
+    // split complexes
+    val res1: Seq[String] = words.flatMap{ word =>
+      val words = word.split("/")
+      // add coordination to improve parsing
+      words.mkString(" and ").split("\\s+")
+    }
+
+    // split token-final "-*ed" etc.
+    val dashPattern = s"\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)"
+    val res2: Seq[String] = res1.flatMap(_.split(dashPattern))
+
+    // split tokens containing multiple dashes (ex. CD4-CD8-double-negative)
+    val res3: Seq[String] = res2.flatMap{ w =>
+
+      w match {
+        //ex. CD4-CD8-double-negative
+        case multi if multi.count(_ == "-") > 2 =>
+          multi.split("-")
+        case _ =>
+          Seq(w)
+      }
+    }
+
+    val start = toks.head.beginPosition
+    val end = toks.head.endPosition
+
+    val newToks = res2
+    val offset = if (toks.nonEmpty) toks.head.beginPosition else 0
+    newToks.indices.map{ i =>
+      val wordLength = newToks(i).length
+      val beginPos = newToks.slice(0, i).map{_.length}.sum + i + offset
+      val endPos = beginPos + wordLength
+      PostProcessorToken(word = newToks(i), beginPosition = beginPos, endPosition = endPos)
+    }.toArray
+  }
+
+  /**
     * Implements the bio-specific post-processing steps from McClosky et al. (2011)
-    * @param input  Input CoreNLP sentence
+    * @param input  an array of tokens
     * @return  The modified tokens
     */
-  def process(input:Array[PostProcessorToken]):Array[PostProcessorToken] = {
+  def process(input: Array[PostProcessorToken]): Array[PostProcessorToken] = {
     var tokens = input
 
     // revert tokenization that is too aggressive
@@ -54,8 +97,9 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     // re-join trailing or preceding - or + to previous digit
     tokens = joinSigns(tokens)
 
+    // bioNLP ST-specific rules
+    tokens = processForBioNlpSharedTask(tokens)
     tokens
-    
   }
 
   def isSpecialToken(s:String):Boolean = tokensWithValidSlash.contains(s.toLowerCase)
