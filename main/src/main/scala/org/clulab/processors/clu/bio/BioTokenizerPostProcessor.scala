@@ -28,15 +28,18 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
 
     val words = toks.map(_.word)
     // split complexes
-    val res1: Seq[String] = words.flatMap{ word =>
+    val res0: Seq[String] = words.flatMap{ word =>
       val words = word.split("/")
       // add coordination to improve parsing
       words.mkString(" and ").split("\\s+")
     }
 
+    val dashPrefixPattern = s"(?<=^(${COMMON_PREFIXES.mkString("|")}))\\-"
+    val res1: Seq[String] = res0.flatMap(_.split(dashPrefixPattern))
+
     // split token-final "-*ed" etc.
-    val dashPattern = s"\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)"
-    val res2: Seq[String] = res1.flatMap(_.split(dashPattern))
+    val dashSuffixPattern = s"\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)"
+    val res2: Seq[String] = res1.flatMap(_.split(dashSuffixPattern))
 
     // split tokens containing multiple dashes (ex. CD4-CD8-double-negative)
     val res3: Seq[String] = res2.flatMap{ w =>
