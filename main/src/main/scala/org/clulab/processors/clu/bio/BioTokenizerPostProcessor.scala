@@ -26,48 +26,44 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     */
   def processForBioNlpSharedTask(toks: Array[PostProcessorToken]): Array[PostProcessorToken] = {
 
-    val words = toks.map(_.word)
-    // split complexes
-    val res0: Seq[String] = words.flatMap{ word =>
-      val words = word.split("/")
-      words
-//      // add coordination to improve parsing
-//      words.mkString(" and ").split("\\s+")
+    def splitOnPattern(tokens: Array[PostProcessorToken], pattern: (String) => Array[String]): Array[PostProcessorToken] = {
+      val words = tokens.map(_.word)
+      // split complexes
+      val before = tokens
+      val offset = if (toks.nonEmpty) before.head.beginPosition else 0
+      val res = for {
+        tok <- before
+        // apply pattern and filter out any empty tokens
+        res = pattern(tok.word).map(_.trim).filterNot(_.isEmpty)
+      } yield {
+        if (res.length == 1) {
+          Seq(tok)
+        } else {
+          res.indices.map { i =>
+            val wordLength = res(i).length
+            val beginPos = res.slice(0, i).map { _.length }.sum + i + offset
+            val endPos = beginPos + wordLength
+            PostProcessorToken(word = res(i), beginPosition = beginPos, endPosition = endPos)
+          }
+        }
+      }
+      res.flatten
     }
 
-    val dashPrefixPattern = s"(?<=^(${COMMON_PREFIXES.mkString("|")}))\\-"
-    val res1: Seq[String] = res0.flatMap(_.split(dashPrefixPattern))
+    val slashPattern = (w: String) => w.split("/")
+    val res0 = splitOnPattern(toks, slashPattern)
+    val dashPrefixPattern = (w: String) => w.split(s"(?<=^(${COMMON_PREFIXES.mkString("|")}))\\-")
+    val res1 = splitOnPattern(res0, dashPrefixPattern)
 
     // split token-final "-*ed" etc.
-    val dashSuffixPattern = s"\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)"
-    val res2: Seq[String] = res1.flatMap(_.split(dashSuffixPattern))
+    val dashSuffixPattern = (w: String) => w.split(s"\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)")
+    val res2 = splitOnPattern(res1, dashSuffixPattern)
 
+    val doubleDashSplitPattern = (w: String) => if (w.count(_.toString == "-") > 2) w.split("-") else Array(w)
     // split tokens containing multiple dashes (ex. CD4-CD8-double-negative)
-    val res3: Seq[String] = res2.flatMap{ w =>
+    val res3 = splitOnPattern(res2, doubleDashSplitPattern)
 
-      w match {
-        //ex. CD4-CD8-double-negative
-        case multi if multi.count(_ == "-") > 2 =>
-          multi.split("-")
-        case _ =>
-          Seq(w)
-      }
-    }
-
-    // remove any empty tokens
-    val res4 = res3.map(_.trim).filterNot(_.isEmpty)
-
-    val start = toks.head.beginPosition
-    val end = toks.head.endPosition
-
-    val newToks = res4
-    val offset = if (toks.nonEmpty) toks.head.beginPosition else 0
-    newToks.indices.map{ i =>
-      val wordLength = newToks(i).length
-      val beginPos = newToks.slice(0, i).map{_.length}.sum + i + offset
-      val endPos = beginPos + wordLength
-      PostProcessorToken(word = newToks(i), beginPosition = beginPos, endPosition = endPos)
-    }.toArray
+    res3
   }
 
   /**
