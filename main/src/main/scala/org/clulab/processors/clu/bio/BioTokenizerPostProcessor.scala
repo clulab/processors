@@ -35,8 +35,6 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     }
 
     def splitOnPattern(tokens: Array[PostProcessorToken], pattern: (String) => Array[String]): Array[PostProcessorToken] = {
-      val words = tokens.map(_.word)
-      // split complexes
       val before = tokens
       val res = for {
         tok <- before
