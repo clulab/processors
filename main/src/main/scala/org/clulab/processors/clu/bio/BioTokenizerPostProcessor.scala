@@ -26,11 +26,18 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     */
   def processForBioNlpSharedTask(toks: Array[PostProcessorToken]): Array[PostProcessorToken] = {
 
+    val BRACKET_PATTERN = """^\-[LR].B\-$""".r
+
+    // Correct word length for (}{}[] replacements
+    def getWordLength(w: String): Int = w match {
+      case bracket if BRACKET_PATTERN.pattern.matcher(bracket).matches  => 1
+      case other => other.length
+    }
+
     def splitOnPattern(tokens: Array[PostProcessorToken], pattern: (String) => Array[String]): Array[PostProcessorToken] = {
       val words = tokens.map(_.word)
       // split complexes
       val before = tokens
-      val offset = if (toks.nonEmpty) before.head.beginPosition else 0
       val res = for {
         tok <- before
         // apply pattern and filter out any empty tokens
@@ -40,8 +47,8 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
           Seq(tok)
         } else {
           res.indices.map { i =>
-            val wordLength = res(i).length
-            val beginPos = res.slice(0, i).map { _.length }.sum + i + offset
+            val wordLength = getWordLength(res(i))
+            val beginPos = tok.beginPosition + res.slice(0, i).map(getWordLength).sum + i
             val endPos = beginPos + wordLength
             PostProcessorToken(word = res(i), beginPosition = beginPos, endPosition = endPos)
           }
@@ -52,11 +59,11 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
 
     val slashPattern = (w: String) => w.split("/")
     val res0 = splitOnPattern(toks, slashPattern)
-    val dashPrefixPattern = (w: String) => w.split(s"(?<=^(${COMMON_PREFIXES.mkString("|")}))\\-")
+    val dashPrefixPattern = (w: String) => w.split(s"(?i)(?<=^(${COMMON_PREFIXES.mkString("|")}))\\-")
     val res1 = splitOnPattern(res0, dashPrefixPattern)
 
     // split token-final "-*ed" etc.
-    val dashSuffixPattern = (w: String) => w.split(s"\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)")
+    val dashSuffixPattern = (w: String) => w.split(s"(?i)\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)")
     val res2 = splitOnPattern(res1, dashSuffixPattern)
 
     val doubleDashSplitPattern = (w: String) => if (w.count(_.toString == "-") > 2) w.split("-") else Array(w)
@@ -74,31 +81,31 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
   def process(input: Array[PostProcessorToken]): Array[PostProcessorToken] = {
     var tokens = input
 
-    // revert tokenization that is too aggressive
-    tokens = revertAggressiveTokenization(tokens)
-
-    // "non" is a special prefix, because it drives negation detection
-    tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
-
-    // tokenize around "-" when the suffix is a known verb, noun, or other important word
-    tokens = breakOnPattern(tokens, dashSuffixes)
-
-    // tokenize around "-" when the prefix is a known site, such as "Tyr" in "Tyr-phosphorylated"
-    tokens = breakOnPattern(tokens, sitePrefixes)
-
-    // break n-ary complexes
-    tokens = breakNaryComplex(tokens)
-
-    // break mutations
-    // TODO: this needs improvement, see Dane's comments
-    tokens = breakMutant(tokens, SINGLEDASH_PATTERN)
-
-    // break all (well, most) tokens containing a single slash; try to replace them with an enumeration
-    // does not apply to protein family names, which often contain slashes
-    tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
-
-    // re-join trailing or preceding - or + to previous digit
-    tokens = joinSigns(tokens)
+//    // revert tokenization that is too aggressive
+//    tokens = revertAggressiveTokenization(tokens)
+//
+//    // "non" is a special prefix, because it drives negation detection
+//    tokens = breakOnPattern(tokens, Pattern.compile("(non)(-)(\\w+)", Pattern.CASE_INSENSITIVE))
+//
+//    // tokenize around "-" when the suffix is a known verb, noun, or other important word
+//    tokens = breakOnPattern(tokens, dashSuffixes)
+//
+//    // tokenize around "-" when the prefix is a known site, such as "Tyr" in "Tyr-phosphorylated"
+//    tokens = breakOnPattern(tokens, sitePrefixes)
+//
+//    // break n-ary complexes
+//    tokens = breakNaryComplex(tokens)
+//
+//    // break mutations
+//    // TODO: this needs improvement, see Dane's comments
+//    tokens = breakMutant(tokens, SINGLEDASH_PATTERN)
+//
+//    // break all (well, most) tokens containing a single slash; try to replace them with an enumeration
+//    // does not apply to protein family names, which often contain slashes
+//    tokens = breakOneSlash(tokens, SINGLESLASH_PATTERN)
+//
+//    // re-join trailing or preceding - or + to previous digit
+//    tokens = joinSigns(tokens)
 
     // bioNLP ST-specific rules
     tokens = processForBioNlpSharedTask(tokens)
