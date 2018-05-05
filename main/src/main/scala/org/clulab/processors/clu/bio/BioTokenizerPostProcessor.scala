@@ -55,8 +55,11 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
       res.flatten
     }
 
+    // split complexes (ex. "A/B/C complex")
     val slashPattern = (w: String) => w.split("/")
     val res0 = splitOnPattern(toks, slashPattern)
+
+    // split token-initial "anti-" etc.
     val dashPrefixPattern = (w: String) => w.split(s"(?i)(?<=^(${COMMON_PREFIXES.mkString("|")}))\\-")
     val res1 = splitOnPattern(res0, dashPrefixPattern)
 
@@ -64,6 +67,7 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     val dashSuffixPattern = (w: String) => w.split(s"(?i)\\-(?=(${VALID_DASH_SUFFIXES.mkString("|")})$$)")
     val res2 = splitOnPattern(res1, dashSuffixPattern)
 
+    // if a token STILL contains 2+ dashes, let's split them, as the token likely swallows several bionlp entities.
     val doubleDashSplitPattern = (w: String) => if (w.count(_.toString == "-") > 2) w.split("-") else Array(w)
     // split tokens containing multiple dashes (ex. CD4-CD8-double-negative)
     val res3 = splitOnPattern(res2, doubleDashSplitPattern)
