@@ -353,6 +353,18 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     es(10) should be ("O")
   }
 
+  it should "tokenize correctly under revertAgressiveTokenization" in {
+    // trying to repliace issue #240
+    val doc = proc.mkDocument("We describe here a novel molecule of this group termed SIT (SHP2 interacting transmembrane adaptor protein).")
+    annotate(doc)
+
+    val s = doc.sentences.head
+    println(s.words.mkString(", "))
+    println(s.startOffsets.mkString(", "))
+    println(s.endOffsets.mkString(", "))
+    false should be (true) // force failue here
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
