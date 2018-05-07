@@ -311,6 +311,21 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     }
   }
 
+  protected def newTokenExtractor(name: String, labels: Seq[String], priority: Priority, keep: Boolean, action: Action, pattern: TokenPattern) =
+      new TokenExtractor(name, labels, priority, keep, action, pattern)
+
+  protected def newCrossSentenceExtractor(name: String, labels: Seq[String], priority: Priority, keep: Boolean,
+      action: Action, leftWindow: Int, rightWindow: Int, anchorPattern: TokenExtractor, neighborPattern: TokenExtractor,
+      anchorRole: String, neighborRole: String): CrossSentenceExtractor = {
+    new CrossSentenceExtractor(name, labels, priority, keep, action, leftWindow, rightWindow,
+        anchorPattern, neighborPattern, anchorRole, neighborRole)
+  }
+
+  protected def newGraphExtractor(name: String, labels: Seq[String], priority: Priority, keep: Boolean, action: Action,
+      pattern: GraphPattern, config: OdinConfig): GraphExtractor = {
+    new GraphExtractor(name, labels, priority, keep, action, pattern, config)
+  }
+
   // compiles a token extractor
   private def mkTokenExtractor(rule: Rule): TokenExtractor = {
     val name = rule.name
@@ -320,7 +335,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val action = mirror.reflect(rule.action)
     val compiler = new TokenPatternParsers(rule.unit, rule.config)
     val pattern = compiler.compileTokenPattern(rule.pattern)
-    new TokenExtractor(name, labels, priority, keep, action, pattern)
+    newTokenExtractor(name, labels, priority, keep, action, pattern)
   }
 
   private def mkCrossSentenceExtractor(rule: Rule): CrossSentenceExtractor = {
@@ -374,7 +389,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
     if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
 
-    new CrossSentenceExtractor(
+    newCrossSentenceExtractor(
       name = rule.name,
       labels = rule.labels,
       priority = Priority(rule.priority),
@@ -400,7 +415,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val action = mirror.reflect(rule.action)
     val compiler = new GraphPatternCompiler(rule.unit, rule.config)
     val pattern = compiler.compileGraphPattern(rule.pattern)
-    new GraphExtractor(name, labels, priority, keep, action, pattern, rule.config)
+    newGraphExtractor(name, labels, priority, keep, action, pattern, rule.config)
   }
 }
 

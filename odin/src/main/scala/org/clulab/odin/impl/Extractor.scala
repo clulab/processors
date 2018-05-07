@@ -2,6 +2,7 @@ package org.clulab.odin.impl
 
 import org.clulab.processors.Document
 import org.clulab.odin._
+import org.clulab.struct.Interval
 
 
 trait Extractor {
@@ -18,6 +19,15 @@ trait Extractor {
     i <- 0 until doc.sentences.size
     m <- findAllIn(i, doc, state)
   } yield m
+
+  protected def newTextBoundMention(interval: Interval, sent: Int, doc: Document): TextBoundMention =
+    new TextBoundMention(labels, interval, sent, doc, keep, name)
+
+  protected def newEventMention(trigger: TextBoundMention, args: Map[String, Seq[Mention]], interval: Interval, sent: Int, doc: Document): EventMention =
+    new EventMention(labels, interval, trigger, args, Map.empty, sent, doc, keep, name)
+
+  protected def newRelationMention(args: Map[String, Seq[Mention]], interval: Interval, sent: Int, doc: Document): RelationMention =
+    new RelationMention(labels, interval, args, Map.empty, sent, doc, keep, name)
 }
 
 class TokenExtractor(
@@ -41,22 +51,22 @@ class TokenExtractor(
         // having several triggers in the same rule is not supported
         // the first will be used and the rest ignored
         val int = r.groups(triggerKey).head
-        val trigger = new TextBoundMention(labels, int, sent, doc, keep, name)
+        val trigger = newTextBoundMention(int, sent, doc)
         val groups = r.groups - triggerKey transform { (argName, intervals) =>
-          intervals.map(i => new TextBoundMention(labels, i, sent, doc, keep, name))
+          intervals.map(i => newTextBoundMention(i, sent, doc))
         }
         val args = mergeArgs(groups, r.mentions)
-        new EventMention(labels, r.interval, trigger, args, Map.empty, sent, doc, keep, name)
+        newEventMention(trigger, args, r.interval, sent, doc)
       case None if r.groups.nonEmpty || r.mentions.nonEmpty =>
         // result has arguments and no trigger, create a RelationMention
         val groups = r.groups transform { (argName, intervals) =>
-          intervals.map(i => new TextBoundMention(labels, i, sent, doc, keep, name))
+          intervals.map(i => newTextBoundMention(i, sent, doc))
         }
         val args = mergeArgs(groups, r.mentions)
-        new RelationMention(labels, r.interval, args, Map.empty, sent, doc, keep, name)
+        newRelationMention(args, r.interval, sent, doc)
       case None =>
         // result has no arguments, create a TextBoundMention
-        new TextBoundMention(labels, r.interval, sent, doc, keep, name)
+        newTextBoundMention(r.interval, sent, doc)
     }
 
   type Args = Map[String, Seq[Mention]]
