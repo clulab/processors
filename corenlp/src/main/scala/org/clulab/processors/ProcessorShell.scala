@@ -41,7 +41,7 @@ object ProcessorShell extends App {
   lazy val bio: Processor = new BioNLPProcessor(removeFigTabReferences = true)
   lazy val fastbio: Processor = new FastBioNLPProcessor(removeFigTabReferences = true)
 
-  var proc = core
+  var proc = bio
   reader.setPrompt("(core)>>> ")
   println("\nWelcome to the ProcessorShell!")
   printCommands()
