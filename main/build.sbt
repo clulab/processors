@@ -22,7 +22,7 @@ libraryDependencies ++= {
     // NLP tools used by CluProcessor
     "org.antlr"                %  "antlr4-runtime"            % "4.6",   // for tokenization
     "org.maltparser"           %  "maltparser"                % "1.9.0", // for dependency parsing
-    "org.clulab"               %  "bioresources"              % "1.1.24", // for bio NER
+    "org.clulab"               %  "bioresources"              % "1.1.26-SNAPSHOT", // for bio NER
 
     // logging
     "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.7.2",
