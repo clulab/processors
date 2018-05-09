@@ -1,4 +1,6 @@
 # Changes
++ **7.2.3** - "nmod" collapsing in CluProcessor now uses "_" as connector instead of ":" to align with CoreNLP.
++ **7.2.3** - "nmod" collapsing now follows multi-word expressions (MWE) to generate multi-word prepositions.
 + **7.2.2** - This is just a copy of 7.2.1, whose release on maven was broken
 + **7.2.1** - Cross-compile for scala 2.11 and 2.12
 + **7.2.1** - Prevented NER from changing state for the ShallowNLPProcessor and FastNLPProcessor

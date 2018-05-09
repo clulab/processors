@@ -72,12 +72,35 @@ object EnhancedDependencies {
       toRemove += prep
       for(c <- dgi.findByName("case").filter(_.source == prep.destination)) {
         val word = sentence.words(c.destination).toLowerCase()
+        // find multi-word prepositions such as "such as"
+        val mwe = findMultiWord(word, c.destination, sentence, dgi)
 
         // TODO: add nmod:agent (if word == "by") and passive voice here?
-        dgi.addEdge(prep.source, prep.destination, s"nmod:$word")
+        dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
       }
     }
     toRemove.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))
+  }
+
+  def findMultiWord(first: String, firstPos: Int, sentence: Sentence, dgi:DirectedGraphIndex[String]): String = {
+    val buffer = new StringBuilder
+    buffer.append(first)
+
+    var head = firstPos
+    var done = false
+    while(! done) {
+      val mods = dgi.findByHeadAndName(head, "mwe")
+      if(mods.isEmpty) {
+        done = true
+      } else {
+        val word = sentence.words(mods.head.destination).toLowerCase()
+        buffer.append("_")
+        buffer.append(word)
+        head = mods.head.destination
+      }
+    }
+
+    buffer.toString()
   }
 
   /**
@@ -130,9 +153,9 @@ object EnhancedDependencies {
           }
         }
 
-        // add the prep_x/nom:x of the right verb to the left, if the left doesn't have a similar prep_x/nomd:x already
+        // add the prep_x/nmod_x of the right verb to the left, if the left doesn't have a similar prep_x/nmod_x already
         var rightPreps =
-          if(universal) dgi.findByHeadAndPattern(right, "^nmod:*".r)
+          if(universal) dgi.findByHeadAndPattern(right, "^nmod_*".r)
           else dgi.findByHeadAndPattern(right, "^prep_*".r)
         for(rightPrep <- rightPreps) {
           val leftPreps = dgi.findByHeadAndName(left, rightPrep.relation)
