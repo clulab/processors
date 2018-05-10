@@ -42,11 +42,11 @@ class TestProcessorClient extends FlatSpecLike
 
   // load application configuration from the configuration file
   lazy val config = ConfigFactory.load().getConfig("ProcessorClient")
-  logger.debug(s"(TestProcessorClient): config=${config}")
+  //logger.debug(s"(TestProcessorClient): config=${config}")
 
   // create a processor server instance
   lazy val client = new ProcessorClient(config)
-  logger.debug(s"(TestProcessorClient): client=${client}")
+  //logger.debug(s"(TestProcessorClient): client=${client}")
 
   // shutdown the actor systems when done testing
   override def afterAll {
