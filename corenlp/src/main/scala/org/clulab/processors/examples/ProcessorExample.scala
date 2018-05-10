@@ -54,7 +54,16 @@ object ProcessorExample {
       sentence.entities.foreach(entities => println(s"Named entities: ${entities.mkString(" ")}"))
       sentence.norms.foreach(norms => println(s"Normalized entities: ${norms.mkString(" ")}"))
       sentence.universalBasicDependencies.foreach(dependencies => {
-        println("Syntactic dependencies:")
+        println("Basic syntactic dependencies:")
+        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+        while(iterator.hasNext) {
+          val dep = iterator.next
+          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+          println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+        }
+      })
+      sentence.universalEnhancedDependencies.foreach(dependencies => {
+        println("Enhanced syntactic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while(iterator.hasNext) {
           val dep = iterator.next

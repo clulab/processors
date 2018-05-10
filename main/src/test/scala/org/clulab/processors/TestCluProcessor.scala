@@ -109,6 +109,13 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("Parsing is fine.")
   }
 
+  it should "parse MWEs correctly" in {
+    val doc = proc.annotate("Foods such as icecream are tasty.")
+
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
+  }
+
   it should "parse a long sentence correctly" in {
     val doc = proc.annotate("Her T score of 63 on the Attention Problems scale is in the At Risk range suggesting that she sometimes daydreams or is easily distracted and unable to concentrate more than momentarily .")
     //println(s"Sentence: ${doc.sentences(0).words.mkString(" ")}")

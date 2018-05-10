@@ -54,14 +54,14 @@ class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
 
   it should "collapse prepositions" in {
     val doc = proc.annotate("Mary gave a book to Jane")
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod:to") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_to") should be(true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be(false)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 4, "case") should be(true)
   }
 
   it should "identify agents in passive voice" in {
     val doc = proc.annotate("Mary was congratulated by Jane")
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 4, "nmod:by") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 4, "nmod_by") should be(true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 0, "nsubjpass") should be(true)
   }
 
@@ -80,8 +80,8 @@ class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
     doc = proc.annotate("Cameras are bought and sold by the store")
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 0, "nsubjpass") should be(true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 0, "nsubjpass") should be(true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 7, "nmod:by") should be(true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 7, "nmod:by") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 7, "nmod_by") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(4, 7, "nmod_by") should be(true)
 
     doc = proc.annotate("She was watching a movie or reading a book")
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 0, "nsubj") should be(true)
