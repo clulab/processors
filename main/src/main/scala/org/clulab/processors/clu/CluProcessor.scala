@@ -305,10 +305,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   /** Syntactic parsing; modifies the document in place */
   def parse(doc:Document) {
     basicSanityCheck(doc)
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
+
+    if (doc.sentences.nonEmpty) {
+      if (doc.sentences.head.tags.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
+      if (doc.sentences.head.lemmas.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
+    }
 
     for (sentence <- doc.sentences) {
       //println(s"PARSING SENTENCE: ${sentence.words.mkString(", ")}")
