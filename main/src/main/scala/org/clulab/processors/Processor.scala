@@ -57,7 +57,10 @@ trait Processor extends ProcessorAnnotator {
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
   override def annotate (text:String, keepText:Boolean = false): Document = {
     val doc = mkDocument(preprocessText(text), keepText)
-    annotate(doc)
+    if (doc.sentences.nonEmpty)
+      annotate(doc)
+    else
+      doc
   }
 
   /** Annotate the given sentences, specify whether to retain the text in the resultant Document. */
