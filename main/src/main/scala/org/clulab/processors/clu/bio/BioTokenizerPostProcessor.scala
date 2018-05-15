@@ -4,7 +4,7 @@ import java.util.regex.Pattern
 
 import scala.collection.mutable.ArrayBuffer
 import BioTokenizerPostProcessor._
-import org.clulab.processors.clu.TokenizerPostProcessor
+import org.clulab.processors.clu.{PostProcessorToken, TokenizerPostProcessor}
 import org.clulab.struct.MutableNumber
 import org.clulab.utils.Files._
 
@@ -22,6 +22,10 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
 
   /**
     * Implements the bio-specific post-processing steps from McClosky et al. (2011)
+    * This receives as input tokens where .word == .raw.
+    *   In this postprocessing, some .word values may change. For example, some "/" are changed to "and" in .word.
+    *   to better serve the tools downstream such as syntactic parsing. However, the .raw MUST continue to match
+    *   the original text exactly.
     * @param input  Input CoreNLP sentence
     * @return  The modified tokens
     */
