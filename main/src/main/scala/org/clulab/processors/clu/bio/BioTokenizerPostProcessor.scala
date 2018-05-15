@@ -463,14 +463,6 @@ object BioTokenizerPostProcessor {
   }
 }
 
-case class PostProcessorToken(word:String, beginPosition:Int, endPosition:Int)
-
-object PostProcessorToken {
-  def mkWithLength(word:String, beginPosition:Int, length:Int): PostProcessorToken = {
-    PostProcessorToken(word, beginPosition, beginPosition + length)
-  }
-}
-
 case class ComplexSubToken(var text:String, var start:Int, var length:Int) {
   override def toString:String = s"[$text, $start, $length]"
 }

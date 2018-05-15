@@ -104,7 +104,7 @@ class Tokenizer(
 
         // found a valid end of sentence; start an empty one
         if(isEos) {
-          sentences += Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray)
+          sentences += Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray, null)
           words = new ArrayBuffer[String]()
           startOffsets = new ArrayBuffer[Int]()
           endOffsets = new ArrayBuffer[Int]()
@@ -118,7 +118,7 @@ class Tokenizer(
     }
 
     if(words.nonEmpty) {
-      sentences += Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray)
+      sentences += Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray, words.toArray)
     }
 
     sentences.toArray

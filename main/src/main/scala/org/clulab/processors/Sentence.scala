@@ -11,13 +11,22 @@ import scala.util.hashing.MurmurHash3._
 
 /** Stores the annotations for a single sentence */
 class Sentence(
-  /** Actual tokens in this sentence */
-  val words: Array[String],
+  /** Raw tokens in this sentence; these MUST match the original text */
+  val raw: Array[String],
   /** Start character offsets for the words; start at 0 */
   val startOffsets: Array[Int],
   /** End character offsets for the words; start at 0 */
-  val endOffsets: Array[Int]
-) extends Serializable {
+  val endOffsets: Array[Int],
+
+  /**
+    * Words produced from raw tokens, closer to what the downstream components expect
+    * These MAY differ from raw tokens,
+    *   e.g., Unicode characters in raw are replaced with ASCII strings, and parens are replaced with -LRB-, -RRB-, etc.
+    * However, the number of raw tokens MUST always equal the number of words, so if the exact text must be recovered,
+    *   please use the raw tokens with the same positions
+    */
+
+  val words: Array[String]) extends Serializable {
 
   /** POS tags for words */
   var tags: Option[Array[String]] = None
@@ -34,7 +43,7 @@ class Sentence(
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
   var graphs: GraphMap = new GraphMap
 
-  def size:Int = words.length
+  def size:Int = raw.length
 
   def indices: Range = 0 until size
 
@@ -59,8 +68,9 @@ class Sentence(
     // decided to use the class name
     val h0 = stringHash(stringCode)
     // NOTE: words.hashCode will produce inconsistent values
-    val h1 = mix(h0, getAnnotationsHash(Some(words)))
-    val h2 = mix(h1, getAnnotationsHash(Some(startOffsets)))
+    val h1a = mix(h0, getAnnotationsHash(Some(raw)))
+    val h1b = mix(h1a, getAnnotationsHash(Some(words)))
+    val h2 = mix(h1b, getAnnotationsHash(Some(startOffsets)))
     val h3 = mix(h2, getAnnotationsHash(Some(endOffsets)))
     val h4 = mix(h3, getAnnotationsHash(tags))
     val h5 = mix(h4, getAnnotationsHash(lemmas))
@@ -128,9 +138,10 @@ class Sentence(
   /** Reverts the current sentence */
   def revert():Sentence = {
     val reverted = new Sentence(
-      SeqUtils.revert(words).toArray,
+      SeqUtils.revert(raw).toArray,
       SeqUtils.revert(startOffsets).toArray,
-      SeqUtils.revert(endOffsets).toArray)
+      SeqUtils.revert(endOffsets).toArray,
+      SeqUtils.revert(words).toArray)
     if(tags.nonEmpty)
       reverted.tags = Some(SeqUtils.revert(tags.get).toArray)
     if(lemmas.nonEmpty)
@@ -152,14 +163,17 @@ class Sentence(
 object Sentence {
 
   def apply(
-    words: Array[String],
-    startOffsets: Array[Int],
-    endOffsets: Array[Int]
-  ): Sentence = new Sentence(words, startOffsets, endOffsets)
-  def apply(
-    words: Array[String],
+    raw:Array[String],
     startOffsets: Array[Int],
     endOffsets: Array[Int],
+    words: Array[String]): Sentence =
+    new Sentence(raw, startOffsets, endOffsets, words)
+
+  def apply(
+    raw: Array[String],
+    startOffsets: Array[Int],
+    endOffsets: Array[Int],
+    words: Array[String],
     tags: Option[Array[String]],
     lemmas: Option[Array[String]],
     entities: Option[Array[String]],
@@ -168,7 +182,7 @@ object Sentence {
     tree: Option[Tree],
     deps: GraphMap
   ): Sentence = {
-    val s = Sentence(words, startOffsets, endOffsets)
+    val s = Sentence(raw, startOffsets, endOffsets, words)
     // update annotations
     s.tags = tags
     s.lemmas = lemmas

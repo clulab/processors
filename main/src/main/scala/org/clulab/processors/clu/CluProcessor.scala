@@ -9,7 +9,7 @@ import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.processors.clu.bio._
-import org.clulab.utils.Configured
+import org.clulab.utils.{Configured, ScienceUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -38,6 +38,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   // the actual tokenizer
   lazy val tokenizer: Tokenizer =
     new OpenDomainEnglishTokenizer
+
+  // used for text normalization
+  lazy val scienceUtils = new ScienceUtils
 
   // this class post-processes the tokens produced by the tokenizer
   lazy val tokenizerPostProcessor:Option[TokenizerPostProcessor] =
@@ -116,45 +119,89 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   }
 
   private def postProcess(document: Document): Document = {
-    if(tokenizerPostProcessor.isEmpty) return document
-    val sentences = new ArrayBuffer[Sentence]()
-    for(s <- document.sentences) {
-      // this method is called before any real NLP happens, so POS tags, NER, etc. should be empty
-      assert(s.tags.isEmpty)
-      assert(s.lemmas.isEmpty)
-      assert(s.entities.isEmpty)
+    //
+    // apply domain specific tokenization rules (see BioTokenizerPostProcessor for such an example)
+    //
+    val postProcessedDoc =
+      if(tokenizerPostProcessor.isEmpty) {
+        return document
+      } else {
+        val sentences = new ArrayBuffer[Sentence]()
+        for (s <- document.sentences) {
+          // this method is called before any real NLP happens, so POS tags, NER, etc. should be empty
+          assert(s.tags.isEmpty)
+          assert(s.lemmas.isEmpty)
+          assert(s.entities.isEmpty)
 
-      val tokens = mkPostProcessorTokens(s)
-      val newTokens = tokenizerPostProcessor.get.process(tokens)
-      sentences += mkSentence(newTokens)
+          val tokens = mkPostProcessorTokens(s)
+          val newTokens = tokenizerPostProcessor.get.process(tokens)
+          sentences += mkSentence(newTokens)
+        }
+
+        // this method is called before any real NLP happens, so coref and discourse should be empty
+        assert(document.coreferenceChains.isEmpty)
+        assert(document.discourseTree.isEmpty)
+        val d = new Document(sentences.toArray)
+        d.text = document.text
+        d
+      }
+
+    //
+    // normalize raw tokens into words
+    // this includes:
+    // - replacing common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
+    // - replacing parens with -LRB-, -RRB-, etc.
+    //
+    for(sentence <- postProcessedDoc.sentences) {
+      // this assumes that sentence.words has been populated already!
+      assert(sentence.words != null)
+      assert(sentence.words.length == sentence.size)
+
+      for(i <- 0 until sentence.size) {
+        val w = sentence.words(i)
+        assert(w != null)
+
+        // replace unicode
+        sentence.words(i) = scienceUtils.replaceUnicodeWithAscii(w)
+
+        // replace parens
+        sentence.words(i) =
+          sentence.words(i) match {
+            case "(" => "-LRB-"
+            case ")" => "-RRB-"
+            case "[" => "-LSB-"
+            case "]" => "-RSB-"
+            case w:String => w
+          }
+      }
     }
 
-    // this method is called before any real NLP happens, so coref and discourse should be empty
-    assert(document.coreferenceChains.isEmpty)
-    assert(document.discourseTree.isEmpty)
-    val d = new Document(sentences.toArray)
-    d.text = document.text
-    d
+    postProcessedDoc
   }
 
   private def mkPostProcessorTokens(sentence: Sentence):Array[PostProcessorToken] = {
     val tokens = new Array[PostProcessorToken](sentence.size)
     for(i <- sentence.indices) {
-      tokens(i) = PostProcessorToken(sentence.words(i), sentence.startOffsets(i), sentence.endOffsets(i))
+      tokens(i) = PostProcessorToken(
+        sentence.raw(i),
+        sentence.startOffsets(i), sentence.endOffsets(i),
+        sentence.raw(i))
     }
     tokens
   }
 
   private def mkSentence(tokens:Array[PostProcessorToken]): Sentence = {
+    val raw = new Array[String](tokens.length)
     val words = new Array[String](tokens.length)
     val startOffsets = new Array[Int](tokens.length)
     val endOffsets = new Array[Int](tokens.length)
     for(i <- tokens.indices) {
+      raw(i) = tokens(i).raw
       words(i) = tokens(i).word
       startOffsets(i) = tokens(i).beginPosition
       endOffsets(i) = tokens(i).endPosition
     }
-    new Sentence(words, startOffsets, endOffsets)
+    new Sentence(raw, startOffsets, endOffsets, words)
   }
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
@@ -195,7 +242,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
         endOffsets += charOffset
         charOffset += charactersBetweenTokens
       }
-      sents += new Sentence(sentence.toArray, startOffsets.toArray, endOffsets.toArray)
+      sents += new Sentence(sentence.toArray, startOffsets.toArray, endOffsets.toArray, sentence.toArray)
       charOffset += charactersBetweenSentences
       if(keepText) {
         text.append(sentence.mkString(mkSep(charactersBetweenTokens)))
@@ -339,12 +386,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
 }
 
-trait TokenizerPreProcessor {
-  def process(text:String):String
-}
-
 trait TokenizerPostProcessor {
   def process(tokens:Array[PostProcessorToken]):Array[PostProcessorToken]
+}
+
+case class PostProcessorToken(raw:String, beginPosition:Int, endPosition:Int, word:String)
+
+object PostProcessorToken {
+  def mkWithLength(raw:String, beginPosition:Int, word:String): PostProcessorToken = {
+    PostProcessorToken(raw, beginPosition, beginPosition + raw.length, word)
+  }
 }
 
 trait SentencePostProcessor {
