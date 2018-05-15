@@ -66,7 +66,7 @@ object ValidCandidate {
   def main(args:Array[String]): Unit = {
     val props = argsToProperties(args)
     val path = props.getProperty("path")
-    val reader = new Reader
+    val reader = new CoNLLSRLReader
     val doc = reader.load(path)
 
     // checks how many true arguments are covered by the isValid() method

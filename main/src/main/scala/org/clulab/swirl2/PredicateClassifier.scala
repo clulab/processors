@@ -25,7 +25,7 @@ class PredicateClassifier {
   var lemmaCounts:Option[Counter[String]] = None
 
   def train(trainPath:String): Unit = {
-    val reader = new Reader
+    val reader = new CoNLLSRLReader
     val doc = reader.load(trainPath)
 
     computePredStats(doc)
@@ -45,7 +45,7 @@ class PredicateClassifier {
   def featuresPerNode(total:Int):Int = (total * 0.66).toInt
 
   def test(testPath:String): Unit = {
-    val reader = new Reader
+    val reader = new CoNLLSRLReader
     val doc = reader.load(testPath)
 
     val output = new ListBuffer[(String, String)]

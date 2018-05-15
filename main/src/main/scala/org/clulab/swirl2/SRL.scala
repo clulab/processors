@@ -71,7 +71,7 @@ class SRL {
   }
 
   def test(testPath:String):Unit = {
-    val reader = new Reader
+    val reader = new CoNLLSRLReader
     val doc = reader.load(testPath)
     val output = new ListBuffer[(DirectedGraph[String], DirectedGraph[String])] // gold, predicted
 

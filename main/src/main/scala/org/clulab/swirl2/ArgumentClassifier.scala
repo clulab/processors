@@ -42,7 +42,7 @@ class ArgumentClassifier {
 
     } else {
       // generate the dataset online
-      val reader = new Reader
+      val reader = new CoNLLSRLReader
       var doc = reader.load(trainPath)
       val labelStats = computeArgStats(doc)
 
@@ -86,7 +86,7 @@ class ArgumentClassifier {
   def featuresPerNode(total:Int):Int = RFClassifier.featuresPerNodeTwoThirds(total)// (10.0 * math.sqrt(total.toDouble)).toInt
 
   def test(testPath:String): Unit = {
-    val reader = new Reader
+    val reader = new CoNLLSRLReader
     val doc = reader.load(testPath)
     val output = new ListBuffer[(DirectedGraph[String], DirectedGraph[String])] // gold, predicted
 
@@ -228,7 +228,7 @@ class ArgumentClassifier {
   }
 
   def testOld(testPath:String): Unit = {
-    val reader = new Reader
+    val reader = new CoNLLSRLReader
     val doc = reader.load(testPath)
     printDoc(doc)
     val distHist = new Counter[Int]()

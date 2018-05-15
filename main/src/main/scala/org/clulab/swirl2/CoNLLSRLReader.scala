@@ -7,17 +7,17 @@ import org.slf4j.LoggerFactory
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
-import Reader._
+import CoNLLSRLReader._
 import org.clulab.serialization.DocumentSerializer
 
 
 /**
-  * Reads a CoNLL formatted file and converts it to our own representation
+  * Reads a CoNLL-2008 formatted file (containing semantic roles) and converts it to our own representation
   * User: mihais
   * Date: 5/5/15
   * Last Modified: Update for Scala 2.12: bug #10151 workaround.
   */
-class Reader {
+class CoNLLSRLReader {
   class CoNLLToken(
     val word:String,
     val pos:String,
@@ -324,8 +324,8 @@ class Reader {
   }
 }
 
-object Reader {
-  val logger = LoggerFactory.getLogger(classOf[Reader])
+object CoNLLSRLReader {
+  val logger = LoggerFactory.getLogger(classOf[CoNLLSRLReader])
 
   val USE_CONLL_TOKENIZATION = true
   val USE_GOLD_SYNTAX = true

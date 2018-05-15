@@ -8,12 +8,12 @@ import org.slf4j.LoggerFactory
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
-import Reader._
+import CoNLLSRLReader._
 import org.clulab.serialization.DocumentSerializer
 
 object ReaderMain {
   def main(args:Array[String]) {
-    val reader = new Reader
+    val reader = new CoNLLSRLReader
     val proc = new FastNLPProcessor()
     val file = new File(args(0))
     val outputFile = new File(args(0) + ".ser")
