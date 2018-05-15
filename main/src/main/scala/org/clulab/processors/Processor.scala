@@ -2,8 +2,6 @@ package org.clulab.processors
 
 import org.clulab.struct.Internalizer
 
-import scala.collection.mutable.ListBuffer
-
 /**
   * User: mihais
   * Date: 3/1/13
@@ -56,7 +54,7 @@ trait Processor extends ProcessorAnnotator {
 
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
   override def annotate (text:String, keepText:Boolean = false): Document = {
-    val doc = mkDocument(preprocessText(text), keepText)
+    val doc = mkDocument(text, keepText)
     if (doc.sentences.nonEmpty)
       annotate(doc)
     else
@@ -68,7 +66,7 @@ trait Processor extends ProcessorAnnotator {
     sentences:Iterable[String],
     keepText:Boolean = false): Document =
   {
-    val doc = mkDocumentFromSentences(preprocessSentences(sentences), keepText)
+    val doc = mkDocumentFromSentences(sentences, keepText)
     annotate(doc)
   }
 
@@ -77,7 +75,7 @@ trait Processor extends ProcessorAnnotator {
     sentences:Iterable[Iterable[String]],
     keepText:Boolean = false): Document =
   {
-    val doc = mkDocumentFromTokens(preprocessTokens(sentences), keepText)
+    val doc = mkDocumentFromTokens(sentences, keepText)
     annotate(doc)
   }
 

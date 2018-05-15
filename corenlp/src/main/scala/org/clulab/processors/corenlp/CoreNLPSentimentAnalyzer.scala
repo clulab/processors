@@ -36,7 +36,7 @@ object CoreNLPSentimentAnalyzer {
 
   /** Perform shallow analysis */
   private def mkDoc(text: String): Document = {
-    val doc = proc.mkDocument(proc.preprocessText(text), keepText = false)
+    val doc = proc.mkDocument(text, keepText = false)
     proc.tagPartsOfSpeech(doc)
     doc.clear()
     doc

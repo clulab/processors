@@ -35,16 +35,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   // should we intern strings or not?
   val internStrings:Boolean = getArgBoolean(s"$prefix.internStrings", Some(false))
 
-  // this class pre-processes the text before any computation happens
-  lazy val tokenizerPreProcessor:Option[TokenizerPreProcessor] =
-    getArgString(s"$prefix.tokenizer.pre.type", Some("none")) match {
-      case "bio" => Some(new BioTokenizerPreProcessor(
-        removeFigTabReferences = getArgBoolean(s"$prefix.tokenizer.pre.removeFigTabReferences", Some(true)),
-        removeBibReferences = getArgBoolean(s"$prefix.tokenizer.pre.removeBibReferences", Some(true))))
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.pre.type!")
-    }
-
   // the actual tokenizer
   lazy val tokenizer: Tokenizer =
     new OpenDomainEnglishTokenizer
@@ -123,11 +113,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     discourse(doc)
     doc.clear()
     doc
-  }
-
-  override def preprocessText(origText:String):String = {
-    if(tokenizerPreProcessor.nonEmpty) tokenizerPreProcessor.get.process(origText)
-    else origText
   }
 
   private def postProcess(document: Document): Document = {

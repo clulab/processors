@@ -9,12 +9,11 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.collection.JavaConverters._
 import scala.io.Source
-
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation
 import edu.stanford.nlp.pipeline.Annotation
-
 import org.clulab.processors.bionlp.BioNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
+import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
@@ -27,6 +26,7 @@ case class KBEntry(kbName:String, neLabel:String, validSpecies:Set[String])
   */
 object KBGenerator {
   val logger: Logger = LoggerFactory.getLogger(classOf[BioNLPProcessor])
+  val su = new ScienceUtils
 
   val NAME_FIELD_NDX = 0                    // config column containing the KB name
   val LABEL_FIELD_NDX = 1                   // config column containing the type label
@@ -145,7 +145,8 @@ object KBGenerator {
     * @return The tokenized line
     */
   def tokenizeResourceLine(line:String):Array[String] = {
-    val annotation = new Annotation(processor.preprocessText(line)) // preprocess text, e.g., replace Unicode with ASCII
+    val text = su.replaceUnicodeWithAscii(line)
+    val annotation = new Annotation(text)
     processor.tokenizerWithoutSentenceSplitting.annotate(annotation) // tokenization
     val origTokens = annotation.get(classOf[TokensAnnotation]).asScala.toArray
     processor.postprocessTokens(origTokens).map(_.word()) // tokenization post-processing
