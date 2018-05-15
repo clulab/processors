@@ -1,14 +1,16 @@
-package org.clulab.swirl2
+package org.clulab.utils
 
 import java.io.{BufferedReader, File, FileReader}
+
 import org.clulab.processors.{Document, Processor}
-import org.clulab.struct.{GraphMap, DirectedGraph}
+import org.clulab.serialization.DocumentSerializer
+import org.clulab.struct.{DirectedGraph, GraphMap}
+import org.clulab.utils.CoNLLSRLReader._
 import org.slf4j.LoggerFactory
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
-import CoNLLSRLReader._
-import org.clulab.serialization.DocumentSerializer
 
 
 /**
