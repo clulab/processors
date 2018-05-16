@@ -280,6 +280,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   }
 
   def lemmatizeWord(word:String):String = {
+    if(parens.findFirstMatchIn(word).nonEmpty)
+      return word
+
     val norm = CluProcessor.normalizeForLemmatization(word).trim
     if(norm.isEmpty) return ""
     
@@ -310,7 +313,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
         var lemma = lemmatizeWord(sent.words(i))
-        // in some case, Morpha returns empty strings
+        // in some cases, Morpha returns empty strings
         if(lemma.isEmpty)
           lemma = sent.words(i).toLowerCase()
         lemmas(i) = lemma
@@ -412,6 +415,8 @@ object CluProcessor {
 
   /** Special characters to remove. */
   val remove: Regex = """[()\[\].,;:"']""".r
+
+  val parens: Regex = """^(\-LRB\-)|(\-RRB\-)|(\-LSB\-)|(-RSB-)$""".r
 
   /** White spaces */
   val whitespaces: String = "\\s+"

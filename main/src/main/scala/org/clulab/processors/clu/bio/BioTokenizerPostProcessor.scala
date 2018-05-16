@@ -44,6 +44,7 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     // tokenize around "-" when the prefix is a known site, such as "Tyr" in "Tyr-phosphorylated"
     tokens = breakOnPattern(tokens, sitePrefixes)
 
+    TODO
     // break n-ary complexes
     tokens = breakNaryComplex(tokens)
 
@@ -68,26 +69,17 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     val output = new ArrayBuffer[PostProcessorToken]
     for(i <- tokens.indices) {
       val token = tokens(i)
-      val matcher = pattern.matcher(token.word)
+      val matcher = pattern.matcher(token.raw)
       if (matcher.matches()) {
         val sepPos = matcher.start(2)
-        val s1 = token.word.substring(0, sepPos)
+        val s1 = token.raw.substring(0, sepPos)
         if(COMMON_PREFIXES.contains(s1.toLowerCase)) {
           // do not separate here; these prefixes cannot live on their own
           output += token
         } else {
-          if (!DISCARD_STANDALONE_DASHES || !s1.equals("-")) {
-            output += PostProcessorToken.mkWithLength(s1, token.beginPosition, sepPos)
-          }
-          val sep = matcher.group(2)
-          if (!DISCARD_STANDALONE_DASHES || !sep.equals("-")) {
-            output += PostProcessorToken.mkWithLength(sep, token.beginPosition + sepPos, 1)
-          }
-          val s3 = token.word.substring(sepPos + 1)
-          if (!DISCARD_STANDALONE_DASHES || !s3.equals("-")) {
-            output += PostProcessorToken.mkWithLength(s3, token.beginPosition + sepPos + 1,
-              token.endPosition - token.beginPosition - sepPos - 1)
-          }
+          output += PostProcessorToken.mkWithLength(s1, token.beginPosition, s1)
+          val s3 = token.raw.substring(sepPos + 1)
+          output += PostProcessorToken.mkWithLength(s3, token.beginPosition + sepPos + 1, s3)
         }
       } else {
         output += token
@@ -101,18 +93,17 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
 
     for(i <- tokens.indices) {
       val token = tokens(i)
-      val matcher = pattern.matcher(token.word)
+      val matcher = pattern.matcher(token.raw)
       if (matcher.matches() &&
         ! isMeasurementUnit(token.word) && // skip measurement units such as "ng/ml"
         ! isSpecialToken(token.word)) { // skip special tokens such as family names containing slash such as "MEK1/MEK2"
         val sepPos = matcher.start(2)
-        val s1 = token.word.substring(0, sepPos)
-        val s3 = token.word.substring(sepPos + 1)
+        val s1 = token.raw.substring(0, sepPos)
+        val s3 = token.raw.substring(sepPos + 1)
 
-        output += PostProcessorToken.mkWithLength(s1, token.beginPosition, sepPos)
-        output += PostProcessorToken.mkWithLength("and", token.beginPosition + sepPos, 1) // replace "/" with "and"; it parses better
-        output += PostProcessorToken.mkWithLength(s3, token.beginPosition + sepPos + 1,
-          token.endPosition - token.beginPosition - sepPos - 1)
+        output += PostProcessorToken.mkWithLength(s1, token.beginPosition, s1)
+        output += PostProcessorToken.mkWithLength("/", token.beginPosition + sepPos, "and") // replace "/" with "and"; it parses better
+        output += PostProcessorToken.mkWithLength(s3, token.beginPosition + sepPos + 1, s3)
       } else {
         output += token
       }
@@ -238,7 +229,8 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     //println()
 
     val output = new ArrayBuffer[PostProcessorToken]
-    var crtToken = new StringBuilder
+    var crtTokenRaw = new StringBuilder
+    var crtTokenWord = new StringBuilder
     var crtTokenBeginPosition = 0
     var i = 0
     while (i < tokens.length) {
@@ -247,23 +239,28 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
         countConnectingTokens(tokens, i, howManyConnectingTokens)) {
         // found an aggressive tokenization for this sequence of tokens; revert it
         for(j <- 0 to howManyConnectingTokens.value) {
-          crtToken.append(tokens(i + j).word)
+          crtTokenRaw.append(tokens(i + j).raw)
+          crtTokenWord.append(tokens(i + j).word)
         }
         i += howManyConnectingTokens.value + 1
       } else {
-        if(crtToken.nonEmpty) {
-          val word = crtToken.toString()
-          output += PostProcessorToken.mkWithLength(word, crtTokenBeginPosition, word.length)
-          crtToken = new StringBuilder
+        if(crtTokenRaw.nonEmpty) {
+          val raw = crtTokenRaw.toString()
+          val word = crtTokenWord.toString()
+          output += PostProcessorToken.mkWithLength(raw, crtTokenBeginPosition, word)
+          crtTokenRaw = new StringBuilder
+          crtTokenWord = new StringBuilder
         }
-        crtToken.append(tokens(i).word)
+        crtTokenRaw.append(tokens(i).raw)
+        crtTokenWord.append(tokens(i).word)
         crtTokenBeginPosition = tokens(i).beginPosition
         i += 1
       }
     }
-    if(crtToken.nonEmpty) {
-      val word = crtToken.toString()
-      output += PostProcessorToken.mkWithLength(word, crtTokenBeginPosition, word.length)
+    if(crtTokenRaw.nonEmpty) {
+      val raw = crtTokenRaw.toString()
+      val word = crtTokenWord.toString()
+      output += PostProcessorToken.mkWithLength(raw, crtTokenBeginPosition, word)
     }
     output.toArray
   }
@@ -332,7 +329,6 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
 }
 
 object BioTokenizerPostProcessor {
-  private val DISCARD_STANDALONE_DASHES = true
 
   private val VALID_DASH_SUFFIXES = Set(
     "\\w+ed", "\\w+ing", // tokenize for all suffix verbs, e.g., "ABC-mediated"
