@@ -2,15 +2,26 @@ package org.clulab.learning
 
 import org.clulab.struct.Counter
 import libsvm._
+
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.Lexicon
 import org.slf4j.LoggerFactory
 import LibSVMClassifier.logger
 import java.io._
 
+import org.clulab.learning._
+
+class KernelType
+
+case object LinearKernel extends KernelType
+case object PolynomialKernel extends KernelType
+case object RBFKernel extends KernelType
+case object SigmoidKernel extends KernelType
+
 /**
- * Modified from mihais's Liblinear wrapper by dfried on 5/2/14
- */
+  * Modified from mihais's Liblinear wrapper by dfried on 5/2/14
+  * Further modified by enrique on 5/15/18
+  */
 class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L,F] with Serializable {
   def this(kernelType: KernelType,
            degree: Int = 3, // for poly
@@ -21,7 +32,7 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
            shrinking: Boolean = true,
            probability: Boolean = true,
            cacheSize: Int = 100) =
-     this(LibSVMClassifier.makeParameters(kernelType, degree, gamma, coef0, C, eps, shrinking, probability, cacheSize))
+    this(LibSVMClassifier.makeParameters(kernelType, degree, gamma, coef0, C, eps, shrinking, probability, cacheSize))
 
   private var problem: svm_problem = null
   private var model: svm_model = null
@@ -33,10 +44,17 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
   private var labelLexicon:Option[Lexicon[L]] = None
 
   /**
-   * Trains a classifier, using only the datums specified in indices
-   * indices is useful for bagging
-   */
-  def train(dataset: Dataset[L, F], indices: Array[Int]): Unit = {
+    * Trains a classifier, using only the datums specified in indices
+    * indices is useful for bagging
+    */
+  override def train(dataset: Dataset[L, F], indices: Array[Int]): Unit = train(dataset, indices, None)
+
+  /**
+    * Trains a classifier, using only the datums specified in indices
+    * indices is useful for bagging
+    * Class weights allow for balancing of not evenly distributed labels by scaling the regularization parameter (C)
+    */
+  def train(dataset: Dataset[L, F], indices: Array[Int], classWeights:Option[Map[L, Double]]): Unit = {
     problem = new svm_problem
     problem.l = indices.length
     logger.debug(s"Using ${problem.l} datums.")
@@ -97,6 +115,23 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
     if (error_msg != null) {
       throw new Exception(error_msg)
     }
+
+    // Add class weights, if provided
+    classWeights match {
+      case Some(weights) => {
+        // Class weights will be marshaled to libsvm's parameter data structure
+        val nr_weights = weights.size
+        val (weight_labels, weight_values) = weights.map{
+          case (label, value) =>  (dataset.labelLexicon.get(label).get, value)
+        }.unzip
+
+        parameters.nr_weight = nr_weights
+        parameters.weight_label = weight_labels.toArray
+        parameters.weight = weight_values.toArray
+      }
+      case None => Unit
+    }
+
     // ... and train
     model = svm.svm_train(problem, parameters)
 
@@ -112,9 +147,9 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
   }
 
   /**
-   * Returns the scores of all possible labels for this datum
-   * Convention: if the classifier can return probabilities, these must be probabilities
-   **/
+    * Returns the scores of all possible labels for this datum
+    * Convention: if the classifier can return probabilities, these must be probabilities
+    **/
   override def scoresOf(d:Datum[L, F]): Counter[L] = {
     val nodes = datumToNodes(d)
     val probs = new Array[Double](model.nr_class)
@@ -238,14 +273,14 @@ object LibSVMClassifier {
   }
 
   def makeParameters(kernelType: KernelType,
-                             degree: Int, // for poly
-                             gamma: Double, // for poly/rbf/sigmoid
-                             coef0: Double, // for poly/sigmoid
-                             C: Double,
-                             eps: Double,
-                             shrinking: Boolean,
-                             probability: Boolean,
-                             cache_size : Int) = {
+                     degree: Int, // for poly
+                     gamma: Double, // for poly/rbf/sigmoid
+                     coef0: Double, // for poly/sigmoid
+                     C: Double,
+                     eps: Double,
+                     shrinking: Boolean,
+                     probability: Boolean,
+                     cache_size : Int) = {
     val params = new svm_parameter
     params.svm_type = svm_parameter.C_SVC
 
