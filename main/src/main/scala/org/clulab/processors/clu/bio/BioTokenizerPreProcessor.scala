@@ -36,7 +36,6 @@ class BioTokenizerPreProcessor(removeFigTabReferences:Boolean, removeBibReferenc
     os.toString()
   }
 
-
   /**
     * Removes references to Bibliographies in the given text string, if the
     * removeBibReferences flag is set for this class instance.

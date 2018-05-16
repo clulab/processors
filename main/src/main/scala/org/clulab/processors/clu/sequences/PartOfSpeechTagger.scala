@@ -66,10 +66,16 @@ object PartOfSpeechTagger {
         wordPos = 0, labelPos = 1,
         ColumnsToDocument.setTags,
         ColumnsToDocument.annotateLemmas)
-      val tagger = new PartOfSpeechTagger // a single-pass model is sufficient for POS tagging
+      val tagger = new PartOfSpeechTagger
 
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
+      }
+
+      // how many folds to use in the first pass, for a bi-directional model
+      // if undefined, it uses a single pass MEMM
+      if(props.containsKey("bi")) {
+        tagger.numFoldsFirstPass = props.getProperty("bi").toInt
       }
 
       tagger.train(List(doc).iterator)
