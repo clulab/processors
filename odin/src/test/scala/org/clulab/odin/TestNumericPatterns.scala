@@ -13,7 +13,8 @@ class TestNumericPatterns extends FlatSpec with Matchers {
       Sentence(
         Array("blah"),
         Array(0),
-        Array(4)
+        Array(4),
+        Array("blah")
       )
     )
   )

@@ -2,7 +2,8 @@ package org.clulab.processors.bionlp
 
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.process.CoreLabelTokenFactory
-import org.clulab.processors.clu.bio.{BioTokenizerPostProcessor, PostProcessorToken}
+import org.clulab.processors.clu.PostProcessorToken
+import org.clulab.processors.clu.bio.BioTokenizerPostProcessor
 
 /**
  * Post processes CoreNLP tokenization so it suits bio analysis
@@ -25,6 +26,7 @@ class BioNLPTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) {
     tokens
   }
 
+  //TODO: how to preserve both raw and word here??
   private def toCoreLabels(tokens: Array[PostProcessorToken]): Array[CoreLabel] = {
     val labels = new Array[CoreLabel](tokens.length)
     val f = new CoreLabelTokenFactory()

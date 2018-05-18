@@ -165,6 +165,12 @@ object Sentence {
   def apply(
     raw:Array[String],
     startOffsets: Array[Int],
+    endOffsets: Array[Int]): Sentence =
+    new Sentence(raw, startOffsets, endOffsets, raw) // words are identical to raw tokens (a common situation)
+
+  def apply(
+    raw:Array[String],
+    startOffsets: Array[Int],
     endOffsets: Array[Int],
     words: Array[String]): Sentence =
     new Sentence(raw, startOffsets, endOffsets, words)
