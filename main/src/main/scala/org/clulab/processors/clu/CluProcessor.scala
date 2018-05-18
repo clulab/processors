@@ -182,6 +182,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   private def mkPostProcessorTokens(sentence: Sentence):Array[PostProcessorToken] = {
     val tokens = new Array[PostProcessorToken](sentence.size)
     for(i <- sentence.indices) {
+      // at this stage, .raw == .word in the PostProcessorToken
       tokens(i) = PostProcessorToken(
         sentence.raw(i),
         sentence.startOffsets(i), sentence.endOffsets(i),
