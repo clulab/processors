@@ -165,7 +165,11 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
 
   def precedes(that: Mention): Boolean = this.compare(that) < 0
 
-  override def hashCode: Int = {
+  override def hashCode: Int = cachedHashCode
+
+  protected lazy val cachedHashCode = calculateHashCode
+
+  protected def calculateHashCode: Int = {
     val h0 = stringHash("org.clulab.odin.Mention")
     val h1 = mix(h0, labels.hashCode)
     val h2 = mix(h1, tokenInterval.hashCode)
@@ -287,9 +291,9 @@ class EventMention(
   }
 
   // trigger should be part of the hashCode too
-  override def hashCode: Int = {
+  protected override def calculateHashCode: Int = {
     val h0 = stringHash("org.clulab.odin.EventMention")
-    val h1 = mix(h0, super.hashCode)
+    val h1 = mix(h0, super.calculateHashCode)
     val h2 = mixLast(h1, trigger.hashCode)
     finalizeHash(h2, 2)
   }
