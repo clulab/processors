@@ -44,25 +44,50 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     var acc = 0.0
     if(numFoldsFirstPass > 1) {
       // generate first-pass labels
-      firstPassLabels = Some(mkFirstPassLabels(sentences))
+      // try to read them from cached file, if it exists
+      val firstPassFile = new File(FIRST_PASS_FILE)
+      firstPassLabels = if(firstPassFile.exists()) {
+        logger.debug(s"Found cached file with first-pass labels: $FIRST_PASS_FILE")
+        val source = scala.io.Source.fromFile(firstPassFile)
+        val labels = readFirstPassLabels(source)
+        source.close()
+        Some(labels)
+      } else {
+        logger.debug("Generating first-pass labels from scratch...")
+        val labels = mkFirstPassLabels(sentences)
+        val pw = new PrintWriter(new FileWriter(FIRST_PASS_FILE))
+        for(s <- firstPassLabels.get) {
+          pw.println(s.mkString("\t"))
+        }
+        pw.close()
+        Some(labels)
+      }
       assert(firstPassLabels.get.length == sentences.size)
 
       // compute the accuracy of the first pass
       acc = accuracy(sentences, firstPassLabels.get)
 
-      // make the first-pass classifier on the whole data
-      firstPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
-        !leftToRight, None))
     }
 
     // make the second-pass classifier
+    logger.debug("Training the second-pass classifier on the whole data...")
     secondPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
       leftToRight, firstPassLabels))
+
+    if(numFoldsFirstPass > 1) {
+      // make the first-pass classifier on the whole data
+      logger.debug("Training the first-pass classifier on the whole data...")
+      firstPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
+        !leftToRight, None))
+    }
 
     logger.info("Finished training.")
     if(firstPassLabels.nonEmpty)
       logger.info(s"The accuracy of the first pass classifier was $acc.")
   }
+
+  private val FIRST_PASS_FILE = "firs_pass_labels.tsv"
+  protected def readFirstPassLabels(source:scala.io.Source):Array[Array[L]]
 
   def mkFirstPassLabels(sentences: ArrayBuffer[Sentence]): Array[Array[L]] = {
     val folds = Datasets.mkFolds(numFoldsFirstPass, sentences.size)

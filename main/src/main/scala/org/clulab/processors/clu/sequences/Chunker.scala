@@ -11,7 +11,7 @@ import org.slf4j.{Logger, LoggerFactory}
 /**
   * Generates chunking (shallow syntax) labels
   */
-class Chunker() extends BiMEMMSequenceTagger[String, String]() {
+class Chunker() extends BiMEMMSequenceTagger[String, String]() with FirstPassLabelsReader {
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int) = {
     val fe = new FeatureExtractor(sentence, offset, features)

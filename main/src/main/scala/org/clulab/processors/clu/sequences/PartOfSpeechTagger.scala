@@ -13,7 +13,7 @@ import org.slf4j.{Logger, LoggerFactory}
   * Author: mihais
   * Date: 3/24/17
   */
-class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
+class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() with FirstPassLabelsReader {
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int) = {
     val fe = new FeatureExtractor(sentence, offset, features)
