@@ -56,7 +56,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
         logger.debug("Generating first-pass labels from scratch...")
         val labels = mkFirstPassLabels(sentences)
         val pw = new PrintWriter(new FileWriter(FIRST_PASS_FILE))
-        for(s <- firstPassLabels.get) {
+        for(s <- labels) {
           pw.println(s.mkString("\t"))
         }
         pw.close()
@@ -86,7 +86,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
       logger.info(s"The accuracy of the first pass classifier was $acc.")
   }
 
-  private val FIRST_PASS_FILE = "firs_pass_labels.tsv"
+  private val FIRST_PASS_FILE = "first_pass_labels.tsv"
   protected def readFirstPassLabels(source:scala.io.Source):Array[Array[L]]
 
   def mkFirstPassLabels(sentences: ArrayBuffer[Sentence]): Array[Array[L]] = {
