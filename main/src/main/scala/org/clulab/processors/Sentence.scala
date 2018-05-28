@@ -13,9 +13,9 @@ import scala.util.hashing.MurmurHash3._
 class Sentence(
   /** Raw tokens in this sentence; these MUST match the original text */
   val raw: Array[String],
-  /** Start character offsets for the words; start at 0 */
+  /** Start character offsets for the raw tokens; start at 0 */
   val startOffsets: Array[Int],
-  /** End character offsets for the words; start at 0 */
+  /** End character offsets for the raw tokens; start at 0 */
   val endOffsets: Array[Int],
 
   /**
@@ -25,7 +25,6 @@ class Sentence(
     * However, the number of raw tokens MUST always equal the number of words, so if the exact text must be recovered,
     *   please use the raw tokens with the same positions
     */
-
   val words: Array[String]) extends Serializable {
 
   /** POS tags for words */
