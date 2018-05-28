@@ -5,6 +5,7 @@ import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import org.clulab.processors.Document
 import org.clulab.processors.bionlp.ner.{HybridNER, KBLoader}
+import org.clulab.processors.clu.PostProcessorToken
 import org.clulab.processors.clu.bio.BioNERPostProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
@@ -35,11 +36,14 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
   private lazy val nerPostProcessor = new BioNERPostProcessor(KBLoader.stopListFile.get)
 
-  override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = BioNLPUtils.mkTokenizerWithoutSentenceSplitting
+  override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP =
+    BioNLPUtils.mkTokenizerWithoutSentenceSplitting
 
-  override def mkTokenizerWithSentenceSplitting: StanfordCoreNLP = BioNLPUtils.mkTokenizerWithSentenceSplitting
+  override def mkTokenizerWithSentenceSplitting: StanfordCoreNLP =
+    BioNLPUtils.mkTokenizerWithSentenceSplitting
 
-  override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = postProcessor.process(originalTokens)
+  override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[PostProcessorToken] =
+    postProcessor.process(originalTokens)
 
   override def resolveCoreference(doc:Document): Unit = {
     doc.coreferenceChains = None

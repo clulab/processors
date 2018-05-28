@@ -149,7 +149,7 @@ object KBGenerator {
     val annotation = new Annotation(text)
     processor.tokenizerWithoutSentenceSplitting.annotate(annotation) // tokenization
     val origTokens = annotation.get(classOf[TokensAnnotation]).asScala.toArray
-    processor.postprocessTokens(origTokens).map(_.word()) // tokenization post-processing
+    processor.postprocessTokens(origTokens).map(_.word) // tokenization post-processing
   }
 
   def containsValidSpecies(entry:KBEntry, tokens:Array[String]):Boolean = {

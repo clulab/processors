@@ -7,7 +7,8 @@ import org.clulab.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
-import org.clulab.processors.clu.bio.{BioNERPostProcessor}
+import org.clulab.processors.clu.PostProcessorToken
+import org.clulab.processors.clu.bio.BioNERPostProcessor
 
 import scala.collection.JavaConverters._
 
@@ -39,7 +40,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
 
   override def mkTokenizerWithSentenceSplitting: StanfordCoreNLP = BioNLPUtils.mkTokenizerWithSentenceSplitting
 
-  override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = postProcessor.process(originalTokens)
+  override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[PostProcessorToken] = postProcessor.process(originalTokens)
 
   override def resolveCoreference(doc:Document): Unit = {
     doc.coreferenceChains = None
