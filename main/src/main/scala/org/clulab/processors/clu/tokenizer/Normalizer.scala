@@ -85,7 +85,7 @@ class EnglishNormalizer extends Normalizer {
     // convert all parens in the format that Treebank likes
     if(PARENS.contains(raw.text)) {
       val tokens = new ListBuffer[RawToken]
-      tokens += RawToken(PARENS.get(raw.text).get, raw.startOffset, raw.endOffset)
+      tokens += RawToken(PARENS(raw.text), raw.startOffset, raw.endOffset)
       return tokens
     }
 

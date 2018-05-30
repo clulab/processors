@@ -77,7 +77,7 @@ class Sentence(
     val h7 = mix(h6, getAnnotationsHash(norms))
     val h8 = mix(h7, getAnnotationsHash(chunks))
     val h9 = mix(h8, if (dependencies.nonEmpty) dependencies.get.equivalenceHash else None.hashCode)
-    finalizeHash(h9, 9)
+    finalizeHash(h9, 9) // TODO: is 9 still valid, now that we have raw tokens as well?
   }
 
   /**
@@ -112,11 +112,11 @@ class Sentence(
     *
     * @return the text of the sentence
     */
-  def getSentenceText():String =  getSentenceFragmentText(0, words.length)
+  def getSentenceText:String =  getSentenceFragmentText(0, words.length)
 
   def getSentenceFragmentText(start:Int, end:Int):String = {
     // optimize the single token case
-    if(end - start == 1) words(start)
+    if(end - start == 1) raw(start)
 
     val text = new mutable.StringBuilder()
     for(i <- start until end) {
@@ -129,7 +129,7 @@ class Sentence(
           text.append(" ")
         }
       }
-      text.append(words(i))
+      text.append(raw(i))
     }
     text.toString()
   }
