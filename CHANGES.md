@@ -1,4 +1,5 @@
 # Changes
++ **7.4.0** - Significant improvements to tokenization code. Both CLU and CoreNLP processors now use the same tokenizer.
 + **7.3.0** - "nmod" collapsing in CluProcessor now uses "_" as connector instead of ":" to align with CoreNLP.
 + **7.3.0** - "nmod" collapsing now follows multi-word expressions (MWE) to generate multi-word prepositions.
 + **7.2.2** - This is just a copy of 7.2.1, whose release on maven was broken
