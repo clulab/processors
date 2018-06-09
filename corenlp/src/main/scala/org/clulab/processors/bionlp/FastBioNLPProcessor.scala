@@ -1,12 +1,10 @@
 package org.clulab.processors.bionlp
 
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
-import edu.stanford.nlp.ling.CoreLabel
-import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
+import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.processors.Document
 import org.clulab.processors.bionlp.ner.{HybridNER, KBLoader}
-import org.clulab.processors.clu.PostProcessorToken
-import org.clulab.processors.clu.bio.BioNERPostProcessor
+import org.clulab.processors.clu.bio.{BioNERPostProcessor, BioTokenizerPostProcessor}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 
@@ -28,22 +26,14 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
                            removeFigTabReferences:Boolean = true,
                            removeBibReferences:Boolean = true
 )
-  extends FastNLPProcessor(internStrings, withChunks, withDiscourse) {
+  extends FastNLPProcessor(
+    Some(new BioTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)),
+    internStrings, withChunks, withDiscourse) {
 
   //lazy val banner = new BannerWrapper
-  private lazy val postProcessor = new BioNLPTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
   private lazy val nerPostProcessor = new BioNERPostProcessor(KBLoader.stopListFile.get)
-
-  override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP =
-    BioNLPUtils.mkTokenizerWithoutSentenceSplitting
-
-  override def mkTokenizerWithSentenceSplitting: StanfordCoreNLP =
-    BioNLPUtils.mkTokenizerWithSentenceSplitting
-
-  override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[PostProcessorToken] =
-    postProcessor.process(originalTokens)
 
   override def resolveCoreference(doc:Document): Unit = {
     doc.coreferenceChains = None

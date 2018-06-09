@@ -7,12 +7,10 @@ import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.collection.JavaConverters._
 import scala.io.Source
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation
-import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.processors.bionlp.BioNLPProcessor
-import org.clulab.processors.shallownlp.ShallowNLPProcessor
+import org.clulab.processors.clu.BioCluProcessor
+import org.clulab.processors.clu.tokenizer.Tokenizer
 import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -33,11 +31,7 @@ object KBGenerator {
   val SPECIES_FIELD_NDX = 2                 // KB column containing the species of the name entity
 
   /** Minimal processor, used solely for the tokenization of resources */
-  lazy val processor = new BioNLPProcessor(
-    withCRFNER = false,
-    withContext = false,
-    withRuleNER = false,
-    withDiscourse = ShallowNLPProcessor.NO_DISCOURSE)
+  lazy val tokenizer: Tokenizer = (new BioCluProcessor).tokenizer
 
   def main (args: Array[String]) {
     val configFile = args(0)
@@ -146,10 +140,8 @@ object KBGenerator {
     */
   def tokenizeResourceLine(line:String):Array[String] = {
     val text = su.replaceUnicodeWithAscii(line)
-    val annotation = new Annotation(text)
-    processor.tokenizerWithoutSentenceSplitting.annotate(annotation) // tokenization
-    val origTokens = annotation.get(classOf[TokensAnnotation]).asScala.toArray
-    processor.postprocessTokens(origTokens).map(_.word) // tokenization post-processing
+    val origTokens = tokenizer.tokenize(text, sentenceSplit = false).head.words
+    origTokens
   }
 
   def containsValidSpecies(entry:KBEntry, tokens:Array[String]):Boolean = {

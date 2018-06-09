@@ -65,13 +65,19 @@ class TestTokenizer extends FlatSpec with Matchers {
 
     sents = tok("I'm happy :) not sad :(.")
     sents(0).size should be (8)
+  }
 
-    
+  it should "handle contractions correctly" in {
+    val sents = tok("I'm won't don't cont'd he's he'd.")
+    sents(0).size should be (12)
+
+    sents(0).raw.mkString(" ") should be ("I 'm wo n't do n't cont'd he 's he 'd .")
+    sents(0).words.mkString(" ") should be ("I am will not do not cont'd he 's he 'd .")
   }
 
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
-    val t = new OpenDomainEnglishTokenizer
+    val t = new OpenDomainEnglishTokenizer(None)
     val sents = t.tokenize(s)
     for(i <- sents.indices) {
       println(s"\tSentence #$i: " + sents(i).words.mkString(", "))

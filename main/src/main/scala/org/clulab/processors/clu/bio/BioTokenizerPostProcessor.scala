@@ -2,9 +2,8 @@ package org.clulab.processors.clu.bio
 
 import java.util.regex.Pattern
 
-import scala.collection.mutable.ArrayBuffer
 import BioTokenizerPostProcessor._
-import org.clulab.processors.clu.{PostProcessorToken, TokenizerPostProcessor}
+import org.clulab.processors.clu.tokenizer.{RawToken, TokenizerStep}
 import org.clulab.struct.MutableNumber
 import org.clulab.utils.Files._
 
@@ -17,7 +16,7 @@ import scala.collection.mutable
   * User: mihais
   * Date: 9/11/17
   */
-class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) extends TokenizerPostProcessor {
+class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) extends TokenizerStep {
   val tokensWithValidSlash:Set[String] = loadTokensWithValidSlash(kbsWithTokensWithValidSlashes)
 
   /**
@@ -29,7 +28,8 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     * @param input  Input CoreNLP sentence
     * @return  The modified tokens
     */
-  def process(input:Array[PostProcessorToken]):Array[PostProcessorToken] = {
+  def process(input:Array[RawToken]):Array[RawToken] = {
+    /*
     var tokens = input
 
     // revert tokenization that is too aggressive
@@ -59,9 +59,11 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     tokens = joinSigns(tokens)
 
     tokens
-    
+    */
+    null
   }
 
+  /*
   def isSpecialToken(s:String):Boolean = tokensWithValidSlash.contains(s.toLowerCase)
 
   def breakOnPattern(tokens:Array[PostProcessorToken], pattern:Pattern):Array[PostProcessorToken] = {
@@ -336,6 +338,7 @@ class BioTokenizerPostProcessor(kbsWithTokensWithValidSlashes:Seq[String]) exten
     }
     output.toArray
   }
+  */
 }
 
 object BioTokenizerPostProcessor {
@@ -406,7 +409,7 @@ object BioTokenizerPostProcessor {
     m.matches()
   }
 
-  private def countConnectingTokens(tokens:Array[PostProcessorToken], offset:Int, howManyConnecting:MutableNumber[Int]):Boolean = {
+  private def countConnectingTokens(tokens:Array[RawToken], offset:Int, howManyConnecting:MutableNumber[Int]):Boolean = {
     var i = offset
     while(i < tokens.length - 1 && isConnectingToken(tokens(i).word) && // found connecting token(s) that were tokenized too aggressively
       tokens(i - 1).endPosition == tokens(i).beginPosition && // attached to the previous token

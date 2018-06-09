@@ -116,14 +116,12 @@ class Sentence(
 
   def getSentenceFragmentText(start:Int, end:Int):String = {
     // optimize the single token case
-    if(end - start == 1) raw(start)
+    if(end - start == 1) return raw(start)
 
     val text = new mutable.StringBuilder()
     for(i <- start until end) {
       if(i > start) {
         // add as many white spaces as recorded between tokens
-        // sometimes this space is negative: in BioNLPProcessor we replace "/" with "and"
-        //   in these cases, let's make sure we print 1 space, otherwise the text is hard to read
         val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
         for (j <- 0 until numberOfSpaces) {
           text.append(" ")
