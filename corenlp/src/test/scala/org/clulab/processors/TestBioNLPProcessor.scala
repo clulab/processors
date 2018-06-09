@@ -278,7 +278,7 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(0).words(6) should be (",")
     doc.sentences(0).words(7) should be ("and")
     doc.sentences(0).startOffsets(7) should be (22)
-    doc.sentences(0).endOffsets(7) should be (23)
+    doc.sentences(0).endOffsets(7) should be (22)
     doc.sentences(0).words(8) should be ("Akt1")
   }
 
