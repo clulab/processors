@@ -7,7 +7,9 @@ package org.clulab.processors.clu.tokenizer
   * @param endPosition end character offset of raw
   * @param word Normalized form raw, e.g., "'m" becomes "am". Note: these are NOT lemmas.
   */
-case class RawToken(raw:String, beginPosition:Int, endPosition:Int, word:String)
+case class RawToken(raw:String, beginPosition:Int, endPosition:Int, word:String) {
+  override def toString: String = s"[$raw, $beginPosition, $endPosition, $word]"
+}
 
 object RawToken {
   def apply(raw:String, beginPosition:Int, word:String): RawToken = {

@@ -7,7 +7,8 @@ import scala.collection.mutable.ArrayBuffer
 /** English open domain tokenizer */
 class OpenDomainEnglishTokenizer(postProcessor:Option[TokenizerStep]) extends Tokenizer(
   lexer = new OpenDomainEnglishLexer,
-  Seq(new TokenizerStepContractions, new TokenizerStepNormalization) ++ postProcessor.toList,
+  // the postprocessor must go first because it assumes that .word == .raw
+  postProcessor.toList ++ Seq(new TokenizerStepContractions, new TokenizerStepNormalization),
   new EnglishSentenceSplitter)
 
 /**
