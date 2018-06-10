@@ -72,6 +72,7 @@ package object json {
       ("words" -> s.words.toList) ~
       ("startOffsets" -> s.startOffsets.toList) ~
       ("endOffsets" -> s.endOffsets.toList) ~
+      ("raw" -> s.raw.toList) ~
       ("tags" -> s.tags.toSerializableJSON) ~
       ("lemmas" -> s.lemmas.toSerializableJSON) ~
       ("entities" -> s.entities.toSerializableJSON) ~
