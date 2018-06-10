@@ -436,6 +436,8 @@ object ShallowNLPProcessor {
       crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
       tokenOffset += crtTokens.size()
       crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
+      crtSent.set(classOf[SentenceIndexAnnotation], new Integer(sentOffset)) // Stanford counts sentences starting from 0
+
       sentencesAnnotation.add(crtSent)
 
       sentOffset += 1
