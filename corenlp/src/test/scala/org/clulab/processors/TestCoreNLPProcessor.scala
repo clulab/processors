@@ -7,8 +7,6 @@ import org.scalatest._
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.struct.CorefMention
 
-import scala.collection.JavaConverters._
-
 /**
  * User: mihais
  * Date: 3/3/13
@@ -178,7 +176,7 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(1).entities.get(5) should be ("O")
 
     doc.sentences(0).norms.get(5) should be ("O")
-    // TODO: norms no longer correct with this version of CoreNLP...
+    // TODO: fix me
     //doc.sentences(0).norms.get(6) should be ("2001-01-15")
     //doc.sentences(0).norms.get(7) should be ("2001-01-15")
     //doc.sentences(0).norms.get(8) should be ("2001-01-15")
