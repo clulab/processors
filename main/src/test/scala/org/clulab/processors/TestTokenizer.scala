@@ -75,6 +75,13 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents(0).words.mkString(" ") should be ("I am will not do not cont'd he 's he 'd .")
   }
 
+  it should "transform double quotes into Treebank quotes" in {
+    val sents = tok("\"I'm happy\", he said.")
+    sents(0).size should be (9)
+    sents(0).words(0) should be ("``")
+    sents(0).words(4) should be ("''")
+  }
+
   it should "tokenize quotes correctly" in {
     val sent = tok("\"The levels of malnutrition among children continue to be truly alarming,\" said Mahimbo Mdoe, UNICEF's Representative in South Sudan.").head
 
