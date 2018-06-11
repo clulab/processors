@@ -71,5 +71,5 @@ class TestCoreCharacterOffsets extends FlatSpec with Matchers {
   /**
     * CoreLabel.word() stores the postprocessed .word from Sentence, where the tokens below do not match the text anymore
     */
-  private def isPostProcessed(w:String):Boolean = Set("-LRB-", "-RRB-", "not", "will").contains(w)
+  private def isPostProcessed(w:String):Boolean = Set("-LRB-", "-RRB-", "not", "will", "``", "''").contains(w)
 }
