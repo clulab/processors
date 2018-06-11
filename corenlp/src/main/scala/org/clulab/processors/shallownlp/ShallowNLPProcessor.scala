@@ -419,7 +419,7 @@ object ShallowNLPProcessor {
       var tokOffset = 0
       for (i <- 0 until sentence.size) {
         val crtTok = new CoreLabel()
-        // Note: the CoreNLP token stores the .word not .raw strings! This is needed for the downstream components.
+        // Note: the CoreNLP token stores the .word not .raw strings! This is needed for its downstream components.
         crtTok.setWord(sentence.words(i))
         crtTok.setValue(sentence.words(i))
         crtTok.setBeginPosition(sentence.startOffsets(i))
