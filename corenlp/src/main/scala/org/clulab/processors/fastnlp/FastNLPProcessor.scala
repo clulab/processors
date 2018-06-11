@@ -13,7 +13,10 @@ import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraphFactory
 import edu.stanford.nlp.trees.GrammaticalStructure
 import java.util.Properties
+
 import FastNLPProcessor._
+import org.clulab.processors.clu.tokenizer.TokenizerStep
+
 import scala.collection.JavaConverters._
 
 /**
@@ -26,9 +29,17 @@ import scala.collection.JavaConverters._
  * Last Modified: Update for Scala 2.12: java converters.
  */
 class FastNLPProcessor(
-  internStrings:Boolean = true,
-  withChunks:Boolean = true,
-  withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) extends ShallowNLPProcessor(internStrings) {
+  tokenizerPostProcessor:Option[TokenizerStep],
+  internStrings:Boolean,
+  withChunks:Boolean,
+  withDiscourse:Int)
+  extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks) {
+
+  def this(internStrings:Boolean = true,
+           withChunks:Boolean = true,
+           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) {
+    this(None, internStrings, withChunks, withDiscourse)
+  }
 
   /** RST discourse parser using only dependency based syntax */
   lazy val rstDependencyParser: RSTParser = fetchRSTParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)

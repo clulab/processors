@@ -140,29 +140,6 @@ class ProcessorClient (
   }
 
 
-  /**
-    * Hook to allow the preprocessing of input text.
-    * @param origText The original input text
-    * @return The preprocessed text
-    */
-  override def preprocessText (origText:String): String = {
-    val reply = callServer(PreprocessTextCmd(origText))
-    reply.asInstanceOf[TextMsg].text
-  }
-
-  /** Runs preprocessText on each sentence */
-  override def preprocessSentences (origSentences:Iterable[String]): Iterable[String] = {
-    val reply = callServer(PreprocessSentencesCmd(origSentences))
-    reply.asInstanceOf[SentencesMsg].sentences
-  }
-
-  /** Runs preprocessText on each token */
-  override def preprocessTokens (origSentences:Iterable[Iterable[String]]): Iterable[Iterable[String]] = {
-    val reply = callServer(PreprocessTokensCmd(origSentences))
-    reply.asInstanceOf[TokensMsg].tokens
-  }
-
-
   /** Shutdown this client: terminate the actor system. */
   override def shutdownClient: Unit = system.terminate()
 

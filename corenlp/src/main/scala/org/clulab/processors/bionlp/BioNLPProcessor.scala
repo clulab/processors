@@ -5,9 +5,8 @@ import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.processors.Document
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotation}
-import edu.stanford.nlp.ling.CoreLabel
-import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
-import org.clulab.processors.clu.bio.{BioNERPostProcessor, BioTokenizerPreProcessor}
+import edu.stanford.nlp.pipeline.Annotation
+import org.clulab.processors.clu.bio.{BioNERPostProcessor, BioTokenizerPostProcessor}
 
 import scala.collection.JavaConverters._
 
@@ -27,22 +26,14 @@ class BioNLPProcessor (internStrings:Boolean = false,
                        removeFigTabReferences:Boolean = true,
                        removeBibReferences:Boolean = true
 )
-  extends CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength) {
+  extends CoreNLPProcessor(
+    Some(new BioTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)),
+    internStrings, withChunks, withDiscourse, maxSentenceLength) {
 
   //lazy val banner = new BannerWrapper
-  private lazy val postProcessor = new BioNLPTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)
-  private lazy val preProcessor = new BioTokenizerPreProcessor(removeFigTabReferences, removeBibReferences)
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
   private lazy val nerPostProcessor = new BioNERPostProcessor(KBLoader.stopListFile.get)
-
-  override def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = BioNLPUtils.mkTokenizerWithoutSentenceSplitting
-
-  override def mkTokenizerWithSentenceSplitting: StanfordCoreNLP = BioNLPUtils.mkTokenizerWithSentenceSplitting
-
-  override def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = postProcessor.process(originalTokens)
-
-  override def preprocessText(origText:String):String = preProcessor.process(origText)
 
   override def resolveCoreference(doc:Document): Unit = {
     doc.coreferenceChains = None

@@ -103,9 +103,9 @@ class ProcessorServer (
                                         removeFigTabReferences,
                                         removeBibReferences)
 
-      case "core" => new CoreNLPProcessor(internStrings, withChunks, withDiscourse, maxSentenceLength)
+      case "core" => new CoreNLPProcessor(None, internStrings, withChunks, withDiscourse, maxSentenceLength)
 
-      case "fast" => new FastNLPProcessor(internStrings, withChunks, withDiscourse)
+      case "fast" => new FastNLPProcessor(None, internStrings, withChunks, withDiscourse)
 
       case "fastbio" => new FastBioNLPProcessor(internStrings,
                                                 withChunks,
@@ -117,7 +117,7 @@ class ProcessorServer (
                                                 removeFigTabReferences,
                                                 removeBibReferences)
 
-      case _ => new ShallowNLPProcessor(internStrings, withChunks)
+      case _ => new ShallowNLPProcessor(None, internStrings, withChunks)
     }
   }
 

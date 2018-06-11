@@ -58,7 +58,7 @@ object ColumnsToDocument {
       if (l.isEmpty) {
         // end of sentence
         if (words.nonEmpty) {
-          val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray)
+          val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray, words.toArray)
           setLabels(s, labels.toArray)
           sentences += s
           words = new ArrayBuffer[String]()
@@ -81,7 +81,7 @@ object ColumnsToDocument {
       }
     }
     if(words.nonEmpty) {
-      val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray)
+      val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray, words.toArray)
       s.tags = Some(labels.toArray)
       sentences += s
     }

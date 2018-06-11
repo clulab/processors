@@ -48,7 +48,7 @@ object SequenceTaggerShell {
     val tokens = text.split("\\s+")
     val startOffsets = new Array[Int](tokens.length) // the offsets do not matter here
     val endOffsets = new Array[Int](tokens.length)
-    new Sentence(tokens, startOffsets, endOffsets)
+    new Sentence(tokens, startOffsets, endOffsets, tokens)
   }
 
 }

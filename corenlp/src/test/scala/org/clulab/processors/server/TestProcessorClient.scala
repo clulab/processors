@@ -176,43 +176,4 @@ class TestProcessorClient extends FlatSpecLike
     (doc.text) should equal(None)
   }
 
-
-  // preprocessText
-  ignore should "preprocess text from zero-length text" in {
-    logger.debug(s"(TestProcessorCoreClient): preprocess text from zero-length text")
-    val text = ""
-    val reply = client.preprocessText(text)
-    (reply) should not be (null)
-    (reply) should equal(text)
-  }
-
-  ignore should "preprocess simple text" in {
-    logger.debug(s"(TestProcessorCoreClient): preprocess simple text")
-    val text = "Testing is performed."
-    val reply = client.preprocessText(text)
-    (reply) should not be (null)
-    (reply) should equal(text)
-  }
-
-  // preprocessSentences
-  ignore should "preprocess sentences" in {
-    logger.debug(s"(TestProcessorCoreClient): preprocess sentences")
-    val sents = Seq("This is a test.", "It is only a test.", "In the event of a real document.")
-    val reply = client.preprocessSentences(sents)
-    (reply) should not be (null)
-    (reply.size) should equal(3)
-    reply.zipWithIndex.foreach { case(sent, ndx) =>
-      (sent) should equal(sents(ndx))
-    }
-  }
-
-  // preprocessTokens
-  ignore should "preprocess tokens" in {
-    logger.debug(s"(TestProcessorCoreClient): preprocess tokens")
-    val toks = Seq(Seq("This", "is", "a", "test."), Seq("It", "is", "only", "a", "test."))
-    val reply = client.preprocessTokens(toks)
-    (reply.size) should equal(2)
-    (reply.flatten) should equal(toks.flatten)
-  }
-
 }

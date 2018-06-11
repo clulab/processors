@@ -76,6 +76,7 @@ object CluShell {
     for (sentence <- doc.sentences) {
       println("Sentence #" + sentenceCount + ":")
       val indices = 0 until sentence.size
+      println("Raw: " + sentence.raw.zip(indices).mkString(" "))
       println("Tokens: " + sentence.words.zip(indices).mkString(" "))
       println("Tags: " + sentence.tags.get.zip(indices).mkString(" "))
       

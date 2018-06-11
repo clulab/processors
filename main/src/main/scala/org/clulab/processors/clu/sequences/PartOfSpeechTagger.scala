@@ -15,7 +15,7 @@ import org.slf4j.{Logger, LoggerFactory}
   */
 class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
 
-  def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int) = {
+  def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int): Unit = {
     val fe = new FeatureExtractor(sentence, offset, features)
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
