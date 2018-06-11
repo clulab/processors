@@ -75,6 +75,16 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents(0).words.mkString(" ") should be ("I am will not do not cont'd he 's he 'd .")
   }
 
+  it should "tokenize quotes correctly" in {
+    val sent = tok("\"The levels of malnutrition among children continue to be truly alarming,\" said Mahimbo Mdoe, UNICEF's Representative in South Sudan.").head
+
+    sent.raw(0) should be ("\"")
+    sent.raw(1) should be ("The")
+    sent.raw(12) should be (",")
+    sent.raw(13) should be ("\"")
+
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
