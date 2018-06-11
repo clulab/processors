@@ -29,10 +29,10 @@ class TestCoreNLPNER extends FlatSpec with Matchers {
     doc.sentences(0).entities.get(10) should be("O")
 
     doc.sentences(0).norms.get(5) should be("O")
-//    doc.sentences(0).norms.get(6) should be("2001-01-15")
-//    doc.sentences(0).norms.get(7) should be("2001-01-15")
-//    doc.sentences(0).norms.get(8) should be("2001-01-15")
-//    doc.sentences(0).norms.get(9) should be("2001-01-15")
+    doc.sentences(0).norms.get(6) should be("2001-01-15")
+    doc.sentences(0).norms.get(7) should be("2001-01-15")
+    doc.sentences(0).norms.get(8) should be("2001-01-15")
+    doc.sentences(0).norms.get(9) should be("2001-01-15")
     doc.sentences(0).norms.get(10) should be("O")
 
     val docAnnotation = doc.asInstanceOf[CoreNLPDocument].annotation.get

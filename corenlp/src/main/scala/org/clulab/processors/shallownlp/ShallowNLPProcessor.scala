@@ -417,7 +417,7 @@ object ShallowNLPProcessor {
       // construct the original CoreNLP tokens
       val crtTokens:util.List[CoreLabel] = new util.ArrayList[CoreLabel]()
       var tokOffset = 0
-      for (i <- 0 until sentence.size) {
+      for (i <- sentence.indices) {
         val crtTok = new CoreLabel()
         // Note: the CoreNLP token stores the .word not .raw strings! This is needed for its downstream components.
         crtTok.setWord(sentence.words(i))
@@ -433,6 +433,9 @@ object ShallowNLPProcessor {
       // construct a CoreNLP sentence
       val crtSent = new Annotation(sentence.getSentenceText)
       crtSent.set(classOf[TokensAnnotation], crtTokens)
+      crtSent.set(classOf[CharacterOffsetBeginAnnotation], new Integer(sentence.startOffsets.head))
+      crtSent.set(classOf[CharacterOffsetEndAnnotation], new Integer(sentence.startOffsets.last))
+
       crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
       tokenOffset += crtTokens.size()
       crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
