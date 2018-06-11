@@ -29,6 +29,16 @@ class ScienceUtils {
   }
 
   /**
+    * Replaces unknown Unicode characters with whitespace
+    * Uses the unicodes variable for the list of known unicodes
+    * This method should ideally be coupled with the above replaceUnicodeWithAscii for text cleaning
+    */
+  def replaceUnknownUnicodesWithWhitespaces(origText:String): String = {
+    // TODO
+    origText
+  }
+
+  /**
     * Replaces references to bibliographies in the given text string with white spaces. The number of characters is preserved.
     * @param text The text to be processed
     * @return The processed text
