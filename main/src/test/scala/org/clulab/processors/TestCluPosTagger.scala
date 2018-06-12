@@ -17,7 +17,7 @@ class TestCluPosTagger extends FlatSpec with Matchers {
     val doc = ColumnsToDocument.readFromStream(stream,
       setLabels = ColumnsToDocument.setTags,
       annotate = ColumnsToDocument.annotateLemmas)
-    val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.posTagger, List(doc).iterator)
+    val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.posTagger, List(doc).iterator, saveOutput = false)
     println(s"POS tagger accuracy is $acc")
     (acc > 97.0) should be (true)
   }
@@ -27,7 +27,7 @@ class TestCluPosTagger extends FlatSpec with Matchers {
     val doc = ColumnsToDocument.readFromStream(stream,
       setLabels = ColumnsToDocument.setTags,
       annotate = ColumnsToDocument.annotateLemmas)
-    val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.posTagger, List(doc).iterator)
+    val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.posTagger, List(doc).iterator, saveOutput = false)
     println(s"POS tagger accuracy is $acc")
     (acc > 98.0) should be (true)
   }
