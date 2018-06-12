@@ -32,4 +32,9 @@ trait Values {
     chunks(tok)
   }
 
+  def norm(tok: Int, sent: Int, doc: Document): String = {
+    val norms = values(doc.sentences(sent).norms, "sentence has no norms")
+    norms(tok)
+  }
+
 }
