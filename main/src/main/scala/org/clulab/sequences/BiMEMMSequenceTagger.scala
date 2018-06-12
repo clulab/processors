@@ -267,9 +267,8 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     w.close()
   }
 
-  override def load(is:InputStream) {
+  override def load(reader:BufferedReader) {
     // load meta data
-    val reader = new BufferedReader(new InputStreamReader(is))
     order = reader.readLine().toInt
     leftToRight = reader.readLine().toBoolean
 

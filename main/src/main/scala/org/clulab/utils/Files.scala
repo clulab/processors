@@ -134,4 +134,17 @@ object Files {
       new ObjectInputStream(
         new BufferedInputStream(is))
   }
+
+  def loadFile(path:String):BufferedReader = loadFile(new File(path))
+
+  def loadFile(path:File):BufferedReader = {
+    if(path.getPath.endsWith(".gz"))
+      new BufferedReader(
+        new InputStreamReader(
+          new GZIPInputStream(
+            new FileInputStream(path))))
+    else
+      new BufferedReader(
+        new FileReader(path))
+  }
 }

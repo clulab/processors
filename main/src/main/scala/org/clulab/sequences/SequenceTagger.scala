@@ -1,9 +1,10 @@
 package org.clulab.sequences
 
-import java.io.{File, FileInputStream, InputStream}
+import java.io.{BufferedReader, File, FileInputStream, InputStream}
 
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Counter
+import org.clulab.utils.Files
 
 /**
   * Trait for all sequence taggers
@@ -26,16 +27,16 @@ trait SequenceTagger[L, F] extends Tagger[L] {
   def save(fn:File)
 
   def loadFromFile(fn:File) {
-    val is = new FileInputStream(fn)
+    val is = Files.loadFile(fn)
     load(is)
   }
 
   def loadFromResource(rn:String) {
-    val is = SequenceTaggerLoader.getClass.getClassLoader.getResourceAsStream(rn)
+    val is = Files.loadStreamFromClasspath(rn)
     load(is)
   }
 
-  def load(is:InputStream)
+  def load(is:BufferedReader)
 
   def addHistoryFeatures(features:Counter[F], order:Int, labels:Seq[L], offset:Int):Unit = {
     addLeftFeatures(features, order, "", labels, offset)
