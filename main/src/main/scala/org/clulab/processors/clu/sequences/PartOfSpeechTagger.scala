@@ -27,8 +27,8 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() with F
       fe.features(offset)
     }
 
-    fe.wordBigrams(0, 2)
-    fe.wordBigrams(1, 2)
+    fe.wordBigrams(0, FeatureExtractor.BIGRAM_THRESHOLD)
+    fe.wordBigrams(1, FeatureExtractor.BIGRAM_THRESHOLD)
   }
 
   def labelExtractor(sentence:Sentence): Array[String] = {
