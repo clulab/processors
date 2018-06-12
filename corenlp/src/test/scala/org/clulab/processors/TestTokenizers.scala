@@ -61,22 +61,22 @@ class TestTokenizers extends FlatSpec with Matchers {
     shallow.mkDocument("initialize me")
 
     var start = System.currentTimeMillis()
-    val cluDoc = clu.mkDocument(text, keepText = false)
-    var end = System.currentTimeMillis()
-    val cluTime = end - start
-    printSents(cluDoc.sentences)
-
-    start = System.currentTimeMillis()
     val coreDoc = shallow.mkDocument(text, keepText = false)
-    end = System.currentTimeMillis()
+    var end = System.currentTimeMillis()
     val coreTime = end - start
     printSents(coreDoc.sentences)
+
+    start = System.currentTimeMillis()
+    val cluDoc = clu.mkDocument(text, keepText = false)
+    end = System.currentTimeMillis()
+    val cluTime = end - start
+    printSents(cluDoc.sentences)
 
     println("coreTime = " + coreTime)
     println("cluTime = " + cluTime)
 
     // TODO: this is true when the test is run as standalone; but fails when run part of "sbt test"
-    // (coreTime > cluTime) should be (true)
+    (coreTime > cluTime) should be (true)
   }
 
   def printSents(sents:Array[Sentence]): Unit = {

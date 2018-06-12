@@ -1,28 +1,20 @@
-package org.clulab.processors.clu.bio
+package org.clulab.utils
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.util.regex.Pattern
 
-import org.clulab.processors.clu.TokenizerPreProcessor
-import org.clulab.processors.clu.bio.BioTokenizerPreProcessor._
+import org.clulab.utils.ScienceUtils.{FIGTAB_REFERENCE, FIGTAB_REFERENCE_WITH_PARENS, MATCHED_PARENS_NON_NESTED, loadUnicodes}
 
 import scala.collection.mutable
 
-/**
-  * Preprocesses bio text, including Unicode normalization, and removing figure and table references
-  * User: mihais
-  * Date: 9/10/17
-  */
-class BioTokenizerPreProcessor(removeFigTabReferences:Boolean, removeBibReferences:Boolean) extends TokenizerPreProcessor {
+class ScienceUtils {
   val unicodes:Map[Char, String] = loadUnicodes
 
-  override def process(origText: String): String = {
-    val textWithoutUnicode = replaceUnicodeWithAscii(origText)
-    val textWithoutBibRefs = removeBibRefs(textWithoutUnicode)
-    val textWithoutFigRefs = removeFigureAndTableReferences(textWithoutBibRefs)
-    textWithoutFigRefs
-  }
-
+  /**
+    * Replaces common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
+    * @param origText The text to be processed
+    * @return The processed text
+    */
   def replaceUnicodeWithAscii(origText:String):String = {
     val os = new StringBuilder()
     for(i <- 0 until origText.length) {
@@ -37,15 +29,11 @@ class BioTokenizerPreProcessor(removeFigTabReferences:Boolean, removeBibReferenc
   }
 
   /**
-    * Removes references to Bibliographies in the given text string, if the
-    * removeBibReferences flag is set for this class instance.
-    * @return The original text or the cleaned text, depending on setting of the
-    *         removeBibReferences flag.
+    * Replaces references to bibliographies in the given text string with white spaces. The number of characters is preserved.
+    * @param text The text to be processed
+    * @return The processed text
     */
   def removeBibRefs (text: String): String = {
-    if (!removeBibReferences)               // remove bib refs only if flag is set
-      return text
-
     val m = MATCHED_PARENS_NON_NESTED.matcher(text)
     val bldr = new StringBuilder
     var previousEnd = 0
@@ -65,14 +53,16 @@ class BioTokenizerPreProcessor(removeFigTabReferences:Boolean, removeBibReferenc
   }
 
   /** Tell whether the given parentheses-bounded string contains a bibliographic reference or not. */
-  def stringHasBibRef (stringInParens: String): Boolean = {
+  private def stringHasBibRef (stringInParens: String): Boolean = {
     stringInParens contains "XREF_BIBR"
   }
 
-
+  /**
+    * Replaces figure and table references from a given string with white spaces. The number of characters is preserved.
+    * @param origText The text to be processed
+    * @return The processed text
+    */
   def removeFigureAndTableReferences(origText:String):String = {
-    if (!removeFigTabReferences) return origText
-
     var noRefs = origText
     // the pattern with parens must run first!
     noRefs = removeFigTabRefs(FIGTAB_REFERENCE_WITH_PARENS, noRefs)
@@ -86,7 +76,7 @@ class BioTokenizerPreProcessor(removeFigTabReferences:Boolean, removeBibReferenc
     * @param text The original text
     * @return The cleaned text
     */
-  def removeFigTabRefs(pattern:Pattern, text:String):String = {
+  private def removeFigTabRefs(pattern:Pattern, text:String):String = {
     val m = pattern.matcher(text)
     val b = new StringBuilder
     var previousEnd = 0
@@ -102,7 +92,10 @@ class BioTokenizerPreProcessor(removeFigTabReferences:Boolean, removeBibReferenc
   }
 }
 
-object BioTokenizerPreProcessor {
+/**
+  * Implements several common utilities we need in the science domain
+  */
+object ScienceUtils {
   /** Match a single text string bounded by non-nested parentheses. */
   val MATCHED_PARENS_NON_NESTED: Pattern = Pattern.compile("""\([^()]*\)""")
 
@@ -111,7 +104,7 @@ object BioTokenizerPreProcessor {
 
   val UNICODE_TO_ASCII: String = "org/clulab/processors/bionlp/unicode_to_ascii.tsv"
 
-  def loadUnicodes:Map[Char, String] = {
+  private def loadUnicodes:Map[Char, String] = {
     val map = new mutable.HashMap[Char, String]()
     val is = getClass.getClassLoader.getResourceAsStream(UNICODE_TO_ASCII)
     assert(is != null, s"Failed to find resource file $UNICODE_TO_ASCII in the classpath!")
@@ -139,7 +132,7 @@ object BioTokenizerPreProcessor {
     map.toMap
   }
 
-  def toUnicodeChar(s:String):Char = {
+  private def toUnicodeChar(s:String):Char = {
     Integer.parseInt(s, 16).toChar
   }
 }

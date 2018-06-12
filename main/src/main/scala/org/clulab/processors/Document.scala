@@ -12,10 +12,16 @@ import scala.util.hashing.MurmurHash3._
   */
 class Document(val sentences: Array[Sentence]) extends Serializable {
 
+  /** Unique id for this document, if any */
   var id: Option[String] = None
-  // FIXME: are coreferenceChains needed? Seems like a CoreNLP-specific thing...
+
+  /** Clusters of coreferent mentions */
   var coreferenceChains: Option[CorefChains] = None
+
+  /** The RST discourse tree for this text */
   var discourseTree: Option[DiscourseTree] = None
+
+  /** The original text corresponding to this document, if it was preserved by the corresponding processor */
   var text: Option[String] = None
 
   /** Clears any internal state potentially constructed by the annotators */

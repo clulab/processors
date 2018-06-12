@@ -10,6 +10,7 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import edu.stanford.nlp.parser.common.{ParserAnnotations, ParserConstraint, ParserUtils}
 import edu.stanford.nlp.pipeline.{ParserAnnotatorUtils, StanfordCoreNLP}
 import java.util.Properties
+
 import collection.mutable.ListBuffer
 import edu.stanford.nlp.ling.CoreAnnotations._
 import edu.stanford.nlp.util.CoreMap
@@ -21,6 +22,8 @@ import CoreNLPUtils._
 import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
 import org.slf4j.{Logger, LoggerFactory}
 import CoreNLPProcessor.logger
+import org.clulab.processors.clu.tokenizer.TokenizerStep
+
 import scala.collection.JavaConverters._
 
 /**
@@ -30,11 +33,18 @@ import scala.collection.JavaConverters._
  * Last Modified: Update for Scala 2.12: java converters.
  */
 class CoreNLPProcessor(
-  internStrings:Boolean = true,
-  withChunks:Boolean = true,
-  val withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
-  val maxSentenceLength:Int = 100
-) extends ShallowNLPProcessor(internStrings, withChunks) {
+  tokenizerPostProcessor:Option[TokenizerStep],
+  internStrings:Boolean,
+  withChunks:Boolean,
+  val withDiscourse:Int,
+  val maxSentenceLength:Int) extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks) {
+
+  def this(internStrings:Boolean = true,
+           withChunks:Boolean = true,
+           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
+           maxSentenceLength:Int = 100) {
+    this(None, internStrings, withChunks, withDiscourse, maxSentenceLength)
+  }
 
   lazy val coref: StanfordCoreNLP = mkCoref
 
