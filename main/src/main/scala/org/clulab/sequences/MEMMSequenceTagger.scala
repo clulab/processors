@@ -88,8 +88,7 @@ abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, var leftToRi
     w.close()
   }
 
-  override def load(is:InputStream) {
-    val reader = new BufferedReader(new InputStreamReader(is))
+  override def load(reader:BufferedReader) {
     order = reader.readLine().toInt
     val c = LiblinearClassifier.loadFrom[L, F] (reader)
     model = Some(c)

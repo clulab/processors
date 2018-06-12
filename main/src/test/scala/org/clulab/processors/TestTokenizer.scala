@@ -89,7 +89,14 @@ class TestTokenizer extends FlatSpec with Matchers {
     sent.raw(1) should be ("The")
     sent.raw(12) should be (",")
     sent.raw(13) should be ("\"")
+  }
 
+  it should "normalize parentheses correctly" in {
+    val sent = tok("This is a test (of parentheses).").head
+
+    sent.raw.length should be (9)
+    sent.words(4) should be ("-LRB-")
+    sent.words(7) should be ("-RRB-")
   }
 
   def tok(s:String):Array[Sentence] = {

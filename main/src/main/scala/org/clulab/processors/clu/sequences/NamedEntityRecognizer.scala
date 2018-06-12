@@ -12,7 +12,7 @@ import org.slf4j.{Logger, LoggerFactory}
   * NER using a MEMM architecture
   * @author Mihai
   */
-class NamedEntityRecognizer extends BiMEMMSequenceTagger[String, String]() {
+class NamedEntityRecognizer extends BiMEMMSequenceTagger[String, String]() with FirstPassLabelsReader {
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int): Unit = {
     val fe = new FeatureExtractor(sentence, offset, features)
 

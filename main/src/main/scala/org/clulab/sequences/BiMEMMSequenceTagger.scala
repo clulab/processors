@@ -37,32 +37,57 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     }
     logger.info(s"Training on ${sentences.size} sentences using order $order.")
 
-    // count bigrams in the corpus
-    FeatureExtractor.countBigrams(sentences)
+    // count bigrams in the corpus, and keep a set of those that occur > BIGRAM_THRESHOLD times
+    FeatureExtractor.countBigrams(sentences, FeatureExtractor.BIGRAM_THRESHOLD)
 
     var firstPassLabels:Option[Array[Array[L]]] = None
     var acc = 0.0
     if(numFoldsFirstPass > 1) {
       // generate first-pass labels
-      firstPassLabels = Some(mkFirstPassLabels(sentences))
-      assert(firstPassLabels.get.length == sentences.size)
+      // try to read them from cached file, if it exists
+      val firstPassFile = new File(FIRST_PASS_FILE)
+      firstPassLabels = if(firstPassFile.exists()) {
+        logger.debug(s"Found cached file with first-pass labels: $FIRST_PASS_FILE")
+        val source = scala.io.Source.fromFile(firstPassFile)
+        val labels = readFirstPassLabels(source)
+        source.close()
+        Some(labels)
+      } else {
+        logger.debug("Generating first-pass labels from scratch...")
+        val labels = mkFirstPassLabels(sentences)
+        val pw = new PrintWriter(new FileWriter(FIRST_PASS_FILE))
+        for(s <- labels) {
+          pw.println(s.mkString("\t"))
+        }
+        pw.close()
+        Some(labels)
+      }
+      assert(firstPassLabels.get.length >= sentences.size)
 
       // compute the accuracy of the first pass
       acc = accuracy(sentences, firstPassLabels.get)
 
-      // make the first-pass classifier on the whole data
-      firstPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
-        !leftToRight, None))
     }
 
     // make the second-pass classifier
+    logger.debug("Training the second-pass classifier on the whole data...")
     secondPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
       leftToRight, firstPassLabels))
+
+    if(numFoldsFirstPass > 1) {
+      // make the first-pass classifier on the whole data
+      logger.debug("Training the first-pass classifier on the whole data...")
+      firstPassModel = Some(buildClassifier(sentences, mkFullFold(sentences.size),
+        !leftToRight, None))
+    }
 
     logger.info("Finished training.")
     if(firstPassLabels.nonEmpty)
       logger.info(s"The accuracy of the first pass classifier was $acc.")
   }
+
+  private val FIRST_PASS_FILE = "first_pass_labels.tsv"
+  protected def readFirstPassLabels(source:scala.io.Source):Array[Array[L]]
 
   def mkFirstPassLabels(sentences: ArrayBuffer[Sentence]): Array[Array[L]] = {
     val folds = Datasets.mkFolds(numFoldsFirstPass, sentences.size)
@@ -242,9 +267,8 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     w.close()
   }
 
-  override def load(is:InputStream) {
+  override def load(reader:BufferedReader) {
     // load meta data
-    val reader = new BufferedReader(new InputStreamReader(is))
     order = reader.readLine().toInt
     leftToRight = reader.readLine().toBoolean
 
