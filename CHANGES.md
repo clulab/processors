@@ -1,4 +1,5 @@
 # Changes
++ **7.4.1** - Expose Sentence.norms in Odin rules.
 + **7.4.0** - Added a bidirectional POS model that performs 0.1% better on WSJ.
 + **7.4.0** - Significant improvements to tokenization code. Both CLU and CoreNLP processors now use the same tokenizer. This tokenizer preserves references to the original text.
 + **7.3.1** - Lazily calculate the hash code of mentions for better performance.
