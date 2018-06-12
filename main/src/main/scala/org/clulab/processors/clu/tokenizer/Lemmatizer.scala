@@ -16,7 +16,7 @@ trait Lemmatizer {
 class EnglishLemmatizer extends Lemmatizer {
   override def lemmatizeWord(word: String): String = {
     if(parens.findFirstMatchIn(word).nonEmpty)
-      return word
+      return word.toLowerCase()
 
     val norm = normalizeForLemmatization(word).trim
     if(norm.isEmpty) return word.toLowerCase()

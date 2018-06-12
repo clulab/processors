@@ -64,6 +64,15 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("POS tagging is fine.")
   }
 
+  it should "POS tag parentheses correctly" in {
+    val doc = proc.mkDocument("This is a test (of parentheses).")
+    proc.lemmatize(doc)
+    proc.tagPartsOfSpeech(doc)
+
+    doc.sentences(0).tags.get(4) should be ("-LRB-")
+    doc.sentences(0).tags.get(7) should be ("-RRB-")
+  }
+
   it should "recognize syntactic chunks correctly" in {
     val doc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
     proc.lemmatize(doc)

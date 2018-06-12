@@ -4,6 +4,8 @@ import org.clulab.processors.Sentence
 import org.clulab.sequences.SequenceTaggerLogger
 import org.clulab.struct.Counter
 
+import scala.collection.mutable
+
 /**
   * Implements common features used in sequence tagging
   * Created by mihais on 6/8/17.
@@ -28,7 +30,7 @@ class FeatureExtractor(
     if(validPosition(i) && validPosition(i - 1)) {
       val bg = FeatureExtractor.mkBigram(sentence, i - 1)
       if(FeatureExtractor.bigrams.isEmpty || // during testing
-         FeatureExtractor.bigrams.get.getCount(bg) > threshold) { // during training
+         FeatureExtractor.bigrams.get.contains(bg)) { // during training
         features += s"wb[$offset]:$bg"
       }
     }
@@ -145,21 +147,34 @@ class FeatureExtractor(
 }
 
 object FeatureExtractor {
-  var bigrams:Option[Counter[String]] = None
+  /** Contains all bigrams in training that occur more BIGRAM_THRESHOLD times */
+  var bigrams:Option[Set[String]] = None
+
+  val BIGRAM_THRESHOLD = 2
 
   /**
     * Counts the bigrams seen in this corpus so we filter out the non-frequent ones
     * @param sentences The training corpus
     */
-  def countBigrams(sentences:Seq[Sentence]): Unit = {
+  def countBigrams(sentences:Seq[Sentence], threshold:Int): Unit = {
     SequenceTaggerLogger.logger.debug(s"Counting bigrams in ${sentences.size} sentences...")
-    bigrams = Some(new Counter[String]())
+    val allBigrams = new Counter[String]()
     for(sentence <- sentences) {
       for(i <- 0 until sentence.size - 1) {
-        bigrams.get += mkBigram(sentence, i)
+        allBigrams += mkBigram(sentence, i)
       }
     }
-    SequenceTaggerLogger.logger.debug(s"Found ${bigrams.get.size} unique bigrams.")
+    SequenceTaggerLogger.logger.debug(s"Found ${allBigrams.size} unique bigrams.")
+
+    val filteredBigrams = new mutable.HashSet[String]
+    for(b <- allBigrams.keySet) {
+      if(allBigrams.getCount(b) > threshold) {
+        filteredBigrams += b
+      }
+    }
+    SequenceTaggerLogger.logger.debug(s"Kept ${filteredBigrams.size} bigrams that occur more $threshold times.")
+
+    bigrams = Some(filteredBigrams.toSet)
   }
 
   def norm(w:String):String = {
