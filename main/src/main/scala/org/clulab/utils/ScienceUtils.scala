@@ -29,14 +29,31 @@ class ScienceUtils {
   }
 
   /**
-    * Replaces unknown Unicode characters with whitespace
-    * Uses the unicodes variable for the list of known unicodes
-    * This method should ideally be coupled with the above replaceUnicodeWithAscii for text cleaning
+    * Replaces unknown Unicode characters with space characters.
+    * This uses the unicodes variable for the list of known substitutions.
+    * This method may be coupled with the above replaceUnicodeWithAscii()
+    * for text cleaning or one can do both with replaceUnicode() below.
     */
-  def replaceUnknownUnicodesWithWhitespaces(origText:String): String = {
-    // TODO
-    origText
+  def replaceUnknownUnicodeWithSpaces(origText: String): String = {
+    val stringBuilder = new StringBuilder()
+    origText.foreach(c => stringBuilder.append(if (unicodes.contains(c) || c < 0x80) c else ' '))
+    stringBuilder.toString()
   }
+
+  /**
+    * Replaces all Unicode characters (characters with codePoints >= 80) with either a
+    * substitute ASCII string from a known list of substitutions or simply a space.
+    * It leaves other characters alone (given certain assumptions about unicode).
+    */
+  def replaceUnicode(origText: String): String = {
+    val stringBuilder = new StringBuilder()
+    origText.foreach { c =>
+      if (unicodes.contains(c)) stringBuilder.append(unicodes(c)) // Append a String.
+      else stringBuilder.append(if (c < 0x80) c else ' ') // Append a Char.
+    }
+    stringBuilder.toString()
+  }
+
 
   /**
     * Replaces references to bibliographies in the given text string with white spaces. The number of characters is preserved.

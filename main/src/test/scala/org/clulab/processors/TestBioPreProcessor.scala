@@ -13,12 +13,23 @@ class TestBioPreProcessor extends FlatSpec with Matchers {
 
   val su = new ScienceUtils
 
-  "ScienceUtils" should "convert Unicode to ASCII" in {
+  "ScienceUtils" should "convert (known) Unicode to ASCII" in {
     val s = "\u2714alpha\u03B1\u25B6"
     val ps = su.replaceUnicodeWithAscii(s)
     ps should be ("valphaalpha>")
   }
 
+  "ScienceUtils" should "convert unknown Unicode to spaces" in {
+    val s = "a\u2714b c\u0081d" // first is known, second is not
+    val ps = su.replaceUnknownUnicodeWithSpaces(s)
+    ps should be ("a\u2714b c d")
+  }
+
+  "ScienceUtils" should "convert all Unicode" in {
+    val s = "a\u2714b c\u0081d" // first is known, second is not
+    val ps = su.replaceUnicode(s)
+    ps should be ("avb c d")
+  }
 
   it should "remove simple BIB REF" in {
     val str = "These are known as Kremer bodies (Bernardi and Pandolfi, XREF_BIBR)."
