@@ -24,6 +24,19 @@ class TestSpanishCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).words(4) should be ("Beijing")
     doc.sentences(1).words(5) should be (".")
 
+    doc.sentences(0).startOffsets(0) should be (0)
+    doc.sentences(0).startOffsets(1) should be (5)
+    doc.sentences(0).startOffsets(2) should be (14)
+    doc.sentences(0).startOffsets(3) should be (17)
+    doc.sentences(0).startOffsets(4) should be (21)
+    doc.sentences(0).startOffsets(5) should be (23)
+    doc.sentences(0).startOffsets(6) should be (28)
+    doc.sentences(1).startOffsets(0) should be (30)
+    doc.sentences(1).startOffsets(1) should be (34)
+    doc.sentences(1).startOffsets(2) should be (36)
+    doc.sentences(1).startOffsets(3) should be (39)
+    doc.sentences(1).startOffsets(4) should be (46)
+    doc.sentences(1).startOffsets(5) should be (53)
     println("Tokenization is fine.")
   }
 
