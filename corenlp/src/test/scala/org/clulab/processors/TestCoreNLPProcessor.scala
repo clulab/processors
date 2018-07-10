@@ -7,8 +7,6 @@ import org.scalatest._
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.struct.CorefMention
 
-import scala.collection.JavaConverters._
-
 /**
  * User: mihais
  * Date: 3/3/13
@@ -149,39 +147,6 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     doc.sentences(1).lemmas.get(3) should be ("visit")
     doc.sentences(1).lemmas.get(4) should be ("Beijing")
     doc.sentences(1).lemmas.get(5) should be (".")
-  }
-
-  it should "recognize NEs correctly" in {
-    val doc = proc.mkDocumentFromSentences(List("John Doe went to China on January 15th, 2001.", "There, he visited Beijing."), keepText = false)
-    proc.tagPartsOfSpeech(doc)
-    proc.lemmatize(doc)
-    proc.recognizeNamedEntities(doc)
-    doc.clear()
-
-    doc.sentences(0).entities.get(0) should be ("PERSON")
-    doc.sentences(0).entities.get(1) should be ("PERSON")
-    doc.sentences(0).entities.get(2) should be ("O")
-    doc.sentences(0).entities.get(3) should be ("O")
-    doc.sentences(0).entities.get(4) should be ("LOCATION")
-    doc.sentences(0).entities.get(5) should be ("O")
-    doc.sentences(0).entities.get(6) should be ("DATE")
-    doc.sentences(0).entities.get(7) should be ("DATE")
-    doc.sentences(0).entities.get(8) should be ("DATE")
-    doc.sentences(0).entities.get(9) should be ("DATE")
-    doc.sentences(0).entities.get(10) should be ("O")
-    doc.sentences(1).entities.get(0) should be ("O")
-    doc.sentences(1).entities.get(1) should be ("O")
-    doc.sentences(1).entities.get(2) should be ("O")
-    doc.sentences(1).entities.get(3) should be ("O")
-    doc.sentences(1).entities.get(4) should be ("LOCATION")
-    doc.sentences(1).entities.get(5) should be ("O")
-
-    doc.sentences(0).norms.get(5) should be ("O")
-    doc.sentences(0).norms.get(6) should be ("2001-01-15")
-    doc.sentences(0).norms.get(7) should be ("2001-01-15")
-    doc.sentences(0).norms.get(8) should be ("2001-01-15")
-    doc.sentences(0).norms.get(9) should be ("2001-01-15")
-    doc.sentences(0).norms.get(10) should be ("O")
   }
 
   it should "run the constituent parser correctly" in {

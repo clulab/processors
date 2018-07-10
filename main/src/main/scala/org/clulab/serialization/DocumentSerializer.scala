@@ -19,6 +19,7 @@ import org.clulab.struct._
   * User: mihais
   * Date: 3/5/13
   * Last Modified: Don't save zero-length text.
+  * Last Modified 06/10/18: Add .raw in sentence serialization
   */
 class DocumentSerializer extends LazyLogging {
 
@@ -103,9 +104,9 @@ class DocumentSerializer extends LazyLogging {
 
   private def loadText (r:BufferedReader, charCount:Int): String = {
     if (charCount < 1) return ""            // sanity check
-    var buffer = new Array[Char](charCount)
+    val buffer = new Array[Char](charCount)
     r.read(buffer, 0, charCount)
-    r.skip(OS_INDEPENDENT_LINE_SEPARATOR.size) // skip over last line separator
+    r.skip(OS_INDEPENDENT_LINE_SEPARATOR.length) // skip over last line separator
     new String(buffer)
   }
 
@@ -113,9 +114,10 @@ class DocumentSerializer extends LazyLogging {
     var bits = read(r)
     assert(bits(0) == START_TOKENS, s"START_TOKENS expected, found ${bits(0)}")
     val tokenCount = bits(1).toInt
-    val wordBuffer = new ArrayBuffer[String]
+    val rawBuffer = new ArrayBuffer[String]()
     val startOffsetBuffer = new ArrayBuffer[Int]
     val endOffsetBuffer = new ArrayBuffer[Int]
+    val wordBuffer = new ArrayBuffer[String]
     val tagBuffer = new ArrayBuffer[String]
     var nilTags = true
     val lemmaBuffer = new ArrayBuffer[String]
@@ -130,26 +132,28 @@ class DocumentSerializer extends LazyLogging {
     while(offset < tokenCount) {
       bits = read(r)
 
-      if (bits.length != 8) {
+      if (bits.length != 9) {
         throw new RuntimeException("ERROR: invalid line: " + bits.mkString(" "))
       }
 
-      wordBuffer += bits(0)
+      rawBuffer += bits(0)
       startOffsetBuffer += bits(1).toInt
       endOffsetBuffer += bits(2).toInt
+      wordBuffer += bits(3)
 
-      tagBuffer += bits(3)
-      if (bits(3) != NIL) nilTags = false
-      lemmaBuffer += bits(4)
-      if (bits(4) != NIL) nilLemmas = false
-      entityBuffer += bits(5)
-      if (bits(5) != NIL) nilEntities = false
-      normBuffer += bits(6)
+      tagBuffer += bits(4)
+      if (bits(4) != NIL) nilTags = false
+      lemmaBuffer += bits(5)
+      if (bits(5) != NIL) nilLemmas = false
+      entityBuffer += bits(6)
+      if (bits(6) != NIL) nilEntities = false
+      normBuffer += bits(7)
       if (bits(6) != NIL) nilNorms = false
-      chunkBuffer += bits(7)
-      if (bits(7) != NIL) nilChunks = false
+      chunkBuffer += bits(8)
+      if (bits(8) != NIL) nilChunks = false
       offset += 1
     }
+    assert(rawBuffer.size == tokenCount)
     assert(wordBuffer.size == tokenCount)
     assert(startOffsetBuffer.size == tokenCount)
     assert(endOffsetBuffer.size == tokenCount)
@@ -176,9 +180,10 @@ class DocumentSerializer extends LazyLogging {
     } while(bits(0) != END_OF_SENTENCE)
 
     Sentence(
-      wordBuffer.toArray,
+      rawBuffer.toArray,
       startOffsetBuffer.toArray,
       endOffsetBuffer.toArray,
+      wordBuffer.toArray,
       bufferOption(tagBuffer, nilTags),
       bufferOption(lemmaBuffer, nilLemmas),
       bufferOption(entityBuffer, nilEntities),
@@ -216,7 +221,7 @@ class DocumentSerializer extends LazyLogging {
     Some(b.toArray)
   }
 
-  def save(doc:Document, os:PrintWriter): Unit = save(doc, os, false)
+  def save(doc:Document, os:PrintWriter): Unit = save(doc, os, keepText = false)
 
   def save(doc:Document, os:PrintWriter, keepText:Boolean): Unit = {
     os.println(START_SENTENCES + SEP + doc.sentences.length)
@@ -269,7 +274,7 @@ class DocumentSerializer extends LazyLogging {
     }
     if (sent.graphs.nonEmpty) {
       for(t <- sent.graphs.keySet) {
-        saveDependencies(sent.graphs.get(t).get, t, os)
+        saveDependencies(sent.graphs(t), t, os)
       }
     }
     if (sent.syntacticTree.nonEmpty) {
@@ -311,7 +316,7 @@ class DocumentSerializer extends LazyLogging {
       children(i) = loadTree(bits, position)
     }
 
-    val n = new NonTerminal(value, children)
+    val n = NonTerminal(value, children)
     n.setStartEndIndices(startOffset, endOffset)
     n.setHead(head)
     n
@@ -319,9 +324,10 @@ class DocumentSerializer extends LazyLogging {
   }
 
   private def saveToken(sent:Sentence, offset:Int, os:PrintWriter) {
-    os.print(sent.words(offset) + SEP +
+    os.print(sent.raw(offset) + SEP +
       sent.startOffsets(offset) + SEP +
-      sent.endOffsets(offset))
+      sent.endOffsets(offset) + SEP +
+      sent.words(offset))
 
     os.print(SEP)
     if (sent.tags.isDefined) os.print(sent.tags.get(offset))
@@ -372,8 +378,8 @@ class DocumentSerializer extends LazyLogging {
       case _ => throw new RuntimeException("ERROR: unknown relation direction " + bits(1))
     }
     val charOffsets = (bits(2).toInt, bits(3).toInt)
-    val firstToken = new TokenOffset(bits(4).toInt, bits(5).toInt)
-    val lastToken = new TokenOffset(bits(6).toInt, bits(7).toInt)
+    val firstToken = TokenOffset(bits(4).toInt, bits(5).toInt)
+    val lastToken = TokenOffset(bits(6).toInt, bits(7).toInt)
     val firstEDU = bits(8).toInt
     val lastEDU = bits(9).toInt
     val childrenCount = bits(10).toInt
@@ -435,7 +441,7 @@ class DocumentSerializer extends LazyLogging {
     val mb = new ListBuffer[CorefMention]
     for (i <- 0 until mentionCount) {
       val bits = read(r)
-      mb += new CorefMention(
+      mb += CorefMention(
         bits(0).toInt,
         bits(1).toInt,
         bits(2).toInt,

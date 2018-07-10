@@ -58,6 +58,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
     case "tag"      ~ "=" ~ matcher ~ None => new TagConstraint(matcher)
     case "entity"   ~ "=" ~ matcher ~ None => new EntityConstraint(matcher)
     case "chunk"    ~ "=" ~ matcher ~ None => new ChunkConstraint(matcher)
+    case "norm"     ~ "=" ~ matcher ~ None => new NormConstraint(matcher)
     case "incoming" ~ "=" ~ matcher ~ None => new IncomingConstraint(matcher, config.graph)
     case "outgoing" ~ "=" ~ matcher ~ None => new OutgoingConstraint(matcher, config.graph)
     case "mention"  ~ "=" ~ matcher ~ arg  => new MentionConstraint(matcher, arg)
@@ -268,6 +269,11 @@ class EntityConstraint(matcher: StringMatcher) extends TokenConstraint with Valu
 class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches chunk(tok, sent, doc)
+}
+
+class NormConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
+    matcher matches norm(tok, sent, doc)
 }
 
 class IncomingConstraint(matcher: StringMatcher, graphName: String) extends TokenConstraint with Graph {

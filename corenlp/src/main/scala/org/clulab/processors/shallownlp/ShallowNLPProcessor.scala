@@ -8,66 +8,62 @@ import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.corenlp.chunker.CRFChunker
 import org.clulab.processors._
 import edu.stanford.nlp.ling.CoreAnnotations._
-import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
+import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
+
 import scala.collection.JavaConverters._
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.reflect.ClassTag
+import scala.collection.mutable.ArrayBuffer
+import ShallowNLPProcessor._
+import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer, TokenizerStep}
 
 /**
   * A Processor using only shallow analysis: tokenization, lemmatization, POS tagging, and NER.
-  * All implemented using Stanford's CoreNLP tools.
+  * Tokenization is ours. All others implemented using Stanford's CoreNLP tools.
   * User: mihais
   * Date: 2/25/15
   * Last Modified: Update for Scala 2.12: java converters.
+  * Last modified 06/11/2018: Switched to our internal tokenizer
   */
-class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boolean = true) extends Processor {
-  lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
-  lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
-  lazy val posTagger = mkPosTagger
-  lazy val lemmatizer = mkLemmatizer
-  lazy val ner = mkNer
-  lazy val chunker = mkChunker
+class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
+                          val internStrings:Boolean,
+                          val withChunks:Boolean) extends Processor {
 
-  protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true) = {
+  def this(internStrings:Boolean = false,
+           withChunks:Boolean = true) {
+    this(None, internStrings, withChunks)
+  }
+
+  lazy val tokenizer: Tokenizer = new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+  lazy val posTagger: StanfordCoreNLP = mkPosTagger
+  lazy val lemmatizer: StanfordCoreNLP = mkLemmatizer
+  lazy val ner: StanfordCoreNLP = mkNer
+  lazy val chunker: CRFChunker = mkChunker
+
+  protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true): StanfordCoreNLP = {
     // Prevent knownLCWords from changing on us.  To be safe, this is added every time
     // because of potential caching of annotators.  Yes, the 0 must be a string.
     props.put("maxAdditionalKnownLCWords", "0")
     new StanfordCoreNLP(props, enforceRequirements)
   }
 
-  def mkTokenizerWithoutSentenceSplitting: StanfordCoreNLP = {
-    val props = new Properties()
-    props.put("annotators", "tokenize")
-    props.put("tokenize.language", "English")
-    newStanfordCoreNLP(props)
-  }
-
-  def mkTokenizerWithSentenceSplitting: StanfordCoreNLP = {
-    val props = new Properties()
-    props.put("annotators", "tokenize, ssplit")
-    props.put("tokenize.language", "English")
-    newStanfordCoreNLP(props)
-  }
-
   def mkPosTagger: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "pos")
-    newStanfordCoreNLP(props, false)
+    newStanfordCoreNLP(props, enforceRequirements = false)
   }
 
   def mkLemmatizer: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "lemma")
-    newStanfordCoreNLP(props, false)
+    newStanfordCoreNLP(props, enforceRequirements = false)
   }
 
   def mkNer: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "ner")
-    newStanfordCoreNLP(props, false)
+    newStanfordCoreNLP(props, enforceRequirements = false)
   }
 
   def mkChunker: CRFChunker = {
@@ -77,191 +73,45 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
     CRFChunker.load(gzis)
   }
 
-  /**
-   * Hook to allow postprocessing of CoreNLP tokenization
-   * This is useful for domain-specific corrections, such as the ones in BioNLPProcessor
-   * If you change the tokens, make sure to store them back in the sentence!
-   * @param originalTokens Input CoreNLP sentence
-   * @return The modified tokens
-   */
-  def postprocessTokens(originalTokens:Array[CoreLabel]):Array[CoreLabel] = originalTokens
-
-  protected def postprocessTokens(sentence:CoreMap): java.util.List[CoreLabel] = {
-    val origTokens = sentence.get(classOf[TokensAnnotation]).asScala.toArray
-
-    val modifiedTokens = postprocessTokens(origTokens)
-
-    // readjust CoreNLP indices to reflect the new token count; these are crucial for correct dependencies!
-    var offset = 1 // Stanford counts tokens starting at 1
-    for(token <- modifiedTokens) {
-      token.setIndex(offset)
-      offset += 1
-    }
-
-    val tokensAsJava = modifiedTokens.toList.asJava
-    sentence.set(classOf[TokensAnnotation], tokensAsJava)
-
-    tokensAsJava
-  }
-
-
-  def mkDocument(text:String, keepText:Boolean): Document = {
-    val annotation = new Annotation(text)
-    tokenizerWithSentenceSplitting.annotate(annotation)
-    val sas = annotation.get(classOf[SentencesAnnotation]).asScala
-    val sentences = new Array[Sentence](sas.size)
-    var offset = 0
-    for (sa <- sas) {
-      sentences(offset) = mkSentence(sa)
-      offset += 1
-    }
-
-    // just in case the postprocessing code changed token offsets, reset them
-    var tokenOffset = 0
-    for(sa <- sas) {
-      val crtTokens = sa.get(classOf[TokensAnnotation])
-      sa.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
-      tokenOffset += crtTokens.size()
-      sa.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
-    }
-
-    val doc = CoreNLPDocument(sentences, annotation)
-    if(keepText) doc.text = Some(text)
-
-    doc
-  }
-
-  def mkSentence(annotation:CoreMap): Sentence = {
-    val wordBuffer = new ArrayBuffer[String]
-    val startOffsetBuffer = new ArrayBuffer[Int]
-    val endOffsetBuffer = new ArrayBuffer[Int]
-
-    val tas = postprocessTokens(annotation).asScala
-    for (ta <- tas) {
-      wordBuffer += in(ta.word)
-      startOffsetBuffer += ta.beginPosition()
-      endOffsetBuffer += ta.endPosition()
-    }
-
-    Sentence(
-      wordBuffer.toArray,
-      startOffsetBuffer.toArray,
-      endOffsetBuffer.toArray
-    )
-  }
-
   def in(s:String):String = {
     if (internStrings) Processor.internString(s)
     else s
   }
 
+  def mkDocument(text:String, keepText:Boolean): Document = {
+    // create the CLU document
+    val doc = CluProcessor.mkDocument(tokenizer, text, keepText = true)
+
+    // now create the CoreNLP document Annotation
+    cluDocToCoreDoc(doc, keepText)
+  }
+
+  /* // TODO: remove me
   def arrayOrNone[T: ClassTag](b:ArrayBuffer[T]): Option[Array[T]] = {
     if (b.nonEmpty) new Some[Array[T]](b.toArray)
     else None
   }
+  */
 
   def mkDocumentFromSentences(sentences:Iterable[String],
                               keepText:Boolean,
                               charactersBetweenSentences:Int = 1): Document = {
-    val origText = sentences.mkString(mkSep(charactersBetweenSentences))
-    val docAnnotation = new Annotation(origText)
-    val sentencesAnnotation = new util.ArrayList[CoreMap]()
-    docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
-    val docSents = new Array[Sentence](sentences.size)
+    // create the CLU document
+    val doc = CluProcessor.mkDocumentFromSentences(tokenizer, sentences, keepText = true, charactersBetweenSentences)
 
-    var sentOffset = 0
-    var charOffset = 0
-    var tokenOffset = 0
-    for(sentence <- sentences) {
-      val tmpAnnotation = new Annotation(sentence)
-      tokenizerWithoutSentenceSplitting.annotate(tmpAnnotation)
-      val crtTokens:java.util.List[CoreLabel] = postprocessTokens(tmpAnnotation)
-
-      // construct a proper sentence, with token and character offsets adjusted to make the entire document consistent
-      val crtSent = new Annotation(sentence)
-      crtSent.set(classOf[TokensAnnotation], crtTokens)
-      crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
-      tokenOffset += crtTokens.size()
-      crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
-      crtSent.set(classOf[CoreAnnotations.SentenceIndexAnnotation], new Integer(sentOffset)) // Stanford counts sentences starting from 0
-      var i = 0
-      while(i < crtTokens.size()) {
-        val crtTok = crtTokens.get(i)
-        crtTok.setBeginPosition(crtTok.beginPosition() + charOffset)
-        crtTok.setEndPosition(crtTok.endPosition() + charOffset)
-        crtTok.setIndex(i + 1) // Stanford counts tokens starting from 1
-        crtTok.setSentIndex(sentOffset) // Stanford counts sentences starting from 0...
-        i += 1
-      }
-
-      sentencesAnnotation.add(crtSent)
-      docSents(sentOffset) = mkSentence(crtSent)
-
-      charOffset += sentence.length + charactersBetweenSentences
-      sentOffset += 1
-    }
-
-    val doc = CoreNLPDocument(docSents, docAnnotation)
-    if(keepText) doc.text = Some(origText)
-
-    doc
-  }
-
-  private def mkSep(size:Int):String = {
-    val os = new mutable.StringBuilder
-    for (i <- 0 until size) os.append(" ")
-    os.toString()
+    // now create the CoreNLP document Annotation
+    cluDocToCoreDoc(doc, keepText)
   }
 
   def mkDocumentFromTokens(sentences:Iterable[Iterable[String]],
                            keepText:Boolean,
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document = {
-    val sb = new ListBuffer[String]
-    for (s <- sentences)
-      sb += s.mkString(mkSep(charactersBetweenTokens))
-    val sentenceTexts = sb.toArray
-    val origText = sentenceTexts.mkString(mkSep(charactersBetweenSentences))
-    val docAnnotation = new Annotation(origText)
-    val sentencesAnnotation = new util.ArrayList[CoreMap]()
-    docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
-    val docSents = new Array[Sentence](sentences.size)
+    // create the CLU document
+    val doc = CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText = true, charactersBetweenSentences, charactersBetweenTokens)
 
-    var sentOffset = 0
-    var charOffset = 0
-    var tokenOffset = 0
-    for(sentence <- sentences) {
-      val crtTokens:util.List[CoreLabel] = new util.ArrayList[CoreLabel]()
-      var tokOffset = 0
-      for (w <- sentence) {
-        val crtTok = new CoreLabel()
-        crtTok.setWord(w)
-        crtTok.setValue(w)
-        crtTok.setBeginPosition(charOffset)
-        charOffset += w.length
-        crtTok.setEndPosition(charOffset)
-        crtTok.setIndex(tokOffset + 1) // Stanford counts tokens starting from 1
-        crtTok.setSentIndex(sentOffset) // Stanford counts sentences starting from 0...
-        crtTokens.add(crtTok)
-        tokOffset += 1
-        charOffset += charactersBetweenTokens
-      }
-
-      val crtSent = new Annotation(sentenceTexts(sentOffset))
-      crtSent.set(classOf[TokensAnnotation], crtTokens)
-      crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
-      tokenOffset += crtTokens.size()
-      crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
-
-      sentencesAnnotation.add(crtSent)
-      docSents(sentOffset) = mkSentence(crtSent)
-      sentOffset += 1
-    }
-
-    val doc = CoreNLPDocument(docSents, docAnnotation)
-    if(keepText) doc.text = Some(origText)
-
-    doc
+    // now create the CoreNLP document Annotation
+    cluDocToCoreDoc(doc, keepText)
   }
 
   def basicSanityCheck(doc:Document, checkAnnotation:Boolean = true): Option[Annotation] = {
@@ -363,9 +213,13 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
       for (ta <- tas) {
         tb += in(ta.ner())
         val n = ta.get(classOf[NormalizedNamedEntityTagAnnotation])
+        //println(s"NORM: $n")
         if (n != null) nb += in(n)
         else nb += in("O")
       }
+
+      //println("NORMS: " + nb.mkString(", "))
+
       doc.sentences(offset).entities = Some(tb.toArray)
       doc.sentences(offset).norms = Some(nb.toArray)
       offset += 1
@@ -373,7 +227,7 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   }
 
   def parse(doc:Document): Unit = {
-    // nothing here
+    // nothing here; see classes that extend this
   }
 
   def chunking(doc:Document) {
@@ -388,11 +242,11 @@ class ShallowNLPProcessor(val internStrings:Boolean = true, val withChunks:Boole
   }
 
   def resolveCoreference(doc:Document) {
-    // nothing here
+    // nothing here; see classes that extend this
   }
 
   def discourse(doc:Document) {
-    // nothing here
+    // nothing here; see classes that extend this
   }
 }
 
@@ -400,4 +254,68 @@ object ShallowNLPProcessor {
   val NO_DISCOURSE = 0 // discourse parsing is disabled
   val WITH_DISCOURSE = 1 // discourse parsing is enabled
   val JUST_EDUS = 2 // only the generation of elementary discourse units is enabled
+
+  /**
+    * Creates the CoreNLP Annotation corresponding to a CLU document containing only tokens
+    */
+  def docToAnnotation(doc:Document): Annotation = {
+    assert(doc.text.nonEmpty)
+    val docAnnotation = new Annotation(doc.text.get)
+    val sentencesAnnotation = new util.ArrayList[CoreMap]()
+    docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
+
+    var sentOffset = 0
+    var tokenOffset = 0
+    for(sentence <- doc.sentences) {
+      // construct the original CoreNLP tokens
+      val crtTokens:util.List[CoreLabel] = new util.ArrayList[CoreLabel]()
+      var tokOffset = 0
+      for (i <- sentence.indices) {
+        val crtTok = new CoreLabel()
+        // Note: the CoreNLP token stores the .word not .raw strings! This is needed for its downstream components.
+        crtTok.setWord(sentence.words(i))
+        crtTok.setValue(sentence.words(i))
+        crtTok.setBeginPosition(sentence.startOffsets(i))
+        crtTok.setEndPosition(sentence.endOffsets(i))
+        crtTok.setIndex(tokOffset + 1) // Stanford counts tokens starting from 1
+        crtTok.setSentIndex(sentOffset) // Stanford counts sentences starting from 0...
+        crtTokens.add(crtTok)
+        tokOffset += 1
+      }
+
+      //
+      // construct a CoreNLP sentence
+      //
+
+      // tokens
+      val crtSent = new Annotation(sentence.getSentenceText)
+      crtSent.set(classOf[TokensAnnotation], crtTokens)
+
+      // character offsets and actual text
+      val sentStartOffset = sentence.startOffsets.head
+      val sentEndOffset = sentence.endOffsets.last
+      crtSent.set(classOf[CharacterOffsetBeginAnnotation], new Integer(sentStartOffset))
+      crtSent.set(classOf[CharacterOffsetEndAnnotation], new Integer(sentEndOffset))
+      crtSent.set(classOf[TextAnnotation], doc.text.get.substring(sentStartOffset, sentEndOffset))
+
+      // token and sentence offsets
+      crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
+      tokenOffset += crtTokens.size()
+      crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
+      crtSent.set(classOf[SentenceIndexAnnotation], new Integer(sentOffset)) // Stanford counts sentences starting from 0
+
+      sentencesAnnotation.add(crtSent)
+      sentOffset += 1
+    }
+
+    docAnnotation
+  }
+
+  def cluDocToCoreDoc(doc:Document, keepText:Boolean): CoreNLPDocument = {
+    val annotation = docToAnnotation(doc)
+    val coreDoc = CoreNLPDocument(doc.sentences, annotation)
+    if(keepText) coreDoc.text = doc.text
+    coreDoc
+  }
+
 }

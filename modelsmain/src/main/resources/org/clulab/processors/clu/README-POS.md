@@ -13,3 +13,11 @@ Trained an dataset consisting of the Penn Treebank concatenated with Genia.
 Accuracy on the test partition of WSJ is: `Accuracy = 96.99`.
 Accuracy on the test partition of Genia is: `Accuracy = 98.1`.
 
+`pos-bimemm-l1-o2-bi10-wsjgenia.dat`
+-----------------------------------
+
+Trained a BiMEMM an dataset consisting of the Penn Treebank concatenated with Genia.
+Note: the second pass used only 95% of the data due to OOM errors.
+Accuracy on the test partition of WSJ is: `Accuracy = 97.09`.
+Accuracy on the test partition of Genia is: `Accuracy = 98.04`.
+

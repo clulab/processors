@@ -1,4 +1,10 @@
 # Changes
++ **7.4.1** - Expose Sentence.norms in Odin rules.
++ **7.4.0** - Added a bidirectional POS model that performs 0.1% better on WSJ.
++ **7.4.0** - Significant improvements to tokenization code. Both CLU and CoreNLP processors now use the same tokenizer. This tokenizer preserves references to the original text.
++ **7.3.1** - Lazily calculate the hash code of mentions for better performance.
++ **7.3.0** - "nmod" collapsing in CluProcessor now uses "_" as connector instead of ":" to align with CoreNLP.
++ **7.3.0** - "nmod" collapsing now follows multi-word expressions (MWE) to generate multi-word prepositions.
 + **7.2.2** - This is just a copy of 7.2.1, whose release on maven was broken
 + **7.2.1** - Cross-compile for scala 2.11 and 2.12
 + **7.2.1** - Prevented NER from changing state for the ShallowNLPProcessor and FastNLPProcessor

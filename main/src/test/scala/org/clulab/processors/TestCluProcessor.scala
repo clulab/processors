@@ -64,6 +64,15 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("POS tagging is fine.")
   }
 
+  it should "POS tag parentheses correctly" in {
+    val doc = proc.mkDocument("This is a test (of parentheses).")
+    proc.lemmatize(doc)
+    proc.tagPartsOfSpeech(doc)
+
+    doc.sentences(0).tags.get(4) should be ("-LRB-")
+    doc.sentences(0).tags.get(7) should be ("-RRB-")
+  }
+
   it should "recognize syntactic chunks correctly" in {
     val doc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
     proc.lemmatize(doc)
@@ -109,6 +118,18 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("Parsing is fine.")
   }
 
+  it should "parse MWEs correctly" in {
+    val doc = proc.mkDocument("Foods such as icecream are tasty.")
+
+    println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
+
+    proc.annotate(doc)
+
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
+  }
+
+  /* // TODO
   it should "parse a long sentence correctly" in {
     val doc = proc.annotate("Her T score of 63 on the Attention Problems scale is in the At Risk range suggesting that she sometimes daydreams or is easily distracted and unable to concentrate more than momentarily .")
     //println(s"Sentence: ${doc.sentences(0).words.mkString(" ")}")
@@ -128,4 +149,5 @@ class TestCluProcessor extends FlatSpec with Matchers {
     deps.hasEdge(2, 1, "compound") should be (true)
     deps.hasEdge(2, 9, "nmod") should be (true)
   }
+  */
 }

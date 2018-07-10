@@ -29,7 +29,7 @@ class BioNLPPOSTaggerPostProcessor {
       words(i) = labels(i).word()
       tags(i) = labels(i).tag()
     }
-    val s = new Sentence(words, startOffsets, endOffsets)
+    val s = Sentence(words, startOffsets, endOffsets)
     s.tags = Some(tags)
     s
   }

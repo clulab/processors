@@ -13,9 +13,9 @@ import org.slf4j.{Logger, LoggerFactory}
   * Author: mihais
   * Date: 3/24/17
   */
-class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
+class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() with FirstPassLabelsReader {
 
-  def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int) = {
+  def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int): Unit = {
     val fe = new FeatureExtractor(sentence, offset, features)
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
@@ -27,8 +27,8 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() {
       fe.features(offset)
     }
 
-    fe.wordBigrams(0, 2)
-    fe.wordBigrams(1, 2)
+    fe.wordBigrams(0, FeatureExtractor.BIGRAM_THRESHOLD)
+    fe.wordBigrams(1, FeatureExtractor.BIGRAM_THRESHOLD)
   }
 
   def labelExtractor(sentence:Sentence): Array[String] = {
@@ -70,10 +70,16 @@ object PartOfSpeechTagger {
         wordPos = wordPos, labelPos = tagPos,
         ColumnsToDocument.setTags,
         ColumnsToDocument.annotateLemmas)
-      val tagger = new PartOfSpeechTagger // a single-pass model is sufficient for POS tagging
+      val tagger = new PartOfSpeechTagger
 
       if(props.containsKey("order")) {
         tagger.order = props.getProperty("order").toInt
+      }
+
+      // how many folds to use in the first pass, for a bi-directional model
+      // if undefined, it uses a single pass MEMM
+      if(props.containsKey("bi")) {
+        tagger.numFoldsFirstPass = props.getProperty("bi").toInt
       }
 
       tagger.train(List(doc).iterator)
