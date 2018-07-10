@@ -8,6 +8,18 @@ import org.scalatest._
 // Tests operating over Universal dependencies
 class TestGraphPattern extends FlatSpec with Matchers {
 
+  "graph range {0,n}" should "not throw an exception" in {
+    val rule = """
+      | - name: DummyRule
+      |   label: DummyLabel
+      |   pattern: |
+      |     trigger = x
+      |     arg:Arg = >nsubj{0,5} # range equivalent to {,5}
+      |""".stripMargin
+    // just ensure the rule compiles
+    val ee = ExtractorEngine(rule)
+  }
+
   "GraphPattern" should "support multiline patterns" in {
 
     // "I saw Kermit at the pond."
