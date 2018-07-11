@@ -15,7 +15,7 @@ class OpenDomainEnglishTokenizer(postProcessor:Option[TokenizerStep]) extends To
 class OpenDomainPortugueseTokenizer(postProcessor:Option[TokenizerStep]) extends Tokenizer(
   lexer = new OpenDomainPortugueseTokenizerLexer,
   // the postprocessor must go first because it assumes that .word == .raw
-  postProcessor.toList ++ Seq(new TokenizerStepPortugueseContractions, new TokenizerStepNormalization),
+  postProcessor.toList ++ Seq(new TokenizerStepPortugueseContractions, new TokenizerStepAccentedNormalization),
   new PortugueseSentenceSplitter)
 
 /**
