@@ -100,11 +100,100 @@ class EnglishSentenceSplitter extends SentenceSplitter {
   }
 }
 
+/**
+  * Splits a sequence of Portuguese tokens into sentences
+  */
+class PortugueseSentenceSplitter extends SentenceSplitter {
+
+  /**
+    * Sentence splitting over a stream of tokens
+    * This includes detection of abbreviations as well
+    **/
+  override def split(tokens:Array[RawToken], sentenceSplit:Boolean):Array[Sentence] = {
+    val sentences = new ArrayBuffer[Sentence]()
+    var raw = new ArrayBuffer[String]()
+    var words = new ArrayBuffer[String]()
+    var beginPositions = new ArrayBuffer[Int]()
+    var endPositions = new ArrayBuffer[Int]()
+
+    for (i <- tokens.indices) {
+      val crt = tokens(i)
+
+      //
+      // we handle end-of-sentence markers (periods, etc.) here
+      // this includes detecting if a period belongs to the previous token (if it's an abbreviation)
+      // and understanding if this token actually marks the end of a sentence
+      //
+      if (EOS.findFirstIn(crt.word).isDefined) {
+        // found a token that normally indicates end of sentence
+
+        // next and previous tokens. We need these to detect proper ends of sentences
+        var next: Option[RawToken] = None
+        if (i < tokens.length - 1) next = Some(tokens(i + 1))
+        var prev: Option[RawToken] = None
+        if (i > 0) prev = Some(tokens(i - 1))
+
+        var isEos = sentenceSplit
+        if (crt.word == "." && prev.isDefined && isAbbreviation(prev.get.word) && crt.beginPosition == prev.get.endPosition) {
+          // found a period that should be attached to the previous abbreviation
+          endPositions(endPositions.size - 1) = crt.endPosition
+          words(words.size - 1) = words.last + crt.word
+          raw(raw.size - 1) = raw.last + crt.raw
+
+          // this is not an end of sentence if the next token does NOT look like the start of a sentence
+          // TODO: maybe this should be handled with a binary classifier instead?
+          if (isEos && next.isDefined && !isSentStart(next.get.word)) {
+            isEos = false
+          }
+        } else {
+          // regular end-of-sentence marker; treat is a distinct token
+          raw += crt.raw
+          words += crt.word
+          beginPositions += crt.beginPosition
+          endPositions += crt.endPosition
+        }
+
+        // found a valid end of sentence; start an empty one
+        if (isEos) {
+          sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
+          raw = new ArrayBuffer[String]()
+          words = new ArrayBuffer[String]()
+          beginPositions = new ArrayBuffer[Int]()
+          endPositions = new ArrayBuffer[Int]()
+        }
+      } else {
+        // just a regular token
+        raw += crt.raw
+        words += crt.word
+        beginPositions += crt.beginPosition
+        endPositions += crt.endPosition
+      }
+    }
+
+    // a few words left over at the end
+    if (words.nonEmpty) {
+      sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
+    }
+
+    sentences.toArray
+  }
+
+  def isAbbreviation(word:String):Boolean = {
+    IS_PORTUGUESE_ABBREVIATION.findFirstIn(word).isDefined
+  }
+
+  def isSentStart(word:String):Boolean = {
+    IS_PORTUGUESE_SENTSTART.findFirstIn(word).isDefined
+  }
+}
+
 object SentenceSplitter {
   val EOS: Regex = """^[\.!\?\s]+$""".r
 
   val IS_ENGLISH_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.abbreviations")
   val IS_ENGLISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.sentstarts")
+  val IS_PORTUGUESE_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/portuguese.abbreviations")
+  val IS_PORTUGUESE_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/portuguese.sentstarts")
 
   /** Reads all words in the given dictionary and converts them into a single disjunction regex for efficiency */
   private def loadDictionary(rn:String): Regex = {
