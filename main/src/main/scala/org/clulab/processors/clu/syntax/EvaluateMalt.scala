@@ -4,10 +4,11 @@ import java.io.{BufferedReader, File, FileReader}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-
 import org.maltparser.concurrent.ConcurrentUtils
 import org.maltparser.core.lw.helper.Utils
 import org.slf4j.LoggerFactory
+
+import scala.util.Try
 
 class EvaluateMalt
 
@@ -108,9 +109,11 @@ object EvaluateMalt {
       val tokens = line.split("\\s+")
       if(tokens.size < 8)
         throw new RuntimeException(s"ERROR: invalid output line: $line")
-      val label = tokens(7)
-      val head = tokens(6).toInt
-      deps += new EvalDependency(label, head)
+      val head = Try(tokens(6).toInt).toOption
+      if (head.nonEmpty) {
+        val label = tokens(7)
+        deps += new EvalDependency(label, head.get)
+      }
     }
     deps
   }
