@@ -4,6 +4,7 @@ import org.clulab.processors.clu.SpanishCluProcessor
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestSpanishCluProcessor extends FlatSpec with Matchers {
+  /*
   val proc = new SpanishCluProcessor()
 
   "SpanishCluProcessor" should "tokenize raw text correctly" in {
@@ -56,5 +57,6 @@ class TestSpanishCluProcessor extends FlatSpec with Matchers {
 
     // TODO
   }
+  */
 
 }

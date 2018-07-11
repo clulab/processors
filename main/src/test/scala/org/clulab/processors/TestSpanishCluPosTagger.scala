@@ -5,6 +5,7 @@ import org.clulab.sequences.{ColumnsToDocument, SequenceTaggerEvaluator}
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestSpanishCluPosTagger extends FlatSpec with Matchers {
+  /*
   // TODO: see TestCluPosTagger
   val proc = new SpanishCluProcessor()
 
@@ -17,4 +18,5 @@ class TestSpanishCluPosTagger extends FlatSpec with Matchers {
     println(s"POS tagger accuracy is $acc")
     (acc > 90) should be (true)
   }
+  */
 }

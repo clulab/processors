@@ -7,6 +7,7 @@ import org.clulab.processors.clu.syntax.EvaluateMalt
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestSpanishCluParser extends FlatSpec with Matchers {
+/*
   // TODO: see TestCluParser
   val procUniversal = new SpanishCluProcessor()
 
@@ -20,4 +21,5 @@ class TestSpanishCluParser extends FlatSpec with Matchers {
     (las > 0.8) should be (true)
     (uas > 0.8) should be (true)
   }
+  */
 }
