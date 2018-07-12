@@ -11,11 +11,13 @@ class TestPortugueseCluPosTagger extends FlatSpec with Matchers {
   "PortugueseCluProcessor" should "POS tag UD sentences with an accuracy over 90%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_test.conllu")
     val doc = ColumnsToDocument.readFromStream(stream,
+      wordPos = ColumnsToDocument.WORD_POS_CONLLU,
+      labelPos = ColumnsToDocument.TAG_POS_CONLLU,
       setLabels = ColumnsToDocument.setTags,
       annotate = ColumnsToDocument.annotateLemmas)
-    val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.posTagger, List(doc).iterator)
+    val acc = new SequenceTaggerEvaluator[String, String].accuracy(proc.posTagger, List(doc).iterator)
     println(s"POS tagger accuracy is $acc")
-    (acc > 0) should be (true) // TODO: investigate low figures
+    (acc > 0.97) should be (true)
   }
 
 }
