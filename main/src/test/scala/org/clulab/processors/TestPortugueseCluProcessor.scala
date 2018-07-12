@@ -43,7 +43,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
   }
 
   it should "POS tag correctly" in {
-    val doc = proc.mkDocument("Fulano de Tal viajou para a China. Lá, ele visitou Pequim.")
+    val doc = proc.mkDocument("Da Silva viajou para a China. Lá, ele visitou Pequim.")
     proc.lemmatize(doc)
     proc.tagPartsOfSpeech(doc)
     doc.clear()
