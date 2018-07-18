@@ -21,7 +21,7 @@ import org.clulab.sequences.{LexiconNER, Tagger}
   *   tokenization (in-house),
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
   *   POS tagging (in-house BiMEMM),
-  *   dependency parsing (ensemble of Malt models)
+  *   dependency parsing (ensemble of Malt models) for universal dependencies
   */
 class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen")) extends Processor with Configured {
 
@@ -242,11 +242,16 @@ trait SentencePostProcessor {
   def process(sentence: Sentence)
 }
 
+/** Same as CluProcessor but it includes custom tokenization and NER for the bio domain */
 class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
 
+/** Same as CluProcessor but using Stanford dependencies */
 class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load("cluprocessoropenwithstanford"))
 
+/** CluProcessor for Spanish */
 class SpanishCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorspanish"))
+
+/** CluProcessor for Portuguese */
 class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorportuguese"))
 
 object CluProcessor {
