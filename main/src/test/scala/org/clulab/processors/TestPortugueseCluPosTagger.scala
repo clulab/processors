@@ -8,7 +8,7 @@ class TestPortugueseCluPosTagger extends FlatSpec with Matchers {
   // TODO: see TestCluPosTagger
   val proc = new PortugueseCluProcessor()
 
-  "PortugueseCluProcessor" should "POS tag UD sentences with an accuracy over 90%" in {
+  "PortugueseCluProcessor" should "POS tag UD sentences with an accuracy over 96.5%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_test.conllu")
     val doc = ColumnsToDocument.readFromStream(stream,
       wordPos = ColumnsToDocument.WORD_POS_CONLLU,

@@ -17,7 +17,7 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"PT UD performance: $las, $uas")
     reader.close()
-    (las > 0) should be (true)
-    (uas > 0) should be (true) // TODO: investigate low figures
+    (las > 0.74) should be (true)
+    (uas > 0.77) should be (true) // TODO: investigate low figures
   }
 }

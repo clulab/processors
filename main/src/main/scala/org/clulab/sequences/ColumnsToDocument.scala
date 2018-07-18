@@ -74,12 +74,23 @@ object ColumnsToDocument {
         val bits = l.split("\\s+")
         if (bits.length < 2)
           throw new RuntimeException(s"ERROR: invalid line [$l]!")
-        words += bits(wordPos)
-        labels += in(bits(labelPos))
-        startOffsets += charOffset
-        charOffset = bits(wordPos).length
-        endOffsets += charOffset
-        charOffset += 1
+
+        // in the Portuguese dataset contractions are preserved, with positions marked with dash, e.g.:
+        //   9-10	das	_	_	_	_	_	_	_	_
+        // we will skip all these lines, because the solved contractions are always present afterwards, e.g.:
+        //   9	de	de	ADP	INDT	_	11	case	_	_
+        //   10	as	o	DET	_	Gender=Fem|Number=Plur	11	det	_	_
+        val offset = bits(0)
+        if(! offset.contains("-")) {
+          words += bits(wordPos)
+          labels += in(bits(labelPos))
+          startOffsets += charOffset
+          charOffset = bits(wordPos).length
+          endOffsets += charOffset
+          charOffset += 1
+        } else {
+          // println("Skipped line: " + l)
+        }
       }
     }
     if(words.nonEmpty) {
