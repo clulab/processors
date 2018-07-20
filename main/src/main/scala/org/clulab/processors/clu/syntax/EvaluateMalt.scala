@@ -50,7 +50,7 @@ object EvaluateMalt {
     val output = new ArrayBuffer[String]()
     for(token <- tokens) {
       val bits = token.split("\\s+")
-      if(! bits(0).contains("-")) {
+      if(! bits(0).contains("-")) { // we assume offsets are always stored in column 0!
         output += token
       } else {
         // println(s"Skipped line: $token")
