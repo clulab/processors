@@ -21,6 +21,8 @@ object ColumnsToDocument {
 
   val WORD_POS_CONLLX = 1
   val TAG_POS_CONLLX = 4
+  val WORD_POS_CONLLU = 1
+  val TAG_POS_CONLLU = 3
 
   val proc = new CluProcessor()
 
@@ -28,25 +30,28 @@ object ColumnsToDocument {
                    wordPos:Int = WORD_POS_CONLLX,
                    labelPos:Int = TAG_POS_CONLLX,
                    setLabels: (Sentence, Array[String]) => Unit,
-                   annotate: (Document) => Unit): Document = {
+                   annotate: (Document) => Unit,
+                   filterOutContractions:Boolean = false): Document = {
     val source = Source.fromFile(fn)
-    readFromSource(source, wordPos, labelPos, setLabels, annotate)
+    readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
   }
 
   def readFromStream(stream:InputStream,
                      wordPos:Int = WORD_POS_CONLLX,
                      labelPos:Int = TAG_POS_CONLLX,
                      setLabels: (Sentence, Array[String]) => Unit,
-                     annotate: (Document) => Unit): Document = {
+                     annotate: (Document) => Unit,
+                     filterOutContractions:Boolean = false): Document = {
     val source = Source.fromInputStream(stream)
-    readFromSource(source, wordPos, labelPos, setLabels, annotate)
+    readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
   }
 
   def readFromSource(source:Source,
                      wordPos:Int,
                      labelPos:Int,
                      setLabels: (Sentence, Array[String]) => Unit,
-                     annotate: (Document) => Unit): Document = {
+                     annotate: (Document) => Unit,
+                     filterOutContractions:Boolean): Document = {
     var words = new ArrayBuffer[String]()
     var startOffsets = new ArrayBuffer[Int]()
     var endOffsets = new ArrayBuffer[Int]()
@@ -72,12 +77,25 @@ object ColumnsToDocument {
         val bits = l.split("\\s+")
         if (bits.length < 2)
           throw new RuntimeException(s"ERROR: invalid line [$l]!")
-        words += bits(wordPos)
-        labels += in(bits(labelPos))
-        startOffsets += charOffset
-        charOffset = bits(wordPos).length
-        endOffsets += charOffset
-        charOffset += 1
+
+        //
+        // in the Portuguese dataset contractions are preserved, with positions marked with dash, e.g.:
+        //   9-10	das	_	_	_	_	_	_	_	_
+        // we will skip all these lines, because the solved contractions are always present afterwards, e.g.:
+        //   9	de	de	ADP	INDT	_	11	case	_	_
+        //   10	as	o	DET	_	Gender=Fem|Number=Plur	11	det	_	_
+        //
+        val offset = bits(0) // we assume token offsets are always in column 0!
+        if(! filterOutContractions || ! offset.contains("-")) {
+          words += bits(wordPos)
+          labels += in(bits(labelPos))
+          startOffsets += charOffset
+          charOffset = bits(wordPos).length
+          endOffsets += charOffset
+          charOffset += 1
+        } else {
+          // println("Skipped line: " + l)
+        }
       }
     }
     if(words.nonEmpty) {

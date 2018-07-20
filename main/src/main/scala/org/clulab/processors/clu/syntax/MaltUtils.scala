@@ -6,6 +6,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.util.Try
 
 /**
   * Utils necessary for malt parsing
@@ -41,16 +42,19 @@ object MaltUtils {
       if(tokens.length < 8)
         throw new RuntimeException("ERROR: Invalid malt output line: " + o)
       // malt indexes tokens from 1; we index from 0
-      val modifier = tokens(0).toInt - 1
-      val head = tokens(6).toInt - 1
-      val label = tokens(7).toLowerCase
+      val modifier = Try(tokens(0).toInt - 1).toOption
+      val head = Try(tokens(6).toInt - 1).toOption
 
-      // sometimes malt generates dependencies from root with a different label than "root"
-      // not sure why this happens, but let's manage this: create a root node in these cases
-      if(head == -1) {
-        roots += modifier
-      } else {
-        edgeBuffer += Edge(source = head, destination = modifier, relation = in(label, internStrings))
+      if (modifier.nonEmpty && head.nonEmpty) {
+        val label = tokens(7).toLowerCase
+
+        // sometimes malt generates dependencies from root with a different label than "root"
+        // not sure why this happens, but let's manage this: create a root node in these cases
+        if (head.get == -1) {
+          roots += modifier.get
+        } else {
+          edgeBuffer += Edge(source = head.get, destination = modifier.get, relation = in(label, internStrings))
+        }
       }
       ()                                    // workaround for bug #10151
     }
@@ -83,24 +87,26 @@ object MaltUtils {
     val conllxDeps = new ArrayBuffer[String]
     for(it <- inputTokens) {
       val bits = it.split("\\s+")
-      val index = bits(0)
-      val word = bits(1)
-      val lemma = bits(2)
-      val pos1 = bits(3)
-      val pos2 = bits(4)
-      val dep = depMap.get(index.toInt)
-      if(dep.isEmpty) {
-        logger.debug(s"Can't find dependency for index $index for token [$it]!")
-        // this happens usually for punctuation tokens
-        val head = if(dg.roots.nonEmpty) dg.roots.head + 1 else 1
-        val label = "punct"
-        val token = s"$index\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
-        conllxDeps += token
-      } else {
-        val head = dep.get._1
-        val label = dep.get._2
-        val token = s"$index\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
-        conllxDeps += token
+      val index = Try(bits(0).toInt).toOption
+      if (index.nonEmpty) {
+        val word = bits(1)
+        val lemma = bits(2)
+        val pos1 = bits(3)
+        val pos2 = bits(4)
+        val dep = depMap.get(index.get)
+        if (dep.isEmpty) {
+          logger.debug(s"Can't find dependency for index ${index.get} for token [$it]!")
+          // this happens usually for punctuation tokens
+          val head = if (dg.roots.nonEmpty) dg.roots.head + 1 else 1
+          val label = "punct"
+          val token = s"${index.get}\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
+          conllxDeps += token
+        } else {
+          val head = dep.get._1
+          val label = dep.get._2
+          val token = s"${index.get}\t$word\t$lemma\t$pos1\t$pos2\t_\t$head\t$label\t_\t_"
+          conllxDeps += token
+        }
       }
     }
 

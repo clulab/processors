@@ -4,10 +4,11 @@ import java.io.{BufferedReader, File, FileReader}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-
 import org.maltparser.concurrent.ConcurrentUtils
 import org.maltparser.core.lw.helper.Utils
 import org.slf4j.LoggerFactory
+
+import scala.util.Try
 
 class EvaluateMalt
 
@@ -37,6 +38,27 @@ object EvaluateMalt {
     reader.close()
   }
 
+  private def skipContractions(tokens: Array[String]): Array[String] = {
+    //
+    // in the Portuguese dataset contractions are preserved, with positions marked with dash, e.g.:
+    //   9-10	das	_	_	_	_	_	_	_	_
+    // we will skip all these lines, because the solved contractions are always present afterwards, e.g.:
+    //   9	de	de	ADP	INDT	_	11	case	_	_
+    //   10	as	o	DET	_	Gender=Fem|Number=Plur	11	det	_	_
+    //
+
+    val output = new ArrayBuffer[String]()
+    for(token <- tokens) {
+      val bits = token.split("\\s+")
+      if(! bits(0).contains("-")) { // we assume offsets are always stored in column 0!
+        output += token
+      } else {
+        // println(s"Skipped line: $token")
+      }
+    }
+    output.toArray
+  }
+
   def evaluate(maltModel:Parser, reader:BufferedReader): (Double, Double) = {
     val goldDeps = new ArrayBuffer[EvalDependency]()
     val sysDeps = new ArrayBuffer[EvalDependency]()
@@ -45,7 +67,7 @@ object EvaluateMalt {
     val verbose = false
     logger.info("Beginning parsing...")
     while(! done) {
-      val goldTokens = ConcurrentUtils.readSentence(reader)
+      val goldTokens = skipContractions(ConcurrentUtils.readSentence(reader))
       if(verbose) {
         println("GOLD:")
         for (t <- goldTokens) println(t)
@@ -108,9 +130,11 @@ object EvaluateMalt {
       val tokens = line.split("\\s+")
       if(tokens.size < 8)
         throw new RuntimeException(s"ERROR: invalid output line: $line")
-      val label = tokens(7)
-      val head = tokens(6).toInt
-      deps += new EvalDependency(label, head)
+      val head = Try(tokens(6).toInt).toOption
+      if (head.nonEmpty) {
+        val label = tokens(7)
+        deps += new EvalDependency(label, head.get)
+      }
     }
     deps
   }

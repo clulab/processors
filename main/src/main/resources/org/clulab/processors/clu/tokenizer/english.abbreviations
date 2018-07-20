@@ -1,6 +1,7 @@
 #
 # Words that should be considered as abbreviations; these may followed '.' in text
 # Matching these is case sensitive
+# TODO: add abbreviations for ES
 #
 A
 A.C

@@ -21,7 +21,7 @@ import org.clulab.sequences.{LexiconNER, Tagger}
   *   tokenization (in-house),
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
   *   POS tagging (in-house BiMEMM),
-  *   dependency parsing (ensemble of Malt models)
+  *   dependency parsing (ensemble of Malt models) for universal dependencies
   */
 class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen")) extends Processor with Configured {
 
@@ -41,10 +41,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     }
 
   // the actual tokenizer
-  lazy val tokenizer: Tokenizer =
-    new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+  lazy val tokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => new OpenDomainPortugueseTokenizer(tokenizerPostProcessor)
+    case _ => new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+  }
 
   // the lemmatizer
+  // TODO: language switch
   lazy val lemmatizer: Lemmatizer =
     new EnglishLemmatizer
 
@@ -85,8 +88,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     }
 
   // the syntactic chunker
-  lazy val chunker:Chunker =
-    Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None))
+  lazy val chunker:Option[Chunker] =
+    if(contains(s"$prefix.chunker.model"))
+      Some(Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None)))
+    else
+      None
 
   // should we use universal dependencies or Stanford ones?
   val useUniversalDependencies:Boolean = getArgBoolean(s"$prefix.parser.universal", Some(true))
@@ -204,10 +210,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document) {
-    basicSanityCheck(doc)
-    for(sent <- doc.sentences) {
-      val chunks = chunker.classesOf(sent)
-      sent.chunks = Some(chunks)
+    if(chunker.isDefined) {
+      basicSanityCheck(doc)
+      for (sent <- doc.sentences) {
+        val chunks = chunker.get.classesOf(sent)
+        sent.chunks = Some(chunks)
+      }
     }
   }
 
@@ -234,9 +242,17 @@ trait SentencePostProcessor {
   def process(sentence: Sentence)
 }
 
+/** Same as CluProcessor but it includes custom tokenization and NER for the bio domain */
 class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
 
+/** Same as CluProcessor but using Stanford dependencies */
 class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load("cluprocessoropenwithstanford"))
+
+/** CluProcessor for Spanish */
+class SpanishCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorspanish"))
+
+/** CluProcessor for Portuguese */
+class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorportuguese"))
 
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])

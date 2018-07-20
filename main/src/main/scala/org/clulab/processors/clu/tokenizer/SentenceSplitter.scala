@@ -13,11 +13,7 @@ trait SentenceSplitter {
   def split(tokens:Array[RawToken], sentenceSplit:Boolean):Array[Sentence]
 }
 
-/**
-  * Splits a sequence of tokens into sentences
-  */
-class EnglishSentenceSplitter extends SentenceSplitter {
-
+abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
   /**
     * Sentence splitting over a stream of tokens
     * This includes detection of abbreviations as well
@@ -91,12 +87,36 @@ class EnglishSentenceSplitter extends SentenceSplitter {
     sentences.toArray
   }
 
-  def isAbbreviation(word:String):Boolean = {
+  def isAbbreviation(word:String):Boolean
+
+  def isSentStart(word:String):Boolean
+}
+
+/**
+  * Splits a sequence of tokens into sentences
+  */
+class EnglishSentenceSplitter extends RuleBasedSentenceSplitter {
+
+  override def isAbbreviation(word:String):Boolean = {
     IS_ENGLISH_ABBREVIATION.findFirstIn(word).isDefined
   }
 
-  def isSentStart(word:String):Boolean = {
+  override def isSentStart(word:String):Boolean = {
     IS_ENGLISH_SENTSTART.findFirstIn(word).isDefined
+  }
+}
+
+/**
+  * Splits a sequence of Portuguese tokens into sentences
+  */
+class PortugueseSentenceSplitter extends RuleBasedSentenceSplitter {
+
+  override def isAbbreviation(word:String):Boolean = {
+    IS_PORTUGUESE_ABBREVIATION.findFirstIn(word).isDefined
+  }
+
+  override def isSentStart(word:String):Boolean = {
+    IS_PORTUGUESE_SENTSTART.findFirstIn(word).isDefined
   }
 }
 
@@ -105,6 +125,8 @@ object SentenceSplitter {
 
   val IS_ENGLISH_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.abbreviations")
   val IS_ENGLISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.sentstarts")
+  val IS_PORTUGUESE_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/portuguese.abbreviations")
+  val IS_PORTUGUESE_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/portuguese.sentstarts")
 
   /** Reads all words in the given dictionary and converts them into a single disjunction regex for efficiency */
   private def loadDictionary(rn:String): Regex = {

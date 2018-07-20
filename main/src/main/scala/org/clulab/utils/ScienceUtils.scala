@@ -9,18 +9,22 @@ import scala.collection.mutable
 
 class ScienceUtils {
   val unicodes:Map[Char, String] = loadUnicodes
+  val accents:Set[Char] = Set('á', 'â', 'ã', 'à', 'ç', 'é', 'ê', 'í', 'ó', 'ô', 'õ', 'ú', 'Á', 'Â', 'Ã', 'À', 'Ç', 'É', 'Ê', 'Í', 'Ó', 'Ô', 'Õ', 'Ú')
 
   /**
     * Replaces common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
     * @param origText The text to be processed
     * @return The processed text
     */
-  def replaceUnicodeWithAscii(origText:String):String = {
+  def replaceUnicodeWithAscii(origText:String, keepAccents:Boolean = false):String = {
     val os = new StringBuilder()
     for(i <- 0 until origText.length) {
       val c: Char = origText.charAt(i)
       if(unicodes.contains(c)) {
-        os.append(unicodes(c))
+        if(keepAccents && accents.contains(c))
+          os.append(c)
+        else
+          os.append(unicodes(c))
       } else {
         os.append(c)
       }
