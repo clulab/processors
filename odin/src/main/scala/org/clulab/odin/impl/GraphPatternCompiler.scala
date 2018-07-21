@@ -121,9 +121,9 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
   def rangeGraphPattern: Parser[GraphPatternNode] =
     atomicGraphPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ "}" ^^ {
       case pat ~ "{" ~ from ~ "," ~ to ~ "}" => (from, to) match {
-        case (None, None) =>
-          sys.error("invalid range")
-        case (None, Some(n)) =>
+        case (None | Some(0), None) =>
+          new KleeneGraphPattern(pat)
+        case (None | Some(0), Some(n)) =>
           repeatPattern(new OptionalGraphPattern(pat), n)
         case (Some(m), None) =>
           val req = repeatPattern(pat, m)
