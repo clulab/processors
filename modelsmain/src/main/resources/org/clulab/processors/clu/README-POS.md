@@ -23,15 +23,19 @@ Accuracy on the test partition of Genia is: `Accuracy = 98.04`.
 Portuguese-language model BiMEMM trained on the concatenation of the Bosque 
 (Floresta Sintá(c)tica) treebank and the Google Universal Dependency Treebank, 
 available at [universaldependencies.org](https://universaldependencies.org). 
-The test partition also includes the Parallel Universal Dependencies (PUD) treebank.
+The test partitions also include the Parallel Universal Dependencies (PUD) treebank.
 NB: the POS tags are universal tags (e.g., `NOUN` rather than `NN`). 
-Accuracy on the combined test partition is: `Accuracy = 93.37`.
+Accuracy on the Bosque test partition is: `Accuracy = 96.45`.
+Accuracy on the GSD test partition is: `Accuracy = 94.85`.
+Accuracy on the PUD test partition is: `Accuracy = 88.59`.
 
 ### `es-pos-bimemm-ud.dat`
 
 Spanish-language model BiMEMM trained on the concatenation of the AnCora corpus 
 and the Google Universal Dependency Treebank, available at 
 [universaldependencies.org](https://universaldependencies.org). 
-The test partition also includes the Parallel Universal Dependencies (PUD) treebank.
+The test partitions also include the Parallel Universal Dependencies (PUD) treebank.
 NB: the POS tags are universal tags (e.g., `NOUN` rather than `NN`). 
-Accuracy on the combined test partition is: `Accuracy = `.
+Accuracy on the Bosque test partition is: `Accuracy = 96.41`.
+Accuracy on the GSD test partition is: `Accuracy = 92.78`.
+Accuracy on the PUD test partition is: `Accuracy = 88.85`.
