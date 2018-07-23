@@ -17,7 +17,7 @@ class TestPortugueseCluPosTagger extends FlatSpec with Matchers {
       filterOutContractions = true)
     val acc = new SequenceTaggerEvaluator[String, String].accuracy(proc.posTagger, List(doc).iterator, saveOutput = false)
     println(s"POS tagger accuracy is $acc")
-    (acc > 96.4) should be (true)
+    acc should be > 96.4
   }
 
   "PortugueseCluProcessor" should "POS tag GSD sentences with an accuracy over 94.8%" in {
@@ -30,7 +30,7 @@ class TestPortugueseCluPosTagger extends FlatSpec with Matchers {
       filterOutContractions = true)
     val acc = new SequenceTaggerEvaluator[String, String].accuracy(proc.posTagger, List(doc).iterator, saveOutput = false)
     println(s"POS tagger accuracy is $acc")
-    (acc > 94.8) should be (true)
+    acc should be > 94.8
   }
 
   "PortugueseCluProcessor" should "POS tag PUD sentences with an accuracy over 88.5%" in {
@@ -43,7 +43,7 @@ class TestPortugueseCluPosTagger extends FlatSpec with Matchers {
       filterOutContractions = true)
     val acc = new SequenceTaggerEvaluator[String, String].accuracy(proc.posTagger, List(doc).iterator, saveOutput = false)
     println(s"POS tagger accuracy is $acc")
-    (acc > 88.5) should be (true)
+    acc should be > 88.5
   }
 
 }

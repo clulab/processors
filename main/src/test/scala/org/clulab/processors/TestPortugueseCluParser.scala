@@ -7,17 +7,38 @@ import org.clulab.processors.clu.syntax.EvaluateMalt
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestPortugueseCluParser extends FlatSpec with Matchers {
-  // TODO: see TestCluParser
   val procUniversal = new PortugueseCluProcessor()
 
-  "PortugueseCluProcessor" should "parse UD with an accuracy over 80%" in {
+  "PortugueseCluProcessor" should "parse Bosque with an accuracy over 77%" in {
     val model = procUniversal.depParser
-    val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_test.conllu")
+    val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_bosque_ud_test.conllu")
     val reader = new BufferedReader(new InputStreamReader(stream))
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
-    println(s"PT UD performance: $las, $uas")
+    println(s"PT Bosque UD performance: $las, $uas")
     reader.close()
-    (las > 0.74) should be (true)
-    (uas > 0.77) should be (true) // TODO: investigate low figures
+    las should be > 0.77
+    uas should be > 0.79
+  }
+
+  "PortugueseCluProcessor" should "parse GSD with an accuracy over 71%" in {
+    val model = procUniversal.depParser
+    val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_gsd_ud_test.conllu")
+    val reader = new BufferedReader(new InputStreamReader(stream))
+    val (las, uas) = EvaluateMalt.evaluate(model, reader)
+    println(s"PT GSD UD performance: $las, $uas")
+    reader.close()
+    las should be > 0.71
+    uas should be > 0.76
+  }
+
+  "PortugueseCluProcessor" should "parse PUD with an accuracy over 61%" in {
+    val model = procUniversal.depParser
+    val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_pud_ud_test.conllu")
+    val reader = new BufferedReader(new InputStreamReader(stream))
+    val (las, uas) = EvaluateMalt.evaluate(model, reader)
+    println(s"PT PUD UD performance: $las, $uas")
+    reader.close()
+    las should be > 0.61
+    uas should be > 0.67
   }
 }

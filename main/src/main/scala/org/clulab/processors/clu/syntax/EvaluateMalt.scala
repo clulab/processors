@@ -5,10 +5,7 @@ import java.io.{BufferedReader, File, FileReader}
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import org.maltparser.concurrent.ConcurrentUtils
-import org.maltparser.core.lw.helper.Utils
 import org.slf4j.LoggerFactory
-
-import scala.util.Try
 
 class EvaluateMalt
 
@@ -49,7 +46,7 @@ object EvaluateMalt {
 
     val output = new ArrayBuffer[String]()
     for(token <- tokens) {
-      val bits = token.split("\\s+")
+      val bits = token.split("\\t")
       if(! bits(0).contains("-")) { // we assume offsets are always stored in column 0!
         output += token
       } else {
@@ -126,15 +123,13 @@ object EvaluateMalt {
   def toDeps(sentence: Array[String]):ArrayBuffer[EvalDependency] = {
     val deps = new ArrayBuffer[EvalDependency]()
     for(line <- sentence) {
-      // println(s"Converting line: $line")
-      val tokens = line.split("\\s+")
+      // \\t rather than \\s+ because some tokens contain spaces
+      val tokens = line.split("\\t")
       if(tokens.size < 8)
         throw new RuntimeException(s"ERROR: invalid output line: $line")
-      val head = Try(tokens(6).toInt).toOption
-      if (head.nonEmpty) {
-        val label = tokens(7)
-        deps += new EvalDependency(label, head.get)
-      }
+      val head = tokens(6).toInt
+      val label = tokens(7)
+      deps += new EvalDependency(label, head)
     }
     deps
   }
@@ -144,7 +139,8 @@ object EvaluateMalt {
     for(line <- Source.fromFile(fn).getLines()) {
       val content = line.trim
       if(content.length > 0) {
-        val tokens = content.split("\\s+")
+        // \\t rather than \\s+ because some tokens contain spaces
+        val tokens = content.split("\\t")
         if(tokens.size < 8)
           throw new RuntimeException(s"ERROR: invalid output line in file $fn: $line")
         val label = tokens(7)
