@@ -120,6 +120,20 @@ class PortugueseSentenceSplitter extends RuleBasedSentenceSplitter {
   }
 }
 
+/**
+  * Splits a sequence of Spanish tokens into sentences
+  */
+class SpanishSentenceSplitter extends RuleBasedSentenceSplitter {
+
+  override def isAbbreviation(word:String):Boolean = {
+    IS_SPANISH_ABBREVIATION.findFirstIn(word).isDefined
+  }
+
+  override def isSentStart(word:String):Boolean = {
+    IS_SPANISH_SENTSTART.findFirstIn(word).isDefined
+  }
+}
+
 object SentenceSplitter {
   val EOS: Regex = """^[\.!\?\s]+$""".r
 
@@ -127,6 +141,8 @@ object SentenceSplitter {
   val IS_ENGLISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.sentstarts")
   val IS_PORTUGUESE_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/portuguese.abbreviations")
   val IS_PORTUGUESE_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/portuguese.sentstarts")
+  val IS_SPANISH_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/spanish.abbreviations")
+  val IS_SPANISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/spanish.sentstarts")
 
   /** Reads all words in the given dictionary and converts them into a single disjunction regex for efficiency */
   private def loadDictionary(rn:String): Regex = {

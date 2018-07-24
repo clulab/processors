@@ -110,6 +110,5 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 7, "nmod") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 5, "case") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 6, "det") should be(true)
-    println("Parsing is fine.")
   }
 }
