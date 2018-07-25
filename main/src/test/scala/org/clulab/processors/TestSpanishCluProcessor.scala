@@ -62,7 +62,7 @@ class TestSpanishCluProcessor extends FlatSpec with Matchers {
   */
 
   it should "parse text correctly" in {
-    val doc = proc.annotate("Juan Olivarez viajó a China. Allí él visitó Beijing.")
+    val doc = proc.annotate("Juan Olivarez viajó a China. Él visitó Pekín allí.")
 
     doc.sentences(0).universalBasicDependencies.get.hasEdge(2, 0, "nsubj") should be(true)
     doc.sentences(0).universalBasicDependencies.get.hasEdge(0, 1, "flat") should be(true)
