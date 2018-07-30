@@ -14,7 +14,11 @@ object Serializer {
 
   /** loads object from file */
   def load[A](filename: String): A = {
-    val cl = getClass().getClassLoader()
+    load(filename, getClass().getClassLoader())
+  }
+
+  /** loads object from file */
+  def load[A](filename: String, cl: ClassLoader): A = {
     val fis = new FileInputStream(filename)
     val ois = new ClassLoaderObjectInputStream(cl, fis)
     val obj = ois.readObject().asInstanceOf[A]
