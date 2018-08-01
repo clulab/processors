@@ -47,7 +47,7 @@ object Serializer {
 
   /* deserialize from input stream */
   def load[A](inputStream: InputStream): A = {
-    load(inputStream, getClass().getClassLoader())
+    load[A](inputStream, getClass().getClassLoader())
   }
 
   /* deserialize from input stream */
@@ -59,7 +59,7 @@ object Serializer {
 
   /* deserialize from file */
   def load[A](file: File): A = {
-    load(file, getClass().getClassLoader())
+    load[A](file, getClass().getClassLoader())
   }
 
   /* deserialize from file */
@@ -71,7 +71,7 @@ object Serializer {
 
   /* deserialize from file */
   def load[A](filename: String): A = {
-    load(filename, getClass().getClassLoader())
+    load[A](filename, getClass().getClassLoader())
   }
 
   /* deserialize from file */
@@ -83,7 +83,7 @@ object Serializer {
 
   /* deserialize from byte array */
   def load[A](bytes: Array[Byte]): A = {
-    load(bytes, getClass().getClassLoader())
+    load[A](bytes, getClass().getClassLoader())
   }
 
   /* deserialize from byte array */
