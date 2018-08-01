@@ -40,8 +40,7 @@ object Serializer {
   def save[A](obj: A): Array[Byte] = {
     using(new ByteArrayOutputStream()) { baos =>
       save(obj, baos)
-      val bytes = baos.toByteArray
-      bytes
+      baos.toByteArray
     }
   }
 
