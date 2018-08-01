@@ -1,37 +1,48 @@
 package org.clulab.utils
 
 import java.io._
+import scala.language.reflectiveCalls
 
 object Serializer {
 
+  type Closable = { def close(): Unit }
+
+  def using[A <: Closable, B](resource: A)(f: A => B): B = {
+    try {
+      f(resource)
+    } finally {
+      resource.close()
+    }
+  }
+
   /** serialize object to output stream */
   def save[A](obj: A, outputStream: OutputStream): Unit = {
-    val oos = new ObjectOutputStream(outputStream)
-    oos.writeObject(obj)
-    oos.close()
+    using(new ObjectOutputStream(outputStream)) { oos =>
+      oos.writeObject(obj)
+    }
   }
 
   /** serialize object to file */
   def save[A](obj: A, file: File): Unit = {
-    val fos = new FileOutputStream(file)
-    save(obj, fos)
-    fos.close()
+    using(new FileOutputStream(file)) { fos =>
+      save(obj, fos)
+    }
   }
 
   /** serialize object to file */
   def save[A](obj: A, filename: String): Unit = {
-    val fos = new FileOutputStream(filename)
-    save(obj, fos)
-    fos.close()
+    using(new FileOutputStream(filename)) { fos =>
+      save(obj, fos)
+    }
   }
 
   /** serialize object to byte array */
   def save[A](obj: A): Array[Byte] = {
-    val baos = new ByteArrayOutputStream()
-    save(obj, baos)
-    val bytes = baos.toByteArray
-    baos.close()
-    bytes
+    using(new ByteArrayOutputStream()) { baos =>
+      save(obj, baos)
+      val bytes = baos.toByteArray
+      bytes
+    }
   }
 
   /* deserialize from input stream */
@@ -41,10 +52,9 @@ object Serializer {
 
   /* deserialize from input stream */
   def load[A](inputStream: InputStream, classLoader: ClassLoader): A = {
-    val ois = new ClassLoaderObjectInputStream(classLoader, inputStream)
-    val obj = ois.readObject().asInstanceOf[A]
-    ois.close()
-    obj
+    using(new ClassLoaderObjectInputStream(classLoader, inputStream)) { ois =>
+      ois.readObject().asInstanceOf[A]
+    }
   }
 
   /* deserialize from file */
@@ -54,10 +64,9 @@ object Serializer {
 
   /* deserialize from file */
   def load[A](file: File, classLoader: ClassLoader): A = {
-    val fis = new FileInputStream(file)
-    val obj = load[A](fis, classLoader)
-    fis.close()
-    obj
+    using(new FileInputStream(file)) { fis =>
+      load[A](fis, classLoader)
+    }
   }
 
   /* deserialize from file */
@@ -67,10 +76,9 @@ object Serializer {
 
   /* deserialize from file */
   def load[A](filename: String, classLoader: ClassLoader): A = {
-    val fis = new FileInputStream(filename)
-    val obj = load[A](fis, classLoader)
-    fis.close()
-    obj
+    using(new FileInputStream(filename)) { fis =>
+      load[A](fis, classLoader)
+    }
   }
 
   /* deserialize from byte array */
@@ -80,10 +88,9 @@ object Serializer {
 
   /* deserialize from byte array */
   def load[A](bytes: Array[Byte], classLoader: ClassLoader): A = {
-    val bais = new ByteArrayInputStream(bytes)
-    val obj = load[A](bais, classLoader)
-    bais.close()
-    obj
+    using(new ByteArrayInputStream(bytes)) { bais =>
+      load[A](bais, classLoader)
+    }
   }
 
 }
