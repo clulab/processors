@@ -20,7 +20,7 @@ class TestPortugueseCluPosTagger extends FlatSpec with Matchers {
     acc should be > 96.4
   }
 
-  "PortugueseCluProcessor" should "POS tag GSD sentences with an accuracy over 94.8%" in {
+  "PortugueseCluProcessor" should "POS tag GSD sentences with an accuracy over 94.7%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_gsd_ud_test.conllu")
     val doc = ColumnsToDocument.readFromStream(stream,
       wordPos = ColumnsToDocument.WORD_POS_CONLLU,
@@ -30,7 +30,7 @@ class TestPortugueseCluPosTagger extends FlatSpec with Matchers {
       filterOutContractions = true)
     val acc = new SequenceTaggerEvaluator[String, String].accuracy(proc.posTagger, List(doc).iterator, saveOutput = false)
     println(s"POS tagger accuracy is $acc")
-    acc should be > 94.8
+    acc should be > 94.7
   }
 
   "PortugueseCluProcessor" should "POS tag PUD sentences with an accuracy over 88.5%" in {
