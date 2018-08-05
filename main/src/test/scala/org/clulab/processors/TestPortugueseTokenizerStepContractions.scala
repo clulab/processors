@@ -27,7 +27,9 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(0).word should be ("de")
     sents(1).word should be ("o")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (2)
 
     sents = getContractedForm("da")
     sents(0).word should be ("de")
@@ -77,7 +79,9 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(0).word should be ("de")
     sents(1).word should be ("ele")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (4)
 
     sents = getContractedForm("dela")
     sents(0).word should be ("de")
@@ -89,7 +93,9 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(0).word should be ("de")
     sents(1).word should be ("eles")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (5)
 
     sents = getContractedForm("delas")
     sents(0).word should be ("de")
@@ -103,7 +109,9 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(0).word should be ("de")
     sents(1).word should be ("este")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (5)
 
     sents = getContractedForm("desta")
     sents(0).word should be ("de")
@@ -153,7 +161,9 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(0).word should be ("de")
     sents(1).word should be ("aquele")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (7)
 
     sents = getContractedForm("daquela")
     sents(0).word should be ("de")
@@ -175,12 +185,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for no, na, nos nas" in {
-    // todo continue tests
     var sents = getContractedForm("no")
     sents(0).word should be ("em")
     sents(1).word should be ("o")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (2)
 
     sents = getContractedForm("na")
     sents(0).word should be ("em")
@@ -203,12 +214,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
 
 
   it should "work for num, numa, nuns, numas" in {
-    // todo continue tests
     var sents = getContractedForm("num")
     sents(0).word should be ("em")
     sents(1).word should be ("um")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (3)
 
     sents = getContractedForm("numa")
     sents(0).word should be ("em")
@@ -231,12 +243,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
 
 
   it should "work for nele, nela, neles, nelas" in {
-    // todo continue tests
     var sents = getContractedForm("nele")
     sents(0).word should be ("em")
     sents(1).word should be ("ele")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (4)
 
     sents = getContractedForm("nela")
     sents(0).word should be ("em")
@@ -258,12 +271,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for neste, nesta, nestes, nestas" in {
-    // todo continue tests
     var sents = getContractedForm("neste")
     sents(0).word should be ("em")
     sents(1).word should be ("este")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (5)
 
     sents = getContractedForm("nesta")
     sents(0).word should be ("em")
@@ -285,12 +299,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for nesse, nessa, nesses, nessas" in {
-    // todo continue tests
     var sents = getContractedForm("nesse")
     sents(0).word should be ("em")
     sents(1).word should be ("esse")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (5)
 
     sents = getContractedForm("nessa")
     sents(0).word should be ("em")
@@ -312,12 +327,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for aquele, aquela, aqueles, aquelas" in {
-    // todo continue tests
     var sents = getContractedForm("naquele")
     sents(0).word should be ("em")
     sents(1).word should be ("aquele")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (7)
 
     sents = getContractedForm("naquela")
     sents(0).word should be ("em")
@@ -339,12 +355,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for ao, à, aos, às" in {
-    // todo continue tests
     var sents = getContractedForm("ao")
     sents(0).word should be ("a")
     sents(1).word should be ("o")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (2)
 
     sents = getContractedForm("à")
     sents(0).word should be ("a")
@@ -356,7 +373,9 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(0).word should be ("a")
     sents(1).word should be ("os")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (3)
     
     sents = getContractedForm("às")
     sents(0).word should be ("a")
@@ -366,12 +385,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for àquele, àquela, àqueles, àquelas" in {
-    // todo continue tests
     var sents = getContractedForm("àquele")
     sents(0).word should be ("a")
     sents(1).word should be ("aquele")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (0)
+    sents(1).endPosition should be (6)
 
     sents = getContractedForm("àquela")
     sents(0).word should be ("a")
@@ -393,12 +413,13 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for pelo, pela, pelos, pelas" in {
-    // todo continue tests
     var sents = getContractedForm("pelo")
     sents(0).word should be ("por")
     sents(1).word should be ("o")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (3)
     sents(1).beginPosition should be (3)
+    sents(1).endPosition should be (4)
 
     sents = getContractedForm("pela")
     sents(0).word should be ("por")
@@ -420,48 +441,53 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
   }
 
   it should "work for doutro" in {
-    // todo continue tests
     var sents = getContractedForm("doutro")
     sents(0).word should be ("de")
     sents(1).word should be ("outro")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (6)
   }
 
   it should "work for noutro" in {
-    // todo continue tests
     var sents = getContractedForm("noutro")
     sents(0).word should be ("em")
     sents(1).word should be ("outro")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (6)
   }
 
   it should "work for danlgum" in {
-    // todo continue tests
     var sents = getContractedForm("dalgum")
     sents(0).word should be ("de")
     sents(1).word should be ("algum")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (6)
   }
 
   it should "work for nalgum" in {
-    // todo continue tests
     var sents = getContractedForm("nalgum")
     sents(0).word should be ("em")
     sents(1).word should be ("algum")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (6)
   }
 
   it should "work for donde" in {
-    // todo continue tests
     var sents = getContractedForm("donde")
     sents(0).word should be ("de")
     sents(1).word should be ("onde")
     sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (1)
     sents(1).beginPosition should be (1)
+    sents(1).endPosition should be (5)
   }
 
   def getContractedForm(s: String): Array[RawToken] = {
