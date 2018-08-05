@@ -26,7 +26,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).words(5) should be (".")
 
     doc.sentences(0).startOffsets(0) should be (0)
-    doc.sentences(0).startOffsets(1) should be (0)
+    doc.sentences(0).startOffsets(1) should be (1)
     doc.sentences(0).startOffsets(2) should be (3)
     doc.sentences(0).startOffsets(3) should be (9)
     doc.sentences(0).startOffsets(4) should be (16)
