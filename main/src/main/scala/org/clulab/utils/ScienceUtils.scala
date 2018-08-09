@@ -2,14 +2,15 @@ package org.clulab.utils
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.util.regex.Pattern
+import java.text.Normalizer
 
-import org.clulab.utils.ScienceUtils.{FIGTAB_REFERENCE, FIGTAB_REFERENCE_WITH_PARENS, MATCHED_PARENS_NON_NESTED, loadUnicodes}
+import org.clulab.utils.ScienceUtils.{FIGTAB_REFERENCE, FIGTAB_REFERENCE_WITH_PARENS, MATCHED_PARENS_NON_NESTED, loadUnicodes, normalizeUnicode}
 
 import scala.collection.mutable
 
 class ScienceUtils {
   val unicodes:Map[Char, String] = loadUnicodes
-  val accents:Set[Char] = Set('á', 'â', 'ã', 'à', 'ç', 'é', 'ê', 'í', 'ó', 'ô', 'õ', 'ú', 'Á', 'Â', 'Ã', 'À', 'Ç', 'É', 'Ê', 'Í', 'Ó', 'Ô', 'Õ', 'Ú')
+  val accents:Set[Char] = normalizeUnicode("áâãàçéêíóôõúüÁÂÃÀÇÉÊÍÓÔÕÚÜ").toSet
 
   /**
     * Replaces common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
@@ -161,6 +162,10 @@ object ScienceUtils {
     }
     reader.close()
     map.toMap
+  }
+
+  def normalizeUnicode(text: String): String = {
+    Normalizer.normalize(text, Normalizer.Form.NFD)
   }
 
   private def toUnicodeChar(s:String):Char = {

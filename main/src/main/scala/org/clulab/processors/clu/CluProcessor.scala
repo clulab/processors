@@ -8,6 +8,7 @@ import org.clulab.struct.GraphMap
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.processors.clu.bio._
 import org.clulab.utils.Configured
+import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -122,7 +123,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(text:String, keepText:Boolean = false): Document = {
-    CluProcessor.mkDocument(tokenizer, text, keepText)
+    val normalizedText = ScienceUtils.normalizeUnicode(text)
+    CluProcessor.mkDocument(tokenizer, normalizedText, keepText)
   }
 
   /** Constructs a document of tokens from an array of untokenized sentences */
