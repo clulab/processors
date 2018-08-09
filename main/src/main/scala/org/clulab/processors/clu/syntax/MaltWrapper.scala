@@ -1,7 +1,7 @@
 package org.clulab.processors.clu.syntax
 
 import java.io.File
-import java.net.URL
+import java.net.{URL, URLDecoder}
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.DirectedGraph
@@ -9,7 +9,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.utils.Files
 import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService}
 import org.maltparser.core.lw.helper.Utils
-
 import MaltWrapper._
 
 /**
@@ -41,7 +40,7 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
   def mkMaltModel(modelName:String): ConcurrentMaltParserModel = {
     val modelURL = MaltWrapper.getClass.getClassLoader.getResource(modelName)
     val parserModelName = Utils.getInternalParserModelName(modelURL)
-    val path = modelURL.toString
+    val path = URLDecoder.decode(modelURL.toString, "UTF-8")
 
     var url = modelURL
     if(path.startsWith("jar:")) {
