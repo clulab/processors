@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.processors.clu.PortugueseCluProcessor
+import org.clulab.utils.ScienceUtils.normalizeUnicode
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestPortugueseCluProcessor extends FlatSpec with Matchers {
@@ -18,7 +19,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).words(5) should be ("a")
     doc.sentences(0).words(6) should be ("China")
     doc.sentences(0).words(7) should be (".")
-    doc.sentences(1).words(0) should be ("Lá")
+    doc.sentences(1).words(0) should be (normalizeUnicode("Lá"))
     doc.sentences(1).words(1) should be (",")
     doc.sentences(1).words(2) should be ("ele")
     doc.sentences(1).words(3) should be ("visitou")
