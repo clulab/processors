@@ -165,7 +165,7 @@ object ScienceUtils {
   }
 
   def normalizeUnicode(text: String): String = {
-    Normalizer.normalize(text, Normalizer.Form.NFD)
+    Normalizer.normalize(text, Normalizer.Form.NFKC)
   }
 
   private def toUnicodeChar(s:String):Char = {
