@@ -84,7 +84,7 @@ class TokenizerStepPortugueseContractions extends TokenizerStep {
       }
       else if("""(?i)^delas$""".r.findFirstIn(input.raw).isDefined) {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "delas")
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "elas")
       }
       else if("""(?i)^deste$""".r.findFirstIn(input.raw).isDefined) {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
@@ -224,11 +224,11 @@ class TokenizerStepPortugueseContractions extends TokenizerStep {
       }
       else if("""(?i)^naqueles$""".r.findFirstIn(input.raw).isDefined) {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "em"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "naqueles")
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "aqueles")
       }
       else if("""(?i)^naquelas$""".r.findFirstIn(input.raw).isDefined) {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "em"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "naquelas")
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "aquelas")
       }
       else if("""(?i)^ao$""".r.findFirstIn(input.raw).isDefined) {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "a"))
@@ -246,43 +246,58 @@ class TokenizerStepPortugueseContractions extends TokenizerStep {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "a"))
         tokens += RawToken(input.raw.substring(1), input.beginPosition, "as")
       }
-      else if("""(?i)^àquele$""".r.findFirstIn(input.raw).isDefined) {
+      // àquele -> a aquele
+      // àquela -> a aquela
+      // àqueles -> a aqueles
+      // àquelas -> a aquelas
+      else if("""(?i)^àquel(e|a|es|as)$""".r.findFirstIn(input.raw).isDefined) {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "a"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition, "aquele")
+        tokens += RawToken(input.raw, input.beginPosition, "a" + input.raw.substring(1))
       }
-      else if("""(?i)^àquela$""".r.findFirstIn(input.raw).isDefined) {
-        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "a"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition, "aquela")
+      // pelo -> por o
+      // pela -> por a
+      // pelos -> por  os
+      // pelas -> por as
+      else if("""(?i)^pel(os|as|o|a)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 3), input.beginPosition, matchCase(input.raw, "por"))
+        tokens += RawToken(input.raw.substring(3), input.beginPosition+3, input.endPosition, input.raw.substring(3))
       }
-      else if("""(?i)^àqueles$""".r.findFirstIn(input.raw).isDefined) {
-        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "a"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition, "aqueles")
+      // doutros -> de outros
+      // doutras -> de outras
+      // doutra -> de outra
+      // doutro -> de outro
+      else if("""(?i)^doutr(os|as|o|a)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
       }
-      else if("""(?i)^àquelas$""".r.findFirstIn(input.raw).isDefined) {
-        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "a"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition, "aquelas")
+      // noutras -> em outras
+      // noutros -> em outros
+      // noutra -> em outra
+      // noutro -> em outro
+      else if("""(?i)^noutr(os|as|o|a)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "em"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
+      }      
+      // dalguns -> de alguns
+      // dalgumas -> de algumas
+      // dalguma -> de alguma
+      // dalgum -> de algum
+      // dalguém -> de alguém
+      // dali -> de ali
+      else if("""(?i)^dal(guns|gumas|guma|gum|guém|i)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
       }
-      // last token should be the last character
-      else if("""(?i)^pelo$""".r.findFirstIn(input.raw).isDefined) {
-        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "por"))
-        tokens += RawToken(input.raw.substring(3), input.beginPosition+3, "o")
+      // nalguns - em - alguns
+      // nalgumas - em algumas
+      else if("""(?i)^nal(guns|gumas|gum|guma)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "em"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
       }
-      // last token should be the last character
-      else if("""(?i)^pela$""".r.findFirstIn(input.raw).isDefined) {
-        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "por"))
-        tokens += RawToken(input.raw.substring(3), input.beginPosition+3, "a")
-      }
-      // TODO: Sometimes 'pelos' means 'por' + 'eles'
-      // the TODO above can't be infered from the raw word only
-      else if("""(?i)^pelos$""".r.findFirstIn(input.raw).isDefined) {
-        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "por"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition, "os")
-      }
-      // TODO: Sometimes 'pelas' means 'por' + 'elas'
-      // the TODO above can't be infered from the raw word only
-      else if("""(?i)^pelas$""".r.findFirstIn(input.raw).isDefined) {
-        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "por"))
-        tokens += RawToken(input.raw.substring(1), input.beginPosition, "as")
+      // donde - de onde
+      else if("""(?i)^donde$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "onde")
       }
       // TODO:
       // doutros -> de outros
@@ -331,4 +346,3 @@ class TokenizerStepPortugueseContractions extends TokenizerStep {
     tokens.toArray
   }
 }
-
