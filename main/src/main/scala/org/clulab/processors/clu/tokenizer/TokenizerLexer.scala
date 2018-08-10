@@ -26,3 +26,11 @@ class OpenDomainPortugueseTokenizerLexer extends TokenizerLexer {
     new CommonTokenStream(lexer)
   }
 }
+
+/** Tokenizer using the OpenDomainLexer.g grammar */
+class OpenDomainSpanishTokenizerLexer extends TokenizerLexer {
+  override def mkLexer(text: String): CommonTokenStream = {
+    val lexer = new OpenDomainSpanishLexer(new ANTLRInputStream(text))
+    new CommonTokenStream(lexer)
+  }
+}

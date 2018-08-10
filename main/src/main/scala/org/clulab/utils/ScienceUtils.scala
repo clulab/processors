@@ -3,13 +3,13 @@ package org.clulab.utils
 import java.io.{BufferedReader, InputStreamReader}
 import java.util.regex.Pattern
 
-import org.clulab.utils.ScienceUtils.{FIGTAB_REFERENCE, FIGTAB_REFERENCE_WITH_PARENS, MATCHED_PARENS_NON_NESTED, loadUnicodes}
+import org.clulab.utils.ScienceUtils._
 
 import scala.collection.mutable
 
 class ScienceUtils {
   val unicodes:Map[Char, String] = loadUnicodes
-  val accents:Set[Char] = Set('á', 'â', 'ã', 'à', 'ç', 'é', 'ê', 'í', 'ó', 'ô', 'õ', 'ú', 'Á', 'Â', 'Ã', 'À', 'Ç', 'É', 'Ê', 'Í', 'Ó', 'Ô', 'Õ', 'Ú')
+  val accents:Set[Char] = loadAccents
 
   /**
     * Replaces common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
@@ -134,6 +134,24 @@ object ScienceUtils {
   val FIGTAB_REFERENCE: Pattern = Pattern.compile("\\s*see(\\s*supplementary)?\\s*(figure|table|fig\\.|tab\\.)\\s*[0-9A-Za-z\\.]+", Pattern.CASE_INSENSITIVE)
 
   val UNICODE_TO_ASCII: String = "org/clulab/processors/bionlp/unicode_to_ascii.tsv"
+  val ACCENTED_CHARACTERS: String = "org/clulab/processors/bionlp/accented_characters.tsv"
+
+  private def loadAccents:Set[Char] = {
+    val acf = getClass.getClassLoader.getResourceAsStream(ACCENTED_CHARACTERS)
+    assert(acf != null, s"Failed to find resource file $ACCENTED_CHARACTERS in the classpath!")
+    val reader = new BufferedReader(new InputStreamReader(acf))
+    val accents = new mutable.ArrayBuffer[Char]()
+    var done = false
+    while(! done) {
+      val line = reader.readLine()
+      if(line == null) {
+        done = true
+      } else if (line.trim().nonEmpty) {
+        accents.append(line.charAt(0))
+      }
+    }
+    accents.toSet
+  }
 
   private def loadUnicodes:Map[Char, String] = {
     val map = new mutable.HashMap[Char, String]()

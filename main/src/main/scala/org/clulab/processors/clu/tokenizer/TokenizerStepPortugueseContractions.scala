@@ -299,6 +299,44 @@ class TokenizerStepPortugueseContractions extends TokenizerStep {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
         tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "onde")
       }
+      // TODO:
+      // doutros -> de outros
+      // doutras -> de outras
+      // doutra -> de outra
+      // doutro -> de outro
+      else if("""(?i)^doutr(os|as|o|a)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
+      }
+      // noutras -> em outras
+      // noutros -> em outros
+      // noutra -> em outra
+      // noutro -> em outro
+      else if("""(?i)^noutr(os|as|o|a)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "em"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
+      }      
+      // dalguns -> de alguns
+      // dalgumas -> de algumas
+      // dalguma -> de alguma
+      // dalgum -> de algum
+      // dalguém -> de alguém
+      // dali -> de ali
+      else if("""(?i)^dal(guns|gumas|guma|gum|guém|i)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
+      }
+      // nalguns - em - alguns
+      // nalgumas - em algumas
+      else if("""(?i)^nal(guns|gumas)$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "em"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, input.raw.substring(1))
+      }
+      // donde - de onde
+      else if("""(?i)^donde$""".r.findFirstIn(input.raw).isDefined) {
+        tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
+        tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "onde")
+      }
       // any other token
       else {
         tokens += input

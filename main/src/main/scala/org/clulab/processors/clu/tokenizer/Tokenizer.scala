@@ -18,6 +18,13 @@ class OpenDomainPortugueseTokenizer(postProcessor:Option[TokenizerStep]) extends
   postProcessor.toList ++ Seq(new TokenizerStepPortugueseContractions, new TokenizerStepAccentedNormalization),
   new PortugueseSentenceSplitter)
 
+/** Spanish open domain tokenizer */
+class OpenDomainSpanishTokenizer(postProcessor:Option[TokenizerStep]) extends Tokenizer(
+  lexer = new OpenDomainSpanishTokenizerLexer,
+  // the postprocessor must go first because it assumes that .word == .raw
+  postProcessor.toList ++ Seq(new TokenizerStepSpanishContractions, new TokenizerStepAccentedNormalization),
+  new SpanishSentenceSplitter)
+
 /**
   * Generic tokenizer
   * Author: mihais
