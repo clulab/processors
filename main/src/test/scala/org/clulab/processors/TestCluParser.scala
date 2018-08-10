@@ -22,8 +22,8 @@ class TestCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"WSJ UD performance: $las, $uas")
     reader.close()
-    (las > 0.890) should be (true)
-    (uas > 0.905) should be (true)
+    las should be > 0.890
+    uas should be > 0.905
   }
 
   it should "parse Genia with an accuracy over 86%" in {
@@ -33,8 +33,8 @@ class TestCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"Genia UD performance: $las, $uas")
     reader.close()
-    (las > 0.866) should be (true)
-    (uas > 0.878) should be (true)
+    las should be > 0.866
+    uas should be > 0.878
   }
 
   "CluProcessorWithStanford" should "parse WSJ with an accuracy over 89%" in {
@@ -44,8 +44,8 @@ class TestCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"WSJ SD performance: $las, $uas")
     reader.close()
-    (las > 0.891) should be (true)
-    (uas > 0.905) should be (true)
+    las should be > 0.891
+    uas should be > 0.905
   }
 
   it should "parse Genia with an accuracy over 87%" in {
@@ -55,7 +55,7 @@ class TestCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"Genia SD performance: $las, $uas")
     reader.close()
-    (las > 0.874) should be (true)
-    (uas > 0.884) should be (true)
+    las should be > 0.874
+    uas should be > 0.884
   }
 }

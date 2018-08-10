@@ -1,7 +1,7 @@
 //
 // antlr4 grammar for open-domain tokenization
 // generate Java classes for this grammar with the command:
-//   java -jar antlr-4.6-complete.jar main/src/main/java/org/clulab/processors/clulab/tokenizer/OpenDomain.g
+//   java -jar antlr-4.6-complete.jar main/src/main/java/org/clulab/processors/clu/tokenizer/OpenDomain.g
 // author: mihai
 //
 

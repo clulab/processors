@@ -40,7 +40,6 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).startOffsets(3) should be (38)
     doc.sentences(1).startOffsets(4) should be (46)
     doc.sentences(1).startOffsets(5) should be (52)
-    println("Tokenization is fine.")
   }
 
   it should "POS tag correctly" in {
@@ -63,41 +62,14 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).tags.get(3) should be ("VERB")
     doc.sentences(1).tags.get(4) should be ("PROPN")
     doc.sentences(1).tags.get(5) should be ("PUNCT")
-    println("POS tagging is fine.")
   }
 
 /*
-  TODO: chunks
+  TODO: Portuguese chunking
   it should "recognize syntactic chunks correctly" in {
-    val doc = proc.mkDocument("")
-    proc.lemmatize(doc)
-    proc.tagPartsOfSpeech(doc)
-    proc.chunking(doc)
-    doc.clear()
-
-    doc.sentences(0).chunks.get(0) should be ("B-NP")
-    doc.sentences(0).chunks.get(1) should be ("B-VP")
-    doc.sentences(0).chunks.get(2) should be ("B-NP")
-    doc.sentences(0).chunks.get(3) should be ("I-NP")
-    doc.sentences(0).chunks.get(4) should be ("I-NP")
-    doc.sentences(0).chunks.get(5) should be ("I-NP")
-    doc.sentences(0).chunks.get(6) should be ("B-VP")
-    doc.sentences(0).chunks.get(7) should be ("I-VP")
-    doc.sentences(0).chunks.get(8) should be ("B-PP")
-    doc.sentences(0).chunks.get(9) should be ("B-NP")
-    doc.sentences(0).chunks.get(10) should be ("I-NP")
-    doc.sentences(0).chunks.get(11) should be ("I-NP")
   }
-  TODO: lemmatization
+  TODO: Portuguese lemmatization
   it should "lemmatize text correctly" in {
-    val doc = proc.mkDocument("John Doe went to the shops.")
-    proc.lemmatize(doc)
-    doc.clear()
-
-    doc.sentences(0).lemmas.get(0) should be ("john")
-    doc.sentences(0).lemmas.get(2) should be ("go")
-    doc.sentences(0).lemmas.get(5) should be ("shop")
-    println("Lemmatization is fine.")
   }
 */
 
@@ -111,6 +83,5 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 7, "nmod") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 5, "case") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 6, "det") should be(true)
-    println("Parsing is fine.")
   }
 }

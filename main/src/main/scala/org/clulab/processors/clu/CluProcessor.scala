@@ -44,6 +44,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   // the actual tokenizer
   lazy val tokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => new OpenDomainPortugueseTokenizer(tokenizerPostProcessor)
+    case "ES" => new OpenDomainSpanishTokenizer(tokenizerPostProcessor)
     case _ => new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
   }
 
