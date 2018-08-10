@@ -124,8 +124,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(text:String, keepText:Boolean = false): Document = {
-    val normalizedText = ScienceUtils.normalizeUnicode(text)
-    CluProcessor.mkDocument(tokenizer, normalizedText, keepText)
+    CluProcessor.mkDocument(tokenizer, text, keepText)
   }
 
   /** Constructs a document of tokens from an array of untokenized sentences */
@@ -255,7 +254,20 @@ class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load(
 class SpanishCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorspanish"))
 
 /** CluProcessor for Portuguese */
-class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorportuguese"))
+class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorportuguese")) {
+
+  val scienceUtils = new ScienceUtils
+
+  /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
+  override def mkDocument(text:String, keepText:Boolean = false): Document = {
+    // FIXME by calling replaceUnicodeWithAscii we are normalizing unicode and keeping accented characters of interest,
+    // but we are also replacing individual unicode characters with sequences of characters that can potentially be greater than one
+    // which means we may lose alignment to the original text
+    val textWithAccents = scienceUtils.replaceUnicodeWithAscii(text, keepAccents = true)
+    CluProcessor.mkDocument(tokenizer, textWithAccents, keepText)
+  }
+
+}
 
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
