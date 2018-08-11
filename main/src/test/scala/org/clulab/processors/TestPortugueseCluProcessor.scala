@@ -41,6 +41,26 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).startOffsets(5) should be (52)
   }
 
+  it should "handle valid accents" in {
+    val doc = proc.annotate("O deputado João cassou Júnior.")
+    doc.sentences.head.words(0) should be ("O")
+    doc.sentences.head.words(1) should be ("deputado")
+    doc.sentences.head.words(2) should be ("João")
+    doc.sentences.head.words(3) should be ("cassou")
+    doc.sentences.head.words(4) should be ("Júnior")
+    doc.sentences.head.words(5) should be (".")
+  }
+
+  it should "handle invalid accents" in {
+    val doc = proc.annotate("O deputado Joāo cassou Júnior.")
+    doc.sentences.head.words(0) should be ("O")
+    doc.sentences.head.words(1) should be ("deputado")
+    doc.sentences.head.words(2) should be ("Joao")
+    doc.sentences.head.words(3) should be ("cassou")
+    doc.sentences.head.words(4) should be ("Júnior")
+    doc.sentences.head.words(5) should be (".")
+  }
+
   it should "POS tag correctly" in {
     val doc = proc.mkDocument("Da Silva viajou para a China. Lá, ele visitou Pequim.")
     proc.lemmatize(doc)

@@ -2,6 +2,7 @@ package org.clulab.utils
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.util.regex.Pattern
+import java.text.Normalizer
 
 import org.clulab.utils.ScienceUtils._
 
@@ -17,9 +18,10 @@ class ScienceUtils {
     * @return The processed text
     */
   def replaceUnicodeWithAscii(origText:String, keepAccents:Boolean = false):String = {
+    val normText = normalizeUnicode(origText)
     val os = new StringBuilder()
-    for(i <- 0 until origText.length) {
-      val c: Char = origText.charAt(i)
+    for(i <- 0 until normText.length) {
+      val c: Char = normText.charAt(i)
       if(unicodes.contains(c)) {
         if(keepAccents && accents.contains(c))
           os.append(c)
@@ -143,7 +145,7 @@ object ScienceUtils {
     val accents = new mutable.ArrayBuffer[Char]()
     var done = false
     while(! done) {
-      val line = reader.readLine()
+      val line = normalizeUnicode(reader.readLine())
       if(line == null) {
         done = true
       } else if (line.trim().nonEmpty) {
@@ -160,7 +162,7 @@ object ScienceUtils {
     val reader = new BufferedReader(new InputStreamReader(is))
     var done = false
     while(! done) {
-      var line = reader.readLine()
+      var line = normalizeUnicode(reader.readLine())
       if(line == null) {
         done = true
       } else {
@@ -179,6 +181,14 @@ object ScienceUtils {
     }
     reader.close()
     map.toMap
+  }
+
+  def normalizeUnicode(text: String): String = {
+    if (text == null) {
+      null
+    } else {
+      Normalizer.normalize(text, Normalizer.Form.NFKC)
+    }
   }
 
   private def toUnicodeChar(s:String):Char = {
