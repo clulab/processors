@@ -20,3 +20,4 @@ cache:
     - $HOME/.sbt
 script:
   - sbt ++$TRAVIS_SCALA_VERSION 'test-only -- -l NeedsExternalBinary'
+
