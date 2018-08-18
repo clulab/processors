@@ -1235,7 +1235,7 @@ estudo NOUN I-NP
 apresentado VERB B-VP
 em ADP B-PP
 a DET B-NP
-5ª ADJ I-NP
+5a ADJ I-NP
 Conferência_Internacional_sobre_Transtornos_Alimentares PROPN I-NP
 , , O
 de ADP B-PP
@@ -1243,7 +1243,7 @@ de ADP B-PP
 de ADP B-PP
 abril NOUN B-NP
 a ADP B-PP
-1º ADJ B-ADJP
+1o ADJ B-ADJP
 de ADP B-PP
 maio n: B-NP
 em ADP B-PP
@@ -2655,7 +2655,7 @@ MG PROPN B-NP
 
 É VERB B-VP
 o DET B-NP
-5º ADJ I-NP
+5o ADJ I-NP
 Encontro_Nacional_de_Histórias_em_Quadrinhos PROPN I-NP
 
 Haverá VERB B-VP
@@ -5214,9 +5214,9 @@ os DET B-NP
 estudantes NOUN I-NP
 de ADP B-PP
 o DET B-NP
-1º. ADJ B-ADJP
+1o. ADJ B-ADJP
 e SCONJ O
-2º. ADJ B-ADJP
+2o. ADJ B-ADJP
 graus NOUN B-NP
 . . O
 
@@ -5626,7 +5626,7 @@ candidatos NOUN I-NP
 já ADV B-ADVP
 em ADP B-PP
 o DET B-NP
-1º ADJ I-NP
+1o ADJ I-NP
 turno NOUN I-NP
 de ADP B-PP
 as DET B-NP
@@ -8866,7 +8866,7 @@ Rio PROPN I-NP
 Lula PROPN B-NP
 está VERB B-VP
 em ADP B-PP
-2º n-adj B-NP
+2o n-adj B-NP
 , , O
 com ADP B-PP
 25 NUM B-NP
@@ -8885,7 +8885,7 @@ Datafolha NOUN I-NP
 BRIZOLA PROPN B-NP
 É VERB B-VP
 O DET B-NP
-3º n-adj I-NP
+3o n-adj I-NP
 Em ADP B-PP
 o DET B-NP
 Rio PROPN I-NP
@@ -11343,7 +11343,7 @@ O DET B-NP
 grupo NOUN I-NP
 Pão-de-açúcar NOUN B-NP
 , , O
-2ª ADJ B-NP
+2a ADJ B-NP
 maior ADJ I-NP
 rede NOUN I-NP
 de ADP B-PP
@@ -13650,7 +13650,7 @@ proposta NOUN I-NP
 Em ADP B-PP
 o DET B-NP
 dia NOUN I-NP
-1º ADJ B-ADJP
+1o ADJ B-ADJP
 de ADP B-PP
 março NOUN B-NP
 , , O
@@ -17024,7 +17024,7 @@ secretaria NOUN B-NP
 
 O DET B-NP
 papa NOUN I-NP
-João_Paulo_2º PROPN B-NP
+João_Paulo_2o PROPN B-NP
 escolheu VERB B-VP
 a DET B-NP
 irmã NOUN I-NP
@@ -17977,7 +17977,7 @@ Roma PROPN B-NP
 . . O
 
 Parágrafo NOUN B-NP
-3º ADJ B-ADJP
+3o ADJ B-ADJP
 -- -- O
 De ADP B-PP
 a DET B-NP
@@ -18014,7 +18014,7 @@ de ADP B-PP
 . . O
 
 Parágrafo NOUN B-NP
-4º ADJ B-ADJP
+4o ADJ B-ADJP
 -- -- O
 As DET B-NP
 contribuições NOUN I-NP
@@ -18037,7 +18037,7 @@ e SCONJ I-NP
 de ADP B-PP
 a DET B-NP
 Lei NOUN I-NP
-nº NOUN B-NP
+no NOUN B-NP
 8.212 NUM B-ADJP
 , , O
 de ADP B-PP
@@ -18058,7 +18058,7 @@ art. NOUN I-NP
 de ADP B-PP
 a DET B-NP
 Lei NOUN I-NP
-nº NOUN B-NP
+no NOUN B-NP
 8.383 NUM B-ADJP
 , , O
 de ADP B-PP
@@ -18098,7 +18098,7 @@ competência NOUN B-NP
 . . O
 
 Parágrafo NOUN B-NP
-5º ADJ B-ADJP
+5o ADJ B-ADJP
 -- -- O
 Os DET B-NP
 valores NOUN I-NP
@@ -18132,12 +18132,12 @@ art. NOUN I-NP
 41 NUM B-ADJP
 , , O
 Parágrafo NOUN B-NP
-7º ADJ B-ADJP
+7o ADJ B-ADJP
 , , O
 de ADP B-PP
 a DET B-NP
 Lei NOUN I-NP
-nº NOUN B-NP
+no NOUN B-NP
 8.213 NUM B-ADJP
 , , O
 de ADP B-PP
@@ -18149,7 +18149,7 @@ alterações NOUN I-NP
 de ADP B-PP
 a DET B-NP
 Lei NOUN I-NP
-nº NOUN B-NP
+no NOUN B-NP
 8.542 NUM B-ADJP
 , , O
 de ADP B-PP
@@ -18479,7 +18479,7 @@ o DET B-NP
 título NOUN I-NP
 de ADP B-PP
 a DET B-NP
-19ª ADJ I-NP
+19a ADJ I-NP
 Copa_Africana_de_Nações PROPN I-NP
 , , O
 a ADP B-PP
@@ -22889,7 +22889,7 @@ o DET B-NP
 maior ADJ I-NP
 volume NOUN I-NP
 desde ADP B-PP
-1º ADJ B-ADJP
+1o ADJ B-ADJP
 de ADP B-PP
 novembro NOUN B-NP
 último ADJ B-ADJP
@@ -23612,7 +23612,7 @@ Dia NOUN B-NP
 último ADJ B-ADJP
 , , O
 o DET B-NP
-2º ADJ I-NP
+2o ADJ I-NP
 Special_Girolando PROPN I-NP
 atingiu VERB B-VP
 a DET B-NP
@@ -27026,11 +27026,11 @@ Santa_Cruz PROPN B-NP
 ( ( O
 para ADP B-PP
 a DET B-NP
-1ª ADJ I-NP
+1a ADJ I-NP
 série NOUN I-NP
 de ADP B-PP
 o DET B-NP
-1º ADJ I-NP
+1o ADJ I-NP
 grau NOUN I-NP
 ) ) O
 e SCONJ O
@@ -28125,7 +28125,7 @@ Gajowianka PROPN I-NP
 , , O
 de ADP B-PP
 a DET B-NP
-3ª ADJ I-NP
+3a ADJ I-NP
 divisão NOUN I-NP
 , , O
 morreu VERB B-VP
@@ -32043,11 +32043,11 @@ os DET B-NP
 votos NOUN I-NP
 de ADP B-PP
 a DET B-NP
-81ª ADJ I-NP
+81a ADJ I-NP
 seção NOUN I-NP
 de ADP B-PP
 a DET B-NP
-77ª ADJ I-NP
+77a ADJ I-NP
 zona NOUN I-NP
 . . O
 
@@ -32074,7 +32074,7 @@ PFL PROPN B-NP
 ) ) O
 em ADP B-PP
 a DET B-NP
-113ª ADJ I-NP
+113a ADJ I-NP
 zona NOUN I-NP
 ( ( O
 Niterói PROPN B-NP
@@ -32609,7 +32609,7 @@ Fund. PROPN B-NP
 instrução NOUN B-NP
 normativa ADJ B-ADJP
 DRF PROPN B-NP
-nº. NOUN B-NP
+no. NOUN B-NP
 38/92 NUM B-ADJP
 ) ) O
 . . O
@@ -34357,7 +34357,7 @@ sujeição NOUN I-NP
 de ADP B-PP
 o DET B-NP
 sultão NOUN I-NP
-Mohamed_6º PROPN B-NP
+Mohamed_6o PROPN B-NP
 a ADP B-PP
 o DET B-NP
 Tratado_de_Sèvres PROPN I-NP
@@ -35275,7 +35275,7 @@ aumenta VERB B-VP
 % NOUN I-NP
 em ADP B-PP
 a DET B-NP
-3ª ADJ I-NP
+3a ADJ I-NP
 semana NOUN I-NP
 em ADP B-PP
 São_Paulo PROPN B-NP
@@ -41334,7 +41334,7 @@ idéia NOUN I-NP
 fazer VERB B-VP
 em ADP B-PP
 a DET B-NP
-22ª ADJ I-NP
+22a ADJ I-NP
 Bienal NOUN I-NP
 uma DET B-NP
 instalação NOUN I-NP
@@ -42449,7 +42449,7 @@ O DET B-NP
 programa NOUN I-NP
 sobre ADP B-PP
 a DET B-NP
-2ª_Guerra_Mundial PROPN I-NP
+2a_Guerra_Mundial PROPN I-NP
 traz VERB B-VP
 informações NOUN B-NP
 sobre ADP B-PP
@@ -44011,7 +44011,7 @@ Cultura PROPN I-NP
 
 Hoje ADV B-NP
 , , I-NP
-4º. ADJ I-NP
+4o. ADJ I-NP
 episódio NOUN I-NP
 , , O
 a ADP B-PP
@@ -44878,14 +44878,14 @@ vice-versa ADV B-ADVP
 Houston PROPN B-NP
 obtém VERB B-VP
 sua DET B-NP
-27.ª ADJ I-NP
+27.a ADJ I-NP
 vitória NOUN I-NP
 
 O DET B-NP
 Houston_Rockets PROPN I-NP
 conquistou VERB B-VP
 sua DET B-NP
-27.ª ADJ I-NP
+27.a ADJ I-NP
 vitória NOUN I-NP
 em ADP B-PP
 a DET B-NP
@@ -45241,7 +45241,7 @@ revistas VERB I-VP
 
 Mogi_Mirim PROPN B-NP
 consegue VERB B-VP
-2ª ADJ B-NP
+2a ADJ B-NP
 vitória NOUN I-NP
 consecutiva ADJ B-ADJP
 
@@ -51918,7 +51918,7 @@ de ADP B-PP
 
 Em ADP B-PP
 o DET B-NP
-1º ADJ I-NP
+1o ADJ I-NP
 semestre NOUN I-NP
 de ADP B-PP
 94 NUM B-ADJP
@@ -53243,7 +53243,7 @@ primeiro ADJ I-NP
 ano NOUN I-NP
 de ADP B-PP
 o DET B-NP
-1º ADJ I-NP
+1o ADJ I-NP
 grau NOUN I-NP
 . . O
 
@@ -55057,7 +55057,7 @@ PSDB PROPN I-NP
 antes ADV B-ADVP
 de ADP B-PP
 o DET B-NP
-1º ADJ I-NP
+1o ADJ I-NP
 turno NOUN I-NP
 . . O
 
@@ -55150,7 +55150,7 @@ principal ADJ I-NP
 questão NOUN I-NP
 de ADP B-PP
 o DET B-NP
-1º ADJ I-NP
+1o ADJ I-NP
 dia NOUN I-NP
 de ADP B-PP
 debate NOUN B-NP
@@ -56252,7 +56252,7 @@ pai NOUN I-NP
 John_Paul_Getty PROPN B-NP
 , , O
 fizeram VERB B-VP
-John_Paul_Getty_2º PROPN B-NP
+John_Paul_Getty_2o PROPN B-NP
 entrar VERB B-VP
 em ADP B-PP
 o DET B-NP
@@ -56746,7 +56746,7 @@ Limeira PROPN B-NP
 , , O
 425 NUM B-ADJP
 , , O
-8º ADJ B-NP
+8o ADJ B-NP
 andar NOUN I-NP
 , , O
 São_Paulo PROPN B-NP
@@ -57922,7 +57922,7 @@ de ADP B-PP
 casa NOUN B-NP
 . . O
 
-Art._1º NOUN B-NP
+Art._1o NOUN B-NP
 Dispensar VERB B-VP
 a DET B-NP
 obrigatoriedade NOUN I-NP
@@ -57945,13 +57945,13 @@ III ADJ B-ADJP
 de ADP B-PP
 o DET B-NP
 art. NOUN I-NP
-8º ADJ B-ADJP
+8o ADJ B-ADJP
 , , O
 de ADP B-PP
 a DET B-NP
 medida NOUN I-NP
 provisória ADJ B-ADJP
-nº NOUN B-NP
+no NOUN B-NP
 482 NUM B-ADJP
 , , O
 de ADP B-PP
@@ -57997,7 +57997,7 @@ o DET B-NP
 dia NOUN I-NP
 . . O
 
-Art._2º NOUN B-NP
+Art._2o NOUN B-NP
 É VERB B-VP
 obrigatória ADJ B-ADJP
 a DET B-NP
@@ -63268,7 +63268,7 @@ previsto VERB B-VP
 em ADP B-PP
 o DET B-NP
 artigo NOUN I-NP
-8º ADJ B-ADJP
+8o ADJ B-ADJP
 , , O
 II n-adj B-NP
 de ADP B-PP
@@ -65702,7 +65702,7 @@ líquida ADJ B-ADJP
 para ADP B-PP
 saque NOUN B-NP
 em ADP B-PP
-1º ADJ B-ADJP
+1o ADJ B-ADJP
 de ADP B-PP
 setembro NOUN B-NP
 , , O
@@ -66473,7 +66473,7 @@ time NOUN I-NP
 rebaixado VERB B-VP
 a ADP B-PP
 a DET B-NP
-3ª ADJ I-NP
+3a ADJ I-NP
 divisão NOUN I-NP
 . . O
 
@@ -70810,7 +70810,7 @@ Amaram VERB B-VP
 . . O
 
 Parágrafo NOUN B-NP
-3º. ADJ B-ADJP
+3o. ADJ B-ADJP
 -- -- O
 Em ADP B-PP
 os DET B-NP
@@ -70887,14 +70887,14 @@ art. NOUN I-NP
 de ADP B-PP
 a DET B-NP
 lei NOUN I-NP
-nº. NOUN B-NP
+no. NOUN B-NP
 8.880 NUM B-ADJP
 de ADP B-PP
 27.05.94 NUM B-ADJP
 . . O
 
 Parágrafo NOUN B-NP
-4º. ADJ B-ADJP
+4o. ADJ B-ADJP
 -- -- O
 A DET B-NP
 Taxa_Referencial PROPN I-NP
@@ -72049,7 +72049,7 @@ ouvidos NOUN I-NP
 . . O
 
 O DET B-NP
-9º ADJ I-NP
+9o ADJ I-NP
 Free_Jazz_Festival PROPN I-NP
 ampliou VERB B-VP
 seu DET B-NP
@@ -73800,7 +73800,7 @@ sala NOUN B-NP
 especial ADJ B-ADJP
 em ADP B-PP
 a DET B-NP
-22ª ADJ I-NP
+22a ADJ I-NP
 Bienal NOUN I-NP
 , , O
 a_partir_de ADP B-PP
@@ -76157,7 +76157,7 @@ audiência NOUN I-NP
 hoje ADV B-ADVP
 em ADP B-PP
 a DET B-NP
-7ª ADJ I-NP
+7a ADJ I-NP
 Junta_da_Justiça_do_Trabalho PROPN I-NP
 em ADP B-PP
 Belém PROPN B-NP
@@ -81064,7 +81064,7 @@ ano NOUN I-NP
 
 Sanchez PROPN B-NP
 , , O
-nº NOUN B-NP
+no NOUN B-NP
 2 NUM B-ADJP
 de ADP B-PP
 o DET B-NP
@@ -81097,7 +81097,7 @@ decisivo ADJ B-ADJP
 
 Em ADP B-PP
 a DET B-NP
-22ª ADJ I-NP
+22a ADJ I-NP
 posição NOUN I-NP
 de ADP B-PP
 o DET B-NP
@@ -94479,7 +94479,7 @@ praticamente ADV B-ADVP
 garantido VERB I-ADVP
 que CCONJ O
 o DET B-NP
-Estádio_1º_de_Maio PROPN I-NP
+Estádio_1o_de_Maio PROPN I-NP
 registará VERB B-VP
 uma NUM B-ADJP
 de ADP B-PP
@@ -97150,7 +97150,7 @@ irmão NOUN I-NP
 que PRON B-NP
 ficou VERB B-VP
 em ADP B-PP
-8º ADJ B-NP
+8o ADJ B-NP
 lugar NOUN I-NP
 . . O
 
@@ -98294,7 +98294,7 @@ o DET B-NP
 comando NOUN I-NP
 de ADP B-PP
 a DET B-NP
-42ª ADJ I-NP
+42a ADJ I-NP
 Volta_Galp PROPN I-NP
 a ADP B-PP
 Portugal PROPN B-NP
@@ -98985,7 +98985,7 @@ disciplina NOUN I-NP
 de ADP B-PP
 Socorrismo PROPN B-NP
 ( ( O
-11º ADJ B-NP
+11o ADJ B-NP
 ano NOUN I-NP
 ) ) O
 . . O
@@ -100043,7 +100043,7 @@ documentos NOUN I-NP
 de ADP B-PP
 o DET B-NP
 art. NOUN I-NP
-46º ADJ B-ADJP
+46o ADJ B-ADJP
 de ADP B-PP
 o DET B-NP
 Código_do_Processo_Civil PROPN I-NP
@@ -106405,7 +106405,7 @@ que PRON B-NP
 interpretará VERB B-VP
 o DET B-NP
 concerto NOUN I-NP
-nº NOUN B-NP
+no NOUN B-NP
 1 NUM B-ADJP
 , , O
 opus NOUN B-NP
@@ -109932,7 +109932,7 @@ golos NOUN I-NP
 marcados VERB B-VP
 em ADP B-PP
 esta DET B-NP
-8ª ADJ I-NP
+8a ADJ I-NP
 jornada NOUN I-NP
 , , O
 que PRON B-NP
@@ -111653,7 +111653,7 @@ prémios NOUN B-NP
 
 Ivanisevic PROPN B-NP
 , , O
-nº NOUN B-NP
+no NOUN B-NP
 4 NUM B-ADJP
 de ADP B-PP
 o DET B-NP
@@ -112122,7 +112122,7 @@ Relógio_d'Água PROPN I-NP
 pertencia VERB B-VP
 a ADP B-PP
 o DET B-NP
-288º ADJ I-NP
+288o ADJ I-NP
 Regimento_de_Infantaria PROPN I-NP
 que PRON B-NP
 aí ADV B-ADVP
@@ -113678,9 +113678,9 @@ de ADP B-PP
 em ADP B-PP
 7 NUM B-ADJP
 ( ( O
-7ª ADJ B-ADJP
+7a ADJ B-ADJP
 , , O
-14ª ADJ B-ADJP
+14a ADJ B-ADJP
 , , O
 etc. ADV B-ADVP
 ) ) O
@@ -113835,7 +113835,7 @@ cada DET B-NP
 letras NOUN I-NP
 a_partir_de ADP B-PP
 a DET B-NP
-4333ª ADJ I-NP
+4333a ADJ I-NP
 . . O
 
 Descida NOUN B-NP
@@ -119763,7 +119763,7 @@ com ADP B-PP
 . . O
 
 A DET B-NP
-19ª ADJ I-NP
+19a ADJ I-NP
 jornada NOUN I-NP
 começou VERB B-VP
 em ADP B-PP
@@ -120984,7 +120984,7 @@ Roland_Garros PROPN B-NP
 , , O
 Arazi PROPN B-NP
 ( ( O
-47º ADJ B-NP
+47o ADJ B-NP
 ATP PROPN I-NP
 ) ) O
 parece VERB B-VP
@@ -121003,7 +121003,7 @@ Alberto_Berasategui PROPN B-NP
 cabeça NOUN B-NP
 de ADP B-PP
 série NOUN B-NP
-nº16 NOUN B-NP
+no16 NOUN B-NP
 ) ) O
 , , O
 um NUM B-ADJP
@@ -123024,7 +123024,7 @@ escadas NOUN I-NP
 interiores ADJ B-ADJP
 de ADP B-PP
 a DET B-NP
-15ª ADJ I-NP
+15a ADJ I-NP
 Esquadra NOUN I-NP
 de ADP B-PP
 a DET B-NP
@@ -125023,7 +125023,7 @@ os DET B-NP
 resolver VERB B-VP
 » » O
 ( ( O
-nº24 NOUN B-NP
+no24 NOUN B-NP
 ) ) O
 , , O
 não ADV B-ADVP
@@ -126283,7 +126283,7 @@ avanço NOUN B-NP
 , , O
 deixando VERB B-VP
 o DET B-NP
-3º. n-adj I-NP
+3o. n-adj I-NP
 , , O
 António_Barros PROPN B-NP
 , , O
@@ -126351,7 +126351,7 @@ em ADP B-PP
 Hockenheim PROPN B-NP
 em ADP B-PP
 o DET B-NP
-13º. ADJ I-NP
+13o. ADJ I-NP
 lugar NOUN I-NP
 , , O
 parando VERB B-VP
@@ -126374,7 +126374,7 @@ bom ADJ I-NP
 arranque NOUN I-NP
 de ADP B-PP
 o DET B-NP
-15º. ADJ I-NP
+15o. ADJ I-NP
 posto NOUN I-NP
 de ADP B-PP
 a DET B-NP
@@ -126438,7 +126438,7 @@ entretanto ADV B-ADVP
 , , O
 em ADP B-PP
 o DET B-NP
-12º. ADJ I-NP
+12o. ADJ I-NP
 lugar NOUN I-NP
 , , O
 o DET B-NP
@@ -127334,7 +127334,7 @@ que PRON B-NP
 surge VERB B-VP
 em ADP B-PP
 a DET B-NP
-20ª ADJ I-NP
+20a ADJ I-NP
 posição NOUN I-NP
 , , O
 graças_a ADP B-PP
@@ -127364,7 +127364,7 @@ Roland_Garros PROPN B-NP
 estava VERB B-VP
 em ADP B-PP
 o DET B-NP
-45º ADJ I-NP
+45o ADJ I-NP
 lugar NOUN I-NP
 , , O
 mas SCONJ O
@@ -127786,7 +127786,7 @@ de ADP B-PP
 sexta-feira NOUN B-NP
 o DET B-NP
 seu DET I-NP
-11º ADJ I-NP
+11o ADJ I-NP
 triunfo NOUN I-NP
 fora_de ADP B-PP
 casa NOUN B-NP
@@ -130679,7 +130679,7 @@ esquecidos VERB B-VP
 de ADP B-PP
 que CCONJ I-PP
 o DET B-NP
-engº NOUN I-NP
+engo NOUN I-NP
 Guterres PROPN B-NP
 fez VERB B-VP
 de ADP B-PP
@@ -130794,7 +130794,7 @@ de ADP B-PP
 o DET B-NP
 Casal_Privilégio PROPN I-NP
 ( ( O
-267ª ADJ B-ADJP
+267a ADJ B-ADJP
 de ADP B-PP
 a DET B-NP
 geral NOUN I-NP
@@ -130810,7 +130810,7 @@ de ADP B-PP
 o DET B-NP
 Cruz_Quebradense PROPN I-NP
 ( ( O
-295ª ADJ B-ADJP
+295a ADJ B-ADJP
 ) ) O
 . . O
 
@@ -133069,7 +133069,7 @@ segurança NOUN B-NP
 Segundo ADP B-PP
 o DET B-NP
 artigo NOUN I-NP
-1º NUM B-ADJP
+1o NUM B-ADJP
 de ADP B-PP
 o DET B-NP
 Código_da_Estrada PROPN I-NP
@@ -144174,7 +144174,7 @@ a ADP B-PP
 as DET B-NP
 16h00 NOUN I-NP
 ; ; O
-2ª NOUN B-NP
+2a NOUN B-NP
 , , O
 a ADP B-PP
 as DET B-NP
@@ -149430,7 +149430,7 @@ jogo NOUN I-NP
 , , O
 referente_a ADP B-PP
 a DET B-NP
-30ª ADJ I-NP
+30a ADJ I-NP
 jornada NOUN I-NP
 de ADP B-PP
 o DET B-NP
@@ -151110,7 +151110,7 @@ Colégio_do_Mondego PROPN I-NP
 pertencem VERB B-VP
 a ADP B-PP
 a DET B-NP
-escola_básica_do_2º_e_3º_ciclo_de_Santa_Clara PROPN I-NP
+escola_básica_do_2o_e_3o_ciclo_de_Santa_Clara PROPN I-NP
 , , O
 em ADP B-PP
 a DET B-NP
@@ -152092,11 +152092,11 @@ nacional ADJ B-ADJP
 » » O
 em ADP B-PP
 os DET B-NP
-4º ADJ B-ADJP
+4o ADJ B-ADJP
 , , O
-6º ADJ B-ADJP
+6o ADJ B-ADJP
 e SCONJ O
-9º ADJ B-ADJP
+9o ADJ B-ADJP
 anos NOUN B-NP
 . . O
 
@@ -152276,7 +152276,7 @@ Amaya PROPN B-NP
 venceu VERB B-VP
 ontem ADV B-ADVP
 a DET B-NP
-16ª ADJ I-NP
+16a ADJ I-NP
 etapa NOUN I-NP
 de ADP B-PP
 a DET B-NP
@@ -152299,7 +152299,7 @@ e SCONJ O
 subiu VERB B-VP
 a ADP B-PP
 o DET B-NP
-4º ADJ I-NP
+4o ADJ I-NP
 lugar NOUN I-NP
 de ADP B-PP
 a DET B-NP
@@ -157877,7 +157877,7 @@ italiano n-adj I-NP
 chegou VERB B-VP
 em ADP B-PP
 a DET B-NP
-66º ADJ I-NP
+66o ADJ I-NP
 posto NOUN I-NP
 , , O
 a ADP B-PP
@@ -157889,7 +157889,7 @@ primeiro ADJ I-NP
 e SCONJ O
 é VERB B-VP
 agora ADV B-ADVP
-27º n-adj B-ADJP
+27o n-adj B-ADJP
 em ADP B-PP
 a DET B-NP
 geral NOUN I-NP
