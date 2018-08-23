@@ -70,7 +70,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).tags.get(0) should be ("ADP")
     doc.sentences(0).tags.get(1) should be ("DET")
     doc.sentences(0).tags.get(2) should be ("PROPN")
-    doc.sentences(0).tags.get(3) should be ("VERB")
+    doc.sentences(0).tags.get(3) should be ("VERBF")
     doc.sentences(0).tags.get(4) should be ("ADP")
     doc.sentences(0).tags.get(5) should be ("DET")
     doc.sentences(0).tags.get(6) should be ("PROPN")
@@ -78,7 +78,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).tags.get(0) should be ("ADV")
     doc.sentences(1).tags.get(1) should be ("PUNCT")
     doc.sentences(1).tags.get(2) should be ("PRON")
-    doc.sentences(1).tags.get(3) should be ("VERB")
+    doc.sentences(1).tags.get(3) should be ("VERBF")
     doc.sentences(1).tags.get(4) should be ("PROPN")
     doc.sentences(1).tags.get(5) should be ("PUNCT")
   }
@@ -92,6 +92,8 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
   }
 */
 
+  /*
+  # WRITE A NEW TEST FOR THIS CASE
   it should "parse text correctly" in {
     val doc = proc.annotate("João da Silva viajou para a China.")
 
@@ -102,5 +104,6 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 7, "nmod") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 5, "case") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 6, "det") should be(true)
-  }
+  } */
+
 }
