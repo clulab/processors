@@ -1,5 +1,5 @@
 Compiled with:
-- dynet tag 2.0.3: https://github.com/clab/dynet/tree/2.0.3
+- dynet commit: f1b365faabbf2fb5752ce897577b048501637278
 - dynet compiled with make -j 4
 - scala 2.12.4
 - scala 2.11.11
