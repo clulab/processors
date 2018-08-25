@@ -1,8 +1,11 @@
 import ReleaseTransformations._
 
+//val defaultScalaVersion = "2.11.11"
+val defaultScalaVersion = "2.12.4"
+
 lazy val commonSettings = Seq(
   organization := "org.clulab",
-  scalaVersion := "2.12.4",
+  scalaVersion := defaultScalaVersion,
   crossScalaVersions := Seq("2.11.11", "2.12.4"),
   scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation"),
   parallelExecution in Test := false,
@@ -90,6 +93,16 @@ lazy val modelscorenlp = project
 lazy val openie = project
   .settings(commonSettings: _*)
   .dependsOn(main % "test->test;compile->compile", odin)
+
+val dynetDir = {
+  val versionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)".r
+  val versionRegex(major, minor, update) = defaultScalaVersion
+
+  "dynet_2_" + minor
+}
+
+lazy val dynet = (project in file(dynetDir))
+  .settings(commonSettings: _*)
 
 // release steps
 releaseProcess := Seq[ReleaseStep](
