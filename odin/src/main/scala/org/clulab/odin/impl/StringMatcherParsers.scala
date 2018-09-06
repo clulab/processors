@@ -23,7 +23,7 @@ trait StringMatcherParsers extends RegexParsers {
 
   // valid java identifier
   def identifier: Parser[String] =
-    """\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*""".r
+    """\p{javaJavaIdentifierStart}[\p{javaJavaIdentifierPart}:-]*""".r
 
   // single- or double-quote delimited string literal
   // with "\" as the escape character
