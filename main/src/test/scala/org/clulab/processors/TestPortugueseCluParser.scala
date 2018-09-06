@@ -16,8 +16,8 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"PT Bosque UD performance: $las, $uas")
     reader.close()
-    las should be > 0.77
-    uas should be > 0.79
+    las should be > 0.81
+    uas should be > 0.84
   }
 
   "PortugueseCluProcessor" should "parse GSD with an accuracy over 71%" in {
@@ -42,7 +42,7 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"PT PUD UD performance: $las, $uas")
     reader.close()
-    las should be > 0.61
-    uas should be > 0.67
+    las should be > 0.71
+    uas should be > 0.77
   }
 }
