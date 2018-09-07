@@ -35,11 +35,20 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   def quantifiedPattern: Parser[ProgramFragment] =
     atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern
 
+  // In GraphPatterns each argument can have a quantifier.
+  // This parser accepts something that looks like an arg quantifier.
+  // Used in singleTokenPattern, as part of a negative lookahead
+  def argQuantifier: Parser[String] =
+    "?" | "*?" | "*" | "+?" | "+" | """\{[0-9,]+\}\??""".r
+
   // when matching the default token field (unitConstraint)
   // we need to make sure that the next token is not a ':'
   // only argument names are followed by colon (and a label)
+  // OR
+  // in case the arg was written as name:label (which looks like an odinIdentifier)
+  // we need to ensure it is not followed by '=' (with an optional argument quantifier in between)
   def singleTokenPattern: Parser[ProgramFragment] =
-    (unitConstraint <~ not(":") | tokenConstraint) ^^ {
+    (unitConstraint <~ not(":" | opt(argQuantifier) ~ "=") | tokenConstraint) ^^ {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 
@@ -67,13 +76,13 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     }
 
   def capturePattern: Parser[ProgramFragment] =
-    "(?<" ~ stringLiteral ~ ">" ~ splitPattern ~ ")" ^^ {
+    "(?<" ~ javaIdentifier ~ ">" ~ splitPattern ~ ")" ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
       case _ => sys.error("unrecognized capturePattern")
     }
 
   def mentionPattern: Parser[ProgramFragment] =
-    "@" ~> opt(stringLiteral <~ ":") ~ exactStringMatcher ~ opt("." ~> stringLiteral) ^^ {
+    "@" ~> opt(javaIdentifier <~ ":") ~ exactStringMatcher ~ opt("." ~> javaIdentifier) ^^ {
       case name ~ matcher ~ arg => ProgramFragment(MatchMention(matcher, name, arg))
     }
 
@@ -83,11 +92,11 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
 
   def repeatedPattern: Parser[ProgramFragment] =
     atomicPattern ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?") ^^ {
-      case frag ~ "?" => frag.greedyOptional
+      case frag ~ "?"  => frag.greedyOptional
       case frag ~ "??" => frag.lazyOptional
-      case frag ~ "*" => frag.greedyStar
+      case frag ~ "*"  => frag.greedyStar
       case frag ~ "*?" => frag.lazyStar
-      case frag ~ "+" => frag.greedyPlus
+      case frag ~ "+"  => frag.greedyPlus
       case frag ~ "+?" => frag.lazyPlus
       case _ => sys.error("unrecognized repeatedPattern operator")
     }
@@ -130,7 +139,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     atomicPatternRev ||| repeatedPatternRev ||| rangePatternRev ||| exactPatternRev
 
   def capturePatternRev: Parser[ProgramFragment] =
-    "(?<" ~ stringLiteral ~ ">" ~ splitPatternRev ~ ")" ^^ {
+    "(?<" ~ javaIdentifier ~ ">" ~ splitPatternRev ~ ")" ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
       case _ => sys.error("unrecognized capturePatternRev")
     }

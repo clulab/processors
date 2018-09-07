@@ -21,7 +21,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
     }
 
   def triggerMentionGraphPattern: Parser[GraphPattern] =
-    identifier ~ ":" ~ identifier ~ rep1(argPattern) ^^ {
+    javaIdentifier ~ ":" ~ javaIdentifier ~ rep1(argPattern) ^^ {
       case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName equalsIgnoreCase "trigger" =>
         new TriggerMentionGraphPattern(anchorLabel, arguments, config)
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
@@ -30,7 +30,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
     }
 
   def argPattern: Parser[ArgumentPattern] =
-    identifier ~ ":" ~ identifier ~ opt("?" ||| "*" ||| "*?" ||| "+" ||| "+?" |||
+    javaIdentifier ~ ":" ~ javaIdentifier ~ opt("?" ||| "*" ||| "*?" ||| "+" ||| "+?" |||
       "{" ~> int <~ "}" |||
       "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}?" )
     ) ~ "=" ~ disjunctiveGraphPattern ^^ {
@@ -153,11 +153,8 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
   def incomingPattern: Parser[GraphPatternNode] =
     incomingMatcher | incomingWildcard
 
-  // there is ambiguity between an outgoingMatcher with an implicit '>'
-  // and the name of the next argument, we solve this by ensuring that
-  // the outgoingMatcher is not followed by ':'
   def outgoingMatcher: Parser[GraphPatternNode] =
-    opt(">") ~> stringMatcher <~ not(":") ^^ { new OutgoingGraphPattern(_) }
+    ">" ~> stringMatcher ^^ { new OutgoingGraphPattern(_) }
 
   def incomingMatcher: Parser[GraphPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingGraphPattern(_) }

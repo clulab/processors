@@ -31,10 +31,10 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  pattern: |
                  |    trigger = saw
                  |    participants:Entity+ = # both participants (+)
-                 |      nsubj                # the nominal subject
+                 |      >nsubj               # the nominal subject
                  |        |                  # and
-                 |      dobj                 # the direct object
-                 |    location:Place = prep_at
+                 |      >dobj                # the direct object
+                 |    location:Place = >prep_at
                  |""".stripMargin
 
     val mentions = Seq(
@@ -62,7 +62,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Binding
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein = prep_of conj?
+                 |    theme:Protein = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -93,8 +93,8 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  label: Example
                   |  pattern: |
                   |    trigger = saw
-                  |    participants:Entity = nsubj
-                  |    location:Place = prep_at
+                  |    participants:Entity = >nsubj
+                  |    location:Place = >prep_at
                   |""".stripMargin
 
     // don't include any Entity mention in the initial state
@@ -117,8 +117,8 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Event
                  |  pattern: |
                  |    trigger = saw
-                 |    participants:Entity+ = nsubj| dobj
-                 |    location:Place? = prep_at
+                 |    participants:Entity+ = >nsubj | >dobj
+                 |    location:Place? = >prep_at
                  |""".stripMargin
 
     val mentions = Seq(
@@ -147,7 +147,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Binding
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein{2} = prep_of conj?
+                 |    theme:Protein{2} = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -175,7 +175,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Binding
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein* = prep_of conj?
+                 |    theme:Protein* = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -200,7 +200,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Binding
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein*? = prep_of conj?
+                 |    theme:Protein*? = >prep_of >conj?
                  |""".stripMargin
 
     intercept[OdinCompileException] { ExtractorEngine(rule) }
@@ -217,7 +217,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Binding
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein+ = prep_of conj?
+                 |    theme:Protein+ = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -242,7 +242,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Binding
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein+? = prep_of conj?
+                 |    theme:Protein+? = >prep_of >conj?
                  |""".stripMargin
 
     intercept[OdinCompileException] { ExtractorEngine(rule) }
@@ -258,7 +258,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  label: Binding
                   |  pattern: |
                   |    trigger = binding
-                  |    theme:Protein{2,} = prep_of conj?
+                  |    theme:Protein{2,} = >prep_of >conj?
                   |""".stripMargin
 
     val mentions = Seq(
@@ -282,7 +282,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  label: Event
                   |  pattern: |
                   |    trigger = binding
-                  |    theme:Protein{,2} = prep_of conj?
+                  |    theme:Protein{,2} = >prep_of >conj?
                   |""".stripMargin
 
 
@@ -303,7 +303,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  label: Binding
                   |  pattern: |
                   |    trigger = binding
-                  |    theme:Protein{2,}? = prep_of conj?
+                  |    theme:Protein{2,}? = >prep_of >conj?
                   |""".stripMargin
 
 
@@ -314,7 +314,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  label: Binding
                   |  pattern: |
                   |    trigger = binding
-                  |    theme:Protein{,2}? = prep_of conj?
+                  |    theme:Protein{,2}? = >prep_of >conj?
                   |""".stripMargin
 
 
@@ -329,7 +329,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
                  |  label: Binding
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein{1,2}? = prep_of conj?
+                 |    theme:Protein{1,2}? = >prep_of >conj?
                  |""".stripMargin
 
 
@@ -347,8 +347,8 @@ class TestGraphPattern extends FlatSpec with Matchers {
       |  label: Positive_activation
       |  pattern: |
       |    trigger = [lemma=result] in [word=/(?i)^(upregul)/]
-      |    controlled:Protein = prep_of nn
-      |    controller:Protein = nsubj prep_of
+      |    controlled:Protein = >prep_of >nn
+      |    controller:Protein = >nsubj >prep_of
       |""".stripMargin
 
     val mentions = Seq(
@@ -383,8 +383,8 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  type: graph
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep_in nn?
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep_in >nn?
                   |
                   |""".stripMargin
 
@@ -453,8 +453,8 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  graph: "universal-enhanced"
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep_in nn?
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep_in >nn?
                   |
                   |""".stripMargin
 
@@ -468,8 +468,8 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  label: Event
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep_in nn?
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep_in >nn?
                   |
                   |""".stripMargin
 
@@ -484,9 +484,9 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  graph: "universal-basic"
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep [lemma="in"] pobj nn?
-                  |    date: Date = prep [lemma="in"] pobj
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep [lemma="in"] >pobj >nn?
+                  |    date: Date = >prep [lemma="in"] >pobj
                   |""".stripMargin
 
     val ee6 = ExtractorEngine(rule6)
@@ -514,9 +514,9 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  graph: "universal-basic"
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep [lemma="in"] pobj nn?
-                  |    date: Date = prep [lemma="in"] pobj
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep [lemma="in"] >pobj >nn?
+                  |    date: Date = >prep [lemma="in"] >pobj
                   |""".stripMargin
 
     val ee = ExtractorEngine(rule)
@@ -533,9 +533,9 @@ class TestGraphPattern extends FlatSpec with Matchers {
                   |  graph: "poo" # this graph type is invalid
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep [lemma="in"] pobj nn?
-                  |    date: Date = prep [lemma="in"] pobj
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep [lemma="in"] >pobj >nn?
+                  |    date: Date = >prep [lemma="in"] >pobj
                   |""".stripMargin
 
     intercept[OdinException] { ExtractorEngine(rule) }
@@ -544,13 +544,12 @@ class TestGraphPattern extends FlatSpec with Matchers {
   it should "handle colons in dependencies" in {
     val doc = jsonStringToDocument(""" {"text":"The chair's office.","sentences":[{"raw":["The","chair","'s","office","."], "words":["The","chair","'s","office","."],"startOffsets":[0,4,9,12,18],"endOffsets":[3,9,11,18,19],"tags":["DT","NN","POS","NN","."],"lemmas":["the","chair","'s","office","."],"entities":["O","O","O","O","O"],"norms":["O","O","O","O","O"],"chunks":["B-NP","I-NP","B-NP","I-NP","O"],"graphs":{"universal-enhanced":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"case"},{"source":3,"destination":1,"relation":"nmod:poss"}],"roots":[3]},"universal-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":1,"destination":2,"relation":"case"},{"source":3,"destination":1,"relation":"nmod:poss"}],"roots":[3]}}}]} """)
 
-    // Note that the nmod:poss needs either quotes around it or to be a regex
     val rule = """
                  |- name: testRule
                  |  label: Entity
                  |  pattern: |
                  |    trigger = [tag="NN"]
-                 |    theme:Entity = "nmod:poss"
+                 |    theme:Entity = >nmod:poss
                  |""".stripMargin
 
     val mentions = Seq(
@@ -580,10 +579,10 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  pattern: |
                  |    trigger = saw
                  |    participants:Entity+ = # both participants (+)
-                 |      nsubj                # the nominal subject
+                 |      >nsubj               # the nominal subject
                  |        |                  # and
-                 |      dobj                 # the direct object
-                 |    location:Place = prep_at
+                 |      >dobj                # the direct object
+                 |    location:Place = >prep_at
                  |""".stripMargin
 
     val mentions = Seq(
@@ -612,7 +611,7 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  graph: "stanford-collapsed"
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein = prep_of conj?
+                 |    theme:Protein = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -644,8 +643,8 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                   |  graph: "stanford-collapsed"
                   |  pattern: |
                   |    trigger = saw
-                  |    participants:Entity = nsubj
-                  |    location:Place = prep_at
+                  |    participants:Entity = >nsubj
+                  |    location:Place = >prep_at
                   |""".stripMargin
 
     // don't include any Entity mention in the initial state
@@ -669,8 +668,8 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  graph: "stanford-collapsed"
                  |  pattern: |
                  |    trigger = saw
-                 |    participants:Entity+ = nsubj| dobj
-                 |    location:Place? = prep_at
+                 |    participants:Entity+ = >nsubj | >dobj
+                 |    location:Place? = >prep_at
                  |""".stripMargin
 
     val mentions = Seq(
@@ -700,7 +699,7 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  graph: "stanford-collapsed"
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein{2} = prep_of conj?
+                 |    theme:Protein{2} = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -729,7 +728,7 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  graph: "stanford-collapsed"
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein* = prep_of conj?
+                 |    theme:Protein* = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -758,7 +757,7 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  graph: "stanford-collapsed"
                  |  pattern: |
                  |    trigger = binding
-                 |    theme:Protein+ = prep_of conj?
+                 |    theme:Protein+ = >prep_of >conj?
                  |""".stripMargin
 
     val mentions = Seq(
@@ -786,7 +785,7 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                   |  graph: "stanford-collapsed"
                   |  pattern: |
                   |    trigger = binding
-                  |    theme:Protein{2,} = prep_of conj?
+                  |    theme:Protein{2,} = >prep_of >conj?
                   |""".stripMargin
 
     val mentions = Seq(
@@ -811,7 +810,7 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                   |  graph: "stanford-collapsed"
                   |  pattern: |
                   |    trigger = binding
-                  |    theme:Protein{,2} = prep_of conj?
+                  |    theme:Protein{,2} = >prep_of >conj?
                   |""".stripMargin
 
 
@@ -836,8 +835,8 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  graph: "stanford-collapsed"
                  |  pattern: |
                  |    trigger = [lemma=result] in [word=/(?i)^(upregul)/]
-                 |    controlled:Protein = prep_of nn
-                 |    controller:Protein = nsubj prep_of
+                 |    controlled:Protein = >prep_of >nn
+                 |    controller:Protein = >nsubj >prep_of
                  |""".stripMargin
 
     val mentions = Seq(
@@ -873,8 +872,8 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                   |  type: graph
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep_in nn?
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep_in >nn?
                   |
                   |""".stripMargin
 
@@ -944,8 +943,8 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                   |  graph: "stanford-collapsed"
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep_in nn?
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep_in >nn?
                   |
                   |""".stripMargin
 
@@ -960,8 +959,8 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                   |  graph: "stanford-collapsed"
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep_in nn?
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep_in >nn?
                   |
                   |""".stripMargin
 
@@ -976,9 +975,9 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                   |  graph: "stanford-basic"
                   |  pattern: |
                   |    trigger = [lemma="disappear"]
-                  |    person: Person = nsubj
-                  |    location: Location = prep [lemma="in"] pobj nn?
-                  |    date: Date = prep [lemma="in"] pobj
+                  |    person: Person = >nsubj
+                  |    location: Location = >prep [lemma="in"] >pobj >nn?
+                  |    date: Date = >prep [lemma="in"] >pobj
                   |""".stripMargin
 
     val ee6 = ExtractorEngine(rule6)
@@ -1006,9 +1005,9 @@ class TestGraphPatternSD extends FlatSpec with Matchers {
                  |  graph: "stanford-basic"
                  |  pattern: |
                  |    trigger = [lemma="disappear"]
-                 |    person: Person = nsubj
-                 |    location: Location = prep [lemma="in"] pobj nn?
-                 |    date: Date = prep [lemma="in"] pobj
+                 |    person: Person = >nsubj
+                 |    location: Location = >prep [lemma="in"] >pobj >nn?
+                 |    date: Date = >prep [lemma="in"] >pobj
                  |""".stripMargin
 
     val ee = ExtractorEngine(rule)

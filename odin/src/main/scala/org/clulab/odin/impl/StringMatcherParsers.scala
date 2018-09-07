@@ -19,11 +19,15 @@ trait StringMatcherParsers extends RegexParsers {
   }
 
   // any valid string literal (with or without quotes)
-  def stringLiteral: Parser[String] = identifier | quotedStringLiteral
+  def stringLiteral: Parser[String] = odinIdentifier | quotedStringLiteral
 
   // valid java identifier
-  def identifier: Parser[String] =
+  def javaIdentifier: Parser[String] =
     """\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*""".r
+
+  // identifier that can also contain colons and dashes except in the first and last characters
+  def odinIdentifier: Parser[String] =
+    """\p{javaJavaIdentifierStart}(?:[-:\p{javaJavaIdentifierPart}]*\p{javaJavaIdentifierPart})?""".r
 
   // single- or double-quote delimited string literal
   // with "\" as the escape character
