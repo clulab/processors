@@ -153,6 +153,12 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
   def incomingPattern: Parser[GraphPatternNode] =
     incomingMatcher | incomingWildcard
 
+  // there is ambiguity between an outgoingMatcher with an implicit '>'
+  // and the name of the next argument, we solve this by ensuring that
+  // the outgoingMatcher is not followed by ':'
+  // OR
+  // in case the arg was written as name:label (which looks like an odinIdentifier)
+  // we need to ensure it is not followed by '=' (with an optional argument quantifier in between)
   def outgoingMatcher: Parser[GraphPatternNode] =
     opt(">") ~> stringMatcher <~ not(":" | opt(argQuantifier) ~ "=") ^^ { new OutgoingGraphPattern(_) }
 
