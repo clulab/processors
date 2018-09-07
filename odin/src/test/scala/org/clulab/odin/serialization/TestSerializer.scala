@@ -56,7 +56,7 @@ class TestSerializer extends FlatSpec with Matchers {
         |  type: dependency
         |  pattern: |
         |    trigger = [lemma="marry"]
-        |    spouse: Entity+ = <xcomp? >/^nsubj/ | >dobj
+        |    spouse: Entity+ = <xcomp? /^nsubj/ | dobj
       """.stripMargin
     val engine = ExtractorEngine(rules)
     val text = "Gonzo married Camilla."

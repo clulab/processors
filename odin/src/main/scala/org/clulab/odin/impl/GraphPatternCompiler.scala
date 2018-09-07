@@ -154,7 +154,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
     incomingMatcher | incomingWildcard
 
   def outgoingMatcher: Parser[GraphPatternNode] =
-    ">" ~> stringMatcher ^^ { new OutgoingGraphPattern(_) }
+    opt(">") ~> stringMatcher <~ not(":" | opt(argQuantifier) ~ "=") ^^ { new OutgoingGraphPattern(_) }
 
   def incomingMatcher: Parser[GraphPatternNode] =
     "<" ~> stringMatcher ^^ { new IncomingGraphPattern(_) }
