@@ -14,6 +14,7 @@ This is the main public code repository of the Computational Language Understand
 	+ `FastBioNLPProcessor` - a version of `FastNLPProcessor` tuned for the biomedical domain, similarly to `BioNLPProcessor`; 
 	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging (using an in-house bidirectional maximum entropy Markov model), and syntax (using an ensemble of models built with [maltparser](http://mallet.cs.umass.edu)), which supports both basic and enhanced dependencies. Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines.
   + `BioCluProcessor` - a version of `CluProcessor` tuned for the biomedical domain.
+  + `PortugueseCluProcessor` - a version of `CluProcessor` trained for Portuguese. This version includes tokenization, POS tagging, syntactic chunking, and dependency parsing, all trained for Portuguese.
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
