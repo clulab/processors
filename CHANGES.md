@@ -1,4 +1,5 @@
 # Changes
++ **7.4.2** - Odin now accepts dependency labels with ":" in the name (for UD).
 + **7.4.2** - Added chunker model and improved tokenization for PortugueseCluProcessor.
 + **7.4.2** - Reorganized Serializer to load/save to file, input/output stream, or byte array. Also takes an optional ClassLoader to use for deserialization.
 + **7.4.2** - Added SpanishCluProcessor and PortugueseCluProcessor, which currently include tokenization, POS tagging, and parsing of universal dependencies.
