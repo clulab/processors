@@ -8,7 +8,7 @@ This is the main public code repository of the Computational Language Understand
 + Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster. 
 + A machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 + A suite of NL processors in the `org.clulab.processors` package. We currently provide the following APIs: 
-	+ `CoreNLPProcessor` - a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), using its constituent parser;
+	+ `CoreNLPProcessor` - a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), using its constituent parser or dependency parser;
 	+ `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
 	+ `BioNLPProcessor` - a version of `CoreNLPProcessor` tuned for the biomedical domain: better tokenization for biomedical texts, improved POS tagging for the bio domain, and a custom NER for this domain that recognizes entities relevant in this domain such as proteins, chemical, and biological processes;
 	+ `FastBioNLPProcessor` - a version of `FastNLPProcessor` tuned for the biomedical domain, similarly to `BioNLPProcessor`; 
@@ -50,7 +50,7 @@ If you use anything else in this package, please link to this github page.
 
 # Installation
 
-This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `7.3.1`):
+This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `7.4.2`):
 
 ```xml
 <dependency>
