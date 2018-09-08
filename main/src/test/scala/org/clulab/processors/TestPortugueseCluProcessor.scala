@@ -70,7 +70,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).tags.get(0) should be ("ADP")
     doc.sentences(0).tags.get(1) should be ("DET")
     doc.sentences(0).tags.get(2) should be ("PROPN")
-    doc.sentences(0).tags.get(3) should be ("VERB")
+    doc.sentences(0).tags.get(3) should be ("VERBF")
     doc.sentences(0).tags.get(4) should be ("ADP")
     doc.sentences(0).tags.get(5) should be ("DET")
     doc.sentences(0).tags.get(6) should be ("PROPN")
@@ -78,29 +78,64 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(1).tags.get(0) should be ("ADV")
     doc.sentences(1).tags.get(1) should be ("PUNCT")
     doc.sentences(1).tags.get(2) should be ("PRON")
-    doc.sentences(1).tags.get(3) should be ("VERB")
+    doc.sentences(1).tags.get(3) should be ("VERBF")
     doc.sentences(1).tags.get(4) should be ("PROPN")
     doc.sentences(1).tags.get(5) should be ("PUNCT")
   }
 
-/*
-  TODO: Portuguese chunking
   it should "recognize syntactic chunks correctly" in {
+    val doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa câncer.")
+
+    doc.sentences(0).chunks.get(0) should be ("B-NP")
+    doc.sentences(0).chunks.get(1) should be ("B-VP")
+    doc.sentences(0).chunks.get(2) should be ("O")
+    doc.sentences(0).chunks.get(3) should be ("B-NP")
+    doc.sentences(0).chunks.get(4) should be ("I-NP")
+    doc.sentences(0).chunks.get(5) should be ("B-VP")
+    doc.sentences(0).chunks.get(6) should be ("B-PP")
+    doc.sentences(0).chunks.get(7) should be ("B-NP")
+    doc.sentences(0).chunks.get(8) should be ("I-NP")
+    doc.sentences(0).chunks.get(9) should be ("B-VP")
+    doc.sentences(0).chunks.get(10) should be ("B-NP")
+    doc.sentences(0).chunks.get(11) should be ("O")
   }
+  /*
   TODO: Portuguese lemmatization
   it should "lemmatize text correctly" in {
   }
-*/
+  */
 
+  
+  // # WRITE A NEW TEST FOR THIS CASE
   it should "parse text correctly" in {
-    val doc = proc.annotate("João da Silva viajou para a China.")
+    var doc = proc.annotate("João da Silva viajou para a China.")
 
     //println("Basic universal dependencies:")
     //println(doc.sentences.head.universalBasicDependencies.get)
 
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 0, "nsubj") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 7, "nmod") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 5, "case") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(7, 6, "det") should be(true)
-  }
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 3, "nmod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 1, "case") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 2, "det") should be(true)
+
+    doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa câncer.")
+    //println("Basic universal dependencies:")
+    //println(doc.sentences.head.universalBasicDependencies.get)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "nsubj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 5, "acl") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(5, 8, "obl") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(9, 4, "nsubj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(9, 10, "xcomp") should be(true)
+
+    doc = proc.annotate("Cultivo intensivo de certas culturas será causado pelo encurtamento da disponibilidade do solo.")
+    //println("Basic universal dependencies:")
+    //println(doc.sentences.head.universalBasicDependencies.get)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 1, "amod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 4, "nmod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 0, "nsubj:pass") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 5, "aux:pass") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 9, "obl") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(9, 12, "nmod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(12, 15, "nmod") should be(true)
+  } 
 }
