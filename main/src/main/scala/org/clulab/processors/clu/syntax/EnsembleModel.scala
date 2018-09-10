@@ -22,8 +22,38 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
     * @return the DirectedGraph corresponding to the ensemble parse
     */
   def parseAttardi(): DirectedGraph[String] = {
-    var deps = toDependencyList(individualOutputs)
+    val individualDeps = toDependencyList(individualOutputs)
     val sentenceSize = individualOutputs(0).size
+
+    var bestDeps:List[Dependency] = null
+    var bestRootCount:Int = Int.MaxValue
+    for (rootVotes <- individualOutputs.length to 1 by -1) {
+      val treeDeps = topDownEnsemble(individualDeps, rootVotes)
+      val rootCount = countRoots(treeDeps, sentenceSize)
+
+      if(rootCount == 1 || rootVotes == 1) { // rootCount < bestRootCount) {
+        bestDeps = treeDeps
+        bestRootCount = rootCount
+      }
+    }
+
+    assert(bestDeps != null)
+    toDirectedGraph(bestDeps)
+  }
+
+
+  def countRoots(dependencies: List[Dependency], sentenceSize: Int):Int = {
+    var rootCount = 0
+    for(dep <- dependencies) {
+      if(dep.head == 0) {
+        rootCount += 1
+      }
+    }
+    rootCount
+  }
+
+  def topDownEnsemble(individualDeps:List[Dependency], minRootVotes:Int): List[Dependency] = {
+    var deps = individualDeps
 
     // stores the ensembled tree wo/ cycles (T)
     val treeDeps = new ListBuffer[Dependency]()
@@ -42,7 +72,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
     // find all actual roots, i.e., nodes that are headed by 0
     val rootlessDeps = new ListBuffer[Dependency]
     for(dep <- deps) {
-      if(dep.head == 0) {
+      if(dep.head == 0 && dep.votes.size >= minRootVotes) {
         F += dep
       } else {
         rootlessDeps += dep
@@ -98,7 +128,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
       deps = newDeps.toList
     }
 
-    toDirectedGraph(treeDeps.toList)
+    treeDeps.toList
   }
 
   /**
