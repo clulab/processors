@@ -8,7 +8,7 @@ import java.io.File
 
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.{CluProcessor, PortugueseCluProcessor}
 import org.clulab.processors.examples.ProcessorExample
 
 /**
@@ -34,6 +34,7 @@ object ProcessorShell extends App {
     ":fast" -> "use FastNLPProcessor",
     ":fastbio" -> "use FastBioNLPProcessor",
     ":clu" -> "use CluProcessor",
+    ":pt" -> "use PortugueseCluProcessor",
     ":exit" -> "exit system"
   )
 
@@ -43,6 +44,7 @@ object ProcessorShell extends App {
   lazy val bio: Processor = new BioNLPProcessor(removeFigTabReferences = true)
   lazy val fastbio: Processor = new FastBioNLPProcessor(removeFigTabReferences = true)
   lazy val clu: Processor = new CluProcessor()
+  lazy val pt:Processor = new PortugueseCluProcessor()
 
   var proc = core
   reader.setPrompt("(core)>>> ")
@@ -84,6 +86,12 @@ object ProcessorShell extends App {
         reader.setPrompt("(clu)>>> ")
         println("Preparing CluProcessor...\n")
         proc = clu
+        proc.annotate("initialize me!")
+
+      case ":pt" =>
+        reader.setPrompt("(clu)>>> ")
+        println("Preparing PortugueseCluProcessor...\n")
+        proc = pt
         proc.annotate("initialize me!")
 
       case ":exit" | null =>
