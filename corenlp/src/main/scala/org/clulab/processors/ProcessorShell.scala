@@ -89,7 +89,7 @@ object ProcessorShell extends App {
         proc.annotate("initialize me!")
 
       case ":pt" =>
-        reader.setPrompt("(clu)>>> ")
+        reader.setPrompt("(pt)>>> ")
         println("Preparing PortugueseCluProcessor...\n")
         proc = pt
         proc.annotate("initialize me!")
