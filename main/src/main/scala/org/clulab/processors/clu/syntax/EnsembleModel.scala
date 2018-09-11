@@ -27,15 +27,21 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
     var bestDeps:List[Dependency] = null
     var bestRootCount:Int = Int.MaxValue
-    for (rootVotes <- individualOutputs.length to 1 by -1) {
+    var bestMinVotes = 0
+    val rootVotes = 1
+    //for (rootVotes <- individualOutputs.length to 1 by -1) {
       val treeDeps = topDownEnsemble(individualDeps, rootVotes)
       val rootCount = countRoots(treeDeps, sentenceSize)
 
       if(rootCount == 1 || rootVotes == 1) { // rootCount < bestRootCount) {
         bestDeps = treeDeps
         bestRootCount = rootCount
+        bestMinVotes = rootVotes
       }
-    }
+    //}
+
+    //println(s"Chose bestRootCount = $bestRootCount for bestMinVotes = $bestMinVotes")
+    EnsembleModel.rootCounts.incrementCount(bestRootCount)
 
     assert(bestDeps != null)
     toDirectedGraph(bestDeps)
@@ -217,5 +223,9 @@ case class Dependency(head:Int, modifier:Int, label:String, votes:Set[Int]) {
   }
 
   override def toString: String = s"($head, $modifier, $label, ${votes.size})"
+}
+
+object EnsembleModel {
+  val rootCounts:Counter[Int] = new Counter[Int]()
 }
 

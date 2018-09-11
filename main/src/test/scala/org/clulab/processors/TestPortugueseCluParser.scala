@@ -3,7 +3,7 @@ package org.clulab.processors
 import java.io.{BufferedReader, InputStreamReader}
 
 import org.clulab.processors.clu.PortugueseCluProcessor
-import org.clulab.processors.clu.syntax.EvaluateMalt
+import org.clulab.processors.clu.syntax.{EnsembleModel, EvaluateMalt, MaltWrapper}
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestPortugueseCluParser extends FlatSpec with Matchers {
@@ -18,6 +18,10 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     reader.close()
     las should be > 0.81
     uas should be > 0.84
+
+    println("SINGLE ROOT COUNTS:")
+    //println(EnsembleModel.rootCounts.sorted)
+    println(MaltWrapper.rootCounts.sorted)
   }
 
   "PortugueseCluProcessor" should "parse GSD with an accuracy over 71%" in {

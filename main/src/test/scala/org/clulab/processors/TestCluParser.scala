@@ -3,7 +3,7 @@ package org.clulab.processors
 import java.io.{BufferedReader, InputStreamReader}
 
 import org.clulab.processors.clu.{CluProcessor, CluProcessorWithStanford}
-import org.clulab.processors.clu.syntax.EvaluateMalt
+import org.clulab.processors.clu.syntax.{EnsembleModel, EvaluateMalt}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -24,6 +24,8 @@ class TestCluParser extends FlatSpec with Matchers {
     reader.close()
     las should be > 0.890
     uas should be > 0.905
+    println("ROOT COUNTS:")
+    println(EnsembleModel.rootCounts.sorted)
   }
 
   it should "parse Genia with an accuracy over 86%" in {

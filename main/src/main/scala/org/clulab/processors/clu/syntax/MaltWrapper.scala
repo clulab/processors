@@ -4,7 +4,7 @@ import java.io.File
 import java.net.{URL, URLDecoder}
 
 import org.clulab.processors.Sentence
-import org.clulab.struct.DirectedGraph
+import org.clulab.struct.{Counter, DirectedGraph}
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.utils.Files
 import org.maltparser.concurrent.{ConcurrentMaltParserModel, ConcurrentMaltParserService}
@@ -72,7 +72,11 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     val outputTokens = parseSentenceConllx(inputTokens)
 
     // convert malt's output into our dependency graph
-    MaltUtils.conllxToDirectedGraph(outputTokens, internStrings)
+    val dg = MaltUtils.conllxToDirectedGraph(outputTokens, internStrings)
+
+    println(s"roots size = ${dg.roots.size}")
+    MaltWrapper.rootCounts.incrementCount(dg.roots.size)
+    dg
   }
 
   override def parseSentenceConllx(inputTokens: Array[String]):Array[String] = {
@@ -86,4 +90,6 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
 
 object MaltWrapper {
   val logger: Logger = LoggerFactory.getLogger(classOf[MaltWrapper])
+
+  val rootCounts:Counter[Int] = new Counter[Int]()
 }
