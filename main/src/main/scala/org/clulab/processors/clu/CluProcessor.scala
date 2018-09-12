@@ -102,8 +102,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   // the dependency parser
   lazy val depParser: Parser =
     if(useUniversalDependencies) {
-      new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
-      //new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-universal", None))
+      //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
+      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-universal", None))
     } else {
       new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-stanford", None))
     }

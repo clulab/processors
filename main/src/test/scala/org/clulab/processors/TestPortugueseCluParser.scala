@@ -19,9 +19,9 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     las should be > 0.81
     uas should be > 0.84
 
-    println("SINGLE ROOT COUNTS:")
-    //println(EnsembleModel.rootCounts.sorted)
-    println(MaltWrapper.rootCounts.sorted)
+    println("ROOT COUNTS:")
+    println(EnsembleModel.rootCounts.sorted)
+    //println(MaltWrapper.rootCounts.sorted)
   }
 
   "PortugueseCluProcessor" should "parse GSD with an accuracy over 71%" in {

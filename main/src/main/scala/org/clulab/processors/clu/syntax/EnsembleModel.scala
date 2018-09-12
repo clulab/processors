@@ -84,7 +84,14 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
         rootlessDeps += dep
       }
     }
-    deps = rootlessDeps.toList
+
+    val bestRoot = rootlessDeps.sortBy(0 - _.votes.size).head
+
+    val rdeps = new ListBuffer[Dependency]
+    rdeps += bestRoot
+    deps = rdeps.toList
+
+    //deps = rootlessDeps.toList
     //println(s"F = $F")
 
     // top-down traversal of the whole tree

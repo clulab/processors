@@ -74,16 +74,21 @@ class MaltWrapper(val modelPath:String, val internStrings:Boolean = false) exten
     // convert malt's output into our dependency graph
     val dg = MaltUtils.conllxToDirectedGraph(outputTokens, internStrings)
 
-    println(s"roots size = ${dg.roots.size}")
-    MaltWrapper.rootCounts.incrementCount(dg.roots.size)
+    //MaltWrapper.rootCounts.incrementCount(dg.roots.size)
     dg
   }
 
   override def parseSentenceConllx(inputTokens: Array[String]):Array[String] = {
     val actualTokens = if(isRightToLeft) ReverseTreebank.revertSentence(inputTokens) else inputTokens
     val outputTokens = maltModel.parseTokens(actualTokens)
-    if(isRightToLeft) ReverseTreebank.revertSentence(outputTokens)
-    else outputTokens
+    val output =
+      if(isRightToLeft) ReverseTreebank.revertSentence(outputTokens)
+      else outputTokens
+
+    val dg = MaltUtils.conllxToDirectedGraph(outputTokens, internStrings)
+    MaltWrapper.rootCounts.incrementCount(dg.roots.size)
+
+    output
   }
   
 }
