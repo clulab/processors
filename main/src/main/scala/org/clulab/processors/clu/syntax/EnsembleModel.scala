@@ -200,3 +200,6 @@ case class Dependency(head:Int, modifier:Int, label:String, votes:Set[Int]) {
   override def toString: String = s"($head, $modifier, $label, ${votes.size})"
 }
 
+object EnsembleModel {
+  val rootCounts:Counter[Int] = new Counter[Int]()
+}
