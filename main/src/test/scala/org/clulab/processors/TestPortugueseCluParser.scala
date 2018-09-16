@@ -3,7 +3,7 @@ package org.clulab.processors
 import java.io.{BufferedReader, InputStreamReader}
 
 import org.clulab.processors.clu.PortugueseCluProcessor
-import org.clulab.processors.clu.syntax.EvaluateMalt
+import org.clulab.processors.clu.syntax.{EnsembleModel, EvaluateMalt}
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestPortugueseCluParser extends FlatSpec with Matchers {
@@ -16,8 +16,8 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"PT Bosque UD performance: $las, $uas")
     reader.close()
-    las should be > 0.81
-    uas should be > 0.84
+    las should be > 0.880 // 0.81 (true performance when not trained on test)
+    uas should be > 0.904 // 0.84 (true performance when not trained on test)
   }
 
   "PortugueseCluProcessor" should "parse GSD with an accuracy over 71%" in {
@@ -31,8 +31,8 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     // las should be > 0.71
     // uas should be > 0.76
     // Bosque only (train+test+dev)
-    las should be > 0.67
-    uas should be > 0.77
+    las should be > 0.678
+    uas should be > 0.792
   }
 
   "PortugueseCluProcessor" should "parse PUD with an accuracy over 61%" in {
@@ -42,7 +42,7 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"PT PUD UD performance: $las, $uas")
     reader.close()
-    las should be > 0.71
-    uas should be > 0.77
+    las should be > 0.722
+    uas should be > 0.781
   }
 }
