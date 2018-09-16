@@ -7,10 +7,11 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Implements the word-by-word voting scheme from Surdeanu et al. (2010)
+  * Implements an ensemble model of multiple parser outputs
   * User: mihais
   * Date: 8/9/17
   * Last Modified: Let Scala efficiently determine conversion return types.
+  * Last Modified (9/15/2018): penalize the creation of disconnected trees.
   */
 class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
@@ -19,15 +20,16 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
   /**
     * Produces an ensemble parse that is guaranteed to not have cycles (using the Attardi algorithm)
     * Based on the paper: "Reverse Revision and Linear Tree Combination for Dependency Parsing" by Attardi and Dell'Orletta
+    *   Page 263: http://www.aclweb.org/anthology/N09-2066
     * @return the DirectedGraph corresponding to the ensemble parse
     */
   def parseAttardi(): DirectedGraph[String] = {
     var deps = toDependencyList(individualOutputs)
     val sentenceSize = individualOutputs(0).size
 
-    // stores the ensembled tree wo/ cycles (T)
-    val treeDeps = new ListBuffer[Dependency]()
-    // stores the nodes that have been traversed
+    // stores the ensembled tree wo/ cycles (T in the Attardi algorithm)
+    val T = new ListBuffer[Dependency]()
+    // stores the nodes that have been traversed (i.e., are in T already)
     // initialized with root (0) because this is a top-down traversal
     val treeNodes = new mutable.HashSet[Int]()
     treeNodes += 0 // root
@@ -48,6 +50,8 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
         rootlessDeps += dep
       }
     }
+
+    // deps contains the dependencies that are not in T nor in F
     deps = rootlessDeps.toList
     //println(s"F = $F")
 
@@ -57,10 +61,10 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
       var bestModifierCount = -1
       var bestDep:Dependency = null
 
-      // find the best dependency whose head is in F
+      // find the best dependency whose head is in T
       // choose the dep with the highest score
       //   break ties by keeping the dep whose modifier serves as head to most nodes (so we can grow the fringe faster)
-      //   (the above heuristic is different from Attardi's algorithm; it helps in practice)
+      //     (the above heuristic is different from Attardi's algorithm; it helps in practice)
       for(f <- F) {
         if(treeNodes.contains(f.head) &&
            (f.score > bestScore ||
@@ -73,11 +77,11 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
 
       // step 1: add the best current dep to T
       assert(bestDep != null)
-      treeDeps += bestDep
+      T += bestDep
       treeNodes += bestDep.modifier
       //println(s"bestDep = $bestDep")
 
-      // step 2: remove from F all deps whose modifier is bestDep.modifier
+      // step 2: remove from F all deps whose modifier is bestDep.modifier (to avoid DAGs)
       var newF = new ListBuffer[Dependency]
       for(f <- F) {
         if(! treeNodes.contains(f.modifier)) {
@@ -86,7 +90,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
       }
       F = newF
 
-      // step 3: adds to F all arcs (h', d', r') in the original trees where h' \in T and d' not \in T
+      // step 3: adds to F all arcs (h', d', r') in the original trees where h' \in T and d' not \in T (last condition necessary to avoid cycles)
       var newDeps = new ListBuffer[Dependency]
       for(dep <- deps) {
         if(treeNodes.contains(dep.head) && ! treeNodes.contains(dep.modifier)) {
@@ -98,7 +102,7 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
       deps = newDeps.toList
     }
 
-    toDirectedGraph(treeDeps.toList)
+    toDirectedGraph(T.toList)
   }
 
   /**
@@ -181,8 +185,15 @@ case class Dependency(head:Int, modifier:Int, label:String, votes:Set[Int]) {
   lazy val score:Double = {
     var s = 0.0
     for(modelIndex <- votes) {
+      // adds a small penalty for less performing models
       s += 1.0 - (0.01 * modelIndex)
     }
+
+    // adds a penalty for root nodes (we try to discourage the addition of a new root node)
+    if(head == 0) {
+      s -= 0.01
+    }
+
     s
   }
 
