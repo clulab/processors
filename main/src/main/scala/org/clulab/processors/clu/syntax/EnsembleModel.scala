@@ -183,15 +183,19 @@ class EnsembleModel(val individualOutputs:Array[DirectedGraph[String]]) {
   */
 case class Dependency(head:Int, modifier:Int, label:String, votes:Set[Int]) {
   lazy val score:Double = {
+    // for a new root to be added, 2 more models must propose it as root vs. as part of a regular dependency
+    val ROOT_PENALTY = 2
+
     var s = 0.0
     for(modelIndex <- votes) {
       // adds a small penalty for less performing models
-      s += 1.0 - (0.01 * modelIndex)
+      // modelIndexes are sorted in decreasing order of model performance, so earlier models count more
+      s += 1.0 - (0.001 * modelIndex)
     }
 
     // adds a penalty for root nodes (we try to discourage the addition of a new root node)
     if(head == 0) {
-      s -= 0.01
+      s -= ROOT_PENALTY
     }
 
     s
@@ -200,6 +204,3 @@ case class Dependency(head:Int, modifier:Int, label:String, votes:Set[Int]) {
   override def toString: String = s"($head, $modifier, $label, ${votes.size})"
 }
 
-object EnsembleModel {
-  val rootCounts:Counter[Int] = new Counter[Int]()
-}
