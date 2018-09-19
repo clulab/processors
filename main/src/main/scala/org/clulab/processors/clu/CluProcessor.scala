@@ -14,6 +14,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.sequences.{LexiconNER, Tagger}
+import CluProcessor._
 
 /**
   * Processor that uses only tools that are under Apache License
