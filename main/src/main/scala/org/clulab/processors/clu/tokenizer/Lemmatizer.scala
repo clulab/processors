@@ -13,6 +13,20 @@ trait Lemmatizer {
   def lemmatizeWord(word:String):String
 }
 
+class PortugueseLemmatizer extends Lemmatizer {
+  override def lemmatizeWord(word: String): String = {
+    // TODO: add a proper lemmatizer here
+    word.toLowerCase
+  }
+}
+
+class SpanishLemmatizer extends Lemmatizer {
+  override def lemmatizeWord(word: String): String = {
+    // TODO: add a proper lemmatizer here
+    word.toLowerCase
+  }
+}
+
 class EnglishLemmatizer extends Lemmatizer {
   override def lemmatizeWord(word: String): String = {
     if(parens.findFirstMatchIn(word).nonEmpty)
