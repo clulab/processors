@@ -13,8 +13,8 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import CluProcessor._
 import org.clulab.sequences.{LexiconNER, Tagger}
+import CluProcessor._
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -49,9 +49,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   }
 
   // the lemmatizer
-  // TODO: language switch
-  lazy val lemmatizer: Lemmatizer =
-    new EnglishLemmatizer
+  lazy val lemmatizer: Lemmatizer = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => new PortugueseLemmatizer
+    case "ES" => new SpanishLemmatizer
+    case _ => new EnglishLemmatizer
+  }
 
   // the POS tagger
   lazy val posTagger: PartOfSpeechTagger =
