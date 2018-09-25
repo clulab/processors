@@ -37,9 +37,11 @@ class FeatureExtractor(
   }
 
   def lemma(offset:Int) {
-    val i = position + offset
-    if(validPosition(i))
-      features += s"l[$offset]:${FeatureExtractor.norm(sentence.lemmas.get(i))}"
+    if (sentence.lemmas.isDefined) {
+      val i = position + offset
+      if (validPosition(i))
+        features += s"l[$offset]:${FeatureExtractor.norm(sentence.lemmas.get(i))}"
+    }
   }
 
   def tag(offset:Int) {
