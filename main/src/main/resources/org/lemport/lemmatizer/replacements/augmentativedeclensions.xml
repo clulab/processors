@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<augmentativedeclensions>
+  <!-- general data -->
+  <prefix>[\wàáãâéêíóõôúç\-]*</prefix>
+  <!-- augmentative conversion rules to normal -->
+  <replacement target="aço" tag="n|n-adj|adj" exceptions="aço|antebraço|baraço|braço|calhamaço|cansaço|embaraço|espaço|inchaço|laço|paço|palhaço|pedaço|traço">o</replacement>
+  <replacement target="adão" tag="n|n-adj|adj" exceptions="cidadão">o</replacement>
+  <replacement target="alhão" tag="n|n-adj|adj" exceptions="batalhão|grandalhão">o</replacement>
+  <replacement target="alhão" tag="n|n-adj|adj" exceptions="batalhão">e</replacement>
+  <replacement target="aníssimo" tag="n|n-adj|adj">ão</replacement>
+  <replacement target="ão" tag="n|n-adj|adj" exceptions="açafrão|acordão|alcatrão|alçapão|afegão|alemão|aptidão|arranhão|arrastão|balão|balcão|barão|barracão|batalhão|betão|bilhão|botão|burlão|calçadão|camarão|campeão|cantão|cão|capitão|cartão|carvão|certidão|cidadão|chão|coesão|colchão|(auto)?combustão|comissão|(super)?computação|conclusão|cordão|cristão|cupão|decisão|demissão|difusão|digressão|dimensão|diversão|divisão|então|escalão|escrivão|explosão|expulsão|falcão|filão|fogão|foguetão|furacão|fusão|galão|galardão|galpão|gamão|garanhão|garrafão|gestão|glutão|grão|ilusão|inclusão|infusão|ingestão|(re)?invasão|inversão|irmão|ladrão|lampião|leão|leilão|lesão|limão|mão|melão|milhão|missão|molengão|motão|muão|multidão|não|órfão|órgão|padrão|pagão|paixão|pão|patrão|pavilhão|pedinchão|pelintrão|pelotão|perdão|pinhão|porão|portão|precisão|pressão|previsão|prisão|pulmão|quarteirão|razão|rescisão|revisão|questão|quinhão|saguão|salão|senão|são|serão|sesão|sessão|solidão|sugestão|talhão|televisão|trapalhão|travão|trovão|tubarão|turbilhão|vão|verão|vilão|violão|visão|vulcão|[\wàáãâéêíóõôúç\-]+(ção|eão|esão|ião|lsão|nsão|são|ssão|xão)">o</replacement>
+  <replacement target="ão" tag="n|n-adj|adj" exceptions="açafrão|acordão|alcatrão|alçapão|afegão|alemão|aptidão|arranhão|arrastão|balão|balcão|barão|barracão|batalhão|betão|bilhão|botão|burlão|calçadão|camarão|campeão|cantão|cão|capitão|cartão|carvão|certidão|cidadão|chão|coesão|colchão|(auto)?combustão|comissão|(super)?computação|conclusão|cordão|cristão|cupão|decisão|demissão|difusão|digressão|dimensão|diversão|divisão|então|escalão|escrivão|explosão|expulsão|falcão|filão|fogão|foguetão|furacão|fusão|galão|galardão|galpão|gamão|garanhão|garrafão|gestão|glutão|grão|ilusão|inclusão|infusão|ingestão|(re)?invasão|inversão|irmão|ladrão|lampião|leão|leilão|lesão|limão|mão|melão|milhão|missão|muão|multidão|não|órfão|órgão|padrão|pagão|paixão|pão|patrão|pavilhão|pelotão|perdão|pinhão|porão|portão|precisão|pressão|previsão|prisão|pulmão|quarteirão|razão|rescisão|revisão|questão|quinhão|saguão|salão|senão|são|serão|sesão|sessão|solidão|sugestão|talhão|televisão|trapalhão|travão|trovão|tubarão|turbilhão|vão|verão|vilão|violão|visão|vulcão|[\wàáãâéêíóõôúç\-]+(ção|eão|esão|ião|lsão|nsão|são|ssão|xão)">a</replacement>
+  <replacement target="arra" tag="n|n-adj|adj" exceptions="alcaparra|amarra|barra|etarra|fanfarra|garra|guitarra|parra">a</replacement>
+  <replacement target="ázio" tag="n|n-adj|adj" exceptions="topázio">o</replacement>
+  <replacement target="zão" tag="n|n-adj|adj" exceptions="razão"></replacement>
+</augmentativedeclensions>
+
+<!--
+TO ADDRESS AT A LATER STAGE:
+-aça, -aço: barbaça, barcaça, fumaça, bagaço, estilhaço, ricaço, golaço
+-alha: fornalha, muralha
+-ama: poeirama
+-anca: bicanca, carranca
+-anzil: corpanzil
+-ão (-ona), -alhão: salão, tapetão, paredão, mocetona, grandona, brincalhão, lobão, caldeirão
+-arão, -(z)arrão, eirão: vagalhão, casarão, homenzarrão, canzarrão, vozeirão, boqueirão
+-arra, -orra, -orro: bocarra, naviarra, cabeçorra, beiçorra, beatorro, sapatorro
+-aréu: fogaréu, povaréu
+-asco: penhasco
+-astro: poetastro, medicastro
+-az, -acaz, -alhaz, -araz, -arraz: cartaz, voraz, machacaz, facalhaz, montaraz, pratarraz, fatacaz
+-ázio: copázio, gatázio, balázio
+-eima: guloseima
+-eirão: vozeirão, chapeirão
+-ento: farturento, corpulento
+-ola: beiçola
+-orra: cabeçorra
+-uça: dentuça
+-zarrão: homenzarrão
+-->

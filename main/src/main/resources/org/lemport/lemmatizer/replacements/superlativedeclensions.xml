@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<superlativedeclensions>
+  <!-- general data -->
+  <prefix>[\wàáãâéêíóõôúç]*</prefix>
+  <!-- superlative conversion rules to normal -->
+  <replacement target="abilíssimo" tag="n|n-adj|adj">ável</replacement>
+  <replacement target="acílimo" tag="n|n-adj|adj">ácil</replacement>
+  <replacement target="ápientíssimo" tag="n|n-adj|adj">ábio</replacement>
+  <replacement target="aspérrimo" tag="n|n-adj|adj">áspero</replacement>
+  <replacement target="bérrimo" tag="n|n-adj|adj">vre</replacement>
+  <replacement target="císsimo" tag="n|n-adj|adj">go</replacement>
+  <replacement target="delíssimo" tag="n|n-adj|adj">el</replacement>
+  <replacement target="díssimo" tag="n|n-adj|adj">do</replacement>
+  <replacement target="ebilíssimo" tag="n|n-adj|adj">ével</replacement>
+  <replacement target="elebérrimo" tag="n|n-adj|adj">élebre</replacement>
+  <replacement target="entíssimo" tag="n|n-adj|adj">o</replacement>
+  <replacement target="érrimo" tag="n|n-adj|adj" exceptions="acérrimo|libérrimo">ro</replacement>
+  <replacement target="érrimo" tag="n|n-adj|adj">re</replacement>
+  <replacement target="gidíssimo" tag="n|n-adj|adj">io</replacement>
+  <replacement target="ianíssimo" tag="n|n-adj|adj">ão</replacement>
+  <replacement target="ibilíssimo" tag="n|n-adj|adj">ível</replacement>
+  <replacement target="icílimo" tag="n|n-adj|adj">ícil</replacement>
+  <replacement target="ilíssimo" tag="n|n-adj|adj" exceptions="humilíssimo">re</replacement>
+  <replacement target="ilíssimo" tag="n|n-adj|adj">ilde</replacement>
+  <replacement target="inferior" tag="n|n-adj|adj">baixo</replacement>
+  <replacement target="ínfimo" tag="n|n-adj|adj">baixo</replacement>
+  <replacement target="íssimo" tag="n|n-adj|adj" exceptions="amaríssimo|fortíssimo|simplíssimo">o</replacement>
+  <replacement target="íssimo" tag="n|n-adj|adj" exceptions="amaríssimo|simplíssimo">e</replacement>
+  <replacement target="íssimo" tag="n|n-adj|adj" exceptions="simplíssimo">go</replacement>
+  <replacement target="íssimo" tag="n|n-adj|adj">es</replacement>
+  <replacement target="maior" tag="n|n-adj|adj">grande</replacement>
+  <replacement target="malíssimo" tag="n|n-adj|adj">mau</replacement>
+  <replacement target="máximo" tag="n|n-adj|adj">grande</replacement>
+  <replacement target="melhor" tag="n|n-adj|adj">bom</replacement>
+  <replacement target="menor" tag="n|n-adj|adj">pequeno</replacement>
+  <replacement target="mínimo" tag="n|n-adj|adj">pequeno</replacement>
+  <replacement target="níssimo" tag="n|n-adj|adj">m</replacement>
+  <replacement target="obilíssimo" tag="n|n-adj|adj" exceptions="nobilíssimo">óvel</replacement>
+  <replacement target="óptimo" tag="n|n-adj|adj">bom</replacement>
+  <replacement target="ótimo" tag="n|n-adj|adj">bom</replacement>
+  <replacement target="péssimo" tag="n|n-adj|adj">mau</replacement>
+  <replacement target="pior" tag="n|n-adj|adj">mau</replacement>
+  <replacement target="quíssimo" tag="n|n-adj|adj" exceptions="antiquíssimo">co</replacement>
+  <replacement target="quíssimo" tag="n|n-adj|adj">go</replacement>
+  <replacement target="sumo" tag="n|n-adj|adj">alto</replacement>
+  <replacement target="superior" tag="n|n-adj|adj">alto</replacement>
+  <replacement target="supremo" tag="n|n-adj|adj">alto</replacement>
+  <replacement target="ubilíssimo" tag="n|n-adj|adj">úvel</replacement>
+  <replacement target="ulcíssimo" tag="n|n-adj|adj">oce</replacement>
+</superlativedeclensions>

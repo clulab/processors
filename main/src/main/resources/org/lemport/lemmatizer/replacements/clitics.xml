@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<clitics>
+  <!-- general data -->
+  <prefix>[\wàáãâéêíóõôúç\-]*</prefix>
+
+<!-- http://www.ciberduvidas.pt/pergunta.php?id=8681 -->
+<!--
+
+[Resposta] Dizem as regras que, por questões de eufonia, se o verbo terminar em -s ou -r, esta consoante cai, e o pronome ganha um -l:
+
+a) «Tu tens» – «Tu tem-lo». Claro que, neste caso, a consoante nasal passou a m…
+
+b) «Tu queres» – «Tu quere-lo».
+
+Dizem também as regras que, se o verbo terminar em ditongo nasal (seja ele representado por vogal e semivogal – dão –, seja-o por vogal e consoante nasal – tem), o pronome ganha um n:
+
+c) «Ele tem» – «Ele tem-no».
+
+Além destas regras, gerais, há algumas exceções, que se prendem, por exemplo, com o verbo querer, que, na terceira pessoa do presente, se escreve, hoje, quer, mas que já se escreveu quere. Esta forma é recuperada quando o verbo é acompanhado de pronome átono.
+
+d) «Ele quer» – «Ele quere-o».
+
+Todas as formas apresentadas são, pois, possíveis, embora seja necessário destrinçar a que pessoa pertencem, o que será possível analisando o contexto em que os verbos ocorrem.
+
+
+
+[Resposta] Em (1) estamos perante o presente do indicativo do verbo, flexionado na segunda pessoa do singular, que termina em -s. 
+Em (2) estamos perante o imperativo flexionado igualmente na segunda pessoa do singular, mas que termina em vogal. 
+Ora, o que se aplica são as regras gerais definidas para casos semelhantes: 
+O pronome pessoal complemento dire(c)to assume a forma -lo/-la quando a flexão do verbo a que se associa implique a sua terminação em -s, [«torna(s)-lo]»; em -z [«fá(z)-lo»] ou em -r [«torná(r)-lo»]. Note-se que em todos os casos a consoante final desaparece e que, quando essa consoante é um -z ou um -r pertencentes a uma sílaba tó[ô]nica, a vogal final passa a ter um acento gráfico, por forma a que a palavra possa continuar a ser aguda. 
+O mesmo pronome adopta a forma -no/-na a seguir a uma consoante nasal 
+
+
+
+[Resposta] Tem-lo 
+Quando um verbo que é seguido do pronome pessoal em forma de complemento dire(c)to termina em -r, -s ou -z perde a consoante, e o pronome assume a forma -lo, -la, -los, -las. 
+O caso que refere é interessante, e creio que a explicação terá de ter em conta a analogia entre a forma verbal terminada em -em ou -ens e os nomes terminados em -em, cujo plural é -ens, como, por exemplo, viagem, viagens. Nestes nomes o ditongo nasal final /ãe/ tem a grafia -em; quando é /ães/ assume a grafia -ens. Em termos fonéticos esta é, também, a diferença entre tens e tem. 
+Ora, quando o verbo na segunda pessoa do singular perde o -s, o ditongo nasal passa a ser /ãe/ em vez de /ães/. E a grafia que estabelece esta diferença é aquela em que a seguir ao e vem um m e não um n. 
+Correndo o risco de não ser muito rigorosa na explicação, creio que o fenó[ô]meno é este. Na verdade, as poucas palavras que terminam em -n em português não fazem um ditongo nasal. Veja-se a pronúncia de abdómen e de espécimen. É, pois, pela grafia tem, em tem-lo, que o consulente sabe que deve ler aquela sílaba como ditongo nasal. 
+
+Tem-no 
+A forma tem-no existe e é distinta da forma tem-lo. Com efeito, o pronome complemento dire(c)to assume a forma -no, -na, -nos, -nas quando o verbo termina em ditongo nasal, quer seja grafado -em (tem-no), -am (viram-no), ou -ão (dão-no). 
+Assim, enquanto em tem-lo estamos perante uma forma verbal correspondente à segunda pessoa do singular, em tem-no estamos perante a terceira pessoa do singular, o que pode ocorrer em frases como «Eu já não vejo o Manuel há muito tempo, mas o José tem-no visto amiúde». 
+-->
+
+  <!-- Rules for breaking apart verbs with clitics -->
+  <replacement target="-a"> ela</replacement>
+  <replacement target="-as"> elas</replacement>
+  <replacement target="-lhe-á">á a ele</replacement>
+  <replacement target="-lhe-ão">ão a ele</replacement>
+  <replacement target="-lhe-ás">ás a ele</replacement>
+  <replacement target="-lhe-ei">ei a ele</replacement>
+  <replacement target="-lhe-emos">emos a ele</replacement>
+  <replacement target="-lhe-ia">ia a ele</replacement>
+  <replacement target="-lhe"> a ele</replacement>
+  <replacement target="-lhes-á">á a eles</replacement>
+  <replacement target="-lhes-ão">ão a eles</replacement>
+  <replacement target="-lhes-ás">ás a eles</replacement>
+  <replacement target="-lhes-ei">ei a eles</replacement>
+  <replacement target="-lhes-emos">emos a eles</replacement>
+  <replacement target="-lhes-ia">ia a eles</replacement>
+  <replacement target="-lhes"> a eles</replacement>
+  <replacement target="-ma"> ela a mim</replacement>
+  <replacement target="-mas"> elas a mim</replacement>
+  <replacement target="-me-á">á a mim</replacement>
+  <replacement target="-me-ão">ão a mim</replacement>
+  <replacement target="-me-ás">ás a mim</replacement>
+  <replacement target="-me-ei">ei a mim</replacement>
+  <replacement target="-me-emos">emos a mim</replacement>
+  <replacement target="-me-ia">ia a mim</replacement>
+  <replacement target="-me"> a mim</replacement>
+  <replacement target="-mo"> ele a mim</replacement>
+  <replacement target="-mos"> eles a mim</replacement>
+  <replacement target="-na"> ela</replacement>
+  <replacement target="-nas"> elas</replacement>
+  <replacement target="-no"> ele</replacement>
+  <replacement target="-nos-á">á a nós</replacement>
+  <replacement target="-nos-ão">ão a nós</replacement>
+  <replacement target="-nos-ás">ás a nós</replacement>
+  <replacement target="-nos-ei">ei a nós</replacement>
+  <replacement target="-nos-emos">emos a nós</replacement>
+  <replacement target="-nos-ia">ia a nós</replacement>
+  <replacement target="-nos"> a nós</replacement>
+  <replacement target="-nos"> eles</replacement>
+  <replacement target="-o"> ele</replacement>
+  <replacement target="-os"> eles</replacement>
+  <replacement target="-se-á">á se</replacement>
+  <replacement target="-se-ão">ão se</replacement>
+  <replacement target="-se-ia">ia se</replacement>
+  <replacement target="-se"> se</replacement>
+  <replacement target="-te-á">á a ti</replacement>
+  <replacement target="-te-ão">ão a ti</replacement>
+  <replacement target="-te-ás">ás a ti</replacement>
+  <replacement target="-te-ei">ei a ti</replacement>
+  <replacement target="-te-emos">emos a ti</replacement>
+  <replacement target="-te-ia">ia a ti</replacement>
+  <replacement target="-te"> a ti</replacement>
+  <replacement target="-vos-á">á a vós</replacement>
+  <replacement target="-vos-ão">ão a vós</replacement>
+  <replacement target="-vos-ás">ás a vós</replacement>
+  <replacement target="-vos-ei">ei a vós</replacement>
+  <replacement target="-vos-emos">emos a vós</replacement>
+  <replacement target="-vos-ia">ia a vós</replacement>
+  <replacement target="-vos"> a vós</replacement>
+  <replacement target="á-la-á">ará ela</replacement>
+  <replacement target="á-la-ão">arão ela</replacement>
+  <replacement target="á-la-ás">arás ela</replacement>
+  <replacement target="á-la-ei">arei ela</replacement>
+  <replacement target="á-la-emos">aremos ela</replacement>
+  <replacement target="á-la-ia">aria ela</replacement>
+  <replacement target="á-la">ar ela</replacement>
+  <replacement target="a-la">as ela</replacement>
+  <replacement target="á-las-á">ará elas</replacement>
+  <replacement target="á-las-ão">arão elas</replacement>
+  <replacement target="á-las-ás">arás elas</replacement>
+  <replacement target="á-las-ei">arei elas</replacement>
+  <replacement target="á-las-emos">aremos elas</replacement>
+  <replacement target="á-las-ia">aria elas</replacement>
+  <replacement target="á-las">ar elas</replacement>
+  <replacement target="a-las">as eles</replacement>
+  <replacement target="á-lo-á">ará ele</replacement>
+  <replacement target="á-lo-ão">arão ele</replacement>
+  <replacement target="á-lo-ás">arás ele</replacement>
+  <replacement target="á-lo-ei">arei ele</replacement>
+  <replacement target="á-lo-emos">aremos ele</replacement>
+  <replacement target="á-lo-ia">aria ele</replacement>
+  <replacement target="á-lo">ar ele</replacement>
+  <replacement target="a-lo">as ele</replacement>
+  <replacement target="á-los-á">ará eles</replacement>
+  <replacement target="á-los-ão">arão eles</replacement>
+  <replacement target="á-los-ás">arás eles</replacement>
+  <replacement target="á-los-ei">arei eles</replacement>
+  <replacement target="á-los-emos">aremos eles</replacement>
+  <replacement target="á-los-ia">aria eles</replacement>
+  <replacement target="á-los">ar ele</replacement>
+  <replacement target="a-los">as eles</replacement>
+  <replacement target="di-la">diz ela</replacement>
+  <replacement target="di-lo">diz ele</replacement>
+  <replacement target="ê-la-á">erá ela</replacement>
+  <replacement target="ê-la-ão">erão ela</replacement>
+  <replacement target="ê-la-ás">erás ela</replacement>
+  <replacement target="ê-la-ei">erei ela</replacement>
+  <replacement target="ê-la-emos">eremos ela</replacement>
+  <replacement target="ê-la-ia">eria ela</replacement>
+  <replacement target="ê-la">er ela</replacement>
+  <replacement target="e-la">es ela</replacement>
+  <replacement target="ê-las-á">erá elas</replacement>
+  <replacement target="ê-las-ão">erão elas</replacement>
+  <replacement target="ê-las-ás">erás elas</replacement>
+  <replacement target="ê-las-ei">erei elas</replacement>
+  <replacement target="ê-las-emos">eremos elas</replacement>
+  <replacement target="ê-las-ia">eria elas</replacement>
+  <replacement target="ê-las">er elas</replacement>
+  <replacement target="e-las">es elas</replacement>
+  <replacement target="ê-lo-á">erá ele</replacement>
+  <replacement target="ê-lo-ão">erão ele</replacement>
+  <replacement target="ê-lo-ás">erás ele</replacement>
+  <replacement target="ê-lo-ei">erei ele</replacement>
+  <replacement target="ê-lo-ia">eria ele</replacement>
+  <replacement target="ê-lo">er ele</replacement>
+  <replacement target="e-lo">es ele</replacement>
+  <replacement target="ê-los-á">erá eles</replacement>
+  <replacement target="ê-los-ão">erão eles</replacement>
+  <replacement target="ê-los-ás">erás eles</replacement>
+  <replacement target="ê-los-ei">erei eles</replacement>
+  <replacement target="ê-los-emos">eremos eles</replacement>
+  <replacement target="ê-los-ia">eria eles</replacement>
+  <replacement target="ê-los">er eles</replacement>
+  <replacement target="e-los">es eles</replacement>
+  <replacement target="fá-la">faz ela</replacement>
+  <replacement target="fá-lo">faz ele</replacement>
+  <replacement target="fê-la">fez ela</replacement>
+  <replacement target="fê-las">fez elas</replacement>
+  <replacement target="fê-lo">fez ele</replacement>
+  <replacement target="fê-los">fez eles</replacement>
+  <replacement target="i-la-á">irá ela</replacement>
+  <replacement target="i-la-ão">irão ela</replacement>
+  <replacement target="i-la-ás">irás ela</replacement>
+  <replacement target="i-la-ei">irei ela</replacement>
+  <replacement target="i-la-emos">iremos ela</replacement>
+  <replacement target="i-la-ia">iria ela</replacement>
+  <replacement target="i-la">ir ela</replacement>
+  <replacement target="i-la">is ela</replacement>
+  <replacement target="i-las-á">irá elas</replacement>
+  <replacement target="i-las-ão">irão elas</replacement>
+  <replacement target="i-las-ás">irás elas</replacement>
+  <replacement target="i-las-ei">irei elas</replacement>
+  <replacement target="i-las-emos">iremos elas</replacement>
+  <replacement target="i-las-ia">iria elas</replacement>
+  <replacement target="i-las">ir elas</replacement>
+  <replacement target="i-las">is elas</replacement>
+  <replacement target="i-lo-á">irá ele</replacement>
+  <replacement target="i-lo-ão">irão ele</replacement>
+  <replacement target="i-lo-ás">irás ele</replacement>
+  <replacement target="i-lo-ei">irei ele</replacement>
+  <replacement target="i-lo-emos">iremos ele</replacement>
+  <replacement target="i-lo-ia">iria ele</replacement>
+  <replacement target="i-lo">ir ele</replacement>
+  <replacement target="i-lo">is ele</replacement>
+  <replacement target="i-los-á">irá eles</replacement>
+  <replacement target="i-los-ão">irão eles</replacement>
+  <replacement target="i-los-ás">irás eles</replacement>
+  <replacement target="i-los-ei">irei eles</replacement>
+  <replacement target="i-los-em">iremos eles</replacement>
+  <replacement target="i-los-ia">iria eles</replacement>
+  <replacement target="i-los">ir eles</replacement>
+  <replacement target="i-los">is eles</replacement>
+  <replacement target="m-la">ns ela</replacement>
+  <replacement target="m-las">ns elas</replacement>
+  <replacement target="m-lo">ns ele</replacement>
+  <replacement target="m-los">ns eles</replacement>
+  <replacement target="m-na">m ela</replacement>
+  <replacement target="m-nas">m elas</replacement>
+  <replacement target="m-no">m ele</replacement>
+  <replacement target="m-nos">m eles</replacement>
+  <replacement target="mo-la">mos ela</replacement>
+  <replacement target="mo-lo">mos ele</replacement>
+  <replacement target="mo-nos">mos nós</replacement>
+  <replacement target="mo-vos">mos vós</replacement>
+  <replacement target="ô-la-á">orá ela</replacement>
+  <replacement target="ô-la-ão">orão ela</replacement>
+  <replacement target="ô-la-ás">orás ela</replacement>
+  <replacement target="ô-la-ei">orei ela</replacement>
+  <replacement target="ô-la-emos">oremos ela</replacement>
+  <replacement target="ô-la-ia">oria ela</replacement>
+  <replacement target="ô-la">ôr ela</replacement>
+  <replacement target="ô-las-á">orá elas</replacement>
+  <replacement target="ô-las-ão">orão elas</replacement>
+  <replacement target="ô-las-ás">orás elas</replacement>
+  <replacement target="ô-las-ei">orei elas</replacement>
+  <replacement target="ô-las-emos">oremos elas</replacement>
+  <replacement target="ô-las-ia">oria elas</replacement>
+  <replacement target="ô-las">ôr elas</replacement>
+  <replacement target="ô-lo-á">orá ele</replacement>
+  <replacement target="ô-lo-ão">orão ele</replacement>
+  <replacement target="ô-lo-ás">orás ele</replacement>
+  <replacement target="ô-lo-ei">orei ele</replacement>
+  <replacement target="ô-lo-emos">oremos ele</replacement>
+  <replacement target="ô-lo-ia">oria ele</replacement>
+  <replacement target="ô-lo">ôr ele</replacement>
+  <replacement target="ô-los-á">orá eles</replacement>
+  <replacement target="ô-los-ão">orão eles</replacement>
+  <replacement target="ô-los-ás">orás eles</replacement>
+  <replacement target="ô-los-ei">orei eles</replacement>
+  <replacement target="ô-los-em">oremos eles</replacement>
+  <replacement target="ô-los-ia">oria eles</replacement>
+  <replacement target="ô-los">ôr eles</replacement>
+  <replacement target="pô-la">pôs ela</replacement>
+  <replacement target="pô-lo">pôs ele</replacement>
+  <replacement target="quere-a">quer ela</replacement>
+  <replacement target="quere-as">quer elas</replacement>
+  <replacement target="quere-o">quer ele</replacement>
+  <replacement target="quere-os">quer eles</replacement>
+  <replacement target="trá-la">traz ela</replacement>
+  <replacement target="trá-lo">traz ele</replacement>
+  <replacement target="u-la">uz ela</replacement>
+  <replacement target="u-las">uz elas</replacement>
+  <replacement target="u-lo">uz ele</replacement>
+  <replacement target="u-los">uz eles</replacement>
+</clitics>
