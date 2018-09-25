@@ -240,7 +240,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     // TODO
   }
 
-  private def basicSanityCheck(doc:Document): Unit = {
+  def basicSanityCheck(doc:Document): Unit = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")
     if (doc.sentences.length != 0 && doc.sentences(0).words == null)
@@ -274,6 +274,33 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
     // which means we may lose alignment to the original text
     val textWithAccents = scienceUtils.replaceUnicodeWithAscii(text, keepAccents = true)
     CluProcessor.mkDocument(tokenizer, textWithAccents, keepText)
+  }
+
+  // overrided this because lemmatization depends on POS for portuguese
+  override def annotate(doc:Document): Document = {
+    tagPartsOfSpeech(doc)
+    lemmatize(doc)
+    recognizeNamedEntities(doc)
+    parse(doc)
+    chunking(doc)
+    resolveCoreference(doc)
+    discourse(doc)
+    doc.clear()
+    doc
+  }
+
+  /** Lematization; modifies the document in place */
+  override def lemmatize(doc:Document) {
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
+      val lemmas = new Array[String](sent.size)
+      for(i <- sent.words.indices) {
+        lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i))
+        assert(lemmas(i).nonEmpty)
+      }
+      sent.lemmas = Some(lemmas)
+    }
   }
 
 }
