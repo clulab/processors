@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<numberdeclensions>
+  <!-- general data -->
+  <prefix>[\wàáãâéêíóõôúç\-]*</prefix>
+  <!-- n|n-adj|adj -->
+  <replacement target="ães" tag="n|n-adj|adj" exceptions="mães">ão</replacement>
+  <replacement target="ais" tag="n|n-adj|adj" exceptions="cais|mais|pais">al</replacement>
+  <replacement target="ases" tag="n|n-adj|adj" exceptions="bases|ênfases|fases|frases">ás</replacement>
+  <replacement target="eis" tag="n|n-adj|adj" exceptions="leis">il</replacement>
+  <replacement target="eis" tag="n|n-adj|adj" exceptions="ágeis|débeis|difíceis|dúcteis|erécteis|estéreis|fáceis|férteis|físseis|flébeis|fósseis|frágeis|fúteis|gráceis|hábeis|húmeis|ignóbeis|inábeis|leis|mísseis|núbeis|pênseis|portáteis|projécteis|répteis|retrácteis|símeis|tácteis|úteis|verosímeis|versáteis|vibráteis|voláteis">el</replacement>
+  <replacement target="éis" tag="n|n-adj|adj">el</replacement>
+  <replacement target="és" tag="n|n-adj|adj" exceptions="convés">é</replacement>
+  <replacement target="eses" tag="n|n-adj|adj" exceptions="[\wàáãâéêíóõôúç]*teses">ês</replacement>
+  <replacement target="is" tag="n|n-adj|adj" exceptions="azuis|bílis|biquínis|bois|cais|chassis|crúcis|dois|génesis|lápis|leis|libris|mais|nazis|oásis|pais|pauis|p[éê]naltis|p[éê]nis|(extra-)?praxis|ralis|safaris|sífilis|t[éê]nis">il</replacement>
+  <replacement target="íses" tag="n|n-adj|adj">ís</replacement>
+  <replacement target="ízes" tag="n|n-adj|adj">iz</replacement>
+  <replacement target="ales" tag="n|n-adj|adj">al</replacement>
+  <replacement target="ns" tag="n|n-adj|adj">m</replacement>
+  <replacement target="ões" tag="n|n-adj|adj">ão</replacement>
+  <replacement target="óis" tag="n|n-adj|adj">ol</replacement>
+  <replacement target="res" tag="n|n-adj|adj" exceptions="abutres|arredores|árvores|balaústres|desastres|hectares|livres|mármores|massacres|mestres|padres|pedestres|pires|pobres|podres|poses|semilivres|terrestres|timbres">r</replacement>
+  <replacement target="s" tag="n|n-adj|adj" exceptions="adeus|alferes|ananás|arredores|atlas|bílis|b[óô]nus|quebra-cabeças|cais|caos|convés|crúcis|deus|férias|fezes|gás|génesis|lápis|libris|[óô]nus|ourives|mais|males|menos|mês|messias|oásis|[óô]nibus|opus|país|p[éê]nis|pêsames|pires|pós|praxis|pus|(\-redes)|reles|revés|s|simples|sífilis|t[éê]nis|trevas|vírus|s|[\wàáãâéêíóõôúç]+ês|((\d+h)?(\d+m))?\d+s"></replacement>
+  <replacement target="ses" tag="n|n-adj|adj" exceptions="análises|bases|crises|fases|frases|passes|[\wàáãâéêíóõôúç]+nses|[\wàáãâéêíóõôúç]+sses|[\wàáãâéêíóõôúç]*teses">s</replacement>
+  <replacement target="uis" tag="n|n-adj|adj">ul</replacement>
+  <replacement target="zes" tag="n|n-adj|adj" exceptions="fezes">z</replacement>
+  <!-- art|pron|pron-pers|pron-det|pron-indp -->
+  <replacement target="ais" tag="art|pron|pron-pers|pron-det|pron-indp" exceptions="demais|mais">al</replacement>
+  <replacement target="ns" tag="art|pron|pron-pers|pron-det|pron-indp">m</replacement>
+  <replacement target="quaisquer" tag="art|pron|pron-pers|pron-det|pron-indp">qualquer</replacement>
+  <replacement target="s" tag="art|pron|pron-pers|pron-det|pron-indp" exceptions="ambas|ambos|demais|diversas|diversos|mais|menos|nós|s|várias|vários|vós"></replacement>
+</numberdeclensions>
+
+<!--
+TO ADDRESS AT A LATER STAGE:
+http://www.ciberduvidas.com/pergunta.php?id=14650
+-->

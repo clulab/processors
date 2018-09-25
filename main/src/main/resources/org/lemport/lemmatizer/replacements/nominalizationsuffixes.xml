@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<nominalizationsuffixes>
+  <!-- general data -->
+  <prefix>[\wàáãâéêíóõôúç\-]*</prefix>
+  <!-- infinitive verb terminations to noun form -->
+  <!-- deverbal nominalization -->
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">a</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ação</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ada</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">adia</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ador</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">adura</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">agem</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ame</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">amento</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ança</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ância</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ante</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ário</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ata</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">atura</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">eiro</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ice</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ismo</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">o</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">or</replacement>
+  <replacement target="ar" tag="v|v-fin|v-ger|v-pcp|v-inf">ura</replacement>
+  <replacement target="eder" tag="v|v-fin|v-ger|v-pcp|v-inf">essão</replacement>
+  <replacement target="edir" tag="v|v-fin|v-ger|v-pcp|v-inf">essão</replacement>
+  <replacement target="ender" tag="v|v-fin|v-ger|v-pcp|v-inf">ensão</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">edor</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">edura</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">eitor</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">ença</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">ença</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">ência</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">ente</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">ição</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">ida</replacement>
+  <replacement target="er" tag="v|v-fin|v-ger|v-pcp|v-inf">imento</replacement>
+  <replacement target="eter" tag="v|v-fin|v-ger|v-pcp|v-inf">issão</replacement>
+  <replacement target="ever" tag="v|v-fin|v-ger|v-pcp|v-inf">itor</replacement>
+  <replacement target="dir" tag="v|v-fin|v-ger|v-pcp|v-inf">são</replacement>
+  <replacement target="igir" tag="v|v-fin|v-ger|v-pcp|v-inf">ector</replacement>
+  <replacement target="imir" tag="v|v-fin|v-ger|v-pcp|v-inf">essão</replacement>
+  <replacement target="ir" tag="v|v-fin|v-ger|v-pcp|v-inf">ente</replacement>
+  <replacement target="ir" tag="v|v-fin|v-ger|v-pcp|v-inf">ida</replacement>
+  <replacement target="ir" tag="v|v-fin|v-ger|v-pcp|v-inf">idor</replacement>
+  <replacement target="ir" tag="v|v-fin|v-ger|v-pcp|v-inf">idura</replacement>
+  <replacement target="ir" tag="v|v-fin|v-ger|v-pcp|v-inf">imento</replacement>
+  <replacement target="ir" tag="v|v-fin|v-ger|v-pcp|v-inf">inte</replacement>
+  <replacement target="itir" tag="v|v-fin|v-ger|v-pcp|v-inf">issão</replacement>
+  <replacement target="jar" tag="v|v-fin|v-ger|v-pcp|v-inf">gem</replacement>
+  <replacement target="rir" tag="v|v-fin|v-ger|v-pcp|v-inf">ertura</replacement>
+  <replacement target="ser" tag="v|v-fin|v-ger|v-pcp|v-inf">ente</replacement>
+  <!-- adjective terminations to noun form -->
+  <!-- deadjectival nominalization -->
+  <replacement target="az" tag="adj|n-adj">ácia</replacement>
+  <replacement target="co" tag="adj|n-adj">quedo</replacement>
+  <replacement target="co" tag="adj|n-adj">queira</replacement>
+  <replacement target="co" tag="adj|n-adj">quice</replacement>
+  <replacement target="e" tag="adj|n-adj">ia</replacement>
+  <replacement target="emo" tag="adj|n-adj">émia</replacement>
+  <replacement target="ês" tag="adj|n-adj">esia</replacement>
+  <replacement target="esto" tag="adj|n-adj">éstia</replacement>
+  <replacement target="ido" tag="adj|n-adj">ídia</replacement>
+  <replacement target="o" tag="adj|n-adj">eira</replacement>
+  <replacement target="o" tag="adj|n-adj">ia</replacement>
+  <replacement target="o" tag="adj|n-adj">idade</replacement>
+  <replacement target="uto" tag="adj|n-adj">úcia</replacement>
+</nominalizationsuffixes>

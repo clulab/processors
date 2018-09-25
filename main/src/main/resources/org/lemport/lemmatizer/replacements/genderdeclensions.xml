@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<genderdeclensions>
+  <!-- general data -->
+  <prefix>[\wàáãâéêíóõôúç\-]*</prefix>
+  <!-- gender conversion rules to normal -->
+  <replacement target="ã" tag="n|n-adj|adj" exceptions="afã|amanhã|avelã|catamarã|clã|divã|fã|hortelã|imã|lã|maçã|manhã">ão</replacement>
+  <replacement target="ada" tag="n|n-adj|adj" exceptions="bancada|bandeirada|bilheteira|camada|camarada|chamada|chegada|década|embaixada|enseada|entrada|escada|esplanada|estrada|facada|fantochada|feijoada|guinada|incursão|granada|jogada|jornada|lâmpada|olimpíada|madrugada|mesada|pancada|papelada|parada|piada|pomada|porrada|pousada|retirada|risada|salada|temporada|tonelada">ado</replacement>
+  <replacement target="anda" tag="n|n-adj|adj" exceptions="banda|ciranda|demanda|propaganda|varanda">ando</replacement>
+  <replacement target="ária" tag="n|n-adj|adj" exceptions="ária|malária">ário</replacement>
+  <replacement target="ara" tag="n|n-adj|adj" exceptions="câmara">aro</replacement>
+  <replacement target="ava" tag="n|n-adj|adj" exceptions="câmara">avo</replacement>
+  <replacement target="eia" tag="n|n-adj|adj" exceptions="assembleia|estreia|ideia|geleia|plateia">eu</replacement>
+  <replacement target="éia" tag="n|n-adj|adj" exceptions="assembléia|estréia|idéia|geléia|platéia">eu</replacement>
+  <replacement target="eita" tag="n|n-adj|adj" exceptions="colheita|receita|seita">eito</replacement>
+  <replacement target="enha" tag="n|n-adj|adj" exceptions="lenha">enho</replacement>
+  <replacement target="erta" tag="n|n-adj|adj">erto</replacement>
+  <replacement target="esa" tag="n|n-adj|adj" exceptions="defesa|despesa|empresa|framboesa|ilesa|obesa|mesa|presa|princesa|represa|sobremesa|surpresa">ês</replacement>
+  <replacement target="esa" tag="n|n-adj|adj" exceptions="defesa|despesa|empresa|framboesa|mesa|princesa|represa|surpr[eê]sa">eso</replacement>
+  <replacement target="esca" tag="n|n-adj|adj">esco</replacement>
+  <replacement target="estra" tag="n|n-adj|adj">estro</replacement>
+  <replacement target="eta" tag="n|n-adj|adj" exceptions="atleta|bicicleta|caderneta|caneta|camiseta|cometa|corneta|dieta|estafeta|estatueta|etiqueta|faceta|gaveta|lisboeta|maqueta|marioneta|meta|motocicleta|perneta|peseta|pipeta|pirueta|planeta|poeta|praceta|profeta|proveta|roleta|tabuleta|vedeta">eto</replacement>
+  <replacement target="eva" tag="n|n-adj|adj" exceptions="treva">evo</replacement>
+  <replacement target="exta" tag="n|n-adj|adj">exto</replacement>
+  <replacement target="íaca" tag="n|n-adj|adj">íaco</replacement>
+  <replacement target="ica" tag="n|n-adj|adj" exceptions="dica|fábrica|(hidro)?ginástica|música|réplica|república">ico</replacement>
+  <replacement target="ida" tag="n|n-adj|adj" exceptions="avenida|comida|corrida|dívida|dúvida|homicida|(contra)?medida|partida|sida|suícida|vida">ido</replacement>
+  <replacement target="ída" tag="n|n-adj|adj" exceptions="recaída|saída">ído</replacement>
+  <replacement target="iga" tag="n|n-adj|adj" exceptions="barriga|briga|cantiga|espiga|intriga|(super)?liga|manteiga|rapariga|viga">igo</replacement>
+  <replacement target="ima" tag="n|n-adj|adj" exceptions="cima|clima|coima|estima|guloseima|lágrima|queima|vítima">imo</replacement>
+  <replacement target="inha" tag="n|n-adj|adj" exceptions="alfacinha|azinha|carapinha|cozinha|espinha|farinha|galinha|linha|madrinha|marinha|pinha|rainha|sardinha|tinha|vinha|vizinha">inho</replacement><!-- ATENÇÃO A ESTE-->
+  <replacement target="inta" tag="n|n-adj|adj">into</replacement>
+  <replacement target="ira" tag="n|n-adj|adj" exceptions="albufeira|algibeira|bandeira|barreira|beira|bilheteira|brincadeira|cabeceira|caçadeira|cachoeira|cadeira|caleira|caldeira|capoeira|carreira|carteira|clareira|cordilheira|eira|espreguiçadeira|esteira|estribeira|feira|figueira|fileira|fogueira|freira|frieira|frigideira|fronteira|ira|leira|madeira|maneira|mangueira|mentira|papeira|peneira|poeira|prateleira|pregadeira|pulseira|regadeira|traineira">iro</replacement>
+  <replacement target="istra" tag="n|n-adj|adj">istro</replacement>
+  <replacement target="iva" tag="n|n-adj|adj" exceptions="classificativa|comitiva|conviva|dádiva|deriva|diva|estimativa|expectativa|iniciativa|ofensiva|perspectiva|prerrogativa|raiva|retrospectiva|saliva|tentativa">ivo</replacement>
+  <replacement target="íza" tag="n|n-adj|adj">iz</replacement>
+  <replacement target="na" tag="n|n-adj|adj" exceptions="acetona|amazona|antena|ardina|arena|aspirina|azeitona|banana|barbatana|boina|cabana|cabina|cana|caserna|cena|centena|chacina|cisterna|cocaína|coluna|cortisona|dezena|disciplina|doutrina|duna|esquina|fauna|fortuna|gabardina|gasolina|lacuna|lanterna|lona|máquina|maratona|margarina|matina|medicina|milena|mina|monótona|neblina|nicotina|oficina|oxitocina|página|paisana|pena|perna|pestana|piscina|plasticina|platina|propina|proteína|ruína|quinzena|roldana|rotina|[\wàáãâéêíóõôúç\-]*semana|serpentina|urna|usina|tuna|vacatura|vacina|vitamina|vitrina|zarabatana|zona">no</replacement>
+  <replacement target="nhola" tag="n|n-adj|adj">nhol</replacement>
+  <replacement target="oga" tag="n|n-adj|adj" exceptions="sinagoga">ogo</replacement>
+  <replacement target="ona" tag="n|n-adj|adj" exceptions="acetona|amazona|cortisona|lona|maratona|monótona|sanfona|zona">ão</replacement>
+  <replacement target="ora" tag="n|n-adj|adj" exceptions="amora|demora|fora|hora|impressora|metáfora|metralhadora|mora|pólvora">or</replacement>
+  <replacement target="osa" tag="n|n-adj|adj" exceptions="mucosa|prosa|rosa">oso</replacement>
+  <replacement target="ova" tag="n|n-adj|adj" exceptions="escova|ova|(contra)?prova|supernova">ovo</replacement>
+  <replacement target="unda" tag="n|n-adj|adj">undo</replacement>
+  <replacement target="ura" tag="n|n-adj|adj" exceptions="(re)?abertura|abreviatura|agrura|altura|amargura|armadura|arquite(c)?tura||assinatura|aventura|brochura|candidatura|candura|cenoura|captura|censura|cintura|cobertura|conje(c)?tura|conjuntura|contra(c)?tura|costura|criatura|cura|ditadura|envergadura|escravatura|escritura|escultura|espessura|estatura|estrutura|factura|fartura|fechadura|feitura|figura|formatura|fractura|frescura|gordura|largura|legislatura|leitura|licenciatura|ligadura|literatura|loucura|mistura|partitura|pintura|postura|prefeitura|procura|releitura|quadratura|ruptura|sepultura|status|temperatura|tempura|ternura|tortura|viatura|[\wàáãâéêíóõôúç]*cultura|[\wàáãâéêíóõôúç\-]*estrutura">uro</replacement>
+  <replacement target="uta" tag="n|n-adj|adj" exceptions="conduta|disputa|escuta|fruta|gruta|juta|luta|permuta|recruta|truta|[\wàáãâéêíóõôúç]+auta">uto</replacement>
+  <replacement target="úva" tag="n|n-adj|adj">úvo</replacement>
+  <!-- art|pron|pron-pers|pron-det|pron-indp -->
+  <replacement target="a" tag="art|pron|pron-pers|pron-det|pron-indp" exceptions="aquela|cada|dela|ela|minha|nada|sua|tua|uma">o</replacement>
+  <replacement target="ambas" tag="art|pron|pron-pers|pron-det|pron-indp">ambos</replacement>
+  <replacement target="ela" tag="art|pron|pron-pers|pron-det|pron-indp">ele</replacement>
+  <replacement target="essa" tag="art|pron|pron-pers|pron-det|pron-indp">esse</replacement>
+  <replacement target="esta" tag="art|pron|pron-pers|pron-det|pron-indp">este</replacement>
+  <replacement target="minha" tag="art|pron|pron-pers|pron-det|pron-indp">meu</replacement>
+  <replacement target="sua" tag="art|pron|pron-pers|pron-det|pron-indp">seu</replacement>
+  <replacement target="tua" tag="art|pron|pron-pers|pron-det|pron-indp">teu</replacement>
+  <replacement target="uma" tag="art|pron|pron-pers|pron-det|pron-indp">um</replacement>
+  <replacement target="várias" tag="art|pron|pron-pers|pron-det|pron-indp">vários</replacement>
+  <!-- num -->
+  <replacement target="centas" tag="num">centos</replacement>
+  <replacement target="duas" tag="num">dois</replacement>
+  <replacement target="uma" tag="num">um</replacement>
+  <replacement target="zentas" tag="num">zentos</replacement>
+</genderdeclensions>
