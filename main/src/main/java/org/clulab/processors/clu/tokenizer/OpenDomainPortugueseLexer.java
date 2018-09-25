@@ -1,4 +1,4 @@
-// Generated from main/src/main/java/org/clulab/processors/clu/tokenizer/OpenDomainPortugueseLexer.g by ANTLR 4.5.2
+// Generated from main/src/main/java/org/clulab/processors/clu/tokenizer/OpenDomainPortugueseLexer.g by ANTLR 4.7.1
 
   package org.clulab.processors.clu.tokenizer;
 
@@ -13,7 +13,7 @@ import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class OpenDomainPortugueseLexer extends Lexer {
-	static { RuntimeMetaData.checkVersion("4.5.2", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.7.1", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -23,6 +23,10 @@ public class OpenDomainPortugueseLexer extends Lexer {
 		TWITTER_HASHTAG=8, FILENAME=9, PROGRAMMING_LANGUAGES=10, FULLURL=11, LIKELYURL_WWW=12, 
 		LIKELYURL_COM=13, EMAIL=14, SGML=15, HTML_CODE=16, SMILEY=17, EOS=18, 
 		WHITESPACE=19, ErrorCharacter=20;
+	public static String[] channelNames = {
+		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
+	};
+
 	public static String[] modeNames = {
 		"DEFAULT_MODE"
 	};
@@ -94,13 +98,16 @@ public class OpenDomainPortugueseLexer extends Lexer {
 	public String getSerializedATN() { return _serializedATN; }
 
 	@Override
+	public String[] getChannelNames() { return channelNames; }
+
+	@Override
 	public String[] getModeNames() { return modeNames; }
 
 	@Override
 	public ATN getATN() { return _ATN; }
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\2\26\u025e\b\1\4\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\2\26\u025e\b\1\4\2"+
 		"\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4"+
 		"\13\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22"+
 		"\t\22\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31"+
@@ -169,11 +176,11 @@ public class OpenDomainPortugueseLexer extends Lexer {
 		">@A}\177\f\2\13\f\16\17\"$&&)+.\60>>@Aab}\177\n\2\13\f\16\17\"$*+.\60"+
 		">>@A}\177\n\2\13\f\16\17\"\"$$*+>>@@~~\5\2\62;C\\c|\13\2\13\f\16\17\""+
 		"\"$$*+>>@@}\177\u00a2\u00a2\r\2\13\f\16\17\"\"$$*+..\60\60>>@@}\177\u00a2"+
-		"\u00a2\u02be\2\3\3\2\2\2\2\5\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3\2"+
-		"\2\2\2\r\3\2\2\2\2\17\3\2\2\2\2\21\3\2\2\2\2\23\3\2\2\2\2\25\3\2\2\2\2"+
-		"\27\3\2\2\2\2\31\3\2\2\2\2\33\3\2\2\2\2\35\3\2\2\2\2\37\3\2\2\2\2!\3\2"+
-		"\2\2\2#\3\2\2\2\2%\3\2\2\2\2\'\3\2\2\2\2)\3\2\2\2\3s\3\2\2\2\5{\3\2\2"+
-		"\2\7}\3\2\2\2\t\u0084\3\2\2\2\13\u0088\3\2\2\2\r\u008d\3\2\2\2\17\u009c"+
+		"\u00a2\2\u02be\2\3\3\2\2\2\2\5\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3"+
+		"\2\2\2\2\r\3\2\2\2\2\17\3\2\2\2\2\21\3\2\2\2\2\23\3\2\2\2\2\25\3\2\2\2"+
+		"\2\27\3\2\2\2\2\31\3\2\2\2\2\33\3\2\2\2\2\35\3\2\2\2\2\37\3\2\2\2\2!\3"+
+		"\2\2\2\2#\3\2\2\2\2%\3\2\2\2\2\'\3\2\2\2\2)\3\2\2\2\3s\3\2\2\2\5{\3\2"+
+		"\2\2\7}\3\2\2\2\t\u0084\3\2\2\2\13\u0088\3\2\2\2\r\u008d\3\2\2\2\17\u009c"+
 		"\3\2\2\2\21\u00ab\3\2\2\2\23\u00b2\3\2\2\2\25\u00cb\3\2\2\2\27\u00cd\3"+
 		"\2\2\2\31\u00e0\3\2\2\2\33\u0107\3\2\2\2\35\u0130\3\2\2\2\37\u0144\3\2"+
 		"\2\2!\u014f\3\2\2\2#\u0163\3\2\2\2%\u016b\3\2\2\2\'\u0173\3\2\2\2)\u0179"+
