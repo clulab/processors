@@ -4,6 +4,8 @@ package org.lemport.lemmatizer.replacement;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -355,5 +357,35 @@ public class Replacement implements Comparable<Replacement> {
       normalizedLength -= matcher.group().trim().length() - 1;
     }
     return normalizedLength;
+  }
+
+  public static String fromPalavrasToUDTagset(String token, String word){
+    Map<String, String> conversionTable = new HashMap<String, String>();
+
+    // convert articles to articles
+
+    conversionTable.put("X", "?");
+    conversionTable.put("ADJ", "adj");
+    conversionTable.put("ADV", "adv");
+    conversionTable.put("SCONJ", "conj-s");
+    conversionTable.put("CCONJ", "conj-c");
+    conversionTable.put("PART", "ec");
+    conversionTable.put("INTJ", "in");
+    conversionTable.put("NOUN", "n");
+    conversionTable.put("NUM", "num");
+    conversionTable.put("ADV", "pp");
+    conversionTable.put("DET", "pron-det");
+    conversionTable.put("PRON", "pron");
+    conversionTable.put("PROPN", "prop");
+    conversionTable.put("ADP", "prp");
+    conversionTable.put("PUNCT", "punc");
+    conversionTable.put("VERBF", "v-fin");
+    conversionTable.put("VERBG", "v-ger");
+    conversionTable.put("VERBI", "v-inf");
+    conversionTable.put("VERBP", "v-pcp");
+
+    return conversionTable.get(token);
+
+    //return tag;
   }
 }
