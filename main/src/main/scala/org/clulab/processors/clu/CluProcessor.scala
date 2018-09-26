@@ -296,7 +296,7 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
       //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
-        lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i), sent.tags.get(i))
+        lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i), Some(sent.tags.get(i)) )
         assert(lemmas(i).nonEmpty)
       }
       sent.lemmas = Some(lemmas)
