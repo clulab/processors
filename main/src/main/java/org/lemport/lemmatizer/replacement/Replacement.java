@@ -359,7 +359,7 @@ public class Replacement implements Comparable<Replacement> {
     return normalizedLength;
   }
 
-  public static String fromPalavrasToUDTagset(String token, String word){
+  public static String fromPalavrasToUDTagset(String tag, String token){
     Map<String, String> conversionTable = new HashMap<String, String>();
 
     // convert articles to articles
@@ -384,8 +384,11 @@ public class Replacement implements Comparable<Replacement> {
     conversionTable.put("VERBI", "v-inf");
     conversionTable.put("VERBP", "v-pcp");
 
-    return conversionTable.get(token);
-
-    //return tag;
+    String newTag = conversionTable.get(tag);
+    if (newTag != null) {
+        return newTag;
+    } else {
+        return tag;
+    }
   }
 }
