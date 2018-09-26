@@ -14,13 +14,16 @@ import org.slf4j.{Logger, LoggerFactory}
   * Date: 3/24/17
   */
 class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() with FirstPassLabelsReader {
+  var skipLemmas = false
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int): Unit = {
     val fe = new FeatureExtractor(sentence, offset, features)
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
       fe.word(offset)
-      fe.lemma(offset)
+      if (skipLemmas == false) {
+        fe.lemma(offset)
+      }
       fe.casing(offset)
       fe.suffixes(offset, 1, 3)
       fe.prefixes(offset, 1, 3)
@@ -86,6 +89,10 @@ object PartOfSpeechTagger {
 
       if(props.containsKey("model")) {
         tagger.save(new File(props.getProperty("model")))
+      }
+
+      if(props.containsKey("skiplemmas")) {
+        tagger.skipLemmas = true
       }
     }
 
