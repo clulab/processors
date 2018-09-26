@@ -383,6 +383,7 @@ public class Replacement implements Comparable<Replacement> {
     conversionTable.put("VERBG", "v-ger");
     conversionTable.put("VERBI", "v-inf");
     conversionTable.put("VERBP", "v-pcp");
+    conversionTable.put("AUX", "v");
 
     String newTag = conversionTable.get(tag);
     if (newTag != null) {
