@@ -62,9 +62,9 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
   }
 
   it should "POS tag correctly" in {
-    val doc = proc.annotate("Da Silva viajou para a China. Lá, ele visitou Pequim.")
-    proc.lemmatize(doc)
+    val doc = proc.mkDocument("Da Silva viajou para a China. Lá, ele visitou Pequim.")
     proc.tagPartsOfSpeech(doc)
+    //proc.lemmatize(doc)
     doc.clear()
 
     doc.sentences(0).tags.get(0) should be ("ADP")
