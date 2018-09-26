@@ -34,7 +34,29 @@ import org.lemport.lemmatizer.replacement.Replacement;
  * @version  0.9.9
  */
 public class Lemmatizer {
-  private static final String DEFAULT_PROP =
+
+  private static Lemmatizer singleLemmatizerInstance = null;
+
+  public static Lemmatizer getInstance() {
+    if (singleLemmatizerInstance == null) {
+        try {
+            singleLemmatizerInstance = new Lemmatizer();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (DictionaryLoadException e) {
+            e.printStackTrace();
+        } catch (WordRankingLoadException e) {
+            e.printStackTrace();
+        }
+    }
+  return singleLemmatizerInstance;
+}
+
+    private static final String DEFAULT_PROP =
       //"resources/config/lemport.properties";
       "org/lemport/lemmatizer/config/lemport.properties";
 
