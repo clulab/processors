@@ -62,7 +62,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
   }
 
   it should "POS tag correctly" in {
-    val doc = proc.mkDocument("Da Silva viajou para a China. Lá, ele visitou Pequim.")
+    val doc = proc.annotate("Da Silva viajou para a China. Lá, ele visitou Pequim.")
     proc.lemmatize(doc)
     proc.tagPartsOfSpeech(doc)
     doc.clear()
@@ -99,11 +99,23 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).chunks.get(10) should be ("B-NP")
     doc.sentences(0).chunks.get(11) should be ("O")
   }
-  /*
-  TODO: Portuguese lemmatization
+
   it should "lemmatize text correctly" in {
+    val doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa câncer.")
+
+    doc.sentences(0).lemmas.get(0) should be ("nós")
+    doc.sentences(0).lemmas.get(1) should be ("descobrir")
+    doc.sentences(0).lemmas.get(2) should be ("que")
+    doc.sentences(0).lemmas.get(3) should be ("o")
+    doc.sentences(0).lemmas.get(4) should be ("exposição")
+    doc.sentences(0).lemmas.get(5) should be ("prolongar")
+    doc.sentences(0).lemmas.get(6) should be ("a")
+    doc.sentences(0).lemmas.get(7) should be ("o")
+    doc.sentences(0).lemmas.get(8) should be ("alumínio")
+    doc.sentences(0).lemmas.get(9) should be ("causar")
+    doc.sentences(0).lemmas.get(10) should be ("câncer")
+    doc.sentences(0).lemmas.get(11) should be (".")
   }
-  */
 
   
   // # WRITE A NEW TEST FOR THIS CASE
