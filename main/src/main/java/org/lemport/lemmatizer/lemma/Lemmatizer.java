@@ -500,6 +500,8 @@ public class Lemmatizer {
   public String lemmatize(String token, String tag) {
     // normalize token/lemma
     String lemma = token.toLowerCase();
+    // map UD tags to palavras tags
+    tag = Replacement.fromPalavrasToUDTagset(tag, token);
     // check for token|tag in cache
     LemmatizerCacheKey key = new LemmatizerCacheKey(lemma, tag.toLowerCase());
     if (cache.containsKey(key)) {
