@@ -11,28 +11,30 @@ import org.lemport.lemmatizer.dictionary.DictionaryLoadException
 import org.lemport.lemmatizer.lemma.{LemmatizeException, Lemmatizer => LemmatizerPT}
 
 trait Lemmatizer {
-  def lemmatizeWord(word:String):String
+  def lemmatizeWord(word:String, pos: String = null):String
 }
 
 class PortugueseLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String): String = {
+  override def lemmatizeWord(word: String, pos: String = null): String = {
     // TODO: add a proper lemmatizer here
 
-    val lemmatizer = new LemmatizerPT()
+    val lemmatizer = LemmatizerPT.getInstance();
 
-    word.toLowerCase
+    val lemma = lemmatizer.lemmatize(word, pos)
+    lemma
+    //word.toLowerCase
   }
 }
 
 class SpanishLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String): String = {
+  override def lemmatizeWord(word: String, pos: String = null): String = {
     // TODO: add a proper lemmatizer here
     word.toLowerCase
   }
 }
 
 class EnglishLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String): String = {
+  override def lemmatizeWord(word: String, pos: String = null): String = {
     if(parens.findFirstMatchIn(word).nonEmpty)
       return word.toLowerCase()
 
