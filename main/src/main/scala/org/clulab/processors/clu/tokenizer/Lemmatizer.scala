@@ -4,10 +4,11 @@ import java.io.StringReader
 
 import scala.collection.mutable
 import scala.util.matching.Regex
-
 import uk.ac.susx.informatics.Morpha
-
 import EnglishLemmatizer._
+import org.lemport.lemmatizer.rank.WordRankingLoadException
+import org.lemport.lemmatizer.dictionary.DictionaryLoadException
+import org.lemport.lemmatizer.lemma.{LemmatizeException, Lemmatizer => LemmatizerPT}
 
 trait Lemmatizer {
   def lemmatizeWord(word:String):String
@@ -16,6 +17,9 @@ trait Lemmatizer {
 class PortugueseLemmatizer extends Lemmatizer {
   override def lemmatizeWord(word: String): String = {
     // TODO: add a proper lemmatizer here
+
+    val lemmatizer = new LemmatizerPT()
+
     word.toLowerCase
   }
 }
