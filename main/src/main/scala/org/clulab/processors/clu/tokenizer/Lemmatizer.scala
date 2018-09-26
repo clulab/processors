@@ -6,35 +6,32 @@ import scala.collection.mutable
 import scala.util.matching.Regex
 import uk.ac.susx.informatics.Morpha
 import EnglishLemmatizer._
-import org.lemport.lemmatizer.rank.WordRankingLoadException
-import org.lemport.lemmatizer.dictionary.DictionaryLoadException
 import org.lemport.lemmatizer.lemma.{LemmatizeException, Lemmatizer => LemmatizerPT}
 
 trait Lemmatizer {
-  def lemmatizeWord(word:String, pos: String = null):String
+  def lemmatizeWord(word:String, pos: Option[String] = None):String
 }
 
 class PortugueseLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String, pos: String = null): String = {
-    // TODO: add a proper lemmatizer here
-
+  override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
+    // get lemmatizer object from LemPORT using singleton
     val lemmatizer = LemmatizerPT.getInstance();
-
-    val lemma = lemmatizer.lemmatize(word, pos)
+    // get the lemma
+    val lemma = lemmatizer.lemmatize(word, pos.get)
     lemma
     //word.toLowerCase
   }
 }
 
 class SpanishLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String, pos: String = null): String = {
+  override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
     // TODO: add a proper lemmatizer here
     word.toLowerCase
   }
 }
 
 class EnglishLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String, pos: String = null): String = {
+  override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
     if(parens.findFirstMatchIn(word).nonEmpty)
       return word.toLowerCase()
 
