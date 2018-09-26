@@ -37,6 +37,8 @@ class FeatureExtractor(
   }
 
   def lemma(offset:Int) {
+    // using lemmas only when they exist
+    // this was introduced because in english the lemmatizer works independently of the POS tag, whereas in portuguese POS is needed by the lemmatizer
     if (sentence.lemmas.isDefined) {
       val i = position + offset
       if (validPosition(i))
