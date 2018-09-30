@@ -508,16 +508,18 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(1).endPosition should be (13)
 
     sents = getContractedForm("arriscar-me")
-    sents(0).word should be ("arrisca")
+    sents(0).word should be ("arriscar")
     sents(1).word should be ("me")
     sents(0).beginPosition should be (0)
     sents(1).beginPosition should be (9)
 
-    sents = getContractedForm("medi-lo")
-    sents(0).word should be ("medi")
-    sents(1).word should be ("lo")
+    sents = getContractedForm("precisamos medi-lo")
+    sents(0).word should be ("precisamos")
+    sents(1).word should be ("medi")
+    sents(2).word should be ("lo")
     sents(0).beginPosition should be (0)
-    sents(1).beginPosition should be (5)
+    sents(1).beginPosition should be (11)
+    sents(2).beginPosition should be (16)
 
     sents = getContractedForm("acode-nos")
     sents(0).word should be ("acode")

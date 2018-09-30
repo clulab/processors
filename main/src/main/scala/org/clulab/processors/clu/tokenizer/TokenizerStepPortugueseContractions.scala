@@ -337,6 +337,14 @@ class TokenizerStepPortugueseContractions extends TokenizerStep {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
         tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "onde")
       }
+
+      else if("""(?i)-(se|lhe|me|lo|nos)$""".r.findFirstIn(input.raw).isDefined) {
+        val tokenNoMesoc = input.raw.replaceAll("""(?i)-(se|lhe|me|lo|nos)$""", "")
+        val mesoc = input.raw.substring(tokenNoMesoc.length+1)
+
+        tokens += RawToken(input.raw.substring(0, tokenNoMesoc.length), input.beginPosition, tokenNoMesoc)
+        tokens += RawToken(mesoc, input.beginPosition+tokenNoMesoc.length+1, mesoc)
+      }
       // any other token
       else {
         tokens += input
