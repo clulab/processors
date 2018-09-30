@@ -490,6 +490,42 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(1).endPosition should be (5)
   }
 
+  it should "work for mesocliticos" in {
+    var sents = getContractedForm("confirma-se")
+    sents(0).word should be ("confirma")
+    sents(1).word should be ("se")
+    sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (8)
+    sents(1).beginPosition should be (9)
+    sents(1).endPosition should be (11)
+
+    sents = getContractedForm("acariciar-lhe")
+    sents(0).word should be ("acariciar")
+    sents(1).word should be ("lhe")
+    sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (9)
+    sents(1).beginPosition should be (10)
+    sents(1).endPosition should be (13)
+
+    sents = getContractedForm("arriscar-me")
+    sents(0).word should be ("arrisca")
+    sents(1).word should be ("me")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (9)
+
+    sents = getContractedForm("medi-lo")
+    sents(0).word should be ("medi")
+    sents(1).word should be ("lo")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (5)
+
+    sents = getContractedForm("acode-nos")
+    sents(0).word should be ("acode")
+    sents(1).word should be ("nos")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (6)
+  }
+
   def getContractedForm(s: String): Array[RawToken] = {
     // fake lexer
     // split string
