@@ -337,14 +337,28 @@ class TokenizerStepPortugueseContractions extends TokenizerStep {
         tokens += RawToken(input.raw.substring(0, 1), input.beginPosition, matchCase(input.raw, "de"))
         tokens += RawToken(input.raw.substring(1), input.beginPosition+1, "onde")
       }
-
-      else if("""(?i)-(se|lhe|me|lo|nos)$""".r.findFirstIn(input.raw).isDefined) {
-        val tokenNoMesoc = input.raw.replaceAll("""(?i)-(se|lhe|me|lo|nos)$""", "")
-        val mesoc = input.raw.substring(tokenNoMesoc.length+1)
-
-        tokens += RawToken(input.raw.substring(0, tokenNoMesoc.length), input.beginPosition, tokenNoMesoc)
-        tokens += RawToken(mesoc, input.beginPosition+tokenNoMesoc.length+1, mesoc)
+      // mesoclises 3 parts
+      // 3 parts has to be executed first than 2 parts otherwise 2 parts will overmach some tokens
+      else if("""(?i)-(se-á|lhe-ia|la-ia|me-ia|se-ia|se-ão|se-é)$""".r.findFirstIn(input.raw).isDefined) {
+        // get the head word
+        val tokenNoMesoc = input.raw.replaceAll("""(?i)-(se-á|lhe-ia|la-ia|me-ia|se-ia|se-ão|se-é)$""", "")
+        // get extra two parts of the mesoc
+        val mesocParts = input.raw.substring(tokenNoMesoc.length+1).split("-")
+        //
+        tokens += RawToken(input.raw.substring(0, tokenNoMesoc.length), input.beginPosition, tokenNoMesoc+mesocParts(1))
+        tokens += RawToken(input.raw.substring(tokenNoMesoc.length+1, tokenNoMesoc.length+1+mesocParts(0).length), input.beginPosition + tokenNoMesoc.length + 1 , mesocParts(0))
       }
+      // mesoclises 2 parts
+      else if("""(?i)(?<!-[a-z]{1,5})-(se|lhe|me|lo|nos|o|la|los|a|lhes|os|las|as|no|na|nas|te|vos)$""".r.findFirstIn(input.raw).isDefined) {
+        // get head word
+        val tokenNoMesoc = input.raw.replaceAll("""(?i)-(se|lhe|me|lo|nos|o|la|los|a|lhes|os|las|as|no|na|nas|te|vos)$""", "")
+        // get mesoc part
+        val mesoc = input.raw.substring(tokenNoMesoc.length+1)
+        //
+        tokens += RawToken(input.raw.substring(0, tokenNoMesoc.length), input.beginPosition, tokenNoMesoc)
+        tokens += RawToken(input.raw.substring(tokenNoMesoc.length+1), input.beginPosition+tokenNoMesoc.length+1, mesoc)
+      }
+
       // any other token
       else {
         tokens += input
