@@ -23,6 +23,8 @@ class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() with F
       fe.word(offset)
       if (skipLemmas == false) {
         fe.lemma(offset)
+      } else {
+        fe.cheapLemma(offset)
       }
       fe.casing(offset)
       fe.suffixes(offset, 1, 3)
@@ -85,14 +87,14 @@ object PartOfSpeechTagger {
         tagger.numFoldsFirstPass = props.getProperty("bi").toInt
       }
 
+      if(props.containsKey("skiplemmas")) {
+        tagger.skipLemmas = true
+      }
+
       tagger.train(List(doc).iterator)
 
       if(props.containsKey("model")) {
         tagger.save(new File(props.getProperty("model")))
-      }
-
-      if(props.containsKey("skiplemmas")) {
-        tagger.skipLemmas = true
       }
     }
 
@@ -103,7 +105,8 @@ object PartOfSpeechTagger {
         SequenceTaggerShell.shell[String, String](tagger)
       } else if(props.containsKey("test")) {
         val doc = ColumnsToDocument.readFromFile(props.getProperty("test"),
-          wordPos = wordPos, labelPos = tagPos,
+          wordPos = wordPos,
+          labelPos = tagPos,
           ColumnsToDocument.setTags,
           ColumnsToDocument.annotateLemmas)
         new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
