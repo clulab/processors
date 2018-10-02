@@ -33,6 +33,7 @@ object ColumnsToDocument {
                    annotate: (Document) => Unit,
                    filterOutContractions:Boolean = false): Document = {
     val source = Source.fromFile(fn)
+
     readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
   }
 
@@ -125,7 +126,7 @@ object ColumnsToDocument {
   }
 
   def annotateLemmas(doc:Document) {
-    proc.lemmatize(doc) // some features use lemmas, which are not available in the CoNLL data
+    //proc.lemmatize(doc) // some features use lemmas, which are not available in the CoNLL data
   }
 
   def annotateLemmmaTags(doc:Document): Unit = {
