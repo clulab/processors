@@ -53,7 +53,18 @@ object ColumnsToDocument {
                      labelPos:Int = TAG_POS_CONLLX,
                      setLabels: (Sentence, Array[String]) => Unit,
                      annotate: (Document) => Unit,
-                     filterOutContractions:Boolean = false): Document = {
+                     filterOutContractions:Boolean = false,
+                     lang: String = "en"): Document = {
+
+    // redefine proc acording to the language used
+    if (lang == "pt"){
+      println("Using Portuguese processors")
+      this.proc = new PortugueseCluProcessor()
+    } else if(lang == "es") {
+      println("Using Spanish processors")
+      this.proc = new SpanishCluProcessor()
+    }
+
     val source = Source.fromInputStream(stream)
     readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
   }
