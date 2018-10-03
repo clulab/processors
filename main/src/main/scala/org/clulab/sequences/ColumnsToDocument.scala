@@ -41,6 +41,9 @@ object ColumnsToDocument {
     } else if(lang == "es") {
       println("Using Spanish processors")
       this.proc = new SpanishCluProcessor()
+    } else {
+      println("Using English processors")
+      this.proc = new CluProcessor()
     }
 
     val source = Source.fromFile(fn)
@@ -63,6 +66,9 @@ object ColumnsToDocument {
     } else if(lang == "es") {
       println("Using Spanish processors")
       this.proc = new SpanishCluProcessor()
+    } else {
+      println("Using English processors")
+      this.proc = new CluProcessor()
     }
 
     val source = Source.fromInputStream(stream)
