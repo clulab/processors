@@ -61,7 +61,7 @@ object PartOfSpeechTagger {
   def main(args:Array[String]) {
     var lang = "en"
     val props = StringUtils.argsToProperties(args)
-    
+
     val (wordPos, tagPos) = if (props.containsKey("conllu"))
       (ColumnsToDocument.WORD_POS_CONLLU, ColumnsToDocument.TAG_POS_CONLLU)
     else

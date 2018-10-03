@@ -62,7 +62,7 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
   }
 
   it should "POS tag correctly" in {
-    val doc = proc.mkDocument("Da Silva viajou para a China. Lá, ele visitou Pequim.")
+    val doc = proc.mkDocument("Da Silva viajou para a China. Lá, George visitou Pequim.")
     proc.tagPartsOfSpeech(doc)
     //proc.lemmatize(doc)
     doc.clear()
@@ -77,14 +77,14 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).tags.get(7) should be ("PUNCT")
     doc.sentences(1).tags.get(0) should be ("ADV")
     doc.sentences(1).tags.get(1) should be ("PUNCT")
-    doc.sentences(1).tags.get(2) should be ("PRON")
+    doc.sentences(1).tags.get(2) should be ("PROPN")
     doc.sentences(1).tags.get(3) should be ("VERBF")
     doc.sentences(1).tags.get(4) should be ("PROPN")
     doc.sentences(1).tags.get(5) should be ("PUNCT")
   }
 
   it should "recognize syntactic chunks correctly" in {
-    val doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa câncer.")
+    val doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa doença.")
 
     doc.sentences(0).chunks.get(0) should be ("B-NP")
     doc.sentences(0).chunks.get(1) should be ("B-VP")
@@ -141,9 +141,9 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
 
     doc = proc.annotate("Cultivo intensivo de certas culturas será causado pelo encurtamento da disponibilidade do solo.")
     //println("Basic universal dependencies:")
-    //println(doc.sentences.head.universalBasicDependencies.get)
+    println(doc.sentences.head.universalBasicDependencies.get)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 1, "amod") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 4, "nmod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 3, "nmod") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 0, "nsubj:pass") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 5, "aux:pass") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 9, "obl") should be(true)
