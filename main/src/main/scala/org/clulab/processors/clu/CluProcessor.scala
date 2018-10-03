@@ -278,6 +278,7 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
 
   // overrided this because lemmatization depends on POS for portuguese
   override def annotate(doc:Document): Document = {
+    cheapLemmatize(doc)
     tagPartsOfSpeech(doc)
     lemmatize(doc)
     recognizeNamedEntities(doc)
@@ -289,17 +290,42 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
     doc
   }
 
+  // TODO:
+  // make sure we are using the correct type of lemmas before running tagPartsOfSpeech(doc)
+  // if we run tagPartsOfSpeech(doc) after lemmatize() and not after cheapLemmatize(doc)
+  // we will get wrong results
+
+  // generate cheap lemmas with the word in lower case for PartOfSpeech training/prediction only
+  def cheapLemmatize(doc:Document) {
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      // if not, generate cheap lemmas
+      val lemmas = new Array[String](sent.size)
+      for (i <- sent.words.indices) {
+        lemmas(i) = sent.words(i).toLowerCase()
+        assert(lemmas(i).nonEmpty)
+      }
+      sent.lemmas = Some(lemmas)
+    }
+  }
+
   /** Lematization; modifies the document in place */
   override def lemmatize(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
-      val lemmas = new Array[String](sent.size)
-      for(i <- sent.words.indices) {
-        lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i), Some(sent.tags.get(i)) )
-        assert(lemmas(i).nonEmpty)
+      // check if sentence tags were defined
+      // if not, generate cheap lemmas
+      if (sent.tags.isDefined) {
+        //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
+        val lemmas = new Array[String](sent.size)
+        for (i <- sent.words.indices) {
+          lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i), Some(sent.tags.get(i)))
+          assert(lemmas(i).nonEmpty)
+        }
+        sent.lemmas = Some(lemmas)
+      } else {
+        cheapLemmatize(doc)
       }
-      sent.lemmas = Some(lemmas)
     }
   }
 

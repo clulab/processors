@@ -14,18 +14,14 @@ import org.slf4j.{Logger, LoggerFactory}
   * Date: 3/24/17
   */
 class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() with FirstPassLabelsReader {
-  var skipLemmas = false
+  var lang: String = "en"
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int): Unit = {
     val fe = new FeatureExtractor(sentence, offset, features)
 
     for(offset <- List(-2, -1, 0, 1, 2)) {
       fe.word(offset)
-      if (skipLemmas == false) {
-        fe.lemma(offset)
-      } else {
-        fe.cheapLemma(offset)
-      }
+      fe.lemma(offset)
       fe.casing(offset)
       fe.suffixes(offset, 1, 3)
       fe.prefixes(offset, 1, 3)
@@ -64,17 +60,24 @@ object PartOfSpeechTagger {
   }
   
   def main(args:Array[String]) {
+    var lang = "en"
     val props = StringUtils.argsToProperties(args)
     val (wordPos, tagPos) = if (props.containsKey("conllu"))
       (ColumnsToDocument.WORD_POS_CONLLU, ColumnsToDocument.TAG_POS_CONLLU)
     else
       (ColumnsToDocument.WORD_POS_CONLLX, ColumnsToDocument.TAG_POS_CONLLX)
 
+    if(props.containsKey("lang")) {
+      lang = props.getProperty("lang")
+    }
+
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"),
         wordPos = wordPos, labelPos = tagPos,
         ColumnsToDocument.setTags,
-        ColumnsToDocument.annotateLemmas)
+        ColumnsToDocument.annotateLemmas,
+        false,
+        lang)
       val tagger = new PartOfSpeechTagger
 
       if(props.containsKey("order")) {
@@ -85,10 +88,6 @@ object PartOfSpeechTagger {
       // if undefined, it uses a single pass MEMM
       if(props.containsKey("bi")) {
         tagger.numFoldsFirstPass = props.getProperty("bi").toInt
-      }
-
-      if(props.containsKey("skiplemmas")) {
-        tagger.skipLemmas = true
       }
 
       tagger.train(List(doc).iterator)
@@ -108,7 +107,10 @@ object PartOfSpeechTagger {
           wordPos = wordPos,
           labelPos = tagPos,
           ColumnsToDocument.setTags,
-          ColumnsToDocument.annotateLemmas)
+          ColumnsToDocument.annotateLemmas,
+          false,
+          lang
+        )
         new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
       }
     }
