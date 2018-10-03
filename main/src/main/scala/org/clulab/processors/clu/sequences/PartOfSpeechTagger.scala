@@ -14,7 +14,6 @@ import org.slf4j.{Logger, LoggerFactory}
   * Date: 3/24/17
   */
 class PartOfSpeechTagger() extends BiMEMMSequenceTagger[String, String]() with FirstPassLabelsReader {
-  var lang: String = "en"
 
   def featureExtractor(features:Counter[String], sentence: Sentence, offset:Int): Unit = {
     val fe = new FeatureExtractor(sentence, offset, features)
@@ -62,6 +61,7 @@ object PartOfSpeechTagger {
   def main(args:Array[String]) {
     var lang = "en"
     val props = StringUtils.argsToProperties(args)
+    
     val (wordPos, tagPos) = if (props.containsKey("conllu"))
       (ColumnsToDocument.WORD_POS_CONLLU, ColumnsToDocument.TAG_POS_CONLLU)
     else

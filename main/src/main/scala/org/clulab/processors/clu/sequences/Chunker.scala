@@ -58,13 +58,20 @@ object Chunker {
   }
 
   def main(args:Array[String]) {
+    var lang = "en"
     val props = StringUtils.argsToProperties(args)
+
+    if(props.containsKey("lang")) {
+      lang = props.getProperty("lang")
+    }
 
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"),
         wordPos = 0, labelPos = 2,
         ColumnsToDocument.setChunks,
-        ColumnsToDocument.annotateLemmmaTags)
+        ColumnsToDocument.annotateLemmmaTags,
+        false,
+        lang)
       val tagger = new Chunker
 
       // how many folds to use in the first pass, for a bi-directional model
@@ -92,7 +99,9 @@ object Chunker {
         val doc = ColumnsToDocument.readFromFile(props.getProperty("test"),
           wordPos = 0, labelPos = 2,
           ColumnsToDocument.setChunks,
-          ColumnsToDocument.annotateLemmmaTags)
+          ColumnsToDocument.annotateLemmmaTags,
+          false,
+          lang)
         new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
       }
     }
