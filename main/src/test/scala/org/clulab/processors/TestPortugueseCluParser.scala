@@ -16,9 +16,10 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"PT Bosque UD performance: $las, $uas")
     reader.close()
-    las should be > 0.880 // 0.81 (true performance when not trained on test)
-    uas should be > 0.904 // 0.84 (true performance when not trained on test)
+    las should be > 0.880 // 0.821 (true performance when not trained on test)
+    uas should be > 0.904 // 0.860 (true performance when not trained on test)
   }
+
 
   "PortugueseCluProcessor" should "parse GSD with an accuracy over 71%" in {
     val model = procUniversal.depParser
@@ -31,8 +32,8 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     // las should be > 0.71
     // uas should be > 0.76
     // Bosque only (train+test+dev)
-    las should be > 0.678
-    uas should be > 0.792
+    las should be > 0.680 // 0.678 (true performance when not trained on test)
+    uas should be > 0.795 // 0.792 (true performance when not trained on test)
   }
 
   "PortugueseCluProcessor" should "parse PUD with an accuracy over 61%" in {
@@ -42,7 +43,7 @@ class TestPortugueseCluParser extends FlatSpec with Matchers {
     val (las, uas) = EvaluateMalt.evaluate(model, reader)
     println(s"PT PUD UD performance: $las, $uas")
     reader.close()
-    las should be > 0.722
-    uas should be > 0.781
+    las should be > 0.724 // 0.722 (true performance when not trained on test)
+    uas should be > 0.783 // 0.781 (true performance when not trained on test)
   }
 }
