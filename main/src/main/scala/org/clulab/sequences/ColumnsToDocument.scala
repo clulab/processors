@@ -24,6 +24,7 @@ object ColumnsToDocument {
   val TAG_POS_CONLLU = 3
 
   var proc:Processor = new CluProcessor()
+  var prevLang: String = "en"
 
   def readFromFile(fn:String,
                    wordPos:Int = WORD_POS_CONLLX,
@@ -35,15 +36,18 @@ object ColumnsToDocument {
                   ): Document = {
 
     // redefine proc acording to the language used
-    if (lang == "pt"){
-      println("Using Portuguese processors")
-      this.proc = new PortugueseCluProcessor()
-    } else if(lang == "es") {
-      println("Using Spanish processors")
-      this.proc = new SpanishCluProcessor()
-    } else {
-      println("Using English processors")
-      this.proc = new CluProcessor()
+    if (lang != prevLang) {
+      if (lang == "pt") {
+        println("Using Portuguese processors")
+        this.proc = new PortugueseCluProcessor()
+      } else if (lang == "es") {
+        println("Using Spanish processors")
+        this.proc = new SpanishCluProcessor()
+      } else {
+        println("Using English processors")
+        this.proc = new CluProcessor()
+      }
+      this.prevLang = lang
     }
 
     val source = Source.fromFile(fn)
@@ -139,6 +143,7 @@ object ColumnsToDocument {
     annotate(d)
 
     d
+
   }
 
   def setTags(s:Sentence, tags:Array[String]): Unit = {
