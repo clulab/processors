@@ -273,10 +273,10 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
   override def annotate(doc:Document): Document = {
     cheapLemmatize(doc)
     tagPartsOfSpeech(doc)
-    lemmatize(doc)
     recognizeNamedEntities(doc)
     parse(doc)
     chunking(doc)
+    lemmatize(doc)
     resolveCoreference(doc)
     discourse(doc)
     doc.clear()
