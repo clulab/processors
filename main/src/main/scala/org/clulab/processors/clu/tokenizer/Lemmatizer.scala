@@ -13,9 +13,8 @@ trait Lemmatizer {
 }
 
 class PortugueseLemmatizer extends Lemmatizer {
+  val lemmatizer = new LemmatizerPT()
   override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
-    // get lemmatizer object from LemPORT using singleton
-    val lemmatizer = LemmatizerPT.getInstance();
     // get the lemma
     val lemma = lemmatizer.lemmatize(word, pos.get)
     lemma
