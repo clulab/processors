@@ -6,7 +6,7 @@ import scala.collection.mutable
 import scala.util.matching.Regex
 import uk.ac.susx.informatics.Morpha
 import EnglishLemmatizer._
-import org.lemport.lemmatizer.lemma.{LemmatizeException, Lemmatizer => LemmatizerPT}
+import lemport.lemma.{ LemmatizeException, Lemmatizer => LemmatizerPT }
 
 trait Lemmatizer {
   def lemmatizeWord(word:String, pos: Option[String] = None):String
