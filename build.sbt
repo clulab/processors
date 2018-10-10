@@ -7,6 +7,7 @@ lazy val commonSettings = Seq(
   scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation"),
   parallelExecution in Test := false,
   scalacOptions in (Compile, doc) += "-no-link-warnings", // suppresses problems with scaladoc @throws links
+  fork in Test := true,
 
   //
   // publishing settings
