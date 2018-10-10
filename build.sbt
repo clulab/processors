@@ -8,6 +8,8 @@ lazy val commonSettings = Seq(
   parallelExecution in Test := false,
   scalacOptions in (Compile, doc) += "-no-link-warnings", // suppresses problems with scaladoc @throws links
   fork := true,
+  // avoid OOM errors on travis when forking JVM
+  parallelExecution in Test := false,
 
   //
   // publishing settings
