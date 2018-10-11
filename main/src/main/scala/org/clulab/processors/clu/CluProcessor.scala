@@ -1,6 +1,6 @@
 package org.clulab.processors.clu
 
-import org.clulab.processors.clu.sequences.{Chunker, NamedEntityRecognizer, PartOfSpeechTagger}
+import org.clulab.processors.clu.sequences.{Chunker, NamedEntityRecognizer, PartOfSpeechTagger, PortuguesePOSPostProcessor}
 import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, Processor, Sentence}
@@ -63,6 +63,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   lazy val posPostProcessor: Option[SentencePostProcessor] =
     getArgString(s"$prefix.pos.post.type", Some("none")) match {
       case "bio" => Some(new BioPOSPostProcessor())
+      case "PT" => Some(new PortuguesePOSPostProcessor())
       case "none" => None
       case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.pos.post.type!")
     }
