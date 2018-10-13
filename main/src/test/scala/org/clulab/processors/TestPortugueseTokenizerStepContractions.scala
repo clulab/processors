@@ -490,6 +490,173 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     sents(1).endPosition should be (5)
   }
 
+  it should "work for mesocliticos with 2 parts" in {
+    var sents = getContractedForm("confirma-se")
+    sents(0).word should be ("confirma")
+    sents(1).word should be ("se")
+    sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (8)
+    sents(1).beginPosition should be (9)
+    sents(1).endPosition should be (11)
+
+    sents = getContractedForm("acariciar-lhe")
+    sents(0).word should be ("acariciar")
+    sents(1).word should be ("lhe")
+    sents(0).beginPosition should be (0)
+    sents(0).endPosition should be (9)
+    sents(1).beginPosition should be (10)
+    sents(1).endPosition should be (13)
+
+    sents = getContractedForm("arriscar-me")
+    sents(0).word should be ("arriscar")
+    sents(1).word should be ("me")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (9)
+
+    sents = getContractedForm("precisamos medi-lo")
+    sents(0).word should be ("precisamos")
+    sents(1).word should be ("medi")
+    sents(2).word should be ("lo")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (11)
+    sents(2).beginPosition should be (16)
+
+    sents = getContractedForm("acode-nos")
+    sents(0).word should be ("acode")
+    sents(1).word should be ("nos")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (6)
+
+    sents = getContractedForm("something-o")
+    sents(0).word should be ("something")
+    sents(1).word should be ("o")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-la")
+    sents(0).word should be ("something")
+    sents(1).word should be ("la")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-los")
+    sents(0).word should be ("something")
+    sents(1).word should be ("los")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-a")
+    sents(0).word should be ("something")
+    sents(1).word should be ("a")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-lhes")
+    sents(0).word should be ("something")
+    sents(1).word should be ("lhes")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-os")
+    sents(0).word should be ("something")
+    sents(1).word should be ("os")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-las")
+    sents(0).word should be ("something")
+    sents(1).word should be ("las")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-as")
+    sents(0).word should be ("something")
+    sents(1).word should be ("as")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-no")
+    sents(0).word should be ("something")
+    sents(1).word should be ("no")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-na")
+    sents(0).word should be ("something")
+    sents(1).word should be ("na")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-nas")
+    sents(0).word should be ("something")
+    sents(1).word should be ("nas")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-te")
+    sents(0).word should be ("something")
+    sents(1).word should be ("te")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+
+    sents = getContractedForm("something-vos")
+    sents(0).word should be ("something")
+    sents(1).word should be ("vos")
+    sents(0).beginPosition should be (0)
+    sents(1).beginPosition should be (10)
+  }
+
+
+  it should "work for mesocliticos with 3 parts" in {
+    var sents = getContractedForm("ver-se-á")
+    sents(0).word should be("verá")
+    sents(1).word should be("se")
+    sents(0).beginPosition should be(0)
+    sents(0).endPosition should be(3)
+    sents(1).beginPosition should be(4)
+    sents(1).endPosition should be(6)
+
+    sents = getContractedForm("permitir-lhe-ia")
+    sents(0).word should be("permitiria")
+    sents(1).word should be("lhe")
+    sents(0).beginPosition should be(0)
+    sents(0).endPosition should be(8)
+    sents(1).beginPosition should be(9)
+    sents(1).endPosition should be(12)
+
+    // this needs a lemmatizer to work
+//    sents = getContractedForm("torná-la-ia")
+//    sents(0).word should be("tornaria")
+//    sents(1).word should be("me")
+//    sents(0).beginPosition should be(0)
+//    sents(1).beginPosition should be(6)
+
+    sents = getContractedForm("parecer-me-ia")
+    sents(0).word should be("pareceria")
+    sents(1).word should be("me")
+    sents(0).beginPosition should be(0)
+    sents(1).beginPosition should be(8)
+
+    sents = getContractedForm("seguir-se-ia")
+    sents(0).word should be("seguiria")
+    sents(1).word should be("se")
+    sents(0).beginPosition should be(0)
+    sents(1).beginPosition should be(7)
+
+    sents = getContractedForm("juntar-se-ão")
+    sents(0).word should be("juntarão")
+    sents(1).word should be("se")
+    sents(0).beginPosition should be(0)
+    sents(1).beginPosition should be(7)
+
+    // this is a dictionary based example
+//    sents = getContractedForm("ver-se-é")
+//    sents(0).word should be("verá")
+//    sents(1).word should be("se")
+//    sents(0).beginPosition should be(0)
+//    sents(1).beginPosition should be(4)
+  }
+
   def getContractedForm(s: String): Array[RawToken] = {
     // fake lexer
     // split string
