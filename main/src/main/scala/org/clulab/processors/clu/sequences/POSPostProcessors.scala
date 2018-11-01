@@ -16,8 +16,31 @@ class PortuguesePOSPostProcessor extends SentencePostProcessor {
     for(i <- sentence.indices) {
       val word = words(i)
       val tag = tags(i)
+      val lower = word.toLowerCase()
 
-      // TODO: add postproc operations here
+      word match {
+        case adj if lower == "normovolêmica" => tags(i) = "ADJ"
+        case adj if lower == "autóloga" => tags(i) = "ADJ"
+        case adj if lower == "lática" => tags(i) = "ADJ"
+        case adj if lower == "protéica" => tags(i) = "ADJ"
+
+        case adj if lower == "cardiovascular" => tags(i) = "ADJ"
+        case adj if lower == "vascular" => tags(i) = "ADJ"
+        case adj if lower == "foliar" => tags(i) = "ADJ"
+
+        case noun if lower == "câncer" => tags(i) = "NOUN"
+        case noun if lower == "aminoácido" => tags(i) = "NOUN"
+        case noun if lower == "aminoácidos" => tags(i) = "NOUN"
+
+        case noun if lower == "béquer" => tags(i) = "NOUN"
+        case noun if lower == "açúcar" => tags(i) = "NOUN"
+        case noun if lower == "amplificador" => tags(i) = "NOUN"
+
+        case "-LRB-" => tags(i) = "PUNCT"
+        case "-RRB-" => tags(i) = "PUNCT"
+
+        case _ => ()
+      }
     }
   }
 }
