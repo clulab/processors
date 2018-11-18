@@ -89,7 +89,7 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
 
     println(doc.sentences.head.universalBasicDependencies.get)
 
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "appos") should be (true) 
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "appos") should be (true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(16, 18, "appos") should be (true)
 
   }
