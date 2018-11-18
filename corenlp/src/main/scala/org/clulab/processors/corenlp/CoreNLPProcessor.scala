@@ -123,6 +123,13 @@ class CoreNLPProcessor(
     val constraints:java.util.List[ParserConstraint] = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
     val words:java.util.List[CoreLabel] = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
 
+    /*
+    println("INPUT TO CONSTITUENT PARSER:")
+    for(i <- 0 until words.size()) {
+      println(i + ": " + words.get(i).word())
+    }
+    */
+
     var tree:StanfordTree = null
 
     //

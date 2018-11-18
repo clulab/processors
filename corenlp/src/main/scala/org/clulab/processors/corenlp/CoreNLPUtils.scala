@@ -1,19 +1,23 @@
 package org.clulab.processors.corenlp
 
 import java.util
+
 import scala.collection.JavaConverters._
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
-import edu.stanford.nlp.ling.CoreAnnotations.{TokensAnnotation, IndexAnnotation}
+import edu.stanford.nlp.ling.CoreAnnotations.{IndexAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.semgraph.SemanticGraph
 import edu.stanford.nlp.trees.SemanticHeadFinder
-import edu.stanford.nlp.trees.TreeCoreAnnotations.{TreeAnnotation, BinarizedTreeAnnotation}
+import edu.stanford.nlp.trees.TreeCoreAnnotations.{BinarizedTreeAnnotation, TreeAnnotation}
 import edu.stanford.nlp.util.{ArrayCoreMap, CoreMap}
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
+import org.clulab.processors.clu.tokenizer.TokenizerStepNormalization
+
 import scala.collection.JavaConverters._
 
 /**
@@ -34,11 +38,8 @@ object CoreNLPUtils {
     val processedWords = new util.ArrayList[CoreLabel]()
     for(w <- words.asScala) {
       val nw = new CoreLabel(w)
-      if(nw.word() == "(") {
-        setWord(nw, "-LRB-")
-      }
-      else if(nw.word() == ")") {
-        setWord(nw, "-RRB-")
+      if(TokenizerStepNormalization.PARENS.contains(nw.word())) {
+        setWord(nw, TokenizerStepNormalization.PARENS(nw.word()))
       }
       processedWords.add(nw)
     }

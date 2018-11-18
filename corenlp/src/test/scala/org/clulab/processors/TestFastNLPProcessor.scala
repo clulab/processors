@@ -81,4 +81,16 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
     entities.size >= 2 should be (true)
     entities.exists { entity => entity != entities.head } should be (false)
   }
+
+  it should "run the dependency parser correctly on texts with parentheses" in {
+    val doc = proc.mkDocumentFromSentences(List("the tyrosine phosphorylation of pp60(c-src) is closely associated with the activation of phosphatidylinositol 3-kinase (PIK)."), keepText = false)
+    proc.annotate(doc)
+    doc.clear()
+
+    println(doc.sentences.head.universalBasicDependencies.get)
+
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "appos") should be (true) 
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(16, 18, "appos") should be (true)
+
+  }
 }
