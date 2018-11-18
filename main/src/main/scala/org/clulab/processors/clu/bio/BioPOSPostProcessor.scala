@@ -3,6 +3,8 @@ package org.clulab.processors.clu.bio
 import org.clulab.processors.Sentence
 import org.clulab.processors.clu.SentencePostProcessor
 
+import scala.util.matching.Regex
+
 /**
   * Fixes some common POS tagging mistakes in the bio domain (in place)
   *
@@ -78,10 +80,10 @@ class BioPOSPostProcessor extends SentencePostProcessor {
       //
       for(i <- sentence.indices) {
         val text = sentence.words(i)
-        text match {
-          case "(" => tags(i) = "-LRB-"
-          case ")" => tags(i) = "-RRB-"
-          case _ =>
+        if(LEFT_PARENS.findFirstMatchIn(text).nonEmpty) {
+          tags(i) = "-LRB-"
+        } else if(RIGHT_PARENS.findFirstMatchIn(text).nonEmpty) {
+          tags(i) = "-RRB-"
         }
       }
 
@@ -95,4 +97,7 @@ class BioPOSPostProcessor extends SentencePostProcessor {
       }
     }
   }
+
+  val LEFT_PARENS: Regex = """^(\-LRB\-)|(\-LSB\-)|(-LCB-)|\(|\[|\{$""".r
+  val RIGHT_PARENS: Regex = """^(\-RRB\-)|(\-RSB\-)|(-RCB-)|\)|\]|\}$""".r
 }
