@@ -360,57 +360,9 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
 object Word2Vec {
   val logger = LoggerFactory.getLogger(classOf[Word2Vec])
 
-  /**
-   * Normalizes words for word2vec
-   * @param uw A word (NOT lemma)
-   * @return The normalized form of the word
-   */
-  def sanitizeWord(uw:String, keepNumbers:Boolean = true):String = {
-    val w = uw.toLowerCase()
+  def sanitizeWord(uw:String, keepNumbers:Boolean = true):String = Word2VecUtils.sanitizeWord(uw, keepNumbers)
 
-    // skip parens from corenlp
-    if(w == "-lrb-" || w == "-rrb-" || w == "-lsb-" || w == "-rsb-") {
-      return ""
-    }
-
-    // skip URLS
-    if(w.startsWith("http") || w.contains(".com") || w.contains(".org")) //added .com and .org to cover more urls (becky)
-      return ""
-
-    // normalize numbers to a unique token
-    if(isNumber(w)) {
-      if(keepNumbers) return "xnumx"
-      else return ""
-    }
-
-    // remove all non-letters; convert letters to lowercase
-    val os = new collection.mutable.StringBuilder()
-    var i = 0
-    while(i < w.length) {
-      val c = w.charAt(i)
-      // added underscore since it is our delimiter for dependency stuff...
-      if(Character.isLetter(c) || c == '_') os += c
-      i += 1
-    }
-    os.toString()
-  }
-
-  def isNumber(w:String):Boolean = {
-    var i = 0
-    var foundDigit = false
-    while(i < w.length) {
-      val c = w.charAt(i)
-      if(! Character.isDigit(c) &&
-        c != '-' && c != '+' &&
-        c != ',' && c != '.' &&
-        c != '/' && c != '\\')
-        return false
-      if(Character.isDigit(c))
-        foundDigit = true
-      i += 1
-    }
-    foundDigit
-  }
+  def isNumber(w:String):Boolean = Word2VecUtils.isNumber(w)
 
   /** Normalizes this vector to length 1, in place */
   def norm(weights:Array[Double]) {
