@@ -2,7 +2,8 @@ package org.clulab.embeddings.word2vec
 
 import java.io.{FileInputStream, FileOutputStream, ObjectOutputStream}
 
-import org.clulab.utils.{ClassLoaderObjectInputStream, Closer, Sourcer}
+import org.clulab.utils.Closer.AutoCloser
+import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
 
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -29,7 +30,7 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     // Sort the map entries (word -> row) by row and then keep just the word.
     val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
-    Closer.autoClose(new ObjectOutputStream(new FileOutputStream(filename))) { objectOutputStream =>
+    new ObjectOutputStream(new FileOutputStream(filename)).autoClose { objectOutputStream =>
       // Writing is performed in two steps so that the parts can be
       // processed separately when read back in.
       objectOutputStream.writeObject(words)
@@ -152,10 +153,10 @@ object CompactWord2Vec {
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
-    Closer.autoClose(
+    (
       if (resource) Sourcer.sourceFromResource(filename)
       else Sourcer.sourceFromFile(filename)
-    ) { source =>
+    ).autoClose { source =>
       val lines = source.getLines()
 
       buildMatrix(lines)
@@ -170,7 +171,7 @@ object CompactWord2Vec {
     //    (map, array)
 
     // This is "unrolled" for performance purposes.
-    Closer.autoClose(new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new FileInputStream(filename))) { objectInputStream =>
+    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new FileInputStream(filename)).autoClose { objectInputStream =>
       val map: MapType = new MutableMapType()
 
     {

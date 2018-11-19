@@ -1,17 +1,20 @@
 package org.clulab.utils
 
+import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
 
 object Closer {
 
-  def close[Closeable <: {def close() : Unit}](resource: => Closeable): Unit = resource.close()
+  protected type Closeable = {def close() : Unit}
+
+  def close[Resource <: Closeable](resource: => Resource): Unit = resource.close()
 
   // This is so that exceptions caused during close are caught, but don't
   // prevent the registration of any previous exception.
   // See also https://medium.com/@dkomanov/scala-try-with-resources-735baad0fd7d.
   // Others have resource: => Closeable, but I want the resource evaluated beforehand
   // so that it doesn't throw an exception before there is anything to close.
-  def autoClose[Closeable <: {def close() : Unit}, Result](resource: Closeable)(function: Closeable => Result): Result = {
+  def autoClose[Resource <: Closeable, Result](resource: Resource)(function: Resource => Result): Result = {
 
     val (result: Option[Result], exception: Option[Throwable]) = try {
       (Some(function(resource)), None)
@@ -49,5 +52,11 @@ object Closer {
           throw e
       }
     }
+  }
+
+  // Allow for alternative syntax closeable.autoClose { closeable => ... }
+  implicit class AutoCloser[Resource <: Closer.Closeable](resource: Resource) {
+
+    def autoClose[Result](function: Resource => Result): Result = Closer.autoClose(resource)(function)
   }
 }
