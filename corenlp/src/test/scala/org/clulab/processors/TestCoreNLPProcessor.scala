@@ -253,4 +253,17 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     //println(s"doc words ${doc.sentences.head.words.zipWithIndex.mkString(", ")}")
     doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 1, "nmod:poss") should be (true)
   }
+
+  it should "run the constituent parser correctly on texts with parentheses" in {
+    val doc = proc.mkDocumentFromSentences(List("the tyrosine phosphorylation of pp60(c-src) is closely associated with the activation of phosphatidylinositol 3-kinase (PIK)."), keepText = false)
+    proc.parse(doc)
+    doc.clear()
+
+    println(doc.sentences.head.universalBasicDependencies.get)
+
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "dep") should be (true) // this probably should be "appos", but oh well...
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(16, 18, "appos") should be (true)
+
+  }
+
 }

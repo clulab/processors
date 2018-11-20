@@ -18,6 +18,9 @@ import ShallowNLPProcessor._
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer, TokenizerStep}
 
+import scala.collection.JavaConverters._
+import scala.util.matching.Regex
+
 /**
   * A Processor using only shallow analysis: tokenization, lemmatization, POS tagging, and NER.
   * Tokenization is ours. All others implemented using Stanford's CoreNLP tools.
@@ -135,7 +138,24 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
    * This is useful for domain-specific corrections
    * @param annotation The CoreNLP annotation
    */
-  def postprocessTags(annotation:Annotation) { }
+  def postprocessTags(annotation:Annotation): Unit = {
+    val sas = annotation.get(classOf[SentencesAnnotation]).asScala
+
+    // Make sure parens are tagged correctly
+    sas.foreach{ sa =>
+      val tas = sa.get(classOf[TokensAnnotation]).asScala.toList.toArray
+      for(i <- tas.indices) {
+        if(LEFT_PARENS.findFirstMatchIn(tas(i).word()).nonEmpty) {
+          tas(i).setTag("-LRB-")
+        } else if(RIGHT_PARENS.findFirstMatchIn(tas(i).word()).nonEmpty) {
+          tas(i).setTag("-RRB-")
+        }
+      }
+    }
+  }
+
+  val LEFT_PARENS: Regex = """^(\-LRB\-)|(\-LSB\-)|(-LCB-)|\(|\[|\{$""".r
+  val RIGHT_PARENS: Regex = """^(\-RRB\-)|(\-RSB\-)|(-RCB-)|\)|\]|\}$""".r
 
   def tagPartsOfSpeech(doc:Document) {
     val annotation = basicSanityCheck(doc)

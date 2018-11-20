@@ -353,6 +353,25 @@ class TestBioNLPProcessor extends FlatSpec with Matchers {
     es(10) should be ("O")
   }
 
+  it should "recognize correct NEs in text with parentheses" in {
+    val doc = proc.mkDocument("Moreover, in von Willebrand factor-stimulated platelets, the tyrosine phosphorylation of pp60(c-src) is closely associated with the activation of phosphatidylinositol 3-kinase (PIK), and two adhesion receptors, glycoprotein (Gp)Ib and GpIIb/IIIa(alpha-IIb-beta(3)), are involved. ")
+    annotate(doc)
+
+    val ws = doc.sentences(0).words
+    val es = doc.sentences(0).entities.get
+
+    for(i <- doc.sentences(0).indices) {
+      println(i + ": " + ws(i) + " " + es(i))
+    }
+
+    ws(13) should be ("pp60")
+    es(13) should be ("B-Gene_or_gene_product")
+    es(14) should be ("O")
+    ws(15) should be ("c-src")
+    es(15) should be ("B-Gene_or_gene_product")
+    es(16) should be ("O")
+  }
+
   def annotate(doc:Document) {
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
