@@ -3,7 +3,7 @@ package org.clulab.struct
 import org.clulab.processors.Processor
 
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 
 /**
  * A more efficient trie implementation, where the first layer is stored as a hash map for efficiency (the rest are the usual trees)
@@ -31,51 +31,59 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
   }
 
   def add(tokens:Array[String]): Unit = {
-    if(tokens == null || tokens.length == 0) {
-      // nothing to see; move on
-      return
+    if (tokens != null && tokens.length > 0) {
+      // first layer
+      val token = in(tokens.head)
+      val tree = entries.get(token).map { tree =>
+        tree.completePath = tree.completePath || tokens.length == 1
+        tree
+      }.getOrElse {
+        val tree = new TrieNode(token, tokens.length == 1)
+
+        entries.put(token, tree)
+        tree
+      }
+
+      // following layers
+      if (tokens.length > 1)
+        add(tree, tokens, 1)
     }
-
-    // first layer
-    val token = in(tokens.head)
-    // If orElse is hit, a new TrieNode is definitely needed.
-    val tree = entries.getOrElse(token, new TrieNode(token, tokens.length == 1))
-
-    tree.completePath = tree.completePath || tokens.length == 1
-    entries.put(token, tree)
-    // following layers
-    if(tokens.length > 1) add(tree, tokens, 1)
   }
 
   private def add(tree:TrieNode, tokens:Array[String], offset:Int): Unit = {
     // Don't necessarily need a new one if it is found in the tree already
-    val child = addTokenToTree(tree, new TrieNode(in(tokens(offset)), offset == tokens.length - 1))
+    val child = addTokenToTree(tree, in(tokens(offset)), offset == tokens.length - 1)
 
-    if(offset < tokens.length - 1) {
+    if (offset < tokens.length - 1)
       add(child, tokens, offset + 1)
-    }
   }
 
-  private def addTokenToTree(parent:TrieNode, newChild:TrieNode):TrieNode = {
+  private def addTokenToTree(parent: TrieNode, newToken: String, newCompletePath: Boolean): TrieNode = {
     val children = parent.children.getOrElse {
       val newChildren = new ListBuffer[TrieNode]
+
       parent.children = Some(newChildren)
       newChildren
     }
 
-    for(i <- children.indices) {
-      val child = children(i)
-      val compare = newChild.token.compareTo(child.token)
-      if(compare < 0) {
-        children.insert(i, newChild) // Now is when a new one is needed
+    children.zipWithIndex.foreach { case (child, index) =>
+      val compare = newToken.compareTo(child.token)
+
+      if (compare < 0) {
+        val newChild = new TrieNode(newToken, newCompletePath)
+
+        children.insert(index, newChild)
         return newChild
-      } else if(compare == 0) {
-        // this node already exists; just adjust the complete path flag, if necessary
-        child.completePath = child.completePath || newChild.completePath
+      }
+      else if (compare == 0) {
+        // This node already exists; just adjust the complete path flag, if necessary.
+        child.completePath = child.completePath || newCompletePath
         return child
       }
     }
-    // the new child is lexicographically "higher" than all existing children
+    // The new child is lexicographically "higher" than all existing children.
+    val newChild = new TrieNode(newToken, newCompletePath)
+
     children += newChild
     newChild
   }
@@ -93,8 +101,10 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
   private def findNormalized(sequence:Array[String], label:String, outsideLabel:String):Array[String] = {
     val labels = new Array[String](sequence.length)
     var offset = 0
-    while(offset < sequence.length) {
+
+    while (offset < sequence.length) {
       val span = findAt(sequence, offset)
+
       if (span > 0) {
         labels(offset) = "B-" + label
         offset += 1
@@ -102,7 +112,8 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
           labels(offset) = "I-" + label
           offset += 1
         }
-      } else {
+      }
+      else {
         labels(offset) = outsideLabel
         offset += 1
       }
@@ -149,16 +160,17 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
            startOffset: Int,
            currentSpanLength: Int,
            longestMatch: MutableNumber[Int]): Boolean = {
+    val currentOffset = startOffset + currentSpanLength
 
-    if (startOffset + currentSpanLength >= sequence.length)
+    if (currentOffset >= sequence.length)
       true
     else {
-      val comp = sequence(startOffset + currentSpanLength).compareTo(token)
+      val comp = token.compareTo(sequence(currentOffset))
 
       if (comp < 0)
-        true // This still seems backwards
+        false // The token is smaller, so don't stop but continue search for larger tokens.
       else if (comp > 0)
-        false
+        true // The token is already larger, so stop searching through tokens.
       else {
         if (completePath && currentSpanLength + 1 > longestMatch.value)
           longestMatch.value = currentSpanLength + 1

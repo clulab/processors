@@ -49,6 +49,17 @@ class TestHashTrie extends FlatSpec with Matchers {
     sameLabels(Array("B-hello", "I-hello", "I-hello", "I-hello"), labels)
   }
 
+  "the trie" should "make use of shouldStop" in {
+    val trie = new HashTrie()
+    trie.add(Array("this", "is", "a", "test"))
+    trie.add(Array("this", "is", "c", "test"))
+    trie.add(Array("this", "is", "d", "test"))
+
+    val labels = trie.find(Array("this", "is", "b", "test"), "hello", "o")
+
+    sameLabels(Array("o", "o", "o", "o"), labels)
+  }
+
   private def sameLabels(l1:Array[String], l2:Array[String]):Boolean = {
     if(l1.length != l2.length) return false
     for(i <- 0 until l1.length)
