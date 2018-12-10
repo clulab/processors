@@ -30,10 +30,11 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     internedS
   }
 
-  def add(tokens:Array[String]): Unit = {
+  def add(tokens: Array[String]): Unit = {
     if (tokens != null && tokens.length > 0) {
       // first layer
-      val token = in(tokens.head)
+      val inTokens = tokens.map(in) // Do them all at once so that trie doesn't need to
+      val token = inTokens.head
       val tree = entries.get(token).map { tree =>
         tree.completePath = tree.completePath || tokens.length == 1
         tree
@@ -44,48 +45,8 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
         tree
       }
 
-      // following layers
-      if (tokens.length > 1)
-        add(tree, tokens, 1)
+      tree.add(inTokens, 1)
     }
-  }
-
-  private def add(tree:TrieNode, tokens:Array[String], offset:Int): Unit = {
-    // Don't necessarily need a new one if it is found in the tree already
-    val child = addTokenToTree(tree, in(tokens(offset)), offset == tokens.length - 1)
-
-    if (offset < tokens.length - 1)
-      add(child, tokens, offset + 1)
-  }
-
-  private def addTokenToTree(parent: TrieNode, newToken: String, newCompletePath: Boolean): TrieNode = {
-    val children = parent.children.getOrElse {
-      val newChildren = new ListBuffer[TrieNode]
-
-      parent.children = Some(newChildren)
-      newChildren
-    }
-
-    children.zipWithIndex.foreach { case (child, index) =>
-      val compare = newToken.compareTo(child.token)
-
-      if (compare < 0) {
-        val newChild = new TrieNode(newToken, newCompletePath)
-
-        children.insert(index, newChild)
-        return newChild
-      }
-      else if (compare == 0) {
-        // This node already exists; just adjust the complete path flag, if necessary.
-        child.completePath = child.completePath || newCompletePath
-        return child
-      }
-    }
-    // The new child is lexicographically "higher" than all existing children.
-    val newChild = new TrieNode(newToken, newCompletePath)
-
-    children += newChild
-    newChild
   }
 
   /**
@@ -184,5 +145,44 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
         true
       }
     }
+  }
+
+  def add(tokens: Array[String], offset: Int): Unit = {
+    if (offset < tokens.length) {
+      // Don't necessarily need a new one if it is found in the tree already
+      val child = addTokenToTree(tokens(offset), offset == tokens.length - 1)
+
+      child.add(tokens, offset + 1)
+    }
+  }
+
+  private def addTokenToTree(newToken: String, newCompletePath: Boolean): TrieNode = {
+    val theChildren = children.getOrElse {
+      val newChildren = new ListBuffer[TrieNode]
+
+      children = Some(newChildren)
+      newChildren
+    }
+
+    theChildren.zipWithIndex.foreach { case (child, index) =>
+      val compare = newToken.compareTo(child.token)
+
+      if (compare < 0) {
+        val newChild = new TrieNode(newToken, newCompletePath)
+
+        theChildren.insert(index, newChild)
+        return newChild
+      }
+      else if (compare == 0) {
+        // This node already exists; just adjust the complete path flag, if necessary.
+        child.completePath = child.completePath || newCompletePath
+        return child
+      }
+    }
+    // The new child is lexicographically "higher" than all existing children.
+    val newChild = new TrieNode(newToken, newCompletePath)
+
+    theChildren += newChild
+    newChild
   }
 }
