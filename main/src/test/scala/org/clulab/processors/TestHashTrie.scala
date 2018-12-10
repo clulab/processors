@@ -38,6 +38,17 @@ class TestHashTrie extends FlatSpec with Matchers {
     trie.uniqueStrings.size should be (5)
   }
 
+  "the trie" should "sort and find the entries correctly" in {
+    val trie = new HashTrie()
+    trie.add(Array("this", "is", "a", "test"))
+    trie.add(Array("this", "is", "c", "test"))
+    trie.add(Array("this", "is", "b", "test"))
+
+    val labels = trie.find(Array("this", "is", "c", "test"), "hello", "o")
+
+    sameLabels(Array("B-hello", "I-hello", "I-hello", "I-hello"), labels)
+  }
+
   private def sameLabels(l1:Array[String], l2:Array[String]):Boolean = {
     if(l1.length != l2.length) return false
     for(i <- 0 until l1.length)
