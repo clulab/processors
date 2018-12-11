@@ -53,31 +53,36 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     * Generates BIO labels for this sequence when complete trie paths match
     * When multiple paths match, the longest one is kept
     */
-  def find(sequence:Array[String], label:String, outsideLabel:String):Array[String] = {
+  def find(sequence:Array[String], label:String, outsideLabel:String): Array[String] = {
     val casedSequence = if (caseInsensitive) sequence.map(_.toLowerCase) else sequence
 
     findNormalized(casedSequence, label, outsideLabel)
   }
 
-  private def findNormalized(sequence:Array[String], label:String, outsideLabel:String):Array[String] = {
+  private def findNormalized(sequence:Array[String], label:String, outsideLabel:String): Array[String] = {
+    lazy val bLabel = "B-" + label
+    lazy val iLabel = "I-" + label
     val labels = new Array[String](sequence.length)
+
     var offset = 0
+    def setNextLabel(value: String) = {
+      labels(offset) = value
+      offset += 1
+    }
+
+    // TODO, the labels shouldn't need to be built each time.  They can be specified in the constructor.
+    // Then also don't need to keep track of them in a tuple?
 
     while (offset < sequence.length) {
       val span = findAt(sequence, offset)
 
       if (span > 0) {
-        labels(offset) = "B-" + label
-        offset += 1
-        for (i <- 1 until span) {
-          labels(offset) = "I-" + label
-          offset += 1
-        }
+        setNextLabel(bLabel)
+        for (_ <- 1 until span)
+          setNextLabel(iLabel)
       }
-      else {
-        labels(offset) = outsideLabel
-        offset += 1
-      }
+      else
+        setNextLabel(outsideLabel)
     }
     labels
   }
@@ -87,7 +92,7 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
    * When multiple paths are found, the longest one is kept
    * Text must be normalized (i.e., case folding) BEFORE this call, if necessary!
    */
-  def findAt(sequenceNormalized:Array[String], offset:Int):Int = {
+  def findAt(sequenceNormalized: Array[String], offset: Int):Int = {
     entries.get(sequenceNormalized(offset)).map { tree =>
       val longestMatch = new MutableNumber[Int](0)
 

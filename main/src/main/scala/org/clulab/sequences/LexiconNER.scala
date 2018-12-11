@@ -30,28 +30,22 @@ import scala.collection.mutable
   */
 @SerialVersionUID(1000L)  
 class LexiconNER private (
-  val matchers:Array[(String, HashTrie)],
-  val knownCaseInsensitives:Set[String],
-  val useLemmas:Boolean,
-  val entityValidator: EntityValidator) extends Tagger[String] with Serializable {
+    val matchers: Array[(String, HashTrie)],
+    val knownCaseInsensitives: Set[String],
+    val useLemmas: Boolean,
+    val entityValidator: EntityValidator) extends Tagger[String] with Serializable {
+  protected val requiresCaseInsensitiveWords = matchers.exists { case (_, hashTrie) => hashTrie.caseInsensitive }
 
   /**
     * Matches the lexicons against this sentence
     * @param sentence The input sentence
     * @return An array of BIO notations the store the outcome of the matches
     */
-  def find(sentence:Sentence):Array[String] = {
-    val seq = findLongestMatch(sentence)
-    seq
-  }
+  def find(sentence:Sentence): Array[String] = findLongestMatch(sentence)
 
-  protected def getTokens(sentence:Sentence):Array[String] = {
-    if (useLemmas) {
-      sentence.lemmas.get
-    } else {
-      sentence.words
-    }
-  }
+  protected def getTokens(sentence:Sentence):Array[String] =
+      if (useLemmas) sentence.lemmas.get
+      else sentence.words
 
   /**
     * Finds the longest match across all matchers.
@@ -60,59 +54,38 @@ class LexiconNER private (
     */
   protected def findLongestMatch(sentence:Sentence):Array[String] = {
     val tokens = getTokens(sentence)
-    val caseInsensitiveWords = tokens.map(_.toLowerCase)
+    // This is only needed if at least one is case insensitive.
+    val caseInsensitiveWords = if (requiresCaseInsensitiveWords) tokens.map(_.toLowerCase) else tokens
+    val labels = new Array[String](tokens.length)
 
     var offset = 0
-    val labels = new ArrayBuffer[String]()
-    while(offset < tokens.length) {
-      // stores the spans found by all matchers
-      val spans = new Array[Int](matchers.length)
-
-      // attempt to match each category at this offset
-      for (i <- matchers.indices) {
-        spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, entityValidator)
-        // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
-      }
-
-      // pick the longest match
-      // solve ties by preferring earlier (higher priority) matchers
-      var bestSpanOffset = -1
-      var bestSpan = -1
-      for(i <- matchers.indices) {
-        if(spans(i) > bestSpan) {
-          bestSpanOffset = i
-          bestSpan = spans(i)
-        }
-      }
-
-      // found something!
-      if(bestSpanOffset != -1) {
-        assert(bestSpan > 0)
-
-        if(contentfulSpan(sentence, offset, bestSpan) && // does this look like a valid entity span?
-           entityValidator.validMatch(sentence, offset, offset + bestSpan)) { // domain-specific constraints on entities
-
-          val label = matchers(bestSpanOffset)._1
-          //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
-          labels += "B-" + label
-          for (_ <- 1 until bestSpan) {
-            labels += "I-" + label
-          }
-        } else {
-          for(_ <- 0 until bestSpan) {
-            labels += OUTSIDE_LABEL
-          }
-        }
-        offset += bestSpan
-        //println(s"Will continue matching starting at $offset")
-      } else {
-        labels += OUTSIDE_LABEL
-        offset += 1
-      }
+    def setNextLabel(value: String) = {
+      labels(offset) = value
+      offset += 1
     }
 
-    assert(labels.length == sentence.size)
-    labels.toArray
+    while (offset < tokens.length) {
+      val (span, index) = findAt(tokens, caseInsensitiveWords, offset)
+
+      if (span > 0) {
+        if (contentfulSpan(sentence, offset, span) && // does this look like a valid entity span?
+            entityValidator.validMatch(sentence, offset, offset + span)) { // domain-specific constraints on entities
+          val label = matchers(index)._1
+          val bLabel =  "B-" + label
+          val iLabel =  "I-" + label
+
+          setNextLabel(bLabel)
+          for (_ <- 1 until span)
+            setNextLabel(iLabel)
+        }
+        else
+          for (_ <- 0 until span)
+            setNextLabel(OUTSIDE_LABEL)
+      }
+      else
+        setNextLabel(OUTSIDE_LABEL)
+    }
+    labels
   }
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int):Boolean = {
@@ -132,19 +105,17 @@ class LexiconNER private (
     false
   }
   
-  protected def findAt(seq:Array[String],
-                       caseInsensitiveSeq:Array[String],
-                       matcher:HashTrie,
-                       offset:Int,
-                       validator:EntityValidator):Int = {
-    val span = if (matcher.caseInsensitive) {
-      matcher.findAt(caseInsensitiveSeq, offset)
-    } else {
-      matcher.findAt(seq, offset)
-    }
-    span
-  }
+  protected def findAt(seq: Array[String], caseInsensitiveSeq: Array[String], offset: Int): (Int, Int) = {
+    def findAt(matcher: HashTrie): Int =
+      matcher.findAt(if (matcher.caseInsensitive) caseInsensitiveSeq else seq, offset)
 
+    matchers.indices.foldLeft((0, -1)) { case ((bestSpan, bestIndex), index) =>
+      val span = findAt(matchers(index)._2)
+
+      if (span > bestSpan) (span, index)
+      else (bestSpan, bestIndex)
+    }
+  }
 }
 
 object LexiconNER {
@@ -389,6 +360,4 @@ object LexiconNER {
     }
     (characters, letters, digits, upperCaseLetters, spaces)
   }
-
 }
-
