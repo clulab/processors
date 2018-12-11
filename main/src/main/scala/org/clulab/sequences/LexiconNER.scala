@@ -91,18 +91,16 @@ class LexiconNER private (
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int):Boolean = {
     val (characters, letters, digits, upperCaseLetters, spaces) =
       LexiconNER.scanText(sentence.words, start, start + length)
-
     // a valid span must have letters > 0 and at least one of the other properties
-    if(letters > 0 &&
-       ( digits > 0 ||
-         upperCaseLetters > 0 ||
-         spaces > 0 ||
-         characters > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH ||
-         knownCaseInsensitives.contains(sentence.words(start)))) {
-      return true
-    }
+    val contentful = letters > 0 && (
+      digits > 0 ||
+      upperCaseLetters > 0 ||
+      spaces > 0 ||
+      characters > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH ||
+      knownCaseInsensitives.contains(sentence.words(start))
+    )
 
-    false
+    contentful
   }
   
   protected def findAt(seq: Array[String], caseInsensitiveSeq: Array[String], offset: Int): (Int, Int) = {
@@ -333,13 +331,18 @@ object LexiconNER {
   // Used by mergeLabels above
   private def overlap(dst:Array[String], src:Array[String], offset:Int):Boolean = {
     var position = offset
-    if(dst(position) != OUTSIDE_LABEL) return true
-    position += 1
-    while(position < src.length && src(position).startsWith("I-")) {
-      if(dst(position) != OUTSIDE_LABEL) return true
+
+    if (dst(position) != OUTSIDE_LABEL)
+      true
+    else {
       position += 1
+      while (position < src.length && src(position).startsWith("I-")) {
+        if (dst(position) != OUTSIDE_LABEL)
+          return true
+        position += 1
+      }
+      false
     }
-    false
   }
 
   def scanText(words:Array[String], start:Int, end:Int):(Int, Int, Int, Int, Int) = {

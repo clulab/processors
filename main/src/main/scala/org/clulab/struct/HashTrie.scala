@@ -65,7 +65,7 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     val labels = new Array[String](sequence.length)
 
     var offset = 0
-    def setNextLabel(value: String) = {
+    def setNextLabel(value: String): Unit = {
       labels(offset) = value
       offset += 1
     }
@@ -140,13 +140,8 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
       else {
         if (completePath && currentSpanLength + 1 > longestMatch.value)
           longestMatch.value = currentSpanLength + 1
-
-        if (children.isDefined) {
-          var shouldStop = false
-          for (child <- children.get if !shouldStop) { // Does not actually stop, but continues
-            shouldStop = child.find(sequence, startOffset, currentSpanLength + 1, longestMatch)
-          }
-        }
+        if (children.isDefined)
+          children.get.find(_.find(sequence, startOffset, currentSpanLength + 1, longestMatch))
         true
       }
     }
@@ -162,32 +157,40 @@ case class TrieNode(token:String, var completePath:Boolean, var children:Option[
   }
 
   private def addTokenToTree(newToken: String, newCompletePath: Boolean): TrieNode = {
-    val theChildren = children.getOrElse {
-      val newChildren = new ListBuffer[TrieNode]
+    if (children.isEmpty)
+      children = Some(new ListBuffer[TrieNode])
 
-      children = Some(newChildren)
-      newChildren
+    val someChildren = children.get
+    val (index, child) = {
+      // Attempt not to go through list twice by leaking matching child.
+      var foundChild: Option[TrieNode] = None
+      val index = someChildren.indexWhere { child =>
+        val comp = newToken.compareTo(child.token)
+        val found = comp <= 0
+
+        if (comp == 0)
+          foundChild = Some(child)
+        found
+      }
+      (index, foundChild)
     }
 
-    theChildren.zipWithIndex.foreach { case (child, index) =>
-      val compare = newToken.compareTo(child.token)
+    if (child.isDefined) {
+      val someChild = child.get
 
-      if (compare < 0) {
-        val newChild = new TrieNode(newToken, newCompletePath)
-
-        theChildren.insert(index, newChild)
-        return newChild
-      }
-      else if (compare == 0) {
-        // This node already exists; just adjust the complete path flag, if necessary.
-        child.completePath = child.completePath || newCompletePath
-        return child
-      }
+      // This node already exists; just adjust the complete path flag, if necessary.
+      someChild.completePath = someChild.completePath || newCompletePath
+      someChild
     }
-    // The new child is lexicographically "higher" than all existing children.
-    val newChild = new TrieNode(newToken, newCompletePath)
+    else {
+      val newChild = new TrieNode(newToken, newCompletePath)
 
-    theChildren += newChild
-    newChild
+      if (index >= 0)
+        someChildren.insert(index, newChild)
+      else
+        // The new child is lexicographically "higher" than all existing children.
+        someChildren += newChild
+      newChild
+    }
   }
 }
