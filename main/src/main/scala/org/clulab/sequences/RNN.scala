@@ -29,10 +29,14 @@ class RNN {
 
         // Note that this needs to be synchronized because the DyNet computational graph is a static variable...
         synchronized {
+          // predict probabilities for one sentence
           val probs = predictSentence(sentence)
           for (prob <- probs) logger.debug("Probs: " + prob.value().toVector())
 
+          // compute loss for this sentence
           val loss = sentenceLoss(sentence.map(_.get(1)), probs)
+
+          // backprop
           // TODO: backprop!
         }
       }
@@ -83,8 +87,10 @@ class RNN {
   def mkEmbedding(word: String):Expression = {
     val sanitized = Word2Vec.sanitizeWord(word)
     if(model.w2i.contains(sanitized))
+      // found the word in the known vocabulary
       Expression.lookup(model.lookupParameters, model.w2i(sanitized))
     else
+      // not found; return the embedding at position 0, which is reserved for unknown words
       Expression.lookup(model.lookupParameters, 0)
   }
 
