@@ -36,7 +36,10 @@ libraryDependencies ++= {
 
     // testing
     "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
-    "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test"
+    "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
+
+    // dynet
+    "org.clulab" %% "fatdynet" % "0.1.1-SNAPSHOT"
   )
 
 }
