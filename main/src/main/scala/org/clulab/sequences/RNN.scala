@@ -14,17 +14,17 @@ import scala.collection.mutable
 class RNN {
   var model:RNNParameters = _
 
-  def train(trainSentences:Array[Array[Row]]): Unit = {
+  def train(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
     val (w2i, t2i) = mkVocabs(trainSentences)
 
     logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
     logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
 
     initialize(w2i, t2i)
-    update(trainSentences:Array[Array[Row]])
+    update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
   }
 
-  def update(trainSentences: Array[Array[Row]]): Unit = {
+  def update(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
     val trainer = new SimpleSGDTrainer(model.parameters)
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -56,7 +56,30 @@ class RNN {
         ComputationGraph.backward(loss)
         trainer.update()
       }
+
+      dev(devSentences)
     }
+  }
+
+  def dev(devSentences:Array[Array[Row]]): Unit = {
+    var total = 0
+    var correct = 0
+
+    for(sent <- devSentences) {
+      val words = sent.map(_.get(0))
+      val golds = sent.map(_.get(1))
+
+      val preds = predict(words)
+      assert(golds.length == preds.length)
+      total += golds.length
+      for(e <- preds.zip(golds)) {
+        if(e._1 == e._2) {
+          correct += 1
+        }
+      }
+    }
+
+    logger.info("Accuracy on dev: " + correct.toDouble / total)
   }
 
   def sentenceLoss(tags:Iterable[String], probs:Iterable[Expression]): Expression = {
@@ -205,7 +228,7 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 1
+  val EPOCHS = 3
   val RANDOM_SEED = 2522620396l
   val EMBEDDING_SIZE = 200
   val RNN_STATE_SIZE = 50
@@ -214,9 +237,11 @@ object RNN {
 
   def main(args: Array[String]): Unit = {
     val trainFile = args(0)
+    val devFile = args(1)
     val trainSentences = ColumnReader.readColumns(trainFile)
+    val devSentences = ColumnReader.readColumns(devFile)
 
     val rnn = new RNN()
-    rnn.train(trainSentences)
+    rnn.train(trainSentences, devSentences)
   }
 }
