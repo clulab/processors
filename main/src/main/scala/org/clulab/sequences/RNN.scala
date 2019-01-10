@@ -6,6 +6,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
+import edu.cmu.dynet.Expression._
 import RNN._
 
 class RNN {
@@ -22,23 +23,35 @@ class RNN {
   }
 
   def update(trainSentences: Array[Array[Row]]): Unit = {
+    val trainer = new SimpleSGDTrainer(model.parameters)
+    var cummulativeLoss = 0.0
+    var numTagged = 0
+    var sentCount = 0
     for(epoch <- 0 until EPOCHS) {
       logger.debug(s"Started epoch $epoch.")
       for(sentence <- trainSentences) {
-        logger.debug("Predicting sentence: " + sentence.map(_.get(0)).mkString(", "))
+        sentCount += 1
+        //logger.debug(s"Predicting sentence $sentCount: " + sentence.map(_.get(0)).mkString(", "))
 
-        // Note that this needs to be synchronized because the DyNet computational graph is a static variable...
-        synchronized {
-          // predict probabilities for one sentence
-          val probs = predictSentence(sentence)
-          for (prob <- probs) logger.debug("Probs: " + prob.value().toVector())
+        // predict probabilities for one sentence
+        val probs = predictSentence(sentence)
+        //for (prob <- probs) logger.debug("Probs: " + prob.value().toVector())
 
-          // compute loss for this sentence
-          val loss = sentenceLoss(sentence.map(_.get(1)), probs)
+        // compute loss for this sentence
+        val loss = sentenceLoss(sentence.map(_.get(1)), probs)
 
-          // backprop
-          // TODO: backprop!
+        cummulativeLoss += loss.value().toFloat
+        numTagged += sentence.length
+
+        if(sentCount % 10 == 0) {
+          logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
+          cummulativeLoss = 0.0
+          numTagged = 0
         }
+
+        // backprop
+        ComputationGraph.backward(loss)
+        trainer.update()
       }
     }
   }
@@ -49,7 +62,7 @@ class RNN {
       val t = e._1
       val prob = e._2
       val tid = model.t2i(t)
-      val loss = Expression.pickNegLogSoftmax(prob, tid)
+      val loss = pickNegLogSoftmax(prob, tid)
       losses.add(loss)
     }
     Expression.sum(losses)
@@ -70,16 +83,16 @@ class RNN {
     assert(fwStates.size == bwStates.length)
     val states = concantenate(fwStates, bwStates)
 
-    val H = Expression.parameter(model.H)
-    val O = Expression.parameter(model.O)
+    val H = parameter(model.H)
+    val O = parameter(model.O)
 
-    states.map(s => Expression.softmax(O * Expression.tanh(H * s)))
+    states.map(s => softmax(O * tanh(H * s)))
   }
 
   def concantenate(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
     val c = new ArrayBuffer[Expression]()
     for(e <- l1.zip(l2)) {
-      c += Expression.concatenate(e._1, e._2)
+      c += concatenate(e._1, e._2)
     }
     c
   }
@@ -88,10 +101,10 @@ class RNN {
     val sanitized = Word2Vec.sanitizeWord(word)
     if(model.w2i.contains(sanitized))
       // found the word in the known vocabulary
-      Expression.lookup(model.lookupParameters, model.w2i(sanitized))
+      lookup(model.lookupParameters, model.w2i(sanitized))
     else
       // not found; return the embedding at position 0, which is reserved for unknown words
-      Expression.lookup(model.lookupParameters, 0)
+      lookup(model.lookupParameters, 0)
   }
 
   def transduce(embeddings:Iterable[Expression], builder:RnnBuilder): Iterable[Expression] = {
