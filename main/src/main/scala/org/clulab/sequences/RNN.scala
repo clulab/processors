@@ -28,7 +28,7 @@ class RNN {
     var numTagged = 0
     var sentCount = 0
     for(epoch <- 0 until EPOCHS) {
-      logger.debug(s"Started epoch $epoch.")
+      logger.info(s"Started epoch $epoch.")
       for(sentence <- trainSentences) {
         sentCount += 1
         //logger.debug(s"Predicting sentence $sentCount: " + sentence.map(_.get(0)).mkString(", "))
@@ -43,7 +43,7 @@ class RNN {
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
 
-        if(sentCount % 10 == 0) {
+        if(sentCount % 1000 == 0) {
           logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
           cummulativeLoss = 0.0
           numTagged = 0
@@ -86,7 +86,7 @@ class RNN {
     val H = parameter(model.H)
     val O = parameter(model.O)
 
-    states.map(s => softmax(O * tanh(H * s)))
+    states.map(s => O * tanh(H * s))
   }
 
   def concantenate(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
