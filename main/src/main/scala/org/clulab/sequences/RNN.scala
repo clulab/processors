@@ -65,6 +65,7 @@ class RNN {
     var total = 0
     var correct = 0
 
+    logger.debug("Started evaluation on dev...")
     for(sent <- devSentences) {
       val words = sent.map(_.get(0))
       val golds = sent.map(_.get(1))
@@ -79,7 +80,7 @@ class RNN {
       }
     }
 
-    logger.info("Accuracy on dev: " + correct.toDouble / total)
+    logger.info(s"Accuracy on ${devSentences.length} dev sentences: " + correct.toDouble / total)
   }
 
   def sentenceLoss(tags:Iterable[String], probs:Iterable[Expression]): Expression = {
@@ -111,7 +112,7 @@ class RNN {
     val H = parameter(model.H)
     val O = parameter(model.O)
 
-    states.map(s => O * tanh(H * s))
+    states.map(s => O * Expression.tanh(H * s))
   }
 
   def predict(words:Array[String]):Array[String] = synchronized {
@@ -228,7 +229,7 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 3
+  val EPOCHS = 20
   val RANDOM_SEED = 2522620396l
   val EMBEDDING_SIZE = 200
   val RNN_STATE_SIZE = 50
