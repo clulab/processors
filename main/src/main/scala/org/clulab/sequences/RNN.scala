@@ -9,6 +9,8 @@ import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 import RNN._
 
+import scala.collection.mutable
+
 class RNN {
   var model:RNNParameters = _
 
@@ -34,7 +36,8 @@ class RNN {
         //logger.debug(s"Predicting sentence $sentCount: " + sentence.map(_.get(0)).mkString(", "))
 
         // predict probabilities for one sentence
-        val probs = predictSentence(sentence)
+        val words = sentence.map(_.get(0))
+        val probs = predictSentence(words)
         //for (prob <- probs) logger.debug("Probs: " + prob.value().toVector())
 
         // compute loss for this sentence
@@ -70,12 +73,11 @@ class RNN {
 
   /**
     * Generates tag probabilities for the words in this sequence
-    * @param sentence One training or testing sentence
+    * @param words One training or testing sentence
     */
-  def predictSentence(sentence: Array[Row]): Iterable[Expression] = {
+  def predictSentence(words: Array[String]): Iterable[Expression] = {
     ComputationGraph.renew()
 
-    val words = sentence.map(_.get(0))
     val embeddings = words.map(mkEmbedding)
 
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
@@ -87,6 +89,26 @@ class RNN {
     val O = parameter(model.O)
 
     states.map(s => O * tanh(H * s))
+  }
+
+  def predict(words:Array[String]):Array[String] = synchronized {
+    val scores = predictSentence(words)
+    val tags = new ArrayBuffer[String]()
+    for(score <- scores) {
+      val probs = softmax(score).value().toVector().toArray
+      var max = Float.MinValue
+      var tid = -1
+      for(i <- probs.indices) {
+        if(probs(i) > max) {
+          max = probs(i)
+          tid = i
+        }
+      }
+      assert(tid > -1)
+      tags += model.i2t(tid)
+    }
+
+    tags.toArray
   }
 
   def concantenate(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
@@ -128,9 +150,18 @@ class RNN {
     val bwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
+    val i2t = fromIndexToString(t2i)
     logger.debug("Created parameters.")
 
-    new RNNParameters(w2i, t2i, parameters, lookupParameters, fwBuilder, bwBuilder, H, O)
+    new RNNParameters(w2i, t2i, i2t, parameters, lookupParameters, fwBuilder, bwBuilder, H, O)
+  }
+
+  def fromIndexToString(s2i: Map[String, Int]):Map[Int, String] = {
+    val i2s = new mutable.HashMap[Int, String]()
+    for(k <- s2i.keySet) {
+      i2s += (s2i(k) -> k)
+    }
+    i2s.toMap
   }
 
   def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int]) = {
@@ -162,6 +193,7 @@ class RNN {
 class RNNParameters(
   val w2i:Map[String, Int],
   val t2i:Map[String, Int],
+  val i2t:Map[Int, String],
   val parameters:ParameterCollection,
   val lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
