@@ -14,13 +14,13 @@ import scala.collection.mutable
 class RNN {
   var model:RNNParameters = _
 
-  def train(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
+  def train(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]], embeddingsFile:String): Unit = {
     val (w2i, t2i) = mkVocabs(trainSentences)
 
     logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
     logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
 
-    initialize(w2i, t2i)
+    initialize(w2i, t2i, embeddingsFile)
     update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
   }
 
@@ -160,14 +160,14 @@ class RNN {
     states
   }
 
-  def initialize(w2i:Map[String, Int], t2i:Map[String, Int]): Unit = {
+  def initialize(w2i:Map[String, Int], t2i:Map[String, Int],embeddingsFile:String): Unit = {
     logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    model = mkParams(w2i, t2i)
+    model = mkParams(w2i, t2i, embeddingsFile)
     logger.debug("Completed initialization.")
   }
 
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int]): RNNParameters = {
+  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], embeddingsFile:String): RNNParameters = {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
     val fwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE, RNN_STATE_SIZE, parameters)
@@ -176,6 +176,11 @@ class RNN {
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
     val i2t = fromIndexToString(t2i)
     logger.debug("Created parameters.")
+
+    logger.debug(s"Loading embeddings from file $embeddingsFile...")
+    val w2v = new Word2Vec(embeddingsFile, Some(w2i.keySet))
+    logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
+    // TODO: init lookupParameters
 
     new RNNParameters(w2i, t2i, i2t, parameters, lookupParameters, fwBuilder, bwBuilder, H, O)
   }
@@ -241,8 +246,9 @@ object RNN {
     val devFile = args(1)
     val trainSentences = ColumnReader.readColumns(trainFile)
     val devSentences = ColumnReader.readColumns(devFile)
+    val embeddingsFile = args(2)
 
     val rnn = new RNN()
-    rnn.train(trainSentences, devSentences)
+    rnn.train(trainSentences, devSentences, embeddingsFile)
   }
 }
