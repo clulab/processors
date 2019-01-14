@@ -25,7 +25,8 @@ class RNN {
   }
 
   def update(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
-    val trainer = new SimpleSGDTrainer(model.parameters)
+    //val trainer = new SimpleSGDTrainer(model.parameters, learningRate = 0.01f)
+    val trainer = new RMSPropTrainer(model.parameters)
     var cummulativeLoss = 0.0
     var numTagged = 0
     var sentCount = 0
@@ -179,10 +180,22 @@ class RNN {
 
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
     val w2v = new Word2Vec(embeddingsFile, Some(w2i.keySet))
+    for(word <- w2i.keySet) {
+      if(w2v.matrix.contains(word)) {
+        lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
+      }
+    }
     logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
-    // TODO: init lookupParameters
 
     new RNNParameters(w2i, t2i, i2t, parameters, lookupParameters, fwBuilder, bwBuilder, H, O)
+  }
+
+  def toFloatArray(doubles:Array[Double]): Array[Float] = {
+    val floats = new Array[Float](doubles.length)
+    for(i <- doubles.indices) {
+      floats(i) = doubles(i).toFloat
+    }
+    floats
   }
 
   def fromIndexToString(s2i: Map[String, Int]):Map[Int, String] = {
@@ -234,7 +247,7 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 20
+  val EPOCHS = 50
   val RANDOM_SEED = 2522620396l
   val EMBEDDING_SIZE = 200
   val RNN_STATE_SIZE = 50
