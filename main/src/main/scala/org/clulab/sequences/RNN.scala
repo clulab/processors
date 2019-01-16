@@ -163,7 +163,8 @@ class RNN {
   }
 
   def mkCharacterEmbedding(word: String): Expression = {
-    val charEmbeddings = word.toCharArray.map(lookup(model.charLookupParameters, _))
+    val charEmbeddings = new ArrayBuffer[Expression]()
+    for(i <- word.indices) charEmbeddings += lookup(model.charLookupParameters, model.c2i(word.charAt(i)))
     val fwOut = transduce(charEmbeddings, model.charFwRnnBuilder).last
     val bwOut = transduce(charEmbeddings.reverse, model.charBwRnnBuilder).last
     concatenate(fwOut, bwOut)
