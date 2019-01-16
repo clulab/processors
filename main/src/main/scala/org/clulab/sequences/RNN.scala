@@ -15,12 +15,12 @@ class RNN {
   var model:RNNParameters = _
 
   def train(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]], embeddingsFile:String): Unit = {
-    val (w2i, t2i) = mkVocabs(trainSentences)
-
+    val (w2i, t2i, c2i) = mkVocabs(trainSentences)
     logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
     logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
+    logger.debug(s"Character vocabulary has ${c2i.size} entries.")
 
-    initialize(w2i, t2i, embeddingsFile)
+    initialize(w2i, t2i, c2i, embeddingsFile)
     update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
   }
 
@@ -108,7 +108,7 @@ class RNN {
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
     val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
     assert(fwStates.size == bwStates.length)
-    val states = concantenate(fwStates, bwStates)
+    val states = concatenateStates(fwStates, bwStates)
 
     val H = parameter(model.H)
     val O = parameter(model.O)
@@ -136,7 +136,7 @@ class RNN {
     tags.toArray
   }
 
-  def concantenate(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
+  def concatenateStates(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
     val c = new ArrayBuffer[Expression]()
     for(e <- l1.zip(l2)) {
       c += concatenate(e._1, e._2)
@@ -146,12 +146,27 @@ class RNN {
 
   def mkEmbedding(word: String):Expression = {
     val sanitized = Word2Vec.sanitizeWord(word)
-    if(model.w2i.contains(sanitized))
+
+    val wordEmbedding =
+      if(model.w2i.contains(sanitized))
       // found the word in the known vocabulary
-      lookup(model.lookupParameters, model.w2i(sanitized))
-    else
+        lookup(model.lookupParameters, model.w2i(sanitized))
+      else
       // not found; return the embedding at position 0, which is reserved for unknown words
-      lookup(model.lookupParameters, 0)
+        lookup(model.lookupParameters, 0)
+
+    // biLSTM over character embeddings
+    val charEmbedding =
+      mkCharacterEmbedding(word)
+
+    concatenate(wordEmbedding, charEmbedding)
+  }
+
+  def mkCharacterEmbedding(word: String): Expression = {
+    val charEmbeddings = word.toCharArray.map(lookup(model.charLookupParameters, _))
+    val fwOut = transduce(charEmbeddings, model.charFwRnnBuilder).last
+    val bwOut = transduce(charEmbeddings.reverse, model.charBwRnnBuilder).last
+    concatenate(fwOut, bwOut)
   }
 
   def transduce(embeddings:Iterable[Expression], builder:RnnBuilder): Iterable[Expression] = {
@@ -161,18 +176,18 @@ class RNN {
     states
   }
 
-  def initialize(w2i:Map[String, Int], t2i:Map[String, Int],embeddingsFile:String): Unit = {
+  def initialize(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int], embeddingsFile:String): Unit = {
     logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    model = mkParams(w2i, t2i, embeddingsFile)
+    model = mkParams(w2i, t2i, c2i, embeddingsFile)
     logger.debug("Completed initialization.")
   }
 
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], embeddingsFile:String): RNNParameters = {
+  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int], embeddingsFile:String): RNNParameters = {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
-    val fwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE, RNN_STATE_SIZE, parameters)
+    val fwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE, RNN_STATE_SIZE, parameters)
+    val bwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
     val i2t = fromIndexToString(t2i)
@@ -187,7 +202,12 @@ class RNN {
     }
     logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
 
-    new RNNParameters(w2i, t2i, i2t, parameters, lookupParameters, fwBuilder, bwBuilder, H, O)
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
+    val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+
+    new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwBuilder, bwBuilder, H, O,
+      charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
   def toFloatArray(doubles:Array[Double]): Array[Float] = {
@@ -206,13 +226,18 @@ class RNN {
     i2s.toMap
   }
 
-  def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int]) = {
+  def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int], Map[Character, Int]) = {
     val words = new Counter[String]()
     val tags = new Counter[String]()
+    val chars = new mutable.HashSet[Character]()
     for(sentence <- trainSentences) {
-      for(word <- sentence) {
-        words += Word2Vec.sanitizeWord(word.get(0))
-        tags += word.get(1)
+      for(token <- sentence) {
+        val word = token.get(0)
+        words += Word2Vec.sanitizeWord(word)
+        for(i <- word.indices) {
+          chars += word.charAt(i)
+        }
+        tags += token.get(1)
       }
     }
 
@@ -226,8 +251,9 @@ class RNN {
 
     val w2i = commonWords.zipWithIndex.toMap
     val t2i = tags.keySet.toList.zipWithIndex.toMap
+    val c2i = chars.toList.zipWithIndex.toMap
 
-    (w2i, t2i)
+    (w2i, t2i, c2i)
   }
 
 }
@@ -236,12 +262,16 @@ class RNNParameters(
   val w2i:Map[String, Int],
   val t2i:Map[String, Int],
   val i2t:Map[Int, String],
+  val c2i:Map[Character, Int],
   val parameters:ParameterCollection,
   val lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,
-  val O:Parameter
+  val O:Parameter,
+  val charLookupParameters:LookupParameter,
+  val charFwRnnBuilder:RnnBuilder,
+  val charBwRnnBuilder:RnnBuilder
 )
 
 object RNN {
@@ -253,6 +283,9 @@ object RNN {
   val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
+  val CHAR_RNN_LAYERS = 1
+  val CHAR_EMBEDDING_SIZE = 32
+  val CHAR_RNN_STATE_SIZE = 16
 
   def main(args: Array[String]): Unit = {
     val trainFile = args(0)
