@@ -1,5 +1,5 @@
 # Changes
-+ **7.4.3** - Improvements to English tokenization rules pertaining to scientific text from plant science.
++ **7.4.4** - Improvements to English tokenization rules pertaining to scientific text from plant science.
 + **7.4.3** - Better handling of parentheses throughout all processors. We keep as they are, e.g., "(", and we convert them to the normalized form, e.g., "-LRB-", just for the constituent parser.
 + **7.4.3** - Added PT lemmatizer.
 + **7.4.3** - We now penalize the creation of disconnected trees in the ensemble model for dependency parsing. 
