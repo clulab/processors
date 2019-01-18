@@ -8,8 +8,10 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 import RNN._
+import org.clulab.utils.MathUtils
 
 import scala.collection.mutable
+import scala.util.Random
 
 class RNN {
   var model:RNNParameters = _
@@ -30,9 +32,13 @@ class RNN {
     var cummulativeLoss = 0.0
     var numTagged = 0
     var sentCount = 0
+    var sentences = trainSentences
+    val rand = new Random(1)
     for(epoch <- 0 until EPOCHS) {
+      sentences = MathUtils.randomize(sentences, rand)
+
       logger.info(s"Started epoch $epoch.")
-      for(sentence <- trainSentences) {
+      for(sentence <- sentences) {
         sentCount += 1
         //logger.debug(s"Predicting sentence $sentCount: " + sentence.map(_.get(0)).mkString(", "))
 
@@ -145,7 +151,7 @@ class RNN {
   }
 
   def mkEmbedding(word: String):Expression = {
-    val sanitized = Word2Vec.sanitizeWord(word)
+    val sanitized = word // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
       if(model.w2i.contains(sanitized))
@@ -234,7 +240,7 @@ class RNN {
     for(sentence <- trainSentences) {
       for(token <- sentence) {
         val word = token.get(0)
-        words += Word2Vec.sanitizeWord(word)
+        words += word // Word2Vec.sanitizeWord(word)
         for(i <- word.indices) {
           chars += word.charAt(i)
         }
@@ -280,7 +286,7 @@ object RNN {
 
   val EPOCHS = 50
   val RANDOM_SEED = 2522620396l
-  val EMBEDDING_SIZE = 200
+  val EMBEDDING_SIZE = 300
   val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
