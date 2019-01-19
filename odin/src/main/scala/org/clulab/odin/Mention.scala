@@ -170,11 +170,11 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   protected lazy val cachedHashCode = calculateHashCode
 
   protected def calculateHashCode: Int = {
-    val h0 = stringHash("org.clulab.odin.Mention")
+    val h0 = stringHash(getClass.getName)
     val h1 = mix(h0, labels.hashCode)
     val h2 = mix(h1, tokenInterval.hashCode)
     val h3 = mix(h2, sentence.hashCode)
-    val h4 = mix(h3, document.equivalenceHash)
+    val h4 = mix(h3, document.ambivalenceHash)
     val h5 = mix(h4, argumentsHashCode)
     val h6 = mixLast(h5, unorderedHash(attachments))
     finalizeHash(h6, 6)
