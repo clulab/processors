@@ -52,6 +52,12 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     val h1 = mix(h0, sentencesHash)
     finalizeHash(h1, 1)
   }
+
+  def ambivalenceHash: Int = {
+    val h0 = stringHash(getClass.getName)
+    val h1 = mix(h0, orderedHash(sentences.map(_.ambivalenceHash)))
+    finalizeHash(h1, 1)
+  }
 }
 
 object Document {
