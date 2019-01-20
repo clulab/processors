@@ -165,6 +165,10 @@ class RNN {
     val charEmbedding =
       mkCharacterEmbedding(word)
 
+    // TODO: add explicit features here. See:
+    // https://github.com/enoriega/lstm_polarity/blob/enrique_temp/rnn.py#L29
+    // https://github.com/enoriega/lstm_polarity/blob/enrique_temp/rnn.py#L57
+
     concatenate(wordEmbedding, charEmbedding)
   }
 
