@@ -165,10 +165,15 @@ class RNN {
     val charEmbedding =
       mkCharacterEmbedding(word)
 
-    // TODO: add explicit features here. See:
-    // https://github.com/enoriega/lstm_polarity/blob/enrique_temp/rnn.py#L29
-    // https://github.com/enoriega/lstm_polarity/blob/enrique_temp/rnn.py#L57
+    // explicit features that capture the shape of the word
+    /*
+    val c = casing(word)
+    val cases = new Array[Float](CASE_o + 1)
+    for(i <- cases.indices) cases(i) = 0
+    cases(c) = 1
 
+    concatenate(wordEmbedding, charEmbedding, input(Dim(CASE_o + 1), new FloatVector(cases)))
+    */
     concatenate(wordEmbedding, charEmbedding)
   }
 
@@ -197,8 +202,9 @@ class RNN {
   def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int], embeddingsFile:String): RNNParameters = {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
-    val fwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new LstmBuilder(RNN_LAYERS, EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE, RNN_STATE_SIZE, parameters)
+    val embeddingSize = EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE // + CASE_o + 1
+    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
     val i2t = fromIndexToString(t2i)
@@ -297,6 +303,44 @@ object RNN {
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
+
+  // case features
+  val CASE_x = 0
+  val CASE_X = 1
+  val CASE_Xx = 2
+  val CASE_xX = 3
+  val CASE_n = 4
+  val CASE_o = 5
+
+  def casing(w:String): Int = {
+    if(w.charAt(0).isLetter) { // probably an actual word
+      // count upper and lower-case chars
+      var uppers = 0
+      for(j <- 0 until w.length) {
+        if(Character.isUpperCase(w.charAt(j))) {
+          uppers += 1
+        }
+      }
+
+      var v = CASE_x
+      if (uppers == w.length) v = CASE_X
+      else if (uppers == 1 && Character.isUpperCase(w.charAt(0))) v = CASE_Xx
+      else if (uppers >= 1 && !Character.isUpperCase(w.charAt(0))) v = CASE_xX
+      v
+    } else if(isNumber(w))
+      CASE_n
+    else
+      CASE_o
+  }
+
+  def isNumber(w:String): Boolean = {
+    for(i <- 0 until w.length) {
+      val c = w.charAt(i)
+      if(! c.isDigit && c != '-' && c != '.' && c != ',')
+        return false
+    }
+    true
+  }
 
   def main(args: Array[String]): Unit = {
     val trainFile = args(0)
