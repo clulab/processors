@@ -13,6 +13,10 @@ import org.clulab.utils.MathUtils
 import scala.collection.mutable
 import scala.util.Random
 
+import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.fatdynet.utils.Loader
+import org.clulab.fatdynet.utils.Loader.ClosableModelSaver
+
 class RNN {
   var model:RNNParameters = _
 
@@ -28,7 +32,9 @@ class RNN {
 
   def update(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
     //val trainer = new SimpleSGDTrainer(model.parameters, learningRate = 0.01f)
-    val trainer = new RMSPropTrainer(model.parameters)
+    val parameters = new ParameterCollection()
+    //val trainer = new RMSPropTrainer(model.parameters)
+    val trainer = new RMSPropTrainer(parameters)
     var cummulativeLoss = 0.0
     var numTagged = 0
     var sentCount = 0
@@ -203,8 +209,11 @@ class RNN {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
     val embeddingSize = EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE // + CASE_o + 1
-    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+
+    val fwModel = new ParameterCollection()
+    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, fwModel)
+    val bwModel = new ParameterCollection()
+    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, bwModel)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
     val i2t = fromIndexToString(t2i)
@@ -220,11 +229,13 @@ class RNN {
     logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
 
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-    val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-    val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charFwModel = new ParameterCollection()
+    val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, charFwModel)
+    val charBwModel = new ParameterCollection()
+    val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, charBwModel)
 
-    new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwBuilder, bwBuilder, H, O,
-      charLookupParameters, charFwBuilder, charBwBuilder)
+    new RNNParameters(w2i, t2i, i2t, c2i, lookupParameters, fwModel, fwBuilder, bwModel, bwBuilder, H, O,
+      charLookupParameters, charFwModel, charFwBuilder, charBwModel, charBwBuilder)
   }
 
   def toFloatArray(doubles:Array[Double]): Array[Float] = {
@@ -280,14 +291,24 @@ class RNNParameters(
   val t2i:Map[String, Int],
   val i2t:Map[Int, String],
   val c2i:Map[Character, Int],
-  val parameters:ParameterCollection,
+
   val lookupParameters:LookupParameter,
+
+  val fwModel:ParameterCollection,
   val fwRnnBuilder:RnnBuilder,
+
+  val bwModel:ParameterCollection,
   val bwRnnBuilder:RnnBuilder,
+
   val H:Parameter,
   val O:Parameter,
+
   val charLookupParameters:LookupParameter,
+
+  val charFwModel:ParameterCollection,
   val charFwRnnBuilder:RnnBuilder,
+
+  val charBwModel:ParameterCollection,
   val charBwRnnBuilder:RnnBuilder
 )
 
@@ -342,6 +363,36 @@ object RNN {
     true
   }
 
+  def save(filename:String, rnnParameters: RNNParameters):Unit = {
+    new ClosableModelSaver(filename).autoClose { saver =>
+      saver.addLookupParameter(rnnParameters.lookupParameters, "/lu")
+      saver.addModel(rnnParameters.fwModel, "/fw")
+      saver.addModel(rnnParameters.bwModel, "/bw")
+      saver.addParameter(rnnParameters.H, "/H")
+      saver.addParameter(rnnParameters.O, "/O")
+      saver.addLookupParameter(rnnParameters.charLookupParameters, "/charLu")
+      saver.addModel(rnnParameters.charFwModel, "/charFw")
+      saver.addModel(rnnParameters.charBwModel, "/charBw")
+    }
+  }
+
+  def load(filename:String):RNNParameters = {
+    val (allParameters, allLookupParameters) = Loader.loadParameters(filename)
+    val lookupParameters = allLookupParameters("/lu")
+    val H = allParameters("/H")
+    val O = allParameters("/O")
+    val charLookupParameters = allLookupParameters("/charLu")
+
+    val (fwBuilder, fwModel, _, _) = Loader.loadLstm(filename, "/fw")
+    val (bwBuilder, bwModel, _, _) = Loader.loadLstm(filename, "/bw")
+    val (charFwBuilder, charFwModel, _, _) = Loader.loadLstm(filename, "/charFw")
+    val (charBwBuilder, charBwModel, _, _) = Loader.loadLstm(filename, "/charBw")
+
+    // TODO
+    new RNNParameters(Map.empty, Map.empty, Map.empty, Map.empty, lookupParameters, fwModel.get, fwBuilder.get, bwModel.get, bwBuilder.get, H, O,
+        charLookupParameters, charFwModel.get, charFwBuilder.get, charBwModel.get, charBwBuilder.get)
+  }
+
   def main(args: Array[String]): Unit = {
     val trainFile = args(0)
     val devFile = args(1)
@@ -351,5 +402,11 @@ object RNN {
 
     val rnn = new RNN()
     rnn.train(trainSentences, devSentences, embeddingsFile)
+
+    val filename = "rnn.dat"
+    save(filename, rnn.model)
+    val rnnParameters = load(filename)
+    val pretrainedRnn = new RNN()
+    pretrainedRnn.model = rnnParameters
   }
 }
