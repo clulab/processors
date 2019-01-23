@@ -24,6 +24,8 @@ class RNN {
 
     initialize(w2i, t2i, c2i, embeddingsFile)
     update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
+
+    // TODO: save the model to disk here
   }
 
   def update(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
@@ -294,7 +296,7 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 50
+  val EPOCHS = 2
   val RANDOM_SEED = 2522620396l
   val EMBEDDING_SIZE = 300
   val RNN_STATE_SIZE = 50
@@ -351,5 +353,7 @@ object RNN {
 
     val rnn = new RNN()
     rnn.train(trainSentences, devSentences, embeddingsFile)
+
+    // TODO: add another branch in the main method, in which it loads a model from disk rather than train one
   }
 }
