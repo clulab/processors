@@ -10,7 +10,7 @@ import org.clulab.struct.DirectedGraphEdgeIterator;
 public class ProcessorsJavaExample {
     public static void main(String [] args) throws Exception {
         // create the processor
-        Processor proc = new CoreNLPProcessor(true, true, 1, 100);
+        Processor proc = new CoreNLPProcessor(true, true, false, 1, 100);
         // for much faster processing, use FastNLPProcessor
         //Processor proc = new FastNLPProcessor(true, false, false, 1);
 

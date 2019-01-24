@@ -41,6 +41,9 @@ class Sentence(
   var syntacticTree: Option[Tree] = None
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
   var graphs: GraphMap = new GraphMap
+  /** Relation triples from OpenIE */
+  var relations:Option[Array[RelationTriple]] = None
+
 
   def size:Int = raw.length
 

@@ -12,7 +12,13 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends FlatSpec with Matchers {
-  var proc:Processor = new FastNLPProcessor(internStrings = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
+  var proc:Processor = new FastNLPProcessor(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
+
+  "FastNLPProcessor" should "extract relations correctly with OpenIE" in {
+    val doc = proc.annotate("Obama was born in Hawaii. He is our president.")
+    doc.sentences.head.relations.get should have size (2)
+    doc.sentences.last.relations.get should have size (1)
+  }
 
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {
     val doc = proc.annotate("John Smith went to China.")

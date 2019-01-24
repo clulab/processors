@@ -36,14 +36,16 @@ class CoreNLPProcessor(
   tokenizerPostProcessor:Option[TokenizerStep],
   internStrings:Boolean,
   withChunks:Boolean,
+  withRelationExtraction:Boolean,
   val withDiscourse:Int,
-  val maxSentenceLength:Int) extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks) {
+  val maxSentenceLength:Int) extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks, withRelationExtraction) {
 
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
+           withRelationExtraction:Boolean = false,
            withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
            maxSentenceLength:Int = 100) {
-    this(None, internStrings, withChunks, withDiscourse, maxSentenceLength)
+    this(None, internStrings, withChunks, withRelationExtraction, withDiscourse, maxSentenceLength)
   }
 
   lazy val coref: StanfordCoreNLP = mkCoref

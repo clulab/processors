@@ -78,6 +78,7 @@ class ProcessorServer (
     val removeFigTabReferences = getArgBoolean(s"${prefix}.removeFigTabReferences", true)
     val removeBibReferences = getArgBoolean(s"${prefix}.removeBibReferences", true)
     val withChunks = getArgBoolean(s"${prefix}.withChunks", true)
+    val withRelationExtraction = getArgBoolean(s"${prefix}.withRelationExtraction", false)
     val withContext = getArgBoolean(s"${prefix}.withContext", true)
     val withCRFNER = getArgBoolean(s"${prefix}.withCRFNER", true)
     val withRuleNER = getArgBoolean(s"${prefix}.withRuleNER", true)
@@ -103,9 +104,9 @@ class ProcessorServer (
                                         removeFigTabReferences,
                                         removeBibReferences)
 
-      case "core" => new CoreNLPProcessor(None, internStrings, withChunks, withDiscourse, maxSentenceLength)
+      case "core" => new CoreNLPProcessor(None, internStrings, withChunks, withRelationExtraction, withDiscourse, maxSentenceLength)
 
-      case "fast" => new FastNLPProcessor(None, internStrings, withChunks, withDiscourse)
+      case "fast" => new FastNLPProcessor(None, internStrings, withChunks, withRelationExtraction, withDiscourse)
 
       case "fastbio" => new FastBioNLPProcessor(internStrings,
                                                 withChunks,
@@ -117,7 +118,7 @@ class ProcessorServer (
                                                 removeFigTabReferences,
                                                 removeBibReferences)
 
-      case _ => new ShallowNLPProcessor(None, internStrings, withChunks)
+      case _ => new ShallowNLPProcessor(None, internStrings, withRelationExtraction, withChunks)
     }
   }
 
