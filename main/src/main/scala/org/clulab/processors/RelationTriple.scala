@@ -4,6 +4,7 @@ import org.clulab.struct.Interval
 
 case class RelationTriple(doc:Document,
                           sentence:Int,
+                          confidence:Float,
                           subjectInterval:Interval,
                           relationInterval:Interval,
                           objectInterval:Interval) {
@@ -22,5 +23,5 @@ case class RelationTriple(doc:Document,
   def objectLemmas:Seq[String] = objectInterval.map(sentenceObj.lemmas.get)
   def objectText:String = objectInterval.map(sentenceObj.words).mkString(" ")
 
-  override def toString: String = s"$subjectText $relationText $objectText"
+  override def toString: String = s"Confidence: $confidence - $subjectText $relationText $objectText"
 }

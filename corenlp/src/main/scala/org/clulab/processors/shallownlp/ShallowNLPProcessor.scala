@@ -323,7 +323,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
         val objectStart = triplet.canonicalObject.asScala.head.index - 1
         val objectEnd= triplet.canonicalObject.asScala.last.index
 
-        val relation = RelationTriple(doc, offset, Interval(subjectStart, subjectEnd), Interval(relationStart, relationEnd), Interval(objectStart, objectEnd))
+        val relation = RelationTriple(doc, offset, confidence.toFloat, Interval(subjectStart, subjectEnd), Interval(relationStart, relationEnd), Interval(objectStart, objectEnd))
         relationInstances += relation
       }
 
