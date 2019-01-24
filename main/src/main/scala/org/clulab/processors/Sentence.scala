@@ -186,7 +186,8 @@ object Sentence {
     norms: Option[Array[String]],
     chunks: Option[Array[String]],
     tree: Option[Tree],
-    deps: GraphMap
+    deps: GraphMap,
+    relations: Option[Array[RelationTriple]]
   ): Sentence = {
     val s = Sentence(raw, startOffsets, endOffsets, words)
     // update annotations
@@ -197,6 +198,7 @@ object Sentence {
     s.chunks = chunks
     s.syntacticTree = tree
     s.graphs = deps
+    s.relations = relations
     s
   }
 }
