@@ -38,7 +38,7 @@ class CoreNLPProcessor(
   withChunks:Boolean,
   withRelationExtraction:Boolean,
   val withDiscourse:Int,
-  val maxSentenceLength:Int) extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks, withRelationExtraction) {
+  val maxSentenceLength:Int) extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks, withRelationExtraction) with OpenIEAnnotator {
 
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,

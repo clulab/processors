@@ -6,8 +6,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphFactory
 import edu.stanford.nlp.semgraph.SemanticGraphFactory.Mode
 import edu.stanford.nlp.trees.GrammaticalStructure
 import edu.stanford.nlp.util.MetaClass
-
-import org.clulab.processors.Document
+import org.clulab.processors.{Document, OpenIEAnnotator}
 import org.clulab.struct.GraphMap
 import org.clulab.discourse.rstparser.RSTParser
 import org.clulab.discourse.rstparser.Utils._
@@ -41,7 +40,7 @@ class FastNLPProcessor(
   withChunks:Boolean,
   withRelationExtraction:Boolean,
   withDiscourse:Int)
-  extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks, withRelationExtraction) {
+  extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks, withRelationExtraction) with OpenIEAnnotator{
 
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
