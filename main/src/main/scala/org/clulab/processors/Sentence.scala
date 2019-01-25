@@ -51,7 +51,7 @@ class Sentence(
   protected lazy val cachedAmbivalenceHash = calculateAmbivalenceHash
 
   protected def calculateAmbivalenceHash: Int = {
-    val h0 = stringHash(getClass.getName)
+    val h0 = stringHash(Sentence.getClass.getName)
     val h1 = mix(h0, orderedHash(raw))
     val h2 = mix(h1, orderedHash(startOffsets))
     val h3 = mix(h2, orderedHash(endOffsets))

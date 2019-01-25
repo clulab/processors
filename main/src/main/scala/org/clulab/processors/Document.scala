@@ -54,7 +54,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   }
 
   def ambivalenceHash: Int = {
-    val h0 = stringHash(getClass.getName)
+    val h0 = stringHash(Document.getClass.getName)
     val h1 = mix(h0, orderedHash(sentences.map(_.ambivalenceHash)))
     finalizeHash(h1, 1)
   }
