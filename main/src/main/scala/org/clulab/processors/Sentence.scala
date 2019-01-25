@@ -41,6 +41,9 @@ class Sentence(
   var syntacticTree: Option[Tree] = None
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
   var graphs: GraphMap = new GraphMap
+  /** Relation triples from OpenIE */
+  var relations:Option[Array[RelationTriple]] = None
+
 
   def size:Int = raw.length
 
@@ -154,7 +157,6 @@ class Sentence(
 
     reverted
   }
-
 }
 
 object Sentence {
@@ -183,7 +185,8 @@ object Sentence {
     norms: Option[Array[String]],
     chunks: Option[Array[String]],
     tree: Option[Tree],
-    deps: GraphMap
+    deps: GraphMap,
+    relations: Option[Array[RelationTriple]]
   ): Sentence = {
     val s = Sentence(raw, startOffsets, endOffsets, words)
     // update annotations
@@ -194,6 +197,8 @@ object Sentence {
     s.chunks = chunks
     s.syntacticTree = tree
     s.graphs = deps
+    s.relations = relations
     s
   }
+
 }

@@ -5,11 +5,9 @@ import java.io._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
-
 import com.typesafe.scalalogging.LazyLogging
-
 import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
-import org.clulab.processors.{Document, Sentence}
+import org.clulab.processors.{Document, RelationTriple, Sentence}
 import org.clulab.struct._
 
 /**
@@ -84,6 +82,18 @@ class DocumentSerializer extends LazyLogging {
     doc.coreferenceChains = coref
     doc.discourseTree = discourse
     doc.text = text
+
+
+    // TODO: Hack by Enrique to resolve the document object for the relations
+    for(sen <- doc.sentences){
+      sen.relations match {
+        case Some(relations) =>
+          val newRelations = relations.map(r => RelationTriple(r.confidence, r.subjectInterval, r.relationInterval, r.objectInterval))
+          sen.relations = Some(newRelations)
+        case None => ()
+      }
+    }
+
     doc
   }
 
@@ -108,6 +118,22 @@ class DocumentSerializer extends LazyLogging {
     r.read(buffer, 0, charCount)
     r.skip(OS_INDEPENDENT_LINE_SEPARATOR.length) // skip over last line separator
     new String(buffer)
+  }
+
+  private def mkRelationInterval(s: String) = {
+    val t = s.split("-").map(_.toInt)
+    assert(t.length == 2)
+    Interval(t(0), t(1))
+  }
+
+  private def loadRelations(r: BufferedReader, sz: Int):Option[Array[RelationTriple]] = {
+    val ret = (0 until sz) map {
+      _ =>
+        val line = r.readLine()
+        val tokens = line.split(SEP)
+        RelationTriple(tokens(0).toFloat, mkRelationInterval(tokens(1)), mkRelationInterval(tokens(2)), mkRelationInterval(tokens(3)))
+    }
+    Some(ret.toArray)
   }
 
   private def loadSentence(r:BufferedReader): Sentence = {
@@ -165,6 +191,7 @@ class DocumentSerializer extends LazyLogging {
 
     var deps = new GraphMap
     var tree:Option[Tree] = None
+    var relations:Option[Array[RelationTriple]] = None
     do {
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
@@ -176,6 +203,9 @@ class DocumentSerializer extends LazyLogging {
         val position = new MutableNumber[Int](0)
         bits = read(r)
         tree = Some(loadTree(bits, position))
+      } else if (bits(0) == START_RELATIONS) {
+        val sz = bits(1).toInt
+        relations = loadRelations(r, sz)
       }
     } while(bits(0) != END_OF_SENTENCE)
 
@@ -189,7 +219,7 @@ class DocumentSerializer extends LazyLogging {
       bufferOption(entityBuffer, nilEntities),
       bufferOption(normBuffer, nilNorms),
       bufferOption(chunkBuffer, nilChunks),
-      tree, deps
+      tree, deps, relations
     )
   }
 
@@ -281,6 +311,11 @@ class DocumentSerializer extends LazyLogging {
       os.println(START_CONSTITUENTS + SEP + "1")
       sent.syntacticTree.foreach(t => { saveTree(t, os); os.println() })
     }
+    if (sent.relations.nonEmpty) {
+      val relations = sent.relations.get
+      os.println(START_RELATIONS + SEP + relations.size)
+      relations foreach (t => saveRelationTriple(t, os))
+    }
     os.println(END_OF_SENTENCE)
   }
 
@@ -321,6 +356,10 @@ class DocumentSerializer extends LazyLogging {
     n.setHead(head)
     n
     // new Tree[String](value, Some(children), head, startOffset, endOffset)
+  }
+
+  private def saveRelationTriple(t:RelationTriple, os:PrintWriter): Unit = {
+    os.println(s"${t.confidence}$SEP${t.subjectInterval.start}-${t.subjectInterval.end}$SEP${t.relationInterval.start}-${t.relationInterval.end}$SEP${t.objectInterval.start}-${t.objectInterval.end}")
   }
 
   private def saveToken(sent:Sentence, offset:Int, os:PrintWriter) {
@@ -465,6 +504,7 @@ object DocumentSerializer {
   val START_DEPENDENCIES = "D"
   val START_CONSTITUENTS = "Y"
   val START_DISCOURSE = "R"
+  val START_RELATIONS = "OIE"
 
   val END_OF_SENTENCE = "EOS"
   val END_OF_DOCUMENT = "EOD"

@@ -28,7 +28,7 @@ class FastBioNLPProcessor (internStrings:Boolean = false,
 )
   extends FastNLPProcessor(
     Some(new BioTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)),
-    internStrings, withChunks, withDiscourse) {
+    internStrings, withChunks, withRelationExtraction = false,  withDiscourse) {
 
   //lazy val banner = new BannerWrapper
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
