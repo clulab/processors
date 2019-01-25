@@ -157,7 +157,6 @@ class Sentence(
 
     reverted
   }
-
 }
 
 object Sentence {
@@ -201,4 +200,5 @@ object Sentence {
     s.relations = relations
     s
   }
+
 }
