@@ -35,7 +35,7 @@ package object openie {
     * Implicit wrapper that returns all the openie relations in a document as an array of event mentions
     * @param doc
     */
-  implicit class RichDocument(doc:Document){
+  implicit class RichDocument(val doc:Document) extends AnyVal {
     def openIEAsOdin:Array[EventMention] = doc.sentences.zipWithIndex.flatMap{
       case (sentence, ix) =>
         sentence.relations match {
