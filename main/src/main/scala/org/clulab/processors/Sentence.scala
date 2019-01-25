@@ -55,8 +55,7 @@ class Sentence(
     val h1 = mix(h0, orderedHash(raw))
     val h2 = mix(h1, orderedHash(startOffsets))
     val h3 = mix(h2, orderedHash(endOffsets))
-    val h4 = mixLast(h3, orderedHash(words))
-    finalizeHash(h4, 4)
+    finalizeHash(h3, 3)
   }
 
   /**
