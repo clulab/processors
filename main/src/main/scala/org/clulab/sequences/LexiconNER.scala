@@ -1,6 +1,7 @@
 package org.clulab.sequences
 
 import java.io.BufferedReader
+import java.util.function.Consumer
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.{EntityValidator, HashTrie, TrueEntityValidator}
@@ -202,9 +203,10 @@ object LexiconNER {
     caseInsensitive:Boolean,
     knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
     val matcher = new HashTrie(label, caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
-    reader.lines.forEach { line: String =>
+    val consumer: Consumer[String] = { line =>
       addLine(line, matcher, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
     }
+    reader.lines.forEach(consumer)
     matcher
   }
 
@@ -228,14 +230,15 @@ object LexiconNER {
   }
 
   private def loadOverrideKB(
-    reader:BufferedReader,
-    lexicalVariationEngine:LexicalVariations,
-    caseInsensitive:Boolean,
-    knownCaseInsensitives:mutable.HashSet[String]): Map[String, HashTrie] = {
+      reader:BufferedReader,
+      lexicalVariationEngine:LexicalVariations,
+      caseInsensitive:Boolean,
+      knownCaseInsensitives:mutable.HashSet[String]): Map[String, HashTrie] = {
     val matchers = new mutable.HashMap[String, HashTrie]()
-    reader.lines.forEach { line: String =>
+    val consumer: Consumer[String] = { line =>
       addOverrideLine(line, matchers, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
     }
+    reader.lines.forEach(consumer)
     matchers.toMap
   }
 
