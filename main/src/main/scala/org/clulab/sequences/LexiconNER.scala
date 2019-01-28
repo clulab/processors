@@ -196,17 +196,23 @@ object LexiconNER {
       entityValidator, new NoLexicalVariations,
       useLemmasForMatching, caseInsensitiveMatching)
   }
+  
+  private def toJavaConsumer[T](consumer: T => Unit): Consumer[T] = {
+    new Consumer[T] {
+      override def accept(t: T): Unit = consumer(t)
+    }
+  }
 
   private def loadKB(label:String,
-    reader:BufferedReader,
-    lexicalVariationEngine:LexicalVariations,
-    caseInsensitive:Boolean,
-    knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
+      reader:BufferedReader,
+      lexicalVariationEngine:LexicalVariations,
+      caseInsensitive:Boolean,
+      knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
     val matcher = new HashTrie(label, caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
-    val consumer: Consumer[String] = { line: String =>
+
+    reader.lines.forEach(toJavaConsumer[String]{ line: String =>
       addLine(line, matcher, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
-    }
-    reader.lines.forEach(consumer)
+    })
     matcher
   }
 
@@ -235,10 +241,10 @@ object LexiconNER {
       caseInsensitive:Boolean,
       knownCaseInsensitives:mutable.HashSet[String]): Map[String, HashTrie] = {
     val matchers = new mutable.HashMap[String, HashTrie]()
-    val consumer: Consumer[String] = { line: String =>
+
+    reader.lines.forEach(toJavaConsumer[String]{ line =>
       addOverrideLine(line, matchers, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
-    }
-    reader.lines.forEach(consumer)
+    })
     matchers.toMap
   }
 
