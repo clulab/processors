@@ -2,6 +2,7 @@ package org.clulab.processors
 
 import org.clulab.struct.HashTrie
 import org.scalatest._
+import scala.collection.mutable
 
 /**
  *
@@ -9,8 +10,21 @@ import org.scalatest._
  * Date: 5/12/15
  */
 class TestHashTrie extends FlatSpec with Matchers {
-  "the trie" should "label the text correctly with BIO labels" in {
-    val trie = new HashTrie()
+
+  class DebugHashTrie(label: String, caseInsensitive: Boolean = true, internStrings: Boolean = true) extends HashTrie(label, caseInsensitive, internStrings) {
+    /** For stats */
+    val uniqueStrings = new mutable.HashSet[String]()
+
+    override def in(s: String): String = {
+      val result = super.in(s)
+
+      uniqueStrings.add(result)
+      result
+    }
+  }
+
+    "the trie" should "label the text correctly with BIO labels" in {
+    val trie = new DebugHashTrie("E")
     trie.add(Array("a", "a", "b"))
     trie.add(Array("a", "b", "b"))
     trie.add(Array("b", "b", "b"))
@@ -20,7 +34,7 @@ class TestHashTrie extends FlatSpec with Matchers {
     //println("TRIE:\n" + trie)
 
     val tokens = Array("a", "a", "b", "d", "a", "b", "d", "b", "b", "b")
-    val labels = trie.find(tokens, "E", "O")
+    val labels = trie.find(tokens,"O")
     //println("TOKENS: " + tokens.mkString(" "))
     //println("LABELS: " + labels.mkString(" "))
 
@@ -28,7 +42,7 @@ class TestHashTrie extends FlatSpec with Matchers {
   }
 
   "the trie" should "have 2 entries and contain 5 unique strings" in {
-    val trie = new HashTrie()
+    val trie = new DebugHashTrie("")
     trie.add(Array("a", "a", "b"))
     trie.add(Array("a", "b"))
     trie.add(Array("c", "d", "e"))
@@ -39,23 +53,23 @@ class TestHashTrie extends FlatSpec with Matchers {
   }
 
   "the trie" should "sort and find the entries correctly" in {
-    val trie = new HashTrie()
+    val trie = new DebugHashTrie("hello")
     trie.add(Array("this", "is", "a", "test"))
     trie.add(Array("this", "is", "c", "test"))
     trie.add(Array("this", "is", "b", "test"))
 
-    val labels = trie.find(Array("this", "is", "c", "test"), "hello", "o")
+    val labels = trie.find(Array("this", "is", "c", "test"), "o")
 
     sameLabels(Array("B-hello", "I-hello", "I-hello", "I-hello"), labels)
   }
 
   "the trie" should "make use of shouldStop" in {
-    val trie = new HashTrie()
+    val trie = new DebugHashTrie("hello")
     trie.add(Array("this", "is", "a", "test"))
     trie.add(Array("this", "is", "c", "test"))
     trie.add(Array("this", "is", "d", "test"))
 
-    val labels = trie.find(Array("this", "is", "b", "test"), "hello", "o")
+    val labels = trie.find(Array("this", "is", "b", "test"), "o")
 
     sameLabels(Array("o", "o", "o", "o"), labels)
   }

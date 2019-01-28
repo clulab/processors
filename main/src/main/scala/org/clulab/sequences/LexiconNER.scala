@@ -30,11 +30,11 @@ import scala.collection.mutable
   */
 @SerialVersionUID(1000L)  
 class LexiconNER private (
-    val matchers: Array[(String, HashTrie)],
+    val matchers: Array[HashTrie],
     val knownCaseInsensitives: Set[String],
     val useLemmas: Boolean,
     val entityValidator: EntityValidator) extends Tagger[String] with Serializable {
-  protected val requiresCaseInsensitiveWords = matchers.exists { case (_, hashTrie) => hashTrie.caseInsensitive }
+  protected val requiresCaseInsensitiveWords: Boolean = matchers.exists(_.caseInsensitive)
 
   /**
     * Matches the lexicons against this sentence
@@ -59,8 +59,8 @@ class LexiconNER private (
     val labels = new Array[String](tokens.length)
 
     var offset = 0
-    def setNextLabel(value: String) = {
-      labels(offset) = value
+    def setNextLabel(label: String): Unit = {
+      labels(offset) = label
       offset += 1
     }
 
@@ -70,9 +70,8 @@ class LexiconNER private (
       if (span > 0) {
         if (contentfulSpan(sentence, offset, span) && // does this look like a valid entity span?
             entityValidator.validMatch(sentence, offset, offset + span)) { // domain-specific constraints on entities
-          val label = matchers(index)._1
-          val bLabel =  "B-" + label
-          val iLabel =  "I-" + label
+          val bLabel =  matchers(index).bLabel
+          val iLabel =  matchers(index).iLabel
 
           setNextLabel(bLabel)
           for (_ <- 1 until span)
@@ -108,7 +107,7 @@ class LexiconNER private (
       matcher.findAt(if (matcher.caseInsensitive) caseInsensitiveSeq else seq, offset)
 
     matchers.indices.foldLeft((0, -1)) { case ((bestSpan, bestIndex), index) =>
-      val span = findAt(matchers(index)._2)
+      val span = findAt(matchers(index))
 
       if (span > bestSpan) (span, index)
       else (bestSpan, bestIndex)
@@ -143,7 +142,7 @@ object LexiconNER {
             useLemmasForMatching:Boolean,
             caseInsensitiveMatching:Boolean): LexiconNER = {
     logger.info("Beginning to load the KBs for the rule-based bio NER...")
-    val matchers = new ArrayBuffer[(String, HashTrie)]
+    val matchers = new ArrayBuffer[HashTrie]
     val knownCaseInsensitives = new mutable.HashSet[String]()
 
     // load the override KBs first, so they take priority during matching
@@ -152,11 +151,11 @@ object LexiconNER {
     if (overrideKBs.isDefined) {
       overrideKBs.get.foreach(okb => {
         val reader = loadStreamFromClasspath(okb)
-        val overrideMatchers = loadOverrideKB(reader, lexicalVariationEngine, caseInsensitiveMatching, knownCaseInsensitives)
+        val overrideMatchers: Map[String, HashTrie] = loadOverrideKB(reader, lexicalVariationEngine, caseInsensitiveMatching, knownCaseInsensitives)
         for(name <- overrideMatchers.keySet.toList.sorted) {
           val matcher = overrideMatchers(name)
-          logger.info(s"Loaded OVERRIDE matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-          matchers += Tuple2(name, matcher)
+          logger.info(s"Loaded OVERRIDE matcher for label $name. The size of the first layer is ${matcher.entriesSize}.")
+          matchers += matcher
         }
         reader.close()
       })
@@ -166,9 +165,9 @@ object LexiconNER {
     for(kb <- kbs) {
       val name = extractKBName(kb)
       val reader = loadStreamFromClasspath(kb)
-      val matcher = loadKB(reader, lexicalVariationEngine, caseInsensitiveMatching, knownCaseInsensitives)
-      logger.info(s"Loaded matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-      matchers += Tuple2(name, matcher)
+      val matcher: HashTrie = loadKB(name, reader, lexicalVariationEngine, caseInsensitiveMatching, knownCaseInsensitives)
+      logger.info(s"Loaded matcher for label $name. The size of the first layer is ${matcher.entriesSize}.")
+      matchers += matcher
       reader.close()
     }
 
@@ -197,12 +196,12 @@ object LexiconNER {
       useLemmasForMatching, caseInsensitiveMatching)
   }
 
-  private def loadKB(
+  private def loadKB(label:String,
     reader:BufferedReader,
     lexicalVariationEngine:LexicalVariations,
     caseInsensitive:Boolean,
     knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
-    val matcher = new HashTrie(caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
+    val matcher = new HashTrie(label, caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
     var done = false
     while(! done) {
       val line = reader.readLine()
@@ -271,7 +270,7 @@ object LexiconNER {
           knownCaseInsensitives.add(line)
         }
         val matcher = matchers.getOrElseUpdate(label,
-          new HashTrie(caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS))
+          new HashTrie(label, caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS))
 
         addWithLexicalVariations(tokens, lexicalVariationEngine, matcher)
       }

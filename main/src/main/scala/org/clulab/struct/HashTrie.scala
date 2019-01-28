@@ -12,21 +12,21 @@ import scala.collection.mutable.ListBuffer
  * Date: 5/12/15
  */
 @SerialVersionUID(1000L)
-class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = true) extends Serializable {
-
+class HashTrie(val label: String, val caseInsensitive:Boolean = true, val internStrings:Boolean = true) extends Serializable {
   /** Stores the first layer, i.e., the entry points in the trie */
   val entries = new mutable.HashMap[String, TrieNode]()
 
-  /** For stats */
-  val uniqueStrings = new mutable.HashSet[String]()
+  val bLabel: String = "B-" + label
+  val iLabel: String = "I-" + label
 
   override def toString:String = entries.values.mkString("", "\n", "\n")
+
+  def entriesSize: Int = entries.size
 
   def in(s:String):String = {
     val casedS = if (caseInsensitive) s.toLowerCase else s
     val internedS = if (internStrings) Processor.internString(casedS) else casedS
 
-    uniqueStrings.add(internedS)
     internedS
   }
 
@@ -44,7 +44,6 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
         entries.put(token, tree)
         tree
       }
-
       tree.add(inTokens, 1)
     }
   }
@@ -53,25 +52,20 @@ class HashTrie(val caseInsensitive:Boolean = true, val internStrings:Boolean = t
     * Generates BIO labels for this sequence when complete trie paths match
     * When multiple paths match, the longest one is kept
     */
-  def find(sequence:Array[String], label:String, outsideLabel:String): Array[String] = {
+  def find(sequence:Array[String], outsideLabel:String): Array[String] = {
     val casedSequence = if (caseInsensitive) sequence.map(_.toLowerCase) else sequence
 
-    findNormalized(casedSequence, label, outsideLabel)
+    findNormalized(casedSequence, outsideLabel)
   }
 
-  private def findNormalized(sequence:Array[String], label:String, outsideLabel:String): Array[String] = {
-    lazy val bLabel = "B-" + label
-    lazy val iLabel = "I-" + label
+  private def findNormalized(sequence:Array[String], outsideLabel:String): Array[String] = {
     val labels = new Array[String](sequence.length)
-
     var offset = 0
-    def setNextLabel(value: String): Unit = {
-      labels(offset) = value
+
+    def setNextLabel(label: String): Unit = {
+      labels(offset) = label
       offset += 1
     }
-
-    // TODO, the labels shouldn't need to be built each time.  They can be specified in the constructor.
-    // Then also don't need to keep track of them in a tuple?
 
     while (offset < sequence.length) {
       val span = findAt(sequence, offset)
