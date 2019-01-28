@@ -202,7 +202,7 @@ object LexiconNER {
     caseInsensitive:Boolean,
     knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
     val matcher = new HashTrie(label, caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
-    reader.lines.forEach { line =>
+    reader.lines.forEach { line: String =>
       addLine(line, matcher, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
     }
     matcher
@@ -233,14 +233,8 @@ object LexiconNER {
     caseInsensitive:Boolean,
     knownCaseInsensitives:mutable.HashSet[String]): Map[String, HashTrie] = {
     val matchers = new mutable.HashMap[String, HashTrie]()
-    var done = false
-    while(! done) {
-      val line = reader.readLine()
-      if(line == null) {
-        done = true
-      } else {
-        addOverrideLine(line, matchers, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
-      }
+    reader.lines.forEach { line: String =>
+      addOverrideLine(line, matchers, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
     }
     matchers.toMap
   }
