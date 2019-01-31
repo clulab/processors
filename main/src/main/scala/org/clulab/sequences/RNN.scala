@@ -1,5 +1,7 @@
 package org.clulab.sequences
 
+import java.io.{FileWriter, PrintWriter}
+
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
@@ -66,14 +68,15 @@ class RNN {
         trainer.update()
       }
 
-      dev(devSentences)
+      dev(devSentences, epoch + 1)
     }
   }
 
-  def dev(devSentences:Array[Array[Row]]): Unit = {
+  def dev(devSentences:Array[Array[Row]], epoch:Int): Unit = {
     var total = 0
     var correct = 0
 
+    val pw = new PrintWriter(new FileWriter("dev.output." + epoch))
     logger.debug("Started evaluation on dev...")
     for(sent <- devSentences) {
       val words = sent.map(_.get(0))
@@ -87,8 +90,14 @@ class RNN {
           correct += 1
         }
       }
+
+      for(i <- words.indices) {
+        pw.println(golds(i) + " " + preds(i))
+      }
+      pw.println()
     }
 
+    pw.close()
     logger.info(s"Accuracy on ${devSentences.length} dev sentences: " + correct.toDouble / total)
   }
 
@@ -159,9 +168,12 @@ class RNN {
       if(model.w2i.contains(sanitized))
       // found the word in the known vocabulary
         lookup(model.lookupParameters, model.w2i(sanitized))
-      else
-      // not found; return the embedding at position 0, which is reserved for unknown words
+      else {
+        // not found; return the embedding at position 0, which is reserved for unknown words
         lookup(model.lookupParameters, 0)
+        //val caseIdx = casing(word)
+        //lookup(model.lookupParameters, caseIdx)
+      }
 
     // biLSTM over character embeddings
     val charEmbedding =
@@ -181,7 +193,10 @@ class RNN {
 
   def mkCharacterEmbedding(word: String): Expression = {
     val charEmbeddings = new ArrayBuffer[Expression]()
-    for(i <- word.indices) charEmbeddings += lookup(model.charLookupParameters, model.c2i(word.charAt(i)))
+    for(i <- word.indices) {
+      if(model.c2i.contains(word.charAt(i)))
+        charEmbeddings += lookup(model.charLookupParameters, model.c2i(word.charAt(i)))
+    }
     val fwOut = transduce(charEmbeddings, model.charFwRnnBuilder).last
     val bwOut = transduce(charEmbeddings.reverse, model.charBwRnnBuilder).last
     concatenate(fwOut, bwOut)
@@ -213,12 +228,54 @@ class RNN {
     logger.debug("Created parameters.")
 
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile, Some(w2i.keySet))
-    for(word <- w2i.keySet) {
-      if(w2v.matrix.contains(word)) {
+    val w2v = new Word2Vec(embeddingsFile) // Some(w2i.keySet))
+    val unknownEmbed = new Array[Double](EMBEDDING_SIZE)
+    for(i <- unknownEmbed.indices) unknownEmbed(i) = 0.0
+
+    var unknownCount = 0
+    for(word <- w2v.matrix.keySet){// w2i.keySet) {
+      if(w2i.contains(word)) {
         lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
+      } else {
+        add(unknownEmbed, w2v.matrix(word))
+        unknownCount += 1
       }
     }
+    for(i <- unknownEmbed.indices) {
+      unknownEmbed(i) /= unknownCount
+    }
+    lookupParameters.initialize(0, new FloatVector(toFloatArray(unknownEmbed)))
+
+    /*
+    val unknownEmbed = new Array[Array[Double]](TOTAL_CASES)
+    for(i <- unknownEmbed.indices) {
+      unknownEmbed(i) = new Array[Double](EMBEDDING_SIZE)
+      for(j <- unknownEmbed(i).indices) {
+        unknownEmbed(i)(j) = 0.0
+      }
+    }
+    val unknownCounts = new Array[Int](TOTAL_CASES)
+    for(i <- unknownCounts.indices) unknownCounts(i) = 0
+    var totalCount = 0
+    for(word <- w2v.matrix.keySet){// w2i.keySet) {
+      if(w2i.contains(word)) {
+        lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
+      } else {
+        val caseIdx = casing(word)
+        add(unknownEmbed(caseIdx), w2v.matrix(word))
+        unknownCounts(caseIdx) += 1
+      }
+      totalCount += 1
+    }
+    //println("before divide: " + unknownEmbed.mkString(", "))
+    //println("unknownCount: " + unknownCount)
+    //println("totalCount: " + totalCount)
+    for(i <- 0 until TOTAL_CASES) {
+      for (j <- unknownEmbed(i).indices) unknownEmbed(i)(j) /= unknownCounts(i).toDouble
+      //println("after divide: " + unknownEmbed.mkString(", "))
+      lookupParameters.initialize(i, new FloatVector(toFloatArray(unknownEmbed(i))))
+    }
+    */
     logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
 
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
@@ -227,6 +284,13 @@ class RNN {
 
     new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwBuilder, bwBuilder, H, O,
       charLookupParameters, charFwBuilder, charBwBuilder)
+  }
+
+  def add(dst:Array[Double], src:Array[Double]): Unit = {
+    assert(dst.length == src.length)
+    for(i <- dst.indices) {
+      dst(i) += src(i)
+    }
   }
 
   def toFloatArray(doubles:Array[Double]): Array[Float] = {
@@ -261,7 +325,11 @@ class RNN {
     }
 
     val commonWords = new ListBuffer[String]
-    commonWords += "*unknown*" // first position reserved for the unknown token
+    /*
+    for(i <- 0 until TOTAL_CASES)
+      commonWords += "*unknown*" + i.toString // first position reserved for the unknown token
+    */
+    commonWords += "*unknown*"
     for(w <- words.keySet) {
       if(words.getCount(w) > 1) {
         commonWords += w
@@ -296,7 +364,7 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 2
+  val EPOCHS = 3
   val RANDOM_SEED = 2522620396l
   val EMBEDDING_SIZE = 300
   val RNN_STATE_SIZE = 50
@@ -313,6 +381,7 @@ object RNN {
   val CASE_xX = 3
   val CASE_n = 4
   val CASE_o = 5
+  val TOTAL_CASES:Int = CASE_o + 1
 
   def casing(w:String): Int = {
     if(w.charAt(0).isLetter) { // probably an actual word
