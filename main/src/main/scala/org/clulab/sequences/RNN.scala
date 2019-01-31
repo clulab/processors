@@ -92,7 +92,7 @@ class RNN {
       }
 
       for(i <- words.indices) {
-        pw.println(golds(i) + " " + preds(i))
+        pw.println(words(i) + " " + golds(i) + " " + preds(i))
       }
       pw.println()
     }
@@ -162,7 +162,7 @@ class RNN {
   }
 
   def mkEmbedding(word: String):Expression = {
-    val sanitized = word // Word2Vec.sanitizeWord(word)
+    val sanitized = word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
       if(model.w2i.contains(sanitized))
