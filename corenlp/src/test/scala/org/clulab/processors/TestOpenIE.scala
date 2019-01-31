@@ -70,4 +70,24 @@ class TestOpenIE extends FlatSpec with Matchers {
 
   "Deserialized document" should behave like openIEBehavior(deserializedDoc)
 
+  "Processors" should "not throw a java.lang.IllegalArgumentException" in {
+    val text = "North Andover is a town in Essex County, Massachusetts, United States. At the 2010 census the population was 28,352."
+    val doc = fastNLP.annotate(text)
+
+    val relations = doc.sentences.map(_.relations).collect{case Some(a) => a}.flatten
+
+    relations should not be empty
+  }
+
+  it should "not throw a java.util.NotSuchElementException" in {
+    val text = "John Alan Lasseter (born January 12, 1957) is an American animator and film director, who is the chief creative officer of Pixar Animation Studios, Walt Disney Animation Studios, and DisneyToon Studios. He is also the Principal Creative Advisor for Walt Disney Imagineering."
+    val doc = fastNLP.annotate(text)
+
+    val relations = doc.sentences.map(_.relations).collect{case Some(a) => a}.flatten
+
+    // For some reason, CoreNLP sometimes omits the relation property of RelationTriple in OpenIE.
+    // In such cases, the relation interval takes a None value. and semantically it is an "is a" relation
+    relations exists (_.relationInterval.isEmpty) should be (true)
+
+  }
 }

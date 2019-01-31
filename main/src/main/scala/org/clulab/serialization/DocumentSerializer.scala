@@ -131,7 +131,8 @@ class DocumentSerializer extends LazyLogging {
       _ =>
         val line = r.readLine()
         val tokens = line.split(SEP)
-        RelationTriple(tokens(0).toFloat, mkRelationInterval(tokens(1)), mkRelationInterval(tokens(2)), mkRelationInterval(tokens(3)))
+        val relInterval = tokens(2) match { case "N" => None; case s => Some(mkRelationInterval(s)) }
+        RelationTriple(tokens(0).toFloat, mkRelationInterval(tokens(1)), relInterval, mkRelationInterval(tokens(3)))
     }
     Some(ret.toArray)
   }
@@ -359,7 +360,15 @@ class DocumentSerializer extends LazyLogging {
   }
 
   private def saveRelationTriple(t:RelationTriple, os:PrintWriter): Unit = {
-    os.println(s"${t.confidence}$SEP${t.subjectInterval.start}-${t.subjectInterval.end}$SEP${t.relationInterval.start}-${t.relationInterval.end}$SEP${t.objectInterval.start}-${t.objectInterval.end}")
+    os.print(s"${t.confidence}$SEP${t.subjectInterval.start}-${t.subjectInterval.end}$SEP")
+    t.relationInterval match {
+      case Some(i) =>
+        os.print(s"${i.start}-${i.end}")
+      case None =>
+        os.print("N")
+    }
+
+    os.println(s"$SEP${t.objectInterval.start}-${t.objectInterval.end}")
   }
 
   private def saveToken(sent:Sentence, offset:Int, os:PrintWriter) {

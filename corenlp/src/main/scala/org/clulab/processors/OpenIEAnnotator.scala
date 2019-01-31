@@ -61,14 +61,24 @@ trait OpenIEAnnotator {
       val triplets = sa.get(classOf[RelationTriplesAnnotation]).asScala
       for (triplet <- triplets) {
         val confidence = triplet.confidence
-        val subjectStart = triplet.canonicalSubject.asScala.head.index - 1
-        val subjectEnd = triplet.canonicalSubject.asScala.last.index
-        val relationStart = triplet.relation.asScala.head.index - 1
-        val relationEnd = triplet.relation.asScala.last.index
-        val objectStart = triplet.canonicalObject.asScala.head.index - 1
-        val objectEnd= triplet.canonicalObject.asScala.last.index
+        val canonicalSubject = triplet.canonicalSubject.asScala
+        val subjectStart = canonicalSubject.head.index - 1
+        val subjectEnd = subjectStart + canonicalSubject.length
 
-        val relation = RelationTriple(confidence.toFloat, Interval(subjectStart, subjectEnd), Interval(relationStart, relationEnd), Interval(objectStart, objectEnd))
+        val relationInterval = triplet.relation.asScala match {
+          case b if b.nonEmpty =>
+            val relationStart = b.head.index - 1
+            val relationEnd = relationStart + b.length
+            Some(Interval(relationStart, relationEnd))
+          case _ =>
+            None
+        }
+
+        val canonicalObject = triplet.canonicalObject.asScala
+        val objectStart = canonicalObject.head.index - 1
+        val objectEnd= objectStart + canonicalObject.length
+
+        val relation = RelationTriple(confidence.toFloat, Interval(subjectStart, subjectEnd),relationInterval , Interval(objectStart, objectEnd))
         relationInstances += relation
       }
 

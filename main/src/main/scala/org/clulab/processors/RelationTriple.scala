@@ -4,15 +4,15 @@ import org.clulab.struct.Interval
 
 case class RelationTriple(confidence:Float,
                           subjectInterval:Interval,
-                          relationInterval:Interval,
+                          relationInterval:Option[Interval],
                           objectInterval:Interval) {
 
   def subjectWords(implicit sentence:Sentence):Seq[String] = subjectInterval.map(sentence.words)
   def subjectLemmas(implicit sentence:Sentence):Seq[String] = subjectInterval.map(sentence.lemmas.get)
   def subjectText(implicit sentence:Sentence):String = subjectWords(sentence).mkString(" ")
 
-  def relationWords(implicit sentence:Sentence):Seq[String] = relationInterval.map(sentence.words)
-  def relationLemmas(implicit sentence:Sentence):Seq[String] = relationInterval.map(sentence.lemmas.get)
+  def relationWords(implicit sentence:Sentence):Seq[String] = relationInterval match { case Some(i) => i.map(sentence.words); case None => Seq() }
+  def relationLemmas(implicit sentence:Sentence):Seq[String] = relationInterval match { case Some(i) => i.map(sentence.lemmas.get); case None => Seq() }
   def relationText(implicit sentence:Sentence):String = relationWords(sentence).mkString(" ")
 
   def objectWords(implicit sentence:Sentence):Seq[String] = objectInterval.map(sentence.words)
