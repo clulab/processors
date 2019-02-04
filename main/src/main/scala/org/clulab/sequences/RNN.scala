@@ -37,7 +37,7 @@ class RNN {
     var numTagged = 0
     var sentCount = 0
     var sentences = trainSentences
-    val rand = new Random(1)
+    val rand = new Random(RANDOM_SEED)
     for(epoch <- 0 until EPOCHS) {
       sentences = MathUtils.randomize(sentences, rand)
 
@@ -48,7 +48,7 @@ class RNN {
 
         // predict probabilities for one sentence
         val words = sentence.map(_.get(0))
-        val probs = predictSentence(words)
+        val probs = predictSentence(words,  doDropout = false)
         //for (prob <- probs) logger.debug("Probs: " + prob.value().toVector())
 
         // compute loss for this sentence
@@ -68,37 +68,86 @@ class RNN {
         trainer.update()
       }
 
-      dev(devSentences, epoch + 1)
+      evaluate(devSentences, epoch + 1)
     }
   }
 
-  def dev(devSentences:Array[Array[Row]], epoch:Int): Unit = {
+  def printCoNLLOutput(pw:PrintWriter, words:Array[String], golds:Array[String], preds:Array[String]): Unit = {
+    for(i <- words.indices) {
+      pw.println(words(i) + " " + golds(i) + " " + preds(i))
+    }
+    pw.println()
+  }
+
+  def accuracy(golds:Array[String], preds:Array[String]): (Int, Int) = {
+    assert(golds.length == preds.length)
+    var correct = 0
+    for(e <- preds.zip(golds)) {
+      if(e._1 == e._2) {
+        correct += 1
+      }
+    }
+    (golds.length, correct)
+  }
+
+  def evaluate(devSentences:Array[Array[Row]], epoch:Int): Unit = {
     var total = 0
     var correct = 0
+    var correctMax = 0
+
+    var totalNonO = 0
+    var invalidNonO = 0
 
     val pw = new PrintWriter(new FileWriter("dev.output." + epoch))
+    val pwm = new PrintWriter(new FileWriter("devmax.output." + epoch))
     logger.debug("Started evaluation on dev...")
     for(sent <- devSentences) {
       val words = sent.map(_.get(0))
       val golds = sent.map(_.get(1))
 
       val preds = predict(words)
-      assert(golds.length == preds.length)
-      total += golds.length
-      for(e <- preds.zip(golds)) {
-        if(e._1 == e._2) {
-          correct += 1
+      val (t, c) = accuracy(golds, preds)
+      total += t
+      correct += c
+
+      printCoNLLOutput(pw, words, golds, preds)
+
+      // analytics:
+      //   how many labels break the BIO format?
+      //   what is the max accuracy, if we correctly fixed all of them?
+      val maxPreds = new Array[String](preds.length)
+      for(i <- preds.indices) maxPreds(i) = preds(i)
+      for(i <- preds.indices) {
+        val crt = preds(i)
+        val prev = if(i > 0) preds(i - 1) else "O"
+
+        if(crt != "O") totalNonO += 1
+        if(crt.startsWith("I-")) {
+          if(! prev.startsWith("O") && crt.substring(2) == prev.substring(2)) {
+            // valid output
+          } else {
+            invalidNonO += 1
+
+            var j = i
+            while(j >= 0 && maxPreds(j) != "O") {
+              maxPreds(j) = golds(j)
+              j -= 1
+            }
+          }
         }
       }
 
-      for(i <- words.indices) {
-        pw.println(words(i) + " " + golds(i) + " " + preds(i))
-      }
-      pw.println()
+      val (_, cm) = accuracy(golds, maxPreds)
+      correctMax += cm
+
+      printCoNLLOutput(pwm, words, golds, maxPreds)
     }
 
     pw.close()
+    pwm.close()
     logger.info(s"Accuracy on ${devSentences.length} dev sentences: " + correct.toDouble / total)
+    logger.info("Percentage of invalid non-O labels: " + invalidNonO.toDouble / totalNonO + " (" + invalidNonO + "/" + totalNonO + ")")
+    logger.info(s"Max accuracy on ${devSentences.length} dev sentences: " + correctMax.toDouble / total)
   }
 
   def sentenceLoss(tags:Iterable[String], probs:Iterable[Expression]): Expression = {
@@ -107,7 +156,7 @@ class RNN {
       val t = e._1
       val prob = e._2
       val tid = model.t2i(t)
-      val loss = pickNegLogSoftmax(prob, tid)
+      val loss = pickNegLogSoftmax(prob, tid) // TODO: bad loss, fix me
       losses.add(loss)
     }
     Expression.sum(losses)
@@ -117,7 +166,7 @@ class RNN {
     * Generates tag probabilities for the words in this sequence
     * @param words One training or testing sentence
     */
-  def predictSentence(words: Array[String]): Iterable[Expression] = {
+  def predictSentence(words: Array[String], doDropout:Boolean): Iterable[Expression] = {
     ComputationGraph.renew()
 
     val embeddings = words.map(mkEmbedding)
@@ -130,11 +179,11 @@ class RNN {
     val H = parameter(model.H)
     val O = parameter(model.O)
 
-    states.map(s => O * Expression.tanh(H * s))
+    states.map(s => if(doDropout) Expression.dropout(O * Expression.tanh(H * s), DROPOUT_PROB) else O * Expression.tanh(H * s))
   }
 
   def predict(words:Array[String]):Array[String] = synchronized {
-    val scores = predictSentence(words)
+    val scores = predictSentence(words, doDropout = false)
     val tags = new ArrayBuffer[String]()
     for(score <- scores) {
       val probs = softmax(score).value().toVector().toArray
@@ -364,8 +413,9 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 3
-  val RANDOM_SEED = 2522620396l
+  val EPOCHS = 2
+  val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
+  val DROPOUT_PROB = 0.1f
   val EMBEDDING_SIZE = 300
   val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
