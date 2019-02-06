@@ -14,7 +14,6 @@ import scala.collection.mutable
 import scala.util.Random
 
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.fatdynet.utils.Loader
 import org.clulab.fatdynet.utils.Loader.ClosableModelSaver
 
 class RNN {
@@ -82,7 +81,10 @@ class RNN {
     var correct = 0
 
     logger.debug("Started evaluation on dev...")
-    for(sent <- devSentences) {
+    for (index <- 0 until 1000) {
+      val sent = devSentences(index)
+//    }
+//    for(sent <- devSentences) {
       val words = sent.map(_.get(0))
       val golds = sent.map(_.get(1))
 
@@ -204,93 +206,10 @@ class RNN {
   def initialize(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int], embeddingsFile:String): Unit = {
     logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    model = mkParams(w2i, t2i, c2i, embeddingsFile)
+    model = mkParams(w2i, t2i, c2i)
+    model.initialize(embeddingsFile)
     logger.debug("Completed initialization.")
   }
-
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int], embeddingsFile:String): RNNParameters = {
-    val parameters = new ParameterCollection()
-    val looseParameters = new ParameterCollection()
-    val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
-    val embeddingSize = EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE // + CASE_o + 1
-
-    val fwModel = parameters // new ParameterCollection()
-    val fwRnnBuilderBefore = parameters.parameterCount()
-    val fwRnnBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, fwModel)
-    var fwRnnBuilderAfter = parameters.parameterCount()
-
-    val bwModel = parameters // new ParameterCollection()
-    val bwRnnBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, bwModel)
-    val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
-    val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
-    val i2t = fromIndexToString(t2i)
-    logger.debug("Created parameters.")
-
-    logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile, Some(w2i.keySet))
-    for(word <- w2i.keySet) {
-      if(w2v.matrix.contains(word)) {
-        lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
-      }
-    }
-    logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
-
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-    val charFwModel = parameters // new ParameterCollection()
-    val charFwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, charFwModel)
-    val charBwModel = parameters // new ParameterCollection()
-    val charBwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, charBwModel)
-
-    new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwModel, fwRnnBuilder, bwModel, bwRnnBuilder, H, O,
-      charLookupParameters, charFwModel, charFwRnnBuilder, charBwModel, charBwRnnBuilder)
-  }
-
-  def toFloatArray(doubles:Array[Double]): Array[Float] = {
-    val floats = new Array[Float](doubles.length)
-    for(i <- doubles.indices) {
-      floats(i) = doubles(i).toFloat
-    }
-    floats
-  }
-
-  def fromIndexToString(s2i: Map[String, Int]):Map[Int, String] = {
-    val i2s = new mutable.HashMap[Int, String]()
-    for(k <- s2i.keySet) {
-      i2s += (s2i(k) -> k)
-    }
-    i2s.toMap
-  }
-
-  def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int], Map[Character, Int]) = {
-    val words = new Counter[String]()
-    val tags = new Counter[String]()
-    val chars = new mutable.HashSet[Character]()
-    for(sentence <- trainSentences) {
-      for(token <- sentence) {
-        val word = token.get(0)
-        words += word // Word2Vec.sanitizeWord(word)
-        for(i <- word.indices) {
-          chars += word.charAt(i)
-        }
-        tags += token.get(1)
-      }
-    }
-
-    val commonWords = new ListBuffer[String]
-    commonWords += "*unknown*" // first position reserved for the unknown token
-    for(w <- words.keySet) {
-      if(words.getCount(w) > 1) {
-        commonWords += w
-      }
-    }
-
-    val w2i = commonWords.zipWithIndex.toMap
-    val t2i = tags.keySet.toList.zipWithIndex.toMap
-    val c2i = chars.toList.zipWithIndex.toMap
-
-    (w2i, t2i, c2i)
-  }
-
 }
 
 class RNNParameters(
@@ -303,10 +222,7 @@ class RNNParameters(
 
   val lookupParameters:LookupParameter,
 
-  val fwModel:ParameterCollection,
   val fwRnnBuilder:RnnBuilder,
-
-  val bwModel:ParameterCollection,
   val bwRnnBuilder:RnnBuilder,
 
   val H:Parameter,
@@ -314,12 +230,28 @@ class RNNParameters(
 
   val charLookupParameters:LookupParameter,
 
-  val charFwModel:ParameterCollection,
   val charFwRnnBuilder:RnnBuilder,
-
-  val charBwModel:ParameterCollection,
   val charBwRnnBuilder:RnnBuilder
-)
+) {
+  protected def toFloatArray(doubles:Array[Double]): Array[Float] = {
+    val floats = new Array[Float](doubles.length)
+    for(i <- doubles.indices) {
+      floats(i) = doubles(i).toFloat
+    }
+    floats
+  }
+
+  def initialize(embeddingsFile: String): Unit = {
+    logger.debug(s"Loading embeddings from file $embeddingsFile...")
+    val w2v = new Word2Vec(embeddingsFile, Some(w2i.keySet))
+    for(word <- w2i.keySet) {
+      if(w2v.matrix.contains(word)) {
+        lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
+      }
+    }
+    logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
+  }
+}
 
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
@@ -374,33 +306,75 @@ object RNN {
 
   def save(filename:String, rnnParameters: RNNParameters):Unit = {
     new ClosableModelSaver(filename).autoClose { saver =>
-      saver.addLookupParameter(rnnParameters.lookupParameters, "/lu")
-      saver.addModel(rnnParameters.fwModel, "/fw")
-      saver.addModel(rnnParameters.bwModel, "/bw")
-      saver.addParameter(rnnParameters.H, "/H")
-      saver.addParameter(rnnParameters.O, "/O")
-      saver.addLookupParameter(rnnParameters.charLookupParameters, "/charLu")
-      saver.addModel(rnnParameters.charFwModel, "/charFw")
-      saver.addModel(rnnParameters.charBwModel, "/charBw")
       saver.addModel(rnnParameters.parameters, "/all")
     }
   }
 
-  def load(filename:String):RNNParameters = {
-    val (allParameters, allLookupParameters) = Loader.loadParameters(filename)
-    val lookupParameters = allLookupParameters("/lu")
-    val H = allParameters("/H")
-    val O = allParameters("/O")
-    val charLookupParameters = allLookupParameters("/charLu")
+  def load(filename:String, trainSentences:Array[Array[Row]], oldRnnParameters: RNNParameters):RNNParameters = {
+    val (w2i, t2i, c2i) = mkVocabs(trainSentences)
+    val (w2i2, t2i2, c2i2) = (oldRnnParameters.w2i, oldRnnParameters.t2i, oldRnnParameters.c2i)
+    val model = mkParams(w2i, t2i, c2i) // This will not be initialized, but rather loaded from the file.
 
-    val (fwRnnBuilder, fwModel, _, _) = Loader.loadLstm(filename, "/fw")
-    val (bwRnnBuilder, bwModel, _, _) = Loader.loadLstm(filename, "/bw")
-    val (charFwRnnBuilder, charFwModel, _, _) = Loader.loadLstm(filename, "/charFw")
-    val (charBwRnnBuilder, charBwModel, _, _) = Loader.loadLstm(filename, "/charBw")
+    new ModelLoader(filename).populateModel(model.parameters, "/all")
+    model
+  }
 
-    // TODO
-    new RNNParameters(Map.empty, Map.empty, Map.empty, Map.empty, new ParameterCollection(), lookupParameters, fwModel.get, fwRnnBuilder.get, bwModel.get, bwRnnBuilder.get, H, O,
-        charLookupParameters, charFwModel.get, charFwRnnBuilder.get, charBwModel.get, charBwRnnBuilder.get)
+  def fromIndexToString(s2i: Map[String, Int]):Map[Int, String] = {
+    val i2s = new mutable.HashMap[Int, String]()
+    for(k <- s2i.keySet) {
+      i2s += (s2i(k) -> k)
+    }
+    i2s.toMap
+  }
+
+  def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int], Map[Character, Int]) = {
+    val words = new Counter[String]()
+    val tags = new Counter[String]()
+    val chars = new mutable.HashSet[Character]()
+    for(sentence <- trainSentences) {
+      for(token <- sentence) {
+        val word = token.get(0)
+        words += word // Word2Vec.sanitizeWord(word)
+        for(i <- word.indices) {
+          chars += word.charAt(i)
+        }
+        tags += token.get(1)
+      }
+    }
+
+    val commonWords = new ListBuffer[String]
+    commonWords += "*unknown*" // first position reserved for the unknown token
+    for(w <- words.keySet) {
+      if(words.getCount(w) > 1) {
+        commonWords += w
+      }
+    }
+
+    val w2i = commonWords.sorted.zipWithIndex.toMap // zipWithIndex means that order matters in commonWords
+    val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap // These come from a set, so they must get sorted for consistency
+    val c2i = chars.toList.sorted.zipWithIndex.toMap // These come from a set, so they must get sorted for consistency
+
+    (w2i, t2i, c2i)
+  }
+
+  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int]): RNNParameters = {
+    val parameters = new ParameterCollection()
+    val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
+    val embeddingSize = EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE // + CASE_o + 1
+    val fwRnnBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val bwRnnBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
+    val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
+
+    val i2t = fromIndexToString(t2i)
+    logger.debug("Created parameters.")
+
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
+    val charFwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+
+    new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwRnnBuilder, bwRnnBuilder, H, O,
+      charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
   }
 
   def main(args: Array[String]): Unit = {
@@ -415,8 +389,14 @@ object RNN {
 
     val filename = "rnn.dat"
     save(filename, rnn.model)
-    val rnnParameters = load(filename)
+
     val pretrainedRnn = new RNN()
+    val rnnParameters = load(filename, trainSentences, rnn.model)
     pretrainedRnn.model = rnnParameters
+
+//    save(filename + "2", pretrainedRnn.model)
+
+    rnn.dev(devSentences)
+    pretrainedRnn.dev(devSentences)
   }
 }
