@@ -141,10 +141,17 @@ object Files {
     if(path.getPath.endsWith(".gz"))
       new BufferedReader(
         new InputStreamReader(
-          new GZIPInputStream(
-            new FileInputStream(path))))
+          newGZIPInputStream(path)))
     else
       new BufferedReader(
         new FileReader(path))
+  }
+
+  def newGZIPInputStream(file: File): GZIPInputStream = {
+    new GZIPInputStream(new FileInputStream(file), 32768)
+  }
+
+  def newGZIPInputStream(filename: String): GZIPInputStream = {
+    new GZIPInputStream(new FileInputStream(filename), 32768)
   }
 }

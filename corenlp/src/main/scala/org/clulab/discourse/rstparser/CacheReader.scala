@@ -31,7 +31,7 @@ object CacheReader {
     val reader = new Reader
     val output = reader.readDir(dir, CORENLP_PROCESSOR)
     val path = new File(dir).getAbsolutePath + ".rcache"
-    val os = new ObjectOutputStream(new FileOutputStream(path))
+    val os = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(path)))
     os.writeObject(output)
     os.close()
     println("Cache saved in file: " + path)
@@ -39,7 +39,7 @@ object CacheReader {
 
   private def loadCache(path:String):List[(DiscourseTree, Document)] = {
     logger.debug("Attempting to load cached documents from: " + path)
-    val is = new ClassLoaderObjectInputStream(DiscourseTree.getClass.getClassLoader, new FileInputStream(path))
+    val is = new ClassLoaderObjectInputStream(DiscourseTree.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(path)))
     val output = is.readObject().asInstanceOf[List[(DiscourseTree, Document)]]
     is.close()
     output

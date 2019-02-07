@@ -1,16 +1,20 @@
 package org.clulab.learning
 
 import java.io._
+
 import org.slf4j.LoggerFactory
+
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.Counter
 import org.clulab.struct.Counters.dotProduct
 import org.clulab.struct.Lexicon
-import org.clulab.utils.{StringUtils, MathUtils}
+import org.clulab.utils.{MathUtils, StringUtils}
 import java.util.Properties
+
 import scala.Serializable
 import scala.util.Random
 import Datasets._
+import org.clulab.utils.Serializer
 
 /**
  * Perceptron classifier for ranking, in primal mode
@@ -144,9 +148,7 @@ class PerceptronRankingClassifier[F] (
   }
 
   override def saveTo(fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
-    os.writeObject(this)
-    os.close()
+    Serializer.save(this, fileName)
   }
 
   override def displayModel(pw:PrintWriter) {
@@ -161,9 +163,6 @@ object PerceptronRankingClassifier {
   val logger = LoggerFactory.getLogger(classOf[PerceptronRankingClassifier[String]])
 
   def loadFrom[F](fileName:String):PerceptronRankingClassifier[F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[PerceptronRankingClassifier[F]]
-    is.close()
-    c
+    Serializer.load(fileName)
   }
 }

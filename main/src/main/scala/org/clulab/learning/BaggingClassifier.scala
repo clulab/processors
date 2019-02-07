@@ -1,10 +1,13 @@
 package org.clulab.learning
 
 import org.clulab.struct.Counter
+
 import scala.util.Random
 import org.slf4j.LoggerFactory
 import BaggingClassifier._
 import java.io._
+
+import org.clulab.utils.Serializer
 
 /**
  * Classifier that implements bagging over another Classifier
@@ -66,9 +69,7 @@ class BaggingClassifier[L, F] (val baseClassifierFactory: () => Classifier[L,F],
   override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
 
   override def saveTo(fn:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fn))
-    os.writeObject(this)
-    os.close()
+    Serializer.save(this, fn)
   }
 }
 
@@ -76,9 +77,6 @@ object BaggingClassifier {
   val logger = LoggerFactory.getLogger(classOf[BaggingClassifier[String, String]])
 
   def loadFrom[L, F](fileName:String):BaggingClassifier[L, F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[BaggingClassifier[L, F]]
-    is.close()
-    c
+    Serializer.load(fileName)
   }
 }

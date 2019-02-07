@@ -1,14 +1,17 @@
 package org.clulab.learning
 
 import scala.collection.mutable
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
+
 import scala.io.{BufferedSource, Source}
 import java.util.zip.GZIPInputStream
-import java.io.{FileWriter, PrintWriter, FileInputStream, BufferedInputStream}
+import java.io.{BufferedInputStream, FileInputStream, FileWriter, PrintWriter}
+
 import org.slf4j.LoggerFactory
 import RVFDataset._
+import org.clulab.utils.Files
 
 /**
  * Parent class for classification datasets
@@ -387,7 +390,7 @@ object RVFDataset {
   /** reads dataset from a file */
   def mkDatasetFromSvmLightFormat(filename: String): RVFDataset[Int, String] = {
     val source = if (filename endsWith ".gz") {
-      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {
       Source.fromFile(filename)
@@ -473,7 +476,7 @@ object RVFDataset {
   /** reads dataset from a file */
   def mkDatumsFromSvmLightFormat(filename: String): Iterable[Datum[Int, String]] = {
     val source = if (filename endsWith ".gz") {
-      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {
       Source.fromFile(filename)
