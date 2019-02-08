@@ -147,6 +147,8 @@ object Files {
         new FileReader(path))
   }
 
+  // See http://java-performance.info/java-io-bufferedinputstream-and-java-util-zip-gzipinputstream/
+  // about whether different kinds of input streams need to be buffered.
   def newGZIPInputStream(file: File): GZIPInputStream = {
     new GZIPInputStream(new FileInputStream(file), 32768)
   }
