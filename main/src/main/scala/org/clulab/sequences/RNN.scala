@@ -462,7 +462,7 @@ object RNN {
 
   def load(filename:String, trainSentences:Array[Array[Row]], oldRnnParameters: RNNParameters):RNNParameters = {
     val (w2i, t2i, c2i) = mkVocabs(trainSentences)
-    val (w2i2, t2i2, c2i2) = (oldRnnParameters.w2i, oldRnnParameters.t2i, oldRnnParameters.c2i)
+    val (w2i2, t2i2, c2i2) = (oldRnnParameters.w2i, oldRnnParameters.t2i, oldRnnParameters.c2i) // TODO: Keith, why is this needed?
     val model = mkParams(w2i, t2i, c2i) // This will not be initialized, but rather loaded from the file.
 
     new ModelLoader(filename).populateModel(model.parameters, "/all")
