@@ -42,7 +42,7 @@ class RNN {
       sentences = MathUtils.randomize(sentences, rand)
 
       logger.info(s"Started epoch $epoch.")
-      for (index <- 0 to 1000) {
+      for (index <- 0 to 1000) { // TODO: mihai, change to whole corpus
         val sentence = sentences(index)
 //      }
 //      for(sentence <- sentences) {
@@ -76,7 +76,7 @@ class RNN {
         trainer.update()
       }
 
-//      evaluate(devSentences, epoch + 1)
+//      evaluate(devSentences, epoch + 1) // TODO: mihai, report perf on dev
     }
   }
 
@@ -318,7 +318,7 @@ class RNN {
 class RNNParameters(
   val w2i:Map[String, Int],
   val t2i:Map[String, Int],
-  val i2t:Map[Int, String],
+  val i2t:Array[String],
   val c2i:Map[Character, Int],
   val parameters:ParameterCollection,
   val lookupParameters:LookupParameter,
@@ -365,37 +365,6 @@ class RNNParameters(
       unknownEmbed(i) /= unknownCount
     }
     lookupParameters.initialize(0, new FloatVector(toFloatArray(unknownEmbed)))
-
-    /*
-    val unknownEmbed = new Array[Array[Double]](TOTAL_CASES)
-    for(i <- unknownEmbed.indices) {
-      unknownEmbed(i) = new Array[Double](EMBEDDING_SIZE)
-      for(j <- unknownEmbed(i).indices) {
-        unknownEmbed(i)(j) = 0.0
-      }
-    }
-    val unknownCounts = new Array[Int](TOTAL_CASES)
-    for(i <- unknownCounts.indices) unknownCounts(i) = 0
-    var totalCount = 0
-    for(word <- w2v.matrix.keySet){// w2i.keySet) {
-      if(w2i.contains(word)) {
-        lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
-      } else {
-        val caseIdx = casing(word)
-        add(unknownEmbed(caseIdx), w2v.matrix(word))
-        unknownCounts(caseIdx) += 1
-      }
-      totalCount += 1
-    }
-    //println("before divide: " + unknownEmbed.mkString(", "))
-    //println("unknownCount: " + unknownCount)
-    //println("totalCount: " + totalCount)
-    for(i <- 0 until TOTAL_CASES) {
-      for (j <- unknownEmbed(i).indices) unknownEmbed(i)(j) /= unknownCounts(i).toDouble
-      //println("after divide: " + unknownEmbed.mkString(", "))
-      lookupParameters.initialize(i, new FloatVector(toFloatArray(unknownEmbed(i))))
-    }
-    */
     logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
 
   }
@@ -422,7 +391,6 @@ object RNN {
   val CASE_xX = 3
   val CASE_n = 4
   val CASE_o = 5
-  val TOTAL_CASES:Int = CASE_o + 1
 
   def casing(w:String): Int = {
     if(w.charAt(0).isLetter) { // probably an actual word
@@ -462,19 +430,24 @@ object RNN {
 
   def load(filename:String, trainSentences:Array[Array[Row]], oldRnnParameters: RNNParameters):RNNParameters = {
     val (w2i, t2i, c2i) = mkVocabs(trainSentences)
-    val (w2i2, t2i2, c2i2) = (oldRnnParameters.w2i, oldRnnParameters.t2i, oldRnnParameters.c2i) // TODO: Keith, why is this needed?
-    val model = mkParams(w2i, t2i, c2i) // This will not be initialized, but rather loaded from the file.
-
+    val model = mkParams(w2i, t2i, c2i) // This will not be initialized, but rather loaded from the file, see below
     new ModelLoader(filename).populateModel(model.parameters, "/all")
     model
   }
 
-  def fromIndexToString(s2i: Map[String, Int]):Map[Int, String] = {
-    val i2s = new mutable.HashMap[Int, String]()
-    for(k <- s2i.keySet) {
-      i2s += (s2i(k) -> k)
+  def fromIndexToString(s2i: Map[String, Int]):Array[String] = {
+    var max = Int.MinValue
+    for(v <- s2i.values) {
+      if(v > max) {
+        max = v
+      }
     }
-    i2s.toMap
+    assert(max > 0)
+    val i2s = new Array[String](max + 1)
+    for(k <- s2i.keySet) {
+      i2s(s2i(k)) = k
+    }
+    i2s
   }
 
   def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int], Map[Character, Int]) = {
@@ -493,11 +466,7 @@ object RNN {
     }
 
     val commonWords = new ListBuffer[String]
-    /*
-    for(i <- 0 until TOTAL_CASES)
-      commonWords += "*unknown*" + i.toString // first position reserved for the unknown token
-    */
-    commonWords += "*unknown*"
+    commonWords += "*unknown*" // the word at position 0 is reserved for unknown words
     for(w <- words.keySet) {
       if(words.getCount(w) > 1) {
         commonWords += w
@@ -544,7 +513,7 @@ object RNN {
     save(filename, rnn.model)
 
     val pretrainedRnn = new RNN()
-    val rnnParameters = load(filename, trainSentences, rnn.model)
+    val rnnParameters = load(filename, trainSentences, rnn.model) // TODO: we need to load without access to trainSentences
     pretrainedRnn.model = rnnParameters
 
     save(filename + "2", pretrainedRnn.model)
