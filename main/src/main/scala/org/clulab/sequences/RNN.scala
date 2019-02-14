@@ -1,5 +1,7 @@
 package org.clulab.sequences
 
+import java.io.File
+import java.io.PrintStream
 import java.io.{FileWriter, PrintWriter}
 
 import org.clulab.embeddings.word2vec.Word2Vec
@@ -11,8 +13,10 @@ import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 import RNN._
 import org.clulab.utils.MathUtils
+import org.clulab.utils.Serializer
 
 import scala.collection.mutable
+import scala.io.Source
 import scala.util.Random
 
 class RNN {
@@ -26,8 +30,6 @@ class RNN {
 
     initialize(w2i, t2i, c2i, embeddingsFile)
     update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
-
-    // TODO: save the model to disk here
   }
 
   def update(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
@@ -306,7 +308,7 @@ class RNN {
     states
   }
 
-  def initialize(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int], embeddingsFile:String): Unit = {
+  def initialize(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingsFile:String): Unit = {
     logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
     model = mkParams(w2i, t2i, c2i)
@@ -319,7 +321,7 @@ class RNNParameters(
   val w2i:Map[String, Int],
   val t2i:Map[String, Int],
   val i2t:Array[String],
-  val c2i:Map[Character, Int],
+  val c2i:Map[Char, Int],
   val parameters:ParameterCollection,
   val lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
@@ -397,15 +399,15 @@ object RNN {
       // count upper and lower-case chars
       var uppers = 0
       for(j <- 0 until w.length) {
-        if(Character.isUpperCase(w.charAt(j))) {
+        if(w.charAt(j).isUpper) {
           uppers += 1
         }
       }
 
       var v = CASE_x
       if (uppers == w.length) v = CASE_X
-      else if (uppers == 1 && Character.isUpperCase(w.charAt(0))) v = CASE_Xx
-      else if (uppers >= 1 && !Character.isUpperCase(w.charAt(0))) v = CASE_xX
+      else if (uppers == 1 && w.charAt(0).isUpper) v = CASE_Xx
+      else if (uppers >= 1 && !w.charAt(0).isUpper) v = CASE_xX
       v
     } else if(isNumber(w))
       CASE_n
@@ -422,16 +424,66 @@ object RNN {
     true
   }
 
-  def save(filename:String, rnnParameters: RNNParameters):Unit = {
-    val modelSaver = new ModelSaver(filename)
-    modelSaver.addModel(rnnParameters.parameters, "/all")
-    modelSaver.done()
+  protected def save[T](printStream: PrintStream, map: Map[T, Int]): Unit = {
+    map.foreach { case (key, value) =>
+      printStream.println(s"$key\t$value")
+    }
+    printStream.println() // Separator
   }
 
-  def load(filename:String, trainSentences:Array[Array[Row]], oldRnnParameters: RNNParameters):RNNParameters = {
-    val (w2i, t2i, c2i) = mkVocabs(trainSentences)
-    val model = mkParams(w2i, t2i, c2i) // This will not be initialized, but rather loaded from the file, see below
-    new ModelLoader(filename).populateModel(model.parameters, "/all")
+  def save(dynetFilename:String, x2iFilename: String, rnnParameters: RNNParameters):Unit = {
+    val modelSaver = new ModelSaver(dynetFilename)
+    modelSaver.addModel(rnnParameters.parameters, "/all")
+    modelSaver.done()
+
+    Serializer.using(new PrintStream(new File(x2iFilename), "UTF-8")) { printStream =>
+      save(printStream, rnnParameters.w2i)
+      save(printStream, rnnParameters.t2i)
+      save(printStream, rnnParameters.c2i)
+    }
+  }
+
+  def load(filename: String, keyValueBuilders: Array[KeyValueBuilder]): Unit = {
+    var index = 0
+
+    Serializer.using(Source.fromFile(filename, "UTF-8")) { source =>
+      source.getLines.foreach { line =>
+        if (line.nonEmpty) {
+          val Array(key, value) = line.split('\t')
+          keyValueBuilders(index).add(key, value)
+        }
+        else
+          index += 1
+      }
+    }
+  }
+
+  trait KeyValueBuilder {
+    def add(key: String, value: String): Unit
+  }
+
+  class MapBuilder[KeyType](val converter: String => KeyType) extends KeyValueBuilder {
+    val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
+
+    def add(key: String, value: String): Unit = mutableMap += ((converter(key), value.toInt))
+
+    def toMap: Map[KeyType, Int] = mutableMap.toMap
+  }
+
+  def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
+    def stringToString(string: String): String = string
+    def stringToChar(string: String): Char = string.charAt(0)
+
+    val w2iBuilder = new MapBuilder(stringToString)
+    val t2iBuilder = new MapBuilder(stringToString)
+    val c2iBuilder = new MapBuilder(stringToChar)
+    val builders: Array[KeyValueBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder)
+
+    load(x2iFilename, builders)
+
+    val model = mkParams(w2iBuilder.toMap, t2iBuilder.toMap, c2iBuilder.toMap)
+
+    new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
     model
   }
 
@@ -450,10 +502,10 @@ object RNN {
     i2s
   }
 
-  def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int], Map[Character, Int]) = {
+  def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
     val words = new Counter[String]()
     val tags = new Counter[String]()
-    val chars = new mutable.HashSet[Character]()
+    val chars = new mutable.HashSet[Char]()
     for(sentence <- trainSentences) {
       for(token <- sentence) {
         val word = token.get(0)
@@ -480,7 +532,7 @@ object RNN {
     (w2i, t2i, c2i)
   }
 
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Character, Int]): RNNParameters = {
+  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int]): RNNParameters = {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
     val embeddingSize = EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE // + CASE_o + 1
@@ -509,14 +561,14 @@ object RNN {
     val rnn = new RNN()
     rnn.train(trainSentences, devSentences, embeddingsFile)
 
-    val filename = "rnn.dat"
-    save(filename, rnn.model)
+    val dynetFilename = "rnn.dat"
+    val x2iFilename = "x2i.dat"
+
+    save(dynetFilename, x2iFilename, rnn.model)
 
     val pretrainedRnn = new RNN()
-    val rnnParameters = load(filename, trainSentences, rnn.model) // TODO: we need to load without access to trainSentences
+    val rnnParameters = load(dynetFilename, x2iFilename)
     pretrainedRnn.model = rnnParameters
-
-    save(filename + "2", pretrainedRnn.model)
 
     rnn.evaluate(devSentences, -1)
     pretrainedRnn.evaluate(devSentences, -1)
