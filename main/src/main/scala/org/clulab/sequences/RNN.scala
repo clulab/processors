@@ -48,11 +48,16 @@ class RNN {
 
         // predict probabilities for one sentence
         val words = sentence.map(_.get(0))
-        val probs = predictSentence(words,  doDropout = false)
-        //for (prob <- probs) logger.debug("Probs: " + prob.value().toVector())
+        val probsAsExpressions = sequenceProbsAsExpressions(words,  doDropout = false)
+        val lattice = expressionProbsToLattice(probsAsExpressions)
+
+        // get the predicted tags for this sentence
+        val predictedTagIds = viterbi(lattice)
+        // get the gold tags for this sentence
+        val goldTagIds = toTagIds(sentence.map(_.get(1)))
 
         // compute loss for this sentence
-        val loss = sentenceLoss(sentence.map(_.get(1)), probs)
+        val loss = sentenceLoss(probsAsExpressions.toArray, goldTagIds, predictedTagIds)
 
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
@@ -70,6 +75,33 @@ class RNN {
 
       evaluate(devSentences, epoch + 1)
     }
+  }
+
+  def sentenceLoss(probs:Array[Expression], golds:Array[Int], preds:Array[Int]): Expression = {
+    val predLosses = new ExpressionVector()
+    val goldLosses = new ExpressionVector()
+    assert(probs.length == golds.length)
+    assert(probs.length == preds.length)
+
+    for(i <- probs.indices) {
+      val goldTid = golds(i)
+      val predTid = preds(i)
+      goldLosses.add(log(pick(probs(i), goldTid)))
+      predLosses.add(log(pick(probs(i), predTid)))
+    }
+
+    val predLoss = sum(predLosses)
+    val goldLoss = sum(goldLosses)
+
+    predLoss - goldLoss
+  }
+
+  def toTagIds(tags: Array[String]):Array[Int] = {
+    val ids = new ArrayBuffer[Int]()
+    for(tag <- tags) {
+      ids += model.t2i(tag)
+    }
+    ids.toArray
   }
 
   def printCoNLLOutput(pw:PrintWriter, words:Array[String], golds:Array[String], preds:Array[String]): Unit = {
@@ -150,23 +182,11 @@ class RNN {
     logger.info(s"Max accuracy on ${devSentences.length} dev sentences: " + correctMax.toDouble / total)
   }
 
-  def sentenceLoss(tags:Iterable[String], probs:Iterable[Expression]): Expression = {
-    val losses = new ExpressionVector()
-    for(e <- tags.zip(probs)) {
-      val t = e._1
-      val prob = e._2
-      val tid = model.t2i(t)
-      val loss = pickNegLogSoftmax(prob, tid) // TODO: bad loss, fix me
-      losses.add(loss)
-    }
-    Expression.sum(losses)
-  }
-
   /**
-    * Generates tag probabilities for the words in this sequence
+    * Generates tag probabilities for the words in this sequence, stored as Expressions
     * @param words One training or testing sentence
     */
-  def predictSentence(words: Array[String], doDropout:Boolean): Iterable[Expression] = {
+  def sequenceProbsAsExpressions(words: Array[String], doDropout:Boolean): Iterable[Expression] = {
     ComputationGraph.renew()
 
     val embeddings = words.map(mkEmbedding)
@@ -179,14 +199,31 @@ class RNN {
     val H = parameter(model.H)
     val O = parameter(model.O)
 
-    states.map(s => if(doDropout) Expression.dropout(O * Expression.tanh(H * s), DROPOUT_PROB) else O * Expression.tanh(H * s))
+    states.map(s =>
+      if(doDropout)
+        softmax(Expression.dropout(O * Expression.tanh(H * s), DROPOUT_PROB)) // TODO: do not dropout from O
+      else
+        softmax(O * Expression.tanh(H * s)))
   }
 
-  def predict(words:Array[String]):Array[String] = synchronized {
-    val scores = predictSentence(words, doDropout = false)
-    val tags = new ArrayBuffer[String]()
-    for(score <- scores) {
-      val probs = softmax(score).value().toVector().toArray
+  /** Creates the lattice of probs for a given sequence */
+  def expressionProbsToLattice(expressions:Iterable[Expression]): Array[Array[Float]] = {
+    val lattice = new ArrayBuffer[Array[Float]]()
+    for(expression <- expressions) {
+      val probs = expression.value().toVector().toArray
+      lattice += probs
+    }
+    lattice.toArray
+  }
+
+  /**
+    * Runs the Viterbi algorithm to generates the best sequence of tag ids
+    */
+  def viterbi(lattice:Array[Array[Float]]):Array[Int] = {
+    // TODO: this is currently greedy, not Viterbi. Fix me.
+
+    val tagIds = new ArrayBuffer[Int]()
+    for(probs <- lattice) {
       var max = Float.MinValue
       var tid = -1
       for(i <- probs.indices) {
@@ -196,9 +233,17 @@ class RNN {
         }
       }
       assert(tid > -1)
-      tags += model.i2t(tid)
+      tagIds += tid
     }
+    tagIds.toArray
+  }
 
+  def predict(words:Array[String]):Array[String] = synchronized {
+    val probsAsExpressions = sequenceProbsAsExpressions(words, doDropout = false)
+    val lattice = expressionProbsToLattice(probsAsExpressions)
+    val tagIds = viterbi(lattice)
+    val tags = new ArrayBuffer[String]()
+    for(tid <- tagIds) tags += model.i2t(tid)
     tags.toArray
   }
 
