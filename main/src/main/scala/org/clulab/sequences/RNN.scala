@@ -426,9 +426,9 @@ object RNN {
     true
   }
 
-  protected def save[T](filename: String, x2i: Map[T, Int]): Unit = {
+  protected def save[T](filename: String, map: Map[T, Int]): Unit = {
     Serializer.using(new PrintStream(new File(filename), "UTF-8")) { printStream =>
-      x2i.foreach { case (key, value) =>
+      map.foreach { case (key, value) =>
           printStream.println(s"$key\t$value")
       }
     }
@@ -444,28 +444,25 @@ object RNN {
     save("c2i.dat", rnnParameters.c2i)
   }
 
-  def loadStringMap(filename: String): Map[String, Int] = {
-    Serializer.using(Source.fromFile(filename, "UTF-8")) { source =>
-      source.getLines.map { line =>
-        val Array(key, value) = line.split('\t')
-        key -> value.toInt
-      }.toMap
-    }
-  }
-
-  def loadCharMap(filename: String): Map[Char, Int] = {
+  def load[KeyType](filename: String, converter: String => KeyType): Map[KeyType, Int] = {
     Serializer.using(Source.fromFile(filename, "UTF-8")) { source =>
       source.getLines.map { line =>
         val Array(key, value) = line.split('\t')
 
-        key.charAt(0) -> value.toInt
+        converter(key) -> value.toInt
       }.toMap
     }
   }
 
   def load(filename:String):RNNParameters = {
-    val (w2i, t2i, c2i) = (loadStringMap("w2i.dat"), loadStringMap("t2i.dat"), loadCharMap("c2i.dat"))
+    def stringToString(string: String): String = string
+    def stringToChar(string: String): Char = string.charAt(0)
+
+    val w2i = load("w2i.dat", stringToString)
+    val t2i = load("t2i.dat", stringToString)
+    val c2i = load("c2i.dat", stringToChar)
     val model = mkParams(w2i, t2i, c2i) // This will not be initialized, but rather loaded from the file, see below
+
     new ModelLoader(filename).populateModel(model.parameters, "/all")
     model
   }
