@@ -1,7 +1,8 @@
 package org.clulab.sequences
 
-import java.io.File
-import java.io.PrintStream
+import java.io.BufferedOutputStream
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import java.io.{FileWriter, PrintWriter}
 
 import org.clulab.embeddings.word2vec.Word2Vec
@@ -425,11 +426,11 @@ object RNN {
     true
   }
 
-  protected def save[T](printStream: PrintStream, map: Map[T, Int]): Unit = {
+  protected def save[T](printWriter: PrintWriter, map: Map[T, Int]): Unit = {
     map.foreach { case (key, value) =>
-      printStream.println(s"$key\t$value")
+      printWriter.println(s"$key\t$value")
     }
-    printStream.println() // Separator
+    printWriter.println() // Separator
   }
 
   def save(dynetFilename:String, x2iFilename: String, rnnParameters: RNNParameters):Unit = {
@@ -437,10 +438,10 @@ object RNN {
     modelSaver.addModel(rnnParameters.parameters, "/all")
     modelSaver.done()
 
-    Serializer.using(new PrintStream(new File(x2iFilename), "UTF-8")) { printStream =>
-      save(printStream, rnnParameters.w2i)
-      save(printStream, rnnParameters.t2i)
-      save(printStream, rnnParameters.c2i)
+    Serializer.using(new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(x2iFilename)), "UTF-8"))) { printWriter =>
+      save(printWriter, rnnParameters.w2i)
+      save(printWriter, rnnParameters.t2i)
+      save(printWriter, rnnParameters.c2i)
     }
   }
 
