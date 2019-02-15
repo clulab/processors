@@ -197,15 +197,19 @@ class RNN {
     val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
     assert(fwStates.size == bwStates.length)
     val states = concatenateStates(fwStates, bwStates)
+    assert(states.size == words.size)
 
     val H = parameter(model.H)
     val O = parameter(model.O)
 
-    states.map(s =>
-      if(doDropout)
-        softmax(Expression.dropout(O * Expression.tanh(H * s), DROPOUT_PROB)) // TODO: do not dropout from O
-      else
-        softmax(O * Expression.tanh(H * s)))
+    states.map(s => {
+      var l1 = Expression.tanh(H * s)
+      if(doDropout) {
+        l1 = Expression.dropout(l1, DROPOUT_PROB)
+      }
+      // TODO: concatenate explicit features here
+      softmax(O * l1)
+    })
   }
 
   /** Creates the lattice of probs for a given sequence */
