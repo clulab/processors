@@ -44,12 +44,8 @@ class RNN {
       sentences = MathUtils.randomize(sentences, rand)
 
       logger.info(s"Started epoch $epoch.")
-      for (index <- 0 to 1000) { // TODO: mihai, change to whole corpus
-        val sentence = sentences(index)
-//      }
-//      for(sentence <- sentences) {
+      for(sentence <- sentences) {
         sentCount += 1
-        //logger.debug(s"Predicting sentence $sentCount: " + sentence.map(_.get(0)).mkString(", "))
 
         // predict probabilities for one sentence
         val words = sentence.map(_.get(0))
@@ -78,7 +74,7 @@ class RNN {
         trainer.update()
       }
 
-//      evaluate(devSentences, epoch + 1) // TODO: mihai, report perf on dev
+      evaluate(devSentences, epoch)
     }
   }
 
@@ -98,7 +94,8 @@ class RNN {
     val predLoss = sum(predLosses)
     val goldLoss = sum(goldLosses)
 
-    predLoss - goldLoss
+    // predLoss - goldLoss
+    - goldLoss
   }
 
   def toTagIds(tags: Array[String]):Array[Int] = {
@@ -375,11 +372,11 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 1 // 2
+  val EPOCHS = 2
   val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
   val DROPOUT_PROB = 0.1f
   val EMBEDDING_SIZE = 300
-  val RNN_STATE_SIZE = 50
+  val RNN_STATE_SIZE = 100
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
   val CHAR_RNN_LAYERS = 1
@@ -518,7 +515,7 @@ object RNN {
     }
 
     val commonWords = new ListBuffer[String]
-    commonWords += "*unknown*" // the word at position 0 is reserved for unknown words
+    commonWords += "<unk>" // the word at position 0 is reserved for unknown words
     for(w <- words.keySet) {
       if(words.getCount(w) > 1) {
         commonWords += w
