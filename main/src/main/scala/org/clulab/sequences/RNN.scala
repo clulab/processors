@@ -49,7 +49,7 @@ class RNN {
 
         // predict probabilities for one sentence
         val words = sentence.map(_.get(0))
-        val probsAsExpressions = sequenceProbsAsExpressions(words,  doDropout = false)
+        val probsAsExpressions = sequenceProbsAsExpressions(words,  doDropout = DO_DROPOUT)
         val lattice = expressionProbsToLattice(probsAsExpressions)
 
         // get the predicted tags for this sentence
@@ -196,8 +196,8 @@ class RNN {
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
     val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
     assert(fwStates.size == bwStates.length)
-    val states = concatenateStates(fwStates, bwStates)
-    assert(states.size == words.size)
+    val states = concatenateStates(fwStates, bwStates).toArray
+    assert(states.length == words.length)
 
     val H = parameter(model.H)
     val O = parameter(model.O)
@@ -207,7 +207,6 @@ class RNN {
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
       }
-      // TODO: concatenate explicit features here
       softmax(O * l1)
     })
   }
@@ -379,6 +378,7 @@ object RNN {
   val EPOCHS = 2
   val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
   val DROPOUT_PROB = 0.1f
+  val DO_DROPOUT = false
   val EMBEDDING_SIZE = 300
   val RNN_STATE_SIZE = 100
   val NONLINEAR_SIZE = 32
@@ -540,7 +540,7 @@ object RNN {
     val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
-    val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
+    val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE)) // + CASE_o + 1))
     val i2t = fromIndexToString(t2i)
     logger.debug("Created parameters.")
 
