@@ -41,6 +41,9 @@ class RNN {
     var sentCount = 0
     var sentences = trainSentences
     val rand = new Random(RANDOM_SEED)
+
+    val transitionMatrix = Expression.parameter(model.T)
+
     for(epoch <- 0 until EPOCHS) {
       sentences = MathUtils.randomize(sentences, rand)
 
@@ -48,7 +51,7 @@ class RNN {
       for(sentence <- sentences) {
         sentCount += 1
 
-        // predict tag emission scores for one sentence
+        // predict tag emission scores for one sentence, from the biLSTM hidden states
         val words = sentence.map(_.get(0))
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
 
@@ -56,7 +59,7 @@ class RNN {
         val goldTagIds = toTagIds(sentence.map(_.get(1)))
 
         // compute loss for this sentence
-        val loss = sentenceLoss(emissionScores.toArray, goldTagIds)
+        val loss = sentenceLoss(emissionScores.toArray, transitionMatrix, goldTagIds)
 
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
@@ -76,15 +79,19 @@ class RNN {
     }
   }
 
-  def sentenceLoss(emissionScoresForSeq:Array[Expression], golds:Array[Int]): Expression = {
+  def sentenceLoss(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
+                   transitionMatrix:Expression, // Dim: (tagCount + 2) x (tagCount + 2)
+                   golds:Array[Int]): Expression = { // Dim: sentenceSize
+
     val goldLosses = new ExpressionVector()
     assert(emissionScoresForSeq.length == golds.length)
+
+    // TODO: fix me. Add logSumExp(partition function) - score for gold sequence
 
     for(i <- emissionScoresForSeq.indices) {
       // gold tag for word at position i
       val goldTid = golds(i)
       // emissionScoresForSeq(i) = all tag emission scores for the word at position i
-      // TODO: add transition score from previous gold tag here
       goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
     }
 
@@ -381,6 +388,10 @@ object RNN {
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
 
+  val UNK_WORD = "<UNK>"
+  val START_TAG = "<START>"
+  val STOP_TAG = "<STOP>"
+
   // case features
   val CASE_x = 0
   val CASE_X = 1
@@ -513,18 +524,36 @@ object RNN {
     }
 
     val commonWords = new ListBuffer[String]
-    commonWords += "<unk>" // the word at position 0 is reserved for unknown words
+    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
     for(w <- words.keySet) {
       if(words.getCount(w) > 1) {
         commonWords += w
       }
     }
 
+    tags += START_TAG
+    tags += STOP_TAG
+
     val w2i = commonWords.sorted.zipWithIndex.toMap // These must be sorted for consistency across runs
     val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
     val c2i = chars.toList.sorted.zipWithIndex.toMap
 
     (w2i, t2i, c2i)
+  }
+
+  /**
+    * Initializes the transition matrix for a tagset of size size
+    * T[i, j] stores a transition *to* i *from* j
+    */
+  def mkTransitionMatrix(parameters:ParameterCollection,
+                         size:Int, startPosition:Int, stopPosition:Int): Parameter = {
+    val T = parameters.addParameters(Dim(size, size), ParameterInit.glorot())
+
+    // TODO: discourage transitions to START from anything
+    // TODO: discourage transitions to anything from STOP
+    // TODO: discourage transitions to I-X from B-Y
+
+    T
   }
 
   def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int]): RNNParameters = {
@@ -535,7 +564,7 @@ object RNN {
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE)) // + CASE_o + 1))
-    val T = parameters.addParameters(Dim(t2i.size, t2i.size), ParameterInit.glorot())
+    val T = mkTransitionMatrix(parameters, t2i.size, t2i(START_TAG), t2i(STOP_TAG))
     val i2t = fromIndexToString(t2i)
     logger.debug("Created parameters.")
 
