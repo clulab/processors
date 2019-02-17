@@ -13,6 +13,8 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 import RNN._
+import org.clulab.fatdynet.Repo
+import org.clulab.fatdynet.utils.Transducer
 import org.clulab.utils.MathUtils
 import org.clulab.utils.Serializer
 
@@ -30,7 +32,7 @@ class RNN {
     logger.debug(s"Character vocabulary has ${c2i.size} entries.")
 
     initialize(w2i, t2i, c2i, embeddingsFile)
-    update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
+//    update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
   }
 
   def update(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
@@ -302,10 +304,9 @@ class RNN {
     concatenate(fwOut, bwOut)
   }
 
-  def transduce(embeddings:Iterable[Expression], builder:RnnBuilder): Iterable[Expression] = {
+  def transduce(embeddings:Seq[Expression], builder:RnnBuilder): Seq[Expression] = {
     builder.newGraph()
-    builder.startNewSequence()
-    val states = embeddings.map(builder.addInput)
+    val states = Transducer.transduce(builder, embeddings)
     states
   }
 
@@ -483,10 +484,32 @@ object RNN {
 
     load(x2iFilename, builders)
 
-    val model = mkParams(w2iBuilder.toMap, t2iBuilder.toMap, c2iBuilder.toMap)
+    val oldModel = {
+      val model = mkParams(w2iBuilder.toMap, t2iBuilder.toMap, c2iBuilder.toMap)
+      new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
+      model
+    }
 
-    new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
-    model
+    val newModel = {
+      val repo = new Repo(dynetFilename)
+      val designs = repo.getDesigns()
+      val model = repo.getModel(designs, "/all")
+      val parameters = model.getParameterCollection
+      val lookupParameters = model.getLookupParameter(0)
+      val fwBuilder = model.getRnnBuilder(0)
+      val bwBuilder = model.getRnnBuilder(1)
+      val H = model.getParameter(0)
+      val O = model.getParameter(1)
+      val charLookupParameters = model.getLookupParameter(1)
+      val charFwBuilder = model.getRnnBuilder(2)
+      val charBwBuilder = model.getRnnBuilder(3)
+
+      val rnn = new RNNParameters(oldModel.w2i, oldModel.t2i, oldModel.i2t, oldModel.c2i, parameters, lookupParameters,
+        fwBuilder, bwBuilder, H, O, charLookupParameters, charFwBuilder, charBwBuilder)
+      rnn
+    }
+
+    newModel
   }
 
   def fromIndexToString(s2i: Map[String, Int]):Array[String] = {
