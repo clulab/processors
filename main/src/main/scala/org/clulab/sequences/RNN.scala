@@ -48,18 +48,15 @@ class RNN {
       for(sentence <- sentences) {
         sentCount += 1
 
-        // predict probabilities for one sentence
+        // predict tag emission scores for one sentence
         val words = sentence.map(_.get(0))
-        val probsAsExpressions = sequenceProbsAsExpressions(words,  doDropout = DO_DROPOUT)
-        val lattice = expressionProbsToLattice(probsAsExpressions)
+        val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
 
-        // get the predicted tags for this sentence
-        val predictedTagIds = viterbi(lattice)
         // get the gold tags for this sentence
         val goldTagIds = toTagIds(sentence.map(_.get(1)))
 
         // compute loss for this sentence
-        val loss = sentenceLoss(probsAsExpressions.toArray, goldTagIds, predictedTagIds)
+        val loss = sentenceLoss(emissionScores.toArray, goldTagIds)
 
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
@@ -79,24 +76,19 @@ class RNN {
     }
   }
 
-  def sentenceLoss(probs:Array[Expression], golds:Array[Int], preds:Array[Int]): Expression = {
-    val predLosses = new ExpressionVector()
+  def sentenceLoss(emissionScoresForSeq:Array[Expression], golds:Array[Int]): Expression = {
     val goldLosses = new ExpressionVector()
-    assert(probs.length == golds.length)
-    assert(probs.length == preds.length)
+    assert(emissionScoresForSeq.length == golds.length)
 
-    for(i <- probs.indices) {
+    for(i <- emissionScoresForSeq.indices) {
+      // gold tag for word at position i
       val goldTid = golds(i)
-      val predTid = preds(i)
-      goldLosses.add(log(pick(probs(i), goldTid)))
-      predLosses.add(log(pick(probs(i), predTid)))
+      // emissionScoresForSeq(i) = all tag emission scores for the word at position i
+      // TODO: add transition score from previous gold tag here
+      goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
     }
 
-    val predLoss = sum(predLosses)
-    val goldLoss = sum(goldLosses)
-
-    // predLoss - goldLoss
-    - goldLoss
+    sum(goldLosses)
   }
 
   def toTagIds(tags: Array[String]):Array[Int] = {
@@ -186,10 +178,10 @@ class RNN {
   }
 
   /**
-    * Generates tag probabilities for the words in this sequence, stored as Expressions
+    * Generates tag emission scores for the words in this sequence, stored as Expressions
     * @param words One training or testing sentence
     */
-  def sequenceProbsAsExpressions(words: Array[String], doDropout:Boolean): Iterable[Expression] = {
+  def emissionScoresAsExpressions(words: Array[String], doDropout:Boolean): Iterable[Expression] = {
     ComputationGraph.renew()
 
     val embeddings = words.map(mkEmbedding)
@@ -208,12 +200,12 @@ class RNN {
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
       }
-      softmax(O * l1)
+      O * l1
     })
   }
 
   /** Creates the lattice of probs for a given sequence */
-  def expressionProbsToLattice(expressions:Iterable[Expression]): Array[Array[Float]] = {
+  def emissionScoresToLattice(expressions:Iterable[Expression]): Array[Array[Float]] = {
     val lattice = new ArrayBuffer[Array[Float]]()
     for(expression <- expressions) {
       val probs = expression.value().toVector().toArray
@@ -245,9 +237,9 @@ class RNN {
   }
 
   def predict(words:Array[String]):Array[String] = synchronized {
-    val probsAsExpressions = sequenceProbsAsExpressions(words, doDropout = false)
-    val lattice = expressionProbsToLattice(probsAsExpressions)
-    val tagIds = viterbi(lattice)
+    val probsAsExpressions = emissionScoresAsExpressions(words, doDropout = false)
+    val lattice = emissionScoresToLattice(probsAsExpressions)
+    val tagIds = viterbi(lattice) // TODO: add transition scores here
     val tags = new ArrayBuffer[String]()
     for(tid <- tagIds) tags += model.i2t(tid)
     tags.toArray
