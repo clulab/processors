@@ -329,6 +329,7 @@ class RNNParameters(
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,
   val O:Parameter,
+  val T:Parameter, // transition matrix for Viterbi
   val charLookupParameters:LookupParameter,
   val charFwRnnBuilder:RnnBuilder,
   val charBwRnnBuilder:RnnBuilder
@@ -542,6 +543,7 @@ object RNN {
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE)) // + CASE_o + 1))
+    val T = parameters.addParameters(Dim(t2i.size, t2i.size), ParameterInit.glorot())
     val i2t = fromIndexToString(t2i)
     logger.debug("Created parameters.")
 
@@ -549,7 +551,7 @@ object RNN {
     val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
-    new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwBuilder, bwBuilder, H, O,
+    new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwBuilder, bwBuilder, H, O, T,
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
