@@ -42,18 +42,18 @@ class RNN {
     var sentences = trainSentences
     val rand = new Random(RANDOM_SEED)
 
-    val transitionMatrix = Expression.parameter(model.T)
-
     for(epoch <- 0 until EPOCHS) {
       sentences = MathUtils.randomize(sentences, rand)
 
       logger.info(s"Started epoch $epoch.")
       for(sentence <- sentences) {
         sentCount += 1
+        ComputationGraph.renew()
 
         // predict tag emission scores for one sentence, from the biLSTM hidden states
         val words = sentence.map(_.get(0))
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
+        val transitionMatrix = Expression.parameter(model.T)
 
         // get the gold tags for this sentence
         val goldTagIds = toTagIds(sentence.map(_.get(1)))
@@ -79,14 +79,61 @@ class RNN {
     }
   }
 
+  def sentenceScore(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
+                    transitionMatrix:Expression, // Dim: tagCount x tagCount
+                    tagSeq:Array[Int],
+                    startTag:Int,
+                    stopTag:Int): Expression = {
+    // start with the transition score to first tag from START
+    var score = pick2D(transitionMatrix, tagSeq.head, startTag)
+
+    for(i <- tagSeq.indices) {
+      if(i > 0) {
+        // transition score from the previous tag
+        score = score + pick2D(transitionMatrix, tagSeq(i), tagSeq(i - 1))
+      }
+
+      // emission score for the current tag
+      score = score + pick(emissionScoresForSeq(i), tagSeq(i))
+    }
+
+    // conclude with the transition score to STOP from last tag
+    score = score + pick2D(transitionMatrix, stopTag, tagSeq.last)
+
+    score
+  }
+
+  /** Picks the scalar element from an expression that is a matrix */
+  def pick2D(matrix:Expression, row:Int, column:Int): Expression = {
+    // TODO: is there a more efficient way of doing this (by avoiding the 2 pick calls)?
+    pick(pick(matrix, row), column)
+  }
+
+  /** Implements the forward algorithm to compute the partition score for this lattice */
+  def mkPartitionScore(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
+                       transitionMatrix:Expression): Expression = { // Dim: tagCount x tagCount
+    null
+  }
+
   def sentenceLoss(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
-                   transitionMatrix:Expression, // Dim: (tagCount + 2) x (tagCount + 2)
+                   transitionMatrix:Expression, // Dim: tagCount x tagCount
                    golds:Array[Int]): Expression = { // Dim: sentenceSize
+
+    val scoreOfGoldSeq = sentenceScore(emissionScoresForSeq, transitionMatrix,
+      golds, model.t2i(START_TAG), model.t2i(STOP_TAG))
+
+    // TODO: fix me. Add logSumExp(partition function) - score for gold sequence
+    // val partitionScore = mkPartitionScore(emissionScoresForSeq, transitionMatrix)
+
+    - scoreOfGoldSeq
+  }
+
+  def sentenceLossGreedy(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
+                         transitionMatrix:Expression, // Dim: tagCount x tagCount
+                         golds:Array[Int]): Expression = { // Dim: sentenceSize
 
     val goldLosses = new ExpressionVector()
     assert(emissionScoresForSeq.length == golds.length)
-
-    // TODO: fix me. Add logSumExp(partition function) - score for gold sequence
 
     for(i <- emissionScoresForSeq.indices) {
       // gold tag for word at position i
@@ -189,8 +236,6 @@ class RNN {
     * @param words One training or testing sentence
     */
   def emissionScoresAsExpressions(words: Array[String], doDropout:Boolean): Iterable[Expression] = {
-    ComputationGraph.renew()
-
     val embeddings = words.map(mkEmbedding)
 
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
