@@ -81,16 +81,17 @@ class RNN {
 
   def sentenceScore(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
                     transitionMatrix:Expression, // Dim: tagCount x tagCount
+                    tagCount:Int,
                     tagSeq:Array[Int],
                     startTag:Int,
                     stopTag:Int): Expression = {
     // start with the transition score to first tag from START
-    var score = pick2D(transitionMatrix, tagSeq.head, startTag)
+    var score = pick2D(transitionMatrix, tagCount, tagSeq.head, startTag)
 
     for(i <- tagSeq.indices) {
       if(i > 0) {
         // transition score from the previous tag
-        score = score + pick2D(transitionMatrix, tagSeq(i), tagSeq(i - 1))
+        score = score + pick2D(transitionMatrix, tagCount, tagSeq(i), tagSeq(i - 1))
       }
 
       // emission score for the current tag
@@ -98,15 +99,15 @@ class RNN {
     }
 
     // conclude with the transition score to STOP from last tag
-    score = score + pick2D(transitionMatrix, stopTag, tagSeq.last)
+    score = score + pick2D(transitionMatrix, tagCount, stopTag, tagSeq.last)
 
     score
   }
 
   /** Picks the scalar element from an expression that is a matrix */
-  def pick2D(matrix:Expression, row:Int, column:Int): Expression = {
+  def pick2D(matrix:Expression, tagCount:Int, row:Int, column:Int): Expression = {
     // TODO: is there a more efficient way of doing this (by avoiding the 2 pick calls)?
-    pick(pick(matrix, row), column)
+    pick(matrix, row * tagCount + column)
   }
 
   /** Implements the forward algorithm to compute the partition score for this lattice */
@@ -119,7 +120,7 @@ class RNN {
                    transitionMatrix:Expression, // Dim: tagCount x tagCount
                    golds:Array[Int]): Expression = { // Dim: sentenceSize
 
-    val scoreOfGoldSeq = sentenceScore(emissionScoresForSeq, transitionMatrix,
+    val scoreOfGoldSeq = sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size,
       golds, model.t2i(START_TAG), model.t2i(STOP_TAG))
 
     // TODO: fix me. Add logSumExp(partition function) - score for gold sequence
@@ -592,7 +593,7 @@ object RNN {
     */
   def mkTransitionMatrix(parameters:ParameterCollection,
                          size:Int, startPosition:Int, stopPosition:Int): Parameter = {
-    val T = parameters.addParameters(Dim(size, size), ParameterInit.glorot())
+    val T = parameters.addParameters(Dim(size * size), ParameterInit.glorot())
 
     // TODO: discourage transitions to START from anything
     // TODO: discourage transitions to anything from STOP
