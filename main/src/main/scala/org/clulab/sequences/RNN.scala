@@ -53,7 +53,10 @@ class RNN {
         // predict tag emission scores for one sentence, from the biLSTM hidden states
         val words = sentence.map(_.get(0))
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
-        val transitionMatrix = Expression.parameter(model.T)
+        val transitionMatrix = new ExpressionVector
+        for(i <- model.T.indices) {
+          transitionMatrix.add(parameter(model.T(i)))
+        }
 
         // get the gold tags for this sentence
         val goldTagIds = toTagIds(sentence.map(_.get(1)))
@@ -80,7 +83,7 @@ class RNN {
   }
 
   def sentenceScore(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
-                    transitionMatrix:Expression, // Dim: tagCount x tagCount
+                    transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
                     tagCount:Int,
                     tagSeq:Array[Int],
                     startTag:Int,
@@ -105,9 +108,8 @@ class RNN {
   }
 
   /** Picks the scalar element from an expression that is a matrix */
-  def pick2D(matrix:Expression, tagCount:Int, row:Int, column:Int): Expression = {
-    // TODO: is there a more efficient way of doing this (by avoiding the 2 pick calls)?
-    pick(matrix, row * tagCount + column)
+  def pick2D(matrix:ExpressionVector, tagCount:Int, row:Int, column:Int): Expression = {
+    pick(matrix(row), column)
   }
 
   /** Implements the forward algorithm to compute the partition score for this lattice */
@@ -117,13 +119,12 @@ class RNN {
   }
 
   def sentenceLoss(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
-                   transitionMatrix:Expression, // Dim: tagCount x tagCount
+                   transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
                    golds:Array[Int]): Expression = { // Dim: sentenceSize
 
     val scoreOfGoldSeq = sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size,
       golds, model.t2i(START_TAG), model.t2i(STOP_TAG))
 
-    // TODO: fix me. Add logSumExp(partition function) - score for gold sequence
     // val partitionScore = mkPartitionScore(emissionScoresForSeq, transitionMatrix)
 
     - scoreOfGoldSeq
@@ -374,7 +375,7 @@ class RNNParameters(
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,
   val O:Parameter,
-  val T:Parameter, // transition matrix for Viterbi
+  val T:Array[Parameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j
   val charLookupParameters:LookupParameter,
   val charFwRnnBuilder:RnnBuilder,
   val charBwRnnBuilder:RnnBuilder
@@ -592,14 +593,21 @@ object RNN {
     * T[i, j] stores a transition *to* i *from* j
     */
   def mkTransitionMatrix(parameters:ParameterCollection,
-                         size:Int, startPosition:Int, stopPosition:Int): Parameter = {
-    val T = parameters.addParameters(Dim(size * size), ParameterInit.glorot())
+                         size:Int, startPosition:Int, stopPosition:Int): Array[Parameter] = {
+    val columns = new ArrayBuffer[Parameter]()
+
+    for(i <- 0 until size) {
+      // we are transitioning *to* tag i
+      // T[j] contains the cost of transitioning *to* i *from* j
+      val T = parameters.addParameters(Dim(size), ParameterInit.glorot())
+      columns += T
+    }
 
     // TODO: discourage transitions to START from anything
     // TODO: discourage transitions to anything from STOP
     // TODO: discourage transitions to I-X from B-Y
 
-    T
+    columns.toArray
   }
 
   def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int]): RNNParameters = {
