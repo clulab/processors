@@ -140,14 +140,14 @@ class RNN {
   def sentenceLoss(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
                    transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
                    golds:Array[Int]): Expression = { // Dim: sentenceSize
+    val startTag = model.t2i(START_TAG)
+    val stopTag = model.t2i(STOP_TAG)
 
     val scoreOfGoldSeq =
-      sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size,
-      golds, model.t2i(START_TAG), model.t2i(STOP_TAG))
+      sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size, golds, startTag, stopTag)
 
     val partitionScore =
-      mkPartitionScore(emissionScoresForSeq, transitionMatrix,
-      model.t2i(START_TAG), model.t2i(STOP_TAG))
+      mkPartitionScore(emissionScoresForSeq, transitionMatrix, startTag, stopTag)
 
     partitionScore - scoreOfGoldSeq
   }
