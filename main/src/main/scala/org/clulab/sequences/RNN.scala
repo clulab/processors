@@ -62,7 +62,7 @@ class RNN {
         val goldTagIds = toTagIds(sentence.map(_.get(1)))
 
         // compute loss for this sentence
-        val loss = sentenceLoss(emissionScores.toArray, transitionMatrix, goldTagIds)
+        val loss = sentenceLoss(emissionScores, transitionMatrix, goldTagIds)
 
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
@@ -82,7 +82,7 @@ class RNN {
     }
   }
 
-  def sentenceScore(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
+  def sentenceScore(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
                     transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
                     tagCount:Int,
                     tagSeq:Array[Int],
@@ -113,19 +113,41 @@ class RNN {
   }
 
   /** Implements the forward algorithm to compute the partition score for this lattice */
-  def mkPartitionScore(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
-                       transitionMatrix:ExpressionVector): Expression = { // Dim: tagCount x tagCount
+  def mkPartitionScore(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
+                       transitionMatrix:ExpressionVector,
+                       startTag:Int, stopTag:Int): Expression = { // Dim: tagCount x tagCount
+    val tagCount = transitionMatrix.size
+
+    //
+    // cost (in log space) of starting at a given tag
+    // the only possible starting tag is START; all others are disabled
+    //
+    val initAlphaValues = new Array[Float](tagCount)
+    for(i <- initAlphaValues.indices) initAlphaValues(i) = LOG_MIN_VALUE
+    initAlphaValues(startTag) = 0
+    val initAlphas = input(Dim(initAlphaValues.length), new FloatVector(initAlphaValues))
+
+    for(t <- emissionScoresForSeq.indices) {
+
+      for(tag <- 0 until tagCount) {
+
+      }
+    }
+
     null // TODO: implement the forward algorithm here
   }
 
-  def sentenceLoss(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
+  def sentenceLoss(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
                    transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
                    golds:Array[Int]): Expression = { // Dim: sentenceSize
 
-    val scoreOfGoldSeq = sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size,
+    val scoreOfGoldSeq =
+      sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size,
       golds, model.t2i(START_TAG), model.t2i(STOP_TAG))
 
-    val partitionScore = mkPartitionScore(emissionScoresForSeq, transitionMatrix)
+    val partitionScore =
+      mkPartitionScore(emissionScoresForSeq, transitionMatrix,
+      model.t2i(START_TAG), model.t2i(STOP_TAG))
 
     partitionScore - scoreOfGoldSeq
   }
@@ -237,7 +259,7 @@ class RNN {
     * Generates tag emission scores for the words in this sequence, stored as Expressions
     * @param words One training or testing sentence
     */
-  def emissionScoresAsExpressions(words: Array[String], doDropout:Boolean): Iterable[Expression] = {
+  def emissionScoresAsExpressions(words: Array[String], doDropout:Boolean): ExpressionVector = {
     val embeddings = words.map(mkEmbedding)
 
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
@@ -249,13 +271,16 @@ class RNN {
     val H = parameter(model.H)
     val O = parameter(model.O)
 
-    states.map(s => {
+    val emissionScores = new ExpressionVector()
+    for(s <- states) {
       var l1 = Expression.tanh(H * s)
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
       }
-      O * l1
-    })
+      emissionScores.add(O * l1)
+    }
+
+    emissionScores
   }
 
   /** Creates the lattice of probs for a given sequence */
@@ -439,7 +464,7 @@ object RNN {
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
-  val LOG_MIN_VALUE = -10000
+  val LOG_MIN_VALUE:Float = -10000
 
   // case features
   val CASE_x = 0
