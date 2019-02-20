@@ -114,8 +114,8 @@ class RNN {
 
   /** Implements the forward algorithm to compute the partition score for this lattice */
   def mkPartitionScore(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
-                       transitionMatrix:Expression): Expression = { // Dim: tagCount x tagCount
-    null
+                       transitionMatrix:ExpressionVector): Expression = { // Dim: tagCount x tagCount
+    null // TODO: implement the forward algorithm here
   }
 
   def sentenceLoss(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
@@ -125,9 +125,9 @@ class RNN {
     val scoreOfGoldSeq = sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size,
       golds, model.t2i(START_TAG), model.t2i(STOP_TAG))
 
-    // val partitionScore = mkPartitionScore(emissionScoresForSeq, transitionMatrix)
+    val partitionScore = mkPartitionScore(emissionScoresForSeq, transitionMatrix)
 
-    - scoreOfGoldSeq
+    partitionScore - scoreOfGoldSeq
   }
 
   def sentenceLossGreedy(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
@@ -439,6 +439,8 @@ object RNN {
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
+  val LOG_MIN_VALUE = -10000
+
   // case features
   val CASE_x = 0
   val CASE_X = 1
@@ -594,20 +596,20 @@ object RNN {
     */
   def mkTransitionMatrix(parameters:ParameterCollection,
                          size:Int, startPosition:Int, stopPosition:Int): Array[Parameter] = {
-    val columns = new ArrayBuffer[Parameter]()
+    val rows = new ArrayBuffer[Parameter]()
 
     for(i <- 0 until size) {
       // we are transitioning *to* tag i
       // T[j] contains the cost of transitioning *to* i *from* j
       val T = parameters.addParameters(Dim(size), ParameterInit.glorot())
-      columns += T
+      rows += T
     }
 
     // TODO: discourage transitions to START from anything
     // TODO: discourage transitions to anything from STOP
     // TODO: discourage transitions to I-X from B-Y
 
-    columns.toArray
+    rows.toArray
   }
 
   def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int]): RNNParameters = {
