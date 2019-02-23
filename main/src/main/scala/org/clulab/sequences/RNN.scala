@@ -13,8 +13,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 import RNN._
-import org.clulab.utils.MathUtils
-import org.clulab.utils.Serializer
+import org.clulab.utils.{MathUtils, Serializer}
 
 import scala.collection.mutable
 import scala.io.Source
@@ -42,8 +41,10 @@ class RNN {
     var sentences = trainSentences
     val rand = new Random(RANDOM_SEED)
 
+    model.printTransitionMatrix()
+
     for(epoch <- 0 until EPOCHS) {
-      // sentences = MathUtils.randomize(sentences, rand) // TODO: uncomment me
+      sentences = MathUtils.randomize(sentences, rand)
 
       logger.info(s"Started epoch $epoch.")
       for(sentence <- sentences) {
@@ -74,6 +75,8 @@ class RNN {
           logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
           cummulativeLoss = 0.0
           numTagged = 0
+
+          model.printTransitionMatrix()
         }
 
         // backprop
@@ -444,8 +447,8 @@ class RNNParameters(
   val T:Array[Parameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j
   val charLookupParameters:LookupParameter,
   val charFwRnnBuilder:RnnBuilder,
-  val charBwRnnBuilder:RnnBuilder
-) {
+  val charBwRnnBuilder:RnnBuilder) {
+
   protected def toFloatArray(doubles: Array[Double]): Array[Float] = {
     val floats = new Array[Float](doubles.length)
     for (i <- doubles.indices) {
@@ -483,6 +486,17 @@ class RNNParameters(
     lookupParameters.initialize(0, new FloatVector(toFloatArray(unknownEmbed)))
     logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
 
+  }
+
+  def printTransitionMatrix(): Unit = {
+    val tagCount = t2i.size
+    for(dstTag <- 0 until tagCount) {
+      println("Transitions TO tag " + i2t(dstTag) + ":")
+      val transScores = T(dstTag).values().toVector()
+      for(srcTag <- 0 until tagCount) {
+        println("\tFROM " + i2t(srcTag) + ": " + transScores(srcTag))
+      }
+    }
   }
 }
 
@@ -660,20 +674,42 @@ object RNN {
     * Initializes the transition matrix for a tagset of size size
     * T[i, j] stores a transition *to* i *from* j
     */
-  def mkTransitionMatrix(parameters:ParameterCollection,
-                         size:Int, startPosition:Int, stopPosition:Int): Array[Parameter] = {
+  def mkTransitionMatrix(parameters:ParameterCollection, t2i:Map[String, Int], i2t:Array[String]): Array[Parameter] = {
     val rows = new ArrayBuffer[Parameter]()
+    val size = t2i.size
+    val startTag = t2i(START_TAG)
+    val stopTag = t2i(STOP_TAG)
 
     for(i <- 0 until size) {
       // we are transitioning *to* tag i
       // T[j] contains the cost of transitioning *to* i *from* j
       val T = parameters.addParameters(Dim(size), ParameterInit.glorot())
+      val dstTag = i2t(i)
+
+      // discourage transitions to START from anything
+      if(i == startTag) {
+        for(j <- 0 until size)
+          T.values().toVector()(j) = LOG_MIN_VALUE // TODO: are these permanent?
+      }
+
+      else {
+        // discourage transitions to anything from STOP
+        T.values().toVector()(stopTag) = LOG_MIN_VALUE
+
+        // discourage transitions to I-X from B-Y or I-Y
+        if(dstTag.startsWith("I-")) {
+          for(j <- 0 until size) {
+            val srcTag = i2t(j)
+            if((srcTag.startsWith("B-") || srcTag.startsWith("I-")) &&
+               srcTag.substring(2) != dstTag.substring(2)) {
+              T.values().toVector()(j) = LOG_MIN_VALUE
+            }
+          }
+        }
+      }
+
       rows += T
     }
-
-    // TODO: discourage transitions to START from anything
-    // TODO: discourage transitions to anything from STOP
-    // TODO: discourage transitions to I-X from B-Y
 
     rows.toArray
   }
@@ -686,8 +722,8 @@ object RNN {
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
     val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE)) // + CASE_o + 1))
-    val T = mkTransitionMatrix(parameters, t2i.size, t2i(START_TAG), t2i(STOP_TAG))
     val i2t = fromIndexToString(t2i)
+    val T = mkTransitionMatrix(parameters, t2i, i2t)
     logger.debug("Created parameters.")
 
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
