@@ -1,157 +1,268 @@
 package org.clulab.sequences
 
-import java.io.BufferedReader
+import java.util.function.Consumer
 
 import org.clulab.processors.Sentence
-import org.clulab.struct.{EntityValidator, HashTrie, TrueEntityValidator}
-
-import scala.collection.mutable.ArrayBuffer
-import LexiconNER._
+import org.clulab.struct.CompactLexiconNER
+import org.clulab.struct.IntHashTrie
+import org.clulab.struct.{BooleanHashTrie, EntityValidator, TrueEntityValidator}
 import org.clulab.utils.Files.loadStreamFromClasspath
+import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 
-/**
-  * Lexicon-based NER, which efficiently recognizes entities from large dictionaries
-  * Note: This is a cleaned-up version of the old RuleNER.
-  * Create a LexiconNER object using LexiconNER.apply() (not the c'tor, which is private).
-  * Use it by calling the find() method on a single sentence.
-  * See org.clulab.processors.TextLexiconNER for usage examples.
-  *
-  * @param matchers A map of tries to be matched for each given category label
-  *                 The order of the matchers is important: it indicates priority during ties (first has higher priority)
-  * @param knownCaseInsensitives Set of single-token entity names that can be spelled using lower case, according to the KB(s)
-  * @param useLemmas If true, tokens are matched using lemmas, otherwise using words
-  *
-  * Author: mihais
-  * Created: 5/11/15
-  * Modified: 9/27/17 - Clean up from RuleNER into LexiconNER
-  */
-@SerialVersionUID(1000L)  
-class LexiconNER private (
-  val matchers:Array[(String, HashTrie)],
-  val knownCaseInsensitives:Set[String],
-  val useLemmas:Boolean,
-  val entityValidator: EntityValidator) extends Tagger[String] with Serializable {
-
+abstract class LexiconNER(knownCaseInsensitives: Set[String], useLemmas: Boolean) extends Tagger[String] with Serializable {
   /**
     * Matches the lexicons against this sentence
     * @param sentence The input sentence
     * @return An array of BIO notations the store the outcome of the matches
     */
-  def find(sentence:Sentence):Array[String] = {
-    val seq = findLongestMatch(sentence)
-    seq
-  }
-
-  protected def getTokens(sentence:Sentence):Array[String] = {
-    if (useLemmas) {
-      sentence.lemmas.get
-    } else {
-      sentence.words
-    }
-  }
-
-  /**
-    * Finds the longest match across all matchers.
-    * This means that the longest match is always chosen, even if coming from a matcher with lower priority
-    * Only ties are disambiguated according to the order provided in the constructor
-    */
-  protected def findLongestMatch(sentence:Sentence):Array[String] = {
-    val tokens = getTokens(sentence)
-    val caseInsensitiveWords = tokens.map(_.toLowerCase)
-
-    var offset = 0
-    val labels = new ArrayBuffer[String]()
-    while(offset < tokens.length) {
-      // stores the spans found by all matchers
-      val spans = new Array[Int](matchers.length)
-
-      // attempt to match each category at this offset
-      for (i <- matchers.indices) {
-        spans(i) = findAt(tokens, caseInsensitiveWords, matchers(i)._2, offset, entityValidator)
-        // if(spans(i) > 0) println(s"Offset $offset: Matched span ${spans(i)} for matcher ${matchers(i)._1}")
-      }
-
-      // pick the longest match
-      // solve ties by preferring earlier (higher priority) matchers
-      var bestSpanOffset = -1
-      var bestSpan = -1
-      for(i <- matchers.indices) {
-        if(spans(i) > bestSpan) {
-          bestSpanOffset = i
-          bestSpan = spans(i)
-        }
-      }
-
-      // found something!
-      if(bestSpanOffset != -1) {
-        assert(bestSpan > 0)
-
-        if(contentfulSpan(sentence, offset, bestSpan) && // does this look like a valid entity span?
-           entityValidator.validMatch(sentence, offset, offset + bestSpan)) { // domain-specific constraints on entities
-
-          val label = matchers(bestSpanOffset)._1
-          //println(s"MATCHED LABEL $label from $offset to ${offset + bestSpan} (exclusive)!")
-          labels += "B-" + label
-          for (_ <- 1 until bestSpan) {
-            labels += "I-" + label
-          }
-        } else {
-          for(_ <- 0 until bestSpan) {
-            labels += OUTSIDE_LABEL
-          }
-        }
-        offset += bestSpan
-        //println(s"Will continue matching starting at $offset")
-      } else {
-        labels += OUTSIDE_LABEL
-        offset += 1
-      }
-    }
-
-    assert(labels.length == sentence.size)
-    labels.toArray
-  }
+  def find(sentence: Sentence): Array[String]
+  def getLabels: Seq[String]
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int):Boolean = {
     val (characters, letters, digits, upperCaseLetters, spaces) =
       LexiconNER.scanText(sentence.words, start, start + length)
-
     // a valid span must have letters > 0 and at least one of the other properties
-    if(letters > 0 &&
-       ( digits > 0 ||
-         upperCaseLetters > 0 ||
-         spaces > 0 ||
-         characters > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH ||
-         knownCaseInsensitives.contains(sentence.words(start)))) {
-      return true
-    }
+    val contentful = letters > 0 && (
+      digits > 0 ||
+      upperCaseLetters > 0 ||
+      spaces > 0 ||
+      characters > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH ||
+      knownCaseInsensitives.contains(sentence.words(start))
+    )
 
-    false
-  }
-  
-  protected def findAt(seq:Array[String],
-                       caseInsensitiveSeq:Array[String],
-                       matcher:HashTrie,
-                       offset:Int,
-                       validator:EntityValidator):Int = {
-    val span = if (matcher.caseInsensitive) {
-      matcher.findAt(caseInsensitiveSeq, offset)
-    } else {
-      matcher.findAt(seq, offset)
-    }
-    span
+    contentful
   }
 
+  protected def getTokens(sentence: Sentence): Array[String] =
+      if (useLemmas) sentence.lemmas.get
+      else sentence.words
+}
+
+abstract class LexiconNERBuilder(caseInsensitiveMatching: Boolean) {
+  val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
+  val INTERN_STRINGS: Boolean = false
+
+  def build(kbs: Seq[String], overrideKBs: Option[Seq[String]],
+    entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean): LexiconNER
+
+  protected def toJavaConsumer[T](consumer: T => Unit): Consumer[T] = {
+    new Consumer[T] {
+      override def accept(t: T): Unit = consumer(t)
+    }
+  }
+
+  protected def extractKBName(kb: String): String = {
+    val slash = kb.lastIndexOf("/")
+    val dot = kb.indexOf('.')
+    val name = kb.substring(slash + 1, dot)
+    name
+  }
+}
+
+class SlowLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNERBuilder(caseInsensitiveMatching) {
+
+  class BuildState(lexicalVariationEngine: LexicalVariations) {
+    val knownCaseInsensitives = new mutable.HashSet[String]()
+
+    def addWithLexicalVariations(matcher: BooleanHashTrie, tokens: Array[String]): Unit = {
+      // keep track of all lower case ents that are single token (necessary for case-insensitive matching)
+      if (tokens.length == 1) {
+        val token = tokens(0)
+        if (token.toLowerCase == token && caseInsensitiveMatching)
+          knownCaseInsensitives.add(tokens(0))
+      }
+      // add the original form
+      matcher.add(tokens)
+      // add the lexical variations
+      for (ts <- lexicalVariationEngine.lexicalVariations(tokens)) {
+        matcher.add(ts)
+      }
+    }
+  }
+
+  protected def newMatcher(label: String): BooleanHashTrie =
+      // TODO: Decide whether you are debugging
+      new BooleanHashTrie(label, caseInsensitive = caseInsensitiveMatching, internStrings = INTERN_STRINGS)
+//      new DebugBooleanHashTrie(label, caseInsensitive = caseInsensitiveMatching, internStrings = INTERN_STRINGS)
+
+  override def build(kbs: Seq[String], overrideKBs: Option[Seq[String]],
+      entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean): SeparatedLexiconNER = {
+    logger.info("Beginning to load the KBs for the rule-based bio NER...")
+    val buildState = new BuildState(lexicalVariationEngine)
+    val overrideMatchers = getOverrideMatchers(overrideKBs, buildState) // first so they take priority during matching
+    val standardMatchers = getStandardMatchers(kbs, buildState)
+    logger.info("KB loading completed.")
+    new SeparatedLexiconNER((overrideMatchers ++ standardMatchers).toArray, buildState.knownCaseInsensitives.toSet,
+        useLemmasForMatching, entityValidator)
+  }
+
+  private def getStandardMatchers(kbs: Seq[String], buildState: BuildState): Seq[BooleanHashTrie] = {
+    def addLine(matcher: BooleanHashTrie, inputLine: String): Unit = {
+      val line = inputLine.trim
+      if (!line.startsWith("#")) {
+        val tokens = line.split("\\s+")
+        buildState.addWithLexicalVariations(matcher, tokens)
+      }
+    }
+
+    kbs.map { kb =>
+      val label = extractKBName(kb)
+      val matcher = newMatcher(label)
+
+      Serializer.using(loadStreamFromClasspath(kb)) { reader =>
+        reader.lines.forEach(toJavaConsumer[String] { line: String =>
+          addLine(matcher, line)
+        })
+      }
+      logger.info(s"Loaded matcher for label $label. The size of the first layer is ${matcher.entriesSize}.")
+      matcher
+    }
+  }
+
+  private def getOverrideMatchers(overrideKBs: Option[Seq[String]], buildState: BuildState): Seq[BooleanHashTrie] = {
+    // in these KBs, the name of the entity must be the first token, and the label must be the last
+    //   (tokenization is performed around TABs here)
+    def addLine(matchers: mutable.HashMap[String, BooleanHashTrie], inputLine: String): Unit = {
+      val line = inputLine.trim
+      if (!line.startsWith("#")) { // skip comments starting with #
+        val blocks = line.split("\t")
+        if (blocks.size >= 2) {
+          val entity = blocks.head // grab the text of the named entity
+          val label = blocks.last // grab the label of the named entity
+          val tokens = entity.split("\\s+")
+          val matcher = matchers.getOrElseUpdate(label, new BooleanHashTrie(label))
+
+          buildState.addWithLexicalVariations(matcher, tokens)
+        }
+      }
+    }
+
+    if (overrideKBs.isDefined) {
+      val matchers = new mutable.HashMap[String, BooleanHashTrie]()
+
+      overrideKBs.get.foreach { okb =>
+        Serializer.using(loadStreamFromClasspath(okb)) { reader =>
+          reader.lines.forEach(toJavaConsumer[String] { line =>
+            addLine(matchers, line)
+          })
+        }
+      }
+      for (name <- matchers.keySet.toList.sorted) {
+        val matcher = matchers(name)
+        logger.info(s"Loaded OVERRIDE matcher for label $name.  The size of the first layer is ${matcher.entriesSize}.")
+      }
+      matchers.values.toSeq
+    }
+    else Seq.empty[BooleanHashTrie]
+  }
+}
+
+class FastLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNERBuilder(caseInsensitiveMatching) {
+
+  class BuildState(lexicalVariationEngine: LexicalVariations) {
+    val intHashTrie = new IntHashTrie
+    val labelToIndex = new mutable.HashMap[String, Int] // This just maps the labels to an integer
+    val knownCaseInsensitives = new mutable.HashSet[String]()
+
+    def getCount: Int = intHashTrie.entriesSize
+
+    protected def add(label: String, tokens: Array[String]): Unit = {
+      val index = labelToIndex.getOrElseUpdate(label, labelToIndex.size)
+
+      intHashTrie.add(tokens, index)
+    }
+
+    def addWithLexicalVariations(label: String, tokens: Array[String]): Unit = {
+      // keep track of all lower case ents that are single token (necessary for case-insensitive matching)
+      if (tokens.length == 1) {
+        val token = tokens(0)
+        if (token.toLowerCase == token && caseInsensitiveMatching)
+          knownCaseInsensitives.add(tokens(0))
+      }
+      // add the original form
+      add(label, tokens)
+      // add the lexical variations
+      for (ts <- lexicalVariationEngine.lexicalVariations(tokens)) {
+        add(label, ts)
+      }
+    }
+  }
+
+  protected def newMatcher(label: String) =
+      new IntHashTrie(caseInsensitive = caseInsensitiveMatching, internStrings = INTERN_STRINGS)
+
+  override def build(kbs: Seq[String], overrideKBs: Option[Seq[String]],
+      entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean): LexiconNER = {
+    logger.info("Beginning to load the KBs for the rule-based bio NER...")
+    val buildState = new BuildState(lexicalVariationEngine)
+    addOverrideKBs(overrideKBs, buildState) // first so they take priority during matching
+    addStandardKBs(kbs, buildState)
+    logger.info("KB loading completed.")
+
+    val labels = buildState.labelToIndex.toArray.sortBy(_._2).map(_._1)
+
+    // TODO: Decide which fast one to use here
+//    new CombinedLexiconNER(buildState.intHashTrie, labels, buildState.knownCaseInsensitives.toSet, useLemmasForMatching, entityValidator)
+    CompactLexiconNER(buildState.intHashTrie, labels, buildState.knownCaseInsensitives.toSet, useLemmasForMatching, entityValidator)
+  }
+
+  private def addStandardKBs(kbs: Seq[String], buildState: BuildState): Unit = {
+    def addLine(inputLine: String, label: String): Unit = {
+      val line = inputLine.trim
+      if (!line.startsWith("#")) {
+        val tokens = line.split("\\s+")
+        buildState.addWithLexicalVariations(label, tokens)
+      }
+    }
+
+    kbs.foreach { kb =>
+      val label = extractKBName(kb)
+      val beforeCount = buildState.getCount
+      Serializer.using(loadStreamFromClasspath(kb)) { reader =>
+        reader.lines.forEach(toJavaConsumer[String] { line: String =>
+          addLine(line, label)
+        })
+      }
+      var afterCount = buildState.getCount
+      logger.info(s"Loaded matcher for label $label. The number of entries added to the first layer was ${afterCount - beforeCount}.")
+    }
+  }
+
+  private def addOverrideKBs(overrideKBs: Option[Seq[String]], buildState: BuildState): Unit = {
+    // in these KBs, the name of the entity must be the first token, and the label must be the last
+    //   (tokenization is performed around TABs here)
+    def addLine(inputLine: String): Unit = {
+      val line = inputLine.trim
+      if (!line.startsWith("#")) { // skip comments starting with #
+        val blocks = line.split("\t")
+        if (blocks.size >= 2) {
+          val entity = blocks.head   // grab the text of the named entity
+          val label = blocks.last    // grab the label of the named entity
+          val tokens = entity.split("\\s+")
+          buildState.addWithLexicalVariations(label, tokens)
+        }
+      }
+    }
+
+    overrideKBs.getOrElse(Seq.empty).foreach { okb =>
+      val beforeCount = buildState.getCount
+      Serializer.using(loadStreamFromClasspath(okb)) { reader =>
+        reader.lines.forEach(toJavaConsumer[String] { line: String =>
+          addLine(line)
+        })
+      }
+      var afterCount = buildState.getCount
+      logger.info(s"Loaded OVERRIDE matchers for all labels.  The number of entries added to the first layer was ${afterCount - beforeCount}.")
+    }
+  }
 }
 
 object LexiconNER {
-  val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
   val OUTSIDE_LABEL: String = "O"
-  val INTERN_STRINGS:Boolean = false
-  val KNOWN_CASE_INSENSITIVE_LENGTH:Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
+  val KNOWN_CASE_INSENSITIVE_LENGTH: Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
 
   /**
     * Creates a LexiconNER from a list of KBs
@@ -167,44 +278,23 @@ object LexiconNER {
     * @param caseInsensitiveMatching If true, tokens are matched case insensitively
     * @return The new LexiconNER
     */
-  def apply(kbs:Seq[String],
-            overrideKBs:Option[Seq[String]],
-            entityValidator: EntityValidator,
-            lexicalVariationEngine:LexicalVariations,
-            useLemmasForMatching:Boolean,
-            caseInsensitiveMatching:Boolean): LexiconNER = {
-    logger.info("Beginning to load the KBs for the rule-based bio NER...")
-    val matchers = new ArrayBuffer[(String, HashTrie)]
-    val knownCaseInsensitives = new mutable.HashSet[String]()
+  def apply(kbs: Seq[String], overrideKBs: Option[Seq[String]],
+      entityValidator: EntityValidator,
+      lexicalVariationEngine: LexicalVariations,
+      useLemmasForMatching: Boolean,
+      caseInsensitiveMatching: Boolean): LexiconNER = {
 
-    // load the override KBs first, so they take priority during matching
-    // in these KBs, the name of the entity must be the first token, and the label must be the last
-    //   (tokenization is performed around TABs here)
-    if (overrideKBs.isDefined) {
-      overrideKBs.get.foreach(okb => {
-        val reader = loadStreamFromClasspath(okb)
-        val overrideMatchers = loadOverrideKB(reader, lexicalVariationEngine, caseInsensitiveMatching, knownCaseInsensitives)
-        for(name <- overrideMatchers.keySet.toList.sorted) {
-          val matcher = overrideMatchers(name)
-          logger.info(s"Loaded OVERRIDE matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-          matchers += Tuple2(name, matcher)
-        }
-        reader.close()
-      })
+    class TrueEntityValidator extends EntityValidator {
+      def validMatch(sentence: Sentence, start:Int, end: Int): Boolean = true
     }
 
-    // load the standard KBs
-    for(kb <- kbs) {
-      val name = extractKBName(kb)
-      val reader = loadStreamFromClasspath(kb)
-      val matcher = loadKB(reader, lexicalVariationEngine, caseInsensitiveMatching, knownCaseInsensitives)
-      logger.info(s"Loaded matcher for label $name. This matcher contains ${matcher.uniqueStrings.size} unique strings; the size of the first layer is ${matcher.entries.size}.")
-      matchers += Tuple2(name, matcher)
-      reader.close()
-    }
-
-    logger.info("KB loading completed.")
-    new LexiconNER(matchers.toArray, knownCaseInsensitives.toSet, useLemmasForMatching, entityValidator)
+    // TODO: Comment this out when not debugging.
+    val newEntityValidator = new TrueEntityValidator() // entityValidator
+    // TODO: Figure out whether to use slow or fast here.
+//    new SlowLexiconNERBuilder(caseInsensitiveMatching).build(kbs, overrideKBs, newEntityValidator,
+//        lexicalVariationEngine, useLemmasForMatching)
+    new FastLexiconNERBuilder(caseInsensitiveMatching).build(kbs, overrideKBs, newEntityValidator,
+        lexicalVariationEngine, useLemmasForMatching)
   }
 
   /**
@@ -219,140 +309,59 @@ object LexiconNER {
     * @param caseInsensitiveMatching If true, tokens are matched case insensitively 
     * @return The new LexiconNER
     */
-  def apply(kbs:Seq[String],
-            entityValidator: EntityValidator = new TrueEntityValidator,
-            useLemmasForMatching:Boolean = false,
-            caseInsensitiveMatching:Boolean = false): LexiconNER = {
-    apply(kbs, None,
-      entityValidator, new NoLexicalVariations,
-      useLemmasForMatching, caseInsensitiveMatching)
+  def apply(kbs: Seq[String],
+      entityValidator: EntityValidator = new TrueEntityValidator,
+      useLemmasForMatching: Boolean = false,
+      caseInsensitiveMatching: Boolean = false): LexiconNER = {
+    apply(kbs, None, entityValidator, new NoLexicalVariations, useLemmasForMatching, caseInsensitiveMatching)
   }
 
-  private def loadKB(
-    reader:BufferedReader,
-    lexicalVariationEngine:LexicalVariations,
-    caseInsensitive:Boolean,
-    knownCaseInsensitives:mutable.HashSet[String]): HashTrie = {
-    val matcher = new HashTrie(caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
-    var done = false
-    while(! done) {
-      val line = reader.readLine()
-      if(line == null) {
-        done = true
-      } else {
-        addLine(line, matcher, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
+  def scanText(words: Array[String], start: Int, end: Int): (Int, Int, Int, Int, Int) = {
+    var characters = 0
+    var letters = 0
+    var digits = 0
+    var upperCaseLetters = 0
+    val spaces = words.length - 1
+
+    for (offset <- start until end) {
+      val word = words(offset)
+      for (i <- word.indices) {
+        val c = word.charAt(i)
+        characters += 1
+        if (Character.isLetter(c)) letters += 1
+        if (Character.isDigit(c)) digits += 1
+        if (Character.isUpperCase(c)) upperCaseLetters += 1
       }
     }
-    matcher
-  }
-
-  private def addLine(
-    inputLine:String,
-    matcher:HashTrie,
-    lexicalVariationEngine:LexicalVariations,
-    caseInsensitive:Boolean, 
-    knownCaseInsensitives:mutable.HashSet[String]): Unit = {
-    
-    val line = inputLine.trim
-    if(! line.startsWith("#")) {
-      val tokens = line.split("\\s+")
-      addWithLexicalVariations(tokens, lexicalVariationEngine, matcher)
-
-      // keep track of all lower case ents that are single token (necessary for case-insensitive matching)
-      if(tokens.length == 1 && line.toLowerCase == line && caseInsensitive) { 
-        knownCaseInsensitives.add(line)
-      }
-    }
-  }
-
-  private def loadOverrideKB(
-    reader:BufferedReader,
-    lexicalVariationEngine:LexicalVariations,
-    caseInsensitive:Boolean,
-    knownCaseInsensitives:mutable.HashSet[String]): Map[String, HashTrie] = {
-    val matchers = new mutable.HashMap[String, HashTrie]()
-    var done = false
-    while(! done) {
-      val line = reader.readLine()
-      if(line == null) {
-        done = true
-      } else {
-        addOverrideLine(line, matchers, lexicalVariationEngine, caseInsensitive, knownCaseInsensitives)
-      }
-    }
-    matchers.toMap
-  }
-
-  private def addOverrideLine(
-    inputLine:String,
-    matchers:mutable.HashMap[String, HashTrie],
-    lexicalVariationEngine:LexicalVariations,
-    caseInsensitive:Boolean,
-    knownCaseInsensitives:mutable.HashSet[String]): Unit = {
-    val line = inputLine.trim
-    if(! line.startsWith("#")) { // skip comments starting with #
-      val blocks = line.split("\t")
-      if (blocks.size >= 2) {
-        val entity = blocks.head   // grab the text of the named entity
-        val label = blocks.last    // grab the label of the named entity
-
-        val tokens = entity.split("\\s+")
-        // keep track of all lower case ents that are single token (necessary for case-insensitive matching)
-        if (tokens.length == 1 && line.toLowerCase == line && caseInsensitive) {
-          knownCaseInsensitives.add(line)
-        }
-        val matcher = matchers.getOrElseUpdate(label,
-          new HashTrie(caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS))
-
-        addWithLexicalVariations(tokens, lexicalVariationEngine, matcher)
-      }
-    }
-  }
-
-  private def addWithLexicalVariations(
-    tokens:Array[String],
-    lexicalVariationEngine:LexicalVariations,
-    matcher:HashTrie): Unit = {
-    // add the original form
-    matcher.add(tokens)
-
-    // add the lexical variations
-    for(ts <- lexicalVariationEngine.lexicalVariations(tokens)) {
-      matcher.add(ts)
-    }
-  }
-
-  private def extractKBName(kb:String):String = {
-    val slash = kb.lastIndexOf("/")
-    val dot = kb.indexOf('.')
-    val name = kb.substring(slash + 1, dot)
-    name
+    (characters, letters, digits, upperCaseLetters, spaces)
   }
 
   /** Merges labels from src into dst, without overlapping any existing labels in dst */
-  def mergeLabels(dst:Array[String], src:Array[String]) {
+  def mergeLabels(dst: Array[String], src: Array[String]) {
     assert(dst.length == src.length)
 
     var offset = 0
-    while(offset < dst.length) {
-      if(src(offset) != OUTSIDE_LABEL) {
+    while (offset < dst.length) {
+      if (src(offset) != LexiconNER.OUTSIDE_LABEL) {
         // no overlap allowed
         // if overlap is detected, the corresponding labels in src are discarded
-        if(! overlap(dst, src, offset)) {
+        if (!overlap(dst, src, offset)) {
           dst(offset) = src(offset)
           offset += 1
-          while(offset < src.length && src(offset).startsWith("I-")) {
+          while (offset < src.length && src(offset).startsWith("I-")) {
             dst(offset) = src(offset)
             offset += 1
           }
-        } else {
+        }
+        else {
           // overlap found; just ignore the labels in src
           offset += 1
-          while(offset < src.length && src(offset).startsWith("I-")) {
+          while (offset < src.length && src(offset).startsWith("I-")) {
             offset += 1
           }
         }
-      } else {
+      }
+      else {
         // nothing to merge
         offset += 1
       }
@@ -360,35 +369,19 @@ object LexiconNER {
   }
 
   // Used by mergeLabels above
-  private def overlap(dst:Array[String], src:Array[String], offset:Int):Boolean = {
+  private def overlap(dst: Array[String], src: Array[String], offset: Int): Boolean = {
     var position = offset
-    if(dst(position) != OUTSIDE_LABEL) return true
-    position += 1
-    while(position < src.length && src(position).startsWith("I-")) {
-      if(dst(position) != OUTSIDE_LABEL) return true
+
+    if (dst(position) != LexiconNER.OUTSIDE_LABEL)
+      true
+    else {
       position += 1
-    }
-    false
-  }
-
-  def scanText(words:Array[String], start:Int, end:Int):(Int, Int, Int, Int, Int) = {
-    var letters = 0
-    var digits = 0
-    var upperCaseLetters = 0
-    var characters = 0
-    val spaces = words.length - 1
-    for(offset <- start until end) {
-      val word = words(offset)
-      for (i <- word.indices) {
-        val c = word.charAt(i)
-        characters += 1
-        if (Character.isLetter(c)) letters += 1
-        if (Character.isUpperCase(c)) upperCaseLetters += 1
-        if (Character.isDigit(c)) digits += 1
+      while (position < src.length && src(position).startsWith("I-")) {
+        if (dst(position) != LexiconNER.OUTSIDE_LABEL)
+          return true
+        position += 1
       }
+      false
     }
-    (characters, letters, digits, upperCaseLetters, spaces)
   }
-
 }
-
