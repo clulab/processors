@@ -41,7 +41,7 @@ class RNN {
     var sentences = trainSentences
     val rand = new Random(RANDOM_SEED)
 
-    model.printTransitionMatrix()
+    // model.printTransitionMatrix()
 
     for(epoch <- 0 until EPOCHS) {
       sentences = MathUtils.randomize(sentences, rand)
