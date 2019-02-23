@@ -43,12 +43,15 @@ class RNN {
     val rand = new Random(RANDOM_SEED)
 
     for(epoch <- 0 until EPOCHS) {
-      sentences = MathUtils.randomize(sentences, rand)
+      // sentences = MathUtils.randomize(sentences, rand) // TODO: uncomment me
 
       logger.info(s"Started epoch $epoch.")
       for(sentence <- sentences) {
         sentCount += 1
         ComputationGraph.renew()
+        //print("Current sentence:")
+        //for(w <- sentence) print(" " + w.get(0) + "/" + w.get(1))
+        //println()
 
         // predict tag emission scores for one sentence, from the biLSTM hidden states
         val words = sentence.map(_.get(0))
@@ -89,12 +92,12 @@ class RNN {
                     startTag:Int,
                     stopTag:Int): Expression = {
     // start with the transition score to first tag from START
-    var score = pick2D(transitionMatrix, tagCount, tagSeq.head, startTag)
+    var score = pick2D(transitionMatrix, tagSeq.head, startTag)
 
     for(i <- tagSeq.indices) {
       if(i > 0) {
         // transition score from the previous tag
-        score = score + pick2D(transitionMatrix, tagCount, tagSeq(i), tagSeq(i - 1))
+        score = score + pick2D(transitionMatrix, tagSeq(i), tagSeq(i - 1))
       }
 
       // emission score for the current tag
@@ -102,13 +105,13 @@ class RNN {
     }
 
     // conclude with the transition score to STOP from last tag
-    score = score + pick2D(transitionMatrix, tagCount, stopTag, tagSeq.last)
+    score = score + pick2D(transitionMatrix, stopTag, tagSeq.last)
 
     score
   }
 
   /** Picks the scalar element from an expression that is a matrix */
-  def pick2D(matrix:ExpressionVector, tagCount:Int, row:Int, column:Int): Expression = {
+  def pick2D(matrix:ExpressionVector, row:Int, column:Int): Expression = {
     pick(matrix(row), column)
   }
 
@@ -118,23 +121,59 @@ class RNN {
                        startTag:Int, stopTag:Int): Expression = { // Dim: tagCount x tagCount
     val tagCount = transitionMatrix.size
 
-    //
-    // cost (in log space) of starting at a given tag
-    // the only possible starting tag is START; all others are disabled
-    //
-    val initAlphaValues = new Array[Float](tagCount)
-    for(i <- initAlphaValues.indices) initAlphaValues(i) = LOG_MIN_VALUE
-    initAlphaValues(startTag) = 0
-    val initAlphas = input(Dim(initAlphaValues.length), new FloatVector(initAlphaValues))
+    //println("emissionScoresForSeq dim: " + emissionScoresForSeq.size + " x " + emissionScoresForSeq.head.value().toVector().size)
+
+    // sum of scores of reaching each tag at this time step
+    var forward = new ExpressionVector()
+    for(t <- 0 until tagCount) {
+      //
+      // cost (in log space) of starting at a given tag
+      // the only possible starting tag is START; all others are disabled
+      //
+      val alphaAtT0:Float = if(t == startTag) 0 else LOG_MIN_VALUE
+      forward.add(input(alphaAtT0))
+    }
+    //println("forward dim: " + forward.size + " x 1")
+    //println("\tValue for start: " + forward(startTag).value().toFloat())
 
     for(t <- emissionScoresForSeq.indices) {
+      val alphasAtT = new ExpressionVector()
+      val emitScores = emissionScoresForSeq(t)
+      //println("In sentence at " + t)
 
-      for(tag <- 0 until tagCount) {
+      for(nextTag <- 0 until tagCount) {
+        //println("Looking at tag: " + nextTag)
+        val alphasForTag = new ExpressionVector()
+        val emitScore = pick(emitScores, nextTag) // scalar: emision score for nextTag
+        //println("\temitScore: " + emitScore.value().toFloat())
 
+        for(srcTag <- 0 until tagCount) {
+          val transScore = pick2D(transitionMatrix, nextTag, srcTag) // scalar: transition score to nextTag from srcTag
+          //println("\ttransScore: " + transScore.value().toFloat())
+          val alphaToTagFromSrc =
+            forward(srcTag) +
+            transScore +
+            emitScore
+          //println("alphaToTagFromSrc: " + alphaToTagFromSrc.value().toFloat())
+
+          alphasForTag.add(alphaToTagFromSrc)
+        }
+        //println("alphasForTag dim: " + alphasForTag.size + " x " + alphasForTag.head.value().toVector().size)
+
+        alphasAtT.add(logSumExp(alphasForTag))
       }
+
+      forward = alphasAtT
     }
 
-    null // TODO: implement the forward algorithm here
+    val terminalVars = new ExpressionVector()
+    for(t <- 0 until tagCount) {
+      terminalVars.add(forward(t) + pick2D(transitionMatrix, stopTag, t))
+    }
+
+    val total = logSumExp(terminalVars)
+    //println("partition score = " + total.value().toFloat())
+    total
   }
 
   def sentenceLoss(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
@@ -145,9 +184,11 @@ class RNN {
 
     val scoreOfGoldSeq =
       sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size, golds, startTag, stopTag)
+    //println("Gold score: " + scoreOfGoldSeq.value().toFloat())
 
     val partitionScore =
       mkPartitionScore(emissionScoresForSeq, transitionMatrix, startTag, stopTag)
+    //println("Partition score: " + partitionScore.value().toFloat())
 
     partitionScore - scoreOfGoldSeq
   }
