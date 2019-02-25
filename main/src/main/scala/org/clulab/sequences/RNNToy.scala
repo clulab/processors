@@ -29,5 +29,18 @@ object RNNToy {
     p2.values().toVector()(1) = 0
     println(p2.values().toVector())
 
+    println("LookupParameter:")
+    val pc = new ParameterCollection()
+    val lup: LookupParameter = pc.addLookupParameters(5, Dim(1))
+    val ex = Expression.lookup(lup, 2)
+    val res = ex.value().toFloat()
+    println(res)
+
+    val newValues: Seq[Float] = Array(5.0F).toSeq
+    lup.initialize(2, newValues)
+    val ex2 = Expression.lookup(lup, 2)
+    val res2 = ex2.value().toFloat()
+    println(res2)
+
   }
 }
