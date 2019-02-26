@@ -11,13 +11,18 @@ import org.clulab.sequences.LexiconNER.OUTSIDE_LABEL
 import scala.collection.mutable
 
 @SerialVersionUID(1000L)
-class CompactLexiconNER(val labels: Seq[String], val caseInsensitive: Boolean, val headCount: Int,
-    val stringIds: Map[String, Int], val parentIsComplete: Array[Int],
-    val parentToChild: Array[Int], val childStringIds: Array[Int], val childAsParent: Array[Int],
-    knownCaseInsensitives: Set[String], useLemmas: Boolean, val entityValidator: EntityValidator)
+// These are var for serialization optimization and then only to preserve compatibility with other LexiconNERs.
+class CompactLexiconNER(var labels: Seq[String], var caseInsensitive: Boolean, var headCount: Int,
+    @transient var stringIds: Map[String, Int], var parentIsComplete: Array[Int],
+    var parentToChild: Array[Int], var childStringIds: Array[Int], var childAsParent: Array[Int],
+    knownCaseInsensitives: Set[String], useLemmas: Boolean, var entityValidator: EntityValidator)
     extends LexiconNER(knownCaseInsensitives, useLemmas) {
-  protected val bLabels = labels.map("B-" + _)
-  protected val iLabels = labels.map("I-" + _)
+  @transient protected var bLabels = mkBLabels
+  @transient protected var iLabels = mkILabels
+
+  protected def mkBLabels: Seq[String] = labels.map("B-" + _)
+
+  protected def mkILabels: Seq[String] =  labels.map("I-" + _)
 
   def toString(stringBuilder: StringBuilder): Unit = {
     val strings = stringIds.toArray.sortBy(_._2).map(_._1)
@@ -162,12 +167,11 @@ class CompactLexiconNER(val labels: Seq[String], val caseInsensitive: Boolean, v
     }
   }
 
-  def save(out: ObjectOutputStream): Unit = {
+  @throws(classOf[java.io.IOException])
+  private def writeObject(out: ObjectOutputStream): Unit = {
     val texts = stringIds.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
     out.writeObject(labels)
-    out.writeObject(bLabels)
-    out.writeObject(iLabels)
     out.writeBoolean(caseInsensitive)
     out.writeInt(headCount)
     out.writeObject(texts)
@@ -177,28 +181,26 @@ class CompactLexiconNER(val labels: Seq[String], val caseInsensitive: Boolean, v
     out.writeObject(childAsParent)
     out.writeObject(entityValidator)
   }
+
+  @throws(classOf[java.io.IOException])
+  private def readObject(in: ObjectInputStream): Unit = {
+    labels = in.readObject.asInstanceOf[Seq[String]]
+    caseInsensitive = in.readBoolean
+    headCount = in.readInt()
+    val texts = in.readObject.asInstanceOf[String]
+    stringIds = texts.split('\n').zipWithIndex.toMap
+    parentIsComplete = in.readObject.asInstanceOf[Array[Int]]
+    parentToChild = in.readObject.asInstanceOf[Array[Int]]
+    childStringIds = in.readObject.asInstanceOf[Array[Int]]
+    childAsParent = in.readObject.asInstanceOf[Array[Int]]
+    entityValidator = in.readObject.asInstanceOf[EntityValidator]
+
+    bLabels = mkBLabels
+    iLabels = mkILabels
+  }
 }
 
 object CompactLexiconNER {
-
-  def load(in: ObjectInputStream): Any = {
-    var labels = in.readObject.asInstanceOf[Seq[String]]
-    val caseInsensitive = in.readBoolean
-    val headCount = in.readInt()
-    val texts = in.readObject.asInstanceOf[String]
-    val stringIds = texts.split('\n').zipWithIndex.toMap
-    val parentIsComplete = in.readObject.asInstanceOf[Array[Int]]
-    val parentToChild = in.readObject.asInstanceOf[Array[Int]]
-    val childStringIds = in.readObject.asInstanceOf[Array[Int]]
-    val childAsParent = in.readObject.asInstanceOf[Array[Int]]
-    val knownCaseInsensitives = in.readObject.asInstanceOf[Set[String]]
-    val useLemmas = in.readObject.asInstanceOf[Boolean]
-    val entityValidator = in.readObject.asInstanceOf[EntityValidator]
-
-    new CompactLexiconNER(labels, caseInsensitive, headCount,
-      stringIds, parentIsComplete, parentToChild, childStringIds, childAsParent,
-      knownCaseInsensitives, useLemmas, entityValidator)
-  }
 
   protected def countChildren(trieNode: IntTrieNode): Int = {
     if (trieNode.children.isDefined) {

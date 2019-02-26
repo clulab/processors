@@ -22,40 +22,28 @@ import org.scalatest.Matchers
 import scala.io.Source
 
 class TestCompactLexiconNER extends FlatSpec with Matchers {
-  val proc = new BioCluProcessor()
-  val start = System.currentTimeMillis
-  val ner = proc.ner.get.asInstanceOf[LexiconNER]
-
-  val stringBuilder = new StringBuilder()
-  //  ner.toString(stringBuilder)
-  println(stringBuilder.toString)
-
-  //  val matchers = ner.matchers
-  val nerLoadStop = System.currentTimeMillis
-  val nerLoadTime = nerLoadStop - start
 
   val filename = "serialized.dat"
 
-  // Want to save lexiconNER???
-  def fileSave(hashTrie: Object): Long = {
+  def fileSave(lexiconNER: Object): Long = {
     val outputStream = new FileOutputStream(filename)
     val bufferedOutputStream = new BufferedOutputStream(outputStream)
     val objectOutputStream = new ObjectOutputStream(bufferedOutputStream)
     val start = System.currentTimeMillis
 
-    objectOutputStream.writeObject(hashTrie)
+    objectOutputStream.writeObject(lexiconNER)
     bufferedOutputStream.close
 
     val stop = System.currentTimeMillis
     stop - start
   }
 
-  def bufferSave(hashTrie: Object): (Array[Byte], Long) = {
+  def bufferSave(lexiconNER: Object): (Array[Byte], Long) = {
     val outputStream = new ByteArrayOutputStream
     val objectOutputStream = new ObjectOutputStream(outputStream)
     val start = System.currentTimeMillis
 
-    objectOutputStream.writeObject(hashTrie)
+    objectOutputStream.writeObject(lexiconNER)
     objectOutputStream.close
 
     val bytes = outputStream.toByteArray
@@ -70,7 +58,7 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     (bytes, stop - start)
   }
 
-  def fileLoad[T](templateHashTrie: T): (T, Long) = {
+  def fileLoad[T]: (T, Long) = {
     val inputStream = new FileInputStream(filename)
     val bufferedInputStream = new BufferedInputStream(inputStream)
     val objectInputStream = new ObjectInputStream(bufferedInputStream)
@@ -81,7 +69,7 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     (hashTrie, stop - start)
   }
 
-  def bufferLoad[T](templateHashTrie: T, byteArray: Array[Byte]): (T, Long) = {
+  def bufferLoad[T](byteArray: Array[Byte]): (T, Long) = {
     val inputStream = new ByteArrayInputStream(byteArray)
     val objectInputStream = new ObjectInputStream(inputStream)
     val start = System.currentTimeMillis
@@ -90,6 +78,22 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     val stop = System.currentTimeMillis
     (hashTrie, stop - start)
   }
+
+  val proc = new BioCluProcessor()
+  val start = System.currentTimeMillis
+
+  val oldNer = proc.ner.get.asInstanceOf[LexiconNER]
+  fileSave(oldNer)
+  val (newNer, loadTime) = fileLoad[LexiconNER]
+  val ner = newNer
+
+  val stringBuilder = new StringBuilder()
+  //  ner.toString(stringBuilder)
+  println(stringBuilder.toString)
+
+  //  val matchers = ner.matchers
+  val nerLoadStop = System.currentTimeMillis
+  val nerLoadTime = nerLoadStop - start
 
   def processColumns(): Long = {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/eng.testa")
@@ -137,7 +141,7 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
 
   def processKnowledgebases(): Long = {
     val files = Files.findFiles("kbs", "tsv")
-    var elapsed = 0
+    var elapsed = 0L
 
     files.foreach { file =>
       elapsed += processKnowledgebase(file.getPath().replace('\\', '/'))

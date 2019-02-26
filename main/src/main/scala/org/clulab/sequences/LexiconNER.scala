@@ -74,9 +74,7 @@ object LexiconNER {
       useLemmasForMatching: Boolean,
       caseInsensitiveMatching: Boolean): LexiconNER = {
     val newEntityValidator =
-        if (OVERRIDE_ENTITY_VALIDATOR) new EntityValidator() {
-          def validMatch(sentence: Sentence, start:Int, end: Int): Boolean = true
-        }
+        if (OVERRIDE_ENTITY_VALIDATOR) EntityValidator.TRUE_VALIDATOR
         else  entityValidator
 
     if (USE_FAST)
