@@ -27,10 +27,10 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
   val ner = proc.ner.get.asInstanceOf[LexiconNER]
 
   val stringBuilder = new StringBuilder()
-//  ner.toString(stringBuilder)
+  //  ner.toString(stringBuilder)
   println(stringBuilder.toString)
 
-//  val matchers = ner.matchers
+  //  val matchers = ner.matchers
   val nerLoadStop = System.currentTimeMillis
   val nerLoadTime = nerLoadStop - start
 
@@ -94,14 +94,14 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
   def processColumns(): Long = {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/eng.testa")
     val doc: Document = ColumnsToDocument.readFromStream(stream,
-        wordPos = 0, labelPos = 3,
-        setLabels = ColumnsToDocument.setEntities,
-        annotate = ColumnsToDocument.annotateLemmmaTags)
+      wordPos = 0, labelPos = 3,
+      setLabels = ColumnsToDocument.setEntities,
+      annotate = ColumnsToDocument.annotateLemmmaTags)
     val start = System.currentTimeMillis
 
     doc.sentences.foreach { sentence =>
       val namedEntities = ner.find(sentence)
-//      println(namedEntities.mkString(" "))
+      //      println(namedEntities.mkString(" "))
     }
 
     val stop = System.currentTimeMillis
@@ -115,15 +115,19 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     source.close
     val doc: Document = proc.mkDocument(text)
 
+    // Do it once for timing
     val start = System.currentTimeMillis
+    doc.sentences.foreach { sentence =>
+      val namedEntities = ner.find(sentence)
+    }
+    val stop = System.currentTimeMillis
+
     println("This is " + filename)
     doc.sentences.foreach { sentence =>
       val namedEntities = ner.find(sentence)
       println(sentence.words.mkString(" "))
       println(namedEntities.mkString(" "))
     }
-
-    val stop = System.currentTimeMillis
     stop - start
   }
 
@@ -133,64 +137,64 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
 
   def processKnowledgebases(): Long = {
     val files = Files.findFiles("kbs", "tsv")
-    val start = System.currentTimeMillis
+    var elapsed = 0
+
     files.foreach { file =>
-      val processTime = processKnowledgebase(file.getPath().replace('\\', '/'))
+      elapsed += processKnowledgebase(file.getPath().replace('\\', '/'))
     }
-    val stop = System.currentTimeMillis
-    stop - start
+    elapsed
   }
 
   println("Label\tAdded\tTokens\tStrings\tEntries\tTokenUniqueness\tEntryFullness\tSize\tBufferSaveTime\tBufferLoadTime\tFileSaveTime\tFileLoadTime")
 
-//  val matchers = Array[ReadableHashTrie]()
-//
-//  matchers.foreach { matcher: ReadableHashTrie =>
-//    val isDebug = matcher.isInstanceOf[DebugBooleanHashTrie]
-//    val debugHashTrie = if (isDebug) Some(matcher.asInstanceOf[DebugBooleanHashTrie]) else None
-//    if (isDebug)
-//      debugHashTrie.get.uniqueStrings.clear()
-//    val label = matcher.label
-//    val addedCount =
-//        if (isDebug) debugHashTrie.get.addedCount
-//        else -1
-//    val addedTokensCount =
-//        if (isDebug) debugHashTrie.get.addedTokensCount
-//        else -1
-//    val uniqueness =
-//        if (isDebug) debugHashTrie.get.uniqueStringsSize.toFloat / addedTokensCount
-//        else 0
-//    val fullness =
-//      if (isDebug) debugHashTrie.get.entriesSize.toFloat / addedCount
-//      else 0
-//    val uniqueStringsSize =
-//      if (isDebug) debugHashTrie.get.uniqueStringsSize
-//      else -1
-//    val (byteArray, bufferSaveTime) = bufferSave(matcher)
-//    val (_, bufferLoadTime) = bufferLoad(matcher, byteArray)
-//    val fileSaveTime = fileSave(matcher)
-//    val (_, fileLoadTime) = fileLoad(matcher)
-//    print(label + "\t")
-//    print(addedCount + "\t")
-//    print(addedTokensCount + "\t")
-//    print(uniqueStringsSize + "\t")
-//    print(matcher.entriesSize + "\t")
-//    print(uniqueness + "\t")
-//    print(fullness + "\t")
-//    print(byteArray.length + "\t")
-//    print(bufferSaveTime + "\t")
-//    print(bufferLoadTime + "\t")
-//    print(fileSaveTime + "\t")
-//    println(fileLoadTime)
-//  }
+  //  val matchers = Array[ReadableHashTrie]()
+  //
+  //  matchers.foreach { matcher: ReadableHashTrie =>
+  //    val isDebug = matcher.isInstanceOf[DebugBooleanHashTrie]
+  //    val debugHashTrie = if (isDebug) Some(matcher.asInstanceOf[DebugBooleanHashTrie]) else None
+  //    if (isDebug)
+  //      debugHashTrie.get.uniqueStrings.clear()
+  //    val label = matcher.label
+  //    val addedCount =
+  //        if (isDebug) debugHashTrie.get.addedCount
+  //        else -1
+  //    val addedTokensCount =
+  //        if (isDebug) debugHashTrie.get.addedTokensCount
+  //        else -1
+  //    val uniqueness =
+  //        if (isDebug) debugHashTrie.get.uniqueStringsSize.toFloat / addedTokensCount
+  //        else 0
+  //    val fullness =
+  //      if (isDebug) debugHashTrie.get.entriesSize.toFloat / addedCount
+  //      else 0
+  //    val uniqueStringsSize =
+  //      if (isDebug) debugHashTrie.get.uniqueStringsSize
+  //      else -1
+  //    val (byteArray, bufferSaveTime) = bufferSave(matcher)
+  //    val (_, bufferLoadTime) = bufferLoad(matcher, byteArray)
+  //    val fileSaveTime = fileSave(matcher)
+  //    val (_, fileLoadTime) = fileLoad(matcher)
+  //    print(label + "\t")
+  //    print(addedCount + "\t")
+  //    print(addedTokensCount + "\t")
+  //    print(uniqueStringsSize + "\t")
+  //    print(matcher.entriesSize + "\t")
+  //    print(uniqueness + "\t")
+  //    print(fullness + "\t")
+  //    print(byteArray.length + "\t")
+  //    print(bufferSaveTime + "\t")
+  //    print(bufferLoadTime + "\t")
+  //    print(fileSaveTime + "\t")
+  //    println(fileLoadTime)
+  //  }
 
   val startupStop = System.currentTimeMillis
   val startupTime = startupStop - start
 
 
   //  val processTime = processColumns()
-  val processTime = processKnowledgebase()
-//  val processTime = processKnowledgebases()
+//  val processTime = processKnowledgebase()
+    val processTime = processKnowledgebases()
 
   println("ProcessTime\tNERLoadTime\tStartupTime")
   print(processTime + "\t")
