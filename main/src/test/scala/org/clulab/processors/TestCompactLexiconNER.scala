@@ -14,8 +14,10 @@ import java.nio.charset.StandardCharsets
 import org.clulab.processors.clu.BioCluProcessor
 import org.clulab.sequences.ColumnsToDocument
 import org.clulab.sequences.LexiconNER
+import org.clulab.sequences.SeparatedLexiconNER
+import org.clulab.struct.BooleanHashTrie
 import org.clulab.utils.Files
-//import org.clulab.struct.DebugBooleanHashTrie
+import org.clulab.struct.DebugBooleanHashTrie
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
@@ -58,7 +60,7 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     (bytes, stop - start)
   }
 
-  def fileLoad[T]: (T, Long) = {
+  def fileLoad[T](): (T, Long) = {
     val inputStream = new FileInputStream(filename)
     val bufferedInputStream = new BufferedInputStream(inputStream)
     val objectInputStream = new ObjectInputStream(bufferedInputStream)
@@ -83,9 +85,10 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
   val start = System.currentTimeMillis
 
   val oldNer = proc.ner.get.asInstanceOf[LexiconNER]
-  fileSave(oldNer)
-  val (newNer, loadTime) = fileLoad[LexiconNER]
-  val ner = newNer
+//  fileSave(oldNer)
+//  val (newNer, loadTime) = fileLoad[LexiconNER]
+//  val ner = newNer
+    val ner = oldNer
 
   val stringBuilder = new StringBuilder()
   //  ner.toString(stringBuilder)
@@ -151,54 +154,57 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
 
   println("Label\tAdded\tTokens\tStrings\tEntries\tTokenUniqueness\tEntryFullness\tSize\tBufferSaveTime\tBufferLoadTime\tFileSaveTime\tFileLoadTime")
 
-  //  val matchers = Array[ReadableHashTrie]()
-  //
-  //  matchers.foreach { matcher: ReadableHashTrie =>
-  //    val isDebug = matcher.isInstanceOf[DebugBooleanHashTrie]
-  //    val debugHashTrie = if (isDebug) Some(matcher.asInstanceOf[DebugBooleanHashTrie]) else None
-  //    if (isDebug)
-  //      debugHashTrie.get.uniqueStrings.clear()
-  //    val label = matcher.label
-  //    val addedCount =
-  //        if (isDebug) debugHashTrie.get.addedCount
-  //        else -1
-  //    val addedTokensCount =
-  //        if (isDebug) debugHashTrie.get.addedTokensCount
-  //        else -1
-  //    val uniqueness =
-  //        if (isDebug) debugHashTrie.get.uniqueStringsSize.toFloat / addedTokensCount
-  //        else 0
-  //    val fullness =
-  //      if (isDebug) debugHashTrie.get.entriesSize.toFloat / addedCount
-  //      else 0
-  //    val uniqueStringsSize =
-  //      if (isDebug) debugHashTrie.get.uniqueStringsSize
-  //      else -1
-  //    val (byteArray, bufferSaveTime) = bufferSave(matcher)
-  //    val (_, bufferLoadTime) = bufferLoad(matcher, byteArray)
-  //    val fileSaveTime = fileSave(matcher)
-  //    val (_, fileLoadTime) = fileLoad(matcher)
-  //    print(label + "\t")
-  //    print(addedCount + "\t")
-  //    print(addedTokensCount + "\t")
-  //    print(uniqueStringsSize + "\t")
-  //    print(matcher.entriesSize + "\t")
-  //    print(uniqueness + "\t")
-  //    print(fullness + "\t")
-  //    print(byteArray.length + "\t")
-  //    print(bufferSaveTime + "\t")
-  //    print(bufferLoadTime + "\t")
-  //    print(fileSaveTime + "\t")
-  //    println(fileLoadTime)
-  //  }
+  if (ner.isInstanceOf[SeparatedLexiconNER]) {
+    val lexiconNER = proc.asInstanceOf[SeparatedLexiconNER]
+    val matchers = lexiconNER.matchers
+
+    matchers.foreach { matcher: BooleanHashTrie =>
+      val isDebug = matcher.isInstanceOf[DebugBooleanHashTrie]
+      val debugHashTrie = if (isDebug) Some(matcher.asInstanceOf[DebugBooleanHashTrie]) else None
+      if (isDebug)
+        debugHashTrie.get.uniqueStrings.clear()
+      val label = matcher.label
+      val addedCount =
+        if (isDebug) debugHashTrie.get.addedCount
+        else -1
+      val addedTokensCount =
+        if (isDebug) debugHashTrie.get.addedTokensCount
+        else -1
+      val uniqueness =
+        if (isDebug) debugHashTrie.get.uniqueStringsSize.toFloat / addedTokensCount
+        else 0
+      val fullness =
+        if (isDebug) debugHashTrie.get.entriesSize.toFloat / addedCount
+        else 0
+      val uniqueStringsSize =
+        if (isDebug) debugHashTrie.get.uniqueStringsSize
+        else -1
+      val (byteArray, bufferSaveTime) = bufferSave(matcher)
+      val (_, bufferLoadTime) = bufferLoad(byteArray)
+      val fileSaveTime = fileSave(matcher)
+      val (_, fileLoadTime) = fileLoad[LexiconNER]()
+      print(label + "\t")
+      print(addedCount + "\t")
+      print(addedTokensCount + "\t")
+      print(uniqueStringsSize + "\t")
+      print(matcher.entriesSize + "\t")
+      print(uniqueness + "\t")
+      print(fullness + "\t")
+      print(byteArray.length + "\t")
+      print(bufferSaveTime + "\t")
+      print(bufferLoadTime + "\t")
+      print(fileSaveTime + "\t")
+      println(fileLoadTime)
+    }
+  }
 
   val startupStop = System.currentTimeMillis
   val startupTime = startupStop - start
 
-
-  //  val processTime = processColumns()
+  val processTime = 0
+//  val processTime = processColumns()
 //  val processTime = processKnowledgebase()
-    val processTime = processKnowledgebases()
+//  val processTime = processKnowledgebases()
 
   println("ProcessTime\tNERLoadTime\tStartupTime")
   print(processTime + "\t")

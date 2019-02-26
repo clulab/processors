@@ -49,7 +49,7 @@ object LexiconNER {
   val USE_FAST = true // Otherwise, slow will be used
   val USE_COMPACT = true // This applies to fast only
   val USE_DEBUG = false // This applies to the slow one only
-  val OVERRIDE_ENTITY_VALIDATOR = true // true is only for testing!
+  val OVERRIDE_ENTITY_VALIDATOR = false // true is only for testing!
 
   val OUTSIDE_LABEL: String = "O"
   val KNOWN_CASE_INSENSITIVE_LENGTH: Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
