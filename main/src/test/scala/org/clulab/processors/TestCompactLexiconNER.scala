@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets
 import org.clulab.processors.clu.BioCluProcessor
 import org.clulab.sequences.ColumnsToDocument
 import org.clulab.sequences.LexiconNER
+import org.clulab.utils.Files
 //import org.clulab.struct.DebugBooleanHashTrie
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
@@ -26,7 +27,7 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
   val ner = proc.ner.get.asInstanceOf[LexiconNER]
 
   val stringBuilder = new StringBuilder()
-  ner.toString(stringBuilder)
+//  ner.toString(stringBuilder)
   println(stringBuilder.toString)
 
 //  val matchers = ner.matchers
@@ -107,19 +108,35 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     stop - start
   }
 
-  def processKnowledgebase(): Long = {
-    val filename = "uniprot-proteins.tsv"
+  protected def processKnowledgebase(filename: String): Long = {
     val source = Source.fromFile(new File(filename), StandardCharsets.UTF_8.toString)
-    val text = source.mkString.substring(0, 5000000) // 0000)
+    val allText = source.getLines().mkString(".  ")
+    val text = allText.substring(0, math.min(allText.size, 5000000)) // 0000)
     source.close
     val doc: Document = proc.mkDocument(text)
 
     val start = System.currentTimeMillis
+    println("This is " + filename)
     doc.sentences.foreach { sentence =>
       val namedEntities = ner.find(sentence)
-//        println(namedEntities.mkString(" "))
+      println(sentence.words.mkString(" "))
+      println(namedEntities.mkString(" "))
     }
 
+    val stop = System.currentTimeMillis
+    stop - start
+  }
+
+  protected def processKnowledgebase(): Long = {
+    processKnowledgebase("uniprot-proteins.tsv")
+  }
+
+  def processKnowledgebases(): Long = {
+    val files = Files.findFiles("kbs", "tsv")
+    val start = System.currentTimeMillis
+    files.foreach { file =>
+      val processTime = processKnowledgebase(file.getPath().replace('\\', '/'))
+    }
     val stop = System.currentTimeMillis
     stop - start
   }
@@ -170,8 +187,11 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
   val startupStop = System.currentTimeMillis
   val startupTime = startupStop - start
 
+
+  //  val processTime = processColumns()
   val processTime = processKnowledgebase()
-//  val processTime = processColumns()
+//  val processTime = processKnowledgebases()
+
   println("ProcessTime\tNERLoadTime\tStartupTime")
   print(processTime + "\t")
   print(nerLoadTime + "\t")

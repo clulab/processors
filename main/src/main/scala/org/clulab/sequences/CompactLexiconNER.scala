@@ -142,7 +142,7 @@ class CompactLexiconNER(val labels: Seq[String], val caseInsensitive: Boolean, v
 
           if (tailCount > 0) 1 + tailCount
           else if (parentIsComplete(newParentIndex) >= 0) {
-            nodeMatch.index = newParentIndex
+            nodeMatch.index = parentIsComplete(newParentIndex)
             1
           }
           else 0
