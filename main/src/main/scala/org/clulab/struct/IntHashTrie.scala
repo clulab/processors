@@ -16,7 +16,12 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
   /** Stores the first layer, i.e., the entry points in the trie */
   val entries = new mutable.HashMap[String, IntTrieNode]()
 
-  override def toString: String = entries.values.mkString("", "\n", "\n")
+  def toString(stringBuilder: StringBuilder, labels: Seq[String]): Unit = {
+    entries.values.foreach { trieNode =>
+      trieNode.toString(stringBuilder, Some(labels))
+      stringBuilder.append("\n")
+    }
+  }
 
   def entriesSize: Int = entries.size
 
@@ -43,7 +48,7 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
         entries.put(token, tree)
         tree
       }
-      tree.add(inTokens, completePath, 1)
+      tree.add(inTokens, 1, completePath)
     }
   }
 
@@ -74,12 +79,28 @@ case class IntTrieNode(token:String, var completePath: Int, var children: Option
 
   def this(token: String, completePath: Int) = this(token, completePath, None)
 
+  def toString(stringBuilder: StringBuilder, labels: Option[Seq[String]]): Unit = {
+    stringBuilder.append(token)
+    if (completePath >= 0) {
+      stringBuilder.append("*")
+      if (labels.isDefined)
+        stringBuilder.append(labels.get(completePath))
+    }
+    children.foreach { children: ListBuffer[IntTrieNode] =>
+      stringBuilder.append(" (")
+      children.zipWithIndex.foreach { case (child: IntTrieNode, index: Int) =>
+        if (index > 0)
+          stringBuilder.append(" | ")
+        child.toString(stringBuilder, labels)
+      }
+      stringBuilder.append(")")
+    }
+  }
+
   override def toString: String = {
-    val os = new StringBuilder
-    os.append(token)
-    if (completePath >= 0) os.append("*")
-    children.foreach(cs => os.append(cs.mkString(" (", " | ", ")")))
-    os.toString()
+    val stringBuilder = new StringBuilder
+    toString(stringBuilder, None)
+    stringBuilder.toString()
   }
 
   /**

@@ -19,6 +19,43 @@ class CompactLexiconNER(val labels: Seq[String], val caseInsensitive: Boolean, v
   protected val bLabels = labels.map("B-" + _)
   protected val iLabels = labels.map("I-" + _)
 
+  def toString(stringBuilder: StringBuilder): Unit = {
+    val strings = stringIds.toArray.sortBy(_._2).map(_._1)
+
+    def toString(index: Int, stringId: Int): Unit = {
+      val token = strings(stringId)
+      stringBuilder.append(token)
+      if (parentIsComplete(index) >= 0) {
+        stringBuilder.append("*")
+        stringBuilder.append(labels(parentIsComplete(index)))
+      }
+      val firstChild = parentToChild(index)
+      val lastChild = parentToChild(index + 1)
+
+      // Alphabetize these so that they match IntHashTrie order.
+      if (firstChild < lastChild) {
+        val childStringIndexAndTokens: Seq[(Int, String)] = firstChild.until(lastChild).map { childIndex: Int =>
+          val token: String = strings(childStringIds(childIndex))
+          (childIndex, token)
+        }
+        val sortedChildStringIndexAndTokens = childStringIndexAndTokens.sortBy(_._2).map(_._1)
+
+        stringBuilder.append(" (")
+        sortedChildStringIndexAndTokens.zipWithIndex.foreach { case (childIndex: Int, index: Int) =>
+          if (index != 0)
+            stringBuilder.append(" | ")
+          toString(childAsParent(childIndex), childStringIds(childIndex))
+        }
+        stringBuilder.append(")")
+      }
+    }
+
+    0.until(headCount).foreach { index =>
+      toString(index, index)
+      stringBuilder.append("\n")
+    }
+  }
+
   def getLabels: Seq[String] = labels
 
   class NodeMatch(var span: Int = 0, var index: Int = -1) {
@@ -126,7 +163,7 @@ class CompactLexiconNER(val labels: Seq[String], val caseInsensitive: Boolean, v
   }
 
   def save(out: ObjectOutputStream): Unit = {
-    val texts= stringIds.toArray.sortBy(_._2).map(_._1).mkString("\n")
+    val texts = stringIds.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
     out.writeObject(labels)
     out.writeObject(bLabels)
@@ -257,6 +294,10 @@ object CompactLexiconNER {
         }
       }
       (parentReserve + parentAdded, childrenReserve + childrenAdded)
+    }
+    // Make sure these get in there first, because only children are done above.
+    trieNodes.foreach { trieNode =>
+      stringIds.getOrElseUpdate(trieNode.token, stringIds.size)
     }
     add(trieNodes, 0, 0)
     require(!parentToChild.exists(_ == -1))

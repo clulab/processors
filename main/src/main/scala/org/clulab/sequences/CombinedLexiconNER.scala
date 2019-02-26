@@ -32,6 +32,8 @@ class CombinedLexiconNER (
   protected val bLabels = labels.map("B-" + _)
   protected val iLabels = labels.map("I-" + _)
 
+  def toString(stringBuilder: StringBuilder): Unit = matcher.toString(stringBuilder, labels)
+
   /**
     * Matches the lexicons against this sentence
     *

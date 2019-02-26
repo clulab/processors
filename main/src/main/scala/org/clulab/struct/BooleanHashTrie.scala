@@ -18,7 +18,19 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true, va
   val bLabel: String = "B-" + label
   val iLabel: String = "I-" + label
 
-  override def toString:String = entries.values.mkString("", "\n", "\n")
+  def toString(stringBuilder: StringBuilder): Unit = {
+    entries.values.foreach { trieNode =>
+      trieNode.toString(stringBuilder, Some(label))
+      stringBuilder.append("\n")
+    }
+  }
+
+  override def toString: String = {
+    val stringBuilder = new StringBuilder()
+
+    toString(stringBuilder)
+    stringBuilder.toString
+  }
 
   def entriesSize: Int = entries.size
 
@@ -73,12 +85,27 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
 
   def this(token: String, completePath: Boolean) = this(token, completePath, None)
 
+  def toString(stringBuilder: StringBuilder, label: Option[String]): Unit = {
+    stringBuilder.append(token)
+    if (completePath) {
+      stringBuilder.append("*")
+      label.foreach(stringBuilder.append)
+    }
+    children.foreach { children: ListBuffer[BooleanTrieNode] =>
+      stringBuilder.append(" (")
+      children.zipWithIndex.foreach { case (child: BooleanTrieNode, index: Int) =>
+        if (index > 0)
+          stringBuilder.append(" | ")
+        child.toString(stringBuilder, label)
+      }
+      stringBuilder.append(")")
+    }
+  }
+
   override def toString: String = {
-    val os = new StringBuilder
-    os.append(token)
-    if (completePath) os.append("*")
-    children.foreach(cs => os.append(cs.mkString(" (", " | ", ")")))
-    os.toString()
+    val stringBuilder = new StringBuilder
+    toString(stringBuilder, None)
+    stringBuilder.toString()
   }
 
   /**
@@ -146,7 +173,7 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
 
       // This node already exists; just adjust the complete path flag, if necessary.
       if (newCompletePath)
-        someChild.completePath = completePath
+        someChild.completePath = newCompletePath
       someChild
     }
     else {

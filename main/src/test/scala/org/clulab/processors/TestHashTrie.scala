@@ -34,7 +34,7 @@ class TestHashTrie extends FlatSpec with Matchers {
     trie.add(Array("c", "d", "e"))
 
     //println("TRIE:\n" + trie)
-    trie.entries.size should be (2)
+    trie.entriesSize should be (2)
     trie.uniqueStrings.size should be (5)
   }
 

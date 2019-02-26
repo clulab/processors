@@ -31,6 +31,20 @@ class SeparatedLexiconNER(
   // caseInsensitiveMatching, so all these matchers should have the same value for caseInsensitive.
   protected val requiresCaseInsensitiveWords: Boolean = matchers.exists(_.caseInsensitive)
   protected val requiresCaseSensitiveWords: Boolean = matchers.exists(!_.caseInsensitive)
+
+  def toString(stringBuilder: StringBuilder): Unit = {
+    if (matchers.size > 0) {
+      stringBuilder.append("\n")
+
+      matchers.zipWithIndex.foreach { case (matcher: BooleanHashTrie, index: Int) =>
+        if (index > 0)
+          stringBuilder.append("\n")
+        matcher.toString(stringBuilder)
+      }
+      stringBuilder.append("\n")
+    }
+  }
+
   /**
     * Matches the lexicons against this sentence
     * @param sentence The input sentence
@@ -95,7 +109,3 @@ class SeparatedLexiconNER(
     }
   }
 }
-
-
-
-

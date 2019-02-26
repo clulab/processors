@@ -4,6 +4,7 @@ import java.util.function.Consumer
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.CompactLexiconNER
+import org.clulab.struct.DebugBooleanHashTrie
 import org.clulab.struct.IntHashTrie
 import org.clulab.struct.{BooleanHashTrie, EntityValidator, TrueEntityValidator}
 import org.clulab.utils.Files.loadStreamFromClasspath
@@ -20,6 +21,7 @@ abstract class LexiconNER(knownCaseInsensitives: Set[String], useLemmas: Boolean
     */
   def find(sentence: Sentence): Array[String]
   def getLabels: Seq[String]
+  def toString(stringBuilder: StringBuilder): Unit // This is to help with debugging.
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int):Boolean = {
     val (characters, letters, digits, upperCaseLetters, spaces) =
@@ -39,6 +41,139 @@ abstract class LexiconNER(knownCaseInsensitives: Set[String], useLemmas: Boolean
   protected def getTokens(sentence: Sentence): Array[String] =
       if (useLemmas) sentence.lemmas.get
       else sentence.words
+}
+
+
+object LexiconNER {
+  // These are configuration values that affect object creation.
+  val USE_FAST = true // Otherwise, slow will be used
+  val USE_COMPACT = true // This applies to fast only
+  val USE_DEBUG = false // This applies to the slow one only
+  val OVERRIDE_ENTITY_VALIDATOR = true // true is only for testing!
+
+  val OUTSIDE_LABEL: String = "O"
+  val KNOWN_CASE_INSENSITIVE_LENGTH: Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
+
+  /**
+    * Creates a LexiconNER from a list of KBs
+    * Note that file name (minus the extension) for each KB becomes the name of the corresponding category.
+    *   For example, /Some/Path/SomeCategory.tsv.gz yields the category name SomeCategory.
+    * Each of the KBs must contain one entity name per line
+    *
+    * @param kbs KBs containing known entity names
+    * @param overrideKBs KBs containing override labels for entity names from kbs (necessary for the bio domain)
+    * @param entityValidator Filter which decides if a matched entity is valid
+    * @param lexicalVariationEngine Generates alternative spellings of an entity name (necessary for the bio domain)
+    * @param useLemmasForMatching If true, we use Sentence.lemmas instead of Sentence.words during matching
+    * @param caseInsensitiveMatching If true, tokens are matched case insensitively
+    * @return The new LexiconNER
+    */
+  def apply(kbs: Seq[String], overrideKBs: Option[Seq[String]],
+      entityValidator: EntityValidator,
+      lexicalVariationEngine: LexicalVariations,
+      useLemmasForMatching: Boolean,
+      caseInsensitiveMatching: Boolean): LexiconNER = {
+    val newEntityValidator =
+        if (OVERRIDE_ENTITY_VALIDATOR) new EntityValidator() {
+          def validMatch(sentence: Sentence, start:Int, end: Int): Boolean = true
+        }
+        else  entityValidator
+
+    if (USE_FAST)
+      new FastLexiconNERBuilder(caseInsensitiveMatching).build(kbs, overrideKBs, newEntityValidator,
+          lexicalVariationEngine, useLemmasForMatching)
+    else
+      new SlowLexiconNERBuilder(caseInsensitiveMatching).build(kbs, overrideKBs, newEntityValidator,
+          lexicalVariationEngine, useLemmasForMatching)
+  }
+
+  /**
+    * Creates a LexiconNER from a list of KBs
+    * Note that file name (minus the extension) for each KB becomes the name of the corresponding category.
+    *   For example, /Some/Path/SomeCategory.tsv.gz yields the category name SomeCategory.
+    * Each of the KBs must contain one entity name per line
+    *
+    * @param kbs KBs containing known entity names
+    * @param entityValidator Filter which decides if a matched entity is valid
+    * @param useLemmasForMatching If true, we use Sentence.lemmas instead of Sentence.words during matching
+    * @param caseInsensitiveMatching If true, tokens are matched case insensitively
+    * @return The new LexiconNER
+    */
+  def apply(kbs: Seq[String],
+    entityValidator: EntityValidator = new TrueEntityValidator,
+    useLemmasForMatching: Boolean = false,
+    caseInsensitiveMatching: Boolean = false): LexiconNER = {
+    apply(kbs, None, entityValidator, new NoLexicalVariations, useLemmasForMatching, caseInsensitiveMatching)
+  }
+
+  def scanText(words: Array[String], start: Int, end: Int): (Int, Int, Int, Int, Int) = {
+    var characters = 0
+    var letters = 0
+    var digits = 0
+    var upperCaseLetters = 0
+    val spaces = words.length - 1
+
+    for (offset <- start until end) {
+      val word = words(offset)
+      for (i <- word.indices) {
+        val c = word.charAt(i)
+        characters += 1
+        if (Character.isLetter(c)) letters += 1
+        if (Character.isDigit(c)) digits += 1
+        if (Character.isUpperCase(c)) upperCaseLetters += 1
+      }
+    }
+    (characters, letters, digits, upperCaseLetters, spaces)
+  }
+
+  /** Merges labels from src into dst, without overlapping any existing labels in dst */
+  def mergeLabels(dst: Array[String], src: Array[String]) {
+    assert(dst.length == src.length)
+
+    var offset = 0
+    while (offset < dst.length) {
+      if (src(offset) != LexiconNER.OUTSIDE_LABEL) {
+        // no overlap allowed
+        // if overlap is detected, the corresponding labels in src are discarded
+        if (!overlap(dst, src, offset)) {
+          dst(offset) = src(offset)
+          offset += 1
+          while (offset < src.length && src(offset).startsWith("I-")) {
+            dst(offset) = src(offset)
+            offset += 1
+          }
+        }
+        else {
+          // overlap found; just ignore the labels in src
+          offset += 1
+          while (offset < src.length && src(offset).startsWith("I-")) {
+            offset += 1
+          }
+        }
+      }
+      else {
+        // nothing to merge
+        offset += 1
+      }
+    }
+  }
+
+  // Used by mergeLabels above
+  private def overlap(dst: Array[String], src: Array[String], offset: Int): Boolean = {
+    var position = offset
+
+    if (dst(position) != LexiconNER.OUTSIDE_LABEL)
+      true
+    else {
+      position += 1
+      while (position < src.length && src(position).startsWith("I-")) {
+        if (dst(position) != LexiconNER.OUTSIDE_LABEL)
+          return true
+        position += 1
+      }
+      false
+    }
+  }
 }
 
 abstract class LexiconNERBuilder(caseInsensitiveMatching: Boolean) {
@@ -84,9 +219,10 @@ class SlowLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNER
   }
 
   protected def newMatcher(label: String): BooleanHashTrie =
-      // TODO: Decide whether you are debugging
+    if (LexiconNER.USE_DEBUG)
+      new DebugBooleanHashTrie(label, caseInsensitive = caseInsensitiveMatching, internStrings = INTERN_STRINGS)
+    else
       new BooleanHashTrie(label, caseInsensitive = caseInsensitiveMatching, internStrings = INTERN_STRINGS)
-//      new DebugBooleanHashTrie(label, caseInsensitive = caseInsensitiveMatching, internStrings = INTERN_STRINGS)
 
   override def build(kbs: Seq[String], overrideKBs: Option[Seq[String]],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean): SeparatedLexiconNER = {
@@ -204,9 +340,10 @@ class FastLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNER
 
     val labels = buildState.labelToIndex.toArray.sortBy(_._2).map(_._1)
 
-    // TODO: Decide which fast one to use here
-//    new CombinedLexiconNER(buildState.intHashTrie, labels, buildState.knownCaseInsensitives.toSet, useLemmasForMatching, entityValidator)
-    CompactLexiconNER(buildState.intHashTrie, labels, buildState.knownCaseInsensitives.toSet, useLemmasForMatching, entityValidator)
+    if (LexiconNER.USE_COMPACT)
+      CompactLexiconNER(buildState.intHashTrie, labels, buildState.knownCaseInsensitives.toSet, useLemmasForMatching, entityValidator)
+    else
+      new CombinedLexiconNER(buildState.intHashTrie, labels, buildState.knownCaseInsensitives.toSet, useLemmasForMatching, entityValidator)
   }
 
   private def addStandardKBs(kbs: Seq[String], buildState: BuildState): Unit = {
@@ -256,132 +393,6 @@ class FastLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNER
       }
       var afterCount = buildState.getCount
       logger.info(s"Loaded OVERRIDE matchers for all labels.  The number of entries added to the first layer was ${afterCount - beforeCount}.")
-    }
-  }
-}
-
-object LexiconNER {
-  val OUTSIDE_LABEL: String = "O"
-  val KNOWN_CASE_INSENSITIVE_LENGTH: Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
-
-  /**
-    * Creates a LexiconNER from a list of KBs
-    * Note that file name (minus the extension) for each KB becomes the name of the corresponding category.
-    *   For example, /Some/Path/SomeCategory.tsv.gz yields the category name SomeCategory.
-    * Each of the KBs must contain one entity name per line
-    *
-    * @param kbs KBs containing known entity names
-    * @param overrideKBs KBs containing override labels for entity names from kbs (necessary for the bio domain)
-    * @param entityValidator Filter which decides if a matched entity is valid
-    * @param lexicalVariationEngine Generates alternative spellings of an entity name (necessary for the bio domain)
-    * @param useLemmasForMatching If true, we use Sentence.lemmas instead of Sentence.words during matching
-    * @param caseInsensitiveMatching If true, tokens are matched case insensitively
-    * @return The new LexiconNER
-    */
-  def apply(kbs: Seq[String], overrideKBs: Option[Seq[String]],
-      entityValidator: EntityValidator,
-      lexicalVariationEngine: LexicalVariations,
-      useLemmasForMatching: Boolean,
-      caseInsensitiveMatching: Boolean): LexiconNER = {
-
-    class TrueEntityValidator extends EntityValidator {
-      def validMatch(sentence: Sentence, start:Int, end: Int): Boolean = true
-    }
-
-    // TODO: Comment this out when not debugging.
-    val newEntityValidator = new TrueEntityValidator() // entityValidator
-    // TODO: Figure out whether to use slow or fast here.
-//    new SlowLexiconNERBuilder(caseInsensitiveMatching).build(kbs, overrideKBs, newEntityValidator,
-//        lexicalVariationEngine, useLemmasForMatching)
-    new FastLexiconNERBuilder(caseInsensitiveMatching).build(kbs, overrideKBs, newEntityValidator,
-        lexicalVariationEngine, useLemmasForMatching)
-  }
-
-  /**
-    * Creates a LexiconNER from a list of KBs
-    * Note that file name (minus the extension) for each KB becomes the name of the corresponding category.
-    *   For example, /Some/Path/SomeCategory.tsv.gz yields the category name SomeCategory.
-    * Each of the KBs must contain one entity name per line
-    *   
-    * @param kbs KBs containing known entity names
-    * @param entityValidator Filter which decides if a matched entity is valid
-    * @param useLemmasForMatching If true, we use Sentence.lemmas instead of Sentence.words during matching
-    * @param caseInsensitiveMatching If true, tokens are matched case insensitively 
-    * @return The new LexiconNER
-    */
-  def apply(kbs: Seq[String],
-      entityValidator: EntityValidator = new TrueEntityValidator,
-      useLemmasForMatching: Boolean = false,
-      caseInsensitiveMatching: Boolean = false): LexiconNER = {
-    apply(kbs, None, entityValidator, new NoLexicalVariations, useLemmasForMatching, caseInsensitiveMatching)
-  }
-
-  def scanText(words: Array[String], start: Int, end: Int): (Int, Int, Int, Int, Int) = {
-    var characters = 0
-    var letters = 0
-    var digits = 0
-    var upperCaseLetters = 0
-    val spaces = words.length - 1
-
-    for (offset <- start until end) {
-      val word = words(offset)
-      for (i <- word.indices) {
-        val c = word.charAt(i)
-        characters += 1
-        if (Character.isLetter(c)) letters += 1
-        if (Character.isDigit(c)) digits += 1
-        if (Character.isUpperCase(c)) upperCaseLetters += 1
-      }
-    }
-    (characters, letters, digits, upperCaseLetters, spaces)
-  }
-
-  /** Merges labels from src into dst, without overlapping any existing labels in dst */
-  def mergeLabels(dst: Array[String], src: Array[String]) {
-    assert(dst.length == src.length)
-
-    var offset = 0
-    while (offset < dst.length) {
-      if (src(offset) != LexiconNER.OUTSIDE_LABEL) {
-        // no overlap allowed
-        // if overlap is detected, the corresponding labels in src are discarded
-        if (!overlap(dst, src, offset)) {
-          dst(offset) = src(offset)
-          offset += 1
-          while (offset < src.length && src(offset).startsWith("I-")) {
-            dst(offset) = src(offset)
-            offset += 1
-          }
-        }
-        else {
-          // overlap found; just ignore the labels in src
-          offset += 1
-          while (offset < src.length && src(offset).startsWith("I-")) {
-            offset += 1
-          }
-        }
-      }
-      else {
-        // nothing to merge
-        offset += 1
-      }
-    }
-  }
-
-  // Used by mergeLabels above
-  private def overlap(dst: Array[String], src: Array[String], offset: Int): Boolean = {
-    var position = offset
-
-    if (dst(position) != LexiconNER.OUTSIDE_LABEL)
-      true
-    else {
-      position += 1
-      while (position < src.length && src(position).startsWith("I-")) {
-        if (dst(position) != LexiconNER.OUTSIDE_LABEL)
-          return true
-        position += 1
-      }
-      false
     }
   }
 }
