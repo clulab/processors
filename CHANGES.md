@@ -1,4 +1,5 @@
 # Changes
++ **7.5.0** - Cache sentence hashes "ambivalently", support OpenIE annotator and serialization of OpenIE relations, buffer file access, and improve performance of LexiconNER
 + **7.4.4** - Improvements to English tokenization rules pertaining to scientific text from plant science.
 + **7.4.3** - Better handling of parentheses throughout all processors. We keep as they are, e.g., "(", and we convert them to the normalized form, e.g., "-LRB-", just for the constituent parser.
 + **7.4.3** - Added PT lemmatizer.
