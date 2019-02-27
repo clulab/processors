@@ -39,7 +39,7 @@ object TokenPattern {
 class TokenPattern(val start: Inst) {
   import TokenPattern._
 
-  def assignIds(): Unit = {
+  private def assignIds(): Unit = {
     def assigner(id: Int, rest: List[Inst]): Unit = {
       rest match {
         case Nil => ()
