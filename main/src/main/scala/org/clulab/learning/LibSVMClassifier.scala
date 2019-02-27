@@ -10,6 +10,7 @@ import LibSVMClassifier.logger
 import java.io._
 
 import org.clulab.learning._
+import org.clulab.utils.Serializer
 
 
 
@@ -160,9 +161,7 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
   override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
 
   override def saveTo(fn:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fn))
-    os.writeObject(this)
-    os.close()
+    Serializer.save(this, fn)
   }
 
   private def convertToLibsvmFeaturesIndices(i: Int) = i + 1
@@ -261,10 +260,7 @@ object LibSVMClassifier {
   val logger = LoggerFactory.getLogger(classOf[LibSVMClassifier[String, String]])
 
   def loadFrom[L, F](fileName:String):LibSVMClassifier[L, F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[LibSVMClassifier[L, F]]
-    is.close()
-    c
+    Serializer.load(fileName)
   }
 
   def makeParameters(kernelType: KernelType,

@@ -1,11 +1,14 @@
 package org.clulab.learning
 
 import libsvm._
+
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.Lexicon
 import org.slf4j.LoggerFactory
 import LibSvmRegression.logger
 import java.io._
+
+import org.clulab.utils.Serializer
 
 /**
   * Wrapper for libsvm regression
@@ -124,9 +127,7 @@ class LibSvmRegression[F](val parameters: svm_parameter) extends Regression[F] w
   override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
 
   override def saveTo(fn:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fn))
-    os.writeObject(this)
-    os.close()
+    Serializer.save(this, fn)
   }
 
   private def convertToLibsvmFeaturesIndices(i: Int) = i + 1
@@ -225,10 +226,7 @@ object LibSvmRegression {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   def loadFrom[F](fileName:String):LibSvmRegression[F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[LibSvmRegression[F]]
-    is.close()
-    c
+    Serializer.load(fileName)
   }
 
   def makeParameters(

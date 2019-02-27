@@ -24,14 +24,14 @@ object Serializer {
 
   /** serialize object to file */
   def save[A](obj: A, file: File): Unit = {
-    using(new FileOutputStream(file)) { fos =>
+    using(new BufferedOutputStream(new FileOutputStream(file))) { fos =>
       save(obj, fos)
     }
   }
 
   /** serialize object to file */
   def save[A](obj: A, filename: String): Unit = {
-    using(new FileOutputStream(filename)) { fos =>
+    using(new BufferedOutputStream(new FileOutputStream(filename))) { fos =>
       save(obj, fos)
     }
   }
@@ -63,7 +63,7 @@ object Serializer {
 
   /* deserialize from file */
   def load[A](file: File, classLoader: ClassLoader): A = {
-    using(new FileInputStream(file)) { fis =>
+    using(new BufferedInputStream(new FileInputStream(file))) { fis =>
       load[A](fis, classLoader)
     }
   }
@@ -75,7 +75,7 @@ object Serializer {
 
   /* deserialize from file */
   def load[A](filename: String, classLoader: ClassLoader): A = {
-    using(new FileInputStream(filename)) { fis =>
+    using(new BufferedInputStream(new FileInputStream(filename))) { fis =>
       load[A](fis, classLoader)
     }
   }
