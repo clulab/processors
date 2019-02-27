@@ -49,6 +49,18 @@ class Sentence(
 
   def indices: Range = 0 until size
 
+  def ambivalenceHash: Int = cachedAmbivalenceHash
+
+  protected lazy val cachedAmbivalenceHash = calculateAmbivalenceHash
+
+  protected def calculateAmbivalenceHash: Int = {
+    val h0 = stringHash(Sentence.getClass.getName)
+    val h1 = mix(h0, orderedHash(raw))
+    val h2 = mix(h1, orderedHash(startOffsets))
+    val h3 = mix(h2, orderedHash(endOffsets))
+    finalizeHash(h3, 3)
+  }
+
   /**
     * Used to compare Sentences.
     * @return a hash (Int) based on the contents of a sentence
