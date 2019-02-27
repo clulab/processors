@@ -10,8 +10,8 @@ class HashTrie(caseInsensitive: Boolean = true, internStrings: Boolean = true)
 
   protected def findNormalized(tokens: Array[String], label: String, outsideLabel: String): Array[String] = {
     val labels = new Array[String](tokens.length)
-    val bLabel = "B-" + label
-    val iLabel = "I-" + label
+    lazy val bLabel = "B-" + label // lazy thinking that most calls will not use it
+    lazy val iLabel = "I-" + label
     var offset = 0
 
     def setNextLabel(label: String): Unit = {
