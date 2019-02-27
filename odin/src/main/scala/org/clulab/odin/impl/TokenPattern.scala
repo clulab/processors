@@ -47,11 +47,11 @@ class TokenPattern(val start: Inst) {
           // skip Done instruction
           assigner(id, rest)
         case (head:Split) :: rest if head.posId == 0 =>
-          // only is posId hasn't been set
+          // only if posId hasn't been set
           head.posId = id
           assigner(id + 1, head.lhs :: head.rhs :: rest)
         case head :: rest if head.posId == 0 =>
-          // only is posId hasn't been set
+          // only if posId hasn't been set
           head.posId = id
           assigner(id + 1, head.next :: rest)
         case head :: rest =>
