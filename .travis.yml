@@ -1,6 +1,5 @@
 sudo: required
 dist: trusty
-group: deprecated-2017Q2
 language: scala
 scala:
   - 2.12.4
