@@ -1,6 +1,12 @@
 package org.clulab.processors.fastnlp
 
-import org.clulab.processors.Document
+import edu.stanford.nlp.semgraph.SemanticGraph
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
+import edu.stanford.nlp.semgraph.SemanticGraphFactory
+import edu.stanford.nlp.semgraph.SemanticGraphFactory.Mode
+import edu.stanford.nlp.trees.GrammaticalStructure
+import edu.stanford.nlp.util.MetaClass
+import org.clulab.processors.{Document, OpenIEAnnotator}
 import org.clulab.struct.GraphMap
 import org.clulab.discourse.rstparser.RSTParser
 import org.clulab.discourse.rstparser.Utils._
@@ -32,13 +38,15 @@ class FastNLPProcessor(
   tokenizerPostProcessor:Option[TokenizerStep],
   internStrings:Boolean,
   withChunks:Boolean,
+  withRelationExtraction:Boolean,
   withDiscourse:Int)
-  extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks) {
+  extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks, withRelationExtraction) with OpenIEAnnotator{
 
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
+           withRelationExtraction:Boolean = false,
            withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) {
-    this(None, internStrings, withChunks, withDiscourse)
+    this(None, internStrings, withChunks, withRelationExtraction, withDiscourse)
   }
 
   /** RST discourse parser using only dependency based syntax */
@@ -75,12 +83,17 @@ class FastNLPProcessor(
       val basicDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.BASIC, GrammaticalStructure.Extras.NONE, null)
       val enhancedDeps = SemanticGraphFactory.makeFromTree(gs, SemanticGraphFactory.Mode.ENHANCED_PLUS_PLUS, GrammaticalStructure.Extras.NONE, null)
 
+      // Add the dependency parses to the CoreNLP sentence annotation object
+      sa.set(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation], basicDeps)
+      sa.set(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation], enhancedDeps)
+
       // convert to our own directed graph
       doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
       doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in))
 
       //println("Output directed graph:")
       //println(dg)
+
 
       offset += 1
     }

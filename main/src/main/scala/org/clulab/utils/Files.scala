@@ -141,10 +141,19 @@ object Files {
     if(path.getPath.endsWith(".gz"))
       new BufferedReader(
         new InputStreamReader(
-          new GZIPInputStream(
-            new FileInputStream(path))))
+          newGZIPInputStream(path)))
     else
       new BufferedReader(
         new FileReader(path))
+  }
+
+  // See http://java-performance.info/java-io-bufferedinputstream-and-java-util-zip-gzipinputstream/
+  // about whether different kinds of input streams need to be buffered.
+  def newGZIPInputStream(file: File): GZIPInputStream = {
+    new GZIPInputStream(new FileInputStream(file), 32768)
+  }
+
+  def newGZIPInputStream(filename: String): GZIPInputStream = {
+    new GZIPInputStream(new FileInputStream(filename), 32768)
   }
 }

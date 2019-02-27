@@ -1,14 +1,16 @@
 package org.clulab.learning
 
 import java.util.zip.GZIPInputStream
-import java.io.{FileWriter, PrintWriter, FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream, BufferedInputStream}
+import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream, PrintWriter}
+
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-import scala.io.{ BufferedSource, Source }
-
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.{BufferedSource, Source}
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
+import org.clulab.utils.Files
+import org.clulab.utils.Serializer
 
 /**
  * Parent class for all datasets used for ranking problems
@@ -245,9 +247,7 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
   }
 
   def saveTo[F](fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
-    os.writeObject(this)
-    os.close()
+    Serializer.save(this, fileName)
   }
 
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
@@ -291,7 +291,7 @@ object RVFRankingDataset {
   /** reads dataset from a file */
   def mkDatasetFromSvmRankFormat(filename: String): RVFRankingDataset[String] = {
     val source = if (filename endsWith ".gz") {
-      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {
       Source.fromFile(filename)
@@ -370,7 +370,7 @@ object RVFRankingDataset {
   /** reads dataset from a file */
   def mkDatumsFromSvmRankFormat(filename: String): Iterable[Iterable[Datum[Int, String]]] = {
     val source = if (filename endsWith ".gz") {
-      val stream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(filename)))
+      val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {
       Source.fromFile(filename)
@@ -466,12 +466,8 @@ object RVFRankingDataset {
   }
 
   def loadFrom[F](fileName:String):RVFRankingDataset[F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[RVFRankingDataset[F]]
-    is.close()
-    c
+    Serializer.load(fileName)
   }
-
 }
 
 class RVFKRankingDataset[F] extends RVFRankingDataset[F] {

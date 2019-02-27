@@ -36,14 +36,16 @@ class CoreNLPProcessor(
   tokenizerPostProcessor:Option[TokenizerStep],
   internStrings:Boolean,
   withChunks:Boolean,
+  withRelationExtraction:Boolean,
   val withDiscourse:Int,
-  val maxSentenceLength:Int) extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks) {
+  val maxSentenceLength:Int) extends ShallowNLPProcessor(tokenizerPostProcessor, internStrings, withChunks, withRelationExtraction) with OpenIEAnnotator {
 
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
+           withRelationExtraction:Boolean = false,
            withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
            maxSentenceLength:Int = 100) {
-    this(None, internStrings, withChunks, withDiscourse, maxSentenceLength)
+    this(None, internStrings, withChunks, withRelationExtraction, withDiscourse, maxSentenceLength)
   }
 
   lazy val coref: StanfordCoreNLP = mkCoref
@@ -122,6 +124,13 @@ class CoreNLPProcessor(
   def stanfordParse(sentence:CoreMap):StanfordTree = {
     val constraints:java.util.List[ParserConstraint] = sentence.get(classOf[ParserAnnotations.ConstraintAnnotation])
     val words:java.util.List[CoreLabel] = parensToSymbols(sentence.get(classOf[CoreAnnotations.TokensAnnotation]))
+
+    /*
+    println("INPUT TO CONSTITUENT PARSER:")
+    for(i <- 0 until words.size()) {
+      println(i + ": " + words.get(i).word())
+    }
+    */
 
     var tree:StanfordTree = null
 
