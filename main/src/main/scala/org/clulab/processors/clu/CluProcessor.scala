@@ -235,6 +235,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     // TODO
   }
 
+  /** Relation extraction; modifies the document in place. */
+  override def relationExtraction(doc: Document): Unit = {
+    // TODO
+  }
+
   private def basicSanityCheck(doc:Document): Unit = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")

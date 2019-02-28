@@ -28,7 +28,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
 )
   extends CoreNLPProcessor(
     Some(new BioTokenizerPostProcessor(KBLoader.UNSLASHABLE_TOKENS_KBS)),
-    internStrings, withChunks, withDiscourse, maxSentenceLength) {
+    internStrings, withChunks, withRelationExtraction = false, withDiscourse, maxSentenceLength) {
 
   //lazy val banner = new BannerWrapper
   private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)

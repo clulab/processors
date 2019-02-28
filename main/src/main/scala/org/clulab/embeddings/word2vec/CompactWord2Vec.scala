@@ -1,10 +1,11 @@
 package org.clulab.embeddings.word2vec
 
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.{FileInputStream, FileOutputStream, ObjectOutputStream}
 
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
-
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.immutable.HashMap
@@ -30,7 +31,7 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     // Sort the map entries (word -> row) by row and then keep just the word.
     val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
-    new ObjectOutputStream(new FileOutputStream(filename)).autoClose { objectOutputStream =>
+    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
       // Writing is performed in two steps so that the parts can be
       // processed separately when read back in.
       objectOutputStream.writeObject(words)
@@ -171,7 +172,7 @@ object CompactWord2Vec {
     //    (map, array)
 
     // This is "unrolled" for performance purposes.
-    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new FileInputStream(filename)).autoClose { objectInputStream =>
+    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
       val map: MapType = new MutableMapType()
 
     {

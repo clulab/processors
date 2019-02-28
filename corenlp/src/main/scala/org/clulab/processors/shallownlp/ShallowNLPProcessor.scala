@@ -15,8 +15,10 @@ import edu.stanford.nlp.util.CoreMap
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import ShallowNLPProcessor._
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations.RelationTriplesAnnotation
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer, TokenizerStep}
+import org.clulab.struct.Interval
 
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
@@ -31,11 +33,12 @@ import scala.util.matching.Regex
   */
 class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
                           val internStrings:Boolean,
-                          val withChunks:Boolean) extends Processor {
+                          val withChunks:Boolean,
+                          val withRelationExtraction:Boolean) extends Processor {
 
   def this(internStrings:Boolean = false,
-           withChunks:Boolean = true) {
-    this(None, internStrings, withChunks)
+           withChunks:Boolean = true, withRelationExtraction:Boolean = false) {
+    this(None, internStrings, withChunks, withRelationExtraction)
   }
 
   lazy val tokenizer: Tokenizer = new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
@@ -43,6 +46,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   lazy val lemmatizer: StanfordCoreNLP = mkLemmatizer
   lazy val ner: StanfordCoreNLP = mkNer
   lazy val chunker: CRFChunker = mkChunker
+
 
   protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true): StanfordCoreNLP = {
     // Prevent knownLCWords from changing on us.  To be safe, this is added every time
@@ -75,6 +79,8 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     val gzis = new GZIPInputStream(is)
     CRFChunker.load(gzis)
   }
+
+
 
   def in(s:String):String = {
     if (internStrings) Processor.internString(s)
@@ -250,6 +256,10 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     // nothing here; see classes that extend this
   }
 
+  override def relationExtraction(doc: Document): Unit  = {
+    // nothing here; see classes that extend this
+  }
+
   def chunking(doc:Document) {
     if (withChunks) {
       for (s <- doc.sentences) {
@@ -268,6 +278,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   def discourse(doc:Document) {
     // nothing here; see classes that extend this
   }
+
 }
 
 object ShallowNLPProcessor {

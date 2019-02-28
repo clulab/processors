@@ -2,17 +2,17 @@ package org.clulab.learning
 
 import java.io._
 import java.util.Properties
+
 import org.slf4j.LoggerFactory
 
 import scala.Serializable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.sys.process._
-
-import org.clulab.struct.{ Counters, Counter, Lexicon }
+import org.clulab.struct.{Counter, Counters, Lexicon}
 import org.clulab.utils.StringUtils
-
 import SVMRankingClassifier.logger
+import org.clulab.utils.Serializer
 
 /**
  * Wrapper for SVMrank: trains using svm_rank_learn but predicts using native Scala code
@@ -330,9 +330,7 @@ class SVMRankingClassifier[F] (
   }
 
   def saveTo(fileName:String) {
-    val os = new ObjectOutputStream(new FileOutputStream(fileName))
-    os.writeObject(this)
-    os.close()
+    Serializer.save(this, fileName)
   }
 
   /** Saves important info to this file for debug purposes */
@@ -379,9 +377,6 @@ object SVMRankingClassifier {
   val logger = LoggerFactory.getLogger(classOf[SVMRankingClassifier[String]])
 
   def loadFrom[F](fileName:String):SVMRankingClassifier[F] = {
-    val is = new ObjectInputStream(new FileInputStream(fileName))
-    val c = is.readObject().asInstanceOf[SVMRankingClassifier[F]]
-    is.close()
-    c
+    Serializer.load(fileName)
   }
 }

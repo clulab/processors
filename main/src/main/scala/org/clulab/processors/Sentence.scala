@@ -41,10 +41,25 @@ class Sentence(
   var syntacticTree: Option[Tree] = None
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
   var graphs: GraphMap = new GraphMap
+  /** Relation triples from OpenIE */
+  var relations:Option[Array[RelationTriple]] = None
+
 
   def size:Int = raw.length
 
   def indices: Range = 0 until size
+
+  def ambivalenceHash: Int = cachedAmbivalenceHash
+
+  protected lazy val cachedAmbivalenceHash = calculateAmbivalenceHash
+
+  protected def calculateAmbivalenceHash: Int = {
+    val h0 = stringHash(Sentence.getClass.getName)
+    val h1 = mix(h0, orderedHash(raw))
+    val h2 = mix(h1, orderedHash(startOffsets))
+    val h3 = mix(h2, orderedHash(endOffsets))
+    finalizeHash(h3, 3)
+  }
 
   /**
     * Used to compare Sentences.
@@ -154,7 +169,6 @@ class Sentence(
 
     reverted
   }
-
 }
 
 object Sentence {
@@ -183,7 +197,8 @@ object Sentence {
     norms: Option[Array[String]],
     chunks: Option[Array[String]],
     tree: Option[Tree],
-    deps: GraphMap
+    deps: GraphMap,
+    relations: Option[Array[RelationTriple]]
   ): Sentence = {
     val s = Sentence(raw, startOffsets, endOffsets, words)
     // update annotations
@@ -194,6 +209,8 @@ object Sentence {
     s.chunks = chunks
     s.syntacticTree = tree
     s.graphs = deps
+    s.relations = relations
     s
   }
+
 }

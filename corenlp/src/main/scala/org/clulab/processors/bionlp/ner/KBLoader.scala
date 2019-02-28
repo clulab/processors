@@ -66,7 +66,7 @@ object KBLoader {
           val ois = Files.loadObjectStreamFromClasspath(serNerModel.get)
           ruleNerSingleton = Some(ois.readObject().asInstanceOf[LexiconNER])
           ois.close()
-          val labels = ruleNerSingleton.get.matchers.map(_._1).sorted
+          val labels = ruleNerSingleton.get.getLabels.sorted
           logger.debug(s"Loaded tries for ${labels.size} labels (repeated labels are due to the override KB): ${labels.mkString(", ")}")
           logger.debug("Completed NER loading.")
         }

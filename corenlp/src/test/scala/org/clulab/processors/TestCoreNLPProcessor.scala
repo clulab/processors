@@ -13,7 +13,13 @@ import org.clulab.struct.CorefMention
  * Last Modified: Update for Scala 2.12: java converters.
  */
 class TestCoreNLPProcessor extends FlatSpec with Matchers {
-  val proc = new CoreNLPProcessor(internStrings = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
+  val proc = new CoreNLPProcessor(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
+
+  "CoreNLPProcessor" should "extract relations correctly with OpenIE" in {
+    val doc = proc.annotate("Obama was born in Hawaii. He is our president.")
+    doc.sentences.head.relations.get should have size (2)
+    doc.sentences.last.relations.get should have size (1)
+  }
 
   "CoreNLPProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.", keepText = false)
