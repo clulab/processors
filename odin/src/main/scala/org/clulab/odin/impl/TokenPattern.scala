@@ -40,23 +40,23 @@ class TokenPattern(val start: Inst) {
   import TokenPattern._
 
   private def assignIds(): Unit = {
-    def assigner(id: Int, rest: List[Inst]): Unit = {
-      rest match {
+    def assigner(id: Int, instructions: List[Inst]): Unit = {
+      instructions match {
         case Nil => ()
-        case Done :: rest =>
+        case Done :: tail =>
           // skip Done instruction
-          assigner(id, rest)
-        case (head:Split) :: rest if head.posId == 0 =>
+          assigner(id, tail)
+        case (head: Split) :: tail if head.posId == 0 =>
           // only if posId hasn't been set
           head.posId = id
-          assigner(id + 1, head.lhs :: head.rhs :: rest)
-        case head :: rest if head.posId == 0 =>
+          assigner(id + 1, head.lhs :: head.rhs :: tail)
+        case head :: tail if head.posId == 0 =>
           // only if posId hasn't been set
           head.posId = id
-          assigner(id + 1, head.next :: rest)
-        case head :: rest =>
+          assigner(id + 1, head.next :: tail)
+        case head :: tail =>
           // skip if posId has been set already
-          assigner(id, rest)
+          assigner(id, tail)
       }
     }
     // don't start from zero
