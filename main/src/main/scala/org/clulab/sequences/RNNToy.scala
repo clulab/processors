@@ -42,5 +42,8 @@ object RNNToy {
     val res2 = ex2.value().toFloat()
     println(res2)
 
+    val v = randomNormal(Dim(1))
+    println(v.value().toFloat())
+
   }
 }

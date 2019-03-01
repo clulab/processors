@@ -58,8 +58,8 @@ class RNN {
         val words = sentence.map(_.get(0))
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
         val transitionMatrix = new ExpressionVector
-        for(i <- model.T.indices) {
-          transitionMatrix.add(parameter(model.T(i)))
+        for(i <- 0 until model.t2i.size) {
+          transitionMatrix.add(lookup(model.T, i))
         }
 
         // get the gold tags for this sentence
@@ -444,7 +444,7 @@ class RNNParameters(
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,
   val O:Parameter,
-  val T:Array[Parameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j
+  val T:LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j
   val charLookupParameters:LookupParameter,
   val charFwRnnBuilder:RnnBuilder,
   val charBwRnnBuilder:RnnBuilder) {
@@ -466,6 +466,53 @@ class RNNParameters(
   }
 
   def initialize(embeddingsFile: String): Unit = {
+    initializeEmbeddings(embeddingsFile)
+    initializeTransitions()
+  }
+
+  def initializeTransitions(): Unit = {
+    val startTag = t2i(START_TAG)
+    val stopTag = t2i(STOP_TAG)
+
+    for (i <- 0 until t2i.size) {
+      T.initialize(i, initTransitionsTo(i, t2i.size, startTag, stopTag))
+    }
+  }
+
+  def initTransitionsTo(dst: Int, size:Int, startTag: Int, stopTag: Int): FloatVector = {
+    val transScores = new Array[Float](size)
+
+    for(i <- 0 until size) {
+      transScores(i) = randomNormal(Dim(1)).value().toFloat() / size // pseudo Glorot
+    }
+
+    if(RNN.USE_DOMAIN_CONSTRAINTS) {
+      // discourage transitions to START from anything
+      if (dst == startTag) {
+        for (i <- 0 until size)
+          transScores(i) = LOG_MIN_VALUE
+      } else {
+        // discourage transitions to anything from STOP
+        transScores(stopTag) = LOG_MIN_VALUE
+
+        // discourage transitions to I-X from B-Y or I-Y
+        val dstTag = i2t(dst)
+        if (dstTag.startsWith("I-")) {
+          for (i <- 0 until size) {
+            val srcTag = i2t(i)
+            if ((srcTag.startsWith("B-") || srcTag.startsWith("I-")) &&
+              srcTag.substring(2) != dstTag.substring(2)) {
+              transScores(i) = LOG_MIN_VALUE
+            }
+          }
+        }
+      }
+    }
+
+    new FloatVector(transScores)
+  }
+
+  def initializeEmbeddings(embeddingsFile: String): Unit = {
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
     val w2v = new Word2Vec(embeddingsFile) // Some(w2i.keySet))
     val unknownEmbed = new Array[Double](EMBEDDING_SIZE)
@@ -492,7 +539,7 @@ class RNNParameters(
     val tagCount = t2i.size
     for(dstTag <- 0 until tagCount) {
       println("Transitions TO tag " + i2t(dstTag) + ":")
-      val transScores = T(dstTag).values().toVector()
+      val transScores = lookup(T, dstTag).value().toVector()
       for(srcTag <- 0 until tagCount) {
         println("\tFROM " + i2t(srcTag) + ": " + transScores(srcTag))
       }
@@ -528,6 +575,8 @@ object RNN {
   val CASE_xX = 3
   val CASE_n = 4
   val CASE_o = 5
+
+  val USE_DOMAIN_CONSTRAINTS = false
 
   def casing(w:String): Int = {
     if(w.charAt(0).isLetter) { // probably an actual word
@@ -674,44 +723,10 @@ object RNN {
     * Initializes the transition matrix for a tagset of size size
     * T[i, j] stores a transition *to* i *from* j
     */
-  def mkTransitionMatrix(parameters:ParameterCollection, t2i:Map[String, Int], i2t:Array[String]): Array[Parameter] = {
-    val rows = new ArrayBuffer[Parameter]()
+  def mkTransitionMatrix(parameters:ParameterCollection, t2i:Map[String, Int], i2t:Array[String]): LookupParameter = {
     val size = t2i.size
-    val startTag = t2i(START_TAG)
-    val stopTag = t2i(STOP_TAG)
-
-    for(i <- 0 until size) {
-      // we are transitioning *to* tag i
-      // T[j] contains the cost of transitioning *to* i *from* j
-      val T = parameters.addParameters(Dim(size), ParameterInit.glorot())
-      val dstTag = i2t(i)
-
-      // discourage transitions to START from anything
-      if(i == startTag) {
-        for(j <- 0 until size)
-          T.values().toVector()(j) = LOG_MIN_VALUE // TODO: are these permanent?
-      }
-
-      else {
-        // discourage transitions to anything from STOP
-        T.values().toVector()(stopTag) = LOG_MIN_VALUE
-
-        // discourage transitions to I-X from B-Y or I-Y
-        if(dstTag.startsWith("I-")) {
-          for(j <- 0 until size) {
-            val srcTag = i2t(j)
-            if((srcTag.startsWith("B-") || srcTag.startsWith("I-")) &&
-               srcTag.substring(2) != dstTag.substring(2)) {
-              T.values().toVector()(j) = LOG_MIN_VALUE
-            }
-          }
-        }
-      }
-
-      rows += T
-    }
-
-    rows.toArray
+    val rows = parameters.addLookupParameters(size, Dim(size))
+    rows
   }
 
   def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int]): RNNParameters = {
