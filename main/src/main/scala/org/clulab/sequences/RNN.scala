@@ -338,7 +338,7 @@ class RNN {
   }
 
   /**
-    * Runs the Viterbi algorithm to generates the best sequence of tag ids
+    * Runs the Viterbi algorithm to generate the best sequence of tag ids
     */
   def viterbi(lattice:Array[Array[Float]]):Array[Int] = {
     // TODO: this is currently greedy, not Viterbi. Fix me.
@@ -576,7 +576,7 @@ object RNN {
   val CASE_n = 4
   val CASE_o = 5
 
-  val USE_DOMAIN_CONSTRAINTS = false
+  val USE_DOMAIN_CONSTRAINTS = true
 
   def casing(w:String): Int = {
     if(w.charAt(0).isLetter) { // probably an actual word
