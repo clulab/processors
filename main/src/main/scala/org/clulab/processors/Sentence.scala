@@ -73,7 +73,7 @@ class Sentence(
       case Some(lbls) =>
         val h0 = stringHash(s"$stringCode.annotations")
         val hs = lbls.map(_.hashCode)
-        val h = mixLast(h0, unorderedHash(hs))
+        val h = mixLast(h0, orderedHash(hs))
         finalizeHash(h, lbls.length)
       case None => None.hashCode
     }
@@ -92,7 +92,7 @@ class Sentence(
     val h7 = mix(h6, getAnnotationsHash(norms))
     val h8 = mix(h7, getAnnotationsHash(chunks))
     val h9 = mix(h8, if (dependencies.nonEmpty) dependencies.get.equivalenceHash else None.hashCode)
-    finalizeHash(h9, 9) // TODO: is 9 still valid, now that we have raw tokens as well?
+    finalizeHash(h9, 10) 
   }
 
   /**
