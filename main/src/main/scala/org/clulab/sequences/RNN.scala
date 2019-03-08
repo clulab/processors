@@ -328,7 +328,7 @@ class RNN {
   }
 
   /** Creates the lattice of probs for a given sequence */
-  def emissionScoresToLattice(expressions:Iterable[Expression]): Array[Array[Float]] = {
+  def emissionScoresToArrays(expressions:Iterable[Expression]): Array[Array[Float]] = {
     val lattice = new ArrayBuffer[Array[Float]]()
     for(expression <- expressions) {
       val probs = expression.value().toVector().toArray
@@ -337,12 +337,58 @@ class RNN {
     lattice.toArray
   }
 
-  /**
-    * Runs the Viterbi algorithm to generate the best sequence of tag ids
-    */
-  def viterbi(lattice:Array[Array[Float]]):Array[Int] = {
-    // TODO: this is currently greedy, not Viterbi. Fix me.
+  def transitionMatrixToArrays(trans: LookupParameter, size: Int): Array[Array[Float]] = {
+    val transitionMatrix = new ArrayBuffer[Array[Float]]()
+    for(i <- 0 until size) {
+      transitionMatrix += lookup(trans, i).value().toVector().toArray
+    }
+    transitionMatrix.toArray
+  }
 
+  def viterbi(emissionScores: Array[Array[Float]], transitionMatrix: Array[Array[Float]]): Array[Int] = {
+
+    // initial scores in log space
+    val initScores = new Array[Float](model.t2i.size)
+    for(i <- initScores.indices) initScores(i) = LOG_MIN_VALUE
+    initScores(model.t2i(START_TAG)) = 0
+
+    // the best overall scores at time step -1 (start)
+    var forwardVar = initScores
+
+    // iterate over all the words in this sentence
+    for(t <- emissionScores.indices) {
+      // scores for *all* tags for time step t
+      val scoresAtT = new Array[Float](emissionScores(t).length)
+
+      // iterate over all possible tags for this time step
+      for(nextTag <- emissionScores(t).indices) {
+        // compute the score of transitioning into this tag from *any* previous tag
+        val transitionIntoNextTag = ArrayMath.sum(forwardVar, transitionMatrix(nextTag))
+
+        // this tag has the best transition score into nextTag
+        val bestPrevTag = ArrayMath.argmax(transitionIntoNextTag)
+
+        // this is the best *transition* score into nextTag
+        scoresAtT(nextTag) = transitionIntoNextTag(bestPrevTag)
+      }
+
+      // these are the best overall scores at time step t = transition + emission
+      forwardVar = ArrayMath.sum(scoresAtT, emissionScores(t))
+    }
+
+    // transition into the stop tag
+    forwardVar = ArrayMath(forwardVar, transitionMatrix(model.t2i(STOP_TAG)))
+    val bestLastTag = ArrayMath.argmax(forwardVar)
+    val pathScore = forwardVar(bestLastTag)
+
+    // TODO: add backpointers
+  }
+
+
+  /**
+    * Runs a greedy algorithm to generate the sequence of tag ids
+    */
+  def greedyPredict(lattice:Array[Array[Float]]):Array[Int] = {
     val tagIds = new ArrayBuffer[Int]()
     for(probs <- lattice) {
       var max = Float.MinValue
@@ -360,9 +406,10 @@ class RNN {
   }
 
   def predict(words:Array[String]):Array[String] = synchronized {
-    val probsAsExpressions = emissionScoresAsExpressions(words, doDropout = false)
-    val lattice = emissionScoresToLattice(probsAsExpressions)
-    val tagIds = viterbi(lattice) // TODO: add transition scores here
+    val emissionScores = emissionScoresToArrays(emissionScoresAsExpressions(words, doDropout = false)) // these scores do not have softmax
+    val transitionMatrix = transitionMatrixToArrays(model.T, model.t2i.size)
+
+    val tagIds = viterbi(emissionScores, transitionMatrix)
     val tags = new ArrayBuffer[String]()
     for(tid <- tagIds) tags += model.i2t(tid)
     tags.toArray
@@ -770,5 +817,28 @@ object RNN {
 
     rnn.evaluate(devSentences, -1)
     pretrainedRnn.evaluate(devSentences, -1)
+  }
+}
+
+object ArrayMath {
+  def argmax(vector:Array[Float]):Int = {
+    var bestValue = Float.MinValue
+    var bestArg = 0
+    for(i <- vector.indices) {
+      if(vector(i) > bestValue) {
+        bestValue = vector(i)
+        bestArg = i
+      }
+    }
+    bestArg
+  }
+
+  def sum(v1:Array[Float], v2:Array[Float]): Array[Float] = {
+    assert(v1.length == v2.length)
+    val s = new Array[Float](v1.length)
+    for(i <- v1.indices) {
+      s(i) = v2(i) + v2(i)
+    }
+    s
   }
 }
