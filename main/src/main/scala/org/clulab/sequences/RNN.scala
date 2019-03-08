@@ -384,7 +384,6 @@ class RNN {
     // TODO: add backpointers
   }
 
-
   /**
     * Runs a greedy algorithm to generate the sequence of tag ids
     */
