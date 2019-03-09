@@ -76,7 +76,7 @@ class RNN {
           cummulativeLoss = 0.0
           numTagged = 0
 
-          model.printTransitionMatrix()
+          //model.printTransitionMatrix()
         }
 
         // backprop
@@ -229,8 +229,8 @@ class RNN {
   }
 
   def accuracy(golds:Array[String], preds:Array[String]): (Int, Int) = {
-    println("GOLD: " + golds.mkString(", "))
-    println("PRED: " + preds.mkString(", "))
+    //println("GOLD: " + golds.mkString(", "))
+    //println("PRED: " + preds.mkString(", "))
 
     assert(golds.length == preds.length)
     var correct = 0
@@ -257,7 +257,7 @@ class RNN {
       val words = sent.map(_.get(0))
       val golds = sent.map(_.get(1))
 
-      println("PREDICT ON SENT: " + words.mkString(", "))
+      // println("PREDICT ON SENT: " + words.mkString(", "))
       val preds = predict(words)
       val (t, c) = accuracy(golds, preds)
       total += t
@@ -349,40 +349,37 @@ class RNN {
     transitionMatrix.toArray
   }
 
+  def printTagScores(header:String, scores:Array[Float]): Unit = {
+    print(header)
+    for(j <- scores.indices) {
+      val tag = model.i2t(j)
+      print(s" {$tag, ${scores(j)}}")
+    }
+    println()
+  }
+
   def viterbi(emissionScores: Array[Array[Float]], transitionMatrix: Array[Array[Float]]): Array[Int] = {
 
+    /*
     println("emission scores:")
     for(i <- emissionScores.indices) {
-      print(s"step #$i:")
-      for(j <- emissionScores(i).indices) {
-        val tag = model.i2t(j)
-        print(s" {$tag, ${emissionScores(i)(j)}}")
-      }
-      println()
+      printTagScores(s"step #$i:", emissionScores(i))
     }
+    */
 
     // initial scores in log space
     val initScores = new Array[Float](model.t2i.size)
     for(i <- initScores.indices) initScores(i) = LOG_MIN_VALUE
     initScores(model.t2i(START_TAG)) = 0
 
-    print("init scores:")
-    for(j <- initScores.indices) {
-      val tag = model.i2t(j)
-      print(s" {$tag, ${initScores(j)}}")
-    }
-    println()
-
+    /*
+    printTagScores("init scores:", initScores)
     println("transition matrix:")
     for(i <- transitionMatrix.indices) {
       val dst = model.i2t(i)
-      print(s"to $dst from:")
-      for(j <- transitionMatrix(i).indices) {
-        val src = model.i2t(j)
-        print(s" {$src, ${transitionMatrix(i)(j)}}")
-      }
-      println()
+      printTagScores(s"to $dst from:", transitionMatrix(i))
     }
+    */
 
     // the best overall scores at time step -1 (start)
     var forwardVar = initScores
@@ -400,8 +397,17 @@ class RNN {
 
       // iterate over all possible tags for this time step
       for(nextTag <- emissionScores(t).indices) {
+        /*
+        val ntv = model.i2t(nextTag)
+        println(s"LOOKING AT TAG $ntv")
+        printTagScores("\tforwardVar:", forwardVar)
+        printTagScores("\ttransitionMatrix:", transitionMatrix(nextTag))
+        */
+
         // compute the score of transitioning into this tag from *any* previous tag
         val transitionIntoNextTag = ArrayMath.sum(forwardVar, transitionMatrix(nextTag))
+
+        //printTagScores(s"\tforwardVar + transitionMatrix:", transitionIntoNextTag)
 
         // this tag has the best transition score into nextTag
         val bestPrevTag = ArrayMath.argmax(transitionIntoNextTag)
@@ -433,7 +439,8 @@ class RNN {
       bestLastTag = backPointersAtT(bestLastTag)
       bestPathReversed += bestLastTag
     }
-    val bestPath = bestPathReversed.reverse.toArray
+    assert(bestPathReversed.last == model.t2i(START_TAG))
+    val bestPath = bestPathReversed.slice(0, bestPathReversed.size - 1).reverse.toArray
 
     bestPath
   }
@@ -507,6 +514,7 @@ class RNN {
   }
 
   def mkCharacterEmbedding(word: String): Expression = {
+    //println(s"make embedding for word [$word]")
     val charEmbeddings = new ArrayBuffer[Expression]()
     for(i <- word.indices) {
       if(model.c2i.contains(word.charAt(i)))
@@ -650,7 +658,7 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 2
+  val EPOCHS = 5
   val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
   val DROPOUT_PROB = 0.1f
   val DO_DROPOUT = false
@@ -890,7 +898,7 @@ object ArrayMath {
     assert(v1.length == v2.length)
     val s = new Array[Float](v1.length)
     for(i <- v1.indices) {
-      s(i) = v2(i) + v2(i)
+      s(i) = v1(i) + v2(i)
     }
     s
   }
