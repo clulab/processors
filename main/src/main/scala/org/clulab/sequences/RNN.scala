@@ -229,6 +229,9 @@ class RNN {
   }
 
   def accuracy(golds:Array[String], preds:Array[String]): (Int, Int) = {
+    println("GOLD: " + golds.mkString(", "))
+    println("PRED: " + preds.mkString(", "))
+
     assert(golds.length == preds.length)
     var correct = 0
     for(e <- preds.zip(golds)) {
@@ -254,6 +257,7 @@ class RNN {
       val words = sent.map(_.get(0))
       val golds = sent.map(_.get(1))
 
+      println("PREDICT ON SENT: " + words.mkString(", "))
       val preds = predict(words)
       val (t, c) = accuracy(golds, preds)
       total += t
@@ -347,18 +351,52 @@ class RNN {
 
   def viterbi(emissionScores: Array[Array[Float]], transitionMatrix: Array[Array[Float]]): Array[Int] = {
 
+    println("emission scores:")
+    for(i <- emissionScores.indices) {
+      print(s"step #$i:")
+      for(j <- emissionScores(i).indices) {
+        val tag = model.i2t(j)
+        print(s" {$tag, ${emissionScores(i)(j)}}")
+      }
+      println()
+    }
+
     // initial scores in log space
     val initScores = new Array[Float](model.t2i.size)
     for(i <- initScores.indices) initScores(i) = LOG_MIN_VALUE
     initScores(model.t2i(START_TAG)) = 0
 
+    print("init scores:")
+    for(j <- initScores.indices) {
+      val tag = model.i2t(j)
+      print(s" {$tag, ${initScores(j)}}")
+    }
+    println()
+
+    println("transition matrix:")
+    for(i <- transitionMatrix.indices) {
+      val dst = model.i2t(i)
+      print(s"to $dst from:")
+      for(j <- transitionMatrix(i).indices) {
+        val src = model.i2t(j)
+        print(s" {$src, ${transitionMatrix(i)(j)}}")
+      }
+      println()
+    }
+
     // the best overall scores at time step -1 (start)
     var forwardVar = initScores
+
+    // backpointers for the entire lattice
+    val backPointers = new ArrayBuffer[Array[Int]]()
 
     // iterate over all the words in this sentence
     for(t <- emissionScores.indices) {
       // scores for *all* tags for time step t
       val scoresAtT = new Array[Float](emissionScores(t).length)
+
+      // backpointers for this time step
+      val backPointersAtT = new Array[Int](emissionScores(t).length)
 
       // iterate over all possible tags for this time step
       for(nextTag <- emissionScores(t).indices) {
@@ -367,21 +405,37 @@ class RNN {
 
         // this tag has the best transition score into nextTag
         val bestPrevTag = ArrayMath.argmax(transitionIntoNextTag)
+        // keep track of the best backpointer for nextTag
+        backPointersAtT(nextTag) = bestPrevTag
 
         // this is the best *transition* score into nextTag
         scoresAtT(nextTag) = transitionIntoNextTag(bestPrevTag)
       }
 
-      // these are the best overall scores at time step t = transition + emission
+      // these are the best overall scores at time step t = transition + emission + previous
       forwardVar = ArrayMath.sum(scoresAtT, emissionScores(t))
+
+      // keep track of the backpointers at this time step
+      backPointers += backPointersAtT
     }
 
+    assert(emissionScores.length == backPointers.length)
+
     // transition into the stop tag
-    forwardVar = ArrayMath(forwardVar, transitionMatrix(model.t2i(STOP_TAG)))
-    val bestLastTag = ArrayMath.argmax(forwardVar)
+    forwardVar = ArrayMath.sum(forwardVar, transitionMatrix(model.t2i(STOP_TAG)))
+    var bestLastTag = ArrayMath.argmax(forwardVar)
     val pathScore = forwardVar(bestLastTag)
 
-    // TODO: add backpointers
+    // best path in the lattice
+    val bestPathReversed = new ListBuffer[Int]
+    bestPathReversed += bestLastTag
+    for(backPointersAtT <- backPointers.reverse) {
+      bestLastTag = backPointersAtT(bestLastTag)
+      bestPathReversed += bestLastTag
+    }
+    val bestPath = bestPathReversed.reverse.toArray
+
+    bestPath
   }
 
   /**
