@@ -22,17 +22,12 @@ import scala.util.Random
 class RNN {
   var model:RNNParameters = _
 
-  def train(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]], embeddingsFile:String): Unit = {
-    val (w2i, t2i, c2i) = mkVocabs(trainSentences)
-    logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
-    logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
-    logger.debug(s"Character vocabulary has ${c2i.size} entries.")
-
-    initialize(w2i, t2i, c2i, embeddingsFile)
-    update(trainSentences:Array[Array[Row]], devSentences:Array[Array[Row]])
-  }
-
-  def update(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
+  /**
+    * Trains on the given training sentences, and report accuracy after each epoch on development sentences
+    * @param trainSentences Training sentences
+    * @param devSentences Development/validation sentences, used for logging purposes only
+    */
+  def train(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
     //val trainer = new SimpleSGDTrainer(model.parameters, learningRate = 0.01f)
     val trainer = new RMSPropTrainer(model.parameters)
     var cummulativeLoss = 0.0
@@ -41,8 +36,6 @@ class RNN {
     var sentences = trainSentences
     val rand = new Random(RANDOM_SEED)
 
-    // model.printTransitionMatrix()
-
     for(epoch <- 0 until EPOCHS) {
       sentences = MathUtils.randomize(sentences, rand)
 
@@ -50,9 +43,6 @@ class RNN {
       for(sentence <- sentences) {
         sentCount += 1
         ComputationGraph.renew()
-        //print("Current sentence:")
-        //for(w <- sentence) print(" " + w.get(0) + "/" + w.get(1))
-        //println()
 
         // predict tag emission scores for one sentence, from the biLSTM hidden states
         val words = sentence.map(_.get(0))
@@ -75,8 +65,6 @@ class RNN {
           logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
           cummulativeLoss = 0.0
           numTagged = 0
-
-          //model.printTransitionMatrix()
         }
 
         // backprop
@@ -88,6 +76,7 @@ class RNN {
     }
   }
 
+  /** Computes the score of the given sequence of tags (tagSeq) */
   def sentenceScore(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
                     transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
                     tagCount:Int,
@@ -118,13 +107,14 @@ class RNN {
     pick(matrix(row), column)
   }
 
-  /** Implements the forward algorithm to compute the partition score for this lattice */
+  /**
+    * Implements the forward algorithm to compute the partition score for this lattice
+    * This code inspired by this PyTorch implementation: https://pytorch.org/tutorials/beginner/nlp/advanced_tutorial.html
+    */
   def mkPartitionScore(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
                        transitionMatrix:ExpressionVector,
                        startTag:Int, stopTag:Int): Expression = { // Dim: tagCount x tagCount
     val tagCount = transitionMatrix.size
-
-    //println("emissionScoresForSeq dim: " + emissionScoresForSeq.size + " x " + emissionScoresForSeq.head.value().toVector().size)
 
     // sum of scores of reaching each tag at this time step
     var forward = new ExpressionVector()
@@ -136,32 +126,24 @@ class RNN {
       val alphaAtT0:Float = if(t == startTag) 0 else LOG_MIN_VALUE
       forward.add(input(alphaAtT0))
     }
-    //println("forward dim: " + forward.size + " x 1")
-    //println("\tValue for start: " + forward(startTag).value().toFloat())
 
     for(t <- emissionScoresForSeq.indices) {
       val alphasAtT = new ExpressionVector()
       val emitScores = emissionScoresForSeq(t)
-      //println("In sentence at " + t)
 
       for(nextTag <- 0 until tagCount) {
-        //println("Looking at tag: " + nextTag)
         val alphasForTag = new ExpressionVector()
         val emitScore = pick(emitScores, nextTag) // scalar: emision score for nextTag
-        //println("\temitScore: " + emitScore.value().toFloat())
 
         for(srcTag <- 0 until tagCount) {
           val transScore = pick2D(transitionMatrix, nextTag, srcTag) // scalar: transition score to nextTag from srcTag
-          //println("\ttransScore: " + transScore.value().toFloat())
           val alphaToTagFromSrc =
             forward(srcTag) +
             transScore +
             emitScore
-          //println("alphaToTagFromSrc: " + alphaToTagFromSrc.value().toFloat())
 
           alphasForTag.add(alphaToTagFromSrc)
         }
-        //println("alphasForTag dim: " + alphasForTag.size + " x " + alphasForTag.head.value().toVector().size)
 
         alphasAtT.add(logSumExp(alphasForTag))
       }
@@ -175,10 +157,16 @@ class RNN {
     }
 
     val total = logSumExp(terminalVars)
-    //println("partition score = " + total.value().toFloat())
     total
   }
 
+  /**
+    * Objective function that maximizes the CRF probability of the gold sequence of tags
+    * @param emissionScoresForSeq emission scores for the whole sequence, and all tags
+    * @param transitionMatrix transition matrix between all tags
+    * @param golds gold sequence of tags
+    * @return the negative prob of the gold sequence (in log space)
+    */
   def sentenceLoss(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
                    transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
                    golds:Array[Int]): Expression = { // Dim: sentenceSize
@@ -187,15 +175,14 @@ class RNN {
 
     val scoreOfGoldSeq =
       sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size, golds, startTag, stopTag)
-    //println("Gold score: " + scoreOfGoldSeq.value().toFloat())
 
     val partitionScore =
       mkPartitionScore(emissionScoresForSeq, transitionMatrix, startTag, stopTag)
-    //println("Partition score: " + partitionScore.value().toFloat())
 
     partitionScore - scoreOfGoldSeq
   }
 
+  /** Greedy loss function, ignoring transition scores (not used) */
   def sentenceLossGreedy(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
                          transitionMatrix:Expression, // Dim: tagCount x tagCount
                          golds:Array[Int]): Expression = { // Dim: sentenceSize
@@ -229,9 +216,6 @@ class RNN {
   }
 
   def accuracy(golds:Array[String], preds:Array[String]): (Int, Int) = {
-    //println("GOLD: " + golds.mkString(", "))
-    //println("PRED: " + preds.mkString(", "))
-
     assert(golds.length == preds.length)
     var correct = 0
     for(e <- preds.zip(golds)) {
@@ -242,17 +226,13 @@ class RNN {
     (golds.length, correct)
   }
 
+  /** Logs accuracy score on devSentences; also saves the output in the file dev.output.<EPOCH> */
   def evaluate(devSentences:Array[Array[Row]], epoch:Int): Unit = {
     var total = 0
     var correct = 0
-    var correctMax = 0
-
-    var totalNonO = 0
-    var invalidNonO = 0
 
     val pw = new PrintWriter(new FileWriter("dev.output." + epoch))
-    val pwm = new PrintWriter(new FileWriter("devmax.output." + epoch))
-    logger.debug("Started evaluation on dev...")
+    logger.debug("Started evaluation on the evaluation dataset...")
     for(sent <- devSentences) {
       val words = sent.map(_.get(0))
       val golds = sent.map(_.get(1))
@@ -264,43 +244,10 @@ class RNN {
       correct += c
 
       printCoNLLOutput(pw, words, golds, preds)
-
-      // analytics:
-      //   how many labels break the BIO format?
-      //   what is the max accuracy, if we correctly fixed all of them?
-      val maxPreds = new Array[String](preds.length)
-      for(i <- preds.indices) maxPreds(i) = preds(i)
-      for(i <- preds.indices) {
-        val crt = preds(i)
-        val prev = if(i > 0) preds(i - 1) else "O"
-
-        if(crt != "O") totalNonO += 1
-        if(crt.startsWith("I-")) {
-          if(! prev.startsWith("O") && crt.substring(2) == prev.substring(2)) {
-            // valid output
-          } else {
-            invalidNonO += 1
-
-            var j = i
-            while(j >= 0 && maxPreds(j) != "O") {
-              maxPreds(j) = golds(j)
-              j -= 1
-            }
-          }
-        }
-      }
-
-      val (_, cm) = accuracy(golds, maxPreds)
-      correctMax += cm
-
-      printCoNLLOutput(pwm, words, golds, maxPreds)
     }
 
     pw.close()
-    pwm.close()
     logger.info(s"Accuracy on ${devSentences.length} dev sentences: " + correct.toDouble / total)
-    logger.info("Percentage of invalid non-O labels: " + invalidNonO.toDouble / totalNonO + " (" + invalidNonO + "/" + totalNonO + ")")
-    logger.info(s"Max accuracy on ${devSentences.length} dev sentences: " + correctMax.toDouble / total)
   }
 
   /**
@@ -331,7 +278,6 @@ class RNN {
     emissionScores
   }
 
-  /** Creates the lattice of probs for a given sequence */
   def emissionScoresToArrays(expressions:Iterable[Expression]): Array[Array[Float]] = {
     val lattice = new ArrayBuffer[Array[Float]]()
     for(expression <- expressions) {
@@ -360,26 +306,10 @@ class RNN {
 
   def viterbi(emissionScores: Array[Array[Float]], transitionMatrix: Array[Array[Float]]): Array[Int] = {
 
-    /*
-    println("emission scores:")
-    for(i <- emissionScores.indices) {
-      printTagScores(s"step #$i:", emissionScores(i))
-    }
-    */
-
     // initial scores in log space
     val initScores = new Array[Float](model.t2i.size)
     for(i <- initScores.indices) initScores(i) = LOG_MIN_VALUE
     initScores(model.t2i(START_TAG)) = 0
-
-    /*
-    printTagScores("init scores:", initScores)
-    println("transition matrix:")
-    for(i <- transitionMatrix.indices) {
-      val dst = model.i2t(i)
-      printTagScores(s"to $dst from:", transitionMatrix(i))
-    }
-    */
 
     // the best overall scores at time step -1 (start)
     var forwardVar = initScores
@@ -397,19 +327,13 @@ class RNN {
 
       // iterate over all possible tags for this time step
       for(nextTag <- emissionScores(t).indices) {
-        /*
-        val ntv = model.i2t(nextTag)
-        println(s"LOOKING AT TAG $ntv")
-        printTagScores("\tforwardVar:", forwardVar)
-        printTagScores("\ttransitionMatrix:", transitionMatrix(nextTag))
-        */
 
         // compute the score of transitioning into this tag from *any* previous tag
         val transitionIntoNextTag = ArrayMath.sum(forwardVar, transitionMatrix(nextTag))
 
         //printTagScores(s"\tforwardVar + transitionMatrix:", transitionIntoNextTag)
 
-        // this tag has the best transition score into nextTag
+        // this previous tag has the best transition score into nextTag
         val bestPrevTag = ArrayMath.argmax(transitionIntoNextTag)
         // keep track of the best backpointer for nextTag
         backPointersAtT(nextTag) = bestPrevTag
@@ -419,6 +343,7 @@ class RNN {
       }
 
       // these are the best overall scores at time step t = transition + emission + previous
+      // note that the emission scores are the same for a given nextTag, so it's Ok to do this outside of the above loop
       forwardVar = ArrayMath.sum(scoresAtT, emissionScores(t))
 
       // keep track of the backpointers at this time step
@@ -432,7 +357,7 @@ class RNN {
     var bestLastTag = ArrayMath.argmax(forwardVar)
     val pathScore = forwardVar(bestLastTag)
 
-    // best path in the lattice
+    // best path in the lattice, in reverse order
     val bestPathReversed = new ListBuffer[Int]
     bestPathReversed += bestLastTag
     for(backPointersAtT <- backPointers.reverse) {
@@ -445,9 +370,7 @@ class RNN {
     bestPath
   }
 
-  /**
-    * Runs a greedy algorithm to generate the sequence of tag ids
-    */
+  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores (not used) */
   def greedyPredict(lattice:Array[Array[Float]]):Array[Int] = {
     val tagIds = new ArrayBuffer[Int]()
     for(probs <- lattice) {
@@ -465,9 +388,21 @@ class RNN {
     tagIds.toArray
   }
 
+  /**
+    * Predict the sequence tags that applies to the given sequence of words
+    * @param words The input words
+    * @return The predicted sequence of tags
+    */
   def predict(words:Array[String]):Array[String] = synchronized {
-    val emissionScores = emissionScoresToArrays(emissionScoresAsExpressions(words, doDropout = false)) // these scores do not have softmax
-    val transitionMatrix = transitionMatrixToArrays(model.T, model.t2i.size)
+    // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
+    val emissionScores:Array[Array[Float]] = synchronized {
+      emissionScoresToArrays(emissionScoresAsExpressions(words, doDropout = false)) // these scores do not have softmax
+    }
+
+    // Note: this block probably does not need to be synchronized as it is not using the computational graph. TODO: check
+    val transitionMatrix:Array[Array[Float]] = synchronized {
+      transitionMatrixToArrays(model.T, model.t2i.size)
+    }
 
     val tagIds = viterbi(emissionScores, transitionMatrix)
     val tags = new ArrayBuffer[String]()
@@ -484,6 +419,12 @@ class RNN {
   }
 
   def mkEmbedding(word: String):Expression = {
+    //
+    // make sure you preprocess the word similarly to the embedding library used!
+    //   GloVe large does not do any preprocessing
+    //   GloVe small lowers the case
+    //   Our Word2Vec uses Word2Vec.sanitizeWord
+    //
     val sanitized = word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
@@ -493,23 +434,12 @@ class RNN {
       else {
         // not found; return the embedding at position 0, which is reserved for unknown words
         lookup(model.lookupParameters, 0)
-        //val caseIdx = casing(word)
-        //lookup(model.lookupParameters, caseIdx)
       }
 
     // biLSTM over character embeddings
     val charEmbedding =
       mkCharacterEmbedding(word)
 
-    // explicit features that capture the shape of the word
-    /*
-    val c = casing(word)
-    val cases = new Array[Float](CASE_o + 1)
-    for(i <- cases.indices) cases(i) = 0
-    cases(c) = 1
-
-    concatenate(wordEmbedding, charEmbedding, input(Dim(CASE_o + 1), new FloatVector(cases)))
-    */
     concatenate(wordEmbedding, charEmbedding)
   }
 
@@ -532,7 +462,12 @@ class RNN {
     states
   }
 
-  def initialize(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingsFile:String): Unit = {
+  def initialize(trainSentences:Array[Array[Row]], embeddingsFile:String): Unit = {
+    val (w2i, t2i, c2i) = mkVocabs(trainSentences)
+    logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
+    logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
+    logger.debug(s"Character vocabulary has ${c2i.size} entries.")
+
     logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
     model = mkParams(w2i, t2i, c2i)
@@ -658,7 +593,7 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 5
+  val EPOCHS = 3
   val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
   val DROPOUT_PROB = 0.1f
   val DO_DROPOUT = false
@@ -865,7 +800,8 @@ object RNN {
     val embeddingsFile = args(2)
 
     val rnn = new RNN()
-    rnn.train(trainSentences, devSentences, embeddingsFile)
+    rnn.initialize(trainSentences, embeddingsFile)
+    rnn.train(trainSentences, devSentences)
 
     val dynetFilename = "rnn.dat"
     val x2iFilename = "x2i.dat"
