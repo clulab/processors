@@ -481,12 +481,12 @@ class RNN {
 }
 
 class RNNParameters(
-  val w2i:Map[String, Int],
+  var w2i:Map[String, Int],
   val t2i:Map[String, Int],
   val i2t:Array[String],
   val c2i:Map[Char, Int],
   val parameters:ParameterCollection,
-  val lookupParameters:LookupParameter,
+  var lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,
@@ -562,24 +562,21 @@ class RNNParameters(
   def initializeEmbeddings(embeddingsFile: String): Unit = {
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
     val w2v = new Word2Vec(embeddingsFile) // Some(w2i.keySet))
-    val unknownEmbed = new Array[Double](EMBEDDING_SIZE)
-    for(i <- unknownEmbed.indices) unknownEmbed(i) = 0.0
 
-    var unknownCount = 0
+    logger.debug(s"Loaded embeddings for a vocabulary of ${w2v.matrix.size} words.")
+    lookupParameters = parameters.addLookupParameters(w2v.matrix.size + 1, Dim(EMBEDDING_SIZE)) // + 1 for the unk embedding
+
+    val commonWords = new ListBuffer[String]
+    commonWords += UNK_WORD
+    for (word <- w2v.matrix.keySet) {
+      commonWords += word
+    }
+    w2i = commonWords.sorted.zipWithIndex.toMap
+
     for(word <- w2v.matrix.keySet){// w2i.keySet) {
-      if(w2i.contains(word)) {
-        lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
-      } else {
-        add(unknownEmbed, w2v.matrix(word))
-        unknownCount += 1
-      }
+      lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
     }
-    for(i <- unknownEmbed.indices) {
-      unknownEmbed(i) /= unknownCount
-    }
-    lookupParameters.initialize(0, new FloatVector(toFloatArray(unknownEmbed)))
     logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
-
   }
 
   def printTransitionMatrix(): Unit = {
@@ -778,7 +775,7 @@ object RNN {
 
   def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int]): RNNParameters = {
     val parameters = new ParameterCollection()
-    val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
+    // val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
     val embeddingSize = EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE // + CASE_o + 1
     val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
@@ -792,7 +789,7 @@ object RNN {
     val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
-    new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters, fwBuilder, bwBuilder, H, O, T,
+    new RNNParameters(w2i, t2i, i2t, c2i, parameters, null, fwBuilder, bwBuilder, H, O, T,
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
