@@ -19,6 +19,10 @@ import scala.collection.mutable
 import scala.io.Source
 import scala.util.Random
 
+/**
+  * Implements the biLSTM-CRF of Lample et al. (2016)
+  * @author Mihai
+  */
 class RNN {
   var model:RNNParameters = _
 
