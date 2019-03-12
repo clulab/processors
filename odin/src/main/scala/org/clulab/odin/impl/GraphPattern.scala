@@ -42,7 +42,7 @@ trait GraphPattern {
     // while preserving the extraction groups
     val reqArgs: Seq[Seq[(String, Seq[Mention])]] = for {
       (name, mentionsWithPathsGroups) <- reqExtractions.toSeq
-    } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
+    } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1).filterNot(_.tokenInterval == Interval.empty))
 
     // get the paths, resulting in an unserializable MapLike
     val reqPaths = reqExtractions.mapValues(_.flatten.toMap)

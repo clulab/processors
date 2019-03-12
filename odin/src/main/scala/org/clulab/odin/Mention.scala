@@ -140,7 +140,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     case Some(txt) => txt.slice(startOffset, endOffset)
     case None =>
       // try to reconstruct the sentence using the character offsets
-      val bits = words.head +: tokenInterval.drop(1).map { i =>
+      val bits = words.headOption.getOrElse("") +: tokenInterval.drop(1).map { i =>
         val spaces = " " * (sentenceObj.startOffsets(i) - sentenceObj.endOffsets(i - 1))
         val word = sentenceObj.words(i)
         spaces + word

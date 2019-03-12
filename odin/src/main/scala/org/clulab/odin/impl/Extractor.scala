@@ -60,7 +60,7 @@ class TokenExtractor(
       case None if r.groups.nonEmpty || r.mentions.nonEmpty =>
         // result has arguments and no trigger, create a RelationMention
         val groups = r.groups transform { (argName, intervals) =>
-          intervals.map(i => newTextBoundMention(i, sent, doc))
+          intervals.filterNot(_ == Interval.empty).map(i => newTextBoundMention(i, sent, doc))
         }
         val args = mergeArgs(groups, r.mentions)
         newRelationMention(args, r.interval, sent, doc)
