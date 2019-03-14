@@ -429,7 +429,7 @@ class RNN {
     //   GloVe small lowers the case
     //   Our Word2Vec uses Word2Vec.sanitizeWord
     //
-    val sanitized = word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
+    val sanitized = word.toLowerCase() // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
       if(model.w2i.contains(sanitized))
@@ -594,11 +594,11 @@ class RNNParameters(
 object RNN {
   val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
 
-  val EPOCHS = 3
+  val EPOCHS = 2
   val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
   val DROPOUT_PROB = 0.1f
-  val DO_DROPOUT = false
-  val EMBEDDING_SIZE = 300
+  val DO_DROPOUT = true
+  val EMBEDDING_SIZE = 200
   val RNN_STATE_SIZE = 100
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
