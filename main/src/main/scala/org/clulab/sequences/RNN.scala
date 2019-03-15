@@ -467,7 +467,7 @@ class RNN {
   }
 
   def initialize(trainSentences:Array[Array[Row]], embeddingsFile:String): Unit = {
-    val (w2i, t2i, c2i) = mkVocabs(trainSentences)
+    val (w2i, t2i, c2i) = mkVocabs(trainSentences) // TODO: start re-engineer here!!!
     logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
     logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
     logger.debug(s"Character vocabulary has ${c2i.size} entries.")
@@ -503,7 +503,6 @@ class RNNParameters(
     }
     floats
   }
-
 
   protected def add(dst:Array[Double], src:Array[Double]): Unit = {
     assert(dst.length == src.length)
@@ -598,8 +597,9 @@ object RNN {
   val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
   val DROPOUT_PROB = 0.1f
   val DO_DROPOUT = true
-  val EMBEDDING_SIZE = 200
-  val RNN_STATE_SIZE = 100
+
+  // val EMBEDDING_SIZE = 100
+  val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
   val CHAR_RNN_LAYERS = 1
@@ -612,45 +612,7 @@ object RNN {
 
   val LOG_MIN_VALUE:Float = -10000
 
-  // case features
-  val CASE_x = 0
-  val CASE_X = 1
-  val CASE_Xx = 2
-  val CASE_xX = 3
-  val CASE_n = 4
-  val CASE_o = 5
-
   val USE_DOMAIN_CONSTRAINTS = true
-
-  def casing(w:String): Int = {
-    if(w.charAt(0).isLetter) { // probably an actual word
-      // count upper and lower-case chars
-      var uppers = 0
-      for(j <- 0 until w.length) {
-        if(w.charAt(j).isUpper) {
-          uppers += 1
-        }
-      }
-
-      var v = CASE_x
-      if (uppers == w.length) v = CASE_X
-      else if (uppers == 1 && w.charAt(0).isUpper) v = CASE_Xx
-      else if (uppers >= 1 && !w.charAt(0).isUpper) v = CASE_xX
-      v
-    } else if(isNumber(w))
-      CASE_n
-    else
-      CASE_o
-  }
-
-  def isNumber(w:String): Boolean = {
-    for(i <- 0 until w.length) {
-      val c = w.charAt(i)
-      if(! c.isDigit && c != '-' && c != '.' && c != ',')
-        return false
-    }
-    true
-  }
 
   protected def save[T](printWriter: PrintWriter, map: Map[T, Int]): Unit = {
     map.foreach { case (key, value) =>
@@ -668,6 +630,7 @@ object RNN {
       save(printWriter, rnnParameters.w2i)
       save(printWriter, rnnParameters.t2i)
       save(printWriter, rnnParameters.c2i)
+      // TODO: Keith, add i2t here?
     }
   }
 
@@ -705,6 +668,7 @@ object RNN {
     val w2iBuilder = new MapBuilder(stringToString)
     val t2iBuilder = new MapBuilder(stringToString)
     val c2iBuilder = new MapBuilder(stringToChar)
+    // TODO: Keith, add i2t builder here?
     val builders: Array[KeyValueBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder)
 
     load(x2iFilename, builders)
@@ -794,6 +758,7 @@ object RNN {
   }
 
   def main(args: Array[String]): Unit = {
+    // TODO: Mihai, add cmd line properties
     val trainFile = args(0)
     val devFile = args(1)
     val trainSentences = ColumnReader.readColumns(trainFile)
@@ -818,6 +783,7 @@ object RNN {
   }
 }
 
+/** Some really basic vector math that happens outside of DyNet */
 object ArrayMath {
   def argmax(vector:Array[Float]):Int = {
     var bestValue = Float.MinValue
