@@ -39,7 +39,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
 
     // dynet
-    "org.clulab" %% "fatdynet" % "0.1.1-SNAPSHOT"
+    "org.clulab" %% "fatdynet" % "0.2.0"
   )
 
 }
