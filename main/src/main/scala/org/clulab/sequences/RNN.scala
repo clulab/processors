@@ -13,6 +13,9 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 import RNN._
+import org.clulab.fatdynet.Repo
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.utils.{MathUtils, Serializer}
 
 import scala.collection.mutable
@@ -604,72 +607,144 @@ object RNN {
 
   val USE_DOMAIN_CONSTRAINTS = true
 
-  protected def save[T](printWriter: PrintWriter, map: Map[T, Int]): Unit = {
-    map.foreach { case (key, value) =>
+  protected def save[T](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+    printWriter.println("# " + comment)
+    values.foreach { case (key, value) =>
       printWriter.println(s"$key\t$value")
     }
     printWriter.println() // Separator
   }
 
+  protected def save[T](printWriter: PrintWriter, values: Array[T], comment: String): Unit = {
+    printWriter.println("# " + comment)
+    values.foreach(printWriter.println)
+    printWriter.println() // Separator
+  }
+
+  protected def save[T](printWriter: PrintWriter, value: Long, comment: String): Unit = {
+    printWriter.println("# " + comment)
+    printWriter.println(value)
+    printWriter.println() // Separator
+  }
+
   def save(dynetFilename:String, x2iFilename: String, rnnParameters: RNNParameters):Unit = {
-    val modelSaver = new ModelSaver(dynetFilename)
-    modelSaver.addModel(rnnParameters.parameters, "/all")
-    modelSaver.done()
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(rnnParameters.parameters, "/all")
+    }
 
     Serializer.using(new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(x2iFilename)), "UTF-8"))) { printWriter =>
-      save(printWriter, rnnParameters.w2i)
-      save(printWriter, rnnParameters.t2i)
-      save(printWriter, rnnParameters.c2i)
-      // TODO: Keith, please add i2t here
-      // TODO: Keith, please also save model.lookupParameters.dim() here; it is needed now in mkParams
+      save(printWriter, rnnParameters.w2i, "w2i")
+      save(printWriter, rnnParameters.t2i, "t2i")
+      save(printWriter, rnnParameters.c2i, "c2i")
+      save(printWriter, rnnParameters.i2t, "i2t")
+      val dim = rnnParameters.lookupParameters.dim().get(0)
+      save(printWriter, dim, "dim")
     }
   }
 
-  def load(filename: String, keyValueBuilders: Array[KeyValueBuilder]): Unit = {
-    var index = 0
+  def load(filename: String, byLineBuilders: Array[ByLineBuilder]): Unit = {
+    var expectingComment = true
+    var byLineBuilderIndex = 0
 
     Serializer.using(Source.fromFile(filename, "UTF-8")) { source =>
       source.getLines.foreach { line =>
-        if (line.nonEmpty) {
-          val Array(key, value) = line.split('\t')
-          keyValueBuilders(index).add(key, value)
+        if (line.nonEmpty)
+          if (expectingComment)
+            expectingComment = false
+          else
+            byLineBuilders(byLineBuilderIndex).addLine(line)
+        else {
+          byLineBuilderIndex += 1
+          expectingComment = true;
         }
-        else
-          index += 1
       }
     }
   }
 
-  trait KeyValueBuilder {
-    def add(key: String, value: String): Unit
+  trait ByLineBuilder {
+    def addLine(line: String): Unit
   }
 
-  class MapBuilder[KeyType](val converter: String => KeyType) extends KeyValueBuilder {
+  // This is a little fancy because it works with both String and Char keys.
+  class ByLineMapBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder {
     val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
 
-    def add(key: String, value: String): Unit = mutableMap += ((converter(key), value.toInt))
+    def addLine(line: String): Unit = {
+      val Array(key, value) = line.split('\t')
 
-    def toMap: Map[KeyType, Int] = mutableMap.toMap
+      mutableMap += ((converter(key), value.toInt))
+    }
+
+    def toValue: Map[KeyType, Int] = mutableMap.toMap
+  }
+
+  // This only works with Strings.
+  class ByLineArrayBuilder extends ByLineBuilder {
+    val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
+
+    def addLine(line: String): Unit = {
+      arrayBuffer += line
+    }
+
+    def toValue: Array[String] = arrayBuffer.toArray
+  }
+
+  // This only works with Strings.
+  class ByLineIntBuilder extends ByLineBuilder {
+    var value: Option[Int] = None
+
+    def addLine(line: String): Unit = {
+      value = Some(line.toInt)
+    }
+
+    def toValue: Int = value.get
   }
 
   protected def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
     def stringToString(string: String): String = string
     def stringToChar(string: String): Char = string.charAt(0)
 
-    val w2iBuilder = new MapBuilder(stringToString)
-    val t2iBuilder = new MapBuilder(stringToString)
-    val c2iBuilder = new MapBuilder(stringToChar)
-    // TODO: Keith, add i2t builder here?
-    val builders: Array[KeyValueBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder)
+    val w2iBuilder = new ByLineMapBuilder(stringToString)
+    val t2iBuilder = new ByLineMapBuilder(stringToString)
+    val c2iBuilder = new ByLineMapBuilder(stringToChar)
+    val i2tBuilder = new ByLineArrayBuilder()
+    val dimBuilder = new ByLineIntBuilder()
+    val builders: Array[ByLineBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder, i2tBuilder, dimBuilder)
 
     load(x2iFilename, builders)
-    // TODO: Keith, please load embedding dimension from the x2i file as well
-    val embeddingDim = 100 // TODO: Keith, replace with value from file (see above)
 
-    val model = mkParams(w2iBuilder.toMap, t2iBuilder.toMap, c2iBuilder.toMap, embeddingDim)
+    val w2i = w2iBuilder.toValue
+    val t2i = t2iBuilder.toValue
+    val c2i = c2iBuilder.toValue
+    val i2t = i2tBuilder.toValue
+    val dim = dimBuilder.toValue
 
-    new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
-    model
+    val oldModel = {
+      val model = mkParams(w2i, t2i, c2i, dim)
+      new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
+      model
+    }
+
+//    val newModel = {
+//      val repo = new Repo(dynetFilename)
+//      val designs = repo.getDesigns()
+//      val model = repo.getModel(designs, "/all")
+//      val parameters = model.getParameterCollection
+//      val lookupParameters = model.getLookupParameter(0)
+//      val fwRnnBuilder = model.getRnnBuilder(0)
+//      val bwRnnBuilder = model.getRnnBuilder(1)
+//      val H = model.getParameter(0)
+//      val O = model.getParameter(1)
+//      val T =  model.getLookupParameter(1)
+//      val charLookupParameters = model.getLookupParameter(2)
+//      val charFwRnnBuilder = model.getRnnBuilder(2)
+//      val charBwRnnBuilder = model.getRnnBuilder(3)
+//      val rnnParameters = new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters,
+//          fwRnnBuilder, bwRnnBuilder, H, O, T, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
+//
+//      rnnParameters
+//    }
+    oldModel
   }
 
   def fromIndexToString(s2i: Map[String, Int]):Array[String] = {
