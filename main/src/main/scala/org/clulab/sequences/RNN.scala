@@ -607,17 +607,23 @@ object RNN {
 
   val USE_DOMAIN_CONSTRAINTS = true
 
-  protected def save[T](printWriter: PrintWriter, map: Map[T, Int], comment: String): Unit = {
+  protected def save[T](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
     printWriter.println("# " + comment)
-    map.foreach { case (key, value) =>
+    values.foreach { case (key, value) =>
       printWriter.println(s"$key\t$value")
     }
     printWriter.println() // Separator
   }
 
-  protected def save[T](printWriter: PrintWriter, array: Array[T], comment: String): Unit = {
+  protected def save[T](printWriter: PrintWriter, values: Array[T], comment: String): Unit = {
     printWriter.println("# " + comment)
-    array.foreach(printWriter.println)
+    values.foreach(printWriter.println)
+    printWriter.println() // Separator
+  }
+
+  protected def save[T](printWriter: PrintWriter, value: Long, comment: String): Unit = {
+    printWriter.println("# " + comment)
+    printWriter.println(value)
     printWriter.println() // Separator
   }
 
@@ -631,6 +637,8 @@ object RNN {
       save(printWriter, rnnParameters.t2i, "t2i")
       save(printWriter, rnnParameters.c2i, "c2i")
       save(printWriter, rnnParameters.i2t, "i2t")
+      val dim = rnnParameters.lookupParameters.dim().get(0)
+      save(printWriter, dim, "dim")
     }
   }
 
@@ -681,6 +689,17 @@ object RNN {
     def toValue: Array[String] = arrayBuffer.toArray
   }
 
+  // This only works with Strings.
+  class ByLineIntBuilder extends ByLineBuilder {
+    var value: Option[Int] = None
+
+    def addLine(line: String): Unit = {
+      value = Some(line.toInt)
+    }
+
+    def toValue: Int = value.get
+  }
+
   protected def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
     def stringToString(string: String): String = string
     def stringToChar(string: String): Char = string.charAt(0)
@@ -689,40 +708,42 @@ object RNN {
     val t2iBuilder = new ByLineMapBuilder(stringToString)
     val c2iBuilder = new ByLineMapBuilder(stringToChar)
     val i2tBuilder = new ByLineArrayBuilder()
-    val builders: Array[ByLineBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder, i2tBuilder)
+    val dimBuilder = new ByLineIntBuilder()
+    val builders: Array[ByLineBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder, i2tBuilder, dimBuilder)
 
     load(x2iFilename, builders)
+
     val w2i = w2iBuilder.toValue
     val t2i = t2iBuilder.toValue
     val c2i = c2iBuilder.toValue
     val i2t = i2tBuilder.toValue
+    val dim = dimBuilder.toValue
 
     val oldModel = {
-      val embeddingDim = 100 // Could get these from x2iFilename
-      val model = mkParams(w2i, t2i, c2i, embeddingDim)
+      val model = mkParams(w2i, t2i, c2i, dim)
       new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
       model
     }
 
-    val newModel = {
-      val repo = new Repo(dynetFilename)
-      val designs = repo.getDesigns()
-      val model = repo.getModel(designs, "/all")
-      val parameters = model.getParameterCollection
-      val lookupParameters = model.getLookupParameter(0)
-      val fwRnnBuilder = model.getRnnBuilder(0)
-      val bwRnnBuilder = model.getRnnBuilder(1)
-      val H = model.getParameter(0)
-      val O = model.getParameter(1)
-      val charLookupParameters = model.getLookupParameter(1)
-      val charFwRnnBuilder = model.getRnnBuilder(2)
-      val charBwRnnBuilder = model.getRnnBuilder(3)
-      val T = mkTransitionMatrix(parameters, t2i, i2t)
-      val rnnParameters = new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters,
-          fwRnnBuilder, bwRnnBuilder, H, O, T, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
-
-      rnnParameters
-    }
+//    val newModel = {
+//      val repo = new Repo(dynetFilename)
+//      val designs = repo.getDesigns()
+//      val model = repo.getModel(designs, "/all")
+//      val parameters = model.getParameterCollection
+//      val lookupParameters = model.getLookupParameter(0)
+//      val fwRnnBuilder = model.getRnnBuilder(0)
+//      val bwRnnBuilder = model.getRnnBuilder(1)
+//      val H = model.getParameter(0)
+//      val O = model.getParameter(1)
+//      val T =  model.getLookupParameter(1)
+//      val charLookupParameters = model.getLookupParameter(2)
+//      val charFwRnnBuilder = model.getRnnBuilder(2)
+//      val charBwRnnBuilder = model.getRnnBuilder(3)
+//      val rnnParameters = new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters,
+//          fwRnnBuilder, bwRnnBuilder, H, O, T, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
+//
+//      rnnParameters
+//    }
     oldModel
   }
 
