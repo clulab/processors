@@ -467,15 +467,22 @@ class RNN {
   }
 
   def initialize(trainSentences:Array[Array[Row]], embeddingsFile:String): Unit = {
-    val (w2i, t2i, c2i) = mkVocabs(trainSentences) // TODO: start re-engineer here!!!
+    logger.debug(s"Loading embeddings from file $embeddingsFile...")
+    val w2v = new Word2Vec(embeddingsFile)
+    logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
+
+    val (w2i, t2i, c2i) = mkVocabs(trainSentences, w2v)
     logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
     logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
     logger.debug(s"Character vocabulary has ${c2i.size} entries.")
 
     logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    model = mkParams(w2i, t2i, c2i)
-    model.initialize(embeddingsFile) // Only necessary if constructing from scratch by training
+    model = mkParams(w2i, t2i, c2i, w2v.dimensions)
+
+    model.initializeEmbeddings(w2v)
+    model.initializeTransitions()
+
     logger.debug("Completed initialization.")
   }
 }
@@ -509,11 +516,6 @@ class RNNParameters(
     for(i <- dst.indices) {
       dst(i) += src(i)
     }
-  }
-
-  def initialize(embeddingsFile: String): Unit = {
-    initializeEmbeddings(embeddingsFile)
-    initializeTransitions()
   }
 
   def initializeTransitions(): Unit = {
@@ -558,24 +560,12 @@ class RNNParameters(
     new FloatVector(transScores)
   }
 
-  def initializeEmbeddings(embeddingsFile: String): Unit = {
-    logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile) // Some(w2i.keySet))
-
-    logger.debug(s"Loaded embeddings for a vocabulary of ${w2v.matrix.size} words.")
-    lookupParameters = parameters.addLookupParameters(w2v.matrix.size + 1, Dim(EMBEDDING_SIZE)) // + 1 for the unk embedding
-
-    val commonWords = new ListBuffer[String]
-    commonWords += UNK_WORD
-    for (word <- w2v.matrix.keySet) {
-      commonWords += word
-    }
-    w2i = commonWords.sorted.zipWithIndex.toMap
-
-    for(word <- w2v.matrix.keySet){// w2i.keySet) {
+  def initializeEmbeddings(w2v:Word2Vec): Unit = {
+    logger.debug("Initializing DyNet embedding parameters...")
+    for(word <- w2v.matrix.keySet){
       lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
     }
-    logger.debug(s"Loaded ${w2v.matrix.size} embeddings.")
+    logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
   }
 
   def printTransitionMatrix(): Unit = {
@@ -630,7 +620,8 @@ object RNN {
       save(printWriter, rnnParameters.w2i)
       save(printWriter, rnnParameters.t2i)
       save(printWriter, rnnParameters.c2i)
-      // TODO: Keith, add i2t here?
+      // TODO: Keith, please add i2t here
+      // TODO: Keith, please also save model.lookupParameters.dim() here; it is needed now in mkParams
     }
   }
 
@@ -661,7 +652,7 @@ object RNN {
     def toMap: Map[KeyType, Int] = mutableMap.toMap
   }
 
-  def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
+  protected def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
     def stringToString(string: String): String = string
     def stringToChar(string: String): Char = string.charAt(0)
 
@@ -672,8 +663,10 @@ object RNN {
     val builders: Array[KeyValueBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder)
 
     load(x2iFilename, builders)
+    // TODO: Keith, please load embedding dimension from the x2i file as well
+    val embeddingDim = 100 // TODO: Keith, replace with value from file (see above)
 
-    val model = mkParams(w2iBuilder.toMap, t2iBuilder.toMap, c2iBuilder.toMap)
+    val model = mkParams(w2iBuilder.toMap, t2iBuilder.toMap, c2iBuilder.toMap, embeddingDim)
 
     new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
     model
@@ -694,14 +687,12 @@ object RNN {
     i2s
   }
 
-  def mkVocabs(trainSentences:Array[Array[Row]]): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
-    val words = new Counter[String]()
+  def mkVocabs(trainSentences:Array[Array[Row]], w2v:Word2Vec): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
     val tags = new Counter[String]()
     val chars = new mutable.HashSet[Char]()
     for(sentence <- trainSentences) {
       for(token <- sentence) {
         val word = token.get(0)
-        words += word // Word2Vec.sanitizeWord(word)
         for(i <- word.indices) {
           chars += word.charAt(i)
         }
@@ -711,16 +702,14 @@ object RNN {
 
     val commonWords = new ListBuffer[String]
     commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
-    for(w <- words.keySet) {
-      if(words.getCount(w) > 1) {
-        commonWords += w
-      }
+    for(w <- w2v.matrix.keySet.toList.sorted) {
+      commonWords += w
     }
 
     tags += START_TAG
     tags += STOP_TAG
 
-    val w2i = commonWords.sorted.zipWithIndex.toMap // These must be sorted for consistency across runs
+    val w2i = commonWords.zipWithIndex.toMap
     val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
     val c2i = chars.toList.sorted.zipWithIndex.toMap
 
@@ -737,14 +726,14 @@ object RNN {
     rows
   }
 
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int]): RNNParameters = {
+  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): RNNParameters = {
     val parameters = new ParameterCollection()
-    // val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(EMBEDDING_SIZE))
-    val embeddingSize = EMBEDDING_SIZE + 2 * CHAR_RNN_STATE_SIZE // + CASE_o + 1
+    val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
+    val embeddingSize = embeddingDim + 2 * CHAR_RNN_STATE_SIZE
     val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val H = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
-    val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE)) // + CASE_o + 1))
+    val O = parameters.addParameters(Dim(t2i.size, NONLINEAR_SIZE))
     val i2t = fromIndexToString(t2i)
     val T = mkTransitionMatrix(parameters, t2i, i2t)
     logger.debug("Created parameters.")
@@ -753,8 +742,19 @@ object RNN {
     val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
-    new RNNParameters(w2i, t2i, i2t, c2i, parameters, null, fwBuilder, bwBuilder, H, O, T,
+    new RNNParameters(w2i, t2i, i2t, c2i,
+      parameters, lookupParameters, fwBuilder, bwBuilder, H, O, T,
       charLookupParameters, charFwBuilder, charBwBuilder)
+  }
+
+  def apply(dynetFilename:String, x2iFilename:String): RNN = {
+    // make sure DyNet is initialized!
+    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+
+    // now load the saved model
+    val rnn = new RNN()
+    rnn.model = load(dynetFilename, x2iFilename)
+    rnn
   }
 
   def main(args: Array[String]): Unit = {
@@ -774,11 +774,7 @@ object RNN {
 
     save(dynetFilename, x2iFilename, rnn.model)
 
-    val pretrainedRnn = new RNN()
-    val rnnParameters = load(dynetFilename, x2iFilename)
-    pretrainedRnn.model = rnnParameters
-
-    rnn.evaluate(devSentences, -1)
+    val pretrainedRnn = RNN(dynetFilename, x2iFilename)
     pretrainedRnn.evaluate(devSentences, -1)
   }
 }
