@@ -13,7 +13,6 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 import RNN._
-import org.clulab.fatdynet.Repo
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.utils.{MathUtils, Serializer}
@@ -627,7 +626,10 @@ object RNN {
     printWriter.println() // Separator
   }
 
-  def save(dynetFilename:String, x2iFilename: String, rnnParameters: RNNParameters):Unit = {
+  def save(modelFilename: String, rnnParameters: RNNParameters):Unit = {
+    val dynetFilename = modelFilename + ".rnn"
+    val x2iFilename = modelFilename + ".x2i"
+
     new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
       modelSaver.addModel(rnnParameters.parameters, "/all")
     }
@@ -655,7 +657,7 @@ object RNN {
             byLineBuilders(byLineBuilderIndex).addLine(line)
         else {
           byLineBuilderIndex += 1
-          expectingComment = true;
+          expectingComment = true
         }
       }
     }
@@ -700,7 +702,7 @@ object RNN {
     def toValue: Int = value.get
   }
 
-  protected def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
+  protected def load(modelFilename: String):RNNParameters = {
     def stringToString(string: String): String = string
     def stringToChar(string: String): Char = string.charAt(0)
 
@@ -710,6 +712,9 @@ object RNN {
     val i2tBuilder = new ByLineArrayBuilder()
     val dimBuilder = new ByLineIntBuilder()
     val builders: Array[ByLineBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder, i2tBuilder, dimBuilder)
+
+    val dynetFilename = modelFilename + ".rnn"
+    val x2iFilename = modelFilename + ".x2i"
 
     load(x2iFilename, builders)
 
@@ -822,13 +827,13 @@ object RNN {
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
-  def apply(dynetFilename:String, x2iFilename:String): RNN = {
+  def apply(modelFilename:String): RNN = {
     // make sure DyNet is initialized!
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
 
     // now load the saved model
     val rnn = new RNN()
-    rnn.model = load(dynetFilename, x2iFilename)
+    rnn.model = load(modelFilename)
     rnn
   }
 
@@ -844,12 +849,9 @@ object RNN {
     rnn.initialize(trainSentences, embeddingsFile)
     rnn.train(trainSentences, devSentences)
 
-    val dynetFilename = "rnn.dat"
-    val x2iFilename = "x2i.dat"
+    save("model", rnn.model)
 
-    save(dynetFilename, x2iFilename, rnn.model)
-
-    val pretrainedRnn = RNN(dynetFilename, x2iFilename)
+    val pretrainedRnn = RNN("model")
     pretrainedRnn.evaluate(devSentences, -1)
   }
 }
