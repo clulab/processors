@@ -661,7 +661,24 @@ object RNN {
     }
   }
 
-  trait ByLineBuilder {
+  abstract class ByLineBuilder {
+
+    protected def addLines(lines: Iterator[String]): Unit = {
+      lines.next() // Skip the comment line
+
+      def nextLine(): Boolean = {
+        val line = lines.next()
+
+        if (line.nonEmpty) {
+          addLine(line)
+          true // Continue on non-blank lines.
+        }
+        else
+          false // Stop at first blank line.
+      }
+
+      while (nextLine()) { }}
+
     def addLine(line: String): Unit
   }
 
@@ -675,7 +692,10 @@ object RNN {
       mutableMap += ((converter(key), value.toInt))
     }
 
-    def toValue: Map[KeyType, Int] = mutableMap.toMap
+    def build(lines: Iterator[String]): Map[KeyType, Int] = {
+      addLines(lines)
+      mutableMap.toMap
+    }
   }
 
   // This only works with Strings.
@@ -686,38 +706,40 @@ object RNN {
       arrayBuffer += line
     }
 
-    def toValue: Array[String] = arrayBuffer.toArray
+    def build(lines: Iterator[String]): Array[String] = {
+      addLines(lines)
+      arrayBuffer.toArray
+    }
   }
 
   // This only works with Strings.
   class ByLineIntBuilder extends ByLineBuilder {
-    var value: Option[Int] = None
+    var valueOpt: Option[Int] = None
 
     def addLine(line: String): Unit = {
-      value = Some(line.toInt)
+      valueOpt = Some(line.toInt)
     }
 
-    def toValue: Int = value.get
+    def build(lines: Iterator[String]): Int = {
+      addLines(lines)
+      valueOpt.get
+    }
   }
 
   protected def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
-    def stringToString(string: String): String = string
-    def stringToChar(string: String): Char = string.charAt(0)
+    val (w2i, t2i, c2i, i2t, dim) = Serializer.using(Source.fromFile(x2iFilename, "UTF-8")) { source =>
+      def stringToString(string: String): String = string
+      def stringToChar(string: String): Char = string.charAt(0)
 
-    val w2iBuilder = new ByLineMapBuilder(stringToString)
-    val t2iBuilder = new ByLineMapBuilder(stringToString)
-    val c2iBuilder = new ByLineMapBuilder(stringToChar)
-    val i2tBuilder = new ByLineArrayBuilder()
-    val dimBuilder = new ByLineIntBuilder()
-    val builders: Array[ByLineBuilder] = Array(w2iBuilder, t2iBuilder, c2iBuilder, i2tBuilder, dimBuilder)
+      val lines = source.getLines()
+      val w2i = new ByLineMapBuilder(stringToString).build(lines)
+      val t2i = new ByLineMapBuilder(stringToString).build(lines)
+      val c2i = new ByLineMapBuilder(stringToChar).build(lines)
+      val i2t = new ByLineArrayBuilder().build(lines)
+      val dim = new ByLineIntBuilder().build(lines)
 
-    load(x2iFilename, builders)
-
-    val w2i = w2iBuilder.toValue
-    val t2i = t2iBuilder.toValue
-    val c2i = c2iBuilder.toValue
-    val i2t = i2tBuilder.toValue
-    val dim = dimBuilder.toValue
+      (w2i, t2i, c2i, i2t, dim)
+    }
 
     val oldModel = {
       val model = mkParams(w2i, t2i, c2i, dim)
@@ -839,15 +861,15 @@ object RNN {
     val trainSentences = ColumnReader.readColumns(trainFile)
     val devSentences = ColumnReader.readColumns(devFile)
     val embeddingsFile = args(2)
-
-    val rnn = new RNN()
-    rnn.initialize(trainSentences, embeddingsFile)
-    rnn.train(trainSentences, devSentences)
-
+//
+//    val rnn = new RNN()
+//    rnn.initialize(trainSentences, embeddingsFile)
+//    rnn.train(trainSentences, devSentences)
+//
     val dynetFilename = "rnn.dat"
     val x2iFilename = "x2i.dat"
-
-    save(dynetFilename, x2iFilename, rnn.model)
+//
+//    save(dynetFilename, x2iFilename, rnn.model)
 
     val pretrainedRnn = RNN(dynetFilename, x2iFilename)
     pretrainedRnn.evaluate(devSentences, -1)
