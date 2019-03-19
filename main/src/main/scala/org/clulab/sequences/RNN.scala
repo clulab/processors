@@ -713,7 +713,9 @@ object RNN {
     }
   }
 
-  protected def load(dynetFilename:String, x2iFilename: String):RNNParameters = {
+  protected def load(modelFilename:String):RNNParameters = {
+    val dynetFilename = modelFilename + ".rnn"
+    val x2iFilename = modelFilename + ".x2i"
     val (w2i, t2i, c2i, i2t, dim) = Serializer.using(Source.fromFile(x2iFilename, "UTF-8")) { source =>
       def stringToString(string: String): String = string
       def stringToChar(string: String): Char = string.charAt(0)
