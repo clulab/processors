@@ -16,6 +16,7 @@ import RNN._
 import org.clulab.fatdynet.Repo
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.struct.MutableNumber
 import org.clulab.utils.{MathUtils, Serializer}
 
 import scala.collection.mutable
@@ -642,87 +643,71 @@ object RNN {
     }
   }
 
-  def load(filename: String, byLineBuilders: Array[ByLineBuilder]): Unit = {
-    var expectingComment = true
-    var byLineBuilderIndex = 0
+  abstract class ByLineBuilder[IntermediateValueType] {
 
-    Serializer.using(Source.fromFile(filename, "UTF-8")) { source =>
-      source.getLines.foreach { line =>
-        if (line.nonEmpty)
-          if (expectingComment)
-            expectingComment = false
-          else
-            byLineBuilders(byLineBuilderIndex).addLine(line)
-        else {
-          byLineBuilderIndex += 1
-          expectingComment = true;
-        }
-      }
-    }
-  }
-
-  abstract class ByLineBuilder {
-
-    protected def addLines(lines: Iterator[String]): Unit = {
+    protected def addLines(intermediateValue: IntermediateValueType, lines: Iterator[String]): Unit = {
       lines.next() // Skip the comment line
 
       def nextLine(): Boolean = {
         val line = lines.next()
 
         if (line.nonEmpty) {
-          addLine(line)
+          addLine(intermediateValue, line)
           true // Continue on non-blank lines.
         }
         else
           false // Stop at first blank line.
       }
 
-      while (nextLine()) { }}
+      while (nextLine()) { }
+    }
 
-    def addLine(line: String): Unit
+    def addLine(intermediateValue: IntermediateValueType, line: String): Unit
   }
 
   // This is a little fancy because it works with both String and Char keys.
-  class ByLineMapBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder {
-    val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
-
-    def addLine(line: String): Unit = {
+  class ByLineMapBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder[mutable.Map[KeyType, Int]] {
+    def addLine(mutableMap: mutable.Map[KeyType, Int], line: String): Unit = {
       val Array(key, value) = line.split('\t')
 
       mutableMap += ((converter(key), value.toInt))
     }
 
     def build(lines: Iterator[String]): Map[KeyType, Int] = {
-      addLines(lines)
+      val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
+
+      addLines(mutableMap, lines)
       mutableMap.toMap
     }
   }
 
   // This only works with Strings.
-  class ByLineArrayBuilder extends ByLineBuilder {
-    val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
+  class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String]] {
 
-    def addLine(line: String): Unit = {
+    def addLine(arrayBuffer: ArrayBuffer[String], line: String): Unit = {
       arrayBuffer += line
     }
 
     def build(lines: Iterator[String]): Array[String] = {
-      addLines(lines)
+      val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
+
+      addLines(arrayBuffer, lines)
       arrayBuffer.toArray
     }
   }
 
   // This only works with Strings.
-  class ByLineIntBuilder extends ByLineBuilder {
-    var valueOpt: Option[Int] = None
+  class ByLineIntBuilder extends ByLineBuilder[MutableNumber[Option[Int]]] {
 
-    def addLine(line: String): Unit = {
-      valueOpt = Some(line.toInt)
+    def addLine(mutableNumberOpt: MutableNumber[Option[Int]], line: String): Unit = {
+      mutableNumberOpt.value = Some(line.toInt)
     }
 
     def build(lines: Iterator[String]): Int = {
-      addLines(lines)
-      valueOpt.get
+      var mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
+
+      addLines(mutableNumberOpt, lines)
+      mutableNumberOpt.value.get
     }
   }
 
@@ -731,10 +716,13 @@ object RNN {
       def stringToString(string: String): String = string
       def stringToChar(string: String): Char = string.charAt(0)
 
+      val byLineStringMapBuilder = new ByLineMapBuilder(stringToString)
+      val byLineCharMapBuilder = new ByLineMapBuilder(stringToChar)
+
       val lines = source.getLines()
-      val w2i = new ByLineMapBuilder(stringToString).build(lines)
-      val t2i = new ByLineMapBuilder(stringToString).build(lines)
-      val c2i = new ByLineMapBuilder(stringToChar).build(lines)
+      val w2i = byLineStringMapBuilder.build(lines)
+      val t2i = byLineStringMapBuilder.build(lines)
+      val c2i = byLineCharMapBuilder.build(lines)
       val i2t = new ByLineArrayBuilder().build(lines)
       val dim = new ByLineIntBuilder().build(lines)
 
