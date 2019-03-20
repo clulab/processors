@@ -12,7 +12,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
-import RNN._
+import LstmCrf._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.struct.MutableNumber
@@ -23,11 +23,11 @@ import scala.io.Source
 import scala.util.Random
 
 /**
-  * Implements the biLSTM-CRF of Lample et al. (2016)
+  * Implements the biLSTM-CRF of Lample et al. (2016), using the GloVe embeddings and learned character embeddings
   * @author Mihai
   */
-class RNN {
-  var model:RNNParameters = _
+class LstmCrf {
+  var model:LstmCrfParameters = _
 
   /**
     * Trains on the given training sentences, and report accuracy after each epoch on development sentences
@@ -490,7 +490,7 @@ class RNN {
   }
 }
 
-class RNNParameters(
+class LstmCrfParameters(
   var w2i:Map[String, Int],
   val t2i:Map[String, Int],
   val i2t:Array[String],
@@ -537,7 +537,7 @@ class RNNParameters(
       transScores(i) = randomNormal(Dim(1)).value().toFloat() / size // pseudo Glorot
     }
 
-    if(RNN.USE_DOMAIN_CONSTRAINTS) {
+    if(LstmCrf.USE_DOMAIN_CONSTRAINTS) {
       // discourage transitions to START from anything
       if (dst == startTag) {
         for (i <- 0 until size)
@@ -583,8 +583,8 @@ class RNNParameters(
   }
 }
 
-object RNN {
-  val logger:Logger = LoggerFactory.getLogger(classOf[RNN])
+object LstmCrf {
+  val logger:Logger = LoggerFactory.getLogger(classOf[LstmCrf])
 
   val EPOCHS = 2
   val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
@@ -627,7 +627,7 @@ object RNN {
     printWriter.println() // Separator
   }
 
-  def save(modelFilename: String, rnnParameters: RNNParameters):Unit = {
+  def save(modelFilename: String, rnnParameters: LstmCrfParameters):Unit = {
     val dynetFilename = modelFilename + ".rnn"
     val x2iFilename = modelFilename + ".x2i"
 
@@ -713,7 +713,7 @@ object RNN {
     }
   }
 
-  protected def load(modelFilename:String):RNNParameters = {
+  protected def load(modelFilename:String):LstmCrfParameters = {
     val dynetFilename = modelFilename + ".rnn"
     val x2iFilename = modelFilename + ".x2i"
     val (w2i, t2i, c2i, i2t, dim) = Serializer.using(Source.fromFile(x2iFilename, "UTF-8")) { source =>
@@ -739,25 +739,6 @@ object RNN {
       model
     }
 
-//    val newModel = {
-//      val repo = new Repo(dynetFilename)
-//      val designs = repo.getDesigns()
-//      val model = repo.getModel(designs, "/all")
-//      val parameters = model.getParameterCollection
-//      val lookupParameters = model.getLookupParameter(0)
-//      val fwRnnBuilder = model.getRnnBuilder(0)
-//      val bwRnnBuilder = model.getRnnBuilder(1)
-//      val H = model.getParameter(0)
-//      val O = model.getParameter(1)
-//      val T =  model.getLookupParameter(1)
-//      val charLookupParameters = model.getLookupParameter(2)
-//      val charFwRnnBuilder = model.getRnnBuilder(2)
-//      val charBwRnnBuilder = model.getRnnBuilder(3)
-//      val rnnParameters = new RNNParameters(w2i, t2i, i2t, c2i, parameters, lookupParameters,
-//          fwRnnBuilder, bwRnnBuilder, H, O, T, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
-//
-//      rnnParameters
-//    }
     oldModel
   }
 
@@ -815,7 +796,7 @@ object RNN {
     rows
   }
 
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): RNNParameters = {
+  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): LstmCrfParameters = {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
     val embeddingSize = embeddingDim + 2 * CHAR_RNN_STATE_SIZE
@@ -831,17 +812,17 @@ object RNN {
     val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
-    new RNNParameters(w2i, t2i, i2t, c2i,
+    new LstmCrfParameters(w2i, t2i, i2t, c2i,
       parameters, lookupParameters, fwBuilder, bwBuilder, H, O, T,
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
-  def apply(modelFilename:String): RNN = {
+  def apply(modelFilename:String): LstmCrf = {
     // make sure DyNet is initialized!
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
 
     // now load the saved model
-    val rnn = new RNN()
+    val rnn = new LstmCrf()
     rnn.model = load(modelFilename)
     rnn
   }
@@ -854,13 +835,13 @@ object RNN {
     val devSentences = ColumnReader.readColumns(devFile)
     val embeddingsFile = args(2)
 
-    val rnn = new RNN()
+    val rnn = new LstmCrf()
     rnn.initialize(trainSentences, embeddingsFile)
     rnn.train(trainSentences, devSentences)
 
     save("model", rnn.model)
 
-    val pretrainedRnn = RNN("model")
+    val pretrainedRnn = LstmCrf("model")
     pretrainedRnn.evaluate(devSentences, -1)
   }
 }
