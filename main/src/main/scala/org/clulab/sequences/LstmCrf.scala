@@ -16,7 +16,7 @@ import LstmCrf._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.struct.MutableNumber
-import org.clulab.utils.{MathUtils, Serializer}
+import org.clulab.utils.{MathUtils, Serializer, StringUtils}
 
 import scala.collection.mutable
 import scala.io.Source
@@ -34,7 +34,7 @@ class LstmCrf {
     * @param trainSentences Training sentences
     * @param devSentences Development/validation sentences, used for logging purposes only
     */
-  def train(trainSentences: Array[Array[Row]], devSentences:Array[Array[Row]]): Unit = {
+  def train(trainSentences: Array[Array[Row]], devSentences:Option[Array[Array[Row]]]): Unit = {
     //val trainer = new SimpleSGDTrainer(model.parameters, learningRate = 0.01f)
     val trainer = new RMSPropTrainer(model.parameters)
     var cummulativeLoss = 0.0
@@ -79,7 +79,9 @@ class LstmCrf {
         trainer.update()
       }
 
-      evaluate(devSentences, epoch)
+      // check dev performance in this epoch
+      if(devSentences.nonEmpty)
+        evaluate(devSentences.get, epoch)
     }
   }
 
@@ -233,14 +235,22 @@ class LstmCrf {
     (golds.length, correct)
   }
 
+  def evaluate(sentences:Array[Array[Row]], epoch:Int): Unit = {
+    evaluate(sentences, "development", epoch)
+  }
+
+  def evaluate(sentences:Array[Array[Row]]): Unit = {
+    evaluate(sentences, "testing", -1)
+  }
+
   /** Logs accuracy score on devSentences; also saves the output in the file dev.output.<EPOCH> */
-  def evaluate(devSentences:Array[Array[Row]], epoch:Int): Unit = {
+  def evaluate(sentences:Array[Array[Row]], name:String, epoch:Int): Unit = {
     var total = 0
     var correct = 0
 
     val pw = new PrintWriter(new FileWriter("dev.output." + epoch))
-    logger.debug("Started evaluation on the evaluation dataset...")
-    for(sent <- devSentences) {
+    logger.debug(s"Started evaluation on the $name dataset...")
+    for(sent <- sentences) {
       val words = sent.map(_.get(0))
       val golds = sent.map(_.get(1))
 
@@ -254,7 +264,7 @@ class LstmCrf {
     }
 
     pw.close()
-    logger.info(s"Accuracy on ${devSentences.length} dev sentences: " + correct.toDouble / total)
+    logger.info(s"Accuracy on ${sentences.length} $name sentences: " + correct.toDouble / total)
   }
 
   /**
@@ -591,7 +601,6 @@ object LstmCrf {
   val DROPOUT_PROB = 0.1f
   val DO_DROPOUT = true
 
-  // val EMBEDDING_SIZE = 100
   val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
@@ -828,21 +837,54 @@ object LstmCrf {
   }
 
   def main(args: Array[String]): Unit = {
-    // TODO: Mihai, add cmd line properties
-    val trainFile = args(0)
-    val devFile = args(1)
-    val trainSentences = ColumnReader.readColumns(trainFile)
-    val devSentences = ColumnReader.readColumns(devFile)
-    val embeddingsFile = args(2)
+    val props = StringUtils.argsToProperties(args)
 
-    val rnn = new LstmCrf()
-    rnn.initialize(trainSentences, embeddingsFile)
-    rnn.train(trainSentences, devSentences)
+    if(props.size() < 2) {
+      usage()
+      System.exit(1)
+    }
 
-    save("model", rnn.model)
+    if(props.containsKey("train") && props.containsKey("embed")) {
+      logger.debug("Starting training procedure...")
+      val trainSentences = ColumnReader.readColumns(props.getProperty("train"))
 
-    val pretrainedRnn = LstmCrf("model")
-    pretrainedRnn.evaluate(devSentences, -1)
+      val devSentences =
+        if(props.containsKey("dev"))
+          Some(ColumnReader.readColumns(props.getProperty("dev")))
+        else
+          None
+
+      val embeddingsFile = props.getProperty("embed")
+
+      val rnn = new LstmCrf()
+      rnn.initialize(trainSentences, embeddingsFile)
+      rnn.train(trainSentences, devSentences)
+
+      if(props.containsKey("model")) {
+        val modelFilePrefix = props.getProperty("model")
+        save(modelFilePrefix, rnn.model)
+      }
+    }
+
+    if(props.containsKey("test") && props.containsKey("model")) {
+      logger.debug("Starting evaluation procedure...")
+      val testSentences = ColumnReader.readColumns(props.getProperty("test"))
+      val rnn = LstmCrf(props.getProperty("model"))
+      rnn.evaluate(testSentences)
+
+    }
+  }
+
+  def usage(): Unit = {
+    val rnn = new LstmCrf
+    println("Usage: " + rnn.getClass.getName + " <ARGUMENTS>")
+    println("Accepted arguments:")
+    println("\t-train <training corpus in the CoNLL BIO or IO format>")
+    println("\t-embed <embeddings file in the word2vec format")
+    println("\t-model <prefix of the model file name>")
+    println("\t-dev <development corpus in the CoNLL BIO or IO format>")
+    println("\t-test <test corpus in the CoNLL BIO or IO format>")
+
   }
 }
 
