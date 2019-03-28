@@ -13,9 +13,11 @@ import java.nio.charset.StandardCharsets
 
 import org.clulab.processors.clu.BioCluProcessor
 import org.clulab.sequences.ColumnsToDocument
+import org.clulab.sequences.CombinedLexiconNER
 import org.clulab.sequences.LexiconNER
 import org.clulab.sequences.SeparatedLexiconNER
 import org.clulab.struct.BooleanHashTrie
+import org.clulab.struct.CompactLexiconNER
 import org.clulab.utils.Files
 import org.clulab.struct.DebugBooleanHashTrie
 import org.scalatest.FlatSpec
@@ -33,7 +35,8 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     val objectOutputStream = new ObjectOutputStream(bufferedOutputStream)
     val start = System.currentTimeMillis
 
-    objectOutputStream.writeObject(lexiconNER)
+    val lex = lexiconNER.asInstanceOf[CombinedLexiconNER]
+    objectOutputStream.writeObject(lex.matcher.entries.keys)
     bufferedOutputStream.close
 
     val stop = System.currentTimeMillis
@@ -85,7 +88,7 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
   val start = System.currentTimeMillis
 
   val oldNer = proc.ner.get.asInstanceOf[LexiconNER]
-//  fileSave(oldNer)
+    fileSave(oldNer)
 //  val (newNer, loadTime) = fileLoad[LexiconNER]
 //  val ner = newNer
     val ner = oldNer
