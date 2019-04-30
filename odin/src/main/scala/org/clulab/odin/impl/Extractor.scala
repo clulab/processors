@@ -51,7 +51,7 @@ class TokenExtractor(
     (groupsTrigger, mentionsTrigger) match {
       case (Some(groupTriggerKey), Some(mentionTriggerKey)) =>
         // Can't have both notations
-        throw new RuntimeException("Can't specify a trigger in as both named capture and named mention")
+        throw new RuntimeException("Can't specify a trigger as both named capture and named mention")
       case (Some(groupTriggerKey), None) =>
         // having several triggers in the same rule is not supported
         // the first will be used and the rest ignored
