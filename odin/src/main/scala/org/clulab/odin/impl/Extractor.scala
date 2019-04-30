@@ -45,29 +45,46 @@ class TokenExtractor(
     action(mentions, state)
   }
 
-  def mkMention(r: TokenPattern.Result, sent: Int, doc: Document): Mention =
-    r.groups.keys find (_ equalsIgnoreCase "trigger") match {
-      case Some(triggerKey) =>
+  def mkMention(r: TokenPattern.Result, sent: Int, doc: Document): Mention = {
+    val groupsTrigger = r.groups.keys find (_ equalsIgnoreCase "trigger")
+    val mentionsTrigger = r.mentions.keys find (_ equalsIgnoreCase "trigger")
+    (groupsTrigger, mentionsTrigger) match {
+      case (Some(groupTriggerKey), Some(mentionTriggerKey)) =>
+        // Can't have both notations
+        throw new RuntimeException("Can't specify a trigger in as both named capture and named mention")
+      case (Some(groupTriggerKey), None) =>
         // having several triggers in the same rule is not supported
         // the first will be used and the rest ignored
-        val int = r.groups(triggerKey).head
+        val int = r.groups(groupTriggerKey).head
         val trigger = newTextBoundMention(int, sent, doc)
-        val groups = r.groups - triggerKey transform { (argName, intervals) =>
+        val groups = r.groups - groupTriggerKey transform { (argName, intervals) =>
           intervals.map(i => newTextBoundMention(i, sent, doc))
         }
         val args = mergeArgs(groups, r.mentions)
         newEventMention(trigger, args, r.interval, sent, doc)
-      case None if r.groups.nonEmpty || r.mentions.nonEmpty =>
+      case (None, Some(mentionTriggerKey)) =>
+        // having several triggers in the same rule is not supported
+        // the first will be used and the rest ignored
+        val origTrigger = r.mentions(mentionTriggerKey).head
+        val trigger = newTextBoundMention(origTrigger.tokenInterval, sent, doc)
+        val groups = r.groups transform { (argName, intervals) =>
+          intervals.map(i => newTextBoundMention(i, sent, doc))
+        }
+        val mentions = r.mentions - mentionTriggerKey
+        val args = mergeArgs(groups, mentions)
+        newEventMention(trigger, args, r.interval, sent, doc)
+      case (None, None) if r.groups.nonEmpty || r.mentions.nonEmpty =>
         // result has arguments and no trigger, create a RelationMention
         val groups = r.groups transform { (argName, intervals) =>
           intervals.map(i => newTextBoundMention(i, sent, doc))
         }
         val args = mergeArgs(groups, r.mentions)
         newRelationMention(args, r.interval, sent, doc)
-      case None =>
+      case (None, None) =>
         // result has no arguments, create a TextBoundMention
         newTextBoundMention(r.interval, sent, doc)
     }
+  }
 
   type Args = Map[String, Seq[Mention]]
   def mergeArgs(m1: Args, m2: Args): Args = {
