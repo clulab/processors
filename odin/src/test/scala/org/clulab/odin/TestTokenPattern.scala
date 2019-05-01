@@ -1080,4 +1080,37 @@ class TestTokenPattern extends FlatSpec with Matchers {
       'end (6)
     )
   }
+
+  text7 should "find a trigger in named mentions" in {
+    val rule = """
+                 |- name: test_rule
+                 |  priority: 1
+                 |  type: token
+                 |  label: TokenPatternTest
+                 |  pattern: |
+                 |    @trigger:Protein binds to @theme:Protein and @theme:Protein
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(0), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(3), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc7, false, "<MANUAL>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc7, state)
+
+    results should have size (1)
+    val binding = results.head
+    binding shouldBe an [EventMention]
+    binding.arguments should contain key ("theme")
+    val themes = binding.arguments("theme")
+    themes should have size (2)
+    binding.asInstanceOf[EventMention].trigger.text should be ("JAK3")
+    val themeTexts = themes.map(_.text)
+    themeTexts should contain ("RAS")
+    themeTexts should contain ("MEK")
+  }
+
 }
