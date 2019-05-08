@@ -1,4 +1,6 @@
 # Changes
++ **7.5.2** - Assemble with LF line endings rather than CRLF to match resource files in duplicated jars, especially with reach.
++ **7.5.1** - Fixed ambivalence hash
 + **7.5.0** - Fixed Odin bug related to lazy ranged quantifiers
 + **7.5.0** - Cache sentence hashes "ambivalently", support OpenIE annotator and serialization of OpenIE relations, buffer file access, and improve performance of LexiconNER
 + **7.4.4** - Improvements to English tokenization rules pertaining to scientific text from plant science.
