@@ -45,7 +45,12 @@ class TestCrLf extends FlatSpec with Matchers {
   // https://groups.google.com/forum/#!topic/scala-user/WrmYHHzcJPw
   type Operation = File => Unit
 
-  val wantedSuffixes: Seq[String] = Seq(".xml")
+  /**
+    * Lots of files have mixed line endings.  These four are consistently LF only.  They should
+    * stay this way when the project is published.  If these remain unchanged, chances are that
+    * the other ones do so as well.
+    */
+  val wantedSuffixes: Seq[String] = Seq("2PlanarEager.xml", "NivreEager.xml", "PlanarEager.xml", "StackAttardi.xml")
   val unwantedSuffixes: Seq[String] = Seq.empty
 
   def fileMatches(file: File): Boolean = {
@@ -71,5 +76,5 @@ class TestCrLf extends FlatSpec with Matchers {
     * The files most likely to cause problems are located there, however.
     * Placement here is therefore a hack.  This code is mostly copied from Eidos.
     */
-  doOperation(new File("./modelsmain/src/main/resources").getCanonicalPath)(test)
+  doOperation(new File("./modelsmain/src/main/resources/appdata/features").getCanonicalPath)(test)
 }
