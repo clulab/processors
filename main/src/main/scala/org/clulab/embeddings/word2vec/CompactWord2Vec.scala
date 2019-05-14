@@ -11,6 +11,34 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
 
+/**
+  * This class and its companion object have been backported from Eidos.  There it is/was an optional
+  * replacementfor Word2Vec used for performance reasons.  It loads data faster from disk and stores it
+  * more compactly in memory.  It does not, however, include all the operations of processer's Word2Vec.
+  * For instance, logMultiplicativeTextSimilarity is not included, but could probably be added.  Other
+  * methods like getWordVector, which in Word2Vec returns an Array[Double], would be inefficient to
+  * include because the arrays of doubles (or floats) are no longer part of the design.  For more
+  * documentation other than that immediately below, both the companion object and the related test case
+  * (org.clulab.embeddings.word2vec.TestCompactWord2Vec) may be helpful.
+  *
+  * The class is typically instantiated by the apply method of the companion object which takes as
+  * arguments a filename and then two booleans: "resource", which specifies whether the named file
+  * exists as a resource or is alternatively stored on the broader filesystem, and "cached", which
+  * specifies that the data consists of Java-serialized objects (see the save method) or, alternatively,
+  * the standard vector text format.  The apply method arranges for the file to be read in the appropriate
+  * way and converted into a map with the words being keys with values being the row numbers in an implied
+  * 2-dimentional matrix of the all vector values, also included in the constructor.  So, rather than each
+  * word being mapped to an independent, mini array as in Word2Vec, they are mapped to an integer row
+  * number of a single, larger matrix/array.
+  *
+  * To take advantage of the faster load times, the vector data file needs to be converted from text
+  * format into a binary (Java serialized objects) for loadBin below.  The test case includes an example.
+  * In some preprocessing phase, call CompactWord2Vec(filename, resource = false, cached = false)
+  * on the file containing the vectors in text format, such as glove.840B.300d.txt.  "resource" is
+  * usually false because it can be a very large file, too large to include as a resource.  On the
+  * resulting return value, call save(compactFilename).  Thereafter, for normal, speedy processing,
+  * use CompactWord2Vec(compactFilename, resource = false, cached = true).
+  */
 class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
   protected val map: CompactWord2Vec.MapType = buildType._1 // (word -> row)
   protected val array: CompactWord2Vec.ArrayType = buildType._2 // flattened matrix
