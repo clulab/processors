@@ -24,9 +24,10 @@ import scala.util.Random
 
 /**
   * Implements the biLSTM-CRF of Lample et al. (2016), using the GloVe embeddings and learned character embeddings
+  * @param greedyInference If true use a CRF layer; otherwise perform greedy inference
   * @author Mihai
   */
-class LstmCrf {
+class LstmCrf(val greedyInference:Boolean = false) {
   var model:LstmCrfParameters = _
 
   /**
@@ -413,13 +414,12 @@ class LstmCrf {
   def predict(words:Array[String]):Array[String] = synchronized {
     // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
     val emissionScores:Array[Array[Float]] = synchronized {
+      ComputationGraph.renew()
       emissionScoresToArrays(emissionScoresAsExpressions(words, doDropout = false)) // these scores do not have softmax
     }
 
-    // Note: this block probably does not need to be synchronized as it is not using the computational graph. TODO: check
-    val transitionMatrix:Array[Array[Float]] = synchronized {
+    val transitionMatrix:Array[Array[Float]] =
       transitionMatrixToArrays(model.T, model.t2i.size)
-    }
 
     val tagIds = viterbi(emissionScores, transitionMatrix)
     val tags = new ArrayBuffer[String]()
@@ -513,8 +513,8 @@ class LstmCrf {
       var kept = 0
       for(line <- source.getLines()) {
         total += 1
-        val tokens = line.split("\\w+")
-        println(s"Reading line: ${tokens.mkString(", ")}")
+        val tokens = line.split("\\s+")
+        // println(s"Reading line: ${tokens.mkString(", ")}")
         assert(tokens.length == 2)
         if(tokens(1).toInt > minFreq) {
           kept += 1
@@ -856,12 +856,12 @@ object LstmCrf {
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
-  def apply(modelFilename:String): LstmCrf = {
+  def apply(modelFilename:String, greedyInference:Boolean = false): LstmCrf = {
     // make sure DyNet is initialized!
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
 
     // now load the saved model
-    val rnn = new LstmCrf()
+    val rnn = new LstmCrf(greedyInference)
     rnn.model = load(modelFilename)
     rnn
   }
@@ -874,6 +874,8 @@ object LstmCrf {
       System.exit(1)
     }
 
+    val greedy = StringUtils.getBool(props, "greedy", default = false)
+
     if(props.containsKey("train") && props.containsKey("embed")) {
       logger.debug("Starting training procedure...")
       val trainSentences = ColumnReader.readColumns(props.getProperty("train"))
@@ -881,7 +883,7 @@ object LstmCrf {
       val docFreqFileName:Option[String] =
         if(props.containsKey("docfreq")) Some(props.getProperty("docfreq"))
         else None
-      val minDocFreq:Int = StringUtils.getInt(props, "minfreq", 100)
+      val minDocFreq:Int = StringUtils.getInt(props, "minfreq", 10)
 
       val devSentences =
         if(props.containsKey("dev"))
@@ -891,7 +893,7 @@ object LstmCrf {
 
       val embeddingsFile = props.getProperty("embed")
 
-      val rnn = new LstmCrf()
+      val rnn = new LstmCrf(greedy)
       rnn.initialize(trainSentences, embeddingsFile, docFreqFileName, minDocFreq)
       rnn.train(trainSentences, devSentences)
 
@@ -904,7 +906,7 @@ object LstmCrf {
     if(props.containsKey("test") && props.containsKey("model")) {
       logger.debug("Starting evaluation procedure...")
       val testSentences = ColumnReader.readColumns(props.getProperty("test"))
-      val rnn = LstmCrf(props.getProperty("model"))
+      val rnn = LstmCrf(props.getProperty("model"), greedy)
       rnn.evaluate(testSentences)
 
     }
