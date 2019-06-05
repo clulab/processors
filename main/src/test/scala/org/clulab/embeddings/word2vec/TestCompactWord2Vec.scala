@@ -21,7 +21,7 @@ class TestCompactWord2Vec extends FlatSpec with Matchers {
   }
 
   val filename = "/test_vectors.txt"
-  val fullsizeText = new Word2Vec(Sourcer.sourceFromResource(filename), None)
+  val fullsizeText = new Word2Vec(Sourcer.sourceFromResource(filename), None, false)
   val compactText = CompactWord2Vec(filename, resource = true, cached = false)
   val tmpFile = File.createTempFile("test_vectors.", ".txt")
   compactText.save(tmpFile.getAbsolutePath())
