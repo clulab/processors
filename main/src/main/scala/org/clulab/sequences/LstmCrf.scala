@@ -442,7 +442,7 @@ class LstmCrf {
     //   GloVe small lowers the case
     //   Our Word2Vec uses Word2Vec.sanitizeWord
     //
-    val sanitized = word.toLowerCase() // Word2Vec.sanitizeWord(word)
+    val sanitized = word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
       if(model.w2i.contains(sanitized))
@@ -479,9 +479,14 @@ class LstmCrf {
     states
   }
 
-  def initialize(trainSentences:Array[Array[Row]], embeddingsFile:String): Unit = {
+  def initialize(trainSentences:Array[Array[Row]],
+                 embeddingsFile:String,
+                 docFreqFileName:Option[String],
+                 minDocFreq:Int): Unit = {
+    println(docFreqFileName)
+    val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile)
+    val w2v = new Word2Vec(embeddingsFile, wordsToUse, caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
     logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
 
     val (w2i, t2i, c2i) = mkVocabs(trainSentences, w2v)
@@ -497,6 +502,31 @@ class LstmCrf {
     model.initializeTransitions()
 
     logger.debug("Completed initialization.")
+  }
+
+  private def loadWordsToUse(docFreqFileName: Option[String], minFreq: Int): Option[Set[String]] = {
+    if(docFreqFileName.isDefined) {
+      logger.debug(s"Loading words to use from file ${docFreqFileName.get} using min frequency of $minFreq.")
+      val wordsToUse = new mutable.HashSet[String]()
+      val source = Source.fromFile(docFreqFileName.get)
+      var total = 0
+      var kept = 0
+      for(line <- source.getLines()) {
+        total += 1
+        val tokens = line.split("\\w+")
+        println(s"Reading line: ${tokens.mkString(", ")}")
+        assert(tokens.length == 2)
+        if(tokens(1).toInt > minFreq) {
+          kept += 1
+          wordsToUse += tokens(0)
+        }
+      }
+      source.close()
+      logger.debug(s"Loaded $kept words to use, from a total of $total words.")
+      Some(wordsToUse.toSet)
+    } else {
+      None
+    }
   }
 }
 
@@ -848,6 +878,11 @@ object LstmCrf {
       logger.debug("Starting training procedure...")
       val trainSentences = ColumnReader.readColumns(props.getProperty("train"))
 
+      val docFreqFileName:Option[String] =
+        if(props.containsKey("docfreq")) Some(props.getProperty("docfreq"))
+        else None
+      val minDocFreq:Int = StringUtils.getInt(props, "minfreq", 100)
+
       val devSentences =
         if(props.containsKey("dev"))
           Some(ColumnReader.readColumns(props.getProperty("dev")))
@@ -857,7 +892,7 @@ object LstmCrf {
       val embeddingsFile = props.getProperty("embed")
 
       val rnn = new LstmCrf()
-      rnn.initialize(trainSentences, embeddingsFile)
+      rnn.initialize(trainSentences, embeddingsFile, docFreqFileName, minDocFreq)
       rnn.train(trainSentences, devSentences)
 
       if(props.containsKey("model")) {
