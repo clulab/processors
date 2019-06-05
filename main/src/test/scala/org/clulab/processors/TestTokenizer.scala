@@ -19,6 +19,15 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents = tok("first sentence. second sentence.")
     sents.length should be (2)
 
+    sents = tok("Artocarpus lacucha Buch.-Ham. ex D.Don is monkey fruit. Second sentence.")
+    sents.length should be (2)
+    sents = tok("Zizania caduciflora Hand.-Mazz. is a grass. Second sentence.")
+    sents.length should be (2)
+    sents = tok("Fig. 1 shows the fungus Gaeumannomyces graminis var. tritici (Ggt), a major root disease of wheat.")
+    sents.length should be (1)
+    sents = tok("Campylobacter spp. are ubiquitous.")
+    sents.length should be (1)
+
     sents = tok("today is 12/25/2017")
     sents(0).size should be (3)
     sents = tok("today is 12/255/2017")
@@ -95,8 +104,8 @@ class TestTokenizer extends FlatSpec with Matchers {
     val sent = tok("This is a test (of parentheses).").head
 
     sent.raw.length should be (9)
-    sent.words(4) should be ("-LRB-")
-    sent.words(7) should be ("-RRB-")
+    sent.words(4) should be ("(") // -LRB- if normalization enabled
+    sent.words(7) should be (")") // -RRB- if normalization enabled
   }
 
   def tok(s:String):Array[Sentence] = {

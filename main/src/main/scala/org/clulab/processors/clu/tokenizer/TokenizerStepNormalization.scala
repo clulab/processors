@@ -8,6 +8,14 @@ class TokenizerStepNormalization extends TokenizerStep {
   // used for text normalization
   lazy val scienceUtils = new ScienceUtils
 
+  //
+  // the corpora used to train the dependency parsers and the NERs keep parentheses NOT normalized
+  // the original Treebank used to train the constituent parser normalized them
+  // so, we'll keep parens NOT normalized since this is more common, and normalize them inside the constituent parser
+  //     (see CoreNLPProcessor)
+  //
+  val normalizeParens = false
+
   def process(inputs:Array[RawToken]):Array[RawToken] = {
     val output = new ArrayBuffer[RawToken]
 
@@ -28,7 +36,7 @@ class TokenizerStepNormalization extends TokenizerStep {
       val input = inputs(i)
 
       // convert all parens in the format that Treebank likes
-      if(PARENS.contains(input.word)) {
+      if(normalizeParens && PARENS.contains(input.word)) {
         output += RawToken(
           input.raw,
           input.beginPosition,

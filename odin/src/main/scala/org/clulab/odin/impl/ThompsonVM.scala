@@ -222,6 +222,7 @@ object ThompsonVM {
 
 // instruction
 sealed trait Inst {
+  var posId: Int = 0
   var next: Inst = null
   def dup(): Inst
   def deepcopy(): Inst = {
@@ -244,21 +245,25 @@ case class Pass() extends Inst {
 // split execution
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
+  override def hashCode: Int = (lhs, rhs, posId).##
 }
 
 // start capturing tokens
 case class SaveStart(name: String) extends Inst {
   def dup() = copy()
+  override def hashCode: Int = ("start", name, posId).##
 }
 
 // end capturing tokens
 case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
+  override def hashCode: Int = ("end", name, posId).##
 }
 
 // matches token using token constraint
 case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
+  override def hashCode: Int = (c, posId).##
 }
 
 // matches mention by label using string matcher
@@ -268,6 +273,7 @@ case class MatchMention(
     arg: Option[String]
 ) extends Inst {
   def dup() = copy()
+  override def hashCode: Int = (m, name, arg, posId).##
 }
 
 // matches sentence start
@@ -283,9 +289,11 @@ case class MatchSentenceEnd() extends Inst {
 // zero-width look-ahead assertion
 case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookAhead(start.deepcopy(), negative)
+  override def hashCode: Int = ("lookahead", start, negative).##
 }
 
 // zero-width look-behind assertion
 case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookBehind(start.deepcopy(), negative)
+  override def hashCode: Int = ("lookbehind", start, negative).##
 }

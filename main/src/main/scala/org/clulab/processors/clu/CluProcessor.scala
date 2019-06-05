@@ -1,6 +1,6 @@
 package org.clulab.processors.clu
 
-import org.clulab.processors.clu.sequences.{Chunker, NamedEntityRecognizer, PartOfSpeechTagger, PortuguesePOSPostProcessor}
+import org.clulab.processors.clu.sequences._
 import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, Processor, Sentence}
@@ -62,6 +62,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   // this class post-processes the POS tagger to avoid some common tagging mistakes for bio
   lazy val posPostProcessor: Option[SentencePostProcessor] =
     getArgString(s"$prefix.pos.post.type", Some("none")) match {
+      case "EN" => Some(new EnglishPOSPostProcessor())
       case "bio" => Some(new BioPOSPostProcessor())
       case "PT" => Some(new PortuguesePOSPostProcessor())
       case "none" => None
@@ -231,6 +232,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   /** Discourse parsing; modifies the document in place */
   def discourse(doc:Document) {
+    // TODO
+  }
+
+  /** Relation extraction; modifies the document in place. */
+  override def relationExtraction(doc: Document): Unit = {
     // TODO
   }
 

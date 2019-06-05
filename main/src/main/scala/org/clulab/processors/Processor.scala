@@ -51,6 +51,9 @@ trait Processor extends ProcessorAnnotator {
   /** Discourse parsing; modifies the document in place. */
   def discourse (doc:Document)
 
+  /** Relation extraction; modifies the document in place. */
+  def relationExtraction(doc:Document)
+
 
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
   override def annotate (text:String, keepText:Boolean = false): Document = {
@@ -89,6 +92,7 @@ trait Processor extends ProcessorAnnotator {
     recognizeNamedEntities(doc)
     parse(doc)
     chunking(doc)
+    relationExtraction(doc)
     resolveCoreference(doc)
     discourse(doc)
     doc.clear()
