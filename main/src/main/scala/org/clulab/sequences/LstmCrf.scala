@@ -55,16 +55,10 @@ class LstmCrf(val greedyInference:Boolean = false) {
         // predict tag emission scores for one sentence, from the biLSTM hidden states
         val words = sentence.map(_.get(0))
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
-        val transitionMatrix = new ExpressionVector
-        for(i <- 0 until model.t2i.size) {
-          transitionMatrix.add(lookup(model.T, i))
-        }
 
-        // get the gold tags for this sentence
-        val goldTagIds = toTagIds(sentence.map(_.get(1)))
-
-        // compute loss for this sentence
-        val loss = sentenceLoss(emissionScores, transitionMatrix, goldTagIds)
+        val loss =
+          if(greedyInference) computeGreedySentenceLoss(emissionScores)
+          else computeCrfSentenceLoss(emissionScores, sentence)
 
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
@@ -84,6 +78,36 @@ class LstmCrf(val greedyInference:Boolean = false) {
       if(devSentences.nonEmpty)
         evaluate(devSentences.get, epoch)
     }
+  }
+
+  /**
+    * Computes the loss value using the CRF
+    * @param emissionScores the biLSTM's hidden states for this sentence
+    * @param sentence the training sentence
+    * @return the loss expression
+    */
+  def computeCrfSentenceLoss(emissionScores: ExpressionVector, sentence: Array[Row]): Expression = {
+    val transitionMatrix = new ExpressionVector
+    for(i <- 0 until model.t2i.size) {
+      transitionMatrix.add(lookup(model.T, i))
+    }
+
+    // get the gold tags for this sentence
+    val goldTagIds = toTagIds(sentence.map(_.get(1)))
+
+    // compute loss for this sentence
+    val loss = sentenceLoss(emissionScores, transitionMatrix, goldTagIds)
+
+    loss
+  }
+
+  /**
+    * Computes the loss value using a simple greedy inference
+    * @param emissionScores the biLSTM's hidden states for this sentence
+    * @return the loss expression
+    */
+  def computeGreedySentenceLoss(emissionScores: ExpressionVector): Expression = {
+    null // TODO
   }
 
   /** Computes the score of the given sequence of tags (tagSeq) */
@@ -883,7 +907,7 @@ object LstmCrf {
       val docFreqFileName:Option[String] =
         if(props.containsKey("docfreq")) Some(props.getProperty("docfreq"))
         else None
-      val minDocFreq:Int = StringUtils.getInt(props, "minfreq", 10)
+      val minDocFreq:Int = StringUtils.getInt(props, "minfreq", 100)
 
       val devSentences =
         if(props.containsKey("dev"))
