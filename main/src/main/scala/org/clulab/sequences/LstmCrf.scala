@@ -56,9 +56,24 @@ class LstmCrf(val greedyInference:Boolean = false) {
         val words = sentence.map(_.get(0))
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
 
+        // get the gold tags for this sentence
+        val goldTagIds = toTagIds(sentence.map(_.get(1)))
+
         val loss =
-          if(greedyInference) computeGreedySentenceLoss(emissionScores)
-          else computeCrfSentenceLoss(emissionScores, sentence)
+          if(greedyInference) {
+            // greedy loss
+            sentenceLossGreedy(emissionScores, goldTagIds)
+          }
+          else {
+            // fetch the transition probabilities from the lookup storage
+            val transitionMatrix = new ExpressionVector
+            for(i <- 0 until model.t2i.size) {
+              transitionMatrix.add(lookup(model.T, i))
+            }
+
+            // CRF loss
+            sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds)
+          }
 
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
@@ -78,36 +93,6 @@ class LstmCrf(val greedyInference:Boolean = false) {
       if(devSentences.nonEmpty)
         evaluate(devSentences.get, epoch)
     }
-  }
-
-  /**
-    * Computes the loss value using the CRF
-    * @param emissionScores the biLSTM's hidden states for this sentence
-    * @param sentence the training sentence
-    * @return the loss expression
-    */
-  def computeCrfSentenceLoss(emissionScores: ExpressionVector, sentence: Array[Row]): Expression = {
-    val transitionMatrix = new ExpressionVector
-    for(i <- 0 until model.t2i.size) {
-      transitionMatrix.add(lookup(model.T, i))
-    }
-
-    // get the gold tags for this sentence
-    val goldTagIds = toTagIds(sentence.map(_.get(1)))
-
-    // compute loss for this sentence
-    val loss = sentenceLoss(emissionScores, transitionMatrix, goldTagIds)
-
-    loss
-  }
-
-  /**
-    * Computes the loss value using a simple greedy inference
-    * @param emissionScores the biLSTM's hidden states for this sentence
-    * @return the loss expression
-    */
-  def computeGreedySentenceLoss(emissionScores: ExpressionVector): Expression = {
-    null // TODO
   }
 
   /** Computes the score of the given sequence of tags (tagSeq) */
@@ -195,15 +180,15 @@ class LstmCrf(val greedyInference:Boolean = false) {
   }
 
   /**
-    * Objective function that maximizes the CRF probability of the gold sequence of tags
+    * Objective function that maximizes the CRF probability of the gold sequence of tags for a given sentence
     * @param emissionScoresForSeq emission scores for the whole sequence, and all tags
     * @param transitionMatrix transition matrix between all tags
     * @param golds gold sequence of tags
     * @return the negative prob of the gold sequence (in log space)
     */
-  def sentenceLoss(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
-                   transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
-                   golds:Array[Int]): Expression = { // Dim: sentenceSize
+  def sentenceLossCrf(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
+                      transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
+                      golds:Array[Int]): Expression = { // Dim: sentenceSize
     val startTag = model.t2i(START_TAG)
     val stopTag = model.t2i(STOP_TAG)
 
@@ -217,8 +202,7 @@ class LstmCrf(val greedyInference:Boolean = false) {
   }
 
   /** Greedy loss function, ignoring transition scores (not used) */
-  def sentenceLossGreedy(emissionScoresForSeq:Array[Expression], // Dim: sentenceSize x tagCount
-                         transitionMatrix:Expression, // Dim: tagCount x tagCount
+  def sentenceLossGreedy(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
                          golds:Array[Int]): Expression = { // Dim: sentenceSize
 
     val goldLosses = new ExpressionVector()
@@ -444,7 +428,8 @@ class LstmCrf(val greedyInference:Boolean = false) {
 
     val tags = new ArrayBuffer[String]()
     if(greedyInference) {
-      // TODO: greedy infer
+      val tagIds = greedyPredict(emissionScores)
+      for (tid <- tagIds) tags += model.i2t(tid)
     } else {
       val transitionMatrix: Array[Array[Float]] =
         transitionMatrixToArrays(model.T, model.t2i.size)
@@ -903,6 +888,7 @@ object LstmCrf {
     }
 
     val greedy = StringUtils.getBool(props, "greedy", default = false)
+    if(greedy) logger.debug("Using greedy inference!")
 
     if(props.containsKey("train") && props.containsKey("embed")) {
       logger.debug("Starting training procedure...")
