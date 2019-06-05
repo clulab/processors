@@ -53,11 +53,11 @@ class LstmCrf(val greedyInference:Boolean = false) {
         ComputationGraph.renew()
 
         // predict tag emission scores for one sentence, from the biLSTM hidden states
-        val words = sentence.map(_.get(0))
+        val words = sentence.map(getRowWord)
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence
-        val goldTagIds = toTagIds(sentence.map(_.get(1)))
+        val goldTagIds = toTagIds(sentence.map(getRowTag))
 
         val loss =
           if(greedyInference) {
@@ -94,6 +94,9 @@ class LstmCrf(val greedyInference:Boolean = false) {
         evaluate(devSentences.get, epoch)
     }
   }
+
+  protected def getRowWord(r:Row) = r.get(0)
+  protected def getRowTag(r:Row) = r.get(1)
 
   /** Computes the score of the given sequence of tags (tagSeq) */
   def sentenceScore(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
@@ -260,8 +263,8 @@ class LstmCrf(val greedyInference:Boolean = false) {
     val pw = new PrintWriter(new FileWriter("dev.output." + epoch))
     logger.debug(s"Started evaluation on the $name dataset...")
     for(sent <- sentences) {
-      val words = sent.map(_.get(0))
-      val golds = sent.map(_.get(1))
+      val words = sent.map(getRowWord)
+      val golds = sent.map(getRowTag)
 
       // println("PREDICT ON SENT: " + words.mkString(", "))
       val preds = predict(words)
@@ -515,6 +518,35 @@ class LstmCrf(val greedyInference:Boolean = false) {
     model.initializeTransitions()
 
     logger.debug("Completed initialization.")
+  }
+
+  def mkVocabs(trainSentences:Array[Array[Row]], w2v:Word2Vec): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
+    val tags = new Counter[String]()
+    val chars = new mutable.HashSet[Char]()
+    for(sentence <- trainSentences) {
+      for(token <- sentence) {
+        val word = getRowWord(token)
+        for(i <- word.indices) {
+          chars += word.charAt(i)
+        }
+        tags += getRowTag(token)
+      }
+    }
+
+    val commonWords = new ListBuffer[String]
+    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
+    for(w <- w2v.matrix.keySet.toList.sorted) {
+      commonWords += w
+    }
+
+    tags += START_TAG
+    tags += STOP_TAG
+
+    val w2i = commonWords.zipWithIndex.toMap
+    val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
+    val c2i = chars.toList.sorted.zipWithIndex.toMap
+
+    (w2i, t2i, c2i)
   }
 
   private def loadWordsToUse(docFreqFileName: Option[String], minFreq: Int): Option[Set[String]] = {
@@ -807,35 +839,6 @@ object LstmCrf {
       i2s(s2i(k)) = k
     }
     i2s
-  }
-
-  def mkVocabs(trainSentences:Array[Array[Row]], w2v:Word2Vec): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
-    val tags = new Counter[String]()
-    val chars = new mutable.HashSet[Char]()
-    for(sentence <- trainSentences) {
-      for(token <- sentence) {
-        val word = token.get(0)
-        for(i <- word.indices) {
-          chars += word.charAt(i)
-        }
-        tags += token.get(1)
-      }
-    }
-
-    val commonWords = new ListBuffer[String]
-    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
-    for(w <- w2v.matrix.keySet.toList.sorted) {
-      commonWords += w
-    }
-
-    tags += START_TAG
-    tags += STOP_TAG
-
-    val w2i = commonWords.zipWithIndex.toMap
-    val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
-    val c2i = chars.toList.sorted.zipWithIndex.toMap
-
-    (w2i, t2i, c2i)
   }
 
   /**
