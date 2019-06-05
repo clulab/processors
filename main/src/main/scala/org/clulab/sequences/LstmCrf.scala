@@ -442,12 +442,16 @@ class LstmCrf(val greedyInference:Boolean = false) {
       emissionScoresToArrays(emissionScoresAsExpressions(words, doDropout = false)) // these scores do not have softmax
     }
 
-    val transitionMatrix:Array[Array[Float]] =
-      transitionMatrixToArrays(model.T, model.t2i.size)
-
-    val tagIds = viterbi(emissionScores, transitionMatrix)
     val tags = new ArrayBuffer[String]()
-    for(tid <- tagIds) tags += model.i2t(tid)
+    if(greedyInference) {
+      // TODO: greedy infer
+    } else {
+      val transitionMatrix: Array[Array[Float]] =
+        transitionMatrixToArrays(model.T, model.t2i.size)
+
+      val tagIds = viterbi(emissionScores, transitionMatrix)
+      for (tid <- tagIds) tags += model.i2t(tid)
+    }
     tags.toArray
   }
 
@@ -945,6 +949,8 @@ object LstmCrf {
     println("\t-model <prefix of the model file name>")
     println("\t-dev <development corpus in the CoNLL BIO or IO format>")
     println("\t-test <test corpus in the CoNLL BIO or IO format>")
+    println("\t-docfreq <file containing document frequency counts of vocabulary terms> (OPTIONAL)")
+    println("\t-minfreq <minimum frequency threshold for a word to be included in the vocabulary; default = 100> (OPTIONAL)")
 
   }
 }
