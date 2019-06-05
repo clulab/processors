@@ -944,11 +944,11 @@ object LstmCrf {
     val rnn = new LstmCrf
     println("Usage: " + rnn.getClass.getName + " <ARGUMENTS>")
     println("Accepted arguments:")
-    println("\t-train <training corpus in the CoNLL BIO or IO format>")
+    println("\t-train <two-column training corpus in the CoNLL BIO or IO format>")
     println("\t-embed <embeddings file in the word2vec format")
     println("\t-model <prefix of the model file name>")
-    println("\t-dev <development corpus in the CoNLL BIO or IO format>")
-    println("\t-test <test corpus in the CoNLL BIO or IO format>")
+    println("\t-dev <two-column development corpus in the CoNLL BIO or IO format>")
+    println("\t-test <two-column test corpus in the CoNLL BIO or IO format>")
     println("\t-docfreq <file containing document frequency counts of vocabulary terms> (OPTIONAL)")
     println("\t-minfreq <minimum frequency threshold for a word to be included in the vocabulary; default = 100> (OPTIONAL)")
 
