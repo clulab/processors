@@ -1059,4 +1059,58 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
   }
 
+  val lazyRangedPattern = """@effect:Crop [!mention="Entity"]{,3}? [lemma=/^suffer/ & tag=/VBN/] from [!mention="Entity"]{0,3}? @cause:Indicator"""
+  val lazyRangedText = "Cotton in 2000 suffered from drought because of little rainfall from July through September ."
+  lazyRangedPattern should s"match '${lazyRangedPattern}'" in {
+    val doc = jsonStringToDocument(""" {"text":"Cotton in 2000 suffered from drought because of little rainfall from July through September .","sentences":[{"words":["Cotton","in","2000","suffered","from","drought","because","of","little","rainfall","from","July","through","September","."],"startOffsets":[0,7,10,15,24,29,37,45,48,55,64,69,74,82,92],"endOffsets":[6,9,14,23,28,36,44,47,54,63,68,73,81,91,93],"raw":["Cotton","in","2000","suffered","from","drought","because","of","little","rainfall","from","July","through","September","."],"tags":["NNP","IN","CD","VBN","IN","NN","IN","IN","JJ","NN","IN","NNP","IN","NNP","."],"lemmas":["cotton","in","2000","suffer","from","drought","because","of","little","rainfall","from","july","through","september","."],"entities":["B-Crop","O","O","O","O","B-AbioticStressor","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","B-PP","B-NP","B-VP","B-PP","B-NP","B-PP","I-PP","B-NP","I-NP","B-PP","B-NP","B-PP","B-NP","O"],"graphs":{"universal-enhanced":{"edges":[{"source":0,"destination":14,"relation":"punct"},{"source":0,"destination":2,"relation":"nmod_in"},{"source":2,"destination":1,"relation":"case"},{"source":2,"destination":3,"relation":"acl"},{"source":3,"destination":5,"relation":"nmod_from"},{"source":5,"destination":4,"relation":"case"},{"source":5,"destination":9,"relation":"nmod_because_of"},{"source":6,"destination":7,"relation":"mwe"},{"source":9,"destination":11,"relation":"nmod_from"},{"source":9,"destination":8,"relation":"amod"},{"source":9,"destination":6,"relation":"case"},{"source":11,"destination":10,"relation":"case"},{"source":11,"destination":13,"relation":"nmod_through"},{"source":13,"destination":12,"relation":"case"}],"roots":[0]},"universal-basic":{"edges":[{"source":0,"destination":2,"relation":"nmod"},{"source":2,"destination":1,"relation":"case"},{"source":2,"destination":3,"relation":"acl"},{"source":3,"destination":5,"relation":"nmod"},{"source":5,"destination":4,"relation":"case"},{"source":0,"destination":14,"relation":"punct"},{"source":5,"destination":9,"relation":"nmod"},{"source":9,"destination":6,"relation":"case"},{"source":9,"destination":8,"relation":"amod"},{"source":6,"destination":7,"relation":"mwe"},{"source":9,"destination":11,"relation":"nmod"},{"source":11,"destination":10,"relation":"case"},{"source":11,"destination":13,"relation":"nmod"},{"source":13,"destination":12,"relation":"case"}],"roots":[0]}}}]} """)
+    val p = TokenPattern.compile(lazyRangedPattern)
+    val mentions = Seq(
+      new TextBoundMention("Crop", Interval(0), 0, doc, true, "<MANUAL>"),
+      new TextBoundMention("Indicator", Interval(5), 0, doc, true, "<MANUAL>")
+    )
+    val state = State(mentions)
+    val results = p.findAllIn(0, doc, state)
+
+    results should have size (1)
+
+    val Seq(p1) = results
+
+    p1.interval should have (
+      'start (0),
+      'end (6)
+    )
+  }
+
+  text7 should "find a trigger in named mentions" in {
+    val rule = """
+                 |- name: test_rule
+                 |  priority: 1
+                 |  type: token
+                 |  label: TokenPatternTest
+                 |  pattern: |
+                 |    @trigger:Protein binds to @theme:Protein and @theme:Protein
+                 |""".stripMargin
+
+    val mentions = Seq(
+      new TextBoundMention("Protein", Interval(0), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(3), 0, doc7, false, "<MANUAL>"),
+      new TextBoundMention("Protein", Interval(5), 0, doc7, false, "<MANUAL>")
+    )
+
+    val state = State(mentions)
+    val ee = ExtractorEngine(rule)
+    val results = ee.extractFrom(doc7, state)
+
+    results should have size (1)
+    val binding = results.head
+    binding shouldBe an [EventMention]
+    binding.arguments should contain key ("theme")
+    val themes = binding.arguments("theme")
+    themes should have size (2)
+    binding.asInstanceOf[EventMention].trigger.text should be ("JAK3")
+    val themeTexts = themes.map(_.text)
+    themeTexts should contain ("RAS")
+    themeTexts should contain ("MEK")
+  }
+
 }

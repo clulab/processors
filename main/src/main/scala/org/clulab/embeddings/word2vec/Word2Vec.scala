@@ -24,18 +24,18 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   lazy val dimensions = matrix.values.head.length
 
   /** alternate constructor to allow loading from a file, possibly with a set of words to constrain the vocab */
-  def this(mf: String, wordsToUse: Option[Set[String]] = None) = {
-    this(Word2Vec.loadMatrix(mf, wordsToUse)._1)
+  def this(mf: String, wordsToUse: Option[Set[String]] = None, caseInsensitiveWordsToUse:Boolean = false) = {
+    this(Word2Vec.loadMatrix(mf, wordsToUse, caseInsensitiveWordsToUse)._1)
   }
 
   /** alternate constructor to allow loading from a source, possibly with a set of words to constrain the vocab */
-  def this(src: Source, wordsToUse: Option[Set[String]]) = {
-    this(Word2Vec.loadMatrixFromSource(src, wordsToUse)._1)
+  def this(src: Source, wordsToUse: Option[Set[String]], caseInsensitiveWordsToUse:Boolean) = {
+    this(Word2Vec.loadMatrixFromSource(src, wordsToUse, caseInsensitiveWordsToUse)._1)
   }
 
   /** alternate constructor to allow loading from a stream, possibly with a set of words to constrain the vocab */
-  def this(is: InputStream, wordsToUse: Option[Set[String]]) = {
-    this(Word2Vec.loadMatrixFromStream(is, wordsToUse)._1)
+  def this(is: InputStream, wordsToUse: Option[Set[String]], caseInsensitiveWordsToUse:Boolean) = {
+    this(Word2Vec.loadMatrixFromStream(is, wordsToUse, caseInsensitiveWordsToUse)._1)
   }
 
   // laziness here causes problems with InputStream-based alternate constructor
@@ -393,39 +393,50 @@ object Word2Vec {
     sum
   }
 
-  private def loadMatrix(mf: String, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
+  private def loadMatrix(mf: String,
+                         wordsToUse: Option[Set[String]],
+                         caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load word2vec matrix from file " + mf + "...")
     val src: Source = Source.fromFile(mf, "iso-8859-1")
     val lines: Iterator[String] = src.getLines()
-    val matrix = buildMatrix(lines, wordsToUse)
+    val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
     src.close()
     logger.debug("Completed matrix loading.")
     matrix
   }
 
-  private def loadMatrixFromStream(is: InputStream, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
+  private def loadMatrixFromStream(is: InputStream,
+                                   wordsToUse: Option[Set[String]],
+                                   caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load word2vec matrix from stream ...")
     val src: Source = Source.fromInputStream(is, "iso-8859-1")
     val lines: Iterator[String] = src.getLines
-    val matrix = buildMatrix(lines, wordsToUse)
+    val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
     src.close()
     logger.debug("Completed matrix loading.")
     matrix
   }
-  private def loadMatrixFromSource(src: Source, wordsToUse: Option[Set[String]]):(Map[String, Array[Double]], Int) = {
+  private def loadMatrixFromSource(src: Source,
+                                   wordsToUse: Option[Set[String]],
+                                   caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load word2vec matrix from source ...")
     val lines: Iterator[String] = src.getLines()
-    val matrix = buildMatrix(lines, wordsToUse)
+    val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
     logger.debug("Completed matrix loading.")
     matrix
   }
 
-  private def buildMatrix(lines: Iterator[String], wordsToUse: Option[Set[String]]): (Map[String, Array[Double]], Int) = {
+  private def buildMatrix(lines: Iterator[String],
+                          wordsToUse: Option[Set[String]],
+                          caseInsensitiveWordsToUse:Boolean): (Map[String, Array[Double]], Int) = {
     val m = new collection.mutable.HashMap[String, Array[Double]]()
     var first = true
     var dims = 0
+    var total = 0
+    var kept = 0
 
     for((line, index) <- lines.zipWithIndex) {
+      total += 1
       val bits = line.split("\\s+")
       if(first) {
         dims = bits(1).toInt
@@ -436,7 +447,8 @@ object Word2Vec {
         }
         assert(bits.length == dims + 1)
         val w = bits(0)
-        if (wordsToUse.isEmpty || wordsToUse.get.contains(w)) {
+        if (wordsToUse.isEmpty || wordsToUse.get.contains(if(caseInsensitiveWordsToUse) w.toLowerCase() else w)) {
+          kept += 1
           val weights = new Array[Double](dims)
           var i = 0
           while(i < dims) {
@@ -448,7 +460,7 @@ object Word2Vec {
         }
       }
     }
-    logger.debug("Completed matrix loading.")
+    logger.debug(s"Completed matrix loading. Kept $kept words out of a total of $total words.")
     (m.toMap, dims)
   }
 

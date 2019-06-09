@@ -133,5 +133,7 @@ object ColumnsToDocument {
     proc.tagPartsOfSpeech(doc)
   }
 
+  def annotateNil(doc:Document): Unit = {}
+
   private def in(s:String):String = Processor.internString(s)
 }

@@ -39,6 +39,35 @@ object TokenPattern {
 class TokenPattern(val start: Inst) {
   import TokenPattern._
 
+  private def assignIds(): Unit = {
+    def assigner(id: Int, instructions: List[Inst]): Unit = {
+      instructions match {
+        case Nil => ()
+        case Done :: tail =>
+          // skip Done instruction
+          assigner(id, tail)
+        case (head: Split) :: tail if head.posId == 0 =>
+          // only if posId hasn't been set
+          head.posId = id
+          assigner(id + 1, head.lhs :: head.rhs :: tail)
+        case head :: tail if head.posId == 0 =>
+          // only if posId hasn't been set
+          head.posId = id
+          assigner(id + 1, head.next :: tail)
+        case head :: tail =>
+          // skip if posId has been set already
+          assigner(id, tail)
+      }
+    }
+    // don't start from zero
+    assigner(1, List(start))
+  }
+
+  // assigns ids to instructions based on their position in the pattern
+  // this is needed to distinguish situations like
+  // x{2,4}? which gets compiled into  x x x? x? because the last two are indistinguishable with case class equality
+  assignIds()
+
   // We want to advance token by token when the first match in the pattern is a MatchMention.
   // This allows us to find overlapping mentions that start in different tokens but end in the same one.
   // e.g. [ASPP1 and [ASPP2 are phosphorylated]] in response to EGFR

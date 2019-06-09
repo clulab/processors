@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/clulab/processors.svg?branch=master)](https://travis-ci.org/clulab/processors)
+[![Build Status](http://jenkins.cs.arizona.edu:8090/buildStatus/icon?job=processors%2Fmaster)](http://jenkins.cs.arizona.edu:8090/job/processors)
 
 # What is it?
 
