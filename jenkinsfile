@@ -1,0 +1,14 @@
+pipeline {
+  agent any
+  stages {
+    stage('Test') {
+      steps {
+          ansiColor('xterm') {
+            echo "Testing..."
+            sh "sbt ++2.12.4 'test-only -- -l NeedsExternalBinary'"
+          }
+      }
+    }
+  }
+}
+
