@@ -1,3 +1,4 @@
+# no longer used. We now use jenkins; see jenkinsfile
 sudo: required
 dist: trusty
 language: scala
