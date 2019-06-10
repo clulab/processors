@@ -1,6 +1,5 @@
 sudo: required
 dist: trusty
-group: deprecated-2017Q2
 language: scala
 scala:
   - 2.12.4
@@ -9,4 +8,4 @@ branches:
   only:
     - master
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION 'test-only -- -l NeedsExternalBinary'
+  - sbt ++$TRAVIS_SCALA_VERSION 'testOnly -- -l NeedsExternalBinary'
