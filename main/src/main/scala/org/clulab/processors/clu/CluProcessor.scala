@@ -240,7 +240,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     // TODO
   }
 
-  private def basicSanityCheck(doc:Document): Unit = {
+  def basicSanityCheck(doc:Document): Unit = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")
     if (doc.sentences.length != 0 && doc.sentences(0).words == null)
@@ -274,6 +274,59 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
     // which means we may lose alignment to the original text
     val textWithAccents = scienceUtils.replaceUnicodeWithAscii(text, keepAccents = true)
     CluProcessor.mkDocument(tokenizer, textWithAccents, keepText)
+  }
+
+  // overrided this because lemmatization depends on POS for portuguese
+  override def annotate(doc:Document): Document = {
+    cheapLemmatize(doc)
+    tagPartsOfSpeech(doc)
+    recognizeNamedEntities(doc)
+    parse(doc)
+    chunking(doc)
+    lemmatize(doc)
+    resolveCoreference(doc)
+    discourse(doc)
+    doc.clear()
+    doc
+  }
+
+  // TODO:
+  // make sure we are using the correct type of lemmas before running tagPartsOfSpeech(doc)
+  // if we run tagPartsOfSpeech(doc) after lemmatize() and not after cheapLemmatize(doc)
+  // we will get wrong results
+
+  // generate cheap lemmas with the word in lower case for PartOfSpeech training/prediction only
+  def cheapLemmatize(doc:Document) {
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      // if not, generate cheap lemmas
+      val lemmas = new Array[String](sent.size)
+      for (i <- sent.words.indices) {
+        lemmas(i) = sent.words(i).toLowerCase()
+        assert(lemmas(i).nonEmpty)
+      }
+      sent.lemmas = Some(lemmas)
+    }
+  }
+
+  /** Lematization; modifies the document in place */
+  override def lemmatize(doc:Document) {
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      // check if sentence tags were defined
+      // if not, generate cheap lemmas
+      if (sent.tags.isDefined) {
+        //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
+        val lemmas = new Array[String](sent.size)
+        for (i <- sent.words.indices) {
+          lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i), Some(sent.tags.get(i)))
+          assert(lemmas(i).nonEmpty)
+        }
+        sent.lemmas = Some(lemmas)
+      } else {
+        cheapLemmatize(doc)
+      }
+    }
   }
 
 }

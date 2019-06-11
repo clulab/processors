@@ -62,9 +62,9 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
   }
 
   it should "POS tag correctly" in {
-    val doc = proc.mkDocument("Da Silva viajou para a China. Lá, ele visitou Pequim.")
-    proc.lemmatize(doc)
+    val doc = proc.mkDocument("Da Silva viajou para a China. Lá, George visitou Pequim.")
     proc.tagPartsOfSpeech(doc)
+    //proc.lemmatize(doc)
     doc.clear()
 
     doc.sentences(0).tags.get(0) should be ("ADP")
@@ -77,14 +77,14 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).tags.get(7) should be ("PUNCT")
     doc.sentences(1).tags.get(0) should be ("ADV")
     doc.sentences(1).tags.get(1) should be ("PUNCT")
-    doc.sentences(1).tags.get(2) should be ("PRON")
+    doc.sentences(1).tags.get(2) should be ("PROPN")
     doc.sentences(1).tags.get(3) should be ("VERBF")
     doc.sentences(1).tags.get(4) should be ("PROPN")
     doc.sentences(1).tags.get(5) should be ("PUNCT")
   }
 
   it should "recognize syntactic chunks correctly" in {
-    val doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa câncer.")
+    val doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa doença.")
 
     doc.sentences(0).chunks.get(0) should be ("B-NP")
     doc.sentences(0).chunks.get(1) should be ("B-VP")
@@ -99,11 +99,23 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).chunks.get(10) should be ("B-NP")
     doc.sentences(0).chunks.get(11) should be ("O")
   }
-  /*
-  TODO: Portuguese lemmatization
+
   it should "lemmatize text correctly" in {
+    val doc = proc.annotate("Nós descobrimos que a exposição prolongada ao alumínio causa câncer.")
+
+    doc.sentences(0).lemmas.get(0) should be ("nós")
+    doc.sentences(0).lemmas.get(1) should be ("descobrir")
+    doc.sentences(0).lemmas.get(2) should be ("que")
+    doc.sentences(0).lemmas.get(3) should be ("o")
+    doc.sentences(0).lemmas.get(4) should be ("exposição")
+    doc.sentences(0).lemmas.get(5) should be ("prolongar")
+    doc.sentences(0).lemmas.get(6) should be ("a")
+    doc.sentences(0).lemmas.get(7) should be ("o")
+    doc.sentences(0).lemmas.get(8) should be ("alumínio")
+    doc.sentences(0).lemmas.get(9) should be ("causar")
+    doc.sentences(0).lemmas.get(10) should be ("câncer")
+    doc.sentences(0).lemmas.get(11) should be (".")
   }
-  */
 
   
   // # WRITE A NEW TEST FOR THIS CASE
@@ -129,9 +141,9 @@ class TestPortugueseCluProcessor extends FlatSpec with Matchers {
 
     doc = proc.annotate("Cultivo intensivo de certas culturas será causado pelo encurtamento da disponibilidade do solo.")
     //println("Basic universal dependencies:")
-    //println(doc.sentences.head.universalBasicDependencies.get)
+    println(doc.sentences.head.universalBasicDependencies.get)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 1, "amod") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 4, "nmod") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(0, 3, "nmod") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 0, "nsubj:pass") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 5, "aux:pass") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(6, 9, "obl") should be(true)

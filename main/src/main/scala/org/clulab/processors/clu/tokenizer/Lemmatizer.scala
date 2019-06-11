@@ -4,31 +4,33 @@ import java.io.StringReader
 
 import scala.collection.mutable
 import scala.util.matching.Regex
-
 import uk.ac.susx.informatics.Morpha
-
 import EnglishLemmatizer._
+import lemport.lemma.{ LemmatizeException, Lemmatizer => LemmatizerPT }
 
 trait Lemmatizer {
-  def lemmatizeWord(word:String):String
+  def lemmatizeWord(word:String, pos: Option[String] = None):String
 }
 
 class PortugueseLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String): String = {
-    // TODO: add a proper lemmatizer here
-    word.toLowerCase
+  val lemmatizer = new LemmatizerPT()
+  override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
+    // get the lemma
+    val lemma = lemmatizer.lemmatize(word, pos.get)
+    lemma
+    //word.toLowerCase
   }
 }
 
 class SpanishLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String): String = {
+  override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
     // TODO: add a proper lemmatizer here
     word.toLowerCase
   }
 }
 
 class EnglishLemmatizer extends Lemmatizer {
-  override def lemmatizeWord(word: String): String = {
+  override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
     if(parens.findFirstMatchIn(word).nonEmpty)
       return word.toLowerCase()
 

@@ -97,10 +97,10 @@
 29	ele	_	PRON	PRP	Case=Nom|Gender=Masc|Number=Sing|Person=3	31	nsubj	_	_
 30	iria	_	AUX	VBC	Aspect=Imp|Mood=Cnd|Number=Sing|Person=3	31	aux	_	_
 31	permitir	_	VERBI	VB	_	23	ccomp	_	_
-32	"	_	PUNCT	``	_	33	punct	_	SpaceAfter=No
+32	``	_	PUNCT	``	_	33	punct	_	SpaceAfter=No
 33	números	_	NOUN	NN	Gender=Masc|Number=Plur	31	obj	_	_
 34	tremendos	_	ADJ	JJ	Gender=Masc|Number=Plur	33	amod	_	SpaceAfter=No
-35	"	_	PUNCT	''	_	33	punct	_	_
+35	''	_	PUNCT	''	_	33	punct	_	_
 36	de	_	ADP	IN	_	37	case	_	_
 37	imigrantes	_	NOUN	NN	Gender=Masc|Number=Plur	33	nmod	_	_
 38	legais	_	ADJ	JJ	Gender=Masc|Number=Plur	37	amod	_	SpaceAfter=No
@@ -108,11 +108,11 @@
 40	baseado	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Sing	31	acl	_	_
 41	em	em	ADP	INDT	_	44	case	_	_
 42	um	um	DET	_	Gender=Masc|Number=Sing	44	det	_	_
-43	"	_	PUNCT	``	_	44	punct	_	SpaceAfter=No
+43	``	_	PUNCT	``	_	44	punct	_	SpaceAfter=No
 44	sistema	_	NOUN	NN	Gender=Masc|Number=Sing	40	obl	_	_
 45	de	_	ADP	IN	_	46	case	_	_
 46	mérito	_	NOUN	NN	Gender=Masc|Number=Sing	44	nmod	_	SpaceAfter=No
-47	"	_	PUNCT	''	_	44	punct	_	SpaceAfter=No
+47	''	_	PUNCT	''	_	44	punct	_	SpaceAfter=No
 48	.	_	PUNCT	.	_	23	punct	_	_
 
 1	Então	_	ADV	RB	_	4	discourse	_	SpaceAfter=No
@@ -676,7 +676,7 @@
 9	a	o	DET	_	Gender=Fem|Number=Sing	11	det	_	_
 10	sua	_	PRON	DTP$	Gender=Fem|Number=Sing|Number[psor]=Sing|Person=3|PronType=Prs	11	det	_	_
 11	popularidade	_	NOUN	NN	Gender=Fem|Number=Sing	7	nmod	_	_
-12	(	_	PUNCT	(	_	17	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	(	_	17	punct	_	SpaceAfter=No
 13	e	_	CCONJ	CC	_	17	cc	_	SpaceAfter=No|ToDo=ex-adp-child
 14	,	_	PUNCT	,	_	15	punct	_	_
 15	talvez	_	ADV	RB	_	17	advmod	_	SpaceAfter=No
@@ -685,7 +685,7 @@
 18	a	o	DET	_	Gender=Fem|Number=Sing	17	det	_	_
 19	de	_	ADP	IN	_	20	case	_	_
 20	Knightley	_	PROPN	NNP	Gender=Fem|Number=Sing	17	nmod	_	SpaceAfter=No|ToDo=nmod
-21	)	_	PUNCT	)	_	17	punct	_	_
+21	-RRB-	_	PUNCT	)	_	17	punct	_	_
 22	este	_	PRON	PDEM	Gender=Masc|Number=Sing	25	nsubj	_	_
 23	foi	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	25	cop	_	_
 24	um	_	DET	DT	Gender=Masc|Number=Sing	25	det	_	_
@@ -912,9 +912,9 @@
 4	10	_	NUM	CD	_	5	nummod	_	_
 5	semanas	_	NOUN	NN	Gender=Fem|Number=Plur	2	nmod	_	_
 6	foi	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	8	aux:pass	_	_
-7	"	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
 8	certificado	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Sing	0	root	_	SpaceAfter=No
-9	"	_	PUNCT	''	_	8	punct	_	_
+9	''	_	PUNCT	''	_	8	punct	_	_
 10	por	por	ADP	INDT	_	12	case	_	_
 11	a	o	DET	_	Gender=Fem|Number=Sing	12	det	_	_
 12	agência	_	NOUN	NN	Gender=Fem|Number=Sing	8	obl	_	_
@@ -1066,10 +1066,10 @@
 38	.	_	PUNCT	.	_	9	punct	_	_
 
 1	Os	_	DET	DT	Gender=Masc|Number=Plur	3	det	_	_
-2	"	_	PUNCT	``	_	3	punct	_	SpaceAfter=No
+2	``	_	PUNCT	``	_	3	punct	_	SpaceAfter=No
 3	eventos	_	NOUN	NN	Gender=Masc|Number=Plur	9	nsubj	_	_
 4	recentes	_	ADJ	JJ	Gender=Masc|Number=Plur	3	amod	_	SpaceAfter=No
-5	"	_	PUNCT	''	_	3	punct	_	_
+5	''	_	PUNCT	''	_	3	punct	_	_
 6	são	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres	9	cop	_	_
 7	provavelmente	_	ADV	RB	_	9	advmod	_	_
 8	os	_	DET	DT	Gender=Masc|Number=Plur	9	det	_	_
@@ -1655,10 +1655,10 @@
 19	2014	_	NUM	CD	Gender=Masc	17	obl	_	SpaceAfter=No
 20	,	_	PUNCT	,	_	24	punct	_	_
 21	como	_	ADP	IN	_	24	case	_	_
-22	"	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
+22	``	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
 23	muito	_	ADV	RB	_	24	advmod	_	_
 24	razoáveis	_	ADJ	JJ	Gender=Fem|Number=Plur	17	obl	_	SpaceAfter=No
-25	"	_	PUNCT	''	_	24	punct	_	SpaceAfter=No
+25	''	_	PUNCT	''	_	24	punct	_	SpaceAfter=No
 26	.	_	PUNCT	.	_	2	punct	_	_
 
 1	Um	_	DET	DT	Gender=Masc|Number=Sing	3	det	_	_
@@ -1758,19 +1758,19 @@
 10	Press	_	PROPN	NNP	Foreign=Yes|Gender=Fem|Number=Sing	9	flat	_	_
 11	que	_	ADP	IN	_	12	mark	_	_
 12	houve	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	6	ccomp	_	_
-13	"	_	PUNCT	``	_	15	punct	_	SpaceAfter=No
+13	``	_	PUNCT	``	_	15	punct	_	SpaceAfter=No
 14	uma	_	DET	DT	Gender=Fem|Number=Sing	15	det	_	_
 15	troca	_	NOUN	NN	Gender=Fem|Number=Sing	12	obj	_	_
 16	de	_	ADP	IN	_	17	case	_	_
 17	palavras	_	NOUN	NN	Gender=Fem|Number=Plur	15	nmod	_	SpaceAfter=No
-18	"	_	PUNCT	''	_	15	punct	_	SpaceAfter=No
+18	''	_	PUNCT	''	_	15	punct	_	SpaceAfter=No
 19	,	_	PUNCT	,	_	20	punct	_	_
 20	seguida	_	VERBP	VBN	Aspect=Perf|Gender=Fem|Number=Sing	15	acl	_	_
 21	de	_	ADP	IN	_	24	case	_	_
 22	uma	_	DET	DT	Gender=Fem|Number=Sing	24	det	_	_
-23	"	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
+23	``	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
 24	discussão	_	NOUN	NN	Gender=Fem|Number=Sing	20	obl	_	SpaceAfter=No
-25	"	_	PUNCT	''	_	24	punct	_	_
+25	''	_	PUNCT	''	_	24	punct	_	_
 26	mas	_	CCONJ	CC	_	31	cc	_	_
 27	que	_	ADP	IN	_	31	mark	_	_
 28	nenhum	_	DET	DT	Gender=Masc|Number=Sing	29	det	_	_
@@ -1828,7 +1828,7 @@
 1	Ele	_	PRON	PRP	Case=Nom|Gender=Masc|Number=Sing|Person=3	2	nsubj	_	_
 2	acrescentou	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	SpaceAfter=No
 3	:	_	PUNCT	:	_	8	punct	_	_
-4	"	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
+4	``	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
 5	Este	_	PRON	PDEM	Gender=Masc|Number=Sing	8	nsubj	_	_
 6	foi	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	8	cop	_	_
 7	um	_	DET	DT	Gender=Masc|Number=Sing	8	det	_	_
@@ -1848,7 +1848,7 @@
 21	hormonal	_	ADJ	JJ	Gender=Fem|Number=Sing	20	amod	_	_
 22	masculina	_	ADJ	JJ	Gender=Fem|Number=Sing	20	amod	_	SpaceAfter=No
 23	.	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
-24	"	_	PUNCT	''	_	8	punct	_	_
+24	''	_	PUNCT	''	_	8	punct	_	_
 
 1	Contudo	_	CCONJ	CC	_	2	discourse	_	_
 2	houve	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
@@ -2157,9 +2157,9 @@
 16	Imobliliário	_	ADJ	JJ	Gender=Masc|Number=Sing	15	amod	_	Proper=True
 17	de	_	ADP	IN	_	18	case	_	Proper=True
 18	Ontario	_	PROPN	NNP	Gender=Masc|Number=Sing	15	nmod	_	_
-19	(	_	PUNCT	(	_	20	punct	_	SpaceAfter=No
+19	-LRB-	_	PUNCT	(	_	20	punct	_	SpaceAfter=No
 20	RECO	_	PROPN	NNP	Gender=Masc|Number=Sing	15	appos	_	SpaceAfter=No
-21	)	_	PUNCT	)	_	20	punct	_	SpaceAfter=No
+21	-RRB-	_	PUNCT	)	_	20	punct	_	SpaceAfter=No
 22	,	_	PUNCT	,	_	24	punct	_	_
 23	que	_	PRON	WP	_	24	nsubj	_	_
 24	regula	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	15	acl:relcl	_	_
@@ -2422,10 +2422,10 @@
 27	terem	_	AUX	VBI	Number=Plur|Person=3	29	aux	_	_
 28	sido	_	AUX	VBN	Aspect=Perf	29	aux:pass	_	_
 29	levantadas	_	VERBP	VBN	Aspect=Perf|Gender=Fem|Number=Plur	15	xcomp	_	_
-30	"	_	PUNCT	``	_	31	punct	_	SpaceAfter=No
+30	``	_	PUNCT	``	_	31	punct	_	SpaceAfter=No
 31	questões	_	NOUN	NN	Gender=Fem|Number=Plur	29	nsubj:pass	_	_
 32	alarmantes	_	ADJ	JJ	Gender=Fem|Number=Plur	31	amod	_	SpaceAfter=No
-33	"	_	PUNCT	''	_	31	punct	_	_
+33	''	_	PUNCT	''	_	31	punct	_	_
 34	sobre	_	ADP	IN	_	36	case	_	_
 35	a	_	DET	DT	Gender=Fem|Number=Sing	36	det	_	_
 36	forma	_	NOUN	NN	Gender=Fem|Number=Sing	31	nmod	_	_
@@ -2755,9 +2755,9 @@
 25	que	_	PRON	WP	_	31	obj	_	_
 26	os	_	DET	DT	Gender=Masc|Number=Plur	27	det	_	_
 27	investidores	_	NOUN	NN	Gender=Masc|Number=Plur	31	nsubj	_	_
-28	(	_	PUNCT	(	_	29	punct	_	SpaceAfter=No
+28	-LRB-	_	PUNCT	(	_	29	punct	_	SpaceAfter=No
 29	privados	_	ADJ	JJ	Gender=Masc|Number=Plur	27	amod	_	SpaceAfter=No
-30	)	_	PUNCT	)	_	29	punct	_	_
+30	-RRB-	_	PUNCT	)	_	29	punct	_	_
 31	têm	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres	24	acl:relcl	_	_
 32	em	em	ADP	INDT	_	34	case	_	_
 33	o	o	DET	_	Gender=Masc|Number=Sing	34	det	_	_
@@ -2916,9 +2916,9 @@
 22	Canadense	_	ADJ	JJ	Gender=Masc|Number=Sing	21	amod	_	Proper=True
 23	de	_	ADP	IN	_	24	case	_	Proper=True
 24	Sangue	_	NOUN	NN	Gender=Fem|Number=Sing	21	nmod	_	Proper=True
-25	(	_	PUNCT	(	_	26	punct	_	SpaceAfter=No
+25	-LRB-	_	PUNCT	(	_	26	punct	_	SpaceAfter=No
 26	CBS	_	PROPN	NNP	Gender=Masc|Number=Sing	21	appos	_	SpaceAfter=No
-27	)	_	PUNCT	)	_	26	punct	_	SpaceAfter=No
+27	-RRB-	_	PUNCT	)	_	26	punct	_	SpaceAfter=No
 28	.	_	PUNCT	.	_	2	punct	_	_
 
 1	As	_	DET	DT	Gender=Fem|Number=Plur	3	det	_	_
@@ -3035,15 +3035,15 @@
 4	como	_	ADP	IN	_	6	case	_	_
 5	uma	_	DET	DT	Gender=Fem|Number=Sing	6	det	_	_
 6	mulher	_	NOUN	NN	Gender=Fem|Number=Sing	3	obl	_	_
-7	"	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
 8	memorável	_	ADJ	JJ	Gender=Fem|Number=Sing	6	amod	_	SpaceAfter=No
-9	"	_	PUNCT	''	_	8	punct	_	_
+9	''	_	PUNCT	''	_	8	punct	_	_
 10	e	_	CCONJ	CC	_	12	cc	_	_
-11	"	_	PUNCT	``	_	12	punct	_	SpaceAfter=No
+11	``	_	PUNCT	``	_	12	punct	_	SpaceAfter=No
 12	amorosa	_	ADJ	JJ	Gender=Fem|Number=Sing	8	conj	_	_
 13	e	_	CCONJ	CC	_	14	cc	_	_
 14	maravilhosa	_	ADJ	JJ	Gender=Fem|Number=Sing	12	conj	_	SpaceAfter=No
-15	"	_	PUNCT	''	_	12	punct	_	_
+15	''	_	PUNCT	''	_	12	punct	_	_
 16	que	_	PRON	WP	_	17	nsubj	_	_
 17	deixou	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	6	acl:relcl	_	_
 18	a	_	DET	PDT	Gender=Fem|Number=Sing	20	det:predet	_	_
@@ -3459,7 +3459,7 @@
 3	admitiu	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
 4	ela	_	PRON	PRP	Gender=Fem|Number=Sing|Person=3	3	nsubj	_	SpaceAfter=No
 5	,	_	PUNCT	,	_	10	punct	_	_
-6	"	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
+6	``	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
 7	vocês	_	PRON	PRP	Case=Nom|Number=Plur|Person=3	10	nsubj	_	_
 8	têm	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres	10	aux	_	_
 9	de	_	ADP	IN	_	8	fixed	_	_
@@ -3623,12 +3623,12 @@
 14	sua	_	PRON	DTP$	Gender=Fem|Number=Sing|Number[psor]=Plur|Person=3|PronType=Prs	15	det	_	_
 15	versão	_	NOUN	NN	Gender=Fem|Number=Sing	11	nmod	_	_
 16	de	_	ADP	IN	_	18	case	_	_
-17	"	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
+17	``	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
 18	Knuck	_	PROPN	NNP	Gender=Masc|Number=Sing	15	nmod	_	_
 19	If	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	18	flat	_	_
 20	You	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	18	flat	_	_
 21	Buck	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	18	flat	_	SpaceAfter=No
-22	"	_	PUNCT	''	_	18	punct	_	_
+22	''	_	PUNCT	''	_	18	punct	_	_
 23	em	_	ADP	IN	_	25	case	_	_
 24	um	_	DET	DT	Gender=Masc|Number=Sing	25	det	_	_
 25	laptop	_	NOUN	NN	Gender=Masc|Number=Sing	9	obl	_	_
@@ -3745,7 +3745,7 @@
 12	que	_	PRON	WP	_	18	nsubj	_	_
 13	o	_	PRON	PRP	Case=Acc|Gender=Masc|Number=Sing|Person=3	18	obj	_	_
 14	chamam	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres	18	cop	_	_
-15	"	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
+15	``	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
 16	não	_	ADV	RB	Polarity=Neg	18	advmod	_	_
 17	mais	_	ADV	RBR	_	18	advmod	_	_
 18	racional	_	ADJ	JJ	Gender=Masc|Number=Sing	11	acl:relcl	_	_
@@ -3761,7 +3761,7 @@
 28	não	_	ADV	RB	Polarity=Neg	29	advmod	_	_
 29	inunda	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	22	advcl	_	SpaceAfter=No
 30	.	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
-31	"	_	PUNCT	''	_	18	punct	_	_
+31	''	_	PUNCT	''	_	18	punct	_	_
 
 1	Mas	_	CCONJ	CC	_	3	discourse	_	_
 2	não	_	ADV	RB	Polarity=Neg	3	advmod	_	_
@@ -3792,10 +3792,10 @@
 8	edição	_	NOUN	NN	Gender=Fem|Number=Sing	6	obj	_	_
 9	formatada	_	ADJ	JJ	Gender=Fem|Number=Sing	8	amod	_	_
 10	de	_	ADP	IN	_	12	case	_	_
-11	"	_	PUNCT	``	_	12	punct	_	SpaceAfter=No
+11	``	_	PUNCT	``	_	12	punct	_	SpaceAfter=No
 12	Zettel's	_	PROPN	NNP	Gender=Masc|Number=Sing	8	nmod	_	_
 13	Traum	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	12	flat	_	SpaceAfter=No
-14	"	_	PUNCT	''	_	12	punct	_	SpaceAfter=No
+14	''	_	PUNCT	''	_	12	punct	_	SpaceAfter=No
 15	,	_	PUNCT	,	_	16	punct	_	_
 16	removendo	_	VERBG	VBG	Aspect=Imp	6	acl	_	_
 17	a	_	DET	DT	Gender=Fem|Number=Sing	18	det	_	_
@@ -4152,7 +4152,7 @@
 17	encantado	_	VERBP	VBN	Aspect=Perf	14	acl:relcl	_	_
 18	Chris	_	PROPN	NNP	Gender=Masc|Number=Sing	17	obj	_	SpaceAfter=No
 19	:	_	PUNCT	:	_	30	punct	_	_
-20	"	_	PUNCT	``	_	30	punct	_	SpaceAfter=No
+20	``	_	PUNCT	``	_	30	punct	_	SpaceAfter=No
 21	Mais	_	ADJ	JJR	Gender=Masc|Number=Sing	22	amod	_	_
 22	africano	_	NOUN	NN	Gender=Masc|Number=Sing	30	obj	_	_
 23	de	de	ADP	INDT	_	26	case	_	_
@@ -4164,7 +4164,7 @@
 29	não	_	ADV	RB	Polarity=Neg	30	advmod	_	_
 30	conheço	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=1|Tense=Pres	14	parataxis	_	SpaceAfter=No
 31	.	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
-32	"	_	PUNCT	''	_	30	punct	_	_
+32	''	_	PUNCT	''	_	30	punct	_	_
 
 1	Quem	_	PRON	WP	_	3	nsubj	_	_
 2	pode	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	3	aux	_	_
@@ -5429,10 +5429,10 @@
 15	conceito	_	NOUN	NN	Gender=Masc|Number=Sing	8	appos	_	_
 16	conhecido	_	ADJ	VBN	Aspect=Perf|Gender=Masc|Number=Sing	15	acl	_	_
 17	como	_	ADP	IN	_	19	case	_	_
-18	"	_	PUNCT	``	_	19	punct	_	SpaceAfter=No
+18	``	_	PUNCT	``	_	19	punct	_	SpaceAfter=No
 19	defesa	_	NOUN	NN	Gender=Fem|Number=Sing	16	obl	_	_
 20	ativa	_	ADJ	JJ	Gender=Fem|Number=Sing	19	amod	_	SpaceAfter=No
-21	"	_	PUNCT	''	_	19	punct	_	SpaceAfter=No
+21	''	_	PUNCT	''	_	19	punct	_	SpaceAfter=No
 22	.	_	PUNCT	.	_	7	punct	_	_
 
 1	Depois	_	ADV	RB	_	18	advmod	_	_
@@ -5557,11 +5557,11 @@
 5	o	o	DET	_	Gender=Masc|Number=Sing	6	det	_	_
 6	mercado	_	NOUN	NN	Gender=Masc|Number=Sing	3	obl	_	_
 7	matinal	_	ADJ	JJ	Gender=Masc|Number=Sing	6	amod	_	_
-8	(	_	PUNCT	(	_	9	punct	_	SpaceAfter=No
+8	-LRB-	_	PUNCT	(	_	9	punct	_	SpaceAfter=No
 9	6:30	_	NUM	CD	_	3	obl:tmod	_	_
 10	-	_	PUNCT	-	_	11	punct	_	_
 11	10:00	_	NUM	CD	_	9	conj	_	SpaceAfter=No
-12	)	_	PUNCT	)	_	9	punct	_	SpaceAfter=No
+12	-RRB-	_	PUNCT	)	_	9	punct	_	SpaceAfter=No
 13	:	_	PUNCT	:	_	14	punct	_	_
 14	pirulitos	_	NOUN	NN	Gender=Masc|Number=Plur	3	obj	_	_
 15	de	_	ADP	IN	_	16	case	_	_
@@ -5570,14 +5570,14 @@
 18	casulos	_	NOUN	NN	Gender=Masc|Number=Plur	14	conj	_	_
 19	de	_	ADP	IN	_	20	case	_	_
 20	vespa	_	NOUN	NN	Gender=Fem|Number=Sing	18	nmod	_	_
-21	(	_	PUNCT	(	_	27	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	(	_	27	punct	_	SpaceAfter=No
 22	as	_	DET	DT	Gender=Fem|Number=Plur	23	det	_	_
 23	pupas	_	NOUN	NN	Gender=Fem|Number=Plur	27	nsubj:pass	_	_
 24	são	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres	27	aux:pass	_	_
 25	consideradas	_	AUX	VBN	Aspect=Perf|Gender=Fem|Number=Plur	27	cop	_	_
 26	um	_	DET	DT	Gender=Masc|Number=Sing	27	det	_	_
 27	petisco	_	NOUN	NN	Gender=Masc|Number=Sing	18	parataxis	_	SpaceAfter=No
-28	)	_	PUNCT	)	_	27	punct	_	SpaceAfter=No
+28	-RRB-	_	PUNCT	)	_	27	punct	_	SpaceAfter=No
 29	,	_	PUNCT	,	_	30	punct	_	_
 30	asas	_	NOUN	NN	Gender=Fem|Number=Plur	14	conj	_	_
 31	de	_	ADP	IN	_	32	case	_	_
@@ -5715,7 +5715,7 @@
 9	a	o	DET	_	Gender=Fem|Number=Sing	10	det	_	_
 10	BBC	_	PROPN	NNP	Gender=Fem|Number=Sing	5	nmod	_	SpaceAfter=No
 11	:	_	PUNCT	:	_	20	punct	_	_
-12	"	_	PUNCT	``	_	20	punct	_	SpaceAfter=No
+12	``	_	PUNCT	``	_	20	punct	_	SpaceAfter=No
 13	Uma	_	DET	DT	Gender=Fem|Number=Sing	14	det	_	_
 14	eleição	_	NOUN	NN	Gender=Fem|Number=Sing	20	nsubj	_	_
 15	legislativa	_	ADJ	JJ	Gender=Fem|Number=Sing	14	amod	_	_
@@ -5729,7 +5729,7 @@
 23	Governo	_	NOUN	NN	Gender=Masc|Number=Sing	24	nsubj	_	Proper=True
 24	quer	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	20	acl:relcl	_	SpaceAfter=No
 25	.	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
-26	"	_	PUNCT	''	_	20	punct	_	_
+26	''	_	PUNCT	''	_	20	punct	_	_
 
 1	É	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	3	cop	_	_
 2	o	_	DET	DT	Gender=Masc|Number=Sing	3	det	_	_
@@ -5856,7 +5856,7 @@
 3	Hopley	_	PROPN	NNP	Gender=Masc|Number=Sing	2	appos	_	_
 4	acrescentou	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	SpaceAfter=No
 5	:	_	PUNCT	:	_	16	punct	_	_
-6	"	_	PUNCT	``	_	16	punct	_	SpaceAfter=No
+6	``	_	PUNCT	``	_	16	punct	_	SpaceAfter=No
 7	O	_	DET	DT	Gender=Masc|Number=Sing	8	det	_	_
 8	aumento	_	NOUN	NN	Gender=Masc|Number=Sing	16	nsubj	_	_
 9	de	de	ADP	INDT	_	11	case	_	_
@@ -5867,7 +5867,7 @@
 14	deve	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	16	aux	_	_
 15	passar	_	AUX	VB	_	16	cop	_	_
 16	despercebido	_	ADJ	JJ	Gender=Masc|Number=Sing	4	parataxis	_	SpaceAfter=No
-17	"	_	PUNCT	''	_	16	punct	_	SpaceAfter=No
+17	''	_	PUNCT	''	_	16	punct	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	4	punct	_	_
 
 1	A	_	DET	DT	Gender=Fem|Number=Sing	2	det	_	_
@@ -6383,10 +6383,10 @@
 5	estava	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Past	1	ccomp	_	_
 6	agora	_	ADV	RB	_	5	advmod	_	_
 7	sob	_	ADP	IN	_	10	case	_	_
-8	"	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
+8	``	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
 9	enorme	_	ADJ	JJ	Gender=Fem|Number=Sing	10	amod	_	_
 10	pressão	_	NOUN	NN	Gender=Fem|Number=Sing	5	obl	_	SpaceAfter=No
-11	"	_	PUNCT	''	_	10	punct	_	SpaceAfter=No
+11	''	_	PUNCT	''	_	10	punct	_	SpaceAfter=No
 12	,	_	PUNCT	,	_	1	punct	_	_
 13	ele	_	PRON	PRP	Case=Nom|Gender=Masc|Number=Sing|Person=3	14	nsubj	_	_
 14	pediu	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
@@ -7292,13 +7292,13 @@
 6	,	_	PUNCT	,	_	5	punct	_	_
 7	não	_	ADV	RB	Polarity=Neg	10	advmod	_	_
 8	a	_	DET	DT	Gender=Fem|Number=Sing	10	det	_	_
-9	"	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
+9	``	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
 10	Guerra	_	NOUN	NN	Gender=Fem|Number=Sing	3	parataxis	_	Proper=True
 11	de	de	ADP	INDT	_	13	case	_	_
 12	os	o	DET	_	Gender=Masc|Number=Plur	13	det	_	_
 13	Tronos	_	NOUN	NN	Gender=Masc|Number=Plur	10	nmod	_	Proper=True|SpaceAfter=No
 14	.	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
-15	"	_	PUNCT	''	_	10	punct	_	_
+15	''	_	PUNCT	''	_	10	punct	_	_
 
 1	Martin	_	PROPN	NNP	Gender=Masc|Number=Sing	5	nsubj	_	_
 2	tem	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	5	aux	_	_
@@ -7318,20 +7318,20 @@
 16	atualmente	_	ADV	RB	_	17	advmod	_	_
 17	chamados	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Plur	8	acl	_	_
 18	de	_	ADP	IN	_	21	case	_	_
-19	"	_	PUNCT	``	_	21	punct	_	SpaceAfter=No
+19	``	_	PUNCT	``	_	21	punct	_	SpaceAfter=No
 20	Os	_	DET	DT	Gender=Masc|Number=Plur	21	det	_	Proper=True
 21	Ventos	_	NOUN	NN	Gender=Masc|Number=Plur	17	obl	_	Proper=True
 22	de	de	ADP	INDT	_	24	case	_	_
 23	o	o	DET	_	Gender=Masc|Number=Sing	24	det	_	_
 24	Inverno	_	NOUN	NN	Gender=Masc|Number=Sing	21	nmod	_	Proper=True|SpaceAfter=No
-25	"	_	PUNCT	''	_	21	punct	_	_
+25	''	_	PUNCT	''	_	21	punct	_	_
 26	e	_	CCONJ	CC	_	29	cc	_	_
-27	"	_	PUNCT	``	_	29	punct	_	SpaceAfter=No
+27	``	_	PUNCT	``	_	29	punct	_	SpaceAfter=No
 28	Um	_	DET	DT	Gender=Masc|Number=Sing	29	det	_	Proper=True
 29	Sonho	_	NOUN	NN	Gender=Masc|Number=Sing	21	conj	_	Proper=True
 30	de	_	ADP	IN	_	31	case	_	Proper=True
 31	Primavera	_	NOUN	NN	Gender=Fem|Number=Sing	29	nmod	_	Proper=True|SpaceAfter=No
-32	"	_	PUNCT	''	_	29	punct	_	SpaceAfter=No
+32	''	_	PUNCT	''	_	29	punct	_	SpaceAfter=No
 33	.	_	PUNCT	.	_	5	punct	_	_
 
 1	Os	_	DET	DT	Gender=Masc|Number=Plur	2	det	_	_
@@ -7574,10 +7574,10 @@
 19	como	_	ADP	IN	_	20	case	_	_
 20	personagens	_	NOUN	NN	Gender=Masc|Number=Plur	13	obl	_	_
 21	de	_	ADP	IN	_	23	case	_	_
-22	"	_	PUNCT	``	_	23	punct	_	SpaceAfter=No
+22	``	_	PUNCT	``	_	23	punct	_	SpaceAfter=No
 23	Stranger	_	PROPN	NNP	Gender=Masc|Number=Sing	20	nmod	_	_
 24	Things	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	23	flat	_	SpaceAfter=No
-25	"	_	PUNCT	''	_	23	punct	_	SpaceAfter=No
+25	''	_	PUNCT	''	_	23	punct	_	SpaceAfter=No
 26	.	_	PUNCT	.	_	13	punct	_	_
 
 1	Eu	_	PRON	PRP	Case=Nom|Number=Sing|Person=1	4	nsubj	_	_
@@ -7608,11 +7608,11 @@
 6	direitos	_	ADJ	JJ	Gender=Masc|Number=Plur	5	amod	_	_
 7	de	_	ADP	IN	_	8	case	_	_
 8	Negan	_	PROPN	NNP	Gender=Masc|Number=Sing	5	nmod	_	_
-9	(	_	PUNCT	(	_	10	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	(	_	10	punct	_	SpaceAfter=No
 10	Jeffrey	_	PROPN	NNP	Gender=Masc|Number=Sing	8	appos	_	_
 11	Dean	_	PROPN	NNP	Gender=Masc|Number=Sing	10	flat:name	_	_
 12	Morgan	_	PROPN	NNP	Gender=Masc|Number=Sing	10	flat:name	_	SpaceAfter=No
-13	)	_	PUNCT	)	_	10	punct	_	SpaceAfter=No
+13	-RRB-	_	PUNCT	)	_	10	punct	_	SpaceAfter=No
 14	,	_	PUNCT	,	_	2	punct	_	_
 15	ele	_	PRON	PRP	Case=Nom|Gender=Masc|Number=Sing|Person=3	17	nsubj	_	_
 16	se	_	PRON	SE	Person=3	17	compound:prt	_	_
@@ -7633,12 +7633,12 @@
 6	o	o	DET	_	Gender=Masc|Number=Sing	7	det	_	_
 7	programa	_	NOUN	NN	Gender=Masc|Number=Sing	4	obl	_	SpaceAfter=No
 8	,	_	PUNCT	,	_	10	punct	_	_
-9	"	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
+9	``	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
 10	The	_	PROPN	NNP	Gender=Masc|Number=Sing	7	appos	_	_
 11	Talking	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	10	flat	_	_
 12	Dead	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	10	flat	_	SpaceAfter=No
 13	.	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
-14	"	_	PUNCT	''	_	10	punct	_	_
+14	''	_	PUNCT	''	_	10	punct	_	_
 
 1	Em	em	ADP	INDT	_	3	case	_	_
 2	as	o	DET	_	Gender=Fem|Number=Plur	3	det	_	_
@@ -8207,10 +8207,10 @@
 2	a	_	ADP	IN	_	4	case	_	_
 3	100	_	NUM	CD	_	4	nummod	_	_
 4	metros	_	NOUN	NN	Gender=Masc|Number=Plur	1	obl	_	_
-5	(	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
+5	-LRB-	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
 6	328	_	NUM	CD	Gender=Masc	7	nummod	_	_
 7	pés	_	NOUN	NN	Gender=Masc|Number=Plur	4	appos	_	SpaceAfter=No
-8	)	_	PUNCT	)	_	7	punct	_	_
+8	-RRB-	_	PUNCT	)	_	7	punct	_	_
 9	abaixo	_	ADV	RB	_	1	advmod	_	_
 10	de	de	ADP	INDT	_	12	case	_	_
 11	a	o	DET	_	Gender=Fem|Number=Sing	12	det	_	_
@@ -8661,10 +8661,10 @@
 6	primeira	_	ADJ	JJ	Gender=Fem|Number=Sing	7	amod	_	_
 7	companhia	_	NOUN	NN	Gender=Fem|Number=Sing	4	nsubj:pass	_	_
 8	cinematográfica	_	ADJ	JJ	Gender=Fem|Number=Sing	7	amod	_	_
-9	(	_	PUNCT	(	_	10	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	(	_	10	punct	_	SpaceAfter=No
 10	Athina	_	PROPN	NNP	Gender=Fem|Number=Sing	7	appos	_	_
 11	Film	_	PROPN	NNP	Foreign=Yes|Gender=Fem|Number=Sing	10	flat	_	SpaceAfter=No
-12	)	_	PUNCT	)	_	10	punct	_	_
+12	-RRB-	_	PUNCT	)	_	10	punct	_	_
 13	e	_	CCONJ	CC	_	14	cc	_	_
 14	em	_	ADP	IN	_	4	conj	_	orig_deprel=obl|ToDo=ex-adp-child
 15	1916	_	NUM	CD	Gender=Masc	14	obj	_	ToDo=pobj
@@ -8930,10 +8930,10 @@
 19	Principado	_	NOUN	NN	Gender=Masc|Number=Sing	16	nmod	_	Proper=True
 20	de	_	ADP	IN	_	21	case	_	Proper=True
 21	Nitra	_	PROPN	NNP	Gender=Fem|Number=Sing	19	nmod	_	_
-22	(	_	PUNCT	(	_	24	punct	_	SpaceAfter=No
+22	-LRB-	_	PUNCT	(	_	24	punct	_	SpaceAfter=No
 23	atual	_	ADJ	JJ	Gender=Fem|Number=Sing	24	amod	_	_
 24	Eslováquia	_	PROPN	NNP	Gender=Fem|Number=Sing	19	appos	_	SpaceAfter=No
-25	)	_	PUNCT	)	_	24	punct	_	SpaceAfter=No
+25	-RRB-	_	PUNCT	)	_	24	punct	_	SpaceAfter=No
 26	.	_	PUNCT	.	_	9	punct	_	_
 
 1	O	_	DET	PDT	Gender=Masc|Number=Sing	4	det:predet	_	_
@@ -8943,14 +8943,14 @@
 5	foi	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	6	cop	_	_
 6	Mojmir	_	PROPN	NNP	Gender=Masc|Number=Sing	0	root	_	_
 7	I	_	ADJ	JJ	Gender=Masc|Number=Sing	6	compound	_	Proper=True
-8	(	_	PUNCT	(	_	10	punct	_	SpaceAfter=No
+8	-LRB-	_	PUNCT	(	_	10	punct	_	SpaceAfter=No
 9	que	_	PRON	WP	_	10	nsubj	_	_
 10	governou	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	6	acl:relcl	_	_
 11	de	_	ADP	IN	_	12	case	_	_
 12	830	_	NUM	CD	Gender=Masc	10	obl	_	_
 13	a	_	ADP	IN	_	14	case	_	_
 14	846	_	NUM	CD	Gender=Masc	12	nmod	_	SpaceAfter=No
-15	)	_	PUNCT	)	_	10	punct	_	SpaceAfter=No
+15	-RRB-	_	PUNCT	)	_	10	punct	_	SpaceAfter=No
 16	.	_	PUNCT	.	_	6	punct	_	_
 
 1	Luís	_	PROPN	NNP	Gender=Masc|Number=Sing	5	nsubj	_	SpaceAfter=No
@@ -9013,9 +9013,9 @@
 15	muito	_	ADV	RB	_	16	advmod	_	_
 16	mais	_	ADV	RBR	_	17	advmod	_	_
 17	avançada	_	ADJ	JJ	Gender=Fem|Number=Sing	14	amod	_	_
-18	(	_	PUNCT	(	_	19	punct	_	SpaceAfter=No
+18	-LRB-	_	PUNCT	(	_	19	punct	_	SpaceAfter=No
 19	1918	_	NUM	CD	Gender=Masc	14	obl:tmod	_	SpaceAfter=No
-20	)	_	PUNCT	)	_	19	punct	_	SpaceAfter=No
+20	-RRB-	_	PUNCT	)	_	19	punct	_	SpaceAfter=No
 21	,	_	PUNCT	,	_	5	punct	_	_
 22	muito	_	ADV	RB	_	23	advmod	_	_
 23	pouca	_	DET	DT	Gender=Fem|Number=Sing	24	det	_	_
@@ -9464,7 +9464,7 @@
 12	assim	_	ADV	RB	_	14	cc	_	_
 13	como	_	ADP	IN	_	12	fixed	_	_
 14	comida	_	NOUN	NN	Gender=Fem|Number=Sing	3	conj	_	_
-15	(	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
 16	de	de	ADP	INDT	_	18	case	_	_
 17	a	o	DET	_	Gender=Fem|Number=Sing	18	det	_	_
 18	pesca	_	NOUN	NN	Gender=Fem|Number=Sing	14	nmod	_	_
@@ -9478,7 +9478,7 @@
 26	de	de	ADP	INDT	_	28	case	_	_
 27	o	o	DET	_	Gender=Masc|Number=Sing	28	det	_	_
 28	mar	_	NOUN	NN	Gender=Masc|Number=Sing	25	nmod	_	SpaceAfter=No
-29	)	_	PUNCT	)	_	18	punct	_	_
+29	-RRB-	_	PUNCT	)	_	18	punct	_	_
 30	a	_	ADP	IN	_	32	case	_	_
 31	inúmeras	_	ADJ	JJ	Gender=Fem|Number=Plur	32	amod	_	_
 32	comunidades	_	NOUN	NN	Gender=Fem|Number=Plur	2	obl	_	_
@@ -9575,12 +9575,12 @@
 18	como	_	ADP	IN	_	19	case	_	_
 19	Mare	_	PROPN	NNP	Gender=Masc|Number=Sing	14	obl	_	_
 20	Nostrum	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	19	flat	_	_
-21	(	_	PUNCT	(	_	24	punct	_	SpaceAfter=No
-22	"	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	(	_	24	punct	_	SpaceAfter=No
+22	``	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
 23	Nosso	_	PRON	DTP$	Gender=Masc|Number=Sing|Number[psor]=Plur|Person=1|PronType=Prs	24	det	_	Proper=True
 24	Mar	_	NOUN	NN	Gender=Masc|Number=Sing	19	appos	_	Proper=True|SpaceAfter=No
-25	"	_	PUNCT	''	_	24	punct	_	SpaceAfter=No
-26	)	_	PUNCT	)	_	24	punct	_	SpaceAfter=No
+25	''	_	PUNCT	''	_	24	punct	_	SpaceAfter=No
+26	-RRB-	_	PUNCT	)	_	24	punct	_	SpaceAfter=No
 27	.	_	PUNCT	.	_	14	punct	_	_
 
 1	A	_	DET	DT	Gender=Fem|Number=Sing	2	det	_	_
@@ -9647,13 +9647,13 @@
 6	hidromel	_	NOUN	NN	Gender=Masc|Number=Sing	4	conj	_	SpaceAfter=No
 7	,	_	PUNCT	,	_	8	punct	_	_
 8	bjórr	_	NOUN	NN	Gender=Masc|Number=Sing	4	conj	_	_
-9	(	_	PUNCT	(	_	11	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	(	_	11	punct	_	SpaceAfter=No
 10	um	_	DET	DT	Gender=Masc|Number=Sing	11	det	_	_
 11	vinho	_	NOUN	NN	Gender=Masc|Number=Sing	8	appos	_	_
 12	de	_	ADP	IN	_	13	case	_	_
 13	fruta	_	NOUN	NN	Gender=Fem|Number=Sing	11	nmod	_	_
 14	forte	_	ADJ	JJ	Gender=Masc|Number=Sing	11	amod	_	SpaceAfter=No
-15	)	_	PUNCT	)	_	11	punct	_	_
+15	-RRB-	_	PUNCT	)	_	11	punct	_	_
 16	e	_	CCONJ	CC	_	22	cc	_	SpaceAfter=No
 17	,	_	PUNCT	,	_	20	punct	_	_
 18	para	_	ADP	IN	_	20	case	_	_
@@ -9863,11 +9863,11 @@
 11	em	em	ADP	INDT	_	13	case	_	_
 12	a	o	DET	_	Gender=Fem|Number=Sing	13	det	_	_
 13	Romênia	_	PROPN	NNP	Gender=Fem|Number=Sing	10	obl	_	_
-14	(	_	PUNCT	(	_	15	punct	_	SpaceAfter=No
+14	-LRB-	_	PUNCT	(	_	15	punct	_	SpaceAfter=No
 15	distrito	_	NOUN	NN	Gender=Masc|Number=Sing	13	appos	_	_
 16	de	_	ADP	IN	_	17	case	_	_
 17	Tulcea	_	PROPN	NNP	Gender=Fem|Number=Sing	15	nmod	_	SpaceAfter=No
-18	)	_	PUNCT	)	_	15	punct	_	SpaceAfter=No
+18	-RRB-	_	PUNCT	)	_	15	punct	_	SpaceAfter=No
 19	,	_	PUNCT	,	_	37	punct	_	_
 20	enquanto	_	ADP	IN	_	37	mark	_	_
 21	a	_	DET	PDT	Gender=Fem|Number=Sing	23	det:predet	_	_
@@ -9890,11 +9890,11 @@
 38	em	em	ADP	INDT	_	40	case	_	_
 39	a	o	DET	_	Gender=Fem|Number=Sing	40	det	_	_
 40	Ucrânia	_	PROPN	NNP	Gender=Fem|Number=Sing	37	obl	_	_
-41	(	_	PUNCT	(	_	42	punct	_	SpaceAfter=No
+41	-LRB-	_	PUNCT	(	_	42	punct	_	SpaceAfter=No
 42	região	_	NOUN	NN	Gender=Fem|Number=Sing	40	appos	_	_
 43	de	_	ADP	IN	_	44	case	_	_
 44	Odessa	_	PROPN	NNP	Gender=Fem|Number=Sing	42	nmod	_	SpaceAfter=No
-45	)	_	PUNCT	)	_	42	punct	_	SpaceAfter=No
+45	-RRB-	_	PUNCT	)	_	42	punct	_	SpaceAfter=No
 46	.	_	PUNCT	.	_	10	punct	_	_
 
 1	O	_	DET	DT	Gender=Masc|Number=Sing	2	det	_	_
@@ -10757,13 +10757,13 @@
 1	1987	_	NUM	CD	Gender=Masc	6	nsubj:pass	_	_
 2	foi	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	6	aux:pass	_	_
 3	proclamado	_	AUX	VBN	Aspect=Perf|Gender=Masc|Number=Sing	6	cop	_	_
-4	"	_	PUNCT	``	_	6	punct	_	SpaceAfter=No
+4	``	_	PUNCT	``	_	6	punct	_	SpaceAfter=No
 5	O	_	DET	DT	Gender=Masc|Number=Sing	6	det	_	Proper=True
 6	Ano	_	NOUN	NN	Gender=Masc|Number=Sing	0	root	_	Proper=True
 7	de	de	ADP	INDT	_	9	case	_	_
 8	o	o	DET	_	Gender=Masc|Number=Sing	9	det	_	_
 9	Rio	_	NOUN	NN	Gender=Masc|Number=Sing	6	nmod	_	Proper=True|SpaceAfter=No|ToDo=nmod
-10	"	_	PUNCT	''	_	6	punct	_	_
+10	''	_	PUNCT	''	_	6	punct	_	_
 11	por	por	ADP	INDT	_	14	case	_	_
 12	o	o	DET	_	Gender=Masc|Number=Sing	14	det	_	_
 13	então	_	ADV	RB	_	14	advmod	_	_
@@ -11037,7 +11037,7 @@
 2	nome	_	NOUN	NN	Gender=Masc|Number=Sing	6	nsubj	_	_
 3	“	_	PUNCT	``	_	4	punct	_	SpaceAfter=No
 4	Caribe	_	PROPN	NNP	Gender=Masc|Number=Sing	2	appos	_	SpaceAfter=No
-5	"	_	PUNCT	''	_	4	punct	_	_
+5	``	_	PUNCT	''	_	4	punct	_	_
 6	deriva	_	NOUN	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	0	root	_	_
 7	de	de	ADP	INDT	_	9	case	_	_
 8	os	o	DET	_	Gender=Masc|Number=Plur	9	det	_	_
@@ -11095,12 +11095,12 @@
 24	de	de	ADP	INPDEM	_	23	obj	_	_
 25	este	este	DET	_	Gender=Masc|Number=Sing	24	det	_	_
 26	,	_	PUNCT	,	_	23	punct	_	_
-27	"	_	PUNCT	``	_	28	punct	_	SpaceAfter=No
+27	``	_	PUNCT	``	_	28	punct	_	SpaceAfter=No
 28	Mar	_	NOUN	NN	Gender=Masc|Number=Sing	36	nsubj	_	Proper=True
 29	de	de	ADP	INDT	_	31	case	_	_
 30	as	o	DET	_	Gender=Fem|Number=Plur	31	det	_	_
 31	Antilhas	_	NOUN	NN	Gender=Fem|Number=Plur	28	nmod	_	Proper=True|SpaceAfter=No
-32	"	_	PUNCT	''	_	28	punct	_	_
+32	''	_	PUNCT	''	_	28	punct	_	_
 33	se	_	PRON	SE	Person=3	36	compound:prt	_	_
 34	tornou	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	36	cop	_	_
 35	um	_	DET	DT	Gender=Masc|Number=Sing	36	det	_	_
@@ -11108,12 +11108,12 @@
 37	alternativo	_	ADJ	JJ	Gender=Masc|Number=Sing	36	amod	_	_
 38	comum	_	ADJ	JJ	Gender=Masc|Number=Sing	36	amod	_	_
 39	para	_	ADP	IN	_	41	case	_	_
-40	"	_	PUNCT	``	_	41	punct	_	SpaceAfter=No
+40	``	_	PUNCT	``	_	41	punct	_	SpaceAfter=No
 41	Mar	_	NOUN	NN	Gender=Masc|Number=Sing	36	nmod	_	Proper=True|ToDo=nmod
 42	de	de	ADP	INDT	_	44	case	_	_
 43	o	o	DET	_	Gender=Masc|Number=Sing	44	det	_	_
 44	Caribe	_	PROPN	NNP	Gender=Masc|Number=Sing	41	nmod	_	SpaceAfter=No
-45	"	_	PUNCT	''	_	41	punct	_	_
+45	''	_	PUNCT	''	_	41	punct	_	_
 46	em	_	ADP	IN	_	48	case	_	_
 47	várias	_	DET	DT	Gender=Fem|Number=Plur	48	det	_	_
 48	línguas	_	NOUN	NN	Gender=Fem|Number=Plur	36	nmod	_	ToDo=nmod
@@ -11155,13 +11155,13 @@
 16	Caribe	_	PROPN	NNP	Gender=Masc|Number=Sing	13	nmod	_	_
 17	identificaram	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Plur|Person=3|Tense=Past	0	root	_	_
 18	o	_	DET	DT	Gender=Masc|Number=Sing	20	det	_	_
-19	"	_	PUNCT	``	_	20	punct	_	SpaceAfter=No
+19	``	_	PUNCT	``	_	20	punct	_	SpaceAfter=No
 20	Mar	_	NOUN	NN	Gender=Masc|Number=Sing	17	obj	_	Proper=True
 21	de	de	ADP	INDT	_	23	case	_	_
 22	o	o	DET	_	Gender=Masc|Number=Sing	23	det	_	_
 23	Sul	_	NOUN	NN	Gender=Masc|Number=Sing	20	nmod	_	Proper=True|SpaceAfter=No
-24	"	_	PUNCT	''	_	20	punct	_	_
-25	(	_	PUNCT	(	_	27	punct	_	SpaceAfter=No
+24	''	_	PUNCT	''	_	20	punct	_	_
+25	-LRB-	_	PUNCT	(	_	27	punct	_	SpaceAfter=No
 26	o	_	DET	DT	Gender=Masc|Number=Sing	27	det	_	_
 27	Oceano	_	NOUN	NN	Gender=Masc|Number=Sing	20	appos	_	Proper=True
 28	Pacífico	_	ADJ	JJ	Gender=Masc|Number=Sing	27	amod	_	Proper=True|SpaceAfter=No
@@ -11174,18 +11174,18 @@
 35	de	de	ADP	INDT	_	37	case	_	_
 36	o	o	DET	_	Gender=Masc|Number=Sing	37	det	_	_
 37	Panamá	_	PROPN	NNP	Gender=Masc|Number=Sing	34	nmod	_	SpaceAfter=No
-38	)	_	PUNCT	)	_	27	punct	_	_
+38	-RRB-	_	PUNCT	)	_	27	punct	_	_
 39	por	_	ADP	IN	_	40	case	_	_
 40	oposição	_	NOUN	NN	Gender=Fem|Number=Sing	17	obl	_	_
 41	a	a	ADP	INDT	_	44	case	_	_
 42	o	o	DET	_	Gender=Masc|Number=Sing	44	det	_	_
-43	"	_	PUNCT	``	_	44	punct	_	SpaceAfter=No
+43	``	_	PUNCT	``	_	44	punct	_	SpaceAfter=No
 44	Mar	_	NOUN	NN	Gender=Masc|Number=Sing	40	nmod	_	Proper=True
 45	de	de	ADP	INDT	_	47	case	_	_
 46	o	o	DET	_	Gender=Masc|Number=Sing	47	det	_	_
 47	Norte	_	NOUN	NN	Gender=Masc|Number=Sing	44	nmod	_	Proper=True|SpaceAfter=No
-48	"	_	PUNCT	''	_	44	punct	_	_
-49	(	_	PUNCT	(	_	51	punct	_	SpaceAfter=No
+48	''	_	PUNCT	''	_	44	punct	_	_
+49	-LRB-	_	PUNCT	(	_	51	punct	_	SpaceAfter=No
 50	o	_	DET	DT	Gender=Masc|Number=Sing	51	det	_	_
 51	Mar	_	NOUN	NN	Gender=Masc|Number=Sing	44	appos	_	Proper=True
 52	de	de	ADP	INDT	_	54	case	_	_
@@ -11198,7 +11198,7 @@
 59	o	o	DET	_	Gender=Masc|Number=Sing	61	det	_	_
 60	mesmo	_	DET	DT	Gender=Masc|Number=Sing	61	det	_	_
 61	istmo	_	NOUN	NN	Gender=Masc|Number=Sing	57	nmod	_	SpaceAfter=No
-62	)	_	PUNCT	)	_	51	punct	_	SpaceAfter=No
+62	-RRB-	_	PUNCT	)	_	51	punct	_	SpaceAfter=No
 63	.	_	PUNCT	.	_	17	punct	_	_
 
 1	O	_	DET	DT	Gender=Masc|Number=Sing	2	det	_	_
@@ -12352,10 +12352,10 @@
 14	ter	_	AUX	VB	_	15	aux	_	_
 15	constituído	_	VERBP	VBN	Aspect=Perf	9	conj	_	_
 16	um	_	DET	DT	Gender=Masc|Number=Sing	18	det	_	_
-17	"	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
+17	``	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
 18	lugar	_	NOUN	NN	Gender=Masc|Number=Sing	15	obj	_	_
 19	alto	_	ADJ	JJ	Gender=Masc|Number=Sing	18	amod	_	SpaceAfter=No
-20	"	_	PUNCT	''	_	18	punct	_	_
+20	''	_	PUNCT	''	_	18	punct	_	_
 21	cananeu	_	ADJ	JJ	Gender=Masc|Number=Sing	18	amod	_	_
 22	de	de	ADP	INDT	_	24	case	_	_
 23	a	o	DET	_	Gender=Fem|Number=Sing	24	det	_	_
@@ -13097,13 +13097,13 @@
 21	Trix	_	PROPN	NNP	Gender=Fem|Number=Sing	19	obl	_	_
 22	em	_	ADP	IN	_	23	case	_	_
 23	Southsea	_	PROPN	NNP	Gender=Fem|Number=Sing	19	obl	_	_
-24	(	_	PUNCT	(	_	29	punct	_	SpaceAfter=No
+24	-LRB-	_	PUNCT	(	_	29	punct	_	SpaceAfter=No
 25	para	_	ADP	IN	_	26	case	_	_
 26	onde	_	ADV	WRB	_	29	xcomp	_	_
 27	Trix	_	PROPN	NNP	Gender=Fem|Number=Sing	29	nsubj	_	_
 28	tinha	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Past	29	aux	_	_
 29	regressado	_	VERBP	VBN	Aspect=Perf	23	acl:relcl	_	SpaceAfter=No
-30	)	_	PUNCT	)	_	29	punct	_	SpaceAfter=No
+30	-RRB-	_	PUNCT	)	_	29	punct	_	SpaceAfter=No
 31	.	_	PUNCT	.	_	9	punct	_	_
 
 1	Stephen	_	PROPN	NNP	Gender=Masc|Number=Sing	7	nsubj	_	_
@@ -13318,7 +13318,7 @@
 9	o	o	DET	_	Gender=Masc|Number=Sing	10	det	_	_
 10	sexo	_	NOUN	NN	Gender=Masc|Number=Sing	7	nmod	_	_
 11	masculino	_	ADJ	JJ	Gender=Masc|Number=Sing	10	amod	_	_
-12	(	_	PUNCT	(	_	14	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	(	_	14	punct	_	SpaceAfter=No
 13	que	_	PRON	WP	_	14	nsubj	_	_
 14	constituem	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres	7	acl:relcl	_	_
 15	a	_	DET	DT	Gender=Fem|Number=Sing	17	det	_	_
@@ -13330,7 +13330,7 @@
 21	em	_	ADP	IN	_	22	case	_	_
 22	guerras	_	NOUN	NN	Gender=Fem|Number=Plur	20	nmod	_	_
 23	civis	_	ADJ	JJ	Gender=Fem|Number=Plur	22	amod	_	SpaceAfter=No
-24	)	_	PUNCT	)	_	14	punct	_	_
+24	-RRB-	_	PUNCT	)	_	14	punct	_	_
 25	são	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres	27	cop	_	_
 26	menos	_	ADV	RBR	_	27	advmod	_	_
 27	propensos	_	ADJ	JJ	Gender=Masc|Number=Plur	1	parataxis	_	_
@@ -13574,9 +13574,9 @@
 14	o	o	DET	_	Gender=Masc|Number=Sing	15	det	_	_
 15	rio	_	NOUN	NN	Gender=Masc|Number=Sing	12	obl	_	Proper=True
 16	Nesto	_	PROPN	NNP	Gender=Masc|Number=Sing	15	appos	_	_
-17	(	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
+17	-LRB-	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
 18	Mesta	_	PROPN	NNP	Gender=Masc|Number=Sing	15	appos	_	SpaceAfter=No
-19	)	_	PUNCT	)	_	18	punct	_	SpaceAfter=No
+19	-RRB-	_	PUNCT	)	_	18	punct	_	SpaceAfter=No
 20	.	_	PUNCT	.	_	12	punct	_	_
 
 1	Filipe	_	PROPN	NNP	Gender=Masc|Number=Sing	2	nsubj	_	_
@@ -13868,7 +13868,7 @@
 3	Unidos	_	ADJ	JJ	Gender=Masc|Number=Plur	2	amod	_	Proper=True
 4	libertaram	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Plur|Person=3|Tense=Past	0	root	_	_
 5	Cuba	_	PROPN	NNP	Gender=Fem|Number=Sing	4	obj	_	_
-6	(	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
+6	-LRB-	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
 7	depois	_	ADV	RB	_	4	advmod	_	_
 8	de	_	ADP	IN	_	10	case	_	_
 9	uma	_	DET	DT	Gender=Fem|Number=Sing	10	det	_	_
@@ -13879,7 +13879,7 @@
 14	de	de	ADP	INDT	_	16	case	_	_
 15	os	o	DET	_	Gender=Masc|Number=Plur	16	det	_	_
 16	EUA	_	PROPN	NNP	Gender=Masc|Number=Plur	13	nmod	_	SpaceAfter=No
-17	)	_	PUNCT	)	_	7	punct	_	SpaceAfter=No
+17	-RRB-	_	PUNCT	)	_	7	punct	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	4	punct	_	_
 
 1	Conforme	_	ADP	IN	_	3	case	_	_
@@ -14023,11 +14023,11 @@
 12	Sicília	_	PROPN	NNP	Gender=Fem|Number=Sing	9	nmod	_	_
 13	e	_	CCONJ	CC	_	14	cc	_	_
 14	Itália	_	PROPN	NNP	Gender=Fem|Number=Sing	12	conj	_	_
-15	(	_	PUNCT	(	_	16	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	(	_	16	punct	_	SpaceAfter=No
 16	Pithekoussae	_	PROPN	NNP	Gender=Fem|Number=Sing	12	appos	_	SpaceAfter=No
 17	,	_	PUNCT	,	_	18	punct	_	_
 18	Cumae	_	PROPN	NNP	Gender=Fem|Number=Sing	16	conj	_	SpaceAfter=No
-19	)	_	PUNCT	)	_	16	punct	_	SpaceAfter=No
+19	-RRB-	_	PUNCT	)	_	16	punct	_	SpaceAfter=No
 20	,	_	PUNCT	,	_	4	punct	_	_
 21	a	_	DET	DT	Gender=Fem|Number=Sing	22	det	_	_
 22	influência	_	NOUN	NN	Gender=Fem|Number=Sing	29	nsubj	_	_
@@ -14391,12 +14391,12 @@
 22	sua	_	PRON	DTP$	Gender=Fem|Number=Sing|Number[psor]=Plur|Person=3|PronType=Prs	23	det	_	_
 23	maioria	_	NOUN	NN	Gender=Fem|Number=Sing	24	nmod	_	ToDo=nmod
 24	chineses	_	ADJ	JJ	Gender=Masc|Number=Plur	18	amod	_	_
-25	(	_	PUNCT	(	_	26	punct	_	SpaceAfter=No
+25	-LRB-	_	PUNCT	(	_	26	punct	_	SpaceAfter=No
 26	calculados	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Plur	24	acl	_	_
 27	em	_	ADP	IN	_	28	case	_	_
 28	7,5	_	NUM	CD	_	26	obl	_	_
 29	milhões	_	NUM	CD	Number=Plur	28	nummod	_	SpaceAfter=No
-30	)	_	PUNCT	)	_	26	punct	_	SpaceAfter=No
+30	-RRB-	_	PUNCT	)	_	26	punct	_	SpaceAfter=No
 31	,	_	PUNCT	,	_	10	punct	_	_
 32	foram	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Plur|Person=3|Tense=Past	33	aux:pass	_	_
 33	mortos	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Plur	0	root	_	_
@@ -14954,9 +14954,9 @@
 37	Ground	_	PROPN	NNP	Gender=Masc|Number=Sing	0	root	_	_
 38	Controlled	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	37	flat	_	_
 39	Approach	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	37	flat	_	_
-40	(	_	PUNCT	(	_	41	punct	_	SpaceAfter=No
+40	-LRB-	_	PUNCT	(	_	41	punct	_	SpaceAfter=No
 41	GCA	_	PROPN	NNP	Gender=Masc|Number=Sing	37	appos	_	SpaceAfter=No
-42	)	_	PUNCT	)	_	41	punct	_	SpaceAfter=No
+42	-RRB-	_	PUNCT	)	_	41	punct	_	SpaceAfter=No
 43	.	_	PUNCT	.	_	37	punct	_	_
 
 1	Utilizando	_	VERBG	VBG	Aspect=Imp	17	acl	_	_
@@ -15548,10 +15548,10 @@
 2	obteve	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
 3	um	_	DET	DT	Gender=Masc|Number=Sing	4	det	_	_
 4	Mestrado	_	NOUN	NN	Gender=Masc|Number=Sing	2	obj	_	_
-5	(	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
+5	-LRB-	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
 6	em	_	ADP	IN	_	7	case	_	_
 7	Artes	_	NOUN	NN	Gender=Fem|Number=Plur	4	nmod	_	Proper=True|SpaceAfter=No
-8	)	_	PUNCT	)	_	7	punct	_	_
+8	-RRB-	_	PUNCT	)	_	7	punct	_	_
 9	em	_	ADP	IN	_	10	case	_	_
 10	21	_	NUM	CD	Gender=Masc	2	obl	_	_
 11	abril	_	NOUN	NN	Gender=Masc|Number=Sing	10	obl:tmod	_	_
@@ -15702,7 +15702,7 @@
 10	e	_	CCONJ	CC	_	11	cc	_	_
 11	explicou	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	3	conj	_	SpaceAfter=No
 12	:	_	PUNCT	:	_	18	punct	_	_
-13	"	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
+13	``	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
 14	Cada	_	DET	DT	Gender=Masc|Number=Sing	15	det	_	_
 15	livro	_	NOUN	NN	Gender=Masc|Number=Sing	18	nsubj	_	_
 16	é	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	18	cop	_	_
@@ -15718,7 +15718,7 @@
 26	uma	_	DET	DT	Gender=Fem|Number=Sing	27	det	_	_
 27	mente	_	NOUN	NN	Gender=Fem|Number=Sing	25	obj	_	_
 28	aberta	_	ADJ	JJ	Gender=Fem|Number=Sing	27	amod	_	SpaceAfter=No
-29	"	_	PUNCT	''	_	18	punct	_	SpaceAfter=No
+29	''	_	PUNCT	''	_	18	punct	_	SpaceAfter=No
 30	.	_	PUNCT	.	_	3	punct	_	_
 
 1	Para	_	ADP	IN	_	2	case	_	_
@@ -15855,10 +15855,10 @@
 13	top	_	NOUN	NN	Gender=Masc|Number=Sing	10	obl	_	_
 14	50	_	NUM	CD	_	13	appos	_	SpaceAfter=No
 15	;	_	PUNCT	,	_	25	punct	_	_
-16	"	_	PUNCT	``	_	17	punct	_	SpaceAfter=No
+16	``	_	PUNCT	``	_	17	punct	_	SpaceAfter=No
 17	Shaky	_	PROPN	NNP	Gender=Masc|Number=Sing	25	nsubj	_	_
 18	Ground	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	17	flat	_	SpaceAfter=No
-19	"	_	PUNCT	''	_	17	punct	_	SpaceAfter=No
+19	''	_	PUNCT	''	_	17	punct	_	SpaceAfter=No
 20	,	_	PUNCT	,	_	22	punct	_	_
 21	o	_	DET	DT	Gender=Masc|Number=Sing	22	det	_	_
 22	single	_	NOUN	NN	Gender=Masc|Number=Sing	17	appos	_	_
@@ -16170,10 +16170,10 @@
 14	para	_	ADP	IN	_	16	case	_	_
 15	a	_	DET	DT	Gender=Fem|Number=Sing	16	det	_	_
 16	música	_	NOUN	NN	Gender=Fem|Number=Sing	13	nmod	_	_
-17	"	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
+17	``	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
 18	Fjögur	_	PROPN	NNP	Gender=Masc|Number=Sing	16	appos	_	_
 19	Píanó	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	18	flat	_	SpaceAfter=No
-20	"	_	PUNCT	''	_	18	punct	_	SpaceAfter=No
+20	''	_	PUNCT	''	_	18	punct	_	SpaceAfter=No
 21	,	_	PUNCT	,	_	22	punct	_	_
 22	protagonizado	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Sing	13	acl	_	_
 23	por	_	ADP	IN	_	24	case	_	_
@@ -16288,14 +16288,14 @@
 18	mais	_	ADV	RBR	_	19	advmod	_	_
 19	tarde	_	ADV	RB	_	17	advmod	_	_
 20	como	_	ADP	IN	_	24	case	_	_
-21	"	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
+21	``	_	PUNCT	``	_	24	punct	_	SpaceAfter=No
 22	um	_	DET	DT	Gender=Masc|Number=Sing	24	det	_	_
 23	grande	_	ADJ	JJ	Gender=Masc|Number=Sing	24	amod	_	_
 24	retorno	_	NOUN	NN	Gender=Masc|Number=Sing	17	obl	_	_
 25	a	a	ADP	INDT	_	27	case	_	_
 26	a	o	DET	_	Gender=Fem|Number=Sing	27	det	_	_
 27	forma	_	NOUN	NN	Gender=Fem|Number=Sing	24	nmod	_	SpaceAfter=No
-28	"	_	PUNCT	''	_	24	punct	_	SpaceAfter=No
+28	''	_	PUNCT	''	_	24	punct	_	SpaceAfter=No
 29	.	_	PUNCT	.	_	2	punct	_	_
 
 1	Em	_	ADP	IN	_	2	case	_	_
@@ -16305,9 +16305,9 @@
 5	and	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	2	flat	_	_
 6	a	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	2	flat	_	_
 7	Prayer	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	2	flat	_	_
-8	(	_	PUNCT	(	_	9	punct	_	SpaceAfter=No
+8	-LRB-	_	PUNCT	(	_	9	punct	_	SpaceAfter=No
 9	1992	_	NUM	CD	Gender=Masc	2	obl:tmod	_	SpaceAfter=No
-10	)	_	PUNCT	)	_	9	punct	_	_
+10	-RRB-	_	PUNCT	)	_	9	punct	_	_
 11	se	_	PRON	SE	Person=3	12	compound:prt	_	_
 12	reuniu	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
 13	com	_	ADP	IN	_	16	case	_	_
@@ -16370,7 +16370,7 @@
 10	de	de	ADP	INDT	_	12	case	_	_
 11	os	o	DET	_	Gender=Masc|Number=Plur	12	det	_	_
 12	Humblebums	_	PROPN	NNP	Gender=Masc|Number=Plur	9	nmod	_	_
-13	"	_	PUNCT	``	_	14	punct	_	SpaceAfter=No
+13	``	_	PUNCT	``	_	14	punct	_	SpaceAfter=No
 14	Her	_	PROPN	NNP	Gender=Masc|Number=Sing	9	appos	_	_
 15	Father	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	14	flat	_	_
 16	Didn	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	14	flat	_	SpaceAfter=No
@@ -16379,16 +16379,16 @@
 19	Like	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	14	flat	_	_
 20	Me	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	14	flat	_	_
 21	Anyway	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	14	flat	_	SpaceAfter=No
-22	"	_	PUNCT	''	_	14	punct	_	_
+22	''	_	PUNCT	''	_	14	punct	_	_
 23	em	em	ADP	INDT	_	25	case	_	_
 24	o	o	DET	_	Gender=Masc|Number=Sing	25	det	_	_
 25	álbum	_	NOUN	NN	Gender=Masc|Number=Sing	2	obl	_	_
 26	Over	_	PROPN	NNP	Gender=Masc|Number=Sing	25	appos	_	_
 27	My	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	26	flat	_	_
 28	Head	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	26	flat	_	_
-29	(	_	PUNCT	(	_	30	punct	_	SpaceAfter=No
+29	-LRB-	_	PUNCT	(	_	30	punct	_	SpaceAfter=No
 30	1994	_	NUM	CD	Gender=Masc	25	obl:tmod	_	SpaceAfter=No
-31	)	_	PUNCT	)	_	30	punct	_	SpaceAfter=No
+31	-RRB-	_	PUNCT	)	_	30	punct	_	SpaceAfter=No
 32	.	_	PUNCT	.	_	2	punct	_	_
 
 1	Estes	_	PRON	PDEM	Gender=Masc|Number=Plur	6	nsubj	_	_
@@ -16498,9 +16498,9 @@
 14	,	_	PUNCT	,	_	13	punct	_	_
 15	um	_	DET	DT	Gender=Masc|Number=Sing	16	det	_	_
 16	povo	_	NOUN	NN	Gender=Masc|Number=Sing	5	ccomp	_	_
-17	"	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
+17	``	_	PUNCT	``	_	18	punct	_	SpaceAfter=No
 18	pacífico	_	ADJ	JJ	Gender=Masc|Number=Sing	16	amod	_	SpaceAfter=No
-19	"	_	PUNCT	''	_	18	punct	_	SpaceAfter=No
+19	''	_	PUNCT	''	_	18	punct	_	SpaceAfter=No
 20	,	_	PUNCT	,	_	25	punct	_	_
 21	uma	_	DET	DT	Gender=Fem|Number=Sing	25	mark	_	_
 22	vez	_	NOUN	NN	Gender=Fem|Number=Sing	21	fixed	_	_
@@ -16712,13 +16712,13 @@
 7	britânica	_	ADJ	JJ	Gender=Fem|Number=Sing	6	amod	_	_
 8	Amor	_	NOUN	NN	Gender=Masc|Number=Sing	4	appos	_	Proper=True
 9	Impossível	_	ADJ	JJ	Gender=Masc|Number=Sing	8	amod	_	Proper=True
-10	(	_	PUNCT	(	_	11	punct	_	SpaceAfter=No
+10	-LRB-	_	PUNCT	(	_	11	punct	_	SpaceAfter=No
 11	Salmon	_	PROPN	NNP	Gender=Masc|Number=Sing	8	appos	_	_
 12	Fishing	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	11	flat	_	_
 13	in	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	11	flat	_	_
 14	the	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	11	flat	_	_
 15	Yemen	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	11	flat	_	SpaceAfter=No
-16	)	_	PUNCT	)	_	11	punct	_	_
+16	-RRB-	_	PUNCT	)	_	11	punct	_	_
 17	de	_	ADP	IN	_	18	case	_	_
 18	2011	_	NUM	CD	Gender=Masc	4	nmod	_	SpaceAfter=No
 19	,	_	PUNCT	,	_	20	punct	_	_
@@ -16748,13 +16748,13 @@
 9	Anos	_	NOUN	NN	Gender=Masc|Number=Plur	4	appos	_	Proper=True
 10	de	_	ADP	IN	_	11	case	_	Proper=True
 11	Noivado	_	NOUN	NN	Gender=Masc|Number=Sing	9	nmod	_	Proper=True
-12	(	_	PUNCT	(	_	13	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	(	_	13	punct	_	SpaceAfter=No
 13	The	_	PROPN	NNP	Gender=Masc|Number=Sing	9	appos	_	_
 14	Five	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	13	flat	_	SpaceAfter=No
 15	-	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	13	flat	_	SpaceAfter=No
 16	Year	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	13	flat	_	_
 17	Engagement	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	13	flat	_	SpaceAfter=No
-18	)	_	PUNCT	)	_	13	punct	_	SpaceAfter=No
+18	-RRB-	_	PUNCT	)	_	13	punct	_	SpaceAfter=No
 19	,	_	PUNCT	,	_	20	punct	_	_
 20	realizado	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Sing	4	acl	_	_
 21	por	_	ADP	IN	_	22	case	_	_
@@ -17256,9 +17256,9 @@
 14	,	_	PUNCT	,	_	16	punct	_	_
 15	em	_	ADP	IN	_	16	case	_	_
 16	Sabrina	_	PROPN	NNP	Gender=Fem|Number=Sing	2	obl	_	_
-17	(	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
+17	-LRB-	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
 18	1954	_	NUM	CD	Gender=Masc	16	obl:tmod	_	SpaceAfter=No
-19	)	_	PUNCT	)	_	18	punct	_	SpaceAfter=No
+19	-RRB-	_	PUNCT	)	_	18	punct	_	SpaceAfter=No
 20	,	_	PUNCT	,	_	21	punct	_	_
 21	interpretada	_	VERBP	VBN	Aspect=Perf|Gender=Fem|Number=Sing	16	acl	_	_
 22	por	_	ADP	IN	_	23	case	_	_
@@ -17473,9 +17473,9 @@
 4	escreveram	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Plur|Person=3|Tense=Past	10	cop	_	_
 5	a	_	DET	DT	Gender=Fem|Number=Sing	6	det	_	_
 6	canção	_	NOUN	NN	Gender=Fem|Number=Sing	10	obj	_	_
-7	"	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	``	_	8	punct	_	SpaceAfter=No
 8	Stephen	_	PROPN	NNP	Gender=Masc|Number=Sing	6	appos	_	SpaceAfter=No
-9	"	_	PUNCT	''	_	8	punct	_	_
+9	''	_	PUNCT	''	_	8	punct	_	_
 10	juntos	_	ADJ	JJ	Gender=Fem|Number=Plur	0	root	_	_
 11	quando	_	ADP	IN	_	13	mark	_	_
 12	Kesha	_	PROPN	NNP	Gender=Fem|Number=Sing	13	nsubj	_	_
@@ -17626,12 +17626,12 @@
 25	Son	_	PROPN	NNP	Gender=Masc|Number=Sing	18	conj	_	_
 26	of	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	25	flat	_	_
 27	Rambow	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	25	flat	_	_
-28	(	_	PUNCT	(	_	30	punct	_	SpaceAfter=No
+28	-LRB-	_	PUNCT	(	_	30	punct	_	SpaceAfter=No
 29	O	_	DET	DT	Gender=Masc|Number=Sing	30	det	_	Proper=True
 30	Filho	_	NOUN	NN	Gender=Masc|Number=Sing	25	appos	_	Proper=True
 31	de	_	ADP	IN	_	32	case	_	Proper=True
 32	Rambow	_	PROPN	NNP	Gender=Masc|Number=Sing	30	nmod	_	SpaceAfter=No
-33	)	_	PUNCT	)	_	30	punct	_	SpaceAfter=No
+33	-RRB-	_	PUNCT	)	_	30	punct	_	SpaceAfter=No
 34	.	_	PUNCT	.	_	3	punct	_	_
 
 1	As	_	DET	DT	Gender=Fem|Number=Plur	3	det	_	_
@@ -17871,7 +17871,7 @@
 18	Alemã	_	ADJ	JJ	Gender=Fem|Number=Sing	17	amod	_	Proper=True
 19	de	_	ADP	IN	_	20	case	_	Proper=True
 20	Futebol	_	NOUN	NN	Gender=Masc|Number=Sing	17	nmod	_	Proper=True
-21	(	_	PUNCT	(	_	22	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	(	_	22	punct	_	SpaceAfter=No
 22	alemão	_	NOUN	NN	Gender=Masc|Number=Sing	17	appos	_	SpaceAfter=No
 23	:	_	PUNCT	:	_	24	punct	_	_
 24	Deutscher	_	PROPN	NNP	Gender=Masc|Number=Sing	22	appos	_	_
@@ -17880,7 +17880,7 @@
 27	Bund	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	24	flat	_	SpaceAfter=No
 28	,	_	PUNCT	,	_	29	punct	_	_
 29	DFB	_	PROPN	NNP	Gender=Masc|Number=Sing	24	appos	_	SpaceAfter=No
-30	)	_	PUNCT	)	_	22	punct	_	SpaceAfter=No
+30	-RRB-	_	PUNCT	)	_	22	punct	_	SpaceAfter=No
 31	.	_	PUNCT	.	_	9	punct	_	_
 
 1	Com	_	ADP	IN	_	3	case	_	_
@@ -18186,10 +18186,10 @@
 
 1	O	_	DET	DT	Gender=Masc|Number=Sing	2	det	_	_
 2	jornal	_	NOUN	NN	Gender=Masc|Number=Sing	8	nsubj	_	_
-3	"	_	PUNCT	``	_	4	punct	_	SpaceAfter=No
+3	``	_	PUNCT	``	_	4	punct	_	SpaceAfter=No
 4	Die	_	PROPN	NNP	Gender=Masc|Number=Sing	2	appos	_	_
 5	ZEIT	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	4	flat	_	SpaceAfter=No
-6	"	_	PUNCT	''	_	4	punct	_	_
+6	''	_	PUNCT	''	_	4	punct	_	_
 7	primeiramente	_	ADV	RB	_	8	advmod	_	_
 8	investigou	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
 9	os	_	DET	DT	Gender=Masc|Number=Plur	10	det	_	_
@@ -18816,12 +18816,12 @@
 9	garantiu	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
 10	que	_	ADP	IN	_	13	mark	_	_
 11	ela	_	PRON	PRP	Case=Nom|Gender=Fem|Number=Sing|Person=3	13	nsubj	_	_
-12	"	_	PUNCT	``	_	13	punct	_	SpaceAfter=No
+12	``	_	PUNCT	``	_	13	punct	_	SpaceAfter=No
 13	sofrerá	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Fut	9	ccomp	_	_
 14	anos	_	NOUN	NN	Gender=Masc|Number=Plur	13	obj	_	_
 15	de	_	ADP	IN	_	16	case	_	_
 16	investigações	_	NOUN	NN	Gender=Fem|Number=Plur	14	nmod	_	SpaceAfter=No
-17	"	_	PUNCT	''	_	13	punct	_	SpaceAfter=No
+17	''	_	PUNCT	''	_	13	punct	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	9	punct	_	_
 
 1	Se	_	ADP	IN	_	4	mark	_	_
@@ -18938,10 +18938,10 @@
 14	de	de	ADP	INDT	_	16	case	_	_
 15	o	o	DET	_	Gender=Masc|Number=Sing	16	det	_	_
 16	parlamento	_	NOUN	NN	Gender=Masc|Number=Sing	13	nmod	_	_
-17	(	_	PUNCT	(	_	19	punct	_	SpaceAfter=No
+17	-LRB-	_	PUNCT	(	_	19	punct	_	SpaceAfter=No
 18	de	_	ADP	IN	_	19	case	_	_
 19	550	_	NUM	CD	Gender=Masc	13	nmod	_	SpaceAfter=No
-20	)	_	PUNCT	)	_	19	punct	_	SpaceAfter=No
+20	-RRB-	_	PUNCT	)	_	19	punct	_	SpaceAfter=No
 21	,	_	PUNCT	,	_	27	punct	_	_
 22	já	_	ADV	RB	_	27	mark	_	_
 23	que	_	ADP	IN	_	22	fixed	_	_
@@ -18969,7 +18969,7 @@
 12	Saint	_	PROPN	NNP	Gender=Masc|Number=Sing	10	nmod	_	SpaceAfter=No
 13	-	_	PUNCT	-	_	14	punct	_	Proper=True|SpaceAfter=No
 14	Gaudens	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	12	flat	_	_
-15	(	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	(	_	18	punct	_	SpaceAfter=No
 16	em	em	ADP	INDT	_	18	case	_	_
 17	a	o	DET	_	Gender=Fem|Number=Sing	18	det	_	_
 18	região	_	NOUN	NN	Gender=Fem|Number=Sing	12	nmod	_	_
@@ -18977,7 +18977,7 @@
 20	Haute	_	PROPN	NNP	Gender=Fem|Number=Sing	18	nmod	_	SpaceAfter=No
 21	-	_	PUNCT	-	_	22	punct	_	Proper=True|SpaceAfter=No
 22	Garonne	_	PROPN	NNP	Foreign=Yes|Gender=Fem|Number=Sing	20	flat	_	SpaceAfter=No
-23	)	_	PUNCT	)	_	18	punct	_	_
+23	-RRB-	_	PUNCT	)	_	18	punct	_	_
 24	decidiu	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
 25	suspender	_	VERBI	VB	_	24	xcomp	_	_
 26	o	_	DET	DT	Gender=Masc|Number=Sing	27	det	_	_
@@ -19030,24 +19030,24 @@
 13	de	_	ADP	IN	_	17	case	_	_
 14	ser	_	AUX	VB	_	17	cop	_	_
 15	um	_	DET	DT	Gender=Masc|Number=Sing	17	det	_	_
-16	"	_	PUNCT	``	_	17	punct	_	SpaceAfter=No
+16	``	_	PUNCT	``	_	17	punct	_	SpaceAfter=No
 17	fascista	_	NOUN	NN	Gender=Masc|Number=Sing	10	xcomp	_	SpaceAfter=No
-18	"	_	PUNCT	''	_	17	punct	_	SpaceAfter=No
+18	''	_	PUNCT	''	_	17	punct	_	SpaceAfter=No
 19	,	_	PUNCT	,	_	21	punct	_	_
-20	"	_	PUNCT	``	_	21	punct	_	SpaceAfter=No
+20	``	_	PUNCT	``	_	21	punct	_	SpaceAfter=No
 21	Ministro	_	NOUN	NN	Gender=Masc|Number=Sing	17	conj	_	_
-22	(	_	PUNCT	(	_	23	punct	_	SpaceAfter=No
+22	-LRB-	_	PUNCT	(	_	23	punct	_	SpaceAfter=No
 23	idiota	_	ADJ	JJ	Gender=Masc|Number=Sing	21	amod	_	SpaceAfter=No
-24	)	_	PUNCT	)	_	23	punct	_	_
+24	-RRB-	_	PUNCT	)	_	23	punct	_	_
 25	de	de	ADP	INDT	_	27	case	_	_
 26	o	o	DET	_	Gender=Masc|Number=Sing	27	det	_	_
 27	Interior	_	NOUN	NN	Gender=Masc|Number=Sing	21	nmod	_	SpaceAfter=No
-28	"	_	PUNCT	''	_	21	punct	_	_
+28	''	_	PUNCT	''	_	21	punct	_	_
 29	e	_	CCONJ	CC	_	32	cc	_	_
 30	um	_	DET	DT	Gender=Masc|Number=Sing	32	det	_	_
-31	"	_	PUNCT	``	_	32	punct	_	SpaceAfter=No
+31	``	_	PUNCT	``	_	32	punct	_	SpaceAfter=No
 32	bandido	_	NOUN	NN	Gender=Masc|Number=Sing	17	conj	_	SpaceAfter=No
-33	"	_	PUNCT	''	_	32	punct	_	SpaceAfter=No
+33	''	_	PUNCT	''	_	32	punct	_	SpaceAfter=No
 34	.	_	PUNCT	.	_	10	punct	_	_
 
 1	Quais	_	PRON	WP	Number=Plur	0	root	_	_
@@ -19109,7 +19109,7 @@
 7	porque	_	ADP	IN	_	9	mark	_	_
 8	foi	_	AUX	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	9	aux:pass	_	_
 9	desenvolvido	_	VERBP	VBN	Aspect=Perf|Gender=Masc|Number=Sing	4	advcl	_	_
-10	"	_	PUNCT	``	_	13	punct	_	SpaceAfter=No
+10	``	_	PUNCT	``	_	13	punct	_	SpaceAfter=No
 11	em	em	ADP	INDT	_	13	case	_	_
 12	o	o	DET	_	Gender=Masc|Number=Sing	13	det	_	_
 13	contexto	_	NOUN	NN	Gender=Masc|Number=Sing	9	obl	_	_
@@ -19118,7 +19118,7 @@
 16	estado	_	NOUN	NN	Gender=Masc|Number=Sing	13	nmod	_	_
 17	de	_	ADP	IN	_	18	case	_	_
 18	emergência	_	NOUN	NN	Gender=Fem|Number=Sing	16	nmod	_	SpaceAfter=No
-19	"	_	PUNCT	''	_	13	punct	_	SpaceAfter=No
+19	''	_	PUNCT	''	_	13	punct	_	SpaceAfter=No
 20	.	_	PUNCT	.	_	4	punct	_	_
 
 1	Esta	_	DET	DT	Gender=Fem|Number=Sing	2	det	_	_
@@ -19228,7 +19228,7 @@
 2	também	_	ADV	RB	_	3	advmod	_	_
 3	comentou	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	_
 4	que	_	ADP	IN	_	12	mark	_	_
-5	"	_	PUNCT	``	_	12	punct	_	SpaceAfter=No
+5	``	_	PUNCT	``	_	12	punct	_	SpaceAfter=No
 6	a	_	DET	DT	Gender=Fem|Number=Sing	7	det	_	_
 7	existência	_	NOUN	NN	Gender=Fem|Number=Sing	12	nsubj	_	_
 8	de	_	ADP	IN	_	10	case	_	_
@@ -19245,7 +19245,7 @@
 19	,	_	PUNCT	,	_	18	punct	_	_
 20	inaceitáveis	_	ADJ	JJ	Gender=Fem|Number=Plur	14	acl:relcl	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
-22	"	_	PUNCT	''	_	12	punct	_	_
+22	''	_	PUNCT	''	_	12	punct	_	_
 
 1	O	_	DET	DT	Gender=Masc|Number=Sing	2	det	_	_
 2	Conselho	_	NOUN	NN	Gender=Masc|Number=Sing	21	nsubj	_	Proper=True
@@ -19424,9 +19424,9 @@
 3	de	_	ADP	IN	_	4	case	_	_
 4	sucesso	_	NOUN	NN	Gender=Masc|Number=Sing	2	nmod	_	_
 5	é	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	7	cop	_	_
-6	"	_	PUNCT	``	_	7	punct	_	SpaceAfter=No
+6	``	_	PUNCT	``	_	7	punct	_	SpaceAfter=No
 7	Geronimo	_	PROPN	NNP	Gender=Masc|Number=Sing	0	root	_	SpaceAfter=No
-8	"	_	PUNCT	''	_	7	punct	_	_
+8	''	_	PUNCT	''	_	7	punct	_	_
 9	por	_	ADP	IN	_	10	case	_	_
 10	Sheppard	_	PROPN	NNP	Gender=Masc|Number=Sing	7	nmod	_	SpaceAfter=No|ToDo=nmod
 11	.	_	PUNCT	.	_	7	punct	_	_
@@ -19609,7 +19609,7 @@
 10	Parlamento	_	NOUN	NN	Gender=Masc|Number=Sing	7	nmod	_	Proper=True
 11	devido	_	ADV	VBN	Aspect=Perf|Gender=Masc|Number=Sing	14	case	_	_
 12	a	_	ADP	IN	_	11	fixed	_	_
-13	"	_	PUNCT	``	_	14	punct	_	SpaceAfter=No
+13	``	_	PUNCT	``	_	14	punct	_	SpaceAfter=No
 14	atitude	_	NOUN	NN	Gender=Fem|Number=Sing	3	obl	_	_
 15	de	_	ADP	IN	_	17	case	_	_
 16	total	_	ADJ	JJ	Gender=Masc|Number=Sing	17	amod	_	_
@@ -19620,7 +19620,7 @@
 21	em	em	ADP	PRP	_	23	iobj	_	_
 22	os	o	DET	_	Case=Dat|Number=Plur|Person=1	21	det	_	_
 23	demonstraram	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Plur|Person=3|Tense=Past	14	acl:relcl	_	SpaceAfter=No
-24	"	_	PUNCT	''	_	14	punct	_	SpaceAfter=No
+24	''	_	PUNCT	''	_	14	punct	_	SpaceAfter=No
 25	.	_	PUNCT	.	_	3	punct	_	_
 
 1	Como	_	ADP	IN	_	2	mark	_	_
@@ -19737,10 +19737,10 @@
 12	motocicletas	_	NOUN	NN	Gender=Fem|Number=Plur	10	nmod	_	_
 13	que	_	PRON	WP	_	16	nsubj	_	_
 14	pode	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	16	aux	_	_
-15	"	_	PUNCT	``	_	16	punct	_	SpaceAfter=No
+15	``	_	PUNCT	``	_	16	punct	_	SpaceAfter=No
 16	ler	_	VERBI	VB	_	10	acl:relcl	_	_
 17	pensamentos	_	NOUN	NN	Gender=Masc|Number=Plur	16	obj	_	SpaceAfter=No
-18	"	_	PUNCT	''	_	16	punct	_	SpaceAfter=No
+18	''	_	PUNCT	''	_	16	punct	_	SpaceAfter=No
 19	,	_	PUNCT	,	_	20	punct	_	_
 20	ajudando	_	VERBG	VBG	Aspect=Imp	16	acl	_	_
 21	a	_	ADP	IN	_	22	case	_	_
@@ -19988,10 +19988,10 @@
 9	lidar	_	VERBI	VB	_	0	root	_	_
 10	com	_	ADP	IN	_	13	case	_	_
 11	outra	_	DET	DT	Gender=Fem|Number=Sing	13	det	_	_
-12	"	_	PUNCT	``	_	13	punct	_	SpaceAfter=No
+12	``	_	PUNCT	``	_	13	punct	_	SpaceAfter=No
 13	batata	_	NOUN	NN	Gender=Fem|Number=Sing	9	obl	_	_
 14	quente	_	ADJ	JJ	Gender=Fem|Number=Sing	13	amod	_	SpaceAfter=No
-15	"	_	PUNCT	''	_	13	punct	_	SpaceAfter=No
+15	''	_	PUNCT	''	_	13	punct	_	SpaceAfter=No
 16	.	_	PUNCT	.	_	9	punct	_	_
 
 1	O	_	DET	DT	Gender=Masc|Number=Sing	2	det	_	_
@@ -20020,11 +20020,11 @@
 4	afirmaram	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Plur|Person=3|Tense=Past	0	root	_	_
 5	que	_	ADP	IN	_	10	mark	_	_
 6	é	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	10	cop	_	_
-7	"	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
+7	``	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
 8	100	_	NUM	CD	_	9	nummod	_	SpaceAfter=No
 9	%	_	SYM	SYM	_	10	advmod	_	_
 10	Cospedal	_	PROPN	NNP	Gender=Fem|Number=Sing	4	ccomp	_	SpaceAfter=No
-11	"	_	PUNCT	''	_	10	punct	_	SpaceAfter=No
+11	''	_	PUNCT	''	_	10	punct	_	SpaceAfter=No
 12	.	_	PUNCT	.	_	4	punct	_	_
 
 1	Apesar	_	ADV	RB	_	10	advmod	_	_
@@ -20108,7 +20108,7 @@
 4	vez	_	NOUN	NN	Gender=Fem|Number=Sing	5	advmod	_	_
 5	disse	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Tense=Past	0	root	_	SpaceAfter=No
 6	:	_	PUNCT	:	_	10	punct	_	_
-7	"	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
+7	``	_	PUNCT	``	_	10	punct	_	SpaceAfter=No
 8	O	_	DET	DT	Gender=Masc|Number=Sing	9	det	_	_
 9	palhaço	_	NOUN	NN	Gender=Masc|Number=Sing	10	nsubj	_	_
 10	está	_	AUX	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	5	parataxis	_	_
@@ -20124,7 +20124,7 @@
 20	o	_	DET	DT	Gender=Masc|Number=Sing	21	det	_	_
 21	homem	_	NOUN	NN	Gender=Masc|Number=Sing	18	obl	_	SpaceAfter=No
 22	.	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
-23	"	_	PUNCT	''	_	10	punct	_	_
+23	''	_	PUNCT	''	_	10	punct	_	_
 
 1	Ele	_	PRON	PRP	Case=Nom|Gender=Masc|Number=Sing|Person=3	2	nsubj	_	_
 2	fica	_	VERBF	VBC	Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Tense=Pres	0	root	_	_
@@ -21753,13 +21753,13 @@
 3	ano	_	NOUN	NN	Gender=Masc|Number=Sing	24	obl	_	_
 4	Pluviose	_	PROPN	NNP	Gender=Masc|Number=Sing	3	appos	_	_
 5	III	_	ADJ	JJ	Gender=Masc|Number=Sing	4	amod	_	Proper=True
-6	(	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
+6	-LRB-	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
 7	Janeiro	_	NOUN	NN	Gender=Masc|Number=Sing	3	appos	_	SpaceAfter=No
 8	-	_	PUNCT	-	_	9	punct	_	SpaceAfter=No
 9	Fevereiro	_	NOUN	NN	Gender=Masc|Number=Sing	7	conj	_	SpaceAfter=No
 10	,	_	PUNCT	,	_	11	punct	_	_
 11	1794	_	NUM	CD	Gender=Masc	7	obl:tmod	_	SpaceAfter=No
-12	)	_	PUNCT	)	_	7	punct	_	SpaceAfter=No
+12	-RRB-	_	PUNCT	)	_	7	punct	_	SpaceAfter=No
 13	,	_	PUNCT	,	_	3	punct	_	_
 14	aliviando	_	VERBG	VBG	Aspect=Imp	24	acl	_	_
 15	a	_	DET	DT	Gender=Fem|Number=Sing	16	det	_	_
@@ -22290,9 +22290,9 @@
 3	punhado	_	NOUN	NN	Gender=Masc|Number=Sing	9	nsubj	_	_
 4	de	de	ADP	_	_	5	case	_	_
 5	eles	eles	PRON	INP	Gender=Masc|Number=Plur|Person=3	3	obj	_	_
-6	(	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
+6	-LRB-	_	PUNCT	(	_	7	punct	_	SpaceAfter=No
 7	condados	_	NOUN	NN	Gender=Masc|Number=Plur	5	appos	_	SpaceAfter=No
-8	)	_	PUNCT	)	_	7	punct	_	_
+8	-RRB-	_	PUNCT	)	_	7	punct	_	_
 9	existiram	_	VERBF	VBC	Aspect=Perf|Mood=Ind|Number=Plur|Person=3|Tense=Past	0	root	_	_
 10	sob	_	ADP	IN	_	11	case	_	_
 11	Henrique	_	PROPN	NNP	Gender=Masc|Number=Sing	9	obl	_	_
@@ -22712,12 +22712,12 @@
 5	a	a	ADP	INDT	_	9	cop	_	_
 6	o	o	DET	_	Gender=Masc|Number=Sing	5	det	_	_
 7	chamado	_	ADJ	JJ	Gender=Masc|Number=Sing	9	amod	_	_
-8	"	_	PUNCT	``	_	9	punct	_	SpaceAfter=No
+8	``	_	PUNCT	``	_	9	punct	_	SpaceAfter=No
 9	Andes	_	PROPN	VBC	Aspect=Imp|Mood=Sub|Number=Sing|Person=2|Tense=Pres	4	case	_	Proper=True
 10	de	_	ADP	IN	_	11	case	_	_
 11	tipo	_	NOUN	NN	Gender=Masc|Number=Sing	9	obl	_	_
 12	andino	_	ADJ	JJ	Gender=Masc|Number=Sing	11	amod	_	SpaceAfter=No
-13	"	_	PUNCT	''	_	9	punct	_	SpaceAfter=No
+13	''	_	PUNCT	''	_	9	punct	_	SpaceAfter=No
 14	,	_	PUNCT	,	_	18	punct	_	_
 15	os	_	DET	DT	Gender=Masc|Number=Plur	16	det	_	_
 16	quais	_	PRON	WP	Number=Plur	18	nsubj:pass	_	_
@@ -23171,7 +23171,7 @@
 32	para	_	ADP	IN	_	33	case	_	_
 33	ele	_	PRON	PRP	Gender=Masc|Number=Sing|Person=3	31	nmod	_	SpaceAfter=No|ToDo=nmod
 34	:	_	PUNCT	:	_	36	punct	_	_
-35	"	_	PUNCT	``	_	36	punct	_	SpaceAfter=No
+35	``	_	PUNCT	``	_	36	punct	_	SpaceAfter=No
 36	Don	_	PROPN	NNP	Gender=Masc|Number=Sing	31	appos	_	SpaceAfter=No
 37	'	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	36	flat	_	SpaceAfter=No
 38	t	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	36	flat	_	_
@@ -23179,7 +23179,7 @@
 40	Breaking	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	36	flat	_	_
 41	My	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	36	flat	_	_
 42	Heart	_	PROPN	NNP	Foreign=Yes|Gender=Masc|Number=Sing	36	flat	_	SpaceAfter=No
-43	"	_	PUNCT	''	_	36	punct	_	SpaceAfter=No
+43	''	_	PUNCT	''	_	36	punct	_	SpaceAfter=No
 44	.	_	PUNCT	.	_	6	punct	_	_
 
 1	Pompey	_	PROPN	NNP	Gender=Masc|Number=Sing	2	nsubj	_	_

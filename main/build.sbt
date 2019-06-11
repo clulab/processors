@@ -23,6 +23,7 @@ libraryDependencies ++= {
     "org.antlr"                %  "antlr4-runtime"            % "4.6",   // for tokenization
     "org.maltparser"           %  "maltparser"                % "1.9.0", // for dependency parsing
     "org.clulab"               %  "bioresources"              % "1.1.24", // for bio NER
+    "org.clulab"               %  "lemport"                   % "0.9.10", // Portuguese lemmatizer
 
     // logging
     "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.7.2",

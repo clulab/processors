@@ -11,14 +11,16 @@ class TestPortugueseCluChunker extends FlatSpec with Matchers {
 
   val proc = new PortugueseCluProcessor()
 
-  val minAccuracy = 93.2
+  val minAccuracy = 93.09
 
   "PortugueseCluProcessor" should f"chunk text with an accuracy over ${minAccuracy}%.1f%%" in {
     val stream = getClass.getClassLoader.getResourceAsStream("org/clulab/processors/pt_chunking_test.conllx")
     val doc = ColumnsToDocument.readFromStream(stream,
       wordPos = 0, labelPos = 2,
       setLabels = ColumnsToDocument.setChunks,
-      annotate = ColumnsToDocument.annotateLemmmaTags)
+      annotate = ColumnsToDocument.annotateLemmmaTags,
+      false,
+    "pt")
     val acc = (new SequenceTaggerEvaluator[String, String]).accuracy(proc.chunker.get, List(doc).iterator, saveOutput = false)
     println(s"Chunker accuracy is $acc")
     acc should be > minAccuracy

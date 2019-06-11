@@ -191,6 +191,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
 
 }
 
+@SerialVersionUID(1L)
 class TextBoundMention(
   val labels: Seq[String],
   val tokenInterval: Interval,
@@ -237,6 +238,7 @@ class TextBoundMention(
 
 // NOTE that event mentions *may* have no arguments
 // this is allowed because it is useful for coreference
+@SerialVersionUID(1L)
 class EventMention(
   val labels: Seq[String],
   val tokenInterval: Interval,
@@ -358,6 +360,7 @@ class EventMention(
 
 }
 
+@SerialVersionUID(1L)
 class RelationMention(
     val labels: Seq[String],
     val tokenInterval: Interval,
@@ -465,6 +468,7 @@ class RelationMention(
 }
 
 
+@SerialVersionUID(1L)
 class CrossSentenceMention(
   val labels: Seq[String],
   val anchor: Mention,

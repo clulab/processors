@@ -36,10 +36,20 @@ class FeatureExtractor(
     }
   }
 
-  def lemma(offset:Int) {
+  def cheapLemma(offset:Int): Unit = {
     val i = position + offset
-    if(validPosition(i))
-      features += s"l[$offset]:${FeatureExtractor.norm(sentence.lemmas.get(i))}"
+    if (validPosition(i))
+      features += s"l[$offset]:${FeatureExtractor.normAndLowerCase(sentence.words(i))}"
+  }
+
+  def lemma(offset:Int) {
+    // using lemmas only when they exist
+    // this was introduced because in english the lemmatizer works independently of the POS tag, whereas in portuguese POS is needed by the lemmatizer
+    if (sentence.lemmas.isDefined) {
+      val i = position + offset
+      if (validPosition(i))
+        features += s"l[$offset]:${FeatureExtractor.norm(sentence.lemmas.get(i))}"
+    }
   }
 
   def tag(offset:Int) {
@@ -179,6 +189,10 @@ object FeatureExtractor {
 
   def norm(w:String):String = {
     w.replaceAll("\\d", "N")
+  }
+
+  def normAndLowerCase(w:String):String = {
+    w.replaceAll("\\d", "N").toLowerCase()
   }
 
   def mkBigram(sentence:Sentence, i:Int):String =

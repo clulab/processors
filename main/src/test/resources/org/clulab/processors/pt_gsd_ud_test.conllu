@@ -13,7 +13,7 @@
 13	de	de	ADP	ADP	_	15	case	_	_
 14	os	o	DET	DET	Definite=Def|Gender=Masc|Number=Plur|PronType=Art	15	det	_	_
 15	investidores	investidor	NOUN	NOUN	_	12	nmod	_	_
-16	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+16	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	8	punct	_	_
 18	destacou	destacar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	18	punct	_	_
@@ -137,13 +137,13 @@
 17	lançamento	lançamento	NOUN	NOUN	_	15	nmod	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	11	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Já	já	ADV	ADV	_	4	advmod	_	_
 3	estamos	estar	AUX	AUX	_	4	aux	_	_
 4	importando	importar	VERBG	VERB	_	9	ccomp	_	_
 5	os	_	DET	DET	_	6	det	_	_
 6	equipamentos	equipamento	NOUN	NOUN	_	4	obj	_	SpaceAfter=No
-7	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+7	''	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 8	,	_	PUNCT	.	_	9	punct	_	_
 9	afirmou	afirmar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 10	.	_	PUNCT	.	_	9	punct	_	_
@@ -420,11 +420,11 @@
 32	Rio	_	PROPN	PNOUN	_	29	nmod	_	_
 33	de	_	ADP	ADP	_	34	case	_	_
 34	Janeiro	_	PROPN	PNOUN	_	32	nmod	_	_
-35	(	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
+35	-LRB-	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
 36	TJ	_	PROPN	PNOUN	_	24	appos	_	_
 37	-	_	PUNCT	.	_	36	punct	_	_
 38	RJ	_	PROPN	PNOUN	_	36	flat	_	SpaceAfter=No
-39	)	_	PUNCT	.	_	36	punct	_	_
+39	-RRB-	_	PUNCT	.	_	36	punct	_	_
 40	que	_	PRON	PRON	_	50	nsubj	_	SpaceAfter=No
 41	,	_	PUNCT	.	_	42	punct	_	_
 42	julgando	julgar	VERBG	VERB	_	50	acl:part	_	_
@@ -475,7 +475,7 @@
 8	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	9	det	_	_
 9	espera	espera	NOUN	NOUN	_	2	nmod	_	SpaceAfter=No
 10	!	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
-11	"	_	PUNCT	.	_	2	punct	_	_
+11	``	_	PUNCT	.	_	2	punct	_	_
 
 1	Terra	_	PROPN	PNOUN	_	4	parataxis	_	SpaceAfter=No
 2	:	_	PUNCT	.	_	4	punct	_	_
@@ -528,13 +528,13 @@
 5	em	em	ADP	ADP	_	7	case	_	_
 6	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	7	det	_	_
 7	Show	show	NOUN	NOUN	_	1	nmod	_	_
-8	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+8	``	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 9	30	_	NUM	NUM	NumType=Card	10	nummod	_	_
 10	Days	_	PROPN	PNOUN	_	7	appos	_	_
 11	to	_	ADP	ADP	_	12	case	_	_
 12	Victory	_	PROPN	PNOUN	_	10	nmod	_	_
 13	Concert	_	PROPN	PNOUN	_	12	flat	_	SpaceAfter=No
-14	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+14	''	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 15	.	_	PUNCT	.	_	1	punct	_	_
 
 1	Alex	_	PROPN	PNOUN	_	0	root	_	_
@@ -550,7 +550,7 @@
 11	Sra	sr	NOUN	NOUN	_	1	conj	_	SpaceAfter=No
 12	.	_	PUNCT	.	_	1	punct	_	_
 
-1	"	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 2	Eventualmente	eventualmente	ADV	ADV	_	16	advmod	_	SpaceAfter=No
 3	,	_	PUNCT	.	_	2	punct	_	_
 4	em	em	ADP	ADP	_	6	case	_	_
@@ -572,7 +572,7 @@
 20	outro	_	DET	DET	_	21	det	_	_
 21	número	número	NOUN	NOUN	_	18	obj	_	_
 22	inicial	inicial	ADJ	ADJ	_	21	amod	_	SpaceAfter=No
-23	"	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+23	''	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 24	,	_	PUNCT	.	_	25	punct	_	_
 25	disse	dizer	VERBF	VERB	_	0	root	_	_
 26	o	_	DET	DET	_	27	det	_	_
@@ -588,9 +588,9 @@
 4	de	_	ADP	ADP	_	5	case	_	_
 5	Dirigentes	_	PROPN	PNOUN	_	3	nmod	_	_
 6	Lojistas	_	PROPN	PNOUN	_	5	flat	_	_
-7	(	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	-LRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	CDL	_	PROPN	PNOUN	_	3	appos	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+9	-RRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	3	punct	_	_
 11	dezembro	_	PROPN	PNOUN	_	14	nsubj	_	_
 12	é	ser	AUX	AUX	_	14	cop	_	_
@@ -619,7 +619,7 @@
 35	vendas	venda	NOUN	NOUN	_	29	nmod	_	SpaceAfter=No
 36	.	_	PUNCT	.	_	14	punct	_	_
 
-1	"	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 2	2013	_	NUM	NUM	NumType=Card	5	nsubj	_	_
 3	será	ser	AUX	AUX	_	5	cop	_	_
 4	um	_	DET	DET	_	5	det	_	_
@@ -627,7 +627,7 @@
 6	desafiador	desafiador	ADJ	ADJ	_	5	amod	_	SpaceAfter=No
 7	.	_	PUNCT	.	_	5	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	É	ser	AUX	AUX	_	4	cop	_	_
 3	um	_	DET	DET	_	4	det	_	_
 4	jogo	jogo	NOUN	NOUN	_	25	ccomp	_	_
@@ -649,7 +649,7 @@
 20	em	em	ADP	ADP	_	22	case	_	_
 21	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	22	det	_	_
 22	competição	competição	NOUN	NOUN	_	16	nmod	_	SpaceAfter=No
-23	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+23	''	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 24	,	_	PUNCT	.	_	25	punct	_	_
 25	ressaltou	ressaltar	VERBF	VERB	_	0	root	_	_
 26	o	_	DET	DET	_	27	det	_	_
@@ -1133,7 +1133,7 @@
 27	em	_	ADP	ADP	_	29	case	_	_
 28	suas	_	DET	DET	_	29	det:poss	_	_
 29	ações	ação	NOUN	NOUN	_	24	nmod	_	_
-30	"	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+30	``	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 31	,	_	PUNCT	.	_	32	punct	_	_
 32	argumenta	argumentar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 33	.	_	PUNCT	.	_	32	punct	_	_
@@ -1169,7 +1169,7 @@
 6	sente	_	VERBF	VERB	_	11	ccomp	_	_
 7	mais	mais	ADV	ADV	_	8	advmod	_	_
 8	confortável	confortável	ADJ	ADJ	_	6	xcomp:adj	_	_
-9	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+9	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	11	punct	_	_
 11	emenda	emendar	NOUN	VERB	_	0	root	_	_
 12	Filgueira	_	PROPN	PNOUN	_	11	nsubj	_	SpaceAfter=No
@@ -1207,9 +1207,9 @@
 9	cidade	cidade	NOUN	NOUN	_	6	conj	_	_
 10	de	_	ADP	ADP	_	11	case	_	_
 11	Zarqa	_	PROPN	PNOUN	_	9	nmod	_	_
-12	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 13	norte	norte	NOUN	NOUN	_	9	appos	_	SpaceAfter=No
-14	)	_	PUNCT	.	_	13	punct	_	_
+14	-RRB-	_	PUNCT	.	_	13	punct	_	_
 15	estavam	estar	AUX	VERB	_	0	root	_	_
 16	fechadas	fechado	ADJ	ADJ	_	15	xcomp:adj	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	15	punct	_	_
@@ -1250,7 +1250,7 @@
 52	tráfego	tráfego	NOUN	NOUN	_	49	nmod	_	SpaceAfter=No
 53	.	_	PUNCT	.	_	15	punct	_	_
 
-1	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 2	A	_	DET	DET	_	3	det	_	_
 3	dona	_	NOUN	NOUN	_	6	nsubj	_	_
 4	Esmeralda	_	PROPN	PNOUN	_	3	appos	_	_
@@ -1264,7 +1264,7 @@
 12	posar	posar	VERBI	VERB	_	11	xcomp	_	_
 13	para	_	ADP	ADP	_	14	case	_	_
 14	nós	_	PRON	PRON	_	12	nmod	_	SpaceAfter=No
-15	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+15	''	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 16	,	_	PUNCT	.	_	17	punct	_	_
 17	explica	explicar	VERBF	VERB	_	0	root	_	_
 18	Mikeliton	_	PROPN	PNOUN	_	17	nsubj	_	SpaceAfter=No
@@ -1279,14 +1279,14 @@
 27	São	_	PROPN	PNOUN	_	24	nmod	_	_
 28	Sebastião	_	PROPN	PNOUN	_	27	flat	_	SpaceAfter=No
 29	,	_	PUNCT	.	_	36	punct	_	_
-30	"	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
+30	``	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
 31	onde	onde	ADV	ADV	_	36	advmod	_	_
 32	é	ser	AUX	AUX	_	36	cop	_	_
 33	quase	quase	ADV	ADV	_	36	advmod	_	_
 34	uma	_	DET	DET	_	36	det	_	_
 35	só	só	ADJ	ADJ	_	36	amod	_	_
 36	família	família	NOUN	NOUN	_	27	acl:relcl	_	SpaceAfter=No
-37	"	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
+37	''	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
 38	.	_	PUNCT	.	_	17	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
@@ -1390,9 +1390,9 @@
 7	edição	edição	NOUN	NOUN	_	3	nmod	_	_
 8	de	_	ADP	ADP	_	9	mark	_	_
 9	hoje	hoje	ADV	ADV	_	7	nmod	_	_
-10	(	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+10	-LRB-	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 11	24	_	NUM	NUM	NumType=Card	9	nmod	_	SpaceAfter=No
-12	)	_	PUNCT	.	_	11	punct	_	_
+12	-RRB-	_	PUNCT	.	_	11	punct	_	_
 13	de	de	ADP	ADP	_	15	case	_	_
 14	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	15	det	_	_
 15	Diário	_	PROPN	PNOUN	_	7	nmod	_	_
@@ -1628,11 +1628,11 @@
 9	de	de	ADP	ADP	_	11	case	_	_
 10	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	11	det	_	_
 11	sábado	_	PROPN	PNOUN	_	8	nmod	_	_
-12	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 13	horário	horário	NOUN	NOUN	_	8	appos	_	_
 14	de	_	ADP	ADP	_	15	case	_	_
 15	Brasília	_	PROPN	PNOUN	_	13	nmod	_	SpaceAfter=No
-16	)	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+16	-RRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 17	.	_	PUNCT	.	_	4	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
@@ -1715,7 +1715,7 @@
 4	descanso	descanso	NOUN	NOUN	_	2	obj	_	SpaceAfter=No
 5	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 2	Inovação	inovação	NOUN	NOUN	_	10	nsubj:pass	_	_
 3	e	_	CCONJ	CONJ	_	4	cc	_	_
 4	interatividade	interatividade	NOUN	NOUN	_	2	conj	_	_
@@ -1741,7 +1741,7 @@
 24	de	de	ADP	ADP	_	26	case	_	_
 25	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	26	det	_	_
 26	cliente	cliente	NOUN	NOUN	_	23	nmod	_	SpaceAfter=No
-27	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+27	''	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 28	,	_	PUNCT	.	_	29	punct	_	_
 29	explica	explicar	VERBF	VERB	_	0	root	_	_
 30	o	_	DET	DET	_	31	det	_	_
@@ -1819,7 +1819,7 @@
 12	carga	carga	NOUN	NOUN	_	10	obj	_	_
 13	viral	viral	ADJ	ADJ	_	12	amod	_	_
 14	maior	maior	ADJ	ADJ	_	12	amod	_	_
-15	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+15	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 16	,	_	PUNCT	.	_	17	punct	_	_
 17	observa	observar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	17	punct	_	_
@@ -2020,12 +2020,12 @@
 6	sucesso	sucesso	NOUN	NOUN	_	4	nmod	_	_
 7	o	_	DET	DET	_	8	det	_	_
 8	druida	druida	NOUN	NOUN	_	4	obj	_	_
-9	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 10	depois	depois	ADV	ADV	_	13	case	_	_
 11	de	_	ADP	ADP	_	10	fixed	_	_
 12	várias	_	DET	DET	_	13	det	_	_
 13	peripécias	peripécia	NOUN	NOUN	_	4	nmod	_	SpaceAfter=No
-14	)	_	PUNCT	.	_	13	punct	_	_
+14	-RRB-	_	PUNCT	.	_	13	punct	_	_
 15	e	_	CCONJ	CONJ	_	28	cc	_	_
 16	para	_	ADP	ADP	_	17	mark	_	_
 17	impedir	impedir	VERBI	VERB	_	28	advcl	_	_
@@ -2345,12 +2345,12 @@
 15	deficiência	deficiência	NOUN	NOUN	_	13	nmod	_	_
 16	de	_	ADP	ADP	_	17	case	_	_
 17	biotinidase	_	NOUN	NOUN	_	15	nmod	_	_
-18	(	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+18	-LRB-	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 19	falta	_	NOUN	NOUN	_	17	appos	_	_
 20	de	_	ADP	ADP	_	21	case	_	_
 21	vitamina	vitamina	NOUN	NOUN	_	19	nmod	_	_
 22	H	_	PROPN	PNOUN	_	21	appos	_	SpaceAfter=No
-23	)	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+23	-RRB-	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 24	,	_	PUNCT	.	_	8	punct	_	_
 25	eo	_	CCONJ	CONJ	_	26	cc	_	_
 26	clobetasol	_	NOUN	NOUN	_	6	conj	_	SpaceAfter=No
@@ -2359,11 +2359,11 @@
 29	contra	_	ADP	ADP	_	31	case	_	_
 30	a	_	DET	DET	_	31	det	_	_
 31	psoríase	psoríase	NOUN	NOUN	_	28	nmod	_	_
-32	(	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+32	-LRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 33	doença	doença	NOUN	NOUN	_	31	appos	_	_
 34	de	_	ADP	ADP	_	35	case	_	_
 35	pele	pele	NOUN	NOUN	_	33	nmod	_	SpaceAfter=No
-36	)	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+36	-RRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 37	.	_	PUNCT	.	_	4	punct	_	_
 
 1	As	_	DET	DET	_	2	det	_	_
@@ -2380,7 +2380,7 @@
 12	para	_	ADP	ADP	_	14	case	_	_
 13	o	_	DET	DET	_	14	det	_	_
 14	consumidor	consumidor	NOUN	NOUN	_	11	nmod	_	_
-15	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+15	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 16	,	_	PUNCT	.	_	17	punct	_	_
 17	complementa	complementar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	17	punct	_	_
@@ -2403,12 +2403,12 @@
 16	de	de	ADP	ADP	_	18	case	_	_
 17	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	18	det	_	_
 18	app	_	PROPN	PNOUN	_	13	nmod	_	_
-19	(	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+19	-LRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 20	liberada	liberar	VERBP	VERB	_	13	acl:part	_	_
 21	para	_	ADP	ADP	_	22	case	_	_
 22	download	_	NOUN	NOUN	_	20	nmod	_	_
 23	ontem	ontem	ADV	ADV	_	20	advmod	_	SpaceAfter=No
-24	)	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+24	-RRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 25	,	_	PUNCT	.	_	29	punct	_	_
 26	seja	_	CCONJ	CONJ	_	29	cc	_	_
 27	em	em	ADP	ADP	_	29	case	_	_
@@ -2509,9 +2509,9 @@
 42	de	de	ADP	ADP	_	44	case	_	_
 43	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	44	det	_	_
 44	Amazônia	_	PROPN	PNOUN	_	39	nmod	_	_
-45	(	_	PUNCT	.	_	46	punct	_	SpaceAfter=No
+45	-LRB-	_	PUNCT	.	_	46	punct	_	SpaceAfter=No
 46	FDA	_	PROPN	PNOUN	_	39	appos	_	SpaceAfter=No
-47	)	_	PUNCT	.	_	46	punct	_	_
+47	-RRB-	_	PUNCT	.	_	46	punct	_	_
 48	e	_	CCONJ	CONJ	_	51	cc	_	_
 49	de	de	ADP	ADP	_	51	case	_	_
 50	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	51	det	_	_
@@ -2521,9 +2521,9 @@
 54	de	de	ADP	ADP	_	56	case	_	_
 55	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	56	det	_	_
 56	Nordeste	_	PROPN	PNOUN	_	51	nmod	_	_
-57	(	_	PUNCT	.	_	58	punct	_	SpaceAfter=No
+57	-LRB-	_	PUNCT	.	_	58	punct	_	SpaceAfter=No
 58	FDNE	_	PROPN	PNOUN	_	51	appos	_	SpaceAfter=No
-59	)	_	PUNCT	.	_	58	punct	_	SpaceAfter=No
+59	-RRB-	_	PUNCT	.	_	58	punct	_	SpaceAfter=No
 60	.	_	PUNCT	.	_	3	punct	_	_
 
 1	E	_	CCONJ	CONJ	_	2	cc	_	_
@@ -2627,9 +2627,9 @@
 2	o	_	DET	DET	_	3	det	_	_
 3	feijão	feijão	NOUN	NOUN	_	1	obj	_	_
 4	branco	branco	ADJ	ADJ	_	3	amod	_	_
-5	(	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+5	-LRB-	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 6	200gr	_	NUM	NUM	NumType=Card	3	appos	_	SpaceAfter=No
-7	)	_	PUNCT	.	_	6	punct	_	_
+7	-RRB-	_	PUNCT	.	_	6	punct	_	_
 8	de	_	ADP	ADP	_	9	case	_	_
 9	molho	molho	NOUN	NOUN	_	1	nmod	_	_
 10	por	_	ADP	ADP	_	13	case	_	_
@@ -2665,13 +2665,13 @@
 17	,	_	PUNCT	.	_	19	punct	_	_
 18	ela	_	PRON	PRON	_	19	nsubj	_	_
 19	disse	dizer	VERBF	VERB	_	6	parataxis	_	_
-20	"	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+20	``	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 21	foi	_	AUX	VERB	_	19	ccomp	_	_
 22	eu	_	PRON	PRON	_	21	nsubj	_	_
 23	quem	_	PRON	PRON	_	24	nsubj	_	_
 24	matou	matar	VERBF	VERB	_	22	acl:relcl	_	_
 25	Max	_	PROPN	PNOUN	_	24	obj	_	SpaceAfter=No
-26	"	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+26	''	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 27	.	_	PUNCT	.	_	6	punct	_	_
 
 1	Entretanto	entretanto	ADV	ADV	_	11	advmod	_	SpaceAfter=No
@@ -2708,7 +2708,7 @@
 15	32	_	NUM	NUM	NumType=Card	16	nummod	_	_
 16	'	_	NOUN	NOUN	_	14	conj	_	SpaceAfter=No
 17	54.2	_	NUM	NUM	NumType=Card	18	nummod	_	SpaceAfter=No
-18	"	_	NOUN	NOUN	_	14	conj	_	SpaceAfter=No
+18	``	_	NOUN	NOUN	_	14	conj	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	1	punct	_	_
 
 1	Os	_	DET	DET	_	2	det	_	_
@@ -2805,7 +2805,7 @@
 9	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	11	det	_	_
 10	nossas	_	DET	DET	_	11	det:poss	_	_
 11	meninas	menino	NOUN	NOUN	_	7	nmod	_	_
-12	"	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+12	``	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 13	,	_	PUNCT	.	_	14	punct	_	_
 14	revela	revelar	VERBF	VERB	_	0	root	_	_
 15	o	_	DET	DET	_	16	det	_	_
@@ -2921,7 +2921,7 @@
 16	http://www.cmgww.com/stars/baker/about/biography.html	_	X	X	_	13	parataxis	_	SpaceAfter=No
 17	.	_	PUNCT	.	_	13	punct	_	_
 
-1	"	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 2	E	_	CCONJ	CONJ	_	11	cc	_	_
 3	se	_	CCONJ	CONJ	_	6	mark	_	_
 4	nada	_	PRON	PRON	_	6	nsubj:pass	_	_
@@ -2940,10 +2940,10 @@
 17	a	a	ADP	ADP	_	19	case	_	_
 18	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	19	det	_	_
 19	ano	ano	NOUN	NOUN	_	13	nmod	_	SpaceAfter=No
-20	"	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+20	''	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	11	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Não	não	ADV	ADV	Polarity=Neg	3	advmod	_	_
 3	sei	saber	VERBF	VERB	_	16	ccomp	_	_
 4	falar	falar	VERBI	VERB	_	3	xcomp	_	_
@@ -2956,7 +2956,7 @@
 11	em	em	ADP	ADP	_	13	case	_	_
 12	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	13	det	_	_
 13	língua	língua	NOUN	NOUN	_	10	nmod	_	SpaceAfter=No
-14	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+14	''	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 15	,	_	PUNCT	.	_	16	punct	_	_
 16	explicou	explicar	VERBF	VERB	_	0	root	_	_
 17	em	_	ADP	ADP	_	18	case	_	_
@@ -3203,9 +3203,9 @@
 37	,	_	PUNCT	.	_	41	punct	_	_
 38	para	_	ADP	ADP	_	41	case	_	_
 39	a	_	DET	DET	_	41	det	_	_
-40	"	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
+40	``	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
 41	obra	obra	NOUN	NOUN	_	28	nmod	_	SpaceAfter=No
-42	"	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
+42	''	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
 43	,	_	PUNCT	.	_	44	punct	_	_
 44	seja	ser	AUX	VERB	_	41	dep	_	_
 45	lá	_	PART	PRT	_	44	dep	_	_
@@ -3396,13 +3396,13 @@
 30	de	de	ADP	ADP	_	32	case	_	_
 31	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	32	det	_	_
 32	região	região	NOUN	NOUN	_	24	nmod	_	SpaceAfter=No
-33	"	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
+33	``	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
 34	.	_	PUNCT	.	_	1	punct	_	_
 
 1	Aqui	aqui	ADV	ADV	_	3	advmod	_	_
-2	[	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+2	-LSB-	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 3	Jacarezinho	_	PROPN	PNOUN	_	20	obj	_	SpaceAfter=No
-4	]	_	PUNCT	.	_	3	punct	_	_
+4	-RSB-	_	PUNCT	.	_	3	punct	_	_
 5	em	_	ADP	ADP	_	6	mark	_	_
 6	especial	especial	ADJ	ADJ	_	3	nmod	_	SpaceAfter=No
 7	,	_	PUNCT	.	_	3	punct	_	_
@@ -3416,7 +3416,7 @@
 15	diretamente	diretamente	ADV	ADV	_	14	advmod	_	_
 16	a	_	DET	DET	_	17	det	_	_
 17	população	população	NOUN	NOUN	_	14	obj	_	_
-18	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+18	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 19	,	_	PUNCT	.	_	20	punct	_	_
 20	disse	dizer	VERBF	VERB	_	0	root	_	_
 21	ele	_	PRON	PRON	_	20	nsubj	_	SpaceAfter=No
@@ -3448,7 +3448,7 @@
 24	anos	ano	NOUN	NOUN	_	17	nmod	_	SpaceAfter=No
 25	.	_	PUNCT	.	_	3	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Não	não	ADV	ADV	Polarity=Neg	3	advmod	_	_
 3	é	ser	AUX	VERB	_	0	root	_	_
 4	isso	_	PRON	PRON	_	3	nsubj	_	_
@@ -3499,7 +3499,7 @@
 3	iludir	iludir	VERBI	VERB	_	8	ccomp	_	_
 4	o	_	DET	DET	_	5	det	_	_
 5	torcedor	torcedor	NOUN	NOUN	_	3	obj	_	_
-6	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+6	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 7	,	_	PUNCT	.	_	8	punct	_	_
 8	completou	completar	VERBF	VERB	_	0	root	_	_
 9	o	_	DET	DET	_	10	det	_	_
@@ -3663,9 +3663,9 @@
 2	:	_	PUNCT	.	_	8	punct	_	_
 3	Péricles	_	PROPN	PNOUN	_	8	nsubj	_	_
 4	Deliberador	_	PROPN	PNOUN	_	3	flat	_	_
-5	(	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+5	-LRB-	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 6	PMN	_	PROPN	PNOUN	_	3	appos	_	SpaceAfter=No
-7	)	_	PUNCT	.	_	6	punct	_	_
+7	-RRB-	_	PUNCT	.	_	6	punct	_	_
 8	diz	dizer	VERBF	VERB	_	0	root	_	_
 9	que	_	CCONJ	CONJ	_	12	mark	_	_
 10	Londrina	_	PROPN	PNOUN	_	12	nsubj	_	_
@@ -3751,7 +3751,7 @@
 19	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	21	det	_	_
 20	bom	bom	ADJ	ADJ	_	21	amod	_	_
 21	caminho	caminho	NOUN	NOUN	_	17	nmod	_	SpaceAfter=No
-22	"	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
+22	``	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
 23	.	_	PUNCT	.	_	1	punct	_	_
 
 1	As	_	DET	DET	_	2	det	_	_
@@ -3892,9 +3892,9 @@
 15	.	_	PUNCT	.	_	6	punct	_	_
 
 1	O	_	DET	DET	_	3	det	_	_
-2	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+2	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 3	hipermercado	hipermercado	NOUN	NOUN	_	7	nsubj:pass	_	SpaceAfter=No
-4	"	_	PUNCT	.	_	3	punct	_	_
+4	''	_	PUNCT	.	_	3	punct	_	_
 5	Flamengo	_	PROPN	PNOUN	_	3	appos	_	_
 6	foi	_	AUX	AUX	_	7	aux:pass	_	_
 7	administrado	administrar	VERBP	VERB	_	0	root	_	_
@@ -4252,7 +4252,7 @@
 9	possível	possível	ADJ	ADJ	_	8	xcomp:adj	_	SpaceAfter=No
 10	.	_	PUNCT	.	_	4	punct	_	_
 
-1	"	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 2	Em	_	ADP	ADP	_	3	case	_	_
 3	1970	_	NUM	NUM	NumType=Card	13	nmod	_	SpaceAfter=No
 4	,	_	PUNCT	.	_	5	punct	_	_
@@ -4315,7 +4315,7 @@
 29	governo	governo	NOUN	NOUN	_	25	nmod	_	_
 30	federal	federal	ADJ	ADJ	_	29	amod	_	_
 31	provocou	provocar	VERBF	VERB	_	0	root	_	_
-32	"	_	PUNCT	.	_	35	punct	_	SpaceAfter=No
+32	``	_	PUNCT	.	_	35	punct	_	SpaceAfter=No
 33	mal	mal	ADV	ADV	_	35	advmod	_	_
 34	-	_	PUNCT	.	_	35	punct	_	_
 35	estar	_	NOUN	NOUN	_	31	obj	_	_
@@ -4326,7 +4326,7 @@
 40	o	_	DET	DET	_	41	det	_	_
 41	PMDB	_	PROPN	PNOUN	_	35	nmod	_	_
 42	nacional	nacional	ADJ	ADJ	_	41	amod	_	SpaceAfter=No
-43	"	_	PUNCT	.	_	35	punct	_	SpaceAfter=No
+43	''	_	PUNCT	.	_	35	punct	_	SpaceAfter=No
 44	,	_	PUNCT	.	_	47	punct	_	_
 45	segundo	_	ADP	ADP	_	47	case	_	_
 46	o	_	DET	DET	_	47	det	_	_
@@ -4395,7 +4395,7 @@
 16	com	_	ADP	ADP	_	18	case	_	_
 17	estes	_	DET	DET	_	18	det	_	_
 18	detalhes	detalhe	NOUN	NOUN	_	15	nmod	_	_
-19	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+19	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 20	,	_	PUNCT	.	_	21	punct	_	_
 21	acrescentou	acrescentar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 22	.	_	PUNCT	.	_	21	punct	_	_
@@ -4936,10 +4936,10 @@
 38	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	40	det	_	_
 39	13	_	NUM	NUM	NumType=Card	40	nummod	_	_
 40	horas	hora	NOUN	NOUN	_	32	nmod	_	_
-41	(	_	PUNCT	.	_	43	punct	_	SpaceAfter=No
+41	-LRB-	_	PUNCT	.	_	43	punct	_	SpaceAfter=No
 42	de	_	ADP	ADP	_	43	case	_	_
 43	Brasília	_	PROPN	PNOUN	_	40	nmod	_	SpaceAfter=No
-44	)	_	PUNCT	.	_	43	punct	_	_
+44	-RRB-	_	PUNCT	.	_	43	punct	_	_
 45	para	_	ADP	ADP	_	47	case	_	_
 46	a	_	DET	DET	_	47	det	_	_
 47	cidade	cidade	NOUN	NOUN	_	32	nmod	_	_
@@ -5012,10 +5012,10 @@
 24	rainha	_	NOUN	NOUN	_	21	nmod	_	_
 25	Elizabeth	_	PROPN	PNOUN	_	24	appos	_	_
 26	II	_	PROPN	PNOUN	_	25	amod	_	_
-27	(	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
+27	-LRB-	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
 28	Isabel	_	PROPN	PNOUN	_	25	appos	_	_
 29	II	_	PROPN	PNOUN	_	28	amod	_	SpaceAfter=No
-30	)	_	PUNCT	.	_	28	punct	_	_
+30	-RRB-	_	PUNCT	.	_	28	punct	_	_
 31	para	_	ADP	ADP	_	32	mark	_	_
 32	representá	representar	NOUN	VERB	_	21	advcl	_	_
 33	-	_	PUNCT	.	_	32	punct	_	_
@@ -5033,9 +5033,9 @@
 6	de	_	ADP	ADP	_	7	case	_	_
 7	Direitos	_	PROPN	PNOUN	_	4	nmod	_	_
 8	Humanos	_	PROPN	PNOUN	_	7	amod	_	_
-9	(	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 10	CNDH	_	PROPN	PNOUN	_	4	appos	_	SpaceAfter=No
-11	)	_	PUNCT	.	_	10	punct	_	_
+11	-RRB-	_	PUNCT	.	_	10	punct	_	_
 12	informou	informar	VERBF	VERB	_	0	root	_	_
 13	que	_	CCONJ	CONJ	_	14	mark	_	_
 14	recebeu	receber	VERBF	VERB	_	12	ccomp	_	_
@@ -5147,7 +5147,7 @@
 25	rochosos	rochoso	ADJ	ADJ	_	24	amod	_	SpaceAfter=No
 26	.	_	PUNCT	.	_	9	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Mandou	mandar	VERBF	VERB	_	0	root	_	_
 3	eu	_	PRON	PRON	_	4	nsubj	_	_
 4	colocar	colocar	VERBI	VERB	_	2	ccomp	_	_
@@ -5309,7 +5309,7 @@
 12	Paulo	_	PROPN	PNOUN	_	11	flat	_	SpaceAfter=No
 13	.	_	PUNCT	.	_	1	punct	_	_
 
-1	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 2	...	_	PUNCT	.	_	6	punct	_	_
 3	SE	_	CCONJ	CONJ	_	6	mark	_	_
 4	algum	_	DET	DET	_	5	det	_	_
@@ -5374,13 +5374,13 @@
 17	os	o	DET	DET	Definite=Def|Gender=Masc|Number=Plur|PronType=Art	18	det	_	_
 18	5	_	NUM	NUM	NumType=Card	15	nmod	_	_
 19	formados	formar	NOUN	VERB	_	18	acl:part	_	_
-20	(	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+20	-LRB-	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 21	cada	_	DET	DET	_	22	det	_	_
 22	região	região	NOUN	NOUN	_	18	appos	_	_
 23	de	de	ADP	ADP	_	25	case	_	_
 24	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	25	det	_	_
 25	país	país	NOUN	NOUN	_	22	nmod	_	SpaceAfter=No
-26	)	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+26	-RRB-	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 27	.	_	PUNCT	.	_	11	punct	_	_
 
 1	Com	_	ADP	ADP	_	2	case	_	_
@@ -5459,7 +5459,7 @@
 12	de	_	ADP	ADP	_	13	case	_	_
 13	todos	_	PRON	PRON	_	11	nmod	_	SpaceAfter=No
 14	.	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
-15	"	_	PUNCT	.	_	5	punct	_	_
+15	``	_	PUNCT	.	_	5	punct	_	_
 
 1	Se	_	CCONJ	CONJ	_	3	mark	_	_
 2	será	ser	AUX	AUX	_	3	aux:pass	_	_
@@ -5478,21 +5478,21 @@
 15	de	de	ADP	ADP	_	17	case	_	_
 16	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	17	det	_	_
 17	PGR	_	NOUN	NOUN	_	14	nmod	_	_
-18	[	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+18	-LSB-	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 19	Procuradoria	_	PROPN	PNOUN	_	17	appos	_	_
 20	-	_	PUNCT	.	_	19	punct	_	_
 21	Geral	_	PROPN	PNOUN	_	19	amod	_	_
 22	de	de	ADP	ADP	_	24	case	_	_
 23	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	24	det	_	_
 24	República	_	PROPN	PNOUN	_	19	nmod	_	SpaceAfter=No
-25	]	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+25	-RSB-	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 26	,	_	PUNCT	.	_	31	punct	_	_
 27	onde	onde	ADV	ADV	_	31	advmod	_	_
 28	o	_	DET	DET	_	29	det	_	_
 29	depoimento	depoimento	NOUN	NOUN	_	31	nsubj:pass	_	_
 30	foi	_	AUX	AUX	_	31	aux:pass	_	_
 31	prestado	prestar	VERBP	VERB	_	17	acl:relcl	_	_
-32	"	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
+32	``	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
 33	,	_	PUNCT	.	_	34	punct	_	_
 34	disse	dizer	VERBF	VERB	_	0	root	_	SpaceAfter=No
 35	.	_	PUNCT	.	_	34	punct	_	_
@@ -5614,12 +5614,12 @@
 10	and	_	CCONJ	CONJ	_	11	cc	_	_
 11	Albert	_	PROPN	PNOUN	_	9	conj	_	_
 12	Museum	_	PROPN	PNOUN	_	9	flat	_	_
-13	(	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
+13	-LRB-	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
 14	V	_	PROPN	PNOUN	_	9	appos	_	_
 15	&amp;	_	CCONJ	CONJ	_	16	cc	_	_
 16	A	_	PROPN	PNOUN	_	14	conj	_	_
 17	Museum	_	PROPN	PNOUN	_	14	flat	_	SpaceAfter=No
-18	)	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
+18	-RRB-	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
 19	,	_	PUNCT	.	_	20	punct	_	_
 20	Universidade	_	PROPN	PNOUN	_	9	conj	_	_
 21	de	_	ADP	ADP	_	22	case	_	_
@@ -5656,7 +5656,7 @@
 20	polícia	polícia	NOUN	NOUN	_	17	nmod	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	5	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Ainda	ainda	ADV	ADV	_	4	advmod	_	_
 3	não	não	ADV	ADV	Polarity=Neg	4	advmod	_	_
 4	está	estar	AUX	VERB	_	32	ccomp	_	_
@@ -5685,7 +5685,7 @@
 27	para	_	ADP	ADP	_	28	case	_	_
 28	nível	nível	NOUN	NOUN	_	24	nmod	_	_
 29	superior	superior	ADJ	ADJ	_	28	amod	_	SpaceAfter=No
-30	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+30	''	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 31	,	_	PUNCT	.	_	32	punct	_	_
 32	mensurou	mensurar	VERBF	VERB	_	0	root	_	_
 33	Carlos	_	PROPN	PNOUN	_	32	nsubj	_	_
@@ -5715,7 +5715,7 @@
 21	antissociais	antissocial	ADJ	ADJ	_	20	amod	_	SpaceAfter=No
 22	.	_	PUNCT	.	_	15	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Sei	saber	VERBF	VERB	_	0	root	_	_
 3	o	_	PRON	PRON	_	2	obj	_	_
 4	que	_	PRON	PRON	_	5	nsubj	_	_
@@ -5724,7 +5724,7 @@
 7	para	_	ADP	ADP	_	8	case	_	_
 8	mim	_	PRON	PRON	_	6	nmod	_	SpaceAfter=No
 9	.	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
-10	"	_	PUNCT	.	_	2	punct	_	_
+10	''	_	PUNCT	.	_	2	punct	_	_
 
 1	As	_	DET	DET	_	3	det	_	_
 2	duas	_	NUM	NUM	NumType=Card	3	nummod	_	_
@@ -5749,10 +5749,10 @@
 21	a	a	ADP	ADP	_	23	case	_	_
 22	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	23	det	_	_
 23	11h30	_	NUM	NUM	NumType=Card	20	nmod	_	_
-24	(	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+24	-LRB-	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 25	de	_	ADP	ADP	_	26	case	_	_
 26	Brasília	_	PROPN	PNOUN	_	23	nmod	_	SpaceAfter=No
-27	)	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+27	-RRB-	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 28	.	_	PUNCT	.	_	18	punct	_	_
 
 1	Minha	_	DET	DET	_	2	det:poss	_	_
@@ -5770,7 +5770,7 @@
 5	Barata	_	PROPN	PNOUN	_	4	flat	_	_
 6	Feyo	_	PROPN	PNOUN	_	4	flat	_	SpaceAfter=No
 7	,	_	PUNCT	.	_	2	punct	_	_
-8	"	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+8	``	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 9	...	_	PUNCT	.	_	20	punct	_	_
 10	o	_	DET	DET	_	11	det	_	_
 11	globo	globo	NOUN	NOUN	_	20	nsubj	_	_
@@ -5823,12 +5823,12 @@
 4	adianta	adiantar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 5	.	_	PUNCT	.	_	4	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Ele	_	PRON	PRON	_	3	nsubj	_	_
 3	fica	ficar	VERBF	VERB	_	0	root	_	_
 4	desconfiado	desconfiado	ADJ	ADJ	_	3	xcomp:adj	_	SpaceAfter=No
 5	.	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
-6	"	_	PUNCT	.	_	3	punct	_	_
+6	''	_	PUNCT	.	_	3	punct	_	_
 
 1	Conclusão	conclusão	NOUN	NOUN	_	0	root	_	_
 2	óbvia	óbvio	ADJ	ADJ	_	1	amod	_	SpaceAfter=No
@@ -6047,7 +6047,7 @@
 13	Paris	_	PROPN	PNOUN	_	14	nsubj	_	_
 14	respondeu	responder	VERBF	VERB	_	8	conj	_	SpaceAfter=No
 15	:	_	PUNCT	.	_	14	punct	_	_
-16	"	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+16	``	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 17	Momento	momento	NOUN	NOUN	_	14	obj	_	_
 18	estranho	estranho	ADJ	ADJ	_	17	amod	_	_
 19	quando	_	CCONJ	CONJ	_	23	advmod	_	_
@@ -6079,7 +6079,7 @@
 45	de	_	ADP	ADP	_	46	mark	_	_
 46	ter	ter	VERBI	VERB	_	44	nmod	_	_
 47	apoio	apoio	NOUN	NOUN	_	46	obj	_	SpaceAfter=No
-48	"	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+48	''	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 49	.	_	PUNCT	.	_	8	punct	_	_
 
 1	Mendes	_	PROPN	PNOUN	_	2	nsubj	_	_
@@ -6092,13 +6092,13 @@
 8	em	_	ADP	ADP	_	9	case	_	_
 9	São	_	PROPN	PNOUN	_	5	nmod	_	_
 10	Paulo	_	PROPN	PNOUN	_	9	flat	_	_
-11	"	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
+11	``	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
 12	parece	parecer	AUX	AUX	_	15	cop	_	_
 13	inclusive	inclusive	ADV	ADV	_	15	advmod	_	_
 14	uma	_	DET	DET	_	15	det	_	_
 15	ação	ação	NOUN	NOUN	_	2	ccomp	_	_
 16	política	político	ADJ	ADJ	_	15	amod	_	SpaceAfter=No
-17	"	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
+17	''	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
 18	,	_	PUNCT	.	_	20	punct	_	_
 19	sem	_	ADP	ADP	_	20	mark	_	_
 20	explicar	explicar	VERBI	VERB	_	2	advcl	_	_
@@ -6158,9 +6158,9 @@
 12	Instituto	_	PROPN	PNOUN	_	9	nmod	_	_
 13	Médico	_	PROPN	PNOUN	_	12	amod	_	_
 14	Legal	_	PROPN	PNOUN	_	12	amod	_	_
-15	(	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 16	IML	_	PROPN	PNOUN	_	12	appos	_	SpaceAfter=No
-17	)	_	PUNCT	.	_	16	punct	_	_
+17	-RRB-	_	PUNCT	.	_	16	punct	_	_
 18	para	_	ADP	ADP	_	19	case	_	_
 19	exame	exame	NOUN	NOUN	_	9	nmod	_	_
 20	de	_	ADP	ADP	_	21	case	_	_
@@ -6200,7 +6200,7 @@
 6	não	não	ADV	ADV	Polarity=Neg	8	advmod	_	_
 7	-	_	PUNCT	.	_	8	punct	_	_
 8	determinístico	determinístico	ADJ	ADJ	_	5	amod	_	_
-9	(	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
 10	em	em	ADP	ADP	_	12	case	_	_
 11	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	12	det	_	_
 12	qual	_	PRON	PRON	_	18	nmod	_	_
@@ -6218,7 +6218,7 @@
 24	a	_	DET	DET	_	26	det	_	_
 25	mesma	mesmo	ADJ	ADJ	_	26	amod	_	_
 26	entrada	entrada	NOUN	NOUN	_	23	nsubj	_	SpaceAfter=No
-27	)	_	PUNCT	.	_	18	punct	_	_
+27	-RRB-	_	PUNCT	.	_	18	punct	_	_
 28	é	ser	AUX	VERB	_	0	root	_	_
 29	redutível	redutível	ADJ	ADJ	_	28	xcomp:adj	_	_
 30	para	_	ADP	ADP	_	32	case	_	_
@@ -6314,7 +6314,7 @@
 17	ou	_	CCONJ	CONJ	_	18	cc	_	_
 18	dinheiro	dinheiro	NOUN	NOUN	_	16	conj	_	_
 19	para	_	ADP	ADP	_	21	mark	_	_
-20	"	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+20	``	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 21	fazer	fazer	VERBI	VERB	_	15	advcl	_	_
 22	o	_	PRON	PRON	_	21	obj	_	_
 23	que	_	PRON	PRON	_	24	nsubj	_	_
@@ -6325,7 +6325,7 @@
 28	bem	bem	ADV	ADV	_	27	advmod	_	_
 29	a	_	DET	DET	_	30	det	_	_
 30	seleção	seleção	NOUN	NOUN	_	27	obj	_	SpaceAfter=No
-31	"	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+31	''	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 32	.	_	PUNCT	.	_	9	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
@@ -6390,7 +6390,7 @@
 18	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	19	det	_	_
 19	Sistema	_	PROPN	PNOUN	_	16	nmod	_	_
 20	S	_	PROPN	PNOUN	_	19	flat	_	_
-21	"	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+21	``	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 22	,	_	PUNCT	.	_	23	punct	_	_
 23	comemorou	comemorar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 24	.	_	PUNCT	.	_	23	punct	_	_
@@ -6487,9 +6487,9 @@
 
 1	Segundo	_	ADP	ADP	_	4	case	_	_
 2	a	_	DET	DET	_	4	det	_	_
-3	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+3	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 4	People	_	PROPN	PNOUN	_	9	nmod	_	SpaceAfter=No
-5	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+5	''	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 6	,	_	PUNCT	.	_	4	punct	_	_
 7	a	_	DET	DET	_	8	det	_	_
 8	casa	casa	NOUN	NOUN	_	9	nsubj	_	_
@@ -6662,8 +6662,8 @@
 2	Vale	_	PROPN	PNOUN	_	10	nsubj	_	_
 3	de	_	ADP	ADP	_	4	case	_	_
 4	Aulps	_	PROPN	PNOUN	_	2	nmod	_	_
-5	(	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
-6	)	_	PUNCT	.	_	2	punct	_	_
+5	-LRB-	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+6	-RRB-	_	PUNCT	.	_	2	punct	_	_
 7	é	ser	AUX	AUX	_	10	cop	_	_
 8	um	_	DET	DET	_	10	det	_	_
 9	pequeno	pequeno	ADJ	ADJ	_	10	amod	_	_
@@ -6743,9 +6743,9 @@
 6	,	_	PUNCT	.	_	8	punct	_	_
 7	parcialmente	parcialmente	ADV	ADV	_	8	advmod	_	_
 8	descoberto	descoberto	ADJ	ADJ	_	5	conj	_	_
-9	[	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+9	-LSB-	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 10	...	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
-11	]	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+11	-RSB-	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 12	,	_	PUNCT	.	_	13	punct	_	_
 13	pernas	perna	NOUN	NOUN	_	2	appos	_	SpaceAfter=No
 14	,	_	PUNCT	.	_	15	punct	_	_
@@ -6757,9 +6757,9 @@
 20	presos	prender	VERBP	VERB	_	19	acl:part	_	_
 21	por	_	ADP	ADP	_	22	case	_	_
 22	cordas	corda	NOUN	NOUN	_	20	nmod	_	_
-23	[	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+23	-LSB-	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 24	...	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
-25	]	_	PUNCT	.	_	26	punct	_	_
+25	-RSB-	_	PUNCT	.	_	26	punct	_	_
 26	boca	boca	NOUN	NOUN	_	13	conj	_	_
 27	amordaçada	amordaçar	VERBP	VERB	_	26	acl:part	_	SpaceAfter=No
 28	,	_	PUNCT	.	_	29	punct	_	_
@@ -6781,7 +6781,7 @@
 44	em	em	ADP	ADP	_	46	case	_	_
 45	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	46	det	_	_
 46	garganta	garganta	NOUN	NOUN	_	43	nmod	_	SpaceAfter=No
-47	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+47	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 48	.	_	PUNCT	.	_	2	punct	_	_
 
 1	De	_	ADP	ADP	_	2	case	_	_
@@ -6868,7 +6868,7 @@
 11	aprender	aprender	VERBI	VERB	_	9	nmod	_	SpaceAfter=No
 12	.	_	PUNCT	.	_	7	punct	_	_
 
-1	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 2	Em	em	ADP	ADP	_	4	case	_	_
 3	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	4	det	_	_
 4	começo	começo	NOUN	NOUN	_	8	nmod	_	_
@@ -6902,9 +6902,9 @@
 32	a	_	DET	DET	_	33	det	_	_
 33	época	época	NOUN	NOUN	_	28	nmod	_	_
 34	de	_	ADP	ADP	_	36	case	_	_
-35	(	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
+35	-LRB-	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
 36	Jim	_	PROPN	PNOUN	_	33	nmod	_	SpaceAfter=No
-37	)	_	PUNCT	.	_	36	punct	_	_
+37	-RRB-	_	PUNCT	.	_	36	punct	_	_
 38	Clark	_	PROPN	PNOUN	_	36	flat	_	_
 39	até	_	ADP	ADP	_	42	case	_	_
 40	os	_	DET	DET	_	42	det	_	_
@@ -7131,9 +7131,9 @@
 19	governador	governador	NOUN	NOUN	_	17	flat	_	_
 20	Paulo	_	PROPN	PNOUN	_	17	appos	_	_
 21	Hartung	_	PROPN	PNOUN	_	20	flat	_	_
-22	(	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+22	-LRB-	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 23	PMDB	_	PROPN	PNOUN	_	17	appos	_	SpaceAfter=No
-24	)	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+24	-RRB-	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 25	,	_	PUNCT	.	_	29	punct	_	_
 26	de	_	ADP	ADP	_	27	case	_	_
 27	quem	_	PRON	PRON	_	29	nmod	_	_
@@ -7296,9 +7296,9 @@
 4	Ultra	_	PROPN	PNOUN	_	3	amod	_	_
 5	também	também	ADV	ADV	_	6	advmod	_	_
 6	inclui	incluir	VERBF	VERB	_	0	root	_	_
-7	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	Ultrafinos	_	PROPN	PNOUN	_	6	obj	_	SpaceAfter=No
-9	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+9	''	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	11	punct	_	_
 11	máquinas	máquina	NOUN	NOUN	_	8	appos	_	_
 12	que	_	PRON	PRON	_	31	nsubj	_	_
@@ -7518,9 +7518,9 @@
 33	problemas	problema	NOUN	NOUN	_	32	obj	_	_
 34	de	_	ADP	ADP	_	35	case	_	_
 35	refração	refração	NOUN	NOUN	_	33	nmod	_	_
-36	(	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
+36	-LRB-	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
 37	grau	grau	NOUN	NOUN	_	35	appos	_	SpaceAfter=No
-38	)	_	PUNCT	.	_	37	punct	_	_
+38	-RRB-	_	PUNCT	.	_	37	punct	_	_
 39	e	_	CCONJ	CONJ	_	42	cc	_	_
 40	este	_	DET	DET	_	41	det	_	_
 41	fator	fator	NOUN	NOUN	_	42	nsubj	_	_
@@ -7744,9 +7744,9 @@
 4	sexta	_	PROPN	PNOUN	_	6	amod	_	_
 5	-	_	PUNCT	.	_	6	punct	_	_
 6	feira	_	PROPN	PNOUN	_	21	nmod	_	_
-7	(	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	-LRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	17	_	NUM	NUM	NumType=Card	6	nmod	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+9	-RRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	6	punct	_	_
 11	uma	_	DET	DET	_	12	det	_	_
 12	assembleia	assembleia	NOUN	NOUN	_	21	nsubj	_	_
@@ -7901,9 +7901,9 @@
 16	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	17	det	_	_
 17	Nações	_	PROPN	PNOUN	_	14	nmod	_	_
 18	Unidas	_	PROPN	PNOUN	_	17	amod	_	_
-19	(	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+19	-LRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 20	ONU	_	PROPN	PNOUN	_	14	appos	_	SpaceAfter=No
-21	)	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+21	-RRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 22	,	_	PUNCT	.	_	23	punct	_	_
 23	Ban	_	PROPN	PNOUN	_	9	appos	_	_
 24	Ki	_	PROPN	PNOUN	_	23	flat	_	_
@@ -8003,7 +8003,7 @@
 13	concordo	concordar	VERBF	VERB	_	5	acl:relcl	_	SpaceAfter=No
 14	.	_	PUNCT	.	_	1	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	É	ser	AUX	VERB	_	0	root	_	_
 3	preciso	preciso	ADJ	ADJ	_	2	xcomp:adj	_	_
 4	ter	ter	VERBI	VERB	_	2	csubj	_	_
@@ -8035,10 +8035,10 @@
 30	nada	_	PRON	PRON	_	32	nsubj	_	_
 31	tivesse	ter	AUX	AUX	_	32	aux	_	_
 32	acontecido	acontecer	VERBP	VERB	_	26	advcl	_	SpaceAfter=No
-33	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+33	''	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 34	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Não	não	ADV	ADV	Polarity=Neg	3	advmod	_	_
 3	vislumbramos	vislumbrar	VERBF	VERB	_	0	root	_	_
 4	nenhum	_	DET	DET	_	5	det	_	_
@@ -8051,7 +8051,7 @@
 11	o	_	DET	DET	_	12	det	_	_
 12	aumento	aumento	NOUN	NOUN	_	3	nmod	_	SpaceAfter=No
 13	.	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
-14	"	_	PUNCT	.	_	3	punct	_	_
+14	''	_	PUNCT	.	_	3	punct	_	_
 
 1	Trabalhamos	trabalhar	VERBF	VERB	_	0	root	_	_
 2	de	_	ADP	ADP	_	3	case	_	_
@@ -8179,9 +8179,9 @@
 3	tucano	tucano	ADJ	ADJ	_	2	amod	_	_
 4	chama	chamar	VERBF	VERB	_	0	root	_	_
 5	de	_	ADP	ADP	_	7	mark	_	_
-6	"	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+6	``	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 7	risível	risível	ADJ	ADJ	_	4	nmod	_	SpaceAfter=No
-8	"	_	PUNCT	.	_	7	punct	_	_
+8	''	_	PUNCT	.	_	7	punct	_	_
 9	a	_	DET	DET	_	10	det	_	_
 10	explicação	explicação	NOUN	NOUN	_	4	obj	_	_
 11	de	de	ADP	ADP	_	13	case	_	_
@@ -8283,7 +8283,7 @@
 16	o	_	DET	DET	_	17	det	_	_
 17	Via	_	PROPN	PNOUN	_	14	nmod	_	_
 18	Marques	_	PROPN	PNOUN	_	17	flat	_	_
-19	(	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+19	-LRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 20	Av.	_	PROPN	PNOUN	_	17	appos	_	_
 21	Marquês	_	PROPN	PNOUN	_	20	flat	_	_
 22	de	_	ADP	ADP	_	23	case	_	_
@@ -8586,7 +8586,7 @@
 16	de	de	ADP	ADP	_	18	case	_	_
 17	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	18	det	_	_
 18	Escócia	_	PROPN	PNOUN	_	15	nmod	_	_
-19	(	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
+19	-LRB-	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
 20	embora	_	CCONJ	CONJ	_	27	mark	_	_
 21	as	_	DET	DET	_	22	det	_	_
 22	listas	lista	NOUN	NOUN	_	27	nsubj	_	_
@@ -8600,10 +8600,10 @@
 30	com	_	ADP	ADP	_	32	case	_	_
 31	este	_	DET	DET	_	32	det	_	_
 32	nome	nome	NOUN	NOUN	_	29	nmod	_	SpaceAfter=No
-33	)	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
+33	-RRB-	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
 34	.	_	PUNCT	.	_	3	punct	_	_
 
-1	"	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 2	Talvez	talvez	ADV	ADV	_	7	advmod	_	_
 3	ele	_	PRON	PRON	_	7	nsubj	_	_
 4	ainda	ainda	ADV	ADV	_	7	advmod	_	_
@@ -8625,16 +8625,16 @@
 20	com	_	ADP	ADP	_	21	case	_	_
 21	medo	medo	NOUN	NOUN	_	14	conj	_	SpaceAfter=No
 22	.	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
-23	"	_	PUNCT	.	_	7	punct	_	_
+23	''	_	PUNCT	.	_	7	punct	_	_
 
 1	É	ser	AUX	AUX	_	2	aux:pass	_	_
 2	classificado	classificar	VERBP	VERB	_	0	root	_	_
 3	como	_	ADP	ADP	_	4	case	_	_
 4	osso	osso	NOUN	NOUN	_	2	nmod	_	_
 5	plano	plano	ADJ	ADJ	_	4	amod	_	_
-6	(	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+6	-LRB-	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 7	chato	chato	ADJ	ADJ	_	4	amod	_	SpaceAfter=No
-8	)	_	PUNCT	.	_	7	punct	_	_
+8	-RRB-	_	PUNCT	.	_	7	punct	_	_
 9	e	_	CCONJ	CONJ	_	10	cc	_	_
 10	tem	ter	VERBF	VERB	_	2	conj	_	_
 11	uma	_	DET	DET	_	12	det	_	_
@@ -8663,9 +8663,9 @@
 19	pessoa	pessoa	NOUN	NOUN	_	6	nmod	_	_
 20	de	de	ADP	ADP	_	23	case	_	_
 21	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	23	det	_	_
-22	"	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+22	``	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 23	mal	mal	NOUN	NOUN	_	19	nmod	_	SpaceAfter=No
-24	"	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+24	''	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 25	,	_	PUNCT	.	_	26	punct	_	_
 26	questiona	questionar	VERBF	VERB	_	6	conj	_	_
 27	sua	_	DET	DET	_	28	det:poss	_	_
@@ -8764,14 +8764,14 @@
 23	de	de	ADP	ADP	_	25	case	_	_
 24	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	25	det	_	_
 25	Linguado	_	PROPN	PNOUN	_	22	nmod	_	_
-26	(	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
+26	-LRB-	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
 27	a	a	ADP	ADP	_	29	case	_	_
 28	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	29	det	_	_
 29	vezes	vez	NOUN	NOUN	_	31	nmod	_	_
 30	denominada	denominar	AUX	AUX	_	31	cop	_	_
 31	João	_	PROPN	PNOUN	_	22	acl:part	_	_
 32	Dias	_	PROPN	PNOUN	_	31	flat	_	SpaceAfter=No
-33	)	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
+33	-RRB-	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
 34	,	_	PUNCT	.	_	38	punct	_	_
 35	que	_	PRON	PRON	_	38	nsubj	_	_
 36	é	ser	AUX	AUX	_	38	cop	_	_
@@ -8830,7 +8830,7 @@
 10	e	_	CCONJ	CONJ	_	11	cc	_	_
 11	Lírio	_	PROPN	PNOUN	_	6	conj	_	_
 12	Ferreira	_	PROPN	PNOUN	_	11	flat	_	_
-13	(	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
+13	-LRB-	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
 14	digamos	dizer	VERBF	VERB	_	18	dep	_	SpaceAfter=No
 15	,	_	PUNCT	.	_	14	punct	_	_
 16	os	_	DET	DET	_	17	det	_	_
@@ -8839,7 +8839,7 @@
 19	de	de	ADP	ADP	_	21	case	_	_
 20	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	21	det	_	_
 21	cena	cena	NOUN	NOUN	_	18	nmod	_	SpaceAfter=No
-22	)	_	PUNCT	.	_	18	punct	_	_
+22	-RRB-	_	PUNCT	.	_	18	punct	_	_
 23	sempre	sempre	ADV	ADV	_	24	advmod	_	_
 24	lutaram	lutar	VERBF	VERB	_	4	ccomp	_	_
 25	por	por	ADP	ADP	_	27	case	_	_
@@ -8850,7 +8850,7 @@
 30	terra	terra	NOUN	NOUN	_	24	nmod	_	SpaceAfter=No
 31	.	_	PUNCT	.	_	4	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Eu	_	PRON	PRON	_	3	nsubj	_	_
 3	joguei	jogar	VERBF	VERB	_	15	ccomp	_	_
 4	um	_	DET	DET	_	5	det	_	_
@@ -8862,7 +8862,7 @@
 10	atingiu	atingir	VERBF	VERB	_	3	conj	_	_
 11	a	_	DET	DET	_	12	det	_	_
 12	atendente	atendente	NOUN	NOUN	_	10	obj	_	SpaceAfter=No
-13	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+13	''	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 14	,	_	PUNCT	.	_	15	punct	_	_
 15	disse	dizer	VERBF	VERB	_	0	root	_	_
 16	Amy	_	PROPN	PNOUN	_	15	nsubj	_	SpaceAfter=No
@@ -8945,7 +8945,7 @@
 37	Deputados	_	PROPN	PNOUN	_	34	nmod	_	SpaceAfter=No
 38	.	_	PUNCT	.	_	10	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Nossa	_	DET	DET	_	3	det:poss	_	_
 3	intenção	intenção	NOUN	NOUN	_	0	root	_	_
 4	é	ser	AUX	AUX	_	3	cop	_	_
@@ -8996,12 +8996,12 @@
 21	o	_	DET	DET	_	22	det	_	_
 22	Estado	_	PROPN	PNOUN	_	18	nmod	_	SpaceAfter=No
 23	,	_	PUNCT	.	_	26	punct	_	_
-24	"	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+24	``	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 25	um	_	DET	DET	_	26	det	_	_
 26	número	número	NOUN	NOUN	_	18	appos	_	_
 27	bastante	bastante	ADV	ADV	_	28	advmod	_	_
 28	significativo	significativo	ADJ	ADJ	_	26	amod	_	SpaceAfter=No
-29	"	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+29	''	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 30	.	_	PUNCT	.	_	10	punct	_	_
 
 1	Durante	_	ADP	ADP	_	3	case	_	_
@@ -9169,16 +9169,16 @@
 3	R	r	NOUN	NOUN	_	1	nmod	_	_
 4	$	_	SYM	SYM	_	3	flat	_	_
 5	6	_	NUM	NUM	NumType=Card	3	nummod	_	_
-6	(	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+6	-LRB-	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 7	inteira	_	NOUN	NOUN	_	3	appos	_	SpaceAfter=No
-8	)	_	PUNCT	.	_	7	punct	_	_
+8	-RRB-	_	PUNCT	.	_	7	punct	_	_
 9	e	_	CCONJ	CONJ	_	10	cc	_	_
 10	R	r	NOUN	NOUN	_	3	conj	_	_
 11	$	_	SYM	SYM	_	10	flat	_	_
 12	3	_	NUM	NUM	NumType=Card	10	nummod	_	_
-13	(	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
+13	-LRB-	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
 14	meia	_	NOUN	NOUN	_	10	appos	_	SpaceAfter=No
-15	)	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
+15	-RRB-	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
 16	.	_	PUNCT	.	_	1	punct	_	_
 
 1	Esta	_	PRON	PRON	_	5	nsubj	_	_
@@ -9196,9 +9196,9 @@
 13	Instituto	_	PROPN	PNOUN	_	8	nmod	_	_
 14	Médico	_	PROPN	PNOUN	_	13	amod	_	_
 15	Legal	_	PROPN	PNOUN	_	13	amod	_	_
-16	(	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+16	-LRB-	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 17	IML	_	PROPN	PNOUN	_	13	appos	_	SpaceAfter=No
-18	)	_	PUNCT	.	_	17	punct	_	_
+18	-RRB-	_	PUNCT	.	_	17	punct	_	_
 19	em	_	ADP	ADP	_	20	case	_	_
 20	2012	_	NUM	NUM	NumType=Card	6	nmod	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	5	punct	_	_
@@ -9346,7 +9346,7 @@
 13	habilitação	habilitação	NOUN	NOUN	_	12	obj	_	SpaceAfter=No
 14	.	_	PUNCT	.	_	6	punct	_	_
 
-1	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 2	O	_	PRON	PRON	_	10	nsubj	_	_
 3	que	_	PRON	PRON	_	5	obj	_	_
 4	eles	_	PRON	PRON	_	5	nsubj	_	_
@@ -9367,7 +9367,7 @@
 19	cometeu	cometer	VERBF	VERB	_	17	ccomp	_	_
 20	um	_	DET	DET	_	21	det	_	_
 21	erro	erro	NOUN	NOUN	_	19	obj	_	SpaceAfter=No
-22	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+22	''	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 23	,	_	PUNCT	.	_	24	punct	_	_
 24	afirmou	afirmar	VERBF	VERB	_	0	root	_	_
 25	a	a	ADP	ADP	_	27	case	_	_
@@ -9407,13 +9407,13 @@
 10	,	_	PUNCT	.	_	12	punct	_	_
 11	três	_	NUM	NUM	NumType=Card	12	nummod	_	_
 12	filhos	filho	NOUN	NOUN	_	4	conj	_	_
-13	(	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
+13	-LRB-	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
 14	Helena	_	PROPN	PNOUN	_	12	appos	_	SpaceAfter=No
 15	,	_	PUNCT	.	_	16	punct	_	_
 16	Edna	_	PROPN	PNOUN	_	14	conj	_	_
 17	e	_	CCONJ	CONJ	_	18	cc	_	_
 18	Eraldo	_	PROPN	PNOUN	_	14	conj	_	SpaceAfter=No
-19	)	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
+19	-RRB-	_	PUNCT	.	_	14	punct	_	SpaceAfter=No
 20	,	_	PUNCT	.	_	22	punct	_	_
 21	oito	_	NUM	NUM	NumType=Card	22	nummod	_	_
 22	netos	neto	NOUN	NOUN	_	4	conj	_	_
@@ -9545,13 +9545,13 @@
 6	foram	_	AUX	AUX	_	7	aux:pass	_	_
 7	dividas	dividir	VERBP	VERB	_	0	root	_	_
 8	em	_	ADP	ADP	_	11	case	_	_
-9	"	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+9	``	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 10	Quem	_	PROPN	PNOUN	_	11	nsubj	_	_
 11	quer	_	PROPN	PNOUN	_	7	nmod	_	_
 12	ser	_	PROPN	PNOUN	_	13	aux:pass	_	_
 13	demitido	_	PROPN	PNOUN	_	11	xcomp	_	SpaceAfter=No
 14	?	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
-15	"	_	PUNCT	.	_	7	punct	_	_
+15	''	_	PUNCT	.	_	7	punct	_	_
 
 1	Deveria	dever	AUX	AUX	_	2	aux	_	_
 2	ter	ter	VERBI	VERB	_	0	root	_	_
@@ -9559,11 +9559,11 @@
 4	pay	_	NOUN	NOUN	_	2	obj	_	_
 5	per	_	ADP	ADP	_	6	mark	_	_
 6	view	_	NOUN	VERB	_	4	nmod	_	_
-7	(	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+7	-LRB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 8	de	de	ADP	ADP	_	10	case	_	_
 9	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	10	det	_	_
 10	execuções	execução	NOUN	NOUN	_	4	nmod	_	SpaceAfter=No
-11	)	_	PUNCT	.	_	10	punct	_	_
+11	-RRB-	_	PUNCT	.	_	10	punct	_	_
 12	eo	_	CCONJ	CONJ	_	14	cc	_	_
 13	dinheiro	dinheiro	NOUN	NOUN	_	14	nsubj	_	_
 14	iria	_	ADJ	VERB	_	2	conj	_	_
@@ -9574,7 +9574,7 @@
 19	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	20	det	_	_
 20	vítimas	vítima	NOUN	NOUN	_	17	nmod	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
-22	"	_	PUNCT	.	_	2	punct	_	_
+22	``	_	PUNCT	.	_	2	punct	_	_
 
 1	As	_	DET	DET	_	2	det	_	_
 2	provas	prova	NOUN	NOUN	_	4	nsubj:pass	_	_
@@ -9616,9 +9616,9 @@
 3	divertiu	divertir	VERBF	VERB	_	33	csubj	_	_
 4	com	_	ADP	ADP	_	7	case	_	_
 5	a	_	DET	DET	_	7	det	_	_
-6	"	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+6	``	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 7	pegadinha	_	NOUN	NOUN	_	3	nmod	_	SpaceAfter=No
-8	"	_	PUNCT	.	_	7	punct	_	_
+8	''	_	PUNCT	.	_	7	punct	_	_
 9	de	de	ADP	ADP	_	11	case	_	_
 10	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	11	det	_	_
 11	Menina	_	PROPN	PNOUN	_	7	nmod	_	_
@@ -9823,13 +9823,13 @@
 17	sensual	sensual	ADJ	ADJ	_	18	amod	_	_
 18	Tessália	_	PROPN	PNOUN	_	14	nmod	_	_
 19	de	_	ADP	ADP	_	21	case	_	_
-20	"	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+20	``	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 21	Avenida	_	PROPN	PNOUN	_	18	nmod	_	_
 22	Brasil	_	PROPN	PNOUN	_	21	flat	_	SpaceAfter=No
-23	"	_	PUNCT	.	_	21	punct	_	_
-24	(	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
+23	''	_	PUNCT	.	_	21	punct	_	_
+24	-LRB-	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
 25	Globo	_	PROPN	PNOUN	_	21	appos	_	SpaceAfter=No
-26	)	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
+26	-RRB-	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
 27	.	_	PUNCT	.	_	9	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -9950,9 +9950,9 @@
 8	/	_	PUNCT	.	_	9	punct	_	_
 9	juvenil	juvenil	ADJ	ADJ	_	10	amod	_	_
 10	Saudade	_	PROPN	PNOUN	_	0	root	_	_
-11	(	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+11	-LRB-	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 12	romance	romance	NOUN	NOUN	_	10	appos	_	SpaceAfter=No
-13	)	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+13	-RRB-	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 14	.	_	PUNCT	.	_	10	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -10184,10 +10184,10 @@
 2	ministra	_	NOUN	NOUN	_	9	nsubj	_	_
 3	Ideli	_	PROPN	PNOUN	_	2	appos	_	_
 4	Salvatti	_	PROPN	PNOUN	_	3	flat	_	_
-5	(	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+5	-LRB-	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 6	Relações	_	PROPN	PNOUN	_	2	appos	_	_
 7	Institucionais	_	PROPN	PNOUN	_	6	amod	_	SpaceAfter=No
-8	)	_	PUNCT	.	_	6	punct	_	_
+8	-RRB-	_	PUNCT	.	_	6	punct	_	_
 9	despachou	despachar	VERBF	VERB	_	0	root	_	_
 10	de	de	ADP	ADP	_	12	case	_	_
 11	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	12	det	_	_
@@ -10214,10 +10214,10 @@
 7	fase	fase	NOUN	NOUN	_	0	root	_	_
 8	de	_	ADP	ADP	_	9	case	_	_
 9	aprendizado	aprendizado	NOUN	NOUN	_	7	nmod	_	SpaceAfter=No
-10	"	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+10	``	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 11	.	_	PUNCT	.	_	7	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Quero	querer	VERBF	VERB	_	0	root	_	_
 3	fazer	fazer	VERBI	VERB	_	2	xcomp	_	_
 4	gol	gol	NOUN	NOUN	_	3	obj	_	_
@@ -10365,9 +10365,9 @@
 17	por	por	ADP	ADP	_	19	case	_	_
 18	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	19	det	_	_
 19	telefone	telefone	NOUN	NOUN	_	6	nmod	_	_
-20	(	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+20	-LRB-	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 21	67	_	NUM	NUM	NumType=Card	23	nummod	_	SpaceAfter=No
-22	)	_	PUNCT	.	_	21	punct	_	_
+22	-RRB-	_	PUNCT	.	_	21	punct	_	_
 23	3316-9161	_	NUM	NUM	NumType=Card	19	appos	_	SpaceAfter=No
 24	.	_	PUNCT	.	_	6	punct	_	_
 
@@ -10519,9 +10519,9 @@
 23	Caixa	_	PROPN	PNOUN	_	19	conj	_	_
 24	Econômica	_	PROPN	PNOUN	_	23	amod	_	_
 25	Federal	_	PROPN	PNOUN	_	23	amod	_	_
-26	(	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
+26	-LRB-	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
 27	CEF	_	PROPN	PNOUN	_	23	appos	_	SpaceAfter=No
-28	)	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
+28	-RRB-	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
 29	,	_	PUNCT	.	_	30	punct	_	_
 30	além	além	ADV	ADV	_	7	advmod	_	_
 31	de	de	ADP	ADP	_	33	case	_	_
@@ -10590,9 +10590,9 @@
 11	de	_	ADP	ADP	_	12	mark	_	_
 12	clicar	clicar	VERBI	VERB	_	10	nmod	_	_
 13	em	_	ADP	ADP	_	15	case	_	_
-14	"	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
+14	``	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
 15	Salvar	_	PROPN	PNOUN	_	12	nmod	_	SpaceAfter=No
-16	"	_	PUNCT	.	_	15	punct	_	_
+16	''	_	PUNCT	.	_	15	punct	_	_
 17	para	_	ADP	ADP	_	23	mark	_	_
 18	que	_	CCONJ	CONJ	_	17	fixed	_	_
 19	as	_	DET	DET	_	21	det	_	_
@@ -10755,7 +10755,7 @@
 45	então	então	ADV	ADV	_	46	advmod	_	_
 46	inéditas	inédito	ADJ	ADJ	_	47	amod	_	_
 47	Naja	_	PROPN	PNOUN	_	34	conj	_	_
-48	(	_	PUNCT	.	_	49	punct	_	SpaceAfter=No
+48	-LRB-	_	PUNCT	.	_	49	punct	_	SpaceAfter=No
 49	instrumental	instrumental	NOUN	NOUN	_	47	appos	_	_
 50	baseado	basear	VERBP	VERB	_	49	acl:part	_	_
 51	em	em	ADP	ADP	_	53	case	_	_
@@ -10764,7 +10764,7 @@
 54	de	_	ADP	ADP	_	55	case	_	_
 55	Luiz	_	PROPN	PNOUN	_	53	nmod	_	_
 56	Schiavon	_	PROPN	PNOUN	_	55	flat	_	SpaceAfter=No
-57	)	_	PUNCT	.	_	49	punct	_	_
+57	-RRB-	_	PUNCT	.	_	49	punct	_	_
 58	e	_	CCONJ	CONJ	_	59	cc	_	_
 59	Alvorada	_	PROPN	PNOUN	_	34	conj	_	_
 60	Voraz	_	PROPN	PNOUN	_	59	amod	_	SpaceAfter=No
@@ -10777,16 +10777,16 @@
 67	London	_	PROPN	PNOUN	_	65	nmod	_	SpaceAfter=No
 68	,	_	PUNCT	.	_	69	punct	_	_
 69	London	_	PROPN	PNOUN	_	67	conj	_	_
-70	(	_	PUNCT	.	_	72	punct	_	SpaceAfter=No
+70	-LRB-	_	PUNCT	.	_	72	punct	_	SpaceAfter=No
 71	de	_	ADP	ADP	_	72	case	_	_
 72	Caetano	_	PROPN	PNOUN	_	67	nmod	_	_
 73	Veloso	_	PROPN	PNOUN	_	72	flat	_	SpaceAfter=No
-74	)	_	PUNCT	.	_	72	punct	_	_
+74	-RRB-	_	PUNCT	.	_	72	punct	_	_
 75	e	_	CCONJ	CONJ	_	77	cc	_	_
 76	de	_	ADP	ADP	_	77	case	_	_
 77	Flores	_	PROPN	PNOUN	_	67	conj	_	_
 78	Astrais	_	PROPN	PNOUN	_	77	amod	_	_
-79	(	_	PUNCT	.	_	82	punct	_	SpaceAfter=No
+79	-LRB-	_	PUNCT	.	_	82	punct	_	SpaceAfter=No
 80	de	de	ADP	ADP	_	82	case	_	_
 81	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	82	det	_	_
 82	grupo	grupo	NOUN	NOUN	_	77	nmod	_	_
@@ -10801,7 +10801,7 @@
 91	Matogrosso	_	PROPN	PNOUN	_	90	flat	_	_
 92	fez	fazer	VERBF	VERB	_	82	acl:relcl	_	_
 93	parte	parte	NOUN	NOUN	_	92	obj	_	SpaceAfter=No
-94	)	_	PUNCT	.	_	82	punct	_	SpaceAfter=No
+94	-RRB-	_	PUNCT	.	_	82	punct	_	SpaceAfter=No
 95	.	_	PUNCT	.	_	29	punct	_	_
 
 1	Clique	clicar	NOUN	VERB	_	0	root	_	_
@@ -10938,13 +10938,13 @@
 12	ceia	ceia	NOUN	NOUN	_	10	obj	_	_
 13	de	_	ADP	ADP	_	14	case	_	_
 14	Thanksgiving	_	PROPN	PNOUN	_	12	nmod	_	_
-15	(	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 16	Dia	_	PROPN	PNOUN	_	14	appos	_	_
 17	de	_	ADP	ADP	_	18	case	_	_
 18	Ação	_	PROPN	PNOUN	_	16	nmod	_	_
 19	de	_	ADP	ADP	_	20	case	_	_
 20	Graças	_	PROPN	PNOUN	_	18	nmod	_	SpaceAfter=No
-21	)	_	PUNCT	.	_	16	punct	_	_
+21	-RRB-	_	PUNCT	.	_	16	punct	_	_
 22	celebrado	celebrar	VERBP	VERB	_	14	acl:part	_	_
 23	em	em	ADP	ADP	_	25	case	_	_
 24	os	o	DET	DET	Definite=Def|Gender=Masc|Number=Plur|PronType=Art	25	det	_	_
@@ -10955,9 +10955,9 @@
 29	quinta	_	PROPN	PNOUN	_	31	amod	_	_
 30	-	_	PUNCT	.	_	31	punct	_	_
 31	feira	_	PROPN	PNOUN	_	22	nmod	_	_
-32	(	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+32	-LRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 33	22	_	NUM	NUM	NumType=Card	31	nmod	_	SpaceAfter=No
-34	)	_	PUNCT	.	_	33	punct	_	_
+34	-RRB-	_	PUNCT	.	_	33	punct	_	_
 35	passada	passado	ADJ	ADJ	_	31	amod	_	SpaceAfter=No
 36	.	_	PUNCT	.	_	3	punct	_	_
 
@@ -11098,16 +11098,16 @@
 6	apreensões	apreensão	NOUN	NOUN	_	3	nmod	_	_
 7	de	_	ADP	ADP	_	8	case	_	_
 8	cocaína	cocaína	NOUN	NOUN	_	6	nmod	_	_
-9	(	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 10	90,9	_	NUM	NUM	NumType=Card	11	nummod	_	_
 11	%	_	SYM	SYM	_	8	appos	_	SpaceAfter=No
-12	)	_	PUNCT	.	_	11	punct	_	_
+12	-RRB-	_	PUNCT	.	_	11	punct	_	_
 13	e	_	CCONJ	CONJ	_	14	cc	_	_
 14	maconha	maconha	NOUN	NOUN	_	8	conj	_	_
-15	(	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 16	91,7	_	NUM	NUM	NumType=Card	17	nummod	_	_
 17	%	_	SYM	SYM	_	14	appos	_	SpaceAfter=No
-18	)	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+18	-RRB-	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	2	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
@@ -11270,9 +11270,9 @@
 27	de	_	ADP	ADP	_	28	case	_	_
 28	Porto	_	PROPN	PNOUN	_	26	nmod	_	_
 29	Seguro	_	PROPN	PNOUN	_	28	amod	_	_
-30	(	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
+30	-LRB-	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
 31	BA	_	PROPN	PNOUN	_	28	appos	_	SpaceAfter=No
-32	)	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
+32	-RRB-	_	PUNCT	.	_	31	punct	_	SpaceAfter=No
 33	.	_	PUNCT	.	_	12	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -11396,11 +11396,11 @@
 11	Justiça	_	PROPN	PNOUN	_	9	nmod	_	_
 12	de	_	ADP	ADP	_	13	case	_	_
 13	Alagoas	_	PROPN	PNOUN	_	9	nmod	_	_
-14	(	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
+14	-LRB-	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
 15	TJ	_	PROPN	PNOUN	_	9	appos	_	_
 16	/	_	PUNCT	.	_	15	punct	_	_
 17	AL	_	PROPN	PNOUN	_	15	flat	_	SpaceAfter=No
-18	)	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
+18	-RRB-	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
 19	,	_	PUNCT	.	_	22	punct	_	_
 20	por	por	ADP	ADP	_	22	case	_	_
 21	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	22	det	_	_
@@ -11410,9 +11410,9 @@
 25	,	_	PUNCT	.	_	22	punct	_	_
 26	disse	dizer	VERBF	VERB	_	0	root	_	_
 27	ser	ser	AUX	VERB	_	26	xcomp	_	_
-28	"	_	PUNCT	.	_	29	punct	_	SpaceAfter=No
+28	``	_	PUNCT	.	_	29	punct	_	SpaceAfter=No
 29	imperioso	imperioso	ADJ	ADJ	_	27	xcomp:adj	_	SpaceAfter=No
-30	"	_	PUNCT	.	_	29	punct	_	_
+30	''	_	PUNCT	.	_	29	punct	_	_
 31	anotar	anotar	VERBI	VERB	_	27	csubj	_	_
 32	sua	_	DET	DET	_	33	det:poss	_	_
 33	gratidão	gratidão	NOUN	NOUN	_	31	obj	_	_
@@ -11540,7 +11540,7 @@
 5	havia	haver	VERBF	VERB	_	4	advcl	_	_
 6	alguns	_	DET	DET	_	7	det	_	_
 7	anos	ano	NOUN	NOUN	_	5	nmod	_	_
-8	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+8	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 9	em	_	ADP	ADP	_	10	case	_	_
 10	janeiro	_	PROPN	PNOUN	_	13	nmod	_	_
 11	de	_	ADP	ADP	_	12	case	_	_
@@ -11558,7 +11558,7 @@
 23	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	24	det	_	_
 24	mês	mês	NOUN	NOUN	_	20	nmod	_	_
 25	seguinte	seguinte	ADJ	ADJ	_	24	amod	_	SpaceAfter=No
-26	)	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+26	-RRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 27	,	_	PUNCT	.	_	4	punct	_	_
 28	o	_	DET	DET	_	29	det	_	_
 29	Terminal	_	PROPN	PNOUN	_	35	nsubj:pass	_	_
@@ -11638,7 +11638,7 @@
 28	alvinegra	alvinegro	ADJ	ADJ	_	27	amod	_	SpaceAfter=No
 29	.	_	PUNCT	.	_	21	punct	_	_
 
-1	"	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 2	Em	em	ADP	ADP	_	5	case	_	_
 3	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	5	det	_	_
 4	minha	_	DET	DET	_	5	det:poss	_	_
@@ -11665,7 +11665,7 @@
 25	com	_	ADP	ADP	_	27	case	_	_
 26	a	_	DET	DET	_	27	det	_	_
 27	greve	greve	NOUN	NOUN	_	22	nmod	_	SpaceAfter=No
-28	"	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+28	''	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 29	,	_	PUNCT	.	_	30	punct	_	_
 30	ressaltou	ressaltar	VERBF	VERB	_	0	root	_	_
 31	Kojo	_	PROPN	PNOUN	_	30	nsubj	_	_
@@ -11689,9 +11689,9 @@
 4	segunda	_	PROPN	PNOUN	_	6	amod	_	_
 5	-	_	PUNCT	.	_	6	punct	_	_
 6	feira	_	PROPN	PNOUN	_	12	nmod	_	_
-7	(	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	-LRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	20	_	NUM	NUM	NumType=Card	6	nmod	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+9	-RRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	6	punct	_	_
 11	Barbosa	_	PROPN	PNOUN	_	12	nsubj	_	_
 12	apresentará	apresentar	VERBF	VERB	_	0	root	_	_
@@ -11773,19 +11773,19 @@
 5	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	6	det	_	_
 6	Vietnã	_	PROPN	PNOUN	_	13	nmod	_	SpaceAfter=No
 7	,	_	PUNCT	.	_	6	punct	_	_
-8	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+8	``	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 9	pagode	pagode	NOUN	NOUN	_	13	nsubj	_	SpaceAfter=No
-10	"	_	PUNCT	.	_	9	punct	_	_
+10	''	_	PUNCT	.	_	9	punct	_	_
 11	é	ser	AUX	AUX	_	13	cop	_	_
 12	um	_	DET	DET	_	13	det	_	_
 13	termo	termo	NOUN	NOUN	_	0	root	_	_
 14	genérico	genérico	ADJ	ADJ	_	13	amod	_	_
 15	significando	significar	AUX	AUX	_	17	cop	_	_
-16	"	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+16	``	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 17	local	local	NOUN	NOUN	_	13	acl:part	_	_
 18	de	_	ADP	ADP	_	19	case	_	_
 19	trabalho	trabalho	NOUN	NOUN	_	17	nmod	_	SpaceAfter=No
-20	"	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+20	''	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	13	punct	_	_
 
 1	Há	haver	VERBF	VERB	_	0	root	_	_
@@ -11963,7 +11963,7 @@
 12	soltos	soltar	ADJ	VERB	_	0	root	_	SpaceAfter=No
 13	.	_	PUNCT	.	_	12	punct	_	_
 
-1	"	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 2	Visto	_	PROPN	VERB	_	6	mark	_	_
 3	que	_	CCONJ	CONJ	_	2	fixed	_	_
 4	as	_	DET	DET	_	5	det	_	_
@@ -11988,7 +11988,7 @@
 23	vontade	vontade	NOUN	NOUN	_	21	obj	_	_
 24	de	_	ADP	ADP	_	25	mark	_	_
 25	ajudar	ajudar	VERBI	VERB	_	23	nmod	_	SpaceAfter=No
-26	"	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+26	''	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 27	,	_	PUNCT	.	_	28	punct	_	_
 28	acrescentou	acrescentar	VERBF	VERB	_	0	root	_	_
 29	Stoere	_	PROPN	PNOUN	_	28	nsubj	_	SpaceAfter=No
@@ -12045,9 +12045,9 @@
 5	apesar	apesar	ADV	ADV	_	9	case	_	_
 6	de	de	ADP	ADP	_	5	case	_	_
 7	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	5	det	_	_
-8	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+8	``	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 9	milagre	milagre	NOUN	NOUN	_	46	nmod	_	SpaceAfter=No
-10	"	_	PUNCT	.	_	9	punct	_	_
+10	''	_	PUNCT	.	_	9	punct	_	_
 11	econômico	econômico	ADJ	ADJ	_	9	amod	_	_
 12	de	de	ADP	ADP	_	15	case	_	_
 13	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	15	det	_	_
@@ -12221,10 +12221,10 @@
 11	registrada	registrar	VERBP	VERB	_	10	acl:part	_	_
 12	em	_	ADP	ADP	_	13	case	_	_
 13	2010	_	NUM	NUM	NumType=Card	11	nmod	_	_
-14	(	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+14	-LRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 15	24	_	NUM	NUM	NumType=Card	16	nummod	_	_
 16	%	_	SYM	SYM	_	10	appos	_	SpaceAfter=No
-17	)	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+17	-RRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	5	punct	_	_
 
 1	A	_	DET	DET	_	3	det	_	_
@@ -12399,9 +12399,9 @@
 6	quarta	_	PROPN	PNOUN	_	8	amod	_	_
 7	-	_	PUNCT	.	_	8	punct	_	_
 8	feira	_	PROPN	PNOUN	_	5	nmod	_	_
-9	(	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 10	25.07	_	NUM	NUM	NumType=Card	8	nmod	_	SpaceAfter=No
-11	)	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+11	-RRB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 12	,	_	PUNCT	.	_	15	punct	_	_
 13	em	em	ADP	ADP	_	15	case	_	_
 14	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	15	det	_	_
@@ -12410,9 +12410,9 @@
 17	Estado	_	PROPN	PNOUN	_	15	nmod	_	_
 18	de	_	ADP	ADP	_	19	case	_	_
 19	Educação	_	PROPN	PNOUN	_	15	nmod	_	_
-20	(	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+20	-LRB-	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 21	Seduc	_	PROPN	PNOUN	_	15	appos	_	SpaceAfter=No
-22	)	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+22	-RRB-	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 23	.	_	PUNCT	.	_	5	punct	_	_
 
 1	Em	_	ADP	ADP	_	2	case	_	_
@@ -12465,7 +12465,7 @@
 10	mostrar	mostrar	VERBI	VERB	_	6	conj	_	SpaceAfter=No
 11	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Há	haver	VERBF	VERB	_	10	advcl	_	_
 3	mais	mais	ADV	ADV	_	5	advmod	_	_
 4	de	_	ADP	ADP	_	3	case	_	_
@@ -12497,24 +12497,24 @@
 30	projetos	projeto	NOUN	NOUN	_	23	nmod	_	_
 31	Agro	_	PROPN	PNOUN	_	30	appos	_	_
 32	Extrativistas	_	PROPN	PNOUN	_	31	flat	_	_
-33	(	_	PUNCT	.	_	34	punct	_	SpaceAfter=No
+33	-LRB-	_	PUNCT	.	_	34	punct	_	SpaceAfter=No
 34	PAEs	_	PROPN	PNOUN	_	31	appos	_	SpaceAfter=No
-35	)	_	PUNCT	.	_	34	punct	_	SpaceAfter=No
+35	-RRB-	_	PUNCT	.	_	34	punct	_	SpaceAfter=No
 36	,	_	PUNCT	.	_	38	punct	_	_
 37	de	_	ADP	ADP	_	38	case	_	_
 38	Assentamento	_	PROPN	PNOUN	_	31	conj	_	_
 39	Florestal	_	PROPN	PNOUN	_	38	amod	_	_
-40	(	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
+40	-LRB-	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
 41	PAF	_	PROPN	PNOUN	_	38	appos	_	SpaceAfter=No
-42	)	_	PUNCT	.	_	41	punct	_	_
+42	-RRB-	_	PUNCT	.	_	41	punct	_	_
 43	e	_	CCONJ	CONJ	_	45	cc	_	_
 44	de	_	ADP	ADP	_	45	case	_	_
 45	Desenvolvimento	_	PROPN	PNOUN	_	31	conj	_	_
 46	Sustentável	_	PROPN	PNOUN	_	45	amod	_	_
-47	(	_	PUNCT	.	_	48	punct	_	SpaceAfter=No
+47	-LRB-	_	PUNCT	.	_	48	punct	_	SpaceAfter=No
 48	PDS	_	PROPN	PNOUN	_	45	appos	_	SpaceAfter=No
-49	)	_	PUNCT	.	_	48	punct	_	SpaceAfter=No
-50	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+49	-RRB-	_	PUNCT	.	_	48	punct	_	SpaceAfter=No
+50	''	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 51	,	_	PUNCT	.	_	52	punct	_	_
 52	destacou	destacar	VERBF	VERB	_	0	root	_	_
 53	o	_	DET	DET	_	54	det	_	_
@@ -12592,26 +12592,26 @@
 3	disputa	disputa	NOUN	NOUN	_	17	nmod	_	_
 4	por	_	ADP	ADP	_	5	case	_	_
 5	Tessália	_	PROPN	PNOUN	_	3	nmod	_	_
-6	(	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+6	-LRB-	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 7	Débora	_	PROPN	PNOUN	_	5	appos	_	_
 8	Nascimento	_	PROPN	PNOUN	_	7	flat	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+9	-RRB-	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	3	punct	_	_
 11	Leleco	_	NOUN	NOUN	_	17	nsubj	_	_
-12	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 13	Marcos	_	PROPN	PNOUN	_	11	appos	_	_
 14	Caruso	_	PROPN	PNOUN	_	13	flat	_	SpaceAfter=No
-15	)	_	PUNCT	.	_	13	punct	_	_
+15	-RRB-	_	PUNCT	.	_	13	punct	_	_
 16	vai	ir	AUX	AUX	_	17	aux	_	_
 17	ganhar	ganhar	VERBI	VERB	_	0	root	_	_
 18	um	_	DET	DET	_	19	det	_	_
 19	round	round	NOUN	NOUN	_	17	obj	_	SpaceAfter=No
 20	,	_	PUNCT	.	_	23	punct	_	_
 21	em	_	ADP	ADP	_	23	case	_	_
-22	"	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+22	``	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 23	Avenida	_	PROPN	PNOUN	_	17	nmod	_	_
 24	Brasil	_	PROPN	PNOUN	_	23	flat	_	SpaceAfter=No
-25	"	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+25	''	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 26	.	_	PUNCT	.	_	17	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -12898,7 +12898,7 @@
 24	Exteriores	_	PROPN	PNOUN	_	23	amod	_	_
 25	afirmou	afirmar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 26	:	_	PUNCT	.	_	25	punct	_	_
-27	"	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
+27	``	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
 28	Sim	sim	ADV	ADV	_	30	advmod	_	SpaceAfter=No
 29	,	_	PUNCT	.	_	30	punct	_	_
 30	aeronaves	aeronave	NOUN	NOUN	_	25	obj	_	_
@@ -13106,7 +13106,7 @@
 24	telefone	telefone	NOUN	NOUN	_	20	nmod	_	SpaceAfter=No
 25	.	_	PUNCT	.	_	6	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Esse	_	DET	DET	_	3	det	_	_
 3	contato	contato	NOUN	NOUN	_	4	nsubj	_	_
 4	é	ser	AUX	VERB	_	0	root	_	_
@@ -13126,11 +13126,11 @@
 18	que	_	PRON	PRON	_	20	nsubj	_	_
 19	sou	ser	AUX	AUX	_	20	cop	_	_
 20	candidato	candidato	NOUN	NOUN	_	16	acl:relcl	_	_
-21	(	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 22	a	a	ADP	ADP	_	24	case	_	_
 23	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	24	det	_	_
 24	Paço	_	PROPN	PNOUN	_	20	nmod	_	SpaceAfter=No
-25	)	_	PUNCT	.	_	24	punct	_	_
+25	-RRB-	_	PUNCT	.	_	24	punct	_	_
 26	por	por	ADP	ADP	_	29	case	_	_
 27	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	29	det	_	_
 28	primeira	primeiro	ADJ	ADJ	_	29	amod	_	_
@@ -13185,9 +13185,9 @@
 6	Econômico	_	PROPN	PNOUN	_	5	amod	_	_
 7	e	_	CCONJ	CONJ	_	8	cc	_	_
 8	Social	_	PROPN	PNOUN	_	6	conj	_	_
-9	(	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 10	BNDES	_	PROPN	PNOUN	_	2	appos	_	SpaceAfter=No
-11	)	_	PUNCT	.	_	10	punct	_	_
+11	-RRB-	_	PUNCT	.	_	10	punct	_	_
 12	aprovou	aprovar	VERBF	VERB	_	0	root	_	_
 13	uma	_	DET	DET	_	14	det	_	_
 14	linha	_	NOUN	NOUN	_	12	obj	_	_
@@ -13497,14 +13497,14 @@
 9	senador	senador	NOUN	NOUN	_	17	nsubj	_	_
 10	Flexa	_	PROPN	PNOUN	_	9	appos	_	_
 11	Ribeiro	_	PROPN	PNOUN	_	10	flat	_	_
-12	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 13	PSDB	_	PROPN	PNOUN	_	9	appos	_	_
 14	-	_	PUNCT	.	_	13	punct	_	_
 15	PA	_	PROPN	PNOUN	_	13	flat	_	SpaceAfter=No
-16	)	_	PUNCT	.	_	13	punct	_	_
+16	-RRB-	_	PUNCT	.	_	13	punct	_	_
 17	afirmou	afirmar	VERBF	VERB	_	0	root	_	_
 18	que	_	CCONJ	CONJ	_	25	mark	_	_
-19	"	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
+19	``	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
 20	a	_	DET	DET	_	21	det	_	_
 21	base	base	NOUN	NOUN	_	25	nsubj	_	_
 22	de	de	ADP	ADP	_	24	case	_	_
@@ -13516,7 +13516,7 @@
 28	não	não	ADV	ADV	Polarity=Neg	29	advmod	_	_
 29	tem	ter	VERBF	VERB	_	25	conj	_	_
 30	consistência	consistência	NOUN	NOUN	_	29	obj	_	SpaceAfter=No
-31	"	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
+31	''	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
 32	,	_	PUNCT	.	_	33	punct	_	_
 33	lembrando	lembrar	VERBG	VERB	_	17	acl:part	_	_
 34	de	de	ADP	ADP	_	36	case	_	_
@@ -13613,11 +13613,11 @@
 17	o	_	NOUN	NOUN	_	13	nmod	_	_
 18	C	c	NOUN	NOUN	_	17	flat	_	SpaceAfter=No
 19	,	_	PUNCT	.	_	23	punct	_	_
-20	"	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+20	``	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 21	ainda	ainda	ADV	ADV	_	23	advmod	_	_
 22	bastante	bastante	ADV	ADV	_	23	advmod	_	_
 23	quente	quente	ADJ	ADJ	_	12	parataxis	_	SpaceAfter=No
-24	"	_	PUNCT	.	_	32	punct	_	SpaceAfter=No
+24	''	_	PUNCT	.	_	32	punct	_	SpaceAfter=No
 25	,	_	PUNCT	.	_	26	punct	_	_
 26	disse	dizer	VERBF	VERB	_	23	parataxis	_	_
 27	Orrison	_	PROPN	PNOUN	_	26	nsubj	_	SpaceAfter=No
@@ -13696,10 +13696,10 @@
 
 1	1998	_	NUM	NUM	NumType=Card	9	nsubj	_	_
 2	QA100	_	PROPN	PNOUN	_	1	flat	_	_
-3	(	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+3	-LRB-	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 4	asteróide	_	NOUN	NOUN	_	1	appos	_	_
 5	74159	_	NUM	NUM	NumType=Card	4	appos	_	SpaceAfter=No
-6	)	_	PUNCT	.	_	4	punct	_	_
+6	-RRB-	_	PUNCT	.	_	4	punct	_	_
 7	é	ser	AUX	AUX	_	9	cop	_	_
 8	um	_	DET	DET	_	9	det	_	_
 9	asteróide	_	NOUN	NOUN	_	0	root	_	_
@@ -13787,17 +13787,17 @@
 1	Primeiro	primeiro	ADV	ADV	_	2	advmod	_	_
 2	veio	_	VERBF	VERB	_	0	root	_	_
 3	o	_	DET	DET	_	5	det	_	_
-4	(	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+4	-LRB-	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 5	goleiro	goleiro	NOUN	NOUN	_	2	nsubj	_	SpaceAfter=No
-6	)	_	PUNCT	.	_	11	punct	_	_
+6	-RRB-	_	PUNCT	.	_	11	punct	_	_
 7	Rafael	_	PROPN	PNOUN	_	5	appos	_	SpaceAfter=No
 8	,	_	PUNCT	.	_	11	punct	_	_
 9	o	_	DET	DET	_	11	det	_	_
-10	(	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+10	-LRB-	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 11	lateral	lateral	NOUN	NOUN	_	5	conj	_	_
 12	-	_	PUNCT	.	_	11	punct	_	_
 13	esquerdo	esquerdo	ADJ	ADJ	_	11	amod	_	SpaceAfter=No
-14	)	_	PUNCT	.	_	11	punct	_	_
+14	-RRB-	_	PUNCT	.	_	11	punct	_	_
 15	Léo	_	PROPN	PNOUN	_	11	appos	_	SpaceAfter=No
 16	,	_	PUNCT	.	_	19	punct	_	_
 17	todo	_	DET	DET	_	18	det	_	_
@@ -13933,7 +13933,7 @@
 6	para	_	ADP	ADP	_	8	case	_	_
 7	o	_	DET	DET	_	8	det	_	_
 8	PSG	_	PROPN	PNOUN	_	5	nmod	_	SpaceAfter=No
-9	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+9	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 10	.	_	PUNCT	.	_	4	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -14121,9 +14121,9 @@
 36	de	de	ADP	ADP	_	38	case	_	_
 37	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	38	det	_	_
 38	Petróleo	_	PROPN	PNOUN	_	34	nmod	_	_
-39	(	_	PUNCT	.	_	40	punct	_	SpaceAfter=No
+39	-LRB-	_	PUNCT	.	_	40	punct	_	SpaceAfter=No
 40	ANP	_	PROPN	PNOUN	_	34	appos	_	SpaceAfter=No
-41	)	_	PUNCT	.	_	40	punct	_	SpaceAfter=No
+41	-RRB-	_	PUNCT	.	_	40	punct	_	SpaceAfter=No
 42	.	_	PUNCT	.	_	2	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -14399,7 +14399,7 @@
 4	perto	perto	ADV	ADV	_	3	advmod	_	_
 5	de	_	ADP	ADP	_	6	mark	_	_
 6	começar	começar	VERBI	VERB	_	4	nmod	_	SpaceAfter=No
-7	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+7	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 8	.	_	PUNCT	.	_	3	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -14413,7 +14413,7 @@
 9	2	_	NUM	NUM	NumType=Card	3	nmod	_	_
 10	a	_	ADP	ADP	_	11	case	_	_
 11	0	_	NUM	NUM	NumType=Card	9	nmod	_	_
-12	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 13	6	_	NUM	NUM	NumType=Card	9	appos	_	_
 14	/	_	PUNCT	.	_	15	punct	_	_
 15	2	_	NUM	NUM	NumType=Card	13	conj	_	_
@@ -14421,7 +14421,7 @@
 17	7	_	NUM	NUM	NumType=Card	13	conj	_	_
 18	/	_	PUNCT	.	_	19	punct	_	_
 19	6	_	NUM	NUM	NumType=Card	17	conj	_	SpaceAfter=No
-20	)	_	PUNCT	.	_	13	punct	_	_
+20	-RRB-	_	PUNCT	.	_	13	punct	_	_
 21	e	_	CCONJ	CONJ	_	23	cc	_	_
 22	agora	agora	ADV	ADV	_	23	advmod	_	_
 23	terá	ter	VERBF	VERB	_	3	conj	_	_
@@ -14454,7 +14454,7 @@
 50	2	_	NUM	NUM	NumType=Card	42	nmod	_	_
 51	a	_	ADP	ADP	_	52	case	_	_
 52	1	_	NUM	NUM	NumType=Card	50	nmod	_	_
-53	(	_	PUNCT	.	_	54	punct	_	SpaceAfter=No
+53	-LRB-	_	PUNCT	.	_	54	punct	_	SpaceAfter=No
 54	6	_	NUM	NUM	NumType=Card	50	appos	_	_
 55	/	_	PUNCT	.	_	56	punct	_	_
 56	2	_	NUM	NUM	NumType=Card	54	conj	_	SpaceAfter=No
@@ -14466,10 +14466,10 @@
 62	6	_	NUM	NUM	NumType=Card	54	conj	_	_
 63	/	_	PUNCT	.	_	64	punct	_	_
 64	4	_	NUM	NUM	NumType=Card	62	conj	_	SpaceAfter=No
-65	)	_	PUNCT	.	_	62	punct	_	SpaceAfter=No
+65	-RRB-	_	PUNCT	.	_	62	punct	_	SpaceAfter=No
 66	.	_	PUNCT	.	_	3	punct	_	_
 
-1	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 2	Além	além	ADV	ADV	_	9	advmod	_	_
 3	de	_	ADP	ADP	_	4	mark	_	_
 4	liberar	liberar	VERBI	VERB	_	2	nmod	_	_
@@ -14505,7 +14505,7 @@
 34	propriedade	propriedade	NOUN	NOUN	_	32	nmod	_	_
 35	e	_	CCONJ	CONJ	_	36	cc	_	_
 36	operação	operação	NOUN	NOUN	_	34	conj	_	SpaceAfter=No
-37	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+37	''	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 38	,	_	PUNCT	.	_	39	punct	_	_
 39	afirmou	afirmar	VERBF	VERB	_	0	root	_	_
 40	a	_	DET	DET	_	41	det	_	_
@@ -14554,7 +14554,7 @@
 
 1	Se	_	PRON	PRON	_	2	obj	_	_
 2	inscreva	inscrever	VERBF	VERB	_	5	ccomp	_	_
-3	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+3	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 4	,	_	PUNCT	.	_	5	punct	_	_
 5	sugere	sugerir	VERBF	VERB	_	0	root	_	_
 6	Tiago	_	PROPN	PNOUN	_	5	nsubj	_	_
@@ -14608,7 +14608,7 @@
 18	a	a	ADP	ADP	_	20	case	_	_
 19	os	o	DET	DET	Definite=Def|Gender=Masc|Number=Plur|PronType=Art	20	det	_	_
 20	conflitos	conflito	NOUN	NOUN	_	17	nmod	_	_
-21	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+21	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 22	,	_	PUNCT	.	_	23	punct	_	_
 23	analisou	analisar	VERBF	VERB	_	0	root	_	_
 24	o	_	DET	DET	_	25	det	_	_
@@ -14618,7 +14618,7 @@
 28	UFBA	_	PROPN	PNOUN	_	25	nmod	_	SpaceAfter=No
 29	.	_	PUNCT	.	_	23	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	O	_	DET	DET	_	3	det	_	_
 3	objetivo	objetivo	NOUN	NOUN	_	27	ccomp	_	_
 4	de	de	ADP	ADP	_	6	case	_	_
@@ -14643,7 +14643,7 @@
 23	municípios	município	NOUN	NOUN	_	21	conj	_	_
 24	beneficiados	beneficiar	VERBP	VERB	_	21	acl:part	_	SpaceAfter=No
 25	,	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
-26	"	_	PUNCT	.	_	3	punct	_	_
+26	''	_	PUNCT	.	_	3	punct	_	_
 27	esclarece	esclarecer	VERBF	VERB	_	0	root	_	_
 28	o	_	DET	DET	_	29	det	_	_
 29	procurador	procurador	NOUN	NOUN	_	27	nsubj	_	_
@@ -14720,14 +14720,14 @@
 11	e	_	CCONJ	CONJ	_	12	cc	_	_
 12	diz	dizer	VERBF	VERB	_	7	conj	_	_
 13	que	_	CCONJ	CONJ	_	15	mark	_	_
-14	"	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
+14	``	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
 15	suou	suar	VERBF	VERB	_	12	ccomp	_	_
 16	e	_	CCONJ	CONJ	_	17	cc	_	_
 17	resolveu	resolver	VERBF	VERB	_	15	conj	_	SpaceAfter=No
-18	"	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+18	''	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 19	,	_	PUNCT	.	_	24	punct	_	_
 20	mas	_	CCONJ	CONJ	_	24	cc	_	_
-21	"	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+21	``	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 22	tem	ter	AUX	AUX	_	24	aux	_	_
 23	que	_	CCONJ	CONJ	_	24	mark	_	_
 24	vir	_	AUX	VERB	_	15	conj	_	_
@@ -14834,11 +14834,11 @@
 9	de	_	ADP	ADP	_	10	case	_	_
 10	Educação	_	PROPN	PNOUN	_	7	nmod	_	_
 11	Tecnológica	_	PROPN	PNOUN	_	10	amod	_	_
-12	(	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+12	-LRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 13	Cefet	_	PROPN	PNOUN	_	7	appos	_	_
 14	-	_	PUNCT	.	_	13	punct	_	_
 15	RJ	_	PROPN	PNOUN	_	13	flat	_	SpaceAfter=No
-16	)	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+16	-RRB-	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	23	punct	_	_
 18	que	_	PRON	PRON	_	23	nsubj	_	_
 19	em	em	ADP	ADP	_	21	case	_	_
@@ -14876,9 +14876,9 @@
 51	Rio	_	PROPN	PNOUN	_	46	nmod	_	_
 52	de	_	ADP	ADP	_	53	case	_	_
 53	Janeiro	_	PROPN	PNOUN	_	51	nmod	_	_
-54	(	_	PUNCT	.	_	55	punct	_	SpaceAfter=No
+54	-LRB-	_	PUNCT	.	_	55	punct	_	SpaceAfter=No
 55	UFRRJ	_	PROPN	PNOUN	_	46	appos	_	SpaceAfter=No
-56	)	_	PUNCT	.	_	55	punct	_	SpaceAfter=No
+56	-RRB-	_	PUNCT	.	_	55	punct	_	SpaceAfter=No
 57	,	_	PUNCT	.	_	59	punct	_	_
 58	que	_	PRON	PRON	_	59	nsubj	_	_
 59	aguarda	aguardar	VERBF	VERB	_	46	acl:relcl	_	_
@@ -15093,11 +15093,11 @@
 19	Mar	_	PROPN	PNOUN	_	17	appos	_	_
 20	a	_	ADP	ADP	_	21	case	_	_
 21	Mar	_	PROPN	PNOUN	_	19	nmod	_	_
-22	(	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
+22	-LRB-	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
 23	apenas	apenas	ADV	ADV	_	24	advmod	_	_
 24	sete	_	NUM	NUM	NumType=Card	25	nummod	_	_
 25	números	número	NOUN	NOUN	_	17	appos	_	SpaceAfter=No
-26	)	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
+26	-RRB-	_	PUNCT	.	_	25	punct	_	SpaceAfter=No
 27	,	_	PUNCT	.	_	31	punct	_	_
 28	e	_	CCONJ	CONJ	_	31	cc	_	_
 29	depois	depois	ADV	ADV	_	31	advmod	_	_
@@ -15105,10 +15105,10 @@
 31	revista	revista	NOUN	NOUN	_	17	conj	_	_
 32	Correo	_	PROPN	PNOUN	_	31	appos	_	_
 33	Literario	_	PROPN	PNOUN	_	32	amod	_	_
-34	(	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
+34	-LRB-	_	PUNCT	.	_	36	punct	_	SpaceAfter=No
 35	quarenta	_	NUM	NUM	NumType=Card	36	nummod	_	_
 36	números	número	NOUN	NOUN	_	31	appos	_	SpaceAfter=No
-37	)	_	PUNCT	.	_	36	punct	_	_
+37	-RRB-	_	PUNCT	.	_	36	punct	_	_
 38	entre	_	ADP	ADP	_	39	case	_	_
 39	1943	_	NUM	NUM	NumType=Card	31	nmod	_	_
 40	e	_	CCONJ	CONJ	_	41	cc	_	_
@@ -15332,7 +15332,7 @@
 13	discutir	discutir	VERBI	VERB	_	11	nmod	_	_
 14	nossas	_	DET	DET	_	15	det:poss	_	_
 15	ideias	ideia	NOUN	NOUN	_	13	obj	_	_
-16	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+16	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	3	punct	_	_
 18	afirmou	afirmar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	18	punct	_	_
@@ -15408,12 +15408,12 @@
 20	de	de	ADP	ADP	_	22	case	_	_
 21	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	22	det	_	_
 22	Morbeia	_	PROPN	PNOUN	_	18	nmod	_	_
-23	(	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+23	-LRB-	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 24	Oum	_	PROPN	PNOUN	_	22	appos	_	_
 25	Er	_	PROPN	PNOUN	_	24	flat	_	_
 26	-	_	PUNCT	.	_	24	punct	_	_
 27	Rbia	_	PROPN	PNOUN	_	24	flat	_	SpaceAfter=No
-28	)	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+28	-RRB-	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 29	,	_	PUNCT	.	_	31	punct	_	_
 30	a	_	ADP	ADP	_	31	case	_	_
 31	sudoeste	sudoeste	NOUN	NOUN	_	7	conj	_	_
@@ -15542,9 +15542,9 @@
 6	somente	somente	ADV	ADV	_	8	advmod	_	_
 7	o	_	DET	DET	_	8	det	_	_
 8	parâmetro	parâmetro	NOUN	NOUN	_	1	obj	_	_
-9	[	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+9	-LSB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 10	W	_	PROPN	PNOUN	_	8	appos	_	SpaceAfter=No
-11	]	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+11	-RSB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 12	,	_	PUNCT	.	_	14	punct	_	_
 13	que	_	PRON	PRON	_	14	nsubj	_	_
 14	indica	indicar	VERBF	VERB	_	8	acl:relcl	_	_
@@ -15639,13 +15639,13 @@
 14	também	também	ADV	ADV	_	16	advmod	_	_
 15	vai	ir	AUX	AUX	_	16	aux	_	_
 16	apoiar	apoiar	VERBI	VERB	_	19	ccomp	_	_
-17	"	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+17	``	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 18	,	_	PUNCT	.	_	19	punct	_	_
 19	apontou	apontar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 20	,	_	PUNCT	.	_	21	punct	_	_
 21	afirmando	afirmar	VERBG	VERB	_	19	acl:part	_	_
 22	que	_	CCONJ	CONJ	_	37	mark	_	SpaceAfter=No
-23	"	_	PUNCT	.	_	37	punct	_	_
+23	''	_	PUNCT	.	_	37	punct	_	_
 24	quando	_	CCONJ	CONJ	_	27	mark	_	_
 25	o	_	DET	DET	_	26	det	_	_
 26	prefeito	prefeito	NOUN	NOUN	_	27	nsubj	_	_
@@ -15660,7 +15660,7 @@
 35	é	ser	AUX	AUX	_	37	cop	_	_
 36	o	_	DET	DET	_	37	det	_	_
 37	povo	povo	NOUN	NOUN	_	21	ccomp	_	SpaceAfter=No
-38	"	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
+38	``	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
 39	.	_	PUNCT	.	_	19	punct	_	_
 
 1	Ainda	ainda	ADV	ADV	_	4	advmod	_	_
@@ -15702,15 +15702,15 @@
 12	francês	francês	ADJ	ADJ	_	11	amod	_	SpaceAfter=No
 13	,	_	PUNCT	.	_	14	punct	_	_
 14	Ronaldinho	_	PROPN	PNOUN	_	1	conj	_	_
-15	(	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 16	Atlético	_	PROPN	PNOUN	_	14	appos	_	_
 17	Mineiro	_	PROPN	PNOUN	_	16	amod	_	SpaceAfter=No
-18	)	_	PUNCT	.	_	16	punct	_	_
+18	-RRB-	_	PUNCT	.	_	16	punct	_	_
 19	e	_	CCONJ	CONJ	_	20	cc	_	_
 20	Fred	_	PROPN	PNOUN	_	1	conj	_	_
-21	(	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 22	Fluminense	_	PROPN	PNOUN	_	20	appos	_	SpaceAfter=No
-23	)	_	PUNCT	.	_	22	punct	_	_
+23	-RRB-	_	PUNCT	.	_	22	punct	_	_
 24	completaram	completar	VERBF	VERB	_	0	root	_	_
 25	a	_	DET	DET	_	26	det	_	_
 26	lista	lista	NOUN	NOUN	_	24	obj	_	_
@@ -15883,12 +15883,12 @@
 13	de	de	ADP	ADP	_	15	case	_	_
 14	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	15	det	_	_
 15	futuro	futuro	NOUN	NOUN	_	12	nmod	_	_
-16	"	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
+16	``	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	18	punct	_	_
 18	explicou	explicar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	18	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Acho	achar	VERBF	VERB	_	0	root	_	_
 3	que	_	CCONJ	CONJ	_	9	mark	_	_
 4	o	_	DET	DET	_	5	det	_	_
@@ -16049,9 +16049,9 @@
 29	Açúcar	_	PROPN	PNOUN	_	27	nmod	_	_
 30	Total	_	PROPN	PNOUN	_	29	amod	_	_
 31	Recuperável	_	PROPN	PNOUN	_	29	amod	_	_
-32	(	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+32	-LRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 33	ATR	_	NOUN	NOUN	_	29	appos	_	SpaceAfter=No
-34	)	_	PUNCT	.	_	33	punct	_	_
+34	-RRB-	_	PUNCT	.	_	33	punct	_	_
 35	por	_	ADP	ADP	_	36	case	_	_
 36	tonelada	tonelada	NOUN	NOUN	_	27	nmod	_	_
 37	de	_	ADP	ADP	_	38	case	_	_
@@ -16130,33 +16130,33 @@
 
 1	Clique	clicar	NOUN	VERB	_	0	root	_	_
 2	em	_	ADP	ADP	_	4	case	_	_
-3	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+3	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 4	Camada	_	PROPN	PNOUN	_	1	nmod	_	SpaceAfter=No
-5	"	_	PUNCT	.	_	8	punct	_	_
+5	''	_	PUNCT	.	_	8	punct	_	_
 6	_	_	PUNCT	.	_	8	punct	_	_
-7	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	Rasterizar	_	PROPN	PNOUN	_	4	conj	_	SpaceAfter=No
-9	"	_	PUNCT	.	_	8	punct	_	_
+9	''	_	PUNCT	.	_	8	punct	_	_
 10	_	_	PUNCT	.	_	12	punct	_	_
-11	"	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+11	``	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 12	Texto	_	PROPN	PNOUN	_	4	conj	_	SpaceAfter=No
-13	"	_	PUNCT	.	_	12	punct	_	_
-14	(	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
-15	"	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+13	''	_	PUNCT	.	_	12	punct	_	_
+14	-LRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+15	``	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 16	Layer	_	PROPN	PNOUN	_	4	appos	_	SpaceAfter=No
-17	"	_	PUNCT	.	_	20	punct	_	_
+17	''	_	PUNCT	.	_	20	punct	_	_
 18	_	_	PUNCT	.	_	20	punct	_	_
-19	"	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+19	``	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 20	Rasterize	_	PROPN	PNOUN	_	16	conj	_	SpaceAfter=No
-21	"	_	PUNCT	.	_	20	punct	_	_
+21	''	_	PUNCT	.	_	20	punct	_	_
 22	_	_	PUNCT	.	_	24	punct	_	_
-23	"	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+23	``	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 24	Text	_	PROPN	PNOUN	_	16	conj	_	SpaceAfter=No
-25	"	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
-26	)	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+25	''	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+26	-RRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 27	.	_	PUNCT	.	_	1	punct	_	_
 
-1	"	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 2	A	_	DET	DET	_	3	det	_	_
 3	situação	situação	NOUN	NOUN	_	5	nsubj	_	_
 4	econômica	econômico	ADJ	ADJ	_	3	amod	_	_
@@ -16172,7 +16172,7 @@
 14	naturalmente	naturalmente	ADV	ADV	_	15	advmod	_	_
 15	exige	exigir	VERBF	VERB	_	5	conj	_	_
 16	cuidado	cuidado	NOUN	NOUN	_	15	obj	_	SpaceAfter=No
-17	"	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+17	''	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 18	,	_	PUNCT	.	_	5	punct	_	_
 19	acrescentou	acrescentar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 20	.	_	PUNCT	.	_	19	punct	_	_
@@ -16212,9 +16212,9 @@
 4	o	_	DET	DET	_	5	det	_	_
 5	problema	problema	NOUN	NOUN	_	2	nmod	_	_
 6	de	_	ADP	ADP	_	8	case	_	_
-7	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	duopóplio	_	NOUN	NOUN	_	5	nmod	_	SpaceAfter=No
-9	"	_	PUNCT	.	_	8	punct	_	_
+9	''	_	PUNCT	.	_	8	punct	_	_
 10	existente	_	ADJ	VERB	_	8	acl:part	_	_
 11	em	em	ADP	ADP	_	13	case	_	_
 12	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	13	det	_	_
@@ -16247,7 +16247,7 @@
 39	impossível	impossível	ADJ	ADJ	_	37	xcomp	_	_
 40	o	_	DET	DET	_	41	det	_	_
 41	deslocamento	deslocamento	NOUN	NOUN	_	39	nsubj	_	_
-42	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+42	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 43	,	_	PUNCT	.	_	44	punct	_	_
 44	diz	dizer	VERBF	VERB	_	0	root	_	_
 45	Randolfe	_	PROPN	PNOUN	_	44	nsubj	_	SpaceAfter=No
@@ -16280,7 +16280,7 @@
 25	que	_	PRON	PRON	_	27	nsubj	_	_
 26	não	não	ADV	ADV	Polarity=Neg	27	advmod	_	_
 27	pode	_	AUX	VERB	_	21	parataxis	_	_
-28	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+28	``	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 29	,	_	PUNCT	.	_	30	punct	_	_
 30	afirma	afirmar	VERBF	VERB	_	0	root	_	_
 31	o	_	DET	DET	_	32	det	_	_
@@ -16301,7 +16301,7 @@
 12	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	14	det	_	_
 13	próximo	próximo	ADJ	ADJ	_	14	amod	_	_
 14	ano	ano	NOUN	NOUN	_	9	nmod	_	_
-15	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+15	``	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 16	,	_	PUNCT	.	_	17	punct	_	_
 17	completou	completar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	17	punct	_	_
@@ -16368,9 +16368,9 @@
 4	de	_	ADP	ADP	_	5	case	_	_
 5	Vigilância	_	PROPN	PNOUN	_	2	nmod	_	_
 6	Sanitária	_	PROPN	PNOUN	_	5	amod	_	_
-7	(	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	-LRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	Anvisa	_	PROPN	PNOUN	_	2	appos	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+9	-RRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	2	punct	_	_
 11	teve	ter	VERBF	VERB	_	0	root	_	_
 12	maior	maior	ADJ	ADJ	_	13	amod	_	_
@@ -16432,7 +16432,7 @@
 40	Conferência	_	PROPN	PNOUN	_	44	nsubj	_	_
 41	de	_	ADP	ADP	_	42	case	_	_
 42	Washington	_	PROPN	PNOUN	_	40	nmod	_	_
-43	"	_	PUNCT	.	_	44	punct	_	SpaceAfter=No
+43	``	_	PUNCT	.	_	44	punct	_	SpaceAfter=No
 44	mostrou	mostrar	VERBF	VERB	_	0	root	_	_
 45	a	_	DET	DET	_	46	det	_	_
 46	possibilidade	possibilidade	NOUN	NOUN	_	44	obj	_	_
@@ -16447,7 +16447,7 @@
 55	nunca	nunca	ADV	ADV	_	57	advmod	_	_
 56	antes	antes	ADV	ADV	_	57	advmod	_	_
 57	visto	_	VERBP	VERB	_	54	acl:part	_	SpaceAfter=No
-58	"	_	PUNCT	.	_	44	punct	_	SpaceAfter=No
+58	''	_	PUNCT	.	_	44	punct	_	SpaceAfter=No
 59	.	_	PUNCT	.	_	44	punct	_	_
 
 1	Em	em	ADP	ADP	_	3	case	_	_
@@ -16487,9 +16487,9 @@
 4	de	_	ADP	ADP	_	5	case	_	_
 5	Ferro	_	PROPN	PNOUN	_	3	nmod	_	_
 6	Sorocabana	_	PROPN	PNOUN	_	3	appos	_	_
-7	(	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	-LRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	1934-1971	_	NUM	NUM	NumType=Card	3	nmod	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+9	-RRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	15	punct	_	_
 11	cujo	_	DET	DET	_	12	det	_	_
 12	nome	nome	NOUN	NOUN	_	15	nsubj:pass	_	_
@@ -16501,9 +16501,9 @@
 18	Paulista	_	PROPN	PNOUN	_	17	amod	_	_
 19	Sociedade	_	PROPN	PNOUN	_	17	appos	_	_
 20	Anônima	_	PROPN	PNOUN	_	19	amod	_	_
-21	(	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 22	1971-1998	_	NUM	NUM	NumType=Card	17	nmod	_	SpaceAfter=No
-23	)	_	PUNCT	.	_	22	punct	_	_
+23	-RRB-	_	PUNCT	.	_	22	punct	_	_
 24	e	_	CCONJ	CONJ	_	28	cc	_	_
 25	que	_	PRON	PRON	_	28	nsubj:pass	_	_
 26	hoje	hoje	ADV	ADV	_	28	advmod	_	_
@@ -16727,10 +16727,10 @@
 16	Ritual	_	PROPN	PNOUN	_	13	conj	_	_
 17	Facial	_	PROPN	PNOUN	_	16	amod	_	_
 18	Revitalizante	_	PROPN	PNOUN	_	16	amod	_	_
-19	(	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+19	-LRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 20	Gaya	_	PROPN	PNOUN	_	18	appos	_	_
 21	Spa	_	PROPN	PNOUN	_	20	flat	_	SpaceAfter=No
-22	)	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+22	-RRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 23	,	_	PUNCT	.	_	24	punct	_	_
 24	Vitis	_	PROPN	PNOUN	_	7	conj	_	_
 25	Face	_	PROPN	PNOUN	_	24	flat	_	SpaceAfter=No
@@ -16740,11 +16740,11 @@
 29	,	_	PUNCT	.	_	30	punct	_	_
 30	Vitis	_	PROPN	PNOUN	_	7	conj	_	_
 31	Zen	_	PROPN	PNOUN	_	30	flat	_	_
-32	(	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+32	-LRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 33	Rede	_	PROPN	PNOUN	_	30	appos	_	_
 34	Shishindo	_	PROPN	PNOUN	_	33	flat	_	_
 35	Spas	_	PROPN	PNOUN	_	33	flat	_	SpaceAfter=No
-36	)	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+36	-RRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 37	,	_	PUNCT	.	_	38	punct	_	_
 38	Crânio	_	PROPN	PNOUN	_	7	conj	_	_
 39	Facial	_	PROPN	PNOUN	_	38	amod	_	_
@@ -16761,11 +16761,11 @@
 50	Relaxante	_	PROPN	PNOUN	_	49	amod	_	_
 51	+	_	X	X	_	52	cc	_	_
 52	Reflexologia	_	PROPN	PNOUN	_	49	conj	_	_
-53	(	_	PUNCT	.	_	54	punct	_	SpaceAfter=No
+53	-LRB-	_	PUNCT	.	_	54	punct	_	SpaceAfter=No
 54	Spa	_	PROPN	PNOUN	_	49	appos	_	_
 55	Tereza	_	PROPN	PNOUN	_	54	flat	_	_
 56	Zanchi	_	PROPN	PNOUN	_	54	flat	_	SpaceAfter=No
-57	)	_	PUNCT	.	_	54	punct	_	SpaceAfter=No
+57	-RRB-	_	PUNCT	.	_	54	punct	_	SpaceAfter=No
 58	,	_	PUNCT	.	_	59	punct	_	_
 59	Argiloterapia	_	PROPN	PNOUN	_	7	conj	_	_
 60	+	_	X	X	_	61	cc	_	_
@@ -16776,12 +16776,12 @@
 65	e	_	CCONJ	CONJ	_	66	cc	_	_
 66	Massagem	_	PROPN	PNOUN	_	63	conj	_	_
 67	Relaxante	_	PROPN	PNOUN	_	66	amod	_	_
-68	(	_	PUNCT	.	_	71	punct	_	SpaceAfter=No
+68	-LRB-	_	PUNCT	.	_	71	punct	_	SpaceAfter=No
 69	De	de	ADP	ADP	_	71	case	_	_
 70	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	71	det	_	_
 71	Lago	_	PROPN	PNOUN	_	63	nmod	_	_
 72	Spa	_	PROPN	PNOUN	_	71	flat	_	SpaceAfter=No
-73	)	_	PUNCT	.	_	71	punct	_	SpaceAfter=No
+73	-RRB-	_	PUNCT	.	_	71	punct	_	SpaceAfter=No
 74	.	_	PUNCT	.	_	4	punct	_	_
 
 1	Dois	_	NUM	NUM	NumType=Card	2	nummod	_	_
@@ -16855,9 +16855,9 @@
 18	,	_	PUNCT	.	_	20	punct	_	_
 19	Minha	_	PROPN	PNOUN	_	20	det:poss	_	_
 20	Vida	_	PROPN	PNOUN	_	17	conj	_	_
-21	(	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 22	MCMV	_	PROPN	PNOUN	_	17	appos	_	SpaceAfter=No
-23	)	_	PUNCT	.	_	22	punct	_	_
+23	-RRB-	_	PUNCT	.	_	22	punct	_	_
 24	até	_	ADP	ADP	_	25	case	_	_
 25	2014	_	NUM	NUM	NumType=Card	4	nmod	_	SpaceAfter=No
 26	.	_	PUNCT	.	_	4	punct	_	_
@@ -16909,13 +16909,13 @@
 45	deu	dar	VERBF	VERB	_	36	acl:relcl	_	SpaceAfter=No
 46	.	_	PUNCT	.	_	17	punct	_	_
 
-1	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 2	Mas	_	CCONJ	CONJ	_	6	cc	_	_
 3	isso	_	PRON	PRON	_	6	nsubj	_	_
 4	nunca	nunca	ADV	ADV	_	6	advmod	_	_
 5	me	_	PRON	PRON	_	6	obj	_	_
 6	preocupou	preocupar	VERBF	VERB	_	9	ccomp	_	SpaceAfter=No
-7	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+7	''	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 8	,	_	PUNCT	.	_	9	punct	_	_
 9	garante	garantir	VERBF	VERB	_	0	root	_	SpaceAfter=No
 10	.	_	PUNCT	.	_	9	punct	_	_
@@ -17084,10 +17084,10 @@
 5	levar	levar	VERBI	VERB	_	3	nmod	_	_
 6	algo	_	PRON	PRON	_	5	obj	_	_
 7	novo	novo	ADJ	ADJ	_	6	amod	_	_
-8	(	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+8	-LRB-	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 9	ou	_	CCONJ	CONJ	_	10	cc	_	_
 10	diferente	diferente	ADJ	ADJ	_	7	conj	_	SpaceAfter=No
-11	)	_	PUNCT	.	_	9	punct	_	_
+11	-RRB-	_	PUNCT	.	_	9	punct	_	_
 12	a	a	ADP	ADP	_	14	case	_	_
 13	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	14	det	_	_
 14	mercado	mercado	NOUN	NOUN	_	5	nmod	_	SpaceAfter=No
@@ -17106,7 +17106,7 @@
 11	RSS	_	PROPN	PNOUN	_	8	conj	_	SpaceAfter=No
 12	.	_	PUNCT	.	_	1	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Encantado	encantado	ADJ	ADJ	_	0	root	_	_
 3	de	_	ADP	ADP	_	4	mark	_	_
 4	saber	saber	VERBI	VERB	_	2	nmod	_	_
@@ -17124,7 +17124,7 @@
 16	Romney	_	PROPN	PNOUN	_	15	flat	_	SpaceAfter=No
 17	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	O	_	DET	DET	_	3	det	_	_
 3	Grêmio	_	PROPN	PNOUN	_	14	nsubj	_	SpaceAfter=No
 4	,	_	PUNCT	.	_	8	punct	_	_
@@ -17168,13 +17168,13 @@
 18	área	área	NOUN	NOUN	_	15	nmod	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	O	_	PRON	PRON	_	0	root	_	_
 3	Que	_	PRON	PRON	_	6	obj	_	_
 4	Tinha	ter	AUX	AUX	_	6	aux	_	_
 5	de	_	ADP	ADP	_	6	mark	_	_
 6	Dar	dar	PROPN	VERB	_	2	acl:relcl	_	SpaceAfter=No
-7	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+7	''	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 8	;	_	PUNCT	.	_	2	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
@@ -17200,7 +17200,7 @@
 3	fato	fato	NOUN	NOUN	_	0	root	_	_
 4	real	real	ADJ	ADJ	_	3	amod	_	SpaceAfter=No
 5	!	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
-6	"	_	PUNCT	.	_	3	punct	_	_
+6	``	_	PUNCT	.	_	3	punct	_	_
 
 1	@	_	X	X	_	5	parataxis	_	_
 2	poupatemposp	_	X	X	_	1	flat	_	_
@@ -17224,7 +17224,7 @@
 20	agenda	agenda	NOUN	NOUN	_	19	obj	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	5	punct	_	_
 
-1	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 2	A	_	DET	DET	_	3	det	_	_
 3	taxa	taxa	NOUN	NOUN	_	6	nsubj	_	_
 4	de	_	ADP	ADP	_	5	case	_	_
@@ -17243,7 +17243,7 @@
 17	o	_	DET	DET	_	18	det	_	_
 18	investimento	investimento	NOUN	NOUN	_	16	obj	_	_
 19	produtivo	produtivo	ADJ	ADJ	_	18	amod	_	SpaceAfter=No
-20	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+20	''	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 21	,	_	PUNCT	.	_	22	punct	_	_
 22	lembrou	lembrar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 23	.	_	PUNCT	.	_	22	punct	_	_
@@ -17251,7 +17251,7 @@
 1	Matsumoto	_	PROPN	PNOUN	_	2	nsubj	_	_
 2	afirmou	afirmar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 3	:	_	PUNCT	.	_	2	punct	_	_
-4	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+4	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 5	Eu	_	PRON	PRON	_	6	nsubj	_	_
 6	queria	querer	VERBF	VERB	_	2	ccomp	_	_
 7	uma	_	DET	DET	_	8	det	_	_
@@ -17595,12 +17595,12 @@
 26	Instituto	_	PROPN	PNOUN	_	23	nmod	_	_
 27	Legislativo	_	PROPN	PNOUN	_	26	amod	_	_
 28	Brasileiro	_	PROPN	PNOUN	_	26	amod	_	_
-29	(	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
+29	-LRB-	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
 30	ILB	_	PROPN	PNOUN	_	26	appos	_	SpaceAfter=No
-31	)	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
+31	-RRB-	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
 32	.	_	PUNCT	.	_	4	punct	_	_
 
-1	"	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 2	Como	_	CCONJ	CONJ	_	3	mark	_	_
 3	estão	estar	AUX	VERB	_	12	advcl	_	_
 4	as	_	DET	DET	_	5	det	_	_
@@ -17763,7 +17763,7 @@
 19	Guarani	_	PROPN	PNOUN	_	13	nmod	_	_
 20	-	_	PUNCT	.	_	19	punct	_	_
 21	Kaiowá	_	PROPN	PNOUN	_	19	flat	_	SpaceAfter=No
-22	"	_	PUNCT	.	_	3	punct	_	_
+22	``	_	PUNCT	.	_	3	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
 2	jogo	jogo	NOUN	NOUN	_	3	nsubj	_	_
@@ -17797,9 +17797,9 @@
 22	Polícia	_	PROPN	PNOUN	_	19	nmod	_	_
 23	Rodoviária	_	PROPN	PNOUN	_	22	amod	_	_
 24	Federal	_	PROPN	PNOUN	_	22	amod	_	_
-25	(	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+25	-LRB-	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 26	PRF	_	PROPN	PNOUN	_	22	appos	_	SpaceAfter=No
-27	)	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+27	-RRB-	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 28	,	_	PUNCT	.	_	30	punct	_	_
 29	em	_	ADP	ADP	_	30	case	_	_
 30	conjunto	conjunto	NOUN	NOUN	_	22	nmod	_	_
@@ -17856,7 +17856,7 @@
 26	$	_	SYM	SYM	_	25	flat	_	_
 27	1,045	_	NUM	NUM	NumType=Card	28	nummod	_	_
 28	milhão	_	NUM	NUM	NumType=Card	25	nummod	_	_
-29	(	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
+29	-LRB-	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
 30	um	_	NUM	NUM	NumType=Card	31	nummod	_	_
 31	milhão	_	NUM	NUM	NumType=Card	32	nummod	_	_
 32	e	_	CCONJ	CONJ	_	33	nummod	_	_
@@ -17865,7 +17865,7 @@
 35	cinco	_	NUM	NUM	NumType=Card	36	nummod	_	_
 36	mil	_	NUM	NUM	NumType=Card	37	nummod	_	_
 37	reais	real	NOUN	NOUN	_	25	appos	_	SpaceAfter=No
-38	)	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
+38	-RRB-	_	PUNCT	.	_	37	punct	_	SpaceAfter=No
 39	.	_	PUNCT	.	_	3	punct	_	_
 
 1	Ele	_	PRON	PRON	_	2	nsubj	_	_
@@ -17978,18 +17978,18 @@
 12	acontecem	acontecer	VERBF	VERB	_	8	acl:relcl	_	_
 
 1	ec	_	PROPN	PNOUN	_	9	nsubj	_	_
-2	(	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+2	-LRB-	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 3	Espanhol	_	PROPN	PNOUN	_	1	appos	_	SpaceAfter=No
 4	:	_	PUNCT	.	_	3	punct	_	_
 5	Ecuador	_	NOUN	NOUN	_	3	appos	_	SpaceAfter=No
-6	)	_	PUNCT	.	_	3	punct	_	_
+6	-RRB-	_	PUNCT	.	_	3	punct	_	_
 7	é	ser	AUX	AUX	_	9	cop	_	_
 8	o	_	DET	DET	_	9	det	_	_
 9	código	código	NOUN	NOUN	_	0	root	_	_
 10	TLD	_	PROPN	PNOUN	_	9	appos	_	_
-11	(	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+11	-LRB-	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 12	ccTLD	_	PROPN	PNOUN	_	9	appos	_	SpaceAfter=No
-13	)	_	PUNCT	.	_	12	punct	_	_
+13	-RRB-	_	PUNCT	.	_	12	punct	_	_
 14	em	em	ADP	ADP	_	16	case	_	_
 15	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	16	det	_	_
 16	Internet	_	PROPN	PNOUN	_	9	nmod	_	_
@@ -18017,7 +18017,7 @@
 17	faltas	_	NOUN	NOUN	_	14	nmod	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	3	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Eu	_	PRON	PRON	_	4	nsubj	_	_
 3	estou	estar	AUX	AUX	_	4	aux	_	_
 4	curtindo	curtir	VERBG	VERB	_	0	root	_	_
@@ -18333,9 +18333,9 @@
 19	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	21	det	_	_
 20	Tríplice	_	PROPN	PNOUN	_	21	amod	_	_
 21	Aliança	_	PROPN	PNOUN	_	17	nmod	_	_
-22	(	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+22	-LRB-	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 23	1865-1870	_	NUM	NUM	NumType=Card	17	nmod	_	SpaceAfter=No
-24	)	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
+24	-RRB-	_	PUNCT	.	_	23	punct	_	SpaceAfter=No
 25	,	_	PUNCT	.	_	30	punct	_	_
 26	onde	onde	ADV	ADV	_	30	advmod	_	_
 27	os	_	DET	DET	_	28	det	_	_
@@ -18461,9 +18461,9 @@
 5	rua	rua	NOUN	NOUN	_	3	nmod	_	_
 6	conhecidas	conhecer	ADJ	VERB	_	1	acl:part	_	_
 7	como	_	ADP	ADP	_	9	case	_	_
-8	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+8	``	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 9	Maras	_	PROPN	PNOUN	_	6	nmod	_	SpaceAfter=No
-10	"	_	PUNCT	.	_	9	punct	_	_
+10	''	_	PUNCT	.	_	9	punct	_	_
 11	também	também	ADV	ADV	_	12	advmod	_	_
 12	extorquem	extorquir	VERBF	VERB	_	0	root	_	_
 13	moradores	morador	NOUN	NOUN	_	12	obj	_	_
@@ -18480,7 +18480,7 @@
 24	pagam	pagar	VERBF	VERB	_	21	acl:relcl	_	SpaceAfter=No
 25	.	_	PUNCT	.	_	12	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Estava	estar	AUX	AUX	_	4	cop	_	_
 3	muito	_	DET	DET	_	4	det	_	_
 4	frio	frio	NOUN	NOUN	_	0	root	_	SpaceAfter=No
@@ -18620,14 +18620,14 @@
 6	referida	referir	VERBP	VERB	_	1	acl:part	_	_
 7	como	_	ADP	ADP	_	8	case	_	_
 8	IPO	_	PROPN	PNOUN	_	6	nmod	_	_
-9	(	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	15	punct	_	SpaceAfter=No
 10	de	de	ADP	ADP	_	12	case	_	_
 11	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	12	det	_	_
 12	inglês	inglês	NOUN	NOUN	_	15	nmod	_	_
 13	Initial	_	PROPN	PNOUN	_	15	amod	_	_
 14	Public	_	PROPN	PNOUN	_	15	amod	_	_
 15	Offering	_	PROPN	PNOUN	_	8	appos	_	SpaceAfter=No
-16	)	_	PUNCT	.	_	15	punct	_	_
+16	-RRB-	_	PUNCT	.	_	15	punct	_	_
 17	é	ser	AUX	AUX	_	19	cop	_	_
 18	o	_	DET	DET	_	19	det	_	_
 19	evento	evento	NOUN	NOUN	_	0	root	_	_
@@ -18692,7 +18692,7 @@
 30	a	_	DET	DET	_	31	det	_	_
 31	mesa	mesa	NOUN	NOUN	_	26	nmod	_	SpaceAfter=No
 32	.	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
-33	"	_	PUNCT	.	_	2	punct	_	_
+33	``	_	PUNCT	.	_	2	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
 2	bolsa	bolsa	NOUN	NOUN	_	10	nsubj	_	_
@@ -19041,7 +19041,7 @@
 23	correta	correto	ADJ	ADJ	_	22	amod	_	SpaceAfter=No
 24	.	_	PUNCT	.	_	6	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Esse	_	PRON	PRON	_	4	nsubj	_	_
 3	é	ser	AUX	AUX	_	4	cop	_	_
 4	um	_	PRON	PRON	_	0	root	_	_
@@ -19063,21 +19063,21 @@
 4	livro	livro	NOUN	NOUN	_	2	nsubj	_	_
 5	de	_	ADP	ADP	_	6	case	_	_
 6	1960	_	NUM	NUM	NumType=Card	4	nmod	_	_
-7	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	Dimensions	_	PROPN	PNOUN	_	4	appos	_	_
 9	de	_	ADP	ADP	_	11	case	_	_
 10	la	_	DET	DET	_	11	det	_	_
 11	conscience	_	NOUN	NOUN	_	8	nmod	_	_
 12	historique	_	ADJ	ADJ	_	11	amod	_	SpaceAfter=No
-13	"	_	PUNCT	.	_	16	punct	_	_
-14	(	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+13	''	_	PUNCT	.	_	16	punct	_	_
+14	-LRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 15	ou	_	CCONJ	CONJ	_	16	cc	_	_
 16	Dimensões	_	PROPN	PNOUN	_	8	conj	_	_
 17	de	de	ADP	ADP	_	19	case	_	_
 18	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	19	det	_	_
 19	Consciência	_	PROPN	PNOUN	_	16	nmod	_	_
 20	Histórica	_	PROPN	PNOUN	_	19	amod	_	SpaceAfter=No
-21	)	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+21	-RRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 22	.	_	PUNCT	.	_	2	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -19096,7 +19096,7 @@
 14	desfeito	desfazer	VERBP	VERB	_	0	root	_	SpaceAfter=No
 15	.	_	PUNCT	.	_	14	punct	_	_
 
-1	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 2	Um	_	DET	DET	_	3	det	_	_
 3	alvo	alvo	NOUN	NOUN	_	6	nsubj	_	_
 4	são	ser	AUX	AUX	_	6	cop	_	_
@@ -19108,7 +19108,7 @@
 10	resistência	resistência	NOUN	NOUN	_	8	obj	_	_
 11	a	_	ADP	ADP	_	12	case	_	_
 12	antibióticos	antibiótico	NOUN	NOUN	_	10	nmod	_	SpaceAfter=No
-13	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+13	''	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 14	,	_	PUNCT	.	_	15	punct	_	_
 15	afirma	afirmar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 16	.	_	PUNCT	.	_	15	punct	_	_
@@ -19188,7 +19188,7 @@
 23	de	de	ADP	ADP	_	25	case	_	_
 24	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	25	det	_	_
 25	pessoas	pessoa	NOUN	NOUN	_	22	nmod	_	_
-26	"	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
+26	``	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
 27	,	_	PUNCT	.	_	28	punct	_	_
 28	disse	dizer	VERBF	VERB	_	0	root	_	_
 29	Vanessa	_	PROPN	PNOUN	_	28	nsubj	_	_
@@ -19259,7 +19259,7 @@
 19	pessoas	pessoa	NOUN	NOUN	_	17	nmod	_	SpaceAfter=No
 20	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	A	_	DET	DET	_	3	det	_	_
 3	poesia	poesia	NOUN	NOUN	_	4	nsubj	_	_
 4	perdeu	perder	VERBF	VERB	_	0	root	_	_
@@ -19291,7 +19291,7 @@
 22	noite	noite	NOUN	NOUN	_	19	nmod	_	SpaceAfter=No
 23	.	_	PUNCT	.	_	3	punct	_	_
 
-1	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 2	The	_	PROPN	PNOUN	_	3	det	_	_
 3	End	_	PROPN	PNOUN	_	6	nsubj	_	_
 4	Is	_	PROPN	PNOUN	_	6	cop	_	_
@@ -19300,7 +19300,7 @@
 7	Is	_	PROPN	PNOUN	_	9	cop	_	_
 8	the	_	PROPN	PNOUN	_	9	det	_	_
 9	End	_	PROPN	PNOUN	_	6	conj	_	SpaceAfter=No
-10	"	_	PUNCT	.	_	6	punct	_	_
+10	''	_	PUNCT	.	_	6	punct	_	_
 11	é	ser	AUX	AUX	_	13	cop	_	_
 12	uma	_	DET	DET	_	13	det	_	_
 13	canção	canção	NOUN	NOUN	_	0	root	_	_
@@ -19515,9 +19515,9 @@
 37	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	38	det	_	_
 38	Consumidor	_	PROPN	PNOUN	_	35	nmod	_	_
 39	Amplo	_	PROPN	PNOUN	_	38	amod	_	_
-40	(	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
+40	-LRB-	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
 41	IPCA	_	PROPN	PNOUN	_	32	appos	_	SpaceAfter=No
-42	)	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
+42	-RRB-	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
 43	.	_	PUNCT	.	_	4	punct	_	_
 
 1	Responsável	responsável	ADJ	ADJ	_	14	amod	_	_
@@ -19852,9 +19852,9 @@
 22	impedir	impedir	VERBI	VERB	_	8	advcl	_	_
 23	a	_	DET	DET	_	24	det	_	_
 24	exportação	exportação	NOUN	NOUN	_	22	obj	_	_
-25	"	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+25	``	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 26	irresponsável	irresponsável	ADJ	ADJ	_	24	amod	_	SpaceAfter=No
-27	"	_	PUNCT	.	_	26	punct	_	_
+27	''	_	PUNCT	.	_	26	punct	_	_
 28	de	_	ADP	ADP	_	29	case	_	_
 29	munições	_	NOUN	NOUN	_	24	nmod	_	SpaceAfter=No
 30	.	_	PUNCT	.	_	8	punct	_	_
@@ -19946,10 +19946,10 @@
 
 1	1998	_	NUM	NUM	NumType=Card	9	nsubj	_	_
 2	RZ63	_	PROPN	PNOUN	_	1	flat	_	_
-3	(	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+3	-LRB-	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 4	asteroide	asteroide	NOUN	NOUN	_	1	appos	_	_
 5	28097	_	NUM	NUM	NumType=Card	4	appos	_	SpaceAfter=No
-6	)	_	PUNCT	.	_	4	punct	_	_
+6	-RRB-	_	PUNCT	.	_	4	punct	_	_
 7	é	ser	AUX	AUX	_	9	cop	_	_
 8	um	_	DET	DET	_	9	det	_	_
 9	asteroide	asteroide	NOUN	NOUN	_	0	root	_	_
@@ -20007,7 +20007,7 @@
 11	gente	gente	NOUN	NOUN	_	12	nsubj	_	_
 12	faz	fazer	VERBF	VERB	_	8	acl:relcl	_	SpaceAfter=No
 13	.	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
-14	"	_	PUNCT	.	_	1	punct	_	_
+14	``	_	PUNCT	.	_	1	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
 2	grupo	grupo	NOUN	NOUN	_	3	nsubj	_	_
@@ -20160,7 +20160,7 @@
 7	,	_	PUNCT	.	_	9	punct	_	_
 8	não	não	ADV	ADV	Polarity=Neg	9	advmod	_	_
 9	financeiro	financeiro	ADJ	ADJ	_	6	conj	_	_
-10	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+10	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 11	,	_	PUNCT	.	_	12	punct	_	_
 12	afirmou	afirmar	VERBF	VERB	_	0	root	_	_
 13	o	_	DET	DET	_	14	det	_	_
@@ -20208,9 +20208,9 @@
 29	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	31	det	_	_
 30	último	último	ADJ	ADJ	_	31	amod	_	_
 31	domingo	_	PROPN	PNOUN	_	27	nmod	_	_
-32	(	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+32	-LRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 33	12	_	NUM	NUM	NumType=Card	31	nmod	_	SpaceAfter=No
-34	)	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
+34	-RRB-	_	PUNCT	.	_	33	punct	_	SpaceAfter=No
 35	.	_	PUNCT	.	_	5	punct	_	_
 
 1	Também	também	ADV	ADV	_	2	advmod	_	_
@@ -20269,7 +20269,7 @@
 6	candidatos	candidato	NOUN	NOUN	_	8	nsubj	_	_
 7	se	_	PRON	PRON	_	8	obj	_	_
 8	inscreveram	inscrever	VERBF	VERB	_	0	root	_	_
-9	(	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 10	veja	ver	VERBF	VERB	_	8	parataxis	_	_
 11	a	_	DET	DET	_	12	det	_	_
 12	concorrência	concorrência	NOUN	NOUN	_	10	obj	_	_
@@ -20280,7 +20280,7 @@
 17	de	de	ADP	ADP	_	19	case	_	_
 18	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	19	det	_	_
 19	concurso	concurso	NOUN	NOUN	_	15	nmod	_	SpaceAfter=No
-20	)	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+20	-RRB-	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	8	punct	_	_
 
 1	Segundo	_	ADP	ADP	_	3	case	_	_
@@ -20347,7 +20347,7 @@
 8	Rodrigues	_	PROPN	PNOUN	_	6	nmod	_	_
 9	se	_	PRON	PRON	_	10	expl:pv	_	_
 10	apropriou	apropriar	VERBF	VERB	_	0	root	_	_
-11	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+11	``	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 12	de	de	ADP	ADP	_	14	case	_	_
 13	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	14	det	_	_
 14	imagem	imagem	NOUN	NOUN	_	10	nmod	_	_
@@ -20368,7 +20368,7 @@
 29	para	_	ADP	ADP	_	31	case	_	_
 30	a	_	DET	DET	_	31	det	_	_
 31	população	população	NOUN	NOUN	_	27	nmod	_	SpaceAfter=No
-32	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+32	''	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 33	.	_	PUNCT	.	_	10	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -20428,9 +20428,9 @@
 7	de	_	ADP	ADP	_	8	case	_	_
 8	Entidades	_	PROPN	PNOUN	_	6	nmod	_	_
 9	Empresariais	_	PROPN	PNOUN	_	8	amod	_	_
-10	(	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+10	-LRB-	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 11	Assemp	_	PROPN	PNOUN	_	6	appos	_	SpaceAfter=No
-12	)	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+12	-RRB-	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 13	,	_	PUNCT	.	_	14	punct	_	_
 14	Fábio	_	PROPN	PNOUN	_	3	appos	_	_
 15	Borba	_	PROPN	PNOUN	_	14	flat	_	SpaceAfter=No
@@ -20463,10 +20463,10 @@
 42	poder	poder	NOUN	NOUN	_	39	nmod	_	_
 43	público	público	ADJ	ADJ	_	42	amod	_	_
 44	é	ser	AUX	VERB	_	0	root	_	_
-45	"	_	PUNCT	.	_	47	punct	_	SpaceAfter=No
+45	``	_	PUNCT	.	_	47	punct	_	SpaceAfter=No
 46	extremamente	extremamente	ADV	ADV	_	47	advmod	_	_
 47	necessária	necessário	ADJ	ADJ	_	44	xcomp:adj	_	SpaceAfter=No
-48	"	_	PUNCT	.	_	47	punct	_	SpaceAfter=No
+48	''	_	PUNCT	.	_	47	punct	_	SpaceAfter=No
 49	.	_	PUNCT	.	_	44	punct	_	_
 
 1	Em	em	ADP	ADP	_	3	case	_	_
@@ -20562,7 +20562,7 @@
 6	de	_	ADP	ADP	_	7	case	_	_
 7	seguros	seguro	NOUN	NOUN	_	5	nmod	_	SpaceAfter=No
 8	,	_	PUNCT	.	_	2	punct	_	_
-9	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+9	``	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 10	resolvemos	resolver	VERBF	VERB	_	0	root	_	_
 11	partir	partir	VERBI	VERB	_	10	xcomp	_	_
 12	para	_	ADP	ADP	_	15	case	_	_
@@ -20596,7 +20596,7 @@
 40	as	o	DET	DET	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	42	det	_	_
 41	suas	_	DET	DET	_	42	det:poss	_	_
 42	atividades	atividade	NOUN	NOUN	_	37	iobj	_	SpaceAfter=No
-43	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+43	''	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 44	.	_	PUNCT	.	_	10	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
@@ -20671,18 +20671,18 @@
 15	por	_	ADP	ADP	_	16	case	_	_
 16	Santa	_	PROPN	PNOUN	_	14	nmod	_	_
 17	Catarina	_	PROPN	PNOUN	_	16	flat	_	_
-18	(	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+18	-LRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 19	5,1	_	NUM	NUM	NumType=Card	20	nummod	_	_
 20	%	_	SYM	SYM	_	16	appos	_	SpaceAfter=No
-21	)	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+21	-RRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 22	,	_	PUNCT	.	_	25	punct	_	_
 23	por	por	ADP	ADP	_	25	case	_	_
 24	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	25	det	_	_
 25	Maranhão	_	PROPN	PNOUN	_	16	conj	_	_
-26	(	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
+26	-LRB-	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
 27	4,1	_	NUM	NUM	NumType=Card	28	nummod	_	_
 28	%	_	SYM	SYM	_	25	appos	_	SpaceAfter=No
-29	)	_	PUNCT	.	_	28	punct	_	_
+29	-RRB-	_	PUNCT	.	_	28	punct	_	_
 30	e	_	CCONJ	CONJ	_	32	cc	_	_
 31	por	_	ADP	ADP	_	32	case	_	_
 32	Mato	_	PROPN	PNOUN	_	16	conj	_	_
@@ -20690,10 +20690,10 @@
 34	de	de	ADP	ADP	_	36	case	_	_
 35	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	36	det	_	_
 36	Sul	_	PROPN	PNOUN	_	32	nmod	_	_
-37	(	_	PUNCT	.	_	39	punct	_	SpaceAfter=No
+37	-LRB-	_	PUNCT	.	_	39	punct	_	SpaceAfter=No
 38	3,4	_	NUM	NUM	NumType=Card	39	nummod	_	_
 39	%	_	SYM	SYM	_	32	appos	_	SpaceAfter=No
-40	)	_	PUNCT	.	_	39	punct	_	SpaceAfter=No
+40	-RRB-	_	PUNCT	.	_	39	punct	_	SpaceAfter=No
 41	.	_	PUNCT	.	_	4	punct	_	_
 
 1	Eu	_	PRON	PRON	_	4	nsubj	_	_
@@ -20712,9 +20712,9 @@
 1	Um	_	DET	DET	_	2	det	_	_
 2	norueguês	norueguês	NOUN	NOUN	_	3	nsubj	_	_
 3	bebeu	beber	VERBF	VERB	_	0	root	_	_
-4	"	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+4	``	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 5	todas	_	PRON	PRON	_	3	obj	_	SpaceAfter=No
-6	"	_	PUNCT	.	_	5	punct	_	_
+6	''	_	PUNCT	.	_	5	punct	_	_
 7	durante	_	ADP	ADP	_	9	case	_	_
 8	uma	_	DET	DET	_	9	det	_	_
 9	viagem	viagem	NOUN	NOUN	_	3	nmod	_	_
@@ -20754,13 +20754,13 @@
 18	a	_	DET	DET	_	19	det	_	_
 19	existência	existência	NOUN	NOUN	_	17	obj	_	_
 20	de	_	ADP	ADP	_	22	case	_	_
-21	"	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+21	``	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 22	provas	prova	NOUN	NOUN	_	19	nmod	_	_
 23	robustas	robusto	ADJ	ADJ	_	22	amod	_	SpaceAfter=No
-24	"	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+24	''	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 25	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 2	A	_	DET	DET	_	3	det	_	_
 3	batata	batata	NOUN	NOUN	_	10	nsubj	_	_
 4	-	_	PUNCT	.	_	3	punct	_	_
@@ -20840,7 +20840,7 @@
 21	Lula	_	PROPN	PNOUN	_	19	nmod	_	_
 22	e	_	CCONJ	CONJ	_	23	cc	_	_
 23	Dilma	_	PROPN	PNOUN	_	21	conj	_	SpaceAfter=No
-24	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+24	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 25	.	_	PUNCT	.	_	4	punct	_	_
 
 1	Os	_	DET	DET	_	3	det	_	_
@@ -20875,7 +20875,7 @@
 30	divisão	divisão	NOUN	NOUN	_	28	nmod	_	SpaceAfter=No
 31	.	_	PUNCT	.	_	4	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Ele	_	PRON	PRON	_	3	nsubj	_	_
 3	está	estar	AUX	VERB	_	0	root	_	_
 4	fora	fora	ADV	ADV	_	3	advmod	_	_
@@ -21068,20 +21068,20 @@
 14	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	15	det	_	_
 15	Mundo	_	PROPN	PNOUN	_	12	nmod	_	_
 16	masculina	masculino	ADJ	ADJ	_	12	amod	_	_
-17	(	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
+17	-LRB-	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
 18	1954	_	NUM	NUM	NumType=Card	16	appos	_	SpaceAfter=No
 19	,	_	PUNCT	.	_	20	punct	_	_
 20	1974	_	NUM	NUM	NumType=Card	18	conj	_	_
 21	e	_	CCONJ	CONJ	_	22	cc	_	_
 22	1990	_	NUM	NUM	NumType=Card	18	conj	_	SpaceAfter=No
-23	)	_	PUNCT	.	_	18	punct	_	_
+23	-RRB-	_	PUNCT	.	_	18	punct	_	_
 24	e	_	CCONJ	CONJ	_	25	cc	_	_
 25	feminina	feminino	ADJ	ADJ	_	16	conj	_	_
-26	(	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
+26	-LRB-	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
 27	2003	_	NUM	NUM	NumType=Card	25	appos	_	_
 28	e	_	CCONJ	CONJ	_	29	cc	_	_
 29	2007	_	NUM	NUM	NumType=Card	27	conj	_	SpaceAfter=No
-30	)	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
+30	-RRB-	_	PUNCT	.	_	27	punct	_	SpaceAfter=No
 31	.	_	PUNCT	.	_	7	punct	_	_
 
 1	Seus	_	DET	DET	_	3	det:poss	_	_
@@ -21219,12 +21219,12 @@
 
 1	Cordofão	_	PROPN	PNOUN	_	11	nsubj	_	_
 2	Ocidental	_	PROPN	PNOUN	_	1	amod	_	_
-3	(	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+3	-LRB-	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 4	Gharb	_	PROPN	PNOUN	_	1	appos	_	_
 5	Kurdufan	_	PROPN	PNOUN	_	4	flat	_	_
 6	em	_	ADP	ADP	_	7	case	_	_
 7	árabe	árabe	NOUN	NOUN	_	4	nmod	_	SpaceAfter=No
-8	)	_	PUNCT	.	_	4	punct	_	_
+8	-RRB-	_	PUNCT	.	_	4	punct	_	_
 9	foi	_	AUX	AUX	_	11	cop	_	_
 10	um	_	DET	DET	_	11	det	_	_
 11	estado	estado	NOUN	NOUN	_	0	root	_	_
@@ -21446,22 +21446,22 @@
 11	peixes	peixe	NOUN	NOUN	_	8	nmod	_	SpaceAfter=No
 12	:	_	PUNCT	.	_	3	punct	_	_
 
-1	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 2	A	_	DET	DET	_	3	det	_	_
 3	triplicação	triplicação	NOUN	NOUN	_	10	nsubj	_	_
-4	(	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
+4	-LRB-	_	PUNCT	.	_	7	punct	_	SpaceAfter=No
 5	de	de	ADP	ADP	_	7	case	_	_
 6	os	o	DET	DET	Definite=Def|Gender=Masc|Number=Plur|PronType=Art	7	det	_	_
 7	valores	_	NOUN	NOUN	_	3	nmod	_	_
 8	pagos	pagar	VERBP	VERB	_	7	acl:part	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	7	punct	_	_
+9	-RRB-	_	PUNCT	.	_	7	punct	_	_
 10	está	estar	AUX	VERB	_	18	ccomp	_	_
 11	em	_	ADP	ADP	_	12	case	_	_
 12	vigor	vigor	NOUN	NOUN	_	10	nmod	_	_
 13	há	haver	ADP	VERB	_	10	advcl	_	_
 14	poucos	_	DET	DET	_	15	det	_	_
 15	meses	mês	NOUN	NOUN	_	13	nmod	_	SpaceAfter=No
-16	"	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
+16	''	_	PUNCT	.	_	10	punct	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	18	punct	_	_
 18	acrescentou	acrescentar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	18	punct	_	_
@@ -21509,12 +21509,12 @@
 7	que	_	CCONJ	CONJ	_	12	mark	_	_
 8	o	_	DET	DET	_	9	det	_	_
 9	petista	petista	NOUN	NOUN	_	12	nsubj	_	_
-10	"	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+10	``	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 11	está	estar	AUX	AUX	_	12	aux	_	_
 12	seguindo	seguir	VERBG	VERB	_	6	ccomp	_	_
 13	as	_	DET	DET	_	14	det	_	_
 14	lições	lição	NOUN	NOUN	_	12	obj	_	SpaceAfter=No
-15	"	_	PUNCT	.	_	12	punct	_	_
+15	''	_	PUNCT	.	_	12	punct	_	_
 16	de	de	ADP	ADP	_	18	case	_	_
 17	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	18	det	_	_
 18	ex	_	PART	PRT	_	14	nmod	_	_
@@ -21567,9 +21567,9 @@
 18	Núcleos	_	PROPN	PNOUN	_	16	nmod	_	_
 19	de	_	ADP	ADP	_	20	case	_	_
 20	Excelência	_	PROPN	PNOUN	_	18	nmod	_	_
-21	(	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+21	-LRB-	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 22	Pronex	_	PROPN	PNOUN	_	14	appos	_	SpaceAfter=No
-23	)	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
+23	-RRB-	_	PUNCT	.	_	22	punct	_	SpaceAfter=No
 24	,	_	PUNCT	.	_	26	punct	_	_
 25	uma	_	DET	DET	_	26	det	_	_
 26	parceria	parceria	NOUN	NOUN	_	14	appos	_	_
@@ -21589,9 +21589,9 @@
 40	de	de	ADP	ADP	_	42	case	_	_
 41	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	42	det	_	_
 42	Pesquisa	_	PROPN	PNOUN	_	39	nmod	_	_
-43	(	_	PUNCT	.	_	44	punct	_	SpaceAfter=No
+43	-LRB-	_	PUNCT	.	_	44	punct	_	SpaceAfter=No
 44	Fadesp	_	PROPN	PNOUN	_	35	appos	_	SpaceAfter=No
-45	)	_	PUNCT	.	_	44	punct	_	_
+45	-RRB-	_	PUNCT	.	_	44	punct	_	_
 46	e	_	CCONJ	CONJ	_	47	cc	_	_
 47	Secretaria	_	PROPN	PNOUN	_	29	conj	_	_
 48	de	_	ADP	ADP	_	49	case	_	_
@@ -21602,9 +21602,9 @@
 53	Tecnologia	_	PROPN	PNOUN	_	51	conj	_	_
 54	e	_	CCONJ	CONJ	_	55	cc	_	_
 55	Inovação	_	PROPN	PNOUN	_	51	conj	_	_
-56	(	_	PUNCT	.	_	57	punct	_	SpaceAfter=No
+56	-LRB-	_	PUNCT	.	_	57	punct	_	SpaceAfter=No
 57	Secti	_	PROPN	PNOUN	_	47	appos	_	SpaceAfter=No
-58	)	_	PUNCT	.	_	57	punct	_	SpaceAfter=No
+58	-RRB-	_	PUNCT	.	_	57	punct	_	SpaceAfter=No
 59	.	_	PUNCT	.	_	4	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -21691,7 +21691,7 @@
 22	adversários	adversário	NOUN	NOUN	_	21	obj	_	SpaceAfter=No
 23	.	_	PUNCT	.	_	9	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Anunciamos	anunciar	VERBF	VERB	_	36	ccomp	_	_
 3	a	_	DET	DET	_	4	det	_	_
 4	adesão	adesão	NOUN	NOUN	_	2	obj	_	_
@@ -21710,9 +21710,9 @@
 17	em	_	ADP	ADP	_	19	case	_	_
 18	uma	_	DET	DET	_	19	det	_	_
 19	reunião	reunião	NOUN	NOUN	_	2	nmod	_	_
-20	(	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
+20	-LRB-	_	PUNCT	.	_	21	punct	_	SpaceAfter=No
 21	extraordinária	extraordinário	ADJ	ADJ	_	19	amod	_	SpaceAfter=No
-22	)	_	PUNCT	.	_	21	punct	_	_
+22	-RRB-	_	PUNCT	.	_	21	punct	_	_
 23	em	em	ADP	ADP	_	25	case	_	_
 24	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	25	det	_	_
 25	dia	dia	NOUN	NOUN	_	19	nmod	_	_
@@ -21724,7 +21724,7 @@
 31	Rio	_	PROPN	PNOUN	_	19	nmod	_	_
 32	de	_	ADP	ADP	_	33	case	_	_
 33	Janeiro	_	PROPN	PNOUN	_	31	nmod	_	SpaceAfter=No
-34	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+34	''	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 35	,	_	PUNCT	.	_	36	punct	_	_
 36	disse	dizer	VERBF	VERB	_	0	root	_	_
 37	a	_	DET	DET	_	38	det	_	_
@@ -22040,7 +22040,7 @@
 17	St	_	PROPN	PNOUN	_	15	nmod	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	2	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Estamos	estar	AUX	AUX	_	3	aux	_	_
 3	acertando	acertar	VERBG	VERB	_	0	root	_	_
 4	as	_	DET	DET	_	5	det	_	_
@@ -22048,7 +22048,7 @@
 6	,	_	PUNCT	.	_	7	punct	_	_
 7	vendo	_	VERBG	VERB	_	3	conj	_	_
 8	conveniências	conveniência	NOUN	NOUN	_	7	obj	_	_
-9	(	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+9	-LRB-	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 10	em	em	ADP	ADP	_	12	case	_	_
 11	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	12	det	_	_
 12	plantão	plantão	NOUN	NOUN	_	3	nmod	_	_
@@ -22057,7 +22057,7 @@
 15	período	período	NOUN	NOUN	_	3	nmod	_	_
 16	de	_	ADP	ADP	_	17	case	_	_
 17	recesso	recesso	NOUN	NOUN	_	15	nmod	_	SpaceAfter=No
-18	)	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+18	-RRB-	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	3	punct	_	_
 
 1	Quatro	_	NUM	NUM	NumType=Card	2	nummod	_	_
@@ -22164,7 +22164,7 @@
 5	desagradáveis	desagradável	ADJ	ADJ	_	4	amod	_	_
 6	que	_	PRON	PRON	_	7	obj	_	_
 7	tive	ter	VERBF	VERB	_	4	acl:relcl	_	SpaceAfter=No
-8	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+8	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 9	.	_	PUNCT	.	_	2	punct	_	_
 
 1	Já	já	ADV	ADV	_	2	advmod	_	_
@@ -22254,9 +22254,9 @@
 46	Márcio	_	PROPN	PNOUN	_	45	appos	_	_
 47	Bins	_	PROPN	PNOUN	_	46	flat	_	_
 48	Ely	_	PROPN	PNOUN	_	46	flat	_	_
-49	(	_	PUNCT	.	_	50	punct	_	SpaceAfter=No
+49	-LRB-	_	PUNCT	.	_	50	punct	_	SpaceAfter=No
 50	PDT	_	PROPN	PNOUN	_	45	appos	_	SpaceAfter=No
-51	)	_	PUNCT	.	_	50	punct	_	SpaceAfter=No
+51	-RRB-	_	PUNCT	.	_	50	punct	_	SpaceAfter=No
 52	.	_	PUNCT	.	_	19	punct	_	_
 
 1	Multidão	multidão	NOUN	NOUN	_	2	nsubj	_	_
@@ -22282,14 +22282,14 @@
 9	de	de	ADP	ADP	_	11	case	_	_
 10	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	11	det	_	_
 11	coligação	coligação	NOUN	NOUN	_	4	nmod	_	_
-12	"	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+12	``	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 13	Unidos	_	PROPN	PNOUN	_	11	appos	_	_
 14	Por	_	PROPN	PNOUN	_	17	case	_	_
 15	Um	_	PROPN	PNOUN	_	17	det	_	_
 16	Novo	_	PROPN	PNOUN	_	17	amod	_	_
 17	São	_	PROPN	PNOUN	_	13	nmod	_	_
 18	Miguel	_	PROPN	PNOUN	_	17	flat	_	SpaceAfter=No
-19	"	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
+19	''	_	PUNCT	.	_	13	punct	_	SpaceAfter=No
 20	,	_	PUNCT	.	_	2	punct	_	_
 21	realizaram	realizar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 22	,	_	PUNCT	.	_	26	punct	_	_
@@ -22359,7 +22359,7 @@
 41	fortaleceram	fortalecer	VERBF	VERB	_	3	conj	_	_
 42	nossa	_	DET	DET	_	43	det:poss	_	_
 43	economia	economia	NOUN	NOUN	_	41	obj	_	SpaceAfter=No
-44	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+44	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 45	.	_	PUNCT	.	_	3	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
@@ -22470,9 +22470,9 @@
 24	de	de	ADP	ADP	_	26	case	_	_
 25	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	26	det	_	_
 26	Coreia	_	PROPN	PNOUN	_	21	nmod	_	_
-27	(	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
+27	-LRB-	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
 28	RPDC	_	PROPN	PNOUN	_	21	appos	_	SpaceAfter=No
-29	)	_	PUNCT	.	_	28	punct	_	_
+29	-RRB-	_	PUNCT	.	_	28	punct	_	_
 30	e	_	CCONJ	CONJ	_	31	cc	_	_
 31	esboça	esboçar	VERBF	VERB	_	12	conj	_	_
 32	inclusive	inclusive	ADV	ADV	_	31	advmod	_	_
@@ -22631,9 +22631,9 @@
 4	Rural	_	PROPN	PNOUN	_	2	amod	_	_
 5	de	_	ADP	ADP	_	6	case	_	_
 6	Pernambuco	_	PROPN	PNOUN	_	2	nmod	_	_
-7	(	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	-LRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	UFRPE	_	PROPN	PNOUN	_	2	appos	_	SpaceAfter=No
-9	)	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+9	-RRB-	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	12	punct	_	_
 11	por	_	ADP	ADP	_	12	case	_	_
 12	meio	meio	NOUN	NOUN	_	18	nmod	_	_
@@ -22678,7 +22678,7 @@
 1	Segundo	_	ADP	ADP	_	2	case	_	_
 2	ele	_	PRON	PRON	_	9	nmod	_	SpaceAfter=No
 3	,	_	PUNCT	.	_	2	punct	_	_
-4	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+4	``	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 5	a	_	DET	DET	_	6	det	_	_
 6	OAB	_	PROPN	PNOUN	_	9	nsubj	_	_
 7	/	_	PUNCT	.	_	6	punct	_	_
@@ -22722,7 +22722,7 @@
 45	advogados	advogado	NOUN	NOUN	_	33	nmod	_	_
 46	em	_	ADP	ADP	_	47	case	_	_
 47	Rondônia	_	PROPN	PNOUN	_	33	nmod	_	SpaceAfter=No
-48	"	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+48	''	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 49	.	_	PUNCT	.	_	9	punct	_	_
 
 1	Os	_	DET	DET	_	2	det	_	_
@@ -22732,9 +22732,9 @@
 5	Supremo	_	PROPN	PNOUN	_	6	amod	_	_
 6	Tribunal	_	PROPN	PNOUN	_	2	nmod	_	_
 7	Federal	_	PROPN	PNOUN	_	6	amod	_	_
-8	(	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+8	-LRB-	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 9	STF	_	PROPN	PNOUN	_	6	appos	_	SpaceAfter=No
-10	)	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
+10	-RRB-	_	PUNCT	.	_	9	punct	_	SpaceAfter=No
 11	,	_	PUNCT	.	_	13	punct	_	_
 12	por	_	ADP	ADP	_	13	case	_	_
 13	meio	meio	NOUN	NOUN	_	19	nmod	_	_
@@ -22755,10 +22755,10 @@
 28	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	29	det	_	_
 29	Recurso	_	PROPN	PNOUN	_	26	nmod	_	_
 30	Extraordinário	_	PROPN	PNOUN	_	29	amod	_	_
-31	(	_	PUNCT	.	_	32	punct	_	SpaceAfter=No
+31	-LRB-	_	PUNCT	.	_	32	punct	_	SpaceAfter=No
 32	RE	_	PROPN	PNOUN	_	29	appos	_	_
 33	688223	_	NUM	NUM	NumType=Card	32	appos	_	SpaceAfter=No
-34	)	_	PUNCT	.	_	32	punct	_	_
+34	-RRB-	_	PUNCT	.	_	32	punct	_	_
 35	em	_	ADP	ADP	_	36	case	_	_
 36	que	_	PRON	PRON	_	42	nmod	_	_
 37	uma	_	DET	DET	_	38	det	_	_
@@ -22771,14 +22771,14 @@
 44	incidência	incidência	NOUN	NOUN	_	42	obj	_	_
 45	de	_	ADP	ADP	_	46	case	_	_
 46	ISS	_	PROPN	PNOUN	_	44	nmod	_	_
-47	(	_	PUNCT	.	_	48	punct	_	SpaceAfter=No
+47	-LRB-	_	PUNCT	.	_	48	punct	_	SpaceAfter=No
 48	Imposto	_	PROPN	PNOUN	_	46	appos	_	_
 49	sobre	_	ADP	ADP	_	50	case	_	_
 50	Serviços	_	PROPN	PNOUN	_	48	nmod	_	_
 51	de	_	ADP	ADP	_	53	case	_	_
 52	Qualquer	_	PROPN	PNOUN	_	53	det	_	_
 53	Natureza	_	PROPN	PNOUN	_	50	nmod	_	SpaceAfter=No
-54	)	_	PUNCT	.	_	48	punct	_	_
+54	-RRB-	_	PUNCT	.	_	48	punct	_	_
 55	sobre	_	ADP	ADP	_	56	case	_	_
 56	contratos	contrato	NOUN	NOUN	_	44	nmod	_	_
 57	de	_	ADP	ADP	_	58	case	_	_
@@ -22793,9 +22793,9 @@
 66	programas	programa	NOUN	NOUN	_	64	nmod	_	_
 67	de	_	ADP	ADP	_	68	case	_	_
 68	computador	computador	NOUN	NOUN	_	66	nmod	_	_
-69	(	_	PUNCT	.	_	70	punct	_	SpaceAfter=No
+69	-LRB-	_	PUNCT	.	_	70	punct	_	SpaceAfter=No
 70	software	software	NOUN	NOUN	_	66	appos	_	SpaceAfter=No
-71	)	_	PUNCT	.	_	70	punct	_	_
+71	-RRB-	_	PUNCT	.	_	70	punct	_	_
 72	desenvolvidos	desenvolver	VERBP	VERB	_	66	acl:part	_	_
 73	de	_	ADP	ADP	_	74	case	_	_
 74	forma	forma	NOUN	NOUN	_	72	nmod	_	_
@@ -23148,7 +23148,7 @@
 22	julho	_	PROPN	PNOUN	_	20	nmod	_	_
 23	de	_	ADP	ADP	_	24	case	_	_
 24	2011	_	NUM	NUM	NumType=Card	22	nmod	_	_
-25	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+25	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 26	,	_	PUNCT	.	_	27	punct	_	_
 27	relata	relatar	VERBF	VERB	_	0	root	_	_
 28	a	_	DET	DET	_	29	det	_	_
@@ -23199,7 +23199,7 @@
 20	fundo	fundo	NOUN	NOUN	_	18	nmod	_	SpaceAfter=No
 21	.	_	PUNCT	.	_	10	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Os	_	DET	DET	_	3	det	_	_
 3	torcedores	torcedor	NOUN	NOUN	_	4	nsubj	_	_
 4	precisam	precisar	VERBF	VERB	_	0	root	_	_
@@ -23251,10 +23251,10 @@
 15	ataque	ataque	NOUN	NOUN	_	20	nsubj	_	_
 16	foi	_	AUX	AUX	_	20	cop	_	_
 17	um	_	DET	DET	_	20	det	_	_
-18	"	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+18	``	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 19	trágico	trágico	ADJ	ADJ	_	20	amod	_	_
 20	acidente	acidente	NOUN	NOUN	_	12	ccomp	_	SpaceAfter=No
-21	"	_	PUNCT	.	_	20	punct	_	_
+21	''	_	PUNCT	.	_	20	punct	_	_
 22	que	_	PRON	PRON	_	25	nsubj	_	_
 23	não	não	ADV	ADV	Polarity=Neg	25	advmod	_	_
 24	se	_	PRON	PRON	_	25	expl:pv	_	_
@@ -23280,7 +23280,7 @@
 17	sobreviver	sobreviver	VERBI	VERB	_	15	nmod	_	SpaceAfter=No
 18	.	_	PUNCT	.	_	9	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Não	não	ADV	ADV	Polarity=Neg	4	advmod	_	_
 3	foi	_	AUX	AUX	_	4	cop	_	_
 4	resultado	resultado	NOUN	NOUN	_	0	root	_	_
@@ -23401,10 +23401,10 @@
 26	até	até	ADV	ADV	_	27	advmod	_	_
 27	mesmo	mesmo	ADV	ADV	_	30	advmod	_	_
 28	configurar	configurar	AUX	AUX	_	30	cop	_	_
-29	"	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
+29	``	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
 30	ilícito	ilícito	NOUN	NOUN	_	6	parataxis	_	_
 31	internacional	internacional	ADJ	ADJ	_	30	amod	_	SpaceAfter=No
-32	"	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
+32	''	_	PUNCT	.	_	30	punct	_	SpaceAfter=No
 33	,	_	PUNCT	.	_	36	punct	_	_
 34	segundo	_	ADP	ADP	_	36	case	_	_
 35	o	_	DET	DET	_	36	det	_	_
@@ -23675,9 +23675,9 @@
 15	de	de	ADP	ADP	_	17	case	_	_
 16	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	17	det	_	_
 17	Sul	_	PROPN	PNOUN	_	13	nmod	_	_
-18	(	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+18	-LRB-	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 19	SP	_	PROPN	PNOUN	_	13	appos	_	SpaceAfter=No
-20	)	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+20	-RRB-	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 21	,	_	PUNCT	.	_	23	punct	_	_
 22	com	_	ADP	ADP	_	23	case	_	_
 23	direito	direito	NOUN	NOUN	_	8	nmod	_	_
@@ -23695,18 +23695,18 @@
 7	o	_	DET	DET	_	8	det	_	_
 8	Ricardo	_	PROPN	PNOUN	_	4	nmod	_	_
 9	Henriques	_	PROPN	PNOUN	_	8	flat	_	_
-10	(	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+10	-LRB-	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 11	preparador	preparador	NOUN	NOUN	_	8	appos	_	_
 12	físico	físico	ADJ	ADJ	_	11	amod	_	SpaceAfter=No
-13	)	_	PUNCT	.	_	11	punct	_	_
+13	-RRB-	_	PUNCT	.	_	11	punct	_	_
 14	eo	_	CCONJ	CONJ	_	15	cc	_	_
 15	Flavio	_	PROPN	PNOUN	_	8	conj	_	_
 16	Tenius	_	PROPN	PNOUN	_	15	flat	_	_
-17	(	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
+17	-LRB-	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
 18	preparador	preparador	NOUN	NOUN	_	15	appos	_	_
 19	de	_	ADP	ADP	_	20	case	_	_
 20	goleiros	goleiro	NOUN	NOUN	_	18	nmod	_	SpaceAfter=No
-21	)	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
+21	-RRB-	_	PUNCT	.	_	18	punct	_	SpaceAfter=No
 22	,	_	PUNCT	.	_	25	punct	_	_
 23	em	em	ADP	ADP	_	25	case	_	_
 24	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	25	det	_	_
@@ -23730,12 +23730,12 @@
 15	BR	_	PROPN	PNOUN	_	3	nmod	_	_
 16	-	_	PUNCT	.	_	15	punct	_	_
 17	476	_	NUM	NUM	NumType=Card	15	appos	_	_
-18	(	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+18	-LRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 19	antiga	antigo	ADJ	ADJ	_	20	amod	_	_
 20	BR	_	PROPN	PNOUN	_	15	appos	_	_
 21	-	_	PUNCT	.	_	20	punct	_	_
 22	116	_	NUM	NUM	NumType=Card	20	appos	_	SpaceAfter=No
-23	)	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
+23	-RRB-	_	PUNCT	.	_	20	punct	_	SpaceAfter=No
 24	,	_	PUNCT	.	_	27	punct	_	_
 25	em	em	ADP	ADP	_	27	case	_	_
 26	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	27	det	_	_
@@ -24005,7 +24005,7 @@
 25	previsões	previsão	NOUN	NOUN	_	22	nmod	_	SpaceAfter=No
 26	.	_	PUNCT	.	_	4	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Então	então	ADV	ADV	_	4	advmod	_	SpaceAfter=No
 3	,	_	PUNCT	.	_	2	punct	_	_
 4	é	ser	AUX	VERB	_	0	root	_	_
@@ -24022,7 +24022,7 @@
 15	em	em	ADP	ADP	_	17	case	_	_
 16	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	17	det	_	_
 17	dicionário	dicionário	NOUN	NOUN	_	12	nmod	_	SpaceAfter=No
-18	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+18	''	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	4	punct	_	_
 
 1	A	_	DET	DET	_	2	det	_	_
@@ -24083,7 +24083,7 @@
 31	local	local	NOUN	NOUN	_	27	nmod	_	SpaceAfter=No
 32	.	_	PUNCT	.	_	27	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Sempre	sempre	ADV	ADV	_	3	advmod	_	_
 3	vejo	ver	VERBF	VERB	_	24	ccomp	_	_
 4	desenhos	desenho	NOUN	NOUN	_	3	obj	_	_
@@ -24104,7 +24104,7 @@
 19	de	de	ADP	ADP	_	21	case	_	_
 20	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	21	det	_	_
 21	Brasil	_	PROPN	PNOUN	_	18	nmod	_	SpaceAfter=No
-22	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+22	''	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 23	,	_	PUNCT	.	_	24	punct	_	_
 24	acrescenta	acrescentar	VERBF	VERB	_	0	root	_	SpaceAfter=No
 25	,	_	PUNCT	.	_	28	punct	_	_
@@ -24136,7 +24136,7 @@
 15	o	_	DET	DET	_	16	det	_	_
 16	tratamento	tratamento	NOUN	NOUN	_	14	obj	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	26	punct	_	_
-18	"	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+18	``	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 19	As	_	DET	DET	_	20	det	_	_
 20	intervenções	intervenção	NOUN	NOUN	_	26	nsubj	_	_
 21	e	_	CCONJ	CONJ	_	23	cc	_	_
@@ -24219,7 +24219,7 @@
 15	Tite	_	PROPN	PNOUN	_	14	nsubj	_	SpaceAfter=No
 16	.	_	PUNCT	.	_	14	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	Não	não	ADV	ADV	Polarity=Neg	4	advmod	_	_
 3	foi	_	AUX	AUX	_	4	cop	_	_
 4	discordância	discordância	NOUN	NOUN	_	0	root	_	SpaceAfter=No
@@ -24431,7 +24431,7 @@
 21	por	_	ADP	ADP	_	26	mark	_	_
 22	ser	ser	AUX	AUX	_	26	cop	_	_
 23	a	_	DET	DET	_	26	det	_	_
-24	"	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+24	``	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 25	melhor	melhor	ADJ	ADJ	_	26	amod	_	_
 26	localização	localização	NOUN	NOUN	_	11	advcl	_	_
 27	para	_	ADP	ADP	_	28	case	_	_
@@ -24458,7 +24458,7 @@
 48	toda	_	DET	DET	_	50	det	_	_
 49	a	_	DET	DET	_	50	det	_	_
 50	Europa	_	PROPN	PNOUN	_	47	obj	_	SpaceAfter=No
-51	"	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
+51	''	_	PUNCT	.	_	26	punct	_	SpaceAfter=No
 52	.	_	PUNCT	.	_	11	punct	_	_
 
 1	Bennett	_	PROPN	PNOUN	_	2	nsubj	_	_
@@ -24670,7 +24670,7 @@
 15	comentários	comentário	NOUN	NOUN	_	12	nmod	_	SpaceAfter=No
 16	.	_	PUNCT	.	_	8	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Nosso	_	DET	DET	_	3	det:poss	_	_
 3	objetivo	objetivo	NOUN	NOUN	_	0	root	_	_
 4	é	ser	AUX	AUX	_	3	cop	_	_
@@ -24700,9 +24700,9 @@
 13	de	de	ADP	ADP	_	15	case	_	_
 14	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	15	det	_	_
 15	Colômbia	_	PROPN	PNOUN	_	10	nmod	_	_
-16	(	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
+16	-LRB-	_	PUNCT	.	_	17	punct	_	SpaceAfter=No
 17	Farc	_	PROPN	PNOUN	_	10	appos	_	SpaceAfter=No
-18	)	_	PUNCT	.	_	17	punct	_	_
+18	-RRB-	_	PUNCT	.	_	17	punct	_	_
 19	marcaram	marcar	VERBF	VERB	_	0	root	_	_
 20	a	_	DET	DET	_	22	det	_	_
 21	próxima	próximo	ADJ	ADJ	_	22	amod	_	_
@@ -24774,7 +24774,7 @@
 12	classificados	classificado	NOUN	NOUN	_	10	nmod	_	SpaceAfter=No
 13	.	_	PUNCT	.	_	4	punct	_	_
 
-1	"	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 2	O	_	DET	DET	_	3	det	_	_
 3	Egito	_	PROPN	PNOUN	_	5	nsubj	_	_
 4	se	_	PRON	PRON	_	5	obj	_	_
@@ -24782,7 +24782,7 @@
 6	para	_	ADP	ADP	_	8	case	_	_
 7	a	_	DET	DET	_	8	det	_	_
 8	estabilidade	estabilidade	NOUN	NOUN	_	5	nmod	_	SpaceAfter=No
-9	"	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
+9	''	_	PUNCT	.	_	5	punct	_	SpaceAfter=No
 10	,	_	PUNCT	.	_	13	punct	_	_
 11	foi	_	AUX	AUX	_	13	cop	_	_
 12	a	_	DET	DET	_	13	det	_	_
@@ -24791,33 +24791,33 @@
 15	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	16	det	_	_
 16	jornal	jornal	NOUN	NOUN	_	13	nmod	_	_
 17	governamental	governamental	ADJ	ADJ	_	16	amod	_	_
-18	"	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+18	``	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 19	Al	_	PROPN	PNOUN	_	16	appos	_	_
 20	-	_	PUNCT	.	_	19	punct	_	_
 21	Akhbar	_	PROPN	PNOUN	_	19	flat	_	SpaceAfter=No
-22	"	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
+22	''	_	PUNCT	.	_	19	punct	_	SpaceAfter=No
 23	,	_	PUNCT	.	_	35	punct	_	_
 24	enquanto	_	CCONJ	CONJ	_	35	mark	_	_
 25	o	_	DET	DET	_	26	det	_	_
 26	independente	_	NOUN	NOUN	_	35	nsubj	_	_
-27	"	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
+27	``	_	PUNCT	.	_	28	punct	_	SpaceAfter=No
 28	Al	_	PROPN	PNOUN	_	26	appos	_	_
 29	-	_	PUNCT	.	_	28	punct	_	_
 30	Masri	_	PROPN	PNOUN	_	28	flat	_	_
 31	Al	_	PROPN	PNOUN	_	28	flat	_	_
 32	-	_	PUNCT	.	_	28	punct	_	_
 33	Yom	_	PROPN	PNOUN	_	28	flat	_	SpaceAfter=No
-34	"	_	PUNCT	.	_	28	punct	_	_
+34	''	_	PUNCT	.	_	28	punct	_	_
 35	denunciou	denunciar	VERBF	VERB	_	13	advcl	_	_
 36	o	_	PRON	PRON	_	35	obj	_	_
 37	que	_	PRON	PRON	_	38	obj	_	_
 38	chamou	chamar	VERBF	VERB	_	36	acl:relcl	_	_
 39	de	_	ADP	ADP	_	41	case	_	_
-40	"	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
+40	``	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
 41	violações	violação	NOUN	NOUN	_	38	nmod	_	_
 42	em	_	ADP	ADP	_	43	case	_	_
 43	massa	massa	NOUN	NOUN	_	41	nmod	_	SpaceAfter=No
-44	"	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
+44	''	_	PUNCT	.	_	41	punct	_	SpaceAfter=No
 45	.	_	PUNCT	.	_	13	punct	_	_
 
 1	Você	_	PRON	PRON	_	2	nsubj	_	_
@@ -24914,7 +24914,7 @@
 12	países	país	NOUN	NOUN	_	9	conj	_	_
 13	em	_	ADP	ADP	_	14	case	_	_
 14	paz	paz	NOUN	NOUN	_	9	nmod	_	_
-15	"	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
+15	``	_	PUNCT	.	_	1	punct	_	SpaceAfter=No
 16	,	_	PUNCT	.	_	1	punct	_	_
 17	disse	dizer	VERBF	VERB	_	0	root	_	_
 18	Lewis	_	PROPN	PNOUN	_	17	nsubj	_	SpaceAfter=No
@@ -25034,7 +25034,7 @@
 26	de	_	ADP	ADP	_	27	case	_	_
 27	base	base	NOUN	NOUN	_	25	nmod	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	Decidimos	decidir	VERBF	VERB	_	18	ccomp	_	_
 3	vender	vender	VERBI	VERB	_	2	xcomp	_	_
 4	nossas	_	DET	DET	_	5	det:poss	_	_
@@ -25049,7 +25049,7 @@
 13	de	_	ADP	ADP	_	14	case	_	_
 14	natureza	natureza	NOUN	NOUN	_	11	nmod	_	_
 15	estratégica	estratégico	ADJ	ADJ	_	14	amod	_	SpaceAfter=No
-16	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+16	''	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 17	,	_	PUNCT	.	_	18	punct	_	_
 18	completa	completar	NOUN	VERB	_	0	root	_	SpaceAfter=No
 19	,	_	PUNCT	.	_	20	punct	_	_
@@ -25064,7 +25064,7 @@
 28	holding	holding	NOUN	NOUN	_	25	nmod	_	SpaceAfter=No
 29	.	_	PUNCT	.	_	18	punct	_	_
 
-1	"	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 2	A	_	DET	DET	_	3	det	_	_
 3	cidade	cidade	NOUN	NOUN	_	4	nsubj	_	_
 4	precisa	precisar	VERBF	VERB	_	0	root	_	_
@@ -25118,7 +25118,7 @@
 21	Fawzi	_	PROPN	PNOUN	_	10	nmod	_	SpaceAfter=No
 22	.	_	PUNCT	.	_	10	punct	_	_
 
-1	"	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	3	punct	_	SpaceAfter=No
 2	Eu	_	PRON	PRON	_	3	nsubj	_	_
 3	sou	ser	AUX	VERB	_	0	root	_	_
 4	tarado	tarado	ADJ	ADJ	_	3	xcomp:adj	_	_
@@ -25139,9 +25139,9 @@
 4	duas	_	NUM	NUM	NumType=Card	5	nummod	_	_
 5	vezes	vez	NOUN	NOUN	_	3	nmod	_	_
 6	que	_	CCONJ	CONJ	_	10	mark	_	_
-7	"	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
+7	``	_	PUNCT	.	_	8	punct	_	SpaceAfter=No
 8	hikikomori	_	NOUN	NOUN	_	10	nsubj	_	SpaceAfter=No
-9	"	_	PUNCT	.	_	8	punct	_	_
+9	''	_	PUNCT	.	_	8	punct	_	_
 10	são	ser	AUX	VERB	_	3	ccomp	_	_
 11	necessários	necessário	ADJ	ADJ	_	10	xcomp:adj	_	_
 12	em	em	ADP	ADP	_	14	case	_	_
@@ -25230,7 +25230,7 @@
 10	$	_	SYM	SYM	_	9	flat	_	_
 11	1,6	_	NUM	NUM	NumType=Card	12	nummod	_	_
 12	mil	_	NUM	NUM	NumType=Card	9	nummod	_	_
-13	"	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
+13	``	_	PUNCT	.	_	6	punct	_	SpaceAfter=No
 14	,	_	PUNCT	.	_	15	punct	_	_
 15	conta	contar	VERBF	VERB	_	0	root	_	_
 16	Ariadna	_	PROPN	PNOUN	_	15	nsubj	_	SpaceAfter=No
@@ -25299,9 +25299,9 @@
 8	entidade	entidade	NOUN	NOUN	_	10	nsubj	_	_
 9	não	não	ADV	ADV	Polarity=Neg	10	advmod	_	_
 10	tinha	ter	VERBF	VERB	_	5	ccomp	_	_
-11	"	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+11	``	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 12	decência	decência	NOUN	NOUN	_	10	obj	_	SpaceAfter=No
-13	"	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+13	''	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 14	,	_	PUNCT	.	_	10	punct	_	_
 15	e	_	CCONJ	CONJ	_	16	cc	_	_
 16	pediu	pedir	VERBF	VERB	_	5	conj	_	_
@@ -25365,7 +25365,7 @@
 17	eo	_	CCONJ	CONJ	_	18	cc	_	_
 18	metrô	metrô	NOUN	NOUN	_	16	conj	_	SpaceAfter=No
 19	.	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
-20	"	_	PUNCT	.	_	4	punct	_	_
+20	``	_	PUNCT	.	_	4	punct	_	_
 
 1	O	_	DET	DET	_	2	det	_	_
 2	destino	destino	NOUN	NOUN	_	8	nsubj	_	_
@@ -25634,10 +25634,10 @@
 7	reforçou	reforçar	VERBF	VERB	_	0	root	_	_
 8	que	_	CCONJ	CONJ	_	26	mark	_	_
 9	a	_	DET	DET	_	11	det	_	_
-10	"	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
+10	``	_	PUNCT	.	_	11	punct	_	SpaceAfter=No
 11	situação	situação	NOUN	NOUN	_	26	nsubj:pass	_	_
 12	difícil	difícil	ADJ	ADJ	_	11	amod	_	SpaceAfter=No
-13	"	_	PUNCT	.	_	11	punct	_	_
+13	''	_	PUNCT	.	_	11	punct	_	_
 14	enfrentada	enfrentar	VERBP	VERB	_	11	acl:part	_	_
 15	em	em	ADP	ADP	_	17	case	_	_
 16	os	o	DET	DET	Definite=Def|Gender=Masc|Number=Plur|PronType=Art	17	det	_	_
@@ -25770,9 +25770,9 @@
 12	Produto	_	PROPN	PNOUN	_	21	nsubj	_	_
 13	Interno	_	PROPN	PNOUN	_	12	amod	_	_
 14	Bruto	_	PROPN	PNOUN	_	12	amod	_	_
-15	(	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
+15	-LRB-	_	PUNCT	.	_	16	punct	_	SpaceAfter=No
 16	PIB	_	PROPN	PNOUN	_	12	appos	_	SpaceAfter=No
-17	)	_	PUNCT	.	_	16	punct	_	_
+17	-RRB-	_	PUNCT	.	_	16	punct	_	_
 18	de	de	ADP	ADP	_	20	case	_	_
 19	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	20	det	_	_
 20	período	período	NOUN	NOUN	_	12	nmod	_	_
@@ -25809,10 +25809,10 @@
 20	de	_	ADP	ADP	_	22	case	_	_
 21	um	_	DET	DET	_	22	det	_	_
 22	livro	livro	NOUN	NOUN	_	19	nmod	_	_
-23	"	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+23	``	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 24	Bird	_	PROPN	PNOUN	_	22	appos	_	_
 25	Watching	_	PROPN	PNOUN	_	24	flat	_	SpaceAfter=No
-26	"	_	PUNCT	.	_	24	punct	_	_
+26	''	_	PUNCT	.	_	24	punct	_	_
 27	de	de	ADP	ADP	_	29	case	_	_
 28	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	29	det	_	_
 29	Inglês	inglês	NOUN	NOUN	_	22	nmod	_	_
@@ -25820,7 +25820,7 @@
 31	Selous	_	PROPN	PNOUN	_	30	flat	_	SpaceAfter=No
 32	.	_	PUNCT	.	_	1	punct	_	_
 
-1	"	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
+1	``	_	PUNCT	.	_	2	punct	_	SpaceAfter=No
 2	É	ser	AUX	VERB	_	0	root	_	_
 3	fundamental	fundamental	ADJ	ADJ	_	2	xcomp:adj	_	_
 4	ter	ter	VERBI	VERB	_	2	csubj	_	_
@@ -25872,10 +25872,10 @@
 20	e	_	CCONJ	CONJ	_	21	cc	_	_
 21	desvendou	desvendar	VERBF	VERB	_	17	conj	_	_
 22	um	_	DET	DET	_	24	det	_	_
-23	"	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+23	``	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 24	easter	_	NOUN	NOUN	_	21	obj	_	_
 25	egg	_	NOUN	NOUN	_	24	flat	_	SpaceAfter=No
-26	"	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
+26	''	_	PUNCT	.	_	24	punct	_	SpaceAfter=No
 27	.	_	PUNCT	.	_	17	punct	_	_
 
 1	Em	em	ADP	ADP	_	3	case	_	_
@@ -25913,9 +25913,9 @@
 8	de	de	ADP	ADP	_	10	case	_	_
 9	o	o	DET	DET	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	10	det	_	_
 10	Arlit	_	PROPN	PNOUN	_	7	nmod	_	_
-11	(	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
+11	-LRB-	_	PUNCT	.	_	12	punct	_	SpaceAfter=No
 12	departamento	departamento	NOUN	NOUN	_	10	appos	_	SpaceAfter=No
-13	)	_	PUNCT	.	_	12	punct	_	_
+13	-RRB-	_	PUNCT	.	_	12	punct	_	_
 14	de	de	ADP	ADP	_	16	case	_	_
 15	a	o	DET	DET	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	16	det	_	_
 16	Agadez	_	PROPN	PNOUN	_	4	nmod	_	_
@@ -25947,9 +25947,9 @@
 
 1	Com	_	ADP	ADP	_	6	case	_	_
 2	a	_	DET	DET	_	6	det	_	_
-3	(	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
+3	-LRB-	_	PUNCT	.	_	4	punct	_	SpaceAfter=No
 4	primeira	primeiro	ADJ	ADJ	_	6	amod	_	SpaceAfter=No
-5	)	_	PUNCT	.	_	4	punct	_	_
+5	-RRB-	_	PUNCT	.	_	4	punct	_	_
 6	aposentadoria	aposentadoria	NOUN	NOUN	_	16	nmod	_	_
 7	de	_	ADP	ADP	_	8	case	_	_
 8	Michael	_	PROPN	PNOUN	_	6	nmod	_	_
@@ -26116,7 +26116,7 @@
 50	os	_	DET	DET	_	51	det	_	_
 51	níveis	nível	NOUN	NOUN	_	40	conj	_	_
 52	técnicos	técnico	ADJ	ADJ	_	51	amod	_	_
-53	(	_	PUNCT	.	_	56	punct	_	SpaceAfter=No
+53	-LRB-	_	PUNCT	.	_	56	punct	_	SpaceAfter=No
 54	desde	_	ADP	ADP	_	56	case	_	_
 55	o	_	DET	DET	_	56	det	_	_
 56	iniciante	iniciante	NOUN	NOUN	_	36	nmod	_	_
@@ -26126,6 +26126,6 @@
 60	que	_	PRON	PRON	_	62	nsubj	_	_
 61	já	já	ADV	ADV	_	62	advmod	_	_
 62	competem	competir	VERBF	VERB	_	59	acl:relcl	_	SpaceAfter=No
-63	)	_	PUNCT	.	_	56	punct	_	SpaceAfter=No
+63	-RRB-	_	PUNCT	.	_	56	punct	_	SpaceAfter=No
 64	.	_	PUNCT	.	_	21	punct	_	_
 

@@ -59,17 +59,25 @@ object PartOfSpeechTagger {
   }
   
   def main(args:Array[String]) {
+    var lang = "en"
     val props = StringUtils.argsToProperties(args)
+
     val (wordPos, tagPos) = if (props.containsKey("conllu"))
       (ColumnsToDocument.WORD_POS_CONLLU, ColumnsToDocument.TAG_POS_CONLLU)
     else
       (ColumnsToDocument.WORD_POS_CONLLX, ColumnsToDocument.TAG_POS_CONLLX)
 
+    if(props.containsKey("lang")) {
+      lang = props.getProperty("lang")
+    }
+
     if(props.containsKey("train")) {
       val doc = ColumnsToDocument.readFromFile(props.getProperty("train"),
         wordPos = wordPos, labelPos = tagPos,
         ColumnsToDocument.setTags,
-        ColumnsToDocument.annotateLemmas)
+        ColumnsToDocument.annotateLemmas,
+        false,
+        lang)
       val tagger = new PartOfSpeechTagger
 
       if(props.containsKey("order")) {
@@ -96,9 +104,13 @@ object PartOfSpeechTagger {
         SequenceTaggerShell.shell[String, String](tagger)
       } else if(props.containsKey("test")) {
         val doc = ColumnsToDocument.readFromFile(props.getProperty("test"),
-          wordPos = wordPos, labelPos = tagPos,
+          wordPos = wordPos,
+          labelPos = tagPos,
           ColumnsToDocument.setTags,
-          ColumnsToDocument.annotateLemmas)
+          ColumnsToDocument.annotateLemmas,
+          false,
+          lang
+        )
         new SequenceTaggerEvaluator[String, String].accuracy(tagger, List(doc).iterator)
       }
     }

@@ -4,8 +4,7 @@ import java.io.InputStream
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.{CluProcessor, SpanishCluProcessor, PortugueseCluProcessor}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -24,15 +23,35 @@ object ColumnsToDocument {
   val WORD_POS_CONLLU = 1
   val TAG_POS_CONLLU = 3
 
-  val proc = new CluProcessor()
+  var proc:Processor = new CluProcessor()
+  var prevLang: String = "en"
 
   def readFromFile(fn:String,
                    wordPos:Int = WORD_POS_CONLLX,
                    labelPos:Int = TAG_POS_CONLLX,
                    setLabels: (Sentence, Array[String]) => Unit,
                    annotate: (Document) => Unit,
-                   filterOutContractions:Boolean = false): Document = {
+                   filterOutContractions:Boolean = false,
+                   lang: String = "en"
+                  ): Document = {
+
+    // redefine proc acording to the language used
+    if (lang != prevLang) {
+      if (lang == "pt") {
+        println("Using Portuguese processors")
+        this.proc = new PortugueseCluProcessor()
+      } else if (lang == "es") {
+        println("Using Spanish processors")
+        this.proc = new SpanishCluProcessor()
+      } else {
+        println("Using English processors")
+        this.proc = new CluProcessor()
+      }
+      this.prevLang = lang
+    }
+
     val source = Source.fromFile(fn)
+
     readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
   }
 
@@ -41,7 +60,21 @@ object ColumnsToDocument {
                      labelPos:Int = TAG_POS_CONLLX,
                      setLabels: (Sentence, Array[String]) => Unit,
                      annotate: (Document) => Unit,
-                     filterOutContractions:Boolean = false): Document = {
+                     filterOutContractions:Boolean = false,
+                     lang: String = "en"): Document = {
+
+    // redefine proc acording to the language used
+    if (lang == "pt"){
+      println("Using Portuguese processors")
+      this.proc = new PortugueseCluProcessor()
+    } else if(lang == "es") {
+      println("Using Spanish processors")
+      this.proc = new SpanishCluProcessor()
+    } else {
+      println("Using English processors")
+      this.proc = new CluProcessor()
+    }
+
     val source = Source.fromInputStream(stream)
     readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
   }
@@ -110,6 +143,7 @@ object ColumnsToDocument {
     annotate(d)
 
     d
+
   }
 
   def setTags(s:Sentence, tags:Array[String]): Unit = {
