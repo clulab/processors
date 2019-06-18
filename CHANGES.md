@@ -1,4 +1,5 @@
 # Changes
++ **7.5.3** - Added support for lemmatization and improved Chunking, Parsing and POS models for Portuguese.
 + **7.5.3** - Switched to Jenkins for unit testing.
 + **7.5.3** - Added a LSTM-CRF sequence tagger.
 + **7.5.2** - Assemble with LF line endings rather than CRLF to match resource files in duplicated jars, especially with reach.  Also enable finding triggers through named mentions.
