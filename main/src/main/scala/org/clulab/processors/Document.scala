@@ -2,6 +2,8 @@ package org.clulab.processors
 
 import org.clulab.discourse.rstparser.DiscourseTree
 import org.clulab.struct.CorefChains
+
+import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
 
 
@@ -24,12 +26,15 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   /** The original text corresponding to this document, if it was preserved by the corresponding processor */
   var text: Option[String] = None
 
+  /** Map of any arbitrary document attachments such as document creation time */
+  protected var attachments:Option[mutable.HashMap[String, DocumentAttachment]] = None
+
   /** Clears any internal state potentially constructed by the annotators */
   def clear() { }
 
   /**
     * Used to compare Documents.
-    * @return a hash (Int) based primarily on the sentences
+    * @return a hash (Int) based primarily on the sentences, ignoring attachments
     */
   def equivalenceHash: Int = {
 
@@ -58,6 +63,19 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     val h1 = mix(h0, orderedHash(sentences.map(_.ambivalenceHash)))
     finalizeHash(h1, 1)
   }
+
+  /** Adds an attachment to the document's attachment map */
+  def addAttachment(name:String, attachment: DocumentAttachment): Unit = {
+    if(attachments.isEmpty)
+      attachments = Some(new mutable.HashMap[String, DocumentAttachment]())
+    attachments.get += name -> attachment
+  }
+
+  /** Retrieves the attachment with the given name */
+  def getAttachment(name:String):Option[DocumentAttachment] = {
+    if(attachments.isEmpty) None
+    else attachments.get.get(name)
+  }
 }
 
 object Document {
@@ -77,4 +95,11 @@ object Document {
   def apply (doc: Document): Document =
     Document(doc.id, doc.sentences, doc.coreferenceChains, doc.discourseTree, doc.text)
 
+}
+
+/**
+  * Placeholder for document attachment, to be used to store any meta data such as document creation time
+  */
+trait DocumentAttachment {
+  // TODO: add trait methods for the serialization of attachments (are these needed here?)
 }
