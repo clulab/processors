@@ -2,6 +2,7 @@ package org.clulab.processors
 
 import org.clulab.discourse.rstparser.DiscourseTree
 import org.clulab.struct.CorefChains
+import org.clulab.utils.Serializer
 
 import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
@@ -27,7 +28,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   var text: Option[String] = None
 
   /** Map of any arbitrary document attachments such as document creation time */
-  protected var attachments:Option[mutable.HashMap[String, DocumentAttachment]] = None
+  protected var attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None
 
   /** Clears any internal state potentially constructed by the annotators */
   def clear() { }
@@ -65,16 +66,28 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   }
 
   /** Adds an attachment to the document's attachment map */
-  def addAttachment(name:String, attachment: DocumentAttachment): Unit = {
-    if(attachments.isEmpty)
+  def addAttachment(name: String, attachment: DocumentAttachment): Unit = {
+    if (attachments.isEmpty)
       attachments = Some(new mutable.HashMap[String, DocumentAttachment]())
     attachments.get += name -> attachment
   }
 
   /** Retrieves the attachment with the given name */
-  def getAttachment(name:String):Option[DocumentAttachment] = {
-    if(attachments.isEmpty) None
+  def getAttachment(name: String): Option[DocumentAttachment] = {
+    if (attachments.isEmpty) None
     else attachments.get.get(name)
+  }
+
+  /** Retrieves keys to all attachments so that the entire collection can be read
+    * for purposes including but not limited to serialization.  If there are no
+    * attachments, that is attachments == None, an empty set is returned.
+    * This does not distinguish between None and Some(HashMap.empty), especially
+    * since the latter should not be possible because of the lazy initialization.
+    */
+  def getAttachmentKeys: collection.Set[String] = {
+    attachments.map { attachments =>
+      attachments.keySet
+    }.getOrElse(collection.Set.empty[String])
   }
 }
 
@@ -97,9 +110,51 @@ object Document {
 
 }
 
+trait DocumentAttachmentBuilder {
+  def mkDocumentAttachment(text: String): DocumentAttachment
+}
+
 /**
-  * Placeholder for document attachment, to be used to store any meta data such as document creation time
+  * Subclasses must have an empty constructor which can be called using reflection
+  * based on the name in DocumentAttachment.documentAttachmentBuilderClassName by
+  * the DocumentSerializer.  The constructed builder is then used to construct the
+  * DocumentAttachment by calling mkDocumentAttachment which likely returns a
+  * customized subclass of DocumentAttachment.
   */
-trait DocumentAttachment {
-  // TODO: add trait methods for the serialization of attachments (are these needed here?)
+class ObjectDocumentAttachmentBuilder extends DocumentAttachmentBuilder {
+
+  /**
+    * This matches the format in DocumentAttachment.toDocumentSerializer.
+    */
+  def mkDocumentAttachment(text: String): DocumentAttachment = {
+    val byteArray: Array[Byte] = text.split(',').map { value =>
+      val byte: Byte = java.lang.Byte.decode(value)
+
+      byte
+    }
+    val documentAttachment: DocumentAttachment = Serializer.load(byteArray)
+
+    documentAttachment
+  }
+}
+
+/**
+  * Placeholder for document attachment, to be used to store any meta data such as document creation time.
+  * Since the Document is serializable, everything in it should be, including the DocumentAttachments.
+  */
+trait DocumentAttachment extends Serializable {
+  /**
+    * An object of this class will (re)construct the DocumentAttachment (or subclass thereof).
+    */
+  val documentAttachmentBuilderClassName: String = classOf[ObjectDocumentAttachmentBuilder].getName
+
+  /** A DocumentSerializer needs/wants to convert the attachment into a compact, legible string.
+    * The default implementation for use in an emergency just converts the Java ObjectOutputStream
+    * into a string.  A good implementation of the trait will override this behavior.
+    */
+  def toDocumentSerializer: String = {
+    val byteArray: Array[Byte] = Serializer.save(this)
+
+    byteArray.mkString(",")
+  }
 }

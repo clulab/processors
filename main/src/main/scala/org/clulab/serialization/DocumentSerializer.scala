@@ -7,6 +7,8 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
+import org.clulab.processors.DocumentAttachment
+import org.clulab.processors.DocumentAttachmentBuilder
 import org.clulab.processors.{Document, RelationTriple, Sentence}
 import org.clulab.struct._
 
@@ -58,7 +60,7 @@ class DocumentSerializer extends LazyLogging {
       if (bits(0) == START_COREF) {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
-    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT)
+    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT && bits(0) != START_ATTACHMENTS)
 
     var discourse:Option[DiscourseTree] = None
     if (bits(0) == START_DISCOURSE) {
@@ -73,6 +75,30 @@ class DocumentSerializer extends LazyLogging {
           s"ERROR: Missing text length in start text line: " + bits.mkString(" "))
       val charCount = bits(1).toInt
       text = Some(loadText(r, charCount))
+      bits = read(r)
+    }
+
+    var namedDocumentAttachmentsOpt: Option[Array[(String, DocumentAttachment)]] = None
+    if (bits(0) == START_ATTACHMENTS) {
+      if (bits.length != 2)
+        throw new RuntimeException(
+          s"ERROR: Missing document attachments size in start attachments line: " + bits.mkString(" "))
+      val attachmentCount = bits(1).toInt
+      if (attachmentCount > 0)
+        namedDocumentAttachmentsOpt = Some(new Array(attachmentCount))
+      0.until(attachmentCount).foreach { index =>
+        bits = read(r)
+        val key = bits(0)
+        val documentAttachmentBuilderClassName = bits(1)
+        // See https://stackoverflow.com/questions/6094575/creating-an-instance-using-the-class-name-and-calling-constructor/6094602
+        val clazz = Class.forName(documentAttachmentBuilderClassName)
+        val ctor = clazz.getConstructor()
+        val obj = ctor.newInstance()
+        val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilder]
+        val text = bits(2)
+        val documentAttachment = documentAttachmentBuilder.mkDocumentAttachment(text)
+        namedDocumentAttachmentsOpt.get(index) = (key, documentAttachment)
+      }
       bits = read(r)
     }
 
@@ -91,6 +117,12 @@ class DocumentSerializer extends LazyLogging {
           val newRelations = relations.map(r => RelationTriple(r.confidence, r.subjectInterval, r.relationInterval, r.objectInterval))
           sen.relations = Some(newRelations)
         case None => ()
+      }
+    }
+
+    namedDocumentAttachmentsOpt.foreach { namedDocumentAttachments =>
+      namedDocumentAttachments.foreach { case (name: String, documentAttachment: DocumentAttachment) =>
+        doc.addAttachment(name, documentAttachment)
       }
     }
 
@@ -283,6 +315,28 @@ class DocumentSerializer extends LazyLogging {
       }
     }
 
+    {
+      def escape(text: String): String = {
+        text.replace("\\", "\\\\")
+            .replace("\t", "\\t")
+            .replace("\n", "\\n")
+      }
+
+      // Sort these so that serialization is the same each time.
+      val attachmentKeys = doc.getAttachmentKeys.toList.sorted
+      if (attachmentKeys.nonEmpty) {
+        os.println(START_ATTACHMENTS + SEP + attachmentKeys.size)
+        attachmentKeys.foreach { key =>
+          val value = doc.getAttachment(key).get
+          os.print(escape(key))
+          os.print(SEP)
+          os.print(escape(value.documentAttachmentBuilderClassName))
+          os.print(SEP)
+          os.println(escape(value.toDocumentSerializer))
+        }
+      }
+    }
+
     os.println(END_OF_DOCUMENT)
   }
 
@@ -314,7 +368,7 @@ class DocumentSerializer extends LazyLogging {
     }
     if (sent.relations.nonEmpty) {
       val relations = sent.relations.get
-      os.println(START_RELATIONS + SEP + relations.size)
+      os.println(START_RELATIONS + SEP + relations.length)
       relations foreach (t => saveRelationTriple(t, os))
     }
     os.println(END_OF_SENTENCE)
@@ -514,6 +568,7 @@ object DocumentSerializer {
   val START_CONSTITUENTS = "Y"
   val START_DISCOURSE = "R"
   val START_RELATIONS = "OIE"
+  val START_ATTACHMENTS = "A"
 
   val END_OF_SENTENCE = "EOS"
   val END_OF_DOCUMENT = "EOD"
