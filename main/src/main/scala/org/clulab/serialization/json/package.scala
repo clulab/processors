@@ -8,6 +8,9 @@ import org.json4s.jackson._
 
 
 package object json {
+  val DOCUMENT_ATTACHMENTS_KEY = "documentAttachments"
+  val DOCUMENT_ATTACHMENTS_BUILDER_KEY = "builder"
+  val DOCUMENT_ATTACHMENTS_VALUE_KEY = "value"
 
   implicit val formats = DefaultFormats
 
@@ -24,7 +27,7 @@ package object json {
       case None => None
     }
   }
-  
+
   implicit class ODirectedGraphOps(odg: Option[DirectedGraph[String]]) {
     def toSerializableJSON: Option[JValue] = odg match {
       case Some(g) => Some(g.jsonAST)
@@ -61,8 +64,8 @@ package object json {
         val jFields = attachmentKeys.map { key =>
           val value = doc.getAttachment(key).get
           JField(key,
-              ("builder" -> JString(value.documentAttachmentBuilderFromJsonClassName)) ~
-              ("value" -> value.toJsonSerializer)
+              (DOCUMENT_ATTACHMENTS_BUILDER_KEY -> JString(value.documentAttachmentBuilderFromJsonClassName)) ~
+              (DOCUMENT_ATTACHMENTS_VALUE_KEY -> value.toJsonSerializer)
           )
         }
         JObject(jFields)
@@ -77,7 +80,7 @@ package object json {
           // TODO: handle discourse tree
           //("discourse-tree" -> discourseTree)
       val ast2 = if (documentAttachments == JNothing) ast1
-          else ast1 ~ ("documentAttachments" -> documentAttachments)
+          else ast1 ~ (DOCUMENT_ATTACHMENTS_KEY -> documentAttachments)
 
       ast2
     }

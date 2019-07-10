@@ -25,25 +25,24 @@ object JSONSerializer {
 
   protected def addDocumentAttachments(doc: Document, jValue: JValue): Unit = {
     // See also DocumentSerializer for text version of nearly the same thing.
-    (jValue \ "documentAttachments") match {
+    (jValue \ DOCUMENT_ATTACHMENTS_KEY) match {
       case jObject: JObject =>
         val keys = jObject.values.keys
         keys.foreach { key: String =>
           (jObject \ key) match {
             case jObject: JObject =>
-              val documentAttachmentBuilderFromJsonClassName = (jObject \ "builder").extract[String]
+              val documentAttachmentBuilderFromJsonClassName = (jObject \ DOCUMENT_ATTACHMENTS_BUILDER_KEY).extract[String]
               val clazz = Class.forName(documentAttachmentBuilderFromJsonClassName)
               val ctor = clazz.getConstructor()
               val obj = ctor.newInstance()
               val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilderFromJson]
-              val value = (jObject \ "value")
+              val value = (jObject \ DOCUMENT_ATTACHMENTS_VALUE_KEY)
               val documentAttachment = documentAttachmentBuilder.mkDocumentAttachment(value)
               doc.addAttachment(key, documentAttachment)
             case jValue: JValue =>
               val text = prettyJson(jValue)
               throw new RuntimeException(s"ERROR: While deserializing document attachments expected JObject but found this: $text")
-            case _ =>
-              println("It shouldn't get here!")
+            case _ => // noop.  It should never get here.  (Famous last words.)
           }
         }
       case _ => // Leave documentAttachments as is: None

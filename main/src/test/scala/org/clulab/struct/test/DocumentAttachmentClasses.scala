@@ -3,7 +3,11 @@ package org.clulab.struct.test
 import java.io.ObjectOutputStream
 
 import org.clulab.processors.DocumentAttachment
+import org.clulab.processors.DocumentAttachmentBuilderFromJson
 import org.clulab.processors.DocumentAttachmentBuilderFromText
+import org.json4s.JString
+import org.json4s.JValue
+import org.json4s.jackson.prettyJson
 
 // These classes are all outside the testing class because the test framework
 // interferes with serialization.  It seems to extend classes with exception
@@ -17,15 +21,16 @@ case class CaseClass(name: String)
 
 // DocumentAttachment provides serialization itself now, so this doesn't need Serializable.
 // This is an example of the minimum functionality needed for a DocumentAttachment.
-class SerializableDocumentAttachment(val name: String) extends DocumentAttachment
+// The attachment simply stores a name, but it could be anything else.
+class NameDocumentAttachment(val name: String) extends DocumentAttachment
 
 // These methods are only there for testing.  Production classes do not need them.
 // This one doesn't provide nice serialization for DocumentSerializer.
-class ObjectNameDocumentAttachment(name: String) extends SerializableDocumentAttachment(name) {
-  var serialized: Boolean = false
+class ObjectNameDocumentAttachment(name: String) extends NameDocumentAttachment(name) {
+  var serialize: Boolean = false
 
   private def writeObject(out: ObjectOutputStream): Unit = {
-    serialized = true
+    serialize = true
     // If this isn't done, the stream will EOF prematurely on deserialization.
     out.defaultWriteObject()
   }
@@ -33,22 +38,34 @@ class ObjectNameDocumentAttachment(name: String) extends SerializableDocumentAtt
   override def equals(other: Any): Boolean = {
     val that = other.asInstanceOf[ObjectNameDocumentAttachment]
 
-    this.name == that.name && this.serialized == that.serialized
+    this.name == that.name && this.serialize == that.serialize
   }
 }
 
-// See the superclass for documentation.
-class NameDocumentBuilder extends DocumentAttachmentBuilderFromText {
+class NameDocumentBuilderFromText extends DocumentAttachmentBuilderFromText {
 
   def mkDocumentAttachment(text: String): TextNameDocumentAttachment = {
     new TextNameDocumentAttachment(text)
   }
 }
 
-class TextNameDocumentAttachment(name: String) extends SerializableDocumentAttachment(name) {
+class NameDocumentBuilderFromJson extends DocumentAttachmentBuilderFromJson {
+
+  def mkDocumentAttachment(json: JValue): TextNameDocumentAttachment = {
+    json match {
+      case JString(text) => new TextNameDocumentAttachment(text)
+      case _ =>
+        val text = prettyJson(json)
+        throw new RuntimeException(s"ERROR: While deserializing TextNameDocumentAttachment expected JString but found this: $text")
+    }
+  }
+}
+
+class TextNameDocumentAttachment(name: String) extends NameDocumentAttachment(name) {
   var serialized: Boolean = false
 
-  override val documentAttachmentBuilderFromTextClassName: String = classOf[NameDocumentBuilder].getName
+  override val documentAttachmentBuilderFromTextClassName: String = classOf[NameDocumentBuilderFromText].getName
+  override val documentAttachmentBuilderFromJsonClassName: String = classOf[NameDocumentBuilderFromJson].getName
 
   private def writeObject(out: ObjectOutputStream): Unit = {
     serialized = true
@@ -65,6 +82,10 @@ class TextNameDocumentAttachment(name: String) extends SerializableDocumentAttac
   override def toDocumentSerializer: String = {
     name
   }
+
+  override def toJsonSerializer: JValue = {
+    new JString(name)
+  }
 }
 
 trait MethodAttachment
@@ -72,5 +93,3 @@ trait MethodAttachment
 class NameMethodAttachment(val name: String) extends MethodAttachment {
 
 }
-
-

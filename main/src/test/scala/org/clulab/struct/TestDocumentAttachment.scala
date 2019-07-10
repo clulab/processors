@@ -10,11 +10,10 @@ import org.clulab.processors.Sentence
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.test.CaseClass
 import org.clulab.struct.test.ObjectNameDocumentAttachment
-import org.clulab.struct.test.SerializableDocumentAttachment
+import org.clulab.struct.test.NameDocumentAttachment
 import org.clulab.struct.test.TextNameDocumentAttachment
 import org.clulab.utils.Closer.AutoCloser
 
-import org.json4s.JValue
 import org.json4s.jackson.parseJson
 import org.json4s.jackson.prettyJson
 import org.json4s.jackson.renderJValue
@@ -87,13 +86,13 @@ class TestDocumentAttachment extends FlatSpec with Matchers {
   // TODO This will fail in SBT because SerializableDocumentAttachment cannot be found.
   // Something like a class finder thing needs to be used.
 
-  "Document with TextNameDocumentAttachments" should "serialize as text" in {
+  "Document with TextNameDocumentAttachments" should "serialize" in {
     val oldDocument = new Document(Array.empty[Sentence])
 
     oldDocument.addAttachment(FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME))
     oldDocument.addAttachment(MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME))
     oldDocument.addAttachment(LAST_KEY, new TextNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new SerializableDocumentAttachment(ALIAS_NAME))
+    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     // This shouldn't compile.
     /*oldDocument.addAttachment("wrong", new NameMethodAttachment("name"))*/
 
@@ -106,14 +105,13 @@ class TestDocumentAttachment extends FlatSpec with Matchers {
     newDocument.getAttachment(FIRST_KEY) should be (oldDocument.getAttachment(FIRST_KEY))
     newDocument.getAttachment(MIDDLE_KEY) should be (oldDocument.getAttachment(MIDDLE_KEY))
     newDocument.getAttachment(LAST_KEY) should be (oldDocument.getAttachment(LAST_KEY))
-    newDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[SerializableDocumentAttachment]].get.name should be (
-      oldDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[SerializableDocumentAttachment]].get.name
+    newDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[NameDocumentAttachment]].get.name should be (
+      oldDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[NameDocumentAttachment]].get.name
     )
 
     // This one must be avoided.
     /*require(newDocument == oldDocument)*/
   }
-
 
   "Document with ObjectNameDocumentAttachment" should "serialize as text" in {
     val oldDocument = new Document(Array.empty[Sentence])
@@ -121,7 +119,7 @@ class TestDocumentAttachment extends FlatSpec with Matchers {
     oldDocument.addAttachment(FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME))
     oldDocument.addAttachment(MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME))
     oldDocument.addAttachment(LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new SerializableDocumentAttachment(ALIAS_NAME))
+    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
 
     val documentSerializer = new DocumentSerializer()
     // This should be a messy string.
@@ -131,8 +129,8 @@ class TestDocumentAttachment extends FlatSpec with Matchers {
     require(newDocument.getAttachment(FIRST_KEY) == oldDocument.getAttachment(FIRST_KEY))
     require(newDocument.getAttachment(MIDDLE_KEY) == oldDocument.getAttachment(MIDDLE_KEY))
     require(newDocument.getAttachment(LAST_KEY) == oldDocument.getAttachment(LAST_KEY))
-    require(newDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[SerializableDocumentAttachment].name ==
-        oldDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[SerializableDocumentAttachment].name)
+    require(newDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name ==
+        oldDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name)
 
     // This one must be avoided.
     /*require(newDocument == oldDocument)*/
@@ -144,22 +142,18 @@ class TestDocumentAttachment extends FlatSpec with Matchers {
     oldDocument.addAttachment(FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME))
     oldDocument.addAttachment(MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME))
     oldDocument.addAttachment(LAST_KEY, new TextNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new SerializableDocumentAttachment(ALIAS_NAME))
+    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     // This shouldn't compile.
     /*oldDocument.addAttachment("wrong", new NameMethodAttachment("name"))*/
 
     val documentString = prettyJson(renderJValue(oldDocument.jsonAST))
 
-    oldDocument.getAttachment(FIRST_KEY).asInstanceOf[Option[TextNameDocumentAttachment]].get.serialized should be (true)
-    oldDocument.getAttachment(MIDDLE_KEY).asInstanceOf[Option[TextNameDocumentAttachment]].get.serialized should be (true)
-    oldDocument.getAttachment(LAST_KEY).asInstanceOf[Option[TextNameDocumentAttachment]].get.serialized should be (true)
-
     val newDocument: Document = JSONSerializer.toDocument(parseJson(documentString))
     newDocument.getAttachment(FIRST_KEY) should be (oldDocument.getAttachment(FIRST_KEY))
     newDocument.getAttachment(MIDDLE_KEY) should be (oldDocument.getAttachment(MIDDLE_KEY))
     newDocument.getAttachment(LAST_KEY) should be (oldDocument.getAttachment(LAST_KEY))
-    newDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[SerializableDocumentAttachment]].get.name should be (
-      oldDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[SerializableDocumentAttachment]].get.name
+    newDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[NameDocumentAttachment]].get.name should be (
+      oldDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[NameDocumentAttachment]].get.name
     )
 
     // This one must be avoided.
@@ -172,7 +166,7 @@ class TestDocumentAttachment extends FlatSpec with Matchers {
     oldDocument.addAttachment(FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME))
     oldDocument.addAttachment(MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME))
     oldDocument.addAttachment(LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new SerializableDocumentAttachment(ALIAS_NAME))
+    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
 
     // This should be a messy string.
     val documentString = prettyJson(renderJValue(oldDocument.jsonAST))
@@ -181,8 +175,8 @@ class TestDocumentAttachment extends FlatSpec with Matchers {
     require(newDocument.getAttachment(FIRST_KEY) == oldDocument.getAttachment(FIRST_KEY))
     require(newDocument.getAttachment(MIDDLE_KEY) == oldDocument.getAttachment(MIDDLE_KEY))
     require(newDocument.getAttachment(LAST_KEY) == oldDocument.getAttachment(LAST_KEY))
-    require(newDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[SerializableDocumentAttachment].name ==
-        oldDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[SerializableDocumentAttachment].name)
+    require(newDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name ==
+        oldDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name)
 
     // This one must be avoided.
     /*require(newDocument == oldDocument)*/
