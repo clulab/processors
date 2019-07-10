@@ -55,12 +55,31 @@ package object json {
   implicit class DocOps(doc: Document) extends JSONSerialization {
 
     def jsonAST: JValue = {
+      // See also DocumentSerializer for a similar text implementation.
+      val attachmentKeys = doc.getAttachmentKeys.toList.sorted
+      val documentAttachments: JValue = if (attachmentKeys.nonEmpty) {
+        val jFields = attachmentKeys.map { key =>
+          val value = doc.getAttachment(key).get
+          JField(key,
+              ("builder" -> JString(value.documentAttachmentBuilderFromJsonClassName)) ~
+              ("value" -> value.toJsonSerializer)
+          )
+        }
+        JObject(jFields)
+      }
+      else JNothing
+
       // field and value are removed when value is not present
-      ("id" -> doc.id) ~
-      ("text" -> doc.text) ~
-      ("sentences" -> doc.sentences.map(_.jsonAST).toList)
-      // TODO: handle discourse tree
-      //("discourse-tree" -> discourseTree)
+      val ast1 =
+          ("id" -> doc.id) ~
+          ("text" -> doc.text) ~
+          ("sentences" -> doc.sentences.map(_.jsonAST).toList)
+          // TODO: handle discourse tree
+          //("discourse-tree" -> discourseTree)
+      val ast2 = if (documentAttachments == JNothing) ast1
+          else ast1 ~ ("documentAttachments" -> documentAttachments)
+
+      ast2
     }
   }
 

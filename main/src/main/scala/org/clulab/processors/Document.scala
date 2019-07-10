@@ -4,6 +4,10 @@ import org.clulab.discourse.rstparser.DiscourseTree
 import org.clulab.struct.CorefChains
 import org.clulab.utils.Serializer
 
+import org.json4s.JString
+import org.json4s.JValue
+import org.json4s.jackson.prettyJson
+
 import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
 
@@ -110,18 +114,31 @@ object Document {
 
 }
 
-trait DocumentAttachmentBuilder {
+/**
+  * This is the interface required for interaction with Document
+  * Since the Document is serializable, everything in it should be, including the DocumentAttachments.
+  */
+trait DocumentAble extends Serializable
+
+/**
+  * This is the interface used to build DocumentAttachments from text when
+  * they are deserialized by the DocumentSerializer as coded further below.
+  */
+trait DocumentAttachmentBuilderFromText {
   def mkDocumentAttachment(text: String): DocumentAttachment
 }
 
 /**
+  * This is an implementation of DocumentAttachmentBuilderFromText that indeed
+  * creates an object from text, but it is an illegible text version of the Java
+  * object serialization.  It is used as a backup absent a more legible representation.
   * Subclasses must have an empty constructor which can be called using reflection
   * based on the name in DocumentAttachment.documentAttachmentBuilderClassName by
   * the DocumentSerializer.  The constructed builder is then used to construct the
   * DocumentAttachment by calling mkDocumentAttachment which likely returns a
   * customized subclass of DocumentAttachment.
   */
-class ObjectDocumentAttachmentBuilder extends DocumentAttachmentBuilder {
+class ObjectDocumentAttachmentBuilderFromText extends DocumentAttachmentBuilderFromText {
 
   /**
     * This matches the format in DocumentAttachment.toDocumentSerializer.
@@ -129,24 +146,21 @@ class ObjectDocumentAttachmentBuilder extends DocumentAttachmentBuilder {
   def mkDocumentAttachment(text: String): DocumentAttachment = {
     val byteArray: Array[Byte] = text.split(',').map { value =>
       val byte: Byte = java.lang.Byte.decode(value)
-
       byte
     }
     val documentAttachment: DocumentAttachment = Serializer.load(byteArray)
-
     documentAttachment
   }
 }
 
 /**
-  * Placeholder for document attachment, to be used to store any meta data such as document creation time.
-  * Since the Document is serializable, everything in it should be, including the DocumentAttachments.
+  * These are interfaces required for interaction with the DocumentSerializer.
   */
-trait DocumentAttachment extends Serializable {
+trait DocumentSerializerAble {
   /**
     * An object of this class will (re)construct the DocumentAttachment (or subclass thereof).
     */
-  val documentAttachmentBuilderClassName: String = classOf[ObjectDocumentAttachmentBuilder].getName
+  val documentAttachmentBuilderFromTextClassName: String = classOf[ObjectDocumentAttachmentBuilderFromText].getName
 
   /** A DocumentSerializer needs/wants to convert the attachment into a compact, legible string.
     * The default implementation for use in an emergency just converts the Java ObjectOutputStream
@@ -154,7 +168,53 @@ trait DocumentAttachment extends Serializable {
     */
   def toDocumentSerializer: String = {
     val byteArray: Array[Byte] = Serializer.save(this)
-
     byteArray.mkString(",")
   }
 }
+
+/**
+  * This is the interface used to build DocumentAttachments from json when
+  * they are deserialized by the JSONSerializer as coded further below.
+  */
+trait DocumentAttachmentBuilderFromJson {
+  def mkDocumentAttachment(json: JValue): DocumentAttachment
+}
+
+/**
+  * This design parallels that of ObjectDocumentAttachmentBuilderFromJson.
+  */
+class ObjectDocumentAttachmentBuilderFromJson extends DocumentAttachmentBuilderFromJson {
+
+  def mkDocumentAttachment(json: JValue): DocumentAttachment = {
+    json match {
+      case JString(text) =>
+        val byteArray: Array[Byte] = text.split(',').map { value =>
+          val byte: Byte = java.lang.Byte.decode(value)
+          byte
+        }
+        val documentAttachment: DocumentAttachment = Serializer.load(byteArray)
+        documentAttachment
+      case _ =>
+        val text = prettyJson(json)
+        throw new RuntimeException(s"ERROR: While deserializing document attachment expected JString but found this: $text")
+    }
+  }
+}
+
+/**
+  * These are interfaces required for interaction with JSONSerializer (and related classes).
+  * See DocumentSerializerAble for a similar implementation but for the text representation.
+  */
+trait JsonSerializerAble {
+  val documentAttachmentBuilderFromJsonClassName: String = classOf[ObjectDocumentAttachmentBuilderFromJson].getName
+
+  def toJsonSerializer: JValue = {
+    val byteArray: Array[Byte] = Serializer.save(this)
+    new JString(byteArray.mkString(","))
+  }
+}
+
+/**
+  * Placeholder for document attachment, to be used to store any meta data such as document creation time.
+  */
+trait DocumentAttachment extends DocumentAble with DocumentSerializerAble with JsonSerializerAble

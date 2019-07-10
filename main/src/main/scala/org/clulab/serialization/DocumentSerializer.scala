@@ -8,7 +8,7 @@ import scala.reflect.ClassTag
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
 import org.clulab.processors.DocumentAttachment
-import org.clulab.processors.DocumentAttachmentBuilder
+import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, RelationTriple, Sentence}
 import org.clulab.struct._
 
@@ -89,12 +89,12 @@ class DocumentSerializer extends LazyLogging {
       0.until(attachmentCount).foreach { index =>
         bits = read(r)
         val key = bits(0)
-        val documentAttachmentBuilderClassName = bits(1)
+        val documentAttachmentBuilderFromTextClassName = bits(1)
         // See https://stackoverflow.com/questions/6094575/creating-an-instance-using-the-class-name-and-calling-constructor/6094602
-        val clazz = Class.forName(documentAttachmentBuilderClassName)
+        val clazz = Class.forName(documentAttachmentBuilderFromTextClassName)
         val ctor = clazz.getConstructor()
         val obj = ctor.newInstance()
-        val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilder]
+        val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilderFromText]
         val text = bits(2)
         val documentAttachment = documentAttachmentBuilder.mkDocumentAttachment(text)
         namedDocumentAttachmentsOpt.get(index) = (key, documentAttachment)
@@ -330,7 +330,7 @@ class DocumentSerializer extends LazyLogging {
           val value = doc.getAttachment(key).get
           os.print(escape(key))
           os.print(SEP)
-          os.print(escape(value.documentAttachmentBuilderClassName))
+          os.print(escape(value.documentAttachmentBuilderFromTextClassName))
           os.print(SEP)
           os.println(escape(value.toDocumentSerializer))
         }
