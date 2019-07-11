@@ -162,7 +162,7 @@ trait DocumentSerializerAble {
     * into a string.  A good implementation of the trait will override this behavior.
     */
   def toDocumentSerializer: String = {
-    val byteArray: Array[Byte] = Serializer.save(this)
+    val byteArray = Serializer.save(this)
     byteArray.mkString(",")
   }
 }
