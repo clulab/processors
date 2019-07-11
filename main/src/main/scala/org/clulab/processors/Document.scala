@@ -11,7 +11,6 @@ import org.json4s.jackson.prettyJson
 import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
 
-
 /**
   * Stores all annotations for one document.
   *   Written by: Mihai Surdeanu and Gus Hahn-Powell.
@@ -78,8 +77,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
 
   /** Retrieves the attachment with the given name */
   def getAttachment(name: String): Option[DocumentAttachment] = {
-    if (attachments.isEmpty) None
-    else attachments.get.get(name)
+    attachments.flatMap(_.get(name))
   }
 
   /** Retrieves keys to all attachments so that the entire collection can be read
@@ -144,10 +142,7 @@ class ObjectDocumentAttachmentBuilderFromText extends DocumentAttachmentBuilderF
     * This matches the format in DocumentAttachment.toDocumentSerializer.
     */
   def mkDocumentAttachment(text: String): DocumentAttachment = {
-    val byteArray: Array[Byte] = text.split(',').map { value =>
-      val byte: Byte = java.lang.Byte.decode(value)
-      byte
-    }
+    val byteArray = text.split(',').map(java.lang.Byte.decode(_).asInstanceOf[Byte])
     val documentAttachment: DocumentAttachment = Serializer.load(byteArray)
     documentAttachment
   }
@@ -188,10 +183,7 @@ class ObjectDocumentAttachmentBuilderFromJson extends DocumentAttachmentBuilderF
   def mkDocumentAttachment(json: JValue): DocumentAttachment = {
     json match {
       case JString(text) =>
-        val byteArray: Array[Byte] = text.split(',').map { value =>
-          val byte: Byte = java.lang.Byte.decode(value)
-          byte
-        }
+        val byteArray = text.split(',').map(java.lang.Byte.decode(_).asInstanceOf[Byte])
         val documentAttachment: DocumentAttachment = Serializer.load(byteArray)
         documentAttachment
       case _ =>

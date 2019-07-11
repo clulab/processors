@@ -80,6 +80,13 @@ class DocumentSerializer extends LazyLogging {
 
     var namedDocumentAttachmentsOpt: Option[Array[(String, DocumentAttachment)]] = None
     if (bits(0) == START_ATTACHMENTS) {
+      def unescapeAttachment(text: String): String = {
+        text
+            .replace("\\n", "\n")
+            .replace("\\t", "\t")
+            .replace("\\\\", "\\")
+      }
+
       if (bits.length != 2)
         throw new RuntimeException(
           s"ERROR: Missing document attachments size in start attachments line: " + bits.mkString(" "))
@@ -88,14 +95,14 @@ class DocumentSerializer extends LazyLogging {
         namedDocumentAttachmentsOpt = Some(new Array(attachmentCount))
       0.until(attachmentCount).foreach { index =>
         bits = read(r)
-        val key = bits(0)
-        val documentAttachmentBuilderFromTextClassName = bits(1)
+        val key = unescapeAttachment(bits(0))
+        val documentAttachmentBuilderFromTextClassName = unescapeAttachment(bits(1))
         // See https://stackoverflow.com/questions/6094575/creating-an-instance-using-the-class-name-and-calling-constructor/6094602
         val clazz = Class.forName(documentAttachmentBuilderFromTextClassName)
         val ctor = clazz.getConstructor()
         val obj = ctor.newInstance()
         val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilderFromText]
-        val text = bits(2)
+        val text = unescapeAttachment(bits(2))
         val documentAttachment = documentAttachmentBuilder.mkDocumentAttachment(text)
         namedDocumentAttachmentsOpt.get(index) = (key, documentAttachment)
       }
@@ -316,8 +323,9 @@ class DocumentSerializer extends LazyLogging {
     }
 
     {
-      def escape(text: String): String = {
-        text.replace("\\", "\\\\")
+      def escapeAttachment(text: String): String = {
+        text
+            .replace("\\", "\\\\")
             .replace("\t", "\\t")
             .replace("\n", "\\n")
       }
@@ -328,11 +336,11 @@ class DocumentSerializer extends LazyLogging {
         os.println(START_ATTACHMENTS + SEP + attachmentKeys.size)
         attachmentKeys.foreach { key =>
           val value = doc.getAttachment(key).get
-          os.print(escape(key))
+          os.print(escapeAttachment(key))
           os.print(SEP)
-          os.print(escape(value.documentAttachmentBuilderFromTextClassName))
+          os.print(escapeAttachment(value.documentAttachmentBuilderFromTextClassName))
           os.print(SEP)
-          os.println(escape(value.toDocumentSerializer))
+          os.println(escapeAttachment(value.toDocumentSerializer))
         }
       }
     }

@@ -46,7 +46,7 @@ class ObjectNameDocumentAttachment(name: String) extends NameDocumentAttachment(
 }
 
 @SerialVersionUID(100L)
-class NameDocumentBuilderFromText extends DocumentAttachmentBuilderFromText {
+class NameDocumentAttachmentBuilderFromText extends DocumentAttachmentBuilderFromText {
 
   def mkDocumentAttachment(text: String): TextNameDocumentAttachment = {
     new TextNameDocumentAttachment(text)
@@ -54,7 +54,7 @@ class NameDocumentBuilderFromText extends DocumentAttachmentBuilderFromText {
 }
 
 @SerialVersionUID(100L)
-class NameDocumentBuilderFromJson extends DocumentAttachmentBuilderFromJson {
+class NameDocumentAttachmentBuilderFromJson extends DocumentAttachmentBuilderFromJson {
 
   def mkDocumentAttachment(json: JValue): TextNameDocumentAttachment = {
     json match {
@@ -70,8 +70,8 @@ class NameDocumentBuilderFromJson extends DocumentAttachmentBuilderFromJson {
 class TextNameDocumentAttachment(name: String) extends NameDocumentAttachment(name) {
   var serialized: Boolean = false
 
-  override def documentAttachmentBuilderFromTextClassName: String = classOf[NameDocumentBuilderFromText].getName
-  override def documentAttachmentBuilderFromJsonClassName: String = classOf[NameDocumentBuilderFromJson].getName
+  override def documentAttachmentBuilderFromTextClassName: String = classOf[NameDocumentAttachmentBuilderFromText].getName
+  override def documentAttachmentBuilderFromJsonClassName: String = classOf[NameDocumentAttachmentBuilderFromJson].getName
 
   private def writeObject(out: ObjectOutputStream): Unit = {
     serialized = true
