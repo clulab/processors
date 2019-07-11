@@ -160,7 +160,7 @@ trait DocumentSerializerAble {
   /**
     * An object of this class will (re)construct the DocumentAttachment (or subclass thereof).
     */
-  val documentAttachmentBuilderFromTextClassName: String = classOf[ObjectDocumentAttachmentBuilderFromText].getName
+  def documentAttachmentBuilderFromTextClassName: String = classOf[ObjectDocumentAttachmentBuilderFromText].getName
 
   /** A DocumentSerializer needs/wants to convert the attachment into a compact, legible string.
     * The default implementation for use in an emergency just converts the Java ObjectOutputStream
@@ -206,7 +206,7 @@ class ObjectDocumentAttachmentBuilderFromJson extends DocumentAttachmentBuilderF
   * See DocumentSerializerAble for a similar implementation but for the text representation.
   */
 trait JsonSerializerAble {
-  val documentAttachmentBuilderFromJsonClassName: String = classOf[ObjectDocumentAttachmentBuilderFromJson].getName
+  def documentAttachmentBuilderFromJsonClassName: String = classOf[ObjectDocumentAttachmentBuilderFromJson].getName
 
   def toJsonSerializer: JValue = {
     val byteArray: Array[Byte] = Serializer.save(this)

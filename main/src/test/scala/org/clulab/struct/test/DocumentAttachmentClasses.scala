@@ -13,6 +13,7 @@ import org.json4s.jackson.prettyJson
 // interferes with serialization.  It seems to extend classes with exception
 // mechanisms which themselves cannot be serialized, causing failures.
 // Heed this, as it was a hard lesson learned.
+// See maybe https://github.com/sbt/sbt/issues/2824.
 
 // Furthermore, these classes are in a completely separate file because
 // IntelliJ cannot find the test suite if they are included in that file.
@@ -22,10 +23,12 @@ case class CaseClass(name: String)
 // DocumentAttachment provides serialization itself now, so this doesn't need Serializable.
 // This is an example of the minimum functionality needed for a DocumentAttachment.
 // The attachment simply stores a name, but it could be anything else.
+@SerialVersionUID(100L)
 class NameDocumentAttachment(val name: String) extends DocumentAttachment
 
 // These methods are only there for testing.  Production classes do not need them.
 // This one doesn't provide nice serialization for DocumentSerializer.
+@SerialVersionUID(100L)
 class ObjectNameDocumentAttachment(name: String) extends NameDocumentAttachment(name) {
   var serialize: Boolean = false
 
@@ -42,6 +45,7 @@ class ObjectNameDocumentAttachment(name: String) extends NameDocumentAttachment(
   }
 }
 
+@SerialVersionUID(100L)
 class NameDocumentBuilderFromText extends DocumentAttachmentBuilderFromText {
 
   def mkDocumentAttachment(text: String): TextNameDocumentAttachment = {
@@ -49,6 +53,7 @@ class NameDocumentBuilderFromText extends DocumentAttachmentBuilderFromText {
   }
 }
 
+@SerialVersionUID(100L)
 class NameDocumentBuilderFromJson extends DocumentAttachmentBuilderFromJson {
 
   def mkDocumentAttachment(json: JValue): TextNameDocumentAttachment = {
@@ -61,11 +66,12 @@ class NameDocumentBuilderFromJson extends DocumentAttachmentBuilderFromJson {
   }
 }
 
+@SerialVersionUID(100L)
 class TextNameDocumentAttachment(name: String) extends NameDocumentAttachment(name) {
   var serialized: Boolean = false
 
-  override val documentAttachmentBuilderFromTextClassName: String = classOf[NameDocumentBuilderFromText].getName
-  override val documentAttachmentBuilderFromJsonClassName: String = classOf[NameDocumentBuilderFromJson].getName
+  override def documentAttachmentBuilderFromTextClassName: String = classOf[NameDocumentBuilderFromText].getName
+  override def documentAttachmentBuilderFromJsonClassName: String = classOf[NameDocumentBuilderFromJson].getName
 
   private def writeObject(out: ObjectOutputStream): Unit = {
     serialized = true
@@ -90,6 +96,6 @@ class TextNameDocumentAttachment(name: String) extends NameDocumentAttachment(na
 
 trait MethodAttachment
 
+@SerialVersionUID(100L)
 class NameMethodAttachment(val name: String) extends MethodAttachment {
-
 }
