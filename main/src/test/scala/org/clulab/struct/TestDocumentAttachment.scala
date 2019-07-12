@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream
 import org.clulab.processors.Document
 import org.clulab.processors.Sentence
 import org.clulab.serialization.DocumentSerializer
+import org.clulab.serialization.json._
 import org.clulab.struct.test.CaseClass
 import org.clulab.struct.test.ObjectNameDocumentAttachment
 import org.clulab.struct.test.NameDocumentAttachment
@@ -20,7 +21,6 @@ import org.json4s.jackson.renderJValue
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import org.clulab.serialization.json._
 
 class TestDocumentAttachment extends FlatSpec with Matchers {
   protected val FIRST_KEY = "first"
