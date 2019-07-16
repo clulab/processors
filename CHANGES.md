@@ -1,4 +1,5 @@
 # Changes
++ **7.5.3** - Fixed CoreNLP parser crash on weird sentences with non-alpha characters only (Reach issue #634).
 + **7.5.3** - Added support for lemmatization and improved Chunking, Parsing and POS models for Portuguese.
 + **7.5.3** - Switched to Jenkins for unit testing.
 + **7.5.3** - Added a LSTM-CRF sequence tagger.
