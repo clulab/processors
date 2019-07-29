@@ -1,4 +1,5 @@
 # Changes
++ **7.5.3** - Add DocumentAttachment to Document
 + **7.5.3** - Added support for lemmatization and improved Chunking, Parsing and POS models for Portuguese.
 + **7.5.3** - Switched to Jenkins for unit testing.
 + **7.5.3** - Added a LSTM-CRF sequence tagger.
