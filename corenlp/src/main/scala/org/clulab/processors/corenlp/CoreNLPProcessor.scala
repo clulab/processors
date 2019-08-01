@@ -89,11 +89,22 @@ class CoreNLPProcessor(
       assert(stanfordTree != null) // even when we can't parse, we create a fake tree in stanfordParse()
 
       // store Stanford annotations; Stanford dependencies are created here!
-      // note: this code breaks on sentences with 1 token
       val words = sa.get(classOf[CoreAnnotations.TokensAnnotation])
+      var depFail = false
       if(words.size() > 1) {
-        ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa,
-          util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
+        //println("SENTENCE WORDS: ")
+        //println(mkSentenceString(words))
+
+        // note: this method fails on weird sentences, e.g., sentences that contain only: ")", "."
+        // make sure we don't crash here!
+        try {
+          ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa,
+            util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
+        } catch {
+          case e:Throwable =>
+            logger.debug("WARNING: CoreNLP failed to extract syntactic dependencies on sentence: " + mkSentenceString(words))
+            depFail = true
+        }
       } else { // exactly 1 token in the sentence
         // save the constituent tree
         sa.set(classOf[TreeCoreAnnotations.TreeAnnotation], stanfordTree)
@@ -111,14 +122,25 @@ class CoreNLPProcessor(
       doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(stanfordTree, headFinder, position))
 
       // save syntactic dependencies in our doc
-      val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
-      val enhancedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation])
+      if(! depFail) {
+        val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
+        val enhancedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation])
 
-      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in))
+        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
+        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in))
+      }
 
       offset += 1
     }
+  }
+
+  def mkSentenceString(words:java.util.List[CoreLabel]): String = {
+    val b = new StringBuilder
+    for(i <- 0 until words.size()) {
+      if(i > 0) b.append(" ")
+      b.append(s"[${words.get(i).word()}]")
+    }
+    b.toString()
   }
 
   def stanfordParse(sentence:CoreMap):StanfordTree = {
