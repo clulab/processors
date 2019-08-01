@@ -8,6 +8,9 @@ import org.json4s.jackson._
 
 
 package object json {
+  val DOCUMENT_ATTACHMENTS_KEY = "documentAttachments"
+  val DOCUMENT_ATTACHMENTS_BUILDER_KEY = "builder"
+  val DOCUMENT_ATTACHMENTS_VALUE_KEY = "value"
 
   implicit val formats = DefaultFormats
 
@@ -24,7 +27,7 @@ package object json {
       case None => None
     }
   }
-  
+
   implicit class ODirectedGraphOps(odg: Option[DirectedGraph[String]]) {
     def toSerializableJSON: Option[JValue] = odg match {
       case Some(g) => Some(g.jsonAST)
@@ -55,12 +58,31 @@ package object json {
   implicit class DocOps(doc: Document) extends JSONSerialization {
 
     def jsonAST: JValue = {
+      // See also DocumentSerializer for a similar text implementation.
+      val attachmentKeys = doc.getAttachmentKeys.toList.sorted
+      val documentAttachments: JValue = if (attachmentKeys.nonEmpty) {
+        val jFields = attachmentKeys.map { key =>
+          val value = doc.getAttachment(key).get
+          JField(key,
+              (DOCUMENT_ATTACHMENTS_BUILDER_KEY -> JString(value.documentAttachmentBuilderFromJsonClassName)) ~
+              (DOCUMENT_ATTACHMENTS_VALUE_KEY -> value.toJsonSerializer)
+          )
+        }
+        JObject(jFields)
+      }
+      else JNothing
+
       // field and value are removed when value is not present
-      ("id" -> doc.id) ~
-      ("text" -> doc.text) ~
-      ("sentences" -> doc.sentences.map(_.jsonAST).toList)
-      // TODO: handle discourse tree
-      //("discourse-tree" -> discourseTree)
+      val ast1 =
+          ("id" -> doc.id) ~
+          ("text" -> doc.text) ~
+          ("sentences" -> doc.sentences.map(_.jsonAST).toList)
+          // TODO: handle discourse tree
+          //("discourse-tree" -> discourseTree)
+      val ast2 = if (documentAttachments == JNothing) ast1
+          else ast1 ~ (DOCUMENT_ATTACHMENTS_KEY -> documentAttachments)
+
+      ast2
     }
   }
 
