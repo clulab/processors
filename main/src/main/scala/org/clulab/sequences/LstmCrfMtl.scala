@@ -19,5 +19,6 @@ object LstmCrfMtl {
     val config = ConfigFactory.load()
 
     val taskManager = new TaskManager(config)
+    taskManager.debugTraversal()
   }
 }
