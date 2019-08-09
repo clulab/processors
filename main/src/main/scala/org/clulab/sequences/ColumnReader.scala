@@ -48,5 +48,8 @@ case class Row(val tokens:Array[String]) {
   def get(idx:Int): String =
     if(idx < tokens.length) tokens(idx)
     else ""
+
+  def getWord: String = get(0)
+  def getTag: String = get(1)
 }
 

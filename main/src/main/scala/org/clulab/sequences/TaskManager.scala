@@ -17,6 +17,9 @@ class TaskManager(config:Config) extends Configured {
   /** Embeddings file */
   val embeddingsFileName:String = getArgString("mtl.embed", None)
 
+  /** Minimum frequency for a word to not be flagged as unknown */
+  val minWordFreq:Int = getArgInt("mtl.minWordFreq", Some(100))
+
   /** File with document frequency counts (needed for managing unknown words) */
   val docFreqFileName:String = getArgString("mtl.docFreq", None)
 
@@ -31,6 +34,9 @@ class TaskManager(config:Config) extends Configured {
 
   /** Training shards from all tasks */
   val shards:Array[Shard] = mkShards()
+
+  def taskCount = tasks.length
+  def indices = tasks.indices
 
   /** Construct training shards by interleaving shards from all tasks */
   private def mkShards():Array[Shard] = {
@@ -85,7 +91,11 @@ class TaskManager(config:Config) extends Configured {
       if(contains(s"mtl.task$taskNumber.test")) Some(getArgString(s"mtl.task$taskNumber.test", None))
       else None
 
-    new Task(taskNumber - 1, taskName, train, dev, test, shardsPerEpoch)
+    val inference =
+      if(contains(s"mtl.task$taskNumber.inference")) Some(getArgString(s"mtl.task$taskNumber.inference", None))
+      else None
+
+    new Task(taskNumber - 1, taskName, train, dev, test, inference, shardsPerEpoch)
   }
 
   def debugTraversal():Unit = {
@@ -115,9 +125,9 @@ class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard]) extends I
   var sentencePosition:Int = 0
 
   override def hasNext: Boolean =
-    (shardPosition < shards.length &&
+    shardPosition < shards.length &&
       (sentencePosition < shards(shardPosition).endPosition ||
-        shardPosition < shards.length - 1))
+        shardPosition < shards.length - 1)
 
   override def next(): (Int, Array[Row]) = {
     if(sentencePosition >= shards(shardPosition).endPosition) {
@@ -143,6 +153,7 @@ class Task(
   val trainFileName:String,
   val devFileName:Option[String],
   val testFileName:Option[String],
+  val inference:Option[String],
   shardsPerEpoch:Int) {
   logger.debug(s"Reading task $taskNumber ($taskName)...")
   val trainSentences:Array[Array[Row]] = ColumnReader.readColumns(trainFileName)
@@ -152,6 +163,8 @@ class Task(
   val testSentences:Option[Array[Array[Row]]] =
     if(testFileName.isDefined) Some(ColumnReader.readColumns(testFileName.get))
     else None
+
+  val greedyInference:Boolean = inference.getOrElse("greedy").toLowerCase() == "greedy"
 
   // The size of the training shard for this task
   val shardSize:Int = math.ceil(trainSentences.length.toDouble / shardsPerEpoch).toInt
