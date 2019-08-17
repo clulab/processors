@@ -1,19 +1,22 @@
 package org.clulab.sequences
 
+import java.io.{FileWriter, PrintWriter}
+
 import com.typesafe.config.ConfigFactory
 import org.slf4j.{Logger, LoggerFactory}
-import edu.cmu.dynet.{Dim, FloatVector, Initialize, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.struct.Counter
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
-import edu.cmu.dynet.Expression.randomNormal
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.sequences.ArrayMath.toFloatArray
-import org.clulab.sequences.LstmCrf.logger
-
 import LstmUtils._
 import LstmCrfMtl._
+import org.clulab.sequences.LstmCrf.{DO_DROPOUT, DROPOUT_PROB}
+
+import scala.util.Random
 
 /**
   * Implements a multi-task learning (MTL) framework around the biLSTM-CRF of Lample et al. (2016)
@@ -120,15 +123,172 @@ class LstmCrfMtl(val taskManager: TaskManager) {
   }
 
   def train():Unit = {
-    // TODO
+    val trainer = new RMSPropTrainer(model.parameters)
+    var cummulativeLoss = 0.0
+    var numTagged = 0
+    var sentCount = 0
+    val rand = new Random(RANDOM_SEED)
+
+    for (epoch <- 0 until taskManager.totalEpochs) {
+      logger.info(s"Started epoch $epoch.")
+      // this fetches randomized training sentences from all tasks
+      val sentenceIterator = taskManager.getSentences(rand)
+
+      for(metaSentence <- sentenceIterator) {
+        val taskId = metaSentence._1
+        val sentence = metaSentence._2
+        sentCount += 1
+        ComputationGraph.renew()
+
+        // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
+        val words = sentence.map(_.getWord)
+        val emissionScores = emissionScoresAsExpressions(words, taskId, doDropout = DO_DROPOUT)
+
+        // get the gold tags for this sentence
+        val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2is(taskId))
+
+        val loss =
+          if(taskManager.tasks(taskId).greedyInference) {
+            // greedy loss
+            sentenceLossGreedy(emissionScores, goldTagIds)
+          }
+          else {
+            // fetch the transition probabilities from the lookup storage
+            val transitionMatrix = new ExpressionVector
+            for(i <- 0 until model.t2is(taskId).size) {
+              transitionMatrix.add(lookup(model.Ts(taskId), i))
+            }
+
+            // CRF loss
+            sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds, model.t2is(taskId))
+          }
+
+        cummulativeLoss += loss.value().toFloat
+        numTagged += sentence.length
+
+        if(sentCount % 1000 == 0) {
+          logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
+          cummulativeLoss = 0.0
+          numTagged = 0
+        }
+
+        // backprop
+        ComputationGraph.backward(loss)
+        trainer.update()
+      }
+
+      // check dev performance in this epoch, for all tasks
+      for(taskId <- 0 until taskManager.taskCount) {
+        val devSentences = taskManager.tasks(taskId).devSentences
+        if(devSentences.nonEmpty) {
+          evaluate(taskId, devSentences.get, epoch)
+        }
+      }
+    }
   }
+
+  def evaluate(taskId:Int, sentences:Array[Array[Row]], epoch:Int): Unit = {
+    evaluate(taskId, sentences, "development", epoch)
+  }
+
+  def evaluate(taskId:Int, sentences:Array[Array[Row]]): Unit = {
+    evaluate(taskId, sentences, "testing", -1)
+  }
+
+  /** Logs accuracy score on devSentences; also saves the output in the file dev.output.<EPOCH> */
+  def evaluate(taskId:Int, sentences:Array[Array[Row]], name:String, epoch:Int): Unit = {
+    var total = 0
+    var correct = 0
+
+    val pw = new PrintWriter(new FileWriter(s"task$taskId.dev.output.$epoch"))
+    logger.debug(s"Started evaluation on the $name dataset for task $taskId...")
+    for(sent <- sentences) {
+      val words = sent.map(_.getWord)
+      val golds = sent.map(_.getTag)
+
+      // println("PREDICT ON SENT: " + words.mkString(", "))
+      val preds = predict(taskId, words)
+      val (t, c) = accuracy(golds, preds)
+      total += t
+      correct += c
+
+      printCoNLLOutput(pw, words, golds, preds)
+    }
+
+    pw.close()
+    logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskId: " + correct.toDouble / total)
+  }
+
+  /**
+   * Predict the sequence tags that applies to the given sequence of words
+   * @param words The input words
+   * @return The predicted sequence of tags
+   */
+  def predict(taskId:Int, words:Array[String]):Array[String] = synchronized {
+    // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
+    val emissionScores:Array[Array[Float]] = synchronized {
+      ComputationGraph.renew()
+      emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, doDropout = false)) // these scores do not have softmax
+    }
+
+    val tags = new ArrayBuffer[String]()
+    if(taskManager.tasks(taskId).greedyInference) {
+      val tagIds = greedyPredict(emissionScores)
+      for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
+    } else {
+      val transitionMatrix: Array[Array[Float]] =
+        transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
+
+      val tagIds = viterbi(emissionScores, transitionMatrix,
+        model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
+      for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
+    }
+    tags.toArray
+  }
+
+  /**
+   * Generates tag emission scores for the words in this sequence, stored as Expressions
+   * @param words One training or testing sentence
+   */
+  def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
+    val embeddings = words.map(mkEmbedding)
+
+    // this is the biLSTM over words that is shared across all tasks
+    val fwStates = transduce(embeddings, model.fwRnnBuilder)
+    val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
+    assert(fwStates.size == bwStates.length)
+    val states = concatenateStates(fwStates, bwStates).toArray
+    assert(states.length == words.length)
+
+    // this is the feed forward network that is specific to each task
+    val H = parameter(model.Hs(taskId))
+    val O = parameter(model.Os(taskId))
+
+    val emissionScores = new ExpressionVector()
+    for(s <- states) {
+      var l1 = Expression.tanh(H * s)
+      if(doDropout) {
+        l1 = Expression.dropout(l1, DROPOUT_PROB)
+      }
+      emissionScores.add(O * l1)
+    }
+
+    emissionScores
+  }
+
+  /** Creates an overall word embedding by concatenating word and character embeddings */
+  def mkEmbedding(word: String):Expression =
+    LstmUtils.mkWordEmbedding(word,
+      model.w2i, model.lookupParameters,
+      model.c2i, model.charLookupParameters,
+      model.charFwRnnBuilder, model.charBwRnnBuilder)
 }
 
 class LstmCrfMtlParameters(
   var w2i:Map[String, Int],
   val c2i:Map[Char, Int],
-  val t2is:Array[Map[String, Int]],
-  val i2ts:Array[Array[String]],
+  val t2is:Array[Map[String, Int]], // one per task
+  val i2ts:Array[Array[String]], // one per task
   val parameters:ParameterCollection,
   var lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
@@ -136,9 +296,9 @@ class LstmCrfMtlParameters(
   val charLookupParameters:LookupParameter,
   val charFwRnnBuilder:RnnBuilder,
   val charBwRnnBuilder:RnnBuilder,
-  val Hs:Array[Parameter],
-  val Os:Array[Parameter],
-  val Ts:Array[LookupParameter]) { // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j
+  val Hs:Array[Parameter], // one per task
+  val Os:Array[Parameter], // one per task
+  val Ts:Array[LookupParameter]) { // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
 
   def taskCount:Int = t2is.length
   def indices:Range = t2is.indices

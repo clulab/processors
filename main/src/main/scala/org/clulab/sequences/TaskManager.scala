@@ -1,12 +1,13 @@
 package org.clulab.sequences
 
 import com.typesafe.config.Config
-import org.clulab.utils.Configured
+import org.clulab.utils.{Configured, MathUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
-
 import TaskManager._
+
+import scala.util.Random
 
 /**
   * Manages the tasks in LstmCrfMtl
@@ -66,7 +67,7 @@ class TaskManager(config:Config) extends Configured {
   }
 
   /** Iterator over all sentences coming from all interleaved shards */
-  def getSentences:Iterator[(Int, Array[Row])] = new SentenceIterator(tasks, shards)
+  def getSentences(random:Random):Iterator[(Int, Array[Row])] = new SentenceIterator(tasks, shards, random)
 
   /** Reads all tasks from disk in memory */
   protected def readTasks(): Array[Task] = {
@@ -120,29 +121,46 @@ class TaskManager(config:Config) extends Configured {
   }
 }
 
-class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard]) extends Iterator[(Int, Array[Row])] {
-  var shardPosition:Int = 0
-  var sentencePosition:Int = 0
+class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard], val random:Random)
+  extends Iterator[(Int, Array[Row])] {
+  /** Offset in randomizedSentencePositions array */
+  var sentenceOffset:Int = 0
 
-  override def hasNext: Boolean =
-    shardPosition < shards.length &&
-      (sentencePosition < shards(shardPosition).endPosition ||
-        shardPosition < shards.length - 1)
+  val randomizedSentencePositions:Array[Sentence] = randomizeSentences()
+
+  private case class Sentence(val taskId, val sentencePosition:Int)
+
+  /** Randomizes all sentences across all tasks */
+  private def randomizeSentences(): Array[Sentence] = {
+    // first, randomize the shards
+    val randomizedShards = MathUtils.randomize(shards, random)
+    val randomizedSents = new ArrayBuffer[Sentence]()
+    for(shard <- randomizedShards) {
+      // second, randomize the sentences inside each shard
+      val sents = MathUtils.randomize((shard.startPosition until shard.endPosition).toArray, random)
+      for(sent <- sents) {
+        // store the randomized sentences
+        randomizedSents += Sentence(shard.taskId, sent)
+      }
+    }
+    randomizedSents.toArray
+  }
+
+  override def hasNext: Boolean = sentenceOffset < randomizedSentencePositions.length
 
   override def next(): (Int, Array[Row]) = {
-    if(sentencePosition >= shards(shardPosition).endPosition) {
-      shardPosition += 1
-      sentencePosition = shards(shardPosition).startPosition
-    }
+    assert(sentenceOffset >= 0 && sentenceOffset < randomizedSentencePositions.length)
 
-    val tid = shards(shardPosition).taskId
-    val sentence = tasks(tid).trainSentences(sentencePosition)
-    sentencePosition += 1
+    val s = randomizedSentencePositions(sentenceOffset)
+    val tid = s.taskId
+    val sentence = tasks(tid).trainSentences(s.sentencePosition)
+    sentenceOffset += 1
 
     //logger.debug(s"shardPosition = $shardPosition, sentencePosition = $sentencePosition")
 
     (tid, sentence)
   }
+
 }
 
 case class Shard(taskId:Int, startPosition:Int, endPosition:Int)

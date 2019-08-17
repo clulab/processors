@@ -2,7 +2,7 @@ package org.clulab.sequences
 
 import java.io.PrintWriter
 
-import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick}
+import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, ParameterCollection, RnnBuilder}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.slf4j.{Logger, LoggerFactory}
@@ -352,6 +352,63 @@ object LstmUtils {
     builder.startNewSequence()
     val states = embeddings.map(builder.addInput)
     states
+  }
+
+  /** Greedy loss function, ignoring transition scores */
+  def sentenceLossGreedy(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
+                         golds:Array[Int]): Expression = { // Dim: sentenceSize
+
+    val goldLosses = new ExpressionVector()
+    assert(emissionScoresForSeq.length == golds.length)
+
+    for(i <- emissionScoresForSeq.indices) {
+      // gold tag for word at position i
+      val goldTid = golds(i)
+      // emissionScoresForSeq(i) = all tag emission scores for the word at position i
+      goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
+    }
+
+    sum(goldLosses)
+  }
+
+  /**
+   * Objective function that maximizes the CRF probability of the gold sequence of tags for a given sentence
+   * @param emissionScoresForSeq emission scores for the whole sequence, and all tags
+   * @param transitionMatrix transition matrix between all tags
+   * @param golds gold sequence of tags
+   * @return the negative prob of the gold sequence (in log space)
+   */
+  def sentenceLossCrf(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
+                      transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
+                      golds:Array[Int],
+                      t2i:Map[String, Int]): Expression = { // Dim: sentenceSize
+    val startTag = t2i(START_TAG)
+    val stopTag = t2i(STOP_TAG)
+
+    val scoreOfGoldSeq =
+      sentenceScore(emissionScoresForSeq, transitionMatrix, t2i.size, golds, startTag, stopTag)
+
+    val partitionScore =
+      mkPartitionScore(emissionScoresForSeq, transitionMatrix, startTag, stopTag)
+
+    partitionScore - scoreOfGoldSeq
+  }
+
+  def emissionScoresToArrays(expressions:Iterable[Expression]): Array[Array[Float]] = {
+    val lattice = new ArrayBuffer[Array[Float]]()
+    for(expression <- expressions) {
+      val probs = expression.value().toVector().toArray
+      lattice += probs
+    }
+    lattice.toArray
+  }
+
+  def transitionMatrixToArrays(trans: LookupParameter, size: Int): Array[Array[Float]] = {
+    val transitionMatrix = new ArrayBuffer[Array[Float]]()
+    for(i <- 0 until size) {
+      transitionMatrix += lookup(trans, i).value().toVector().toArray
+    }
+    transitionMatrix.toArray
   }
 }
 
