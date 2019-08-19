@@ -100,12 +100,13 @@ class TaskManager(config:Config) extends Configured {
   }
 
   def debugTraversal():Unit = {
+    val rand = new Random()
     for(epoch <- 0 until totalEpochs) {
       logger.debug(s"Started epoch $epoch")
       var sentCount = 0
       var taskId = 0
       var totalSents = 0
-      for(sentence <- getSentences) {
+      for(sentence <- getSentences(rand)) {
         totalSents += 1
         if(sentence._1 != taskId) {
           logger.debug(s"Read $sentCount sentences from task $taskId")
@@ -124,11 +125,11 @@ class TaskManager(config:Config) extends Configured {
 class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard], val random:Random)
   extends Iterator[(Int, Array[Row])] {
   /** Offset in randomizedSentencePositions array */
-  var sentenceOffset:Int = 0
+  private var sentenceOffset:Int = 0
 
-  val randomizedSentencePositions:Array[Sentence] = randomizeSentences()
+  private val randomizedSentencePositions:Array[Sentence] = randomizeSentences()
 
-  private case class Sentence(val taskId, val sentencePosition:Int)
+  private case class Sentence(taskId:Int, sentencePosition:Int)
 
   /** Randomizes all sentences across all tasks */
   private def randomizeSentences(): Array[Sentence] = {
