@@ -35,7 +35,7 @@ class LstmCrfMtl(val taskManager: TaskManager) {
     logger.debug(s"Character vocabulary has ${c2i.size} entries.")
     logger.debug(s"Tag vocabulary has:")
     for(i <- t2is.indices) {
-      logger.debug(s"- ${t2is(i).size} entries for task ${taskManager.tasks(i).taskNumber}")
+      logger.debug(s"  ${t2is(i).size} entries for task ${taskManager.tasks(i).taskNumber}")
     }
 
     logger.debug("Initializing DyNet...")
@@ -179,29 +179,44 @@ class LstmCrfMtl(val taskManager: TaskManager) {
 
       // check dev performance in this epoch, for all tasks
       for(taskId <- 0 until taskManager.taskCount) {
+        val taskName = taskManager.tasks(taskId).taskName
         val devSentences = taskManager.tasks(taskId).devSentences
         if(devSentences.nonEmpty) {
-          evaluate(taskId, devSentences.get, epoch)
+          evaluate(taskId, taskName, devSentences.get, epoch)
         }
       }
     }
   }
 
-  def evaluate(taskId:Int, sentences:Array[Array[Row]], epoch:Int): Unit = {
-    evaluate(taskId, sentences, "development", epoch)
+  def test(): Unit = {
+    // check final performance on the test dataset
+    for(taskId <- 0 until taskManager.taskCount) {
+      val taskName = taskManager.tasks(taskId).taskName
+      val testSentences = taskManager.tasks(taskId).testSentences
+      if(testSentences.nonEmpty) {
+        evaluate(taskId, taskName, testSentences.get)
+      }
+    }
   }
 
-  def evaluate(taskId:Int, sentences:Array[Array[Row]]): Unit = {
-    evaluate(taskId, sentences, "testing", -1)
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): Unit = {
+    evaluate(taskId, taskName, sentences, "development", epoch)
+  }
+
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): Unit = {
+    evaluate(taskId, taskName, sentences, "testing", -1)
   }
 
   /** Logs accuracy score on devSentences; also saves the output in the file dev.output.<EPOCH> */
-  def evaluate(taskId:Int, sentences:Array[Array[Row]], name:String, epoch:Int): Unit = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): Unit = {
     var total = 0
     var correct = 0
+    val taskNumber = taskId + 1
 
-    val pw = new PrintWriter(new FileWriter(s"task$taskId.dev.output.$epoch"))
-    logger.debug(s"Started evaluation on the $name dataset for task $taskId...")
+    val pw =
+      if(epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
+      else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
+    logger.debug(s"Started evaluation on the $name dataset for task $taskNumber ($taskName)...")
     for(sent <- sentences) {
       val words = sent.map(_.getWord)
       val golds = sent.map(_.getTag)
@@ -216,7 +231,7 @@ class LstmCrfMtl(val taskManager: TaskManager) {
     }
 
     pw.close()
-    logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskId: " + correct.toDouble / total)
+    logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): " + correct.toDouble / total)
   }
 
   /**
@@ -381,5 +396,7 @@ object LstmCrfMtl {
     mtl.initialize()
 
     mtl.train()
+
+    mtl.test()
   }
 }
