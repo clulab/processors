@@ -14,7 +14,6 @@ import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.sequences.ArrayMath.toFloatArray
 import LstmUtils._
 import LstmCrfMtl._
-import org.clulab.sequences.LstmCrf.{DO_DROPOUT, DROPOUT_PROB}
 
 import scala.util.Random
 
@@ -178,13 +177,16 @@ class LstmCrfMtl(val taskManager: TaskManager) {
       }
 
       // check dev performance in this epoch, for all tasks
+      var totalAcc = 0.0
       for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val devSentences = taskManager.tasks(taskId).devSentences
         if(devSentences.nonEmpty) {
-          evaluate(taskId, taskName, devSentences.get, epoch)
+          totalAcc += evaluate(taskId, taskName, devSentences.get, epoch)
         }
       }
+      val avgAcc = totalAcc / taskManager.taskCount
+      logger.info(s"Average accuracy across ${taskManager.taskCount} tasks: $avgAcc")
     }
   }
 
@@ -199,16 +201,16 @@ class LstmCrfMtl(val taskManager: TaskManager) {
     }
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): Unit = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): Double = {
     evaluate(taskId, taskName, sentences, "development", epoch)
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): Unit = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): Double = {
     evaluate(taskId, taskName, sentences, "testing", -1)
   }
 
   /** Logs accuracy score on devSentences; also saves the output in the file dev.output.<EPOCH> */
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): Unit = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): Double = {
     var total = 0
     var correct = 0
     val taskNumber = taskId + 1
@@ -231,7 +233,10 @@ class LstmCrfMtl(val taskManager: TaskManager) {
     }
 
     pw.close()
-    logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): " + correct.toDouble / total)
+    val acc = correct.toDouble / total
+    logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): $acc")
+
+    acc
   }
 
   /**
@@ -297,6 +302,11 @@ class LstmCrfMtl(val taskManager: TaskManager) {
       model.w2i, model.lookupParameters,
       model.c2i, model.charLookupParameters,
       model.charFwRnnBuilder, model.charBwRnnBuilder)
+
+  def save(modelFilename: String): Unit = {
+    // TODO: save *model* using a similar strategy to LstmCrf (Keith)
+  }
+
 }
 
 class LstmCrfMtlParameters(
@@ -382,6 +392,9 @@ object LstmCrfMtl {
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
 
+  val DROPOUT_PROB = 0.1f
+  val DO_DROPOUT = true
+
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
@@ -394,9 +407,29 @@ object LstmCrfMtl {
     val taskManager = new TaskManager(config)
     val mtl = new LstmCrfMtl(taskManager)
     mtl.initialize()
-
     mtl.train()
-
     mtl.test()
+
+    // save the model to disk
+    mtl.save("mtl")
+
+    // load the model from disk and test again
+    // val mtlFromDisk = LstmCrfMtl("mtl", taskManager)
+    // mtlFromDisk.test()
+  }
+
+  protected def load(modelFilename:String):LstmCrfMtlParameters = {
+    // TODO: load the LstmCrfMtl from file(s) using similar code to LstmCrf (Keith)
+    null
+  }
+
+  def apply(modelFilename:String, taskManager: TaskManager): LstmCrfMtl = {
+    // make sure DyNet is initialized!
+    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+
+    // now load the saved model
+    val rnn = new LstmCrfMtl(taskManager)
+    rnn.model = load(modelFilename)
+    rnn
   }
 }
