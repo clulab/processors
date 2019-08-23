@@ -14,6 +14,10 @@ import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.sequences.ArrayMath.toFloatArray
 import LstmUtils._
 import LstmCrfMtl._
+import edu.cmu.dynet.ModelLoader
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.utils.Serializer
 
 import scala.util.Random
 
@@ -39,7 +43,7 @@ class LstmCrfMtl(val taskManager: TaskManager) {
 
     logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    model = mkParams(w2i, c2i, t2is, w2v.dimensions)
+    model = mkParams(taskManager.taskCount, w2i, c2i, t2is, w2v.dimensions)
 
     model.initializeEmbeddings(w2v)
     model.initializeTransitions()
@@ -47,41 +51,6 @@ class LstmCrfMtl(val taskManager: TaskManager) {
     logger.debug("Completed initialization.")
   }
 
-  def mkParams(w2i:Map[String, Int],
-               c2i:Map[Char, Int],
-               t2is:Array[Map[String, Int]],
-               embeddingDim:Int): LstmCrfMtlParameters = {
-    val parameters = new ParameterCollection()
-
-    // These parameters correspond to the LSTM(s) shared by all tasks
-    val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
-    val embeddingSize = embeddingDim + 2 * CHAR_RNN_STATE_SIZE
-    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
-
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-    val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-    val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-
-    // These parameters are unique for each task
-    val Hs = new Array[Parameter](taskManager.taskCount)
-    val Os = new Array[Parameter](taskManager.taskCount)
-    val i2ts = new Array[Array[String]](taskManager.taskCount)
-    val Ts = new Array[LookupParameter](taskManager.taskCount)
-    for(tid <- taskManager.indices) {
-      Hs(tid) = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
-      Os(tid) = parameters.addParameters(Dim(t2is(tid).size, NONLINEAR_SIZE))
-      i2ts(tid) = fromIndexToString(t2is(tid))
-      Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
-    }
-    logger.debug("Created parameters.")
-
-    new LstmCrfMtlParameters(w2i, c2i, t2is, i2ts,
-      parameters, lookupParameters,
-      fwBuilder, bwBuilder,
-      charLookupParameters, charFwBuilder, charBwBuilder,
-      Hs, Os, Ts)
-  }
 
   private def mkVocabs(w2v:Word2Vec): (Map[String, Int], Map[Char, Int], Array[Map[String, Int]]) = {
     val tags = new Array[Counter[String]](taskManager.taskCount)
@@ -302,11 +271,6 @@ class LstmCrfMtl(val taskManager: TaskManager) {
       model.w2i, model.lookupParameters,
       model.c2i, model.charLookupParameters,
       model.charFwRnnBuilder, model.charBwRnnBuilder)
-
-  def save(modelFilename: String): Unit = {
-    // TODO: save *model* using a similar strategy to LstmCrf (Keith)
-  }
-
 }
 
 class LstmCrfMtlParameters(
@@ -398,6 +362,102 @@ object LstmCrfMtl {
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
+  def save(modelFilename: String, model: LstmCrfMtlParameters): Unit = {
+    val dynetFilename = modelFilename + ".rnn"
+    val x2iFilename = modelFilename + ".x2i"
+
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(model.parameters, "/all")
+    }
+
+    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
+      val taskCount = model.taskCount
+      val dim = model.lookupParameters.dim().get(0)
+
+      LstmUtils.save(printWriter, model.w2i, "w2i")
+      LstmUtils.save(printWriter, model.c2i, "c2i")
+      LstmUtils.save(printWriter, taskCount, "taskCount")
+      model.t2is.zipWithIndex.foreach { case (t2i, index) =>
+        LstmUtils.save(printWriter, t2i, s"t2i($index)")
+      }
+      LstmUtils.save(printWriter, dim, "dim")
+    }
+  }
+
+  protected def load(modelFilename:String):LstmCrfMtlParameters = {
+    val dynetFilename = modelFilename + ".rnn"
+    val x2iFilename = modelFilename + ".x2i"
+    val (taskCount, w2i, c2i, t2is, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+      val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
+      val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
+      val lines = source.getLines()
+      val w2i = byLineStringMapBuilder.build(lines)
+      val c2i = byLineCharMapBuilder.build(lines)
+      val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
+      val t2is = 0.until(taskCount).map { _ =>
+        byLineStringMapBuilder.build(lines)
+      }.toArray
+      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
+
+      (taskCount, w2i, c2i, t2is, dim)
+    }
+    val model = {
+      val model = mkParams(taskCount, w2i, c2i, t2is, dim)
+      new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
+      model
+    }
+
+    model
+  }
+
+  def mkParams(taskCount: Int, w2i:Map[String, Int],
+    c2i:Map[Char, Int],
+    t2is:Array[Map[String, Int]],
+    embeddingDim:Int): LstmCrfMtlParameters = {
+    val parameters = new ParameterCollection()
+
+    // These parameters correspond to the LSTM(s) shared by all tasks
+    val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
+    val embeddingSize = embeddingDim + 2 * CHAR_RNN_STATE_SIZE
+    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
+    val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+
+    // These parameters are unique for each task
+    val Hs = new Array[Parameter](taskCount)
+    val Os = new Array[Parameter](taskCount)
+    val i2ts = new Array[Array[String]](taskCount)
+    val Ts = new Array[LookupParameter](taskCount)
+    for(tid <- 0.until(taskCount)) {
+      Hs(tid) = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
+      Os(tid) = parameters.addParameters(Dim(t2is(tid).size, NONLINEAR_SIZE))
+      i2ts(tid) = fromIndexToString(t2is(tid))
+      Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
+    }
+    logger.debug("Created parameters.")
+
+    new LstmCrfMtlParameters(w2i, c2i, t2is, i2ts,
+      parameters, lookupParameters,
+      fwBuilder, bwBuilder,
+      charLookupParameters, charFwBuilder, charBwBuilder,
+      Hs, Os, Ts)
+  }
+
+  def apply(modelFilename:String, taskManager: TaskManager): LstmCrfMtl = {
+    // make sure DyNet is initialized!
+    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+
+    // now load the saved model
+    val rnn = new LstmCrfMtl(taskManager)
+    rnn.model = load(modelFilename)
+    // It might be that this taskManager is not suitable for the model.
+    assert(taskManager.taskCount == rnn.model.i2ts.length)
+    rnn
+  }
+
   def main(args: Array[String]): Unit = {
     //
     // to set a custom config file add -Dconfig.file=/path/to/conf/file to the cmd line for sbt
@@ -411,25 +471,10 @@ object LstmCrfMtl {
     mtl.test()
 
     // save the model to disk
-    mtl.save("mtl")
+    save("mtl", mtl.model)
 
     // load the model from disk and test again
-    // val mtlFromDisk = LstmCrfMtl("mtl", taskManager)
-    // mtlFromDisk.test()
-  }
-
-  protected def load(modelFilename:String):LstmCrfMtlParameters = {
-    // TODO: load the LstmCrfMtl from file(s) using similar code to LstmCrf (Keith)
-    null
-  }
-
-  def apply(modelFilename:String, taskManager: TaskManager): LstmCrfMtl = {
-    // make sure DyNet is initialized!
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-
-    // now load the saved model
-    val rnn = new LstmCrfMtl(taskManager)
-    rnn.model = load(modelFilename)
-    rnn
+    val mtlFromDisk = LstmCrfMtl("mtl", taskManager)
+    mtlFromDisk.test()
   }
 }
