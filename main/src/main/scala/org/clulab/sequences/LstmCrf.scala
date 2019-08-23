@@ -345,6 +345,9 @@ object LstmCrf {
       LstmUtils.save(printWriter, rnnParameters.w2i, "w2i")
       LstmUtils.save(printWriter, rnnParameters.t2i, "t2i")
       LstmUtils.save(printWriter, rnnParameters.c2i, "c2i")
+      // TODO It should not be necessary to save or load i2t because it is
+      //  completely determined by t2i.  However, not doing so will cause
+      //  compatability problems with existing model files.
       LstmUtils.save(printWriter, rnnParameters.i2t, "i2t")
       LstmUtils.save(printWriter, dim, "dim")
     }

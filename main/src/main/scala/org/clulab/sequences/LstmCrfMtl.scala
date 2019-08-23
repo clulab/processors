@@ -101,7 +101,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
     for (epoch <- 0 until taskManager.totalEpochs) {
       logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
-      val sentenceIterator = taskManager.getSentences(rand).take(1000) // kwa remove
+      val sentenceIterator = taskManager.getSentences(rand)
 
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
@@ -488,8 +488,8 @@ object LstmCrfMtl {
     mtl.save("mtl")
 
     // load the model from disk and test again
-    val mtlFromDisk = LstmCrfMtl("mtl", taskManager)
-    mtlFromDisk.test() // These results match the original ones exactly
-    mtlFromDisk.save("mtl2") // These files match the original ones exactly
+//    val mtlFromDisk = LstmCrfMtl("mtl", taskManager)
+//    mtlFromDisk.test() // These results match the original ones exactly
+//    mtlFromDisk.save("mtl2") // These files match the original ones exactly
   }
 }
