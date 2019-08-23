@@ -238,12 +238,12 @@ class LstmCrf(val greedyInference:Boolean = false) {
 }
 
 class LstmCrfParameters(
-  var w2i:Map[String, Int],
+  val w2i:Map[String, Int],
   val t2i:Map[String, Int],
   val i2t:Array[String],
   val c2i:Map[Char, Int],
   val parameters:ParameterCollection,
-  var lookupParameters:LookupParameter,
+  val lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,

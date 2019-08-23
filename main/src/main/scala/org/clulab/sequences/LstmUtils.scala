@@ -415,9 +415,11 @@ object LstmUtils {
     transitionMatrix.toArray
   }
 
-  def save[T](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+  // This <% seems to be called an "implicit conversion declaration".
+  def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
     printWriter.println("# " + comment)
-    values.foreach { case (key, value) =>
+    // Sort these so that the same file always results, even it this is slow.
+    values.toSeq.sorted.foreach { case (key, value) =>
       printWriter.println(s"$key\t$value")
     }
     printWriter.println() // Separator
