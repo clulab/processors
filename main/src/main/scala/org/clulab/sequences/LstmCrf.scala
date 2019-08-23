@@ -1,8 +1,5 @@
 package org.clulab.sequences
 
-import java.io.BufferedOutputStream
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
 import java.io.{FileWriter, PrintWriter}
 
 import org.clulab.embeddings.word2vec.Word2Vec
@@ -17,11 +14,9 @@ import edu.cmu.dynet.Expression._
 import LstmCrf._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.struct.MutableNumber
 import org.clulab.utils.{MathUtils, Serializer, StringUtils}
 
 import scala.collection.mutable
-import scala.io.Source
 import scala.util.Random
 
 /**
@@ -243,12 +238,12 @@ class LstmCrf(val greedyInference:Boolean = false) {
 }
 
 class LstmCrfParameters(
-  var w2i:Map[String, Int],
+  val w2i:Map[String, Int],
   val t2i:Map[String, Int],
   val i2t:Array[String],
   val c2i:Map[Char, Int],
   val parameters:ParameterCollection,
-  var lookupParameters:LookupParameter,
+  val lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,
@@ -336,26 +331,6 @@ object LstmCrf {
 
   val USE_DOMAIN_CONSTRAINTS = true
 
-  protected def save[T](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
-    printWriter.println("# " + comment)
-    values.foreach { case (key, value) =>
-      printWriter.println(s"$key\t$value")
-    }
-    printWriter.println() // Separator
-  }
-
-  protected def save[T](printWriter: PrintWriter, values: Array[T], comment: String): Unit = {
-    printWriter.println("# " + comment)
-    values.foreach(printWriter.println)
-    printWriter.println() // Separator
-  }
-
-  protected def save[T](printWriter: PrintWriter, value: Long, comment: String): Unit = {
-    printWriter.println("# " + comment)
-    printWriter.println(value)
-    printWriter.println() // Separator
-  }
-
   def save(modelFilename: String, rnnParameters: LstmCrfParameters):Unit = {
     val dynetFilename = modelFilename + ".rnn"
     val x2iFilename = modelFilename + ".x2i"
@@ -364,111 +339,42 @@ object LstmCrf {
       modelSaver.addModel(rnnParameters.parameters, "/all")
     }
 
-    Serializer.using(new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(x2iFilename)), "UTF-8"))) { printWriter =>
-      save(printWriter, rnnParameters.w2i, "w2i")
-      save(printWriter, rnnParameters.t2i, "t2i")
-      save(printWriter, rnnParameters.c2i, "c2i")
-      save(printWriter, rnnParameters.i2t, "i2t")
+    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
       val dim = rnnParameters.lookupParameters.dim().get(0)
-      save(printWriter, dim, "dim")
-    }
-  }
 
-  abstract class ByLineBuilder[IntermediateValueType] {
-
-    protected def addLines(intermediateValue: IntermediateValueType, lines: Iterator[String]): Unit = {
-      lines.next() // Skip the comment line
-
-      def nextLine(): Boolean = {
-        val line = lines.next()
-
-        if (line.nonEmpty) {
-          addLine(intermediateValue, line)
-          true // Continue on non-blank lines.
-        }
-        else
-          false // Stop at first blank line.
-      }
-
-      while (nextLine()) { }
-    }
-
-    def addLine(intermediateValue: IntermediateValueType, line: String): Unit
-  }
-
-  // This is a little fancy because it works with both String and Char keys.
-  class ByLineMapBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder[mutable.Map[KeyType, Int]] {
-    def addLine(mutableMap: mutable.Map[KeyType, Int], line: String): Unit = {
-      val Array(key, value) = line.split('\t')
-
-      mutableMap += ((converter(key), value.toInt))
-    }
-
-    def build(lines: Iterator[String]): Map[KeyType, Int] = {
-      val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
-
-      addLines(mutableMap, lines)
-      mutableMap.toMap
-    }
-  }
-
-  // This only works with Strings.
-  class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String]] {
-
-    def addLine(arrayBuffer: ArrayBuffer[String], line: String): Unit = {
-      arrayBuffer += line
-    }
-
-    def build(lines: Iterator[String]): Array[String] = {
-      val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
-
-      addLines(arrayBuffer, lines)
-      arrayBuffer.toArray
-    }
-  }
-
-  // This only works with Strings.
-  class ByLineIntBuilder extends ByLineBuilder[MutableNumber[Option[Int]]] {
-
-    def addLine(mutableNumberOpt: MutableNumber[Option[Int]], line: String): Unit = {
-      mutableNumberOpt.value = Some(line.toInt)
-    }
-
-    def build(lines: Iterator[String]): Int = {
-      var mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
-
-      addLines(mutableNumberOpt, lines)
-      mutableNumberOpt.value.get
+      LstmUtils.save(printWriter, rnnParameters.w2i, "w2i")
+      LstmUtils.save(printWriter, rnnParameters.t2i, "t2i")
+      LstmUtils.save(printWriter, rnnParameters.c2i, "c2i")
+      // TODO It should not be necessary to save or load i2t because it is
+      //  completely determined by t2i.  However, not doing so will cause
+      //  compatability problems with existing model files.
+      LstmUtils.save(printWriter, rnnParameters.i2t, "i2t")
+      LstmUtils.save(printWriter, dim, "dim")
     }
   }
 
   protected def load(modelFilename:String):LstmCrfParameters = {
     val dynetFilename = modelFilename + ".rnn"
     val x2iFilename = modelFilename + ".x2i"
-    val (w2i, t2i, c2i, i2t, dim) = Serializer.using(Source.fromFile(x2iFilename, "UTF-8")) { source =>
-      def stringToString(string: String): String = string
-      def stringToChar(string: String): Char = string.charAt(0)
-
-      val byLineStringMapBuilder = new ByLineMapBuilder(stringToString)
-      val byLineCharMapBuilder = new ByLineMapBuilder(stringToChar)
-
+    val (w2i, t2i, c2i, i2t, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+      val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
+      val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
       val lines = source.getLines()
       val w2i = byLineStringMapBuilder.build(lines)
       val t2i = byLineStringMapBuilder.build(lines)
       val c2i = byLineCharMapBuilder.build(lines)
-      val i2t = new ByLineArrayBuilder().build(lines)
-      val dim = new ByLineIntBuilder().build(lines)
+      val i2t = new LstmUtils.ByLineArrayBuilder().build(lines)
+      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
 
       (w2i, t2i, c2i, i2t, dim)
     }
-
-    val oldModel = {
+    val model = {
       val model = mkParams(w2i, t2i, c2i, dim)
       new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
       model
     }
 
-    oldModel
+    model
   }
 
   def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): LstmCrfParameters = {

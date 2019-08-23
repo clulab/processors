@@ -1,10 +1,14 @@
 package org.clulab.sequences
 
+import java.io.BufferedOutputStream
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import java.io.PrintWriter
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, ParameterCollection, RnnBuilder}
 import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.struct.MutableNumber
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -410,7 +414,116 @@ object LstmUtils {
     }
     transitionMatrix.toArray
   }
+
+  // This <% seems to be called an "implicit conversion declaration".
+  def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+    printWriter.println("# " + comment)
+    // Sort these so that the same file always results, even it this is slow.
+    values.toSeq.sorted.foreach { case (key, value) =>
+      printWriter.println(s"$key\t$value")
+    }
+    printWriter.println() // Separator
+  }
+
+  def save[T](printWriter: PrintWriter, values: Array[T], comment: String): Unit = {
+    printWriter.println("# " + comment)
+    values.foreach(printWriter.println)
+    printWriter.println() // Separator
+  }
+
+  def save[T](printWriter: PrintWriter, value: Long, comment: String): Unit = {
+    printWriter.println("# " + comment)
+    printWriter.println(value)
+    printWriter.println() // Separator
+  }
+
+  abstract class ByLineBuilder[IntermediateValueType] {
+
+    protected def addLines(intermediateValue: IntermediateValueType, lines: Iterator[String]): Unit = {
+      lines.next() // Skip the comment line
+
+      def nextLine(): Boolean = {
+        val line = lines.next()
+
+        if (line.nonEmpty) {
+          addLine(intermediateValue, line)
+          true // Continue on non-blank lines.
+        }
+        else
+          false // Stop at first blank line.
+      }
+
+      while (nextLine()) { }
+    }
+
+    def addLine(intermediateValue: IntermediateValueType, line: String): Unit
+  }
+
+  // This is a little fancy because it works with both String and Char keys.
+  class ByLineMapBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder[mutable.Map[KeyType, Int]] {
+
+    def addLine(mutableMap: mutable.Map[KeyType, Int], line: String): Unit = {
+      val Array(key, value) = line.split('\t')
+
+      mutableMap += ((converter(key), value.toInt))
+    }
+
+    def build(lines: Iterator[String]): Map[KeyType, Int] = {
+      val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
+
+      addLines(mutableMap, lines)
+      mutableMap.toMap
+    }
+  }
+
+  protected def stringToString(string: String): String = string
+
+  protected def stringToChar(string: String): Char = string.charAt(0)
+
+  class ByLineStringMapBuilder extends ByLineMapBuilder(stringToString)
+
+  class ByLineCharMapBuilder extends ByLineMapBuilder(stringToChar)
+
+  class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String]] {
+
+    def addLine(arrayBuffer: ArrayBuffer[String], line: String): Unit = {
+      arrayBuffer += line
+    }
+
+    def build(lines: Iterator[String]): Array[String] = {
+      val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
+
+      addLines(arrayBuffer, lines)
+      arrayBuffer.toArray
+    }
+  }
+
+  class ByLineIntBuilder extends ByLineBuilder[MutableNumber[Option[Int]]] {
+
+    def addLine(mutableNumberOpt: MutableNumber[Option[Int]], line: String): Unit = {
+      mutableNumberOpt.value = Some(line.toInt)
+    }
+
+    def build(lines: Iterator[String]): Int = {
+      var mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
+
+      addLines(mutableNumberOpt, lines)
+      mutableNumberOpt.value.get
+    }
+  }
+
+  def newPrintWriter(filename: String): PrintWriter = {
+    new PrintWriter(
+      new OutputStreamWriter(
+        new BufferedOutputStream(
+          new FileOutputStream(filename)
+        ),
+        "UTF-8"
+      )
+    )
+  }
+
+  def newSource(filename: String): Source = Source.fromFile(filename, "UTF-8")
 }
 
 class LstmUtils
-
