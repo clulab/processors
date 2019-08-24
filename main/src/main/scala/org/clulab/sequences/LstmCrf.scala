@@ -345,10 +345,6 @@ object LstmCrf {
       LstmUtils.save(printWriter, rnnParameters.w2i, "w2i")
       LstmUtils.save(printWriter, rnnParameters.t2i, "t2i")
       LstmUtils.save(printWriter, rnnParameters.c2i, "c2i")
-      // TODO It should not be necessary to save or load i2t because it is
-      //  completely determined by t2i.  However, not doing so will cause
-      //  compatability problems with existing model files.
-      LstmUtils.save(printWriter, rnnParameters.i2t, "i2t")
       LstmUtils.save(printWriter, dim, "dim")
     }
   }
@@ -356,17 +352,16 @@ object LstmCrf {
   protected def load(modelFilename:String):LstmCrfParameters = {
     val dynetFilename = modelFilename + ".rnn"
     val x2iFilename = modelFilename + ".x2i"
-    val (w2i, t2i, c2i, i2t, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+    val (w2i, t2i, c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
       val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
       val lines = source.getLines()
       val w2i = byLineStringMapBuilder.build(lines)
       val t2i = byLineStringMapBuilder.build(lines)
       val c2i = byLineCharMapBuilder.build(lines)
-      val i2t = new LstmUtils.ByLineArrayBuilder().build(lines)
       val dim = new LstmUtils.ByLineIntBuilder().build(lines)
 
-      (w2i, t2i, c2i, i2t, dim)
+      (w2i, t2i, c2i, dim)
     }
     val model = {
       val model = mkParams(w2i, t2i, c2i, dim)
