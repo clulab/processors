@@ -2,21 +2,19 @@ package org.clulab.sequences
 
 import java.io.{FileWriter, PrintWriter}
 
-import org.clulab.embeddings.word2vec.Word2Vec
-import org.clulab.struct.Counter
-import org.slf4j.{Logger, LoggerFactory}
-
-import LstmUtils._
-
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
-import LstmCrf._
+import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.sequences.LstmCrf._
+import org.clulab.sequences.LstmUtils._
+import org.clulab.struct.Counter
 import org.clulab.utils.{MathUtils, Serializer, StringUtils}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.Random
 
 /**
@@ -24,8 +22,59 @@ import scala.util.Random
   * @param greedyInference If true use a CRF layer; otherwise perform greedy inference
   * @author Mihai
   */
-class LstmCrf(val greedyInference:Boolean = false) {
-  var model:LstmCrfParameters = _
+
+class LstmCrf protected(val greedyInference: Boolean, initializationParamsOpt: Option[LstmCrf.InitializationParams], lstmCrfParametersOpt: Option[LstmCrfParameters]) {
+  // Constructor for case of uninitialized model
+  def this(greedyInference: Boolean, initializationParams: LstmCrf.InitializationParams) = this(greedyInference, Some(initializationParams), None)
+  // Constructor for case of model previously initialized because, e.g., it was read from file
+  def this(greedyInference: Boolean, lstmCrfParameters: LstmCrfParameters) = this(greedyInference, None, Some(lstmCrfParameters))
+
+  var model: LstmCrfParameters = lstmCrfParametersOpt.getOrElse(initialize(initializationParamsOpt.get))
+
+  protected def initialize(initializationParams: LstmCrf.InitializationParams): LstmCrfParameters = {
+    val w2v = loadEmbeddings(initializationParams.docFreqFileName, initializationParams.minDocFreq, initializationParams.embeddingsFile)
+    val (w2i, t2i, c2i) = mkVocabs(initializationParams.trainSentences, w2v)
+
+    logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
+    logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
+    logger.debug(s"Character vocabulary has ${c2i.size} entries.")
+
+    // TODO Perhaps put this elsewhere, like in main.
+    logger.debug("Initializing DyNet...")
+    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+    val model = LstmCrfParameters.create(w2i, t2i, c2i, w2v)
+    logger.debug("Completed initialization.")
+    model
+  }
+
+  def mkVocabs(trainSentences:Array[Array[Row]], w2v:Word2Vec): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
+    val tags = new Counter[String]()
+    val chars = new mutable.HashSet[Char]()
+    for(sentence <- trainSentences) {
+      for(token <- sentence) {
+        val word = token.getWord
+        for(i <- word.indices) {
+          chars += word.charAt(i)
+        }
+        tags += token.getTag
+      }
+    }
+
+    val commonWords = new ListBuffer[String]
+    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
+    for(w <- w2v.matrix.keySet.toList.sorted) {
+      commonWords += w
+    }
+
+    tags += START_TAG
+    tags += STOP_TAG
+
+    val w2i = commonWords.zipWithIndex.toMap
+    val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
+    val c2i = chars.toList.sorted.zipWithIndex.toMap
+
+    (w2i, t2i, c2i)
+  }
 
   /**
     * Trains on the given training sentences, and report accuracy after each epoch on development sentences
@@ -125,34 +174,6 @@ class LstmCrf(val greedyInference:Boolean = false) {
   }
 
   /**
-    * Generates tag emission scores for the words in this sequence, stored as Expressions
-    * @param words One training or testing sentence
-    */
-  def emissionScoresAsExpressions(words: Array[String], doDropout:Boolean): ExpressionVector = {
-    val embeddings = words.map(mkEmbedding)
-
-    val fwStates = transduce(embeddings, model.fwRnnBuilder)
-    val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
-    assert(fwStates.size == bwStates.length)
-    val states = concatenateStates(fwStates, bwStates).toArray
-    assert(states.length == words.length)
-
-    val H = parameter(model.H)
-    val O = parameter(model.O)
-
-    val emissionScores = new ExpressionVector()
-    for(s <- states) {
-      var l1 = Expression.tanh(H * s)
-      if(doDropout) {
-        l1 = Expression.dropout(l1, DROPOUT_PROB)
-      }
-      emissionScores.add(O * l1)
-    }
-
-    emissionScores
-  }
-
-  /**
     * Predict the sequence tags that applies to the given sequence of words
     * @param words The input words
     * @return The predicted sequence of tags
@@ -178,63 +199,41 @@ class LstmCrf(val greedyInference:Boolean = false) {
     tags.toArray
   }
 
+  /**
+   * Generates tag emission scores for the words in this sequence, stored as Expressions
+   * @param words One training or testing sentence
+   */
+  def emissionScoresAsExpressions(words: Array[String], doDropout:Boolean): ExpressionVector = {
+    val embeddings = words.map(mkEmbedding)
+
+    val fwStates = transduce(embeddings, model.fwRnnBuilder)
+    val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
+    assert(fwStates.size == bwStates.length)
+    val states = concatenateStates(fwStates, bwStates).toArray
+    assert(states.length == words.length)
+
+    val H = parameter(model.H)
+    val O = parameter(model.O)
+
+    val emissionScores = new ExpressionVector()
+    for(s <- states) {
+      var l1 = Expression.tanh(H * s)
+      if(doDropout) {
+        l1 = Expression.dropout(l1, DROPOUT_PROB)
+      }
+      emissionScores.add(O * l1)
+    }
+
+    emissionScores
+  }
+
   def mkEmbedding(word: String):Expression =
     LstmUtils.mkWordEmbedding(word,
       model.w2i, model.lookupParameters,
       model.c2i, model.charLookupParameters,
       model.charFwRnnBuilder, model.charBwRnnBuilder)
 
-  def initialize(trainSentences:Array[Array[Row]],
-                 embeddingsFile:String,
-                 docFreqFileName:Option[String],
-                 minDocFreq:Int): Unit = {
-
-    val w2v = loadEmbeddings(docFreqFileName, minDocFreq, embeddingsFile)
-
-    val (w2i, t2i, c2i) = mkVocabs(trainSentences, w2v)
-    logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
-    logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
-    logger.debug(s"Character vocabulary has ${c2i.size} entries.")
-
-    logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    model = mkParams(w2i, t2i, c2i, w2v.dimensions)
-
-    model.initializeEmbeddings(w2v)
-    model.initializeTransitions()
-
-    logger.debug("Completed initialization.")
-  }
-
-  def mkVocabs(trainSentences:Array[Array[Row]], w2v:Word2Vec): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
-    val tags = new Counter[String]()
-    val chars = new mutable.HashSet[Char]()
-    for(sentence <- trainSentences) {
-      for(token <- sentence) {
-        val word = token.getWord
-        for(i <- word.indices) {
-          chars += word.charAt(i)
-        }
-        tags += token.getTag
-      }
-    }
-
-    val commonWords = new ListBuffer[String]
-    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
-    for(w <- w2v.matrix.keySet.toList.sorted) {
-      commonWords += w
-    }
-
-    tags += START_TAG
-    tags += STOP_TAG
-
-    val w2i = commonWords.zipWithIndex.toMap
-    val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
-    val c2i = chars.toList.sorted.zipWithIndex.toMap
-
-    (w2i, t2i, c2i)
-  }
-
+  def save(baseFilename: String): Unit = model.save(baseFilename)
 }
 
 class LstmCrfParameters(
@@ -313,15 +312,27 @@ class LstmCrfParameters(
       }
     }
   }
+
+  def save(modelFilename: String): Unit = {
+    val dynetFilename = LstmCrfParameters.mkDynetFilename(modelFilename)
+    val x2iFilename = LstmCrfParameters.mkX2iFilename(modelFilename)
+
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(parameters, "/all")
+    }
+
+    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
+      val dim = lookupParameters.dim().get(0)
+
+      LstmUtils.save(printWriter, w2i, "w2i")
+      LstmUtils.save(printWriter, t2i, "t2i")
+      LstmUtils.save(printWriter, c2i, "c2i")
+      LstmUtils.save(printWriter, dim, "dim")
+    }
+  }
 }
 
-object LstmCrf {
-  val logger:Logger = LoggerFactory.getLogger(classOf[LstmCrf])
-
-  val EPOCHS = 2
-  val DROPOUT_PROB = 0.1f
-  val DO_DROPOUT = true
-
+object LstmCrfParameters {
   val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
@@ -329,29 +340,13 @@ object LstmCrf {
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
 
-  val USE_DOMAIN_CONSTRAINTS = true
+  def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
 
-  def save(modelFilename: String, rnnParameters: LstmCrfParameters):Unit = {
-    val dynetFilename = modelFilename + ".rnn"
-    val x2iFilename = modelFilename + ".x2i"
+  def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
-    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
-      modelSaver.addModel(rnnParameters.parameters, "/all")
-    }
-
-    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
-      val dim = rnnParameters.lookupParameters.dim().get(0)
-
-      LstmUtils.save(printWriter, rnnParameters.w2i, "w2i")
-      LstmUtils.save(printWriter, rnnParameters.t2i, "t2i")
-      LstmUtils.save(printWriter, rnnParameters.c2i, "c2i")
-      LstmUtils.save(printWriter, dim, "dim")
-    }
-  }
-
-  protected def load(modelFilename:String):LstmCrfParameters = {
-    val dynetFilename = modelFilename + ".rnn"
-    val x2iFilename = modelFilename + ".x2i"
+  def load(baseFilename: String): LstmCrfParameters = {
+    val dynetFilename = mkDynetFilename(baseFilename)
+    val x2iFilename = mkX2iFilename(baseFilename)
     val (w2i, t2i, c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
       val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
@@ -372,7 +367,7 @@ object LstmCrf {
     model
   }
 
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): LstmCrfParameters = {
+  protected def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): LstmCrfParameters = {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
     val embeddingSize = embeddingDim + 2 * CHAR_RNN_STATE_SIZE
@@ -393,19 +388,42 @@ object LstmCrf {
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
-  def apply(modelFilename:String, greedyInference:Boolean = false): LstmCrf = {
+  def create(w2i: Map[String, Int], t2i: Map[String, Int], c2i: Map[Char, Int], w2v: Word2Vec): LstmCrfParameters = {
+    val model = mkParams(w2i, t2i, c2i, w2v.dimensions)
+
+    model.initializeEmbeddings(w2v)
+    model.initializeTransitions()
+    model
+  }
+}
+
+object LstmCrf {
+  val logger:Logger = LoggerFactory.getLogger(classOf[LstmCrf])
+
+  val EPOCHS = 2
+  val DROPOUT_PROB = 0.1f
+  val DO_DROPOUT = true
+  val USE_DOMAIN_CONSTRAINTS = true
+
+  case class InitializationParams(
+    trainSentences: Array[Array[Row]],
+    embeddingsFile: String,
+    docFreqFileName: Option[String],
+    minDocFreq: Int
+  )
+
+  def apply(baseFilename: String, greedyInference: Boolean = false): LstmCrf = {
     // make sure DyNet is initialized!
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
 
-    // now load the saved model
-    val rnn = new LstmCrf(greedyInference)
-    rnn.model = load(modelFilename)
+    val model = LstmCrfParameters.load(baseFilename)
+    val rnn = new LstmCrf(greedyInference, model)
+
     rnn
   }
 
   def main(args: Array[String]): Unit = {
     val props = StringUtils.argsToProperties(args)
-
     if(props.size() < 2) {
       usage()
       System.exit(1)
@@ -416,12 +434,20 @@ object LstmCrf {
 
     if(props.containsKey("train") && props.containsKey("embed")) {
       logger.debug("Starting training procedure...")
-      val trainSentences = ColumnReader.readColumns(props.getProperty("train"))
 
-      val docFreqFileName:Option[String] =
-        if(props.containsKey("docfreq")) Some(props.getProperty("docfreq"))
-        else None
-      val minDocFreq:Int = StringUtils.getInt(props, "minfreq", 100)
+      val trainSentences = ColumnReader.readColumns(props.getProperty("train"))
+      val initializationParams = {
+        val docFreqFileName: Option[String] =
+          if (props.containsKey("docfreq")) Some(props.getProperty("docfreq"))
+          else None
+        val minDocFreq: Int = StringUtils.getInt(props, "minfreq", 100)
+        val embeddingsFile = props.getProperty("embed")
+
+        LstmCrf.InitializationParams(
+          trainSentences, embeddingsFile, docFreqFileName, minDocFreq
+        )
+      }
+      val rnn = new LstmCrf(greedy, initializationParams)
 
       val devSentences =
         if(props.containsKey("dev"))
@@ -429,15 +455,11 @@ object LstmCrf {
         else
           None
 
-      val embeddingsFile = props.getProperty("embed")
-
-      val rnn = new LstmCrf(greedy)
-      rnn.initialize(trainSentences, embeddingsFile, docFreqFileName, minDocFreq)
       rnn.train(trainSentences, devSentences)
 
       if(props.containsKey("model")) {
         val modelFilePrefix = props.getProperty("model")
-        save(modelFilePrefix, rnn.model)
+        rnn.save(modelFilePrefix)
       }
     }
 
@@ -446,13 +468,11 @@ object LstmCrf {
       val testSentences = ColumnReader.readColumns(props.getProperty("test"))
       val rnn = LstmCrf(props.getProperty("model"), greedy)
       rnn.evaluate(testSentences)
-
     }
   }
 
   def usage(): Unit = {
-    val rnn = new LstmCrf
-    println("Usage: " + rnn.getClass.getName + " <ARGUMENTS>")
+    println("Usage: " + classOf[LstmCrf].getName + " <ARGUMENTS>")
     println("Accepted arguments:")
     println("\t-train <two-column training corpus in the CoNLL BIO or IO format>")
     println("\t-embed <embeddings file in the word2vec format")
@@ -461,7 +481,5 @@ object LstmCrf {
     println("\t-test <two-column test corpus in the CoNLL BIO or IO format>")
     println("\t-docfreq <file containing document frequency counts of vocabulary terms> (OPTIONAL)")
     println("\t-minfreq <minimum frequency threshold for a word to be included in the vocabulary; default = 100> (OPTIONAL)")
-
   }
 }
-

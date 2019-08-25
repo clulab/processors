@@ -3,23 +3,21 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import org.slf4j.{Logger, LoggerFactory}
 import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
+import edu.cmu.dynet.ModelLoader
 import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.sequences.ArrayMath.toFloatArray
+import org.clulab.sequences.LstmCrfMtl._
+import org.clulab.sequences.LstmUtils._
 import org.clulab.struct.Counter
+import org.clulab.utils.Serializer
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
-import org.clulab.sequences.ArrayMath.toFloatArray
-import LstmUtils._
-import LstmCrfMtl._
-import edu.cmu.dynet.ModelLoader
-import org.clulab.fatdynet.utils.CloseableModelSaver
-import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.sequences.LstmCrfMtl.logger
-import org.clulab.utils.Serializer
-
 import scala.util.Random
 
 /**
@@ -292,8 +290,8 @@ class LstmCrfMtlParameters(
   val Os:Array[Parameter], // one per task
   val Ts:Array[LookupParameter]) { // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
 
-  def taskCount:Int = t2is.length
-  def indices:Range = t2is.indices
+  val taskCount: Int = t2is.length
+  val indices: Range = t2is.indices
 
   def initializeEmbeddings(w2v:Word2Vec): Unit = {
     logger.debug("Initializing DyNet embedding parameters...")
