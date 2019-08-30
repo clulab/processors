@@ -36,8 +36,8 @@ class TaskManager(config:Config) extends Configured {
   /** Training shards from all tasks */
   val shards:Array[Shard] = mkShards()
 
-  def taskCount = tasks.length
-  def indices = tasks.indices
+  def taskCount:Int = tasks.length
+  def indices: Range = tasks.indices
 
   /** Construct training shards by interleaving shards from all tasks */
   private def mkShards():Array[Shard] = {
@@ -96,7 +96,10 @@ class TaskManager(config:Config) extends Configured {
       if(contains(s"mtl.task$taskNumber.inference")) Some(getArgString(s"mtl.task$taskNumber.inference", None))
       else None
 
-    new Task(taskNumber - 1, taskName, train, dev, test, inference, shardsPerEpoch)
+    val weight:Float =
+      getArgFloat(s"mtl.task$taskNumber.weight", Some(1.0.toFloat))
+
+    new Task(taskNumber - 1, taskName, train, dev, test, inference, shardsPerEpoch, weight)
   }
 
   def debugTraversal():Unit = {
@@ -173,7 +176,8 @@ class Task(
   val devFileName:Option[String],
   val testFileName:Option[String],
   val inference:Option[String],
-  shardsPerEpoch:Int) {
+  val shardsPerEpoch:Int,
+  val taskWeight:Float) {
   logger.debug(s"Reading task $taskNumber ($taskName)...")
   val trainSentences:Array[Array[Row]] = ColumnReader.readColumns(trainFileName)
   val devSentences:Option[Array[Array[Row]]] =
@@ -196,6 +200,8 @@ class Task(
     logger.debug(s"Read ${devSentences.get.length} development sentences for task $taskNumber.")
   if(testSentences.isDefined)
     logger.debug(s"Read ${testSentences.get.length} testing sentences for task $taskNumber.")
+  logger.debug(s"Using taskWeight = $taskWeight")
+  logger.debug(s"Using $inference inference.")
   logger.debug(s"============ completed task $taskNumber ============")
 
   /** Construct the shards from all training sentences in this task */
