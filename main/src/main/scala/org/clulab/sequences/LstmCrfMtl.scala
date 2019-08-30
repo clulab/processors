@@ -3,9 +3,8 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, ModelLoader, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
-import edu.cmu.dynet.ModelLoader
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
@@ -89,12 +88,15 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
     (w2i, c2i, t2is)
   }
 
-  def train():Unit = {
+  def train(modelNamePrefix:String):Unit = {
     val trainer = new RMSPropTrainer(model.parameters)
     var cummulativeLoss = 0.0
     var numTagged = 0
     var sentCount = 0
     val rand = new Random(RANDOM_SEED)
+
+    var maxAvgAcc = 0.0
+    var bestEpoch = 0
 
     for (epoch <- 0 until taskManager.totalEpochs) {
       logger.info(s"Started epoch $epoch.")
@@ -114,7 +116,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
         // get the gold tags for this sentence
         val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2is(taskId))
 
-        val loss =
+        var loss =
           if(taskManager.tasks(taskId).greedyInference) {
             // greedy loss
             sentenceLossGreedy(emissionScores, goldTagIds)
@@ -129,6 +131,9 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
             // CRF loss
             sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds, model.t2is(taskId))
           }
+
+        if(taskManager.tasks(taskId).taskWeight != 1.0)
+          loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
 
         cummulativeLoss += loss.value().toFloat
         numTagged += sentence.length
@@ -155,7 +160,17 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
       }
       val avgAcc = totalAcc / taskManager.taskCount
       logger.info(s"Average accuracy across ${taskManager.taskCount} tasks: $avgAcc")
+
+      if(avgAcc > maxAvgAcc) {
+        maxAvgAcc = avgAcc
+        bestEpoch = epoch
+      }
+
+      // save model after each epoch
+      save(s"$modelNamePrefix-epoch$epoch")
     }
+
+    logger.info(s"The best epoch was epoch $bestEpoch with an average accuracy of $maxAvgAcc.")
   }
 
   def test(): Unit = {
@@ -480,14 +495,18 @@ object LstmCrfMtl {
     //
     val config = ConfigFactory.load()
     val taskManager = new TaskManager(config)
-    val mtl = new LstmCrfMtl(taskManager)
-    mtl.train()
-    mtl.test()
-    mtl.save("mtl")
+    val trainMode = true
 
-    // load the model from disk and test again
-//    val mtlFromDisk = LstmCrfMtl("mtl", taskManager)
-//    mtlFromDisk.test() // These results match the original ones exactly
-//    mtlFromDisk.save("mtl2") // These files match the original ones exactly
+    if(trainMode) {
+      val mtl = new LstmCrfMtl(taskManager)
+      mtl.train("mtl")
+      // mtl.test()
+    } else {
+      // load the model from disk and test again
+      val mtlFromDisk = LstmCrfMtl("mtl-final", taskManager)
+      mtlFromDisk.test() // These results match the original ones exactly
+
+      //mtlFromDisk.save("mtl2") // These files match the original ones exactly
+    }
   }
 }
