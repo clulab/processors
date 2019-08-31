@@ -31,9 +31,9 @@ class OpenDomainSpanishTokenizer(postProcessor:Option[TokenizerStep]) extends To
   * Date: 3/15/17
   */
 class Tokenizer(
-  lexer:TokenizerLexer,
-  steps:Seq[TokenizerStep],
-  sentenceSplitter: SentenceSplitter) {
+  val lexer:TokenizerLexer,
+  val steps:Seq[TokenizerStep],
+  val sentenceSplitter: SentenceSplitter) {
 
   /** Tokenization and sentence splitting */
   def tokenize(text:String, sentenceSplit:Boolean = true):Array[Sentence] = {
