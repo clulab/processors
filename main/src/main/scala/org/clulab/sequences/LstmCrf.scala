@@ -1,25 +1,20 @@
 package org.clulab.sequences
 
-import java.io.BufferedOutputStream
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
 import java.io.{FileWriter, PrintWriter}
 
-import org.clulab.embeddings.word2vec.Word2Vec
-import org.clulab.struct.Counter
-import org.slf4j.{Logger, LoggerFactory}
-
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
-import LstmCrf._
+import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.struct.MutableNumber
+import org.clulab.sequences.LstmCrf._
+import org.clulab.sequences.LstmUtils._
+import org.clulab.struct.Counter
 import org.clulab.utils.{MathUtils, Serializer, StringUtils}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.io.Source
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.Random
 
 /**
@@ -27,8 +22,59 @@ import scala.util.Random
   * @param greedyInference If true use a CRF layer; otherwise perform greedy inference
   * @author Mihai
   */
-class LstmCrf(val greedyInference:Boolean = false) {
-  var model:LstmCrfParameters = _
+
+class LstmCrf protected(val greedyInference: Boolean, initializationParamsOpt: Option[LstmCrf.InitializationParams], lstmCrfParametersOpt: Option[LstmCrfParameters]) {
+  // Constructor for case of uninitialized model
+  def this(greedyInference: Boolean, initializationParams: LstmCrf.InitializationParams) = this(greedyInference, Some(initializationParams), None)
+  // Constructor for case of model previously initialized because, e.g., it was read from file
+  def this(greedyInference: Boolean, lstmCrfParameters: LstmCrfParameters) = this(greedyInference, None, Some(lstmCrfParameters))
+
+  var model: LstmCrfParameters = lstmCrfParametersOpt.getOrElse(initialize(initializationParamsOpt.get))
+
+  protected def initialize(initializationParams: LstmCrf.InitializationParams): LstmCrfParameters = {
+    val w2v = loadEmbeddings(initializationParams.docFreqFileName, initializationParams.minDocFreq, initializationParams.embeddingsFile)
+    val (w2i, t2i, c2i) = mkVocabs(initializationParams.trainSentences, w2v)
+
+    logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
+    logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
+    logger.debug(s"Character vocabulary has ${c2i.size} entries.")
+
+    // TODO Perhaps put this elsewhere, like in main.
+    logger.debug("Initializing DyNet...")
+    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+    val model = LstmCrfParameters.create(w2i, t2i, c2i, w2v)
+    logger.debug("Completed initialization.")
+    model
+  }
+
+  def mkVocabs(trainSentences:Array[Array[Row]], w2v:Word2Vec): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
+    val tags = new Counter[String]()
+    val chars = new mutable.HashSet[Char]()
+    for(sentence <- trainSentences) {
+      for(token <- sentence) {
+        val word = token.getWord
+        for(i <- word.indices) {
+          chars += word.charAt(i)
+        }
+        tags += token.getTag
+      }
+    }
+
+    val commonWords = new ListBuffer[String]
+    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
+    for(w <- w2v.matrix.keySet.toList.sorted) {
+      commonWords += w
+    }
+
+    tags += START_TAG
+    tags += STOP_TAG
+
+    val w2i = commonWords.zipWithIndex.toMap
+    val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
+    val c2i = chars.toList.sorted.zipWithIndex.toMap
+
+    (w2i, t2i, c2i)
+  }
 
   /**
     * Trains on the given training sentences, and report accuracy after each epoch on development sentences
@@ -53,11 +99,11 @@ class LstmCrf(val greedyInference:Boolean = false) {
         ComputationGraph.renew()
 
         // predict tag emission scores for one sentence, from the biLSTM hidden states
-        val words = sentence.map(getRowWord)
+        val words = sentence.map(_.getWord)
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence
-        val goldTagIds = toTagIds(sentence.map(getRowTag))
+        val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2i)
 
         val loss =
           if(greedyInference) {
@@ -72,7 +118,7 @@ class LstmCrf(val greedyInference:Boolean = false) {
             }
 
             // CRF loss
-            sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds)
+            sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds, model.t2i)
           }
 
         cummulativeLoss += loss.value().toFloat
@@ -95,158 +141,6 @@ class LstmCrf(val greedyInference:Boolean = false) {
     }
   }
 
-  protected def getRowWord(r:Row) = r.get(0)
-  protected def getRowTag(r:Row) = r.get(1)
-
-  /** Computes the score of the given sequence of tags (tagSeq) */
-  def sentenceScore(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
-                    transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
-                    tagCount:Int,
-                    tagSeq:Array[Int],
-                    startTag:Int,
-                    stopTag:Int): Expression = {
-    // start with the transition score to first tag from START
-    var score = pick2D(transitionMatrix, tagSeq.head, startTag)
-
-    for(i <- tagSeq.indices) {
-      if(i > 0) {
-        // transition score from the previous tag
-        score = score + pick2D(transitionMatrix, tagSeq(i), tagSeq(i - 1))
-      }
-
-      // emission score for the current tag
-      score = score + pick(emissionScoresForSeq(i), tagSeq(i))
-    }
-
-    // conclude with the transition score to STOP from last tag
-    score = score + pick2D(transitionMatrix, stopTag, tagSeq.last)
-
-    score
-  }
-
-  /** Picks the scalar element from an expression that is a matrix */
-  def pick2D(matrix:ExpressionVector, row:Int, column:Int): Expression = {
-    pick(matrix(row), column)
-  }
-
-  /**
-    * Implements the forward algorithm to compute the partition score for this lattice
-    * This code inspired by this PyTorch implementation: https://pytorch.org/tutorials/beginner/nlp/advanced_tutorial.html
-    */
-  def mkPartitionScore(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
-                       transitionMatrix:ExpressionVector,
-                       startTag:Int, stopTag:Int): Expression = { // Dim: tagCount x tagCount
-    val tagCount = transitionMatrix.size
-
-    // sum of scores of reaching each tag at this time step
-    var forward = new ExpressionVector()
-    for(t <- 0 until tagCount) {
-      //
-      // cost (in log space) of starting at a given tag
-      // the only possible starting tag is START; all others are disabled
-      //
-      val alphaAtT0:Float = if(t == startTag) 0 else LOG_MIN_VALUE
-      forward.add(input(alphaAtT0))
-    }
-
-    for(t <- emissionScoresForSeq.indices) {
-      val alphasAtT = new ExpressionVector()
-      val emitScores = emissionScoresForSeq(t)
-
-      for(nextTag <- 0 until tagCount) {
-        val alphasForTag = new ExpressionVector()
-        val emitScore = pick(emitScores, nextTag) // scalar: emision score for nextTag
-
-        for(srcTag <- 0 until tagCount) {
-          val transScore = pick2D(transitionMatrix, nextTag, srcTag) // scalar: transition score to nextTag from srcTag
-          val alphaToTagFromSrc =
-            forward(srcTag) +
-            transScore +
-            emitScore
-
-          alphasForTag.add(alphaToTagFromSrc)
-        }
-
-        alphasAtT.add(logSumExp(alphasForTag))
-      }
-
-      forward = alphasAtT
-    }
-
-    val terminalVars = new ExpressionVector()
-    for(t <- 0 until tagCount) {
-      terminalVars.add(forward(t) + pick2D(transitionMatrix, stopTag, t))
-    }
-
-    val total = logSumExp(terminalVars)
-    total
-  }
-
-  /**
-    * Objective function that maximizes the CRF probability of the gold sequence of tags for a given sentence
-    * @param emissionScoresForSeq emission scores for the whole sequence, and all tags
-    * @param transitionMatrix transition matrix between all tags
-    * @param golds gold sequence of tags
-    * @return the negative prob of the gold sequence (in log space)
-    */
-  def sentenceLossCrf(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
-                      transitionMatrix:ExpressionVector, // Dim: tagCount x tagCount
-                      golds:Array[Int]): Expression = { // Dim: sentenceSize
-    val startTag = model.t2i(START_TAG)
-    val stopTag = model.t2i(STOP_TAG)
-
-    val scoreOfGoldSeq =
-      sentenceScore(emissionScoresForSeq, transitionMatrix, model.t2i.size, golds, startTag, stopTag)
-
-    val partitionScore =
-      mkPartitionScore(emissionScoresForSeq, transitionMatrix, startTag, stopTag)
-
-    partitionScore - scoreOfGoldSeq
-  }
-
-  /** Greedy loss function, ignoring transition scores (not used) */
-  def sentenceLossGreedy(emissionScoresForSeq:ExpressionVector, // Dim: sentenceSize x tagCount
-                         golds:Array[Int]): Expression = { // Dim: sentenceSize
-
-    val goldLosses = new ExpressionVector()
-    assert(emissionScoresForSeq.length == golds.length)
-
-    for(i <- emissionScoresForSeq.indices) {
-      // gold tag for word at position i
-      val goldTid = golds(i)
-      // emissionScoresForSeq(i) = all tag emission scores for the word at position i
-      goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
-    }
-
-    sum(goldLosses)
-  }
-
-  def toTagIds(tags: Array[String]):Array[Int] = {
-    val ids = new ArrayBuffer[Int]()
-    for(tag <- tags) {
-      ids += model.t2i(tag)
-    }
-    ids.toArray
-  }
-
-  def printCoNLLOutput(pw:PrintWriter, words:Array[String], golds:Array[String], preds:Array[String]): Unit = {
-    for(i <- words.indices) {
-      pw.println(words(i) + " " + golds(i) + " " + preds(i))
-    }
-    pw.println()
-  }
-
-  def accuracy(golds:Array[String], preds:Array[String]): (Int, Int) = {
-    assert(golds.length == preds.length)
-    var correct = 0
-    for(e <- preds.zip(golds)) {
-      if(e._1 == e._2) {
-        correct += 1
-      }
-    }
-    (golds.length, correct)
-  }
-
   def evaluate(sentences:Array[Array[Row]], epoch:Int): Unit = {
     evaluate(sentences, "development", epoch)
   }
@@ -263,8 +157,8 @@ class LstmCrf(val greedyInference:Boolean = false) {
     val pw = new PrintWriter(new FileWriter("dev.output." + epoch))
     logger.debug(s"Started evaluation on the $name dataset...")
     for(sent <- sentences) {
-      val words = sent.map(getRowWord)
-      val golds = sent.map(getRowTag)
+      val words = sent.map(_.getWord)
+      val golds = sent.map(_.getTag)
 
       // println("PREDICT ON SENT: " + words.mkString(", "))
       val preds = predict(words)
@@ -280,9 +174,35 @@ class LstmCrf(val greedyInference:Boolean = false) {
   }
 
   /**
-    * Generates tag emission scores for the words in this sequence, stored as Expressions
-    * @param words One training or testing sentence
+    * Predict the sequence tags that applies to the given sequence of words
+    * @param words The input words
+    * @return The predicted sequence of tags
     */
+  def predict(words:Array[String]):Array[String] = synchronized {
+    // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
+    val emissionScores:Array[Array[Float]] = synchronized {
+      ComputationGraph.renew()
+      emissionScoresToArrays(emissionScoresAsExpressions(words, doDropout = false)) // these scores do not have softmax
+    }
+
+    val tags = new ArrayBuffer[String]()
+    if(greedyInference) {
+      val tagIds = greedyPredict(emissionScores)
+      for (tid <- tagIds) tags += model.i2t(tid)
+    } else {
+      val transitionMatrix: Array[Array[Float]] =
+        transitionMatrixToArrays(model.T, model.t2i.size)
+
+      val tagIds = viterbi(emissionScores, transitionMatrix, model.t2i.size, model.t2i(START_TAG), model.t2i(STOP_TAG))
+      for (tid <- tagIds) tags += model.i2t(tid)
+    }
+    tags.toArray
+  }
+
+  /**
+   * Generates tag emission scores for the words in this sequence, stored as Expressions
+   * @param words One training or testing sentence
+   */
   def emissionScoresAsExpressions(words: Array[String], doDropout:Boolean): ExpressionVector = {
     val embeddings = words.map(mkEmbedding)
 
@@ -307,281 +227,22 @@ class LstmCrf(val greedyInference:Boolean = false) {
     emissionScores
   }
 
-  def emissionScoresToArrays(expressions:Iterable[Expression]): Array[Array[Float]] = {
-    val lattice = new ArrayBuffer[Array[Float]]()
-    for(expression <- expressions) {
-      val probs = expression.value().toVector().toArray
-      lattice += probs
-    }
-    lattice.toArray
-  }
+  def mkEmbedding(word: String):Expression =
+    LstmUtils.mkWordEmbedding(word,
+      model.w2i, model.lookupParameters,
+      model.c2i, model.charLookupParameters,
+      model.charFwRnnBuilder, model.charBwRnnBuilder)
 
-  def transitionMatrixToArrays(trans: LookupParameter, size: Int): Array[Array[Float]] = {
-    val transitionMatrix = new ArrayBuffer[Array[Float]]()
-    for(i <- 0 until size) {
-      transitionMatrix += lookup(trans, i).value().toVector().toArray
-    }
-    transitionMatrix.toArray
-  }
-
-  def printTagScores(header:String, scores:Array[Float]): Unit = {
-    print(header)
-    for(j <- scores.indices) {
-      val tag = model.i2t(j)
-      print(s" {$tag, ${scores(j)}}")
-    }
-    println()
-  }
-
-  def viterbi(emissionScores: Array[Array[Float]], transitionMatrix: Array[Array[Float]]): Array[Int] = {
-
-    // initial scores in log space
-    val initScores = new Array[Float](model.t2i.size)
-    for(i <- initScores.indices) initScores(i) = LOG_MIN_VALUE
-    initScores(model.t2i(START_TAG)) = 0
-
-    // the best overall scores at time step -1 (start)
-    var forwardVar = initScores
-
-    // backpointers for the entire lattice
-    val backPointers = new ArrayBuffer[Array[Int]]()
-
-    // iterate over all the words in this sentence
-    for(t <- emissionScores.indices) {
-      // scores for *all* tags for time step t
-      val scoresAtT = new Array[Float](emissionScores(t).length)
-
-      // backpointers for this time step
-      val backPointersAtT = new Array[Int](emissionScores(t).length)
-
-      // iterate over all possible tags for this time step
-      for(nextTag <- emissionScores(t).indices) {
-
-        // compute the score of transitioning into this tag from *any* previous tag
-        val transitionIntoNextTag = ArrayMath.sum(forwardVar, transitionMatrix(nextTag))
-
-        //printTagScores(s"\tforwardVar + transitionMatrix:", transitionIntoNextTag)
-
-        // this previous tag has the best transition score into nextTag
-        val bestPrevTag = ArrayMath.argmax(transitionIntoNextTag)
-        // keep track of the best backpointer for nextTag
-        backPointersAtT(nextTag) = bestPrevTag
-
-        // this is the best *transition* score into nextTag
-        scoresAtT(nextTag) = transitionIntoNextTag(bestPrevTag)
-      }
-
-      // these are the best overall scores at time step t = transition + emission + previous
-      // note that the emission scores are the same for a given nextTag, so it's Ok to do this outside of the above loop
-      forwardVar = ArrayMath.sum(scoresAtT, emissionScores(t))
-
-      // keep track of the backpointers at this time step
-      backPointers += backPointersAtT
-    }
-
-    assert(emissionScores.length == backPointers.length)
-
-    // transition into the stop tag
-    forwardVar = ArrayMath.sum(forwardVar, transitionMatrix(model.t2i(STOP_TAG)))
-    var bestLastTag = ArrayMath.argmax(forwardVar)
-    val pathScore = forwardVar(bestLastTag)
-
-    // best path in the lattice, in reverse order
-    val bestPathReversed = new ListBuffer[Int]
-    bestPathReversed += bestLastTag
-    for(backPointersAtT <- backPointers.reverse) {
-      bestLastTag = backPointersAtT(bestLastTag)
-      bestPathReversed += bestLastTag
-    }
-    assert(bestPathReversed.last == model.t2i(START_TAG))
-    val bestPath = bestPathReversed.slice(0, bestPathReversed.size - 1).reverse.toArray
-
-    bestPath
-  }
-
-  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores (not used) */
-  def greedyPredict(lattice:Array[Array[Float]]):Array[Int] = {
-    val tagIds = new ArrayBuffer[Int]()
-    for(probs <- lattice) {
-      var max = Float.MinValue
-      var tid = -1
-      for(i <- probs.indices) {
-        if(probs(i) > max) {
-          max = probs(i)
-          tid = i
-        }
-      }
-      assert(tid > -1)
-      tagIds += tid
-    }
-    tagIds.toArray
-  }
-
-  /**
-    * Predict the sequence tags that applies to the given sequence of words
-    * @param words The input words
-    * @return The predicted sequence of tags
-    */
-  def predict(words:Array[String]):Array[String] = synchronized {
-    // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
-    val emissionScores:Array[Array[Float]] = synchronized {
-      ComputationGraph.renew()
-      emissionScoresToArrays(emissionScoresAsExpressions(words, doDropout = false)) // these scores do not have softmax
-    }
-
-    val tags = new ArrayBuffer[String]()
-    if(greedyInference) {
-      val tagIds = greedyPredict(emissionScores)
-      for (tid <- tagIds) tags += model.i2t(tid)
-    } else {
-      val transitionMatrix: Array[Array[Float]] =
-        transitionMatrixToArrays(model.T, model.t2i.size)
-
-      val tagIds = viterbi(emissionScores, transitionMatrix)
-      for (tid <- tagIds) tags += model.i2t(tid)
-    }
-    tags.toArray
-  }
-
-  def concatenateStates(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
-    val c = new ArrayBuffer[Expression]()
-    for(e <- l1.zip(l2)) {
-      c += concatenate(e._1, e._2)
-    }
-    c
-  }
-
-  def mkEmbedding(word: String):Expression = {
-    //
-    // make sure you preprocess the word similarly to the embedding library used!
-    //   GloVe large does not do any preprocessing
-    //   GloVe small lowers the case
-    //   Our Word2Vec uses Word2Vec.sanitizeWord
-    //
-    val sanitized = word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
-
-    val wordEmbedding =
-      if(model.w2i.contains(sanitized))
-      // found the word in the known vocabulary
-        lookup(model.lookupParameters, model.w2i(sanitized))
-      else {
-        // not found; return the embedding at position 0, which is reserved for unknown words
-        lookup(model.lookupParameters, 0)
-      }
-
-    // biLSTM over character embeddings
-    val charEmbedding =
-      mkCharacterEmbedding(word)
-
-    concatenate(wordEmbedding, charEmbedding)
-  }
-
-  def mkCharacterEmbedding(word: String): Expression = {
-    //println(s"make embedding for word [$word]")
-    val charEmbeddings = new ArrayBuffer[Expression]()
-    for(i <- word.indices) {
-      if(model.c2i.contains(word.charAt(i)))
-        charEmbeddings += lookup(model.charLookupParameters, model.c2i(word.charAt(i)))
-    }
-    val fwOut = transduce(charEmbeddings, model.charFwRnnBuilder).last
-    val bwOut = transduce(charEmbeddings.reverse, model.charBwRnnBuilder).last
-    concatenate(fwOut, bwOut)
-  }
-
-  def transduce(embeddings:Iterable[Expression], builder:RnnBuilder): Iterable[Expression] = {
-    builder.newGraph()
-    builder.startNewSequence()
-    val states = embeddings.map(builder.addInput)
-    states
-  }
-
-  def initialize(trainSentences:Array[Array[Row]],
-                 embeddingsFile:String,
-                 docFreqFileName:Option[String],
-                 minDocFreq:Int): Unit = {
-    println(docFreqFileName)
-    val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
-    logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile, wordsToUse, caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
-    logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
-
-    val (w2i, t2i, c2i) = mkVocabs(trainSentences, w2v)
-    logger.debug(s"Tag vocabulary has ${t2i.size} entries.")
-    logger.debug(s"Word vocabulary has ${w2i.size} entries (including 1 for unknown).")
-    logger.debug(s"Character vocabulary has ${c2i.size} entries.")
-
-    logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    model = mkParams(w2i, t2i, c2i, w2v.dimensions)
-
-    model.initializeEmbeddings(w2v)
-    model.initializeTransitions()
-
-    logger.debug("Completed initialization.")
-  }
-
-  def mkVocabs(trainSentences:Array[Array[Row]], w2v:Word2Vec): (Map[String, Int], Map[String, Int], Map[Char, Int]) = {
-    val tags = new Counter[String]()
-    val chars = new mutable.HashSet[Char]()
-    for(sentence <- trainSentences) {
-      for(token <- sentence) {
-        val word = getRowWord(token)
-        for(i <- word.indices) {
-          chars += word.charAt(i)
-        }
-        tags += getRowTag(token)
-      }
-    }
-
-    val commonWords = new ListBuffer[String]
-    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
-    for(w <- w2v.matrix.keySet.toList.sorted) {
-      commonWords += w
-    }
-
-    tags += START_TAG
-    tags += STOP_TAG
-
-    val w2i = commonWords.zipWithIndex.toMap
-    val t2i = tags.keySet.toList.sorted.zipWithIndex.toMap
-    val c2i = chars.toList.sorted.zipWithIndex.toMap
-
-    (w2i, t2i, c2i)
-  }
-
-  private def loadWordsToUse(docFreqFileName: Option[String], minFreq: Int): Option[Set[String]] = {
-    if(docFreqFileName.isDefined) {
-      logger.debug(s"Loading words to use from file ${docFreqFileName.get} using min frequency of $minFreq.")
-      val wordsToUse = new mutable.HashSet[String]()
-      val source = Source.fromFile(docFreqFileName.get)
-      var total = 0
-      var kept = 0
-      for(line <- source.getLines()) {
-        total += 1
-        val tokens = line.split("\\s+")
-        // println(s"Reading line: ${tokens.mkString(", ")}")
-        assert(tokens.length == 2)
-        if(tokens(1).toInt > minFreq) {
-          kept += 1
-          wordsToUse += tokens(0)
-        }
-      }
-      source.close()
-      logger.debug(s"Loaded $kept words to use, from a total of $total words.")
-      Some(wordsToUse.toSet)
-    } else {
-      None
-    }
-  }
+  def save(baseFilename: String): Unit = model.save(baseFilename)
 }
 
 class LstmCrfParameters(
-  var w2i:Map[String, Int],
+  val w2i:Map[String, Int],
   val t2i:Map[String, Int],
   val i2t:Array[String],
   val c2i:Map[Char, Int],
   val parameters:ParameterCollection,
-  var lookupParameters:LookupParameter,
+  val lookupParameters:LookupParameter,
   val fwRnnBuilder:RnnBuilder,
   val bwRnnBuilder:RnnBuilder,
   val H:Parameter,
@@ -590,21 +251,6 @@ class LstmCrfParameters(
   val charLookupParameters:LookupParameter,
   val charFwRnnBuilder:RnnBuilder,
   val charBwRnnBuilder:RnnBuilder) {
-
-  protected def toFloatArray(doubles: Array[Double]): Array[Float] = {
-    val floats = new Array[Float](doubles.length)
-    for (i <- doubles.indices) {
-      floats(i) = doubles(i).toFloat
-    }
-    floats
-  }
-
-  protected def add(dst:Array[Double], src:Array[Double]): Unit = {
-    assert(dst.length == src.length)
-    for(i <- dst.indices) {
-      dst(i) += src(i)
-    }
-  }
 
   def initializeTransitions(): Unit = {
     val startTag = t2i(START_TAG)
@@ -651,7 +297,7 @@ class LstmCrfParameters(
   def initializeEmbeddings(w2v:Word2Vec): Unit = {
     logger.debug("Initializing DyNet embedding parameters...")
     for(word <- w2v.matrix.keySet){
-      lookupParameters.initialize(w2i(word), new FloatVector(toFloatArray(w2v.matrix(word))))
+      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
     }
     logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
   }
@@ -666,16 +312,27 @@ class LstmCrfParameters(
       }
     }
   }
+
+  def save(modelFilename: String): Unit = {
+    val dynetFilename = LstmCrfParameters.mkDynetFilename(modelFilename)
+    val x2iFilename = LstmCrfParameters.mkX2iFilename(modelFilename)
+
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(parameters, "/all")
+    }
+
+    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
+      val dim = lookupParameters.dim().get(0)
+
+      LstmUtils.save(printWriter, w2i, "w2i")
+      LstmUtils.save(printWriter, t2i, "t2i")
+      LstmUtils.save(printWriter, c2i, "c2i")
+      LstmUtils.save(printWriter, dim, "dim")
+    }
+  }
 }
 
-object LstmCrf {
-  val logger:Logger = LoggerFactory.getLogger(classOf[LstmCrf])
-
-  val EPOCHS = 2
-  val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
-  val DROPOUT_PROB = 0.1f
-  val DO_DROPOUT = true
-
+object LstmCrfParameters {
   val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
@@ -683,175 +340,34 @@ object LstmCrf {
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
 
-  val UNK_WORD = "<UNK>"
-  val START_TAG = "<START>"
-  val STOP_TAG = "<STOP>"
+  def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
 
-  val LOG_MIN_VALUE:Float = -10000
+  def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
-  val USE_DOMAIN_CONSTRAINTS = true
-
-  protected def save[T](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
-    printWriter.println("# " + comment)
-    values.foreach { case (key, value) =>
-      printWriter.println(s"$key\t$value")
-    }
-    printWriter.println() // Separator
-  }
-
-  protected def save[T](printWriter: PrintWriter, values: Array[T], comment: String): Unit = {
-    printWriter.println("# " + comment)
-    values.foreach(printWriter.println)
-    printWriter.println() // Separator
-  }
-
-  protected def save[T](printWriter: PrintWriter, value: Long, comment: String): Unit = {
-    printWriter.println("# " + comment)
-    printWriter.println(value)
-    printWriter.println() // Separator
-  }
-
-  def save(modelFilename: String, rnnParameters: LstmCrfParameters):Unit = {
-    val dynetFilename = modelFilename + ".rnn"
-    val x2iFilename = modelFilename + ".x2i"
-
-    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
-      modelSaver.addModel(rnnParameters.parameters, "/all")
-    }
-
-    Serializer.using(new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(x2iFilename)), "UTF-8"))) { printWriter =>
-      save(printWriter, rnnParameters.w2i, "w2i")
-      save(printWriter, rnnParameters.t2i, "t2i")
-      save(printWriter, rnnParameters.c2i, "c2i")
-      save(printWriter, rnnParameters.i2t, "i2t")
-      val dim = rnnParameters.lookupParameters.dim().get(0)
-      save(printWriter, dim, "dim")
-    }
-  }
-
-  abstract class ByLineBuilder[IntermediateValueType] {
-
-    protected def addLines(intermediateValue: IntermediateValueType, lines: Iterator[String]): Unit = {
-      lines.next() // Skip the comment line
-
-      def nextLine(): Boolean = {
-        val line = lines.next()
-
-        if (line.nonEmpty) {
-          addLine(intermediateValue, line)
-          true // Continue on non-blank lines.
-        }
-        else
-          false // Stop at first blank line.
-      }
-
-      while (nextLine()) { }
-    }
-
-    def addLine(intermediateValue: IntermediateValueType, line: String): Unit
-  }
-
-  // This is a little fancy because it works with both String and Char keys.
-  class ByLineMapBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder[mutable.Map[KeyType, Int]] {
-    def addLine(mutableMap: mutable.Map[KeyType, Int], line: String): Unit = {
-      val Array(key, value) = line.split('\t')
-
-      mutableMap += ((converter(key), value.toInt))
-    }
-
-    def build(lines: Iterator[String]): Map[KeyType, Int] = {
-      val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
-
-      addLines(mutableMap, lines)
-      mutableMap.toMap
-    }
-  }
-
-  // This only works with Strings.
-  class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String]] {
-
-    def addLine(arrayBuffer: ArrayBuffer[String], line: String): Unit = {
-      arrayBuffer += line
-    }
-
-    def build(lines: Iterator[String]): Array[String] = {
-      val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
-
-      addLines(arrayBuffer, lines)
-      arrayBuffer.toArray
-    }
-  }
-
-  // This only works with Strings.
-  class ByLineIntBuilder extends ByLineBuilder[MutableNumber[Option[Int]]] {
-
-    def addLine(mutableNumberOpt: MutableNumber[Option[Int]], line: String): Unit = {
-      mutableNumberOpt.value = Some(line.toInt)
-    }
-
-    def build(lines: Iterator[String]): Int = {
-      var mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
-
-      addLines(mutableNumberOpt, lines)
-      mutableNumberOpt.value.get
-    }
-  }
-
-  protected def load(modelFilename:String):LstmCrfParameters = {
-    val dynetFilename = modelFilename + ".rnn"
-    val x2iFilename = modelFilename + ".x2i"
-    val (w2i, t2i, c2i, i2t, dim) = Serializer.using(Source.fromFile(x2iFilename, "UTF-8")) { source =>
-      def stringToString(string: String): String = string
-      def stringToChar(string: String): Char = string.charAt(0)
-
-      val byLineStringMapBuilder = new ByLineMapBuilder(stringToString)
-      val byLineCharMapBuilder = new ByLineMapBuilder(stringToChar)
-
+  def load(baseFilename: String): LstmCrfParameters = {
+    val dynetFilename = mkDynetFilename(baseFilename)
+    val x2iFilename = mkX2iFilename(baseFilename)
+    val (w2i, t2i, c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+      val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
+      val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
       val lines = source.getLines()
       val w2i = byLineStringMapBuilder.build(lines)
       val t2i = byLineStringMapBuilder.build(lines)
       val c2i = byLineCharMapBuilder.build(lines)
-      val i2t = new ByLineArrayBuilder().build(lines)
-      val dim = new ByLineIntBuilder().build(lines)
+      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
 
-      (w2i, t2i, c2i, i2t, dim)
+      (w2i, t2i, c2i, dim)
     }
-
-    val oldModel = {
+    val model = {
       val model = mkParams(w2i, t2i, c2i, dim)
       new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
       model
     }
 
-    oldModel
+    model
   }
 
-  def fromIndexToString(s2i: Map[String, Int]):Array[String] = {
-    var max = Int.MinValue
-    for(v <- s2i.values) {
-      if(v > max) {
-        max = v
-      }
-    }
-    assert(max > 0)
-    val i2s = new Array[String](max + 1)
-    for(k <- s2i.keySet) {
-      i2s(s2i(k)) = k
-    }
-    i2s
-  }
-
-  /**
-    * Initializes the transition matrix for a tagset of size size
-    * T[i, j] stores a transition *to* i *from* j
-    */
-  def mkTransitionMatrix(parameters:ParameterCollection, t2i:Map[String, Int], i2t:Array[String]): LookupParameter = {
-    val size = t2i.size
-    val rows = parameters.addLookupParameters(size, Dim(size))
-    rows
-  }
-
-  def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): LstmCrfParameters = {
+  protected def mkParams(w2i:Map[String, Int], t2i:Map[String, Int], c2i:Map[Char, Int], embeddingDim:Int): LstmCrfParameters = {
     val parameters = new ParameterCollection()
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
     val embeddingSize = embeddingDim + 2 * CHAR_RNN_STATE_SIZE
@@ -872,19 +388,42 @@ object LstmCrf {
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
-  def apply(modelFilename:String, greedyInference:Boolean = false): LstmCrf = {
+  def create(w2i: Map[String, Int], t2i: Map[String, Int], c2i: Map[Char, Int], w2v: Word2Vec): LstmCrfParameters = {
+    val model = mkParams(w2i, t2i, c2i, w2v.dimensions)
+
+    model.initializeEmbeddings(w2v)
+    model.initializeTransitions()
+    model
+  }
+}
+
+object LstmCrf {
+  val logger:Logger = LoggerFactory.getLogger(classOf[LstmCrf])
+
+  val EPOCHS = 2
+  val DROPOUT_PROB = 0.1f
+  val DO_DROPOUT = true
+  val USE_DOMAIN_CONSTRAINTS = true
+
+  case class InitializationParams(
+    trainSentences: Array[Array[Row]],
+    embeddingsFile: String,
+    docFreqFileName: Option[String],
+    minDocFreq: Int
+  )
+
+  def apply(baseFilename: String, greedyInference: Boolean = false): LstmCrf = {
     // make sure DyNet is initialized!
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
 
-    // now load the saved model
-    val rnn = new LstmCrf(greedyInference)
-    rnn.model = load(modelFilename)
+    val model = LstmCrfParameters.load(baseFilename)
+    val rnn = new LstmCrf(greedyInference, model)
+
     rnn
   }
 
   def main(args: Array[String]): Unit = {
     val props = StringUtils.argsToProperties(args)
-
     if(props.size() < 2) {
       usage()
       System.exit(1)
@@ -895,12 +434,20 @@ object LstmCrf {
 
     if(props.containsKey("train") && props.containsKey("embed")) {
       logger.debug("Starting training procedure...")
-      val trainSentences = ColumnReader.readColumns(props.getProperty("train"))
 
-      val docFreqFileName:Option[String] =
-        if(props.containsKey("docfreq")) Some(props.getProperty("docfreq"))
-        else None
-      val minDocFreq:Int = StringUtils.getInt(props, "minfreq", 100)
+      val trainSentences = ColumnReader.readColumns(props.getProperty("train"))
+      val initializationParams = {
+        val docFreqFileName: Option[String] =
+          if (props.containsKey("docfreq")) Some(props.getProperty("docfreq"))
+          else None
+        val minDocFreq: Int = StringUtils.getInt(props, "minfreq", 100)
+        val embeddingsFile = props.getProperty("embed")
+
+        LstmCrf.InitializationParams(
+          trainSentences, embeddingsFile, docFreqFileName, minDocFreq
+        )
+      }
+      val rnn = new LstmCrf(greedy, initializationParams)
 
       val devSentences =
         if(props.containsKey("dev"))
@@ -908,15 +455,11 @@ object LstmCrf {
         else
           None
 
-      val embeddingsFile = props.getProperty("embed")
-
-      val rnn = new LstmCrf(greedy)
-      rnn.initialize(trainSentences, embeddingsFile, docFreqFileName, minDocFreq)
       rnn.train(trainSentences, devSentences)
 
       if(props.containsKey("model")) {
         val modelFilePrefix = props.getProperty("model")
-        save(modelFilePrefix, rnn.model)
+        rnn.save(modelFilePrefix)
       }
     }
 
@@ -925,13 +468,11 @@ object LstmCrf {
       val testSentences = ColumnReader.readColumns(props.getProperty("test"))
       val rnn = LstmCrf(props.getProperty("model"), greedy)
       rnn.evaluate(testSentences)
-
     }
   }
 
   def usage(): Unit = {
-    val rnn = new LstmCrf
-    println("Usage: " + rnn.getClass.getName + " <ARGUMENTS>")
+    println("Usage: " + classOf[LstmCrf].getName + " <ARGUMENTS>")
     println("Accepted arguments:")
     println("\t-train <two-column training corpus in the CoNLL BIO or IO format>")
     println("\t-embed <embeddings file in the word2vec format")
@@ -940,30 +481,5 @@ object LstmCrf {
     println("\t-test <two-column test corpus in the CoNLL BIO or IO format>")
     println("\t-docfreq <file containing document frequency counts of vocabulary terms> (OPTIONAL)")
     println("\t-minfreq <minimum frequency threshold for a word to be included in the vocabulary; default = 100> (OPTIONAL)")
-
-  }
-}
-
-/** Some really basic vector math that happens outside of DyNet */
-object ArrayMath {
-  def argmax(vector:Array[Float]):Int = {
-    var bestValue = Float.MinValue
-    var bestArg = 0
-    for(i <- vector.indices) {
-      if(vector(i) > bestValue) {
-        bestValue = vector(i)
-        bestArg = i
-      }
-    }
-    bestArg
-  }
-
-  def sum(v1:Array[Float], v2:Array[Float]): Array[Float] = {
-    assert(v1.length == v2.length)
-    val s = new Array[Float](v1.length)
-    for(i <- v1.indices) {
-      s(i) = v1(i) + v2(i)
-    }
-    s
   }
 }

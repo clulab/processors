@@ -23,6 +23,11 @@ trait Configured {
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
+  protected def getArgFloat (argPath: String, defaultValue: Option[Float]): Float =
+    if (getConf.hasPath(argPath)) getConf.getDouble(argPath).toFloat
+    else if(defaultValue.nonEmpty) defaultValue.get
+    else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
+
   protected def getArgString (argPath: String, defaultValue: Option[String]): String =
     if (getConf.hasPath(argPath)) getConf.getString(argPath)
     else if(defaultValue.nonEmpty) defaultValue.get
