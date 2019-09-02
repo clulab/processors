@@ -1,5 +1,7 @@
 package org.clulab.processors.clu.tokenizer
 
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.Token
 import org.clulab.processors.Sentence
 
 import scala.collection.mutable.ArrayBuffer
@@ -31,54 +33,49 @@ class OpenDomainSpanishTokenizer(postProcessor:Option[TokenizerStep]) extends To
   * Date: 3/15/17
   */
 class Tokenizer(
-  val lexer:TokenizerLexer,
-  val steps:Seq[TokenizerStep],
-  val sentenceSplitter: SentenceSplitter) {
+  val lexer: TokenizerLexer,
+  val steps: Seq[TokenizerStep],
+  val sentenceSplitter: SentenceSplitter
+) {
 
-  /** Tokenization and sentence splitting */
-  def tokenize(text:String, sentenceSplit:Boolean = true):Array[Sentence] = {
-    val tokens = lexer.mkLexer(text)
-    var done = false
+  protected def newRawToken(token: Token): RawToken = {
+    val word = token.getText
+    val beginPosition = token.getStartIndex
+    val endPosition = token.getStopIndex + 1 // antlr is inclusive on end position, we are exclusive
 
-    val rawTokens = new ArrayBuffer[RawToken]()
+    assert(beginPosition + word.length == endPosition)
+    RawToken(word, beginPosition)
+  }
 
-    //
-    // raw tokenization, using the antlr grammar
-    //
-    while(! done) {
-      val t = tokens.LT(1)
-      if(t.getType == -1) {
-        // EOF
-        done = true
-      } else {
-        // info on the current token
-        val word = t.getText
-        val beginPosition = t.getStartIndex
-        val endPosition = t.getStopIndex + 1 // antlr is inclusive on end position, we are exclusive
+  protected def readTokens(text: String): Array[RawToken] = {
+    val tokens: CommonTokenStream = lexer.mkLexer(text)
+    val rawTokenBuffer = new ArrayBuffer[RawToken]()
 
-        // make sure character positions are legit
-        assert(beginPosition + word.length == endPosition)
-
-        // add to raw stream
-        rawTokens += RawToken(word, beginPosition)
-
-        // advance to next token in stream
-        tokens.consume()
+    def processToken(token: Token): Boolean = {
+      if (token.getType == -1) // EOF
+        false
+      else {
+        rawTokenBuffer += newRawToken(token)
+        true
       }
     }
 
-    //
-    // now apply all the additional non-Antlr steps such as solving contractions, normalization, post-processing
-    //
-    var postProcessedTokens = rawTokens.toArray
-    for(step <- steps) {
-      postProcessedTokens = step.process(postProcessedTokens)
-    }
+    while (processToken(tokens.LT(1)))
+      tokens.consume()
+    rawTokenBuffer.toArray
+  }
 
-    //
+  /** Tokenization and sentence splitting */
+  def tokenize(text: String, sentenceSplit: Boolean = true): Array[Sentence] = {
+    // raw tokenization, using the antlr grammar
+    val rawTokens = readTokens(text)
+    // now apply all the additional non-Antlr steps such as solving contractions, normalization, post-processing
+    val stepTokens = steps.foldLeft(rawTokens) { (rawTokens, step) =>
+      step.process(rawTokens)
+    }
     // sentence splitting, including detection of abbreviations
-    //
-    sentenceSplitter.split(postProcessedTokens, sentenceSplit)
+    val sentences = sentenceSplitter.split(stepTokens, sentenceSplit)
+
+    sentences
   }
 }
-
