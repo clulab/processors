@@ -1,4 +1,5 @@
 # Changes
++ **7.5.4** - Include small refactorings that allow clients (e.g., Eidos) to more easily override tokenization.  Streamline TokenizerStepContractions  
 + **7.5.3** - Add DocumentAttachment to Document
 + **7.5.3** - Fixed CoreNLP parser crash on weird sentences with non-alpha characters only (Reach issue #634).
 + **7.5.3** - Added support for lemmatization and improved Chunking, Parsing and POS models for Portuguese.
