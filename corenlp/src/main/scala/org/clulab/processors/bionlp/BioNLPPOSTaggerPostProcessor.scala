@@ -2,7 +2,7 @@ package org.clulab.processors.bionlp
 
 import edu.stanford.nlp.ling.CoreLabel
 import org.clulab.processors.Sentence
-import org.clulab.processors.clu.bio.BioPOSPostProcessor
+import org.clulab.processors.bio.BioPOSPostProcessor
 
 /**
   * Fixes some common POS tagging mistakes in the bio domain (in place, using CoreLabel.setTag)

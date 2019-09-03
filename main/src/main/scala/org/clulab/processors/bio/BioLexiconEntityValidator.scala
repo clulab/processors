@@ -1,4 +1,4 @@
-package org.clulab.processors.clu.bio
+package org.clulab.processors.bio
 
 import org.clulab.processors.Sentence
 import org.clulab.struct.EntityValidator

@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.struct.{DirectedGraph, GraphMap, Tree}
+import org.clulab.struct.{DirectedGraph, GraphMap, RelationTriple, Tree}
 import org.clulab.struct.GraphMap._
 import org.clulab.utils.SeqUtils
 

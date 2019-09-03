@@ -1,6 +1,6 @@
-package org.clulab.processors
+package org.clulab.struct
 
-import org.clulab.struct.Interval
+import org.clulab.processors.Sentence
 
 case class RelationTriple(confidence:Float,
                           subjectInterval:Interval,
@@ -19,4 +19,3 @@ case class RelationTriple(confidence:Float,
   def objectLemmas(implicit sentence:Sentence):Seq[String] = objectInterval.map(sentence.lemmas.get)
   def objectText(implicit sentence:Sentence):String = objectWords(sentence).mkString(" ")
 }
-

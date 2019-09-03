@@ -6,7 +6,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.naturalli.NaturalLogicAnnotations.RelationTriplesAnnotation
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.struct.Interval
+import org.clulab.struct.{Interval, RelationTriple}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer

@@ -11,7 +11,6 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.nio.charset.StandardCharsets
 
-import org.clulab.processors.clu.BioCluProcessor
 import org.clulab.sequences.ColumnsToDocument
 import org.clulab.sequences.LexiconNER
 import org.clulab.sequences.SeparatedLexiconNER

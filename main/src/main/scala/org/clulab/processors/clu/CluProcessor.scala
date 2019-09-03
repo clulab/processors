@@ -6,7 +6,7 @@ import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.GraphMap
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.processors.clu.bio._
+import org.clulab.processors.bio._
 import org.clulab.utils.Configured
 import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -21,31 +21,20 @@ import CluProcessor._
   * Currently supports:
   *   tokenization (in-house),
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
-  *   POS tagging (in-house BiMEMM),
-  *   dependency parsing (ensemble of Malt models) for universal dependencies
+  *   POS tagging, NER, chunking, dependency parsing - using our MTL architecture (dep parsing coming soon)
   */
-class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen")) extends Processor with Configured {
+class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) extends Processor with Configured {
 
   override def getConf: Config = config
 
   // should we intern strings or not?
   val internStrings:Boolean = getArgBoolean(s"$prefix.internStrings", Some(false))
 
-  // this class post-processes the tokens produced by the tokenizer
-  lazy private val tokenizerPostProcessor:Option[TokenizerStep] =
-    getArgString(s"$prefix.tokenizer.post.type", Some("none")) match {
-      case "bio" => Some(new BioTokenizerPostProcessor(
-        getArgStrings(s"$prefix.tokenizer.post.tokensWithValidSlashes", None)
-      ))
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.post.type!")
-    }
-
-  // the actual tokenizer
+  // the tokenizer
   lazy val tokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => new OpenDomainPortugueseTokenizer(tokenizerPostProcessor)
-    case "ES" => new OpenDomainSpanishTokenizer(tokenizerPostProcessor)
-    case _ => new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+    case "PT" => new OpenDomainPortugueseTokenizer()
+    case "ES" => new OpenDomainSpanishTokenizer()
+    case _ => new OpenDomainEnglishTokenizer()
   }
 
   // the lemmatizer
@@ -55,66 +44,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     case _ => new EnglishLemmatizer
   }
 
-  // the POS tagger
-  lazy val posTagger: PartOfSpeechTagger =
-    PartOfSpeechTagger.loadFromResource(getArgString(s"$prefix.pos.model", None))
-
-  // this class post-processes the POS tagger to avoid some common tagging mistakes for bio
-  lazy val posPostProcessor: Option[SentencePostProcessor] =
-    getArgString(s"$prefix.pos.post.type", Some("none")) match {
-      case "EN" => Some(new EnglishPOSPostProcessor())
-      case "bio" => Some(new BioPOSPostProcessor())
-      case "PT" => Some(new PortuguesePOSPostProcessor())
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.pos.post.type!")
-    }
-
-  // the NER tagger
-  lazy val ner: Option[Tagger[String]] =
-    getArgString(s"$prefix.ner.type", Some("none")) match {
-      case "bio" => Some(LexiconNER(
-        getArgStrings(s"$prefix.ner.kbs", None),
-        Some(getArgStrings(s"$prefix.ner.overrides", None)),
-        new BioLexiconEntityValidator,
-        new BioLexicalVariations,
-        useLemmasForMatching = false,
-        caseInsensitiveMatching = true
-      ))
-      case "conll" => Some(NamedEntityRecognizer.loadFromResource(getArgString(s"$prefix.ner.model", None)))
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.type!")
-    }
-
-  // this class post-processes the NER labels to avoid some common tagging mistakes (used in bio)
-  lazy val nerPostProcessor: Option[SentencePostProcessor] =
-    getArgString(s"$prefix.ner.post.type", Some("none")) match {
-      case "bio" => Some(new BioNERPostProcessor(getArgString(s"$prefix.ner.post.stopListFile", None)))
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.post.stopListFile!")
-    }
-
-  // the syntactic chunker
-  lazy val chunker:Option[Chunker] =
-    if(contains(s"$prefix.chunker.model"))
-      Some(Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None)))
-    else
-      None
-
-  // should we use universal dependencies or Stanford ones?
-  val useUniversalDependencies:Boolean = getArgBoolean(s"$prefix.parser.universal", Some(true))
-
-  // the dependency parser
-  lazy val depParser: Parser =
-    if(useUniversalDependencies) {
-      //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
-      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-universal", None))
-    } else {
-      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-stanford", None))
-    }
-
-
   override def annotate(doc:Document): Document = {
-    // with this processor, we lemmatize first, because this POS tagger uses lemmas as features
+    // with this processor, we lemmatize first, because this POS tagger is part of the MTL framework
     lemmatize(doc)
     tagPartsOfSpeech(doc)
     recognizeNamedEntities(doc)
@@ -150,12 +81,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val tags = posTagger.classesOf(sent)
-      sent.tags = Some(tags)
-
-      if(posPostProcessor.nonEmpty) {
-        posPostProcessor.get.process(sent)
-      }
     }
   }
 
@@ -175,54 +100,15 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 
   /** NER; modifies the document in place */
   def recognizeNamedEntities(doc:Document) {
-    if(ner.nonEmpty) {
-      basicSanityCheck(doc)
-      for (sentence <- doc.sentences) {
-        val labels = ner.get.find(sentence)
-        sentence.entities = Some(labels)
-
-        if(nerPostProcessor.nonEmpty) {
-          nerPostProcessor.get.process(sentence)
-        }
-      }
-    }
   }
 
   /** Syntactic parsing; modifies the document in place */
   def parse(doc:Document) {
     basicSanityCheck(doc)
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
-
-    for (sentence <- doc.sentences) {
-      //println(s"PARSING SENTENCE: ${sentence.words.mkString(", ")}")
-      //println(sentence.tags.get.mkString(", "))
-      //println(sentence.lemmas.get.mkString(", "))
-      val dg = depParser.parseSentence(sentence)
-
-      if(useUniversalDependencies) {
-        sentence.setDependencies(GraphMap.UNIVERSAL_BASIC, dg)
-        sentence.setDependencies(GraphMap.UNIVERSAL_ENHANCED,
-          EnhancedDependencies.generateUniversalEnhancedDependencies(sentence, dg))
-      } else {
-        sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
-        sentence.setDependencies(GraphMap.STANFORD_COLLAPSED,
-          EnhancedDependencies.generateStanfordEnhancedDependencies(sentence, dg))
-      }
-    }
   }
 
   /** Shallow parsing; modifies the document in place */
   def chunking(doc:Document) {
-    if(chunker.isDefined) {
-      basicSanityCheck(doc)
-      for (sent <- doc.sentences) {
-        val chunks = chunker.get.classesOf(sent)
-        sent.chunks = Some(chunks)
-      }
-    }
   }
 
   /** Coreference resolution; modifies the document in place */
@@ -252,12 +138,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 trait SentencePostProcessor {
   def process(sentence: Sentence)
 }
-
-/** Same as CluProcessor but it includes custom tokenization and NER for the bio domain */
-class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
-
-/** Same as CluProcessor but using Stanford dependencies */
-class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load("cluprocessoropenwithstanford"))
 
 /** CluProcessor for Spanish */
 class SpanishCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorspanish"))

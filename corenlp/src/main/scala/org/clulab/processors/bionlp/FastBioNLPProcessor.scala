@@ -4,7 +4,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.{SentencesAnnotation, TokensAnnotat
 import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.processors.Document
 import org.clulab.processors.bionlp.ner.{HybridNER, KBLoader}
-import org.clulab.processors.clu.bio.{BioNERPostProcessor, BioTokenizerPostProcessor}
+import org.clulab.processors.bio.{BioNERPostProcessor, BioTokenizerPostProcessor}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 
