@@ -41,12 +41,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
       case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.post.type!")
     }
 
-  // the actual tokenizer
-  lazy val tokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
+  // This strange construction is designed to allow subclasses access to the value of the tokenizer while
+  // at the same time allowing them to override the value.
+  // val tokenizer: Tokenizer = new ModifiedTokenizer(super.tokenizer)
+  // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
+  // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
+  protected lazy val localTokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => new OpenDomainPortugueseTokenizer(tokenizerPostProcessor)
     case "ES" => new OpenDomainSpanishTokenizer(tokenizerPostProcessor)
     case _ => new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
   }
+
+  // the actual tokenizer
+  lazy val tokenizer: Tokenizer = localTokenizer
 
   // the lemmatizer
   lazy val lemmatizer: Lemmatizer = getArgString(s"$prefix.language", Some("EN")) match {
