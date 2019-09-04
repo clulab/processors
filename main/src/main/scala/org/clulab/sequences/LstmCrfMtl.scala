@@ -479,11 +479,11 @@ object LstmCrfMtl {
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
-  def apply(baseFilename: String, taskManager: TaskManager): LstmCrfMtl = {
+  def apply(modelFilenamePrefix: String, taskManager: TaskManager): LstmCrfMtl = {
     // make sure DyNet is initialized!
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
 
-    val model = LstmCrfMtlParameters.load(baseFilename)
+    val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
     val mtl = new LstmCrfMtl(taskManager, Some(model))
 
     mtl
@@ -493,9 +493,9 @@ object LstmCrfMtl {
     //
     // to set a custom config file add -Dconfig.file=/path/to/conf/file to the cmd line for sbt
     //
-    val config = ConfigFactory.load()
+    val config = ConfigFactory.load("mtl-en")
     val taskManager = new TaskManager(config)
-    val trainMode = true
+    val trainMode = false
 
     if(trainMode) {
       val mtl = new LstmCrfMtl(taskManager)
@@ -503,7 +503,7 @@ object LstmCrfMtl {
       // mtl.test()
     } else {
       // load the model from disk and test again
-      val mtlFromDisk = LstmCrfMtl("mtl-final", taskManager)
+      val mtlFromDisk = LstmCrfMtl("mtl-en", taskManager)
       mtlFromDisk.test() // These results match the original ones exactly
 
       //mtlFromDisk.save("mtl2") // These files match the original ones exactly
