@@ -3,7 +3,6 @@ package org.clulab.sequences
 import java.io._
 
 import org.clulab.learning._
-import org.clulab.processors.clu.sequences.FeatureExtractor
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.sequences.SequenceTaggerLogger._
 import org.clulab.struct.Counter
