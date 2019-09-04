@@ -407,6 +407,21 @@ object LstmUtils {
     lattice.toArray
   }
 
+  def emissionScoresToArraysAllTasks(expressions:Array[ExpressionVector]): Array[Array[Array[Float]]] = {
+    val latticesAllTasks = new Array[Array[Array[Float]]](expressions.size)
+
+    for(tid <- 0 until latticesAllTasks.length) {
+      val lattice = new ArrayBuffer[Array[Float]]()
+      for (expression <- expressions(tid)) {
+        val probs = expression.value().toVector().toArray
+        lattice += probs
+      }
+      latticesAllTasks(tid) = lattice.toArray
+    }
+
+    latticesAllTasks
+  }
+
   def transitionMatrixToArrays(trans: LookupParameter, size: Int): Array[Array[Float]] = {
     val transitionMatrix = new ArrayBuffer[Array[Float]]()
     for(i <- 0 until size) {
@@ -444,6 +459,7 @@ object LstmUtils {
 
       def nextLine(): Boolean = {
         val line = lines.next()
+        //println(s"LINE: [$line]")
 
         if (line.nonEmpty) {
           addLine(intermediateValue, line)

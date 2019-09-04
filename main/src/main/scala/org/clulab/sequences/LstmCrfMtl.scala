@@ -240,7 +240,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @param words The input words
    * @return The predicted sequence of tags
    */
-  def predict(taskId:Int, words:Array[String]):Array[String] = synchronized {
+  def predict(taskId:Int, words:Array[String]):Array[String] = {
     // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
     val emissionScores:Array[Array[Float]] = synchronized {
       ComputationGraph.renew()
@@ -263,7 +263,43 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   }
 
   /**
-   * Generates tag emission scores for the words in this sequence, stored as Expressions
+   * Predicts the sequence of tags that applies to the given sequence of words for ALL tasks
+   * @param words The input words
+   * @return The predicted sequence of tags for all tasks
+   */
+  def predictJointly(words:Array[String]): Array[Array[String]] = {
+    // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
+    val emissionScoresAllTasks:Array[Array[Array[Float]]] = synchronized {
+      ComputationGraph.renew()
+      emissionScoresToArraysAllTasks(emissionScoresAsExpressionsAllTasks(words, doDropout = false)) // these scores do not have softmax
+    }
+
+    // stores the sequence of best tags for ALL tasks
+    val tagsAllTasks = new Array[Array[String]](model.taskCount)
+
+    // generate the sequence of argmax tags for each task, using its own inference procedure
+    for(taskId <- 0 until model.taskCount) {
+      val tags = new ArrayBuffer[String]()
+      if(model.greedyInference(taskId)) {
+        val tagIds = greedyPredict(emissionScoresAllTasks(taskId))
+        for (tagId <- tagIds) tags += model.i2ts(taskId)(tagId)
+      } else {
+        val transitionMatrix: Array[Array[Float]] =
+          transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
+
+        val tagIds = viterbi(emissionScoresAllTasks(taskId), transitionMatrix,
+          model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
+        for (tagId <- tagIds) tags += model.i2ts(taskId)(tagId)
+      }
+
+      tagsAllTasks(taskId) = tags.toArray
+    }
+
+    tagsAllTasks
+  }
+
+  /**
+   * Generates tag emission scores for the words in this sequence, stored as Expressions, for one given task
    * @param words One training or testing sentence
    */
   def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
@@ -290,6 +326,44 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     emissionScores
+  }
+
+  /**
+   * Generates tag emission scores for the words in this sequence, stored as Expressions, for all tasks
+   * @param words One training or testing sentence
+   * @return The scores for all tasks
+   */
+  def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
+    val embeddings = words.map(mkEmbedding)
+
+    // this is the biLSTM over words that is shared across all tasks
+    // we run this ONCE for all tasks!
+    val fwStates = transduce(embeddings, model.fwRnnBuilder)
+    val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
+    assert(fwStates.size == bwStates.length)
+    val states = concatenateStates(fwStates, bwStates).toArray
+    assert(states.length == words.length)
+
+    val emissionScoresAllTasks = new Array[ExpressionVector](model.taskCount)
+
+    // this is the feed forward network that is specific to each task
+    for(taskId <- 0 until model.taskCount) {
+      val H = parameter(model.Hs(taskId))
+      val O = parameter(model.Os(taskId))
+
+      val emissionScores = new ExpressionVector()
+      for (s <- states) {
+        var l1 = Expression.tanh(H * s)
+        if (doDropout) {
+          l1 = Expression.dropout(l1, DROPOUT_PROB)
+        }
+        emissionScores.add(O * l1)
+      }
+
+      emissionScoresAllTasks(taskId) = emissionScores
+    }
+
+    emissionScoresAllTasks
   }
 
   /** Creates an overall word embedding by concatenating word and character embeddings */
@@ -424,6 +498,7 @@ object LstmCrfMtlParameters {
       val c2i = byLineCharMapBuilder.build(lines)
       val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
       val greedyInferences:Array[Boolean] = byLineArrayBuilder.build(lines).map(_.toBoolean)
+      //println("INFERENCES: " + greedyInferences.mkString(", "))
       val t2is = 0.until(taskCount).map { _ =>
         byLineStringMapBuilder.build(lines)
       }.toArray
@@ -518,32 +593,31 @@ object LstmCrfMtl {
     mtl
   }
 
-  def shell(mtl:LstmCrfMtl): Unit = {
-
-  }
-
   def main(args: Array[String]): Unit = {
-    //
-    // to set a custom config file add -Dconfig.file=/path/to/conf/file to the cmd line for sbt
-    //
-    val config = ConfigFactory.load("mtl-en")
-    val taskManager = new TaskManager(config)
     val runMode = "train" // "train", "test", or "shell"
     initializeDyNet()
+    val modelName = "mtl-en"
+    val configName = "mtl-en"
 
     if(runMode == "train") {
+      val config = ConfigFactory.load(configName)
+      val taskManager = new TaskManager(config)
+
       val mtl = new LstmCrfMtl(Some(taskManager))
-      mtl.train("mtl")
+      mtl.train(modelName)
       // mtl.test()
     } else if(runMode == "test") {
+      val config = ConfigFactory.load(configName)
+      val taskManager = new TaskManager(config)
+
       // load the model from disk and test again
-      val mtlFromDisk = LstmCrfMtl("mtl-en", taskManager)
+      val mtlFromDisk = LstmCrfMtl(modelName, taskManager)
       mtlFromDisk.test() // These results match the original ones exactly
 
-      //mtlFromDisk.save("mtl2") // These files match the original ones exactly
+      // mtlFromDisk.save("mtl2") // These files match the original ones exactly
     } else if(runMode == "shell") {
-      val mtlFromDisk = LstmCrfMtl("mtl-en")
-      shell(mtlFromDisk)
+      val mtlFromDisk = LstmCrfMtl(modelName)
+      MTLShell.shell(mtlFromDisk)
     }
   }
 }
