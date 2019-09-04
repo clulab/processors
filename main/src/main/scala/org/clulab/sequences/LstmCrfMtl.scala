@@ -24,14 +24,25 @@ import scala.util.Random
   * We use GloVe embeddings and learned character embeddings
   * @author Mihai
   */
-class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[LstmCrfMtlParameters] = None) {
+class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOpt: Option[LstmCrfMtlParameters] = None) {
   /** Stores the DyNet parameters required by all tasks */
   val model: LstmCrfMtlParameters = lstmCrfMtlParametersOpt.getOrElse(initialize())
 
-  // This taskManager might not be suitable for the model.
-  require(taskManager.taskCount == model.taskCount)
+  if(taskManagerOpt.isDefined) {
+    // This taskManager might not be suitable for the model.
+    require(taskManagerOpt.get.taskCount == model.taskCount)
+  }
+
+  // Use this carefully. That is, only when taskManagerOpt.isDefined
+  def taskManager: TaskManager = {
+    assert(taskManagerOpt.isDefined)
+    taskManagerOpt.get
+  }
 
   protected def initialize(): LstmCrfMtlParameters = {
+    // If we're here, we must have a task manager, because we will train and/or test all these tasks
+    require(taskManagerOpt.isDefined)
+
     val w2v = loadEmbeddings(Some(taskManager.docFreqFileName), taskManager.minWordFreq, taskManager.embeddingsFileName)
     val (w2i, c2i, t2is) = mkVocabs(w2v)
 
@@ -42,10 +53,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
       logger.debug(s"  ${t2is(i).size} entries for task ${taskManager.tasks(i).taskNumber}")
     }
 
-    // TODO Perhaps put this elsewhere, like in main.
-    logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    val model = LstmCrfMtlParameters.create(taskManager.taskCount, w2i, c2i, t2is, w2v)
+    val model = LstmCrfMtlParameters.create(taskManager.taskCount, w2i, c2i, t2is, w2v, taskManager.greedyInferences)
     logger.debug("Completed initialization.")
     model
   }
@@ -89,6 +97,8 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
   }
 
   def train(modelNamePrefix:String):Unit = {
+    require(taskManagerOpt.isDefined)
+
     val trainer = new RMSPropTrainer(model.parameters)
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -117,7 +127,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
         val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2is(taskId))
 
         var loss =
-          if(taskManager.tasks(taskId).greedyInference) {
+          if(model.greedyInference(taskId)) {
             // greedy loss
             sentenceLossGreedy(emissionScores, goldTagIds)
           }
@@ -174,6 +184,8 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
   }
 
   def test(): Unit = {
+    require(taskManagerOpt.isDefined)
+
     // check final performance on the test dataset
     for(taskId <- 0 until taskManager.taskCount) {
       val taskName = taskManager.tasks(taskId).taskName
@@ -223,7 +235,8 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
   }
 
   /**
-   * Predict the sequence tags that applies to the given sequence of words
+   * Predict the sequence tags that applies to the given sequence of words for one given task
+   * @param taskId: id of the current task to use
    * @param words The input words
    * @return The predicted sequence of tags
    */
@@ -235,7 +248,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
     }
 
     val tags = new ArrayBuffer[String]()
-    if(taskManager.tasks(taskId).greedyInference) {
+    if(model.greedyInference(taskId)) {
       val tagIds = greedyPredict(emissionScores)
       for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
     } else {
@@ -303,7 +316,8 @@ class LstmCrfMtlParameters(
   val charBwRnnBuilder:RnnBuilder,
   val Hs:Array[Parameter], // one per task
   val Os:Array[Parameter], // one per task
-  val Ts:Array[LookupParameter]) { // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
+  val Ts:Array[LookupParameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
+  val greedyInference:Array[Boolean]) {
 
   val taskCount: Int = t2is.length
   val indices: Range = t2is.indices
@@ -375,6 +389,9 @@ class LstmCrfMtlParameters(
       LstmUtils.save(printWriter, w2i, "w2i")
       LstmUtils.save(printWriter, c2i, "c2i")
       LstmUtils.save(printWriter, taskCount, "taskCount")
+
+      LstmUtils.save(printWriter, greedyInference, "greedyInference")
+
       t2is.zipWithIndex.foreach { case (t2i, index) =>
         LstmUtils.save(printWriter, t2i, s"t2i($index)")
       }
@@ -398,22 +415,24 @@ object LstmCrfMtlParameters {
   def load(baseFilename: String): LstmCrfMtlParameters = {
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
-    val (taskCount, w2i, c2i, t2is, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+    val (taskCount, w2i, c2i, t2is, dim, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
       val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
+      val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
       val lines = source.getLines()
       val w2i = byLineStringMapBuilder.build(lines)
       val c2i = byLineCharMapBuilder.build(lines)
       val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
+      val greedyInferences:Array[Boolean] = byLineArrayBuilder.build(lines).map(_.toBoolean)
       val t2is = 0.until(taskCount).map { _ =>
         byLineStringMapBuilder.build(lines)
       }.toArray
       val dim = new LstmUtils.ByLineIntBuilder().build(lines)
 
-      (taskCount, w2i, c2i, t2is, dim)
+      (taskCount, w2i, c2i, t2is, dim, greedyInferences)
     }
     val model = {
-      val model = mkParams(taskCount, w2i, c2i, t2is, dim)
+      val model = mkParams(taskCount, w2i, c2i, t2is, dim, greedyInferences)
       new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
       model
     }
@@ -425,7 +444,8 @@ object LstmCrfMtlParameters {
       w2i: Map[String, Int],
       c2i: Map[Char, Int],
       t2is: Array[Map[String, Int]],
-      embeddingDim: Int): LstmCrfMtlParameters = {
+      embeddingDim: Int,
+      greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
     val parameters = new ParameterCollection()
 
     // These parameters correspond to the LSTM(s) shared by all tasks
@@ -455,15 +475,16 @@ object LstmCrfMtlParameters {
       parameters, lookupParameters,
       fwBuilder, bwBuilder,
       charLookupParameters, charFwBuilder, charBwBuilder,
-      Hs, Os, Ts)
+      Hs, Os, Ts, greedyInferences)
   }
 
   def create(taskCount: Int,
       w2i: Map[String, Int],
       c2i: Map[Char, Int],
       t2is: Array[Map[String, Int]],
-      w2v: Word2Vec): LstmCrfMtlParameters = {
-    val model = mkParams(taskCount, w2i, c2i, t2is, w2v.dimensions)
+      w2v: Word2Vec,
+      greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
+    val model = mkParams(taskCount, w2i, c2i, t2is, w2v.dimensions, greedyInferences)
 
     model.initializeEmbeddings(w2v)
     model.initializeTransitions()
@@ -479,14 +500,26 @@ object LstmCrfMtl {
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
-  def apply(modelFilenamePrefix: String, taskManager: TaskManager): LstmCrfMtl = {
-    // make sure DyNet is initialized!
+  def initializeDyNet(): Unit = {
+    logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+    logger.debug("DyNet initialization complete.")
+  }
 
+  def apply(modelFilenamePrefix: String, taskManager: TaskManager): LstmCrfMtl = {
     val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
-    val mtl = new LstmCrfMtl(taskManager, Some(model))
-
+    val mtl = new LstmCrfMtl(Some(taskManager), Some(model))
     mtl
+  }
+
+  def apply(modelFilenamePrefix: String): LstmCrfMtl = {
+    val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
+    val mtl = new LstmCrfMtl(None, Some(model))
+    mtl
+  }
+
+  def shell(mtl:LstmCrfMtl): Unit = {
+
   }
 
   def main(args: Array[String]): Unit = {
@@ -495,18 +528,22 @@ object LstmCrfMtl {
     //
     val config = ConfigFactory.load("mtl-en")
     val taskManager = new TaskManager(config)
-    val trainMode = false
+    val runMode = "train" // "train", "test", or "shell"
+    initializeDyNet()
 
-    if(trainMode) {
-      val mtl = new LstmCrfMtl(taskManager)
+    if(runMode == "train") {
+      val mtl = new LstmCrfMtl(Some(taskManager))
       mtl.train("mtl")
       // mtl.test()
-    } else {
+    } else if(runMode == "test") {
       // load the model from disk and test again
       val mtlFromDisk = LstmCrfMtl("mtl-en", taskManager)
       mtlFromDisk.test() // These results match the original ones exactly
 
       //mtlFromDisk.save("mtl2") // These files match the original ones exactly
+    } else if(runMode == "shell") {
+      val mtlFromDisk = LstmCrfMtl("mtl-en")
+      shell(mtlFromDisk)
     }
   }
 }
