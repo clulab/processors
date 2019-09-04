@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataformat name="malttab">
-	<column name="FORM" category="INPUT" type="STRING"/>
-	<column name="POSTAG" category="INPUT" type="STRING"/>
-	<column name="HEAD" category="HEAD" type="INTEGER"/>
-	<column name="DEPREL" category="DEPENDENCY_EDGE_LABEL" type="STRING"/>
-</dataformat>
