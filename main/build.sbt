@@ -21,8 +21,6 @@ libraryDependencies ++= {
 
     // NLP tools used by CluProcessor
     "org.antlr"                %  "antlr4-runtime"            % "4.6",   // for tokenization
-    "org.maltparser"           %  "maltparser"                % "1.9.0", // for dependency parsing
-    "org.clulab"               %  "bioresources"              % "1.1.24", // for bio NER
     "org.clulab"               %  "lemport"                   % "0.9.10", // Portuguese lemmatizer
 
     // logging
@@ -30,17 +28,12 @@ libraryDependencies ++= {
     "ch.qos.logback"               %  "logback-classic"  % "1.0.10",
     "org.slf4j"                    %  "slf4j-api"        % "1.7.10",
 
-    // AKKA
-    "com.typesafe.akka"   %%  "akka-actor"   % akkaV,
-    "com.typesafe.akka"   %%  "akka-remote"  % akkaV,
-    "com.typesafe.akka"   %%  "akka-slf4j"   % akkaV,
-
     // testing
     "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
 
     // dynet
-    "org.clulab" %% "fatdynet" % "0.2.2"
+    "org.clulab" %% "fatdynet" % "0.2.3"
   )
 
 }

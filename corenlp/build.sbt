@@ -6,6 +6,8 @@ libraryDependencies ++= {
   Seq (
     // this sub-project depends on CoreNLP
     "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV,
-    "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV classifier "models"
+    "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV classifier "models",
+
+    "org.clulab" % "bioresources" % "1.1.24" // for bio NER
   )
 }

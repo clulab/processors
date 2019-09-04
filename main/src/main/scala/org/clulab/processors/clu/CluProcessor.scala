@@ -1,19 +1,14 @@
 package org.clulab.processors.clu
 
-import org.clulab.processors.clu.sequences._
-import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, Processor, Sentence}
-import org.clulab.struct.GraphMap
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.processors.bio._
 import org.clulab.utils.Configured
 import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import org.clulab.sequences.{LexiconNER, Tagger}
 import CluProcessor._
 
 /**
