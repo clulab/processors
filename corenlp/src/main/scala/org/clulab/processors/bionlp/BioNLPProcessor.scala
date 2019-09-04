@@ -31,7 +31,7 @@ class BioNLPProcessor (internStrings:Boolean = false,
     internStrings, withChunks, withRelationExtraction = false, withDiscourse, maxSentenceLength) {
 
   //lazy val banner = new BannerWrapper
-  private lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
+  lazy val hybridNER = new HybridNER(withCRFNER, withRuleNER)
   private lazy val posPostProcessor = new BioNLPPOSTaggerPostProcessor
   private lazy val nerPostProcessor = new BioNERPostProcessor(KBLoader.stopListFile.get)
 

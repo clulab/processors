@@ -1,24 +1,13 @@
 package org.clulab.processors
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import java.io._
 import java.nio.charset.StandardCharsets
 
-import org.clulab.sequences.ColumnsToDocument
-import org.clulab.sequences.LexiconNER
-import org.clulab.sequences.SeparatedLexiconNER
-import org.clulab.struct.BooleanHashTrie
+import org.clulab.processors.bionlp.BioNLPProcessor
+import org.clulab.sequences.{ColumnsToDocument, LexiconNER, SeparatedLexiconNER}
+import org.clulab.struct.{BooleanHashTrie, DebugBooleanHashTrie}
 import org.clulab.utils.Files
-import org.clulab.struct.DebugBooleanHashTrie
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.{FlatSpec, Matchers}
 
 import scala.io.Source
 
@@ -80,10 +69,10 @@ class TestCompactLexiconNER extends FlatSpec with Matchers {
     (hashTrie, stop - start)
   }
 
-  val proc = new BioCluProcessor()
+  val proc = new BioNLPProcessor()
   val start = System.currentTimeMillis
 
-  val oldNer = proc.ner.get.asInstanceOf[LexiconNER]
+  val oldNer: LexiconNER = proc.hybridNER.ruleNer
 //  fileSave(oldNer)
 //  val (newNer, loadTime) = fileLoad[LexiconNER]
 //  val ner = newNer
