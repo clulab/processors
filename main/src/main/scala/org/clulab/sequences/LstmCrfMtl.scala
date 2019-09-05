@@ -487,6 +487,7 @@ object LstmCrfMtlParameters {
   def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
   def load(baseFilename: String): LstmCrfMtlParameters = {
+    logger.debug(s"Loading MTL model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
     val (taskCount, w2i, c2i, t2is, dim, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
@@ -512,6 +513,7 @@ object LstmCrfMtlParameters {
       model
     }
 
+    logger.debug("MTL loading complete.")
     model
   }
 
@@ -618,7 +620,8 @@ object LstmCrfMtl {
       // mtlFromDisk.save("mtl2") // These files match the original ones exactly
     } else if(runMode == "shell") {
       val mtlFromDisk = LstmCrfMtl(modelName)
-      MTLShell.shell(mtlFromDisk)
+      val sh = new MTLShell(mtlFromDisk)
+      sh.shell()
     }
   }
 }

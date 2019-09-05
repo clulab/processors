@@ -1,5 +1,6 @@
 package org.clulab.processors.clu
 
+import org.clulab.sequences.LstmCrfMtl
 import org.clulab.struct.DirectedGraphEdgeIterator
 import org.clulab.utils.Shell
 
@@ -12,6 +13,7 @@ class CluShell extends Shell {
   var proc: CluProcessor = _
 
   override def initialize(): Unit = {
+    LstmCrfMtl.initializeDyNet()
     proc = new CluProcessor()
   }
 
@@ -30,6 +32,12 @@ class CluShell extends Shell {
 
       if(sentence.tags.isDefined)
         println("Tags: " + sentence.tags.get.zip(indices).mkString(" "))
+
+      if(sentence.entities.isDefined)
+        println("Entities: " + sentence.entities.get.zip(indices).mkString(" "))
+
+      if(sentence.chunks.isDefined)
+        println("Chunks: " + sentence.chunks.get.zip(indices).mkString(" "))
 
       sentence.universalBasicDependencies.foreach(dependencies => {
         println("Basic dependencies:")
