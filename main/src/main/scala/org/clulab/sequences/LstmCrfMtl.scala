@@ -588,6 +588,7 @@ object LstmCrfMtl {
   }
 
   def apply(modelFilenamePrefix: String): LstmCrfMtl = {
+    // TODO: this must have the ability to load from either the file system or a jar in the path
     val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
     val mtl = new LstmCrfMtl(None, Some(model))
     mtl
