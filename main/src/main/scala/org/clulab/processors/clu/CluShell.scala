@@ -1,85 +1,36 @@
 package org.clulab.processors.clu
 
-import java.io.File
-
-import jline.console.ConsoleReader
-import jline.console.history.FileHistory
-import org.clulab.processors.Document
 import org.clulab.struct.DirectedGraphEdgeIterator
-
-import scala.collection.immutable.ListMap
+import org.clulab.utils.Shell
 
 /**
   * An interactive shell for CluProcessor
   * User: mihais
   * Date: 8/2/17
   */
-object CluShell {
-  val commands = ListMap(
-    ":help" -> "show commands",
-    ":exit" -> "exit system"
-  )
+class CluShell extends Shell {
+  var proc: CluProcessor = _
 
-  def shell() {
-    val history = new FileHistory(new File(System.getProperty("user.home"), ".clushellhistory"))
-    sys addShutdownHook {
-      history.flush() // flush file before exiting
-    }
-
-    val reader = new ConsoleReader
-    reader.setHistory(history)
-
-    lazy val proc = new CluProcessor()
-    reader.setPrompt("(clu)>>> ")
-    println("\nWelcome to the ProcessorShell!")
-    printCommands()
-
-    var running = true
-    while (running) {
-      reader.readLine match {
-        case ":help" =>
-          printCommands()
-
-        case ":exit" | null =>
-          running = false
-
-        case text =>
-          if(text.trim.nonEmpty) {
-            try {
-              val doc = proc.annotate(text)
-              print(doc)
-            } catch {
-              case e:Throwable =>
-                println("Processing failed with the following error:")
-                e.printStackTrace()
-            }
-          }
-      }
-    }
-
-    // manual terminal cleanup
-    reader.getTerminal.restore()
-    reader.shutdown()
+  override def initialize(): Unit = {
+    proc = new CluProcessor()
   }
 
-  /** Summarizes available commands */
-  def printCommands(): Unit = {
-    println("\nCOMMANDS:")
-    for ((cmd, msg) <- commands)
-      println(s"\t$cmd\t=> $msg")
-    println()
-  }
+  override def work(text: String): Unit = {
+    val doc = proc.annotate(text)
 
-  /** Prints one document */
-  def print(doc:Document) {
     var sentenceCount = 0
     for (sentence <- doc.sentences) {
       println("Sentence #" + sentenceCount + ":")
       val indices = 0 until sentence.size
       println("Raw: " + sentence.raw.zip(indices).mkString(" "))
       println("Tokens: " + sentence.words.zip(indices).mkString(" "))
-      println("Tags: " + sentence.tags.get.zip(indices).mkString(" "))
-      
+
+      if(sentence.lemmas.isDefined)
+        println("Lemmas: " + sentence.lemmas.get.zip(indices).mkString(" "))
+
+      if(sentence.tags.isDefined)
+        println("Tags: " + sentence.tags.get.zip(indices).mkString(" "))
+
       sentence.universalBasicDependencies.foreach(dependencies => {
         println("Basic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
@@ -104,8 +55,11 @@ object CluShell {
       println("\n")
     }
   }
+}
 
+object CluShell {
   def main(args:Array[String]): Unit = {
-    shell()
+    val sh = new CluShell
+    sh.shell()
   }
 }

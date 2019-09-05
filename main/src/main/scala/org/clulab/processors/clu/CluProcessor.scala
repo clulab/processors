@@ -9,7 +9,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import CluProcessor._
+import org.clulab.sequences.LstmCrfMtl
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -39,13 +39,21 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => new EnglishLemmatizer
   }
 
+  // the multi-task learning (MTL) model, which covers: POS, NER, chunking, dependency parsing (coming soon)
+  lazy val mtl: LstmCrfMtl = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => LstmCrfMtl(getArgString(s"$prefix.language", Some("mtl-en")))
+  }
+
   override def annotate(doc:Document): Document = {
-    // with this processor, we lemmatize first, because this POS tagger is part of the MTL framework
-    lemmatize(doc)
-    tagPartsOfSpeech(doc)
-    recognizeNamedEntities(doc)
-    parse(doc)
-    chunking(doc)
+    tagPartsOfSpeech(doc) // the call to MTL is in here
+    recognizeNamedEntities(doc) // Nop, kept for the record
+    chunking(doc) // Nop, kept for the record
+    parse(doc) // Nop, kept for the record
+
+    lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+
     resolveCoreference(doc)
     discourse(doc)
     doc.clear()
@@ -72,10 +80,15 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
   }
 
-  /** Part of speech tagging */
+  /** Part of speech tagging + NER + chunking, jointly */
   def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
+      val allLabels = mtl.predictJointly(sent.words)
+      sent.entities = Some(allLabels(0))
+      sent.tags = Some(allLabels(1))
+      sent.chunks = Some(allLabels(2))
+      // TODO: create the dependency graph here, when it's available
     }
   }
 
@@ -93,17 +106,28 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
   }
 
+  /** Generates cheap lemmas with the word in lower case, for languages where a lemmatizer is not available */
+  def cheapLemmatize(doc:Document) {
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      val lemmas = sent.words.map(_.toLowerCase())
+      sent.lemmas = Some(lemmas)
+    }
+  }
+
   /** NER; modifies the document in place */
-  def recognizeNamedEntities(doc:Document) {
+  def recognizeNamedEntities(doc:Document): Unit = {
+    // Nop, covered by MTL
   }
 
   /** Syntactic parsing; modifies the document in place */
-  def parse(doc:Document) {
-    basicSanityCheck(doc)
+  def parse(doc:Document): Unit = {
+    // Nop, covered by MTL
   }
 
   /** Shallow parsing; modifies the document in place */
-  def chunking(doc:Document) {
+  def chunking(doc:Document): Unit = {
+    // Nop, covered by MTL
   }
 
   /** Coreference resolution; modifies the document in place */
@@ -149,39 +173,6 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
     // which means we may lose alignment to the original text
     val textWithAccents = scienceUtils.replaceUnicodeWithAscii(text, keepAccents = true)
     CluProcessor.mkDocument(tokenizer, textWithAccents, keepText)
-  }
-
-  // overrided this because lemmatization depends on POS for portuguese
-  override def annotate(doc:Document): Document = {
-    cheapLemmatize(doc)
-    tagPartsOfSpeech(doc)
-    recognizeNamedEntities(doc)
-    parse(doc)
-    chunking(doc)
-    lemmatize(doc)
-    resolveCoreference(doc)
-    discourse(doc)
-    doc.clear()
-    doc
-  }
-
-  // TODO:
-  // make sure we are using the correct type of lemmas before running tagPartsOfSpeech(doc)
-  // if we run tagPartsOfSpeech(doc) after lemmatize() and not after cheapLemmatize(doc)
-  // we will get wrong results
-
-  // generate cheap lemmas with the word in lower case for PartOfSpeech training/prediction only
-  def cheapLemmatize(doc:Document) {
-    basicSanityCheck(doc)
-    for(sent <- doc.sentences) {
-      // if not, generate cheap lemmas
-      val lemmas = new Array[String](sent.size)
-      for (i <- sent.words.indices) {
-        lemmas(i) = sent.words(i).toLowerCase()
-        assert(lemmas(i).nonEmpty)
-      }
-      sent.lemmas = Some(lemmas)
-    }
   }
 
   /** Lematization; modifies the document in place */
