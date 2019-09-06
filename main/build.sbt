@@ -33,7 +33,10 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
 
     // dynet
-    "org.clulab" %% "fatdynet" % "0.2.3"
+    "org.clulab" %% "fatdynet" % "0.2.3",
+
+    // trained models for the ML components used in both main and corenlp
+    "org.clulab" %% "processors-models" % "0.0.1-SNAPSHOT"
   )
 
 }
