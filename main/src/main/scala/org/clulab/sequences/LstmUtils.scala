@@ -1,12 +1,9 @@
 package org.clulab.sequences
 
-import java.io.BufferedOutputStream
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
-import java.io.PrintWriter
+import java.io.{BufferedOutputStream, File, FileOutputStream, OutputStreamWriter, PrintWriter}
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, ModelLoader, ParameterCollection, RnnBuilder, ZipModelLoader}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.struct.MutableNumber
 import org.slf4j.{Logger, LoggerFactory}
@@ -539,7 +536,38 @@ object LstmUtils {
     )
   }
 
-  def newSource(filename: String): Source = Source.fromFile(filename, "UTF-8")
+  def newSource(filename: String): Source = {
+    val f = new File(filename)
+    if(f.exists()) {
+      // this file exists on disk
+      Source.fromFile(filename, "UTF-8")
+    } else {
+      // the file does not exist on disk. let's hope it's in the classpath
+      Source.fromResource(filename)
+    }
+  }
+
+  def loadParameters(dynetFilename: String, modelParameters:ParameterCollection): Unit = {
+    val possibleFile = new File(dynetFilename)
+    if(possibleFile.exists()) {
+      // read from this file on disk
+      new ModelLoader(dynetFilename).populateModel(modelParameters, "/all")
+
+    } else {
+      // the file does not exist on disk. let's find in the classpath
+      val url = LstmCrfMtl.getClass.getClassLoader.getResource(dynetFilename)
+      if(url == null)
+        throw new RuntimeException(s"ERROR: cannot locate the model file $dynetFilename!")
+      val path = url.getPath
+      assert(path.startsWith("file:"))
+      val fileNameEnd = path.lastIndexOf("!/")
+      assert(fileNameEnd > 0)
+      val jarFileName = path.substring(5, fileNameEnd)
+      //println(jarFileName)
+
+      new ZipModelLoader(dynetFilename, jarFileName).populateModel(modelParameters, "/all")
+    }
+  }
 }
 
 class LstmUtils
