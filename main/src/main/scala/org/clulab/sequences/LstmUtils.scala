@@ -405,9 +405,9 @@ object LstmUtils {
   }
 
   def emissionScoresToArraysAllTasks(expressions:Array[ExpressionVector]): Array[Array[Array[Float]]] = {
-    val latticesAllTasks = new Array[Array[Array[Float]]](expressions.size)
+    val latticesAllTasks = new Array[Array[Array[Float]]](expressions.length)
 
-    for(tid <- 0 until latticesAllTasks.length) {
+    for(tid <- latticesAllTasks.indices) {
       val lattice = new ArrayBuffer[Array[Float]]()
       for (expression <- expressions(tid)) {
         val probs = expression.value().toVector().toArray
