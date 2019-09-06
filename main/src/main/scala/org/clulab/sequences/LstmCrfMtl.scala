@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, ModelLoader, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
@@ -499,7 +499,6 @@ object LstmCrfMtlParameters {
       val c2i = byLineCharMapBuilder.build(lines)
       val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
       val greedyInferences:Array[Boolean] = byLineArrayBuilder.build(lines).map(_.toBoolean)
-      //println("INFERENCES: " + greedyInferences.mkString(", "))
       val t2is = 0.until(taskCount).map { _ =>
         byLineStringMapBuilder.build(lines)
       }.toArray
@@ -507,9 +506,10 @@ object LstmCrfMtlParameters {
 
       (taskCount, w2i, c2i, t2is, dim, greedyInferences)
     }
+
     val model = {
       val model = mkParams(taskCount, w2i, c2i, t2is, dim, greedyInferences)
-      new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
+      LstmUtils.loadParameters(dynetFilename, model.parameters)
       model
     }
 
@@ -590,7 +590,6 @@ object LstmCrfMtl {
   }
 
   def apply(modelFilenamePrefix: String): LstmCrfMtl = {
-    // TODO: this must have the ability to load from either the file system or a jar in the path
     val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
     val mtl = new LstmCrfMtl(None, Some(model))
     mtl
