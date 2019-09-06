@@ -134,17 +134,17 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Coreference resolution; modifies the document in place */
   def resolveCoreference(doc:Document) {
-    // TODO
+    // TODO. We need this.
   }
 
   /** Discourse parsing; modifies the document in place */
   def discourse(doc:Document) {
-    // TODO
+    // TODO. We will probably not include this, at least in the short term
   }
 
   /** Relation extraction; modifies the document in place. */
   override def relationExtraction(doc: Document): Unit = {
-    // TODO
+    // TODO. We will probably not include this.
   }
 
   def basicSanityCheck(doc:Document): Unit = {
