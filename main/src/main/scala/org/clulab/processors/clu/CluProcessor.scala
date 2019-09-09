@@ -27,12 +27,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   // should we intern strings or not?
   val internStrings:Boolean = getArgBoolean(s"$prefix.internStrings", Some(false))
 
-  // the tokenizer
-  lazy val tokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => new OpenDomainPortugueseTokenizer()
-    case "ES" => new OpenDomainSpanishTokenizer()
-    case _ => new OpenDomainEnglishTokenizer()
+  // This strange construction is designed to allow subclasses access to the value of the tokenizer while
+  // at the same time allowing them to override the value.
+  // val tokenizer: Tokenizer = new ModifiedTokenizer(super.tokenizer)
+  // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
+  // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
+  protected lazy val localTokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => new OpenDomainPortugueseTokenizer(tokenizerPostProcessor)
+    case "ES" => new OpenDomainSpanishTokenizer(tokenizerPostProcessor)
+    case _ => new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
   }
+
+  // the actual tokenizer
+  lazy val tokenizer: Tokenizer = localTokenizer
 
   // the lemmatizer
   lazy val lemmatizer: Lemmatizer = getArgString(s"$prefix.language", Some("EN")) match {

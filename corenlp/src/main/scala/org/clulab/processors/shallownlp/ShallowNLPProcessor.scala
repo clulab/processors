@@ -41,7 +41,13 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     this(None, internStrings, withChunks, withRelationExtraction)
   }
 
-  lazy val tokenizer: Tokenizer = new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+  // This strange construction is designed to allow subclasses access to the value of the tokenizer while
+  // at the same time allowing them to override the value.
+  // val tokenizer: Tokenizer = new ModifiedTokenizer(super.tokenizer)
+  // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
+  // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
+  protected lazy val localTokenizer: Tokenizer = new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+  lazy val tokenizer: Tokenizer = localTokenizer
   lazy val posTagger: StanfordCoreNLP = mkPosTagger
   lazy val lemmatizer: StanfordCoreNLP = mkLemmatizer
   lazy val ner: StanfordCoreNLP = mkNer
