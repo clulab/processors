@@ -33,9 +33,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
   // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
   protected lazy val localTokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => new OpenDomainPortugueseTokenizer(tokenizerPostProcessor)
-    case "ES" => new OpenDomainSpanishTokenizer(tokenizerPostProcessor)
-    case _ => new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+    case "PT" => new OpenDomainPortugueseTokenizer
+    case "ES" => new OpenDomainSpanishTokenizer
+    case _ => new OpenDomainEnglishTokenizer
   }
 
   // the actual tokenizer
