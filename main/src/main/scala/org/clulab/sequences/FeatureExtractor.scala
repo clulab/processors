@@ -1,7 +1,6 @@
 package org.clulab.sequences
 
 import org.clulab.processors.Sentence
-import org.clulab.sequences.SequenceTaggerLogger
 import org.clulab.struct.Counter
 
 import scala.collection.mutable

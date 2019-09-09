@@ -18,6 +18,7 @@ libraryDependencies ++= {
     // for machine learning
     "de.bwaldvogel"            %  "liblinear"                 % "1.94",
     "tw.edu.ntu.csie"          %  "libsvm"                    % "3.17",
+    "org.clulab"              %%  "fatdynet"                  % "0.2.3",
 
     // NLP tools used by CluProcessor
     "org.antlr"                %  "antlr4-runtime"            % "4.6",   // for tokenization
@@ -32,11 +33,8 @@ libraryDependencies ++= {
     "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
 
-    // dynet
-    "org.clulab" %% "fatdynet" % "0.2.3",
-
     // trained models for the ML components used in both main and corenlp
-    "org.clulab" %% "processors-models" % "0.0.1-SNAPSHOT"
+    "org.clulab" %% "processors-models" % "0.0.2"
   )
 
 }
