@@ -1,4 +1,5 @@
 # Changes
++ **8.0.0** - Complete redesign of CluProcessor. POS tagging, NER, and syntactic chunking are now implemented using a multi-task framework implemented using the Scala wrapper in DyNet. Dependency syntax and support for multiple languages coming soon. All CoreNLP processors (CoreNLP, FastNLP, BioNLP) are fully backwards compatible with v7. 
 + **7.5.3** - Add DocumentAttachment to Document
 + **7.5.3** - Fixed CoreNLP parser crash on weird sentences with non-alpha characters only (Reach issue #634).
 + **7.5.3** - Added support for lemmatization and improved Chunking, Parsing and POS models for Portuguese.
