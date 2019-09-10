@@ -1,11 +1,16 @@
 package org.clulab.sequences
 
 import java.io.{BufferedOutputStream, File, FileOutputStream, OutputStreamWriter, PrintWriter}
+import java.net.JarURLConnection
+import java.net.URI
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, ModelLoader, ParameterCollection, RnnBuilder, ZipModelLoader}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, ParameterCollection, RnnBuilder}
 import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.fatdynet.utils.CloseableModelLoader
+import org.clulab.fatdynet.utils.CloseableZipModelLoader
 import org.clulab.struct.MutableNumber
+import org.clulab.utils.Closer.AutoCloser
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -22,7 +27,7 @@ object LstmUtils {
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
-  val RANDOM_SEED = 2522620396l // used for both DyNet, and the JVM seed for shuffling data
+  val RANDOM_SEED = 2522620396L // used for both DyNet, and the JVM seed for shuffling data
 
   val LOG_MIN_VALUE:Float = -10000
 
@@ -518,7 +523,7 @@ object LstmUtils {
     }
 
     def build(lines: Iterator[String]): Int = {
-      var mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
+      val mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
 
       addLines(mutableNumberOpt, lines)
       mutableNumberOpt.value.get
@@ -547,25 +552,45 @@ object LstmUtils {
     }
   }
 
-  def loadParameters(dynetFilename: String, modelParameters:ParameterCollection): Unit = {
+  def loadParameters(dynetFilename: String, modelParameters: ParameterCollection): Unit = {
     val possibleFile = new File(dynetFilename)
-    if(possibleFile.exists()) {
-      // read from this file on disk
-      new ModelLoader(dynetFilename).populateModel(modelParameters, "/all")
-
-    } else {
-      // the file does not exist on disk. let's find in the classpath
+    if (possibleFile.exists()) {
+      // Read from this file on disk.
+      new CloseableModelLoader(dynetFilename).autoClose { modelLoader =>
+        modelLoader.populateModel(modelParameters, "/all")
+      }
+    }
+    else {
+      // The file does not exist on disk.  Let's find in the classpath.
       val url = LstmCrfMtl.getClass.getClassLoader.getResource(dynetFilename)
-      if(url == null)
+      if (Option(url).isEmpty)
         throw new RuntimeException(s"ERROR: cannot locate the model file $dynetFilename!")
-      val path = url.getPath
-      assert(path.startsWith("file:"))
-      val fileNameEnd = path.lastIndexOf("!/")
-      assert(fileNameEnd > 0)
-      val jarFileName = path.substring(5, fileNameEnd)
-      //println(jarFileName)
+      val protocol = url.getProtocol
+      if (protocol == "jar") {
+        // The resource has been jarred, and must be extracted with a ZipModelLoader.
+        val jarUrl = url.openConnection().asInstanceOf[JarURLConnection].getJarFileURL
+        val protocol2 = jarUrl.getProtocol
+        assert(protocol2 == "file")
+        val uri = new URI(jarUrl.toString)
+        // This converts both percent encoded characters and file separators.
+        val nativeJarFileName = new File(uri).getPath
 
-      new ZipModelLoader(dynetFilename, jarFileName).populateModel(modelParameters, "/all")
+        new CloseableZipModelLoader(dynetFilename, nativeJarFileName).autoClose { zipModelLoader =>
+          zipModelLoader.populateModel(modelParameters, "/all")
+        }
+      }
+      else if (protocol == "file") {
+        // The resource has not been jarred, but lives in a classpath directory.
+        val uri = new URI(url.toString)
+        // This converts both percent encoded characters and file separators.
+        val nativeFileName = new File(uri).getPath
+
+        new CloseableModelLoader(nativeFileName).autoClose { modelLoader =>
+          modelLoader.populateModel(modelParameters, "/all")
+        }
+      }
+      else
+        throw new RuntimeException(s"ERROR: cannot locate the model file $dynetFilename with protocol $protocol!")
     }
   }
 }
