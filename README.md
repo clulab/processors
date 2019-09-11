@@ -12,19 +12,17 @@ This is the main public code repository of the Computational Language Understand
 	+ `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
 	+ `BioNLPProcessor` - a version of `CoreNLPProcessor` tuned for the biomedical domain: better tokenization for biomedical texts, improved POS tagging for the bio domain, and a custom NER for this domain that recognizes entities relevant in this domain such as proteins, chemical, and biological processes;
 	+ `FastBioNLPProcessor` - a version of `FastNLPProcessor` tuned for the biomedical domain, similarly to `BioNLPProcessor`; 
-	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging (using an in-house bidirectional maximum entropy Markov model), and syntax (using an ensemble of models built with [maltparser](http://mallet.cs.umass.edu)), which supports both basic and enhanced dependencies. Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines.
-  + `BioCluProcessor` - a version of `CluProcessor` tuned for the biomedical domain.
-  + `PortugueseCluProcessor` - a version of `CluProcessor` trained for Portuguese. This version includes tokenization, POS tagging, syntactic chunking, and dependency parsing, all trained for Portuguese.
+	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging (using an in-house bidirectional maximum entropy Markov model), named entity recognition (NER), and shallow syntax or chunking. The last three components are implemented using a multi-task learning framework implemented using the Scala wrapper in [DyNet](https://dynet.readthedocs.io/en/latest/). Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines. Coming soon: dependency parsing, and support for multiple languages. 
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
 Our code is licensed as follows:
-+ **`main, odin, modelsmain`** - Apache License Version 2.0. Please note that these subprojects do not interact with the `corenlp` subproject below.
-+ **`corenlp, modelscorenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/). If you use only `CluProcessor`, these dependencies do not have to be included in your project.
++ **`main, odin`** - Apache License Version 2.0. Please note that these subprojects do not interact with the `corenlp` subproject below.
++ **`corenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/). If you use only `CluProcessor`, this dependency does not have to be included in your project.
 
 (c) Mihai Surdeanu, 2013 -
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, and Tom Hicks.
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, Tom Hicks, and [Keith Alcock](http://www.keithalcock.com).
 
 # Changes
 + [Please see the CHANGES file](CHANGES.md)
@@ -51,35 +49,24 @@ If you use anything else in this package, please link to this github page.
 
 # Installation
 
-This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `7.4.2`):
+This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.0.0`):
 
 ```xml
 <dependency>
    <groupId>org.clulab</groupId>
-   <artifactId>processors-corenlp_2.11</artifactId>
+   <artifactId>processors-corenlp_2.12</artifactId>
    <version>x.x.x</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
-   <artifactId>processors-main_2.11</artifactId>
+   <artifactId>processors-main_2.12</artifactId>
    <version>x.x.x</version>
 </dependency>
 <dependency>
    <groupId>org.clulab</groupId>
-   <artifactId>processors-odin_2.11</artifactId>
+   <artifactId>processors-odin_2.12</artifactId>
    <version>x.x.x</version>
 </dependency>
-<dependency>
-   <groupId>org.clulab</groupId>
-   <artifactId>processors-modelsmain_2.11</artifactId>
-   <version>x.x.x</version>
-</dependency>
-<dependency>
-   <groupId>org.clulab</groupId>
-   <artifactId>processors-modelscorenlp_2.11</artifactId>
-   <version>x.x.x</version>
-</dependency>
-
 ```
 
 The equivalent SBT dependencies are:
@@ -91,9 +78,7 @@ libraryDependencies ++= {
   Seq(
     "org.clulab" %% "processors-main" % procVer,
     "org.clulab" %% "processors-corenlp" % procVer,
-    "org.clulab" %% "processors-odin" % procVer,
-    "org.clulab" %% "processors-modelsmain" % procVer,
-    "org.clulab" %% "processors-modelscorenlp" % procVer,
+    "org.clulab" %% "processors-odin" % procVer
   )
 }
 ```

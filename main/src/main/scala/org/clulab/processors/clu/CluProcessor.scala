@@ -1,19 +1,16 @@
 package org.clulab.processors.clu
 
-import org.clulab.processors.clu.sequences._
-import org.clulab.processors.clu.syntax._
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, Processor, Sentence}
-import org.clulab.struct.GraphMap
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.processors.clu.bio._
 import org.clulab.utils.Configured
 import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import org.clulab.sequences.{LexiconNER, Tagger}
+import org.clulab.sequences.LstmCrfMtl
+
 import CluProcessor._
 
 /**
@@ -21,25 +18,14 @@ import CluProcessor._
   * Currently supports:
   *   tokenization (in-house),
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
-  *   POS tagging (in-house BiMEMM),
-  *   dependency parsing (ensemble of Malt models) for universal dependencies
+  *   POS tagging, NER, chunking, dependency parsing - using our MTL architecture (dep parsing coming soon)
   */
-class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen")) extends Processor with Configured {
+class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) extends Processor with Configured {
 
   override def getConf: Config = config
 
   // should we intern strings or not?
   val internStrings:Boolean = getArgBoolean(s"$prefix.internStrings", Some(false))
-
-  // this class post-processes the tokens produced by the tokenizer
-  lazy private val tokenizerPostProcessor:Option[TokenizerStep] =
-    getArgString(s"$prefix.tokenizer.post.type", Some("none")) match {
-      case "bio" => Some(new BioTokenizerPostProcessor(
-        getArgStrings(s"$prefix.tokenizer.post.tokensWithValidSlashes", None)
-      ))
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.tokenizer.post.type!")
-    }
 
   // This strange construction is designed to allow subclasses access to the value of the tokenizer while
   // at the same time allowing them to override the value.
@@ -47,9 +33,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
   // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
   // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
   protected lazy val localTokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => new OpenDomainPortugueseTokenizer(tokenizerPostProcessor)
-    case "ES" => new OpenDomainSpanishTokenizer(tokenizerPostProcessor)
-    case _ => new OpenDomainEnglishTokenizer(tokenizerPostProcessor)
+    case "PT" => new OpenDomainPortugueseTokenizer
+    case "ES" => new OpenDomainSpanishTokenizer
+    case _ => new OpenDomainEnglishTokenizer
   }
 
   // the actual tokenizer
@@ -62,71 +48,21 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     case _ => new EnglishLemmatizer
   }
 
-  // the POS tagger
-  lazy val posTagger: PartOfSpeechTagger =
-    PartOfSpeechTagger.loadFromResource(getArgString(s"$prefix.pos.model", None))
-
-  // this class post-processes the POS tagger to avoid some common tagging mistakes for bio
-  lazy val posPostProcessor: Option[SentencePostProcessor] =
-    getArgString(s"$prefix.pos.post.type", Some("none")) match {
-      case "EN" => Some(new EnglishPOSPostProcessor())
-      case "bio" => Some(new BioPOSPostProcessor())
-      case "PT" => Some(new PortuguesePOSPostProcessor())
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.pos.post.type!")
-    }
-
-  // the NER tagger
-  lazy val ner: Option[Tagger[String]] =
-    getArgString(s"$prefix.ner.type", Some("none")) match {
-      case "bio" => Some(LexiconNER(
-        getArgStrings(s"$prefix.ner.kbs", None),
-        Some(getArgStrings(s"$prefix.ner.overrides", None)),
-        new BioLexiconEntityValidator,
-        new BioLexicalVariations,
-        useLemmasForMatching = false,
-        caseInsensitiveMatching = true
-      ))
-      case "conll" => Some(NamedEntityRecognizer.loadFromResource(getArgString(s"$prefix.ner.model", None)))
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.type!")
-    }
-
-  // this class post-processes the NER labels to avoid some common tagging mistakes (used in bio)
-  lazy val nerPostProcessor: Option[SentencePostProcessor] =
-    getArgString(s"$prefix.ner.post.type", Some("none")) match {
-      case "bio" => Some(new BioNERPostProcessor(getArgString(s"$prefix.ner.post.stopListFile", None)))
-      case "none" => None
-      case _ => throw new RuntimeException(s"ERROR: Unknown argument value for $prefix.ner.post.stopListFile!")
-    }
-
-  // the syntactic chunker
-  lazy val chunker:Option[Chunker] =
-    if(contains(s"$prefix.chunker.model"))
-      Some(Chunker.loadFromResource(getArgString(s"$prefix.chunker.model", None)))
-    else
-      None
-
-  // should we use universal dependencies or Stanford ones?
-  val useUniversalDependencies:Boolean = getArgBoolean(s"$prefix.parser.universal", Some(true))
-
-  // the dependency parser
-  lazy val depParser: Parser =
-    if(useUniversalDependencies) {
-      //new MaltWrapper(getArgString(s"$prefix.parser.model", None), internStrings)
-      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-universal", None))
-    } else {
-      new EnsembleMaltParser(getArgStrings(s"$prefix.parser.models-stanford", None))
-    }
-
+  // the multi-task learning (MTL) model, which covers: POS, NER, chunking, dependency parsing (coming soon)
+  lazy val mtl: LstmCrfMtl = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => LstmCrfMtl(getArgString(s"$prefix.language", Some("mtl-en")))
+  }
 
   override def annotate(doc:Document): Document = {
-    // with this processor, we lemmatize first, because this POS tagger uses lemmas as features
-    lemmatize(doc)
-    tagPartsOfSpeech(doc)
-    recognizeNamedEntities(doc)
-    parse(doc)
-    chunking(doc)
+    tagPartsOfSpeech(doc) // the call to MTL is in here
+    recognizeNamedEntities(doc) // Nop, kept for the record
+    chunking(doc) // Nop, kept for the record
+    parse(doc) // Nop, kept for the record
+
+    lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+
     resolveCoreference(doc)
     discourse(doc)
     doc.clear()
@@ -153,16 +89,15 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
   }
 
-  /** Part of speech tagging */
+  /** Part of speech tagging + NER + chunking, jointly */
   def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val tags = posTagger.classesOf(sent)
-      sent.tags = Some(tags)
-
-      if(posPostProcessor.nonEmpty) {
-        posPostProcessor.get.process(sent)
-      }
+      val allLabels = mtl.predictJointly(sent.words)
+      sent.entities = Some(allLabels(0))
+      sent.tags = Some(allLabels(1))
+      sent.chunks = Some(allLabels(2))
+      // TODO: create the dependency graph here, when it's available
     }
   }
 
@@ -180,71 +115,43 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
     }
   }
 
-  /** NER; modifies the document in place */
-  def recognizeNamedEntities(doc:Document) {
-    if(ner.nonEmpty) {
-      basicSanityCheck(doc)
-      for (sentence <- doc.sentences) {
-        val labels = ner.get.find(sentence)
-        sentence.entities = Some(labels)
-
-        if(nerPostProcessor.nonEmpty) {
-          nerPostProcessor.get.process(sentence)
-        }
-      }
+  /** Generates cheap lemmas with the word in lower case, for languages where a lemmatizer is not available */
+  def cheapLemmatize(doc:Document) {
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      val lemmas = sent.words.map(_.toLowerCase())
+      sent.lemmas = Some(lemmas)
     }
+  }
+
+  /** NER; modifies the document in place */
+  def recognizeNamedEntities(doc:Document): Unit = {
+    // Nop, covered by MTL
   }
 
   /** Syntactic parsing; modifies the document in place */
-  def parse(doc:Document) {
-    basicSanityCheck(doc)
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
-
-    for (sentence <- doc.sentences) {
-      //println(s"PARSING SENTENCE: ${sentence.words.mkString(", ")}")
-      //println(sentence.tags.get.mkString(", "))
-      //println(sentence.lemmas.get.mkString(", "))
-      val dg = depParser.parseSentence(sentence)
-
-      if(useUniversalDependencies) {
-        sentence.setDependencies(GraphMap.UNIVERSAL_BASIC, dg)
-        sentence.setDependencies(GraphMap.UNIVERSAL_ENHANCED,
-          EnhancedDependencies.generateUniversalEnhancedDependencies(sentence, dg))
-      } else {
-        sentence.setDependencies(GraphMap.STANFORD_BASIC, dg)
-        sentence.setDependencies(GraphMap.STANFORD_COLLAPSED,
-          EnhancedDependencies.generateStanfordEnhancedDependencies(sentence, dg))
-      }
-    }
+  def parse(doc:Document): Unit = {
+    // Nop, covered by MTL
   }
 
   /** Shallow parsing; modifies the document in place */
-  def chunking(doc:Document) {
-    if(chunker.isDefined) {
-      basicSanityCheck(doc)
-      for (sent <- doc.sentences) {
-        val chunks = chunker.get.classesOf(sent)
-        sent.chunks = Some(chunks)
-      }
-    }
+  def chunking(doc:Document): Unit = {
+    // Nop, covered by MTL
   }
 
   /** Coreference resolution; modifies the document in place */
   def resolveCoreference(doc:Document) {
-    // TODO
+    // TODO. We need this.
   }
 
   /** Discourse parsing; modifies the document in place */
   def discourse(doc:Document) {
-    // TODO
+    // TODO. We will probably not include this, at least in the short term
   }
 
   /** Relation extraction; modifies the document in place. */
   override def relationExtraction(doc: Document): Unit = {
-    // TODO
+    // TODO. We will probably not include this.
   }
 
   def basicSanityCheck(doc:Document): Unit = {
@@ -259,12 +166,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessoropen"))
 trait SentencePostProcessor {
   def process(sentence: Sentence)
 }
-
-/** Same as CluProcessor but it includes custom tokenization and NER for the bio domain */
-class BioCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorbio"))
-
-/** Same as CluProcessor but using Stanford dependencies */
-class CluProcessorWithStanford extends CluProcessor(config = ConfigFactory.load("cluprocessoropenwithstanford"))
 
 /** CluProcessor for Spanish */
 class SpanishCluProcessor extends CluProcessor(config = ConfigFactory.load("cluprocessorspanish"))
@@ -281,39 +182,6 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
     // which means we may lose alignment to the original text
     val textWithAccents = scienceUtils.replaceUnicodeWithAscii(text, keepAccents = true)
     CluProcessor.mkDocument(tokenizer, textWithAccents, keepText)
-  }
-
-  // overrided this because lemmatization depends on POS for portuguese
-  override def annotate(doc:Document): Document = {
-    cheapLemmatize(doc)
-    tagPartsOfSpeech(doc)
-    recognizeNamedEntities(doc)
-    parse(doc)
-    chunking(doc)
-    lemmatize(doc)
-    resolveCoreference(doc)
-    discourse(doc)
-    doc.clear()
-    doc
-  }
-
-  // TODO:
-  // make sure we are using the correct type of lemmas before running tagPartsOfSpeech(doc)
-  // if we run tagPartsOfSpeech(doc) after lemmatize() and not after cheapLemmatize(doc)
-  // we will get wrong results
-
-  // generate cheap lemmas with the word in lower case for PartOfSpeech training/prediction only
-  def cheapLemmatize(doc:Document) {
-    basicSanityCheck(doc)
-    for(sent <- doc.sentences) {
-      // if not, generate cheap lemmas
-      val lemmas = new Array[String](sent.size)
-      for (i <- sent.words.indices) {
-        lemmas(i) = sent.words(i).toLowerCase()
-        assert(lemmas(i).nonEmpty)
-      }
-      sent.lemmas = Some(lemmas)
-    }
   }
 
   /** Lematization; modifies the document in place */

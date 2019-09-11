@@ -39,6 +39,14 @@ class TaskManager(config:Config) extends Configured {
   def taskCount:Int = tasks.length
   def indices: Range = tasks.indices
 
+  def greedyInferences:Array[Boolean] = {
+    val infs = new Array[Boolean](taskCount)
+    for(tid <- tasks.indices) {
+      infs(tid) = tasks(tid).greedyInference
+    }
+    infs
+  }
+
   /** Construct training shards by interleaving shards from all tasks */
   private def mkShards():Array[Shard] = {
     val shardsByTasks = new Array[Array[Shard]](tasks.length)

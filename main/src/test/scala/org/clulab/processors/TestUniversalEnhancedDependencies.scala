@@ -6,6 +6,8 @@ import org.scalatest.{FlatSpec, Matchers}
 class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
   val proc = new CluProcessor()
 
+  // TODO: add back once we have a parser
+  /*
   "CluProcessor" should "parse some basic sentences correctly" in {
     var doc = proc.annotate("Ras1 is associated with cancer.")
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 0, "nsubjpass") should be(true)
@@ -119,4 +121,5 @@ class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 1, "dobj") should be(true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 3, "dobj") should be(false)
   }
+  */
 }

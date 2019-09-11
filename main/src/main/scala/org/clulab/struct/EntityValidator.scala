@@ -15,7 +15,7 @@ trait EntityValidator extends Serializable {
 
 /**
   * Any span is considered as a valid entity
-  * See org.clulab.processors.clu.bio.BioLexiconEntityValidator for a more complicated validator.
+  * See org.clulab.processors.bio.BioLexiconEntityValidator for a more complicated validator.
   */
 @SerialVersionUID(1000L)  
 class TrueEntityValidator extends EntityValidator {

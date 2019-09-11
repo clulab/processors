@@ -7,7 +7,7 @@ import org.clulab.struct.Internalizer
   * Date: 3/1/13
   *   Last Modified: Move preprocess* methods from here to ProcessorAnnotator.
   */
-trait Processor extends ProcessorAnnotator {
+trait Processor {
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization. */
   def mkDocument (text:String, keepText:Boolean = false): Document
@@ -56,7 +56,7 @@ trait Processor extends ProcessorAnnotator {
 
 
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
-  override def annotate (text:String, keepText:Boolean = false): Document = {
+  def annotate (text:String, keepText:Boolean = false): Document = {
     val doc = mkDocument(text, keepText)
     if (doc.sentences.nonEmpty)
       annotate(doc)
@@ -65,19 +65,17 @@ trait Processor extends ProcessorAnnotator {
   }
 
   /** Annotate the given sentences, specify whether to retain the text in the resultant Document. */
-  override def annotateFromSentences (
+  def annotateFromSentences (
     sentences:Iterable[String],
-    keepText:Boolean = false): Document =
-  {
+    keepText:Boolean = false): Document = {
     val doc = mkDocumentFromSentences(sentences, keepText)
     annotate(doc)
   }
 
   /** Annotate the given tokens, specify whether to retain the text in the resultant Document. */
-  override def annotateFromTokens (
+  def annotateFromTokens (
     sentences:Iterable[Iterable[String]],
-    keepText:Boolean = false): Document =
-  {
+    keepText:Boolean = false): Document = {
     val doc = mkDocumentFromTokens(sentences, keepText)
     annotate(doc)
   }

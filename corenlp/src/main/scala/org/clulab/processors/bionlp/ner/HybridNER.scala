@@ -19,8 +19,8 @@ import scala.collection.JavaConverters._
   * Last Modified: Update for Scala 2.12: java converters.
   */
 class HybridNER(withCRFNER:Boolean, withRuleNER:Boolean) {
-  lazy private val bioNer = CRFNER.load(CRF_MODEL_PATH)
-  lazy private val ruleNer = KBLoader.loadAll(fromSerializedModel = false)
+  lazy val bioNer = CRFNER.load(CRF_MODEL_PATH)
+  lazy val ruleNer = KBLoader.loadAll(fromSerializedModel = false)
 
   /** Runs the NER, and stores the output in place, in the .entities field in the sentences in the given Document */
   def recognizeNamedEntities(doc:Document, annotation:Option[Annotation]) {

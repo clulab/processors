@@ -43,6 +43,7 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("Tokenization is fine.")
   }
 
+  /*
   it should "POS tag correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
     proc.lemmatize(doc)
@@ -104,7 +105,9 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).lemmas.get(5) should be ("shop")
     println("Lemmatization is fine.")
   }
+  */
 
+  /*
   it should "parse text correctly" in {
     val doc = proc.annotate("John Doe went to China")
 
@@ -128,6 +131,7 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be (true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
   }
+  */
 
   /* // TODO
   it should "parse a long sentence correctly" in {

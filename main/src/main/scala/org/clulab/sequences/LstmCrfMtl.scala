@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, ModelLoader, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
@@ -24,14 +24,25 @@ import scala.util.Random
   * We use GloVe embeddings and learned character embeddings
   * @author Mihai
   */
-class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[LstmCrfMtlParameters] = None) {
+class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOpt: Option[LstmCrfMtlParameters] = None) {
   /** Stores the DyNet parameters required by all tasks */
   val model: LstmCrfMtlParameters = lstmCrfMtlParametersOpt.getOrElse(initialize())
 
-  // This taskManager might not be suitable for the model.
-  require(taskManager.taskCount == model.taskCount)
+  if(taskManagerOpt.isDefined) {
+    // This taskManager might not be suitable for the model.
+    require(taskManagerOpt.get.taskCount == model.taskCount)
+  }
+
+  // Use this carefully. That is, only when taskManagerOpt.isDefined
+  def taskManager: TaskManager = {
+    assert(taskManagerOpt.isDefined)
+    taskManagerOpt.get
+  }
 
   protected def initialize(): LstmCrfMtlParameters = {
+    // If we're here, we must have a task manager, because we will train and/or test all these tasks
+    require(taskManagerOpt.isDefined)
+
     val w2v = loadEmbeddings(Some(taskManager.docFreqFileName), taskManager.minWordFreq, taskManager.embeddingsFileName)
     val (w2i, c2i, t2is) = mkVocabs(w2v)
 
@@ -42,10 +53,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
       logger.debug(s"  ${t2is(i).size} entries for task ${taskManager.tasks(i).taskNumber}")
     }
 
-    // TODO Perhaps put this elsewhere, like in main.
-    logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    val model = LstmCrfMtlParameters.create(taskManager.taskCount, w2i, c2i, t2is, w2v)
+    val model = LstmCrfMtlParameters.create(taskManager.taskCount, w2i, c2i, t2is, w2v, taskManager.greedyInferences)
     logger.debug("Completed initialization.")
     model
   }
@@ -89,6 +97,8 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
   }
 
   def train(modelNamePrefix:String):Unit = {
+    require(taskManagerOpt.isDefined)
+
     val trainer = new RMSPropTrainer(model.parameters)
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -117,7 +127,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
         val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2is(taskId))
 
         var loss =
-          if(taskManager.tasks(taskId).greedyInference) {
+          if(model.greedyInference(taskId)) {
             // greedy loss
             sentenceLossGreedy(emissionScores, goldTagIds)
           }
@@ -174,6 +184,8 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
   }
 
   def test(): Unit = {
+    require(taskManagerOpt.isDefined)
+
     // check final performance on the test dataset
     for(taskId <- 0 until taskManager.taskCount) {
       val taskName = taskManager.tasks(taskId).taskName
@@ -223,11 +235,12 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
   }
 
   /**
-   * Predict the sequence tags that applies to the given sequence of words
+   * Predict the sequence tags that applies to the given sequence of words for one given task
+   * @param taskId: id of the current task to use
    * @param words The input words
    * @return The predicted sequence of tags
    */
-  def predict(taskId:Int, words:Array[String]):Array[String] = synchronized {
+  def predict(taskId:Int, words:Array[String]):Array[String] = {
     // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
     val emissionScores:Array[Array[Float]] = synchronized {
       ComputationGraph.renew()
@@ -235,7 +248,7 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
     }
 
     val tags = new ArrayBuffer[String]()
-    if(taskManager.tasks(taskId).greedyInference) {
+    if(model.greedyInference(taskId)) {
       val tagIds = greedyPredict(emissionScores)
       for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
     } else {
@@ -250,7 +263,43 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
   }
 
   /**
-   * Generates tag emission scores for the words in this sequence, stored as Expressions
+   * Predicts the sequence of tags that applies to the given sequence of words for ALL tasks
+   * @param words The input words
+   * @return The predicted sequence of tags for all tasks
+   */
+  def predictJointly(words:Array[String]): Array[Array[String]] = {
+    // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
+    val emissionScoresAllTasks:Array[Array[Array[Float]]] = synchronized {
+      ComputationGraph.renew()
+      emissionScoresToArraysAllTasks(emissionScoresAsExpressionsAllTasks(words, doDropout = false)) // these scores do not have softmax
+    }
+
+    // stores the sequence of best tags for ALL tasks
+    val tagsAllTasks = new Array[Array[String]](model.taskCount)
+
+    // generate the sequence of argmax tags for each task, using its own inference procedure
+    for(taskId <- 0 until model.taskCount) {
+      val tags = new ArrayBuffer[String]()
+      if(model.greedyInference(taskId)) {
+        val tagIds = greedyPredict(emissionScoresAllTasks(taskId))
+        for (tagId <- tagIds) tags += model.i2ts(taskId)(tagId)
+      } else {
+        val transitionMatrix: Array[Array[Float]] =
+          transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
+
+        val tagIds = viterbi(emissionScoresAllTasks(taskId), transitionMatrix,
+          model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
+        for (tagId <- tagIds) tags += model.i2ts(taskId)(tagId)
+      }
+
+      tagsAllTasks(taskId) = tags.toArray
+    }
+
+    tagsAllTasks
+  }
+
+  /**
+   * Generates tag emission scores for the words in this sequence, stored as Expressions, for one given task
    * @param words One training or testing sentence
    */
   def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
@@ -279,6 +328,44 @@ class LstmCrfMtl(val taskManager: TaskManager, lstmCrfMtlParametersOpt: Option[L
     emissionScores
   }
 
+  /**
+   * Generates tag emission scores for the words in this sequence, stored as Expressions, for all tasks
+   * @param words One training or testing sentence
+   * @return The scores for all tasks
+   */
+  def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
+    val embeddings = words.map(mkEmbedding)
+
+    // this is the biLSTM over words that is shared across all tasks
+    // we run this ONCE for all tasks!
+    val fwStates = transduce(embeddings, model.fwRnnBuilder)
+    val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
+    assert(fwStates.size == bwStates.length)
+    val states = concatenateStates(fwStates, bwStates).toArray
+    assert(states.length == words.length)
+
+    val emissionScoresAllTasks = new Array[ExpressionVector](model.taskCount)
+
+    // this is the feed forward network that is specific to each task
+    for(taskId <- 0 until model.taskCount) {
+      val H = parameter(model.Hs(taskId))
+      val O = parameter(model.Os(taskId))
+
+      val emissionScores = new ExpressionVector()
+      for (s <- states) {
+        var l1 = Expression.tanh(H * s)
+        if (doDropout) {
+          l1 = Expression.dropout(l1, DROPOUT_PROB)
+        }
+        emissionScores.add(O * l1)
+      }
+
+      emissionScoresAllTasks(taskId) = emissionScores
+    }
+
+    emissionScoresAllTasks
+  }
+
   /** Creates an overall word embedding by concatenating word and character embeddings */
   def mkEmbedding(word: String):Expression =
     LstmUtils.mkWordEmbedding(word,
@@ -303,7 +390,8 @@ class LstmCrfMtlParameters(
   val charBwRnnBuilder:RnnBuilder,
   val Hs:Array[Parameter], // one per task
   val Os:Array[Parameter], // one per task
-  val Ts:Array[LookupParameter]) { // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
+  val Ts:Array[LookupParameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
+  val greedyInference:Array[Boolean]) {
 
   val taskCount: Int = t2is.length
   val indices: Range = t2is.indices
@@ -375,6 +463,9 @@ class LstmCrfMtlParameters(
       LstmUtils.save(printWriter, w2i, "w2i")
       LstmUtils.save(printWriter, c2i, "c2i")
       LstmUtils.save(printWriter, taskCount, "taskCount")
+
+      LstmUtils.save(printWriter, greedyInference, "greedyInference")
+
       t2is.zipWithIndex.foreach { case (t2i, index) =>
         LstmUtils.save(printWriter, t2i, s"t2i($index)")
       }
@@ -396,28 +487,33 @@ object LstmCrfMtlParameters {
   def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
   def load(baseFilename: String): LstmCrfMtlParameters = {
+    logger.debug(s"Loading MTL model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
-    val (taskCount, w2i, c2i, t2is, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+    val (taskCount, w2i, c2i, t2is, dim, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
       val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
+      val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
       val lines = source.getLines()
       val w2i = byLineStringMapBuilder.build(lines)
       val c2i = byLineCharMapBuilder.build(lines)
       val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
+      val greedyInferences:Array[Boolean] = byLineArrayBuilder.build(lines).map(_.toBoolean)
       val t2is = 0.until(taskCount).map { _ =>
         byLineStringMapBuilder.build(lines)
       }.toArray
       val dim = new LstmUtils.ByLineIntBuilder().build(lines)
 
-      (taskCount, w2i, c2i, t2is, dim)
+      (taskCount, w2i, c2i, t2is, dim, greedyInferences)
     }
+
     val model = {
-      val model = mkParams(taskCount, w2i, c2i, t2is, dim)
-      new ModelLoader(dynetFilename).populateModel(model.parameters, "/all")
+      val model = mkParams(taskCount, w2i, c2i, t2is, dim, greedyInferences)
+      LstmUtils.loadParameters(dynetFilename, model.parameters)
       model
     }
 
+    logger.debug("MTL loading complete.")
     model
   }
 
@@ -425,7 +521,8 @@ object LstmCrfMtlParameters {
       w2i: Map[String, Int],
       c2i: Map[Char, Int],
       t2is: Array[Map[String, Int]],
-      embeddingDim: Int): LstmCrfMtlParameters = {
+      embeddingDim: Int,
+      greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
     val parameters = new ParameterCollection()
 
     // These parameters correspond to the LSTM(s) shared by all tasks
@@ -455,15 +552,16 @@ object LstmCrfMtlParameters {
       parameters, lookupParameters,
       fwBuilder, bwBuilder,
       charLookupParameters, charFwBuilder, charBwBuilder,
-      Hs, Os, Ts)
+      Hs, Os, Ts, greedyInferences)
   }
 
   def create(taskCount: Int,
       w2i: Map[String, Int],
       c2i: Map[Char, Int],
       t2is: Array[Map[String, Int]],
-      w2v: Word2Vec): LstmCrfMtlParameters = {
-    val model = mkParams(taskCount, w2i, c2i, t2is, w2v.dimensions)
+      w2v: Word2Vec,
+      greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
+    val model = mkParams(taskCount, w2i, c2i, t2is, w2v.dimensions, greedyInferences)
 
     model.initializeEmbeddings(w2v)
     model.initializeTransitions()
@@ -479,34 +577,50 @@ object LstmCrfMtl {
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
-  def apply(baseFilename: String, taskManager: TaskManager): LstmCrfMtl = {
-    // make sure DyNet is initialized!
+  def initializeDyNet(): Unit = {
+    logger.debug("Initializing DyNet...")
     Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+    logger.debug("DyNet initialization complete.")
+  }
 
-    val model = LstmCrfMtlParameters.load(baseFilename)
-    val mtl = new LstmCrfMtl(taskManager, Some(model))
+  def apply(modelFilenamePrefix: String, taskManager: TaskManager): LstmCrfMtl = {
+    val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
+    val mtl = new LstmCrfMtl(Some(taskManager), Some(model))
+    mtl
+  }
 
+  def apply(modelFilenamePrefix: String): LstmCrfMtl = {
+    val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
+    val mtl = new LstmCrfMtl(None, Some(model))
     mtl
   }
 
   def main(args: Array[String]): Unit = {
-    //
-    // to set a custom config file add -Dconfig.file=/path/to/conf/file to the cmd line for sbt
-    //
-    val config = ConfigFactory.load()
-    val taskManager = new TaskManager(config)
-    val trainMode = true
+    val runMode = "train" // "train", "test", or "shell"
+    initializeDyNet()
+    val modelName = "mtl-en"
+    val configName = "mtl-en"
 
-    if(trainMode) {
-      val mtl = new LstmCrfMtl(taskManager)
-      mtl.train("mtl")
+    if(runMode == "train") {
+      val config = ConfigFactory.load(configName)
+      val taskManager = new TaskManager(config)
+
+      val mtl = new LstmCrfMtl(Some(taskManager))
+      mtl.train(modelName)
       // mtl.test()
-    } else {
+    } else if(runMode == "test") {
+      val config = ConfigFactory.load(configName)
+      val taskManager = new TaskManager(config)
+
       // load the model from disk and test again
-      val mtlFromDisk = LstmCrfMtl("mtl-final", taskManager)
+      val mtlFromDisk = LstmCrfMtl(modelName, taskManager)
       mtlFromDisk.test() // These results match the original ones exactly
 
-      //mtlFromDisk.save("mtl2") // These files match the original ones exactly
+      // mtlFromDisk.save("mtl2") // These files match the original ones exactly
+    } else if(runMode == "shell") {
+      val mtlFromDisk = LstmCrfMtl(modelName)
+      val sh = new MTLShell(mtlFromDisk)
+      sh.shell()
     }
   }
 }

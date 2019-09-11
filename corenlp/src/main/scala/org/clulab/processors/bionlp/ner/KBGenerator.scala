@@ -9,7 +9,6 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import org.clulab.processors.bionlp.BioNLPProcessor
-import org.clulab.processors.clu.BioCluProcessor
 import org.clulab.processors.clu.tokenizer.Tokenizer
 import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -31,7 +30,7 @@ object KBGenerator {
   val SPECIES_FIELD_NDX = 2                 // KB column containing the species of the name entity
 
   /** Minimal processor, used solely for the tokenization of resources */
-  lazy val tokenizer: Tokenizer = (new BioCluProcessor).tokenizer
+  lazy val tokenizer: Tokenizer = (new BioNLPProcessor).tokenizer
 
   def main (args: Array[String]) {
     val configFile = args(0)

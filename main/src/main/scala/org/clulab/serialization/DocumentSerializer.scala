@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
 import org.clulab.processors.DocumentAttachment
 import org.clulab.processors.DocumentAttachmentBuilderFromText
-import org.clulab.processors.{Document, RelationTriple, Sentence}
+import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
 
 /**
