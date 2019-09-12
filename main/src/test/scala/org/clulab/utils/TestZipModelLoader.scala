@@ -17,5 +17,6 @@ class TestZipModelLoader extends FlatSpec with Matchers {
     val modelName = "mtl-en"
     LstmCrfMtlParameters.load(modelName)
     // If something was wrong, it should have crashed by now.
+    assert(true)
   }
 }
