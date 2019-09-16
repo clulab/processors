@@ -100,6 +100,9 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     require(taskManagerOpt.isDefined)
 
     val trainer = new RMSPropTrainer(model.parameters)
+    trainer.clippingEnabled_=(true)
+    trainer.clipThreshold_=(LstmCrfMtlParameters.CLIP_THRESHOLD)
+
     var cummulativeLoss = 0.0
     var numTagged = 0
     var sentCount = 0
@@ -481,6 +484,7 @@ object LstmCrfMtlParameters {
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
+  val CLIP_THRESHOLD = 10.0f
 
   def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
 
