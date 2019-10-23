@@ -1,4 +1,4 @@
-[![Build Status](http://jenkins.cs.arizona.edu:8090/buildStatus/icon?job=processors%2Fmaster)](http://jenkins.cs.arizona.edu:8090/job/processors)
+[![Build Status](http://jenkins.cs.arizona.edu:8090/buildStatus/icon?job=processors%2Fmaster)](http://jenkins.cs.arizona.edu:8090/job/processors) 
 
 # What is it?
 
