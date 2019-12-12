@@ -46,14 +46,20 @@ object CoreNLPUtils {
     processedWords
   }
 
-  def toDirectedGraph(sg:SemanticGraph, interning: (String) => String):DirectedGraph[String] = {
-    val edgeBuffer = new ListBuffer[Edge[String]]
+  def toDirectedGraph(sg:SemanticGraph, interning: (String) => String, debug:Boolean = false):DirectedGraph[String] = {
+    // this needs to be a set rather than a list because CoreNLP sometimes duplicates the enhanced deps it creates
+    val edgeBuffer = new mutable.HashSet[Edge[String]]
     for (edge <- sg.edgeIterable().asScala) {
       val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
       val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
       var label = edge.getRelation.getShortName
       val spec = edge.getRelation.getSpecific
       if (spec != null) label = label + "_" + spec
+
+      if(debug) {
+        println(s"Adding the following dependency: (${head - 1}, ${modifier - 1}, $label)")
+      }
+
       edgeBuffer += Edge(head - 1, modifier - 1, interning(label))
     }
 

@@ -1,2 +1,2 @@
 #!/bin/bash
-sbt 'run-main org.clulab.processors.ProcessorShell'
+sbt 'runMain org.clulab.processors.ProcessorShell'
