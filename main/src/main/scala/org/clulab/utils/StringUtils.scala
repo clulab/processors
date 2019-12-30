@@ -141,4 +141,12 @@ object StringUtils {
     sw.toString
   }
 
+  /** Generates the stem of a word, according to the Porter algorithm */
+  def porterStem(s:String): String = {
+    val ps = new PorterStemmer
+    val lowerS = s.toLowerCase()
+    ps.add(lowerS.toCharArray, lowerS.length)
+    ps.stem()
+    ps.toString
+  }
 }
