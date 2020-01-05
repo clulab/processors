@@ -13,30 +13,30 @@ import scala.collection.JavaConverters._
 trait Configured {
   def getConf:Config
 
-  protected def getArgBoolean (argPath: String, defaultValue: Option[Boolean]): Boolean =
+  def getArgBoolean (argPath: String, defaultValue: Option[Boolean]): Boolean =
     if (getConf.hasPath(argPath)) getConf.getBoolean(argPath)
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  protected def getArgInt (argPath: String, defaultValue: Option[Int]): Int =
+  def getArgInt (argPath: String, defaultValue: Option[Int]): Int =
     if (getConf.hasPath(argPath)) getConf.getInt(argPath)
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  protected def getArgFloat (argPath: String, defaultValue: Option[Float]): Float =
+  def getArgFloat (argPath: String, defaultValue: Option[Float]): Float =
     if (getConf.hasPath(argPath)) getConf.getDouble(argPath).toFloat
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  protected def getArgString (argPath: String, defaultValue: Option[String]): String =
+  def getArgString (argPath: String, defaultValue: Option[String]): String =
     if (getConf.hasPath(argPath)) getConf.getString(argPath)
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  protected def getArgStrings (argPath: String, defaultValue: Option[Seq[String]]): Seq[String] =
+  def getArgStrings (argPath: String, defaultValue: Option[Seq[String]]): Seq[String] =
     if (getConf.hasPath(argPath)) getConf.getStringList(argPath).asScala
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  protected def contains(argPath:String):Boolean = getConf.hasPath(argPath)
+  def contains(argPath:String):Boolean = getConf.hasPath(argPath)
 }

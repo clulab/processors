@@ -1,6 +1,6 @@
 package org.clulab.processors.clu
 
-import org.clulab.sequences.LstmCrfMtl
+import org.clulab.sequences.LstmUtils._
 import org.clulab.struct.DirectedGraphEdgeIterator
 import org.clulab.utils.Shell
 
@@ -13,7 +13,7 @@ class CluShell extends Shell {
   var proc: CluProcessor = _
 
   override def initialize(): Unit = {
-    LstmCrfMtl.initializeDyNet()
+    initializeDyNet()
     proc = new CluProcessor()
   }
 

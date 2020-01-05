@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
@@ -580,12 +580,6 @@ object LstmCrfMtl {
   val DO_DROPOUT = true
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
-
-  def initializeDyNet(): Unit = {
-    logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
-    logger.debug("DyNet initialization complete.")
-  }
 
   def apply(modelFilenamePrefix: String, taskManager: TaskManager): LstmCrfMtl = {
     val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
