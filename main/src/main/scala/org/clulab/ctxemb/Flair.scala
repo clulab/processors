@@ -7,10 +7,11 @@ import org.clulab.utils.Configured
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.io.Source
-import Flair._
-import edu.cmu.dynet.{Dim, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RMSPropTrainer, RnnBuilder}
 
 import scala.collection.mutable
+import Flair._
+import org.clulab.sequences.LstmCrf.logger
 
 /**
  * Implementation of the FLAIR language model
@@ -27,21 +28,59 @@ class Flair {
    */
   def train(trainFileName:String): Unit = {
     // build the set of known characters
-    val (knownChars, totalSentCount) = countCharacters(trainFileName)
-    model = mkParams(knownChars)
+    val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
+    val c2i = knownChars.toArray.zipWithIndex.toMap
+    val sentPct = totalSentCount / 100
+    model = mkParams(c2i)
+    val trainer = new RMSPropTrainer(model.parameters)
 
     // train the fw and bw character LSTMs on all sentences in training
     val source = Source.fromFile(trainFileName)
     var sentCount = 0
+    var fwCummulativeLoss = 0.0
+    var bwCummulativeLoss = 0.0
+    var numTagged = 0
     for(sentence <- source.getLines()) {
-      // TODO
+      ComputationGraph.renew()
+      val characters = sentence.toCharArray
+
+      //
+      // left-to-right prediction
+      //
+      val fwIn = Array(BOS_CHAR) ++ characters
+      val fwOut = toIds(characters ++ Array(EOS_CHAR), c2i)
+
+      // predict
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn)
+      val fwLoss = sentenceLossGreedy(fwEmissionScores, fwOut)
+      fwCummulativeLoss += fwLoss.value().toFloat
+
+      // backprop
+      ComputationGraph.backward(fwLoss)
+      trainer.update()
+
+      //
+      // right-to-left prediction
+      //
+      val reverse = characters.reverse
+      val bwIn = Array(EOS_CHAR) ++ reverse
+      val bwOut = toIds(reverse ++ Array(BOS_CHAR), c2i)
+
+      //
+      // reporting
+      //
       sentCount += 1
+      numTagged += characters.length + 1
+      if(sentCount % sentPct == 0) {
+        val pct = ((sentCount.toDouble * 100.0) / totalSentCount.toDouble).ceil.toInt
+        logger.debug(s"Processed $pct% of the data.")
+        logger.info("Forward cummulative loss: " + fwCummulativeLoss / numTagged)
+      }
     }
     source.close()
   }
 
-  protected def mkParams(knownChars:Set[Char]): FlairParameters = {
-    val c2i = knownChars.toArray.zipWithIndex.toMap
+  protected def mkParams(c2i:Map[Char, Int]): FlairParameters = {
     val i2c = fromIndexToChar(c2i)
 
     val parameters = new ParameterCollection()
@@ -53,7 +92,7 @@ class Flair {
       charLookupParameters, charFwBuilder, charBwBuilder)
   }
 
-  protected def countCharacters(trainFileName: String): (Set[Char], Int) = {
+  protected def generateKnownCharacters(trainFileName: String): (Set[Char], Int) = {
     logger.debug(s"Counting characters in file $trainFileName...")
     val counts = new Counter[Char]()
     val source = Source.fromFile(trainFileName)
@@ -79,7 +118,12 @@ class Flair {
     }
     logger.debug(s"Found ${knownChars.size} not unknown characters.")
     logger.debug(s"Known characters: ${knownChars.toSeq.sorted.mkString(", ")}")
-    knownChars += 0.toChar // we use 0 for UNK
+
+    // add the virtual characters we need
+    knownChars += UNKNOWN_CHAR
+    knownChars += BOS_CHAR
+    knownChars += EOS_CHAR
+
     (knownChars.toSet, sentCount)
   }
 }
@@ -106,6 +150,10 @@ object Flair {
   val CHAR_RNN_STATE_SIZE = 2048
   val CLIP_THRESHOLD = 10.0f
   val MIN_UNK_FREQ_RATIO = 0.000001
+
+  val UNKNOWN_CHAR = 0.toChar // placeholder for unknown characters
+  val BOS_CHAR = 1.toChar // virtual character indicating beginning of sentence
+  val EOS_CHAR = 2.toChar // virtual character indicating end of sentence
 
   def main(args: Array[String]): Unit = {
     initializeDyNet()

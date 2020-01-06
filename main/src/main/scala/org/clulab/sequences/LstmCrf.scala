@@ -103,7 +103,7 @@ class LstmCrf protected(val greedyInference: Boolean, initializationParamsOpt: O
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence
-        val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2i)
+        val goldTagIds = toIds(sentence.map(_.getTag), model.t2i)
 
         val loss =
           if(greedyInference) {

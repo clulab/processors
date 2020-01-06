@@ -236,7 +236,7 @@ object LstmUtils {
     total
   }
 
-  def toTagIds(tags: Array[String], t2i:Map[String, Int]):Array[Int] = {
+  def toIds[T](tags: Array[T], t2i:Map[T, Int]):Array[Int] = {
     val ids = new ArrayBuffer[Int]()
     for(tag <- tags) {
       ids += t2i(tag)

@@ -127,7 +127,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         val emissionScores = emissionScoresAsExpressions(words, taskId, doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence
-        val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2is(taskId))
+        val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
 
         var loss =
           if(model.greedyInference(taskId)) {
