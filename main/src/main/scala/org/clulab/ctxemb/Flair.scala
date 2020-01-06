@@ -23,7 +23,7 @@ class Flair {
    * @param trainFileName
    */
   def train(trainFileName:String): Unit = {
-    val charCounts = countCharacters(trainFileName)
+    val knownChars = countCharacters(trainFileName)
   }
 
   protected def countCharacters(trainFileName: String): Set[Char] = {
