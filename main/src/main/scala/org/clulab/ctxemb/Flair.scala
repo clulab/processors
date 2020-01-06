@@ -7,8 +7,9 @@ import org.clulab.utils.Configured
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.io.Source
-
 import Flair._
+
+import scala.collection.mutable
 
 /**
  * Implementation of the FLAIR language model
@@ -25,7 +26,7 @@ class Flair {
     val charCounts = countCharacters(trainFileName)
   }
 
-  protected def countCharacters(trainFileName: String): Counter[Char] = {
+  protected def countCharacters(trainFileName: String): Set[Char] = {
     logger.debug(s"Counting characters in file $trainFileName...")
     val counts = new Counter[Char]()
     val source = Source.fromFile(trainFileName)
@@ -37,11 +38,19 @@ class Flair {
     source.close()
     logger.debug("Counting completed.")
     logger.debug(s"Found ${counts.size} characters.")
-    val sortedChars = counts.toSeq.sortBy(- _._2)
-    for(c <- sortedChars) {
-      println(s"[${c._1}] ${c._2}")
+    var totalCounts = 0.0
+    for(c <- counts.keySet) {
+      totalCounts += counts.getCount(c)
     }
-    counts
+    val knownChars = new mutable.HashSet[Char]()
+    for(c <- counts.keySet) {
+      if(counts.getCount(c) > totalCounts * MIN_UNK_FREQ_RATIO) {
+        knownChars += c
+      }
+    }
+    logger.debug(s"Found ${knownChars.size} not unknown characters.")
+    logger.debug(s"Known characters: ${knownChars.toSeq.sorted.mkString(", ")}")
+    knownChars.toSet
   }
 }
 
@@ -51,6 +60,8 @@ class FlairConfig(config:Config) extends Configured {
 
 object Flair {
   private val logger:Logger = LoggerFactory.getLogger(classOf[Flair])
+
+  val MIN_UNK_FREQ_RATIO = 0.000001
 
   def main(args: Array[String]): Unit = {
     initializeDyNet()
