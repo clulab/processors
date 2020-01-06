@@ -102,7 +102,7 @@ object Flair {
   private val logger:Logger = LoggerFactory.getLogger(classOf[Flair])
 
   val CHAR_RNN_LAYERS = 1
-  val CHAR_EMBEDDING_SIZE = 64 // TODO
+  val CHAR_EMBEDDING_SIZE = 100
   val CHAR_RNN_STATE_SIZE = 2048
   val CLIP_THRESHOLD = 10.0f
   val MIN_UNK_FREQ_RATIO = 0.000001
