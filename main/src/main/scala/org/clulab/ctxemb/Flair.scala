@@ -8,6 +8,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.io.Source
 import Flair._
+import edu.cmu.dynet.{Dim, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
 
 import scala.collection.mutable
 
@@ -16,6 +17,8 @@ import scala.collection.mutable
  */
 class Flair {
 
+  var model:FlairParameters = _
+
   /**
    * Trains the LM from the text in this file
    * The file must contain a sentence per line,
@@ -23,17 +26,43 @@ class Flair {
    * @param trainFileName
    */
   def train(trainFileName:String): Unit = {
-    val knownChars = countCharacters(trainFileName)
+    // build the set of known characters
+    val (knownChars, totalSentCount) = countCharacters(trainFileName)
+    model = mkParams(knownChars)
+
+    // train the fw and bw character LSTMs on all sentences in training
+    val source = Source.fromFile(trainFileName)
+    var sentCount = 0
+    for(sentence <- source.getLines()) {
+      // TODO
+      sentCount += 1
+    }
+    source.close()
   }
 
-  protected def countCharacters(trainFileName: String): Set[Char] = {
+  protected def mkParams(knownChars:Set[Char]): FlairParameters = {
+    val c2i = knownChars.toArray.zipWithIndex.toMap
+    val i2c = fromIndexToChar(c2i)
+
+    val parameters = new ParameterCollection()
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
+    val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+
+    new FlairParameters(c2i, i2c, parameters,
+      charLookupParameters, charFwBuilder, charBwBuilder)
+  }
+
+  protected def countCharacters(trainFileName: String): (Set[Char], Int) = {
     logger.debug(s"Counting characters in file $trainFileName...")
     val counts = new Counter[Char]()
     val source = Source.fromFile(trainFileName)
+    var sentCount = 0
     for(line <- source.getLines()) {
       for(c <- line.toCharArray) {
         counts.incrementCount(c)
       }
+      sentCount += 1
     }
     source.close()
     logger.debug("Counting completed.")
@@ -50,7 +79,8 @@ class Flair {
     }
     logger.debug(s"Found ${knownChars.size} not unknown characters.")
     logger.debug(s"Known characters: ${knownChars.toSeq.sorted.mkString(", ")}")
-    knownChars.toSet
+    knownChars += 0.toChar // we use 0 for UNK
+    (knownChars.toSet, sentCount)
   }
 }
 
@@ -58,9 +88,23 @@ class FlairConfig(config:Config) extends Configured {
   override def getConf: Config = config
 }
 
+class FlairParameters (
+  val c2i: Map[Char, Int],
+  val i2c: Array[Char],
+  val parameters: ParameterCollection,
+  val charLookupParameters: LookupParameter,
+  val charFwRnnBuilder: RnnBuilder,
+  val charBwRnnBuilder: RnnBuilder) {
+
+}
+
 object Flair {
   private val logger:Logger = LoggerFactory.getLogger(classOf[Flair])
 
+  val CHAR_RNN_LAYERS = 1
+  val CHAR_EMBEDDING_SIZE = 64 // TODO
+  val CHAR_RNN_STATE_SIZE = 2048
+  val CLIP_THRESHOLD = 10.0f
   val MIN_UNK_FREQ_RATIO = 0.000001
 
   def main(args: Array[String]): Unit = {

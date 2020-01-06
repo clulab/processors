@@ -87,6 +87,21 @@ object LstmUtils {
     i2s
   }
 
+  def fromIndexToChar(s2i: Map[Char, Int]):Array[Char] = {
+    var max = Int.MinValue
+    for(v <- s2i.values) {
+      if(v > max) {
+        max = v
+      }
+    }
+    assert(max > 0)
+    val i2s = new Array[Char](max + 1)
+    for(k <- s2i.keySet) {
+      i2s(s2i(k)) = k
+    }
+    i2s
+  }
+
   /**
    * Initializes the transition matrix for a tagset of size size
    * T[i, j] stores a transition *to* i *from* j
