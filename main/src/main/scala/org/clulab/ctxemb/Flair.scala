@@ -86,7 +86,7 @@ class Flair {
       //
       sentCount += 1
       numTagged += characters.length + 1
-      if(sentCount % 100 == 0) {
+      if(sentCount % 1000 == 0) {
         // val pct = ((sentCount.toDouble * 100.0) / totalSentCount.toDouble).ceil.toInt
         logger.debug(s"Processed $sentCount sentences.")
         logger.info("Forward cummulative loss: " + fwCummulativeLoss / numTagged)
