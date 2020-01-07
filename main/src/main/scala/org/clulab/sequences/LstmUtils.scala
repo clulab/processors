@@ -615,6 +615,10 @@ object LstmUtils {
         throw new RuntimeException(s"ERROR: cannot locate the model file $dynetFilename with protocol $protocol!")
     }
   }
+
+  def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
+
+  def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 }
 
 class LstmUtils

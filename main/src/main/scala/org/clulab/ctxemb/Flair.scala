@@ -3,7 +3,7 @@ package org.clulab.ctxemb
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.sequences.LstmUtils._
 import org.clulab.struct.Counter
-import org.clulab.utils.Configured
+import org.clulab.utils.{Configured, Serializer}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.io.Source
@@ -12,7 +12,9 @@ import edu.cmu.dynet.Expression._
 
 import scala.collection.mutable
 import Flair._
-import org.clulab.sequences.LstmCrf.logger
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.sequences.LstmUtils
 
 /**
  * Implementation of the FLAIR language model
@@ -71,20 +73,27 @@ class Flair {
       val bwOut = toIds(reverse ++ Array(BOS_CHAR), c2i)
 
       // predict
-      // TODO
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO)
+      val bwLoss = sentenceLossGreedy(bwEmissionScores, bwOut)
+      bwCummulativeLoss += bwLoss.value().toFloat
 
       // backprop
-      // TODO
+      ComputationGraph.backward(bwLoss)
+      trainer.update()
 
       //
       // reporting
       //
       sentCount += 1
       numTagged += characters.length + 1
-      if(sentCount % sentPct == 0) {
-        val pct = ((sentCount.toDouble * 100.0) / totalSentCount.toDouble).ceil.toInt
-        logger.debug(s"Processed $pct% of the data.")
+      if(sentCount % 100 == 0) {
+        // val pct = ((sentCount.toDouble * 100.0) / totalSentCount.toDouble).ceil.toInt
+        logger.debug(s"Processed $sentCount sentences.")
         logger.info("Forward cummulative loss: " + fwCummulativeLoss / numTagged)
+        logger.info("Backward cummulative loss: " + bwCummulativeLoss / numTagged)
+
+        val baseModelName = s"flair_s${sentCount}"
+        model.save(baseModelName)
       }
     }
     source.close()
@@ -134,8 +143,8 @@ class Flair {
 
     val parameters = new ParameterCollection()
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-    val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-    val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
     val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
     val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
@@ -195,6 +204,22 @@ class FlairParameters (
   val fwO: Parameter,
   val bwO: Parameter) {
 
+  def save(modelFilename: String): Unit = {
+    val dynetFilename = mkDynetFilename(modelFilename)
+    val x2iFilename = mkX2iFilename(modelFilename)
+
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(parameters, "/all")
+    }
+
+    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
+      val dim = charLookupParameters.dim().get(0)
+
+      LstmUtils.save(printWriter, c2i, "c2i")
+      LstmUtils.save(printWriter, dim, "dim")
+    }
+
+  }
 }
 
 object Flair {
@@ -202,7 +227,7 @@ object Flair {
 
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 100
-  val CHAR_RNN_STATE_SIZE = 2048
+  val CHAR_RNN_STATE_SIZE = 1024
   val CLIP_THRESHOLD = 10.0f
   val MIN_UNK_FREQ_RATIO = 0.000001
 
