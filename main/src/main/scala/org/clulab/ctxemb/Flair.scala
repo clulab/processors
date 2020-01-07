@@ -7,7 +7,8 @@ import org.clulab.utils.Configured
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.io.Source
-import edu.cmu.dynet.{ComputationGraph, Dim, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet._
+import edu.cmu.dynet.Expression._
 
 import scala.collection.mutable
 import Flair._
@@ -24,13 +25,15 @@ class Flair {
    * Trains the LM from the text in this file
    * The file must contain a sentence per line,
    *   with the white spaces between tokens normalized to a single space
-   * @param trainFileName
+   * @param trainFileName The name of the file with training sentences
    */
   def train(trainFileName:String): Unit = {
     // build the set of known characters
     val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
     val c2i = knownChars.toArray.zipWithIndex.toMap
     val sentPct = totalSentCount / 100
+
+    // initialize model and optimizer
     model = mkParams(c2i)
     val trainer = new RMSPropTrainer(model.parameters)
 
@@ -43,6 +46,7 @@ class Flair {
     for(sentence <- source.getLines()) {
       ComputationGraph.renew()
       val characters = sentence.toCharArray
+      replaceUnks(characters)
 
       //
       // left-to-right prediction
@@ -51,7 +55,7 @@ class Flair {
       val fwOut = toIds(characters ++ Array(EOS_CHAR), c2i)
 
       // predict
-      val fwEmissionScores = emissionScoresAsExpressions(fwIn)
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO)
       val fwLoss = sentenceLossGreedy(fwEmissionScores, fwOut)
       fwCummulativeLoss += fwLoss.value().toFloat
 
@@ -65,6 +69,12 @@ class Flair {
       val reverse = characters.reverse
       val bwIn = Array(EOS_CHAR) ++ reverse
       val bwOut = toIds(reverse ++ Array(BOS_CHAR), c2i)
+
+      // predict
+      // TODO
+
+      // backprop
+      // TODO
 
       //
       // reporting
@@ -80,6 +90,45 @@ class Flair {
     source.close()
   }
 
+  def replaceUnks(chars: Array[Char]): Unit = {
+    for(i <- chars.indices) {
+      if(! model.c2i.contains(chars(i))) {
+        chars(i) = UNKNOWN_CHAR
+      }
+    }
+  }
+
+  def emissionScoresAsExpressions(chars: Array[Char],
+                                  rnnBuilder: RnnBuilder,
+                                  pO:Parameter,
+                                  doDropout:Boolean = false): ExpressionVector = {
+    val embeddings = chars.map(mkEmbedding)
+
+    val states = transduce(embeddings, rnnBuilder)
+    // TODO: add dropout
+
+    val O = parameter(pO)
+    val emissionScores = new ExpressionVector()
+    for(s <- states) {
+      emissionScores.add(O * s)
+    }
+
+    emissionScores
+  }
+
+  def mkEmbedding(c:Char): Expression = {
+    val charEmbedding =
+      if(model.c2i.contains(c))
+        // found the character in the known vocabulary
+        lookup(model.charLookupParameters, model.c2i(c))
+      else {
+        // not found; return the embedding at position 0, which is reserved for unknown words
+        lookup(model.charLookupParameters, UNKNOWN_CHAR)
+      }
+
+    charEmbedding
+  }
+
   protected def mkParams(c2i:Map[Char, Int]): FlairParameters = {
     val i2c = fromIndexToChar(c2i)
 
@@ -88,8 +137,12 @@ class Flair {
     val charFwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
+    val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+    val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+
     new FlairParameters(c2i, i2c, parameters,
-      charLookupParameters, charFwBuilder, charBwBuilder)
+      charLookupParameters, charFwBuilder, charBwBuilder,
+      fwO, bwO)
   }
 
   protected def generateKnownCharacters(trainFileName: String): (Set[Char], Int) = {
@@ -138,7 +191,9 @@ class FlairParameters (
   val parameters: ParameterCollection,
   val charLookupParameters: LookupParameter,
   val charFwRnnBuilder: RnnBuilder,
-  val charBwRnnBuilder: RnnBuilder) {
+  val charBwRnnBuilder: RnnBuilder,
+  val fwO: Parameter,
+  val bwO: Parameter) {
 
 }
 
@@ -151,9 +206,9 @@ object Flair {
   val CLIP_THRESHOLD = 10.0f
   val MIN_UNK_FREQ_RATIO = 0.000001
 
-  val UNKNOWN_CHAR = 0.toChar // placeholder for unknown characters
-  val BOS_CHAR = 1.toChar // virtual character indicating beginning of sentence
-  val EOS_CHAR = 2.toChar // virtual character indicating end of sentence
+  val UNKNOWN_CHAR:Char = 0.toChar // placeholder for unknown characters
+  val BOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
+  val EOS_CHAR:Char = 2.toChar // virtual character indicating end of sentence
 
   def main(args: Array[String]): Unit = {
     initializeDyNet()
