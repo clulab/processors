@@ -464,6 +464,15 @@ object LstmUtils {
     printWriter.println() // Separator
   }
 
+  def saveCharMap(printWriter: PrintWriter, values: Map[Char, Int], comment: String): Unit = {
+    printWriter.println("# " + comment)
+    // Sort these so that the same file always results, even it this is slow.
+    values.toSeq.sorted.foreach { case (key, value) =>
+      printWriter.println(s"${key.toInt}\t$value") // save characters as int, to store the unprintable ones correctly
+    }
+    printWriter.println() // Separator
+  }
+
   def save[T](printWriter: PrintWriter, values: Array[T], comment: String): Unit = {
     printWriter.println("# " + comment)
     values.foreach(printWriter.println)

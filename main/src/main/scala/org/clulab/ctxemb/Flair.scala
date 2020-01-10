@@ -16,6 +16,8 @@ import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmUtils
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
  * Implementation of the FLAIR language model
  */
@@ -49,18 +51,25 @@ class Flair {
     var numTagged = 0
     for(sentence <- source.getLines()) {
       ComputationGraph.renew()
-      val characters = sentence.toCharArray
-      replaceUnks(characters)
+
+      val charBuffer = new ArrayBuffer[Char]()
+      for(i <- sentence.indices) {
+        val c = sentence.charAt(i)
+        if(model.c2i.contains(c))
+          charBuffer += c
+        else
+          charBuffer += UNKNOWN_CHAR
+      }
+      val characters = charBuffer.toArray
 
       //
       // left-to-right prediction
       //
-      val fwIn = Array(BOS_CHAR) ++ characters
-      val fwOut = toIds(characters ++ Array(EOS_CHAR), c2i)
+      val fwIn = characters
 
       // predict
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO)
-      val fwLoss = sentenceLossGreedy(fwEmissionScores, fwOut)
+      val fwLoss = languageModelLoss(fwEmissionScores, fwIn, backward = false)
       fwCummulativeLoss += fwLoss.value().toFloat
 
       // backprop
@@ -70,13 +79,11 @@ class Flair {
       //
       // right-to-left prediction
       //
-      val reverse = characters.reverse
-      val bwIn = Array(EOS_CHAR) ++ reverse
-      val bwOut = toIds(reverse ++ Array(BOS_CHAR), c2i)
+      val bwIn = characters.reverse
 
       // predict
       val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO)
-      val bwLoss = sentenceLossGreedy(bwEmissionScores, bwOut)
+      val bwLoss = languageModelLoss(bwEmissionScores, bwIn, backward = true)
       bwCummulativeLoss += bwLoss.value().toFloat
 
       // backprop
@@ -101,12 +108,30 @@ class Flair {
     source.close()
   }
 
-  def replaceUnks(chars: Array[Char]): Unit = {
-    for(i <- chars.indices) {
-      if(! model.c2i.contains(chars(i))) {
-        chars(i) = UNKNOWN_CHAR
-      }
+  /** Greedy loss function, ignoring transition scores */
+  def languageModelLoss(emissionScoresForSeq:ExpressionVector,
+                        characters:Array[Char],
+                        backward:Boolean): Expression = {
+
+    val goldLosses = new ExpressionVector()
+
+    for(i <- emissionScoresForSeq.indices) {
+      // gold tag for char at position i
+      val goldTid = model.c2i(
+        if(! backward) {
+          if(i < characters.length - 1) characters(i + 1)
+          else EOS_CHAR
+        } else {
+          if(i > 0) characters(i - 1)
+          else BOS_CHAR
+        }
+      )
+
+      // emissionScoresForSeq(i) = all tag emission scores for the word at position i
+      goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
     }
+
+    sum(goldLosses)
   }
 
   def emissionScoresAsExpressions(chars: Array[Char],
@@ -217,7 +242,7 @@ class FlairParameters (
     Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
       val dim = charLookupParameters.dim().get(0)
 
-      LstmUtils.save(printWriter, c2i, "c2i")
+      LstmUtils.saveCharMap(printWriter, c2i, "c2i")
       LstmUtils.save(printWriter, dim, "dim")
     }
 
