@@ -38,6 +38,8 @@ class Flair {
     // initialize model and optimizer
     model = mkParams(c2i)
     val trainer = new RMSPropTrainer(model.parameters)
+    trainer.clippingEnabled_=(true)
+    trainer.clipThreshold_=(CLIP_THRESHOLD)
 
     // train the fw and bw character LSTMs on all sentences in training
     val source = Source.fromFile(trainFileName)
@@ -92,7 +94,7 @@ class Flair {
         logger.info("Forward cummulative loss: " + fwCummulativeLoss / numTagged)
         logger.info("Backward cummulative loss: " + bwCummulativeLoss / numTagged)
 
-        val baseModelName = s"flair_s${sentCount}"
+        val baseModelName = s"flair_s$sentCount"
         model.save(baseModelName)
       }
     }
@@ -209,7 +211,7 @@ class FlairParameters (
     val x2iFilename = mkX2iFilename(modelFilename)
 
     new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
-      modelSaver.addModel(parameters, "/all")
+      modelSaver.addModel(parameters, "/flair")
     }
 
     Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
