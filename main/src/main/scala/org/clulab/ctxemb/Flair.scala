@@ -119,10 +119,10 @@ class Flair {
       // gold tag for char at position i
       val goldTid = model.c2i(
         if(! backward) {
-          if(i < characters.length - 1) characters(i + 1)
+          if(i < characters.length - 1) characters(i + 1) // the next character if forward LM
           else EOS_CHAR
         } else {
-          if(i > 0) characters(i - 1)
+          if(i > 0) characters(i - 1) // the previous character if backward LM
           else BOS_CHAR
         }
       )
