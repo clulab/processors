@@ -46,8 +46,7 @@ class Flair {
     // train the fw and bw character LSTMs on all sentences in training
     val source = Source.fromFile(trainFileName)
     var sentCount = 0
-    var fwCummulativeLoss = 0.0
-    var bwCummulativeLoss = 0.0
+    var cummulativeLoss = 0.0
     var numTagged = 0
     for(sentence <- source.getLines()) {
       ComputationGraph.renew()
@@ -66,28 +65,23 @@ class Flair {
       // left-to-right prediction
       //
       val fwIn = characters
-
-      // predict
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO)
       val fwLoss = languageModelLoss(fwEmissionScores, fwIn, backward = false)
-      fwCummulativeLoss += fwLoss.value().toFloat
-
-      // backprop
-      ComputationGraph.backward(fwLoss)
-      trainer.update()
 
       //
       // right-to-left prediction
       //
       val bwIn = characters.reverse
-
-      // predict
       val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO)
       val bwLoss = languageModelLoss(bwEmissionScores, bwIn, backward = true)
-      bwCummulativeLoss += bwLoss.value().toFloat
 
+      //
       // backprop
-      ComputationGraph.backward(bwLoss)
+      // we do this over the batch of two instances (fwd and bwd)
+      //
+      val comboLoss = (fwLoss + bwLoss) / 2
+      cummulativeLoss += comboLoss.value().toFloat()
+      ComputationGraph.backward(comboLoss)
       trainer.update()
 
       //
@@ -97,10 +91,7 @@ class Flair {
       numTagged += characters.length + 1
       if(sentCount % 1000 == 0) {
         // val pct = ((sentCount.toDouble * 100.0) / totalSentCount.toDouble).ceil.toInt
-        logger.debug(s"Processed $sentCount sentences.")
-        logger.info("Forward cummulative loss: " + fwCummulativeLoss / numTagged)
-        logger.info("Backward cummulative loss: " + bwCummulativeLoss / numTagged)
-
+        logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
         val baseModelName = s"flair_s$sentCount"
         model.save(baseModelName)
       }
