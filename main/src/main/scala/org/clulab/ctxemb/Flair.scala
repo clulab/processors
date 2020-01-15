@@ -39,7 +39,7 @@ class Flair {
 
     // initialize model and optimizer
     model = mkParams(c2i)
-    val trainer = new RMSPropTrainer(model.parameters)
+    val trainer = new SimpleSGDTrainer(model.parameters) // RMSPropTrainer(model.parameters)
     trainer.clippingEnabled_=(true)
     trainer.clipThreshold_=(CLIP_THRESHOLD)
 
@@ -92,8 +92,13 @@ class Flair {
       if(sentCount % 1000 == 0) {
         // val pct = ((sentCount.toDouble * 100.0) / totalSentCount.toDouble).ceil.toInt
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
+
+	if(sentCount % 50000 == 0){
         val baseModelName = s"flair_s$sentCount"
         model.save(baseModelName)
+	}
+
+	System.gc()
       }
     }
     source.close()
@@ -246,7 +251,7 @@ object Flair {
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 100
   val CHAR_RNN_STATE_SIZE = 1024
-  val CLIP_THRESHOLD = 10.0f
+  val CLIP_THRESHOLD = 5.0f
   val MIN_UNK_FREQ_RATIO = 0.000001
 
   val UNKNOWN_CHAR:Char = 0.toChar // placeholder for unknown characters
