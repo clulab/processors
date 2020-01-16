@@ -13,11 +13,13 @@ import scala.collection.mutable
  *
  * @author Mihai
  */
-class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
+class LemmatizeEmbeddings(// val frequencyFile:String,
+                          val embeddingFile:String) {
 
-  val frequencies = loadFreqFile()
+  //val frequencies = loadFreqFile()
   val wordEmbeddings = loadEmbeddings()
 
+  /*
   def loadFreqFile(): Map[String, Double] = {
     val f = new mutable.HashMap[String, Double]()
     for(line <- io.Source.fromFile(frequencyFile).getLines()) {
@@ -30,6 +32,7 @@ class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
     println(s"Loaded frequencies for ${f.keySet.size} words.")
     f.toMap
   }
+  */
 
   def loadEmbeddings(): Map[String, Array[Double]] = {
     val e = new mutable.HashMap[String, Array[Double]]()
@@ -41,6 +44,7 @@ class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
       for(i <- 1 until toks.length) {
         vector(i - 1) = toks(i).toDouble
       }
+      println(s"Loaded embedding for ${word}")
       e += word -> vector
     }
     println(s"Loaded embeddings for ${e.keySet.size} words.")
@@ -58,6 +62,7 @@ class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
       //val weight = frequencies.getOrElse(word.toLowerCase(), 1.0)
       //if(! frequencies.contains(word.toLowerCase())) totalUnk += 1
       //multiply(vector, weight)
+      println(s"[$word] lemmatized to [$lemma]")
       add(ne, lemma, vector)
       totalWeights.incrementCount(lemma) // weight)
     }
@@ -105,15 +110,15 @@ class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
 
 object LemmatizeEmbeddings {
   def main(args: Array[String]): Unit = {
-    val freqFile = args(0)
-    val embedFile = args(1)
+    //val freqFile = args(0)
+    val embedFile = args(0)
     val outputFile = embedFile + "_lemmas"
 
-    val le = new LemmatizeEmbeddings(freqFile, embedFile)
+    val le = new LemmatizeEmbeddings(embedFile)
     val lemmaEmbeddings = le.lemmatize()
 
     val pw = new PrintWriter(outputFile)
-    for(lemma <- lemmaEmbeddings.keySet.toList.sorted) {
+    for(lemma <- lemmaEmbeddings.keySet) {
       pw.print(lemma)
       val v = lemmaEmbeddings(lemma)
       for(i <- v.indices) {
