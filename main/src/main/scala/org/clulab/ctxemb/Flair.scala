@@ -38,7 +38,7 @@ class Flair {
 
     // initialize model and optimizer
     model = mkParams(c2i)
-    val trainer = new SimpleSGDTrainer(model.parameters) // RMSPropTrainer(model.parameters)
+    val trainer = new RMSPropTrainer(model.parameters)
     trainer.clippingEnabled_=(true)
     trainer.clipThreshold_=(CLIP_THRESHOLD)
 
