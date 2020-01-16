@@ -85,9 +85,9 @@ class Flair {
       try {
         trainer.update()
       } catch {
-        case exception: RuntimeException if
-        exception.getMessage.startsWith("Magnitude of gradient is bad") =>
+        case exception: RuntimeException =>
           logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
+          logger.info("Trying to continue training...")
       }
 
       //
