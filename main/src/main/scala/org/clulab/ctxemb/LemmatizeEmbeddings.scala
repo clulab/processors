@@ -51,10 +51,12 @@ class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
     val lemmatizer = new EnglishLemmatizer
     val ne = new mutable.HashMap[String, Array[Double]]()
     val totalWeights = new Counter[String]()
+    var totalUnk = 0
     for(word <- wordEmbeddings.keySet) {
       val lemma = lemmatizer.lemmatizeWord(word)
       val vector = wordEmbeddings(word)
-      val weight = frequencies.getOrElse(word.toLowerCase(), 100.0)
+      val weight = frequencies.getOrElse(word.toLowerCase(), 1.0)
+      if(! frequencies.contains(word.toLowerCase())) totalUnk += 1
       multiply(vector, weight)
       add(ne, lemma, vector)
       totalWeights.incrementCount(lemma, weight)
@@ -66,6 +68,8 @@ class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
       val vector = ne(lemma)
       divide(vector, totalWeight)
     }
+
+    println(s"Processed ${wordEmbeddings.keySet.size} words, and found $totalUnk unknown words.")
 
     ne.toMap
   }
