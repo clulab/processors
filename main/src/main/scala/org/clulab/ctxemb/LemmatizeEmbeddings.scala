@@ -55,11 +55,11 @@ class LemmatizeEmbeddings(val frequencyFile:String, val embeddingFile:String) {
     for(word <- wordEmbeddings.keySet) {
       val lemma = lemmatizer.lemmatizeWord(word)
       val vector = wordEmbeddings(word)
-      val weight = frequencies.getOrElse(word.toLowerCase(), 1.0)
-      if(! frequencies.contains(word.toLowerCase())) totalUnk += 1
-      multiply(vector, weight)
+      //val weight = frequencies.getOrElse(word.toLowerCase(), 1.0)
+      //if(! frequencies.contains(word.toLowerCase())) totalUnk += 1
+      //multiply(vector, weight)
       add(ne, lemma, vector)
-      totalWeights.incrementCount(lemma, weight)
+      totalWeights.incrementCount(lemma) // weight)
     }
 
     // normalize
