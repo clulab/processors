@@ -13,26 +13,24 @@ import scala.collection.mutable
  *
  * @author Mihai
  */
-class LemmatizeEmbeddings(// val frequencyFile:String,
+class LemmatizeEmbeddings(val frequencyFile:String,
                           val embeddingFile:String) {
 
-  //val frequencies = loadFreqFile()
+  val frequencies = loadFreqFile()
   val wordEmbeddings = loadEmbeddings()
 
-  /*
   def loadFreqFile(): Map[String, Double] = {
     val f = new mutable.HashMap[String, Double]()
     for(line <- io.Source.fromFile(frequencyFile).getLines()) {
       val toks = line.split("\\s+")
       assert(toks.length == 2)
       val word = toks(0)
-      val freq = toks(1).toDouble / 10000.0 // to avoid overflows
+      val freq = toks(1).toDouble
       f += word -> freq
     }
     println(s"Loaded frequencies for ${f.keySet.size} words.")
     f.toMap
   }
-  */
 
   def loadEmbeddings(): Map[String, Array[Double]] = {
     val e = new mutable.HashMap[String, Array[Double]]()
@@ -44,7 +42,7 @@ class LemmatizeEmbeddings(// val frequencyFile:String,
       for(i <- 1 until toks.length) {
         vector(i - 1) = toks(i).toDouble
       }
-      println(s"Loaded embedding for ${word}")
+      //println(s"Loaded embedding for ${word}")
       e += word -> vector
     }
     println(s"Loaded embeddings for ${e.keySet.size} words.")
@@ -58,13 +56,23 @@ class LemmatizeEmbeddings(// val frequencyFile:String,
     var totalUnk = 0
     for(word <- wordEmbeddings.keySet) {
       val lemma = lemmatizer.lemmatizeWord(word)
+      val lowerCaseWord = word.toLowerCase()
       val vector = wordEmbeddings(word)
-      //val weight = frequencies.getOrElse(word.toLowerCase(), 1.0)
-      //if(! frequencies.contains(word.toLowerCase())) totalUnk += 1
-      //multiply(vector, weight)
-      println(s"[$word] lemmatized to [$lemma]")
-      add(ne, lemma, vector)
-      totalWeights.incrementCount(lemma) // weight)
+
+      // known word
+      if(frequencies.contains(lowerCaseWord)) { // our counts are for lower case words...
+        // println(s"[$word] lemmatized to [$lemma]")
+        val weight = frequencies(lowerCaseWord)
+        multiply(vector, weight) // in place, but this is Ok: we only see each vector once
+        totalWeights.incrementCount(lemma, weight)
+        add(ne, lemma, vector)
+      }
+
+      // unknown word in Gigaword => add vector to the UNK token
+      else {
+        totalWeights.incrementCount(LemmatizeEmbeddings.UNK)
+        add(ne, LemmatizeEmbeddings.UNK, vector)
+      }
     }
 
     // normalize
@@ -109,12 +117,14 @@ class LemmatizeEmbeddings(// val frequencyFile:String,
 }
 
 object LemmatizeEmbeddings {
+  val UNK = "*UNK*"
+
   def main(args: Array[String]): Unit = {
-    //val freqFile = args(0)
-    val embedFile = args(0)
+    val freqFile = args(0)
+    val embedFile = args(1)
     val outputFile = embedFile + "_lemmas"
 
-    val le = new LemmatizeEmbeddings(embedFile)
+    val le = new LemmatizeEmbeddings(freqFile, embedFile)
     val lemmaEmbeddings = le.lemmatize()
 
     val pw = new PrintWriter(outputFile)
