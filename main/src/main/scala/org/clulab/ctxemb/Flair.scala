@@ -35,7 +35,6 @@ class Flair {
     // build the set of known characters
     val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
     val c2i = knownChars.toArray.zipWithIndex.toMap
-    val sentPct = totalSentCount / 100
 
     // initialize model and optimizer
     model = mkParams(c2i)
@@ -82,7 +81,14 @@ class Flair {
       val comboLoss = (fwLoss + bwLoss) / 2
       cummulativeLoss += comboLoss.value().toFloat()
       ComputationGraph.backward(comboLoss)
-      trainer.update()
+
+      try {
+        trainer.update()
+      } catch {
+        case exception: RuntimeException if
+        exception.getMessage.startsWith("Magnitude of gradient is bad") =>
+          logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
+      }
 
       //
       // reporting
@@ -90,15 +96,13 @@ class Flair {
       sentCount += 1
       numTagged += characters.length + 1
       if(sentCount % 1000 == 0) {
-        // val pct = ((sentCount.toDouble * 100.0) / totalSentCount.toDouble).ceil.toInt
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
 
-	if(sentCount % 50000 == 0){
-        val baseModelName = s"flair_s$sentCount"
-        model.save(baseModelName)
-	}
-
-	System.gc()
+        // save a model every 50K sentences
+        if(sentCount % 50000 == 0){
+          val baseModelName = s"flair_s$sentCount"
+          model.save(baseModelName)
+        }
       }
     }
     source.close()
