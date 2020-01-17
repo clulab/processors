@@ -53,7 +53,7 @@ class Flair {
     var batchLosses = new ExpressionVector()
 
     for(sentence <- source.getLines()) {
-      println(s"Sent #$sentCount: $sentence")
+      //println(s"Sent #$sentCount: $sentence")
 
       // prepare the chars in this sentence
       val charBuffer = new ArrayBuffer[Char]()
@@ -106,7 +106,7 @@ class Flair {
         // reset for the next batch
         ComputationGraph.renew()
         batchLosses = new ArrayBuffer[Expression]()
-        println("Renewed graph!")
+        //println("Renewed graph!")
       }
 
       //
@@ -281,7 +281,7 @@ object Flair {
   val BOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
   val EOS_CHAR:Char = 2.toChar // virtual character indicating end of sentence
 
-  val BATCH_SIZE = 16
+  val BATCH_SIZE = 1
 
   def main(args: Array[String]): Unit = {
     initializeDyNet() // autoBatch = true, mem = "512")
