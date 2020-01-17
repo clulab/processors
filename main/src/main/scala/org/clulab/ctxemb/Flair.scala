@@ -284,7 +284,7 @@ object Flair {
   val BATCH_SIZE = 16
 
   def main(args: Array[String]): Unit = {
-    initializeDyNet(autoBatch = true, mem = "512")
+    initializeDyNet() // autoBatch = true, mem = "512")
 
     val configName = "flair"
     val config = new FlairConfig(ConfigFactory.load(configName))
