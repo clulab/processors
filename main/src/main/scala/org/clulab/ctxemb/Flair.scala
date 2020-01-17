@@ -25,6 +25,13 @@ class Flair {
 
   var model:FlairParameters = _
 
+  def mkTrainer(): Trainer = {
+    val trainer = new RMSPropTrainer(model.parameters)
+    trainer.clippingEnabled_=(true)
+    trainer.clipThreshold_=(CLIP_THRESHOLD)
+    trainer
+  }
+
   /**
    * Trains the LM from the text in this file
    * The file must contain a sentence per line,
@@ -38,9 +45,7 @@ class Flair {
 
     // initialize model and optimizer
     model = mkParams(c2i)
-    val trainer = new RMSPropTrainer(model.parameters)
-    trainer.clippingEnabled_=(true)
-    trainer.clipThreshold_=(CLIP_THRESHOLD)
+    var trainer = mkTrainer()
 
     // train the fw and bw character LSTMs on all sentences in training
     val source = Source.fromFile(trainFileName)
@@ -98,9 +103,8 @@ class Flair {
             logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
             logger.info("Trying to continue training...")
 
-            trainer.restart()
-            trainer.clippingEnabled_=(true)
-            trainer.clipThreshold_=(CLIP_THRESHOLD)
+            // start again, hoping for the best
+            trainer = mkTrainer()
         }
 
         // reset for the next batch
