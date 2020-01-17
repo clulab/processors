@@ -31,7 +31,7 @@ object LstmUtils {
 
   val LOG_MIN_VALUE:Float = -10000
 
-  def initializeDyNet(autoBatch:Boolean = false, mem:Double = 0): Unit = {
+  def initializeDyNet(autoBatch:Boolean = false, mem:String = ""): Unit = {
     logger.debug("Initializing DyNet...")
 
     val params = new mutable.HashMap[String, Any]()
