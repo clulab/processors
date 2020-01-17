@@ -47,9 +47,14 @@ class Flair {
     var sentCount = 0
     var cummulativeLoss = 0.0
     var numTagged = 0
-    for(sentence <- source.getLines()) {
-      ComputationGraph.renew()
 
+    // start the first batch
+    var batchLosses = new ExpressionVector()
+    ComputationGraph.renew()
+
+    for(sentence <- source.getLines()) {
+
+      // prepare the chars in this sentence
       val charBuffer = new ArrayBuffer[Char]()
       for(i <- sentence.indices) {
         val c = sentence.charAt(i)
@@ -66,6 +71,7 @@ class Flair {
       val fwIn = characters
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO)
       val fwLoss = languageModelLoss(fwEmissionScores, fwIn, backward = false)
+      batchLosses.add(fwLoss)
 
       //
       // right-to-left prediction
@@ -73,25 +79,31 @@ class Flair {
       val bwIn = characters.reverse
       val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO)
       val bwLoss = languageModelLoss(bwEmissionScores, bwIn, backward = true)
+      batchLosses.add(bwLoss)
 
       //
       // backprop
-      // we do this over the batch of two instances (fwd and bwd)
+      // we do this only when the batch is full
       //
-      val comboLoss = (fwLoss + bwLoss) / 2
-      cummulativeLoss += comboLoss.value().toFloat()
-      ComputationGraph.backward(comboLoss)
+      if(batchLosses.size >= BATCH_SIZE) {
+        val comboLoss = sum(batchLosses) / batchLosses.size
+        ComputationGraph.backward(comboLoss)
 
-      try {
-        trainer.update()
-      } catch {
-        case exception: RuntimeException =>
-          logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
-          logger.info("Trying to continue training...")
+        try {
+          trainer.update()
+        } catch {
+          case exception: RuntimeException =>
+            logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
+            logger.info("Trying to continue training...")
 
-          trainer.restart()
-          trainer.clippingEnabled_=(true)
-          trainer.clipThreshold_=(CLIP_THRESHOLD)
+            trainer.restart()
+            trainer.clippingEnabled_=(true)
+            trainer.clipThreshold_=(CLIP_THRESHOLD)
+        }
+
+        // reset for the next batch
+        batchLosses = new ArrayBuffer[Expression]()
+        ComputationGraph.renew()
       }
 
       //
@@ -266,8 +278,10 @@ object Flair {
   val BOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
   val EOS_CHAR:Char = 2.toChar // virtual character indicating end of sentence
 
+  val BATCH_SIZE = 16
+
   def main(args: Array[String]): Unit = {
-    initializeDyNet()
+    initializeDyNet(autoBatch = true)
 
     val configName = "flair"
     val config = new FlairConfig(ConfigFactory.load(configName))
