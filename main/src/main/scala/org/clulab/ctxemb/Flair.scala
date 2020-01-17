@@ -88,6 +88,10 @@ class Flair {
         case exception: RuntimeException =>
           logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
           logger.info("Trying to continue training...")
+
+          trainer.restart()
+          trainer.clippingEnabled_=(true)
+          trainer.clipThreshold_=(CLIP_THRESHOLD)
       }
 
       //
