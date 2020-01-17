@@ -53,6 +53,7 @@ class Flair {
     ComputationGraph.renew()
 
     for(sentence <- source.getLines()) {
+      println(s"Sent #$sentCount: $sentence")
 
       // prepare the chars in this sentence
       val charBuffer = new ArrayBuffer[Char]()
