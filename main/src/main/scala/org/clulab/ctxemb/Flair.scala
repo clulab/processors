@@ -49,8 +49,8 @@ class Flair {
     var numTagged = 0
 
     // start the first batch
-    var batchLosses = new ExpressionVector()
     ComputationGraph.renew()
+    var batchLosses = new ExpressionVector()
 
     for(sentence <- source.getLines()) {
       println(s"Sent #$sentCount: $sentence")
@@ -104,8 +104,8 @@ class Flair {
         }
 
         // reset for the next batch
-        batchLosses = new ArrayBuffer[Expression]()
         ComputationGraph.renew()
+        batchLosses = new ArrayBuffer[Expression]()
         println("Renewed graph!")
       }
 
