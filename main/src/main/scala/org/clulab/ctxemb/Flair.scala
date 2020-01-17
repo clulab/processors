@@ -88,6 +88,7 @@ class Flair {
       //
       if(batchLosses.size >= BATCH_SIZE) {
         val comboLoss = sum(batchLosses) / batchLosses.size
+        cummulativeLoss += comboLoss.value().toFloat()
         ComputationGraph.backward(comboLoss)
 
         try {
