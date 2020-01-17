@@ -31,11 +31,17 @@ object LstmUtils {
 
   val LOG_MIN_VALUE:Float = -10000
 
-  def initializeDyNet(autoBatch:Boolean = false): Unit = {
+  def initializeDyNet(autoBatch:Boolean = false, mem:Double = 0): Unit = {
     logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map(
-      "random-seed" -> RANDOM_SEED,
-      "autobatch" -> (if(autoBatch) 1 else 0)))
+
+    val params = new mutable.HashMap[String, Any]()
+    params += "random-seed" -> RANDOM_SEED
+    if(autoBatch) {
+      params += "autobatch" -> 1
+      params += "dynet-mem" -> mem
+    }
+
+    Initialize.initialize(params.toMap)
     logger.debug("DyNet initialization complete.")
   }
 
