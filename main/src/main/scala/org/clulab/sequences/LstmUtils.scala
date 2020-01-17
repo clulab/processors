@@ -9,7 +9,6 @@ import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Initialize, LookupParam
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelLoader
 import org.clulab.fatdynet.utils.CloseableZipModelLoader
-import org.clulab.sequences.LstmCrfMtl.logger
 import org.clulab.struct.MutableNumber
 import org.clulab.utils.Closer.AutoCloser
 import org.slf4j.{Logger, LoggerFactory}

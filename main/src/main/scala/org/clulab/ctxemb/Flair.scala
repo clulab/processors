@@ -106,6 +106,7 @@ class Flair {
         // reset for the next batch
         batchLosses = new ArrayBuffer[Expression]()
         ComputationGraph.renew()
+        println("Renewed graph!")
       }
 
       //
