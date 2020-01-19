@@ -125,7 +125,7 @@ class Flair {
       //
       sentCount += 1
       numTagged += characters.length + 1
-      if(sentCount % 100 == 0) {
+      if(sentCount % 1000 == 0) {
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
 
         // save a model every 50K sentences
