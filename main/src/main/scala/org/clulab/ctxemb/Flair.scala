@@ -96,26 +96,22 @@ class Flair {
         cummulativeLoss += comboLoss.value().toFloat()
         ComputationGraph.backward(comboLoss)
 
-        //try {
+        try {
           trainer.update()
-        //} catch {
-          //case exception: RuntimeException =>
-        if(sentCount == 110) {
-            //logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
-        logger.info(s"The exception happened on this line: [$sentence].")
+        } catch {
+          case exception: RuntimeException =>
+            logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
+            logger.info(s"The exception happened on this line: [$sentence].")
             logger.info(s"The normalized line has length ${characters.length}.")
             logger.info(s"The characters in the sentence are: [${characters.mkString(", ")}].")
             logger.info(s"Characters as integers: [${characters.map(_.toInt).mkString(", ")}].")
-            logger.info("Below is the trainer status:")
-            trainer.status()
             logger.info("Trying to continue training...")
 
             // start again, hoping for the best
-            trainer = mkTrainer()
-
             logger.info(s"Gradient L2 before reset: ${model.parameters.gradientL2Norm()}")
             model.parameters.resetGradient()
             logger.info(s"Gradient L2 after reset: ${model.parameters.gradientL2Norm()}")
+            trainer = mkTrainer()
         }
 
         // reset for the next batch
