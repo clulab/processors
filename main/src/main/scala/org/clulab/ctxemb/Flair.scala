@@ -111,6 +111,7 @@ class Flair {
 
             // start again, hoping for the best
             trainer = mkTrainer()
+            ComputationGraph.revert()
         }
 
         // reset for the next batch
@@ -126,6 +127,8 @@ class Flair {
       numTagged += characters.length + 1
       if(sentCount % 1000 == 0) {
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
+
+        ComputationGraph.checkpoint()
 
         // save a model every 50K sentences
         if(sentCount % 50000 == 0){
