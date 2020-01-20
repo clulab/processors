@@ -96,6 +96,8 @@ class Flair {
         cummulativeLoss += comboLoss.value().toFloat()
         ComputationGraph.backward(comboLoss)
 
+        safeUpdate(trainer, model.parameters)
+        /* old code, for debugging purposes
         try {
           trainer.update()
         } catch {
@@ -113,6 +115,7 @@ class Flair {
             logger.info(s"Gradient L2 after reset: ${model.parameters.gradientL2Norm()}")
             trainer = mkTrainer()
         }
+        */
 
         // reset for the next batch
         ComputationGraph.renew()
@@ -136,6 +139,22 @@ class Flair {
       }
     }
     source.close()
+  }
+
+  /**
+   * Updates the model, catching vanishing/exploding gradients and trying to recover
+   * @param myTrainer
+   * @param parameters
+   */
+  def safeUpdate(myTrainer: Trainer, parameters: ParameterCollection): Unit = {
+    try {
+      myTrainer.update()
+    } catch {
+      case exception: RuntimeException if(exception.getMessage().startsWith("Magnitude of gradient is bad")) =>
+        // aim to reset the gradient and continue training
+        parameters.resetGradient()
+        logger.info(s"Caught an invalid gradient exception: ${exception.getMessage}. Reset gradient L2 norm to: ${parameters.gradientL2Norm()}")
+    }
   }
 
   /** Greedy loss function, ignoring transition scores */
