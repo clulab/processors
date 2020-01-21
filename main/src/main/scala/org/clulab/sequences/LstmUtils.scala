@@ -36,6 +36,7 @@ object LstmUtils {
 
     val params = new mutable.HashMap[String, Any]()
     params += "random-seed" -> RANDOM_SEED
+    params += "weight-decay" -> 0.10
     if(autoBatch) {
       params += "autobatch" -> 1
       params += "dynet-mem" -> mem
