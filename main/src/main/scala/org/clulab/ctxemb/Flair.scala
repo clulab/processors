@@ -152,6 +152,7 @@ class Flair {
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = false) // no dropout during testing!
       val pp = perplexity(fwEmissionScores, fwIn)
       println(s"Perplexity for sent #$sentCount: $pp")
+      System.exit(0)
 
       cummulativeFwPerplexity += pp
       sentCount += 1
@@ -194,8 +195,15 @@ class Flair {
   /** Computes perplexity for this sentence */
   def perplexity(emissionScoresForSeq: ExpressionVector, characters: Array[Char]): Double = {
     var probProd = 1.0
+    println("c2i:")
+    println(model.c2i)
+    println("Sentence: " + characters.mkString(", "))
     for(i <- emissionScoresForSeq.indices) {
       val goldTid = goldTagId(characters, i)
+      val gold =
+        if(i < characters.length - 1) characters(i + 1)
+        else EOS_CHAR
+      println(s"i = $i; c = ${characters(i)}; gold = $gold; gold as int = ${gold.toInt}; gold id = $goldTid")
       val prob = pick(softmax(emissionScoresForSeq(i)), goldTid)
       probProd *= prob.value().toFloat()
     }
