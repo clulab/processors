@@ -194,7 +194,7 @@ class Flair {
 
   /** Computes perplexity for this sentence */
   def perplexity(emissionScoresForSeq: ExpressionVector, characters: Array[Char]): Double = {
-    var probProd = 1.0
+    var pp = 1.0
     println("c2i:")
     println(model.c2i)
     println("Sentence: " + characters.mkString(", "))
@@ -206,9 +206,8 @@ class Flair {
       println(s"i = $i; c = ${characters(i)}; gold = $gold; gold as int = ${gold.toInt}; gold id = $goldTid")
       val prob = pick(softmax(emissionScoresForSeq(i)), goldTid)
       println(s"prob of gold = ${prob.value().toFloat()}")
-      probProd *= prob.value().toFloat()
+      pp *= math.pow(1.0 / prob.value().toFloat(), characters.length.toDouble)
     }
-    val pp = math.pow(1.0 / probProd, characters.length.toDouble)
     pp
   }
 
