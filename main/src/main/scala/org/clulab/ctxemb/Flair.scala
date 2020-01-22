@@ -38,7 +38,7 @@ class Flair {
    *   with the white spaces between tokens normalized to a single space
    * @param trainFileName The name of the file with training sentences
    */
-  def train(trainFileName:String): Unit = {
+  def train(trainFileName:String, devFileName:Option[String]): Unit = {
     // build the set of known characters
     val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
     val c2i = knownChars.toArray.zipWithIndex.toMap
@@ -61,22 +61,14 @@ class Flair {
       //println(s"Sent #$sentCount: $sentence")
 
       // prepare the chars in this sentence
-      val charBuffer = new ArrayBuffer[Char]()
-      for(i <- sentence.indices) {
-        val c = sentence.charAt(i)
-        if(model.c2i.contains(c))
-          charBuffer += c
-        else
-          charBuffer += UNKNOWN_CHAR
-      }
-      val characters = charBuffer.toArray
+      val characters = sentenceToCharacters(sentence)
 
       //
       // left-to-right prediction
       //
       val fwIn = characters
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = true)
-      val fwLoss = languageModelLoss(fwEmissionScores, fwIn, backward = false)
+      val fwLoss = languageModelLoss(fwEmissionScores, fwIn)
       batchLosses.add(fwLoss)
 
       //
@@ -84,7 +76,7 @@ class Flair {
       //
       val bwIn = characters.reverse
       val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO, doDropout = true)
-      val bwLoss = languageModelLoss(bwEmissionScores, bwIn, backward = true)
+      val bwLoss = languageModelLoss(bwEmissionScores, bwIn)
       batchLosses.add(bwLoss)
 
       //
@@ -116,22 +108,51 @@ class Flair {
         if(sentCount % 50000 == 0){
           val baseModelName = s"flair_s$sentCount"
           model.save(baseModelName)
+
+          // compute perplexity if a dev set is available
+          if(devFileName.nonEmpty) {
+            reportPerplexity(devFileName.get)
+          }
         }
       }
     }
     source.close()
   }
 
+  /** Prepare the chars in this sentence */
+  def sentenceToCharacters(sentence:String): Array[Char] = {
+    val charBuffer = new ArrayBuffer[Char]()
+    for(i <- sentence.indices) {
+      val c = sentence.charAt(i)
+      if(model.c2i.contains(c))
+        charBuffer += c
+      else
+        charBuffer += UNKNOWN_CHAR
+    }
+    charBuffer.toArray
+  }
+
+  def reportPerplexity(devFileName: String): Unit = {
+    val source = Source.fromFile(devFileName)
+    var sentCount = 0
+    var cummulativePerplexity = 0.0
+    for(sentence <- source.getLines()) {
+      val characters = sentenceToCharacters(sentence)
+
+    }
+    source.close()
+  }
+
   /**
    * Updates the model, catching vanishing/exploding gradients and trying to recover
-   * @param myTrainer
-   * @param parameters
+   * @param myTrainer Optimizer
+   * @param parameters Model
    */
   def safeUpdate(myTrainer: Trainer, parameters: ParameterCollection): Unit = {
     try {
       myTrainer.update()
     } catch {
-      case exception: RuntimeException if(exception.getMessage().startsWith("Magnitude of gradient is bad")) =>
+      case exception: RuntimeException if exception.getMessage.startsWith("Magnitude of gradient is bad") =>
         // aim to reset the gradient and continue training
         parameters.resetGradient()
         logger.info(s"Caught an invalid gradient exception: ${exception.getMessage}. Reset gradient L2 norm to: ${parameters.gradientL2Norm()}")
@@ -142,31 +163,24 @@ class Flair {
    * Gets the gold tag id for the character at position i
    * @param characters Array of chars in this sentence
    * @param i Position in the character array
-   * @param backward True, if backward traversal
-   * @return The id of the gold tag for this character
+   * @return The id of the gold tag (i.e., the next character) for this character
    */
-  def goldTagId(characters:Array[Char], i:Int, backward:Boolean): Int = {
+  def goldTagId(characters:Array[Char], i:Int): Int = {
     val goldTid = model.c2i(
-      if(! backward) {
-        if(i < characters.length - 1) characters(i + 1) // the next character if forward LM
-        else EOS_CHAR
-      } else {
-        if(i > 0) characters(i - 1) // the previous character if backward LM
-        else BOS_CHAR
-      }
+      if(i < characters.length - 1) characters(i + 1) // the next character if it exists
+      else EOS_CHAR
     )
     goldTid
   }
 
   /** Greedy loss function, ignoring transition scores */
   def languageModelLoss(emissionScoresForSeq:ExpressionVector,
-                        characters:Array[Char],
-                        backward:Boolean): Expression = {
+                        characters:Array[Char]): Expression = {
 
     val goldLosses = new ExpressionVector()
 
     for(i <- emissionScoresForSeq.indices) {
-      val goldTid = goldTagId(characters, i, backward)
+      val goldTid = goldTagId(characters, i)
 
       // emissionScoresForSeq(i) = all tag emission scores for the word at position i
       goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
@@ -256,7 +270,6 @@ class Flair {
 
     // add the virtual characters we need
     knownChars += UNKNOWN_CHAR
-    knownChars += BOS_CHAR
     knownChars += EOS_CHAR
 
     (knownChars.toSet, sentCount)
@@ -307,8 +320,7 @@ object Flair {
   val DROPOUT_PROB:Float = 0.2.toFloat
 
   val UNKNOWN_CHAR:Char = 0.toChar // placeholder for unknown characters
-  val BOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
-  val EOS_CHAR:Char = 2.toChar // virtual character indicating end of sentence
+  val EOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
 
   val BATCH_SIZE = 1
 
@@ -319,6 +331,9 @@ object Flair {
     val config = new FlairConfig(ConfigFactory.load(configName))
 
     val lm = new Flair()
-    lm.train(config.getArgString("flair.train", None))
+    lm.train(
+      config.getArgString("flair.train", None),
+      Some(config.getArgString("flair.dev", None))
+    )
   }
 }
