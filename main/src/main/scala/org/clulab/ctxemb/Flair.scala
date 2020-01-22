@@ -75,7 +75,7 @@ class Flair {
       // left-to-right prediction
       //
       val fwIn = characters
-      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO)
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = true)
       val fwLoss = languageModelLoss(fwEmissionScores, fwIn, backward = false)
       batchLosses.add(fwLoss)
 
@@ -83,7 +83,7 @@ class Flair {
       // right-to-left prediction
       //
       val bwIn = characters.reverse
-      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO)
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO, doDropout = true)
       val bwLoss = languageModelLoss(bwEmissionScores, bwIn, backward = true)
       batchLosses.add(bwLoss)
 
@@ -97,25 +97,6 @@ class Flair {
         ComputationGraph.backward(comboLoss)
 
         safeUpdate(trainer, model.parameters)
-        /* old code, for debugging purposes
-        try {
-          trainer.update()
-        } catch {
-          case exception: RuntimeException =>
-            logger.info("Caught a Trainer.update() exception:\n" + exception.getMessage) // and then continue
-            logger.info(s"The exception happened on this line: [$sentence].")
-            logger.info(s"The normalized line has length ${characters.length}.")
-            logger.info(s"The characters in the sentence are: [${characters.mkString(", ")}].")
-            logger.info(s"Characters as integers: [${characters.map(_.toInt).mkString(", ")}].")
-            logger.info("Trying to continue training...")
-
-            // start again, hoping for the best
-            logger.info(s"Gradient L2 before reset: ${model.parameters.gradientL2Norm()}")
-            model.parameters.resetGradient()
-            logger.info(s"Gradient L2 after reset: ${model.parameters.gradientL2Norm()}")
-            trainer = mkTrainer()
-        }
-        */
 
         // reset for the next batch
         ComputationGraph.renew()
