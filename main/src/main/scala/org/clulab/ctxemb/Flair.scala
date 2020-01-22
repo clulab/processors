@@ -205,7 +205,7 @@ class Flair {
         else EOS_CHAR
       println(s"i = $i; c = ${characters(i)}; gold = $gold; gold as int = ${gold.toInt}; gold id = $goldTid")
       val prob = pick(softmax(emissionScoresForSeq(i)), goldTid)
-      println(s"prob of gold = $prob")
+      println(s"prob of gold = ${prob.value().toFloat()}")
       probProd *= prob.value().toFloat()
     }
     val pp = math.pow(1.0 / probProd, characters.length.toDouble)
