@@ -138,6 +138,26 @@ class Flair {
     }
   }
 
+  /**
+   * Gets the gold tag id for the character at position i
+   * @param characters Array of chars in this sentence
+   * @param i Position in the character array
+   * @param backward True, if backward traversal
+   * @return The id of the gold tag for this character
+   */
+  def goldTagId(characters:Array[Char], i:Int, backward:Boolean): Int = {
+    val goldTid = model.c2i(
+      if(! backward) {
+        if(i < characters.length - 1) characters(i + 1) // the next character if forward LM
+        else EOS_CHAR
+      } else {
+        if(i > 0) characters(i - 1) // the previous character if backward LM
+        else BOS_CHAR
+      }
+    )
+    goldTid
+  }
+
   /** Greedy loss function, ignoring transition scores */
   def languageModelLoss(emissionScoresForSeq:ExpressionVector,
                         characters:Array[Char],
@@ -146,16 +166,7 @@ class Flair {
     val goldLosses = new ExpressionVector()
 
     for(i <- emissionScoresForSeq.indices) {
-      // gold tag for char at position i
-      val goldTid = model.c2i(
-        if(! backward) {
-          if(i < characters.length - 1) characters(i + 1) // the next character if forward LM
-          else EOS_CHAR
-        } else {
-          if(i > 0) characters(i - 1) // the previous character if backward LM
-          else BOS_CHAR
-        }
-      )
+      val goldTid = goldTagId(characters, i, backward)
 
       // emissionScoresForSeq(i) = all tag emission scores for the word at position i
       goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
