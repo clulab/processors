@@ -38,7 +38,12 @@ class Flair {
    *   with the white spaces between tokens normalized to a single space
    * @param trainFileName The name of the file with training sentences
    */
-  def train(trainFileName:String, devFileName:Option[String]): Unit = {
+  def train(
+    trainFileName:String,
+    devFileName:Option[String],
+    statsCheckpoint:Int,
+    saveCheckpoint:Int): Unit = {
+
     // build the set of known characters
     val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
     val c2i = knownChars.toArray.zipWithIndex.toMap
@@ -101,11 +106,11 @@ class Flair {
       //
       sentCount += 1
       numTagged += characters.length + 1
-      if(sentCount % 1000 == 0) {
+      if(sentCount % statsCheckpoint == 0) {
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
 
         // save a model every 50K sentences
-        if(sentCount % 50000 == 0){
+        if(sentCount % saveCheckpoint == 0){
           val baseModelName = s"flair_s$sentCount"
           model.save(baseModelName)
 
@@ -135,12 +140,20 @@ class Flair {
   def reportPerplexity(devFileName: String): Unit = {
     val source = Source.fromFile(devFileName)
     var sentCount = 0
-    var cummulativePerplexity = 0.0
+    var cummulativeFwPerplexity = 0.0
     for(sentence <- source.getLines()) {
       val characters = sentenceToCharacters(sentence)
 
+      val fwIn = characters
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = false) // no dropout during testing!
+      val pp = perplexity(fwEmissionScores, fwIn)
+
+      cummulativeFwPerplexity += pp
+      sentCount += 1
     }
     source.close()
+
+    logger.info(s"Average forward perplexity: ${cummulativeFwPerplexity / sentCount.toDouble}")
   }
 
   /**
@@ -171,6 +184,11 @@ class Flair {
       else EOS_CHAR
     )
     goldTid
+  }
+
+  /** Computes perplexity for this sentence */
+  def perplexity(emissionScoresForSeq: ExpressionVector, characters: Array[Char]): Double = {
+    1.0 // TODO
   }
 
   /** Greedy loss function, ignoring transition scores */
@@ -333,7 +351,9 @@ object Flair {
     val lm = new Flair()
     lm.train(
       config.getArgString("flair.train", None),
-      Some(config.getArgString("flair.dev", None))
+      Some(config.getArgString("flair.dev", None)),
+      config.getArgInt("flair.statsCheckpoint", Some(1000)),
+      config.getArgInt("flair.saveCheckpoint", Some(50000))
     )
   }
 }
