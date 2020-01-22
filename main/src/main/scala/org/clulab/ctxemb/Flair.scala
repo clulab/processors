@@ -84,6 +84,10 @@ class Flair {
       val bwLoss = languageModelLoss(bwEmissionScores, bwIn)
       batchLosses.add(bwLoss)
 
+      // book keeping
+      sentCount += 1
+      numTagged += characters.length + 1
+
       //
       // backprop
       // we do this only when the batch is full
@@ -92,8 +96,12 @@ class Flair {
         val comboLoss = sum(batchLosses) / batchLosses.size
         cummulativeLoss += comboLoss.value().toFloat()
         ComputationGraph.backward(comboLoss)
-
         safeUpdate(trainer, model.parameters)
+
+        // report perplexity if a dev file is available
+        if(sentCount % saveCheckpoint == 0 && devFileName.nonEmpty){
+          reportPerplexity(devFileName.get)
+        }
 
         // reset for the next batch
         ComputationGraph.renew()
@@ -102,10 +110,8 @@ class Flair {
       }
 
       //
-      // reporting
+      // reporting and model saving
       //
-      sentCount += 1
-      numTagged += characters.length + 1
       if(sentCount % statsCheckpoint == 0) {
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
 
@@ -113,11 +119,6 @@ class Flair {
         if(sentCount % saveCheckpoint == 0){
           val baseModelName = s"flair_s$sentCount"
           model.save(baseModelName)
-
-          // compute perplexity if a dev set is available
-          if(devFileName.nonEmpty) {
-            reportPerplexity(devFileName.get)
-          }
         }
       }
     }
