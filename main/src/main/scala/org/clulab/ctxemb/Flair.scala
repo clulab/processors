@@ -189,8 +189,13 @@ class Flair {
                                   doDropout:Boolean = false): ExpressionVector = {
     val embeddings = chars.map(mkEmbedding)
 
+    if(doDropout) {
+      rnnBuilder.setDropout(DROPOUT_PROB)
+    } else {
+      rnnBuilder.disableDropout()
+    }
+
     val states = transduce(embeddings, rnnBuilder)
-    // TODO: add dropout
 
     val O = parameter(pO)
     val emissionScores = new ExpressionVector()
@@ -306,6 +311,8 @@ object Flair {
   val CHAR_RNN_STATE_SIZE = 1024
   val CLIP_THRESHOLD = 5.0f
   val MIN_UNK_FREQ_RATIO = 0.000001
+
+  val DROPOUT_PROB:Float = 0.2.toFloat
 
   val UNKNOWN_CHAR:Char = 0.toChar // placeholder for unknown characters
   val BOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
