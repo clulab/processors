@@ -151,6 +151,7 @@ class Flair {
       val fwIn = characters
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = false) // no dropout during testing!
       val pp = perplexity(fwEmissionScores, fwIn)
+      println(s"Perplexity for sent #$sentCount: $pp")
 
       cummulativeFwPerplexity += pp
       sentCount += 1
