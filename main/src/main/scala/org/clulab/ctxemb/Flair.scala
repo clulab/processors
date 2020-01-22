@@ -84,7 +84,9 @@ class Flair {
       val bwLoss = languageModelLoss(bwEmissionScores, bwIn)
       batchLosses.add(bwLoss)
 
+      //
       // book keeping
+      //
       sentCount += 1
       numTagged += characters.length + 1
 
@@ -190,7 +192,14 @@ class Flair {
 
   /** Computes perplexity for this sentence */
   def perplexity(emissionScoresForSeq: ExpressionVector, characters: Array[Char]): Double = {
-    1.0 // TODO
+    var probProd = 1.0
+    for(i <- emissionScoresForSeq.indices) {
+      val goldTid = goldTagId(characters, i)
+      val prob = pick(softmax(emissionScoresForSeq(i)), goldTid)
+      probProd *= prob.value().toFloat()
+    }
+    val pp = math.pow(1.0 / probProd, characters.length.toDouble)
+    pp
   }
 
   /** Greedy loss function, ignoring transition scores */
