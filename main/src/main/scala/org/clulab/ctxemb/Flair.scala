@@ -143,6 +143,7 @@ class Flair {
     var cummulativeFwPerplexity = 0.0
     for(sentence <- source.getLines()) {
       val characters = sentenceToCharacters(sentence)
+      ComputationGraph.renew()
 
       val fwIn = characters
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = false) // no dropout during testing!
