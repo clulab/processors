@@ -206,7 +206,10 @@ class Flair {
       println(s"i = $i; c = ${characters(i)}; gold = $gold; gold as int = ${gold.toInt}; gold id = $goldTid")
       val prob = pick(softmax(emissionScoresForSeq(i)), goldTid)
       println(s"prob of gold = ${prob.value().toFloat()}")
-      pp *= math.pow(1.0 / prob.value().toFloat(), characters.length.toDouble)
+      val v = math.pow(1.0 / prob.value().toFloat(), characters.length.toDouble)
+      println(s"v = $v")
+      pp *= v
+      println(s"pp = $pp")
     }
     pp
   }
