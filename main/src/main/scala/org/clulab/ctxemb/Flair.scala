@@ -211,7 +211,7 @@ class Flair {
       pp *= v
       println(s"pp = $pp")
     }
-    pp = math.pow(pp, characters.length.toDouble)
+    pp = math.pow(pp, 1.0 / characters.length.toDouble)
     pp
   }
 
