@@ -39,10 +39,10 @@ class Flair {
    * @param trainFileName The name of the file with training sentences
    */
   def train(
-    trainFileName:String,
-    devFileName:Option[String],
-    statsCheckpoint:Int,
-    saveCheckpoint:Int): Unit = {
+             trainFileName:String,
+             devFileName:Option[String],
+             logCheckpoint:Int,
+             saveCheckpoint:Int): Unit = {
 
     // build the set of known characters
     val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
@@ -114,7 +114,7 @@ class Flair {
       //
       // reporting and model saving
       //
-      if(sentCount % statsCheckpoint == 0) {
+      if(sentCount % logCheckpoint == 0) {
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
 
         // save a model every 50K sentences
@@ -144,6 +144,7 @@ class Flair {
     val source = Source.fromFile(devFileName)
     var sentCount = 0
     var cummulativeFwPerplexity = 0.0
+    logger.debug("Computing perplexity in dev...")
     for(sentence <- source.getLines()) {
       val characters = sentenceToCharacters(sentence)
       ComputationGraph.renew()
@@ -151,14 +152,12 @@ class Flair {
       val fwIn = characters
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = false) // no dropout during testing!
       val pp = perplexity(fwEmissionScores, fwIn)
-      println(s"Perplexity for sent #$sentCount: $pp")
-      System.exit(0)
+      // println(s"Perplexity for sent #$sentCount: $pp")
 
       cummulativeFwPerplexity += pp
       sentCount += 1
     }
     source.close()
-
     logger.info(s"Average forward perplexity: ${cummulativeFwPerplexity / sentCount.toDouble}")
   }
 
@@ -371,7 +370,7 @@ object Flair {
     lm.train(
       config.getArgString("flair.train", None),
       Some(config.getArgString("flair.dev", None)),
-      config.getArgInt("flair.statsCheckpoint", Some(1000)),
+      config.getArgInt("flair.logCheckpoint", Some(1000)),
       config.getArgInt("flair.saveCheckpoint", Some(50000))
     )
   }
