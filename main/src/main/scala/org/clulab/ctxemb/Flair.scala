@@ -144,6 +144,7 @@ class Flair {
     val source = Source.fromFile(devFileName)
     var sentCount = 0
     var cummulativeFwPerplexity = 0.0
+    var cummulativeBwPerplexity = 0.0
     logger.debug("Computing perplexity in dev...")
     for(sentence <- source.getLines()) {
       val characters = sentenceToCharacters(sentence)
@@ -151,14 +152,19 @@ class Flair {
 
       val fwIn = characters
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = false) // no dropout during testing!
-      val pp = perplexity(fwEmissionScores, fwIn)
-      // println(s"Perplexity for sent #$sentCount: $pp")
+      val fwPp = perplexity(fwEmissionScores, fwIn)
 
-      cummulativeFwPerplexity += pp
+      val bwIn = characters.reverse
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO, doDropout = false)
+      val bwPp = perplexity(bwEmissionScores, bwIn)
+
+      cummulativeFwPerplexity += fwPp
+      cummulativeBwPerplexity += bwPp
       sentCount += 1
     }
     source.close()
     logger.info(s"Average forward perplexity: ${cummulativeFwPerplexity / sentCount.toDouble}")
+    logger.info(s"Average backward perplexity: ${cummulativeBwPerplexity / sentCount.toDouble}")
   }
 
   /**
