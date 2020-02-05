@@ -20,7 +20,8 @@ class TestCounter extends FlatSpec with Matchers {
     c.saveTo(w)
     w.close()
 
-    val content = sw.toString.replaceAll("\n", " ")
+    val eol = System.getProperty("line.separator")
+    val content = sw.toString.replace(eol, " ")
     content should be ("0.0 2 S 1.0 dos 1.0 uno ")
   }
 }
