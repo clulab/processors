@@ -1,7 +1,7 @@
 name := "processors-corenlp"
 
 libraryDependencies ++= {
-  val corenlpV = "3.8.0"
+  val corenlpV = "3.9.2"
 
   Seq (
     // this sub-project depends on CoreNLP
