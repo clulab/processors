@@ -1,14 +1,14 @@
 package org.clulab.processors.shallownlp
 
 import java.util
-import java.util.Properties
+import java.util.{ArrayList, List, Properties}
 import java.util.zip.GZIPInputStream
 
 import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.corenlp.chunker.CRFChunker
 import org.clulab.processors._
 import edu.stanford.nlp.ling.CoreAnnotations._
-import edu.stanford.nlp.ling.CoreLabel
+import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 
@@ -297,7 +297,13 @@ object ShallowNLPProcessor {
     */
   def docToAnnotation(doc:Document): Annotation = {
     assert(doc.text.nonEmpty)
+    val docAnnotation = new Annotation(doc.text.get)
+    val tokens = new util.ArrayList[CoreLabel]
+    val text = new StringBuilder
+
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
+    docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
+
     var sentOffset = 0
     var tokenOffset = 0
     for(sentence <- doc.sentences) {
@@ -324,6 +330,7 @@ object ShallowNLPProcessor {
       // tokens
       val crtSent = new Annotation(sentence.getSentenceText)
       crtSent.set(classOf[TokensAnnotation], crtTokens)
+      tokens.addAll(crtTokens)
 
       // character offsets and actual text
       val sentStartOffset = sentence.startOffsets.head
@@ -331,7 +338,7 @@ object ShallowNLPProcessor {
       crtSent.set(classOf[CharacterOffsetBeginAnnotation], new Integer(sentStartOffset))
       crtSent.set(classOf[CharacterOffsetEndAnnotation], new Integer(sentEndOffset))
       crtSent.set(classOf[TextAnnotation], doc.text.get.substring(sentStartOffset, sentEndOffset))
-
+      text.append(doc.text.get.substring(sentStartOffset, sentEndOffset))
       // token and sentence offsets
       crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
       tokenOffset += crtTokens.size()
@@ -341,7 +348,9 @@ object ShallowNLPProcessor {
       sentencesAnnotation.add(crtSent)
       sentOffset += 1
     }
-    val docAnnotation = new Annotation(sentencesAnnotation)
+    docAnnotation.set(classOf[CoreAnnotations.TokensAnnotation], tokens)
+    docAnnotation.set(classOf[CoreAnnotations.TextAnnotation], text.toString)
+
     docAnnotation
   }
 
