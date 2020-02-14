@@ -1,4 +1,5 @@
 # Changes
++ **8.0.0** - Updated liblinear to 2.30, libsvm to 3.23, and fatdynet to 0.2.4.
 + **8.0.0** - Updated CoreNLP to v3.9.2.
 + **8.0.0** - Better tokenization of emoticons.
 + **8.0.0** - Bug fix: sometimes CoreNLP's enhanced syntactic dependencies contain duplicated ones.
