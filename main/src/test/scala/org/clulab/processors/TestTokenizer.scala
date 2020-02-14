@@ -108,6 +108,39 @@ class TestTokenizer extends FlatSpec with Matchers {
     sent.words(7) should be (")") // -RRB- if normalization enabled
   }
 
+  it should "not tokenize letter emoticons too aggressively" in {
+    var sent = tok("Lecithin :cholesterol and phospholipid :diacylglycerol acyltransferase").head
+    sent.raw.length should be (8)
+    sent.words(1) should be (":")
+    sent.words(5) should be (":")
+
+    sent = tok("ATP :dephospho-CoA triphosphoribosyl transferase").head
+    sent.raw.length should be (5)
+    sent.words(1) should be (":")
+
+    sent = tok("CDP-Glycerol :Poly (glycerophosphate) glycerophosphotransferase").head
+    sent.raw.length should be (7)
+    sent.words(1) should be (":")
+    sent.words(3) should be ("(")
+    sent.words(5) should be (")")
+
+    sent = tok("T=pseudo3 icosahedral viral capsid").head
+    sent.raw.length should be (6)
+    sent.words(1) should be ("=")
+
+    sent = tok("Myristoyl-CoA :protein N-myristoyltransferase,C-terminal").head
+    sent.raw.length should be (6)
+    sent.words(1) should be (":")
+
+    sent = tok("I am :), she said").head
+    sent.raw.length should be (6)
+    sent.words(2) should be (":)")
+
+    sent = tok("I am :( today, she said").head
+    sent.raw.length should be (7)
+    sent.words(2) should be (":(")
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)

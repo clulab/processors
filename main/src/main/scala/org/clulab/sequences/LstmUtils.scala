@@ -5,10 +5,11 @@ import java.net.JarURLConnection
 import java.net.URI
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelLoader
 import org.clulab.fatdynet.utils.CloseableZipModelLoader
+import org.clulab.sequences.LstmCrfMtl.logger
 import org.clulab.struct.MutableNumber
 import org.clulab.utils.Closer.AutoCloser
 import org.slf4j.{Logger, LoggerFactory}
@@ -30,6 +31,19 @@ object LstmUtils {
   val RANDOM_SEED = 2522620396L // used for both DyNet, and the JVM seed for shuffling data
 
   val LOG_MIN_VALUE:Float = -10000
+
+  private var IS_DYNET_INITIALIZED = false
+
+  def initializeDyNet(): Unit = {
+    this.synchronized {
+      if(! IS_DYNET_INITIALIZED) {
+        logger.debug("Initializing DyNet...")
+        Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+        logger.debug("DyNet initialization complete.")
+        IS_DYNET_INITIALIZED = true
+      }
+    }
+  }
 
   def loadEmbeddings(docFreqFileName:Option[String], minDocFreq:Int, embeddingsFile:String): Word2Vec = {
     val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
