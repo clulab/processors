@@ -61,8 +61,9 @@ HTML_CODE: '&' (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPE
 
 // Common smileys
 SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('('|')'|'\\'|'{'|'@'|'|'|'['|']') ;
+
 // Smileys ending in a letter. These should be tokenized only when the next character is not a letter
-//LETTER_SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? (D'|'P'|'d'|'p'|'O') ;
+LETTER_SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('D'|'P'|'d'|'p'|'O') {! Character.isLetterOrDigit(_input.LA(1))}? ;
 
 // TODO: phone numbers
 
