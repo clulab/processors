@@ -180,7 +180,7 @@ class CoreNLPProcessor(
       } catch {
         case e: Exception =>
           System.err.println("WARNING: Parsing of sentence failed, possibly because of out of memory. " +
-            "Will ignore and continue: " + edu.stanford.nlp.ling.SentenceUtils.listToString(words))
+            "Will ignore and continue: " + edu.stanford.nlp.ling.SentenceUtils.listToString(words, true))
       }
 
       //println("SYNTACTIC TREE: " + tree)
