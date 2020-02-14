@@ -71,7 +71,7 @@ LETTER_SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('D'|'P'|'d'|'p'|'O'
 EOS: PUNCTUATION (PUNCTUATION)* ;
 
 // skip all white spaces
-WHITESPACE: ('\t'|' '|'\r'|'\n'|'\u000C'| '\u2028'|'\u2029'|'\u000B'|'\u0085'|'\u00A0'|('\u2000'..'\u200A')|'\u3000')+ -> skip ;
+WHITESPACE: ('\t'|' '|'\r'|'\n'|'\u000C'| '\u2028'|'\u2029'|'\u000B'|'\u0085'|'\u00A0'|('\u2000'..'\u200A')|'\u3000'|'\u001e')+ -> skip ;
 
 // handle characters which failed to match any other token
 ErrorCharacter: . ;
