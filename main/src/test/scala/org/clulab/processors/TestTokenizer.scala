@@ -108,6 +108,12 @@ class TestTokenizer extends FlatSpec with Matchers {
     sent.words(7) should be (")") // -RRB- if normalization enabled
   }
 
+  // Lecithin :cholesterol and phospholipid :diacylglycerol acyltransferase
+  // ATP : dephospho-CoA triphosphoribosyl transferase
+  // CDP-Glycerol : Poly ( glycerophosphate ) glycerophosphotransferase
+  // T = pseudo3 icosahedral viral capsid
+  // Myristoyl-CoA : protein N-myristoyltransferase , C-terminal
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
