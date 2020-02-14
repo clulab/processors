@@ -109,10 +109,10 @@ class TestTokenizer extends FlatSpec with Matchers {
   }
 
   // Lecithin :cholesterol and phospholipid :diacylglycerol acyltransferase
-  // ATP : dephospho-CoA triphosphoribosyl transferase
-  // CDP-Glycerol : Poly ( glycerophosphate ) glycerophosphotransferase
+  // ATP :dephospho-CoA triphosphoribosyl transferase
+  // CDP-Glycerol :Poly (glycerophosphate) glycerophosphotransferase
   // T = pseudo3 icosahedral viral capsid
-  // Myristoyl-CoA : protein N-myristoyltransferase , C-terminal
+  // Myristoyl-CoA :protein N-myristoyltransferase,C-terminal
 
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
