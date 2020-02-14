@@ -8,7 +8,7 @@ import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.corenlp.chunker.CRFChunker
 import org.clulab.processors._
 import edu.stanford.nlp.ling.CoreAnnotations._
-import edu.stanford.nlp.ling.CoreLabel
+import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 
@@ -300,6 +300,7 @@ object ShallowNLPProcessor {
     val docAnnotation = new Annotation(doc.text.get)
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
     docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
+    val docTokens = new util.ArrayList[CoreLabel]
 
     var sentOffset = 0
     var tokenOffset = 0
@@ -327,6 +328,7 @@ object ShallowNLPProcessor {
       // tokens
       val crtSent = new Annotation(sentence.getSentenceText)
       crtSent.set(classOf[TokensAnnotation], crtTokens)
+      docTokens.addAll(crtTokens)
 
       // character offsets and actual text
       val sentStartOffset = sentence.startOffsets.head
@@ -344,6 +346,10 @@ object ShallowNLPProcessor {
       sentencesAnnotation.add(crtSent)
       sentOffset += 1
     }
+
+    // document-wide annotations: all tokens in the doc, and the full text
+    docAnnotation.set(classOf[CoreAnnotations.TokensAnnotation], docTokens)
+    docAnnotation.set(classOf[CoreAnnotations.TextAnnotation], doc.text.get)
 
     docAnnotation
   }
