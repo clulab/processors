@@ -21,12 +21,12 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * Implementation of the FLAIR language model
  */
-class Flair {
+class Flair(val flairParametersOpt: Option[FlairParameters] = None) {
 
-  var model:FlairParameters = _
+  var model:Option[FlairParameters] = flairParametersOpt
 
   def mkTrainer(): Trainer = {
-    val trainer = new RMSPropTrainer(model.parameters)
+    val trainer = new RMSPropTrainer(model.get.parameters)
     trainer.clippingEnabled_=(true)
     trainer.clipThreshold_=(CLIP_THRESHOLD)
     trainer
@@ -49,7 +49,7 @@ class Flair {
     val c2i = knownChars.toArray.zipWithIndex.toMap
 
     // initialize model and optimizer
-    model = mkParams(c2i)
+    model = Some(mkParams(c2i))
     var trainer = mkTrainer()
 
     // train the fw and bw character LSTMs on all sentences in training
@@ -72,7 +72,7 @@ class Flair {
       // left-to-right prediction
       //
       val fwIn = characters
-      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = true)
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.get.charFwRnnBuilder, model.get.fwO, doDropout = true)
       val fwLoss = languageModelLoss(fwEmissionScores, fwIn)
       batchLosses.add(fwLoss)
 
@@ -80,7 +80,7 @@ class Flair {
       // right-to-left prediction
       //
       val bwIn = characters.reverse
-      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO, doDropout = true)
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.get.charBwRnnBuilder, model.get.bwO, doDropout = true)
       val bwLoss = languageModelLoss(bwEmissionScores, bwIn)
       batchLosses.add(bwLoss)
 
@@ -98,7 +98,7 @@ class Flair {
         val comboLoss = sum(batchLosses) / batchLosses.size
         cummulativeLoss += comboLoss.value().toFloat()
         ComputationGraph.backward(comboLoss)
-        safeUpdate(trainer, model.parameters)
+        safeUpdate(trainer, model.get.parameters)
 
         // report perplexity if a dev file is available
         if(sentCount % saveCheckpoint == 0 && devFileName.nonEmpty){
@@ -120,7 +120,7 @@ class Flair {
         // save a model every 50K sentences
         if(sentCount % saveCheckpoint == 0){
           val baseModelName = s"flair_s$sentCount"
-          model.save(baseModelName)
+          model.get.save(baseModelName)
         }
       }
     }
@@ -132,7 +132,7 @@ class Flair {
     val charBuffer = new ArrayBuffer[Char]()
     for(i <- sentence.indices) {
       val c = sentence.charAt(i)
-      if(model.c2i.contains(c))
+      if(model.get.c2i.contains(c))
         charBuffer += c
       else
         charBuffer += UNKNOWN_CHAR
@@ -151,11 +151,11 @@ class Flair {
       ComputationGraph.renew()
 
       val fwIn = characters
-      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.charFwRnnBuilder, model.fwO, doDropout = false) // no dropout during testing!
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.get.charFwRnnBuilder, model.get.fwO) // no dropout during testing!
       val fwPp = perplexity(fwEmissionScores, fwIn)
 
       val bwIn = characters.reverse
-      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.charBwRnnBuilder, model.bwO, doDropout = false)
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.get.charBwRnnBuilder, model.get.bwO)
       val bwPp = perplexity(bwEmissionScores, bwIn)
 
       cummulativeFwPerplexity += fwPp
@@ -190,7 +190,7 @@ class Flair {
    * @return The id of the gold tag (i.e., the next character) for this character
    */
   def goldTagId(characters:Array[Char], i:Int): Int = {
-    val goldTid = model.c2i(
+    val goldTid = model.get.c2i(
       if(i < characters.length - 1) characters(i + 1) // the next character if it exists
       else EOS_CHAR
     )
@@ -256,12 +256,12 @@ class Flair {
 
   def mkEmbedding(c:Char): Expression = {
     val charEmbedding =
-      if(model.c2i.contains(c))
+      if(model.get.c2i.contains(c))
         // found the character in the known vocabulary
-        lookup(model.charLookupParameters, model.c2i(c))
+        lookup(model.get.charLookupParameters, model.get.c2i(c))
       else {
         // not found; return the embedding at position 0, which is reserved for unknown words
-        lookup(model.charLookupParameters, UNKNOWN_CHAR)
+        lookup(model.get.charLookupParameters, UNKNOWN_CHAR)
       }
 
     charEmbedding
