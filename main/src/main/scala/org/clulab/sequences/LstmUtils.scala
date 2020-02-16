@@ -538,9 +538,13 @@ object LstmUtils {
 
   protected def stringToChar(string: String): Char = string.charAt(0)
 
+  protected def stringToCharInt(string: String): Char = string.toInt.toChar
+
   class ByLineStringMapBuilder extends ByLineMapBuilder(stringToString)
 
   class ByLineCharMapBuilder extends ByLineMapBuilder(stringToChar)
+
+  class ByLineCharIntMapBuilder extends ByLineMapBuilder(stringToCharInt)
 
   class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String]] {
 

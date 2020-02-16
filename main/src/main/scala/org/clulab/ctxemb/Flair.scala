@@ -357,7 +357,7 @@ object FlairParameters {
     val x2iFilename = mkX2iFilename(baseFilename)
 
     val (c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
-      val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
+      val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
       val lines = source.getLines()
       val c2i = byLineCharMapBuilder.build(lines)
       val dim = new LstmUtils.ByLineIntBuilder().build(lines)
