@@ -356,7 +356,7 @@ object FlairParameters {
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
 
-    val (c2i, _) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+    val (c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
       val lines = source.getLines()
       val c2i = byLineCharMapBuilder.build(lines)
@@ -364,6 +364,7 @@ object FlairParameters {
       (c2i, dim)
     }
     Flair.logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
+    Flair.logger.debug(s"dim = $dim")
 
     val model = {
       val model = mkParams(c2i)
