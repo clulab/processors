@@ -592,12 +592,12 @@ object LstmUtils {
     }
   }
 
-  def loadParameters(dynetFilename: String, modelParameters: ParameterCollection): Unit = {
+  def loadParameters(dynetFilename: String, modelParameters: ParameterCollection, key:String = "/all"): Unit = {
     val possibleFile = new File(dynetFilename)
     if (possibleFile.exists()) {
       // Read from this file on disk.
       new CloseableModelLoader(dynetFilename).autoClose { modelLoader =>
-        modelLoader.populateModel(modelParameters, "/all")
+        modelLoader.populateModel(modelParameters, key)
       }
     }
     else {
@@ -616,7 +616,7 @@ object LstmUtils {
         val nativeJarFileName = new File(uri).getPath
 
         new CloseableZipModelLoader(dynetFilename, nativeJarFileName).autoClose { zipModelLoader =>
-          zipModelLoader.populateModel(modelParameters, "/all")
+          zipModelLoader.populateModel(modelParameters, key)
         }
       }
       else if (protocol == "file") {
@@ -626,7 +626,7 @@ object LstmUtils {
         val nativeFileName = new File(uri).getPath
 
         new CloseableModelLoader(nativeFileName).autoClose { modelLoader =>
-          modelLoader.populateModel(modelParameters, "/all")
+          modelLoader.populateModel(modelParameters, key)
         }
       }
       else

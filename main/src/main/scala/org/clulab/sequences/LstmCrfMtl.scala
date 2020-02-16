@@ -453,8 +453,8 @@ class LstmCrfMtlParameters(
   }
 
   def save(baseFilename: String): Unit = {
-    val dynetFilename = LstmCrfMtlParameters.mkDynetFilename(baseFilename)
-    val x2iFilename = LstmCrfMtlParameters.mkX2iFilename(baseFilename)
+    val dynetFilename = mkDynetFilename(baseFilename)
+    val x2iFilename = mkX2iFilename(baseFilename)
 
     new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
       modelSaver.addModel(parameters, "/all")
@@ -485,10 +485,6 @@ object LstmCrfMtlParameters {
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
   val CLIP_THRESHOLD = 10.0f
-
-  def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
-
-  def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
   def load(baseFilename: String): LstmCrfMtlParameters = {
     logger.debug(s"Loading MTL model from $baseFilename...")

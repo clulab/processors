@@ -49,7 +49,7 @@ class Flair(val flairParametersOpt: Option[FlairParameters] = None) {
     val c2i = knownChars.toArray.zipWithIndex.toMap
 
     // initialize model and optimizer
-    model = Some(mkParams(c2i))
+    model = Some(FlairParameters.mkParams(c2i))
     var trainer = mkTrainer()
 
     // train the fw and bw character LSTMs on all sentences in training
@@ -267,22 +267,6 @@ class Flair(val flairParametersOpt: Option[FlairParameters] = None) {
     charEmbedding
   }
 
-  protected def mkParams(c2i:Map[Char, Int]): FlairParameters = {
-    val i2c = fromIndexToChar(c2i)
-
-    val parameters = new ParameterCollection()
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-    val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-    val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-
-    val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
-    val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
-
-    new FlairParameters(c2i, i2c, parameters,
-      charLookupParameters, charFwBuilder, charBwBuilder,
-      fwO, bwO)
-  }
-
   protected def generateKnownCharacters(trainFileName: String): (Set[Char], Int) = {
     logger.debug(s"Counting characters in file $trainFileName...")
     val counts = new Counter[Char]()
@@ -346,12 +330,51 @@ class FlairParameters (
       LstmUtils.saveCharMap(printWriter, c2i, "c2i")
       LstmUtils.save(printWriter, dim, "dim")
     }
+  }
+}
 
+object FlairParameters {
+  def mkParams(c2i:Map[Char, Int]): FlairParameters = {
+    val i2c = fromIndexToChar(c2i)
+
+    val parameters = new ParameterCollection()
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
+    val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+
+    val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+    val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+
+    new FlairParameters(c2i, i2c, parameters,
+      charLookupParameters, charFwBuilder, charBwBuilder,
+      fwO, bwO)
+  }
+
+  def load(baseFilename: String): FlairParameters = {
+    Flair.logger.debug(s"Loading MTL model from $baseFilename...")
+    val dynetFilename = mkDynetFilename(baseFilename)
+    val x2iFilename = mkX2iFilename(baseFilename)
+
+    val (c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+      val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
+      val lines = source.getLines()
+      val c2i = byLineCharMapBuilder.build(lines)
+      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
+      (c2i, dim)
+    }
+
+    val model = {
+      val model = mkParams(c2i)
+      LstmUtils.loadParameters(dynetFilename, model.parameters)
+      model
+    }
+
+    model
   }
 }
 
 object Flair {
-  private val logger:Logger = LoggerFactory.getLogger(classOf[Flair])
+  val logger:Logger = LoggerFactory.getLogger(classOf[Flair])
 
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 100
@@ -366,18 +389,32 @@ object Flair {
 
   val BATCH_SIZE = 1
 
+  def apply(modelFilenamePrefix: String): Flair = {
+    val model = FlairParameters.load(modelFilenamePrefix)
+    val flair = new Flair(Some(model))
+    flair
+  }
+
   def main(args: Array[String]): Unit = {
     initializeDyNet() // autoBatch = true, mem = "512")
-
     val configName = "flair"
     val config = new FlairConfig(ConfigFactory.load(configName))
 
-    val lm = new Flair()
-    lm.train(
-      config.getArgString("flair.train", None),
-      Some(config.getArgString("flair.dev", None)),
-      config.getArgInt("flair.logCheckpoint", Some(1000)),
-      config.getArgInt("flair.saveCheckpoint", Some(50000))
-    )
+    if(! config.contains("flair.model")) {
+      // train mode
+      logger.debug("Entering training mode...")
+      val lm = new Flair()
+      lm.train(
+        config.getArgString("flair.train", None),
+        Some(config.getArgString("flair.dev", None)),
+        config.getArgInt("flair.logCheckpoint", Some(1000)),
+        config.getArgInt("flair.saveCheckpoint", Some(50000))
+      )
+    } else {
+      // test mode
+      logger.debug("Entering evaluation mode...")
+      val lm = Flair(config.getArgString("flair.model", None))
+      lm.reportPerplexity(config.getArgString("flair.dev", None))
+    }
   }
 }
