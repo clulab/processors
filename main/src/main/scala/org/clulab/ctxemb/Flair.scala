@@ -363,6 +363,7 @@ object FlairParameters {
       val dim = new LstmUtils.ByLineIntBuilder().build(lines)
       (c2i, dim)
     }
+    Flair.logger.debug(s"Loaded a character map with ${c2i.size} entries.")
 
     val model = {
       val model = mkParams(c2i)
