@@ -338,12 +338,13 @@ object FlairParameters {
     val i2c = fromIndexToChar(c2i)
 
     val parameters = new ParameterCollection()
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
     val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
     val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
     val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
 
     new FlairParameters(c2i, i2c, parameters,
       charLookupParameters, charFwBuilder, charBwBuilder,
