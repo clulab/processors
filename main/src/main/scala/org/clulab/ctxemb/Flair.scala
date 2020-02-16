@@ -368,7 +368,7 @@ object FlairParameters {
 
     val model = {
       val model = mkParams(c2i)
-      LstmUtils.loadParameters(dynetFilename, model.parameters)
+      LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/flair")
       model
     }
 
