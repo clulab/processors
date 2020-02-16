@@ -352,7 +352,7 @@ object FlairParameters {
   }
 
   def load(baseFilename: String): FlairParameters = {
-    Flair.logger.debug(s"Loading MTL model from $baseFilename...")
+    Flair.logger.debug(s"Loading Flair model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
 
