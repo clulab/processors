@@ -40,8 +40,8 @@ class LstmCrf protected(val greedyInference: Boolean, initializationParamsOpt: O
     logger.debug(s"Character vocabulary has ${c2i.size} entries.")
 
     // TODO Perhaps put this elsewhere, like in main.
-    logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+    initializeDyNet()
+
     val model = LstmCrfParameters.create(w2i, t2i, c2i, w2v)
     logger.debug("Completed initialization.")
     model

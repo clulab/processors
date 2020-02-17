@@ -334,10 +334,10 @@ class FlairParameters (
 }
 
 object FlairParameters {
-  def mkParams(c2i:Map[Char, Int]): FlairParameters = {
+  def mkParams(c2i:Map[Char, Int], collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
     val i2c = fromIndexToChar(c2i)
 
-    val parameters = new ParameterCollection()
+    val parameters = collectionOpt.getOrElse(new ParameterCollection())
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
 
     val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
@@ -351,7 +351,7 @@ object FlairParameters {
       fwO, bwO)
   }
 
-  def load(baseFilename: String): FlairParameters = {
+  def load(baseFilename: String, collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
     Flair.logger.debug(s"Loading Flair model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
@@ -367,7 +367,7 @@ object FlairParameters {
     Flair.logger.debug(s"dim = $dim")
 
     val model = {
-      val model = mkParams(c2i)
+      val model = mkParams(c2i, collectionOpt)
       LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/flair")
       model
     }
@@ -392,8 +392,8 @@ object Flair {
 
   val BATCH_SIZE = 1
 
-  def apply(modelFilenamePrefix: String): Flair = {
-    val model = FlairParameters.load(modelFilenamePrefix)
+  def apply(modelFilenamePrefix: String, collectionOpt: Option[ParameterCollection] = None): Flair = {
+    val model = FlairParameters.load(modelFilenamePrefix, collectionOpt)
     val flair = new Flair(Some(model))
     flair
   }
