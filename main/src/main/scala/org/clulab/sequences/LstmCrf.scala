@@ -40,8 +40,8 @@ class LstmCrf protected(val greedyInference: Boolean, initializationParamsOpt: O
     logger.debug(s"Character vocabulary has ${c2i.size} entries.")
 
     // TODO Perhaps put this elsewhere, like in main.
-    logger.debug("Initializing DyNet...")
-    Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+    initializeDyNet()
+
     val model = LstmCrfParameters.create(w2i, t2i, c2i, w2v)
     logger.debug("Completed initialization.")
     model
@@ -103,7 +103,7 @@ class LstmCrf protected(val greedyInference: Boolean, initializationParamsOpt: O
         val emissionScores = emissionScoresAsExpressions(words,  doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence
-        val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2i)
+        val goldTagIds = toIds(sentence.map(_.getTag), model.t2i)
 
         val loss =
           if(greedyInference) {
@@ -314,8 +314,8 @@ class LstmCrfParameters(
   }
 
   def save(modelFilename: String): Unit = {
-    val dynetFilename = LstmCrfParameters.mkDynetFilename(modelFilename)
-    val x2iFilename = LstmCrfParameters.mkX2iFilename(modelFilename)
+    val dynetFilename = mkDynetFilename(modelFilename)
+    val x2iFilename = mkX2iFilename(modelFilename)
 
     new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
       modelSaver.addModel(parameters, "/all")
@@ -339,10 +339,6 @@ object LstmCrfParameters {
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
-
-  def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
-
-  def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
   def load(baseFilename: String): LstmCrfParameters = {
     val dynetFilename = mkDynetFilename(baseFilename)

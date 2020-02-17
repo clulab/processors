@@ -29,16 +29,26 @@ object LstmUtils {
   val STOP_TAG = "<STOP>"
 
   val RANDOM_SEED = 2522620396L // used for both DyNet, and the JVM seed for shuffling data
+  val WEIGHT_DECAY = (1e-5).toFloat
 
   val LOG_MIN_VALUE:Float = -10000
 
   private var IS_DYNET_INITIALIZED = false
 
-  def initializeDyNet(): Unit = {
+  def initializeDyNet(autoBatch:Boolean = false, mem:String = ""): Unit = {
     this.synchronized {
       if(! IS_DYNET_INITIALIZED) {
         logger.debug("Initializing DyNet...")
-        Initialize.initialize(Map("random-seed" -> RANDOM_SEED))
+
+        val params = new mutable.HashMap[String, Any]()
+        params += "random-seed" -> RANDOM_SEED
+        params += "weight-decay" -> WEIGHT_DECAY
+        if(autoBatch) {
+          params += "autobatch" -> 1
+          params += "dynet-mem" -> mem
+        }
+
+        Initialize.initialize(params.toMap)
         logger.debug("DyNet initialization complete.")
         IS_DYNET_INITIALIZED = true
       }
@@ -88,6 +98,21 @@ object LstmUtils {
     }
     assert(max > 0)
     val i2s = new Array[String](max + 1)
+    for(k <- s2i.keySet) {
+      i2s(s2i(k)) = k
+    }
+    i2s
+  }
+
+  def fromIndexToChar(s2i: Map[Char, Int]):Array[Char] = {
+    var max = Int.MinValue
+    for(v <- s2i.values) {
+      if(v > max) {
+        max = v
+      }
+    }
+    assert(max > 0)
+    val i2s = new Array[Char](max + 1)
     for(k <- s2i.keySet) {
       i2s(s2i(k)) = k
     }
@@ -228,7 +253,7 @@ object LstmUtils {
     total
   }
 
-  def toTagIds(tags: Array[String], t2i:Map[String, Int]):Array[Int] = {
+  def toIds[T](tags: Array[T], t2i:Map[T, Int]):Array[Int] = {
     val ids = new ArrayBuffer[Int]()
     for(tag <- tags) {
       ids += t2i(tag)
@@ -456,6 +481,15 @@ object LstmUtils {
     printWriter.println() // Separator
   }
 
+  def saveCharMap(printWriter: PrintWriter, values: Map[Char, Int], comment: String): Unit = {
+    printWriter.println("# " + comment)
+    // Sort these so that the same file always results, even it this is slow.
+    values.toSeq.sorted.foreach { case (key, value) =>
+      printWriter.println(s"${key.toInt}\t$value") // save characters as int, to store the unprintable ones correctly
+    }
+    printWriter.println() // Separator
+  }
+
   def save[T](printWriter: PrintWriter, values: Array[T], comment: String): Unit = {
     printWriter.println("# " + comment)
     values.foreach(printWriter.println)
@@ -512,9 +546,13 @@ object LstmUtils {
 
   protected def stringToChar(string: String): Char = string.charAt(0)
 
+  protected def stringToCharInt(string: String): Char = string.toInt.toChar
+
   class ByLineStringMapBuilder extends ByLineMapBuilder(stringToString)
 
   class ByLineCharMapBuilder extends ByLineMapBuilder(stringToChar)
+
+  class ByLineCharIntMapBuilder extends ByLineMapBuilder(stringToCharInt)
 
   class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String]] {
 
@@ -566,12 +604,12 @@ object LstmUtils {
     }
   }
 
-  def loadParameters(dynetFilename: String, modelParameters: ParameterCollection): Unit = {
+  def loadParameters(dynetFilename: String, modelParameters: ParameterCollection, key:String = "/all"): Unit = {
     val possibleFile = new File(dynetFilename)
     if (possibleFile.exists()) {
       // Read from this file on disk.
       new CloseableModelLoader(dynetFilename).autoClose { modelLoader =>
-        modelLoader.populateModel(modelParameters, "/all")
+        modelLoader.populateModel(modelParameters, key)
       }
     }
     else {
@@ -590,7 +628,7 @@ object LstmUtils {
         val nativeJarFileName = new File(uri).getPath
 
         new CloseableZipModelLoader(dynetFilename, nativeJarFileName).autoClose { zipModelLoader =>
-          zipModelLoader.populateModel(modelParameters, "/all")
+          zipModelLoader.populateModel(modelParameters, key)
         }
       }
       else if (protocol == "file") {
@@ -600,13 +638,17 @@ object LstmUtils {
         val nativeFileName = new File(uri).getPath
 
         new CloseableModelLoader(nativeFileName).autoClose { modelLoader =>
-          modelLoader.populateModel(modelParameters, "/all")
+          modelLoader.populateModel(modelParameters, key)
         }
       }
       else
         throw new RuntimeException(s"ERROR: cannot locate the model file $dynetFilename with protocol $protocol!")
     }
   }
+
+  def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
+
+  def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 }
 
 class LstmUtils

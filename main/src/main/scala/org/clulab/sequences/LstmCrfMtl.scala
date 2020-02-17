@@ -127,7 +127,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         val emissionScores = emissionScoresAsExpressions(words, taskId, doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence
-        val goldTagIds = toTagIds(sentence.map(_.getTag), model.t2is(taskId))
+        val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
 
         var loss =
           if(model.greedyInference(taskId)) {
@@ -453,8 +453,8 @@ class LstmCrfMtlParameters(
   }
 
   def save(baseFilename: String): Unit = {
-    val dynetFilename = LstmCrfMtlParameters.mkDynetFilename(baseFilename)
-    val x2iFilename = LstmCrfMtlParameters.mkX2iFilename(baseFilename)
+    val dynetFilename = mkDynetFilename(baseFilename)
+    val x2iFilename = mkX2iFilename(baseFilename)
 
     new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
       modelSaver.addModel(parameters, "/all")
@@ -485,10 +485,6 @@ object LstmCrfMtlParameters {
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
   val CLIP_THRESHOLD = 10.0f
-
-  def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
-
-  def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
   def load(baseFilename: String): LstmCrfMtlParameters = {
     logger.debug(s"Loading MTL model from $baseFilename...")
