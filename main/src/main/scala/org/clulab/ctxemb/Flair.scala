@@ -401,7 +401,7 @@ object FlairParameters {
 
       // now load the actual embedding vectors into the parameters
       if(w2v.nonEmpty) {
-        initializeEmbeddings(w2v.get, model.wordLookupParameters.get)
+        initializeEmbeddings(w2v.get, w2i.get, model.wordLookupParameters.get)
       }
 
       model
