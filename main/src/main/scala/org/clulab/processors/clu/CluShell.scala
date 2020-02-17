@@ -13,7 +13,6 @@ class CluShell extends Shell {
   var proc: CluProcessor = _
 
   override def initialize(): Unit = {
-    initializeDyNet()
     proc = new CluProcessor()
   }
 

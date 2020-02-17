@@ -578,12 +578,14 @@ object LstmCrfMtl {
   val USE_DOMAIN_CONSTRAINTS = true
 
   def apply(modelFilenamePrefix: String, taskManager: TaskManager): LstmCrfMtl = {
+    initializeDyNet()
     val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
     val mtl = new LstmCrfMtl(Some(taskManager), Some(model))
     mtl
   }
 
   def apply(modelFilenamePrefix: String): LstmCrfMtl = {
+    initializeDyNet()
     val model = LstmCrfMtlParameters.load(modelFilenamePrefix)
     val mtl = new LstmCrfMtl(None, Some(model))
     mtl

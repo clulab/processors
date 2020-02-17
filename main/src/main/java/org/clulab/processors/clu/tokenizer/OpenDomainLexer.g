@@ -60,7 +60,10 @@ SGML: '<' '/'? ~('<'|'>'|'.'|','|'!'|'?'|'|'|'('|')'|'{'|'}')+ '>' ;
 HTML_CODE: '&' (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? ';' ;
 
 // Common smileys
-SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('('|')'|'D'|'P'|'d'|'p'|'O'|'\\'|'{'|'@'|'|'|'['|']') ;
+SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('('|')'|'\\'|'{'|'@'|'|'|'['|']') ;
+
+// Smileys ending in a letter. These should be tokenized only when the next character is not a letter
+LETTER_SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('D'|'P'|'d'|'p'|'O') {! Character.isLetterOrDigit(_input.LA(1))}? ;
 
 // TODO: phone numbers
 
@@ -68,7 +71,10 @@ SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('('|')'|'D'|'P'|'d'|'p'|'O
 EOS: PUNCTUATION (PUNCTUATION)* ;
 
 // skip all white spaces
-WHITESPACE: ('\t'|' '|'\r'|'\n'|'\u000C'| '\u2028'|'\u2029'|'\u000B'|'\u0085'|'\u00A0'|('\u2000'..'\u200A')|'\u3000')+ -> skip ;
+// we consider all ascii characters in the range 0-32 (hex 00-20) to be whitespace
+// this includes the usual characters (e.g. space, newline, tab) as well as some control characters that are
+// invisible but can potentially confuse the parser if we don't explicitly ignore them
+WHITESPACE: (('\u0000'..'\u0020')|'\u2028'|'\u2029'|'\u0085'|'\u00A0'|('\u2000'..'\u200A')|'\u3000')+ -> skip ;
 
 // handle characters which failed to match any other token
 ErrorCharacter: . ;

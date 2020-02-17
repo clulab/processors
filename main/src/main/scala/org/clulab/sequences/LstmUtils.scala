@@ -9,6 +9,7 @@ import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Initialize, LookupParam
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelLoader
 import org.clulab.fatdynet.utils.CloseableZipModelLoader
+import org.clulab.sequences.LstmCrfMtl.logger
 import org.clulab.struct.MutableNumber
 import org.clulab.utils.Closer.AutoCloser
 import org.slf4j.{Logger, LoggerFactory}
@@ -32,19 +33,26 @@ object LstmUtils {
 
   val LOG_MIN_VALUE:Float = -10000
 
+  private var IS_DYNET_INITIALIZED = false
+
   def initializeDyNet(autoBatch:Boolean = false, mem:String = ""): Unit = {
-    logger.debug("Initializing DyNet...")
+    this.synchronized {
+      if(! IS_DYNET_INITIALIZED) {
+        logger.debug("Initializing DyNet...")
 
-    val params = new mutable.HashMap[String, Any]()
-    params += "random-seed" -> RANDOM_SEED
-    params += "weight-decay" -> WEIGHT_DECAY
-    if(autoBatch) {
-      params += "autobatch" -> 1
-      params += "dynet-mem" -> mem
+        val params = new mutable.HashMap[String, Any]()
+        params += "random-seed" -> RANDOM_SEED
+        params += "weight-decay" -> WEIGHT_DECAY
+        if(autoBatch) {
+          params += "autobatch" -> 1
+          params += "dynet-mem" -> mem
+        }
+
+        Initialize.initialize(params.toMap)
+        logger.debug("DyNet initialization complete.")
+        IS_DYNET_INITIALIZED = true
+      }
     }
-
-    Initialize.initialize(params.toMap)
-    logger.debug("DyNet initialization complete.")
   }
 
   def loadEmbeddings(docFreqFileName:Option[String], minDocFreq:Int, embeddingsFile:String): Word2Vec = {
