@@ -12,11 +12,12 @@ import edu.cmu.dynet.Expression._
 
 import scala.collection.mutable
 import Flair._
+import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.sequences.LstmUtils
+import org.clulab.sequences.{ArrayMath, LstmUtils}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
  * Implementation of the FLAIR language model
@@ -309,8 +310,10 @@ class FlairConfig(config:Config) extends Configured {
 class FlairParameters (
   val c2i: Map[Char, Int],
   val i2c: Array[Char],
+  val w2i:Option[Map[String, Int]], // only in testing, to combine char and word embeddings
   val parameters: ParameterCollection,
   val charLookupParameters: LookupParameter,
+  val wordLookupParameters: Option[LookupParameter], // only in testing, to combine char and word embeddings
   val charFwRnnBuilder: RnnBuilder,
   val charBwRnnBuilder: RnnBuilder,
   val fwO: Parameter,
@@ -334,7 +337,9 @@ class FlairParameters (
 }
 
 object FlairParameters {
-  def mkParams(c2i:Map[Char, Int], collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
+  def mkParams(c2i:Map[Char, Int],
+               w2i:Option[Map[String, Int]] = None, wordEmbeddingDim:Int = -1,
+               collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
     val i2c = fromIndexToChar(c2i)
 
     val parameters = collectionOpt.getOrElse(new ParameterCollection())
@@ -346,12 +351,21 @@ object FlairParameters {
     val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
     val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
 
-    new FlairParameters(c2i, i2c, parameters,
-      charLookupParameters, charFwBuilder, charBwBuilder,
-      fwO, bwO)
+    if(w2i.isEmpty) {
+      new FlairParameters(c2i, i2c, None, parameters,
+        charLookupParameters, None, charFwBuilder, charBwBuilder,
+        fwO, bwO)
+    } else {
+      val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(wordEmbeddingDim))
+      new FlairParameters(c2i, i2c, w2i, parameters,
+        charLookupParameters, Some(wordLookupParameters), charFwBuilder, charBwBuilder,
+        fwO, bwO)
+    }
   }
 
-  def load(baseFilename: String, collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
+  def load(config: FlairConfig, collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
+
+    val baseFilename = config.getArgString("flair.model", None)
     Flair.logger.debug(s"Loading Flair model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
@@ -364,15 +378,54 @@ object FlairParameters {
       (c2i, dim)
     }
     Flair.logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
-    Flair.logger.debug(s"dim = $dim")
+
+    val w2v = if(config.contains("flair.embed")) {
+      val embedFilename = config.getArgString("flair.embed", None)
+      val docFreqFilename = config.getArgString("flair.docFreq", None)
+      val minFreq = config.getArgInt("flair.minWordFreq", Some(100))
+      Some(loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename))
+    } else {
+      None
+    }
+
+    val w2i = if(w2v.isDefined) {
+      Some(mkWordVocab(w2v.get))
+    } else {
+      None
+    }
+    val wordEmbeddingDim = if(w2v.isDefined) w2v.get.dimensions else -1
 
     val model = {
-      val model = mkParams(c2i, collectionOpt)
+      val model = mkParams(c2i, w2i, wordEmbeddingDim, collectionOpt)
       LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/flair")
+
+      // now load the actual embedding vectors into the parameters
+      if(w2v.nonEmpty) {
+        initializeEmbeddings(w2v.get, model.wordLookupParameters.get)
+      }
+
       model
     }
 
     model
+  }
+
+  def initializeEmbeddings(w2v:Word2Vec, w2i:Map[String, Int], lookupParameters: LookupParameter): Unit = {
+    logger.debug("Initializing DyNet embedding parameters...")
+    for(word <- w2v.matrix.keySet){
+      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
+    }
+    logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
+  }
+
+  private def mkWordVocab(w2v:Word2Vec): Map[String, Int] = {
+    val commonWords = new ListBuffer[String]
+    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
+    for(w <- w2v.matrix.keySet.toList.sorted) {
+      commonWords += w
+    }
+    val w2i = commonWords.zipWithIndex.toMap
+    w2i
   }
 }
 
@@ -392,8 +445,8 @@ object Flair {
 
   val BATCH_SIZE = 1
 
-  def apply(modelFilenamePrefix: String, collectionOpt: Option[ParameterCollection] = None): Flair = {
-    val model = FlairParameters.load(modelFilenamePrefix, collectionOpt)
+  def apply(config: FlairConfig, collectionOpt: Option[ParameterCollection] = None): Flair = {
+    val model = FlairParameters.load(config, collectionOpt)
     val flair = new Flair(Some(model))
     flair
   }
@@ -416,7 +469,7 @@ object Flair {
     } else {
       // test mode
       logger.debug("Entering evaluation mode...")
-      val lm = Flair(config.getArgString("flair.model", None))
+      val lm = Flair(config)
       lm.reportPerplexity(config.getArgString("flair.dev", None))
     }
   }
