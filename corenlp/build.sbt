@@ -8,6 +8,6 @@ libraryDependencies ++= {
     "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV,
     "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV classifier "models",
 
-    "org.clulab" % "bioresources" % "1.1.24" // for bio NER
+    "org.clulab" % "bioresources" % "1.1.29" // for bio NER
   )
 }
