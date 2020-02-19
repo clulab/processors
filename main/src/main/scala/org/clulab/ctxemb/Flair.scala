@@ -310,10 +310,8 @@ class FlairConfig(config:Config) extends Configured {
 class FlairParameters (
   val c2i: Map[Char, Int],
   val i2c: Array[Char],
-  val w2i:Option[Map[String, Int]], // only in testing, to combine char and word embeddings
   val parameters: ParameterCollection,
   val charLookupParameters: LookupParameter,
-  val wordLookupParameters: Option[LookupParameter], // only in testing, to combine char and word embeddings
   val charFwRnnBuilder: RnnBuilder,
   val charBwRnnBuilder: RnnBuilder,
   val fwO: Parameter,
@@ -337,12 +335,10 @@ class FlairParameters (
 }
 
 object FlairParameters {
-  def mkParams(c2i:Map[Char, Int],
-               w2i:Option[Map[String, Int]] = None, wordEmbeddingDim:Int = -1,
-               collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
+  def mkParams(c2i:Map[Char, Int]): FlairParameters = {
     val i2c = fromIndexToChar(c2i)
 
-    val parameters = collectionOpt.getOrElse(new ParameterCollection())
+    val parameters = new ParameterCollection()
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
 
     val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
@@ -351,21 +347,12 @@ object FlairParameters {
     val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
     val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
 
-    if(w2i.isEmpty) {
-      new FlairParameters(c2i, i2c, None, parameters,
-        charLookupParameters, None, charFwBuilder, charBwBuilder,
+    new FlairParameters(c2i, i2c, parameters,
+        charLookupParameters, charFwBuilder, charBwBuilder,
         fwO, bwO)
-    } else {
-      val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(wordEmbeddingDim))
-      new FlairParameters(c2i, i2c, w2i, parameters,
-        charLookupParameters, Some(wordLookupParameters), charFwBuilder, charBwBuilder,
-        fwO, bwO)
-    }
   }
 
-  def load(config: FlairConfig, collectionOpt: Option[ParameterCollection] = None): FlairParameters = {
-
-    val baseFilename = config.getArgString("flair.model", None)
+  def load(baseFilename: String): FlairParameters = {
     Flair.logger.debug(s"Loading Flair model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
@@ -379,31 +366,9 @@ object FlairParameters {
     }
     Flair.logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
 
-    val w2v = if(config.contains("flair.embed")) {
-      val embedFilename = config.getArgString("flair.embed", None)
-      val docFreqFilename = config.getArgString("flair.docFreq", None)
-      val minFreq = config.getArgInt("flair.minWordFreq", Some(100))
-      Some(loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename))
-    } else {
-      None
-    }
-
-    val w2i = if(w2v.isDefined) {
-      Some(mkWordVocab(w2v.get))
-    } else {
-      None
-    }
-    val wordEmbeddingDim = if(w2v.isDefined) w2v.get.dimensions else -1
-
     val model = {
-      val model = mkParams(c2i, w2i, wordEmbeddingDim, collectionOpt)
+      val model = mkParams(c2i)
       LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/flair")
-
-      // now load the actual embedding vectors into the parameters
-      if(w2v.nonEmpty) {
-        initializeEmbeddings(w2v.get, w2i.get, model.wordLookupParameters.get)
-      }
-
       model
     }
 
@@ -445,8 +410,8 @@ object Flair {
 
   val BATCH_SIZE = 1
 
-  def apply(config: FlairConfig, collectionOpt: Option[ParameterCollection] = None): Flair = {
-    val model = FlairParameters.load(config, collectionOpt)
+  def apply(baseModelFilename: String): Flair = {
+    val model = FlairParameters.load(baseModelFilename)
     val flair = new Flair(Some(model))
     flair
   }
@@ -456,21 +421,21 @@ object Flair {
     val configName = "flair"
     val config = new FlairConfig(ConfigFactory.load(configName))
 
-    if(! config.contains("flair.model")) {
+    if(config.contains("flair.test.model")) {
+      // test mode
+      logger.debug("Entering evaluation mode...")
+      val lm = Flair(config.getArgString("flair.test.model", None))
+      lm.reportPerplexity(config.getArgString("flair.train.dev", None))
+    } else {
       // train mode
       logger.debug("Entering training mode...")
       val lm = new Flair()
       lm.train(
-        config.getArgString("flair.train", None),
-        Some(config.getArgString("flair.dev", None)),
-        config.getArgInt("flair.logCheckpoint", Some(1000)),
-        config.getArgInt("flair.saveCheckpoint", Some(50000))
+        config.getArgString("flair.train.train", None),
+        Some(config.getArgString("flair.train.dev", None)),
+        config.getArgInt("flair.train.logCheckpoint", Some(1000)),
+        config.getArgInt("flair.train.saveCheckpoint", Some(50000))
       )
-    } else {
-      // test mode
-      logger.debug("Entering evaluation mode...")
-      val lm = Flair(config)
-      lm.reportPerplexity(config.getArgString("flair.dev", None))
     }
   }
 }
