@@ -375,23 +375,6 @@ object FlairParameters {
     model
   }
 
-  def initializeEmbeddings(w2v:Word2Vec, w2i:Map[String, Int], lookupParameters: LookupParameter): Unit = {
-    logger.debug("Initializing DyNet embedding parameters...")
-    for(word <- w2v.matrix.keySet){
-      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
-    }
-    logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
-  }
-
-  private def mkWordVocab(w2v:Word2Vec): Map[String, Int] = {
-    val commonWords = new ListBuffer[String]
-    commonWords += UNK_WORD // the word at position 0 is reserved for unknown words
-    for(w <- w2v.matrix.keySet.toList.sorted) {
-      commonWords += w
-    }
-    val w2i = commonWords.zipWithIndex.toMap
-    w2i
-  }
 }
 
 object Flair {
