@@ -1,18 +1,15 @@
 package org.clulab.sequences
 
 import java.io.{BufferedOutputStream, File, FileOutputStream, OutputStreamWriter, PrintWriter}
-import java.net.JarURLConnection
-import java.net.URI
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.CloseableModelLoader
 import org.clulab.fatdynet.utils.CloseableZipModelLoader
-import org.clulab.sequences.LstmCrfMtl.logger
-import org.clulab.struct.MutableNumber
 import org.clulab.utils.Closer.AutoCloser
+import org.clulab.struct.MutableNumber
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -30,7 +27,7 @@ object LstmUtils {
   val STOP_TAG = "<STOP>"
 
   val RANDOM_SEED = 2522620396L // used for both DyNet, and the JVM seed for shuffling data
-  val WEIGHT_DECAY = (1e-5).toFloat
+  val WEIGHT_DECAY:Float = 1e-5.toFloat
 
   val LOG_MIN_VALUE:Float = -10000
 
@@ -506,10 +503,16 @@ object LstmUtils {
   abstract class ByLineBuilder[IntermediateValueType] {
 
     protected def addLines(intermediateValue: IntermediateValueType, lines: Iterator[String]): Unit = {
-      lines.next() // Skip the comment line
+      // we need to look ahead to skip the comments, hence the buffered iterator
+      val bufferedIterator = lines.buffered
+
+      // skip all comment lines
+      while(bufferedIterator.head.nonEmpty && bufferedIterator.head.startsWith("#")) {
+        bufferedIterator.next()
+      }
 
       def nextLine(): Boolean = {
-        val line = lines.next()
+        val line = bufferedIterator.next()
         //println(s"LINE: [$line]")
 
         if (line.nonEmpty) {
@@ -615,6 +618,24 @@ object LstmUtils {
   def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
 
   def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
+
+  def mkWordVocab(w2v:Word2Vec): Map[String, Int] = {
+    val commonWords = new ListBuffer[String]
+    commonWords += LstmUtils.UNK_WORD // the word at position 0 is reserved for unknown words
+    for(w <- w2v.matrix.keySet.toList.sorted) {
+      commonWords += w
+    }
+    val w2i = commonWords.zipWithIndex.toMap
+    w2i
+  }
+
+  def initializeEmbeddings(w2v:Word2Vec, w2i:Map[String, Int], lookupParameters: LookupParameter): Unit = {
+    logger.debug("Initializing DyNet embedding parameters...")
+    for(word <- w2v.matrix.keySet){
+      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
+    }
+    logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
+  }
 }
 
 class LstmUtils

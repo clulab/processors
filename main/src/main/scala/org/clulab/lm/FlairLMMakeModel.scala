@@ -1,25 +1,20 @@
-package org.clulab.ctxemb
+package org.clulab.lm
 
 import com.typesafe.config.ConfigFactory
-import org.clulab.ctxemb.FlairParameters.mkParams
-import org.clulab.embeddings.word2vec.Word2Vec
-import org.clulab.sequences.{ArrayMath, LstmUtils}
+import org.clulab.lm.FlairParameters.mkParams
+import org.clulab.sequences.LstmUtils
 import org.clulab.sequences.LstmUtils.{initializeDyNet, mkDynetFilename, mkX2iFilename}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 import edu.cmu.dynet._
-import edu.cmu.dynet.Expression._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-
-
-import scala.collection.mutable.ListBuffer
 
 /**
  * Merges the Flair character LM parameters with word embeddings into a single model file
  */
-object FlairWordMerge {
-  val logger:Logger = LoggerFactory.getLogger(classOf[FlairWordMerge])
+object FlairLMMakeModel {
+  val logger:Logger = LoggerFactory.getLogger(classOf[FlairLMMakeModel])
 
   def main(args: Array[String]): Unit = {
     initializeDyNet() // autoBatch = true, mem = "512")
@@ -58,10 +53,10 @@ object FlairWordMerge {
     val docFreqFilename = config.getArgString("flair.merge.docFreq", None)
     val minFreq = config.getArgInt("flair.merge.minWordFreq", Some(100))
     val w2v = LstmUtils.loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename)
-    val w2i = mkWordVocab(w2v)
+    val w2i = LstmUtils.mkWordVocab(w2v)
 
     val wordLookupParameters = model.parameters.addLookupParameters(w2i.size, Dim(w2v.dimensions))
-    initializeEmbeddings(w2v, w2i, wordLookupParameters)
+    LstmUtils.initializeEmbeddings(w2v, w2i, wordLookupParameters)
     logger.debug("Completed loading word embeddings.")
 
     //
@@ -84,23 +79,7 @@ object FlairWordMerge {
     }
   }
 
-  private def mkWordVocab(w2v:Word2Vec): Map[String, Int] = {
-    val commonWords = new ListBuffer[String]
-    commonWords += LstmUtils.UNK_WORD // the word at position 0 is reserved for unknown words
-    for(w <- w2v.matrix.keySet.toList.sorted) {
-      commonWords += w
-    }
-    val w2i = commonWords.zipWithIndex.toMap
-    w2i
-  }
 
-  def initializeEmbeddings(w2v:Word2Vec, w2i:Map[String, Int], lookupParameters: LookupParameter): Unit = {
-    logger.debug("Initializing DyNet embedding parameters...")
-    for(word <- w2v.matrix.keySet){
-      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
-    }
-    logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
-  }
 }
 
-class FlairWordMerge
+class FlairLMMakeModel

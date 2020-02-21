@@ -1,4 +1,4 @@
-package org.clulab.ctxemb
+package org.clulab.lm
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.sequences.LstmUtils._
@@ -12,12 +12,11 @@ import edu.cmu.dynet.Expression._
 
 import scala.collection.mutable
 import Flair._
-import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.sequences.{ArrayMath, LstmUtils}
+import org.clulab.sequences.LstmUtils
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * Implementation of the FLAIR language model
