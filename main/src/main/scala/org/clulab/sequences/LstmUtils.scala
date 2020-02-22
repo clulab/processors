@@ -360,7 +360,7 @@ object LstmUtils {
 
     val wordEmbedding =
       if(w2i.contains(sanitized))
-      // found the word in the known vocabulary
+        // found the word in the known vocabulary
         lookup(wordLookupParameters, w2i(sanitized))
       else {
         // not found; return the embedding at position 0, which is reserved for unknown words
@@ -382,8 +382,11 @@ object LstmUtils {
     //println(s"make embedding for word [$word]")
     val charEmbeddings = new ArrayBuffer[Expression]()
     for(i <- word.indices) {
-      if(c2i.contains(word.charAt(i)))
+      if(c2i.contains(word.charAt(i))) {
         charEmbeddings += lookup(charLookupParameters, c2i(word.charAt(i)))
+      } else {
+        charEmbeddings += lookup(charLookupParameters, 0) // 0 reserved for unknown chars
+      }
     }
     val fwOut = transduce(charEmbeddings, charFwRnnBuilder).last
     val bwOut = transduce(charEmbeddings.reverse, charBwRnnBuilder).last

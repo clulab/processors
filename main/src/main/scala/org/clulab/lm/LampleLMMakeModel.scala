@@ -66,6 +66,7 @@ object LampleLMMakeModel {
     Serializer.using(LstmUtils.newPrintWriter(outX2iFilename)) { printWriter =>
       LstmUtils.saveCharMap(printWriter, c2i, "c2i")
       LstmUtils.save(printWriter, w2i, "w2i")
+      LstmUtils.save(printWriter, w2v.dimensions, "dim")
     }
   }
 }
