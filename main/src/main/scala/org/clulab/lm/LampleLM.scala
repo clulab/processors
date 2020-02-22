@@ -1,5 +1,7 @@
 package org.clulab.lm
 
+import java.io.PrintWriter
+
 import edu.cmu.dynet.{Dim, Expression, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
 import org.clulab.sequences.LstmUtils
 import org.clulab.sequences.LstmUtils.{mkDynetFilename, mkX2iFilename}
@@ -23,8 +25,19 @@ class LampleLM(
       c2i, charLookupParameters,
       charFwRnnBuilder, charBwRnnBuilder)
 
+  override def saveX2i(printWriter: PrintWriter): Unit = {
+    val dim = lookupParameters.dim().get(0)
+
+    LstmUtils.save(printWriter, c2i, "c2i")
+    LstmUtils.save(printWriter, w2i, "w2i")
+    LstmUtils.save(printWriter, dim, "dim")
+  }
+
   override def mkEmbeddings(words: Iterable[String]): Iterable[Expression] =
     words.map(mkEmbedding)
+
+  override def dimensions: Int =
+    (2 * LampleLM.CHAR_EMBEDDING_SIZE) + lookupParameters.dim().get(0).toInt
 }
 
 object LampleLM {
@@ -41,19 +54,34 @@ object LampleLM {
     val x2iFilename = mkX2iFilename(modelBaseFilename)
 
     //
+    // load the x2i info, and construct the parameters
+    //
+    val model = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+      val lines = source.getLines()
+      mkParams(lines, parameters)
+    }
+
+    //
+    // load the parameters
+    //
+    LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/lample")
+
+    model
+  }
+
+  protected def mkParams(lines:Iterator[String], parameters: ParameterCollection): LampleLM = {
+    //
     // load the x2i info
     //
-    val (c2i, w2i, embeddingDim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
-      val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
-      val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
-      val lines = source.getLines()
-      val c2i = byLineCharMapBuilder.build(lines)
-      val w2i = byLineStringMapBuilder.build(lines)
-      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
-      (c2i, w2i, dim)
-    }
+    val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
+    val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
+    val c2i = byLineCharMapBuilder.build(lines)
+    val w2i = byLineStringMapBuilder.build(lines)
+    val embeddingDim = new LstmUtils.ByLineIntBuilder().build(lines)
+
     logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
     logger.debug(s"Loaded a word map with ${w2i.keySet.size} entries.")
+    logger.debug(s"Using word embeddings of size $embeddingDim.")
 
     //
     // mkParams
@@ -68,11 +96,11 @@ object LampleLM {
       charFwRnnBuilder, charBwRnnBuilder
     )
 
-    //
-    // loadParameters
-    //
-    LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/lample")
-
     model
+  }
+
+  /** Loads the LM inside a task specific model, *after* training the task */
+  def load(lines:Iterator[String], parameters: ParameterCollection): LampleLM = {
+    mkParams(lines, parameters)
   }
 }

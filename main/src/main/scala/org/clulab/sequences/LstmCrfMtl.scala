@@ -5,7 +5,6 @@ import java.io.{FileWriter, PrintWriter}
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
-import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
@@ -15,8 +14,7 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -293,7 +291,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @param words One training or testing sentence
    */
   def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
-    val embeddings = words.map(mkEmbedding)
+    val embeddings = model.lm.mkEmbeddings(words).toArray
 
     // this is the biLSTM over words that is shared across all tasks
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
@@ -324,7 +322,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @return The scores for all tasks
    */
   def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
-    val embeddings = words.map(mkEmbedding)
+    val embeddings = model.lm.mkEmbeddings(words).toArray
 
     // this is the biLSTM over words that is shared across all tasks
     // we run this ONCE for all tasks!
@@ -428,18 +426,14 @@ class LstmCrfMtlParameters(
     }
 
     Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
-      val dim = lookupParameters.dim().get(0)
+      lm.saveX2i(printWriter)
 
-      LstmUtils.save(printWriter, w2i, "w2i")
-      LstmUtils.save(printWriter, c2i, "c2i")
       LstmUtils.save(printWriter, taskCount, "taskCount")
-
       LstmUtils.save(printWriter, greedyInference, "greedyInference")
 
       t2is.zipWithIndex.foreach { case (t2i, index) =>
         LstmUtils.save(printWriter, t2i, s"t2i($index)")
       }
-      LstmUtils.save(printWriter, dim, "dim")
     }
   }
 }
@@ -454,25 +448,25 @@ object LstmCrfMtlParameters {
     logger.debug(s"Loading MTL model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
-    val (taskCount, w2i, c2i, t2is, dim, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
-      val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
-      val byLineCharMapBuilder = new LstmUtils.ByLineCharMapBuilder()
-      val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
+    val parameters = new ParameterCollection()
+    val (lm, taskCount, t2is, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
-      val w2i = byLineStringMapBuilder.build(lines)
-      val c2i = byLineCharMapBuilder.build(lines)
+
+      val lm = LampleLM.load(lines, parameters)
+
+      val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
+      val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
       val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
       val greedyInferences:Array[Boolean] = byLineArrayBuilder.build(lines).map(_.toBoolean)
       val t2is = 0.until(taskCount).map { _ =>
         byLineStringMapBuilder.build(lines)
       }.toArray
-      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
 
-      (taskCount, w2i, c2i, t2is, dim, greedyInferences)
+      (lm, taskCount, t2is, greedyInferences)
     }
 
     val model = {
-      val model = mkParams(taskCount, w2i, c2i, t2is, dim, greedyInferences)
+      val model = mkParams(taskCount, parameters, lm, t2is, greedyInferences)
       LstmUtils.loadParameters(dynetFilename, model.parameters)
       model
     }
@@ -482,17 +476,12 @@ object LstmCrfMtlParameters {
   }
 
   protected def mkParams(taskCount: Int,
-                         TODO
-                         w2i: Map[String, Int],
-      c2i: Map[Char, Int],
-      t2is: Array[Map[String, Int]],
-      embeddingDim: Int,
-      greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
-    val parameters = new ParameterCollection()
-
+                         parameters: ParameterCollection,
+                         lm: LM,
+                         t2is: Array[Map[String, Int]],
+                         greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
     // These parameters correspond to the LSTM(s) shared by all tasks
-    val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
-    val embeddingSize = embeddingDim + 2 * CHAR_RNN_STATE_SIZE
+    val embeddingSize = lm.dimensions
     val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     
@@ -509,10 +498,9 @@ object LstmCrfMtlParameters {
     }
     logger.debug("Created parameters.")
 
-    new LstmCrfMtlParameters(w2i, c2i, t2is, i2ts,
-      parameters, lookupParameters,
+    new LstmCrfMtlParameters(t2is, i2ts,
+      parameters, lm,
       fwBuilder, bwBuilder,
-      charLookupParameters, charFwBuilder, charBwBuilder,
       Hs, Os, Ts, greedyInferences)
   }
 

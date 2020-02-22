@@ -16,7 +16,7 @@ class TaskManager(config:Config) extends Configured {
   override def getConf: Config = config
 
   /** Language model */
-  val lmFileName:String = getArgString("lm")
+  val lmFileName:String = getArgString("lm", None)
 
   /** Embeddings file */
   val embeddingsFileName:String = getArgString("mtl.embed", None)

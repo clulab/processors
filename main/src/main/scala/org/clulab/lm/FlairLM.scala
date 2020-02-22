@@ -1,5 +1,7 @@
 package org.clulab.lm
 
+import java.io.PrintWriter
+
 import edu.cmu.dynet.{Expression, ParameterCollection}
 
 class FlairLM extends LM {
@@ -7,6 +9,10 @@ class FlairLM extends LM {
     // TODO
     null
   }
+
+  override def dimensions: Int = 0 // TODO
+
+  override def saveX2i(printWriter: PrintWriter): Unit = {} // TODO
 }
 
 object FlairLM {
