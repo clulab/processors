@@ -58,23 +58,30 @@ object LampleLM {
     //
     val model = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
-      mkParams(lines, parameters, Some(dynetFilename))
+      load(lines, parameters, Some(dynetFilename))
     }
 
     model
   }
 
-  protected def mkParams(lines:Iterator[String],
-                         parameters: ParameterCollection,
-                         dynetFilename:Option[String]): LampleLM = {
+  /**
+   * Loads the Lample LM model
+   * @param x2iIterator iterates over the .x2i file
+   * @param parameters ParameterCollection that holds all these parameters
+   * @param dynetFilename If specified, load a pretrained model from here
+   * @return the LampleLM object
+   */
+  def load(x2iIterator:Iterator[String],
+           parameters: ParameterCollection,
+           dynetFilename:Option[String] = None): LampleLM = {
     //
     // load the x2i info
     //
     val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
     val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
-    val c2i = byLineCharMapBuilder.build(lines)
-    val w2i = byLineStringMapBuilder.build(lines)
-    val embeddingDim = new LstmUtils.ByLineIntBuilder().build(lines)
+    val c2i = byLineCharMapBuilder.build(x2iIterator)
+    val w2i = byLineStringMapBuilder.build(x2iIterator)
+    val embeddingDim = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
 
     logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
     logger.debug(s"Loaded a word map with ${w2i.keySet.size} entries.")
@@ -85,13 +92,19 @@ object LampleLM {
     //
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
 
+    //
+    // load these parameters from the DyNet model file
+    //
     if(dynetFilename.nonEmpty) {
       // load the parameters above
       logger.debug(s"Loading pretrained Lample LM model from $dynetFilename...")
       LstmUtils.loadParameters(dynetFilename.get, parameters, key = "/lample")
     }
 
+    //
+    // make the rest of the parameters
     // these parameters are randomly initialized, not pretrained
+    //
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
     val charFwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
@@ -102,10 +115,5 @@ object LampleLM {
     )
 
     model
-  }
-
-  /** Loads the LM inside a task specific model, *after* training the task */
-  def load(lines:Iterator[String], parameters: ParameterCollection): LampleLM = {
-    mkParams(lines, parameters, None)
   }
 }
