@@ -11,7 +11,7 @@ import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 /**
- * Merges the Flair character LM parameters with word embeddings into a single model file
+ * Merges the Flair character LM parameters (produced by FlairTrainer) with word embeddings (GloVe) into a model file
  */
 object FlairLMMakeModel {
   val logger:Logger = LoggerFactory.getLogger(classOf[FlairLMMakeModel])

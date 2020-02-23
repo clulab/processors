@@ -11,7 +11,7 @@ import edu.cmu.dynet._
 import edu.cmu.dynet.Expression._
 
 import scala.collection.mutable
-import Flair._
+import FlairTrainer._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmUtils
@@ -21,7 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * Implementation of the FLAIR language model
  */
-class Flair(val flairParametersOpt: Option[FlairParameters] = None) {
+class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
 
   var model:Option[FlairParameters] = flairParametersOpt
 
@@ -200,17 +200,10 @@ class Flair(val flairParametersOpt: Option[FlairParameters] = None) {
   /** Computes perplexity for this sentence */
   def perplexity(emissionScoresForSeq: ExpressionVector, characters: Array[Char]): Double = {
     var pp = 1.0
-    //println("c2i:")
-    //println(model.c2i)
-    //println("Sentence: " + characters.mkString(", "))
     for(i <- emissionScoresForSeq.indices) {
       val goldTid = goldTagId(characters, i)
-      //val gold = if(i < characters.length - 1) characters(i + 1) else EOS_CHAR
-      //println(s"i = $i; c = ${characters(i)}; gold = $gold; gold as int = ${gold.toInt}; gold id = $goldTid")
       val prob = pick(softmax(emissionScoresForSeq(i)), goldTid)
-      //println(s"prob of gold = ${prob.value().toFloat()}")
       pp *= math.pow(1.0 / prob.value().toFloat(), 1.0 / characters.length.toDouble)
-      // println(s"pp = $pp")
     }
     pp
   }
@@ -256,10 +249,10 @@ class Flair(val flairParametersOpt: Option[FlairParameters] = None) {
 
   def mkEmbedding(c:Char): Expression = {
     val charEmbedding =
-      if(model.get.c2i.contains(c))
+      if(model.get.c2i.contains(c)) {
         // found the character in the known vocabulary
         lookup(model.get.charLookupParameters, model.get.c2i(c))
-      else {
+      } else {
         // not found; return the embedding at position 0, which is reserved for unknown words
         lookup(model.get.charLookupParameters, UNKNOWN_CHAR)
       }
@@ -352,7 +345,7 @@ object FlairParameters {
   }
 
   def load(baseFilename: String): FlairParameters = {
-    Flair.logger.debug(s"Loading Flair model from $baseFilename...")
+    FlairTrainer.logger.debug(s"Loading Flair model from $baseFilename...")
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
 
@@ -363,7 +356,7 @@ object FlairParameters {
       val dim = new LstmUtils.ByLineIntBuilder().build(lines)
       (c2i, dim)
     }
-    Flair.logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
+    FlairTrainer.logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
 
     val model = {
       val model = mkParams(c2i)
@@ -376,8 +369,8 @@ object FlairParameters {
 
 }
 
-object Flair {
-  val logger:Logger = LoggerFactory.getLogger(classOf[Flair])
+object FlairTrainer {
+  val logger:Logger = LoggerFactory.getLogger(classOf[FlairTrainer])
 
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 100
@@ -392,9 +385,9 @@ object Flair {
 
   val BATCH_SIZE = 1
 
-  def apply(baseModelFilename: String): Flair = {
+  def apply(baseModelFilename: String): FlairTrainer = {
     val model = FlairParameters.load(baseModelFilename)
-    val flair = new Flair(Some(model))
+    val flair = new FlairTrainer(Some(model))
     flair
   }
 
@@ -406,12 +399,12 @@ object Flair {
     if(config.contains("flair.test.model")) {
       // test mode
       logger.debug("Entering evaluation mode...")
-      val lm = Flair(config.getArgString("flair.test.model", None))
+      val lm = FlairTrainer(config.getArgString("flair.test.model", None))
       lm.reportPerplexity(config.getArgString("flair.train.dev", None))
     } else {
       // train mode
       logger.debug("Entering training mode...")
-      val lm = new Flair()
+      val lm = new FlairTrainer()
       lm.train(
         config.getArgString("flair.train.train", None),
         Some(config.getArgString("flair.train.dev", None)),
