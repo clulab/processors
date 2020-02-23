@@ -518,7 +518,7 @@ object LstmCrfMtlParameters {
 object LstmCrfMtl {
   val logger:Logger = LoggerFactory.getLogger(classOf[LstmCrfMtl])
 
-  val DROPOUT_PROB = 0.1f
+  val DROPOUT_PROB = 0.2f
   val DO_DROPOUT = true
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
