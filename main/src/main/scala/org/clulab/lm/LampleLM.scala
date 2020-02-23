@@ -37,7 +37,7 @@ class LampleLM(
     words.map(mkEmbedding)
 
   override def dimensions: Int =
-    (2 * LampleLM.CHAR_EMBEDDING_SIZE) + lookupParameters.dim().get(0).toInt
+    (2 * LampleLM.CHAR_RNN_STATE_SIZE) + lookupParameters.dim().get(0).toInt
 }
 
 object LampleLM {
@@ -54,22 +54,19 @@ object LampleLM {
     val x2iFilename = mkX2iFilename(modelBaseFilename)
 
     //
-    // load the x2i info, and construct the parameters
+    // load the x2i info, construct the parameters, and load them
     //
     val model = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
-      mkParams(lines, parameters)
+      mkParams(lines, parameters, Some(dynetFilename))
     }
-
-    //
-    // load the parameters
-    //
-    LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/lample")
 
     model
   }
 
-  protected def mkParams(lines:Iterator[String], parameters: ParameterCollection): LampleLM = {
+  protected def mkParams(lines:Iterator[String],
+                         parameters: ParameterCollection,
+                         dynetFilename:Option[String]): LampleLM = {
     //
     // load the x2i info
     //
@@ -84,9 +81,17 @@ object LampleLM {
     logger.debug(s"Using word embeddings of size $embeddingDim.")
 
     //
-    // mkParams
+    // make the loadable parameters
     //
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(embeddingDim))
+
+    if(dynetFilename.nonEmpty) {
+      // load the parameters above
+      logger.debug(s"Loading pretrained Lample LM model from $dynetFilename...")
+      LstmUtils.loadParameters(dynetFilename.get, parameters, key = "/lample")
+    }
+
+    // these parameters are randomly initialized, not pretrained
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
     val charFwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwRnnBuilder = new LstmBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
@@ -101,6 +106,6 @@ object LampleLM {
 
   /** Loads the LM inside a task specific model, *after* training the task */
   def load(lines:Iterator[String], parameters: ParameterCollection): LampleLM = {
-    mkParams(lines, parameters)
+    mkParams(lines, parameters, None)
   }
 }
