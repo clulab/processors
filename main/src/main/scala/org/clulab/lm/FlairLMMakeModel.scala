@@ -1,7 +1,6 @@
 package org.clulab.lm
 
 import com.typesafe.config.ConfigFactory
-import org.clulab.lm.FlairParameters.mkParams
 import org.clulab.sequences.LstmUtils
 import org.clulab.sequences.LstmUtils.{initializeDyNet, mkDynetFilename, mkX2iFilename}
 import org.clulab.utils.Serializer
@@ -26,23 +25,7 @@ object FlairLMMakeModel {
     //
     logger.debug("Loading the Flair character LM model...")
     val inputFlairModelFile = config.getArgString("flair.merge.model.input", None)
-    val dynetFilename = mkDynetFilename(inputFlairModelFile)
-    val x2iFilename = mkX2iFilename(inputFlairModelFile)
-
-    val (c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
-      val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
-      val lines = source.getLines()
-      val c2i = byLineCharMapBuilder.build(lines)
-      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
-      (c2i, dim)
-    }
-    logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
-
-    val model = {
-      val model = mkParams(c2i)
-      LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/flair")
-      model
-    }
+    val flairTrainer = FlairTrainer(inputFlairModelFile)
     logger.debug("Completed loading the Flair character LM.")
 
     //
@@ -55,7 +38,8 @@ object FlairLMMakeModel {
     val w2v = LstmUtils.loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename)
     val w2i = LstmUtils.mkWordVocab(w2v)
 
-    val wordLookupParameters = model.parameters.addLookupParameters(w2i.size, Dim(w2v.dimensions))
+    // create lookup parameters for these word embeddings; add them to the same model
+    val wordLookupParameters = flairTrainer.parameters.addLookupParameters(w2i.size, Dim(w2v.dimensions))
     LstmUtils.initializeEmbeddings(w2v, w2i, wordLookupParameters)
     logger.debug("Completed loading word embeddings.")
 
@@ -67,13 +51,13 @@ object FlairLMMakeModel {
     val outX2iFilename = mkX2iFilename(outFlairModelFile)
 
     new CloseableModelSaver(outDynetFilename).autoClose { modelSaver =>
-      modelSaver.addModel(model.parameters, "/flair")
+      modelSaver.addModel(flairTrainer.parameters, "/flair")
     }
 
     Serializer.using(LstmUtils.newPrintWriter(outX2iFilename)) { printWriter =>
-      val dim = model.charLookupParameters.dim().get(0)
+      val dim = flairTrainer.charLookupParameters.dim().get(0)
 
-      LstmUtils.saveCharMap(printWriter, c2i, "c2i")
+      LstmUtils.saveCharMap(printWriter, flairTrainer.c2i, "c2i")
       LstmUtils.save(printWriter, dim, "dim")
       LstmUtils.save(printWriter, w2i, "w2i")
     }

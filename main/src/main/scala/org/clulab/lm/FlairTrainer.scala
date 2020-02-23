@@ -21,12 +21,17 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * Implementation of the FLAIR language model
  */
-class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
-
-  var model:Option[FlairParameters] = flairParametersOpt
+class FlairTrainer( val c2i: Map[Char, Int],
+                    val i2c: Array[Char],
+                    val parameters: ParameterCollection,
+                    val charLookupParameters: LookupParameter,
+                    val charFwRnnBuilder: RnnBuilder,
+                    val charBwRnnBuilder: RnnBuilder,
+                    val fwO: Parameter,
+                    val bwO: Parameter) {
 
   def mkTrainer(): Trainer = {
-    val trainer = new RMSPropTrainer(model.get.parameters)
+    val trainer = new RMSPropTrainer(parameters)
     trainer.clippingEnabled_=(true)
     trainer.clipThreshold_=(CLIP_THRESHOLD)
     trainer
@@ -38,18 +43,12 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
    *   with the white spaces between tokens normalized to a single space
    * @param trainFileName The name of the file with training sentences
    */
-  def train(
-             trainFileName:String,
+  def train( trainFileName:String,
              devFileName:Option[String],
              logCheckpoint:Int,
              saveCheckpoint:Int): Unit = {
 
-    // build the set of known characters
-    val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
-    val c2i = knownChars.toArray.zipWithIndex.toMap
-
-    // initialize model and optimizer
-    model = Some(FlairParameters.mkParams(c2i))
+    // initialize optimizer
     var trainer = mkTrainer()
 
     // train the fw and bw character LSTMs on all sentences in training
@@ -72,7 +71,7 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
       // left-to-right prediction
       //
       val fwIn = characters
-      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.get.charFwRnnBuilder, model.get.fwO, doDropout = true)
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn, charFwRnnBuilder, fwO, doDropout = true)
       val fwLoss = languageModelLoss(fwEmissionScores, fwIn)
       batchLosses.add(fwLoss)
 
@@ -80,7 +79,7 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
       // right-to-left prediction
       //
       val bwIn = characters.reverse
-      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.get.charBwRnnBuilder, model.get.bwO, doDropout = true)
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, charBwRnnBuilder, bwO, doDropout = true)
       val bwLoss = languageModelLoss(bwEmissionScores, bwIn)
       batchLosses.add(bwLoss)
 
@@ -98,7 +97,7 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
         val comboLoss = sum(batchLosses) / batchLosses.size
         cummulativeLoss += comboLoss.value().toFloat()
         ComputationGraph.backward(comboLoss)
-        safeUpdate(trainer, model.get.parameters)
+        safeUpdate(trainer, parameters)
 
         // report perplexity if a dev file is available
         if(sentCount % saveCheckpoint == 0 && devFileName.nonEmpty){
@@ -120,7 +119,7 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
         // save a model every 50K sentences
         if(sentCount % saveCheckpoint == 0){
           val baseModelName = s"flair_s$sentCount"
-          model.get.save(baseModelName)
+          save(baseModelName)
         }
       }
     }
@@ -132,7 +131,7 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
     val charBuffer = new ArrayBuffer[Char]()
     for(i <- sentence.indices) {
       val c = sentence.charAt(i)
-      if(model.get.c2i.contains(c))
+      if(c2i.contains(c))
         charBuffer += c
       else
         charBuffer += UNKNOWN_CHAR
@@ -151,11 +150,11 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
       ComputationGraph.renew()
 
       val fwIn = characters
-      val fwEmissionScores = emissionScoresAsExpressions(fwIn, model.get.charFwRnnBuilder, model.get.fwO) // no dropout during testing!
+      val fwEmissionScores = emissionScoresAsExpressions(fwIn, charFwRnnBuilder, fwO) // no dropout during testing!
       val fwPp = perplexity(fwEmissionScores, fwIn)
 
       val bwIn = characters.reverse
-      val bwEmissionScores = emissionScoresAsExpressions(bwIn, model.get.charBwRnnBuilder, model.get.bwO)
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, charBwRnnBuilder, bwO)
       val bwPp = perplexity(bwEmissionScores, bwIn)
 
       cummulativeFwPerplexity += fwPp
@@ -190,7 +189,7 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
    * @return The id of the gold tag (i.e., the next character) for this character
    */
   def goldTagId(characters:Array[Char], i:Int): Int = {
-    val goldTid = model.get.c2i(
+    val goldTid = c2i(
       if(i < characters.length - 1) characters(i + 1) // the next character if it exists
       else EOS_CHAR
     )
@@ -249,15 +248,103 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
 
   def mkEmbedding(c:Char): Expression = {
     val charEmbedding =
-      if(model.get.c2i.contains(c)) {
+      if(c2i.contains(c)) {
         // found the character in the known vocabulary
-        lookup(model.get.charLookupParameters, model.get.c2i(c))
+        lookup(charLookupParameters, c2i(c))
       } else {
         // not found; return the embedding at position 0, which is reserved for unknown words
-        lookup(model.get.charLookupParameters, UNKNOWN_CHAR)
+        lookup(charLookupParameters, UNKNOWN_CHAR)
       }
 
     charEmbedding
+  }
+
+  def save(modelFilename: String): Unit = {
+    val dynetFilename = mkDynetFilename(modelFilename)
+    val x2iFilename = mkX2iFilename(modelFilename)
+
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(parameters, "/flair")
+    }
+
+    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
+      val dim = charLookupParameters.dim().get(0)
+
+      LstmUtils.saveCharMap(printWriter, c2i, "c2i")
+      LstmUtils.save(printWriter, dim, "dim")
+    }
+  }
+}
+
+class FlairConfig(config:Config) extends Configured {
+  override def getConf: Config = config
+}
+
+object FlairTrainer {
+  val logger:Logger = LoggerFactory.getLogger(classOf[FlairTrainer])
+
+  val CHAR_RNN_LAYERS = 1
+  val CHAR_EMBEDDING_SIZE = 100
+  val CHAR_RNN_STATE_SIZE = 2048
+  val CLIP_THRESHOLD = 5.0f
+  val MIN_UNK_FREQ_RATIO = 0.000001
+
+  val DROPOUT_PROB:Float = 0.2.toFloat
+
+  val UNKNOWN_CHAR:Char = 0.toChar // placeholder for unknown characters
+  val EOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
+
+  val BATCH_SIZE = 1
+
+  def apply(baseModelFilename: String): FlairTrainer = {
+    load(baseModelFilename)
+  }
+
+  def mkParams(c2i: Map[Char, Int]): FlairTrainer = {
+    val i2c = fromIndexToChar(c2i)
+
+    val parameters = new ParameterCollection()
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
+
+    val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+
+    val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+    val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+
+    new FlairTrainer(c2i, i2c, parameters,
+      charLookupParameters, charFwBuilder, charBwBuilder,
+      fwO, bwO)
+  }
+
+  def load(baseModelFilename: String): FlairTrainer = {
+    logger.debug(s"Loading Flair model from $baseModelFilename...")
+    val dynetFilename = mkDynetFilename(baseModelFilename)
+    val x2iFilename = mkX2iFilename(baseModelFilename)
+
+    //
+    // load the .x2i info
+    //
+    val (c2i, _) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+      val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
+      val lines = source.getLines()
+      val c2i = byLineCharMapBuilder.build(lines)
+      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
+      (c2i, dim)
+    }
+    logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
+
+    //
+    // create the DyNet parameters
+    //
+    val model = mkParams(c2i)
+
+    //
+    // load the above parameters from the DyNet model file
+    //
+    LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/flair")
+
+    model
   }
 
   protected def generateKnownCharacters(trainFileName: String): (Set[Char], Int) = {
@@ -293,120 +380,35 @@ class FlairTrainer(val flairParametersOpt: Option[FlairParameters] = None) {
 
     (knownChars.toSet, sentCount)
   }
-}
-
-class FlairConfig(config:Config) extends Configured {
-  override def getConf: Config = config
-}
-
-class FlairParameters (
-  val c2i: Map[Char, Int],
-  val i2c: Array[Char],
-  val parameters: ParameterCollection,
-  val charLookupParameters: LookupParameter,
-  val charFwRnnBuilder: RnnBuilder,
-  val charBwRnnBuilder: RnnBuilder,
-  val fwO: Parameter,
-  val bwO: Parameter) {
-
-  def save(modelFilename: String): Unit = {
-    val dynetFilename = mkDynetFilename(modelFilename)
-    val x2iFilename = mkX2iFilename(modelFilename)
-
-    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
-      modelSaver.addModel(parameters, "/flair")
-    }
-
-    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
-      val dim = charLookupParameters.dim().get(0)
-
-      LstmUtils.saveCharMap(printWriter, c2i, "c2i")
-      LstmUtils.save(printWriter, dim, "dim")
-    }
-  }
-}
-
-object FlairParameters {
-  def mkParams(c2i:Map[Char, Int]): FlairParameters = {
-    val i2c = fromIndexToChar(c2i)
-
-    val parameters = new ParameterCollection()
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-
-    val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-    val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-
-    val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
-    val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
-
-    new FlairParameters(c2i, i2c, parameters,
-        charLookupParameters, charFwBuilder, charBwBuilder,
-        fwO, bwO)
-  }
-
-  def load(baseFilename: String): FlairParameters = {
-    FlairTrainer.logger.debug(s"Loading Flair model from $baseFilename...")
-    val dynetFilename = mkDynetFilename(baseFilename)
-    val x2iFilename = mkX2iFilename(baseFilename)
-
-    val (c2i, dim) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
-      val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
-      val lines = source.getLines()
-      val c2i = byLineCharMapBuilder.build(lines)
-      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
-      (c2i, dim)
-    }
-    FlairTrainer.logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
-
-    val model = {
-      val model = mkParams(c2i)
-      LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/flair")
-      model
-    }
-
-    model
-  }
-
-}
-
-object FlairTrainer {
-  val logger:Logger = LoggerFactory.getLogger(classOf[FlairTrainer])
-
-  val CHAR_RNN_LAYERS = 1
-  val CHAR_EMBEDDING_SIZE = 100
-  val CHAR_RNN_STATE_SIZE = 2048
-  val CLIP_THRESHOLD = 5.0f
-  val MIN_UNK_FREQ_RATIO = 0.000001
-
-  val DROPOUT_PROB:Float = 0.2.toFloat
-
-  val UNKNOWN_CHAR:Char = 0.toChar // placeholder for unknown characters
-  val EOS_CHAR:Char = 1.toChar // virtual character indicating beginning of sentence
-
-  val BATCH_SIZE = 1
-
-  def apply(baseModelFilename: String): FlairTrainer = {
-    val model = FlairParameters.load(baseModelFilename)
-    val flair = new FlairTrainer(Some(model))
-    flair
-  }
 
   def main(args: Array[String]): Unit = {
     initializeDyNet() // autoBatch = true, mem = "512")
     val configName = "flair"
     val config = new FlairConfig(ConfigFactory.load(configName))
 
+    //
+    // test mode
+    //
     if(config.contains("flair.test.model")) {
-      // test mode
       logger.debug("Entering evaluation mode...")
       val lm = FlairTrainer(config.getArgString("flair.test.model", None))
       lm.reportPerplexity(config.getArgString("flair.train.dev", None))
-    } else {
-      // train mode
+    }
+
+    //
+    // train mode
+    //
+    else {
       logger.debug("Entering training mode...")
-      val lm = new FlairTrainer()
+
+      // build the set of known characters
+      val trainFileName = config.getArgString("flair.train.train", None)
+      val (knownChars, totalSentCount) = generateKnownCharacters(trainFileName)
+      val c2i = knownChars.toArray.zipWithIndex.toMap
+
+      val lm = mkParams(c2i)
       lm.train(
-        config.getArgString("flair.train.train", None),
+        trainFileName,
         Some(config.getArgString("flair.train.dev", None)),
         config.getArgInt("flair.train.logCheckpoint", Some(1000)),
         config.getArgInt("flair.train.saveCheckpoint", Some(50000))
