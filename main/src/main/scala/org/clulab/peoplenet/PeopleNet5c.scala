@@ -6,6 +6,10 @@ import org.clulab.struct.Counter
 
 import scala.collection.mutable.ArrayBuffer
 
+/**
+ * Same thing as PeopleNet but it operates over sparse property vectors
+ * Sparse vectors are stored using our own Counter class
+ */
 object PeopleNet5c {
   def main(args: Array[String]): Unit = {
     val source = io.Source.fromFile("UAIR5c.csv")
@@ -44,6 +48,9 @@ object PeopleNet5c {
     saveGmap("gmap5c", names.toArray, vectors.toArray, 0.4)
     saveGmap("gmap5c", names.toArray, vectors.toArray, 0.5)
     saveGmap("gmap5c", names.toArray, vectors.toArray, 0.6)
+    saveGmap("gmap5c", names.toArray, vectors.toArray, 0.7)
+    saveGmap("gmap5c", names.toArray, vectors.toArray, 0.8)
+    saveGmap("gmap5c", names.toArray, vectors.toArray, 0.9)
   }
 
   def saveGmap(gmapFilename:String,
