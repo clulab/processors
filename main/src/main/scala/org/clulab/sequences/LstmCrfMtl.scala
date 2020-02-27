@@ -42,7 +42,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     require(taskManagerOpt.isDefined)
 
     val parameters = new ParameterCollection()
-    val lm = LampleLM.load(taskManager.lmFileName, parameters)
+    val lm = FlairLM.load(taskManager.lmFileName, parameters)
 
     val t2is = mkVocabs()
     logger.debug(s"Tag vocabulary has:")
@@ -109,6 +109,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
         // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
         val words = sentence.map(_.getWord)
+        println(s"TRAIN SENTENCE: ${words.mkString(" ")}")
         val emissionScores = emissionScoresAsExpressions(words, taskId, doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence

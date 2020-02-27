@@ -2,11 +2,14 @@ package org.clulab.lm
 
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{Dim, Expression, GruBuilder, LookupParameter, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.Expression.lookup
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, GruBuilder, LookupParameter, Parameter, ParameterCollection, RnnBuilder}
 import org.clulab.lm.FlairTrainer.{CHAR_EMBEDDING_SIZE, CHAR_RNN_LAYERS, CHAR_RNN_STATE_SIZE}
 import org.clulab.sequences.LstmUtils
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.collection.mutable.ArrayBuffer
 
 class FlairLM ( val w2i: Map[String, Int],
                 val c2i: Map[Char, Int],
@@ -14,11 +17,67 @@ class FlairLM ( val w2i: Map[String, Int],
                 val wordLookupParameters: LookupParameter,
                 val charLookupParameters: LookupParameter,
                 val charFwRnnBuilder: RnnBuilder,
-                val charBwRnnBuilder: RnnBuilder) extends LM {
+                val charBwRnnBuilder: RnnBuilder,
+                val fwO: Parameter,
+                val bwO: Parameter) extends LM {
 
   override def mkEmbeddings(words: Iterable[String]): Iterable[Expression] = {
-    // TODO
-    null
+    val (text, firstLastOffsets) = wordsToCharacters(words)
+    assert(words.size == firstLastOffsets.length)
+    //println(s"mkEmbeddings for sentence: ${text.mkString("")}")
+    //println(s"First/last offsets: ${firstLastOffsets.mkString(" ")}")
+
+    val fwIn = text.map(mkCharEmbedding)
+    val fwOut = LstmUtils.transduce(fwIn, charFwRnnBuilder).toArray
+    assert(fwOut.length == text.length)
+    val bwIn = fwIn.reverse
+    val bwOut = LstmUtils.transduce(bwIn, charBwRnnBuilder).toArray.reverse
+    assert(bwOut.length == text.length)
+
+    val states = new ExpressionVector()
+    for(w <- firstLastOffsets) {
+      val endExp = fwOut(w._2)
+      val beginExp = bwOut(w._1)
+
+      val wordEmb =
+        if(w2i.contains(w._3)) {
+          lookup(wordLookupParameters, w2i(w._3))
+        } else {
+          lookup(wordLookupParameters, 0)
+        }
+
+      val state = Expression.concatenate(wordEmb, endExp, beginExp)
+      states.add(state)
+    }
+
+    assert(states.length == firstLastOffsets.length)
+    states
+  }
+
+  def mkCharEmbedding(c:Char): Expression = {
+    val charEmbedding = lookup(charLookupParameters, c2i(c))
+    charEmbedding
+  }
+
+  def wordsToCharacters(words:Iterable[String]): (Array[Char], Array[(Int, Int, String)]) = {
+    val charBuffer = new ArrayBuffer[Char]()
+    val firstLastOffsets = new ArrayBuffer[(Int, Int, String)]()
+    for(word <- words) {
+      val first = charBuffer.size
+      val last = first + word.length - 1
+      firstLastOffsets += Tuple3(first, last, word)
+
+      for(i <- word.indices) {
+        val c = word.charAt(i)
+        if (c2i.contains(c)) {
+          charBuffer += c
+        } else {
+          charBuffer += FlairTrainer.UNKNOWN_CHAR
+        }
+      }
+      charBuffer += ' '
+    }
+    (charBuffer.toArray, firstLastOffsets.toArray)
   }
 
   override def dimensions: Int = {
@@ -84,6 +143,8 @@ object FlairLM {
     val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(wordEmbeddingDim))
+    val fwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
+    val bwO = parameters.addParameters(Dim(c2i.size, CHAR_RNN_STATE_SIZE))
 
     //
     // load these parameters from the DyNet model file
@@ -94,10 +155,14 @@ object FlairLM {
       LstmUtils.loadParameters(dynetFilename.get, parameters, key = "/flair")
     }
 
+    charFwBuilder.disableDropout()
+    charBwBuilder.disableDropout()
+
     val model = new FlairLM(
       w2i, c2i, parameters,
       lookupParameters, charLookupParameters,
-      charFwBuilder, charBwBuilder
+      charFwBuilder, charBwBuilder,
+      fwO, bwO
     )
 
     model
