@@ -109,7 +109,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
         // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
         val words = sentence.map(_.getWord)
-        println(s"TRAIN SENTENCE: ${words.mkString(" ")}")
+        println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
         val emissionScores = emissionScoresAsExpressions(words, taskId, doDropout = DO_DROPOUT)
 
         // get the gold tags for this sentence
