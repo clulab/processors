@@ -9,7 +9,7 @@ import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
 import org.clulab.sequences.LstmUtils._
-import org.clulab.lm.{LM, LampleLM}
+import org.clulab.lm.{FlairLM, LM, LampleLM}
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -452,7 +452,8 @@ object LstmCrfMtlParameters {
     val (lm, taskCount, t2is, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
 
-      val lm = LampleLM.load(lines, parameters)
+      //val lm = LampleLM.load(lines, parameters)
+      val lm = FlairLM.load(lines, parameters)
 
       val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
       val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()

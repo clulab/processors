@@ -55,15 +55,16 @@ object FlairLMMakeModel {
     }
 
     Serializer.using(LstmUtils.newPrintWriter(outX2iFilename)) { printWriter =>
-      val dim = flairTrainer.charLookupParameters.dim().get(0)
+      val charDim = flairTrainer.charLookupParameters.dim().get(0)
+      val wordDim = wordLookupParameters.dim().get(0)
 
       LstmUtils.saveCharMap(printWriter, flairTrainer.c2i, "c2i")
-      LstmUtils.save(printWriter, dim, "dim")
+      LstmUtils.save(printWriter, charDim, "charDim")
       LstmUtils.save(printWriter, w2i, "w2i")
+      LstmUtils.save(printWriter, wordDim, "wordDim")
+
     }
   }
-
-
 }
 
 class FlairLMMakeModel
