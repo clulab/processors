@@ -3,12 +3,12 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder, Trainer}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
-import org.clulab.sequences.LstmUtils._
+import org.clulab.sequences.LstmUtils.{logger, _}
 import org.clulab.lm.{FlairLM, LM, LampleLM}
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
@@ -145,7 +145,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
         // backprop
         ComputationGraph.backward(loss)
-        trainer.update()
+        safeUpdate(trainer, model.parameters)
       }
 
       // check dev performance in this epoch, for all tasks
@@ -170,6 +170,22 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     logger.info(s"The best epoch was epoch $bestEpoch with an average accuracy of $maxAvgAcc.")
+  }
+
+  /**
+    * Updates the model, catching vanishing/exploding gradients and trying to recover
+    * @param myTrainer Optimizer
+    * @param parameters Model
+    */
+  def safeUpdate(myTrainer: Trainer, parameters: ParameterCollection): Unit = {
+    try {
+      myTrainer.update()
+    } catch {
+      case exception: RuntimeException if exception.getMessage.startsWith("Magnitude of gradient is bad") =>
+        // aim to reset the gradient and continue training
+        parameters.resetGradient()
+        logger.info(s"Caught an invalid gradient exception: ${exception.getMessage}. Reset gradient L2 norm to: ${parameters.gradientL2Norm()}")
+    }
   }
 
   def test(): Unit = {
