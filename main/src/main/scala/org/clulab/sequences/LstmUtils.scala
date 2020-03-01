@@ -645,14 +645,11 @@ class SafeTrainer(val trainer: Trainer, val clipThreshold:Float) {
   trainer.clippingEnabled_=(true)
   trainer.clipThreshold_=(clipThreshold)
 
-  def update(parameters: ParameterCollection): Unit = {
-
-  }
   /**
    * Updates the model, catching vanishing/exploding gradients and trying to recover
    * @param parameters Model
    */
-  def safeUpdate(parameters: ParameterCollection): Unit = {
+  def update(parameters: ParameterCollection): Unit = {
     try {
       trainer.update()
     } catch {
