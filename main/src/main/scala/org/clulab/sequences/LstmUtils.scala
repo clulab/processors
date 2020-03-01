@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{BufferedOutputStream, File, FileOutputStream, OutputStreamWriter, PrintWriter}
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder, Trainer}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.CloseableModelLoader
@@ -638,6 +638,39 @@ object LstmUtils {
       lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
     }
     logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
+  }
+}
+
+class SafeTrainer(val trainer: Trainer, val clipThreshold:Float) {
+  trainer.clippingEnabled_=(true)
+  trainer.clipThreshold_=(clipThreshold)
+
+  def update(parameters: ParameterCollection): Unit = {
+
+  }
+  /**
+   * Updates the model, catching vanishing/exploding gradients and trying to recover
+   * @param parameters Model
+   */
+  def safeUpdate(parameters: ParameterCollection): Unit = {
+    try {
+      trainer.update()
+    } catch {
+      case exception: RuntimeException if exception.getMessage.startsWith("Magnitude of gradient is bad") =>
+        // aim to reset the gradient and continue training
+        parameters.resetGradient()
+        SafeTrainer.logger.info(s"Caught an invalid gradient exception: ${exception.getMessage}. Reset gradient L2 norm to: ${parameters.gradientL2Norm()}")
+    }
+  }
+}
+
+object SafeTrainer {
+  val logger = LoggerFactory.getLogger(classOf[SafeTrainer])
+
+  val CLIP_THRESHOLD = 5.0f
+
+  def apply(trainer: Trainer, clipThreshold: Float = CLIP_THRESHOLD): SafeTrainer = {
+    new SafeTrainer(trainer, clipThreshold)
   }
 }
 

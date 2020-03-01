@@ -84,9 +84,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   def train(modelNamePrefix:String):Unit = {
     require(taskManagerOpt.isDefined)
 
-    val trainer = new RMSPropTrainer(model.parameters)
-    trainer.clippingEnabled_=(true)
-    trainer.clipThreshold_=(LstmCrfMtlParameters.CLIP_THRESHOLD)
+    val trainer = SafeTrainer(new RMSPropTrainer(model.parameters))
 
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -145,7 +143,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
         // backprop
         ComputationGraph.backward(loss)
-        safeUpdate(trainer, model.parameters)
+        trainer.update(model.parameters)
       }
 
       // check dev performance in this epoch, for all tasks
@@ -170,22 +168,6 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     logger.info(s"The best epoch was epoch $bestEpoch with an average accuracy of $maxAvgAcc.")
-  }
-
-  /**
-    * Updates the model, catching vanishing/exploding gradients and trying to recover
-    * @param myTrainer Optimizer
-    * @param parameters Model
-    */
-  def safeUpdate(myTrainer: Trainer, parameters: ParameterCollection): Unit = {
-    try {
-      myTrainer.update()
-    } catch {
-      case exception: RuntimeException if exception.getMessage.startsWith("Magnitude of gradient is bad") =>
-        // aim to reset the gradient and continue training
-        parameters.resetGradient()
-        logger.info(s"Caught an invalid gradient exception: ${exception.getMessage}. Reset gradient L2 norm to: ${parameters.gradientL2Norm()}")
-    }
   }
 
   def test(): Unit = {
@@ -459,7 +441,6 @@ object LstmCrfMtlParameters {
   val RNN_STATE_SIZE = 50
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
-  val CLIP_THRESHOLD = 10.0f
 
   def load(baseFilename: String): LstmCrfMtlParameters = {
     logger.debug(s"Loading MTL model from $baseFilename...")
