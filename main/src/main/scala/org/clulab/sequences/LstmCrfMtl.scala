@@ -3,12 +3,12 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder, Trainer}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
-import org.clulab.sequences.LstmUtils.{logger, _}
+import org.clulab.sequences.LstmUtils._
 import org.clulab.lm.{FlairLM, LM, LampleLM}
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
