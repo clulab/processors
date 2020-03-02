@@ -55,10 +55,8 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   def getEmbedding(w:String): Option[Array[Double]] = {
     if(matrix.contains(w)) {
       matrix.get(w)
-    } else if(matrix.contains(Word2Vec.UNK)) {
-      matrix.get(Word2Vec.UNK)
     } else {
-      None
+      matrix.get(Word2Vec.UNK)
     }
   }
 
