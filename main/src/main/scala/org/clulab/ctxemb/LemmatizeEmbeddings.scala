@@ -2,6 +2,7 @@ package org.clulab.ctxemb
 
 import java.io.PrintWriter
 
+import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.processors.clu.tokenizer.EnglishLemmatizer
 import org.clulab.struct.Counter
 
@@ -70,8 +71,8 @@ class LemmatizeEmbeddings(val frequencyFile:String,
 
       // unknown word in Gigaword => add vector to the UNK token
       else {
-        totalWeights.incrementCount(LemmatizeEmbeddings.UNK)
-        add(ne, LemmatizeEmbeddings.UNK, vector)
+        totalWeights.incrementCount(Word2Vec.UNK)
+        add(ne, Word2Vec.UNK, vector)
       }
     }
 
@@ -117,8 +118,6 @@ class LemmatizeEmbeddings(val frequencyFile:String,
 }
 
 object LemmatizeEmbeddings {
-  val UNK = "*UNK*"
-
   def main(args: Array[String]): Unit = {
     val freqFile = args(0)
     val embedFile = args(1)
