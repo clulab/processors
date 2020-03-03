@@ -601,7 +601,10 @@ object LstmUtils {
       Source.fromFile(filename, "UTF-8")
     } else {
       // the file does not exist on disk. let's hope it's in the classpath
-      Source.fromResource(filename)
+      // this should work for both scala 2.11 and 2.12
+      Source.fromInputStream(getClass.getResourceAsStream("/" + filename))
+      // this only works for scala 2.12, so we can't cross compile with 2.11
+      // Source.fromResource(filename)
     }
   }
 
