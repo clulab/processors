@@ -293,6 +293,14 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
     val embeddings = model.lm.mkEmbeddings(words).toArray
 
+    if(doDropout) {
+      model.fwRnnBuilder.setDropout(DROPOUT_PROB)
+      model.bwRnnBuilder.setDropout(DROPOUT_PROB)
+    } else {
+      model.fwRnnBuilder.disableDropout()
+      model.bwRnnBuilder.disableDropout()
+    }
+
     // this is the biLSTM over words that is shared across all tasks
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
     val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
