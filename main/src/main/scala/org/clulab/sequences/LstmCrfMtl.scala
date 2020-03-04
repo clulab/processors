@@ -42,7 +42,8 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     require(taskManagerOpt.isDefined)
 
     val parameters = new ParameterCollection()
-    val lm = FlairLM.load(taskManager.lmFileName, parameters)
+    //val lm = FlairLM.load(taskManager.lmFileName, parameters)
+    val lm = LampleLM.load(taskManager.lmFileName, parameters)
 
     val t2is = mkVocabs()
     logger.debug(s"Tag vocabulary has:")
