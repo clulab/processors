@@ -8,6 +8,7 @@ import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.CloseableModelLoader
 import org.clulab.fatdynet.utils.CloseableZipModelLoader
+import org.clulab.processors.clu.tokenizer.EnglishLemmatizer
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.struct.MutableNumber
 import org.slf4j.{Logger, LoggerFactory}
@@ -343,6 +344,8 @@ object LstmUtils {
     c
   }
 
+  val lemmatizer = new EnglishLemmatizer
+
   def mkWordEmbedding(word: String,
                       w2i:Map[String, Int],
                       wordLookupParameters:LookupParameter,
@@ -356,7 +359,7 @@ object LstmUtils {
     //   GloVe small lowers the case
     //   Our Word2Vec uses Word2Vec.sanitizeWord
     //
-    val sanitized = word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
+    val sanitized = lemmatizer.lemmatizeWord(word) // word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
       if(w2i.contains(sanitized))
@@ -364,7 +367,7 @@ object LstmUtils {
         lookup(wordLookupParameters, w2i(sanitized))
       else {
         // not found; return the embedding at position 0, which is reserved for unknown words
-        lookup(wordLookupParameters, 0)
+        lookup(wordLookupParameters, w2i(LstmUtils.UNK_WORD)) // 0)
       }
 
     // biLSTM over character embeddings
