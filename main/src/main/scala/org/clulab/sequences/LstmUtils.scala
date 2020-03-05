@@ -57,7 +57,7 @@ object LstmUtils {
   def loadEmbeddings(docFreqFileName:Option[String], minDocFreq:Int, embeddingsFile:String): Word2Vec = {
     val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile, None, caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
+    val w2v = new Word2Vec(embeddingsFile, wordsToUse, caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
     logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
 
     w2v
@@ -359,7 +359,7 @@ object LstmUtils {
     //   GloVe small lowers the case
     //   Our Word2Vec uses Word2Vec.sanitizeWord
     //
-    val sanitized = lemmatizer.lemmatizeWord(word) // word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
+    val sanitized = word // lemmatizer.lemmatizeWord(word) // word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
       if(w2i.contains(sanitized))
@@ -367,7 +367,7 @@ object LstmUtils {
         lookup(wordLookupParameters, w2i(sanitized))
       else {
         // not found; return the embedding at position 0, which is reserved for unknown words
-        lookup(wordLookupParameters, w2i(LstmUtils.UNK_WORD)) // 0)
+        lookup(wordLookupParameters, 0) // w2i(LstmUtils.UNK_WORD)) // 0)
       }
 
     // biLSTM over character embeddings

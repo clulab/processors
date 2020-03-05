@@ -446,7 +446,7 @@ class LstmCrfMtlParameters(
 }
 
 object LstmCrfMtlParameters {
-  val RNN_STATE_SIZE = 50
+  val RNN_STATE_SIZE = 256
   val NONLINEAR_SIZE = 32
   val RNN_LAYERS = 1
 
