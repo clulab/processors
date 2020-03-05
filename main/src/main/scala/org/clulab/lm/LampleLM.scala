@@ -28,7 +28,7 @@ class LampleLM(
   override def saveX2i(printWriter: PrintWriter): Unit = {
     val dim = lookupParameters.dim().get(0)
 
-    LstmUtils.save(printWriter, c2i, "c2i")
+    LstmUtils.saveCharMap(printWriter, c2i, "c2i")
     LstmUtils.save(printWriter, w2i, "w2i")
     LstmUtils.save(printWriter, dim, "dim")
   }

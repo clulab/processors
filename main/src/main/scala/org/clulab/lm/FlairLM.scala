@@ -85,7 +85,7 @@ class FlairLM ( val w2i: Map[String, Int],
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
-    LstmUtils.save(printWriter, c2i, "c2i")
+    LstmUtils.saveCharMap(printWriter, c2i, "c2i")
     LstmUtils.save(printWriter, charLookupParameters.dim().get(0), "charDim")
     LstmUtils.save(printWriter, w2i, "w2i")
     LstmUtils.save(printWriter, wordLookupParameters.dim().get(0), "wordDim")

@@ -42,8 +42,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     require(taskManagerOpt.isDefined)
 
     val parameters = new ParameterCollection()
-    //val lm = FlairLM.load(taskManager.lmFileName, parameters)
-    val lm = LampleLM.load(taskManager.lmFileName, parameters)
+    val lm = mkLM(taskManager.lmFileName, parameters)
 
     val t2is = mkVocabs()
     logger.debug(s"Tag vocabulary has:")
@@ -459,8 +458,7 @@ object LstmCrfMtlParameters {
     val (lm, taskCount, t2is, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
 
-      //val lm = LampleLM.load(lines, parameters)
-      val lm = FlairLM.load(lines, parameters)
+      val lm = mkLM(lines, parameters)
 
       val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
       val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
@@ -530,6 +528,20 @@ object LstmCrfMtl {
   val DO_DROPOUT = true
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
+
+  val lmType = "lample" // "flair"
+
+  def mkLM(lmFileName:String, parameterCollection: ParameterCollection): LM = {
+    if(lmType == "lample") LampleLM.load(lmFileName, parameterCollection)
+    else if(lmType == "flair") FlairLM.load(lmFileName, parameterCollection)
+    else throw new RuntimeException(s"ERROR: unknown LM type for model file $lmFileName!")
+  }
+
+  def mkLM(linesIterator:Iterator[String], parameterCollection: ParameterCollection): LM = {
+    if(lmType == "lample") LampleLM.load(linesIterator, parameterCollection)
+    else if(lmType == "flair") FlairLM.load(linesIterator, parameterCollection)
+    else throw new RuntimeException(s"ERROR: unknown LM type!")
+  }
 
   def apply(modelFilenamePrefix: String, taskManager: TaskManager): LstmCrfMtl = {
     initializeDyNet()
