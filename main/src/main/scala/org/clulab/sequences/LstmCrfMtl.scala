@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, GruBuilder, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
@@ -488,8 +488,8 @@ object LstmCrfMtlParameters {
                          greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
     // These parameters correspond to the LSTM(s) shared by all tasks
     val embeddingSize = lm.dimensions
-    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val fwBuilder = new GruBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val bwBuilder = new GruBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     
     // These parameters are unique for each task
     val Hs = new Array[Parameter](taskCount)
