@@ -495,7 +495,7 @@ object LstmCrfMtlParameters {
                          greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
     // These parameters correspond to the LSTM(s) shared by all tasks
     val embeddingSize = lm.dimensions
-    val fwBuilder = new LstmBuilder()(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     
     // These parameters are unique for each task
