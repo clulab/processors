@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, GruBuilder, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
@@ -309,15 +309,22 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
     // this is the feed forward network that is specific to each task
     val H = parameter(model.Hs(taskId))
-    val O = parameter(model.Os(taskId))
+    // val O = parameter(model.Os(taskId))
 
     val emissionScores = new ExpressionVector()
     for(s <- states) {
+      var l1 = H * s
+      if(doDropout) {
+        l1 = Expression.dropout(l1, DROPOUT_PROB)
+      }
+      emissionScores.add(l1)
+      /*
       var l1 = Expression.tanh(H * s)
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
       }
       emissionScores.add(O * l1)
+      */
     }
 
     emissionScores
@@ -488,8 +495,8 @@ object LstmCrfMtlParameters {
                          greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
     // These parameters correspond to the LSTM(s) shared by all tasks
     val embeddingSize = lm.dimensions
-    val fwBuilder = new GruBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new GruBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val fwBuilder = new LstmBuilder()(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
+    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
     
     // These parameters are unique for each task
     val Hs = new Array[Parameter](taskCount)
@@ -497,7 +504,7 @@ object LstmCrfMtlParameters {
     val i2ts = new Array[Array[String]](taskCount)
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
-      Hs(tid) = parameters.addParameters(Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, 2 * RNN_STATE_SIZE)) // Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
       Os(tid) = parameters.addParameters(Dim(t2is(tid).size, NONLINEAR_SIZE))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
