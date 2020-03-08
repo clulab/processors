@@ -536,7 +536,7 @@ object LstmCrfMtl {
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
-  val lmType = "lample" // "flair"
+  val lmType = "flair" // "flair" // "lample"
 
   def mkLM(lmFileName:String, parameterCollection: ParameterCollection): LM = {
     if(lmType == "lample") LampleLM.load(lmFileName, parameterCollection)
@@ -567,7 +567,7 @@ object LstmCrfMtl {
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
     initializeDyNet()
-    val modelName = "mtl-en"
+    val modelName = "mtl-en-flair"
     val configName = "mtl-en"
 
     if(runMode == "train") {
