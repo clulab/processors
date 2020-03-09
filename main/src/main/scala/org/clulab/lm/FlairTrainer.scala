@@ -49,7 +49,7 @@ class FlairTrainer( val c2i: Map[Char, Int],
              saveCheckpoint:Int): Unit = {
 
     // initialize optimizer
-    var trainer = mkTrainer()
+    val trainer = mkTrainer()
 
     // train the fw and bw character LSTMs on all sentences in training
     val source = Source.fromFile(trainFileName)
