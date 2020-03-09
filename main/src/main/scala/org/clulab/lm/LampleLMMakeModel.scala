@@ -43,7 +43,8 @@ object LampleLMMakeModel {
     val embedFilename = config.getArgString("lample.merge.embed", None)
     val docFreqFilename = config.getArgString("lample.merge.docFreq", None)
     val minFreq = config.getArgInt("lample.merge.minWordFreq", Some(100))
-    val w2v = LstmUtils.loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename)
+    val w2v = LstmUtils.loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename,
+      Some(config.getArgString("lample.merge.mandatoryWords", None)))
     val w2i = LstmUtils.mkWordVocab(w2v)
 
     val parameters = new ParameterCollection()

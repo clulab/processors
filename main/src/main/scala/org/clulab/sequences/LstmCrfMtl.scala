@@ -14,6 +14,7 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
@@ -168,6 +169,26 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     logger.info(s"The best epoch was epoch $bestEpoch with an average accuracy of $maxAvgAcc.")
+  }
+
+  def uniqueWords():Unit = {
+    require(taskManagerOpt.isDefined)
+    val rand = new Random(RANDOM_SEED)
+    val sentenceIterator = taskManager.getSentences(rand)
+
+    val uniqueWords = new mutable.HashSet[String]()
+    for(metaSentence <- sentenceIterator) {
+      val sentence = metaSentence._2
+      val words = sentence.map(_.getWord)
+      for(word <- words) uniqueWords += word
+    }
+
+    logger.info(s"Found ${uniqueWords.size} unique words.")
+    val pw = new PrintWriter("unique_words.txt")
+    for(word <- uniqueWords) {
+      pw.println(word)
+    }
+    pw.close()
   }
 
   def test(): Unit = {
@@ -536,7 +557,7 @@ object LstmCrfMtl {
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
-  val lmType = "flair" // "flair" // "lample"
+  val lmType = "lample" // "flair" // "lample"
 
   def mkLM(lmFileName:String, parameterCollection: ParameterCollection): LM = {
     if(lmType == "lample") LampleLM.load(lmFileName, parameterCollection)
@@ -567,7 +588,7 @@ object LstmCrfMtl {
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
     initializeDyNet()
-    val modelName = "mtl-en-flair"
+    val modelName = "mtl-en"
     val configName = "mtl-en"
 
     if(runMode == "train") {
@@ -590,6 +611,14 @@ object LstmCrfMtl {
       val mtlFromDisk = LstmCrfMtl(modelName)
       val sh = new MTLShell(mtlFromDisk)
       sh.shell()
+    } else if(runMode == "wordstats") {
+      val config = ConfigFactory.load(configName)
+      val taskManager = new TaskManager(config)
+
+      val mtl = new LstmCrfMtl(Some(taskManager))
+      mtl.uniqueWords()
+    } else {
+      throw new RuntimeException(s"ERROR: unknown run mode $runMode!")
     }
   }
 }

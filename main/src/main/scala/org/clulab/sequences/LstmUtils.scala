@@ -54,16 +54,29 @@ object LstmUtils {
     }
   }
 
-  def loadEmbeddings(docFreqFileName:Option[String], minDocFreq:Int, embeddingsFile:String): Word2Vec = {
+  def loadEmbeddings(docFreqFileName:Option[String],
+                     minDocFreq:Int,
+                     embeddingsFile:String,
+                     mandatoryWords:Option[String] = None): Word2Vec = {
     val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile, wordsToUse, caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
+
+    if(mandatoryWords.isDefined && wordsToUse.isDefined) {
+      val source = Source.fromFile(mandatoryWords.get)
+      for(line <- source.getLines()) {
+        wordsToUse.get += line.trim.toLowerCase()
+      }
+      source.close()
+    }
+    logger.debug(s"Word count after adding mandatory words is ${wordsToUse.get.size}.")
+
+    val w2v = new Word2Vec(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
     logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
 
     w2v
   }
 
-  private def loadWordsToUse(docFreqFileName: Option[String], minDocFreq: Int):Option[Set[String]] = {
+  private def loadWordsToUse(docFreqFileName: Option[String], minDocFreq: Int):Option[mutable.HashSet[String]] = {
     if(docFreqFileName.isDefined) {
       logger.debug(s"Loading words to use from file ${docFreqFileName.get} using min frequency of $minDocFreq.")
       val wordsToUse = new mutable.HashSet[String]()
@@ -82,7 +95,7 @@ object LstmUtils {
       }
       source.close()
       logger.debug(s"Loaded $kept words to use, from a total of $total words.")
-      Some(wordsToUse.toSet)
+      Some(wordsToUse)
     } else {
       None
     }
