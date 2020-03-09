@@ -217,12 +217,14 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     var total = 0
     var correct = 0
     val taskNumber = taskId + 1
+    var sentCount = 0
 
     val pw =
       if(epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
     logger.debug(s"Started evaluation on the $name dataset for task $taskNumber ($taskName)...")
     for(sent <- sentences) {
+      sentCount += 1
       val words = sent.map(_.getWord)
       val golds = sent.map(_.getTag)
 
@@ -231,6 +233,11 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       val (t, c) = accuracy(golds, preds)
       total += t
       correct += c
+
+      if(sentCount % 10 == 0) {
+        val crtAcc = correct.toDouble / total
+        logger.debug(s"Processed $sentCount sentences. Current accuracy is $crtAcc.")
+      }
 
       printCoNLLOutput(pw, words, golds, preds)
     }
@@ -557,17 +564,15 @@ object LstmCrfMtl {
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
-  val lmType = "lample" // "flair" // "lample"
-
   def mkLM(lmFileName:String, parameterCollection: ParameterCollection): LM = {
-    if(lmType == "lample") LampleLM.load(lmFileName, parameterCollection)
-    else if(lmType == "flair") FlairLM.load(lmFileName, parameterCollection)
+    if(LM_TYPE == "lample") LampleLM.load(lmFileName, parameterCollection)
+    else if(LM_TYPE == "flair") FlairLM.load(lmFileName, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type for model file $lmFileName!")
   }
 
   def mkLM(linesIterator:Iterator[String], parameterCollection: ParameterCollection): LM = {
-    if(lmType == "lample") LampleLM.load(linesIterator, parameterCollection)
-    else if(lmType == "flair") FlairLM.load(linesIterator, parameterCollection)
+    if(LM_TYPE == "lample") LampleLM.load(linesIterator, parameterCollection)
+    else if(LM_TYPE == "flair") FlairLM.load(linesIterator, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type!")
   }
 
@@ -584,6 +589,8 @@ object LstmCrfMtl {
     val mtl = new LstmCrfMtl(None, Some(model))
     mtl
   }
+
+  val LM_TYPE = "lample" // "flair" // "lample"
 
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
