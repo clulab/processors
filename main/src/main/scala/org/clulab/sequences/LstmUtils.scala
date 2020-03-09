@@ -24,6 +24,8 @@ object LstmUtils {
   private val logger:Logger = LoggerFactory.getLogger(classOf[LstmUtils])
 
   val UNK_WORD = "<UNK>"
+  val EOS_WORD = "<EOS>"
+
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
