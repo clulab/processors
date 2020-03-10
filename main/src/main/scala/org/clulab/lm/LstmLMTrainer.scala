@@ -257,7 +257,7 @@ object LstmLMTrainer {
 
   val CLIP_THRESHOLD = 5.0f
   val DROPOUT_PROB:Float = 0.2f
-  val BATCH_SIZE = 1
+  val BATCH_SIZE = 10
 
   protected def generateKnownWords(trainFileName: String): (Set[String], Set[String], Int) = {
     logger.debug(s"Counting words in file $trainFileName...")
