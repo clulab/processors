@@ -3,7 +3,7 @@ package org.clulab.lm
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import org.clulab.sequences.{LstmUtils, SafeTrainer}
-import org.clulab.sequences.LstmUtils.initializeDyNet
+import org.clulab.sequences.LstmUtils.{initializeDyNet, mkDynetFilename, mkX2iFilename}
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -11,8 +11,13 @@ import scala.collection.mutable
 import scala.io.Source
 import LstmLMTrainer._
 import edu.cmu.dynet.Expression.{pick, pickNegLogSoftmax, softmax, sum}
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.utils.Serializer
 
 import scala.collection.mutable.ArrayBuffer
+
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 class LstmLMTrainer (val w2i: Map[String, Int],
                      val t2i: Map[String, Int],
@@ -99,8 +104,8 @@ class LstmLMTrainer (val w2i: Map[String, Int],
 
         // save a model every 50K sentences
         if(sentCount % saveCheckpoint == 0){
-          //val baseModelName = s"lstmlm_s$sentCount"
-          // save(baseModelName)
+          val baseModelName = s"lstmlm_s$sentCount"
+          save(baseModelName)
         }
       }
     }
@@ -203,6 +208,23 @@ class LstmLMTrainer (val w2i: Map[String, Int],
   }
   def tagId(word: String): Int = {
     t2i.getOrElse(word, t2i(LstmUtils.UNK_WORD))
+  }
+
+  def save(modelFilename: String): Unit = {
+    val dynetFilename = mkDynetFilename(modelFilename)
+    val x2iFilename = mkX2iFilename(modelFilename)
+
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(parameters, "/lstm")
+    }
+
+    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
+      val dim = wordLookupParameters.dim().get(0)
+
+      LstmUtils.save(printWriter, w2i, "w2i")
+      LstmUtils.save(printWriter, t2i, "t2i")
+      LstmUtils.save(printWriter, dim, "dim")
+    }
   }
 }
 
