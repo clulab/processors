@@ -70,6 +70,15 @@ class LstmLMTrainer (val w2i: Map[String, Int],
       batchLosses.add(fwLoss)
 
       //
+      // right-to-left prediction
+      //
+      val bwIn = words.reverse
+      val bwTags = tags.reverse
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, bwTags, wordBwRnnBuilder, bwO, doDropout = true)
+      val bwLoss = languageModelLoss(bwEmissionScores, bwTags)
+      batchLosses.add(bwLoss)
+
+      //
       // book keeping
       //
       sentCount += 1
@@ -102,7 +111,7 @@ class LstmLMTrainer (val w2i: Map[String, Int],
       if(sentCount % logCheckpoint == 0) {
         logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
 
-        // save a model every 50K sentences
+        // save a model when we hit a save checkpoint
         if(sentCount % saveCheckpoint == 0){
           val baseModelName = s"lstmlm_s$sentCount"
           save(baseModelName)
@@ -162,6 +171,8 @@ class LstmLMTrainer (val w2i: Map[String, Int],
     val source = Source.fromFile(devFileName)
     var sentCount = 0
     var cummulativeFwPerplexity = 0.0
+    var cummulativeBwPerplexity = 0.0
+
     logger.debug("Computing perplexity in dev...")
     for(sentence <- source.getLines()) {
       val (words, tags) = sentenceToWords(sentence)
@@ -172,11 +183,18 @@ class LstmLMTrainer (val w2i: Map[String, Int],
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, fwTags, wordFwRnnBuilder, fwO) // no dropout during testing!
       val fwPp = perplexity(fwEmissionScores, fwTags)
 
+      val bwIn = words.reverse
+      val bwTags = tags.reverse
+      val bwEmissionScores = emissionScoresAsExpressions(bwIn, bwTags, wordBwRnnBuilder, bwO)
+      val bwPp = perplexity(bwEmissionScores, bwTags)
+
       cummulativeFwPerplexity += fwPp
+      cummulativeBwPerplexity += bwPp
       sentCount += 1
     }
     source.close()
     logger.info(s"Average forward perplexity: ${cummulativeFwPerplexity / sentCount.toDouble}")
+    logger.info(s"Average backward perplexity: ${cummulativeBwPerplexity / sentCount.toDouble}")
   }
 
   /** Computes perplexity for this sentence */
@@ -235,11 +253,11 @@ object LstmLMTrainer {
   val MIN_UNK_WORD_FREQ_RATIO = 0.00000001
 
   val WORD_EMBEDDING_SIZE = 300
-  val WORD_RNN_STATE_SIZE = 512
+  val WORD_RNN_STATE_SIZE = 1024
 
   val CLIP_THRESHOLD = 5.0f
   val DROPOUT_PROB:Float = 0.2f
-  val BATCH_SIZE = 1
+  val BATCH_SIZE = 10
 
   protected def generateKnownWords(trainFileName: String): (Set[String], Set[String], Int) = {
     logger.debug(s"Counting words in file $trainFileName...")
