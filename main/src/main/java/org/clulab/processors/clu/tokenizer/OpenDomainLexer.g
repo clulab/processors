@@ -33,7 +33,7 @@ FRACTION: ONE_TO_FOUR_DIGITS ('/' | '\u2044') ONE_TO_FOUR_DIGITS;
 // some other token
 // note that we do not hard code abbreviations in the lexer.
 // abbreviations are handled in the org.clulab.processors.clulab.tokenizer.Tokenizer class.
-WORD: ALPHANUM+ (('.'|'!'|'?'|'-'|'_'|'\'') ALPHANUM+ )* ;
+WORD: ALPHANUM+ (('.'|'-'|'_'|'\'') ALPHANUM+ )* ;
 
 // Twitter user names and hashtags
 TWITTER_NAME: '@' (LOWER_CASE_LETTER|UPPER_CASE_LETTER|'_') (LOWER_CASE_LETTER|UPPER_CASE_LETTER|'_'|DIGIT)*;

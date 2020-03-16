@@ -28,6 +28,12 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
     for (i <- tokens.indices) {
       val crt = tokens(i)
 
+      // next and previous tokens. We need these to detect proper ends of sentences
+      var next: Option[RawToken] = None
+      if (i < tokens.length - 1) next = Some(tokens(i + 1))
+      var prev: Option[RawToken] = None
+      if (i > 0) prev = Some(tokens(i - 1))
+
       //
       // we handle end-of-sentence markers (periods, etc.) here
       // this includes detecting if a period belongs to the previous token (if it's an abbreviation)
@@ -35,14 +41,9 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
       //
       if (EOS.findFirstIn(crt.word).isDefined) {
         // found a token that normally indicates end of sentence
-
-        // next and previous tokens. We need these to detect proper ends of sentences
-        var next: Option[RawToken] = None
-        if (i < tokens.length - 1) next = Some(tokens(i + 1))
-        var prev: Option[RawToken] = None
-        if (i > 0) prev = Some(tokens(i - 1))
-
         var isEos = sentenceSplit
+
+        // period that probably belongs to an abbreviation and should not be marked as EOS
         if (crt.word == "." && prev.isDefined && isAbbreviation(prev.get.word) && crt.beginPosition == prev.get.endPosition) {
           // found a period that should be attached to the previous abbreviation
           endPositions(endPositions.size - 1) = crt.endPosition
@@ -54,8 +55,10 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
           if (isEos && next.isDefined && !isSentStart(next.get.word)) {
             isEos = false
           }
-        } else {
-          // regular end-of-sentence marker; treat is a distinct token
+        }
+
+        // regular end-of-sentence marker; treat is a distinct token
+        else {
           raw += crt.raw
           words += crt.word
           beginPositions += crt.beginPosition
@@ -70,7 +73,52 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
           beginPositions = new ArrayBuffer[Int]()
           endPositions = new ArrayBuffer[Int]()
         }
-      } else {
+      }
+
+      // found a period *inside* a token; sometimes this is an EOS
+      else if(EOS_FOLLOWEDBY_BULLET.findFirstIn(crt.raw).isDefined &&
+        crt.raw.lastIndexOf('.') > 0 &&
+        next.isDefined && isSentStart(next.get.word)) {
+        //println(s"FOUND EOS INSIDE TOKEN: ${crt.raw}")
+
+        //
+        // create the last token from the token fragment before the period, and the period itself
+        //
+        val dotRawPosition = crt.raw.lastIndexOf('.')
+        assert(dotRawPosition > 0)
+        val dotWordPosition = crt.word.lastIndexOf('.')
+        assert(dotWordPosition > 0)
+
+        raw += crt.raw.substring(0, dotRawPosition)
+        words += crt.word.substring(0, dotWordPosition)
+        beginPositions += crt.beginPosition
+        endPositions += crt.beginPosition + dotRawPosition
+
+        raw += crt.raw.substring(dotRawPosition, dotRawPosition + 1)
+        words += crt.word.substring(dotWordPosition, dotWordPosition + 1)
+        beginPositions += endPositions.last
+        endPositions += beginPositions.last + raw.length
+        val lastPosition = endPositions.last
+
+        //
+        // create the current sentence
+        //
+        sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
+        raw = new ArrayBuffer[String]()
+        words = new ArrayBuffer[String]()
+        beginPositions = new ArrayBuffer[Int]()
+        endPositions = new ArrayBuffer[Int]()
+
+        //
+        // add the part of the token after the period to the new sentence
+        //
+        raw += crt.raw.substring(dotRawPosition + 1)
+        words += crt.word.substring(dotWordPosition + 1)
+        beginPositions += lastPosition
+        endPositions += lastPosition + raw.length
+      }
+
+      else {
         // just a regular token
         raw += crt.raw
         words += crt.word
@@ -136,6 +184,8 @@ class SpanishSentenceSplitter extends RuleBasedSentenceSplitter {
 
 object SentenceSplitter {
   val EOS: Regex = """^[\.!\?\s]+$""".r
+
+  val EOS_FOLLOWEDBY_BULLET = """\.\d+$""".r
 
   val IS_ENGLISH_ABBREVIATION: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.abbreviations")
   val IS_ENGLISH_SENTSTART: Regex = loadDictionary("org/clulab/processors/clu/tokenizer/english.sentstarts")
