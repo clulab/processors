@@ -1,7 +1,6 @@
 #
 # Words that indicate beginning of sentence when the previous word was an abbreviation
 # Matching these is case sensitive
-# TODO: Add sentence starts for ES and PT
 #
 A
 About

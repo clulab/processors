@@ -141,6 +141,20 @@ class TestTokenizer extends FlatSpec with Matchers {
     sent.words(2) should be (":(")
   }
 
+  it should "tokenize question mark correctly" in {
+    val sents = tok("An increase in assessed settlements reported access to functional boreholes in November , which can be attributed to the scaling up of humanitarian activities from the WASH cluster to rehabilitate boreholes in Jur River and Wau Counties?17 The overall percentage of functional boreholes increased across WBeG , specifically in Jur River and Wau Counties in November .")
+    sents.length should be (2)
+    sents(0).words(0) should be ("An")
+    sents(1).words(0) should be ("17")
+  }
+
+  it should "tokenize punctuation correctly" in {
+    val sents = tok("An increase in assessed settlements reported access to functional boreholes in November , which can be attributed to the scaling up of humanitarian activities from the WASH cluster to rehabilitate boreholes in Jur River and Wau Counties.17 The overall percentage of functional boreholes increased across WBeG , specifically in Jur River and Wau Counties in November .")
+    sents.length should be (2)
+    sents(0).words(0) should be ("An")
+    sents(1).words(0) should be ("17")
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
