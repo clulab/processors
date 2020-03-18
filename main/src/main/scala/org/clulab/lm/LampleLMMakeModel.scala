@@ -56,9 +56,9 @@ object LampleLMMakeModel {
     //
     // save the combined parameters into a single model file
     //
-    val outFlairModelFile = config.getArgString("lample.merge.model", None)
-    val outDynetFilename = mkDynetFilename(outFlairModelFile)
-    val outX2iFilename = mkX2iFilename(outFlairModelFile)
+    val outModelFile = config.getArgString("lample.merge.model", None)
+    val outDynetFilename = mkDynetFilename(outModelFile)
+    val outX2iFilename = mkX2iFilename(outModelFile)
 
     new CloseableModelSaver(outDynetFilename).autoClose { modelSaver =>
       modelSaver.addModel(parameters, "/lample")

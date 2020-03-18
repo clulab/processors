@@ -318,7 +318,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @param words One training or testing sentence
    */
   def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
-    val embeddings = model.lm.mkEmbeddings(words).toArray
+    val embeddings = model.lm.mkEmbeddings(words, doDropout).toArray
 
     if(doDropout) {
       model.fwRnnBuilder.setDropout(DROPOUT_PROB)
@@ -364,7 +364,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @return The scores for all tasks
    */
   def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
-    val embeddings = model.lm.mkEmbeddings(words).toArray
+    val embeddings = model.lm.mkEmbeddings(words, doDropout).toArray
 
     // this is the biLSTM over words that is shared across all tasks
     // we run this ONCE for all tasks!

@@ -3,7 +3,7 @@ package org.clulab.lm
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
 import org.clulab.sequences.{LstmUtils, SafeTrainer}
-import org.clulab.sequences.LstmUtils.{initializeDyNet, mkDynetFilename, mkX2iFilename}
+import org.clulab.sequences.LstmUtils.{ByLineStringMapBuilder, initializeDyNet, mkDynetFilename, mkX2iFilename}
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -11,16 +11,15 @@ import scala.collection.mutable
 import scala.io.Source
 import LstmLMTrainer._
 import edu.cmu.dynet.Expression.{pick, pickNegLogSoftmax, softmax, sum}
-import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.utils.Serializer
 
 import scala.collection.mutable.ArrayBuffer
-
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 class LstmLMTrainer (val w2i: Map[String, Int],
                      val t2i: Map[String, Int],
+                     val c2i: Map[Char, Int],
                      val parameters: ParameterCollection,
                      val wordLookupParameters: LookupParameter,
                      val wordFwRnnBuilder: RnnBuilder,
@@ -239,6 +238,7 @@ class LstmLMTrainer (val w2i: Map[String, Int],
     Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
       val dim = wordLookupParameters.dim().get(0)
 
+      LstmUtils.saveCharMap(printWriter, c2i, "c2i")
       LstmUtils.save(printWriter, w2i, "w2i")
       LstmUtils.save(printWriter, t2i, "t2i")
       LstmUtils.save(printWriter, dim, "dim")
@@ -300,7 +300,45 @@ object LstmLMTrainer {
     (knownWords.toSet, tags.toSet, sentCount)
   }
 
-  def mkParams(w2i: Map[String, Int], t2i: Map[String, Int]): LstmLMTrainer = {
+  def apply(baseModelFilename: String): LstmLMTrainer = {
+    load(baseModelFilename)
+  }
+
+  def load(baseModelFilename: String): LstmLMTrainer = {
+    logger.debug(s"Loading LstmLM model from $baseModelFilename...")
+    val dynetFilename = mkDynetFilename(baseModelFilename)
+    val x2iFilename = mkX2iFilename(baseModelFilename)
+
+    //
+    // load the .x2i info
+    //
+    val (w2i, t2i, c2i, _) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+      val byLineStringMapBuilder = new ByLineStringMapBuilder()
+      val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
+      val lines = source.getLines()
+      val c2i = byLineCharMapBuilder.build(lines)
+      val w2i = byLineStringMapBuilder.build(lines)
+      val t2i = byLineStringMapBuilder.build(lines)
+      val dim = new LstmUtils.ByLineIntBuilder().build(lines)
+      (w2i, t2i, c2i, dim)
+    }
+    logger.debug(s"Loaded a Lstm LM word map with ${w2i.keySet.size} words and ${t2i.keySet.size} labels.")
+    logger.debug(s"Loaded a character map with ${c2i.keySet.size} known characters.")
+
+    //
+    // create the DyNet parameters
+    //
+    val model = mkParams(w2i, t2i, c2i)
+
+    //
+    // load the above parameters from the DyNet model file
+    //
+    LstmUtils.loadParameters(dynetFilename, model.parameters, key = "/lstm")
+
+    model
+  }
+
+  def mkParams(w2i: Map[String, Int], t2i: Map[String, Int], c2i: Map[Char, Int]): LstmLMTrainer = {
 
     val parameters = new ParameterCollection()
 
@@ -312,7 +350,7 @@ object LstmLMTrainer {
     val fwO = parameters.addParameters(Dim(t2i.size, WORD_RNN_STATE_SIZE))
     val bwO = parameters.addParameters(Dim(t2i.size, WORD_RNN_STATE_SIZE))
 
-    new LstmLMTrainer(w2i, t2i, parameters,
+    new LstmLMTrainer(w2i, t2i, c2i, parameters,
       wordLookupParameters, wordFwBuilder, wordBwBuilder,
       fwO, bwO)
   }
@@ -335,13 +373,28 @@ object LstmLMTrainer {
     else {
       logger.debug("Entering training mode...")
 
+      //
       // build the set of known characters
+      //
       val trainFileName = config.getArgString("lstm.train.train", None)
       val (knownWords, tags, _) = generateKnownWords(trainFileName)
       val w2i = knownWords.toArray.zipWithIndex.toMap
       val t2i = tags.toArray.zipWithIndex.toMap
 
-      val lm = mkParams(w2i, t2i)
+      //
+      // Load the character map
+      //
+      logger.debug(s"Loading the character map...")
+      val c2iFilename = config.getArgString("lstm.train.c2i", None)
+      val c2i = Serializer.using(LstmUtils.newSource(c2iFilename)) { source =>
+        val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
+        val lines = source.getLines()
+        val c2i = byLineCharMapBuilder.build(lines)
+        c2i
+      }
+      logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries. ")
+
+      val lm = mkParams(w2i, t2i, c2i)
       lm.train(
         trainFileName,
         Some(config.getArgString("lstm.train.dev", None)),

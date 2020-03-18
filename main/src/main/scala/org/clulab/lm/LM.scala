@@ -6,7 +6,7 @@ import edu.cmu.dynet.Expression
 
 /** Trait for language model (LM) functionality */
 trait LM {
-  def mkEmbeddings(words: Iterable[String]): Iterable[Expression]
+  def mkEmbeddings(words: Iterable[String], doDropout:Boolean): Iterable[Expression]
 
   def dimensions: Int
 

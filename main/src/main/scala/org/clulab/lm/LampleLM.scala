@@ -19,11 +19,12 @@ class LampleLM(
   val charBwRnnBuilder:RnnBuilder) extends LM {
 
   /** Creates an overall word embedding by concatenating word and character embeddings */
-  def mkEmbedding(word: String):Expression =
+  def mkEmbedding(word: String):Expression = {
     LstmUtils.mkWordEmbedding(word,
       w2i, lookupParameters,
       c2i, charLookupParameters,
       charFwRnnBuilder, charBwRnnBuilder)
+  }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
     val dim = lookupParameters.dim().get(0)
@@ -33,8 +34,17 @@ class LampleLM(
     LstmUtils.save(printWriter, dim, "dim")
   }
 
-  override def mkEmbeddings(words: Iterable[String]): Iterable[Expression] =
+  override def mkEmbeddings(words: Iterable[String], doDropout:Boolean): Iterable[Expression] = {
+    if(doDropout) {
+      charFwRnnBuilder.setDropout(LampleLM.DROPOUT_PROB)
+      charBwRnnBuilder.setDropout(LampleLM.DROPOUT_PROB)
+    } else {
+      charFwRnnBuilder.disableDropout()
+      charBwRnnBuilder.disableDropout()
+    }
+
     words.map(mkEmbedding)
+  }
 
   override def dimensions: Int =
     (2 * LampleLM.CHAR_RNN_STATE_SIZE) + lookupParameters.dim().get(0).toInt
@@ -46,6 +56,7 @@ object LampleLM {
   val CHAR_RNN_LAYERS = 1
   val CHAR_EMBEDDING_SIZE = 32
   val CHAR_RNN_STATE_SIZE = 16
+  val DROPOUT_PROB = 0.2f
 
   /** Loads the LM inside a task specific model, *before* training the task */
   def load(modelBaseFilename:String, parameters: ParameterCollection): LampleLM = {
