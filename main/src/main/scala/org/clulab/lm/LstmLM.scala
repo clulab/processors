@@ -61,10 +61,9 @@ class LstmLM (val w2i: Map[String, Int],
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
     LstmUtils.saveCharMap(printWriter, c2i, "c2i")
-    LstmUtils.save(printWriter, charLookupParameters.dim().get(0), "charDim")
     LstmUtils.save(printWriter, w2i, "w2i")
-    LstmUtils.save(printWriter, wordLookupParameters.dim().get(0), "wordDim")
     LstmUtils.save(printWriter, t2i, "t2i")
+    LstmUtils.save(printWriter, wordLookupParameters.dim().get(0), "dim")
   }
 }
 
@@ -109,12 +108,11 @@ object LstmLM {
     val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
     val byLineIntBuilder = new LstmUtils.ByLineIntBuilder()
     val c2i = byLineCharMapBuilder.build(x2iIterator)
-    val charEmbeddingDim = byLineIntBuilder.build(x2iIterator)
     val w2i = byLineStringMapBuilder.build(x2iIterator)
-    val wordEmbeddingDim = byLineIntBuilder.build(x2iIterator)
     val t2i = byLineStringMapBuilder.build(x2iIterator)
+    val wordEmbeddingDim = byLineIntBuilder.build(x2iIterator)
 
-    logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries and dimension $charEmbeddingDim.")
+    logger.debug(s"Loaded a character map with ${c2i.keySet.size} entries.")
     logger.debug(s"Loaded a word map with ${w2i.keySet.size} entries and dimension $wordEmbeddingDim.")
     logger.debug(s"Loaded a word label map with ${t2i.keySet.size} entries.")
 
