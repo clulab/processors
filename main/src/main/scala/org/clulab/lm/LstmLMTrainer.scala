@@ -356,7 +356,7 @@ object LstmLMTrainer {
   }
 
   def main(args: Array[String]): Unit = {
-    initializeDyNet(autoBatch = true, mem = "6144")
+    initializeDyNet() // autoBatch = true, mem = "2000,2000,1000,1000")
     val configName = "lstm-lm"
     val config = new FlairConfig(ConfigFactory.load(configName))
 
