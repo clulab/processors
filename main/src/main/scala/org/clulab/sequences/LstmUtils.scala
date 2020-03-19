@@ -387,12 +387,12 @@ object LstmUtils {
     val fwOuts = transduce(charEmbeddings, charFwRnnBuilder)
     val fwOut =
       if(fwOuts.nonEmpty) fwOuts.last
-      else transduce(Array(lookup(charLookupParameters, c2i('a'))), charFwRnnBuilder).head // TODO: this needs a better solution; we need a dedicated UNK character
+      else transduce(Array(lookup(charLookupParameters, 0)), charFwRnnBuilder).head // 0 = UNK
 
     val bwOuts = transduce(charEmbeddings.reverse, charBwRnnBuilder)
     val bwOut =
       if(bwOuts.nonEmpty) bwOuts.last
-      else transduce(Array(lookup(charLookupParameters, c2i('a'))), charBwRnnBuilder).head // TODO: same as above
+      else transduce(Array(lookup(charLookupParameters, 0)), charBwRnnBuilder).head // 0 = UNK
 
     concatenate(fwOut, bwOut)
   }
