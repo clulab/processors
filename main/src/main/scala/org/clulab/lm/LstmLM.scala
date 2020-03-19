@@ -53,7 +53,7 @@ class LstmLM (val w2i: Map[String, Int],
       states += Expression.concatenate(fwStates(i), bwStates(i))
     }
 
-    states.toArray
+    states
   }
 
   def mkEmbedding(wi: Int): Expression = Expression.lookup(wordLookupParameters, wi)
@@ -69,7 +69,7 @@ class LstmLM (val w2i: Map[String, Int],
   }
 
   override def dimensions: Int = {
-    2 * LstmLMTrainer.WORD_RNN_STATE_SIZE + 2 * CHAR_RNN_STATE_SIZE
+    2 * LstmLMTrainer.WORD_RNN_STATE_SIZE // + 2 * CHAR_RNN_STATE_SIZE
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
