@@ -40,11 +40,23 @@ class LstmLM (val w2i: Map[String, Int],
     }
 
     val wordIds = sentenceToWords(words)
+    val fwEmbeddings = wordIds.map(mkEmbedding)
+    val bwEmbeddings = fwEmbeddings.reverse
 
-    throw new RuntimeException("Need embeddings!")
-    // TODO: add word LSTMs and char LSTMs here!
-    null
+    val fwStates = LstmUtils.transduce(fwEmbeddings, wordFwRnnBuilder).toArray
+    val bwStates = LstmUtils.transduce(bwEmbeddings, wordBwRnnBuilder).toArray.reverse
+    assert(fwStates.length == bwStates.length)
+
+    val states = new ArrayBuffer[Expression]()
+    for(i <- fwStates.indices) {
+      // TODO: add char embeddings
+      states += Expression.concatenate(fwStates(i), bwStates(i))
+    }
+
+    states.toArray
   }
+
+  def mkEmbedding(wi: Int): Expression = Expression.lookup(wordLookupParameters, wi)
 
   def sentenceToWords(tokens: Iterable[String]): Array[Int] = {
     val wordIds = new ArrayBuffer[Int]()
