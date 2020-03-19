@@ -41,6 +41,7 @@ class LstmLM (val w2i: Map[String, Int],
 
     val wordIds = sentenceToWords(words)
 
+    throw new RuntimeException("Need embeddings!")
     // TODO: add word LSTMs and char LSTMs here!
     null
   }
@@ -119,14 +120,11 @@ object LstmLM {
     //
     // make the loadable parameters
     //
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-    val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-    val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
     val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(wordEmbeddingDim))
     val wordFwBuilder = new LstmBuilder(1, WORD_EMBEDDING_SIZE, WORD_RNN_STATE_SIZE, parameters)
     val wordBwBuilder = new LstmBuilder(1, WORD_EMBEDDING_SIZE, WORD_RNN_STATE_SIZE, parameters)
-    val fwO = parameters.addParameters(Dim(c2i.size, WORD_RNN_STATE_SIZE))
-    val bwO = parameters.addParameters(Dim(c2i.size, WORD_RNN_STATE_SIZE))
+    val fwO = parameters.addParameters(Dim(t2i.size, WORD_RNN_STATE_SIZE))
+    val bwO = parameters.addParameters(Dim(t2i.size, WORD_RNN_STATE_SIZE))
 
     //
     // load these parameters from the DyNet model file
@@ -136,6 +134,10 @@ object LstmLM {
       logger.debug(s"Loading pretrained LstmLM model from $dynetFilename...")
       LstmUtils.loadParameters(dynetFilename.get, parameters, key = "/lstm")
     }
+
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
+    val charFwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charBwBuilder = new GruBuilder(CHAR_RNN_LAYERS, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
 
     charFwBuilder.disableDropout()
     charBwBuilder.disableDropout()

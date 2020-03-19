@@ -9,7 +9,7 @@ import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
 import org.clulab.sequences.LstmUtils._
-import org.clulab.lm.{FlairLM, LM, LampleLM}
+import org.clulab.lm.{FlairLM, LM, LampleLM, LstmLM}
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -567,12 +567,14 @@ object LstmCrfMtl {
   def mkLM(lmFileName:String, parameterCollection: ParameterCollection): LM = {
     if(LM_TYPE == "lample") LampleLM.load(lmFileName, parameterCollection)
     else if(LM_TYPE == "flair") FlairLM.load(lmFileName, parameterCollection)
+    else if(LM_TYPE == "lstm") LstmLM.load(lmFileName, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type for model file $lmFileName!")
   }
 
   def mkLM(linesIterator:Iterator[String], parameterCollection: ParameterCollection): LM = {
     if(LM_TYPE == "lample") LampleLM.load(linesIterator, parameterCollection)
     else if(LM_TYPE == "flair") FlairLM.load(linesIterator, parameterCollection)
+    else if(LM_TYPE == "lstm") LstmLM.load(linesIterator, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type!")
   }
 
@@ -590,7 +592,7 @@ object LstmCrfMtl {
     mtl
   }
 
-  val LM_TYPE = "lample" // "flair" // "lample"
+  val LM_TYPE = "lstm" // "flair" // "lample"
 
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
