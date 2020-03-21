@@ -234,10 +234,12 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       total += t
       correct += c
 
+      /*
       if(sentCount % 10 == 0) {
         val crtAcc = correct.toDouble / total
         logger.debug(s"Processed $sentCount sentences. Current accuracy is $crtAcc.")
       }
+      */
 
       printCoNLLOutput(pw, words, golds, preds)
     }
