@@ -58,12 +58,11 @@ class LstmLMTrainer (val w2i: Map[String, Int],
 
     for(sentence <- source.getLines()) {
       val (words, tags) = sentenceToWords(sentence)
-      val embeddings = words.map(mkEmbedding)
 
       //
       // left-to-right prediction
       //
-      val fwIn = embeddings
+      val fwIn = words
       val fwTags = tags
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, fwTags, wordFwRnnBuilder, fwO, doDropout = true)
       val fwLoss = languageModelLoss(fwEmissionScores, fwTags)
@@ -72,7 +71,7 @@ class LstmLMTrainer (val w2i: Map[String, Int],
       //
       // right-to-left prediction
       //
-      val bwIn = embeddings.reverse
+      val bwIn = words.reverse
       val bwTags = tags.reverse
       val bwEmissionScores = emissionScoresAsExpressions(bwIn, bwTags, wordBwRnnBuilder, bwO, doDropout = true)
       val bwLoss = languageModelLoss(bwEmissionScores, bwTags)
@@ -120,12 +119,12 @@ class LstmLMTrainer (val w2i: Map[String, Int],
     }
   }
 
-  def emissionScoresAsExpressions(embeddings: Array[Expression],
+  def emissionScoresAsExpressions(words: Array[Int],
                                   tags: Array[Int],
                                   rnnBuilder: RnnBuilder,
                                   pO:Parameter,
                                   doDropout:Boolean = false): ExpressionVector = {
-
+    val embeddings = words.map(mkEmbedding)
 
     if(doDropout) {
       rnnBuilder.setDropout(DROPOUT_PROB)
@@ -176,15 +175,14 @@ class LstmLMTrainer (val w2i: Map[String, Int],
     logger.debug("Computing perplexity in dev...")
     for(sentence <- source.getLines()) {
       val (words, tags) = sentenceToWords(sentence)
-      val embeddings = words.map(mkEmbedding)
       ComputationGraph.renew()
 
-      val fwIn = embeddings
+      val fwIn = words
       val fwTags = tags
       val fwEmissionScores = emissionScoresAsExpressions(fwIn, fwTags, wordFwRnnBuilder, fwO) // no dropout during testing!
       val fwPp = perplexity(fwEmissionScores, fwTags)
 
-      val bwIn = embeddings.reverse
+      val bwIn = words.reverse
       val bwTags = tags.reverse
       val bwEmissionScores = emissionScoresAsExpressions(bwIn, bwTags, wordBwRnnBuilder, bwO)
       val bwPp = perplexity(bwEmissionScores, bwTags)
@@ -358,7 +356,7 @@ object LstmLMTrainer {
   }
 
   def main(args: Array[String]): Unit = {
-    initializeDyNet(autoBatch = false, mem = "4096") // autoBatch = true, mem = "2000,2000,1000,1000")
+    initializeDyNet() // autoBatch = true, mem = "2000,2000,1000,1000")
     val configName = "lstm-lm"
     val config = new FlairConfig(ConfigFactory.load(configName))
 
