@@ -41,6 +41,7 @@ class LstmLMTrainer (val w2i: Map[String, Int],
    */
   def train( trainFileName:String,
              devFileName:Option[String],
+             epochs:Int,
              logCheckpoint:Int,
              saveCheckpoint:Int): Unit = {
     // initialize optimizer
@@ -56,66 +57,80 @@ class LstmLMTrainer (val w2i: Map[String, Int],
     ComputationGraph.renew()
     var batchLosses = new ExpressionVector()
 
-    for(sentence <- source.getLines()) {
-      val (words, tags) = sentenceToWords(sentence)
+    for(epoch <- 0 until epochs) {
+      logger.debug(s"Starting epoch #$epoch...")
+      for (sentence <- source.getLines()) {
+        val (words, tags) = sentenceToWords(sentence)
 
-      //
-      // left-to-right prediction
-      //
-      val fwIn = words
-      val fwTags = tags
-      val fwEmissionScores = emissionScoresAsExpressions(fwIn, fwTags, wordFwRnnBuilder, fwO, doDropout = true)
-      val fwLoss = languageModelLoss(fwEmissionScores, fwTags)
-      batchLosses.add(fwLoss)
+        //
+        // left-to-right prediction
+        //
+        val fwIn = words
+        val fwTags = tags
+        val fwEmissionScores = emissionScoresAsExpressions(fwIn, fwTags, wordFwRnnBuilder, fwO, doDropout = true)
+        val fwLoss = languageModelLoss(fwEmissionScores, fwTags)
+        batchLosses.add(fwLoss)
 
-      //
-      // right-to-left prediction
-      //
-      val bwIn = words.reverse
-      val bwTags = tags.reverse
-      val bwEmissionScores = emissionScoresAsExpressions(bwIn, bwTags, wordBwRnnBuilder, bwO, doDropout = true)
-      val bwLoss = languageModelLoss(bwEmissionScores, bwTags)
-      batchLosses.add(bwLoss)
+        //
+        // right-to-left prediction
+        //
+        val bwIn = words.reverse
+        val bwTags = tags.reverse
+        val bwEmissionScores = emissionScoresAsExpressions(bwIn, bwTags, wordBwRnnBuilder, bwO, doDropout = true)
+        val bwLoss = languageModelLoss(bwEmissionScores, bwTags)
+        batchLosses.add(bwLoss)
 
-      //
-      // book keeping
-      //
-      sentCount += 1
-      numTagged += words.length + 1
+        //
+        // book keeping
+        //
+        sentCount += 1
+        numTagged += words.length + 1
 
-      //
-      // backprop
-      // we do this only when the batch is full
-      //
-      if(batchLosses.size >= BATCH_SIZE) {
-        val comboLoss = sum(batchLosses) / batchLosses.size
-        cummulativeLoss += comboLoss.value().toFloat()
-        ComputationGraph.backward(comboLoss)
-        trainer.update(parameters)
+        //
+        // backprop
+        // we do this only when the batch is full
+        //
+        if (batchLosses.size >= BATCH_SIZE) {
+          val comboLoss = sum(batchLosses) / batchLosses.size
+          cummulativeLoss += comboLoss.value().toFloat()
+          ComputationGraph.backward(comboLoss)
+          trainer.update(parameters)
 
-        // report perplexity if a dev file is available
-        if(sentCount % saveCheckpoint == 0 && devFileName.nonEmpty){
-          reportPerplexity(devFileName.get)
+          // report perplexity if a dev file is available
+          if (sentCount % saveCheckpoint == 0 && devFileName.nonEmpty) {
+            reportPerplexity(devFileName.get)
+          }
+
+          // reset for the next batch
+          ComputationGraph.renew()
+          batchLosses = new ArrayBuffer[Expression]()
+          //println("Renewed graph!")
         }
 
-        // reset for the next batch
-        ComputationGraph.renew()
-        batchLosses = new ArrayBuffer[Expression]()
-        //println("Renewed graph!")
+        //
+        // reporting and model saving
+        //
+        if (sentCount % logCheckpoint == 0) {
+          logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
+
+          // save a model when we hit a save checkpoint
+          if (sentCount % saveCheckpoint == 0) {
+            val baseModelName = s"lstmlm_s$sentCount"
+            save(baseModelName)
+          }
+        }
       }
 
       //
-      // reporting and model saving
+      // report perplexity and save a model at the end of each epoch
       //
-      if(sentCount % logCheckpoint == 0) {
-        logger.debug(s"Processed $sentCount sentences. Cummulative loss: ${cummulativeLoss / numTagged}.")
-
-        // save a model when we hit a save checkpoint
-        if(sentCount % saveCheckpoint == 0){
-          val baseModelName = s"lstmlm_s$sentCount"
-          save(baseModelName)
-        }
+      logger.debug(s"Epoch #$epoch complete.")
+      logger.debug(s"Processed $sentCount sentences at the end of epoch $epoch. Cummulative loss: ${cummulativeLoss / numTagged}.")
+      if(devFileName.nonEmpty) {
+        reportPerplexity(devFileName.get)
       }
+      val baseModelName = s"lstmlm_epoch$epoch"
+      save(baseModelName)
     }
   }
 
@@ -398,6 +413,7 @@ object LstmLMTrainer {
       lm.train(
         trainFileName,
         Some(config.getArgString("lstm.train.dev", None)),
+        config.getArgInt("lstm.train.epochs", Some(1)),
         config.getArgInt("lstm.train.logCheckpoint", Some(1000)),
         config.getArgInt("lstm.train.saveCheckpoint", Some(50000))
       )
