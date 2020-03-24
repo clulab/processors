@@ -330,15 +330,11 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       model.bwRnnBuilder.disableDropout()
     }
 
-    /*
     // this is the biLSTM over words that is shared across all tasks
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
     val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
     assert(fwStates.size == bwStates.length)
     val states = concatenateStates(fwStates, bwStates).toArray
-    */
-
-    val states = embeddings
     assert(states.length == words.length)
 
     // this is the feed forward network that is specific to each task
@@ -374,14 +370,11 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
     // this is the biLSTM over words that is shared across all tasks
     // we run this ONCE for all tasks!
-    /*
     val fwStates = transduce(embeddings, model.fwRnnBuilder)
     val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
     assert(fwStates.size == bwStates.length)
     val states = concatenateStates(fwStates, bwStates).toArray
     assert(states.length == words.length)
-    */
-    val states = embeddings
 
     val emissionScoresAllTasks = new Array[ExpressionVector](model.taskCount)
 
@@ -541,7 +534,7 @@ object LstmCrfMtlParameters {
     val i2ts = new Array[Array[String]](taskCount)
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions)) // 2 * RNN_STATE_SIZE)) // Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, 2 * RNN_STATE_SIZE)) // Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
       Os(tid) = parameters.addParameters(Dim(t2is(tid).size, NONLINEAR_SIZE))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
@@ -601,7 +594,7 @@ object LstmCrfMtl {
     mtl
   }
 
-  val LM_TYPE = "lstm" // "flair" // "lample"
+  val LM_TYPE = "lample" // "lstm" // "flair" // "lample"
 
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
