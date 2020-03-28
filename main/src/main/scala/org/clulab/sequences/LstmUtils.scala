@@ -78,7 +78,7 @@ object LstmUtils {
     w2v
   }
 
-  private def loadWordsToUse(docFreqFileName: Option[String], minDocFreq: Int):Option[mutable.HashSet[String]] = {
+  def loadWordsToUse(docFreqFileName: Option[String], minDocFreq: Int):Option[mutable.HashSet[String]] = {
     if(docFreqFileName.isDefined) {
       logger.debug(s"Loading words to use from file ${docFreqFileName.get} using min frequency of $minDocFreq.")
       val wordsToUse = new mutable.HashSet[String]()
