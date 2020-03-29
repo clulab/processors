@@ -33,6 +33,8 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   /** Map of any arbitrary document attachments such as document creation time */
   protected var attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None
 
+  protected var documentCreationTime:Option[String] = None
+
   /** Clears any internal state potentially constructed by the annotators */
   def clear() { }
 
@@ -91,6 +93,18 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
       attachments.keySet
     }.getOrElse(collection.Set.empty[String])
   }
+
+  /**
+   * Sets the document creation time using the CoreNLP format.
+   * See useFixedDate here for more details: https://stanfordnlp.github.io/CoreNLP/ner.html#setting-document-date
+   * The DCT will impacts how Sentence.norms are generated for DATE expressions
+   * @param dct
+   */
+  def setDCT(dct:String): Unit = {
+    documentCreationTime = Some(dct)
+  }
+
+  def getDCT: Option[String] = documentCreationTime
 }
 
 object Document {
