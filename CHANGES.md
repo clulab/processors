@@ -1,4 +1,5 @@
 # Changes
++ **8.0.0** - Added Document.setDCT to provide document creation times to Stanford's SUTime.
 + **8.0.0** - Made sure we can cross-compile with scala 2.11.
 + **8.0.0** - Improved tokenization of whitespaces and control characters.
 + **8.0.0** - Updated liblinear to 2.30, libsvm to 3.23, and fatdynet to 0.2.4.
