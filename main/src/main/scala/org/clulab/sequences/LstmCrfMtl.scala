@@ -3,13 +3,13 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection, RMSPropTrainer}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
 import org.clulab.sequences.LstmUtils._
-import org.clulab.lm.{FlairLM, LM, LampleLM, LampleLM2, LstmLM}
+import org.clulab.lm.{FlairLM, LM, RnnLM}
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -19,8 +19,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
-  * Implements a multi-task learning (MTL) framework around the biLSTM-CRF of Lample et al. (2016)
-  * We use GloVe embeddings and learned character embeddings
+  * Implements a multi-task learning (MTL) framework around a RnnLM
   * @author Mihai
   */
 class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOpt: Option[LstmCrfMtlParameters] = None) {
@@ -320,30 +319,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @param words One training or testing sentence
    */
   def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
-    val embeddings = model.lm.mkEmbeddings(words, doDropout).toArray
-
-    if(doDropout) {
-      model.fwRnnBuilder.setDropout(DROPOUT_PROB)
-      model.bwRnnBuilder.setDropout(DROPOUT_PROB)
-    } else {
-      model.fwRnnBuilder.disableDropout()
-      model.bwRnnBuilder.disableDropout()
-    }
-
-    // this is the biLSTM over words that is shared across all tasks
-    /*
-    val fwStates = transduce(embeddings, model.fwRnnBuilder)
-    val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
-    assert(fwStates.size == bwStates.length)
-    val states = concatenateStates(fwStates, bwStates).toArray
-    assert(states.length == words.length)
-
-     */
-    val states = embeddings
+    val states = model.lm.mkEmbeddings(words, doDropout).toArray
 
     // this is the feed forward network that is specific to each task
     val H = parameter(model.Hs(taskId))
-    // val O = parameter(model.Os(taskId))
 
     val emissionScores = new ExpressionVector()
     for(s <- states) {
@@ -352,13 +331,6 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         l1 = Expression.dropout(l1, DROPOUT_PROB)
       }
       emissionScores.add(l1)
-      /*
-      var l1 = Expression.tanh(H * s)
-      if(doDropout) {
-        l1 = Expression.dropout(l1, DROPOUT_PROB)
-      }
-      emissionScores.add(O * l1)
-      */
     }
 
     emissionScores
@@ -370,33 +342,21 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @return The scores for all tasks
    */
   def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
-    val embeddings = model.lm.mkEmbeddings(words, doDropout).toArray
-
-    // TODO: fix me, to match emissionScoresAsExpressions!
-
-    // this is the biLSTM over words that is shared across all tasks
-    // we run this ONCE for all tasks!
-    val fwStates = transduce(embeddings, model.fwRnnBuilder)
-    val bwStates = transduce(embeddings.reverse, model.bwRnnBuilder).toArray.reverse
-    assert(fwStates.size == bwStates.length)
-    val states = concatenateStates(fwStates, bwStates).toArray
-    assert(states.length == words.length)
-    // val states = embeddings
+    val states = model.lm.mkEmbeddings(words, doDropout).toArray
 
     val emissionScoresAllTasks = new Array[ExpressionVector](model.taskCount)
 
     // this is the feed forward network that is specific to each task
     for(taskId <- 0 until model.taskCount) {
       val H = parameter(model.Hs(taskId))
-      val O = parameter(model.Os(taskId))
 
       val emissionScores = new ExpressionVector()
       for (s <- states) {
-        var l1 = Expression.tanh(H * s)
-        if (doDropout) {
+        var l1 = H * s
+        if(doDropout) {
           l1 = Expression.dropout(l1, DROPOUT_PROB)
         }
-        emissionScores.add(O * l1)
+        emissionScores.add(l1)
       }
 
       emissionScoresAllTasks(taskId) = emissionScores
@@ -412,11 +372,8 @@ class LstmCrfMtlParameters(
   val t2is:Array[Map[String, Int]], // one per task
   val i2ts:Array[Array[String]], // one per task
   val parameters:ParameterCollection,
-  val lm:LM,
-  val fwRnnBuilder:RnnBuilder,
-  val bwRnnBuilder:RnnBuilder,
+  val lm:LM, // shared by all tasks
   val Hs:Array[Parameter], // one per task
-  val Os:Array[Parameter], // one per task
   val Ts:Array[LookupParameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
   val greedyInference:Array[Boolean]) {
 
@@ -490,9 +447,6 @@ class LstmCrfMtlParameters(
 }
 
 object LstmCrfMtlParameters {
-  val RNN_STATE_SIZE = 256
-  val NONLINEAR_SIZE = 32
-  val RNN_LAYERS = 1
 
   def load(baseFilename: String): LstmCrfMtlParameters = {
     logger.debug(s"Loading MTL model from $baseFilename...")
@@ -530,19 +484,13 @@ object LstmCrfMtlParameters {
                          lm: LM,
                          t2is: Array[Map[String, Int]],
                          greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
-    // These parameters correspond to the LSTM(s) shared by all tasks
-    val embeddingSize = lm.dimensions
-    val fwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new LstmBuilder(RNN_LAYERS, embeddingSize, RNN_STATE_SIZE, parameters)
-    
+
     // These parameters are unique for each task
     val Hs = new Array[Parameter](taskCount)
-    val Os = new Array[Parameter](taskCount)
     val i2ts = new Array[Array[String]](taskCount)
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions)) // lm.dimensions)) // 2 * RNN_STATE_SIZE)) // Dim(NONLINEAR_SIZE, 2 * RNN_STATE_SIZE))
-      Os(tid) = parameters.addParameters(Dim(t2is(tid).size, NONLINEAR_SIZE))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
@@ -550,8 +498,7 @@ object LstmCrfMtlParameters {
 
     new LstmCrfMtlParameters(t2is, i2ts,
       parameters, lm,
-      fwBuilder, bwBuilder,
-      Hs, Os, Ts, greedyInferences)
+      Hs, Ts, greedyInferences)
   }
 
   def create(taskCount: Int,
@@ -570,20 +517,19 @@ object LstmCrfMtl {
 
   val DROPOUT_PROB = 0.2f
   val DO_DROPOUT = true
+
   /** Use domain constraints in the transition probabilities? */
   val USE_DOMAIN_CONSTRAINTS = true
 
   def mkLM(lmFileName:String, parameterCollection: ParameterCollection): LM = {
-    if(LM_TYPE == "lample") LampleLM2.load(lmFileName, parameterCollection)
+    if(LM_TYPE == "rnnlm") RnnLM.load(lmFileName, parameterCollection)
     else if(LM_TYPE == "flair") FlairLM.load(lmFileName, parameterCollection)
-    else if(LM_TYPE == "lstm") LstmLM.load(lmFileName, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type for model file $lmFileName!")
   }
 
   def mkLM(linesIterator:Iterator[String], parameterCollection: ParameterCollection): LM = {
-    if(LM_TYPE == "lample") LampleLM2.load(linesIterator, parameterCollection)
+    if(LM_TYPE == "rnnlm") RnnLM.load(linesIterator, parameterCollection)
     else if(LM_TYPE == "flair") FlairLM.load(linesIterator, parameterCollection)
-    else if(LM_TYPE == "lstm") LstmLM.load(linesIterator, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type!")
   }
 
@@ -601,7 +547,7 @@ object LstmCrfMtl {
     mtl
   }
 
-  val LM_TYPE = "lample" // "lstm" // "flair" // "lample"
+  val LM_TYPE = "rnnlm" // "flair"
 
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"

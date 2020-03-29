@@ -72,7 +72,7 @@ object LstmUtils {
     }
     logger.debug(s"Word count after adding mandatory words is ${wordsToUse.get.size}.")
 
-    val w2v = new Word2Vec(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
+    val w2v = new Word2Vec(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our DF scores are case insensitive
     logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
 
     w2v

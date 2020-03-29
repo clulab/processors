@@ -17,7 +17,7 @@ object FlairLMMakeModel {
 
   def main(args: Array[String]): Unit = {
     initializeDyNet() // autoBatch = true, mem = "512")
-    val configName = "flair"
+    val configName = "flair-en"
     val config = new FlairConfig(ConfigFactory.load(configName))
 
     //
