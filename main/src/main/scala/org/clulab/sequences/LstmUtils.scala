@@ -6,10 +6,7 @@ import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pi
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder, Trainer}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
-import org.clulab.fatdynet.utils.CloseableModelLoader
-import org.clulab.fatdynet.utils.CloseableZipModelLoader
 import org.clulab.processors.clu.tokenizer.EnglishLemmatizer
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.struct.MutableNumber
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -680,7 +677,7 @@ class SafeTrainer(val trainer: Trainer, val clipThreshold:Float) {
 }
 
 object SafeTrainer {
-  val logger = LoggerFactory.getLogger(classOf[SafeTrainer])
+  val logger: Logger = LoggerFactory.getLogger(classOf[SafeTrainer])
 
   val CLIP_THRESHOLD = 5.0f
 

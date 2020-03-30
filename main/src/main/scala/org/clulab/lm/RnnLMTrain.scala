@@ -3,11 +3,8 @@ package org.clulab.lm
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{Dim, LstmBuilder, ParameterCollection}
 import org.clulab.sequences.LstmUtils
-import org.clulab.sequences.LstmUtils.{mkDynetFilename, mkX2iFilename}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
-import org.clulab.fatdynet.utils.CloseableModelSaver
-import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 /**
  * Constructs the RnnLM model
@@ -18,14 +15,14 @@ import org.clulab.fatdynet.utils.Closer.AutoCloser
 object RnnLMTrain {
   val logger:Logger = LoggerFactory.getLogger(classOf[RnnLMTrain])
 
-  val CHAR_EMBEDDING_SIZE = 32
-  val CHAR_RNN_STATE_SIZE = 16
-  val RNN_STATE_SIZE = 256
-
   def main(args: Array[String]): Unit = {
     LstmUtils.initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
     val configName = "rnnlm-en"
     val config = new FlairConfig(ConfigFactory.load(configName))
+
+    val charEmbeddingSize = config.getArgInt("rnnlm.train.charEmbeddingSize", Some(32))
+    val charRnnStateSize = config.getArgInt("rnnlm.train.charRnnStateSize", Some(16))
+    val wordRnnStateSize = config.getArgInt("rnnlm.train.wordRnnStateSize", Some(256))
 
     //
     // Load the character map
@@ -66,43 +63,51 @@ object RnnLMTrain {
     //
     // Character embeddings and character biLSTM, initialized randomly
     //
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(CHAR_EMBEDDING_SIZE))
-    val charFwRnnBuilder = new LstmBuilder(1, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
-    val charBwRnnBuilder = new LstmBuilder(1, CHAR_EMBEDDING_SIZE, CHAR_RNN_STATE_SIZE, parameters)
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(charEmbeddingSize))
+    val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
+    val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * CHAR_RNN_STATE_SIZE + w2v.dimensions
-    val fwBuilder = new LstmBuilder(1, embeddingSize, RNN_STATE_SIZE, parameters)
-    val bwBuilder = new LstmBuilder(1, embeddingSize, RNN_STATE_SIZE, parameters)
+    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions
+    val fwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
+    val bwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
+
+    //
+    // Feed forward networks, used for LM prediction, only if training is enabled
+    //
+    val lmLabelCount = config.getArgInt("rnnlm.train.lmLabelCount", Some(40000)) + 2 // + 2 for UNK and EOS
+    val fwO = parameters.addParameters(Dim(lmLabelCount, wordRnnStateSize))
+    val bwO = parameters.addParameters(Dim(lmLabelCount, wordRnnStateSize))
 
     //
     // Create the LM object
     //
     val lm = new RnnLM(w2i, c2i,
-      RNN_STATE_SIZE, CHAR_RNN_STATE_SIZE,
+      wordRnnStateSize, charRnnStateSize, lmLabelCount,
       parameters,
       wordLookupParameters, charLookupParameters,
       charFwRnnBuilder, charBwRnnBuilder,
-      fwBuilder, bwBuilder)
+      fwBuilder, bwBuilder, fwO, bwO)
 
     //
     // Train the LM (optional)
     //
-    // TODO
+    val doTrain = config.getArgBoolean("rnnlm.train.doTrain", Some(false))
+    if(doTrain && config.contains("rnnlm.train.train")) {
+      lm.trainLM(
+        config.getArgString("rnnlm.train.train", None),
+        Some(config.getArgString("rnnlm.train.dev", None)),
+        lmLabelCount,
+        config.getArgInt("rnnlm.train.logCheckpoint", Some(1000)),
+        config.getArgInt("rnnlm.train.saveCheckpoint", Some(50000)),
+        config.getArgInt("rnnlm.train.batchSize", Some(1))
+      )
+    }
 
     //
     // Save the combined parameters into a single model file
     //
     val outModelFile = config.getArgString("rnnlm.train.model", None)
-    val outDynetFilename = mkDynetFilename(outModelFile)
-    val outX2iFilename = mkX2iFilename(outModelFile)
-
-    new CloseableModelSaver(outDynetFilename).autoClose { modelSaver =>
-      modelSaver.addModel(parameters, "/rnnlm")
-    }
-
-    Serializer.using(LstmUtils.newPrintWriter(outX2iFilename)) { printWriter =>
-      lm.saveX2i(printWriter)
-    }
+    lm.save(outModelFile)
 
     logger.info("Done.")
   }
