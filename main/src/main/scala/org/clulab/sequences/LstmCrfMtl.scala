@@ -176,13 +176,15 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     val sentenceIterator = taskManager.getSentences(rand)
 
     val uniqueWords = new mutable.HashSet[String]()
+    var sentCount = 0
     for(metaSentence <- sentenceIterator) {
       val sentence = metaSentence._2
       val words = sentence.map(_.getWord)
       for(word <- words) uniqueWords += word
+      sentCount += 1
     }
 
-    logger.info(s"Found ${uniqueWords.size} unique words.")
+    logger.info(s"Found ${uniqueWords.size} unique words in $sentCount training sentences.")
     val pw = new PrintWriter("unique_words.txt")
     for(word <- uniqueWords) {
       pw.println(word)
