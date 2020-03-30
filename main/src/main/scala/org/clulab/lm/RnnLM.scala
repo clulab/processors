@@ -263,7 +263,7 @@ class RnnLM(val w2i:Map[String, Int],
     labels += LstmUtils.EOS_WORD
 
     var done = false
-    var count = 0
+    var count = 2 // we already added UNK and EOS
     for(sortedWord <- sortedWords if ! done) {
       labels += sortedWord._1
       count += 1
