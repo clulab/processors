@@ -1,4 +1,5 @@
 # Changes
++ **8.0.0** - Added RnnLM, a language model that combines the one of Lample et al. with (parts of) ULMFit. This is now used in LstmCrfMtl.
 + **8.0.0** - Improved tokenization of whitespaces and control characters.
 + **8.0.0** - Updated liblinear to 2.30, libsvm to 3.23, and fatdynet to 0.2.4.
 + **8.0.0** - Updated CoreNLP to v3.9.2.

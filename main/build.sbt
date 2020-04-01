@@ -34,7 +34,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
 
     // trained models for the ML components used in both main and corenlp
-    "org.clulab" %% "processors-models" % "0.0.2"
+    "org.clulab" %% "processors-models" % "0.0.3-SNAPSHOT"
   )
 
 }

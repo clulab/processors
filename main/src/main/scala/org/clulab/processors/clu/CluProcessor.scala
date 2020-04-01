@@ -48,16 +48,23 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => new EnglishLemmatizer
   }
 
-  // the multi-task learning (MTL) model, which covers: POS, NER, chunking, dependency parsing (coming soon)
-  lazy val mtl: LstmCrfMtl = getArgString(s"$prefix.language", Some("EN")) match {
+  // one of the multi-task learning (MTL) models, which covers: POS and chunking
+  lazy val mtlSyn: LstmCrfMtl = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => LstmCrfMtl(getArgString(s"$prefix.language", Some("mtl-en")))
+    case _ => LstmCrfMtl(getArgString(s"$prefix.mtl-pos-chunk", Some("mtl-en-pos-chunk")))
+  }
+
+  // one of the multi-task learning (MTL) models, which covers: NER
+  lazy val mtlNer: LstmCrfMtl = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => LstmCrfMtl(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
   }
 
   override def annotate(doc:Document): Document = {
-    tagPartsOfSpeech(doc) // the call to MTL is in here
-    recognizeNamedEntities(doc) // Nop, kept for the record
+    tagPartsOfSpeech(doc) // the call to the syntax MTL is in here
+    recognizeNamedEntities(doc) // the call to the NER MTL is in here
     chunking(doc) // Nop, kept for the record
     parse(doc) // Nop, kept for the record
 
@@ -93,10 +100,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val allLabels = mtl.predictJointly(sent.words)
-      sent.entities = Some(allLabels(0))
-      sent.tags = Some(allLabels(1))
-      sent.chunks = Some(allLabels(2))
+      val allLabels = mtlSyn.predictJointly(sent.words)
+      sent.tags = Some(allLabels(0))
+      sent.chunks = Some(allLabels(1))
       // TODO: create the dependency graph here, when it's available
     }
   }
@@ -126,7 +132,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** NER; modifies the document in place */
   def recognizeNamedEntities(doc:Document): Unit = {
-    // Nop, covered by MTL
+    basicSanityCheck(doc)
+    for(sent <- doc.sentences) {
+      val allLabels = mtlNer.predictJointly(sent.words)
+      sent.entities = Some(allLabels(0))
+      // TODO: call SUTime to normalize dates?
+    }
   }
 
   /** Syntactic parsing; modifies the document in place */
