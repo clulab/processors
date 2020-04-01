@@ -6,10 +6,6 @@ import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pi
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder, Trainer}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
-<<<<<<< HEAD
-import org.clulab.processors.clu.tokenizer.EnglishLemmatizer
-=======
->>>>>>> master
 import org.clulab.struct.MutableNumber
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -363,7 +359,7 @@ object LstmUtils {
     c
   }
 
-  val lemmatizer = new EnglishLemmatizer
+  // val lemmatizer = new EnglishLemmatizer
 
   def mkWordEmbedding(word: String,
                       w2i:Map[String, Int],
