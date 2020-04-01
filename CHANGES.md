@@ -1,9 +1,11 @@
 # Changes
 + **8.0.0** - Added RnnLM, a language model that combines the one of Lample et al. (2016) with some of the pre-training components of ULMFit (Howard and Ruder, 2018). This is now used in LstmCrfMtl.
++ **8.0.0** - Added Document.setDCT to provide document creation times to Stanford's SUTime.
++ **8.0.0** - Made sure we can cross-compile with scala 2.11.
 + **8.0.0** - Improved tokenization of whitespaces and control characters.
 + **8.0.0** - Updated liblinear to 2.30, libsvm to 3.23, and fatdynet to 0.2.4.
 + **8.0.0** - Updated CoreNLP to v3.9.2.
-+ **8.0.0** - Better tokenization of emoticons. 
++ **8.0.0** - Better tokenization of emoticons. Better tokenization of (missing) white spaces around periods.
 + **8.0.0** - Bug fix: sometimes CoreNLP's enhanced syntactic dependencies contain duplicated ones.
 + **8.0.0** - Complete redesign of CluProcessor. POS tagging, NER, and syntactic chunking are now implemented using a multi-task framework implemented using the Scala wrapper in DyNet. Dependency syntax and support for multiple languages coming soon. All CoreNLP processors (CoreNLP, FastNLP, BioNLP) are fully backwards compatible with v7. 
 + **8.0.0** - Include small refactorings that allow clients (e.g., Eidos) to more easily override tokenization. Streamline TokenizerStepContractions.

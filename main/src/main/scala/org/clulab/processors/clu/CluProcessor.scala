@@ -115,7 +115,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       val lemmas = new Array[String](sent.size)
       for(i <- sent.words.indices) {
         lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i))
-        assert(lemmas(i).nonEmpty)
+
+        // a lemma may be empty in some weird Unicode situations
+        if(lemmas(i).isEmpty) {
+          logger.debug(s"""WARNING: Found empty lemma for word #$i "${sent.words(i)}" in sentence: ${sent.words.mkString(" ")}""")
+          lemmas(i) = sent.words(i).toLowerCase()
+        }
       }
       sent.lemmas = Some(lemmas)
     }
@@ -206,7 +211,12 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
         val lemmas = new Array[String](sent.size)
         for (i <- sent.words.indices) {
           lemmas(i) = lemmatizer.lemmatizeWord(sent.words(i), Some(sent.tags.get(i)))
-          assert(lemmas(i).nonEmpty)
+
+          // a lemma may be empty in some weird Unicode situations
+          if(lemmas(i).isEmpty) {
+            logger.debug(s"""WARNING: Found empty lemma for word #$i "${sent.words(i)}" in sentence: ${sent.words.mkString(" ")}""")
+            lemmas(i) = sent.words(i).toLowerCase()
+          }
         }
         sent.lemmas = Some(lemmas)
       } else {

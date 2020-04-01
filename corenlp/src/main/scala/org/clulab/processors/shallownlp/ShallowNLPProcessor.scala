@@ -226,6 +226,9 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     val annotation = namedEntitySanityCheck(doc)
     if(annotation.isEmpty) return
 
+    if(doc.getDCT.isDefined)
+      annotation.get.set(classOf[DocDateAnnotation], doc.getDCT.get)
+
     try {
       ner.annotate(annotation.get)
     } catch {

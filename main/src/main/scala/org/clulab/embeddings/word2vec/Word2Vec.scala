@@ -51,6 +51,15 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     pw.close()
   }
 
+  /** If the word doesn't exist in the lexicon, try to use UNK */
+  def getEmbedding(w:String): Option[Array[Double]] = {
+    if(matrix.contains(w)) {
+      matrix.get(w)
+    } else {
+      matrix.get(Word2Vec.UNK)
+    }
+  }
+
   /**
    * Computes the similarity between two given words
    * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
@@ -59,9 +68,9 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
    * @return The cosine similarity of the two corresponding vectors
    */
   def similarity(w1:String, w2:String):Double = {
-    val v1o = matrix.get(w1)
+    val v1o = getEmbedding(w1)
     if(v1o.isEmpty) return -1
-    val v2o = matrix.get(w2)
+    val v2o = getEmbedding(w2)
     if(v2o.isEmpty) return -1
     Word2Vec.dotProduct(v1o.get, v2o.get)
   }
@@ -93,7 +102,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     var found = false
     for(w1 <- words) {
       val w = Word2Vec.sanitizeWord(w1)         // sanitize words
-      val vo = matrix.get(w)
+      val vo = getEmbedding(w)
       if(vo.isDefined) {
         found = true
         add(v, vo.get)
@@ -105,7 +114,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   }
 
   def mostSimilarWords(word: String, howMany: Int, filterPredicate: Option[String => Boolean] = None): List[(String,
-    Double)] = matrix.get(word) match {
+    Double)] = getEmbedding(word) match {
     case Some(v) => mostSimilarWords(v, howMany, filterPredicate)
     case None => List()
   }
@@ -113,7 +122,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   def makeCompositeVector(t:Iterable[String]):Array[Double] = {
     val vTotal = new Array[Double](dimensions)
     for(s <- t) {
-      val v = matrix.get(s)
+      val v = getEmbedding(s)
       if(v.isDefined) add(vTotal, v.get)
     }
     Word2Vec.norm(vTotal)
@@ -127,7 +136,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     */
   def getWordVector(word:String):Option[Array[Double]] = {
     val sw = Word2Vec.sanitizeWord(word)
-    matrix.get(sw)
+    getEmbedding(sw)
   }
 
   /**
@@ -175,8 +184,8 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
       for(w2 <- t2) {
         // no need to add the log sim if identical (log(1) == 0)
         if(w1 != w2) {
-          val v1 = matrix.get(w1)
-          val v2 = matrix.get(w2)
+          val v1 = getEmbedding(w1)
+          val v2 = getEmbedding(w2)
           if(v1.isDefined && v2.isDefined) {
             // *multiply* rather than add similarities!
             sim *= Word2Vec.dotProduct(v1.get, v2.get)
@@ -200,8 +209,8 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
                                                t2:Iterable[String],
                                                method: Symbol = 'linear,
                                                normalize: Boolean = false):Double = {
-    val t1Vecs = t1.flatMap(matrix.get) // this will drop any words that don't have vectors
-    val t2Vecs = t2.flatMap(matrix.get)
+    val t1Vecs = t1.flatMap(getEmbedding) // this will drop any words that don't have vectors
+    val t2Vecs = t2.flatMap(getEmbedding)
     val sims = for {
       v1 <- t1Vecs
       v2 <- t2Vecs
@@ -245,10 +254,10 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   def sanitizedMaxSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     var max = Double.MinValue
     for(s1 <- t1) {
-      val v1 = matrix.get(s1)
+      val v1 = getEmbedding(s1)
       if(v1.isDefined) {
         for(s2 <- t2) {
-          val v2 = matrix.get(s2)
+          val v2 = getEmbedding(s2)
           if(v2.isDefined) {
             val s = Word2Vec.dotProduct(v1.get, v2.get)
             if(s > max) max = s
@@ -266,10 +275,10 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   def sanitizedMinSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     var min = Double.MaxValue
     for(s1 <- t1) {
-      val v1 = matrix.get(s1)
+      val v1 = getEmbedding(s1)
       if(v1.isDefined) {
         for(s2 <- t2) {
-          val v2 = matrix.get(s2)
+          val v2 = getEmbedding(s2)
           if(v2.isDefined) {
             val s = Word2Vec.dotProduct(v1.get, v2.get)
             if(s < min) min = s
@@ -318,10 +327,10 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     var avg = 0.0
     var count = 0
     for(s1 <- t1) {
-      val v1 = matrix.get(s1)
+      val v1 = getEmbedding(s1)
       if(v1.isDefined) {
         for(s2 <- t2) {
-          val v2 = matrix.get(s2)
+          val v2 = getEmbedding(s2)
           if(v2.isDefined) {
             val s = Word2Vec.dotProduct(v1.get, v2.get)
             avg += s
@@ -359,6 +368,8 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
 
 object Word2Vec {
   val logger = LoggerFactory.getLogger(classOf[Word2Vec])
+
+  val UNK = "*UNK*"
 
   def sanitizeWord(uw:String, keepNumbers:Boolean = true):String = Word2VecUtils.sanitizeWord(uw, keepNumbers)
 

@@ -6,7 +6,10 @@ import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pi
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder, Trainer}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
+<<<<<<< HEAD
 import org.clulab.processors.clu.tokenizer.EnglishLemmatizer
+=======
+>>>>>>> master
 import org.clulab.struct.MutableNumber
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -27,7 +30,11 @@ object LstmUtils {
   val STOP_TAG = "<STOP>"
 
   val RANDOM_SEED = 2522620396L // used for both DyNet, and the JVM seed for shuffling data
+<<<<<<< HEAD
   val WEIGHT_DECAY:Float = 1e-5.toFloat
+=======
+  val WEIGHT_DECAY = 1e-5f
+>>>>>>> master
 
   val LOG_MIN_VALUE:Float = -10000
 
@@ -403,8 +410,18 @@ object LstmUtils {
         charEmbeddings += lookup(charLookupParameters, 0) // 0 reserved for unknown chars
       }
     }
-    val fwOut = transduce(charEmbeddings, charFwRnnBuilder).last
-    val bwOut = transduce(charEmbeddings.reverse, charBwRnnBuilder).last
+
+    // Some embeddings may be empty in some weird Unicode encodings
+    val fwOuts = transduce(charEmbeddings, charFwRnnBuilder)
+    val fwOut =
+      if(fwOuts.nonEmpty) fwOuts.last
+      else transduce(Array(lookup(charLookupParameters, 0)), charFwRnnBuilder).head // 0 = UNK
+
+    val bwOuts = transduce(charEmbeddings.reverse, charBwRnnBuilder)
+    val bwOut =
+      if(bwOuts.nonEmpty) bwOuts.last
+      else transduce(Array(lookup(charLookupParameters, 0)), charBwRnnBuilder).head // 0 = UNK
+
     concatenate(fwOut, bwOut)
   }
 
@@ -622,7 +639,10 @@ object LstmUtils {
       Source.fromFile(filename, "UTF-8")
     } else {
       // the file does not exist on disk. let's hope it's in the classpath
-      Source.fromResource(filename)
+      // this should work for both scala 2.11 and 2.12
+      Source.fromInputStream(getClass.getResourceAsStream("/" + filename))
+      // this only works for scala 2.12, so we can't cross compile with 2.11
+      // Source.fromResource(filename)
     }
   }
 
