@@ -468,6 +468,9 @@ object LstmCrfMtlParameters {
         byLineStringMapBuilder.build(lines)
       }.toArray
 
+      //println(s"${t2is(0).keySet.size} TAGS FOR TASK 0: " + t2is(0).keySet.toList.sorted.mkString(", "))
+      //println(s"${t2is(1).keySet.size} TAGS FOR TASK 1: " + t2is(1).keySet.toList.sorted.mkString(", "))
+
       (lm, taskCount, t2is, greedyInferences)
     }
 
@@ -492,6 +495,7 @@ object LstmCrfMtlParameters {
     val i2ts = new Array[Array[String]](taskCount)
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
+      //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
       Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
@@ -554,8 +558,8 @@ object LstmCrfMtl {
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
     initializeDyNet()
-    val modelName = "mtl-en"
-    val configName = "mtl-en"
+    val modelName = "mtl-en-pos-chunk" // "mtl-en-ner"
+    val configName = "mtl-en-pos-chunk" // "mtl-en-ner"
 
     if(runMode == "train") {
       val config = ConfigFactory.load(configName)

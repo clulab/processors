@@ -394,10 +394,6 @@ object RnnLM {
       LstmUtils.loadParameters(dynetFilename.get, parameters, key = "/rnnlm")
     }
 
-    //
-    // make the rest of the parameters
-    // these parameters are randomly initialized, not pretrained
-    //
     val model = new RnnLM(
       w2i, c2i, wordRnnStateSize, charRnnStateSize, lmLabelCount, parameters,
       lookupParameters, charLookupParameters,

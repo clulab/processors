@@ -524,8 +524,8 @@ object LstmUtils {
       // we need to look ahead to skip the comments, hence the buffered iterator
       val bufferedIterator = lines.buffered
 
-      // skip all comment lines
-      while(bufferedIterator.head.nonEmpty && bufferedIterator.head.startsWith("#")) {
+      // skip exactly 1 comment line (optional)
+      if(bufferedIterator.head.nonEmpty && bufferedIterator.head.startsWith("#")) {
         bufferedIterator.next()
       }
 
