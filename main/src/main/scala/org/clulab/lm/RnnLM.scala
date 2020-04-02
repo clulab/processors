@@ -188,7 +188,7 @@ class RnnLM(val w2i:Map[String, Int],
 
         // save a model when we hit a save checkpoint
         if (sentCount % saveCheckpoint == 0) {
-          val baseModelName = s"lstmlm_s$sentCount"
+          val baseModelName = s"rnnlm_s$sentCount"
           save(baseModelName)
         }
       }
