@@ -26,11 +26,7 @@ object LstmUtils {
   val STOP_TAG = "<STOP>"
 
   val RANDOM_SEED = 2522620396L // used for both DyNet, and the JVM seed for shuffling data
-<<<<<<< HEAD
-  val WEIGHT_DECAY:Float = 1e-5.toFloat
-=======
   val WEIGHT_DECAY = 1e-5f
->>>>>>> master
 
   val LOG_MIN_VALUE:Float = -10000
 
