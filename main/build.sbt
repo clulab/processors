@@ -1,5 +1,8 @@
 name := "processors-main"
 
+// for processors-models
+resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
+
 libraryDependencies ++= {
   val akkaV = "2.5.4"
   val json4sVersion = "3.5.2"
@@ -33,8 +36,8 @@ libraryDependencies ++= {
     "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
     "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
 
-    // trained models for the ML components used in both main and corenlp
-    "org.clulab" %% "processors-models" % "0.0.3"
+    // trained models for local ML models used in both main and corenlp
+    "org.clulab" % "processors-models" % "0.0.3"
   )
 
 }
