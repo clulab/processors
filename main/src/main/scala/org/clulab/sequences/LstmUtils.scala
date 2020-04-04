@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{BufferedOutputStream, File, FileOutputStream, OutputStreamWriter, PrintWriter}
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder, Trainer}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.struct.MutableNumber
@@ -20,6 +20,8 @@ object LstmUtils {
   private val logger:Logger = LoggerFactory.getLogger(classOf[LstmUtils])
 
   val UNK_WORD = "<UNK>"
+  val EOS_WORD = "<EOS>"
+
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
@@ -50,16 +52,29 @@ object LstmUtils {
     }
   }
 
-  def loadEmbeddings(docFreqFileName:Option[String], minDocFreq:Int, embeddingsFile:String): Word2Vec = {
+  def loadEmbeddings(docFreqFileName:Option[String],
+                     minDocFreq:Int,
+                     embeddingsFile:String,
+                     mandatoryWords:Option[String] = None): Word2Vec = {
     val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
-    val w2v = new Word2Vec(embeddingsFile, wordsToUse, caseInsensitiveWordsToUse = true) // TODO: our IDF scores are case insensitive
+
+    if(mandatoryWords.isDefined && wordsToUse.isDefined) {
+      val source = Source.fromFile(mandatoryWords.get)
+      for(line <- source.getLines()) {
+        wordsToUse.get += line.trim.toLowerCase()
+      }
+      source.close()
+    }
+    logger.debug(s"Word count after adding mandatory words is ${wordsToUse.get.size}.")
+
+    val w2v = new Word2Vec(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our DF scores are case insensitive
     logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
 
     w2v
   }
 
-  private def loadWordsToUse(docFreqFileName: Option[String], minDocFreq: Int):Option[Set[String]] = {
+  def loadWordsToUse(docFreqFileName: Option[String], minDocFreq: Int):Option[mutable.HashSet[String]] = {
     if(docFreqFileName.isDefined) {
       logger.debug(s"Loading words to use from file ${docFreqFileName.get} using min frequency of $minDocFreq.")
       val wordsToUse = new mutable.HashSet[String]()
@@ -78,7 +93,7 @@ object LstmUtils {
       }
       source.close()
       logger.debug(s"Loaded $kept words to use, from a total of $total words.")
-      Some(wordsToUse.toSet)
+      Some(wordsToUse)
     } else {
       None
     }
@@ -340,6 +355,8 @@ object LstmUtils {
     c
   }
 
+  // val lemmatizer = new EnglishLemmatizer
+
   def mkWordEmbedding(word: String,
                       w2i:Map[String, Int],
                       wordLookupParameters:LookupParameter,
@@ -353,15 +370,15 @@ object LstmUtils {
     //   GloVe small lowers the case
     //   Our Word2Vec uses Word2Vec.sanitizeWord
     //
-    val sanitized = word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
+    val sanitized = word // lemmatizer.lemmatizeWord(word) // word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
 
     val wordEmbedding =
       if(w2i.contains(sanitized))
-      // found the word in the known vocabulary
+        // found the word in the known vocabulary
         lookup(wordLookupParameters, w2i(sanitized))
       else {
         // not found; return the embedding at position 0, which is reserved for unknown words
-        lookup(wordLookupParameters, 0)
+        lookup(wordLookupParameters, 0) // w2i(LstmUtils.UNK_WORD)) // 0)
       }
 
     // biLSTM over character embeddings
@@ -379,8 +396,11 @@ object LstmUtils {
     //println(s"make embedding for word [$word]")
     val charEmbeddings = new ArrayBuffer[Expression]()
     for(i <- word.indices) {
-      if(c2i.contains(word.charAt(i)))
+      if(c2i.contains(word.charAt(i))) {
         charEmbeddings += lookup(charLookupParameters, c2i(word.charAt(i)))
+      } else {
+        charEmbeddings += lookup(charLookupParameters, 0) // 0 reserved for unknown chars
+      }
     }
 
     // Some embeddings may be empty in some weird Unicode encodings
@@ -510,10 +530,16 @@ object LstmUtils {
   abstract class ByLineBuilder[IntermediateValueType] {
 
     protected def addLines(intermediateValue: IntermediateValueType, lines: Iterator[String]): Unit = {
-      lines.next() // Skip the comment line
+      // we need to look ahead to skip the comments, hence the buffered iterator
+      val bufferedIterator = lines.buffered
+
+      // skip exactly 1 comment line (optional)
+      if(bufferedIterator.head.nonEmpty && bufferedIterator.head.startsWith("#")) {
+        bufferedIterator.next()
+      }
 
       def nextLine(): Boolean = {
-        val line = lines.next()
+        val line = bufferedIterator.next()
         //println(s"LINE: [$line]")
 
         if (line.nonEmpty) {
@@ -622,6 +648,54 @@ object LstmUtils {
   def mkDynetFilename(baseFilename: String): String = baseFilename + ".rnn"
 
   def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
+
+  def mkWordVocab(w2v:Word2Vec): Map[String, Int] = {
+    val commonWords = new ListBuffer[String]
+    commonWords += LstmUtils.UNK_WORD // the word at position 0 is reserved for unknown words
+    for(w <- w2v.matrix.keySet.toList.sorted) {
+      commonWords += w
+    }
+    val w2i = commonWords.zipWithIndex.toMap
+    w2i
+  }
+
+  def initializeEmbeddings(w2v:Word2Vec, w2i:Map[String, Int], lookupParameters: LookupParameter): Unit = {
+    logger.debug("Initializing DyNet embedding parameters...")
+    for(word <- w2v.matrix.keySet){
+      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
+    }
+    logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
+  }
+}
+
+class SafeTrainer(val trainer: Trainer, val clipThreshold:Float) {
+  trainer.clippingEnabled_=(true)
+  trainer.clipThreshold_=(clipThreshold)
+
+  /**
+   * Updates the model, catching vanishing/exploding gradients and trying to recover
+   * @param parameters Model
+   */
+  def update(parameters: ParameterCollection): Unit = {
+    try {
+      trainer.update()
+    } catch {
+      case exception: RuntimeException if exception.getMessage.startsWith("Magnitude of gradient is bad") =>
+        // aim to reset the gradient and continue training
+        parameters.resetGradient()
+        SafeTrainer.logger.info(s"Caught an invalid gradient exception: ${exception.getMessage}. Reset gradient L2 norm to: ${parameters.gradientL2Norm()}")
+    }
+  }
+}
+
+object SafeTrainer {
+  val logger: Logger = LoggerFactory.getLogger(classOf[SafeTrainer])
+
+  val CLIP_THRESHOLD = 5.0f
+
+  def apply(trainer: Trainer, clipThreshold: Float = CLIP_THRESHOLD): SafeTrainer = {
+    new SafeTrainer(trainer, clipThreshold)
+  }
 }
 
 class LstmUtils

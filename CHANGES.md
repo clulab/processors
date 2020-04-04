@@ -1,4 +1,5 @@
 # Changes
++ **8.0.0** - Added RnnLM, a language model that combines the one of Lample et al. (2016) with some of the pre-training components of ULMFit (Howard and Ruder, 2018). This is now used in LstmCrfMtl.
 + **8.0.0** - Added Document.setDCT to provide document creation times to Stanford's SUTime.
 + **8.0.0** - Made sure we can cross-compile with scala 2.11.
 + **8.0.0** - Improved tokenization of whitespaces and control characters.
