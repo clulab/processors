@@ -15,14 +15,8 @@ import scala.util.Random
 class TaskManager(config:Config) extends Configured {
   override def getConf: Config = config
 
-  /** Embeddings file */
-  val embeddingsFileName:String = getArgString("mtl.embed", None)
-
-  /** Minimum frequency for a word to not be flagged as unknown */
-  val minWordFreq:Int = getArgInt("mtl.minWordFreq", Some(100))
-
-  /** File with document frequency counts (needed for managing unknown words) */
-  val docFreqFileName:String = getArgString("mtl.docFreq", None)
+  /** Language model */
+  val lmFileName:String = getArgString("mtl.lm", None)
 
   /** How many shards to have per epoch */
   val shardsPerEpoch:Int = getArgInt("mtl.shardsPerEpoch", Some(10))

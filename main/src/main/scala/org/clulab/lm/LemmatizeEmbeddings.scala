@@ -1,4 +1,4 @@
-package org.clulab.ctxemb
+package org.clulab.lm
 
 import java.io.PrintWriter
 
