@@ -1,7 +1,6 @@
 name := "processors-main"
 
 libraryDependencies ++= {
-  val akkaV = "2.5.4"
   val json4sVersion = "3.5.2"
 
   Seq(
@@ -31,7 +30,6 @@ libraryDependencies ++= {
 
     // testing
     "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
-    "com.typesafe.akka"   %%  "akka-testkit"   % akkaV    % "test",
 
     // trained models for the ML components used in both main and corenlp
     "org.clulab" %% "processors-models" % "0.0.2"
