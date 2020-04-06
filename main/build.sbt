@@ -27,15 +27,15 @@ libraryDependencies ++= {
     "org.clulab"               %  "lemport"                   % "0.9.10", // Portuguese lemmatizer
 
     // logging
-    "com.typesafe.scala-logging"  %%  "scala-logging"    % "3.7.2",
-    "ch.qos.logback"               %  "logback-classic"  % "1.0.10",
-    "org.slf4j"                    %  "slf4j-api"        % "1.7.10",
+    "com.typesafe.scala-logging"  %%  "scala-logging"         % "3.7.2",
+    "ch.qos.logback"               %  "logback-classic"       % "1.0.10",
+    "org.slf4j"                    %  "slf4j-api"             % "1.7.10",
 
     // testing
-    "org.scalatest"       %%  "scalatest"      % "3.0.1"  % "test",
+    "org.scalatest"           %%  "scalatest"                 % "3.0.1"  % "test",
 
     // trained models for local ML models used in both main and corenlp
-    "org.clulab" % "processors-models" % "0.0.3"
+    "org.clulab"               % "processors-models"          % "0.0.4"
   )
 
 }
