@@ -1,7 +1,6 @@
 package org.clulab.processors
 
 import scala.collection.immutable.ListMap
-import org.clulab.processors.bionlp.{BioNLPProcessor, FastBioNLPProcessor}
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import java.io.File
@@ -30,9 +29,7 @@ object ProcessorShell extends App {
   val commands = ListMap(
     ":help" -> "show commands",
     ":core" -> "use CoreNLPProcessor",
-    ":bio" -> "use BioNLPProcessor",
     ":fast" -> "use FastNLPProcessor",
-    ":fastbio" -> "use FastBioNLPProcessor",
     ":clu" -> "use CluProcessor",
     ":exit" -> "exit system"
   )
@@ -40,8 +37,6 @@ object ProcessorShell extends App {
   // create the processor
   lazy val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
   lazy val fast: Processor = new FastNLPProcessor() // this uses the faster dependency parser
-  lazy val bio: Processor = new BioNLPProcessor(removeFigTabReferences = true)
-  lazy val fastbio: Processor = new FastBioNLPProcessor(removeFigTabReferences = true)
   lazy val clu: Processor = new CluProcessor()
 
   var proc = core
@@ -66,18 +61,6 @@ object ProcessorShell extends App {
         reader.setPrompt("(fast)>>> ")
         println("Preparing FastNLPProcessor...\n")
         proc = fast
-        proc.annotate("initialize me!")
-
-      case ":bio" =>
-        reader.setPrompt("(bio)>>> ")
-        println("Preparing BioNLPProcessor...\n")
-        proc = bio
-        proc.annotate("initialize me!")
-
-      case ":fastbio" =>
-        reader.setPrompt("(fastbio)>>> ")
-        println("Preparing FastBioNLPProcessor...\n")
-        proc = fastbio
         proc.annotate("initialize me!")
 
       case ":clu" =>
