@@ -76,6 +76,9 @@ EOS: PUNCTUATION (PUNCTUATION)* ;
 // invisible but can potentially confuse the parser if we don't explicitly ignore them
 WHITESPACE: (('\u0000'..'\u0020')|'\u2028'|'\u2029'|'\u0085'|'\u00A0'|('\u2000'..'\u200A')|'\u3000')+ -> skip ;
 
+// This is according to https://unicodebook.readthedocs.io/unicode_encodings.html#surrogates.
+SEQ_OF_UNICODES: HI_SURROGATE LO_SURROGATE ;
+
 // handle characters which failed to match any other token
 ErrorCharacter: . ;
 
@@ -102,3 +105,5 @@ fragment URL_END2:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')');
 fragment URL_END3:   ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'.'|'!'|'?'|','|'-'|'('|')'|'{'|'}');
 fragment EMAIL_USER: (('a'..'z')|('A'..'Z')|('0'..'9')) ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'|'\u00A0')* ;
 fragment EMAIL_DOMAIN: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'|'.'|'\u00A0'|',')+ ;
+fragment HI_SURROGATE: ('\uD800'..'\uDBFF') ;
+fragment LO_SURROGATE: ('\uDC00'..'\uDFFF') ;
