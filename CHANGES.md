@@ -1,4 +1,6 @@
 # Changes
++ **8.0.2** - Have lexer keep UTF-16 surrogate pairs together
++ **8.0.1** - No change
 + **8.0.0** - BioNLPProcessor moved to the Reach/processors subproject.
 + **8.0.0** - Added RnnLM, a language model that combines the one of Lample et al. (2016) with some of the pre-training components of ULMFit (Howard and Ruder, 2018). This is now used in LstmCrfMtl.
 + **8.0.0** - Added Document.setDCT to provide document creation times to Stanford's SUTime.
