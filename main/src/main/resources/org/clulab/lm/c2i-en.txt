@@ -1,8 +1,4 @@
-#
-# map from common En characters (encoded as integers in the first column) and a unique index to be used by neural LMs
-# these characters were extracted from the 1-billion-word-language-modeling-benchmark-r13output
-# we use two special characters: 0, which stands for UNKNOWN, and 1, which stands for EOS
-#
+# map from common En characters (encoded as integers in the first column) and a unique index to be used by neural LMs. These characters were extracted from the 1-billion-word-language-modeling-benchmark-r13output. We use two special characters: 0, which stands for UNKNOWN, and 1, which stands for EOS
 0	0
 1	1
 32	2

@@ -44,8 +44,10 @@ object RnnLMTrain {
     val embedFilename = config.getArgString("rnnlm.train.embed", None)
     val docFreqFilename = config.getArgString("rnnlm.train.docFreq", None)
     val minFreq = config.getArgInt("rnnlm.train.minWordFreq", Some(100))
-    val w2v = LstmUtils.loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename,
-      Some(config.getArgString("rnnlm.train.mandatoryWords", None)))
+    val minMandatoryFreq = config.getArgInt("rnnlm.train.minMandatoryWordFreq", Some(1))
+    val w2v = LstmUtils.loadEmbeddings(
+      Some(docFreqFilename), minFreq, embedFilename,
+      Some(config.getArgString("rnnlm.train.mandatoryWords", None)), minMandatoryFreq)
     val w2i = LstmUtils.mkWordVocab(w2v)
 
     //

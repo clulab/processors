@@ -180,7 +180,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     for(metaSentence <- sentenceIterator) {
       val sentence = metaSentence._2
       val words = sentence.map(_.getWord)
-      for(word <- words) uniqueWords.incrementCount(word)
+      for(word <- words) uniqueWords.incrementCount(word.toLowerCase())
       sentCount += 1
     }
 

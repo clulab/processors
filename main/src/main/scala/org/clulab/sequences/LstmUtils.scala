@@ -55,17 +55,31 @@ object LstmUtils {
   def loadEmbeddings(docFreqFileName:Option[String],
                      minDocFreq:Int,
                      embeddingsFile:String,
-                     mandatoryWords:Option[String] = None): Word2Vec = {
+                     mandatoryWords:Option[String],
+                     minMandatoryWordFreq:Int): Word2Vec = {
     val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
 
     if(mandatoryWords.isDefined && wordsToUse.isDefined) {
       val source = Source.fromFile(mandatoryWords.get)
+      var keptMandatory = 0
+      var totalMandatory = 0
       for(line <- source.getLines()) {
-        wordsToUse.get += line.trim.toLowerCase()
+        val tokens = line.split("\\s+")
+        assert(tokens.length == 2)
+        val word = tokens(0)
+        val freq = tokens(1).toInt
+
+        if(freq > minMandatoryWordFreq) {
+          wordsToUse.get += word.toLowerCase()
+          keptMandatory += 1
+        }
+        totalMandatory += 1
       }
       source.close()
+      logger.debug(s"Kept $keptMandatory out of $totalMandatory mandatory words (${keptMandatory.toDouble * 100.0 / totalMandatory}%).")
     }
+
     logger.debug(s"Word count after adding mandatory words is ${wordsToUse.get.size}.")
 
     val w2v = new Word2Vec(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our DF scores are case insensitive
@@ -92,7 +106,7 @@ object LstmUtils {
         }
       }
       source.close()
-      logger.debug(s"Loaded $kept words to use, from a total of $total words.")
+      logger.debug(s"Loaded $kept words to use, from a total of $total words (${kept.toDouble * 100.0/total}%).")
       Some(wordsToUse)
     } else {
       None
