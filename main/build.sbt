@@ -35,7 +35,7 @@ libraryDependencies ++= {
     "org.scalatest"           %%  "scalatest"                 % "3.0.1"  % "test",
 
     // trained models for local ML models used in both main and corenlp
-    "org.clulab"               % "processors-models"          % "0.0.4"
+    "org.clulab"               % "processors-models"          % "0.0.5"
   )
 
 }

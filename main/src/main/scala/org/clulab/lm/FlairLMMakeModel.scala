@@ -35,7 +35,7 @@ object FlairLMMakeModel {
     val embedFilename = config.getArgString("flair.merge.embed", None)
     val docFreqFilename = config.getArgString("flair.merge.docFreq", None)
     val minFreq = config.getArgInt("flair.merge.minWordFreq", Some(100))
-    val w2v = LstmUtils.loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename)
+    val w2v = LstmUtils.loadEmbeddings(Some(docFreqFilename), minFreq, embedFilename, None, 1)
     val w2i = LstmUtils.mkWordVocab(w2v)
 
     // create lookup parameters for these word embeddings; add them to the same model
