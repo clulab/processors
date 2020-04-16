@@ -90,6 +90,16 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     }
   }
 
+  protected def addWeighted(dest: CompactWord2Vec.ArrayType, srcRow: Int, weight:Float): Unit = {
+    val srcOffset = srcRow * columns
+    var i = 0 // optimization
+
+    while (i < columns) {
+      dest(i) += array(srcOffset + i)*weight
+      i += 1
+    }
+  }
+
   def isOutOfVocabulary(word: String): Boolean = !map.contains(Word2VecUtils.sanitizeWord(word))
 
   // Normalize this vector to length 1, in place.
@@ -120,6 +130,16 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     text.foreach { word =>
       map.get(word).foreach { index => add(total, index) }
     }
+    norm(total)
+  }
+
+  def makeCompositeVectorWeighted(text: Iterable[String], weights:Iterable[Float]): CompactWord2Vec.ArrayType = {
+    val total = new CompactWord2Vec.ArrayType(columns)
+
+    (text, weights).zipped.foreach { (word, weight) =>
+      map.get(word).foreach { index => addWeighted(total, index, weight) }
+    }
+
     norm(total)
   }
 
