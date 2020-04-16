@@ -136,9 +136,10 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
   def makeCompositeVectorWeighted(text: Iterable[String], weights:Iterable[Float]): CompactWord2Vec.ArrayType = {
     val total = new CompactWord2Vec.ArrayType(columns)
 
-    (text, weights).zipped.foreach { (word, weight) =>
-      map.get(word).foreach { index => addWeighted(total, index, weight) }
+    for (idx <- 0 until text.size){
+      map.get(text(idx)).foreach { index => addWeighted(total, index, weights(idx)) }
     }
+
     norm(total)
   }
 
