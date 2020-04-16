@@ -1,4 +1,5 @@
 # Changes
++ **8.0.2** - Add functionality for weighted composite embedding vectors.
 + **8.0.2** - Have lexer keep UTF-16 surrogate pairs together
 + **8.0.1** - No change
 + **8.0.0** - BioNLPProcessor moved to the Reach/processors subproject.
