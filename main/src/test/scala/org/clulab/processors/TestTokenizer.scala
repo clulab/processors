@@ -155,12 +155,20 @@ class TestTokenizer extends FlatSpec with Matchers {
     sents(1).words(0) should be ("17")
   }
 
+  it should "tokenize common emoticons correctly" in {
+    val orig = """:-) :) :-] :] :-> :> :-} :} :^) =] =) :-)) :-( :( :-< :< :-[ :[ :-|| >:[ :{ :@ >:( :-( :( :-) :) :-* :* ;-) ;) ;-] ;] ;^) :-, :-/ :/ :-. >:\\ >:/ :\\ =/ =\\ :-| :| :$ :-# :# :-& :& >:-) >:) }:-) }:) >;) |;-) <:-| ,:-|"""
+    val sents = tok(orig)
+    sents.length should be (1)
+    val text = sents(0).words.mkString(" ")
+    text should be (orig)
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
     val sents = t.tokenize(s)
     for(i <- sents.indices) {
-      println(s"\tSentence #$i: " + sents(i).words.mkString(", "))
+      println(s"\tSentence #$i: " + sents(i).words.mkString(" "))
     }
     sents
   }
