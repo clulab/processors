@@ -59,17 +59,11 @@ SGML: '<' '/'? ~('<'|'>'|'.'|','|'!'|'?'|'|'|'('|')'|'{'|'}')+ '>' ;
 // HTML characters
 HTML_CODE: '&' (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER) (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? (LOWER_CASE_LETTER | UPPER_CASE_LETTER)? ';' ;
 
-// Emoticons from Sandeep Suntwal:
-// Emoticons ending in a letter. These should be tokenized only when the next character is not a letter
-//EMOTICONS_WITH_LETTERS: (:|>|;|=|\||,|8|3|0|x|X|d|D|B|O) (-|:|;|\^|/|c|o)? (/3|-3|-\)|\^\)|-l|3|8|0|J|l|L|o|O|x|X|p|P|d|D|b|B|c|C|S|\(|\)|<|;|:|=) {! Character.isLetterOrDigit(_input.LA(1))}? ;
-// Common emoticons
-//EMOTICONS: (':'|';'|'='|'>'|'*'|'}'|'%'|'<'|','|'#'|'|') ('-'|':'|';'|'^'|'/')? ('#'|'*'|':'|'&'|'.'|'$'|'@'|','|'))'|'||'|'\\\\'|'/)'|'-)'|'-|'|'<'|'>'|'{'|'}'|'['|']'|'('|')'|'|'|'/'|'\\') ;
-
-// Older emoticon patterns, no longer needed
 // Common smileys
-SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('('|')'|'\\'|'{'|'@'|'|'|'['|']') ;
+SMILEY: EYEBROWS? EYES NOSE? ('('|')'|'\\'|'\\\\'|'{'|'}'|'@'|'|'|'||'|'['|']'|'/'|'>'|'<'|'))'|'*'|'.'|','|'$'|'#'|'&') ;
+
 // Smileys ending in a letter. These should be tokenized only when the next character is not a letter
-LETTER_SMILEY: ('<'|'>')? (':'|';'|'=') ('-'|'o'|'*'|'\'')? ('D'|'P'|'d'|'p'|'O') {! Character.isLetterOrDigit(_input.LA(1))}? ;
+LETTER_SMILEY: EYEBROWS? EYES NOSE? ('D'|'P'|'d'|'p'|'3'|'8'|'0'|'J'|'l'|'L'|'o'|'O'|'x'|'X'|'b'|'B'|'c'|'C'|'S') {! Character.isLetterOrDigit(_input.LA(1))}? ;
 
 // TODO: phone numbers
 
@@ -113,3 +107,6 @@ fragment EMAIL_USER: (('a'..'z')|('A'..'Z')|('0'..'9')) ~(' '|'\t'|'\n'|'\f'|'\r
 fragment EMAIL_DOMAIN: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}'|'.'|'\u00A0'|',')+ ;
 fragment HI_SURROGATE: ('\uD800'..'\uDBFF') ;
 fragment LO_SURROGATE: ('\uDC00'..'\uDFFF') ;
+fragment EYEBROWS: ('<'|'>'|'}'|'|'|','|'O'|'0') ;
+fragment EYES: (':'|';'|'='|'8'|'x'|'X') ;
+fragment NOSE: ('-'|'o'|'*'|'\''|'^'|'/'|'c'|'//') ;
