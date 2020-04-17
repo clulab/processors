@@ -1,4 +1,5 @@
 # Changes
++ **8.0.3** - Improved emoticon grammars with help from Sandeep Suntwal.
 + **8.0.2** - Add functionality for weighted composite embedding vectors.
 + **8.0.2** - Using processors-models 0.0.5, which has better handling of unknown words in LstmCrfMtl models.
 + **8.0.2** - Have lexer keep UTF-16 surrogate pairs together.
