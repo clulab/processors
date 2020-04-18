@@ -94,10 +94,11 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
         beginPositions += crt.beginPosition
         endPositions += crt.beginPosition + dotRawPosition
 
+        // This is just for the period with length of 1.
         raw += crt.raw.substring(dotRawPosition, dotRawPosition + 1)
         words += crt.word.substring(dotWordPosition, dotWordPosition + 1)
         beginPositions += endPositions.last
-        endPositions += beginPositions.last + raw.length
+        endPositions += beginPositions.last + 1
         val lastPosition = endPositions.last
 
         //
@@ -115,7 +116,7 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
         raw += crt.raw.substring(dotRawPosition + 1)
         words += crt.word.substring(dotWordPosition + 1)
         beginPositions += lastPosition
-        endPositions += lastPosition + raw.length
+        endPositions += lastPosition + raw.head.length
       }
 
       else {
