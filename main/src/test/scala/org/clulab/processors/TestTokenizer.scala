@@ -171,6 +171,26 @@ class TestTokenizer extends FlatSpec with Matchers {
     text should be (orig)
   }
 
+  it should "split sentences correctly" in {
+    // This is taken from an actual document.
+    val orig = """Rapidly deploying as many as 25,000 troops, over 1,000 armored vehicles and a strategy that included the Russian navy taking control of Poti, Georgia’s main port city, 2 some argued that Russia’s actions resembled a well planned offensive strike.3 According to Russian President Dmitry Medvedev, however, Russia’s actions were necessary to “protect . . . the Russian citizens living in [South Ossetia]."""
+
+    val sents = tok(orig)
+    sents.length should be > 1
+
+    val startOffsets = sents.flatMap(_.startOffsets)
+    val badStartOpt = startOffsets.indices.drop(1).find(i => startOffsets(i) < startOffsets(i - 1))
+    badStartOpt should be (empty)
+
+    val endOffsets = sents.flatMap(_.endOffsets)
+    val badEndOpt = startOffsets.indices.drop(1).find(i => endOffsets(i) < endOffsets(i - 1))
+    badEndOpt should be (empty)
+
+    val raws = sents.flatMap(_.raw)
+    val badRawOpt = raws.indices.find(i => orig.slice(startOffsets(i), endOffsets(i)) != raws(i))
+    badRawOpt should be (empty)
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
