@@ -69,6 +69,22 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       graph
   }
 
+  // Variables can be a string, or optionally a list of strings which are combined with OR.
+  // This is largely to support clean diffs when changes are made to variables, e.g., triggers.
+  private def processVar(varValue: Any): String = {
+    varValue match {
+      // If the variable is a string, clean the whitespace and return
+      case s: String => cleanVar(s)
+      // Else, if it's a list:
+      case arr:java.util.ArrayList[String] => arr.asScala
+        .map(_.toString.trim)
+        .map(cleanVar)  // clean each
+        .mkString("|")  // concatenate with OR
+      case _ => ???
+    }
+
+  }
+
   // StrSubstitutor doesn't support whitespace in var (ex. ${ varName } )
   private def cleanVar(s: String): String = {
     val clean = s.
@@ -204,7 +220,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
   /** Reads the variables declared directly or imports them from a file */
   def readOrImportVars(data: Any): Map[String, String] = data match {
-    case vars: JMap[_, _] => vars.asScala.map{ case (k,v) => k.toString -> cleanVar(v.toString) }.toMap
+    case vars: JMap[_, _] => vars.asScala.map{ case (k,v) => k.toString -> processVar(v) }.toMap
     case path: String =>
       val url = mkURL(path)
       val source = Source.fromURL(url)
@@ -212,7 +228,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       source.close()
       val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
       val vars = yaml.load(input).asInstanceOf[JMap[String, Any]]
-      vars.asScala.mapValues(s => cleanVar(s.toString)).toMap
+      vars.asScala.mapValues(v => processVar(v)).toMap
   }
 
   // reads a taxonomy from data, where data may be either a forest or a file path
