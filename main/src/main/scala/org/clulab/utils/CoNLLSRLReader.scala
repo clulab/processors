@@ -1,10 +1,11 @@
 package org.clulab.utils
 
-import java.io.{BufferedReader, File, FileReader}
+import java.io.{BufferedReader, File, FileReader, PrintWriter}
 
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.struct.{DirectedGraph, GraphMap}
+import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
 import org.clulab.utils.CoNLLSRLReader._
 import org.slf4j.LoggerFactory
 
@@ -144,6 +145,8 @@ class CoNLLSRLReader {
     }
     */
 
+    // Uncomment these lines if fancier features are needed!
+    /*
     proc.tagPartsOfSpeech(doc)
     proc.lemmatize(doc)
     proc.recognizeNamedEntities(doc)
@@ -162,6 +165,7 @@ class CoNLLSRLReader {
     } else {
       proc.parse(doc)
     }
+    */
 
     doc
   }
@@ -199,10 +203,12 @@ class CoNLLSRLReader {
         for(i <- sentence.indices) {
           if(sentence(i).frameBits(columnOffset) != "_") {
             val modifier = i
-            val label = sentence(i).frameBits(columnOffset)
-            edges += new Tuple3(head, modifier, label)
-            modifiers += modifier
-            argCount += 1
+            val label = simplifyLabel(sentence(i).frameBits(columnOffset))
+            if(label.isDefined) {
+              edges += Tuple3(head, modifier, label.get)
+              modifiers += modifier
+              argCount += 1
+            }
           }
         }
       }
@@ -216,6 +222,22 @@ class CoNLLSRLReader {
     }
 
     DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
+  }
+
+  val KEEP_LABELS = Set("A0", "A1", "R-A0", "R-A1", "AM-TMP", "AM-MNR", "AM-LOC", "AM-MOD", "AM-ADV", "AM-NEG")
+  val AX_LABELS = Set("A2", "A3", "A4", "A5")
+
+  def simplifyLabel(label:String): Option[String] = {
+    if(! SIMPLIFY_ARG_LABELS) return Some(label)
+
+    //
+    // Keep: A0, A1, R-A0, R-A1, AM-TMP, AM-MNR, AM-LOC, AM-MOD, AM-ADV, AM-NEG
+    // Change: A2-5 => Ax
+    //
+    if(KEEP_LABELS.contains(label)) Some(label)
+    else if(AX_LABELS.contains(label)) Some("Ax")
+    else None
+
   }
 
   def mkToken(bits:Array[String]):CoNLLToken = {
@@ -329,6 +351,35 @@ class CoNLLSRLReader {
 object CoNLLSRLReader {
   val logger = LoggerFactory.getLogger(classOf[CoNLLSRLReader])
 
-  val USE_CONLL_TOKENIZATION = true
-  val USE_GOLD_SYNTAX = true
+  val USE_CONLL_TOKENIZATION = false
+  val SIMPLIFY_ARG_LABELS = true
+
+  //val USE_GOLD_SYNTAX = true
+
+  def main(args: Array[String]): Unit = {
+    val file = new File(args(0))
+    val reader = new CoNLLSRLReader
+    val proc = new CluProcessor()
+    val doc = reader.read(file, proc, verbose = true)
+
+    labelStats(doc)
+  }
+
+  def labelStats(doc: Document): Unit = {
+    val labels = new Counter[String]()
+    for(sent <- doc.sentences) {
+      val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
+      for(e <- g.allEdges) {
+        val l = e._3
+        labels += l
+      }
+    }
+
+    val pw = new PrintWriter("labels.tsv")
+    for(l <- labels.sorted){
+      pw.println(s"${l._1}\t${l._2}")
+    }
+    pw.close()
+
+  }
 }
