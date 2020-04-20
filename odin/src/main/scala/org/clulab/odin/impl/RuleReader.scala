@@ -76,7 +76,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       // If the variable is a string, clean the whitespace and return
       case s: String => cleanVar(s)
       // Else, if it's a list:
-      case arr:java.util.ArrayList[String] => arr.asScala
+      case arr:java.util.ArrayList[_] => arr.asScala
         .map(_.toString.trim)
         .map(cleanVar)  // clean each
         .mkString("|")  // concatenate with OR
