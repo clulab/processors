@@ -558,8 +558,8 @@ object LstmCrfMtl {
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
     initializeDyNet()
-    val modelName = "mtl-en-ner" // "mtl-en-ner" // "mtl-en-pos-chunk"
-    val configName = "mtl-en-ner" // "mtl-en-ner" // "mtl-en-pos-chunk"
+    val modelName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
+    val configName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
 
     if(runMode == "train") {
       val config = ConfigFactory.load(configName)

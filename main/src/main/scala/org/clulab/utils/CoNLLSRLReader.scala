@@ -357,12 +357,50 @@ object CoNLLSRLReader {
   //val USE_GOLD_SYNTAX = true
 
   def main(args: Array[String]): Unit = {
+    assert(args.length == 2)
+
     val file = new File(args(0))
     val reader = new CoNLLSRLReader
     val proc = new CluProcessor()
     val doc = reader.read(file, proc, verbose = true)
 
     labelStats(doc)
+    saveSimplified(doc, args(1))
+  }
+
+  def saveSimplified(doc: Document, outputFileName: String): Unit = {
+    val pw = new PrintWriter(outputFileName)
+    for(sent <- doc.sentences) {
+      val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
+      val heads = new Array[Boolean](sent.words.length)
+      var headPositions = new mutable.HashSet[Int]()
+      for(e <- g.edges) {
+        headPositions += e.source
+        heads(e.source) = true
+      }
+
+      val headMap = headPositions.toList.sorted.zipWithIndex.toMap
+
+      val args = new Array[Array[String]](headMap.size)
+      for(i <- args.indices) {
+        args(i) = new Array[String](sent.size)
+        for(j <- args(i).indices) args(i)(j) = "O"
+      }
+
+      for(e <- g.edges) {
+        args(headMap(e.source))(e.destination) = e.relation
+      }
+
+      for(i <- sent.words.indices) {
+        pw.print(sent.words(i) + "\t" + (if(heads(i)) "B-P" else "O"))
+        for(j <- args.indices) {
+          pw.print("\t" + args(j)(i))
+        }
+        pw.println()
+      }
+      pw.println()
+    }
+    pw.close()
   }
 
   def labelStats(doc: Document): Unit = {
