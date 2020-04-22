@@ -303,7 +303,24 @@ object LstmUtils {
     (golds.length, correct)
   }
 
-  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores (not used) */
+  def f1(golds:Array[String], preds:Array[String]): (Int, Int, Int) = {
+    assert(golds.length == preds.length)
+    var correct = 0
+    var gold = 0
+    var pred = 0
+    for(e <- preds.zip(golds)) {
+      if(e._2 != "O") gold += 1
+      if(e._1 != "O") {
+        pred += 1
+        if (e._1 == e._2) {
+          correct += 1
+        }
+      }
+    }
+    (correct, pred, gold)
+  }
+
+  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores */
   def greedyPredict(lattice:Array[Array[Float]]):Array[Int] = {
     val tagIds = new ArrayBuffer[Int]()
     for(probs <- lattice) {

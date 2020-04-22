@@ -158,7 +158,6 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
                 val words = sentence.map(_.getWord)
 
                 // produce the hidden states from the LM
-                // TODO: add the arg arch here!
                 val emissionScores = emissionScoresAsExpressions(words, taskId, Some(predPosition._2), doDropout = DO_DROPOUT)
 
                 // get the gold tags for this frame
@@ -202,15 +201,24 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
       // check dev performance in this epoch, for all tasks
       var totalAcc = 0.0
+      var totalPrec = 0.0
+      var totalRec = 0.0
       for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val devSentences = taskManager.tasks(taskId).devSentences
         if(devSentences.nonEmpty) {
-          totalAcc += evaluate(taskId, taskName, devSentences.get, epoch)
+          val (acc, prec, rec) = evaluate(taskId, taskName, devSentences.get, epoch)
+          totalAcc += acc
+          totalPrec += prec
+          totalRec += rec
         }
       }
       val avgAcc = totalAcc / taskManager.taskCount
+      val avgPrec = totalPrec / taskManager.taskCount
+      val avgRec = totalRec / taskManager.taskCount
       logger.info(s"Average accuracy across ${taskManager.taskCount} tasks: $avgAcc")
+      logger.info(s"Average precision across ${taskManager.taskCount} tasks: $avgPrec")
+      logger.info(s"Average recall across ${taskManager.taskCount} tasks: $avgRec")
 
       if(avgAcc > maxAvgAcc) {
         maxAvgAcc = avgAcc
@@ -259,18 +267,21 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): Double = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): (Double, Double, Double) = {
     evaluate(taskId, taskName, sentences, "development", epoch)
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): Double = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): (Double, Double, Double) = {
     evaluate(taskId, taskName, sentences, "testing", -1)
   }
 
   /** Logs accuracy score on devSentences; also saves the output in the file dev.output.<EPOCH> */
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): Double = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): (Double, Double, Double) = {
     var total = 0
     var correct = 0
+    var totalNonOPred = 0
+    var totalNonOGold = 0
+    var correctNonO = 0
     val taskNumber = taskId + 1
     var sentCount = 0
 
@@ -287,10 +298,15 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         val golds = sent.map(_.getTag)
 
         // println("PREDICT ON SENT: " + words.mkString(", "))
-        val preds = predict(taskId, words)
+        val preds = predict(taskId, words, None)
         val (t, c) = accuracy(golds, preds)
         total += t
         correct += c
+
+        val (cn, pn, gn) = f1(golds, preds)
+        correctNonO += cn
+        totalNonOPred += pn
+        totalNonOGold += gn
 
         /*
         if(sentCount % 10 == 0) {
@@ -305,15 +321,21 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       for (sent <- sentences) {
         sentCount += 1
         val words = sent.map(_.getWord)
+        val predPositions = sent.map(_.getTag).zipWithIndex.filter(_._1 == "B-P")
 
         for(j <- 2 until sent(0).length) {
           val golds = sent.map(_.tokens(j))
 
-          val preds = predict(taskId, words) // TODO: add predicate info
+          val preds = predict(taskId, words, Some(predPositions(j - 2)._2))
 
           val (t, c) = accuracy(golds, preds)
           total += t
           correct += c
+
+          val (cn, pn, gn) = f1(golds, preds)
+          correctNonO += cn
+          totalNonOPred += pn
+          totalNonOGold += gn
         }
       }
     }
@@ -322,7 +344,15 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     val acc = correct.toDouble / total
     logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): $acc")
 
-    acc
+    val prec = correctNonO.toDouble / totalNonOPred
+    val rec = correctNonO.toDouble / totalNonOGold
+    val microF1 = if(prec != 0 && rec != 0) 2.0 * prec * rec / (prec + rec) else 0.0
+
+    logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): $prec")
+    logger.info(s"Recall on ${sentences.length} $name sentences for task $taskNumber ($taskName): $rec")
+    logger.info(s"Micro F1 on ${sentences.length} $name sentences for task $taskNumber ($taskName): $microF1")
+
+    (acc, prec, rec)
   }
 
   /**
@@ -331,18 +361,21 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @param words The input words
    * @return The predicted sequence of tags
    */
-  def predict(taskId:Int, words:Array[String]):Array[String] = {
+  def predict(taskId:Int, words:Array[String], predPosition:Option[Int]):Array[String] = {
     // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
     val emissionScores:Array[Array[Float]] = synchronized {
       ComputationGraph.renew()
-      emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, None, doDropout = false)) // these scores do not have softmax
+
+      if(taskManager.tasks(taskId).inference != TaskManager.SRL_INFERENCE) {
+        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, None, doDropout = false)) // these scores do not have softmax
+      } else {
+        // SRL arguments need extra info, i.e., the position of the predicate
+        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, predPosition, doDropout = false))
+      }
     }
 
     val tags = new ArrayBuffer[String]()
-    if(model.inferenceTypes(taskId) == TaskManager.GREEDY_INFERENCE) {
-      val tagIds = greedyPredict(emissionScores)
-      for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
-    } else if(model.inferenceTypes(taskId) == TaskManager.VITERBI_INFERENCE) {
+    if(model.inferenceTypes(taskId) == TaskManager.VITERBI_INFERENCE) {
       val transitionMatrix: Array[Array[Float]] =
         transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
 
@@ -350,9 +383,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
       for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
     } else {
-      // TODO
-      throw new RuntimeException("Implement me!")
+      val tagIds = greedyPredict(emissionScores)
+      for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
     }
+
     tags.toArray
   }
 
@@ -410,6 +444,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
     val emissionScores = new ExpressionVector()
     for(s <- states) {
+      // TODO: add position info here!
       val ss = Expression.concatenate(states(predPositionOpt.get), s)
       var l1 = H * ss
       if(doDropout) {
