@@ -336,7 +336,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
           totalNonOPred += pn
           totalNonOGold += gn
 
-          println(s"pred = ${predPositions(j - 2)._1} at position ${predPositions(j - 2)._2}")
+          pw.println(s"pred = ${predPositions(j - 2)._1} at position ${predPositions(j - 2)._2}")
           printCoNLLOutput(pw, words, golds, preds)
         }
       }
@@ -445,9 +445,15 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     val H = parameter(model.Hs(taskId))
 
     val emissionScores = new ExpressionVector()
-    for(s <- states) {
+    for(i <- states.indices) {
       // TODO: add position info here!
-      val ss = Expression.concatenate(states(predPositionOpt.get), s)
+      val predPos = predPositionOpt.get
+      var dist = i - predPos
+      if (dist < -20) dist = -21
+      if(dist > 20) dist = 21
+      val posIndex = dist + 21
+      val posEmbed = lookup(model.positionEmbeddings, posIndex)
+      val ss = Expression.concatenate(states(predPos), states(i), posEmbed)
       var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
@@ -495,6 +501,7 @@ class LstmCrfMtlParameters(
   val i2ts:Array[Array[String]], // one per task
   val parameters:ParameterCollection,
   val lm:LM, // shared by all tasks
+  val positionEmbeddings: LookupParameter, // TODO
   val Hs:Array[Parameter], // one per task
   val Ts:Array[LookupParameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
   val inferenceTypes:Array[Int]) {
@@ -611,19 +618,20 @@ object LstmCrfMtlParameters {
                          inferenceTypes: Array[Int]): LstmCrfMtlParameters = {
 
     // These parameters are unique for each task
+    val positionEmbeddings = parameters.addLookupParameters(43, Dim(64))
     val Hs = new Array[Parameter](taskCount)
     val i2ts = new Array[Array[String]](taskCount)
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
       //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 43))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
     logger.debug("Created parameters.")
 
     new LstmCrfMtlParameters(t2is, i2ts,
-      parameters, lm,
+      parameters,lm, positionEmbeddings,
       Hs, Ts, inferenceTypes)
   }
 
@@ -676,9 +684,9 @@ object LstmCrfMtl {
   val LM_TYPE = "rnnlm" // "flair"
 
   def main(args: Array[String]): Unit = {
-    val runMode = "test" // "train", "test", or "shell"
+    val runMode = "train" // "train", "test", or "shell"
     initializeDyNet(autoBatch = true, mem = "1660,1664,2496,1400")
-    val modelName = "mtl-en-srl-epoch0" // "mtl-en-ner" // "mtl-en-pos-chunk"
+    val modelName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
     val configName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
 
     if(runMode == "train") {
