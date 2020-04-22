@@ -325,7 +325,6 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
         for(j <- 2 until sent(0).length) {
           val golds = sent.map(_.tokens(j))
-
           val preds = predict(taskId, words, Some(predPositions(j - 2)._2))
 
           val (t, c) = accuracy(golds, preds)
@@ -336,6 +335,9 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
           correctNonO += cn
           totalNonOPred += pn
           totalNonOGold += gn
+
+          println(s"pred = ${predPositions(j - 2)._1} at position ${predPositions(j - 2)._2}")
+          printCoNLLOutput(pw, words, golds, preds)
         }
       }
     }
@@ -674,9 +676,9 @@ object LstmCrfMtl {
   val LM_TYPE = "rnnlm" // "flair"
 
   def main(args: Array[String]): Unit = {
-    val runMode = "train" // "train", "test", or "shell"
+    val runMode = "test" // "train", "test", or "shell"
     initializeDyNet(autoBatch = true, mem = "1660,1664,2496,1400")
-    val modelName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
+    val modelName = "mtl-en-srl-epoch0" // "mtl-en-ner" // "mtl-en-pos-chunk"
     val configName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
 
     if(runMode == "train") {
