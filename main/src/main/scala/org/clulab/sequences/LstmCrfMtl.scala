@@ -14,7 +14,6 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
@@ -51,7 +50,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     val model = LstmCrfMtlParameters.create(
-      taskManager.taskCount, parameters, lm, t2is, taskManager.greedyInferences)
+      taskManager.taskCount, parameters, lm, t2is, taskManager.inferenceTypes)
     logger.debug("Completed initialization.")
     model
   }
@@ -62,8 +61,17 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
     for(tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        for (token <- sentence) {
-          tags(tid) += token.getTag
+        if(taskManager.tasks(tid).srlInference) {
+          // the argument labels start on column 2 (column 1 are the predicates)
+          for(token <- sentence) {
+            for(j <- 2 until token.tokens.length) {
+              tags(tid) += token.get(j)
+            }
+          }
+        } else {
+          for (token <- sentence) {
+            tags(tid) += token.getTag
+          }
         }
       }
     }
@@ -105,20 +113,29 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         sentCount += 1
         ComputationGraph.renew()
 
-        // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
-        val words = sentence.map(_.getWord)
-        //println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
-        val emissionScores = emissionScoresAsExpressions(words, taskId, doDropout = DO_DROPOUT)
+        // forward pass + loss, different for each type of inference
+        var lossOpt =
+          if(model.inferenceTypes(taskId) == TaskManager.GREEDY_INFERENCE) {
+            // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
+            val words = sentence.map(_.getWord)
+            //println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
+            val emissionScores = emissionScoresAsExpressions(words, taskId, None, doDropout = DO_DROPOUT)
 
-        // get the gold tags for this sentence
-        val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
+            // get the gold tags for this sentence
+            val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
 
-        var loss =
-          if(model.greedyInference(taskId)) {
             // greedy loss
-            sentenceLossGreedy(emissionScores, goldTagIds)
+            Some(sentenceLossGreedy(emissionScores, goldTagIds))
           }
-          else {
+          else if(model.inferenceTypes(taskId) == TaskManager.VITERBI_INFERENCE) {
+            // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
+            val words = sentence.map(_.getWord)
+            //println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
+            val emissionScores = emissionScoresAsExpressions(words, taskId, None, doDropout = DO_DROPOUT)
+
+            // get the gold tags for this sentence
+            val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
+
             // fetch the transition probabilities from the lookup storage
             val transitionMatrix = new ExpressionVector
             for(i <- 0 until model.t2is(taskId).size) {
@@ -126,13 +143,52 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             }
 
             // CRF loss
-            sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds, model.t2is(taskId))
+            Some(sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds, model.t2is(taskId)))
+          } else {
+            val predPositions = sentence.map(_.getTag).zipWithIndex.filter(_._1 == "B-P")
+            //println(sentence.map(_.getWord).mkString(" "))
+            //println(predPositions.mkString(" "))
+
+            if(predPositions.length > 0) {
+              val allPredLoss = new ExpressionVector()
+
+              for(j <- 2 until sentence(0).length) {
+                val predPosition = predPositions(j - 2)
+
+                val words = sentence.map(_.getWord)
+
+                // produce the hidden states from the LM
+                // TODO: add the arg arch here!
+                val emissionScores = emissionScoresAsExpressions(words, taskId, Some(predPosition._2), doDropout = DO_DROPOUT)
+
+                // get the gold tags for this frame
+                val goldTagIds = toIds(sentence.map(_.tokens(j)), model.t2is(taskId))
+
+                // greedy loss for the sequence of arguments in this frame
+                allPredLoss.add(sentenceLossGreedy(emissionScores, goldTagIds))
+              }
+
+              Some(Expression.sum(allPredLoss))
+            } else {
+              None
+            }
           }
 
-        if(taskManager.tasks(taskId).taskWeight != 1.0)
-          loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
+        if(lossOpt.isDefined) {
+          var loss = lossOpt.get
 
-        cummulativeLoss += loss.value().toFloat
+          // task weighting
+          if (taskManager.tasks(taskId).taskWeight != 1.0)
+            loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
+
+          // for stats
+          cummulativeLoss += loss.value().toFloat
+
+          // backprop
+          ComputationGraph.backward(loss)
+          trainer.update(model.parameters)
+        }
+
         numTagged += sentence.length
 
         if(sentCount % 1000 == 0) {
@@ -141,9 +197,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
           numTagged = 0
         }
 
-        // backprop
-        ComputationGraph.backward(loss)
-        trainer.update(model.parameters)
+
       }
 
       // check dev performance in this epoch, for all tasks
@@ -224,25 +278,44 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       if(epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
     logger.debug(s"Started evaluation on the $name dataset for task $taskNumber ($taskName)...")
-    for(sent <- sentences) {
-      sentCount += 1
-      val words = sent.map(_.getWord)
-      val golds = sent.map(_.getTag)
 
-      // println("PREDICT ON SENT: " + words.mkString(", "))
-      val preds = predict(taskId, words)
-      val (t, c) = accuracy(golds, preds)
-      total += t
-      correct += c
+    // regular BIO evaluation
+    if(taskManager.tasks(taskId).inference != TaskManager.SRL_INFERENCE) {
+      for (sent <- sentences) {
+        sentCount += 1
+        val words = sent.map(_.getWord)
+        val golds = sent.map(_.getTag)
 
-      /*
-      if(sentCount % 10 == 0) {
-        val crtAcc = correct.toDouble / total
-        logger.debug(s"Processed $sentCount sentences. Current accuracy is $crtAcc.")
+        // println("PREDICT ON SENT: " + words.mkString(", "))
+        val preds = predict(taskId, words)
+        val (t, c) = accuracy(golds, preds)
+        total += t
+        correct += c
+
+        /*
+        if(sentCount % 10 == 0) {
+          val crtAcc = correct.toDouble / total
+          logger.debug(s"Processed $sentCount sentences. Current accuracy is $crtAcc.")
+        }
+        */
+
+        printCoNLLOutput(pw, words, golds, preds)
       }
-      */
+    } else { // SRL arg evaluation
+      for (sent <- sentences) {
+        sentCount += 1
+        val words = sent.map(_.getWord)
 
-      printCoNLLOutput(pw, words, golds, preds)
+        for(j <- 2 until sent(0).length) {
+          val golds = sent.map(_.tokens(j))
+
+          val preds = predict(taskId, words) // TODO: add predicate info
+
+          val (t, c) = accuracy(golds, preds)
+          total += t
+          correct += c
+        }
+      }
     }
 
     pw.close()
@@ -262,20 +335,23 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
     val emissionScores:Array[Array[Float]] = synchronized {
       ComputationGraph.renew()
-      emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, doDropout = false)) // these scores do not have softmax
+      emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, None, doDropout = false)) // these scores do not have softmax
     }
 
     val tags = new ArrayBuffer[String]()
-    if(model.greedyInference(taskId)) {
+    if(model.inferenceTypes(taskId) == TaskManager.GREEDY_INFERENCE) {
       val tagIds = greedyPredict(emissionScores)
       for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
-    } else {
+    } else if(model.inferenceTypes(taskId) == TaskManager.VITERBI_INFERENCE) {
       val transitionMatrix: Array[Array[Float]] =
         transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
 
       val tagIds = viterbi(emissionScores, transitionMatrix,
         model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
       for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
+    } else {
+      // TODO
+      throw new RuntimeException("Implement me!")
     }
     tags.toArray
   }
@@ -298,16 +374,19 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     // generate the sequence of argmax tags for each task, using its own inference procedure
     for(taskId <- 0 until model.taskCount) {
       val tags = new ArrayBuffer[String]()
-      if(model.greedyInference(taskId)) {
+      if(model.inferenceTypes(taskId) == TaskManager.GREEDY_INFERENCE) {
         val tagIds = greedyPredict(emissionScoresAllTasks(taskId))
         for (tagId <- tagIds) tags += model.i2ts(taskId)(tagId)
-      } else {
+      } else if(model.inferenceTypes(taskId) == TaskManager.VITERBI_INFERENCE) {
         val transitionMatrix: Array[Array[Float]] =
           transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
 
         val tagIds = viterbi(emissionScoresAllTasks(taskId), transitionMatrix,
           model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
         for (tagId <- tagIds) tags += model.i2ts(taskId)(tagId)
+      } else {
+        // TODO
+        throw new RuntimeException("Implement me!")
       }
 
       tagsAllTasks(taskId) = tags.toArray
@@ -320,7 +399,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * Generates tag emission scores for the words in this sequence, stored as Expressions, for one given task
    * @param words One training or testing sentence
    */
-  def emissionScoresAsExpressions(words: Array[String], taskId:Int, doDropout:Boolean): ExpressionVector = {
+  def emissionScoresAsExpressions(words: Array[String],
+                                  taskId:Int,
+                                  predPositionOpt: Option[Int],
+                                  doDropout:Boolean): ExpressionVector = {
     val states = model.lm.mkEmbeddings(words, doDropout).toArray
 
     // this is the feed forward network that is specific to each task
@@ -328,7 +410,8 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
     val emissionScores = new ExpressionVector()
     for(s <- states) {
-      var l1 = H * s
+      val ss = Expression.concatenate(states(predPositionOpt.get), s)
+      var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
       }
@@ -377,7 +460,7 @@ class LstmCrfMtlParameters(
   val lm:LM, // shared by all tasks
   val Hs:Array[Parameter], // one per task
   val Ts:Array[LookupParameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
-  val greedyInference:Array[Boolean]) {
+  val inferenceTypes:Array[Int]) {
 
   val taskCount: Int = t2is.length
   val indices: Range = t2is.indices
@@ -439,7 +522,7 @@ class LstmCrfMtlParameters(
       lm.saveX2i(printWriter)
 
       LstmUtils.save(printWriter, taskCount, "taskCount")
-      LstmUtils.save(printWriter, greedyInference, "greedyInference")
+      LstmUtils.save(printWriter, inferenceTypes, "inferenceTypes")
 
       t2is.zipWithIndex.foreach { case (t2i, index) =>
         LstmUtils.save(printWriter, t2i, s"t2i($index)")
@@ -455,7 +538,7 @@ object LstmCrfMtlParameters {
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
     val parameters = new ParameterCollection()
-    val (lm, taskCount, t2is, greedyInferences) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+    val (lm, taskCount, t2is, inferenceTypes) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
 
       val lm = mkLM(lines, parameters)
@@ -463,7 +546,7 @@ object LstmCrfMtlParameters {
       val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
       val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
       val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
-      val greedyInferences:Array[Boolean] = byLineArrayBuilder.build(lines).map(_.toBoolean)
+      val inferenceTypes:Array[Int] = byLineArrayBuilder.build(lines).map(_.toInt)
       val t2is = 0.until(taskCount).map { _ =>
         byLineStringMapBuilder.build(lines)
       }.toArray
@@ -471,11 +554,11 @@ object LstmCrfMtlParameters {
       //println(s"${t2is(0).keySet.size} TAGS FOR TASK 0: " + t2is(0).keySet.toList.sorted.mkString(", "))
       //println(s"${t2is(1).keySet.size} TAGS FOR TASK 1: " + t2is(1).keySet.toList.sorted.mkString(", "))
 
-      (lm, taskCount, t2is, greedyInferences)
+      (lm, taskCount, t2is, inferenceTypes)
     }
 
     val model = {
-      val model = mkParams(taskCount, parameters, lm, t2is, greedyInferences)
+      val model = mkParams(taskCount, parameters, lm, t2is, inferenceTypes)
       LstmUtils.loadParameters(dynetFilename, model.parameters)
       model
     }
@@ -488,7 +571,7 @@ object LstmCrfMtlParameters {
                          parameters: ParameterCollection,
                          lm: LM,
                          t2is: Array[Map[String, Int]],
-                         greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
+                         inferenceTypes: Array[Int]): LstmCrfMtlParameters = {
 
     // These parameters are unique for each task
     val Hs = new Array[Parameter](taskCount)
@@ -496,7 +579,7 @@ object LstmCrfMtlParameters {
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
       //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
@@ -504,15 +587,15 @@ object LstmCrfMtlParameters {
 
     new LstmCrfMtlParameters(t2is, i2ts,
       parameters, lm,
-      Hs, Ts, greedyInferences)
+      Hs, Ts, inferenceTypes)
   }
 
   def create(taskCount: Int,
       parameters: ParameterCollection,
       lm: LM,
       t2is: Array[Map[String, Int]],
-      greedyInferences: Array[Boolean]): LstmCrfMtlParameters = {
-    val model = mkParams(taskCount, parameters, lm, t2is, greedyInferences)
+      inferenceTypes: Array[Int]): LstmCrfMtlParameters = {
+    val model = mkParams(taskCount, parameters, lm, t2is, inferenceTypes)
     model.initializeTransitions()
     model
   }
@@ -557,7 +640,7 @@ object LstmCrfMtl {
 
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
-    initializeDyNet()
+    initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400"
     val modelName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
     val configName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
 

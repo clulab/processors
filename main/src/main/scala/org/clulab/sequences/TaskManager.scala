@@ -33,10 +33,10 @@ class TaskManager(config:Config) extends Configured {
   def taskCount:Int = tasks.length
   def indices: Range = tasks.indices
 
-  def greedyInferences:Array[Boolean] = {
-    val infs = new Array[Boolean](taskCount)
+  def inferenceTypes:Array[Int] = {
+    val infs = new Array[Int](taskCount)
     for(tid <- tasks.indices) {
-      infs(tid) = tasks(tid).greedyInference
+      infs(tid) = tasks(tid).inference
     }
     infs
   }
@@ -94,14 +94,19 @@ class TaskManager(config:Config) extends Configured {
       if(contains(s"mtl.task$taskNumber.test")) Some(getArgString(s"mtl.task$taskNumber.test", None))
       else None
 
-    val inference =
-      if(contains(s"mtl.task$taskNumber.inference")) Some(getArgString(s"mtl.task$taskNumber.inference", None))
-      else None
+    val inference = parseInference(getArgString(s"mtl.task$taskNumber.inference", Some("greedy")))
 
     val weight:Float =
       getArgFloat(s"mtl.task$taskNumber.weight", Some(1.0.toFloat))
 
     new Task(taskNumber - 1, taskName, train, dev, test, inference, shardsPerEpoch, weight)
+  }
+
+  def parseInference(inf: String): Int = inf match {
+    case "greedy" => TaskManager.GREEDY_INFERENCE
+    case "viterbi" => TaskManager.VITERBI_INFERENCE
+    case "srl" => TaskManager.SRL_INFERENCE
+    case _ => throw new RuntimeException(s"ERROR: unknown inference type $inf!")
   }
 
   def debugTraversal():Unit = {
@@ -177,7 +182,7 @@ class Task(
   val trainFileName:String,
   val devFileName:Option[String],
   val testFileName:Option[String],
-  val inference:Option[String],
+  val inference:Int,
   val shardsPerEpoch:Int,
   val taskWeight:Float) {
   logger.debug(s"Reading task $taskNumber ($taskName)...")
@@ -189,7 +194,17 @@ class Task(
     if(testFileName.isDefined) Some(ColumnReader.readColumns(testFileName.get))
     else None
 
-  val greedyInference:Boolean = inference.getOrElse("greedy").toLowerCase() == "greedy"
+  val greedyInference:Boolean = inference == TaskManager.GREEDY_INFERENCE
+  val viterbiInference:Boolean = inference == TaskManager.VITERBI_INFERENCE
+  val srlInference:Boolean = inference == TaskManager.SRL_INFERENCE
+
+  def prettyInference: String =
+    inference match {
+      case TaskManager.GREEDY_INFERENCE => "greedy"
+      case TaskManager.VITERBI_INFERENCE => "viterbi"
+      case TaskManager.SRL_INFERENCE => "srl"
+      case _ => "unknown"
+    }
 
   // The size of the training shard for this task
   val shardSize:Int = math.ceil(trainSentences.length.toDouble / shardsPerEpoch).toInt
@@ -203,7 +218,7 @@ class Task(
   if(testSentences.isDefined)
     logger.debug(s"Read ${testSentences.get.length} testing sentences for task $taskNumber.")
   logger.debug(s"Using taskWeight = $taskWeight")
-  logger.debug(s"Using $inference inference.")
+  logger.debug(s"Using $prettyInference inference.")
   logger.debug(s"============ completed task $taskNumber ============")
 
   /** Construct the shards from all training sentences in this task */
@@ -224,4 +239,7 @@ class Task(
 object TaskManager {
   val logger:Logger = LoggerFactory.getLogger(classOf[TaskManager])
 
+  val GREEDY_INFERENCE = 0
+  val VITERBI_INFERENCE = 1
+  val SRL_INFERENCE = 2
 }

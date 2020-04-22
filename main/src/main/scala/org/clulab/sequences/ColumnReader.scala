@@ -1,8 +1,5 @@
 package org.clulab.sequences
 
-import org.clulab.processors.Sentence
-import org.clulab.sequences.ColumnsToDocument.in
-
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
@@ -44,12 +41,13 @@ object ColumnReader {
   }
 }
 
-case class Row(val tokens:Array[String]) {
+case class Row(tokens:Array[String]) {
   def get(idx:Int): String =
     if(idx < tokens.length) tokens(idx)
     else ""
 
   def getWord: String = get(0)
   def getTag: String = get(1)
+  def length = tokens.length
 }
 
