@@ -624,7 +624,7 @@ object LstmCrfMtlParameters {
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
       //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 43))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 64))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
