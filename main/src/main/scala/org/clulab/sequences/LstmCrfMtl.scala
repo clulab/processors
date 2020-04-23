@@ -461,9 +461,9 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       if(dist > 20) dist = 21
       val posIndex = dist + 21
       val posEmbed = lookup(model.positionEmbeddings, posIndex)
-      val predPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(predPos), 0))
-      val argPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(i), 0))
-      val ss = Expression.concatenate(states(predPos), states(i), posEmbed, predPosEmbed, argPosEmbed)
+      //val predPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(predPos), 0))
+      //val argPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(i), 0))
+      val ss = Expression.concatenate(states(predPos), states(i), posEmbed) // , predPosEmbed, argPosEmbed)
       var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
@@ -650,7 +650,7 @@ object LstmCrfMtlParameters {
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
       //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 64 + 2 * 32))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 64)) // + 2 * 32))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
