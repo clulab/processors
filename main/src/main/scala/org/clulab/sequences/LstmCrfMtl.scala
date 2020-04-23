@@ -169,7 +169,8 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
                 allPredLoss.add(sentenceLossGreedy(emissionScores, goldTagIds))
               }
 
-              Some(Expression.sum(allPredLoss))
+              if(allPredLoss.length > 0) Some(Expression.sum(allPredLoss))
+              else None
             } else {
               None
             }
