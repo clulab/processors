@@ -3,6 +3,7 @@ package org.clulab.utils
 import java.io.{BufferedReader, File, FileReader, PrintWriter}
 
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
@@ -146,8 +147,8 @@ class CoNLLSRLReader {
     */
 
     // Uncomment these lines if fancier features are needed!
-    /*
     proc.tagPartsOfSpeech(doc)
+    /*
     proc.lemmatize(doc)
     proc.recognizeNamedEntities(doc)
 
@@ -361,7 +362,7 @@ object CoNLLSRLReader {
 
     val file = new File(args(0))
     val reader = new CoNLLSRLReader
-    val proc = new CluProcessor()
+    val proc = new FastNLPProcessor()
     val doc = reader.read(file, proc, verbose = true)
 
     labelStats(doc)
@@ -393,6 +394,7 @@ object CoNLLSRLReader {
 
       for(i <- sent.words.indices) {
         pw.print(sent.words(i) + "\t" + (if(heads(i)) "B-P" else "O"))
+        pw.print("\t" + sent.tags.get(i))
         for(j <- args.indices) {
           pw.print("\t" + args(j)(i))
         }

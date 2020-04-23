@@ -48,6 +48,12 @@ case class Row(tokens:Array[String]) {
 
   def getWord: String = get(0)
   def getTag: String = get(1)
+  def getPos: String = get(2)
+
   def length = tokens.length
+}
+
+object Row {
+  val ARG_START = 3
 }
 

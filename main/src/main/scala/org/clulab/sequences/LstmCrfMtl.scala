@@ -10,6 +10,7 @@ import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
 import org.clulab.sequences.LstmUtils._
 import org.clulab.lm.{FlairLM, LM, RnnLM}
+import org.clulab.sequences
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -64,7 +65,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         if(taskManager.tasks(tid).srlInference) {
           // the argument labels start on column 2 (column 1 are the predicates)
           for(token <- sentence) {
-            for(j <- 2 until token.tokens.length) {
+            for(j <- Row.ARG_START until token.tokens.length) {
               tags(tid) += token.get(j)
             }
           }
@@ -119,7 +120,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
             val words = sentence.map(_.getWord)
             //println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
-            val emissionScores = emissionScoresAsExpressions(words, taskId, None, doDropout = DO_DROPOUT)
+            val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)
 
             // get the gold tags for this sentence
             val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
@@ -131,7 +132,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
             val words = sentence.map(_.getWord)
             //println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
-            val emissionScores = emissionScoresAsExpressions(words, taskId, None, doDropout = DO_DROPOUT)
+            val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)
 
             // get the gold tags for this sentence
             val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
@@ -152,13 +153,14 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             if(predPositions.length > 0) {
               val allPredLoss = new ExpressionVector()
 
-              for(j <- 2 until sentence(0).length) {
-                val predPosition = predPositions(j - 2)
+              for(j <- Row.ARG_START until sentence(0).length) {
+                val predPosition = predPositions(j - Row.ARG_START)
 
                 val words = sentence.map(_.getWord)
+                val pos = sentence.map(_.getPos)
 
                 // produce the hidden states from the LM
-                val emissionScores = emissionScoresAsExpressions(words, taskId, Some(predPosition._2), doDropout = DO_DROPOUT)
+                val emissionScores = emissionScoresAsExpressions(words, taskId, Some(pos), Some(predPosition._2), doDropout = DO_DROPOUT)
 
                 // get the gold tags for this frame
                 val goldTagIds = toIds(sentence.map(_.tokens(j)), model.t2is(taskId))
@@ -296,9 +298,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         sentCount += 1
         val words = sent.map(_.getWord)
         val golds = sent.map(_.getTag)
+        val pos = sent.map(_.getPos)
 
         // println("PREDICT ON SENT: " + words.mkString(", "))
-        val preds = predict(taskId, words, None)
+        val preds = predict(taskId, words, Some(pos), None)
         val (t, c) = accuracy(golds, preds)
         total += t
         correct += c
@@ -321,11 +324,12 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       for (sent <- sentences) {
         sentCount += 1
         val words = sent.map(_.getWord)
+        val pos = sent.map(_.getPos)
         val predPositions = sent.map(_.getTag).zipWithIndex.filter(_._1 == "B-P")
 
-        for(j <- 2 until sent(0).length) {
+        for(j <- Row.ARG_START until sent(0).length) {
           val golds = sent.map(_.tokens(j))
-          val preds = predict(taskId, words, Some(predPositions(j - 2)._2))
+          val preds = predict(taskId, words, Some(pos), Some(predPositions(j - Row.ARG_START)._2))
 
           val (t, c) = accuracy(golds, preds)
           total += t
@@ -336,7 +340,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
           totalNonOPred += pn
           totalNonOGold += gn
 
-          pw.println(s"pred = ${predPositions(j - 2)._1} at position ${predPositions(j - 2)._2}")
+          pw.println(s"pred = ${predPositions(j - Row.ARG_START)._1} at position ${predPositions(j - Row.ARG_START)._2}")
           printCoNLLOutput(pw, words, golds, preds)
         }
       }
@@ -363,16 +367,16 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @param words The input words
    * @return The predicted sequence of tags
    */
-  def predict(taskId:Int, words:Array[String], predPosition:Option[Int]):Array[String] = {
+  def predict(taskId:Int, words:Array[String], tagsOpt: Option[Array[String]], predPosition:Option[Int]):Array[String] = {
     // Note: this block MUST be synchronized. Currently the computational graph in DyNet is a static variable.
     val emissionScores:Array[Array[Float]] = synchronized {
       ComputationGraph.renew()
 
       if(taskManager.tasks(taskId).inference != TaskManager.SRL_INFERENCE) {
-        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, None, doDropout = false)) // these scores do not have softmax
+        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, None, None, doDropout = false)) // these scores do not have softmax
       } else {
         // SRL arguments need extra info, i.e., the position of the predicate
-        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, predPosition, doDropout = false))
+        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, tagsOpt, predPosition, doDropout = false))
       }
     }
 
@@ -437,6 +441,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    */
   def emissionScoresAsExpressions(words: Array[String],
                                   taskId:Int,
+                                  tagsOpt: Option[Array[String]],
                                   predPositionOpt: Option[Int],
                                   doDropout:Boolean): ExpressionVector = {
     val states = model.lm.mkEmbeddings(words, doDropout).toArray
@@ -444,16 +449,20 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     // this is the feed forward network that is specific to each task
     val H = parameter(model.Hs(taskId))
 
+    val tags = tagsOpt.get
+
     val emissionScores = new ExpressionVector()
     for(i <- states.indices) {
-      // TODO: add position info here!
+      // TODO: add new features here!
       val predPos = predPositionOpt.get
       var dist = i - predPos
       if (dist < -20) dist = -21
       if(dist > 20) dist = 21
       val posIndex = dist + 21
       val posEmbed = lookup(model.positionEmbeddings, posIndex)
-      val ss = Expression.concatenate(states(predPos), states(i), posEmbed)
+      val predPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(predPos), 0))
+      val argPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(i), 0))
+      val ss = Expression.concatenate(states(predPos), states(i), posEmbed, predPosEmbed, argPosEmbed)
       var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
@@ -502,6 +511,8 @@ class LstmCrfMtlParameters(
   val parameters:ParameterCollection,
   val lm:LM, // shared by all tasks
   val positionEmbeddings: LookupParameter, // TODO
+  val pos2is: Map[String, Int], // POS tags to indices
+  val posEmbeddings: LookupParameter, // POS tags embeddings
   val Hs:Array[Parameter], // one per task
   val Ts:Array[LookupParameter], // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
   val inferenceTypes:Array[Int]) {
@@ -568,6 +579,8 @@ class LstmCrfMtlParameters(
       LstmUtils.save(printWriter, taskCount, "taskCount")
       LstmUtils.save(printWriter, inferenceTypes, "inferenceTypes")
 
+      LstmUtils.save(printWriter, pos2is, comment = "pos2i")
+
       t2is.zipWithIndex.foreach { case (t2i, index) =>
         LstmUtils.save(printWriter, t2i, s"t2i($index)")
       }
@@ -582,7 +595,7 @@ object LstmCrfMtlParameters {
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
     val parameters = new ParameterCollection()
-    val (lm, taskCount, t2is, inferenceTypes) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+    val (lm, taskCount, t2is, inferenceTypes, _) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
 
       val lm = mkLM(lines, parameters)
@@ -591,6 +604,7 @@ object LstmCrfMtlParameters {
       val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
       val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
       val inferenceTypes:Array[Int] = byLineArrayBuilder.build(lines).map(_.toInt)
+      val pos2is: Map[String, Int] = byLineStringMapBuilder.build(lines) // TODO: never used, remove
       val t2is = 0.until(taskCount).map { _ =>
         byLineStringMapBuilder.build(lines)
       }.toArray
@@ -598,7 +612,7 @@ object LstmCrfMtlParameters {
       //println(s"${t2is(0).keySet.size} TAGS FOR TASK 0: " + t2is(0).keySet.toList.sorted.mkString(", "))
       //println(s"${t2is(1).keySet.size} TAGS FOR TASK 1: " + t2is(1).keySet.toList.sorted.mkString(", "))
 
-      (lm, taskCount, t2is, inferenceTypes)
+      (lm, taskCount, t2is, inferenceTypes, pos2is)
     }
 
     val model = {
@@ -609,6 +623,17 @@ object LstmCrfMtlParameters {
 
     logger.debug("MTL loading complete.")
     model
+  }
+
+  def readPos2is(pos2iFilename: String): Map[String, Int] = {
+    val pos2i = Serializer.using(LstmUtils.newSource(pos2iFilename)) { source =>
+      val byLineStringMapBuilder = new sequences.LstmUtils.ByLineStringMapBuilder()
+      val lines = source.getLines()
+      val pos2i = byLineStringMapBuilder.build(lines)
+      pos2i
+    }
+    logger.debug(s"Loaded ${pos2i.size} POS tags.")
+    pos2i
   }
 
   protected def mkParams(taskCount: Int,
@@ -624,14 +649,19 @@ object LstmCrfMtlParameters {
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
       //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 64))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 64 + 2 * 32))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
+
+    val pos2is = readPos2is("org/clulab/lm/pos2i-en.txt")
+    val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(32))
+
     logger.debug("Created parameters.")
 
     new LstmCrfMtlParameters(t2is, i2ts,
       parameters,lm, positionEmbeddings,
+      pos2is, posEmbeddings,
       Hs, Ts, inferenceTypes)
   }
 
