@@ -571,7 +571,7 @@ object LstmUtils {
 
       def nextLine(): Boolean = {
         val line = bufferedIterator.next()
-        //println(s"LINE: [$line]")
+        println(s"LINE: [$line]")
 
         if (line.nonEmpty) {
           addLine(intermediateValue, line)
