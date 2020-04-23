@@ -3,6 +3,10 @@ name := "processors-main"
 // for processors-models
 resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
 
+pomIncludeRepository := { (repo: MavenRepository) =>
+  repo.root.startsWith("http://artifactory.cs.arizona.edu")
+}
+
 libraryDependencies ++= {
   val json4sVersion = "3.5.2"
 
