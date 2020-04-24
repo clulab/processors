@@ -49,7 +49,7 @@ If you use anything else in this package, please link to this github page.
 
 # Installation
 
-This software is available on Maven Central. To use, simply add the following dependencies to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.0.0`):
+The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.0.3`).  One component is not available at Maven Central because of size limitations there.  However, Maven seems to fetch this transitive dependency, [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), automatically.
 
 ```xml
 <dependency>
@@ -69,9 +69,11 @@ This software is available on Maven Central. To use, simply add the following de
 </dependency>
 ```
 
-The equivalent SBT dependencies are:
+SBT is not able to fetch the dependency without further configuration.  An additional resolver must be provided, but thereafter the procedure is the same.  The equivalent SBT dependencies are:
 
 ```scala
+resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
+
 libraryDependencies ++= {
   val procVer = "x.x.x"
 
