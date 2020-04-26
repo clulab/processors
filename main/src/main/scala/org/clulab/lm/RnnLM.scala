@@ -57,7 +57,10 @@ class RnnLM(val w2i:Map[String, Int],
 
     val predEmbed = Expression.input(if(isPredFeature) 1f else 0f)
 
+    // TODO: make constLookup
     val wordEmbedding = Expression.lookup(wordLookupParameters, w2i.getOrElse(sanitized, 0))
+
+    // TODO: add learned word embedding of dimension 32
 
     // biLSTM over character embeddings
     val charEmbedding =

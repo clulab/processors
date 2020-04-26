@@ -69,7 +69,7 @@ object RnnLMTrain {
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions
+    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + 1 // 1 for isPredFeature
     val fwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
     val bwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
 
