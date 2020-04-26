@@ -419,11 +419,11 @@ object LstmUtils {
     concatenate(wordEmbedding, charEmbedding)
   }
 
-  private def mkCharacterEmbedding(word: String,
-                                   c2i:Map[Char, Int],
-                                   charLookupParameters:LookupParameter,
-                                   charFwRnnBuilder:RnnBuilder,
-                                   charBwRnnBuilder:RnnBuilder): Expression = {
+  def mkCharacterEmbedding(word: String,
+                           c2i:Map[Char, Int],
+                           charLookupParameters:LookupParameter,
+                           charFwRnnBuilder:RnnBuilder,
+                           charBwRnnBuilder:RnnBuilder): Expression = {
     //println(s"make embedding for word [$word]")
     val charEmbeddings = new ArrayBuffer[Expression]()
     for(i <- word.indices) {

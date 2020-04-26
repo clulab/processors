@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection, RMSPropTrainer}
+import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
@@ -445,7 +445,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
                                   tagsOpt: Option[Array[String]],
                                   predPositionOpt: Option[Int],
                                   doDropout:Boolean): ExpressionVector = {
-    val states = model.lm.mkEmbeddings(words, doDropout).toArray
+    val states = model.lm.mkEmbeddings(words, predPositionOpt, doDropout).toArray
 
     // this is the feed forward network that is specific to each task
     val H = parameter(model.Hs(taskId))
@@ -488,7 +488,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @return The scores for all tasks
    */
   def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
-    val states = model.lm.mkEmbeddings(words, doDropout).toArray
+    val states = model.lm.mkEmbeddings(words, None, doDropout).toArray // TODO: fix me! Add predicate position
 
     val emissionScoresAllTasks = new Array[ExpressionVector](model.taskCount)
 
