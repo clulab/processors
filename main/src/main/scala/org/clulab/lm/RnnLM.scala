@@ -379,8 +379,8 @@ object RnnLM {
     val charBwRnnBuilder = new LstmBuilder(1, charEmbedDim, charRnnStateSize, parameters)
 
     val embeddingSize = 2 * charRnnStateSize + wordEmbedDim
-    val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
-    val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
+    val fwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
+    val bwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
 
     val fwO = parameters.addParameters(Dim(lmLabelCount, wordRnnStateSize))
     val bwO = parameters.addParameters(Dim(lmLabelCount, wordRnnStateSize))

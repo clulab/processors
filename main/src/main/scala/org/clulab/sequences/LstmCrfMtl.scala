@@ -93,7 +93,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   def train(modelNamePrefix:String):Unit = {
     require(taskManagerOpt.isDefined)
 
-    val trainer = SafeTrainer(new AdamTrainer(model.parameters)) // RMSPropTrainer(model.parameters))
+    val trainer = SafeTrainer(new AdamTrainer(model.parameters, learningRate = 0.01f)) // RMSPropTrainer(model.parameters))
 
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -341,7 +341,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
           totalNonOPred += pn
           totalNonOGold += gn
 
-          pw.println(s"pred = ${predPositions(j - Row.ARG_START)._1} at position ${predPositions(j - Row.ARG_START)._2}")
+          pw.println(s"pred = ${words(predPositions(j - Row.ARG_START)._2)} at position ${predPositions(j - Row.ARG_START)._2}")
           printCoNLLOutput(pw, words, golds, preds)
         }
       }
@@ -452,6 +452,9 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
     val tags = tagsOpt.get
 
+    //println(s"words = ${words.zip(tags).mkString(" ")}")
+    //println(s"pred at position ${predPositionOpt.get} = ${words(predPositionOpt.get)}/${tags(predPositionOpt.get)}")
+
     val emissionScores = new ExpressionVector()
     for(i <- states.indices) {
       // TODO: add new features here!
@@ -460,6 +463,11 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       if (dist < -20) dist = -21
       if(dist > 20) dist = 21
       val posIndex = dist + 21
+
+      //println(s"word at $i = ${words(i)}/${tags(i)}")
+      //println(s"distance = $posIndex")
+      //println()
+
       val posEmbed = lookup(model.positionEmbeddings, posIndex)
       val predPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(predPos), 0))
       val argPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(i), 0))
