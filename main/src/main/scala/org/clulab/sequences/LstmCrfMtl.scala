@@ -93,7 +93,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   def train(modelNamePrefix:String):Unit = {
     require(taskManagerOpt.isDefined)
 
-    val trainer = SafeTrainer(new AdamTrainer(model.parameters, learningRate = 0.01f)) // RMSPropTrainer(model.parameters))
+    val trainer = SafeTrainer(new AdamTrainer(model.parameters)) // RMSPropTrainer(model.parameters))
 
     var cummulativeLoss = 0.0
     var numTagged = 0
