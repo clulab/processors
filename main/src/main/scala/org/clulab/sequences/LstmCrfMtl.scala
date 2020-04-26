@@ -725,7 +725,7 @@ object LstmCrfMtl {
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
     initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
-    val modelName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
+    val modelName = "mtl-en-srl2" // "mtl-en-ner" // "mtl-en-pos-chunk"
     val configName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
 
     if(runMode == "train") {
