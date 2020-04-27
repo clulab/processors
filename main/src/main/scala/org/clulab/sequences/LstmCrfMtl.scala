@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
+import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection, RMSPropTrainer}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
@@ -93,7 +93,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   def train(modelNamePrefix:String):Unit = {
     require(taskManagerOpt.isDefined)
 
-    val trainer = SafeTrainer(new AdamTrainer(model.parameters)) // RMSPropTrainer(model.parameters))
+    val trainer = SafeTrainer(new RMSPropTrainer(model.parameters)) // RMSPropTrainer(model.parameters))
 
     var cummulativeLoss = 0.0
     var numTagged = 0
