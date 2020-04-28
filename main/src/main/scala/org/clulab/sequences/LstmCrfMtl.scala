@@ -330,6 +330,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
         for(j <- Row.ARG_START until sent(0).length) {
           val golds = sent.map(_.tokens(j))
+          // TODO: better inference here!
           val preds = predict(taskId, words, Some(pos), Some(predPositions(j - Row.ARG_START)._2))
 
           val (t, c) = accuracy(golds, preds)
@@ -382,16 +383,25 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     val tags = new ArrayBuffer[String]()
-    if(model.inferenceTypes(taskId) == TaskManager.VITERBI_INFERENCE) {
-      val transitionMatrix: Array[Array[Float]] =
-        transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
 
-      val tagIds = viterbi(emissionScores, transitionMatrix,
-        model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
-      for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
-    } else {
-      val tagIds = greedyPredict(emissionScores)
-      for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
+    model.inferenceTypes(taskId) match {
+      case TaskManager.VITERBI_INFERENCE =>
+        val transitionMatrix: Array[Array[Float]] =
+          transitionMatrixToArrays(model.Ts(taskId), model.t2is(taskId).size)
+        val tagIds = viterbi(emissionScores, transitionMatrix,
+          model.t2is(taskId).size, model.t2is(taskId)(START_TAG), model.t2is(taskId)(STOP_TAG))
+        for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
+
+      case TaskManager.GREEDY_INFERENCE =>
+        val tagIds = greedyPredict(emissionScores)
+        for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
+
+      case TaskManager.SRL_INFERENCE =>
+        val tagIds = srlPredict(emissionScores, predPosition.get, model.t2is(taskId)("O"))
+        for (tid <- tagIds) tags += model.i2ts(taskId)(tid)
+
+      case _ => throw new RuntimeException(s"ERROR: Unknown inference type ${model.inferenceTypes(taskId)}!")
+
     }
 
     tags.toArray
@@ -725,7 +735,7 @@ object LstmCrfMtl {
   def main(args: Array[String]): Unit = {
     val runMode = "train" // "train", "test", or "shell"
     initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
-    val modelName = "mtl-en-srl2" // "mtl-en-ner" // "mtl-en-pos-chunk"
+    val modelName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
     val configName = "mtl-en-srl" // "mtl-en-ner" // "mtl-en-pos-chunk"
 
     if(runMode == "train") {

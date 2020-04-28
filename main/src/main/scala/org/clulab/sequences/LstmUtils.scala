@@ -338,6 +338,51 @@ object LstmUtils {
     tagIds.toArray
   }
 
+  def srlPredict(lattice:Array[Array[Float]], predPosition: Int, oId:Int):Array[Int] = {
+    val tagIds = new Array[Int](lattice.length)
+    for(i <- tagIds.indices) {
+      tagIds(i) = oId
+    }
+
+    val tags = new ArrayBuffer[(Int, Int, Float)]()
+    for(i <- lattice.indices) {
+      for(j <- lattice(i).indices) {
+        tags += Tuple3(i, j, lattice(i)(j))
+      }
+    }
+    val sortedTags = tags.sortBy(0f - _._3)
+    val usedPositions = new mutable.HashSet[Int]()
+    val usedArgs = new mutable.HashSet[Int]()
+    for(t3 <- sortedTags) {
+      val position = t3._1
+      val tagId = t3._2
+      if(! usedPositions.contains(position) && (tagId == oId || ! usedArgs.contains(tagId))) {
+        tagIds(position) = tagId
+        usedPositions += position
+        if(tagId != oId) usedArgs += tagId
+      }
+    }
+
+    /*
+    val windowSize = 30
+    for(i <- math.max(0, predPosition - windowSize) until math.min(tagIds.length, predPosition + windowSize)) {
+      val probs = lattice(i)
+      var max = Float.MinValue
+      var tid = -1
+      for(j <- probs.indices) {
+        if(probs(j) > max) {
+          max = probs(j)
+          tid = j
+        }
+      }
+      assert(tid > -1)
+      tagIds(i) = tid
+    }
+    */
+
+    tagIds
+  }
+
   def printTagScores(header:String, scores:Array[Float], i2t:Array[String]): Unit = {
     print(header)
     for(j <- scores.indices) {
