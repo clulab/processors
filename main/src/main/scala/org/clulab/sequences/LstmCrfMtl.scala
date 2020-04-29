@@ -3,7 +3,7 @@ package org.clulab.sequences
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection, RMSPropTrainer}
+import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
@@ -93,7 +93,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   def train(modelNamePrefix:String):Unit = {
     require(taskManagerOpt.isDefined)
 
-    val trainer = SafeTrainer(new AdamTrainer(model.parameters, learningRate = 0.0001f)) // RMSPropTrainer(model.parameters))
+    val trainer = SafeTrainer(new AdamTrainer(model.parameters)) // RMSPropTrainer(model.parameters))
 
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -282,9 +282,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
   def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): (Double, Double, Double) = {
     var total = 0
     var correct = 0
-    var totalNonOPred = 0
-    var totalNonOGold = 0
-    var correctNonO = 0
+    val scoreCountsByLabel = new ScoreCountsByLabel
     val taskNumber = taskId + 1
     var sentCount = 0
 
@@ -307,10 +305,8 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         total += t
         correct += c
 
-        val (cn, pn, gn) = f1(golds, preds)
-        correctNonO += cn
-        totalNonOPred += pn
-        totalNonOGold += gn
+        val sc = f1(golds, preds)
+        scoreCountsByLabel.incAll(sc)
 
         /*
         if(sentCount % 10 == 0) {
@@ -330,17 +326,16 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
         for(j <- Row.ARG_START until sent(0).length) {
           val golds = sent.map(_.tokens(j))
+          val predPosition = predPositions(j - Row.ARG_START)._2
           // TODO: better inference here!
-          val preds = predict(taskId, words, Some(pos), Some(predPositions(j - Row.ARG_START)._2))
+          val preds = predict(taskId, words, Some(pos), Some(predPosition))
 
           val (t, c) = accuracy(golds, preds)
           total += t
           correct += c
 
-          val (cn, pn, gn) = f1(golds, preds)
-          correctNonO += cn
-          totalNonOPred += pn
-          totalNonOGold += gn
+          val sc = f1(golds, preds)
+          scoreCountsByLabel.incAll(sc)
 
           pw.println(s"pred = ${words(predPositions(j - Row.ARG_START)._2)} at position ${predPositions(j - Row.ARG_START)._2}")
           printCoNLLOutput(pw, words, golds, preds)
@@ -352,15 +347,14 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     val acc = correct.toDouble / total
     logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): $acc")
 
-    val prec = correctNonO.toDouble / totalNonOPred
-    val rec = correctNonO.toDouble / totalNonOGold
-    val microF1 = if(prec != 0 && rec != 0) 2.0 * prec * rec / (prec + rec) else 0.0
+    logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
+    logger.info(s"Recall on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
+    logger.info(s"Micro F1 on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
+    for(label <- scoreCountsByLabel.labels) {
+      logger.info(s"\tF1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.f1(label)}")
+    }
 
-    logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): $prec")
-    logger.info(s"Recall on ${sentences.length} $name sentences for task $taskNumber ($taskName): $rec")
-    logger.info(s"Micro F1 on ${sentences.length} $name sentences for task $taskNumber ($taskName): $microF1")
-
-    (acc, prec, rec)
+    (acc, scoreCountsByLabel.precision(), scoreCountsByLabel.recall())
   }
 
   /**
