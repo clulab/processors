@@ -423,13 +423,13 @@ object RnnLM {
     //
     // make the loadable parameters
     //
+    val posLookupParameters = parameters.addLookupParameters(p2i.size, Dim(posEmbedDim))
+
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(wordEmbedDim))
 
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(charEmbedDim))
     val charFwRnnBuilder = new LstmBuilder(1, charEmbedDim, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbedDim, charRnnStateSize, parameters)
-
-    val posLookupParameters = parameters.addLookupParameters(p2i.size, Dim(posEmbedDim))
 
     val embeddingSize = 2 * charRnnStateSize + wordEmbedDim + 1 + posEmbedDim // 1 for the isPredFeature
     val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
