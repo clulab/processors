@@ -449,7 +449,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
                                   tagsOpt: Option[Array[String]],
                                   predPositionOpt: Option[Int],
                                   doDropout:Boolean): ExpressionVector = {
-    val states = model.lm.mkEmbeddings(words, predPositionOpt, doDropout).toArray
+    val states = model.lm.mkEmbeddings(words, Some(tagsOpt.get.toIterable), predPositionOpt, doDropout).toArray // TODO: fix the toIterable
 
     // this is the feed forward network that is specific to each task
     val H = parameter(model.Hs(taskId))
@@ -492,7 +492,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @return The scores for all tasks
    */
   def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
-    val states = model.lm.mkEmbeddings(words, None, doDropout).toArray // TODO: fix me! Add predicate position
+    val states = model.lm.mkEmbeddings(words, None, None, doDropout).toArray // TODO: fix me! Add predicate position + POS tags
 
     val emissionScoresAllTasks = new Array[ExpressionVector](model.taskCount)
 
@@ -638,17 +638,6 @@ object LstmCrfMtlParameters {
     model
   }
 
-  def readPos2is(pos2iFilename: String): Map[String, Int] = {
-    val pos2i = Serializer.using(LstmUtils.newSource(pos2iFilename)) { source =>
-      val byLineStringMapBuilder = new sequences.LstmUtils.ByLineStringMapBuilder()
-      val lines = source.getLines()
-      val pos2i = byLineStringMapBuilder.build(lines)
-      pos2i
-    }
-    logger.debug(s"Loaded ${pos2i.size} POS tags.")
-    pos2i
-  }
-
   protected def mkParams(taskCount: Int,
                          parameters: ParameterCollection,
                          lm: LM,
@@ -667,7 +656,7 @@ object LstmCrfMtlParameters {
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
 
-    val pos2is = readPos2is("org/clulab/lm/pos2i-en.txt")
+    val pos2is = LstmUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
     val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(32))
 
     logger.debug("Created parameters.")

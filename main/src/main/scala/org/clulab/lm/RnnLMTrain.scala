@@ -23,6 +23,12 @@ object RnnLMTrain {
     val charEmbeddingSize = config.getArgInt("rnnlm.train.charEmbeddingSize", Some(32))
     val charRnnStateSize = config.getArgInt("rnnlm.train.charRnnStateSize", Some(16))
     val wordRnnStateSize = config.getArgInt("rnnlm.train.wordRnnStateSize", Some(256))
+    val posTagEmbeddingSize = config.getArgInt("rnnlm.train.posTagEmbeddingSize", Some(32))
+
+    //
+    // This stores all parameters in the RnnLM
+    //
+    val parameters = new ParameterCollection()
 
     //
     // Load the character map
@@ -51,9 +57,10 @@ object RnnLMTrain {
     val w2i = LstmUtils.mkWordVocab(w2v)
 
     //
-    // This stores all parameters in the RnnLM
+    // POS tag embeddings
     //
-    val parameters = new ParameterCollection()
+    val pos2is = LstmUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
+    val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(posTagEmbeddingSize))
 
     //
     // Convert the word embeddings we loaded above into DyNet LookupParameters
@@ -69,7 +76,7 @@ object RnnLMTrain {
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + 1 // 1 for isPredFeature
+    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + 1 + posTagEmbeddingSize // 1 for isPredFeature
     val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
     val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
 
@@ -83,10 +90,11 @@ object RnnLMTrain {
     //
     // Create the LM object
     //
-    val lm = new RnnLM(w2i, c2i,
+    val lm = new RnnLM(w2i, c2i, pos2is,
       wordRnnStateSize, charRnnStateSize, lmLabelCount,
       parameters,
       wordLookupParameters, charLookupParameters,
+      posEmbeddings,
       charFwRnnBuilder, charBwRnnBuilder,
       fwBuilder, bwBuilder, fwO, bwO)
 

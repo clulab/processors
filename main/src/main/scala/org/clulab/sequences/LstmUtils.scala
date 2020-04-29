@@ -6,7 +6,9 @@ import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pi
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder, Trainer}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
+import org.clulab.sequences
 import org.clulab.struct.MutableNumber
+import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -766,6 +768,16 @@ object LstmUtils {
       // this only works for scala 2.12, so we can't cross compile with 2.11
       // Source.fromResource(filename)
     }
+  }
+
+  def readString2Ids(s2iFilename: String): Map[String, Int] = {
+    val s2i = Serializer.using(LstmUtils.newSource(s2iFilename)) { source =>
+      val byLineStringMapBuilder = new sequences.LstmUtils.ByLineStringMapBuilder()
+      val lines = source.getLines()
+      val s2i = byLineStringMapBuilder.build(lines)
+      s2i
+    }
+    s2i
   }
 
   def loadParameters(dynetFilename: String, modelParameters: ParameterCollection, key:String = "/all"): Unit = {
