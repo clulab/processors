@@ -408,6 +408,8 @@ object LstmUtils {
     }
     val sortedTags = tags.sortBy(0f - _._3)
     val usedPositions = new mutable.HashSet[Int]()
+    usedPositions += predPosition // do not allow self loops
+    tagIds(predPosition) = oId
     val usedArgs = new mutable.HashSet[Int]()
     for(t3 <- sortedTags) {
       val position = t3._1
