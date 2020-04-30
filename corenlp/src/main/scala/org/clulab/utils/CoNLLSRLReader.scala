@@ -2,7 +2,6 @@ package org.clulab.utils
 
 import java.io.{BufferedReader, File, FileReader, PrintWriter}
 
-import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
@@ -181,7 +180,7 @@ class CoNLLSRLReader {
     for(modifier <- tokens.indices) {
       val head = tokens(modifier).dep._1
       if(head >= 0)
-        edges += new Tuple3(head, modifier, tokens(modifier).dep._2)
+        edges += Tuple3(head, modifier, tokens(modifier).dep._2)
       else
         roots += modifier
       ()                                    // workaround for bug #10151
@@ -225,7 +224,7 @@ class CoNLLSRLReader {
     DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
   }
 
-  val KEEP_LABELS = Set("A0", "A1", "R-A0", "R-A1", "AM-TMP", "AM-MNR", "AM-LOC", "AM-MOD", "AM-ADV", "AM-NEG")
+  val KEEP_LABELS = Set("A0", "A1", "R-A0", "R-A1", "AM-TMP", "AM-LOC", "AM-MOD", "AM-NEG")
   val AX_LABELS = Set("A2", "A3", "A4", "A5")
 
   def simplifyLabel(label:String): Option[String] = {
@@ -252,7 +251,7 @@ class CoNLLSRLReader {
       case _ => 1
     }
     val frameBits =  bits.slice(14, bits.length)
-    new CoNLLToken(word, pos, lemma, new Tuple2(head, depLabel), isPred, frameBits)
+    new CoNLLToken(word, pos, lemma, Tuple2(head, depLabel), isPred, frameBits)
   }
 
   /**
@@ -354,6 +353,7 @@ object CoNLLSRLReader {
 
   val USE_CONLL_TOKENIZATION = false
   val SIMPLIFY_ARG_LABELS = true
+  val REMOVE_SELF_LOOPS = true // do not allow self arguments for predicates
 
   //val USE_GOLD_SYNTAX = true
 
@@ -371,6 +371,8 @@ object CoNLLSRLReader {
 
   def saveSimplified(doc: Document, outputFileName: String): Unit = {
     val pw = new PrintWriter(outputFileName)
+    var selfLoopCount = 0
+
     for(sent <- doc.sentences) {
       val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
       val heads = new Array[Boolean](sent.words.length)
@@ -390,6 +392,13 @@ object CoNLLSRLReader {
 
       for(e <- g.edges) {
         args(headMap(e.source))(e.destination) = e.relation
+
+        if(REMOVE_SELF_LOOPS) {
+          if(e.source == e.destination) {
+            args(headMap(e.source))(e.destination) = "O"
+            selfLoopCount += 1
+          }
+        }
       }
 
       for(i <- sent.words.indices) {
@@ -403,6 +412,10 @@ object CoNLLSRLReader {
       pw.println()
     }
     pw.close()
+
+    if(REMOVE_SELF_LOOPS) {
+      logger.info(s"Removed $selfLoopCount self-argument loops.")
+    }
   }
 
   def labelStats(doc: Document): Unit = {
