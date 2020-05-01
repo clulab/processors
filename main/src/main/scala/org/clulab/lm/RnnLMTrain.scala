@@ -24,6 +24,8 @@ object RnnLMTrain {
     val charRnnStateSize = config.getArgInt("rnnlm.train.charRnnStateSize", Some(16))
     val wordRnnStateSize = config.getArgInt("rnnlm.train.wordRnnStateSize", Some(256))
     val posTagEmbeddingSize = config.getArgInt("rnnlm.train.posTagEmbeddingSize", Some(32))
+    val positionEmbeddingSize = config.getArgInt("rnnlm.train.positionEmbeddingSize", Some(16))
+    val positionWindowSize = config.getArgInt("rnnlm.train.positionWindowSize", Some(20))
 
     //
     // This stores all parameters in the RnnLM
@@ -63,6 +65,11 @@ object RnnLMTrain {
     val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(posTagEmbeddingSize))
 
     //
+    // Position embeddings [-20, 20] + < 20 + > 20. total = 43
+    //
+    val positionEmbeddings = parameters.addLookupParameters(positionWindowSize * 2 + 3, Dim(positionEmbeddingSize))
+
+    //
     // Convert the word embeddings we loaded above into DyNet LookupParameters
     //
     val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(w2v.dimensions))
@@ -76,7 +83,7 @@ object RnnLMTrain {
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + 1 + posTagEmbeddingSize // 1 for isPredFeature
+    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + 1 + posTagEmbeddingSize + positionEmbeddingSize // 1 for isPredFeature
     val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
     val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
 
@@ -92,9 +99,10 @@ object RnnLMTrain {
     //
     val lm = new RnnLM(w2i, c2i, pos2is,
       wordRnnStateSize, charRnnStateSize, lmLabelCount,
+      positionEmbeddingSize, positionWindowSize,
       parameters,
       wordLookupParameters, charLookupParameters,
-      posEmbeddings,
+      posEmbeddings, positionEmbeddings,
       charFwRnnBuilder, charBwRnnBuilder,
       fwBuilder, bwBuilder, fwO, bwO)
 

@@ -28,10 +28,13 @@ class RnnLM(val w2i:Map[String, Int],
             val wordRnnStateSize: Int,
             val charRnnStateSize: Int,
             val lmLabelCount: Int,
+            val positionEmbeddingSize: Int,
+            val positionWindowSize: Int,
             val parameters:ParameterCollection,
             val wordLookupParameters:LookupParameter,
             val charLookupParameters:LookupParameter,
             val posLookupParameters:LookupParameter,
+            val positionLookupParameters:LookupParameter,
             val charFwRnnBuilder:RnnBuilder,
             val charBwRnnBuilder:RnnBuilder,
             val wordFwRnnBuilder:RnnBuilder,
@@ -40,31 +43,41 @@ class RnnLM(val w2i:Map[String, Int],
             val bwO:Parameter) extends LM {
 
   /** Creates an overall word embedding by concatenating word and character embeddings */
-  def mkEmbedding(word: String, posTag:String, isPredFeature:Boolean):Expression = {
-    mkWordEmbedding(word, posTag, isPredFeature,
+  def mkEmbedding(word: String, posTag:String, wordPosition: Int, predicatePosition: Int):Expression = {
+    mkWordEmbedding(word, posTag, wordPosition, predicatePosition,
       w2i, wordLookupParameters,
       c2i, charLookupParameters,
       p2i, posLookupParameters,
+      positionLookupParameters,
       charFwRnnBuilder, charBwRnnBuilder)
   }
 
   def mkWordEmbedding(word: String,
                       posTag: String,
-                      isPredFeature: Boolean,
+                      wordPosition: Int,
+                      predicatePosition: Int,
                       w2i:Map[String, Int],
                       wordLookupParameters:LookupParameter,
                       c2i:Map[Char, Int],
                       charLookupParameters:LookupParameter,
                       p2i:Map[String, Int],
                       posLookupParameters: LookupParameter,
+                      positionLookupParameters: LookupParameter,
                       charFwRnnBuilder:RnnBuilder,
                       charBwRnnBuilder:RnnBuilder):Expression = {
     val sanitized = word
 
-    val predEmbed = Expression.input(if(isPredFeature) 1f else 0f)
+    val predEmbed = Expression.input(if(wordPosition == predicatePosition) 1f else 0f)
 
-    // TODO: add POS tag
+    // POS tag embedding
     val posTagEmbed = Expression.lookup(posLookupParameters, p2i.getOrElse(posTag, 0))
+
+    // Position embedding
+    var dist = wordPosition - predicatePosition
+    if (dist < - positionWindowSize) dist = - positionWindowSize - 1
+    if(dist > positionWindowSize) dist = positionWindowSize + 1
+    val posIndex = dist + positionWindowSize + 1
+    val positionEmbedding = Expression.lookup(positionLookupParameters, posIndex)
 
     // TODO: make constLookup
     val wordEmbedding = Expression.lookup(wordLookupParameters, w2i.getOrElse(sanitized, 0))
@@ -75,7 +88,7 @@ class RnnLM(val w2i:Map[String, Int],
     val charEmbedding =
       LstmUtils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
 
-    concatenate(wordEmbedding, charEmbedding, predEmbed, posTagEmbed)
+    concatenate(wordEmbedding, charEmbedding, predEmbed, posTagEmbed, positionEmbedding)
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
@@ -92,6 +105,8 @@ class RnnLM(val w2i:Map[String, Int],
     LstmUtils.save(printWriter, wordRnnStateSize, "wordRnnStateSize")
     LstmUtils.save(printWriter, charRnnStateSize, "charRnnStateSize")
     LstmUtils.save(printWriter, lmLabelCount, "lmLabelCount")
+    LstmUtils.save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
+    LstmUtils.save(printWriter, positionWindowSize, "positionWindowSize")
   }
 
   def save(baseModelName: String): Unit = {
@@ -129,7 +144,7 @@ class RnnLM(val w2i:Map[String, Int],
     setRnnDropout(wordBwRnnBuilder, doDropout)
 
     val embeddings = (words, posTags.get, words.toArray.indices).zipped.toList.map(t =>
-      mkEmbedding(t._1, t._2, if(predPosition.isDefined && predPosition.get == t._3) true else false)
+      mkEmbedding(t._1, t._2, t._3, predPosition.get)
     )
 
     val fwEmbeddings = embeddings.toArray
@@ -249,7 +264,7 @@ class RnnLM(val w2i:Map[String, Int],
     setRnnDropout(rnnBuilder, doDropout)
 
     val embeddings = (words, posTags.get, words.indices).zipped.toList.map(t =>
-        mkEmbedding(t._1, t._2, if(predPosition.isDefined && predPosition.get == t._3) true else false)
+        mkEmbedding(t._1, t._2, t._3, predPosition.get)
     )
 
     val states = LstmUtils.transduce(embeddings, rnnBuilder)
@@ -409,6 +424,8 @@ object RnnLM {
     val wordRnnStateSize = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
     val charRnnStateSize = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
     val lmLabelCount = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
+    val positionEmbeddingSize = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
+    val positionWindowSize = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
 
     logger.debug(s"\tLoaded a character map with ${c2i.keySet.size} entries.")
     logger.debug(s"\tLoaded a word map with ${w2i.keySet.size} entries.")
@@ -424,6 +441,8 @@ object RnnLM {
     // make the loadable parameters
     //
     val posLookupParameters = parameters.addLookupParameters(p2i.size, Dim(posEmbedDim))
+
+    val positionEmbeddings = parameters.addLookupParameters(positionWindowSize * 2 + 3, Dim(positionEmbeddingSize))
 
     val lookupParameters = parameters.addLookupParameters(w2i.size, Dim(wordEmbedDim))
 
@@ -449,8 +468,10 @@ object RnnLM {
 
     val model = new RnnLM(
       w2i, c2i, p2i,
-      wordRnnStateSize, charRnnStateSize, lmLabelCount, parameters,
-      lookupParameters, charLookupParameters, posLookupParameters,
+      wordRnnStateSize, charRnnStateSize, lmLabelCount,
+      positionEmbeddingSize, positionWindowSize,
+      parameters,
+      lookupParameters, charLookupParameters, posLookupParameters, positionEmbeddings,
       charFwRnnBuilder, charBwRnnBuilder,
       fwBuilder, bwBuilder, fwO, bwO
     )
