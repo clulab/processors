@@ -138,7 +138,7 @@ class RnnLM(val w2i:Map[String, Int],
   override def mkEmbeddings(words: Iterable[String],
                             posTags: Option[Iterable[String]],
                             predPosition:Option[Int],
-                            doDropout:Boolean): Iterable[Expression] = {
+                            doDropout:Boolean): (Iterable[Expression], Iterable[Expression]) = {
     setCharRnnDropout(doDropout)
     setRnnDropout(wordFwRnnBuilder, doDropout)
     setRnnDropout(wordBwRnnBuilder, doDropout)
@@ -158,10 +158,18 @@ class RnnLM(val w2i:Map[String, Int],
       states += Expression.concatenate(fwStates(i), bwStates(i))
     }
 
-    states
+    (states, embeddings)
   }
 
   override def dimensions: Int = wordRnnStateSize * 2
+
+  override def wordDimensions: Int = {
+    (wordLookupParameters.dim().get(0) + // word embedding
+     1 + // isPred feature
+     2 * charRnnStateSize + // character embedding
+     positionLookupParameters.dim().get(0) + // relative position embedding
+     posLookupParameters.dim().get(0)).toInt // POS tag embedding
+  }
 
   /**
    * Pretrain this LM for next word prediction, in both directions

@@ -336,23 +336,35 @@ object LstmUtils {
       }
     }
 
-    def precision(label: String = "*"): Double = {
+    def precision(label: String = "*", decimals: Int = 2): Double = {
       val c = map(label).correct
       val p = map(label).predicted
-      if(p != 0) c.toDouble / p else 0d
+      round(if(p != 0) c.toDouble / p else 0d, decimals)
     }
 
-    def recall(label: String = "*"): Double = {
+    def recall(label: String = "*", decimals: Int = 2): Double = {
       val c = map(label).correct
       val g = map(label).gold
-      if(g != 0) c.toDouble / g else 0d
+      round(if(g != 0) c.toDouble / g else 0d, decimals)
     }
 
-    def f1(label: String = "*"): Double = {
+    def f1(label: String = "*", decimals: Int = 2): Double = {
       val p = precision(label)
       val r = recall(label)
 
-      if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d
+      round(if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d, decimals)
+    }
+
+    def round(d: Double, decimals: Int): Double = {
+      var zeros = 1
+      var i = 0
+      while(i < decimals) {
+        zeros *= 10
+        i += 1
+      }
+
+      val v = (d * zeros).toInt.toDouble / 100
+      v
     }
   }
 

@@ -10,7 +10,6 @@ import org.clulab.fatdynet.utils.Closer.AutoCloser
 import org.clulab.sequences.LstmCrfMtl._
 import org.clulab.sequences.LstmUtils._
 import org.clulab.lm.{FlairLM, LM, RnnLM}
-import org.clulab.sequences
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -351,7 +350,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     logger.info(s"Recall on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
     logger.info(s"Micro F1 on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
     for(label <- scoreCountsByLabel.labels) {
-      logger.info(s"\tF1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.f1(label)}")
+      logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
     }
 
     (acc, scoreCountsByLabel.precision(), scoreCountsByLabel.recall())
@@ -449,7 +448,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
                                   tagsOpt: Option[Array[String]],
                                   predPositionOpt: Option[Int],
                                   doDropout:Boolean): ExpressionVector = {
-    val states = model.lm.mkEmbeddings(words, Some(tagsOpt.get.toIterable), predPositionOpt, doDropout).toArray // TODO: fix the toIterable
+    val (statesIter, embeddingsIter) = model.lm.mkEmbeddings(words, Some(tagsOpt.get.toIterable), predPositionOpt, doDropout) // TODO: fix the toIterable
+    val states = statesIter.toArray
+    val embeddings = embeddingsIter.toArray
+    assert(states.length == embeddings.length)
 
     // this is the feed forward network that is specific to each task
     val H = parameter(model.Hs(taskId))
@@ -460,9 +462,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     //println(s"pred at position ${predPositionOpt.get} = ${words(predPositionOpt.get)}/${tags(predPositionOpt.get)}")
 
     val emissionScores = new ExpressionVector()
+    val predPosition = predPositionOpt.get
     for(i <- states.indices) {
       // TODO: add new features here!
-      val predPos = predPositionOpt.get
+      /*
       var dist = i - predPos
       if (dist < -20) dist = -21
       if(dist > 20) dist = 21
@@ -475,7 +478,9 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       val posEmbed = lookup(model.positionEmbeddings, posIndex)
       val predPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(predPos), 0))
       val argPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(i), 0))
-      val ss = Expression.concatenate(states(predPos), states(i), posEmbed, predPosEmbed, argPosEmbed)
+      */
+      //val ss = Expression.concatenate(states(predPos), states(i), posEmbed, predPosEmbed, argPosEmbed)
+      val ss = Expression.concatenate(states(predPosition), states(i), embeddings(predPosition), embeddings(i))
       var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
@@ -492,7 +497,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @return The scores for all tasks
    */
   def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
-    val states = model.lm.mkEmbeddings(words, None, None, doDropout).toArray // TODO: fix me! Add predicate position + POS tags
+    val (statesIter, embeddingsIter) = model.lm.mkEmbeddings(words, None, None, doDropout) // TODO: fix me! Add predicate position + POS tags
+    val states = statesIter.toArray
+    val embeddings = embeddingsIter.toArray
+    assert(states.length == embeddings.length)
 
     val emissionScoresAllTasks = new Array[ExpressionVector](model.taskCount)
 
@@ -651,7 +659,7 @@ object LstmCrfMtlParameters {
     val Ts = new Array[LookupParameter](taskCount)
     for(tid <- 0.until(taskCount)) {
       //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
-      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + 64 + 2 * 32))
+      Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + lm.wordDimensions * 2)) // 64 + 2 * 32))
       i2ts(tid) = fromIndexToString(t2is(tid))
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
