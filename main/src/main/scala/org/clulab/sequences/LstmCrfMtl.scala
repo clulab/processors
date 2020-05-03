@@ -480,7 +480,16 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       val argPosEmbed = lookup(model.posEmbeddings, model.pos2is.getOrElse(tags(i), 0))
       */
       //val ss = Expression.concatenate(states(predPos), states(i), posEmbed, predPosEmbed, argPosEmbed)
-      val ss = Expression.concatenate(states(predPosition), states(i), embeddings(predPosition), embeddings(i))
+
+      var ep = embeddings(predPosition)
+      var ea = embeddings(i)
+
+      if(doDropout) {
+        ep = Expression.dropout(ep, DROPOUT_PROB)
+        ea = Expression.dropout(ea, DROPOUT_PROB)
+      }
+
+      val ss = Expression.concatenate(states(predPosition), states(i), ep, ea)
       var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)

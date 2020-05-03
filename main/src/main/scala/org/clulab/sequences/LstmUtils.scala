@@ -339,20 +339,20 @@ object LstmUtils {
     def precision(label: String = "*", decimals: Int = 2): Double = {
       val c = map(label).correct
       val p = map(label).predicted
-      round(if(p != 0) c.toDouble / p else 0d, decimals)
+      round(if(p != 0) c.toDouble / p else 0d, decimals + 2)
     }
 
     def recall(label: String = "*", decimals: Int = 2): Double = {
       val c = map(label).correct
       val g = map(label).gold
-      round(if(g != 0) c.toDouble / g else 0d, decimals)
+      round(if(g != 0) c.toDouble / g else 0d, decimals + 2)
     }
 
     def f1(label: String = "*", decimals: Int = 2): Double = {
       val p = precision(label)
       val r = recall(label)
 
-      round(if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d, decimals)
+      round(if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d, decimals + 2)
     }
 
     def round(d: Double, decimals: Int): Double = {
