@@ -352,7 +352,7 @@ object LstmUtils {
       val p = precision(label)
       val r = recall(label)
 
-      round(if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d, decimals + 2)
+      if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d
     }
 
     def round(d: Double, decimals: Int): Double = {

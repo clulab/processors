@@ -59,6 +59,11 @@ object RnnLMTrain {
     val w2i = LstmUtils.mkWordVocab(w2v)
 
     //
+    // Construct the vocab from the words in the training dataset(s)
+    //
+    //TODO
+
+    //
     // POS tag embeddings
     //
     val pos2is = LstmUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")

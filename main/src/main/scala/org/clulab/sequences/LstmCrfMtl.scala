@@ -100,6 +100,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     val rand = new Random(RANDOM_SEED)
 
     var maxAvgAcc = 0.0
+    var maxAvgF1 = 0.0
     var bestEpoch = 0
 
     for (epoch <- 0 until taskManager.totalEpochs) {
@@ -205,33 +206,37 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       var totalAcc = 0.0
       var totalPrec = 0.0
       var totalRec = 0.0
+      var totalF1 = 0.0
       for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val devSentences = taskManager.tasks(taskId).devSentences
         if(devSentences.nonEmpty) {
-          val (acc, prec, rec) = evaluate(taskId, taskName, devSentences.get, epoch)
+          val (acc, prec, rec, f1) = evaluate(taskId, taskName, devSentences.get, epoch)
           totalAcc += acc
           totalPrec += prec
           totalRec += rec
+          totalF1 += f1
         }
       }
       val avgAcc = totalAcc / taskManager.taskCount
       val avgPrec = totalPrec / taskManager.taskCount
       val avgRec = totalRec / taskManager.taskCount
+      val avgF1 = totalF1 / taskManager.taskCount
       logger.info(s"Average accuracy across ${taskManager.taskCount} tasks: $avgAcc")
-      logger.info(s"Average precision across ${taskManager.taskCount} tasks: $avgPrec")
-      logger.info(s"Average recall across ${taskManager.taskCount} tasks: $avgRec")
+      logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks: $avgPrec / $avgRec / $avgF1")
 
-      if(avgAcc > maxAvgAcc) {
+      if(avgAcc > maxAvgF1) {
+        maxAvgF1 = avgF1
         maxAvgAcc = avgAcc
         bestEpoch = epoch
       }
+      logger.info(s"Best epoch so far is epoch $bestEpoch with an average F1 of $maxAvgF1, and average accuracy of $maxAvgAcc.")
 
       // save model after each epoch
       save(s"$modelNamePrefix-epoch$epoch")
     }
 
-    logger.info(s"The best epoch was epoch $bestEpoch with an average accuracy of $maxAvgAcc.")
+    logger.info(s"The best epoch was epoch $bestEpoch with an average F1 of $maxAvgF1, and average accuracy of $maxAvgAcc.")
   }
 
   def uniqueWords():Unit = {
@@ -269,16 +274,16 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): (Double, Double, Double) = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): (Double, Double, Double, Double) = {
     evaluate(taskId, taskName, sentences, "development", epoch)
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): (Double, Double, Double) = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): (Double, Double, Double, Double) = {
     evaluate(taskId, taskName, sentences, "testing", -1)
   }
 
   /** Logs accuracy score on devSentences; also saves the output in the file dev.output.<EPOCH> */
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): (Double, Double, Double) = {
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], name:String, epoch:Int): (Double, Double, Double, Double) = {
     var total = 0
     var correct = 0
     val scoreCountsByLabel = new ScoreCountsByLabel
@@ -353,7 +358,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
     }
 
-    (acc, scoreCountsByLabel.precision(), scoreCountsByLabel.recall())
+    (acc, scoreCountsByLabel.precision(), scoreCountsByLabel.recall(), scoreCountsByLabel.f1())
   }
 
   /**
