@@ -3,8 +3,11 @@ package org.clulab.lm
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{Dim, LstmBuilder, ParameterCollection}
 import org.clulab.sequences.LstmUtils
+import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.io.Source
 
 /**
  * Constructs the RnnLM model
@@ -61,7 +64,9 @@ object RnnLMTrain {
     //
     // Construct the vocab from the words in the training dataset(s)
     //
-    //TODO
+    val tw2i = mkTrainWordVocab(config.getArgString("rnnlm.train.taskTrainCorpus", None), minMandatoryFreq)
+    val trainWordEmbeddingSize = config.getArgInt("rnnlm.train.trainWordEmbeddingSize", Some(32))
+    val trainWordLookupParameters = parameters.addLookupParameters(tw2i.size, Dim(trainWordEmbeddingSize))
 
     //
     // POS tag embeddings
@@ -88,7 +93,7 @@ object RnnLMTrain {
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + 1 + posTagEmbeddingSize + positionEmbeddingSize // 1 for isPredFeature
+    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + trainWordEmbeddingSize + 1 + posTagEmbeddingSize + positionEmbeddingSize // 1 for isPredFeature
     val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
     val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
 
@@ -102,11 +107,11 @@ object RnnLMTrain {
     //
     // Create the LM object
     //
-    val lm = new RnnLM(w2i, c2i, pos2is,
+    val lm = new RnnLM(w2i, tw2i, c2i, pos2is,
       wordRnnStateSize, charRnnStateSize, lmLabelCount,
       positionEmbeddingSize, positionWindowSize,
       parameters,
-      wordLookupParameters, charLookupParameters,
+      wordLookupParameters, trainWordLookupParameters, charLookupParameters,
       posEmbeddings, positionEmbeddings,
       charFwRnnBuilder, charBwRnnBuilder,
       fwBuilder, bwBuilder, fwO, bwO)
@@ -133,6 +138,25 @@ object RnnLMTrain {
     lm.save(outModelFile)
 
     logger.info("Done.")
+  }
+
+  def mkTrainWordVocab(trainWords: String, minFreq: Int): Map[String, Int] = {
+    val source = Source.fromFile(trainWords)
+    val counts = new Counter[String]()
+    for(line <- source.getLines()) {
+      val tokens = line.split("\\s+")
+      if(tokens.length > 0) {
+        // the words are in the first column
+        val word = tokens(0)
+        counts += word
+      }
+    }
+    source.close()
+
+    val uniqueWordsOverFreq = counts.sorted(true).filter(_._2 > minFreq).map(_._1).toSet.toList
+    val uniquesWithUnknown = List(LstmUtils.UNK_WORD) ++ uniqueWordsOverFreq // UNK must be at position 0
+    uniquesWithUnknown.zipWithIndex.toMap
+
   }
 }
 
