@@ -225,7 +225,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       logger.info(s"Average accuracy across ${taskManager.taskCount} tasks: $avgAcc")
       logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks: $avgPrec / $avgRec / $avgF1")
 
-      if(avgAcc > maxAvgF1) {
+      if(avgF1 > maxAvgF1) {
         maxAvgF1 = avgF1
         maxAvgAcc = avgAcc
         bestEpoch = epoch
