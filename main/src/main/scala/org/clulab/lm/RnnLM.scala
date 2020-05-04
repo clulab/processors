@@ -172,7 +172,7 @@ class RnnLM(val w2i:Map[String, Int],
 
   override def wordDimensions: Int = {
     (wordLookupParameters.dim().get(0) + // word embedding
-     trainWordLookupParameters.dim().get(0) + // train word embedding
+     // trainWordLookupParameters.dim().get(0) + // train word embedding
      1 + // isPred feature
      2 * charRnnStateSize + // character embedding
      positionLookupParameters.dim().get(0) + // relative position embedding
