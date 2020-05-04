@@ -352,19 +352,7 @@ object LstmUtils {
       val p = precision(label)
       val r = recall(label)
 
-      if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d
-    }
-
-    def round(d: Double, decimals: Int): Double = {
-      var zeros = 1
-      var i = 0
-      while(i < decimals) {
-        zeros *= 10
-        i += 1
-      }
-
-      val v = (d * zeros).toInt.toDouble / 100
-      v
+      round(if(p != 0 && r != 0) 2.0 * p * r / (p + r) else 0d, decimals)
     }
   }
 
@@ -386,6 +374,18 @@ object LstmUtils {
       }
     }
     scoreCountsByLabel
+  }
+
+  def round(d: Double, decimals: Int): Double = {
+    var zeros = 1
+    var i = 0
+    while(i < decimals) {
+      zeros *= 10
+      i += 1
+    }
+
+    val v = (d * zeros).toInt.toDouble / 100
+    v
   }
 
   /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores */

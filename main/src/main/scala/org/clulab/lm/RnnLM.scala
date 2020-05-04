@@ -91,7 +91,8 @@ class RnnLM(val w2i:Map[String, Int],
     val charEmbedding =
       LstmUtils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
 
-    concatenate(wordEmbedding, trainWordEmbedding, charEmbedding, predEmbed, posTagEmbed, positionEmbedding)
+    concatenate(wordEmbedding, // trainWordEmbedding,
+      charEmbedding, predEmbed, posTagEmbed, positionEmbedding)
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {

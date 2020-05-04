@@ -348,7 +348,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     pw.close()
-    val acc = correct.toDouble / total
+    val acc = LstmUtils.round(correct.toDouble / total, decimals = 4)
     logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): $acc")
 
     logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
