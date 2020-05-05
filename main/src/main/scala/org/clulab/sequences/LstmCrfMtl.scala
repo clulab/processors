@@ -489,10 +489,13 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       var ep = embeddings(predPosition)
       var ea = embeddings(i)
 
+      // no longer needed; dropout happens in the LM
+      /*
       if(doDropout) {
         ep = Expression.dropout(ep, DROPOUT_PROB)
         ea = Expression.dropout(ea, DROPOUT_PROB)
       }
+      */
 
       val ss = Expression.concatenate(states(predPosition), states(i), ep, ea)
       var l1 = H * ss

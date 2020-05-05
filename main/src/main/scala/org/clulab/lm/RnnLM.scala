@@ -150,9 +150,13 @@ class RnnLM(val w2i:Map[String, Int],
     setRnnDropout(wordFwRnnBuilder, doDropout)
     setRnnDropout(wordBwRnnBuilder, doDropout)
 
-    val embeddings = (words, posTags.get, words.toArray.indices).zipped.toList.map(t =>
+    var embeddings = (words, posTags.get, words.toArray.indices).zipped.toList.map(t =>
       mkEmbedding(t._1, t._2, t._3, predPosition.get)
     )
+
+    if(doDropout) {
+      embeddings = embeddings.map(e => Expression.dropout(e, DROPOUT_PROB))
+    }
 
     val fwEmbeddings = embeddings.toArray
     val fwStates = LstmUtils.transduce(fwEmbeddings, wordFwRnnBuilder).toArray
