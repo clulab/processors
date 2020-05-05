@@ -172,7 +172,7 @@ class RnnLM(val w2i:Map[String, Int],
 
   override def wordDimensions: Int = {
     (wordLookupParameters.dim().get(0) + // word embedding
-     // trainWordLookupParameters.dim().get(0) + // train word embedding
+     trainWordLookupParameters.dim().get(0) + // train word embedding
      1 + // isPred feature
      2 * charRnnStateSize + // character embedding
      positionLookupParameters.dim().get(0) + // relative position embedding
@@ -472,7 +472,7 @@ object RnnLM {
     val charFwRnnBuilder = new LstmBuilder(1, charEmbedDim, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbedDim, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * charRnnStateSize + wordEmbedDim + // trainWordEmbedDim +
+    val embeddingSize = 2 * charRnnStateSize + wordEmbedDim + trainWordEmbedDim +
       1 + posEmbedDim + positionEmbeddingSize // 1 for the isPredFeature
     val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
     val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
