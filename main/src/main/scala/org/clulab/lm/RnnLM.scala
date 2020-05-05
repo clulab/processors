@@ -74,23 +74,27 @@ class RnnLM(val w2i:Map[String, Int],
     // POS tag embedding
     val posTagEmbed = Expression.lookup(posLookupParameters, p2i.getOrElse(posTag, 0))
 
-    // Position embedding
+    // Position embedding, relative to the position of the predicate
+    // We cut the distance down to values inside the window [-positionWindowSize, +positionWindowSize]
     var dist = wordPosition - predicatePosition
     if (dist < - positionWindowSize) dist = - positionWindowSize - 1
     if(dist > positionWindowSize) dist = positionWindowSize + 1
     val posIndex = dist + positionWindowSize + 1
     val positionEmbedding = Expression.lookup(positionLookupParameters, posIndex)
 
-    // TODO: make constLookup - DONE
+    // GloVe embeddings
+    // These are static; we do not update them during backprop
     val wordEmbedding = Expression.constLookup(wordLookupParameters, w2i.getOrElse(sanitized, 0))
 
-    // TODO: add learned word embedding of dimension 32 - DONE
+    // Learned word embeddings
+    // These are initialized randomly, and updated during backprop
     val trainWordEmbedding = Expression.lookup(trainWordLookupParameters, tw2i.getOrElse(sanitized, 0))
 
     // biLSTM over character embeddings
     val charEmbedding =
       LstmUtils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
 
+    // The final word embedding is a concatenation of all these
     concatenate(wordEmbedding, trainWordEmbedding,
       charEmbedding, predEmbed, posTagEmbed, positionEmbedding)
   }
@@ -150,25 +154,30 @@ class RnnLM(val w2i:Map[String, Int],
     setRnnDropout(wordFwRnnBuilder, doDropout)
     setRnnDropout(wordBwRnnBuilder, doDropout)
 
+    // gather the word embeddings
     var embeddings = (words, posTags.get, words.toArray.indices).zipped.toList.map(t =>
       mkEmbedding(t._1, t._2, t._3, predPosition.get)
     )
 
+    // apply dropout on the word embeddings
     if(doDropout) {
       embeddings = embeddings.map(e => Expression.dropout(e, DROPOUT_PROB))
     }
 
+    // word-level biLSTM
     val fwEmbeddings = embeddings.toArray
     val fwStates = LstmUtils.transduce(fwEmbeddings, wordFwRnnBuilder).toArray
     val bwEmbeddings = fwEmbeddings.reverse
     val bwStates = LstmUtils.transduce(bwEmbeddings, wordBwRnnBuilder).toArray.reverse
     assert(fwStates.length == bwStates.length)
 
+    // the word state concatenates the fwd and bwd LSTM hidden states
     val states = new ArrayBuffer[Expression]()
     for(i <- fwStates.indices) {
       states += Expression.concatenate(fwStates(i), bwStates(i))
     }
 
+    // return the word embeddings as well, for highway connections
     (states, embeddings)
   }
 

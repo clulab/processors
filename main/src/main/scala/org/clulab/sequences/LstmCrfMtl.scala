@@ -497,6 +497,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       }
       */
 
+      // highway connections: concatenate the RNN hidden states with the word embeddings
       val ss = Expression.concatenate(states(predPosition), states(i), ep, ea)
       var l1 = H * ss
       if(doDropout) {
