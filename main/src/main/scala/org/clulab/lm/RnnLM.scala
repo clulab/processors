@@ -17,6 +17,8 @@ import edu.cmu.dynet.Expression.concatenate
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
+import scala.util.Random
+
 
 /**
  * Implements a RnnLM inspired by Lample et al. (2016) and ULMFit
@@ -24,6 +26,7 @@ import org.clulab.fatdynet.utils.Closer.AutoCloser
  */
 class RnnLM(val w2i:Map[String, Int],
             val tw2i:Map[String, Int],
+            val tw2f:Counter[String],
             val c2i:Map[Char, Int],
             val p2i:Map[String, Int],
             val wordRnnStateSize: Int,
@@ -88,7 +91,9 @@ class RnnLM(val w2i:Map[String, Int],
 
     // Learned word embeddings
     // These are initialized randomly, and updated during backprop
-    val trainWordEmbedding = Expression.lookup(trainWordLookupParameters, tw2i.getOrElse(sanitized, 0))
+    var id = tw2i.getOrElse(sanitized, 0)
+    if(id > 0 && tw2f.getCount(sanitized) == 1 && RANDOM.nextDouble() < 0.5) id = 0 // sample uniformly with prob 0.5 from singletons
+    val trainWordEmbedding = Expression.lookup(trainWordLookupParameters, id)
 
     // biLSTM over character embeddings
     val charEmbedding =
@@ -107,7 +112,8 @@ class RnnLM(val w2i:Map[String, Int],
 
     LstmUtils.saveCharMap(printWriter, c2i, "c2i")
     LstmUtils.save(printWriter, w2i, "w2i")
-    LstmUtils.save(printWriter, tw2i, "w2i")
+    LstmUtils.save(printWriter, tw2i, "tw2i")
+    LstmUtils.save(printWriter, tw2f, comment = "tw2f")
     LstmUtils.save(printWriter, p2i, "p2i")
     LstmUtils.save(printWriter, wordEmbedDim, "wordEmbedDim")
     LstmUtils.save(printWriter, trainWordEmbedDim, "trainWordEmbedDim")
@@ -405,6 +411,8 @@ class RnnLM(val w2i:Map[String, Int],
 object RnnLM {
   val logger:Logger = LoggerFactory.getLogger(classOf[RnnLM])
 
+  val RANDOM = new Random(LstmUtils.RANDOM_SEED)
+
   val DROPOUT_PROB = 0.2f
 
   /** Loads the LM inside a task specific model, *before* training the task */
@@ -438,10 +446,12 @@ object RnnLM {
     // load the x2i info
     //
     val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
+    val byLineCounterBuilder = new LstmUtils.ByLineStringCounterBuilder()
     val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
     val c2i = byLineCharMapBuilder.build(x2iIterator)
     val w2i = byLineStringMapBuilder.build(x2iIterator)
     val tw2i = byLineStringMapBuilder.build(x2iIterator)
+    val tw2f = byLineCounterBuilder.build(x2iIterator)
     val p2i = byLineStringMapBuilder.build(x2iIterator)
     val wordEmbedDim = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
     val trainWordEmbedDim = new LstmUtils.ByLineIntBuilder().build(x2iIterator)
@@ -498,7 +508,7 @@ object RnnLM {
     }
 
     val model = new RnnLM(
-      w2i, tw2i, c2i, p2i,
+      w2i, tw2i, tw2f, c2i, p2i,
       wordRnnStateSize, charRnnStateSize, lmLabelCount,
       positionEmbeddingSize, positionWindowSize,
       parameters,

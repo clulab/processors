@@ -64,8 +64,8 @@ object RnnLMTrain {
     //
     // Construct the vocab from the words in the training dataset(s)
     //
-    val tw2i = mkTrainWordVocab(config.getArgString("rnnlm.train.taskTrainCorpus", None), minMandatoryFreq)
-    val trainWordEmbeddingSize = config.getArgInt("rnnlm.train.trainWordEmbeddingSize", Some(32))
+    val (tw2i, tw2f) = mkTrainWordVocab(config.getArgString("rnnlm.train.taskTrainCorpus", None), minMandatoryFreq)
+    val trainWordEmbeddingSize = config.getArgInt("rnnlm.train.trainWordEmbeddingSize", Some(64))
     val trainWordLookupParameters = parameters.addLookupParameters(tw2i.size, Dim(trainWordEmbeddingSize))
 
     //
@@ -108,7 +108,7 @@ object RnnLMTrain {
     //
     // Create the LM object
     //
-    val lm = new RnnLM(w2i, tw2i, c2i, pos2is,
+    val lm = new RnnLM(w2i, tw2i, tw2f, c2i, pos2is,
       wordRnnStateSize, charRnnStateSize, lmLabelCount,
       positionEmbeddingSize, positionWindowSize,
       parameters,
@@ -141,7 +141,7 @@ object RnnLMTrain {
     logger.info("Done.")
   }
 
-  def mkTrainWordVocab(trainWords: String, minFreq: Int): Map[String, Int] = {
+  def mkTrainWordVocab(trainWords: String, minFreq: Int): (Map[String, Int], Counter[String]) = {
     val source = Source.fromFile(trainWords)
     val counts = new Counter[String]()
     for(line <- source.getLines()) {
@@ -154,9 +154,10 @@ object RnnLMTrain {
     }
     source.close()
 
-    val uniqueWordsOverFreq = counts.sorted(true).filter(_._2 > minFreq).map(_._1).toSet.toList
-    val uniquesWithUnknown = List(LstmUtils.UNK_WORD) ++ uniqueWordsOverFreq // UNK must be at position 0
-    uniquesWithUnknown.zipWithIndex.toMap
+    //val uniqueWordsOverFreq = counts.sorted(true).filter(_._2 > minFreq).map(_._1).toSet.toList
+    //val uniquesWithUnknown = List(LstmUtils.UNK_WORD) ++ uniqueWordsOverFreq // UNK must be at position 0
+    val uniquesWithUnknown = List(LstmUtils.UNK_WORD) ++ counts.keySet
+    (uniquesWithUnknown.zipWithIndex.toMap, counts)
 
   }
 }

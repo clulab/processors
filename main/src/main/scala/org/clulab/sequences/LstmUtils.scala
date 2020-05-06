@@ -7,7 +7,7 @@ import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.sequences
-import org.clulab.struct.MutableNumber
+import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -652,6 +652,17 @@ object LstmUtils {
     printWriter.println() // Separator
   }
 
+  def save[T <% Ordered[T]](printWriter: PrintWriter, values: Counter[T], comment: String): Unit = {
+    printWriter.println("# " + comment)
+    // Sort these so that the same file always results, even it this is slow.
+    val keys = values.keySet.toList.sorted
+    for(key <- keys) {
+      val value = values.getCount(key)
+      printWriter.println(s"$key\t$value")
+    }
+    printWriter.println() // Separator
+  }
+
   def saveCharMap(printWriter: PrintWriter, values: Map[Char, Int], comment: String): Unit = {
     printWriter.println("# " + comment)
     // Sort these so that the same file always results, even it this is slow.
@@ -719,6 +730,22 @@ object LstmUtils {
     }
   }
 
+  class ByLineCounterBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder[Counter[KeyType]] {
+
+    def addLine(counter: Counter[KeyType], line: String): Unit = {
+      val Array(key, value) = line.split('\t')
+
+      counter.setCount(converter(key), value.toDouble)
+    }
+
+    def build(lines: Iterator[String]): Counter[KeyType] = {
+      val counter: Counter[KeyType] = new Counter[KeyType]()
+
+      addLines(counter, lines)
+      counter
+    }
+  }
+
   protected def stringToString(string: String): String = string
 
   protected def stringToChar(string: String): Char = string.charAt(0)
@@ -726,6 +753,8 @@ object LstmUtils {
   protected def stringToCharInt(string: String): Char = string.toInt.toChar
 
   class ByLineStringMapBuilder extends ByLineMapBuilder(stringToString)
+
+  class ByLineStringCounterBuilder extends ByLineCounterBuilder(stringToString)
 
   class ByLineCharMapBuilder extends ByLineMapBuilder(stringToChar)
 
