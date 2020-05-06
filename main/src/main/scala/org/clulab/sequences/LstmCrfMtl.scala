@@ -489,19 +489,17 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       var ep = embeddings(predPosition)
       var ea = embeddings(i)
 
-      // no longer needed; dropout happens in the LM
-      /*
       if(doDropout) {
         ep = Expression.dropout(ep, DROPOUT_PROB)
         ea = Expression.dropout(ea, DROPOUT_PROB)
       }
-      */
 
       // highway connections: concatenate the RNN hidden states with the word embeddings
       val ss = Expression.concatenate(states(predPosition), states(i), ep, ea)
       var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
+        l1 = Expression.rectify(l1)
       }
       emissionScores.add(l1)
     }

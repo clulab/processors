@@ -159,11 +159,6 @@ class RnnLM(val w2i:Map[String, Int],
       mkEmbedding(t._1, t._2, t._3, predPosition.get)
     )
 
-    // apply dropout on the word embeddings
-    if(doDropout) {
-      embeddings = embeddings.map(e => Expression.dropout(e, DROPOUT_PROB))
-    }
-
     // word-level biLSTM
     val fwEmbeddings = embeddings.toArray
     val fwStates = LstmUtils.transduce(fwEmbeddings, wordFwRnnBuilder).toArray
