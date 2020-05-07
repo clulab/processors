@@ -499,7 +499,6 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       var l1 = H * ss
       if(doDropout) {
         l1 = Expression.dropout(l1, DROPOUT_PROB)
-        l1 = Expression.rectify(l1)
       }
       emissionScores.add(l1)
     }
