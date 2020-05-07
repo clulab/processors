@@ -55,16 +55,15 @@ object RnnLMTrain {
     val embedFilename = config.getArgString("rnnlm.train.embed", None)
     val docFreqFilename = config.getArgString("rnnlm.train.docFreq", None)
     val minFreq = config.getArgInt("rnnlm.train.minWordFreq", Some(100))
-    val minMandatoryFreq = config.getArgInt("rnnlm.train.minMandatoryWordFreq", Some(1))
     val w2v = LstmUtils.loadEmbeddings(
       Some(docFreqFilename), minFreq, embedFilename,
-      Some(config.getArgString("rnnlm.train.mandatoryWords", None)), minMandatoryFreq)
+      Some(config.getArgString("rnnlm.train.mandatoryWords", None)), 0)
     val w2i = LstmUtils.mkWordVocab(w2v)
 
     //
     // Construct the vocab from the words in the training dataset(s)
     //
-    val (tw2i, tw2f) = mkTrainWordVocab(config.getArgString("rnnlm.train.taskTrainCorpus", None), minMandatoryFreq)
+    val (tw2i, tw2f) = mkTrainWordVocab(config.getArgString("rnnlm.train.taskTrainCorpus", None))
     val trainWordEmbeddingSize = config.getArgInt("rnnlm.train.trainWordEmbeddingSize", Some(64))
     val trainWordLookupParameters = parameters.addLookupParameters(tw2i.size, Dim(trainWordEmbeddingSize))
 
@@ -141,7 +140,7 @@ object RnnLMTrain {
     logger.info("Done.")
   }
 
-  def mkTrainWordVocab(trainWords: String, minFreq: Int): (Map[String, Int], Counter[String]) = {
+  def mkTrainWordVocab(trainWords: String): (Map[String, Int], Counter[String]) = {
     val source = Source.fromFile(trainWords)
     val counts = new Counter[String]()
     for(line <- source.getLines()) {

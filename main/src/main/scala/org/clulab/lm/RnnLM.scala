@@ -92,7 +92,8 @@ class RnnLM(val w2i:Map[String, Int],
     // Learned word embeddings
     // These are initialized randomly, and updated during backprop
     var id = tw2i.getOrElse(sanitized, 0)
-    if(id > 0 && tw2f.getCount(sanitized) == 1 && RANDOM.nextDouble() < 0.5) id = 0 // sample uniformly with prob 0.5 from singletons
+    // sample uniformly with prob 0.5 from singletons; move all other singletons to UNK
+    if(id > 0 && tw2f.getCount(sanitized) == 1 && RANDOM.nextDouble() < 0.5) id = 0
     val trainWordEmbedding = Expression.lookup(trainWordLookupParameters, id)
 
     // biLSTM over character embeddings
