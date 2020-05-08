@@ -1,7 +1,5 @@
 package org.clulab.embeddings.word2vec
 
-import org.clulab.embeddings.word2vec.Word2Vec.isNumber
-
 object Word2VecUtils {
 
   /**

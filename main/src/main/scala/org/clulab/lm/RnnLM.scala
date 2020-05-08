@@ -48,29 +48,8 @@ class RnnLM(val w2i:Map[String, Int],
             val bwO:Parameter) extends LM {
 
   /** Creates an overall word embedding by concatenating word and character embeddings */
-  def mkEmbedding(word: String, posTag:String, wordPosition: Int, predicatePosition: Int):Expression = {
-    mkWordEmbedding(word, posTag, wordPosition, predicatePosition,
-      w2i, wordLookupParameters,
-      c2i, charLookupParameters,
-      p2i, posLookupParameters,
-      positionLookupParameters,
-      charFwRnnBuilder, charBwRnnBuilder)
-  }
-
-  def mkWordEmbedding(word: String,
-                      posTag: String,
-                      wordPosition: Int,
-                      predicatePosition: Int,
-                      w2i:Map[String, Int],
-                      wordLookupParameters:LookupParameter,
-                      c2i:Map[Char, Int],
-                      charLookupParameters:LookupParameter,
-                      p2i:Map[String, Int],
-                      posLookupParameters: LookupParameter,
-                      positionLookupParameters: LookupParameter,
-                      charFwRnnBuilder:RnnBuilder,
-                      charBwRnnBuilder:RnnBuilder):Expression = {
-    val sanitized = word
+  def mkEmbedding(word: String, posTag:String, wordPosition: Int, predicatePosition: Int, doDropout: Boolean):Expression = {
+  val sanitized = word // no changes for GloVe large
 
     val predEmbed = Expression.input(if(wordPosition == predicatePosition) 1f else 0f)
 
@@ -93,7 +72,7 @@ class RnnLM(val w2i:Map[String, Int],
     // These are initialized randomly, and updated during backprop
     var id = tw2i.getOrElse(sanitized, 0)
     // sample uniformly with prob 0.5 from singletons; move all other singletons to UNK
-    if(id > 0 && tw2f.getCount(sanitized) == 1 && RANDOM.nextDouble() < 0.5) id = 0
+    if(doDropout && id > 0 && tw2f.getCount(sanitized) == 1 && RANDOM.nextDouble() < 0.5) id = 0
     val trainWordEmbedding = Expression.lookup(trainWordLookupParameters, id)
 
     // biLSTM over character embeddings
@@ -163,7 +142,7 @@ class RnnLM(val w2i:Map[String, Int],
 
     // gather the word embeddings
     var embeddings = (words, posTags.get, words.toArray.indices).zipped.toList.map(t =>
-      mkEmbedding(t._1, t._2, t._3, predPosition.get)
+      mkEmbedding(t._1, t._2, t._3, predPosition.get, doDropout)
     )
 
     // word-level biLSTM
@@ -295,7 +274,7 @@ class RnnLM(val w2i:Map[String, Int],
     setRnnDropout(rnnBuilder, doDropout)
 
     val embeddings = (words, posTags.get, words.indices).zipped.toList.map(t =>
-        mkEmbedding(t._1, t._2, t._3, predPosition.get)
+        mkEmbedding(t._1, t._2, t._3, predPosition.get, doDropout)
     )
 
     val states = LstmUtils.transduce(embeddings, rnnBuilder)
