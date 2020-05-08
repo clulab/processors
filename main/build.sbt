@@ -24,7 +24,7 @@ libraryDependencies ++= {
     // for machine learning
     "de.bwaldvogel"            %  "liblinear"                 % "2.30",
     "tw.edu.ntu.csie"          %  "libsvm"                    % "3.23",
-    "org.clulab"              %%  "fatdynet"                  % "0.2.5", // "0-cuda.2.6-SNAPSHOT", // "0.2.5"
+    "org.clulab"              %%  "fatdynet"                  % "0-cuda.2.6-SNAPSHOT", // "0-cuda.2.6-SNAPSHOT", // "0.2.5"
 
     // NLP tools used by CluProcessor
     "org.antlr"                %  "antlr4-runtime"            % "4.6",   // for tokenization
@@ -39,7 +39,10 @@ libraryDependencies ++= {
     "org.scalatest"           %%  "scalatest"                 % "3.0.1"  % "test",
 
     // trained models for local ML models used in both main and corenlp
-    "org.clulab"               % "processors-models"          % "0.0.5"
+    "org.clulab"               % "processors-models"          % "0.0.5",
+
+    // word vectors
+    "org.clulab"               % "glove-840b-300d"          % "0.1.0"
   )
 
 }

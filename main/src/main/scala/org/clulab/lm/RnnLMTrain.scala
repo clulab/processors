@@ -18,6 +18,8 @@ import scala.io.Source
 object RnnLMTrain {
   val logger:Logger = LoggerFactory.getLogger(classOf[RnnLMTrain])
 
+  val WORD_EMBEDDING_SIZE = 300
+
   def main(args: Array[String]): Unit = {
     LstmUtils.initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
     val configName = "rnnlm-en"
@@ -51,6 +53,7 @@ object RnnLMTrain {
     //
     // Load the word embeddings
     //
+    /*
     logger.debug("Loading word embeddings...")
     val embedFilename = config.getArgString("rnnlm.train.embed", None)
     val docFreqFilename = config.getArgString("rnnlm.train.docFreq", None)
@@ -59,6 +62,7 @@ object RnnLMTrain {
       Some(docFreqFilename), minFreq, embedFilename,
       Some(config.getArgString("rnnlm.train.mandatoryWords", None)), 0)
     val w2i = LstmUtils.mkWordVocab(w2v)
+    */
 
     //
     // Construct the vocab from the words in the training dataset(s)
@@ -81,9 +85,11 @@ object RnnLMTrain {
     //
     // Convert the word embeddings we loaded above into DyNet LookupParameters
     //
+    /*
     val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(w2v.dimensions))
     LstmUtils.initializeEmbeddings(w2v, w2i, wordLookupParameters)
     logger.debug("Completed loading word embeddings.")
+    */
 
     //
     // Character embeddings and character biLSTM, initialized randomly
@@ -92,7 +98,7 @@ object RnnLMTrain {
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + trainWordEmbeddingSize +
+    val embeddingSize = 2 * charRnnStateSize + WORD_EMBEDDING_SIZE + trainWordEmbeddingSize +
       1 + posTagEmbeddingSize + positionEmbeddingSize // 1 for isPredFeature
     val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
     val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
@@ -107,11 +113,11 @@ object RnnLMTrain {
     //
     // Create the LM object
     //
-    val lm = new RnnLM(w2i, tw2i, tw2f, c2i, pos2is,
+    val lm = new RnnLM(tw2i, tw2f, c2i, pos2is,
       wordRnnStateSize, charRnnStateSize, lmLabelCount,
       positionEmbeddingSize, positionWindowSize,
       parameters,
-      wordLookupParameters, trainWordLookupParameters, charLookupParameters,
+      trainWordLookupParameters, charLookupParameters,
       posEmbeddings, positionEmbeddings,
       charFwRnnBuilder, charBwRnnBuilder,
       fwBuilder, bwBuilder, fwO, bwO)
