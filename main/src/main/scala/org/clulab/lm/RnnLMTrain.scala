@@ -1,7 +1,8 @@
 package org.clulab.lm
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{Dim, LstmBuilder, ParameterCollection}
+import edu.cmu.dynet.{Dim, FloatVector, LstmBuilder, ParameterCollection}
+import org.clulab.embeddings.word2vec.CompactWord2Vec
 import org.clulab.sequences.LstmUtils
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
@@ -17,6 +18,8 @@ import scala.io.Source
  */
 object RnnLMTrain {
   val logger:Logger = LoggerFactory.getLogger(classOf[RnnLMTrain])
+
+  val WORD_EMBED_SIZE = 300
 
   def main(args: Array[String]): Unit = {
     LstmUtils.initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
@@ -52,6 +55,9 @@ object RnnLMTrain {
     // Load the word embeddings
     //
     logger.debug("Loading word embeddings...")
+    val wordVectors = CompactWord2Vec("glove300dByFreq10.txt", resource = false, cached = false)
+    val w2i = wordVectors.keys.toList.sorted.zipWithIndex.toMap
+    /*
     val embedFilename = config.getArgString("rnnlm.train.embed", None)
     val docFreqFilename = config.getArgString("rnnlm.train.docFreq", None)
     val minFreq = config.getArgInt("rnnlm.train.minWordFreq", Some(100))
@@ -59,6 +65,7 @@ object RnnLMTrain {
       Some(docFreqFilename), minFreq, embedFilename,
       Some(config.getArgString("rnnlm.train.mandatoryWords", None)), 0)
     val w2i = LstmUtils.mkWordVocab(w2v)
+    */
 
     //
     // Construct the vocab from the words in the training dataset(s)
@@ -81,8 +88,11 @@ object RnnLMTrain {
     //
     // Convert the word embeddings we loaded above into DyNet LookupParameters
     //
-    val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(w2v.dimensions))
-    LstmUtils.initializeEmbeddings(w2v, w2i, wordLookupParameters)
+    val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(WORD_EMBED_SIZE))
+    //LstmUtils.initializeEmbeddings(w2v, w2i, wordLookupParameters)
+    for(word <- wordVectors.keys) {
+      wordLookupParameters.initialize(w2i(word), new FloatVector(wordVectors.get(word).get))
+    }
     logger.debug("Completed loading word embeddings.")
 
     //
@@ -92,7 +102,7 @@ object RnnLMTrain {
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 
-    val embeddingSize = 2 * charRnnStateSize + w2v.dimensions + trainWordEmbeddingSize +
+    val embeddingSize = 2 * charRnnStateSize + WORD_EMBED_SIZE + trainWordEmbeddingSize +
       1 + posTagEmbeddingSize + positionEmbeddingSize // 1 for isPredFeature
     val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
     val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
