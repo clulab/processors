@@ -112,15 +112,19 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
         val taskId = metaSentence._1
         val sentence = metaSentence._2
         sentCount += 1
+
+        println(s"SENTENCE: ${sentence.map(_.getWord).mkString(", ")}")
         ComputationGraph.renew()
+        println("\tafter renew")
 
         // forward pass + loss, different for each type of inference
+        var undefinedCount = 0
         var lossOpt =
           if(model.inferenceTypes(taskId) == TaskManager.GREEDY_INFERENCE) {
             // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
             val words = sentence.map(_.getWord)
             //println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
-            val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)
+            val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)._1
 
             // get the gold tags for this sentence
             val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
@@ -132,7 +136,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             // predict tag emission scores for one sentence and the current task, from the biLSTM hidden states
             val words = sentence.map(_.getWord)
             //println(s"TRAIN SENTENCE #$sentCount: ${words.mkString(" ")}")
-            val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)
+            val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)._1
 
             // get the gold tags for this sentence
             val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
@@ -147,6 +151,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             Some(sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds, model.t2is(taskId)))
           } else {
             val predPositions = sentence.map(_.getTag).zipWithIndex.filter(_._1 == "B-P")
+            println(s"\tFound ${predPositions.length} predicates at positions: ${predPositions.mkString(", ")}")
             //println(sentence.map(_.getWord).mkString(" "))
             //println(predPositions.mkString(" "))
 
@@ -155,21 +160,30 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
 
               for(j <- Row.ARG_START until sentence(0).length) {
                 val predPosition = predPositions(j - Row.ARG_START)
+                println(s"\tWorking on pred: ${predPosition}")
 
                 val words = sentence.map(_.getWord)
                 val pos = sentence.map(_.getPos)
 
                 // produce the hidden states from the LM
-                val emissionScores = emissionScoresAsExpressions(words, taskId, Some(pos), Some(predPosition._2), doDropout = DO_DROPOUT)
+                val (emissionScores, uc) = emissionScoresAsExpressions(words, taskId, Some(pos), Some(predPosition._2), doDropout = DO_DROPOUT)
+                println("\tAfter emission scores.")
+                undefinedCount = uc
 
                 // get the gold tags for this frame
                 val goldTagIds = toIds(sentence.map(_.tokens(j)), model.t2is(taskId))
 
                 // greedy loss for the sequence of arguments in this frame
                 allPredLoss.add(sentenceLossGreedy(emissionScores, goldTagIds))
+                println("\tloss computed")
               }
 
-              if(allPredLoss.length > 0) Some(Expression.sum(allPredLoss))
+              if(allPredLoss.length > 0) {
+                println("\t summing losses")
+                val l = Some(Expression.sum(allPredLoss))
+                println("\t sum done.")
+                l
+              }
               else None
             } else {
               None
@@ -184,11 +198,21 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
 
           // for stats
+          println("\tfwd pass...")
           cummulativeLoss += loss.value().toFloat
+
+          if(true) {
+            println(s"\tbackprop with $undefinedCount/${sentence.length}")
+          }
 
           // backprop
           ComputationGraph.backward(loss)
+          println("\tbackward done.")
           trainer.update(model.parameters)
+
+          if(true){ // undefinedCount > 0) {
+            println("\tdone!")
+          }
         }
 
         numTagged += sentence.length
@@ -373,10 +397,10 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       ComputationGraph.renew()
 
       if(taskManager.tasks(taskId).inference != TaskManager.SRL_INFERENCE) {
-        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, None, None, doDropout = false)) // these scores do not have softmax
+        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, None, None, doDropout = false)._1) // these scores do not have softmax
       } else {
         // SRL arguments need extra info, i.e., the position of the predicate
-        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, tagsOpt, predPosition, doDropout = false))
+        emissionScoresToArrays(emissionScoresAsExpressions(words, taskId, tagsOpt, predPosition, doDropout = false)._1)
       }
     }
 
@@ -452,8 +476,8 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
                                   taskId:Int,
                                   tagsOpt: Option[Array[String]],
                                   predPositionOpt: Option[Int],
-                                  doDropout:Boolean): ExpressionVector = {
-    val (statesIter, embeddingsIter) = model.lm.mkEmbeddings(words, Some(tagsOpt.get.toIterable), predPositionOpt, doDropout) // TODO: fix the toIterable
+                                  doDropout:Boolean): (ExpressionVector, Int) = {
+    val (statesIter, embeddingsIter, undefinedCount) = model.lm.mkEmbeddings(words, Some(tagsOpt.get.toIterable), predPositionOpt, doDropout) // TODO: fix the toIterable
     val states = statesIter.toArray
     val embeddings = embeddingsIter.toArray
     assert(states.length == embeddings.length)
@@ -503,7 +527,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       emissionScores.add(l1)
     }
 
-    emissionScores
+    (emissionScores, undefinedCount)
   }
 
   /**
@@ -512,7 +536,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
    * @return The scores for all tasks
    */
   def emissionScoresAsExpressionsAllTasks(words: Array[String], doDropout:Boolean): Array[ExpressionVector] = {
-    val (statesIter, embeddingsIter) = model.lm.mkEmbeddings(words, None, None, doDropout) // TODO: fix me! Add predicate position + POS tags
+    val (statesIter, embeddingsIter, undefinedCount) = model.lm.mkEmbeddings(words, None, None, doDropout) // TODO: fix me! Add predicate position + POS tags
     val states = statesIter.toArray
     val embeddings = embeddingsIter.toArray
     assert(states.length == embeddings.length)

@@ -46,10 +46,10 @@ class RnnLM(val tw2i:Map[String, Int],
             val fwO:Parameter,
             val bwO:Parameter) extends LM {
 
-  val wordVectors = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
+  lazy val wordVectors = CompactWord2Vec("glove300dByFreq10.txt", resource = false, cached = false) // "/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
 
   /** Creates an overall word embedding by concatenating word and character embeddings */
-  def mkEmbedding(word: String, posTag:String, wordPosition: Int, predicatePosition: Int, doDropout: Boolean):Expression = {
+  def mkEmbedding(word: String, posTag:String, wordPosition: Int, predicatePosition: Int, doDropout: Boolean):(Expression, Boolean) = {
   val sanitized = word // no changes for GloVe large
 
     val predEmbed = Expression.input(if(wordPosition == predicatePosition) 1f else 0f)
@@ -70,14 +70,21 @@ class RnnLM(val tw2i:Map[String, Int],
     // TODO: add word embeddings
     // val wordEmbedding = Expression.constLookup(wordLookupParameters, w2i.getOrElse(sanitized, 0))
     val vector = wordVectors.get(word)
+    var isDefined = true
+    //println(s"\tword = $word")
     val wordEmbedding =
       if(vector.isDefined) {
         //println(s"Vector for word [$word] is: ${vector.get.mkString(", ")}")
         RnnLM.arrayToExpression(vector.get)
       }
       else {
+        //println("\t\tis UNK")
         // logger.debug(s"""Did not find vector for word "$word".""")
-        RnnLM.arrayToExpression(RnnLM.UNK_VECTOR)
+        val vecEmpty = wordVectors.get("") // empty string for UNK
+        //arrayToExpression(RnnLM.UNK_VECTOR)
+        assert(vecEmpty.isDefined)
+        isDefined = false
+        RnnLM.arrayToExpression(vecEmpty.get)
       }
 
     // Learned word embeddings
@@ -92,8 +99,8 @@ class RnnLM(val tw2i:Map[String, Int],
       LstmUtils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
 
     // The final word embedding is a concatenation of all these
-    concatenate(wordEmbedding, trainWordEmbedding,
-      charEmbedding, predEmbed, posTagEmbed, positionEmbedding)
+    (concatenate(wordEmbedding, trainWordEmbedding,
+      charEmbedding, predEmbed, posTagEmbed, positionEmbedding), isDefined)
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
@@ -147,15 +154,19 @@ class RnnLM(val tw2i:Map[String, Int],
   override def mkEmbeddings(words: Iterable[String],
                             posTags: Option[Iterable[String]],
                             predPosition:Option[Int],
-                            doDropout:Boolean): (Iterable[Expression], Iterable[Expression]) = {
+                            doDropout:Boolean): (Iterable[Expression], Iterable[Expression], Int) = {
     setCharRnnDropout(doDropout)
     setRnnDropout(wordFwRnnBuilder, doDropout)
     setRnnDropout(wordBwRnnBuilder, doDropout)
 
     // gather the word embeddings
-    var embeddings = (words, posTags.get, words.toArray.indices).zipped.toList.map(t =>
-      mkEmbedding(t._1, t._2, t._3, predPosition.get, doDropout)
-    )
+    //println(s"Make embeddings for sentence: ${words.mkString(", ")}")
+    var undefinedCount = 0
+    val embeddings = (words, posTags.get, words.toArray.indices).zipped.toList.map(t => {
+      val ei = mkEmbedding(t._1, t._2, t._3, predPosition.get, doDropout)
+      if (!ei._2) undefinedCount += 1
+      ei._1
+    })
 
     // word-level biLSTM
     val fwEmbeddings = embeddings.toArray
@@ -171,7 +182,7 @@ class RnnLM(val tw2i:Map[String, Int],
     }
 
     // return the word embeddings as well, for highway connections
-    (states, embeddings)
+    (states, embeddings, undefinedCount)
   }
 
   override def dimensions: Int = wordRnnStateSize * 2
@@ -286,7 +297,7 @@ class RnnLM(val tw2i:Map[String, Int],
     setRnnDropout(rnnBuilder, doDropout)
 
     val embeddings = (words, posTags.get, words.indices).zipped.toList.map(t =>
-        mkEmbedding(t._1, t._2, t._3, predPosition.get, doDropout)
+        mkEmbedding(t._1, t._2, t._3, predPosition.get, doDropout)._1
     )
 
     val states = LstmUtils.transduce(embeddings, rnnBuilder)

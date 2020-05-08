@@ -21,7 +21,7 @@ class FlairLM ( val w2i: Map[String, Int],
                 val fwO: Parameter,
                 val bwO: Parameter) extends LM {
 
-  override def mkEmbeddings(words: Iterable[String], posTags: Option[Iterable[String]], predPosition: Option[Int], doDropout:Boolean): (Iterable[Expression], Iterable[Expression]) = {
+  override def mkEmbeddings(words: Iterable[String], posTags: Option[Iterable[String]], predPosition: Option[Int], doDropout:Boolean): (Iterable[Expression], Iterable[Expression], Int) = {
 
     if(doDropout) {
       charFwRnnBuilder.setDropout(FlairTrainer.DROPOUT_PROB)
@@ -60,7 +60,7 @@ class FlairLM ( val w2i: Map[String, Int],
     }
 
     assert(states.length == firstLastOffsets.length)
-    (states, states) // TODO: second param should be word embeddings before the LSTMs
+    (states, states, 0) // TODO: second param should be word embeddings before the LSTMs
   }
 
   def mkCharEmbedding(c:Char): Expression = {
