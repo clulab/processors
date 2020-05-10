@@ -100,8 +100,8 @@ object RnnLMTrain {
 
     val embeddingSize = 2 * charRnnStateSize + WORD_EMBED_SIZE + trainWordEmbeddingSize +
       1 + posTagEmbeddingSize + positionEmbeddingSize // 1 for isPredFeature
-    val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
-    val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
+    val fwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
+    val bwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
 
     //
     // Feed forward networks, used for LM prediction, only if training is enabled

@@ -464,8 +464,8 @@ object RnnLM {
 
     val embeddingSize = 2 * charRnnStateSize + RnnLMTrain.WORD_EMBED_SIZE + trainWordEmbedDim +
       1 + posEmbedDim + positionEmbeddingSize // 1 for the isPredFeature
-    val fwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
-    val bwBuilder = new LstmBuilder(4, embeddingSize, wordRnnStateSize, parameters)
+    val fwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
+    val bwBuilder = new LstmBuilder(1, embeddingSize, wordRnnStateSize, parameters)
 
     val fwO = parameters.addParameters(Dim(lmLabelCount, wordRnnStateSize))
     val bwO = parameters.addParameters(Dim(lmLabelCount, wordRnnStateSize))
