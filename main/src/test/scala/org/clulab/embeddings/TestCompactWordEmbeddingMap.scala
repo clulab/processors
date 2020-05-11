@@ -1,31 +1,31 @@
-package org.clulab.embeddings.word2vec
+package org.clulab.embeddings
 
 import org.clulab.utils.Sourcer
-
 import java.io.File
+
 import org.scalatest._
 
 
-class TestCompactWord2Vec extends FlatSpec with Matchers {
+class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
 
-  protected def matches(array1: CompactWord2Vec.ArrayType, array2: Array[Double], epsilon: Double): Boolean = {
+  protected def matches(array1: CompactWordEmbeddingMap.ArrayType, array2: Array[Double], epsilon: Double): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) < epsilon
     }
   }
 
-  protected def matches(array1: CompactWord2Vec.ArrayType, array2: CompactWord2Vec.ArrayType): Boolean = {
+  protected def matches(array1: CompactWordEmbeddingMap.ArrayType, array2: CompactWordEmbeddingMap.ArrayType): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) == 0
     }
   }
 
   val filename = "/test_vectors.txt"
-  val fullsizeText = new Word2Vec(Sourcer.sourceFromResource(filename), None, false)
-  val compactText = CompactWord2Vec(filename, resource = true, cached = false)
+  val fullsizeText = new WordEmbeddingMap(Sourcer.sourceFromResource(filename), None, false)
+  val compactText = CompactWordEmbeddingMap(filename, resource = true, cached = false)
   val tmpFile = File.createTempFile("test_vectors.", ".txt")
   compactText.save(tmpFile.getAbsolutePath())
-  val compactBin = CompactWord2Vec(tmpFile.getAbsolutePath(), resource = false, cached = true)
+  val compactBin = CompactWordEmbeddingMap(tmpFile.getAbsolutePath(), resource = false, cached = true)
   val epsilon = 0.000001
 
   behavior of "compactText version"

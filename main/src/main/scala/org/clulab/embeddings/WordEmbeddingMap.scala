@@ -1,41 +1,41 @@
-package org.clulab.embeddings.word2vec
+package org.clulab.embeddings
 
 import java.io._
-import java.nio.{ ByteBuffer, ByteOrder }
+import java.nio.{ByteBuffer, ByteOrder}
 
-import org.slf4j.LoggerFactory
+import org.apache.commons.io.{FileUtils, IOUtils}
 import org.clulab.utils.MathUtils
-import org.apache.commons.io.{ IOUtils, FileUtils }
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
- * Implements similarity metrics using the word2vec matrix
+ * Implements similarity metrics using the embedding matrix
  * IMPORTANT: In our implementation, words are lower cased but NOT lemmatized or stemmed (see sanitizeWord)
+ * Note: matrixConstructor is lazy, meant to save memory space if we're caching features
  * User: mihais, dfried, gus
  * Date: 11/25/13
  * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 
-// matrixConstructor is lazy, meant to save memory space if we're caching features
-class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
+class WordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) {
 
-  lazy val dimensions = matrix.values.head.length
+  lazy val dimensions: Int = matrix.values.head.length
 
   /** alternate constructor to allow loading from a file, possibly with a set of words to constrain the vocab */
   def this(mf: String, wordsToUse: Option[Set[String]] = None, caseInsensitiveWordsToUse:Boolean = false) = {
-    this(Word2Vec.loadMatrix(mf, wordsToUse, caseInsensitiveWordsToUse)._1)
+    this(WordEmbeddingMap.loadMatrix(mf, wordsToUse, caseInsensitiveWordsToUse)._1)
   }
 
   /** alternate constructor to allow loading from a source, possibly with a set of words to constrain the vocab */
   def this(src: Source, wordsToUse: Option[Set[String]], caseInsensitiveWordsToUse:Boolean) = {
-    this(Word2Vec.loadMatrixFromSource(src, wordsToUse, caseInsensitiveWordsToUse)._1)
+    this(WordEmbeddingMap.loadMatrixFromSource(src, wordsToUse, caseInsensitiveWordsToUse)._1)
   }
 
   /** alternate constructor to allow loading from a stream, possibly with a set of words to constrain the vocab */
   def this(is: InputStream, wordsToUse: Option[Set[String]], caseInsensitiveWordsToUse:Boolean) = {
-    this(Word2Vec.loadMatrixFromStream(is, wordsToUse, caseInsensitiveWordsToUse)._1)
+    this(WordEmbeddingMap.loadMatrixFromStream(is, wordsToUse, caseInsensitiveWordsToUse)._1)
   }
 
   // laziness here causes problems with InputStream-based alternate constructor
@@ -56,7 +56,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     if(matrix.contains(w)) {
       matrix.get(w)
     } else {
-      matrix.get(Word2Vec.UNK)
+      matrix.get(WordEmbeddingMap.UNK)
     }
   }
 
@@ -72,7 +72,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     if(v1o.isEmpty) return -1
     val v2o = getEmbedding(w2)
     if(v2o.isEmpty) return -1
-    Word2Vec.dotProduct(v1o.get, v2o.get)
+    WordEmbeddingMap.dotProduct(v1o.get, v2o.get)
   }
 
   /** Adds the content of src to dest, in place */
@@ -90,7 +90,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
       case None => matrix.keys
       case Some(p) => matrix.keys.filter(p)
     }
-    MathUtils.nBest[String](word => Word2Vec.dotProduct(v, matrix(word)))(words, howMany)
+    MathUtils.nBest[String](word => WordEmbeddingMap.dotProduct(v, matrix(word)))(words, howMany)
   }
 
   /**
@@ -101,7 +101,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     val v = new Array[Double](dimensions)
     var found = false
     for(w1 <- words) {
-      val w = Word2Vec.sanitizeWord(w1)         // sanitize words
+      val w = WordEmbeddingMap.sanitizeWord(w1)         // sanitize words
       val vo = getEmbedding(w)
       if(vo.isDefined) {
         found = true
@@ -109,7 +109,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
       }
     }
     if(! found) return List()
-    Word2Vec.norm(v)
+    WordEmbeddingMap.norm(v)
     mostSimilarWords(v, howMany, None)
   }
 
@@ -125,7 +125,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
       val v = getEmbedding(s)
       if(v.isDefined) add(vTotal, v.get)
     }
-    Word2Vec.norm(vTotal)
+    WordEmbeddingMap.norm(vTotal)
     vTotal
   }
 
@@ -135,30 +135,30 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     * @return the array of embeddings weights
     */
   def getWordVector(word:String):Option[Array[Double]] = {
-    val sw = Word2Vec.sanitizeWord(word)
+    val sw = WordEmbeddingMap.sanitizeWord(word)
     getEmbedding(sw)
   }
 
   /**
-   * Computes the cosine similarity between two texts, according to the word2vec matrix
+   * Computes the cosine similarity between two texts, according to the embedding matrix
    * IMPORTANT: t1, t2 must be arrays of words, not lemmas!
    */
   def textSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
+    t1.foreach(st1 += WordEmbeddingMap.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
+    t2.foreach(st2 += WordEmbeddingMap.sanitizeWord(_))
     sanitizedTextSimilarity(st1, st2)
   }
 
   /**
-   * Computes the cosine similarity between two texts, according to the word2vec matrix
+   * Computes the cosine similarity between two texts, according to the embedding matrix
    * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
    */
   def sanitizedTextSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val v1 = makeCompositeVector(t1)
     val v2 = makeCompositeVector(t2)
-    Word2Vec.dotProduct(v1, v2)
+    WordEmbeddingMap.dotProduct(v1, v2)
   }
 
   /**
@@ -167,15 +167,15 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
    */
   def multiplicativeTextSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
+    t1.foreach(st1 += WordEmbeddingMap.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
+    t2.foreach(st2 += WordEmbeddingMap.sanitizeWord(_))
     multiplicativeSanitizedTextSimilarity(st1, st2)
   }
 
   /**
    * Similar to sanitizedTextSimilarity, but but using the multiplicative heuristic of Levy and Goldberg (2014)
-   * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
+   * IMPORTANT: words here must already be normalized using sanitizeWord()!
    * @return Similarity value
    */
   def multiplicativeSanitizedTextSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
@@ -188,7 +188,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
           val v2 = getEmbedding(w2)
           if(v1.isDefined && v2.isDefined) {
             // *multiply* rather than add similarities!
-            sim *= Word2Vec.dotProduct(v1.get, v2.get)
+            sim *= WordEmbeddingMap.dotProduct(v1.get, v2.get)
           }
         }
       }
@@ -200,8 +200,8 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
                                       t2: Iterable[String],
                                       method: Symbol = 'linear,
                                       normalize: Boolean = false): Double = {
-    val st1 = t1.map(Word2Vec.sanitizeWord(_))
-    val st2 = t2.map(Word2Vec.sanitizeWord(_))
+    val st1 = t1.map(WordEmbeddingMap.sanitizeWord(_))
+    val st2 = t2.map(WordEmbeddingMap.sanitizeWord(_))
     logMultiplicativeSanitizedTextSimilarity(st1, st2, method, normalize)
   }
 
@@ -214,7 +214,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
     val sims = for {
       v1 <- t1Vecs
       v2 <- t2Vecs
-      cosSim = Word2Vec.dotProduct(v1, v2)
+      cosSim = WordEmbeddingMap.dotProduct(v1, v2)
       toYield = method match {
         case 'linear => math.log(cosSim + 1)
         case 'linear_scaled => math.log((cosSim + 1) / 2)
@@ -230,26 +230,26 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   }
 
   /**
-   * Finds the maximum word2vec similarity between any two words in these two texts
+   * Finds the maximum embedding similarity between any two words in these two texts
    * IMPORTANT: IMPORTANT: t1, t2 must be arrays of words, not lemmas!
    */
   def maxSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
+    t1.foreach(st1 += WordEmbeddingMap.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
+    t2.foreach(st2 += WordEmbeddingMap.sanitizeWord(_))
     sanitizedMaxSimilarity(st1, st2)
   }
 
   def minSimilarity(t1: Iterable[String], t2: Iterable[String]): Double = {
-    val st1 = t1.map(Word2Vec.sanitizeWord(_))
-    val st2 = t2.map(Word2Vec.sanitizeWord(_))
+    val st1 = t1.map(WordEmbeddingMap.sanitizeWord(_))
+    val st2 = t2.map(WordEmbeddingMap.sanitizeWord(_))
     sanitizedMinSimilarity(st1, st2)
   }
 
   /**
-   * Finds the maximum word2vec similarity between any two words in these two texts
-   * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
+   * Finds the maximum embedding similarity between any two words in these two texts
+   * IMPORTANT: words here must already be normalized using sanitizeWord()!
    */
   def sanitizedMaxSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     var max = Double.MinValue
@@ -259,7 +259,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
         for(s2 <- t2) {
           val v2 = getEmbedding(s2)
           if(v2.isDefined) {
-            val s = Word2Vec.dotProduct(v1.get, v2.get)
+            val s = WordEmbeddingMap.dotProduct(v1.get, v2.get)
             if(s > max) max = s
           }
         }
@@ -269,7 +269,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   }
 
   /**
-   * Finds the minimum word2vec similarity between any two words in these two texts
+   * Finds the minimum embedding similarity between any two words in these two texts
    * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
    */
   def sanitizedMinSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
@@ -280,7 +280,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
         for(s2 <- t2) {
           val v2 = getEmbedding(s2)
           if(v2.isDefined) {
-            val s = Word2Vec.dotProduct(v1.get, v2.get)
+            val s = WordEmbeddingMap.dotProduct(v1.get, v2.get)
             if(s < min) min = s
           }
         }
@@ -290,14 +290,14 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   }
 
   /**
-   * Finds the average word2vec similarity between any two words in these two texts
+   * Finds the average embedding similarity between any two words in these two texts
    * IMPORTANT: words here must be words not lemmas!
    */
   def avgSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
+    t1.foreach(st1 += WordEmbeddingMap.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
+    t2.foreach(st2 += WordEmbeddingMap.sanitizeWord(_))
     val (score, pairs) = sanitizedAvgSimilarity(st1, st2)
 
     score
@@ -305,9 +305,9 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
 
   def avgSimilarityReturnTop(t1:Iterable[String], t2:Iterable[String]):(Double, Array[(Double, String, String)]) = {
     val st1 = new ArrayBuffer[String]()
-    t1.foreach(st1 += Word2Vec.sanitizeWord(_))
+    t1.foreach(st1 += WordEmbeddingMap.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
-    t2.foreach(st2 += Word2Vec.sanitizeWord(_))
+    t2.foreach(st2 += WordEmbeddingMap.sanitizeWord(_))
     val (score, pairs) = sanitizedAvgSimilarity(st1, st2)
 
     val sorted = pairs.sortBy(- _._1).toArray
@@ -316,8 +316,8 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
   }
 
   /**
-   * Finds the average word2vec similarity between any two words in these two texts
-   * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
+   * Finds the average embedding similarity between any two words in these two texts
+   * IMPORTANT: words here must already be normalized using sanitizeWord()!
    * Changelog: (Peter/June 4/2014) Now returns words list of pairwise scores, for optional answer justification.
    */
   def sanitizedAvgSimilarity(t1:Iterable[String], t2:Iterable[String]):(Double, ArrayBuffer[(Double, String, String)]) = {
@@ -332,7 +332,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
         for(s2 <- t2) {
           val v2 = getEmbedding(s2)
           if(v2.isDefined) {
-            val s = Word2Vec.dotProduct(v1.get, v2.get)
+            val s = WordEmbeddingMap.dotProduct(v1.get, v2.get)
             avg += s
             count += 1
 
@@ -350,7 +350,7 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
    * for a sequence of (word, weight) pairs, interpolate the vectors corresponding to the words by their respective
    * weights, and normalize the resulting vector
    */
-  def interpolate(wordsAndWeights: Iterable[(String, Double)]) = {
+  def interpolate(wordsAndWeights: Iterable[(String, Double)]): Array[Double] = {
     // create a vector to store the weighted sum
     val v = new Array[Double](dimensions)
     for ((word, p) <- wordsAndWeights) {
@@ -361,19 +361,19 @@ class Word2Vec(matrixConstructor: => Map[String, Array[Double]]) {
       // add it in place to the sum vector
       add(v, scaled)
     }
-    Word2Vec.norm(v)
+    WordEmbeddingMap.norm(v)
     v
   }
 }
 
-object Word2Vec {
-  val logger = LoggerFactory.getLogger(classOf[Word2Vec])
+object WordEmbeddingMap {
+  val logger: Logger = LoggerFactory.getLogger(classOf[WordEmbeddingMap])
 
   val UNK = "*UNK*"
 
-  def sanitizeWord(uw:String, keepNumbers:Boolean = true):String = Word2VecUtils.sanitizeWord(uw, keepNumbers)
+  def sanitizeWord(uw:String, keepNumbers:Boolean = true):String = EmbeddingUtils.sanitizeWord(uw, keepNumbers)
 
-  def isNumber(w:String):Boolean = Word2VecUtils.isNumber(w)
+  def isNumber(w:String):Boolean = EmbeddingUtils.isNumber(w)
 
   /** Normalizes this vector to length 1, in place */
   def norm(weights:Array[Double]) {
@@ -407,7 +407,7 @@ object Word2Vec {
   private def loadMatrix(mf: String,
                          wordsToUse: Option[Set[String]],
                          caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
-    logger.debug("Started to load word2vec matrix from file " + mf + "...")
+    logger.debug("Started to load embedding matrix from file " + mf + "...")
     val src: Source = Source.fromFile(mf, "iso-8859-1")
     val lines: Iterator[String] = src.getLines()
     val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
@@ -419,7 +419,7 @@ object Word2Vec {
   private def loadMatrixFromStream(is: InputStream,
                                    wordsToUse: Option[Set[String]],
                                    caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
-    logger.debug("Started to load word2vec matrix from stream ...")
+    logger.debug("Started to load embedding matrix from stream ...")
     val src: Source = Source.fromInputStream(is, "iso-8859-1")
     val lines: Iterator[String] = src.getLines
     val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
@@ -430,7 +430,7 @@ object Word2Vec {
   private def loadMatrixFromSource(src: Source,
                                    wordsToUse: Option[Set[String]],
                                    caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
-    logger.debug("Started to load word2vec matrix from source ...")
+    logger.debug("Started to load embedding matrix from source ...")
     val lines: Iterator[String] = src.getLines()
     val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
     logger.debug("Completed matrix loading.")
@@ -475,18 +475,18 @@ object Word2Vec {
     (m.toMap, dims)
   }
 
-  def fromBinary(filename: String): Word2Vec = fromBinary(new File(filename))
+  def fromBinary(filename: String): WordEmbeddingMap = fromBinary(new File(filename))
 
-  def fromBinary(file: File): Word2Vec = {
-    new Word2Vec(readBinaryMatrix(FileUtils.readFileToByteArray(file)))
+  def fromBinary(file: File): WordEmbeddingMap = {
+    new WordEmbeddingMap(readBinaryMatrix(FileUtils.readFileToByteArray(file)))
   }
 
-  def fromBinary(inputStream: InputStream): Word2Vec = {
-    new Word2Vec(readBinaryMatrix(IOUtils.toByteArray(inputStream)))
+  def fromBinary(inputStream: InputStream): WordEmbeddingMap = {
+    new WordEmbeddingMap(readBinaryMatrix(IOUtils.toByteArray(inputStream)))
   }
 
-  def fromBinary(bytes: Array[Byte]): Word2Vec = {
-    new Word2Vec(readBinaryMatrix(bytes))
+  def fromBinary(bytes: Array[Byte]): WordEmbeddingMap = {
+    new WordEmbeddingMap(readBinaryMatrix(bytes))
   }
 
   // reads non-space chars
@@ -547,7 +547,7 @@ object Word2Vec {
   }
 
   def main(args:Array[String]) {
-    val w2v = new Word2Vec(args(0), None)
+    val w2v = new WordEmbeddingMap(args(0), None)
 
     println("Words most similar to \"house\":")
     for(t <- w2v.mostSimilarWords(Set("house"), 40)) {

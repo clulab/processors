@@ -1,8 +1,6 @@
-package org.clulab.embeddings.word2vec
+package org.clulab.embeddings
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.{FileInputStream, FileOutputStream, ObjectOutputStream}
+import java.io._
 
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
@@ -13,13 +11,13 @@ import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
-  * replacementfor Word2Vec used for performance reasons.  It loads data faster from disk and stores it
+  * replacement for WordEmbeddingMap used for performance reasons.  It loads data faster from disk and stores it
   * more compactly in memory.  It does not, however, include all the operations of processer's Word2Vec.
   * For instance, logMultiplicativeTextSimilarity is not included, but could probably be added.  Other
   * methods like getWordVector, which in Word2Vec returns an Array[Double], would be inefficient to
   * include because the arrays of doubles (or floats) are no longer part of the design.  For more
   * documentation other than that immediately below, both the companion object and the related test case
-  * (org.clulab.embeddings.word2vec.TestCompactWord2Vec) may be helpful.
+  * (org.clulab.embeddings.TestCompactWord2Vec) may be helpful.
   *
   * The class is typically instantiated by the apply method of the companion object which takes as
   * arguments a filename and then two booleans: "resource", which specifies whether the named file
@@ -39,13 +37,13 @@ import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
   * resulting return value, call save(compactFilename).  Thereafter, for normal, speedy processing,
   * use CompactWord2Vec(compactFilename, resource = false, cached = true).
   */
-class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
-  protected val map: CompactWord2Vec.MapType = buildType._1 // (word -> row)
-  protected val array: CompactWord2Vec.ArrayType = buildType._2 // flattened matrix
+class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) {
+  protected val map: CompactWordEmbeddingMap.MapType = buildType._1 // (word -> row)
+  protected val array: CompactWordEmbeddingMap.ArrayType = buildType._2 // flattened matrix
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
 
-  def get(word: String): Option[CompactWord2Vec.ArrayType] = { // debug use only
+  def get(word: String): Option[CompactWordEmbeddingMap.ArrayType] = { // debug use only
     map.get(word).map { row =>
       val offset = row * columns
 
@@ -67,10 +65,10 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     }
   }
 
-  def dotProduct(row1: Int, row2: Int): CompactWord2Vec.ValueType = {
+  def dotProduct(row1: Int, row2: Int): CompactWordEmbeddingMap.ValueType = {
     val offset1 = row1 * columns
     val offset2 = row2 * columns
-    var sum = 0.asInstanceOf[CompactWord2Vec.ValueType] // optimization
+    var sum = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
     var i = 0 // optimization
 
     while (i < columns) {
@@ -80,7 +78,7 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     sum
   }
 
-  protected def add(dest: CompactWord2Vec.ArrayType, srcRow: Int): Unit = {
+  protected def add(dest: CompactWordEmbeddingMap.ArrayType, srcRow: Int): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
@@ -90,7 +88,7 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     }
   }
 
-  protected def addWeighted(dest: CompactWord2Vec.ArrayType, srcRow: Int, weight:Float): Unit = {
+  protected def addWeighted(dest: CompactWordEmbeddingMap.ArrayType, srcRow: Int, weight:Float): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
@@ -100,19 +98,19 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     }
   }
 
-  def isOutOfVocabulary(word: String): Boolean = !map.contains(Word2VecUtils.sanitizeWord(word))
+  def isOutOfVocabulary(word: String): Boolean = !map.contains(EmbeddingUtils.sanitizeWord(word))
 
   // Normalize this vector to length 1, in place.
   // (If the length is zero, do nothing.)
-  protected def norm(array: CompactWord2Vec.ArrayType): CompactWord2Vec.ArrayType = {
-    var len = 0.asInstanceOf[CompactWord2Vec.ValueType] // optimization
+  protected def norm(array: CompactWordEmbeddingMap.ArrayType): CompactWordEmbeddingMap.ArrayType = {
+    var len = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
     var i = 0 // optimization
 
     while (i < array.length) {
       len += array(i) * array(i)
       i += 1
     }
-    len = math.sqrt(len).asInstanceOf[CompactWord2Vec.ValueType]
+    len = math.sqrt(len).asInstanceOf[CompactWordEmbeddingMap.ValueType]
 
     if (len != 0) {
       i = 0
@@ -124,8 +122,8 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     array
   }
 
-  def makeCompositeVector(text: Iterable[String]): CompactWord2Vec.ArrayType = {
-    val total = new CompactWord2Vec.ArrayType(columns)
+  def makeCompositeVector(text: Iterable[String]): CompactWordEmbeddingMap.ArrayType = {
+    val total = new CompactWordEmbeddingMap.ArrayType(columns)
 
     text.foreach { word =>
       map.get(word).foreach { index => add(total, index) }
@@ -133,8 +131,8 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     norm(total)
   }
 
-  def makeCompositeVectorWeighted(text: Iterable[String], weights:Iterable[Float]): CompactWord2Vec.ArrayType = {
-    val total = new CompactWord2Vec.ArrayType(columns)
+  def makeCompositeVectorWeighted(text: Iterable[String], weights:Iterable[Float]): CompactWordEmbeddingMap.ArrayType = {
+    val total = new CompactWordEmbeddingMap.ArrayType(columns)
 
     (text, weights).zipped.foreach { (word, weight) =>
       map.get(word).foreach { index => addWeighted(total, index, weight) }
@@ -143,18 +141,18 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
     norm(total)
   }
 
-  // Find the average word2vec similarity between any two words in these two texts.
+  // Find the average embedding similarity between any two words in these two texts.
   // IMPORTANT: words here must be words not lemmas!
-  def avgSimilarity(text1: Iterable[String], text2: Iterable[String]): CompactWord2Vec.ValueType = {
-    val sanitizedText1 = text1.map(Word2VecUtils.sanitizeWord(_))
-    val sanitizedText2 = text2.map(Word2VecUtils.sanitizeWord(_))
+  def avgSimilarity(text1: Iterable[String], text2: Iterable[String]): CompactWordEmbeddingMap.ValueType = {
+    val sanitizedText1 = text1.map(EmbeddingUtils.sanitizeWord(_))
+    val sanitizedText2 = text2.map(EmbeddingUtils.sanitizeWord(_))
 
     sanitizedAvgSimilarity(sanitizedText1, sanitizedText2)
   }
 
-  // Find the average word2vec similarity between any two words in these two texts.
-  protected def sanitizedAvgSimilarity(text1: Iterable[String], text2: Iterable[String]): CompactWord2Vec.ValueType = {
-    var avg = 0.asInstanceOf[CompactWord2Vec.ValueType] // optimization
+  // Find the average embedding similarity between any two words in these two texts.
+  protected def sanitizedAvgSimilarity(text1: Iterable[String], text2: Iterable[String]): CompactWordEmbeddingMap.ValueType = {
+    var avg = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
     var count = 0 // optimization
 
     for (word1 <- text1) {
@@ -176,7 +174,7 @@ class CompactWord2Vec(buildType: CompactWord2Vec.BuildType) {
   }
 }
 
-object CompactWord2Vec {
+object CompactWordEmbeddingMap {
   protected type MutableMapType = MutableHashMap[String, Int]
   protected type ImmutableMapType = HashMap[String, Int]
 
@@ -190,15 +188,15 @@ object CompactWord2Vec {
   protected type BuildType = (MapType, ArrayType)
   protected type StoreType = (String, ArrayType)
 
-  protected val logger: Logger = LoggerFactory.getLogger(classOf[CompactWord2Vec])
+  protected val logger: Logger = LoggerFactory.getLogger(classOf[CompactWordEmbeddingMap])
 
-  def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWord2Vec = {
-    logger.trace("Started to load word2vec matrix from file " + filename + "...")
+  def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
+    logger.trace("Started to load embedding matrix from file " + filename + "...")
     val buildType =
       if (cached) loadBin(filename)
       else loadTxt(filename, resource)
-    logger.trace("Completed word2vec matrix loading.")
-    new CompactWord2Vec(buildType)
+    logger.trace("Completed embedding matrix loading.")
+    new CompactWordEmbeddingMap(buildType)
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
@@ -250,7 +248,7 @@ object CompactWord2Vec {
 
     def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {
       val offset = rowIndex * columns
-      var len = 0.asInstanceOf[CompactWord2Vec.ValueType] // optimization
+      var len = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
       var i = 0 // optimization
 
       while (i < columns) {

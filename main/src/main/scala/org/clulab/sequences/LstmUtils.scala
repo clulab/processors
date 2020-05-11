@@ -4,7 +4,7 @@ import java.io.{BufferedOutputStream, File, FileOutputStream, OutputStreamWriter
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, Initialize, LookupParameter, ParameterCollection, RnnBuilder, Trainer}
-import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.sequences
 import org.clulab.struct.{Counter, MutableNumber}
@@ -58,7 +58,7 @@ object LstmUtils {
                      minDocFreq:Int,
                      embeddingsFile:String,
                      mandatoryWords:Option[String],
-                     minMandatoryWordFreq:Int): Word2Vec = {
+                     minMandatoryWordFreq:Int): WordEmbeddingMap = {
     val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
     logger.debug(s"Loading embeddings from file $embeddingsFile...")
 
@@ -84,7 +84,7 @@ object LstmUtils {
 
     logger.debug(s"Word count after adding mandatory words is ${wordsToUse.get.size}.")
 
-    val w2v = new Word2Vec(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our DF scores are case insensitive
+    val w2v = new WordEmbeddingMap(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our DF scores are case insensitive
     logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
 
     w2v
@@ -834,7 +834,7 @@ object LstmUtils {
 
   def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
-  def mkWordVocab(w2v:Word2Vec): Map[String, Int] = {
+  def mkWordVocab(w2v:WordEmbeddingMap): Map[String, Int] = {
     val commonWords = new ListBuffer[String]
     commonWords += LstmUtils.UNK_WORD // the word at position 0 is reserved for unknown words
     for(w <- w2v.matrix.keySet.toList.sorted) {
@@ -844,7 +844,7 @@ object LstmUtils {
     w2i
   }
 
-  def initializeEmbeddings(w2v:Word2Vec, w2i:Map[String, Int], lookupParameters: LookupParameter): Unit = {
+  def initializeEmbeddings(w2v:WordEmbeddingMap, w2i:Map[String, Int], lookupParameters: LookupParameter): Unit = {
     logger.debug("Initializing DyNet embedding parameters...")
     for(word <- w2v.matrix.keySet){
       lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))

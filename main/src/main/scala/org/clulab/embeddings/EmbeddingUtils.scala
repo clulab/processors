@@ -1,6 +1,6 @@
-package org.clulab.embeddings.word2vec
+package org.clulab.embeddings
 
-object Word2VecUtils {
+object EmbeddingUtils {
 
   /**
     * Normalizes words for word2vec

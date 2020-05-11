@@ -1,14 +1,14 @@
 package org.clulab.lm
 
 import edu.cmu.dynet.{Dim, Expression, FloatVector, LookupParameter, ParameterCollection}
-import org.clulab.embeddings.word2vec.CompactWord2Vec
+import org.clulab.embeddings.CompactWordEmbeddingMap
 
 class WordEmbeddings {
   val parameters = new ParameterCollection()
   val (lookupParameters, w2i) = mkLookupParams()
 
   def mkLookupParams(): (LookupParameter, Map[String, Int]) = {
-    val wordVectors = CompactWord2Vec("glove300dByFreq10.txt", resource = false, cached = false)
+    val wordVectors = CompactWordEmbeddingMap("glove300dByFreq10.txt", resource = false, cached = false)
     val w2i = wordVectors.keys.toList.sorted.zipWithIndex.toMap
 
     val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(RnnLMTrain.WORD_EMBED_SIZE))
