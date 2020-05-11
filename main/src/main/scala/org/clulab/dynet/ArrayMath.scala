@@ -1,4 +1,4 @@
-package org.clulab.sequences
+package org.clulab.dynet
 
 /** Some really basic vector math that happens outside of DyNet */
 object ArrayMath {
@@ -30,14 +30,4 @@ object ArrayMath {
     }
     floats
   }
-
-  // TODO: remove, seems unused?
-  /*
-  def add(dst:Array[Double], src:Array[Double]): Unit = {
-    assert(dst.length == src.length)
-    for(i <- dst.indices) {
-      dst(i) += src(i)
-    }
-  }
-  */
 }

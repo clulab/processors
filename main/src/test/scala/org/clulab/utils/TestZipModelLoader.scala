@@ -1,7 +1,7 @@
 package org.clulab.utils
 
 import edu.cmu.dynet.Initialize
-import org.clulab.sequences.LstmCrfMtlParameters
+import org.clulab.dynet.LstmCrfMtlParameters
 import org.scalatest._
 
 class TestZipModelLoader extends FlatSpec with Matchers {

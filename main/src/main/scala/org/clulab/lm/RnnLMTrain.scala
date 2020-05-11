@@ -1,13 +1,17 @@
 package org.clulab.lm
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import edu.cmu.dynet.{Dim, LstmBuilder, ParameterCollection}
-import org.clulab.sequences.LstmUtils
+import org.clulab.dynet.DyNetUtils
 import org.clulab.struct.Counter
-import org.clulab.utils.Serializer
+import org.clulab.utils.{Configured, Serializer}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.io.Source
+
+class FlairConfig(config:Config) extends Configured {
+  override def getConf: Config = config
+}
 
 /**
  * Constructs the RnnLM model
@@ -19,7 +23,7 @@ object RnnLMTrain {
   val logger:Logger = LoggerFactory.getLogger(classOf[RnnLMTrain])
 
   def main(args: Array[String]): Unit = {
-    LstmUtils.initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
+    DyNetUtils.initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
     val configName = "rnnlm-en"
     val config = new FlairConfig(ConfigFactory.load(configName))
 
@@ -40,8 +44,8 @@ object RnnLMTrain {
     //
     logger.debug(s"Loading the character map...")
     val c2iFilename = config.getArgString("rnnlm.train.c2i", None)
-    val c2i = Serializer.using(LstmUtils.newSource(c2iFilename)) { source =>
-      val byLineCharMapBuilder = new LstmUtils.ByLineCharIntMapBuilder()
+    val c2i = Serializer.using(DyNetUtils.newSource(c2iFilename)) { source =>
+      val byLineCharMapBuilder = new DyNetUtils.ByLineCharIntMapBuilder()
       val lines = source.getLines()
       val c2i = byLineCharMapBuilder.build(lines)
       c2i
@@ -73,7 +77,7 @@ object RnnLMTrain {
     //
     // POS tag embeddings
     //
-    val pos2is = LstmUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
+    val pos2is = DyNetUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
     val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(posTagEmbeddingSize))
 
     //
@@ -161,7 +165,7 @@ object RnnLMTrain {
 
     //val uniqueWordsOverFreq = counts.sorted(true).filter(_._2 > minFreq).map(_._1).toSet.toList
     //val uniquesWithUnknown = List(LstmUtils.UNK_WORD) ++ uniqueWordsOverFreq // UNK must be at position 0
-    val uniquesWithUnknown = List(LstmUtils.UNK_WORD) ++ counts.keySet
+    val uniquesWithUnknown = List(DyNetUtils.UNK_WORD) ++ counts.keySet
     (uniquesWithUnknown.zipWithIndex.toMap, counts)
 
   }

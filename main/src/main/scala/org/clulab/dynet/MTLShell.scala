@@ -1,4 +1,4 @@
-package org.clulab.sequences
+package org.clulab.dynet
 
 import org.clulab.utils.Shell
 

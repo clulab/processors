@@ -1,12 +1,12 @@
-package org.clulab.sequences
+package org.clulab.dynet
 
 import com.typesafe.config.Config
+import org.clulab.dynet.TaskManager._
+import org.clulab.sequences.{ColumnReader, Row}
 import org.clulab.utils.{Configured, MathUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
-import TaskManager._
-
 import scala.util.Random
 
 /**

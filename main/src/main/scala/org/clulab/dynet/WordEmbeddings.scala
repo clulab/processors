@@ -1,7 +1,8 @@
-package org.clulab.lm
+package org.clulab.dynet
 
-import edu.cmu.dynet.{Dim, Expression, FloatVector, LookupParameter, ParameterCollection}
+import edu.cmu.dynet._
 import org.clulab.embeddings.CompactWordEmbeddingMap
+import org.clulab.lm.RnnLMTrain
 
 class WordEmbeddings {
   val parameters = new ParameterCollection()

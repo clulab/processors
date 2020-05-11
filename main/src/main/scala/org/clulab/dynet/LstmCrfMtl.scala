@@ -1,15 +1,16 @@
-package org.clulab.sequences
+package org.clulab.dynet
 
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
+import edu.cmu.dynet._
+import org.clulab.dynet.DyNetUtils._
+import org.clulab.dynet.LstmCrfMtl._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.sequences.LstmCrfMtl._
-import org.clulab.sequences.LstmUtils._
-import org.clulab.lm.{FlairLM, LM, RnnLM}
+import org.clulab.lm.{LM, RnnLM}
+import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -348,7 +349,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     pw.close()
-    val acc = LstmUtils.round(correct.toDouble / total, decimals = 4)
+    val acc = DyNetUtils.round(correct.toDouble / total, decimals = 4)
     logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): $acc")
 
     logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
@@ -609,16 +610,16 @@ class LstmCrfMtlParameters(
       modelSaver.addModel(parameters, "/all")
     }
 
-    Serializer.using(LstmUtils.newPrintWriter(x2iFilename)) { printWriter =>
+    Serializer.using(DyNetUtils.newPrintWriter(x2iFilename)) { printWriter =>
       lm.saveX2i(printWriter)
 
-      LstmUtils.save(printWriter, taskCount, "taskCount")
-      LstmUtils.save(printWriter, inferenceTypes, "inferenceTypes")
+      DyNetUtils.save(printWriter, taskCount, "taskCount")
+      DyNetUtils.save(printWriter, inferenceTypes, "inferenceTypes")
 
-      LstmUtils.save(printWriter, pos2is, comment = "pos2i")
+      DyNetUtils.save(printWriter, pos2is, comment = "pos2i")
 
       t2is.zipWithIndex.foreach { case (t2i, index) =>
-        LstmUtils.save(printWriter, t2i, s"t2i($index)")
+        DyNetUtils.save(printWriter, t2i, s"t2i($index)")
       }
     }
   }
@@ -631,14 +632,14 @@ object LstmCrfMtlParameters {
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
     val parameters = new ParameterCollection()
-    val (lm, taskCount, t2is, inferenceTypes, _) = Serializer.using(LstmUtils.newSource(x2iFilename)) { source =>
+    val (lm, taskCount, t2is, inferenceTypes, _) = Serializer.using(DyNetUtils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
 
       val lm = mkLM(lines, parameters)
 
-      val byLineStringMapBuilder = new LstmUtils.ByLineStringMapBuilder()
-      val byLineArrayBuilder = new LstmUtils.ByLineArrayBuilder()
-      val taskCount = new LstmUtils.ByLineIntBuilder().build(lines)
+      val byLineStringMapBuilder = new DyNetUtils.ByLineStringMapBuilder()
+      val byLineArrayBuilder = new DyNetUtils.ByLineArrayBuilder()
+      val taskCount = new DyNetUtils.ByLineIntBuilder().build(lines)
       val inferenceTypes:Array[Int] = byLineArrayBuilder.build(lines).map(_.toInt)
       val pos2is: Map[String, Int] = byLineStringMapBuilder.build(lines) // TODO: never used, remove
       val t2is = 0.until(taskCount).map { _ =>
@@ -653,7 +654,7 @@ object LstmCrfMtlParameters {
 
     val model = {
       val model = mkParams(taskCount, parameters, lm, t2is, inferenceTypes)
-      LstmUtils.loadParameters(dynetFilename, model.parameters)
+      DyNetUtils.loadParameters(dynetFilename, model.parameters)
       model
     }
 
@@ -679,7 +680,7 @@ object LstmCrfMtlParameters {
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
 
-    val pos2is = LstmUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
+    val pos2is = DyNetUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
     val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(32))
 
     logger.debug("Created parameters.")
@@ -712,13 +713,11 @@ object LstmCrfMtl {
 
   def mkLM(lmFileName:String, parameterCollection: ParameterCollection): LM = {
     if(LM_TYPE == "rnnlm") RnnLM.load(lmFileName, parameterCollection)
-    else if(LM_TYPE == "flair") FlairLM.load(lmFileName, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type for model file $lmFileName!")
   }
 
   def mkLM(linesIterator:Iterator[String], parameterCollection: ParameterCollection): LM = {
     if(LM_TYPE == "rnnlm") RnnLM.load(linesIterator, parameterCollection)
-    else if(LM_TYPE == "flair") FlairLM.load(linesIterator, parameterCollection)
     else throw new RuntimeException(s"ERROR: unknown LM type!")
   }
 

@@ -1,4 +1,4 @@
-package org.clulab.lm
+package org.clulab.utils
 
 import java.io.PrintWriter
 
@@ -7,6 +7,7 @@ import scala.io.Source
 
 /**
  * Converts the CoNLL format into the one-sentence-per-line required by our LMs
+ * This produces the same format as the 1-billion-word-language-modeling-benchmark-r13output dataset
  *
  * @author Mihai
  */
