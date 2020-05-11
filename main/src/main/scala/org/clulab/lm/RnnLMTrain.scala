@@ -77,7 +77,7 @@ object RnnLMTrain {
     //
     // POS tag embeddings
     //
-    val pos2is = DyNetUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
+    val pos2is = DyNetUtils.readString2Ids("org/clulab/lm/tag2i-en.txt")
     val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(posTagEmbeddingSize))
 
     //

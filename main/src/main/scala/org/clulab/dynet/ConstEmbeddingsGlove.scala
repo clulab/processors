@@ -59,7 +59,7 @@ object ConstEmbeddingsGlove {
 
   private def UNK:String = "" // empty string for UNK
 
-  def apply(configName:String = "glove.conf"): ConstEmbeddingsGlove = {
+  def apply(configName:String = "org/clulab/glove.conf"): ConstEmbeddingsGlove = {
     val config = ConfigWithDefaults(configName)
     val matrixResourceName = config.getArgString("glove.matrixResourceName", None)
     val isResource = config.getArgBoolean("glove.isResource", Some(true))

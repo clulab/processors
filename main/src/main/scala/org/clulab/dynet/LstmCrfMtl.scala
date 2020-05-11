@@ -680,7 +680,7 @@ object LstmCrfMtlParameters {
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
 
-    val pos2is = DyNetUtils.readString2Ids("org/clulab/lm/pos2i-en.txt")
+    val pos2is = DyNetUtils.readString2Ids("org/clulab/lm/tag2i-en.txt")
     val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(32))
 
     logger.debug("Created parameters.")
