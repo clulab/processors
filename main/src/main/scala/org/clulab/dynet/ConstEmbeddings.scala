@@ -8,4 +8,6 @@ trait ConstEmbeddings {
    * This is necessary so we can share the same (large) object between different tasks
    */
   def mkEmbeddings(words: Iterable[String]): ExpressionVector
+
+  def dim: Int
 }
