@@ -47,13 +47,13 @@ case class Row(tokens:Array[String]) {
     else ""
 
   def getWord: String = get(0)
-  def getTag: String = get(1)
-  def getPos: String = get(2)
+  def getLabel: String = get(1)
+  def getPosTag: String = get(2) // use this carefully; this may not be available in all datasets!
 
   def length = tokens.length
 }
 
 object Row {
-  val ARG_START = 3
+  val ARG_START = 3 // column where SRL arguments begin
 }
 

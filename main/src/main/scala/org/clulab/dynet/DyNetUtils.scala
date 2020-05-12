@@ -561,11 +561,15 @@ object DyNetUtils {
     concatenate(fwOut, bwOut)
   }
 
-  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): Iterable[Expression] = {
+  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): mutable.IndexedSeq[Expression] = {
     builder.newGraph()
     builder.startNewSequence()
-    val states = embeddings.map(builder.addInput)
-    states
+    val ev = new ExpressionVector()
+    for(e <- embeddings) {
+      ev.add(builder.addInput(e))
+    }
+    //val states = embeddings.map(builder.addInput)
+    ev
   }
 
   /** Greedy loss function, ignoring transition scores */

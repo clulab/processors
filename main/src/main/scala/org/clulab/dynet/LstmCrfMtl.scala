@@ -71,7 +71,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
           }
         } else {
           for (token <- sentence) {
-            tags(tid) += token.getTag
+            tags(tid) += token.getLabel
           }
         }
       }
@@ -124,7 +124,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)
 
             // get the gold tags for this sentence
-            val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
+            val goldTagIds = toIds(sentence.map(_.getLabel), model.t2is(taskId))
 
             // greedy loss
             Some(sentenceLossGreedy(emissionScores, goldTagIds))
@@ -136,7 +136,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             val emissionScores = emissionScoresAsExpressions(words, taskId, None, None, doDropout = DO_DROPOUT)
 
             // get the gold tags for this sentence
-            val goldTagIds = toIds(sentence.map(_.getTag), model.t2is(taskId))
+            val goldTagIds = toIds(sentence.map(_.getLabel), model.t2is(taskId))
 
             // fetch the transition probabilities from the lookup storage
             val transitionMatrix = new ExpressionVector
@@ -147,7 +147,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
             // CRF loss
             Some(sentenceLossCrf(emissionScores, transitionMatrix, goldTagIds, model.t2is(taskId)))
           } else {
-            val predPositions = sentence.map(_.getTag).zipWithIndex.filter(_._1 == "B-P")
+            val predPositions = sentence.map(_.getLabel).zipWithIndex.filter(_._1 == "B-P")
             //println(sentence.map(_.getWord).mkString(" "))
             //println(predPositions.mkString(" "))
 
@@ -158,7 +158,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
                 val predPosition = predPositions(j - Row.ARG_START)
 
                 val words = sentence.map(_.getWord)
-                val pos = sentence.map(_.getPos)
+                val pos = sentence.map(_.getPosTag)
 
                 // produce the hidden states from the LM
                 val emissionScores = emissionScoresAsExpressions(words, taskId, Some(pos), Some(predPosition._2), doDropout = DO_DROPOUT)
@@ -301,8 +301,8 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       for (sent <- sentences) {
         sentCount += 1
         val words = sent.map(_.getWord)
-        val golds = sent.map(_.getTag)
-        val pos = sent.map(_.getPos)
+        val golds = sent.map(_.getLabel)
+        val pos = sent.map(_.getPosTag)
 
         // println("PREDICT ON SENT: " + words.mkString(", "))
         val preds = predict(taskId, words, Some(pos), None)
@@ -326,8 +326,8 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
       for (sent <- sentences) {
         sentCount += 1
         val words = sent.map(_.getWord)
-        val pos = sent.map(_.getPos)
-        val predPositions = sent.map(_.getTag).zipWithIndex.filter(_._1 == "B-P")
+        val pos = sent.map(_.getPosTag)
+        val predPositions = sent.map(_.getLabel).zipWithIndex.filter(_._1 == "B-P")
 
         for(j <- Row.ARG_START until sent(0).length) {
           val golds = sent.map(_.tokens(j))
