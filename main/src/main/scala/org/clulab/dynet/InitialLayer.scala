@@ -3,7 +3,7 @@ package org.clulab.dynet
 import edu.cmu.dynet.ExpressionVector
 
 /**
- * First layer that occurs in an architecture: goes from words to Expressions
+ * First layer that occurs in a sequence modeling architecture: goes from words to Expressions
  */
 trait InitialLayer {
   def mkEmbeddings(words: IndexedSeq[String],

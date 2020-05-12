@@ -3,7 +3,6 @@ package org.clulab.lm
 import java.io.PrintWriter
 
 import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
-import org.clulab.dynet.SafeTrainer
 import org.clulab.dynet.DyNetUtils.{mkDynetFilename, mkX2iFilename}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
