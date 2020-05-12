@@ -53,67 +53,6 @@ object DyNetUtils {
     }
   }
 
-  def loadEmbeddings(docFreqFileName: Option[String],
-                     minDocFreq: Int,
-                     embeddingsFile: String,
-                     mandatoryWords: Option[String],
-                     minMandatoryWordFreq: Int): WordEmbeddingMap = {
-    val wordsToUse = loadWordsToUse(docFreqFileName, minDocFreq)
-    logger.debug(s"Loading embeddings from file $embeddingsFile...")
-
-    if (mandatoryWords.isDefined && wordsToUse.isDefined) {
-      val source = Source.fromFile(mandatoryWords.get)
-      var keptMandatory = 0
-      var totalMandatory = 0
-      for (line <- source.getLines()) {
-        val tokens = line.split("\\s+")
-        assert(tokens.length == 2)
-        val word = tokens(0)
-        val freq = tokens(1).toInt
-
-        if (freq > minMandatoryWordFreq) {
-          wordsToUse.get += word.toLowerCase()
-          keptMandatory += 1
-        }
-        totalMandatory += 1
-      }
-      source.close()
-      logger.debug(s"Kept $keptMandatory out of $totalMandatory mandatory words (${keptMandatory.toDouble * 100.0 / totalMandatory}%).")
-    }
-
-    logger.debug(s"Word count after adding mandatory words is ${wordsToUse.get.size}.")
-
-    val w2v = new WordEmbeddingMap(embeddingsFile, Some(wordsToUse.get.toSet), caseInsensitiveWordsToUse = true) // TODO: our DF scores are case insensitive
-    logger.debug(s"Completed loading embeddings for a vocabulary of size ${w2v.matrix.size}.")
-
-    w2v
-  }
-
-  def loadWordsToUse(docFreqFileName: Option[String], minDocFreq: Int): Option[mutable.HashSet[String]] = {
-    if (docFreqFileName.isDefined) {
-      logger.debug(s"Loading words to use from file ${docFreqFileName.get} using min frequency of $minDocFreq.")
-      val wordsToUse = new mutable.HashSet[String]()
-      val source = Source.fromFile(docFreqFileName.get)
-      var total = 0
-      var kept = 0
-      for (line <- source.getLines()) {
-        total += 1
-        val tokens = line.split("\\s+")
-        // println(s"Reading line: ${tokens.mkString(", ")}")
-        assert(tokens.length == 2)
-        if (tokens(1).toInt > minDocFreq) {
-          kept += 1
-          wordsToUse += tokens(0)
-        }
-      }
-      source.close()
-      logger.debug(s"Loaded $kept words to use, from a total of $total words (${kept.toDouble * 100.0 / total}%).")
-      Some(wordsToUse)
-    } else {
-      None
-    }
-  }
-
   def fromIndexToString(s2i: Map[String, Int]): Array[String] = {
     var max = Int.MinValue
     for (v <- s2i.values) {
@@ -497,39 +436,6 @@ object DyNetUtils {
       c += concatenate(e._1, e._2)
     }
     c
-  }
-
-  // val lemmatizer = new EnglishLemmatizer
-
-  def mkWordEmbedding(word: String,
-                      w2i: Map[String, Int],
-                      wordLookupParameters: LookupParameter,
-                      c2i: Map[Char, Int],
-                      charLookupParameters: LookupParameter,
-                      charFwRnnBuilder: RnnBuilder,
-                      charBwRnnBuilder: RnnBuilder): Expression = {
-    //
-    // make sure you preprocess the word similarly to the embedding library used!
-    //   GloVe large does not do any preprocessing
-    //   GloVe small lowers the case
-    //   Our Word2Vec uses Word2Vec.sanitizeWord
-    //
-    val sanitized = word // lemmatizer.lemmatizeWord(word) // word // word.toLowerCase() // Word2Vec.sanitizeWord(word)
-
-    val wordEmbedding =
-      if (w2i.contains(sanitized))
-      // found the word in the known vocabulary
-      lookup(wordLookupParameters, w2i(sanitized))
-        else {
-        // not found; return the embedding at position 0, which is reserved for unknown words
-        lookup(wordLookupParameters, 0) // w2i(LstmUtils.UNK_WORD)) // 0)
-      }
-
-    // biLSTM over character embeddings
-    val charEmbedding =
-      mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
-
-    concatenate(wordEmbedding, charEmbedding)
   }
 
   def mkCharacterEmbedding(word: String,
