@@ -3,7 +3,6 @@ package org.clulab.embeddings
 import java.io.File
 
 import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.Counter
 import org.clulab.utils.Sinker
 import org.clulab.utils.Sourcer
 
@@ -17,6 +16,21 @@ object CullVectors extends App {
   val outputFile = new File(args(2))
   // This is either the upper limit or lower limit, depending on how keep is set below.
   val limit = args(3).toInt
+
+  class Counter(protected var value: Int, step: Int) {
+
+    def inc(increment: Int = 1): Int = {
+      value += (increment * step)
+      value
+    }
+
+    def get: Int = value
+  }
+
+  object Counter {
+
+    def apply(start: Int = 0, step: Int = 1): Counter = new Counter(start, step)
+  }
 
   def l2(values: Array[Float]): Float =
     math.sqrt(values.foldLeft(0f) { case (sum, value) => sum + value * value }).toFloat
