@@ -5,6 +5,6 @@ package org.clulab.dynet
  */
 class Layers (val initialLayer: Option[InitialLayer],
               val intermediateLayers: IndexedSeq[IntermediateLayer],
-              val finalLayer: Boolean) { // TODO: add class for final layer
+              val finalLayer: Option[FinalLayer]) {
 
 }
