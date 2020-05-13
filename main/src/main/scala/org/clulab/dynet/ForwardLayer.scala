@@ -23,16 +23,12 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       for (i <- inputExpressions.indices) {
         var argExp = inputExpressions(i)
 
-        if(doDropout) {
-          // TODO: there was no dropout here in the old system
-          argExp = Expression.dropout(argExp, dropoutProb)
-        }
+        // TODO: there was no dropout here in the old system
+        argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
 
         var l1 = pH * argExp
 
-        if (doDropout) {
-          l1 = Expression.dropout(l1, dropoutProb)
-        }
+        l1 = Utils.expressionDropout(l1, dropoutProb, doDropout)
         emissionScores.add(l1)
       }
     }
@@ -43,17 +39,13 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         var argExp = inputExpressions(i)
         var predExp = inputExpressions(predPosition)
 
-        if(doDropout) {
-          argExp = Expression.dropout(argExp, dropoutProb)
-          predExp = Expression.dropout(predExp, dropoutProb)
-        }
+        argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
+        predExp = Utils.expressionDropout(predExp, dropoutProb, doDropout)
 
         val ss = Expression.concatenate(argExp, predExp)
         var l1 = pH * ss
 
-        if(doDropout) {
-          l1 = Expression.dropout(l1, dropoutProb)
-        }
+        l1 = Utils.expressionDropout(l1, dropoutProb, doDropout)
         emissionScores.add(l1)
       }
     }

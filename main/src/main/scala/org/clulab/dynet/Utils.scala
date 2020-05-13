@@ -768,10 +768,18 @@ object Utils {
   }
 
   def setRnnDropout(rnnBuilder: RnnBuilder, dropoutProb: Float, doDropout: Boolean): Unit = {
-    if(doDropout) {
+    if(doDropout && dropoutProb > 0) {
       rnnBuilder.setDropout(dropoutProb)
     } else {
       rnnBuilder.disableDropout()
+    }
+  }
+
+  def expressionDropout(expression: Expression, dropoutProb: Float, doDropout: Boolean): Expression = {
+    if(doDropout && dropoutProb > 0) {
+      Expression.dropout(expression, dropoutProb)
+    } else {
+      expression
     }
   }
 }

@@ -15,9 +15,6 @@ import scala.util.Random
 class TaskManager(config:Config) extends Configured {
   override def getConf: Config = config
 
-  /** Language model */
-  val lmFileName:String = getArgString("mtl.lm", None)
-
   /** How many shards to have per epoch */
   val shardsPerEpoch:Int = getArgInt("mtl.shardsPerEpoch", Some(10))
 
@@ -52,10 +49,12 @@ class TaskManager(config:Config) extends Configured {
       }
     }
 
+    /*
     logger.debug("All shards:")
     for(i <- interleavedShards.indices) {
       logger.debug(s"${interleavedShards(i)}")
     }
+    */
 
     interleavedShards.toArray
   }
@@ -86,10 +85,10 @@ class TaskManager(config:Config) extends Configured {
       if(contains(s"mtl.task$taskNumber.test")) Some(getArgString(s"mtl.task$taskNumber.test", None))
       else None
 
-    val taskType = parseType(getArgString(s"mtl.task$taskNumber.inference", Some("greedy")))
+    val taskType = parseType(getArgString(s"mtl.task$taskNumber.type", Some("basic")))
 
     val weight:Float =
-      getArgFloat(s"mtl.task$taskNumber.weight", Some(1.0.toFloat))
+      getArgFloat(s"mtl.task$taskNumber.weight", Some(1.0f))
 
     new Task(taskNumber - 1, taskName, train, dev, test, taskType, shardsPerEpoch, weight)
   }
@@ -201,6 +200,7 @@ class Task(
   // Current position in the training sentences when we iterate during training
   var currentTrainingSentencePosition:Int = 0
 
+  logger.debug(s"============ starting task $taskNumber ============")
   logger.debug(s"Read ${trainSentences.length} training sentences for task $taskNumber, with shard size $shardSize.")
   if(devSentences.isDefined)
     logger.debug(s"Read ${devSentences.get.length} development sentences for task $taskNumber.")
