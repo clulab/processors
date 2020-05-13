@@ -16,5 +16,5 @@ trait InitialLayer {
                    predicatePosition: Option[Int],
                    doDropout: Boolean): ExpressionVector
 
-  def dim:Int // output dimension
+  def outDim:Int // output dimension
 }

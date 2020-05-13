@@ -5,7 +5,7 @@ import java.io.{FileWriter, PrintWriter}
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.Expression.{lookup, parameter, randomNormal}
 import edu.cmu.dynet._
-import org.clulab.dynet.DyNetUtils._
+import org.clulab.dynet.Utils._
 import org.clulab.dynet.LstmCrfMtl._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
@@ -349,7 +349,7 @@ class LstmCrfMtl(val taskManagerOpt: Option[TaskManager], lstmCrfMtlParametersOp
     }
 
     pw.close()
-    val acc = DyNetUtils.round(correct.toDouble / total, decimals = 4)
+    val acc = Utils.round(correct.toDouble / total, decimals = 4)
     logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): $acc")
 
     logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
@@ -610,16 +610,16 @@ class LstmCrfMtlParameters(
       modelSaver.addModel(parameters, "/all")
     }
 
-    Serializer.using(DyNetUtils.newPrintWriter(x2iFilename)) { printWriter =>
+    Serializer.using(Utils.newPrintWriter(x2iFilename)) { printWriter =>
       lm.saveX2i(printWriter)
 
-      DyNetUtils.save(printWriter, taskCount, "taskCount")
-      DyNetUtils.save(printWriter, inferenceTypes, "inferenceTypes")
+      Utils.save(printWriter, taskCount, "taskCount")
+      Utils.save(printWriter, inferenceTypes, "inferenceTypes")
 
-      DyNetUtils.save(printWriter, pos2is, comment = "pos2i")
+      Utils.save(printWriter, pos2is, comment = "pos2i")
 
       t2is.zipWithIndex.foreach { case (t2i, index) =>
-        DyNetUtils.save(printWriter, t2i, s"t2i($index)")
+        Utils.save(printWriter, t2i, s"t2i($index)")
       }
     }
   }
@@ -632,14 +632,14 @@ object LstmCrfMtlParameters {
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
     val parameters = new ParameterCollection()
-    val (lm, taskCount, t2is, inferenceTypes, _) = Serializer.using(DyNetUtils.newSource(x2iFilename)) { source =>
+    val (lm, taskCount, t2is, inferenceTypes, _) = Serializer.using(Utils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
 
       val lm = mkLM(lines, parameters)
 
-      val byLineStringMapBuilder = new DyNetUtils.ByLineStringMapBuilder()
-      val byLineArrayBuilder = new DyNetUtils.ByLineArrayBuilder()
-      val taskCount = new DyNetUtils.ByLineIntBuilder().build(lines)
+      val byLineStringMapBuilder = new Utils.ByLineStringMapBuilder()
+      val byLineArrayBuilder = new Utils.ByLineArrayBuilder()
+      val taskCount = new Utils.ByLineIntBuilder().build(lines)
       val inferenceTypes:Array[Int] = byLineArrayBuilder.build(lines).map(_.toInt)
       val pos2is: Map[String, Int] = byLineStringMapBuilder.build(lines) // TODO: never used, remove
       val t2is = 0.until(taskCount).map { _ =>
@@ -654,7 +654,7 @@ object LstmCrfMtlParameters {
 
     val model = {
       val model = mkParams(taskCount, parameters, lm, t2is, inferenceTypes)
-      DyNetUtils.loadParameters(dynetFilename, model.parameters)
+      Utils.loadParameters(dynetFilename, model.parameters)
       model
     }
 
@@ -680,7 +680,7 @@ object LstmCrfMtlParameters {
       Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
     }
 
-    val pos2is = DyNetUtils.readString2Ids("org/clulab/lm/tag2i-en.txt")
+    val pos2is = Utils.readString2Ids("org/clulab/lm/tag2i-en.txt")
     val posEmbeddings = parameters.addLookupParameters(pos2is.size, Dim(32))
 
     logger.debug("Created parameters.")

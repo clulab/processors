@@ -7,7 +7,7 @@ import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, LstmBu
 import org.clulab.lm.RnnLM.RANDOM
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
-import org.clulab.dynet.DyNetUtils._
+import org.clulab.dynet.Utils._
 
 import scala.util.Random
 
@@ -76,7 +76,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // biLSTM over character embeddings
     //
     val charEmbedding =
-      DyNetUtils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
+      Utils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
 
     //
     // POS tag embedding
@@ -139,11 +139,11 @@ class EmbeddingLayer (val parameters:ParameterCollection,
           charEmbedding)
       }
 
-    assert(embed.dim().get(0) == dim)
+    assert(embed.dim().get(0) == outDim)
     embed
   }
 
-  override def dim: Int = {
+  override def outDim: Int = {
     val posTagDim = if(posTagLookupParameters.nonEmpty) posTagEmbeddingSize else 0
     val positionDim = if(positionLookupParameters.nonEmpty) positionEmbeddingSize else 0
     val predicateDim = if(positionLookupParameters.nonEmpty) 1 else 0
@@ -157,16 +157,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   }
 
   private def setCharRnnDropout(doDropout: Boolean): Unit = {
-    setRnnDropout(charFwRnnBuilder, doDropout)
-    setRnnDropout(charBwRnnBuilder, doDropout)
-  }
-
-  private def setRnnDropout(rnnBuilder: RnnBuilder, doDropout: Boolean): Unit = {
-    if(doDropout) {
-      rnnBuilder.setDropout(dropoutProb)
-    } else {
-      rnnBuilder.disableDropout()
-    }
+    setRnnDropout(charFwRnnBuilder, dropoutProb, doDropout)
+    setRnnDropout(charBwRnnBuilder, dropoutProb, doDropout)
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
@@ -191,7 +183,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
 object EmbeddingLayer {
   val logger:Logger = LoggerFactory.getLogger(classOf[EmbeddingLayer])
 
-  val RANDOM = new Random(DyNetUtils.RANDOM_SEED)
+  val RANDOM = new Random(Utils.RANDOM_SEED)
 
   val DROPOUT_PROB = 0.2f
 

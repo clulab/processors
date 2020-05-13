@@ -17,8 +17,8 @@ import scala.io.Source
 /**
  * Utility methods used by DyNet applications
  */
-object DyNetUtils {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[DyNetUtils])
+object Utils {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[Utils])
 
   val UNK_WORD = "<UNK>"
   val EOS_WORD = "<EOS>"
@@ -723,8 +723,8 @@ object DyNetUtils {
   }
 
   def readString2Ids(s2iFilename: String): Map[String, Int] = {
-    val s2i = Serializer.using(DyNetUtils.newSource(s2iFilename)) { source =>
-      val byLineStringMapBuilder = new DyNetUtils.ByLineStringMapBuilder()
+    val s2i = Serializer.using(Utils.newSource(s2iFilename)) { source =>
+      val byLineStringMapBuilder = new Utils.ByLineStringMapBuilder()
       val lines = source.getLines()
       val s2i = byLineStringMapBuilder.build(lines)
       s2i
@@ -745,7 +745,7 @@ object DyNetUtils {
 
   def mkWordVocab(w2v: WordEmbeddingMap): Map[String, Int] = {
     val commonWords = new ListBuffer[String]
-    commonWords += DyNetUtils.UNK_WORD // the word at position 0 is reserved for unknown words
+    commonWords += Utils.UNK_WORD // the word at position 0 is reserved for unknown words
     for (w <- w2v.matrix.keySet.toList.sorted) {
       commonWords += w
     }
@@ -760,6 +760,14 @@ object DyNetUtils {
     }
     logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
   }
+
+  def setRnnDropout(rnnBuilder: RnnBuilder, dropoutProb: Float, doDropout: Boolean): Unit = {
+    if(doDropout) {
+      rnnBuilder.setDropout(dropoutProb)
+    } else {
+      rnnBuilder.disableDropout()
+    }
+  }
 }
 
-class DyNetUtils
+class Utils

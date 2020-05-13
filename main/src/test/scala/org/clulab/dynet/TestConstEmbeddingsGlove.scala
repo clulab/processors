@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
   lazy val embeddings = ConstEmbeddingsGlove("/test_vectors.txt", true)
 
-  DyNetUtils.initializeDyNet()
+  Utils.initializeDyNet()
 
   "ConstEmbeddingsGlove" should "not be empty" in {
     val e = embeddings.get("time")

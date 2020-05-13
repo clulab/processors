@@ -3,7 +3,7 @@ package org.clulab.lm
 import java.io.PrintWriter
 
 import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, Parameter, ParameterCollection, RMSPropTrainer, RnnBuilder}
-import org.clulab.dynet.DyNetUtils.{mkDynetFilename, mkX2iFilename}
+import org.clulab.dynet.Utils.{mkDynetFilename, mkX2iFilename}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -13,7 +13,7 @@ import org.clulab.struct.Counter
 import scala.io.Source
 import RnnLM._
 import edu.cmu.dynet.Expression.concatenate
-import org.clulab.dynet.{DyNetUtils, SafeTrainer, WordEmbeddings}
+import org.clulab.dynet.{Utils, SafeTrainer, WordEmbeddings}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
@@ -78,7 +78,7 @@ class RnnLM(val tw2i:Map[String, Int],
 
     // biLSTM over character embeddings
     val charEmbedding =
-      DyNetUtils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
+      Utils.mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder)
 
     // The final word embedding is a concatenation of all these
     concatenate(wordEmbedding, trainWordEmbedding,
@@ -90,18 +90,18 @@ class RnnLM(val tw2i:Map[String, Int],
     val charEmbedDim = charLookupParameters.dim().get(0)
     val posEmbedDim = posLookupParameters.dim().get(0)
 
-    DyNetUtils.saveCharMap(printWriter, c2i, "c2i")
-    DyNetUtils.save(printWriter, tw2i, "tw2i")
-    DyNetUtils.save(printWriter, tw2f, comment = "tw2f")
-    DyNetUtils.save(printWriter, p2i, "p2i")
-    DyNetUtils.save(printWriter, trainWordEmbedDim, "trainWordEmbedDim")
-    DyNetUtils.save(printWriter, charEmbedDim, "charEmbedDim")
-    DyNetUtils.save(printWriter, posEmbedDim, "posEmbedDim")
-    DyNetUtils.save(printWriter, wordRnnStateSize, "wordRnnStateSize")
-    DyNetUtils.save(printWriter, charRnnStateSize, "charRnnStateSize")
-    DyNetUtils.save(printWriter, lmLabelCount, "lmLabelCount")
-    DyNetUtils.save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
-    DyNetUtils.save(printWriter, positionWindowSize, "positionWindowSize")
+    Utils.saveCharMap(printWriter, c2i, "c2i")
+    Utils.save(printWriter, tw2i, "tw2i")
+    Utils.save(printWriter, tw2f, comment = "tw2f")
+    Utils.save(printWriter, p2i, "p2i")
+    Utils.save(printWriter, trainWordEmbedDim, "trainWordEmbedDim")
+    Utils.save(printWriter, charEmbedDim, "charEmbedDim")
+    Utils.save(printWriter, posEmbedDim, "posEmbedDim")
+    Utils.save(printWriter, wordRnnStateSize, "wordRnnStateSize")
+    Utils.save(printWriter, charRnnStateSize, "charRnnStateSize")
+    Utils.save(printWriter, lmLabelCount, "lmLabelCount")
+    Utils.save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
+    Utils.save(printWriter, positionWindowSize, "positionWindowSize")
   }
 
   def save(baseModelName: String): Unit = {
@@ -112,7 +112,7 @@ class RnnLM(val tw2i:Map[String, Int],
       modelSaver.addModel(parameters, "/rnnlm")
     }
 
-    Serializer.using(DyNetUtils.newPrintWriter(outX2iFilename)) { printWriter =>
+    Serializer.using(Utils.newPrintWriter(outX2iFilename)) { printWriter =>
       saveX2i(printWriter)
     }
   }
@@ -145,9 +145,9 @@ class RnnLM(val tw2i:Map[String, Int],
 
     // word-level biLSTM
     val fwEmbeddings = embeddings.toArray
-    val fwStates = DyNetUtils.transduce(fwEmbeddings, wordFwRnnBuilder).toArray
+    val fwStates = Utils.transduce(fwEmbeddings, wordFwRnnBuilder).toArray
     val bwEmbeddings = fwEmbeddings.reverse
-    val bwStates = DyNetUtils.transduce(bwEmbeddings, wordBwRnnBuilder).toArray.reverse
+    val bwStates = Utils.transduce(bwEmbeddings, wordBwRnnBuilder).toArray.reverse
     assert(fwStates.length == bwStates.length)
 
     // the word state concatenates the fwd and bwd LSTM hidden states
@@ -275,7 +275,7 @@ class RnnLM(val tw2i:Map[String, Int],
         mkEmbedding(t._1, t._2, t._3, predPosition.get, doDropout)
     )
 
-    val states = DyNetUtils.transduce(embeddings, rnnBuilder)
+    val states = Utils.transduce(embeddings, rnnBuilder)
 
     val O = Expression.parameter(pO)
     val emissionScores = new ExpressionVector()
@@ -329,8 +329,8 @@ class RnnLM(val tw2i:Map[String, Int],
 
     val sortedWords = counts.sorted(descending = true)
     val labels = new ArrayBuffer[String]()
-    labels += DyNetUtils.UNK_WORD
-    labels += DyNetUtils.EOS_WORD
+    labels += Utils.UNK_WORD
+    labels += Utils.EOS_WORD
 
     var done = false
     var count = 2 // we already added UNK and EOS
@@ -389,7 +389,7 @@ class RnnLM(val tw2i:Map[String, Int],
 object RnnLM {
   val logger:Logger = LoggerFactory.getLogger(classOf[RnnLM])
 
-  val RANDOM = new Random(DyNetUtils.RANDOM_SEED)
+  val RANDOM = new Random(Utils.RANDOM_SEED)
 
   val DROPOUT_PROB = 0.2f
 
@@ -402,7 +402,7 @@ object RnnLM {
     //
     // load the x2i info, construct the parameters, and load them
     //
-    val model = Serializer.using(DyNetUtils.newSource(x2iFilename)) { source =>
+    val model = Serializer.using(Utils.newSource(x2iFilename)) { source =>
       val lines = source.getLines()
       load(lines, parameters, Some(dynetFilename))
     }
@@ -423,21 +423,21 @@ object RnnLM {
     //
     // load the x2i info
     //
-    val byLineCharMapBuilder = new DyNetUtils.ByLineCharIntMapBuilder()
-    val byLineCounterBuilder = new DyNetUtils.ByLineStringCounterBuilder()
-    val byLineStringMapBuilder = new DyNetUtils.ByLineStringMapBuilder()
+    val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
+    val byLineCounterBuilder = new Utils.ByLineStringCounterBuilder()
+    val byLineStringMapBuilder = new Utils.ByLineStringMapBuilder()
     val c2i = byLineCharMapBuilder.build(x2iIterator)
     val tw2i = byLineStringMapBuilder.build(x2iIterator)
     val tw2f = byLineCounterBuilder.build(x2iIterator)
     val p2i = byLineStringMapBuilder.build(x2iIterator)
-    val trainWordEmbedDim = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
-    val charEmbedDim = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
-    val posEmbedDim = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
-    val wordRnnStateSize = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
-    val charRnnStateSize = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
-    val lmLabelCount = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
-    val positionEmbeddingSize = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
-    val positionWindowSize = new DyNetUtils.ByLineIntBuilder().build(x2iIterator)
+    val trainWordEmbedDim = new Utils.ByLineIntBuilder().build(x2iIterator)
+    val charEmbedDim = new Utils.ByLineIntBuilder().build(x2iIterator)
+    val posEmbedDim = new Utils.ByLineIntBuilder().build(x2iIterator)
+    val wordRnnStateSize = new Utils.ByLineIntBuilder().build(x2iIterator)
+    val charRnnStateSize = new Utils.ByLineIntBuilder().build(x2iIterator)
+    val lmLabelCount = new Utils.ByLineIntBuilder().build(x2iIterator)
+    val positionEmbeddingSize = new Utils.ByLineIntBuilder().build(x2iIterator)
+    val positionWindowSize = new Utils.ByLineIntBuilder().build(x2iIterator)
 
     logger.debug(s"\tLoaded a character map with ${c2i.keySet.size} entries.")
     logger.debug(s"\tLoaded a train word map with ${tw2i.keySet.size} entries.")
@@ -476,7 +476,7 @@ object RnnLM {
     if(dynetFilename.nonEmpty) {
       // load the parameters above
       logger.debug(s"Loading pretrained RnnLM model from $dynetFilename...")
-      DyNetUtils.loadParameters(dynetFilename.get, parameters, key = "/rnnlm")
+      Utils.loadParameters(dynetFilename.get, parameters, key = "/rnnlm")
     }
 
     val model = new RnnLM(
