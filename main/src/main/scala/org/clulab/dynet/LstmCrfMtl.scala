@@ -677,7 +677,7 @@ object LstmCrfMtlParameters {
       //println(s"Creating parameters for task #$tid, using ${t2is(tid).size} labels, and ${lm.dimensions} LM dimensions.")
       Hs(tid) = parameters.addParameters(Dim(t2is(tid).size, lm.dimensions * 2 + lm.wordDimensions * 2)) // 64 + 2 * 32))
       i2ts(tid) = fromIndexToString(t2is(tid))
-      Ts(tid) = mkTransitionMatrix(parameters, t2is(tid), i2ts(tid))
+      Ts(tid) = mkTransitionMatrix(parameters, t2is(tid))
     }
 
     val pos2is = Utils.readString2Ids("org/clulab/lm/tag2i-en.txt")

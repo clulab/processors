@@ -36,10 +36,10 @@ class EmbeddingLayer (val parameters:ParameterCollection,
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
-  override def mkEmbeddings(words: IndexedSeq[String],
-                            tags: Option[IndexedSeq[String]],
-                            predicatePosition: Option[Int],
-                            doDropout: Boolean): ExpressionVector = {
+  override def forward(words: IndexedSeq[String],
+                       tags: Option[IndexedSeq[String]],
+                       predicatePosition: Option[Int],
+                       doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
     // const word embeddings such as GloVe

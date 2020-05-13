@@ -20,7 +20,7 @@ class RnnLayer (val parameters:ParameterCollection,
                 val wordBwRnnBuilder:RnnBuilder,
                 val dropoutProb: Float = RnnLayer.DROPOUT_PROB) extends IntermediateLayer with Saveable {
 
-  override def mkEmbeddings(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
+  override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
     setRnnDropout(wordFwRnnBuilder, dropoutProb, doDropout)
     setRnnDropout(wordBwRnnBuilder, dropoutProb, doDropout)
 

@@ -87,7 +87,7 @@ object Utils {
    * Initializes the transition matrix for a tagset of size size
    * T[i, j] stores a transition *to* i *from* j
    */
-  def mkTransitionMatrix(parameters: ParameterCollection, t2i: Map[String, Int], i2t: Array[String]): LookupParameter = {
+  def mkTransitionMatrix(parameters: ParameterCollection, t2i: Map[String, Int]): LookupParameter = {
     val size = t2i.size
     val rows = parameters.addLookupParameters(size, Dim(size))
     rows
@@ -408,7 +408,7 @@ object Utils {
   def sentenceScore(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
                     transitionMatrix: ExpressionVector, // Dim: tagCount x tagCount
                     tagCount: Int,
-                    tagSeq: Array[Int],
+                    tagSeq: IndexedSeq[Int],
                     startTag: Int,
                     stopTag: Int): Expression = {
     // start with the transition score to first tag from START
@@ -480,7 +480,7 @@ object Utils {
 
   /** Greedy loss function, ignoring transition scores */
   def sentenceLossGreedy(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
-                         golds: Array[Int]): Expression = { // Dim: sentenceSize
+                         golds: IndexedSeq[Int]): Expression = { // Dim: sentenceSize
 
     val goldLosses = new ExpressionVector()
     assert(emissionScoresForSeq.length == golds.length)
@@ -505,7 +505,7 @@ object Utils {
    */
   def sentenceLossCrf(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
                       transitionMatrix: ExpressionVector, // Dim: tagCount x tagCount
-                      golds: Array[Int],
+                      golds: IndexedSeq[Int],
                       t2i: Map[String, Int]): Expression = { // Dim: sentenceSize
     val startTag = t2i(START_TAG)
     val stopTag = t2i(STOP_TAG)
@@ -587,7 +587,13 @@ object Utils {
     printWriter.println() // Separator
   }
 
-  def save[T](printWriter: PrintWriter, value: Long, comment: String): Unit = {
+  def save(printWriter: PrintWriter, value: Long, comment: String): Unit = {
+    printWriter.println("# " + comment)
+    printWriter.println(value)
+    printWriter.println() // Separator
+  }
+
+  def save(printWriter: PrintWriter, value: String, comment: String): Unit = {
     printWriter.println("# " + comment)
     printWriter.println(value)
     printWriter.println() // Separator
