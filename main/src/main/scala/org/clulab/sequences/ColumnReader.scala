@@ -41,6 +41,12 @@ object ColumnReader {
   }
 }
 
+/**
+ * Stores training data for sequence modeling
+ * Mandatory columns: 0 - word, 1 - label
+ * Optional columns: 2 - POS tag, 3+ SRL arguments
+ * @param tokens
+ */
 case class Row(tokens:Array[String]) {
   def get(idx:Int): String =
     if(idx < tokens.length) tokens(idx)

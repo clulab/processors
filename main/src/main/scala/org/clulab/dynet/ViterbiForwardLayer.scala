@@ -66,26 +66,6 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     Utils.sentenceLossCrf(finalStates, transitionMatrix, goldLabels, t2i)
   }
 
-  override def forward(inputExpressions: ExpressionVector,
-                       predicatePositionOpt: Option[Int],
-                       doDropout: Boolean): ExpressionVector = {
-    val pH = Expression.parameter(H)
-    val emissionScores = new ExpressionVector()
-
-    for(ie <- inputExpressions) {
-
-      // TODO: dropout on ie here?
-
-      var l1 = pH * ie
-      if(doDropout) {
-        l1 = Expression.dropout(l1, dropoutProb)
-      }
-      emissionScores.add(l1)
-    }
-
-    emissionScores
-  }
-
   override def saveX2i(printWriter: PrintWriter): Unit = {
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
