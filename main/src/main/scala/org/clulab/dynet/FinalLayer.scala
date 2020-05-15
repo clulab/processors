@@ -10,5 +10,7 @@ trait FinalLayer {
   def inDim: Int
   def outDim: Int
 
-  def loss(finalStates: ExpressionVector, goldLabels: IndexedSeq[String]): Expression
+  def loss(emissionScoresAsExpression: ExpressionVector, goldLabels: IndexedSeq[String]): Expression
+
+  def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
 }

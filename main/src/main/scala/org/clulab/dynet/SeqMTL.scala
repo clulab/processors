@@ -1,5 +1,7 @@
 package org.clulab.dynet
 
+import java.io.{FileWriter, PrintWriter}
+
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ParameterCollection}
 import org.clulab.dynet.Utils._
@@ -116,6 +118,9 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
       // this fetches randomized training sentences from all tasks
       val sentenceIterator = taskManager.getSentences(rand)
 
+      //
+      // traverse all training sentences
+      //
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
@@ -124,7 +129,10 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
 
         val words = sentence.map(_.getWord)
         val posTags =
-          if(flows(taskId).needsPosTags) Some(sentence.map(_.getPosTag).toIndexedSeq)
+          if(flows(taskId).needsPosTags) {
+            assert(sentence(0).hasPosTag)
+            Some(sentence.map(_.getPosTag).toIndexedSeq)
+          }
           else None
 
         val goldLabels = sentence.map(_.getLabel)
@@ -164,7 +172,149 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
           numTagged = 0
         }
       }
+
+      //
+      // check dev performance in this epoch, for all tasks
+      //
+      var totalAcc = 0.0
+      var totalPrec = 0.0
+      var totalRec = 0.0
+      var totalF1 = 0.0
+      for(taskId <- 0 until taskManager.taskCount) {
+        val taskName = taskManager.tasks(taskId).taskName
+        val devSentences = taskManager.tasks(taskId).devSentences
+        if(devSentences.nonEmpty) {
+          val (acc, prec, rec, f1) = evaluate(taskId, taskName, devSentences.get, epoch)
+          totalAcc += acc
+          totalPrec += prec
+          totalRec += rec
+          totalF1 += f1
+        }
+      }
+      val avgAcc = totalAcc / taskManager.taskCount
+      val avgPrec = totalPrec / taskManager.taskCount
+      val avgRec = totalRec / taskManager.taskCount
+      val avgF1 = totalF1 / taskManager.taskCount
+      logger.info(s"Average accuracy across ${taskManager.taskCount} tasks: $avgAcc")
+      logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks: $avgPrec / $avgRec / $avgF1")
+
+      if(avgF1 > maxAvgF1) {
+        maxAvgF1 = avgF1
+        maxAvgAcc = avgAcc
+        bestEpoch = epoch
+        epochPatience = taskManager.epochPatience
+      } else {
+        epochPatience -= 1
+      }
+      logger.info(s"Best epoch so far is epoch $bestEpoch with an average F1 of $maxAvgF1, and average accuracy of $maxAvgAcc.")
+      if(epochPatience < taskManager.epochPatience) {
+        logger.info(s"Epoch patience is at $epochPatience.")
+      }
+
+      // TODO: save model here
+      // save(s"$modelNamePrefix-epoch$epoch")
     }
+  }
+
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): (Double, Double, Double, Double) = {
+    evaluate(taskId, taskName, sentences, "development", epoch)
+  }
+
+  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): (Double, Double, Double, Double) = {
+    evaluate(taskId, taskName, sentences, "testing", -1)
+  }
+
+  /**
+   * Computes accuracy/P/R/F1 for the evaluation dataset of the given task
+   * Where possible, it also saves CoNLL-2003 compatible files of the output
+   */
+  def evaluate(taskId:Int,
+               taskName:String,
+               sentences:Array[Array[Row]],
+               name:String, epoch:Int): (Double, Double, Double, Double) = {
+
+    val scoreCountsByLabel = new ScoreCountsByLabel
+    val taskNumber = taskId + 1
+    var sentCount = 0
+
+    logger.debug(s"Started evaluation on the $name dataset for task $taskNumber ($taskName)...")
+
+    val pw =
+      if(epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
+      else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
+
+    //
+    // regular BIO evaluation, compatible with CoNLL-2003
+    //
+    if(taskManager.tasks(taskId).isBasic) {
+      for (sent <- sentences) {
+        sentCount += 1
+        val words = sent.map(_.getWord)
+        val golds = sent.map(_.getLabel)
+
+        val posTags =
+          if(flows(taskId).needsPosTags) {
+            assert(sent(0).hasPosTag)
+            Some(sent.map(_.getPosTag).toIndexedSeq)
+          }
+          else None
+
+        val preds = flows(taskId).predict(words, posTags, None)
+
+        val sc = SeqScorer.f1(golds, preds)
+        scoreCountsByLabel.incAll(sc)
+
+        printCoNLLOutput(pw, words, golds, preds)
+      }
+    }
+
+    //
+    // evaluation of SRL arguments
+    //
+    else if(taskManager.tasks(taskId).isSrl) {
+      for (sent <- sentences) {
+        sentCount += 1
+        val words = sent.map(_.getWord)
+        val posTags =
+          if(flows(taskId).needsPosTags) {
+            assert(sent(0).hasPosTag)
+            Some(sent.map(_.getPosTag).toIndexedSeq)
+          }
+          else None
+
+        // find the token positions of all predicates in this sentence
+        val predPositions = sent.map(_.getLabel).zipWithIndex.filter(_._1 == "B-P").map(_._2)
+
+        // traverse the argument columns corresponding to each predicate
+        for(j <- Row.ARG_START until sent(0).length) {
+          val golds = sent.map(_.tokens(j))
+          val predPosition = predPositions(j - Row.ARG_START)
+
+          val preds = flows(taskId).predict(words, posTags, Some(predPosition))
+
+          val sc = SeqScorer.f1(golds, preds)
+          scoreCountsByLabel.incAll(sc)
+
+          pw.println(s"pred = ${words(predPositions(j - Row.ARG_START))} at position ${predPositions(j - Row.ARG_START)}")
+          printCoNLLOutput(pw, words, golds, preds)
+        }
+      }
+    }
+
+    pw.close()
+
+    logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
+    logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
+    logger.info(s"Recall on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
+    logger.info(s"Micro F1 on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
+    for(label <- scoreCountsByLabel.labels) {
+      logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
+    }
+
+    ( scoreCountsByLabel.accuracy(),
+      scoreCountsByLabel.precision(),
+      scoreCountsByLabel.recall(),
+      scoreCountsByLabel.f1() )
   }
 
   def predictJointly(words: IndexedSeq[String]): IndexedSeq[IndexedSeq[String]] = {
@@ -199,7 +349,7 @@ object SeqMTL {
     }
 
     else if(props.containsKey("test")) {
-
+      // TODO
     }
   }
 }

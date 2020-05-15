@@ -28,6 +28,11 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   override def toString: String = {
     s"GreedyForwardLayer($inDim, $outDim)"
   }
+
+  override def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String] = {
+    val labelIds = Utils.greedyPredict(emissionScores)
+    labelIds.map(i2t(_))
+  }
 }
 
 object GreedyForwardLayer {

@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
-import com.typesafe.config.Config
-import edu.cmu.dynet.{Expression, ParameterCollection}
+import edu.cmu.dynet.{ComputationGraph, Expression, ParameterCollection}
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 
@@ -41,13 +40,38 @@ class Layers (val initialLayer: Option[InitialLayer],
     assert(initialLayer.nonEmpty)
     assert(finalLayer.nonEmpty)
 
-    var states = initialLayer.get.forward(words, posTags, predicatePosition, true)
+    var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = true)
     for(i <- intermediateLayers.indices) {
-      states = intermediateLayers(i).forward(states, true)
+      states = intermediateLayers(i).forward(states, doDropout = true)
     }
-    states = finalLayer.get.forward(states, predicatePosition, true)
+    states = finalLayer.get.forward(states, predicatePosition, doDropout = true)
 
     finalLayer.get.loss(states, goldLabels)
+  }
+
+  def predict(words: IndexedSeq[String],
+              posTags: Option[IndexedSeq[String]],
+              predicatePosition: Option[Int]): IndexedSeq[String] = {
+    assert(initialLayer.nonEmpty)
+    assert(finalLayer.nonEmpty)
+
+    val emissionScores =
+      this.synchronized {
+        ComputationGraph.renew()
+        var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = false)
+
+        for (i <- intermediateLayers.indices) {
+          states = intermediateLayers(i).forward(states, doDropout = false)
+        }
+
+        states = finalLayer.get.forward(states, predicatePosition, doDropout = false)
+
+        Utils.emissionScoresToArrays(states)
+      }
+
+    val labels = finalLayer.get.inference(emissionScores)
+
+    labels
   }
 }
 

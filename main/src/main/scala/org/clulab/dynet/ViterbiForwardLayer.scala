@@ -76,6 +76,14 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
   override def toString: String = {
     s"ViterbiForwardLayer($inDim, $outDim)"
   }
+
+  override def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String] = {
+    val transitionMatrix: Array[Array[Float]] =
+      Utils.transitionMatrixToArrays(T, t2i.size)
+    val labelsIds = Utils.viterbi(emissionScores,
+      transitionMatrix, t2i.size, t2i(START_TAG), t2i(STOP_TAG))
+    labelsIds.map(i2t(_))
+  }
 }
 
 object ViterbiForwardLayer {
