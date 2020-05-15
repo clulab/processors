@@ -19,7 +19,10 @@ class TaskManager(config:Config) extends Configured {
   val shardsPerEpoch:Int = getArgInt("mtl.shardsPerEpoch", Some(10))
 
   /** Total number of epochs */
-  val totalEpochs:Int = getArgInt("mtl.epochs", Some(1))
+  val maxEpochs:Int = getArgInt("mtl.maxEpochs", Some(100))
+
+  /** Training patience in number of epochs */
+  val epochPatience:Int = getArgInt("mtl.epochPatience", Some(5))
 
   /** Array of all tasks to be managed */
   val tasks:Array[Task] = readTasks()
@@ -101,7 +104,7 @@ class TaskManager(config:Config) extends Configured {
 
   def debugTraversal():Unit = {
     val rand = new Random()
-    for(epoch <- 0 until totalEpochs) {
+    for(epoch <- 0 until maxEpochs) {
       logger.debug(s"Started epoch $epoch")
       var sentCount = 0
       var taskId = 0

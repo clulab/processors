@@ -14,7 +14,8 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           dropoutProb: Float = DROPOUT_PROB)
   extends ForwardLayer(parameters, inputSize, t2i, i2t, H, dropoutProb) {
 
-  override def loss(finalStates: ExpressionVector, goldLabels: IndexedSeq[Int]): Expression = {
+  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
+    val goldLabels = Utils.toIds(goldLabelStrings, t2i)
     Utils.sentenceLossGreedy(finalStates, goldLabels)
   }
 
@@ -22,6 +23,10 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, t2i, "t2i")
+  }
+
+  override def toString: String = {
+    s"GreedyForwardLayer($inDim, $outDim)"
   }
 }
 

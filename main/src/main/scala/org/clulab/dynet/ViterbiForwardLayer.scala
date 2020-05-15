@@ -56,13 +56,14 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     new FloatVector(transScores)
   }
 
-  override def loss(finalStates: ExpressionVector, goldLabels: IndexedSeq[Int]): Expression = {
+  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     // fetch the transition probabilities from the lookup storage
     val transitionMatrix = new ExpressionVector
     for(i <- 0 until t2i.size) {
       transitionMatrix.add(lookup(T, i))
     }
 
+    val goldLabels = Utils.toIds(goldLabelStrings, t2i)
     Utils.sentenceLossCrf(finalStates, transitionMatrix, goldLabels, t2i)
   }
 
@@ -70,6 +71,10 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, t2i, "t2i")
+  }
+
+  override def toString: String = {
+    s"ViterbiForwardLayer($inDim, $outDim)"
   }
 }
 

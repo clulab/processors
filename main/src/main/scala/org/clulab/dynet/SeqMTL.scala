@@ -1,12 +1,15 @@
 package org.clulab.dynet
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ParameterCollection}
-import org.clulab.dynet.Utils.initializeDyNet
+import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ParameterCollection}
+import org.clulab.dynet.Utils._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
+import SeqMTL._
+
+import scala.util.Random
 
 /**
  * Implement multi-task learning (MTL) for sequence modeling
@@ -18,6 +21,9 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
              modelOpt: Option[Array[Layers]]) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected val model: Array[Layers] = modelOpt.getOrElse(initialize())
+
+  // One combined Layers object per task, which merges the shared Layers with the task-specific Layers for each task
+  protected val flows: Array[Layers] = mkFlows(model)
 
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {
@@ -35,20 +41,39 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
     // 0 reserved for the shared Layers object
     val layersPerTask = new Array[Layers](taskManager.taskCount + 1)
     layersPerTask(0) =
-      Layers(taskManager.getConf, "mtl.layers", taskWords(0), None)
+      Layers(taskManager, "mtl.layers", parameters, taskWords(0), None)
     for (i <- taskManager.indices) {
       layersPerTask(i + 1) =
-        Layers(taskManager.getConf, s"mtl.task${i + 1}.layers",
-          taskWords(i + 1), Some(taskLabels(i + 1)))
+        Layers(taskManager, s"mtl.task${i + 1}.layers",
+          parameters, taskWords(i + 1), Some(taskLabels(i + 1)))
+    }
+    for(i <- layersPerTask.indices) {
+      logger.debug(s"Summary of layersPerTask($i):")
+      logger.debug(layersPerTask(i).toString)
     }
 
     layersPerTask
   }
 
+  protected def mkFlows(layers: Array[Layers]): Array[Layers] = {
+    val flows = new Array[Layers](taskManager.taskCount)
+    assert(flows.length + 1 == layers.length)
+
+    for(i <- flows.indices) {
+      flows(i) = Layers.merge(layers(0), layers(i + 1))
+    }
+
+    flows
+  }
+
   protected def mkVocabularies(): (Array[Counter[String]], Array[Counter[String]]) = {
     // index 0 reserved for the shared Layers; tid + 1 corresponds to each task
     val labels = new Array[Counter[String]](taskManager.taskCount + 1)
-    for (i <- 1 until labels.length) labels(i) = new Counter[String]() // labels(0) not used
+    for (i <- 1 until labels.length) { // labels(0) not used, since only task-specific layers have a final layer
+      labels(i) = new Counter[String]()
+      labels(i) += START_TAG
+      labels(i) += STOP_TAG
+    }
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
@@ -76,6 +101,70 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
 
     val trainer = SafeTrainer(new AdamTrainer(parameters)) // RMSPropTrainer(parameters))
 
+    var cummulativeLoss = 0.0
+    var numTagged = 0
+    var sentCount = 0
+    val rand = new Random(RANDOM_SEED)
+
+    var maxAvgAcc = 0.0
+    var maxAvgF1 = 0.0
+    var bestEpoch = 0
+    var epochPatience = taskManager.epochPatience
+
+    for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
+      logger.info(s"Started epoch $epoch.")
+      // this fetches randomized training sentences from all tasks
+      val sentenceIterator = taskManager.getSentences(rand)
+
+      for(metaSentence <- sentenceIterator) {
+        val taskId = metaSentence._1
+        val sentence = metaSentence._2
+        sentCount += 1
+        ComputationGraph.renew()
+
+        val words = sentence.map(_.getWord)
+        val posTags =
+          if(flows(taskId).needsPosTags) Some(sentence.map(_.getPosTag).toIndexedSeq)
+          else None
+
+        val goldLabels = sentence.map(_.getLabel)
+
+        val lossOpt =
+          if(taskManager.tasks(taskId).isBasic) {
+            Some(flows(taskId).loss(words, posTags, None, goldLabels))
+          } else if(taskManager.tasks(taskId).isSrl) {
+            // token positions for the predicates in this sentence
+            val predicatePositions = sentence.map(_.getLabel).zipWithIndex.filter(_._1 == "B-P").map(_._2)
+            // TODO
+            None
+          } else {
+            throw new RuntimeException(s"ERROR: unknown task type ${taskManager.tasks(taskId).taskType}!")
+          }
+
+        if(lossOpt.isDefined) {
+          var loss = lossOpt.get
+
+          // task weighting
+          if (taskManager.tasks(taskId).taskWeight != 1.0)
+            loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
+
+          // for stats
+          cummulativeLoss += loss.value().toFloat
+
+          // backprop
+          ComputationGraph.backward(loss)
+          trainer.update(parameters)
+        }
+
+        numTagged += sentence.length
+
+        if(sentCount % 1000 == 0) {
+          logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
+          cummulativeLoss = 0.0
+          numTagged = 0
+        }
+      }
+    }
   }
 
   def predictJointly(words: IndexedSeq[String]): IndexedSeq[IndexedSeq[String]] = {

@@ -8,6 +8,7 @@ import org.clulab.lm.RnnLM.RANDOM
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
+import org.clulab.utils.{Configured, Serializer}
 
 import scala.util.Random
 
@@ -35,6 +36,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val dropoutProb: Float = EmbeddingLayer.DROPOUT_PROB) extends InitialLayer with Saveable {
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
+
+  override def needsPosTags: Boolean = posTagEmbeddingSize > 0
 
   override def forward(words: IndexedSeq[String],
                        tags: Option[IndexedSeq[String]],
@@ -178,6 +181,10 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
     save(printWriter, positionWindowSize, "positionWindowSize")
   }
+
+  override def toString: String = {
+    s"EmbeddingLayer($outDim)"
+  }
 }
 
 object EmbeddingLayer {
@@ -254,6 +261,78 @@ object EmbeddingLayer {
       posTagLookupParameters,
       positionLookupParameters)
 
+  }
+
+  def initialize(config: Configured,
+                 paramPrefix: String,
+                 parameters: ParameterCollection,
+                 wordCounter: Counter[String]): Option[InitialLayer] = {
+    if(! config.contains(paramPrefix)) {
+      return None
+    }
+
+    val learnedWordEmbeddingSize = config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize", Some(128))
+    val charEmbeddingSize = config.getArgInt(paramPrefix + ".charEmbeddingSize", Some(32))
+    val charRnnStateSize = config.getArgInt(paramPrefix + ".charRnnStateSize", Some(16))
+    val posTagEmbeddingSize = config.getArgInt(paramPrefix + ".posTagEmbeddingSize", Some(-1))
+    val positionEmbeddingSize = config.getArgInt(paramPrefix + ".positionEmbeddingSize", Some(-1))
+    val positionWindowSize = config.getArgInt(paramPrefix + ".positionWindowSize", Some(-1))
+    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(EmbeddingLayer.DROPOUT_PROB))
+
+    // the word at position 0 is always reserved for UNK
+    val wordList = List(Utils.UNK_WORD) ++ wordCounter.keySet.toList.sorted
+    val w2i = wordList.zipWithIndex.toMap
+
+    val wordLookupParameters:LookupParameter = parameters.addLookupParameters(w2i.size, Dim(learnedWordEmbeddingSize))
+
+    val c2iFilename = config.getArgString(paramPrefix + ".c2i", Some("org/clulab/c2i-en.txt"))
+    val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
+      val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
+      val lines = source.getLines()
+      val c2i = byLineCharMapBuilder.build(lines)
+      c2i
+    }
+
+    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(charEmbeddingSize))
+    val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
+    val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
+
+    val (tag2i, posTagLookupParameters) =
+      if(posTagEmbeddingSize > 0) {
+        val tag2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".tag2i", Some("org/clulab/lm/tag2i-en.txt")))
+        val posTagLookupParameters = parameters.addLookupParameters(tag2i.size, Dim(posTagEmbeddingSize))
+        (Some(tag2i), Some(posTagLookupParameters))
+      } else {
+        (None, None)
+      }
+
+    val positionLookupParameters =
+      if(positionEmbeddingSize > 0) {
+        // Position embeddings [-positionWindowSize, positionWindowSize] + < positionWindowSize + > positionWindowSize. total = 43
+        val positionLookupParameters = parameters.addLookupParameters(positionWindowSize * 2 + 3, Dim(positionEmbeddingSize))
+        Some(positionLookupParameters)
+      } else {
+        None
+      }
+
+    val layer = new EmbeddingLayer(
+      parameters:ParameterCollection,
+      w2i, wordCounter, c2i, tag2i,
+      learnedWordEmbeddingSize,
+      charEmbeddingSize,
+      charRnnStateSize,
+      posTagEmbeddingSize,
+      positionEmbeddingSize,
+      positionWindowSize,
+      wordLookupParameters,
+      charLookupParameters,
+      charFwRnnBuilder,
+      charBwRnnBuilder,
+      posTagLookupParameters,
+      positionLookupParameters,
+      dropoutProb)
+
+    Some(layer)
   }
 
 }

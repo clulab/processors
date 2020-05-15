@@ -6,6 +6,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.dynet.Utils._
+import org.clulab.utils.Configured
 
 /**
  * This layer applies a biLSTM over the sequence of Expressions produced by a previous layer
@@ -59,6 +60,10 @@ class RnnLayer (val parameters:ParameterCollection,
     save(printWriter, rnnStateSize, "rnnStateSize")
     save(printWriter, if(useHighwayConnections) 1 else 0, "useHighwayConnections")
   }
+
+  override def toString: String = {
+    s"RnnLayer($inDim, $outDim)"
+  }
 }
 
 object RnnLayer {
@@ -88,5 +93,31 @@ object RnnLayer {
     new RnnLayer(parameters,
       inputSize, numLayers, rnnStateSize, useHighwayConnections,
       fwBuilder, bwBuilder)
+  }
+
+  def initialize(config: Configured,
+                 paramPrefix: String,
+                 parameters: ParameterCollection): Option[IntermediateLayer] = {
+    if (!config.contains(paramPrefix)) {
+      return None
+    }
+
+    val inputSize = config.getArgInt(paramPrefix + ".inputSize", None)
+    val numLayers = config.getArgInt(paramPrefix + ".numLayers", Some(1))
+    val rnnStateSize = config.getArgInt(paramPrefix + ".rnnStateSize", None)
+    val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))
+    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DROPOUT_PROB))
+
+    val wordFwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
+    val wordBwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
+
+    val layer = new RnnLayer(
+      parameters,
+      inputSize, numLayers, rnnStateSize, useHighwayConnections,
+      wordFwRnnBuilder, wordBwRnnBuilder,
+      dropoutProb
+    )
+
+    Some(layer)
   }
 }

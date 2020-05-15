@@ -1,9 +1,11 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Expression, ExpressionVector, Parameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
 import ForwardLayer._
-import org.clulab.dynet.Utils.ByLineIntBuilder
+import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}
+import org.clulab.struct.Counter
+import org.clulab.utils.Configured
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
@@ -66,6 +68,9 @@ object ForwardLayer {
   val TYPE_VITERBI = 1
   val TYPE_GREEDY = 2
 
+  val TYPE_GREEDY_STRING = "greedy"
+  val TYPE_VITERBI_STRING = "viterbi"
+
   def load(parameters: ParameterCollection,
            x2iIterator: Iterator[String]): ForwardLayer = {
     val inferenceType = new ByLineIntBuilder().build(x2iIterator)
@@ -73,7 +78,39 @@ object ForwardLayer {
     inferenceType match {
       case TYPE_VITERBI => ViterbiForwardLayer.load(parameters, x2iIterator)
       case TYPE_GREEDY => GreedyForwardLayer.load(parameters, x2iIterator)
-      case _ => throw new RuntimeException(s"ERROR: unknown forward layer type ${inferenceType}!")
+      case _ => throw new RuntimeException(s"ERROR: unknown forward layer type $inferenceType!")
+    }
+  }
+
+  def initialize(config: Configured,
+                 paramPrefix: String,
+                 parameters: ParameterCollection,
+                 labelCounter: Counter[String]): Option[ForwardLayer] = {
+    if (!config.contains(paramPrefix)) {
+      return None
+    }
+
+    val inferenceType = config.getArgString(paramPrefix + ".inference", Some("greedy"))
+    val inputSize = config.getArgInt(paramPrefix + ".inputSize", None)
+    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DROPOUT_PROB))
+
+    val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
+    val i2t = fromIndexToString(t2i)
+
+    val H = parameters.addParameters(Dim(t2i.size, inputSize))
+
+    inferenceType match {
+      case TYPE_GREEDY_STRING =>
+        Some(new GreedyForwardLayer(parameters, inputSize, t2i, i2t, H, dropoutProb))
+      case TYPE_VITERBI_STRING =>
+        val T = mkTransitionMatrix(parameters, t2i)
+        val layer = new ViterbiForwardLayer(parameters,
+          inputSize, t2i, i2t, H, T, dropoutProb)
+        layer.initializeTransitions()
+        Some(layer)
+      case _ =>
+        new RuntimeException(s"ERROR: unknown inference type $inferenceType!")
+        None
     }
   }
 }
