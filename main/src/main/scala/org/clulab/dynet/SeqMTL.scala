@@ -3,29 +3,31 @@ package org.clulab.dynet
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ParameterCollection}
+import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection}
 import org.clulab.dynet.Utils._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
-import org.clulab.utils.StringUtils
+import org.clulab.utils.{Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import SeqMTL._
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 import scala.util.Random
 
 /**
- * Implement multi-task learning (MTL) for sequence modeling
- *
+ * Multi-task learning (MTL) for sequence modeling
+ * Designed to model any sequence task (e.g., POS tagging, NER), and SRL
  * @author Mihai
  */
 class SeqMTL(val taskManagerOpt: Option[TaskManager],
              val parameters: ParameterCollection,
              modelOpt: Option[Array[Layers]]) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
-  protected val model: Array[Layers] = modelOpt.getOrElse(initialize())
+  protected lazy val model: Array[Layers] = modelOpt.getOrElse(initialize())
 
-  // One combined Layers object per task, which merges the shared Layers with the task-specific Layers for each task
-  protected val flows: Array[Layers] = mkFlows(model)
+  // One Layers object per task, which merges the shared Layers with the task-specific Layers for each task
+  protected lazy val flows: Array[Layers] = mkFlows(model)
 
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {
@@ -135,16 +137,38 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
           }
           else None
 
-        val goldLabels = sentence.map(_.getLabel)
-
         val lossOpt =
+          // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
           if(taskManager.tasks(taskId).isBasic) {
+            val goldLabels = sentence.map(_.getLabel)
             Some(flows(taskId).loss(words, posTags, None, goldLabels))
-          } else if(taskManager.tasks(taskId).isSrl) {
+          }
+
+          // prediction of SRL arguments
+          else if(taskManager.tasks(taskId).isSrl) {
             // token positions for the predicates in this sentence
             val predicatePositions = sentence.map(_.getLabel).zipWithIndex.filter(_._1 == "B-P").map(_._2)
-            // TODO
-            None
+
+            // traverse all SRL frames
+            if(predicatePositions.nonEmpty) {
+              val allPredLoss = new ExpressionVector()
+
+              for(j <- Row.ARG_START until sentence(0).length) {
+                // token position of the predicate for this frame
+                val predPosition = predicatePositions(j - Row.ARG_START)
+
+                // gold argument labels for this frame
+                val goldLabels = sentence.map(_.tokens(j))
+
+                val loss = flows(taskId).loss(words, posTags, Some(predPosition), goldLabels)
+                allPredLoss.add(loss)
+              }
+
+              if(allPredLoss.length > 0) Some(Expression.sum(allPredLoss))
+              else None
+            } else {
+              None
+            }
           } else {
             throw new RuntimeException(s"ERROR: unknown task type ${taskManager.tasks(taskId).taskType}!")
           }
@@ -211,8 +235,7 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
         logger.info(s"Epoch patience is at $epochPatience.")
       }
 
-      // TODO: save model here
-      // save(s"$modelNamePrefix-epoch$epoch")
+      save(s"$modelNamePrefix-epoch$epoch")
     }
   }
 
@@ -320,12 +343,31 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
   def predictJointly(words: IndexedSeq[String]): IndexedSeq[IndexedSeq[String]] = {
     null // TODO
   }
+
+  def save(baseFilename: String): Unit = {
+    val dynetFilename = mkDynetFilename(baseFilename)
+    val x2iFilename = mkX2iFilename(baseFilename)
+
+    // save the DyNet parameters
+    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+      modelSaver.addModel(parameters, "/all")
+    }
+
+    // save all the other meta data
+    Serializer.using(Utils.newPrintWriter(x2iFilename)) { printWriter =>
+      printWriter.println(model.length)
+      for(i <- model.indices) {
+        model(i).saveX2i(printWriter)
+      }
+    }
+  }
 }
 
 object SeqMTL {
   val logger:Logger = LoggerFactory.getLogger(classOf[SeqMTL])
 
   def apply(modelFilenamePrefix: String): SeqMTL = {
+
     initializeDyNet()
 
     // TODO
@@ -349,7 +391,9 @@ object SeqMTL {
     }
 
     else if(props.containsKey("test")) {
-      // TODO
+      assert(props.containsKey("conf"))
+      val configName = props.getProperty("conf")
+      val config = ConfigFactory.load(configName)
     }
   }
 }

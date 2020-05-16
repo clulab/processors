@@ -33,7 +33,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val charBwRnnBuilder:RnnBuilder,
                       val posTagLookupParameters:Option[LookupParameter],
                       val positionLookupParameters:Option[LookupParameter],
-                      val dropoutProb: Float = EmbeddingLayer.DROPOUT_PROB) extends InitialLayer with Saveable {
+                      val dropoutProb: Float = EmbeddingLayer.DROPOUT_PROB) extends InitialLayer {
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 

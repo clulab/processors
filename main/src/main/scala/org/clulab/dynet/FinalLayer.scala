@@ -2,7 +2,7 @@ package org.clulab.dynet
 
 import edu.cmu.dynet.{Expression, ExpressionVector}
 
-trait FinalLayer {
+trait FinalLayer extends Saveable {
   def forward(inputExpressions: ExpressionVector,
               predicatePositionOpt: Option[Int],
               doDropout: Boolean): ExpressionVector

@@ -19,7 +19,7 @@ class RnnLayer (val parameters:ParameterCollection,
                 val useHighwayConnections: Boolean,
                 val wordFwRnnBuilder:RnnBuilder,
                 val wordBwRnnBuilder:RnnBuilder,
-                val dropoutProb: Float = RnnLayer.DROPOUT_PROB) extends IntermediateLayer with Saveable {
+                val dropoutProb: Float = RnnLayer.DROPOUT_PROB) extends IntermediateLayer {
 
   override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
     setRnnDropout(wordFwRnnBuilder, dropoutProb, doDropout)

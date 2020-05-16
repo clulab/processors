@@ -13,7 +13,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val i2t: Array[String],
                              val H: Parameter,
                              val dropoutProb: Float = DROPOUT_PROB)
-  extends FinalLayer with Saveable {
+  extends FinalLayer {
 
   def forward(inputExpressions: ExpressionVector,
               predicatePositionOpt: Option[Int],

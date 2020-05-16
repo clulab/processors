@@ -1,8 +1,12 @@
 package org.clulab.dynet
 
+import java.io.PrintWriter
+
 import edu.cmu.dynet.{ComputationGraph, Expression, ParameterCollection}
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
+
+import org.clulab.dynet.Utils._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -11,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
  */
 class Layers (val initialLayer: Option[InitialLayer],
               val intermediateLayers: IndexedSeq[IntermediateLayer],
-              val finalLayer: Option[FinalLayer]) {
+              val finalLayer: Option[FinalLayer]) extends Saveable {
   override def toString: String = {
     val sb = new StringBuilder
     var started = false
@@ -72,6 +76,27 @@ class Layers (val initialLayer: Option[InitialLayer],
     val labels = finalLayer.get.inference(emissionScores)
 
     labels
+  }
+
+  override def saveX2i(printWriter: PrintWriter): Unit = {
+    if(initialLayer.nonEmpty) {
+      save(printWriter, 1, "hasInitial")
+      initialLayer.get.saveX2i(printWriter)
+    } else {
+      save(printWriter, 0, "hasInitial")
+    }
+
+    save(printWriter, intermediateLayers.length, "intermediateCount")
+    for(il <- intermediateLayers) {
+      il.saveX2i(printWriter)
+    }
+
+    if(finalLayer.nonEmpty) {
+      save(printWriter, 1, "hasFinal")
+      finalLayer.get.saveX2i(printWriter)
+    } else {
+      save(printWriter, 0, "hasFinal")
+    }
   }
 }
 
