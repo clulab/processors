@@ -175,4 +175,34 @@ object Layers {
 
   val MAX_INTERMEDIATE_LAYERS = 10
 
+  def loadX2i(parameters: ParameterCollection, lines: Iterator[String]): Layers = {
+    val byLineIntBuilder = new ByLineIntBuilder()
+
+    val hasInitial = byLineIntBuilder.build(lines)
+    val initialLayer =
+      if(hasInitial == 1) {
+        val layer = EmbeddingLayer.load(parameters, lines)
+        Some(layer)
+      } else {
+        None
+      }
+
+    val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
+    val intermCount = byLineIntBuilder.build(lines)
+    for(_ <- 0 until intermCount) {
+      val il = RnnLayer.load(parameters, lines)
+      intermediateLayers += il
+    }
+
+    val hasFinal = byLineIntBuilder.build(lines)
+    val finalLayer =
+      if(hasFinal == 1) {
+        val layer = ForwardLayer.load(parameters, lines)
+        Some(layer)
+      } else {
+        None
+      }
+
+    new Layers(initialLayer, intermediateLayers, finalLayer)
+  }
 }

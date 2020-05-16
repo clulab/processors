@@ -13,6 +13,7 @@ import SeqMTL._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -22,9 +23,9 @@ import scala.util.Random
  */
 class SeqMTL(val taskManagerOpt: Option[TaskManager],
              val parameters: ParameterCollection,
-             modelOpt: Option[Array[Layers]]) {
+             modelOpt: Option[IndexedSeq[Layers]]) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
-  protected lazy val model: Array[Layers] = modelOpt.getOrElse(initialize())
+  protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
 
   // One Layers object per task, which merges the shared Layers with the task-specific Layers for each task
   protected lazy val flows: Array[Layers] = mkFlows(model)
@@ -59,7 +60,7 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
     layersPerTask
   }
 
-  protected def mkFlows(layers: Array[Layers]): Array[Layers] = {
+  protected def mkFlows(layers: IndexedSeq[Layers]): Array[Layers] = {
     val flows = new Array[Layers](taskManager.taskCount)
     assert(flows.length + 1 == layers.length)
 
@@ -344,6 +345,19 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
     null // TODO
   }
 
+  def test(): Unit = {
+    require(taskManagerOpt.isDefined)
+
+    // check final performance on the test dataset
+    for(taskId <- 0 until taskManager.taskCount) {
+      val taskName = taskManager.tasks(taskId).taskName
+      val testSentences = taskManager.tasks(taskId).testSentences
+      if(testSentences.nonEmpty) {
+        evaluate(taskId, taskName, testSentences.get)
+      }
+    }
+  }
+
   def save(baseFilename: String): Unit = {
     val dynetFilename = mkDynetFilename(baseFilename)
     val x2iFilename = mkX2iFilename(baseFilename)
@@ -355,7 +369,7 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
 
     // save all the other meta data
     Serializer.using(Utils.newPrintWriter(x2iFilename)) { printWriter =>
-      printWriter.println(model.length)
+      Utils.save(printWriter, model.length, "layerCount")
       for(i <- model.indices) {
         model(i).saveX2i(printWriter)
       }
@@ -366,12 +380,50 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
 object SeqMTL {
   val logger:Logger = LoggerFactory.getLogger(classOf[SeqMTL])
 
+  protected def load(parameters: ParameterCollection,
+                     modelFilenamePrefix: String): IndexedSeq[Layers] = {
+
+    logger.debug(s"Loading MTL model from $modelFilenamePrefix...")
+    val dynetFilename = mkDynetFilename(modelFilenamePrefix)
+    val x2iFilename = mkX2iFilename(modelFilenamePrefix)
+
+    //
+    // load the x2i meta data
+    //
+    val layersSeq = Serializer.using(Utils.newSource(x2iFilename)) { source =>
+      val layersSeq = new ArrayBuffer[Layers]()
+      val lines = source.getLines()
+
+      val layersCount = new Utils.ByLineIntBuilder().build(lines)
+      for(i <- 0 until layersCount) {
+        val layers = Layers.loadX2i(parameters, lines)
+        layersSeq += layers
+      }
+
+      layersSeq.toIndexedSeq
+    }
+
+    //
+    // load the actual DyNet params
+    //
+    Utils.loadParameters(dynetFilename, parameters)
+
+    logger.debug("MTL loading complete.")
+    layersSeq
+  }
+
+  def apply(modelFilenamePrefix: String, taskManager: TaskManager): SeqMTL = {
+    val parameters = new ParameterCollection()
+    val model = SeqMTL.load(parameters, modelFilenamePrefix)
+    val mtl = new SeqMTL(Some(taskManager), parameters, Some(model))
+    mtl
+  }
+
   def apply(modelFilenamePrefix: String): SeqMTL = {
-
-    initializeDyNet()
-
-    // TODO
-    null
+    val parameters = new ParameterCollection()
+    val model = SeqMTL.load(parameters, modelFilenamePrefix)
+    val mtl = new SeqMTL(None, parameters, Some(model))
+    mtl
   }
 
   def main(args: Array[String]): Unit = {
@@ -394,6 +446,11 @@ object SeqMTL {
       assert(props.containsKey("conf"))
       val configName = props.getProperty("conf")
       val config = ConfigFactory.load(configName)
+      val taskManager = new TaskManager(config)
+      val modelName = props.getProperty("test")
+
+      val mtl = SeqMTL(modelName, taskManager)
+      mtl.test()
     }
   }
 }
