@@ -59,8 +59,8 @@ class Layers (val initialLayer: Option[InitialLayer],
     assert(initialLayer.nonEmpty)
     assert(finalLayer.nonEmpty)
 
-    val emissionScores =
-      this.synchronized {
+    val emissionScores: Array[Array[Float]] =
+      this.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
         ComputationGraph.renew()
         var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = false)
 

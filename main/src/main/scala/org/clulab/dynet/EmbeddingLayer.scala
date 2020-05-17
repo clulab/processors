@@ -167,7 +167,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   override def saveX2i(printWriter: PrintWriter): Unit = {
     save(printWriter, w2i, "w2i")
     save(printWriter, w2f, "w2f")
-    save(printWriter, c2i, "c2i")
+    saveCharMap(printWriter, c2i, "c2i")
     if(tag2i.nonEmpty) {
       save(printWriter, 1, "hasTag2i")
       save(printWriter, tag2i.get, "tag2i")
