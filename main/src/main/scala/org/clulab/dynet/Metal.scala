@@ -9,7 +9,7 @@ import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.{Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
-import SeqMTL._
+import Metal._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
@@ -17,13 +17,13 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
- * Multi-task learning (MTL) for sequence modeling
+ * Multi-task learning (MeTaL) for sequence modeling
  * Designed to model any sequence task (e.g., POS tagging, NER), and SRL
  * @author Mihai
  */
-class SeqMTL(val taskManagerOpt: Option[TaskManager],
-             val parameters: ParameterCollection,
-             modelOpt: Option[IndexedSeq[Layers]]) {
+class Metal(val taskManagerOpt: Option[TaskManager],
+            val parameters: ParameterCollection,
+            modelOpt: Option[IndexedSeq[Layers]]) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
 
@@ -377,8 +377,8 @@ class SeqMTL(val taskManagerOpt: Option[TaskManager],
   }
 }
 
-object SeqMTL {
-  val logger:Logger = LoggerFactory.getLogger(classOf[SeqMTL])
+object Metal {
+  val logger:Logger = LoggerFactory.getLogger(classOf[Metal])
 
   protected def load(parameters: ParameterCollection,
                      modelFilenamePrefix: String): IndexedSeq[Layers] = {
@@ -412,17 +412,17 @@ object SeqMTL {
     layersSeq
   }
 
-  def apply(modelFilenamePrefix: String, taskManager: TaskManager): SeqMTL = {
+  def apply(modelFilenamePrefix: String, taskManager: TaskManager): Metal = {
     val parameters = new ParameterCollection()
-    val model = SeqMTL.load(parameters, modelFilenamePrefix)
-    val mtl = new SeqMTL(Some(taskManager), parameters, Some(model))
+    val model = Metal.load(parameters, modelFilenamePrefix)
+    val mtl = new Metal(Some(taskManager), parameters, Some(model))
     mtl
   }
 
-  def apply(modelFilenamePrefix: String): SeqMTL = {
+  def apply(modelFilenamePrefix: String): Metal = {
     val parameters = new ParameterCollection()
-    val model = SeqMTL.load(parameters, modelFilenamePrefix)
-    val mtl = new SeqMTL(None, parameters, Some(model))
+    val model = Metal.load(parameters, modelFilenamePrefix)
+    val mtl = new Metal(None, parameters, Some(model))
     mtl
   }
 
@@ -438,7 +438,7 @@ object SeqMTL {
       val taskManager = new TaskManager(config)
       val modelName = props.getProperty("train")
 
-      val mtl = new SeqMTL(Some(taskManager), parameters, None)
+      val mtl = new Metal(Some(taskManager), parameters, None)
       mtl.train(modelName)
     }
 
@@ -449,7 +449,7 @@ object SeqMTL {
       val taskManager = new TaskManager(config)
       val modelName = props.getProperty("test")
 
-      val mtl = SeqMTL(modelName, taskManager)
+      val mtl = Metal(modelName, taskManager)
       mtl.test()
     }
   }

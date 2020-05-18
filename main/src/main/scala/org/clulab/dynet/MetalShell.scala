@@ -2,7 +2,7 @@ package org.clulab.dynet
 
 import org.clulab.utils.Shell
 
-class MTLShell(val mtl:SeqMTL) extends Shell {
+class MetalShell(val mtl:Metal) extends Shell {
   override def initialize(): Unit = {
     // nothing to do. we receive an initialize MTL object
   }

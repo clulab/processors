@@ -10,7 +10,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import CluProcessor._
-import org.clulab.dynet.SeqMTL
+import org.clulab.dynet.Metal
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -48,17 +48,17 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   // one of the multi-task learning (MTL) models, which covers: POS and chunking
-  lazy val mtlSyn: SeqMTL = getArgString(s"$prefix.language", Some("EN")) match {
+  lazy val mtlSyn: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => SeqMTL(getArgString(s"$prefix.mtl-pos-chunk", Some("mtl-en-pos-chunk")))
+    case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk", Some("mtl-en-pos-chunk")))
   }
 
   // one of the multi-task learning (MTL) models, which covers: NER
-  lazy val mtlNer: SeqMTL = getArgString(s"$prefix.language", Some("EN")) match {
+  lazy val mtlNer: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => SeqMTL(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+    case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
   }
 
   override def annotate(doc:Document): Document = {
