@@ -1,4 +1,5 @@
 # Changes
+
 + **8.0.3** - Allow vars to be formatted as a yaml list in Odin.
 + **8.0.3** - Tokenization bug fixes.
 + **8.0.3** - Better management of artifactory repos.
