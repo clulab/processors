@@ -35,6 +35,8 @@ class Layers (val initialLayer: Option[InitialLayer],
     sb.toString()
   }
 
+  def isEmpty: Boolean = (initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty)
+
   def needsPosTags: Boolean = initialLayer.nonEmpty && initialLayer.get.needsPosTags
 
   def loss(words: IndexedSeq[String],
@@ -61,6 +63,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
     val emissionScores: Array[Array[Float]] =
       this.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
+
         ComputationGraph.renew()
         var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = false)
 

@@ -452,5 +452,12 @@ object Metal {
       val mtl = Metal(modelName, taskManager)
       mtl.test()
     }
+
+    else if(props.containsKey("shell")) {
+      val modelName = props.getProperty("shell")
+      val mtl = Metal(modelName)
+      val shell = new MetalShell(mtl)
+      shell.shell()
+    }
   }
 }
