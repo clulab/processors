@@ -46,11 +46,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     // 0 reserved for the shared Layers object
     val layersPerTask = new Array[Layers](taskManager.taskCount + 1)
     layersPerTask(0) =
-      Layers(taskManager, "mtl.layers", parameters, taskWords(0), None)
+      Layers(taskManager, "mtl.layers", parameters, taskWords(0),
+        None, false)
     for (i <- taskManager.indices) {
       layersPerTask(i + 1) =
         Layers(taskManager, s"mtl.task${i + 1}.layers",
-          parameters, taskWords(i + 1), Some(taskLabels(i + 1)))
+          parameters, taskWords(i + 1),
+          Some(taskLabels(i + 1)), taskManager.tasks(i).isSrl)
     }
     for(i <- layersPerTask.indices) {
       logger.debug(s"Summary of layersPerTask($i):")

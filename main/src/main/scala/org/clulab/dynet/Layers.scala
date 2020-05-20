@@ -2,10 +2,9 @@ package org.clulab.dynet
 
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{ComputationGraph, Expression, ParameterCollection}
+import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterCollection}
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
-
 import org.clulab.dynet.Utils._
 
 import scala.collection.mutable.ArrayBuffer
@@ -35,7 +34,8 @@ class Layers (val initialLayer: Option[InitialLayer],
     sb.toString()
   }
 
-  def isEmpty: Boolean = (initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty)
+  def isEmpty: Boolean = initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty
+  def nonEmpty: Boolean = ! isEmpty
 
   def needsPosTags: Boolean = initialLayer.nonEmpty && initialLayer.get.needsPosTags
 
@@ -55,6 +55,45 @@ class Layers (val initialLayer: Option[InitialLayer],
     finalLayer.get.loss(states, goldLabels)
   }
 
+  protected def forward(words: IndexedSeq[String],
+                        posTags: Option[IndexedSeq[String]],
+                        predicatePosition: Option[Int]): ExpressionVector = {
+    if(initialLayer.isEmpty) {
+      throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
+    }
+
+    var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = false)
+
+    for (i <- intermediateLayers.indices) {
+      states = intermediateLayers(i).forward(states, doDropout = false)
+    }
+
+    if(finalLayer.nonEmpty) {
+      states = finalLayer.get.forward(states, predicatePosition, doDropout = false)
+    }
+
+    states
+  }
+
+  protected def forwardFrom(inStates: ExpressionVector,
+                            predicatePosition: Option[Int]): ExpressionVector = {
+    if(initialLayer.nonEmpty) {
+      throw new RuntimeException(s"ERROR: you can't call forwardFrom() on a Layers object that has an initial layer: $toString!")
+    }
+
+    var states = inStates
+
+    for (i <- intermediateLayers.indices) {
+      states = intermediateLayers(i).forward(states, doDropout = false)
+    }
+
+    if(finalLayer.nonEmpty) {
+      states = finalLayer.get.forward(states, predicatePosition, doDropout = false)
+    }
+
+    states
+  }
+
   def predict(words: IndexedSeq[String],
               posTags: Option[IndexedSeq[String]],
               predicatePosition: Option[Int]): IndexedSeq[String] = {
@@ -65,14 +104,7 @@ class Layers (val initialLayer: Option[InitialLayer],
       this.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
 
         ComputationGraph.renew()
-        var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = false)
-
-        for (i <- intermediateLayers.indices) {
-          states = intermediateLayers(i).forward(states, doDropout = false)
-        }
-
-        states = finalLayer.get.forward(states, predicatePosition, doDropout = false)
-
+        val states = forward(words, posTags, predicatePosition)
         Utils.emissionScoresToArrays(states)
       }
 
@@ -108,7 +140,8 @@ object Layers {
             paramPrefix: String,
             parameters: ParameterCollection,
             wordCounter: Counter[String],
-            labelCounterOpt: Option[Counter[String]]): Layers = {
+            labelCounterOpt: Option[Counter[String]],
+            doubleFinalLayer: Boolean): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
     val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
@@ -124,7 +157,8 @@ object Layers {
 
     val finalLayer =
       if(labelCounterOpt.nonEmpty) {
-        ForwardLayer.initialize(config, paramPrefix + ".final", parameters, labelCounterOpt.get)
+        ForwardLayer.initialize(config, paramPrefix + ".final", parameters,
+          labelCounterOpt.get, doubleFinalLayer)
       } else {
         None
       }
@@ -161,6 +195,10 @@ object Layers {
         throw new RuntimeException(s"ERROR: the input dimension of intermediate layer ${il.toString} does not match the expected value of $prevOutDim!")
       }
       prevOutDim = il.outDim
+    }
+
+    if(intermediateLayers.isEmpty) {
+      throw new RuntimeException(s"ERROR: intermediate layers must exist in the merge!")
     }
 
     if(taskLayers.finalLayer.get.inDim != intermediateLayers.last.outDim) {
@@ -207,5 +245,33 @@ object Layers {
       }
 
     new Layers(initialLayer, intermediateLayers, finalLayer)
+  }
+
+  def predictJointly(layers: Array[Layers],
+                     words: IndexedSeq[String],
+                     posTags: Option[IndexedSeq[String]],
+                     predicatePosition: Option[Int]): IndexedSeq[IndexedSeq[String]] = {
+    val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
+
+    this.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
+      ComputationGraph.renew()
+
+      // layers(0) contains the shared layers
+      if(layers(0).nonEmpty) {
+        val sharedStates = layers(0).forward(words, posTags, predicatePosition)
+
+        for (i <- 1 until layers.length) {
+          val states = layers(i).forwardFrom(sharedStates, predicatePosition)
+          // TODO
+        }
+      }
+
+      // no shared layer
+      else {
+
+      }
+    }
+
+    labelsPerTask
   }
 }

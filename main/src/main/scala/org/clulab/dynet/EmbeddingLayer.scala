@@ -27,6 +27,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val posTagEmbeddingSize: Int, // size of the POS tag embedding
                       val positionEmbeddingSize: Int,
                       val positionWindowSize: Int, // window considered for position values (relative to predicate)
+                      val useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
                       val wordLookupParameters:LookupParameter,
                       val charLookupParameters:LookupParameter,
                       val charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
@@ -97,7 +98,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // 1 if this word is the predicate
     //
     val predEmbed =
-    if(predicatePosition.nonEmpty) {
+    if(predicatePosition.nonEmpty && useIsPredicate) {
       Some(Expression.input(if(wordPosition == predicatePosition.get) 1f else 0f))
     } else {
       None
@@ -180,6 +181,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     save(printWriter, posTagEmbeddingSize, "posTagEmbeddingSize")
     save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
     save(printWriter, positionWindowSize, "positionWindowSize")
+    save(printWriter, if(useIsPredicate) 1 else 0, "useIsPredicate")
   }
 
   override def toString: String = {
@@ -220,6 +222,7 @@ object EmbeddingLayer {
     val posTagEmbeddingSize = byLineIntBuilder.build(x2iIterator)
     val positionEmbeddingSize = byLineIntBuilder.build(x2iIterator)
     val positionWindowSize = byLineIntBuilder.build(x2iIterator)
+    val useIsPredicate = byLineIntBuilder.build(x2iIterator) == 1
 
     //
     // make the loadable parameters
@@ -254,6 +257,7 @@ object EmbeddingLayer {
       posTagEmbeddingSize,
       positionEmbeddingSize,
       positionWindowSize,
+      useIsPredicate,
       wordLookupParameters,
       charLookupParameters,
       charFwRnnBuilder,
@@ -277,6 +281,7 @@ object EmbeddingLayer {
     val posTagEmbeddingSize = config.getArgInt(paramPrefix + ".posTagEmbeddingSize", Some(-1))
     val positionEmbeddingSize = config.getArgInt(paramPrefix + ".positionEmbeddingSize", Some(-1))
     val positionWindowSize = config.getArgInt(paramPrefix + ".positionWindowSize", Some(-1))
+    val useIsPredicate = config.getArgBoolean(paramPrefix + ".useIsPredicate", Some(true))
     val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(EmbeddingLayer.DROPOUT_PROB))
 
     // the word at position 0 is always reserved for UNK
@@ -324,6 +329,7 @@ object EmbeddingLayer {
       posTagEmbeddingSize,
       positionEmbeddingSize,
       positionWindowSize,
+      useIsPredicate,
       wordLookupParameters,
       charLookupParameters,
       charFwRnnBuilder,
