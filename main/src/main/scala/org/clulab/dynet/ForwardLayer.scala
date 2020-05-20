@@ -86,7 +86,7 @@ object ForwardLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
-                 doubleFinalLayer: Boolean): Option[ForwardLayer] = {
+                 computeInputSize: (Int) => Int): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
     }
@@ -98,7 +98,7 @@ object ForwardLayer {
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
 
-    val actualInputSize = if(doubleFinalLayer) inputSize * 2 else inputSize
+    val actualInputSize = computeInputSize(inputSize)
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     inferenceType match {

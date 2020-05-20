@@ -141,7 +141,7 @@ object Layers {
             parameters: ParameterCollection,
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
-            doubleFinalLayer: Boolean): Layers = {
+            computInputSizeFinalLayer: (Int) => Int): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
     val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
@@ -158,7 +158,7 @@ object Layers {
     val finalLayer =
       if(labelCounterOpt.nonEmpty) {
         ForwardLayer.initialize(config, paramPrefix + ".final", parameters,
-          labelCounterOpt.get, doubleFinalLayer)
+          labelCounterOpt.get, computInputSizeFinalLayer)
       } else {
         None
       }
