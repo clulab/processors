@@ -25,7 +25,6 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       for (i <- inputExpressions.indices) {
         var argExp = inputExpressions(i)
 
-        // TODO: there was no dropout here in the old system
         argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
 
         var l1 = pH * argExp
@@ -41,13 +40,11 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         var argExp = inputExpressions(i)
         var predExp = inputExpressions(predPosition)
 
-        argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
-        predExp = Utils.expressionDropout(predExp, dropoutProb, doDropout)
+        // TODO: dropout before or after concatenate?
+        val ss = Utils.expressionDropout(Expression.concatenate(argExp, predExp), dropoutProb, doDropout)
 
-        val ss = Expression.concatenate(argExp, predExp)
-        var l1 = pH * ss
+        val l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
-        l1 = Utils.expressionDropout(l1, dropoutProb, doDropout)
         emissionScores.add(l1)
       }
     }
@@ -93,7 +90,7 @@ object ForwardLayer {
 
     val inferenceType = config.getArgString(paramPrefix + ".inference", Some("greedy"))
     val inputSize = config.getArgInt(paramPrefix + ".inputSize", None)
-    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DROPOUT_PROB))
+    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DROPOUT_PROB))
 
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
