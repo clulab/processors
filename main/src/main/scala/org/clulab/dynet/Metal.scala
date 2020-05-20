@@ -49,7 +49,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       Layers(taskManager, "mtl.layers", parameters, taskWords(0),
         None, identity)
     for (i <- taskManager.indices) {
-      val computeInputSizeFinalLayer: (Int) => Int =
+      val computeInputSizeFinalLayer: Int => Int =
         if(taskManager.tasks(i).isSrl) doubleInt
         else identity
 

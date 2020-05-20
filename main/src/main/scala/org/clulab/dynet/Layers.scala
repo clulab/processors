@@ -141,7 +141,7 @@ object Layers {
             parameters: ParameterCollection,
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
-            computInputSizeFinalLayer: (Int) => Int): Layers = {
+            computInputSizeFinalLayer: Int => Int): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
     val intermediateLayers = new ArrayBuffer[IntermediateLayer]()

@@ -83,7 +83,7 @@ object ForwardLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
-                 computeInputSize: (Int) => Int): Option[ForwardLayer] = {
+                 computeInputSize: Int => Int): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
     }
