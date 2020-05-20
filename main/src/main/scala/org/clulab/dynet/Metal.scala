@@ -351,7 +351,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   }
 
   def predictJointly(words: IndexedSeq[String]): IndexedSeq[IndexedSeq[String]] = {
-    null // TODO
+    Layers.predictJointly(model, words, None, None)
   }
 
   def test(): Unit = {

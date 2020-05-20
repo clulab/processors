@@ -247,7 +247,7 @@ object Layers {
     new Layers(initialLayer, intermediateLayers, finalLayer)
   }
 
-  def predictJointly(layers: Array[Layers],
+  def predictJointly(layers: IndexedSeq[Layers],
                      words: IndexedSeq[String],
                      posTags: Option[IndexedSeq[String]],
                      predicatePosition: Option[Int]): IndexedSeq[IndexedSeq[String]] = {
@@ -262,13 +262,20 @@ object Layers {
 
         for (i <- 1 until layers.length) {
           val states = layers(i).forwardFrom(sharedStates, predicatePosition)
-          // TODO
+          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+          val labels = layers(i).finalLayer.get.inference(emissionScores)
+          labelsPerTask += labels
         }
       }
 
       // no shared layer
       else {
-
+        for (i <- 1 until layers.length) {
+          val states = layers(i).forward(words, posTags, predicatePosition)
+          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+          val labels = layers(i).finalLayer.get.inference(emissionScores)
+          labelsPerTask += labels
+        }
       }
     }
 
