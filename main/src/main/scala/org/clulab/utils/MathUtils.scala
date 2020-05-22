@@ -246,12 +246,42 @@ object MathUtils {
       (bucket) <- 0 to boundaries.size
     } yield (getRange(bucket) -> countsByBucket.getOrElse(bucket, 0))).toMap
   }
-  
+
   def histogram(xs: Traversable[Double], numBuckets: Int): Map[(Double, Double), Int] = {
     val (min, max) = (xs.min, xs.max)
     val step = (max - min) / numBuckets
     require(step != 0, "xs has all same values")
     val divisions = (min + step) to (max - step / 2) by step
     histogram(xs, divisions)
+  }
+
+  /**
+   *
+   * @param coll                         - the collection on which to call the methods
+   * @param collectionToSequenceImplicit - just like a view bound: CT <% Seq[T], but written explicitly (view bounds
+   *                                     are deprecated); Allows this code to work with any collections that can be
+   *                                     viewed as Seq[T] via an implicit conversion
+   * @param numeric                      - implicit param to be able to use the same methods for all number types
+   */
+  implicit class EnhancedNumericCollection[T, CT](coll: CT)(implicit collectionToSequenceImplicit: CT => Seq[T], numeric: Numeric[T]) {
+    def mean(): Double = {
+      // coll.sum might overflow
+      var sum = 0.0
+      for (n <- coll) {
+        sum += numeric.toDouble(n)
+      }
+      sum / (coll.size.toDouble)
+    }
+
+    def variance(): Double = {
+      var sumOfSquares = 0.0
+      var sum = 0.0
+      for (number <- coll) {
+        val numberDouble = numeric.toDouble(number)
+        sumOfSquares += numberDouble * numberDouble
+        sum += numberDouble
+      }
+      sumOfSquares / coll.size - math.pow((sum / coll.size), 2)
+    }
   }
 }
