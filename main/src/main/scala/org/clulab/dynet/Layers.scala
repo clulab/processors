@@ -219,7 +219,7 @@ object Layers {
   def loadX2i(parameters: ParameterCollection, lines: Iterator[String]): Layers = {
     val byLineIntBuilder = new ByLineIntBuilder()
 
-    val hasInitial = byLineIntBuilder.build(lines)
+    val hasInitial = byLineIntBuilder.build(lines, "hasInitial")
     val initialLayer =
       if(hasInitial == 1) {
         val layer = EmbeddingLayer.load(parameters, lines)
@@ -229,13 +229,13 @@ object Layers {
       }
 
     val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
-    val intermCount = byLineIntBuilder.build(lines)
+    val intermCount = byLineIntBuilder.build(lines, "intermediateCount")
     for(_ <- 0 until intermCount) {
       val il = RnnLayer.load(parameters, lines)
       intermediateLayers += il
     }
 
-    val hasFinal = byLineIntBuilder.build(lines)
+    val hasFinal = byLineIntBuilder.build(lines, "hasFinal")
     val finalLayer =
       if(hasFinal == 1) {
         val layer = ForwardLayer.load(parameters, lines)

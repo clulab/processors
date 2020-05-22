@@ -37,11 +37,11 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     else {
       val predPosition = predicatePositionOpt.get
       for(i <- inputExpressions.indices) {
-        var argExp = inputExpressions(i)
-        var predExp = inputExpressions(predPosition)
+        val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
+        val predExp = Utils.expressionDropout(inputExpressions(predPosition), dropoutProb, doDropout)
 
         // TODO: dropout before or after concatenate?
-        val ss = Utils.expressionDropout(Expression.concatenate(argExp, predExp), dropoutProb, doDropout)
+        val ss = Expression.concatenate(argExp, predExp)
 
         val l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
@@ -70,7 +70,7 @@ object ForwardLayer {
 
   def load(parameters: ParameterCollection,
            x2iIterator: Iterator[String]): ForwardLayer = {
-    val inferenceType = new ByLineIntBuilder().build(x2iIterator)
+    val inferenceType = new ByLineIntBuilder().build(x2iIterator, "inferenceType")
 
     inferenceType match {
       case TYPE_VITERBI => ViterbiForwardLayer.load(parameters, x2iIterator)

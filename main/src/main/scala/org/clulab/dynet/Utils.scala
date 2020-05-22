@@ -512,11 +512,52 @@ object Utils {
     printWriter.println() // Separator
   }
 
-  abstract class ByLineBuilder[IntermediateValueType] {
+  abstract class ByLineBuilder[IntermediateValueType, FinalValueType, DefaultValueType] {
 
-    protected def addLines(intermediateValue: IntermediateValueType, lines: Iterator[String]): Unit = {
+    protected def setDefaultValue(intermediateValue: IntermediateValueType, defaultValue: DefaultValueType)
+
+    protected def getComment(line: String): String = {
+      assert(line.startsWith("#"))
+      line.substring(1).trim
+    }
+
+    protected def addLines(intermediateValue: IntermediateValueType,
+                           lines: Iterator[String],
+                           fieldName: Option[String],
+                           defaultValue: Option[DefaultValueType]): Unit = {
       // we need to look ahead to skip the comments, hence the buffered iterator
       val bufferedIterator = lines.buffered
+
+      //
+      // sanity check: verify if we are reading the expected field, by checking the string in the comment
+      // if we are not seeing the expected field, but we have a default value for this field, use that
+      //   this is necessary to make new code backwards compatible with older models that may not have that field
+      // if we are not seeing the expected field, and no default value provided, bail
+      //
+      if(fieldName.nonEmpty) {
+        val head = Some(bufferedIterator.head) // if(bufferedIterator.hasNext) Some(bufferedIterator.head) else None
+
+        // if the field name doesn't match, set it to the default value
+        if (defaultValue.nonEmpty) {
+          if(head.isEmpty) {
+            logger.warn(s"Did not see the expected field [${fieldName.get}] in the model; instead I am seeing an empty line.")
+            logger.warn(s"Attempting to recover by using default value of [${defaultValue.get}].")
+            setDefaultValue(intermediateValue, defaultValue.get)
+            return
+          } else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
+            logger.warn(s"Did not see the expected field [${fieldName.get}] in the model; instead I am seeing this line: [${head.get}].")
+            logger.warn(s"Attempting to recover by using default value of [${defaultValue.get}].")
+            setDefaultValue(intermediateValue, defaultValue.get)
+            return
+          }
+        } else {
+          if(head.isEmpty) {
+            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing an empty line!")
+          } else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
+            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing this line: [${head.get}]!")
+          }
+        }
+      }
 
       // skip exactly 1 comment line (optional)
       if (bufferedIterator.head.nonEmpty && bufferedIterator.head.startsWith("#")) {
@@ -531,18 +572,39 @@ object Utils {
           addLine(intermediateValue, line)
           true // Continue on non-blank lines.
         }
-        else
+        else {
           false // Stop at first blank line.
+        }
       }
 
       while (nextLine()) {}
     }
 
     def addLine(intermediateValue: IntermediateValueType, line: String): Unit
+
+    protected def build(lines: Iterator[String],
+                        fieldName: Option[String],
+                        defaultValue: Option[DefaultValueType]): FinalValueType
+
+    def build(lines: Iterator[String]): FinalValueType = {
+      build(lines, None, None)
+    }
+
+    def build(lines: Iterator[String],
+              fieldName: String): FinalValueType = {
+      build(lines, Some(fieldName), None)
+    }
+
+    def build(lines: Iterator[String],
+              fieldName: String,
+              defaultValue: DefaultValueType): FinalValueType = {
+      build(lines, Some(fieldName), Some(defaultValue))
+    }
   }
 
   // This is a little fancy because it works with both String and Char keys.
-  class ByLineMapBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder[mutable.Map[KeyType, Int]] {
+  class ByLineMapBuilder[KeyType](val converter: String => KeyType)
+    extends ByLineBuilder[mutable.Map[KeyType, Int], Map[KeyType, Int], IndexedSeq[(KeyType, Int)]] {
 
     def addLine(mutableMap: mutable.Map[KeyType, Int], line: String): Unit = {
       val Array(key, value) = line.split('\t')
@@ -550,15 +612,25 @@ object Utils {
       mutableMap += ((converter(key), value.toInt))
     }
 
-    def build(lines: Iterator[String]): Map[KeyType, Int] = {
+    override protected def build(lines: Iterator[String],
+                                 fieldName: Option[String],
+                                 defaultValue: Option[IndexedSeq[(KeyType, Int)]]): Map[KeyType, Int] = {
       val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
 
-      addLines(mutableMap, lines)
+      addLines(mutableMap, lines, fieldName, defaultValue)
       mutableMap.toMap
+    }
+
+    override protected def setDefaultValue(mutableMap: mutable.Map[KeyType, Int],
+                                           defaultValue: IndexedSeq[(KeyType, Int)]): Unit = {
+      for(kv <- defaultValue) {
+        mutableMap += kv
+      }
     }
   }
 
-  class ByLineCounterBuilder[KeyType](val converter: String => KeyType) extends ByLineBuilder[Counter[KeyType]] {
+  class ByLineCounterBuilder[KeyType](val converter: String => KeyType)
+    extends ByLineBuilder[Counter[KeyType], Counter[KeyType], IndexedSeq[(KeyType, Double)]] {
 
     def addLine(counter: Counter[KeyType], line: String): Unit = {
       val Array(key, value) = line.split('\t')
@@ -566,11 +638,20 @@ object Utils {
       counter.setCount(converter(key), value.toDouble)
     }
 
-    def build(lines: Iterator[String]): Counter[KeyType] = {
+    override protected def build(lines: Iterator[String],
+                                 fieldName: Option[String],
+                                 defaultValue: Option[IndexedSeq[(KeyType, Double)]]): Counter[KeyType] = {
       val counter: Counter[KeyType] = new Counter[KeyType]()
 
-      addLines(counter, lines)
+      addLines(counter, lines, fieldName, defaultValue)
       counter
+    }
+
+    override protected def setDefaultValue(counter: Counter[KeyType],
+                                           defaultValue: IndexedSeq[(KeyType, Double)]): Unit = {
+      for(kv <- defaultValue) {
+        counter.setCount(kv._1, kv._2)
+      }
     }
   }
 
@@ -588,31 +669,47 @@ object Utils {
 
   class ByLineCharIntMapBuilder extends ByLineMapBuilder(stringToCharInt)
 
-  class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String]] {
+  class ByLineArrayBuilder extends ByLineBuilder[ArrayBuffer[String], Array[String], IndexedSeq[String]] {
 
     def addLine(arrayBuffer: ArrayBuffer[String], line: String): Unit = {
       arrayBuffer += line
     }
 
-    def build(lines: Iterator[String]): Array[String] = {
+    override protected def build(lines: Iterator[String],
+                                 fieldName: Option[String],
+                                 defaultValue: Option[IndexedSeq[String]]): Array[String] = {
       val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
 
-      addLines(arrayBuffer, lines)
+      addLines(arrayBuffer, lines, fieldName, defaultValue)
       arrayBuffer.toArray
+    }
+
+    override protected def setDefaultValue(intermediateValue: ArrayBuffer[String],
+                                           defaultValue: IndexedSeq[String]): Unit = {
+      for(v <- defaultValue) {
+        intermediateValue += v
+      }
     }
   }
 
-  class ByLineIntBuilder extends ByLineBuilder[MutableNumber[Option[Int]]] {
+  class ByLineIntBuilder extends ByLineBuilder[MutableNumber[Option[Int]], Int, Int] {
 
     def addLine(mutableNumberOpt: MutableNumber[Option[Int]], line: String): Unit = {
       mutableNumberOpt.value = Some(line.toInt)
     }
 
-    def build(lines: Iterator[String]): Int = {
+    override protected def build(lines: Iterator[String],
+                                 fieldName: Option[String],
+                                 defaultValue: Option[Int]): Int = {
       val mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
 
-      addLines(mutableNumberOpt, lines)
+      addLines(mutableNumberOpt, lines, fieldName, defaultValue)
       mutableNumberOpt.value.get
+    }
+
+    override protected def setDefaultValue(intermediateValue: MutableNumber[Option[Int]],
+                                           defaultValue: Int): Unit = {
+      intermediateValue.value = Some(defaultValue)
     }
   }
 

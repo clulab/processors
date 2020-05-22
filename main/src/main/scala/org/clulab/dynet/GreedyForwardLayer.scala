@@ -44,8 +44,8 @@ object GreedyForwardLayer {
     val byLineIntBuilder = new ByLineIntBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
 
-    val inputSize = byLineIntBuilder.build(x2iIterator)
-    val t2i = byLineStringMapBuilder.build(x2iIterator)
+    val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
+    val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
 
     //

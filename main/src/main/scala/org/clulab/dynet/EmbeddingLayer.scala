@@ -4,11 +4,12 @@ import java.io.PrintWriter
 
 import edu.cmu.dynet.Expression.concatenate
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
-import org.clulab.lm.RnnLM.RANDOM
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
 import org.clulab.utils.{Configured, Serializer}
+
+import EmbeddingLayer._
 
 import scala.util.Random
 
@@ -34,7 +35,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val charBwRnnBuilder:RnnBuilder,
                       val posTagLookupParameters:Option[LookupParameter],
                       val positionLookupParameters:Option[LookupParameter],
-                      val dropoutProb: Float = EmbeddingLayer.DROPOUT_PROB) extends InitialLayer {
+                      val dropoutProb: Float = EmbeddingLayer.DEFAULT_DROPOUT_PROB) extends InitialLayer {
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
@@ -194,7 +195,14 @@ object EmbeddingLayer {
 
   val RANDOM = new Random(Utils.RANDOM_SEED)
 
-  val DROPOUT_PROB = 0.2f
+  val DEFAULT_DROPOUT_PROB: Float = 0.2f
+  val DEFAULT_LEARNED_WORD_EMBEDDING_SIZE: Int = 128
+  val DEFAULT_CHAR_EMBEDDING_SIZE: Int = 32
+  val DEFAULT_CHAR_RNN_STATE_SIZE: Int = 16
+  val DEFAULT_POS_TAG_EMBEDDING_SIZE: Int = -1 // no POS tag embeddings by default
+  val DEFAULT_POSITION_EMBEDDING_SIZE: Int = -1 // no position embeddings by default
+  val DEFAULT_POSITION_WINDOW_SIZE: Int = -1
+  val DEFAULT_USE_IS_PREDICATE: Int = 1
 
   def load(parameters: ParameterCollection,
            x2iIterator:Iterator[String]): EmbeddingLayer = {
@@ -206,23 +214,31 @@ object EmbeddingLayer {
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
     val byLineIntBuilder = new ByLineIntBuilder()
 
-    val w2i = byLineStringMapBuilder.build(x2iIterator)
-    val w2f = byLineCounterBuilder.build(x2iIterator)
-    val c2i = byLineCharMapBuilder.build(x2iIterator)
-    val hasTag2i = byLineIntBuilder.build(x2iIterator)
+    val w2i = byLineStringMapBuilder.build(x2iIterator, "w2i")
+    val w2f = byLineCounterBuilder.build(x2iIterator, "w2f")
+    val c2i = byLineCharMapBuilder.build(x2iIterator, "c2i")
+    val hasTag2i = byLineIntBuilder.build(x2iIterator, "hasTag2i", 0)
     val tag2i =
       if(hasTag2i == 1) {
         Some(byLineStringMapBuilder.build(x2iIterator))
       } else {
         None
       }
-    val learnedWordEmbeddingSize = byLineIntBuilder.build(x2iIterator)
-    val charEmbeddingSize = byLineIntBuilder.build(x2iIterator)
-    val charRnnStateSize = byLineIntBuilder.build(x2iIterator)
-    val posTagEmbeddingSize = byLineIntBuilder.build(x2iIterator)
-    val positionEmbeddingSize = byLineIntBuilder.build(x2iIterator)
-    val positionWindowSize = byLineIntBuilder.build(x2iIterator)
-    val useIsPredicate = byLineIntBuilder.build(x2iIterator) == 1
+    val learnedWordEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator,"learnedWordEmbeddingSize", DEFAULT_LEARNED_WORD_EMBEDDING_SIZE)
+    val charEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator,"charEmbeddingSize", DEFAULT_CHAR_EMBEDDING_SIZE)
+    val charRnnStateSize =
+      byLineIntBuilder.build(x2iIterator, "charRnnStateSize", DEFAULT_CHAR_RNN_STATE_SIZE)
+    val posTagEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator, "posTagEmbeddingSize", DEFAULT_POS_TAG_EMBEDDING_SIZE)
+    val positionEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator, "positionEmbeddingSize", DEFAULT_POSITION_EMBEDDING_SIZE)
+    val positionWindowSize =
+      byLineIntBuilder.build(x2iIterator, "positionWindowSize", DEFAULT_POSITION_WINDOW_SIZE)
+    val useIsPredicateAsInt =
+      byLineIntBuilder.build(x2iIterator, "useIsPredicate", DEFAULT_USE_IS_PREDICATE)
+    val useIsPredicate = useIsPredicateAsInt == 1
 
     //
     // make the loadable parameters
@@ -275,14 +291,30 @@ object EmbeddingLayer {
       return None
     }
 
-    val learnedWordEmbeddingSize = config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize", Some(128))
-    val charEmbeddingSize = config.getArgInt(paramPrefix + ".charEmbeddingSize", Some(32))
-    val charRnnStateSize = config.getArgInt(paramPrefix + ".charRnnStateSize", Some(16))
-    val posTagEmbeddingSize = config.getArgInt(paramPrefix + ".posTagEmbeddingSize", Some(-1))
-    val positionEmbeddingSize = config.getArgInt(paramPrefix + ".positionEmbeddingSize", Some(-1))
-    val positionWindowSize = config.getArgInt(paramPrefix + ".positionWindowSize", Some(-1))
-    val useIsPredicate = config.getArgBoolean(paramPrefix + ".useIsPredicate", Some(true))
-    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(EmbeddingLayer.DROPOUT_PROB))
+    val learnedWordEmbeddingSize =
+      config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize",
+        Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE))
+    val charEmbeddingSize =
+      config.getArgInt(paramPrefix + ".charEmbeddingSize",
+        Some(DEFAULT_CHAR_EMBEDDING_SIZE))
+    val charRnnStateSize =
+      config.getArgInt(paramPrefix + ".charRnnStateSize",
+        Some(DEFAULT_CHAR_RNN_STATE_SIZE))
+    val posTagEmbeddingSize =
+      config.getArgInt(paramPrefix + ".posTagEmbeddingSize",
+        Some(DEFAULT_POS_TAG_EMBEDDING_SIZE))
+    val positionEmbeddingSize =
+      config.getArgInt(paramPrefix + ".positionEmbeddingSize",
+        Some(DEFAULT_POSITION_EMBEDDING_SIZE))
+    val positionWindowSize =
+      config.getArgInt(paramPrefix + ".positionWindowSize",
+        Some(DEFAULT_POSITION_WINDOW_SIZE))
+    val useIsPredicate =
+      config.getArgBoolean(paramPrefix + ".useIsPredicate",
+        Some(DEFAULT_USE_IS_PREDICATE == 1))
+    val dropoutProb =
+      config.getArgFloat(paramPrefix + ".dropoutProb",
+        Some(EmbeddingLayer.DEFAULT_DROPOUT_PROB))
 
     // the word at position 0 is always reserved for UNK
     val wordList = List(Utils.UNK_WORD) ++ wordCounter.keySet.toList.sorted
@@ -294,7 +326,7 @@ object EmbeddingLayer {
     val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
       val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
       val lines = source.getLines()
-      val c2i = byLineCharMapBuilder.build(lines)
+      val c2i = byLineCharMapBuilder.build(lines, "c2i")
       c2i
     }
 

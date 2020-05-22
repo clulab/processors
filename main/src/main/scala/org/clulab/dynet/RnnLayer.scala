@@ -78,10 +78,10 @@ object RnnLayer {
     //
     val byLineIntBuilder = new ByLineIntBuilder()
 
-    val inputSize = byLineIntBuilder.build(x2iIterator)
-    val numLayers = byLineIntBuilder.build(x2iIterator)
-    val rnnStateSize = byLineIntBuilder.build(x2iIterator)
-    val useHighwayConnectionsAsInt = byLineIntBuilder.build(x2iIterator)
+    val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
+    val numLayers = byLineIntBuilder.build(x2iIterator, "numLayers")
+    val rnnStateSize = byLineIntBuilder.build(x2iIterator, "rnnStateSize")
+    val useHighwayConnectionsAsInt = byLineIntBuilder.build(x2iIterator, "useHighwayConnections")
     val useHighwayConnections = useHighwayConnectionsAsInt == 1
 
     //
