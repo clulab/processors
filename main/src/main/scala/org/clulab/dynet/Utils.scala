@@ -514,7 +514,8 @@ object Utils {
 
   abstract class ByLineBuilder[IntermediateValueType, FinalValueType, DefaultValueType] {
 
-    protected def setDefaultValue(intermediateValue: IntermediateValueType, defaultValue: DefaultValueType)
+    protected def setDefaultValue(intermediateValue: IntermediateValueType,
+                                  defaultValue: DefaultValueType)
 
     protected def getComment(line: String): String = {
       assert(line.startsWith("#"))
@@ -522,11 +523,9 @@ object Utils {
     }
 
     protected def addLines(intermediateValue: IntermediateValueType,
-                           lines: Iterator[String],
+                           lines: BufferedIterator[String],
                            fieldName: Option[String],
                            defaultValue: Option[DefaultValueType]): Unit = {
-      // we need to look ahead to skip the comments, hence the buffered iterator
-      val bufferedIterator = lines.buffered
 
       //
       // sanity check: verify if we are reading the expected field, by checking the string in the comment
@@ -535,7 +534,7 @@ object Utils {
       // if we are not seeing the expected field, and no default value provided, bail
       //
       if(fieldName.nonEmpty) {
-        val head = Some(bufferedIterator.head) // if(bufferedIterator.hasNext) Some(bufferedIterator.head) else None
+        val head = if(lines.hasNext) Some(lines.head) else None
 
         // if the field name doesn't match, set it to the default value
         if (defaultValue.nonEmpty) {
@@ -560,12 +559,12 @@ object Utils {
       }
 
       // skip exactly 1 comment line (optional)
-      if (bufferedIterator.head.nonEmpty && bufferedIterator.head.startsWith("#")) {
-        bufferedIterator.next()
+      if (lines.head.nonEmpty && lines.head.startsWith("#")) {
+        lines.next()
       }
 
       def nextLine(): Boolean = {
-        val line = bufferedIterator.next()
+        val line = lines.next()
         //println(s"LINE: [$line]")
 
         if (line.nonEmpty) {
@@ -582,20 +581,20 @@ object Utils {
 
     def addLine(intermediateValue: IntermediateValueType, line: String): Unit
 
-    protected def build(lines: Iterator[String],
+    protected def build(lines: BufferedIterator[String],
                         fieldName: Option[String],
                         defaultValue: Option[DefaultValueType]): FinalValueType
 
-    def build(lines: Iterator[String]): FinalValueType = {
+    def build(lines: BufferedIterator[String]): FinalValueType = {
       build(lines, None, None)
     }
 
-    def build(lines: Iterator[String],
+    def build(lines: BufferedIterator[String],
               fieldName: String): FinalValueType = {
       build(lines, Some(fieldName), None)
     }
 
-    def build(lines: Iterator[String],
+    def build(lines: BufferedIterator[String],
               fieldName: String,
               defaultValue: DefaultValueType): FinalValueType = {
       build(lines, Some(fieldName), Some(defaultValue))
@@ -612,7 +611,7 @@ object Utils {
       mutableMap += ((converter(key), value.toInt))
     }
 
-    override protected def build(lines: Iterator[String],
+    override protected def build(lines: BufferedIterator[String],
                                  fieldName: Option[String],
                                  defaultValue: Option[IndexedSeq[(KeyType, Int)]]): Map[KeyType, Int] = {
       val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
@@ -638,7 +637,7 @@ object Utils {
       counter.setCount(converter(key), value.toDouble)
     }
 
-    override protected def build(lines: Iterator[String],
+    override protected def build(lines: BufferedIterator[String],
                                  fieldName: Option[String],
                                  defaultValue: Option[IndexedSeq[(KeyType, Double)]]): Counter[KeyType] = {
       val counter: Counter[KeyType] = new Counter[KeyType]()
@@ -675,7 +674,7 @@ object Utils {
       arrayBuffer += line
     }
 
-    override protected def build(lines: Iterator[String],
+    override protected def build(lines: BufferedIterator[String],
                                  fieldName: Option[String],
                                  defaultValue: Option[IndexedSeq[String]]): Array[String] = {
       val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
@@ -698,7 +697,7 @@ object Utils {
       mutableNumberOpt.value = Some(line.toInt)
     }
 
-    override protected def build(lines: Iterator[String],
+    override protected def build(lines: BufferedIterator[String],
                                  fieldName: Option[String],
                                  defaultValue: Option[Int]): Int = {
       val mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
@@ -741,7 +740,7 @@ object Utils {
   def readString2Ids(s2iFilename: String): Map[String, Int] = {
     val s2i = Serializer.using(Utils.newSource(s2iFilename)) { source =>
       val byLineStringMapBuilder = new Utils.ByLineStringMapBuilder()
-      val lines = source.getLines()
+      val lines = source.getLines().buffered
       val s2i = byLineStringMapBuilder.build(lines)
       s2i
     }

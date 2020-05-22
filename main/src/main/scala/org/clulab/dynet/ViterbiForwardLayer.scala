@@ -88,7 +88,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
 
 object ViterbiForwardLayer {
   def load(parameters: ParameterCollection,
-           x2iIterator: Iterator[String]): ViterbiForwardLayer = {
+           x2iIterator: BufferedIterator[String]): ViterbiForwardLayer = {
     //
     // load the x2i info
     //

@@ -205,7 +205,7 @@ object EmbeddingLayer {
   val DEFAULT_USE_IS_PREDICATE: Int = 1
 
   def load(parameters: ParameterCollection,
-           x2iIterator:Iterator[String]): EmbeddingLayer = {
+           x2iIterator:BufferedIterator[String]): EmbeddingLayer = {
     //
     // load the x2i info
     //
@@ -325,7 +325,7 @@ object EmbeddingLayer {
     val c2iFilename = config.getArgString(paramPrefix + ".c2i", Some("org/clulab/c2i-en.txt"))
     val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
       val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
-      val lines = source.getLines()
+      val lines = source.getLines().buffered
       val c2i = byLineCharMapBuilder.build(lines, "c2i")
       c2i
     }

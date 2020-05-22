@@ -401,7 +401,7 @@ object Metal {
     //
     val layersSeq = Serializer.using(Utils.newSource(x2iFilename)) { source =>
       val layersSeq = new ArrayBuffer[Layers]()
-      val lines = source.getLines()
+      val lines = source.getLines().buffered
 
       val layersCount = new Utils.ByLineIntBuilder().build(lines)
       for(i <- 0 until layersCount) {

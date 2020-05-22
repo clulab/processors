@@ -69,7 +69,7 @@ object ForwardLayer {
   val TYPE_VITERBI_STRING = "viterbi"
 
   def load(parameters: ParameterCollection,
-           x2iIterator: Iterator[String]): ForwardLayer = {
+           x2iIterator: BufferedIterator[String]): ForwardLayer = {
     val inferenceType = new ByLineIntBuilder().build(x2iIterator, "inferenceType")
 
     inferenceType match {

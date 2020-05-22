@@ -37,7 +37,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
 
 object GreedyForwardLayer {
   def load(parameters: ParameterCollection,
-           x2iIterator: Iterator[String]): GreedyForwardLayer = {
+           x2iIterator: BufferedIterator[String]): GreedyForwardLayer = {
     //
     // load the x2i info
     //

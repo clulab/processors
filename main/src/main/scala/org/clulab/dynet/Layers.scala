@@ -216,7 +216,7 @@ object Layers {
 
   val MAX_INTERMEDIATE_LAYERS = 10
 
-  def loadX2i(parameters: ParameterCollection, lines: Iterator[String]): Layers = {
+  def loadX2i(parameters: ParameterCollection, lines: BufferedIterator[String]): Layers = {
     val byLineIntBuilder = new ByLineIntBuilder()
 
     val hasInitial = byLineIntBuilder.build(lines, "hasInitial")

@@ -72,7 +72,7 @@ object RnnLayer {
   val DROPOUT_PROB = 0.2f
 
   def load(parameters: ParameterCollection,
-           x2iIterator: Iterator[String]): RnnLayer = {
+           x2iIterator: BufferedIterator[String]): RnnLayer = {
     //
     // load the x2i info
     //
