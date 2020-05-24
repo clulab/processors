@@ -126,20 +126,21 @@ class EmbeddingLayer (val parameters:ParameterCollection,
           assert(predEmbed.nonEmpty)
           concatenate(constEmbedding,
             learnedWordEmbedding,
-            charEmbedding,
+//            charEmbedding,
             posTagEmbed.get,
             predEmbed.get,
             positionEmbedding.get)
         } else {
           concatenate(constEmbedding,
             learnedWordEmbedding,
-            charEmbedding,
+//            charEmbedding,
             posTagEmbed.get)
         }
       } else {
         concatenate(constEmbedding,
-          learnedWordEmbedding,
-          charEmbedding)
+          learnedWordEmbedding//,
+//          charEmbedding
+        )
       }
 
     assert(embed.dim().get(0) == outDim)
@@ -153,7 +154,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
 
     constEmbedder.dim +
     learnedWordEmbeddingSize +
-    charRnnStateSize * 2 +
+//    charRnnStateSize * 2 +
     posTagDim +
     positionDim +
     predicateDim
