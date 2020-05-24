@@ -53,7 +53,9 @@ case class Row(tokens:Array[String]) {
     else ""
 
   def getWord: String = get(0)
-  def getLabel: String = get(1)
+  def getLemma: String = get(1)
+  def getFeatures: String = get(2)
+  def getLabel: String = get(3)
 
   def getPosTag: String = get(2) // use this carefully; this may not be available in all datasets!
   def hasPosTag: Boolean = length > 2
