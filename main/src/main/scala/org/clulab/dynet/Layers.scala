@@ -38,15 +38,17 @@ class Layers (val initialLayer: Option[InitialLayer],
   def nonEmpty: Boolean = ! isEmpty
 
   def needsPosTags: Boolean = initialLayer.nonEmpty && initialLayer.get.needsPosTags
+  def needsNeTags: Boolean = initialLayer.nonEmpty && initialLayer.get.needsNeTags
 
   def loss(words: IndexedSeq[String],
            posTags: Option[IndexedSeq[String]],
+           neTags: Option[IndexedSeq[String]],
            predicatePosition: Option[Int],
            goldLabels: IndexedSeq[String]): Expression = {
     assert(initialLayer.nonEmpty)
     assert(finalLayer.nonEmpty)
 
-    var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = true)
+    var states = initialLayer.get.forward(words, posTags, neTags, predicatePosition, doDropout = true)
     for(i <- intermediateLayers.indices) {
       states = intermediateLayers(i).forward(states, doDropout = true)
     }
@@ -57,12 +59,13 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def forward(words: IndexedSeq[String],
                         posTags: Option[IndexedSeq[String]],
+                        neTags: Option[IndexedSeq[String]],
                         predicatePosition: Option[Int]): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
 
-    var states = initialLayer.get.forward(words, posTags, predicatePosition, doDropout = false)
+    var states = initialLayer.get.forward(words, posTags, neTags, predicatePosition, doDropout = false)
 
     for (i <- intermediateLayers.indices) {
       states = intermediateLayers(i).forward(states, doDropout = false)
@@ -96,6 +99,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   def predict(words: IndexedSeq[String],
               posTags: Option[IndexedSeq[String]],
+              neTags: Option[IndexedSeq[String]],
               predicatePosition: Option[Int]): IndexedSeq[String] = {
     assert(initialLayer.nonEmpty)
     assert(finalLayer.nonEmpty)
@@ -104,7 +108,7 @@ class Layers (val initialLayer: Option[InitialLayer],
       this.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
 
         ComputationGraph.renew()
-        val states = forward(words, posTags, predicatePosition)
+        val states = forward(words, posTags, neTags, predicatePosition)
         Utils.emissionScoresToArrays(states)
       }
 
@@ -141,7 +145,7 @@ object Layers {
             parameters: ParameterCollection,
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
-            computInputSizeFinalLayer: Int => Int): Layers = {
+            hasPredicate: Boolean): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
     val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
@@ -158,7 +162,7 @@ object Layers {
     val finalLayer =
       if(labelCounterOpt.nonEmpty) {
         ForwardLayer.initialize(config, paramPrefix + ".final", parameters,
-          labelCounterOpt.get, computInputSizeFinalLayer)
+          labelCounterOpt.get, hasPredicate)
       } else {
         None
       }
@@ -223,6 +227,7 @@ object Layers {
     val initialLayer =
       if(hasInitial == 1) {
         val layer = EmbeddingLayer.load(parameters, lines)
+        println("loaded initial layer!")
         Some(layer)
       } else {
         None
@@ -232,6 +237,7 @@ object Layers {
     val intermCount = byLineIntBuilder.build(lines, "intermediateCount")
     for(_ <- 0 until intermCount) {
       val il = RnnLayer.load(parameters, lines)
+      println("loaded one intermediate layer!")
       intermediateLayers += il
     }
 
@@ -239,6 +245,7 @@ object Layers {
     val finalLayer =
       if(hasFinal == 1) {
         val layer = ForwardLayer.load(parameters, lines)
+        println("loaded final layer!")
         Some(layer)
       } else {
         None
@@ -250,6 +257,7 @@ object Layers {
   def predictJointly(layers: IndexedSeq[Layers],
                      words: IndexedSeq[String],
                      posTags: Option[IndexedSeq[String]],
+                     neTags: Option[IndexedSeq[String]],
                      predicatePosition: Option[Int]): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
@@ -258,7 +266,7 @@ object Layers {
 
       // layers(0) contains the shared layers
       if(layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(words, posTags, predicatePosition)
+        val sharedStates = layers(0).forward(words, posTags, neTags, predicatePosition)
 
         for (i <- 1 until layers.length) {
           val states = layers(i).forwardFrom(sharedStates, predicatePosition)
@@ -271,7 +279,7 @@ object Layers {
       // no shared layer
       else {
         for (i <- 1 until layers.length) {
-          val states = layers(i).forward(words, posTags, predicatePosition)
+          val states = layers(i).forward(words, posTags, neTags, predicatePosition)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels

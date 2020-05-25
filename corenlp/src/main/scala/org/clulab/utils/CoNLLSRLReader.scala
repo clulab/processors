@@ -7,7 +7,7 @@ import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
 import org.clulab.utils.CoNLLSRLReader._
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -126,7 +126,7 @@ class CoNLLSRLReader {
     //
 
     val tokens = sentences.map(_.map(_.word).toList).toList
-    val doc = proc.mkDocumentFromTokens(tokens, keepText = false)
+    val doc = proc.mkDocumentFromTokens(tokens)
 
     /*
     if(USE_GOLD_SYNTAX) {
@@ -147,10 +147,10 @@ class CoNLLSRLReader {
 
     // Uncomment these lines if fancier features are needed!
     proc.tagPartsOfSpeech(doc)
-    /*
     proc.lemmatize(doc)
     proc.recognizeNamedEntities(doc)
 
+    /*
     if(USE_GOLD_SYNTAX) {
       // this only works with the original tokenization. TODO: fix this
       assert(USE_CONLL_TOKENIZATION)
@@ -349,7 +349,7 @@ class CoNLLSRLReader {
 }
 
 object CoNLLSRLReader {
-  val logger = LoggerFactory.getLogger(classOf[CoNLLSRLReader])
+  val logger: Logger = LoggerFactory.getLogger(classOf[CoNLLSRLReader])
 
   val USE_CONLL_TOKENIZATION = false
   val SIMPLIFY_ARG_LABELS = true
@@ -403,7 +403,7 @@ object CoNLLSRLReader {
 
       for(i <- sent.words.indices) {
         pw.print(sent.words(i) + "\t" + (if(heads(i)) "B-P" else "O"))
-        pw.print("\t" + sent.tags.get(i))
+        pw.print("\t" + sent.tags.get(i) + "\t" + sent.entities.get(i))
         for(j <- args.indices) {
           pw.print("\t" + args(j)(i))
         }

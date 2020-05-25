@@ -9,6 +9,7 @@ import org.clulab.utils.Configured
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
+                             val hasPredicate: Boolean,
                              val t2i: Map[String, Int],
                              val i2t: Array[String],
                              val H: Parameter,
@@ -40,7 +41,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
         val predExp = Utils.expressionDropout(inputExpressions(predPosition), dropoutProb, doDropout)
 
-        // TODO: dropout before or after concatenate?
+        // TODO: dropout before or after concatenate? - seems better before
         val ss = Expression.concatenate(argExp, predExp)
 
         val l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
@@ -68,6 +69,8 @@ object ForwardLayer {
   val TYPE_GREEDY_STRING = "greedy"
   val TYPE_VITERBI_STRING = "viterbi"
 
+  val DEFAULT_HAS_PREDICATE = 0
+
   def load(parameters: ParameterCollection,
            x2iIterator: BufferedIterator[String]): ForwardLayer = {
     val inferenceType = new ByLineIntBuilder().build(x2iIterator, "inferenceType")
@@ -83,7 +86,7 @@ object ForwardLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
-                 computeInputSize: Int => Int): Option[ForwardLayer] = {
+                 hasPredicate: Boolean): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
     }
@@ -95,16 +98,17 @@ object ForwardLayer {
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
 
-    val actualInputSize = computeInputSize(inputSize)
+    val actualInputSize = if(hasPredicate) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     inferenceType match {
       case TYPE_GREEDY_STRING =>
-        Some(new GreedyForwardLayer(parameters, inputSize, t2i, i2t, H, dropoutProb))
+        Some(new GreedyForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
-          inputSize, t2i, i2t, H, T, dropoutProb)
+          inputSize, hasPredicate,
+          t2i, i2t, H, T, dropoutProb)
         layer.initializeTransitions()
         Some(layer)
       case _ =>

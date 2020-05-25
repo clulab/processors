@@ -606,6 +606,7 @@ object Utils {
     extends ByLineBuilder[mutable.Map[KeyType, Int], Map[KeyType, Int], IndexedSeq[(KeyType, Int)]] {
 
     def addLine(mutableMap: mutable.Map[KeyType, Int], line: String): Unit = {
+      //println(s"READING LINE [$line]")
       val Array(key, value) = line.split('\t')
 
       mutableMap += ((converter(key), value.toInt))

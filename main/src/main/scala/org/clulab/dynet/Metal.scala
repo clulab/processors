@@ -44,19 +44,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val (taskWords, taskLabels) = mkVocabularies()
 
     // 0 reserved for the shared Layers object
-    val layersPerTask = new Array[Layers](taskManager.taskCount + 1)
+    val layersPerTask: Array[Layers] = new Array[Layers](taskManager.taskCount + 1)
     layersPerTask(0) =
       Layers(taskManager, "mtl.layers", parameters, taskWords(0),
-        None, identity)
+        None, hasPredicate = false)
     for (i <- taskManager.indices) {
-      val computeInputSizeFinalLayer: Int => Int =
-        if(taskManager.tasks(i).isSrl) doubleInt
-        else identity
-
+      val hasPredicate = taskManager.tasks(i).isSrl
       layersPerTask(i + 1) =
         Layers(taskManager, s"mtl.task${i + 1}.layers",
           parameters, taskWords(i + 1),
-          Some(taskLabels(i + 1)), computeInputSizeFinalLayer)
+          Some(taskLabels(i + 1)), hasPredicate)
     }
     for(i <- layersPerTask.indices) {
       logger.debug(s"Summary of layersPerTask($i):")
@@ -65,9 +62,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     layersPerTask
   }
-
-  def identity(i: Int): Int = i
-  def doubleInt(i: Int): Int = 2 * i
 
   protected def mkFlows(layers: IndexedSeq[Layers]): Array[Layers] = {
     val flows = new Array[Layers](taskManager.taskCount)
@@ -146,12 +140,18 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             Some(sentence.map(_.getPosTag).toIndexedSeq)
           }
           else None
+        val neTags =
+          if(flows(taskId).needsNeTags) {
+            assert(sentence(0).hasNeTag)
+            Some(sentence.map(_.getNeTag).toIndexedSeq)
+          }
+          else None
 
         val lossOpt =
           // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
           if(taskManager.tasks(taskId).isBasic) {
             val goldLabels = sentence.map(_.getLabel)
-            Some(flows(taskId).loss(words, posTags, None, goldLabels))
+            Some(flows(taskId).loss(words, posTags, neTags, None, goldLabels))
           }
 
           // prediction of SRL arguments
@@ -170,7 +170,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
                 // gold argument labels for this frame
                 val goldLabels = sentence.map(_.tokens(j))
 
-                val loss = flows(taskId).loss(words, posTags, Some(predPosition), goldLabels)
+                val loss = flows(taskId).loss(words, posTags, neTags, Some(predPosition), goldLabels)
                 allPredLoss.add(loss)
               }
 
@@ -291,8 +291,14 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             Some(sent.map(_.getPosTag).toIndexedSeq)
           }
           else None
+        val neTags =
+          if(flows(taskId).needsNeTags) {
+            assert(sent(0).hasNeTag)
+            Some(sent.map(_.getNeTag).toIndexedSeq)
+          }
+          else None
 
-        val preds = flows(taskId).predict(words, posTags, None)
+        val preds = flows(taskId).predict(words, posTags, neTags, None)
 
         val sc = SeqScorer.f1(golds, preds)
         scoreCountsByLabel.incAll(sc)
@@ -308,10 +314,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for (sent <- sentences) {
         sentCount += 1
         val words = sent.map(_.getWord)
-        val posTags =
+        val posTags = // TODO: fix me, create AnnotatedText
           if(flows(taskId).needsPosTags) {
             assert(sent(0).hasPosTag)
             Some(sent.map(_.getPosTag).toIndexedSeq)
+          }
+          else None
+        val neTags =
+          if(flows(taskId).needsNeTags) {
+            assert(sent(0).hasNeTag)
+            Some(sent.map(_.getNeTag).toIndexedSeq)
           }
           else None
 
@@ -323,7 +335,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           val golds = sent.map(_.tokens(j))
           val predPosition = predPositions(j - Row.ARG_START)
 
-          val preds = flows(taskId).predict(words, posTags, Some(predPosition))
+          val preds = flows(taskId).predict(words, posTags, neTags, Some(predPosition))
 
           val sc = SeqScorer.f1(golds, preds)
           scoreCountsByLabel.incAll(sc)
@@ -351,7 +363,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   }
 
   def predictJointly(words: IndexedSeq[String]): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, words, None, None)
+    Layers.predictJointly(model, words, None, None, None)
   }
 
   def test(): Unit = {
@@ -406,6 +418,7 @@ object Metal {
       val layersCount = new Utils.ByLineIntBuilder().build(lines)
       for(i <- 0 until layersCount) {
         val layers = Layers.loadX2i(parameters, lines)
+        println("loadX2i done!")
         layersSeq += layers
       }
 

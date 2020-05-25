@@ -8,15 +8,17 @@ import edu.cmu.dynet.ExpressionVector
 trait InitialLayer extends Saveable {
   def forward(words: IndexedSeq[String],
               doDropout: Boolean): ExpressionVector = {
-    forward(words, None, None, doDropout)
+    forward(words, None, None, None, doDropout)
   }
 
   def forward(words: IndexedSeq[String],
               tags: Option[IndexedSeq[String]],
+              nes: Option[IndexedSeq[String]],
               predicatePosition: Option[Int],
               doDropout: Boolean): ExpressionVector
 
   def needsPosTags: Boolean
+  def needsNeTags: Boolean
 
   def outDim:Int // output dimension
 }

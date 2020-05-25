@@ -4,7 +4,7 @@ import org.clulab.utils.Shell
 
 class MetalShell(val mtl:Metal) extends Shell {
   override def initialize(): Unit = {
-    // nothing to do. we receive an initialize MTL object
+    // nothing to do. we receive an initialized MTL object
   }
 
   override def work(text: String): Unit = {

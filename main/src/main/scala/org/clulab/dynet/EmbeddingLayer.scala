@@ -22,10 +22,12 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val w2f:Counter[String], // word to frequency
                       val c2i:Map[Char, Int], // character to index
                       val tag2i:Option[Map[String, Int]], // POS tag to index
+                      val ne2i:Option[Map[String, Int]], // NE tag to index
                       val learnedWordEmbeddingSize: Int, // size of the learned word embedding
                       val charEmbeddingSize: Int, // size of the character embedding
                       val charRnnStateSize: Int, // size of each one of the char-level RNNs
                       val posTagEmbeddingSize: Int, // size of the POS tag embedding
+                      val neTagEmbeddingSize: Int, // size of the NE tag embedding
                       val positionEmbeddingSize: Int,
                       val positionWindowSize: Int, // window considered for position values (relative to predicate)
                       val useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
@@ -34,15 +36,18 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
                       val charBwRnnBuilder:RnnBuilder,
                       val posTagLookupParameters:Option[LookupParameter],
+                      val neTagLookupParameters:Option[LookupParameter],
                       val positionLookupParameters:Option[LookupParameter],
                       val dropoutProb: Float = EmbeddingLayer.DEFAULT_DROPOUT_PROB) extends InitialLayer {
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
   override def needsPosTags: Boolean = posTagEmbeddingSize > 0
+  override def needsNeTags: Boolean = neTagEmbeddingSize > 0
 
   override def forward(words: IndexedSeq[String],
                        tags: Option[IndexedSeq[String]],
+                       nes: Option[IndexedSeq[String]],
                        predicatePosition: Option[Int],
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
@@ -51,12 +56,14 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val constEmbeddings = constEmbedder.mkEmbeddings(words)
     assert(constEmbeddings.length == words.length)
     if(tags.isDefined) assert(tags.get.length == words.length)
+    if(nes.isDefined) assert(nes.get.length == words.length)
 
     // build the word embeddings one by one
     val embeddings = new ExpressionVector()
     for(i <- words.indices) {
       val tag = if(tags.isDefined) Some(tags.get(i)) else None
-      embeddings.add(mkEmbedding(words(i), i, tag, predicatePosition, constEmbeddings(i), doDropout))
+      val ne = if(nes.isDefined) Some(nes.get(i)) else None
+      embeddings.add(mkEmbedding(words(i), i, tag, ne, predicatePosition, constEmbeddings(i), doDropout))
     }
 
     embeddings
@@ -65,6 +72,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   private def mkEmbedding(word: String,
                           wordPosition: Int,
                           tag: Option[String],
+                          ne: Option[String],
                           predicatePosition: Option[Int],
                           constEmbedding: Expression,
                           doDropout: Boolean): Expression = {
@@ -96,14 +104,26 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       }
 
     //
+    // NE tag embedding
+    //
+    val neTagEmbed =
+      if(tag.nonEmpty) {
+        assert(neTagLookupParameters.nonEmpty)
+        assert(ne2i.nonEmpty)
+        Some(Expression.lookup(neTagLookupParameters.get, ne2i.get.getOrElse(ne.get, 0)))
+      } else {
+        None
+      }
+
+    //
     // 1 if this word is the predicate
     //
     val predEmbed =
-    if(predicatePosition.nonEmpty && useIsPredicate) {
-      Some(Expression.input(if(wordPosition == predicatePosition.get) 1f else 0f))
-    } else {
-      None
-    }
+      if(predicatePosition.nonEmpty && useIsPredicate) {
+        Some(Expression.input(if(wordPosition == predicatePosition.get) 1f else 0f))
+      } else {
+        None
+      }
 
     //
     // Position embedding, relative to the position of the predicate
@@ -122,41 +142,31 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       }
 
     // The final word embedding is a concatenation of all these
-    val embed =
-      if(posTagEmbed.nonEmpty) {
-        if(positionEmbedding.nonEmpty) {
-          assert(predEmbed.nonEmpty)
-          concatenate(constEmbedding,
-            learnedWordEmbedding,
-            charEmbedding,
-            posTagEmbed.get,
-            predEmbed.get,
-            positionEmbedding.get)
-        } else {
-          concatenate(constEmbedding,
-            learnedWordEmbedding,
-            charEmbedding,
-            posTagEmbed.get)
-        }
-      } else {
-        concatenate(constEmbedding,
-          learnedWordEmbedding,
-          charEmbedding)
-      }
+    val embedParts = new ExpressionVector()
+    embedParts.add(constEmbedding)
+    embedParts.add(learnedWordEmbedding)
+    embedParts.add(charEmbedding)
+    if(posTagEmbed.nonEmpty) embedParts.add(posTagEmbed.get)
+    if(neTagEmbed.nonEmpty) embedParts.add(neTagEmbed.get)
+    if(positionEmbedding.nonEmpty) embedParts.add(positionEmbedding.get)
+    if(predEmbed.nonEmpty) embedParts.add(predEmbed.get)
 
+    val embed = concatenate(embedParts)
     assert(embed.dim().get(0) == outDim)
     embed
   }
 
   override def outDim: Int = {
     val posTagDim = if(posTagLookupParameters.nonEmpty) posTagEmbeddingSize else 0
+    val neTagDim = if(neTagLookupParameters.nonEmpty) neTagEmbeddingSize else 0
     val positionDim = if(positionLookupParameters.nonEmpty) positionEmbeddingSize else 0
-    val predicateDim = if(positionLookupParameters.nonEmpty) 1 else 0
+    val predicateDim = if(positionLookupParameters.nonEmpty && useIsPredicate) 1 else 0
 
     constEmbedder.dim +
     learnedWordEmbeddingSize +
     charRnnStateSize * 2 +
     posTagDim +
+    neTagDim +
     positionDim +
     predicateDim
   }
@@ -176,10 +186,17 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     } else {
       save(printWriter, 0, "hasTag2i")
     }
+    if(ne2i.nonEmpty) {
+      save(printWriter, 1, "hasNe2i")
+      save(printWriter, tag2i.get, "ne2i")
+    } else {
+      save(printWriter, 0, "hasNe2i")
+    }
     save(printWriter, learnedWordEmbeddingSize, "learnedWordEmbeddingSize")
     save(printWriter, charEmbeddingSize, "charEmbeddingSize")
     save(printWriter, charRnnStateSize, "charRnnStateSize")
     save(printWriter, posTagEmbeddingSize, "posTagEmbeddingSize")
+    save(printWriter, neTagEmbeddingSize, "neTagEmbeddingSize")
     save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
     save(printWriter, positionWindowSize, "positionWindowSize")
     save(printWriter, if(useIsPredicate) 1 else 0, "useIsPredicate")
@@ -200,6 +217,7 @@ object EmbeddingLayer {
   val DEFAULT_CHAR_EMBEDDING_SIZE: Int = 32
   val DEFAULT_CHAR_RNN_STATE_SIZE: Int = 16
   val DEFAULT_POS_TAG_EMBEDDING_SIZE: Int = -1 // no POS tag embeddings by default
+  val DEFAULT_NE_TAG_EMBEDDING_SIZE: Int = -1 // no NE tag embeddings by default
   val DEFAULT_POSITION_EMBEDDING_SIZE: Int = -1 // no position embeddings by default
   val DEFAULT_POSITION_WINDOW_SIZE: Int = -1
   val DEFAULT_USE_IS_PREDICATE: Int = 1
@@ -224,6 +242,14 @@ object EmbeddingLayer {
       } else {
         None
       }
+    val hasNe2i = byLineIntBuilder.build(x2iIterator, "hasNe2i", 0)
+    val ne2i =
+      if(hasNe2i == 1) {
+        Some(byLineStringMapBuilder.build(x2iIterator))
+      } else {
+        None
+      }
+
     val learnedWordEmbeddingSize =
       byLineIntBuilder.build(x2iIterator,"learnedWordEmbeddingSize", DEFAULT_LEARNED_WORD_EMBEDDING_SIZE)
     val charEmbeddingSize =
@@ -232,6 +258,8 @@ object EmbeddingLayer {
       byLineIntBuilder.build(x2iIterator, "charRnnStateSize", DEFAULT_CHAR_RNN_STATE_SIZE)
     val posTagEmbeddingSize =
       byLineIntBuilder.build(x2iIterator, "posTagEmbeddingSize", DEFAULT_POS_TAG_EMBEDDING_SIZE)
+    val neTagEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator, "neTagEmbeddingSize", DEFAULT_NE_TAG_EMBEDDING_SIZE)
     val positionEmbeddingSize =
       byLineIntBuilder.build(x2iIterator, "positionEmbeddingSize", DEFAULT_POSITION_EMBEDDING_SIZE)
     val positionWindowSize =
@@ -256,6 +284,14 @@ object EmbeddingLayer {
         None
       }
 
+    val neTagLookupParameters =
+      if(hasNe2i == 1) {
+        assert(ne2i.nonEmpty)
+        Some(parameters.addLookupParameters(ne2i.get.size, Dim(neTagEmbeddingSize)))
+      } else {
+        None
+      }
+
     val positionLookupParameters =
       if(positionEmbeddingSize > 0) {
         // the +3 is needed for: position 0, 1 to the left of the window, and 1 to the right of the window
@@ -266,11 +302,12 @@ object EmbeddingLayer {
 
     new EmbeddingLayer(
       parameters,
-      w2i, w2f, c2i, tag2i,
+      w2i, w2f, c2i, tag2i, ne2i,
       learnedWordEmbeddingSize,
       charEmbeddingSize,
       charRnnStateSize,
       posTagEmbeddingSize,
+      neTagEmbeddingSize,
       positionEmbeddingSize,
       positionWindowSize,
       useIsPredicate,
@@ -279,8 +316,8 @@ object EmbeddingLayer {
       charFwRnnBuilder,
       charBwRnnBuilder,
       posTagLookupParameters,
+      neTagLookupParameters,
       positionLookupParameters)
-
   }
 
   def initialize(config: Configured,
@@ -303,6 +340,9 @@ object EmbeddingLayer {
     val posTagEmbeddingSize =
       config.getArgInt(paramPrefix + ".posTagEmbeddingSize",
         Some(DEFAULT_POS_TAG_EMBEDDING_SIZE))
+    val neTagEmbeddingSize =
+      config.getArgInt(paramPrefix + ".neTagEmbeddingSize",
+        Some(DEFAULT_NE_TAG_EMBEDDING_SIZE))
     val positionEmbeddingSize =
       config.getArgInt(paramPrefix + ".positionEmbeddingSize",
         Some(DEFAULT_POSITION_EMBEDDING_SIZE))
@@ -326,7 +366,8 @@ object EmbeddingLayer {
     val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
       val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
       val lines = source.getLines().buffered
-      val c2i = byLineCharMapBuilder.build(lines, "c2i")
+      val c2i = byLineCharMapBuilder.build(lines)
+      //println(s"c2i has size ${c2i.size}")
       c2i
     }
 
@@ -336,9 +377,20 @@ object EmbeddingLayer {
 
     val (tag2i, posTagLookupParameters) =
       if(posTagEmbeddingSize > 0) {
-        val tag2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".tag2i", Some("org/clulab/lm/tag2i-en.txt")))
+        val tag2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".tag2i", Some("org/clulab/tag2i-en.txt")))
         val posTagLookupParameters = parameters.addLookupParameters(tag2i.size, Dim(posTagEmbeddingSize))
+        //println(s"tag2i has size ${tag2i.size}")
         (Some(tag2i), Some(posTagLookupParameters))
+      } else {
+        (None, None)
+      }
+
+    val (ne2i, neTagLookupParameters) =
+      if(neTagEmbeddingSize > 0) {
+        val ne2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".ne2i", Some("org/clulab/ne2i-en.txt")))
+        val neTagLookupParameters = parameters.addLookupParameters(ne2i.size, Dim(neTagEmbeddingSize))
+        //println(s"ne2i has size ${ne2i.size}")
+        (Some(ne2i), Some(neTagLookupParameters))
       } else {
         (None, None)
       }
@@ -354,11 +406,12 @@ object EmbeddingLayer {
 
     val layer = new EmbeddingLayer(
       parameters:ParameterCollection,
-      w2i, wordCounter, c2i, tag2i,
+      w2i, wordCounter, c2i, tag2i, ne2i,
       learnedWordEmbeddingSize,
       charEmbeddingSize,
       charRnnStateSize,
       posTagEmbeddingSize,
+      neTagEmbeddingSize,
       positionEmbeddingSize,
       positionWindowSize,
       useIsPredicate,
@@ -367,6 +420,7 @@ object EmbeddingLayer {
       charFwRnnBuilder,
       charBwRnnBuilder,
       posTagLookupParameters,
+      neTagLookupParameters,
       positionLookupParameters,
       dropoutProb)
 

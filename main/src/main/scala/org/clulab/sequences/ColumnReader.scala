@@ -56,12 +56,14 @@ case class Row(tokens:Array[String]) {
   def getLabel: String = get(1)
 
   def getPosTag: String = get(2) // use this carefully; this may not be available in all datasets!
+  def getNeTag: String = get(3) // use this carefully; this may not be available in all datasets!
   def hasPosTag: Boolean = length > 2
+  def hasNeTag: Boolean = length > 3
 
   def length = tokens.length
 }
 
 object Row {
-  val ARG_START = 3 // column where SRL arguments begin
+  val ARG_START = 4 // column where SRL arguments begin
 }
 
