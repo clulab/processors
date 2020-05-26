@@ -1,4 +1,4 @@
-# Map from En NE tags to indices; 0 stands for unknown tag
+# Map from En NE tags to indices (as produced by CoreNLP); 0 stands for unknown tag
 UNK	0
 CAUSE_OF_DEATH	1
 CITY	2

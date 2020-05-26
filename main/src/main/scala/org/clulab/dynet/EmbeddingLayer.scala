@@ -95,8 +95,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // POS tag embedding
     //
     val posTagEmbed =
-      if(tag.nonEmpty) {
-        assert(posTagLookupParameters.nonEmpty)
+      if(tag.nonEmpty && posTagLookupParameters.nonEmpty) {
         assert(tag2i.nonEmpty)
         Some(Expression.lookup(posTagLookupParameters.get, tag2i.get.getOrElse(tag.get, 0)))
       } else {
@@ -107,8 +106,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // NE tag embedding
     //
     val neTagEmbed =
-      if(tag.nonEmpty) {
-        assert(neTagLookupParameters.nonEmpty)
+      if(ne.nonEmpty && neTagLookupParameters.nonEmpty) {
         assert(ne2i.nonEmpty)
         Some(Expression.lookup(neTagLookupParameters.get, ne2i.get.getOrElse(ne.get, 0)))
       } else {
@@ -130,8 +128,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // We cut the distance down to values inside the window [-positionWindowSize, +positionWindowSize]
     //
     val positionEmbedding =
-      if(predicatePosition.nonEmpty) {
-        assert(positionLookupParameters.nonEmpty)
+      if(predicatePosition.nonEmpty && positionLookupParameters.nonEmpty) {
         var dist = wordPosition - predicatePosition.get
         if (dist < - positionWindowSize) dist = - positionWindowSize - 1
         if(dist > positionWindowSize) dist = positionWindowSize + 1
@@ -188,7 +185,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     }
     if(ne2i.nonEmpty) {
       save(printWriter, 1, "hasNe2i")
-      save(printWriter, tag2i.get, "ne2i")
+      save(printWriter, ne2i.get, "ne2i")
     } else {
       save(printWriter, 0, "hasNe2i")
     }
@@ -220,7 +217,7 @@ object EmbeddingLayer {
   val DEFAULT_NE_TAG_EMBEDDING_SIZE: Int = -1 // no NE tag embeddings by default
   val DEFAULT_POSITION_EMBEDDING_SIZE: Int = -1 // no position embeddings by default
   val DEFAULT_POSITION_WINDOW_SIZE: Int = -1
-  val DEFAULT_USE_IS_PREDICATE: Int = 1
+  val DEFAULT_USE_IS_PREDICATE: Int = -1
 
   def load(parameters: ParameterCollection,
            x2iIterator:BufferedIterator[String]): EmbeddingLayer = {
@@ -287,6 +284,7 @@ object EmbeddingLayer {
     val neTagLookupParameters =
       if(hasNe2i == 1) {
         assert(ne2i.nonEmpty)
+        //println(s"LOAD: neTagLookupParameters has dim ${ne2i.get.size} x $neTagEmbeddingSize")
         Some(parameters.addLookupParameters(ne2i.get.size, Dim(neTagEmbeddingSize)))
       } else {
         None
@@ -379,7 +377,6 @@ object EmbeddingLayer {
       if(posTagEmbeddingSize > 0) {
         val tag2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".tag2i", Some("org/clulab/tag2i-en.txt")))
         val posTagLookupParameters = parameters.addLookupParameters(tag2i.size, Dim(posTagEmbeddingSize))
-        //println(s"tag2i has size ${tag2i.size}")
         (Some(tag2i), Some(posTagLookupParameters))
       } else {
         (None, None)
@@ -389,7 +386,7 @@ object EmbeddingLayer {
       if(neTagEmbeddingSize > 0) {
         val ne2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".ne2i", Some("org/clulab/ne2i-en.txt")))
         val neTagLookupParameters = parameters.addLookupParameters(ne2i.size, Dim(neTagEmbeddingSize))
-        //println(s"ne2i has size ${ne2i.size}")
+        //println(s"INITIALIZE: neTagLookupParameters has dim ${ne2i.size} x $neTagEmbeddingSize")
         (Some(ne2i), Some(neTagLookupParameters))
       } else {
         (None, None)
