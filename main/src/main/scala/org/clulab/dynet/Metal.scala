@@ -107,7 +107,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   def train(modelNamePrefix: String): Unit = {
     require(taskManagerOpt.isDefined)
 
-    val trainer = SafeTrainer(new AdamTrainer(parameters)) // RMSPropTrainer(parameters))
+    val trainer = SafeTrainer(new AdamTrainer(parameters, learningRate = 0.01f)) // RMSPropTrainer(parameters))
 
     var cummulativeLoss = 0.0
     var numTagged = 0
