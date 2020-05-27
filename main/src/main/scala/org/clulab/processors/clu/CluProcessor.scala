@@ -10,7 +10,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import CluProcessor._
-import org.clulab.dynet.Metal
+import org.clulab.dynet.{AnnotatedSentence, Metal}
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -99,7 +99,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val allLabels = mtlSyn.predictJointly(sent.words)
+      val allLabels = mtlSyn.predictJointly(new AnnotatedSentence(sent.words))
       sent.tags = Some(allLabels(0).toArray)
       sent.chunks = Some(allLabels(1).toArray)
       // TODO: create the dependency graph here, when it's available
@@ -138,7 +138,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val allLabels = mtlNer.predictJointly(sent.words)
+      val allLabels = mtlNer.predictJointly(new AnnotatedSentence(sent.words))
       sent.entities = Some(allLabels(0).toArray)
       // TODO: call SUTime to normalize dates?
     }

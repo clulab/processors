@@ -86,17 +86,19 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
+    val basicReader = new BasicRowReader
+    val srlArgsReader = new SrlArgsRowReader
+
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
         for (token <- sentence) {
-          words(tid + 1) += token.getWord
-          words(0) += token.getWord
+          words(tid + 1) += basicReader.getWord(token)
+          words(0) += basicReader.getWord(token)
           if (taskManager.tasks(tid).taskType == TaskManager.TYPE_SRL) {
-            for (j <- Row.ARG_START until token.tokens.length) {
-              labels(tid + 1) += token.get(j)
-            }
+            val ls = srlArgsReader.getLabels(token)
+            for(l <- ls) labels(tid + 1) += l
           } else { // basic tasks with the labels in the second column
-            labels(tid + 1) += token.getLabel
+            labels(tid + 1) += basicReader.getLabel(token)
           }
         }
       }
@@ -117,6 +119,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       case "sgd" => SafeTrainer(new SimpleSGDTrainer(parameters, learningRate))
       case _ => throw new RuntimeException(s"ERROR: unknown trainer $trainerType!")
     }
+
+    val basicReader = new BasicRowReader
+    val srlArgsRowReader = new SrlArgsRowReader
 
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -139,47 +144,40 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
+        val taskType = taskManager.tasks(taskId).taskType
+
         sentCount += 1
         ComputationGraph.renew()
 
-        val words = sentence.map(_.getWord)
-        val posTags =
-          if(flows(taskId).needsPosTags) {
-            assert(sentence(0).hasPosTag)
-            Some(sentence.map(_.getPosTag).toIndexedSeq)
-          }
-          else None
-        val neTags =
-          if(flows(taskId).needsNeTags) {
-            assert(sentence(0).hasNeTag)
-            Some(sentence.map(_.getNeTag).toIndexedSeq)
-          }
-          else None
+        val annotatedSentence = taskType match {
+          case TaskManager.TYPE_BASIC => basicReader.toAnnotatedSentence(sentence)
+          case TaskManager.TYPE_SRL => srlArgsRowReader.toAnnotatedSentence(sentence)
+          case _ => throw new RuntimeException(s"ERROR: unknown reader for task type $taskType!")
+        }
 
         val lossOpt =
           // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
           if(taskManager.tasks(taskId).isBasic) {
-            val goldLabels = sentence.map(_.getLabel)
-            Some(flows(taskId).loss(words, posTags, neTags, None, goldLabels))
+            Some(flows(taskId).loss(annotatedSentence, basicReader.toLabels(sentence)))
           }
 
           // prediction of SRL arguments
           else if(taskManager.tasks(taskId).isSrl) {
             // token positions for the predicates in this sentence
-            val predicatePositions = sentence.map(_.getLabel).zipWithIndex.filter(_._1 == "B-P").map(_._2)
+            val predicatePositions = srlArgsRowReader.getPredicatePositions(sentence)
 
             // traverse all SRL frames
             if(predicatePositions.nonEmpty) {
               val allPredLoss = new ExpressionVector()
 
-              for(j <- Row.ARG_START until sentence(0).length) {
+              for(predIdx <- predicatePositions.indices) {
                 // token position of the predicate for this frame
-                val predPosition = predicatePositions(j - Row.ARG_START)
+                val predPosition = predicatePositions(predIdx)
 
-                // gold argument labels for this frame
-                val goldLabels = sentence.map(_.tokens(j))
+                val loss = flows(taskId).loss(annotatedSentence,
+                  srlArgsRowReader.toLabels(sentence, Some(predIdx)),
+                  Some(predPosition))
 
-                val loss = flows(taskId).loss(words, posTags, neTags, Some(predPosition), goldLabels)
                 allPredLoss.add(loss)
               }
 
@@ -285,34 +283,25 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       if(epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
 
+    val basicReader = new BasicRowReader
+    val srlArgsReader = new SrlArgsRowReader
+
     //
     // regular BIO evaluation, compatible with CoNLL-2003
     //
     if(taskManager.tasks(taskId).isBasic) {
       for (sent <- sentences) {
         sentCount += 1
-        val words = sent.map(_.getWord)
-        val golds = sent.map(_.getLabel)
 
-        val posTags =
-          if(flows(taskId).needsPosTags) {
-            assert(sent(0).hasPosTag)
-            Some(sent.map(_.getPosTag).toIndexedSeq)
-          }
-          else None
-        val neTags =
-          if(flows(taskId).needsNeTags) {
-            assert(sent(0).hasNeTag)
-            Some(sent.map(_.getNeTag).toIndexedSeq)
-          }
-          else None
+        val sentence = basicReader.toAnnotatedSentence(sent)
+        val golds = basicReader.toLabels(sent)
 
-        val preds = flows(taskId).predict(words, posTags, neTags, None)
+        val preds = flows(taskId).predict(sentence)
 
         val sc = SeqScorer.f1(golds, preds)
         scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, words, golds, preds)
+        printCoNLLOutput(pw, sentence.words, golds, preds)
       }
     }
 
@@ -322,35 +311,21 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     else if(taskManager.tasks(taskId).isSrl) {
       for (sent <- sentences) {
         sentCount += 1
-        val words = sent.map(_.getWord)
-        val posTags = // TODO: fix me, create AnnotatedText
-          if(flows(taskId).needsPosTags) {
-            assert(sent(0).hasPosTag)
-            Some(sent.map(_.getPosTag).toIndexedSeq)
-          }
-          else None
-        val neTags =
-          if(flows(taskId).needsNeTags) {
-            assert(sent(0).hasNeTag)
-            Some(sent.map(_.getNeTag).toIndexedSeq)
-          }
-          else None
+        val annotatedSentence = srlArgsReader.toAnnotatedSentence(sent)
 
         // find the token positions of all predicates in this sentence
-        val predPositions = sent.map(_.getLabel).zipWithIndex.filter(_._1 == "B-P").map(_._2)
+        val predPositions = srlArgsReader.getPredicatePositions(sent)
 
         // traverse the argument columns corresponding to each predicate
-        for(j <- Row.ARG_START until sent(0).length) {
-          val golds = sent.map(_.tokens(j))
-          val predPosition = predPositions(j - Row.ARG_START)
-
-          val preds = flows(taskId).predict(words, posTags, neTags, Some(predPosition))
+        for(j <- predPositions.indices) {
+          val golds = srlArgsReader.toLabels(sent, Some(j))
+          val preds = flows(taskId).predict(annotatedSentence, Some(predPositions(j)))
 
           val sc = SeqScorer.f1(golds, preds)
           scoreCountsByLabel.incAll(sc)
 
-          pw.println(s"pred = ${words(predPositions(j - Row.ARG_START))} at position ${predPositions(j - Row.ARG_START)}")
-          printCoNLLOutput(pw, words, golds, preds)
+          pw.println(s"pred = ${annotatedSentence.words(predPositions(j))} at position ${predPositions(j)}")
+          printCoNLLOutput(pw, annotatedSentence.words, golds, preds)
         }
       }
     }
@@ -371,8 +346,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       scoreCountsByLabel.f1() )
   }
 
-  def predictJointly(words: IndexedSeq[String]): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, words, None, None, None)
+  // this only supports basic tasks for now
+  def predictJointly(sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
+    Layers.predictJointly(model, sentence)
   }
 
   def test(): Unit = {
@@ -427,7 +403,7 @@ object Metal {
       val layersCount = new Utils.ByLineIntBuilder().build(lines)
       for(i <- 0 until layersCount) {
         val layers = Layers.loadX2i(parameters, lines)
-        println("loadX2i done!")
+        //println("loadX2i done!")
         layersSeq += layers
       }
 

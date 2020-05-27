@@ -42,15 +42,14 @@ class EmbeddingLayer (val parameters:ParameterCollection,
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
-  override def needsPosTags: Boolean = posTagEmbeddingSize > 0
-  override def needsNeTags: Boolean = neTagEmbeddingSize > 0
-
-  override def forward(words: IndexedSeq[String],
-                       tags: Option[IndexedSeq[String]],
-                       nes: Option[IndexedSeq[String]],
-                       predicatePosition: Option[Int],
+  override def forward(sentence: AnnotatedSentence,
+                       predicatePosition: Option[Int] = None,
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
+
+    val words = sentence.words
+    val tags = sentence.posTags
+    val nes = sentence.neTags
 
     // const word embeddings such as GloVe
     val constEmbeddings = constEmbedder.mkEmbeddings(words)

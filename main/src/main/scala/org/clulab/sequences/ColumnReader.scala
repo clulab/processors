@@ -48,22 +48,15 @@ object ColumnReader {
  * @param tokens
  */
 case class Row(tokens:Array[String]) {
-  def get(idx:Int): String =
-    if(idx < tokens.length) tokens(idx)
-    else ""
-
-  def getWord: String = get(0)
-  def getLabel: String = get(1)
-
-  def getPosTag: String = get(2) // use this carefully; this may not be available in all datasets!
-  def getNeTag: String = get(3) // use this carefully; this may not be available in all datasets!
-  def hasPosTag: Boolean = length > 2
-  def hasNeTag: Boolean = length > 3
+  def get(idx:Int): String = {
+    if(idx >= tokens.length) {
+      throw new RuntimeException(s"ERROR: trying to read field #$idx, which does not exist in this row: [${tokens.mkString(", ")}]!")
+    }
+    tokens(idx)
+  }
 
   def length = tokens.length
-}
 
-object Row {
-  val ARG_START = 4 // column where SRL arguments begin
+
 }
 

@@ -9,7 +9,7 @@ class MetalShell(val mtl:Metal) extends Shell {
 
   override def work(text: String): Unit = {
     val words = text.split("\\s+")
-    val labels = mtl.predictJointly(words)
+    val labels = mtl.predictJointly(new AnnotatedSentence(words))
     print(words, labels)
   }
 
