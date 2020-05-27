@@ -31,6 +31,9 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         var l1 = pH * argExp
 
         l1 = Utils.expressionDropout(l1, dropoutProb, doDropout)
+
+        l1 = Expression.rectify(l1)
+
         emissionScores.add(l1)
       }
     }
@@ -44,7 +47,9 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         // TODO: dropout before or after concatenate? - seems better before
         val ss = Expression.concatenate(argExp, predExp)
 
-        val l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+        var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+
+        l1 = Expression.rectify(l1)
 
         emissionScores.add(l1)
       }
@@ -65,6 +70,10 @@ object ForwardLayer {
 
   val TYPE_VITERBI = 1
   val TYPE_GREEDY = 2
+
+  val NONLIN_NONE = 0
+  val NONLIN_RELU = 1
+  val NONLIN_TANH = 2
 
   val TYPE_GREEDY_STRING = "greedy"
   val TYPE_VITERBI_STRING = "viterbi"
