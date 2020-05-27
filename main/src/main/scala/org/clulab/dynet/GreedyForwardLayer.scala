@@ -14,8 +14,9 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           t2i: Map[String, Int],
                           i2t: Array[String],
                           H: Parameter,
+                          nonlinearity: Int,
                           dropoutProb: Float = DROPOUT_PROB)
-  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -26,6 +27,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if(hasPredicate) 1 else 0, "hasPredicate")
+    save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
   }
 
@@ -51,6 +53,7 @@ object GreedyForwardLayer {
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
     val hasPredicateAsInt = byLineIntBuilder.build(x2iIterator, "hasPredicate", DEFAULT_HAS_PREDICATE)
     val hasPredicate = hasPredicateAsInt == 1
+    val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity")
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
 
@@ -62,7 +65,7 @@ object GreedyForwardLayer {
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     new GreedyForwardLayer(parameters,
-      inputSize, hasPredicate, t2i, i2t, H)
+      inputSize, hasPredicate, t2i, i2t, H, nonlinearity)
   }
 }
 

@@ -13,6 +13,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val t2i: Map[String, Int],
                              val i2t: Array[String],
                              val H: Parameter,
+                             val nonlinearity: Int,
                              val dropoutProb: Float = DROPOUT_PROB)
   extends FinalLayer {
 
@@ -28,11 +29,12 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
         argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
 
-        var l1 = pH * argExp
+        var l1 = Utils.expressionDropout(pH * argExp, dropoutProb, doDropout)
 
-        l1 = Utils.expressionDropout(l1, dropoutProb, doDropout)
-
-        l1 = Expression.rectify(l1)
+        nonlinearity match {
+          case NONLIN_TANH => l1 = Expression.tanh(l1)
+          case NONLIN_RELU => l1 = Expression.rectify(l1)
+        }
 
         emissionScores.add(l1)
       }
@@ -49,7 +51,10 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
         var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
-        l1 = Expression.rectify(l1)
+        nonlinearity match {
+          case NONLIN_TANH => l1 = Expression.tanh(l1)
+          case NONLIN_RELU => l1 = Expression.rectify(l1)
+        }
 
         emissionScores.add(l1)
       }
@@ -104,6 +109,14 @@ object ForwardLayer {
     val inputSize = config.getArgInt(paramPrefix + ".inputSize", None)
     val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DROPOUT_PROB))
 
+    val nonlinAsString = config.getArgString(paramPrefix + ".nonlinearity", Some(""))
+    val nonlin = nonlinAsString match {
+      case "relu" => NONLIN_RELU
+      case "tanh" => NONLIN_TANH
+      case "" => NONLIN_NONE
+      case _ => throw new RuntimeException(s"ERROR: unknown non-linearity $nonlinAsString!")
+    }
+
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
 
@@ -112,12 +125,14 @@ object ForwardLayer {
 
     inferenceType match {
       case TYPE_GREEDY_STRING =>
-        Some(new GreedyForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, dropoutProb))
+        Some(new GreedyForwardLayer(parameters,
+          inputSize, hasPredicate,
+          t2i, i2t, H, nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
           inputSize, hasPredicate,
-          t2i, i2t, H, T, dropoutProb)
+          t2i, i2t, H, T, nonlin, dropoutProb)
         layer.initializeTransitions()
         Some(layer)
       case _ =>

@@ -13,8 +13,9 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
                           i2t: Array[String],
                           H: Parameter,
                           val T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
+                          nonlinearity: Int,
                           dropoutProb: Float = DROPOUT_PROB)
-  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model
   def initializeTransitions(): Unit = {
@@ -72,6 +73,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if(hasPredicate) 1 else 0, "hasPredicate")
+    save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
   }
 
@@ -100,6 +102,7 @@ object ViterbiForwardLayer {
     val inputSize = byLineIntBuilder.build(x2iIterator)
     val hasPredicateAsInt = byLineIntBuilder.build(x2iIterator, "hasPredicate", DEFAULT_HAS_PREDICATE)
     val hasPredicate = hasPredicateAsInt == 1
+    val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity")
     val t2i = byLineStringMapBuilder.build(x2iIterator)
     val i2t = fromIndexToString(t2i)
 
@@ -111,7 +114,7 @@ object ViterbiForwardLayer {
     val T = mkTransitionMatrix(parameters, t2i)
 
     new ViterbiForwardLayer(parameters,
-      inputSize, hasPredicate, t2i, i2t, H, T)
+      inputSize, hasPredicate, t2i, i2t, H, T, nonlinearity)
   }
 }
 
