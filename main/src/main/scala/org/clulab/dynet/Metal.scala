@@ -3,18 +3,19 @@ package org.clulab.dynet
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection}
+import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.{Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
-import Metal._
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+
+import Metal._
 
 /**
  * Multi-task learning (MeTaL) for sequence modeling
@@ -107,7 +108,15 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   def train(modelNamePrefix: String): Unit = {
     require(taskManagerOpt.isDefined)
 
-    val trainer = SafeTrainer(new AdamTrainer(parameters, learningRate = 0.01f)) // RMSPropTrainer(parameters))
+    val learningRate = taskManager.getArgFloat("mtl.learningRate", Some(0.001f))
+    val trainerType = taskManager.getArgString("mtl.trainer", Some("adam"))
+
+    val trainer = trainerType match {
+      case "adam" => SafeTrainer(new AdamTrainer(parameters, learningRate))
+      case "rmsprop" => SafeTrainer(new RMSPropTrainer(parameters, learningRate))
+      case "sgd" => SafeTrainer(new SimpleSGDTrainer(parameters, learningRate))
+      case _ => throw new RuntimeException(s"ERROR: unknown trainer $trainerType!")
+    }
 
     var cummulativeLoss = 0.0
     var numTagged = 0
