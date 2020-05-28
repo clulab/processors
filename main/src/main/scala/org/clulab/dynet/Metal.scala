@@ -279,13 +279,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val batchLoss = Expression.sum(batchLosses)
 
     // forward pass and stats
-    val avgLoss = batchLoss.value().toFloat / batchLosses.size
+    val batchLossAsFloat = batchLoss.value().toFloat
 
     // backprop
     ComputationGraph.backward(batchLoss)
     trainer.update(parameters)
 
-    avgLoss
+    batchLossAsFloat
   }
 
   def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): (Double, Double, Double, Double) = {
