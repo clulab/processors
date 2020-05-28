@@ -51,9 +51,10 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
         var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
-        nonlinearity match {
-          case NONLIN_TANH => l1 = Expression.tanh(l1)
-          case NONLIN_RELU => l1 = Expression.rectify(l1)
+        l1 = nonlinearity match {
+          case NONLIN_TANH => Expression.tanh(l1)
+          case NONLIN_RELU => Expression.rectify(l1)
+          case _ => l1 // nothing to do otherwise
         }
 
         emissionScores.add(l1)
