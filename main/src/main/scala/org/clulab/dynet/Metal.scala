@@ -112,6 +112,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     val learningRate = taskManager.getArgFloat("mtl.learningRate", Some(0.001f))
     val trainerType = taskManager.getArgString("mtl.trainer", Some("adam"))
+    val batchSize = taskManager.getArgInt("mtl.batchSize", Some(1))
+    assert(batchSize > 0)
 
     val trainer = trainerType match {
       case "adam" => SafeTrainer(new AdamTrainer(parameters, learningRate))
@@ -138,6 +140,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       // this fetches randomized training sentences from all tasks
       val sentenceIterator = taskManager.getSentences(rand)
 
+      ComputationGraph.renew()
+      var batchLosses: ExpressionVector = new ExpressionVector()
+
       //
       // traverse all training sentences
       //
@@ -147,7 +152,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val taskType = taskManager.tasks(taskId).taskType
 
         sentCount += 1
-        ComputationGraph.renew()
 
         val annotatedSentence = taskType match {
           case TaskManager.TYPE_BASIC => basicReader.toAnnotatedSentence(sentence)
@@ -197,12 +201,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           if (taskManager.tasks(taskId).taskWeight != 1.0)
             loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
 
-          // for stats
-          cummulativeLoss += loss.value().toFloat
+          batchLosses.add(loss)
 
-          // backprop
-          ComputationGraph.backward(loss)
-          trainer.update(parameters)
+          if(batchLosses.size >= batchSize) {
+            // backprop
+            cummulativeLoss += batchBackprop(batchLosses, trainer)
+
+            // start a new batch
+            ComputationGraph.renew()
+            batchLosses = new ExpressionVector()
+          }
         }
 
         numTagged += sentence.length
@@ -212,6 +220,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           cummulativeLoss = 0.0
           numTagged = 0
         }
+      }
+
+      // we may have an incomplete batch here
+      if(batchLosses.nonEmpty) {
+        // backprop
+        cummulativeLoss += batchBackprop(batchLosses, trainer)
+
+        // start a new batch
+        ComputationGraph.renew()
+        batchLosses = new ExpressionVector()
       }
 
       //
@@ -254,6 +272,20 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
       save(s"$modelNamePrefix-epoch$epoch")
     }
+  }
+
+  def batchBackprop(batchLosses: ExpressionVector, trainer: SafeTrainer): Float = {
+    // this is were the auto batch magic happens
+    val batchLoss = Expression.sum(batchLosses)
+
+    // forward pass and stats
+    val avgLoss = batchLoss.value().toFloat / batchLosses.size
+
+    // backprop
+    ComputationGraph.backward(batchLoss)
+    trainer.update(parameters)
+
+    avgLoss
   }
 
   def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): (Double, Double, Double, Double) = {
@@ -435,7 +467,7 @@ object Metal {
 
   def main(args: Array[String]): Unit = {
     val props = StringUtils.argsToProperties(args)
-    initializeDyNet() // autoBatch = true, mem = "1660,1664,2496,1400")
+    initializeDyNet(autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
 
     if(props.containsKey("train")) {
       assert(props.containsKey("conf"))
