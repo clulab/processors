@@ -135,6 +135,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     var bestEpoch = 0
     var epochPatience = taskManager.epochPatience
 
+    var skippedFrames = 0
+    var totalFrames = 0
+
     for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
       logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
@@ -177,12 +180,17 @@ class Metal(val taskManagerOpt: Option[TaskManager],
               for(predIdx <- predicatePositions.indices) {
                 // token position of the predicate for this frame
                 val predPosition = predicatePositions(predIdx)
+                totalFrames += 1
 
-                val loss = flows(taskId).loss(annotatedSentence,
-                  srlArgsRowReader.toLabels(sentence, Some(predIdx)),
-                  Some(predPosition))
+                // gold arg labels for this frame
+                val labels = srlArgsRowReader.toLabels(sentence, Some(predIdx))
 
-                allPredLoss.add(loss)
+                if(hasContent(labels)) {
+                  val loss = flows(taskId).loss(annotatedSentence, labels, Some(predPosition))
+                  allPredLoss.add(loss)
+                } else {
+                  skippedFrames += 1
+                }
               }
 
               if(allPredLoss.length > 0) Some(Expression.sum(allPredLoss))
@@ -219,6 +227,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
           cummulativeLoss = 0.0
           numTagged = 0
+
+          if(skippedFrames > 0) {
+            logger.debug(s"Skipped $skippedFrames out of $totalFrames total SRL frames.")
+          }
         }
       }
 
@@ -272,6 +284,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
       save(s"$modelNamePrefix-epoch$epoch")
     }
+  }
+
+  /** Returns true if this contains at least 1 non-O label */
+  private def hasContent(labels: IndexedSeq[String]): Boolean = {
+    labels.filter(_ != "O").size > 0
   }
 
   def batchBackprop(batchLosses: ExpressionVector, trainer: SafeTrainer): Float = {
@@ -467,7 +484,7 @@ object Metal {
 
   def main(args: Array[String]): Unit = {
     val props = StringUtils.argsToProperties(args)
-    initializeDyNet(autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
+    initializeDyNet() // autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
 
     if(props.containsKey("train")) {
       assert(props.containsKey("conf"))
