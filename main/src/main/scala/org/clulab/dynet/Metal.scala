@@ -185,7 +185,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
                 // gold arg labels for this frame
                 val labels = srlArgsRowReader.toLabels(sentence, Some(predIdx))
 
-                if(hasContent(labels)) {
+                if(true) { // hasContent(labels)) { // does not seem to help
                   val loss = flows(taskId).loss(annotatedSentence, labels, Some(predPosition))
                   allPredLoss.add(loss)
                 } else {
