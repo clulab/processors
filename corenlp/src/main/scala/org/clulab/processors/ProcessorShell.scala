@@ -3,12 +3,12 @@ package org.clulab.processors
 import scala.collection.immutable.ListMap
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import java.io.File
+import java.io.{File, PrintWriter}
 
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
+import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.processors.examples.ProcessorExample
 
 /**
   * A simple interactive shell
@@ -45,6 +45,7 @@ object ProcessorShell extends App {
   printCommands()
 
   var running = true
+  val printWriter = new PrintWriter(System.out)
 
   while (running) {
     reader.readLine match {
@@ -66,6 +67,7 @@ object ProcessorShell extends App {
       case ":clu" =>
         reader.setPrompt("(clu)>>> ")
         println("Preparing CluProcessor...\n")
+        Utils.initializeDyNet()
         proc = clu
         proc.annotate("initialize me!")
 
@@ -74,7 +76,8 @@ object ProcessorShell extends App {
 
       case text =>
         val doc = proc.annotate(text)
-        ProcessorExample.printDoc(doc)
+        doc.prettyPrint(printWriter)
+        printWriter.flush()
     }
   }
 

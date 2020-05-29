@@ -115,6 +115,11 @@ class FastNLPProcessor(
 
     //println("FOUND DISCOURSE TREE:\n" + out._1)
   }
+
+  /** Semantic role labeling */
+  override def srl(doc: Document): Unit = {
+    // not implemented yet
+  }
 }
 
 object FastNLPProcessor {

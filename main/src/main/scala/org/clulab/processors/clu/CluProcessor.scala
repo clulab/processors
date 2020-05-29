@@ -47,11 +47,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => new EnglishLemmatizer
   }
 
-  // one of the multi-task learning (MTL) models, which covers: POS and chunking
-  lazy val mtlSyn: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+  // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
+  lazy val mtlPosChunkSrlp: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk", Some("mtl-en-pos-chunk")))
+    case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
   }
 
   // one of the multi-task learning (MTL) models, which covers: NER
@@ -61,16 +61,27 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
   }
 
+  // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
+  lazy val mtlSrla: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+  }
+
   override def annotate(doc:Document): Document = {
     tagPartsOfSpeech(doc) // the call to the syntax MTL is in here
     recognizeNamedEntities(doc) // the call to the NER MTL is in here
-    chunking(doc) // Nop, kept for the record
-    parse(doc) // Nop, kept for the record
+    chunking(doc) // Nothing, kept for the record
+    parse(doc) // Nothing, kept for the record
 
     lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
 
+    srl(doc) // SRL (arguments)
+
+    // these are not implemented yet
     resolveCoreference(doc)
     discourse(doc)
+
     doc.clear()
     doc
   }
@@ -95,19 +106,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
   }
 
-  /** Part of speech tagging + NER + chunking, jointly */
-  def tagPartsOfSpeech(doc:Document) {
+  /** Part of speech tagging + chunking + SRL (predicates), jointly */
+  override def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val allLabels = mtlSyn.predictJointly(new AnnotatedSentence(sent.words))
+      val allLabels = mtlPosChunkSrlp.predictJointly(new AnnotatedSentence(sent.words))
       sent.tags = Some(allLabels(0).toArray)
       sent.chunks = Some(allLabels(1).toArray)
-      // TODO: create the dependency graph here, when it's available
+      // TODO: SRL preds
     }
   }
 
   /** Lematization; modifies the document in place */
-  def lemmatize(doc:Document) {
+  override def lemmatize(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
@@ -135,13 +146,17 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** NER; modifies the document in place */
-  def recognizeNamedEntities(doc:Document): Unit = {
+  override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       val allLabels = mtlNer.predictJointly(new AnnotatedSentence(sent.words))
       sent.entities = Some(allLabels(0).toArray)
       // TODO: call SUTime to normalize dates?
     }
+  }
+
+  override def srl(doc: Document): Unit = {
+    // TODO
   }
 
   /** Syntactic parsing; modifies the document in place */
@@ -156,12 +171,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Coreference resolution; modifies the document in place */
   def resolveCoreference(doc:Document) {
-    // TODO. We need this.
+    // TODO. Implement me
   }
 
   /** Discourse parsing; modifies the document in place */
   def discourse(doc:Document) {
-    // TODO. We will probably not include this, at least in the short term
+    // TODO. Implement me
   }
 
   /** Relation extraction; modifies the document in place. */

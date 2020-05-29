@@ -1,9 +1,10 @@
 package org.clulab.processors
 
-import org.clulab.discourse.rstparser.DiscourseTree
-import org.clulab.struct.CorefChains
-import org.clulab.utils.Serializer
+import java.io.PrintWriter
 
+import org.clulab.discourse.rstparser.DiscourseTree
+import org.clulab.struct.{CorefChains, DirectedGraphEdgeIterator}
+import org.clulab.utils.Serializer
 import org.json4s.JString
 import org.json4s.JValue
 import org.json4s.jackson.prettyJson
@@ -98,13 +99,87 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
    * Sets the document creation time using the CoreNLP format.
    * See useFixedDate here for more details: https://stanfordnlp.github.io/CoreNLP/ner.html#setting-document-date
    * The DCT will impacts how Sentence.norms are generated for DATE expressions
-   * @param dct
+   * @param dct Document creation time
    */
   def setDCT(dct:String): Unit = {
     documentCreationTime = Some(dct)
   }
 
   def getDCT: Option[String] = documentCreationTime
+
+  def prettyPrint(pw: PrintWriter): Unit = {
+    // let's print the sentence-level annotations
+    var sentenceCount = 0
+    for (sentence <- sentences) {
+      pw.println("Sentence #" + sentenceCount + ":")
+      pw.println("Tokens: " + sentence.words.mkString(" "))
+      pw.println("Start character offsets: " + sentence.startOffsets.mkString(" "))
+      pw.println("End character offsets: " + sentence.endOffsets.mkString(" "))
+
+      // these annotations are optional, so they are stored using Option objects, hence the foreach statement
+      sentence.lemmas.foreach(lemmas => pw.println(s"Lemmas: ${lemmas.mkString(" ")}"))
+      sentence.tags.foreach(tags => pw.println(s"POS tags: ${tags.mkString(" ")}"))
+      sentence.chunks.foreach(chunks => pw.println(s"Chunks: ${chunks.mkString(" ")}"))
+      sentence.entities.foreach(entities => pw.println(s"Named entities: ${entities.mkString(" ")}"))
+      sentence.norms.foreach(norms => pw.println(s"Normalized entities: ${norms.mkString(" ")}"))
+      sentence.universalBasicDependencies.foreach(dependencies => {
+        pw.println("Basic syntactic dependencies:")
+        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+        while(iterator.hasNext) {
+          val dep = iterator.next
+          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+        }
+      })
+      sentence.universalEnhancedDependencies.foreach(dependencies => {
+        pw.println("Enhanced syntactic dependencies:")
+        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+        while(iterator.hasNext) {
+          val dep = iterator.next
+          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+        }
+      })
+      sentence.semanticRoles.foreach(dependencies => {
+        pw.println("Semantic dependencies:")
+        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+        while(iterator.hasNext) {
+          val dep = iterator.next
+          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+        }
+      })
+      sentence.syntacticTree.foreach(tree => {
+        pw.println("Constituent tree: " + tree.toStringDepth(showHead = false))
+        // see the org.clulab.struct.Tree class for more information
+        // on syntactic trees, including access to head phrases/words
+      })
+
+      sentenceCount += 1
+      pw.println("\n")
+    }
+
+    // let's print the coreference chains
+    coreferenceChains.foreach(chains => {
+      for (chain <- chains.getChains) {
+        pw.println("Found one coreference chain containing the following mentions:")
+        for (mention <- chain) {
+          // note that all these offsets start at 0 too
+          pw.println("\tsentenceIndex:" + mention.sentenceIndex +
+            " headIndex:" + mention.headIndex +
+            " startTokenOffset:" + mention.startOffset +
+            " endTokenOffset:" + mention.endOffset +
+            " text: " + sentences(mention.sentenceIndex).words.slice(mention.startOffset, mention.endOffset).mkString("[", " ", "]"))
+        }
+      }
+    })
+
+    // let's print the discourse tree
+    discourseTree.foreach(dt => {
+      pw.println("Document-wide discourse tree:")
+      pw.println(dt.toString())
+    })
+  }
 }
 
 object Document {
