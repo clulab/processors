@@ -102,7 +102,7 @@ object ViterbiForwardLayer {
     val inputSize = byLineIntBuilder.build(x2iIterator)
     val hasPredicateAsInt = byLineIntBuilder.build(x2iIterator, "hasPredicate", DEFAULT_HAS_PREDICATE)
     val hasPredicate = hasPredicateAsInt == 1
-    val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity")
+    val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator)
     val i2t = fromIndexToString(t2i)
 
