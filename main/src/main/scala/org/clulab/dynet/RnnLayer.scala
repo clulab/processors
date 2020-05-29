@@ -97,12 +97,12 @@ object RnnLayer {
 
   def initialize(config: Configured,
                  paramPrefix: String,
-                 parameters: ParameterCollection): Option[IntermediateLayer] = {
+                 parameters: ParameterCollection,
+                 inputSize: Int): Option[IntermediateLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
     }
 
-    val inputSize = config.getArgInt(paramPrefix + ".inputSize", None)
     val numLayers = config.getArgInt(paramPrefix + ".numLayers", Some(1))
     val rnnStateSize = config.getArgInt(paramPrefix + ".rnnStateSize", None)
     val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))

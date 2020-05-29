@@ -101,13 +101,13 @@ object ForwardLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
-                 hasPredicate: Boolean): Option[ForwardLayer] = {
+                 hasPredicate: Boolean,
+                 inputSize: Int): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
     }
 
     val inferenceType = config.getArgString(paramPrefix + ".inference", Some("greedy"))
-    val inputSize = config.getArgInt(paramPrefix + ".inputSize", None)
     val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DROPOUT_PROB))
 
     val nonlinAsString = config.getArgString(paramPrefix + ".nonlinearity", Some(""))

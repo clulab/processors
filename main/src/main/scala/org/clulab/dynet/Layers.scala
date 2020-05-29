@@ -15,6 +15,23 @@ import scala.collection.mutable.ArrayBuffer
 class Layers (val initialLayer: Option[InitialLayer],
               val intermediateLayers: IndexedSeq[IntermediateLayer],
               val finalLayer: Option[FinalLayer]) extends Saveable {
+
+  def outDim: Option[Int] = {
+    if(finalLayer.nonEmpty) {
+      return Some(finalLayer.get.outDim)
+    }
+
+    if(intermediateLayers.nonEmpty) {
+      return Some(intermediateLayers.last.outDim)
+    }
+
+    if(initialLayer.nonEmpty) {
+      return Some(initialLayer.get.outDim)
+    }
+
+    None
+  }
+
   override def toString: String = {
     val sb = new StringBuilder
     var started = false
@@ -137,15 +154,29 @@ object Layers {
             parameters: ParameterCollection,
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
-            hasPredicate: Boolean): Layers = {
+            hasPredicate: Boolean,
+            providedInputSize: Option[Int]): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
+
+    var inputSize =
+      if(initialLayer.nonEmpty) {
+        Some(initialLayer.get.outDim)
+      } else if(providedInputSize.nonEmpty) {
+        providedInputSize
+      } else {
+        None
+      }
 
     val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
     var done = false
     for(i <- 1 to MAX_INTERMEDIATE_LAYERS if ! done) {
-      val intermediateLayer = RnnLayer.initialize(config, paramPrefix + s".intermediate$i", parameters)
+      if(inputSize.isEmpty) {
+        throw new RuntimeException("ERROR: trying to construct an intermediate layer without a known input size!")
+      }
+      val intermediateLayer = RnnLayer.initialize(config, paramPrefix + s".intermediate$i", parameters, inputSize.get)
       if(intermediateLayer.nonEmpty) {
         intermediateLayers += intermediateLayer.get
+        inputSize = Some(intermediateLayer.get.outDim)
       } else {
         done = true
       }
@@ -153,8 +184,12 @@ object Layers {
 
     val finalLayer =
       if(labelCounterOpt.nonEmpty) {
+        if(inputSize.isEmpty) {
+          throw new RuntimeException("ERROR: trying to construct a final layer without a known input size!")
+        }
+
         ForwardLayer.initialize(config, paramPrefix + ".final", parameters,
-          labelCounterOpt.get, hasPredicate)
+          labelCounterOpt.get, hasPredicate, inputSize.get)
       } else {
         None
       }

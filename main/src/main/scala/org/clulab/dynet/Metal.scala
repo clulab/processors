@@ -48,13 +48,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val layersPerTask: Array[Layers] = new Array[Layers](taskManager.taskCount + 1)
     layersPerTask(0) =
       Layers(taskManager, "mtl.layers", parameters, taskWords(0),
-        None, hasPredicate = false)
+        None, hasPredicate = false, providedInputSize = None)
+
+    val inputSize = layersPerTask(0).outDim
+
     for (i <- taskManager.indices) {
       val hasPredicate = taskManager.tasks(i).isSrl
       layersPerTask(i + 1) =
         Layers(taskManager, s"mtl.task${i + 1}.layers",
-          parameters, taskWords(i + 1),
-          Some(taskLabels(i + 1)), hasPredicate)
+          parameters, taskWords(i + 1), Some(taskLabels(i + 1)),
+          hasPredicate, inputSize)
     }
     for(i <- layersPerTask.indices) {
       logger.debug(s"Summary of layersPerTask($i):")
@@ -288,7 +291,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
   /** Returns true if this contains at least 1 non-O label */
   private def hasContent(labels: IndexedSeq[String]): Boolean = {
-    labels.filter(_ != "O").size > 0
+    labels.exists(_ != "O")
   }
 
   def batchBackprop(batchLosses: ExpressionVector, trainer: SafeTrainer): Float = {
