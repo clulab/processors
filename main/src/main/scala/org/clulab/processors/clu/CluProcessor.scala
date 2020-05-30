@@ -114,6 +114,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       sent.tags = Some(allLabels(0).toArray)
       sent.chunks = Some(allLabels(1).toArray)
       // TODO: SRL preds
+
     }
   }
 
