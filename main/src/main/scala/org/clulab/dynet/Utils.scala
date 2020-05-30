@@ -26,8 +26,10 @@ object Utils {
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
-  val RANDOM_SEED = 2522620396L // used for both DyNet, and the JVM seed for shuffling data
+  val RANDOM_SEED = 1L // used for both DyNet, and the JVM seed for shuffling data
   val WEIGHT_DECAY = 1e-5f
+
+
 
   val LOG_MIN_VALUE: Float = -10000
 
