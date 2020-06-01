@@ -2,6 +2,8 @@ package org.clulab.utils
 
 import java.io.{BufferedReader, File, FileReader, PrintWriter}
 
+import org.clulab.dynet.Utils
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
@@ -359,10 +361,11 @@ object CoNLLSRLReader {
 
   def main(args: Array[String]): Unit = {
     assert(args.length == 2)
+    Utils.initializeDyNet()
 
     val file = new File(args(0))
     val reader = new CoNLLSRLReader
-    val proc = new FastNLPProcessor()
+    val proc = new CluProcessor() // FastNLPProcessor()
     val doc = reader.read(file, proc, verbose = true)
 
     labelStats(doc)
