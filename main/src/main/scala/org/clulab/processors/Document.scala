@@ -83,6 +83,12 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     attachments.flatMap(_.get(name))
   }
 
+  def removeAttachment(name: String): Unit = {
+    if(attachments.nonEmpty) {
+      attachments.get -= name
+    }
+  }
+
   /** Retrieves keys to all attachments so that the entire collection can be read
     * for purposes including but not limited to serialization.  If there are no
     * attachments, that is attachments == None, an empty set is returned.
@@ -299,3 +305,15 @@ trait JsonSerializerAble {
   * Placeholder for document attachment, to be used to store any meta data such as document creation time.
   */
 trait DocumentAttachment extends DocumentAble with DocumentSerializerAble with JsonSerializerAble
+
+/**
+ * Designed to store intermediate attachments that are only used to pass information between processor components.
+ * Thus, these do not need to be serialized
+ */
+class IntermediateDocumentAttachment extends DocumentAttachment {
+  override def toDocumentSerializer: String = ""
+
+  override def toJsonSerializer: JValue = {
+    new JString("")
+  }
+}

@@ -1,7 +1,7 @@
 package org.clulab.processors.clu
 
 import org.clulab.processors.clu.tokenizer._
-import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.utils.Configured
 import org.clulab.utils.ScienceUtils
@@ -106,16 +106,38 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
   }
 
+  class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
+
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
   override def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
+
+    val preds = new ArrayBuffer[IndexedSeq[Int]]()
+
     for(sent <- doc.sentences) {
       val allLabels = mtlPosChunkSrlp.predictJointly(new AnnotatedSentence(sent.words))
       sent.tags = Some(allLabels(0).toArray)
       sent.chunks = Some(allLabels(1).toArray)
-      // TODO: SRL preds
 
+      // get the index of all predicates in this sentence
+      val predsInSent = new ArrayBuffer[Int]()
+      var done = false
+      var offset = 0
+      while(! done) {
+        val idx = allLabels(2).indexOf("B-P", offset)
+
+        if(idx >= 0) {
+          predsInSent += idx
+          offset = idx + 1
+        } else {
+          done = true
+        }
+      }
+      preds += predsInSent
     }
+
+    // store the index of all predicates as a doc attachment
+    doc.addAttachment("predicates", new PredicateAttachment(preds))
   }
 
   /** Lematization; modifies the document in place */
@@ -152,7 +174,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     for(sent <- doc.sentences) {
       val allLabels = mtlNer.predictJointly(new AnnotatedSentence(sent.words))
       sent.entities = Some(allLabels(0).toArray)
-      // TODO: call SUTime to normalize dates?
     }
   }
 
