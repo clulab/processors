@@ -8,9 +8,10 @@ import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, Metal}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -181,10 +182,45 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
     assert(predicatesAttachment.nonEmpty)
 
+    if(doc.sentences.length > 0) {
+      assert(doc.sentences(0).tags.nonEmpty)
+      assert(doc.sentences(0).entities.nonEmpty)
+    }
+
     val predicates = predicatesAttachment.get.asInstanceOf[PredicateAttachment].predicates
     assert(predicates.length == doc.sentences.length)
 
-    // TODO
+    // generate SRL frames for each predicate in each sentence
+    for(si <- predicates.indices) {
+      val sentence = doc.sentences(si)
+
+      val edges = new ListBuffer[Edge[String]]()
+      val roots = new mutable.HashSet[Int]()
+
+      // SRL needs POS tags and NEs!
+      val annotatedSentence =
+        new AnnotatedSentence(sentence.words,
+          Some(sentence.tags.get), Some(sentence.entities.get))
+
+      // all predicates become roots
+      val preds = predicates(si)
+      roots ++= preds
+
+      for(pi <- preds.indices) {
+        val pred = preds(pi)
+        val argLabels = mtlSrla.predict(0, annotatedSentence, Some(pred))
+
+        for(ai <- argLabels.indices) {
+          if(argLabels(ai) != "O") {
+            val edge = Edge[String](pred, ai, argLabels(ai))
+            edges += edge
+          }
+        }
+      }
+
+      val sentGraph = new DirectedGraph[String](edges.toList, roots.toSet)
+      sentence.graphs += GraphMap.SEMANTIC_ROLES -> sentGraph
+    }
 
     doc.removeAttachment(PREDICATE_ATTACHMENT_NAME)
   }

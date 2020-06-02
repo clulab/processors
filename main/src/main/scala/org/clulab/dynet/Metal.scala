@@ -68,7 +68,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   }
 
   protected def mkFlows(layers: IndexedSeq[Layers]): Array[Layers] = {
-    val flows = new Array[Layers](taskManager.taskCount)
+    val flows = new Array[Layers](layers.length - 1)
     assert(flows.length + 1 == layers.length)
 
     for(i <- flows.indices) {
@@ -401,6 +401,17 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   // this only supports basic tasks for now
   def predictJointly(sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
     Layers.predictJointly(model, sentence)
+  }
+
+  def predict(taskId: Int,
+              sentence: AnnotatedSentence): IndexedSeq[String] = {
+    predict(taskId, sentence, None)
+  }
+
+  def predict(taskId: Int,
+              sentence: AnnotatedSentence,
+              predPositionOpt: Option[Int]): IndexedSeq[String] = {
+    flows(taskId).predict(sentence, predPositionOpt)
   }
 
   def test(): Unit = {
