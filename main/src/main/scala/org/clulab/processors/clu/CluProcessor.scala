@@ -137,7 +137,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
 
     // store the index of all predicates as a doc attachment
-    doc.addAttachment("predicates", new PredicateAttachment(preds))
+    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(preds))
   }
 
   /** Lematization; modifies the document in place */
@@ -178,7 +178,15 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   override def srl(doc: Document): Unit = {
+    val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
+    assert(predicatesAttachment.nonEmpty)
+
+    val predicates = predicatesAttachment.get.asInstanceOf[PredicateAttachment].predicates
+    assert(predicates.length == doc.sentences.length)
+
     // TODO
+
+    doc.removeAttachment(PREDICATE_ATTACHMENT_NAME)
   }
 
   /** Syntactic parsing; modifies the document in place */
@@ -266,6 +274,8 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
   val prefix:String = "CluProcessor"
+
+  val PREDICATE_ATTACHMENT_NAME = "predicates"
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
