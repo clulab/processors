@@ -39,7 +39,8 @@ libraryDependencies ++= {
     "org.scalatest"           %%  "scalatest"                 % "3.0.1"  % "test",
 
     // trained models for local ML models used in both main and corenlp
-    "org.clulab"               % "processors-models"          % "0.0.5",
+    // these are stored in the CLU lab Artifactory not maven!
+    "org.clulab"               % "processors-models"          % "0.1.0",
     "org.clulab"               % "glove-840b-300d-10f"        % "1.0.0"
   )
 

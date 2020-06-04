@@ -60,7 +60,7 @@ object GreedyForwardLayer {
     //
     // make the loadable parameters
     //
-    println(s"making FF ${t2i.size} x ${2 * inputSize}")
+    //println(s"making FF ${t2i.size} x ${2 * inputSize}")
     val actualInputSize = if(hasPredicate) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
