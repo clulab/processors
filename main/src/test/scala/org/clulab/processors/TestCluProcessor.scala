@@ -1,5 +1,6 @@
 package org.clulab.processors
 
+import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -9,7 +10,10 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 6/17/17
   */
 class TestCluProcessor extends FlatSpec with Matchers {
-  val proc = new CluProcessor()
+  val proc = {
+    Utils.initializeDyNet()
+    new CluProcessor()
+  }
   
   "CluProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
@@ -43,7 +47,6 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("Tokenization is fine.")
   }
 
-  /*
   it should "POS tag correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
     proc.lemmatize(doc)
@@ -105,7 +108,6 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences(0).lemmas.get(5) should be ("shop")
     println("Lemmatization is fine.")
   }
-  */
 
   /*
   it should "parse text correctly" in {
