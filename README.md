@@ -21,7 +21,7 @@ Our code is licensed as follows:
 
 (c) Mihai Surdeanu, 2013 -
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, Tom Hicks, and [Keith Alcock](http://www.keithalcock.com).
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, [Keith Alcock](http://www.keithalcock.com), and Tom Hicks.
 
 # Changes
 + [Please see the CHANGES file](CHANGES.md)
