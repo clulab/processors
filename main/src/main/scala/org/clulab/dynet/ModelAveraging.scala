@@ -1,7 +1,9 @@
 package org.clulab.dynet
 
-import java.io.PrintWriter
+import java.io.{File, PrintWriter}
 import java.text.DecimalFormat
+
+import org.apache.commons.io.FileUtils
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -16,10 +18,13 @@ object ModelAveraging extends App {
   val individualModelFileNames = args.slice(0, args.length - 1)
   val outputModelFileName = args.last
 
-  val out = new PrintWriter(outputModelFileName)
+  //
+  // generate the .rnn file
+  //
+  val out = new PrintWriter(outputModelFileName + ".rnn")
   val lines = new Array[Iterator[String]](individualModelFileNames.length)
   for(i <- individualModelFileNames.indices) {
-    lines(i) = io.Source.fromFile(individualModelFileNames(i)).getLines()
+    lines(i) = io.Source.fromFile(individualModelFileNames(i) + ".rnn").getLines()
   }
 
   while(lines(0).hasNext) {
@@ -36,8 +41,16 @@ object ModelAveraging extends App {
       out.println(avg(crtLines))
     }
   }
-
   out.close()
+
+  //
+  // generate the .x2i file
+  // all the .x2i files should be the same, so just copy one
+  //
+  val origX2i = new File(individualModelFileNames(0) + ".x2i")
+  val avgX2i = new File(outputModelFileName + ".x2i")
+  FileUtils.copyFile(origX2i, avgX2i)
+  assert(avgX2i.exists())
 
   def avg(lines: Array[String]): String = {
     // convert to vectors
@@ -61,6 +74,8 @@ object ModelAveraging extends App {
     // convert avg vector to string
     val b = new StringBuilder
     val numFormat = new DecimalFormat("0.00000000E00")
+    val expNoSign = "e[0-9]".r
+
     for(i <- avgVector.indices) {
       //if(i > 0) b.append(" ")
       val num = avgVector(i)
@@ -74,8 +89,14 @@ object ModelAveraging extends App {
         numFormatted = "+" + numFormatted
       }
 
-      // Dynet uses "e+00" for no exponent
-      numFormatted = numFormatted.replace("e00", "e+00")
+      // Dynet requires the plus sign on positive exponents, e.g., "e+01" rather than "e01"
+      val expNoSignMatch = expNoSign.findFirstMatchIn(numFormatted)
+      if(expNoSignMatch.nonEmpty) {
+        numFormatted =
+          numFormatted.substring(0, expNoSignMatch.get.start) +
+          "e+" +
+          numFormatted.substring(expNoSignMatch.get.start + 1)
+      }
 
       b.append(numFormatted)
       b.append(" ")
