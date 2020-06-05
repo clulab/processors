@@ -1,17 +1,17 @@
 package org.clulab.processors.clu
 
 import org.clulab.processors.clu.tokenizer._
-import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.utils.Configured
 import org.clulab.utils.ScienceUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-import org.clulab.sequences.LstmCrfMtl
-
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
+import org.clulab.dynet.{AnnotatedSentence, Metal}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -48,30 +48,41 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => new EnglishLemmatizer
   }
 
-  // one of the multi-task learning (MTL) models, which covers: POS and chunking
-  lazy val mtlSyn: LstmCrfMtl = getArgString(s"$prefix.language", Some("EN")) match {
+  // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
+  lazy val mtlPosChunkSrlp: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => LstmCrfMtl(getArgString(s"$prefix.mtl-pos-chunk", Some("mtl-en-pos-chunk")))
+    case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
   }
 
   // one of the multi-task learning (MTL) models, which covers: NER
-  lazy val mtlNer: LstmCrfMtl = getArgString(s"$prefix.language", Some("EN")) match {
+  lazy val mtlNer: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => LstmCrfMtl(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+    case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+  }
+
+  // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
+  lazy val mtlSrla: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
   }
 
   override def annotate(doc:Document): Document = {
     tagPartsOfSpeech(doc) // the call to the syntax MTL is in here
     recognizeNamedEntities(doc) // the call to the NER MTL is in here
-    chunking(doc) // Nop, kept for the record
-    parse(doc) // Nop, kept for the record
+    chunking(doc) // Nothing, kept for the record
+    parse(doc) // Nothing, kept for the record
 
     lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
 
+    srl(doc) // SRL (arguments)
+
+    // these are not implemented yet
     resolveCoreference(doc)
     discourse(doc)
+
     doc.clear()
     doc
   }
@@ -96,19 +107,42 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
   }
 
-  /** Part of speech tagging + NER + chunking, jointly */
-  def tagPartsOfSpeech(doc:Document) {
+  class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
+
+  /** Part of speech tagging + chunking + SRL (predicates), jointly */
+  override def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
+
+    val preds = new ArrayBuffer[IndexedSeq[Int]]()
+
     for(sent <- doc.sentences) {
-      val allLabels = mtlSyn.predictJointly(sent.words)
-      sent.tags = Some(allLabels(0))
-      sent.chunks = Some(allLabels(1))
-      // TODO: create the dependency graph here, when it's available
+      val allLabels = mtlPosChunkSrlp.predictJointly(new AnnotatedSentence(sent.words))
+      sent.tags = Some(allLabels(0).toArray)
+      sent.chunks = Some(allLabels(1).toArray)
+
+      // get the index of all predicates in this sentence
+      val predsInSent = new ArrayBuffer[Int]()
+      var done = false
+      var offset = 0
+      while(! done) {
+        val idx = allLabels(2).indexOf("B-P", offset)
+
+        if(idx >= 0) {
+          predsInSent += idx
+          offset = idx + 1
+        } else {
+          done = true
+        }
+      }
+      preds += predsInSent
     }
+
+    // store the index of all predicates as a doc attachment
+    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(preds))
   }
 
   /** Lematization; modifies the document in place */
-  def lemmatize(doc:Document) {
+  override def lemmatize(doc:Document) {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
@@ -136,13 +170,59 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** NER; modifies the document in place */
-  def recognizeNamedEntities(doc:Document): Unit = {
+  override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val allLabels = mtlNer.predictJointly(sent.words)
-      sent.entities = Some(allLabels(0))
-      // TODO: call SUTime to normalize dates?
+      val allLabels = mtlNer.predictJointly(new AnnotatedSentence(sent.words))
+      sent.entities = Some(allLabels(0).toArray)
     }
+  }
+
+  override def srl(doc: Document): Unit = {
+    val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
+    assert(predicatesAttachment.nonEmpty)
+
+    if(doc.sentences.length > 0) {
+      assert(doc.sentences(0).tags.nonEmpty)
+      assert(doc.sentences(0).entities.nonEmpty)
+    }
+
+    val predicates = predicatesAttachment.get.asInstanceOf[PredicateAttachment].predicates
+    assert(predicates.length == doc.sentences.length)
+
+    // generate SRL frames for each predicate in each sentence
+    for(si <- predicates.indices) {
+      val sentence = doc.sentences(si)
+
+      val edges = new ListBuffer[Edge[String]]()
+      val roots = new mutable.HashSet[Int]()
+
+      // SRL needs POS tags and NEs!
+      val annotatedSentence =
+        new AnnotatedSentence(sentence.words,
+          Some(sentence.tags.get), Some(sentence.entities.get))
+
+      // all predicates become roots
+      val preds = predicates(si)
+      roots ++= preds
+
+      for(pi <- preds.indices) {
+        val pred = preds(pi)
+        val argLabels = mtlSrla.predict(0, annotatedSentence, Some(pred))
+
+        for(ai <- argLabels.indices) {
+          if(argLabels(ai) != "O") {
+            val edge = Edge[String](pred, ai, argLabels(ai))
+            edges += edge
+          }
+        }
+      }
+
+      val sentGraph = new DirectedGraph[String](edges.toList, roots.toSet)
+      sentence.graphs += GraphMap.SEMANTIC_ROLES -> sentGraph
+    }
+
+    doc.removeAttachment(PREDICATE_ATTACHMENT_NAME)
   }
 
   /** Syntactic parsing; modifies the document in place */
@@ -157,12 +237,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Coreference resolution; modifies the document in place */
   def resolveCoreference(doc:Document) {
-    // TODO. We need this.
+    // TODO. Implement me
   }
 
   /** Discourse parsing; modifies the document in place */
   def discourse(doc:Document) {
-    // TODO. We will probably not include this, at least in the short term
+    // TODO. Implement me
   }
 
   /** Relation extraction; modifies the document in place. */
@@ -230,6 +310,8 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
   val prefix:String = "CluProcessor"
+
+  val PREDICATE_ATTACHMENT_NAME = "predicates"
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,

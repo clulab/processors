@@ -1,4 +1,5 @@
 # Changes
++ **8.1.0** - CluProcessor now uses the new Metal framework on top of DyNet, and includes components for POS tagging, NER, syntactic chunking, and semantic role labeling.
 + **8.0.3** - Allow vars to be formatted as a yaml list in Odin.
 + **8.0.3** - Tokenization bug fixes.
 + **8.0.3** - Better management of artifactory repos.

@@ -42,6 +42,9 @@ trait Processor {
   /** Syntactic parsing; modifies the document in place. */
   def parse (doc:Document)
 
+  /** Semantic role labeling */
+  def srl (doc: Document)
+
   /** Shallow parsing; modifies the document in place. */
   def chunking (doc:Document)
 
@@ -91,6 +94,7 @@ trait Processor {
     parse(doc)
     chunking(doc)
     relationExtraction(doc)
+    srl(doc)
     resolveCoreference(doc)
     discourse(doc)
     doc.clear()

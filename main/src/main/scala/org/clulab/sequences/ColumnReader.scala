@@ -1,8 +1,5 @@
 package org.clulab.sequences
 
-import org.clulab.processors.Sentence
-import org.clulab.sequences.ColumnsToDocument.in
-
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
@@ -44,12 +41,22 @@ object ColumnReader {
   }
 }
 
-case class Row(val tokens:Array[String]) {
-  def get(idx:Int): String =
-    if(idx < tokens.length) tokens(idx)
-    else ""
+/**
+ * Stores training data for sequence modeling
+ * Mandatory columns: 0 - word, 1 - label
+ * Optional columns: 2 - POS tag, 3+ SRL arguments
+ * @param tokens
+ */
+case class Row(tokens:Array[String]) {
+  def get(idx:Int): String = {
+    if(idx >= tokens.length) {
+      throw new RuntimeException(s"ERROR: trying to read field #$idx, which does not exist in this row: [${tokens.mkString(", ")}]!")
+    }
+    tokens(idx)
+  }
 
-  def getWord: String = get(0)
-  def getTag: String = get(1)
+  def length = tokens.length
+
+
 }
 

@@ -5,14 +5,13 @@
 This is the main public code repository of the Computational Language Understanding (CLU) Lab led by [Mihai Surdeanu](http://surdeanu.info/mihai/) at [University of Arizona](http://www.arizona.edu). This repository contains:
 
 + A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `org.clulab.odin` package. See [Odin's Wiki page](https://github.com/clulab/processors/wiki/ODIN-(Open-Domain-INformer)) for more details.
-+ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster. 
++ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster.
++ A multi-task learning framework for sequence modeling called [Metal](https://github.com/clulab/processors/wiki/Metal), which is implemented on top of [DyNet](https://dynet.readthedocs.io/en/latest/). This framework includes a simple domain-specific language (DSL) that allows you to ramp up sequence models very quickly without writing any Scala code. We use `Metal` to implement most of the components in `CluProcessor`. 
 + A machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 + A suite of NL processors in the `org.clulab.processors` package. We currently provide the following APIs: 
 	+ `CoreNLPProcessor` - a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), using its constituent parser or dependency parser;
 	+ `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
-	+ `BioNLPProcessor` - a version of `CoreNLPProcessor` tuned for the biomedical domain: better tokenization for biomedical texts, improved POS tagging for the bio domain, and a custom NER for this domain that recognizes entities relevant in this domain such as proteins, chemical, and biological processes;
-	+ `FastBioNLPProcessor` - a version of `FastNLPProcessor` tuned for the biomedical domain, similarly to `BioNLPProcessor`; 
-	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), and shallow syntax or chunking. The last three components are implemented using a multi-task learning framework implemented using the Scala wrapper of [DyNet](https://dynet.readthedocs.io/en/latest/). Performance is comparable to `FastNLPProcessor`, under a more permissive license. Additionally, the memory footprint of `CluProcessor` is smaller than that of `FastNLPProcessor`, so it may be more appropriate for older machines. Coming soon: dependency parsing, and support for multiple languages. 
+	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), and shallow syntactic parsing or chunking, and semantic role labeling. The last four components are implemented using `Metal`, our multi-task learning framework. 
 
 This software requires Java 1.8, Scala 2.11, and CoreNLP 3.x or higher.
 
@@ -22,7 +21,7 @@ Our code is licensed as follows:
 
 (c) Mihai Surdeanu, 2013 -
 
-Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, Tom Hicks, and [Keith Alcock](http://www.keithalcock.com).
+Authors: [Mihai Surdeanu](http://surdeanu.info/mihai/), [Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), Peter Jansen, [Daniel Fried](http://www.cs.arizona.edu/~dfried/), Dane Bell, [Keith Alcock](http://www.keithalcock.com), and Tom Hicks.
 
 # Changes
 + [Please see the CHANGES file](CHANGES.md)
@@ -49,7 +48,7 @@ If you use anything else in this package, please link to this github page.
 
 # Installation
 
-The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.0.3`).  One component is not available at Maven Central because of size limitations there.  However, Maven seems to fetch this transitive dependency, [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), automatically.
+The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.1.0`).  One component is not available at Maven Central because of size limitations there.  However, Maven seems to fetch this transitive dependency, [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), automatically.
 
 ```xml
 <dependency>
@@ -112,7 +111,7 @@ Alternatively, you can run just the unit tests that do not require external bina
 + **Discourse parsing** - we include a complete RST parser; simply instantiate `CoreNLPProcessor` with `withDiscourse = true`.
 + **Biomedical tools** - we now include tools to process biomedical texts, which can be used under the same simple interface. We also offer event extraction tools for the biomedical domain.
 + **Rule-based event extraction** - we include Odin, an event extraction framework, which can be customized to various domains.
-+ **Apache license** - our `CluProcessor` replicates most functionality of Stanford's CoreNLP (tokenization, POS tagging, dependency parsing, more soon!) under the more permissive Apache license. 
++ **Apache license** - our `CluProcessor` replicates most functionality of Stanford's CoreNLP (tokenization, POS tagging, shallow parsing, semantic role labeling) under the more permissive Apache license. 
 
 # How to compile the source code
 
@@ -633,7 +632,9 @@ Developers only: For more details on the discourse parsers, please see [this Wik
 
 ## The `org.clulab.learning` package
 
-`processors` now contains a machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
+For deep learning tools in processors, please see [Metal](https://github.com/clulab/processors/wiki/Metal).
+
+`processors` also contains a machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
 
 The structure of this package is heavily inspired by Stanford's CoreNLP. Similar to CoreNLP, we use a `Datum` trait to store a single data point, which is implemented by `BVFDatum` to store binary-valued-feature datums, or by `RVFDatum` to store real-valued-feature datums. A collection of data points is stored as a `Dataset`, which is similarly implemented by `BVFDataset` or `RVFDataset`. All classifiers implement the `Classifier` trait, which has three main methods: `train`, which trains a model a given dataset, `classOf`, which returns the most likely prediction for a given datum, and `scoresOf`, which returns the scores for all known labels for a given datum. We currently support the following classifiers: large-margin Perceptron (`PerceptronClassifier`), linear SVMs and logistic regression from [liblinear](http://www.csie.ntu.edu.tw/~cjlin/liblinear/) (`LibLinearClassifier`), dual SVMs from [libsvm](http://www.csie.ntu.edu.tw/~cjlin/libsvm/) (`LibSVMClassifier`), and random forests, implemented in-house (`RFClassifier`).
 

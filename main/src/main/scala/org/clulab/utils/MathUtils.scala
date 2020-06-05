@@ -256,6 +256,26 @@ object MathUtils {
   }
 
   /**
+   * Rounds a number between 0 and 1 to a percentage value, with up to the indicated number of decimals
+   * This is useful to pretty print P/R/F1 scores
+   */
+  def round(d: Double, decimals: Int): Double = {
+    if(decimals < 0) {
+      return d // do not round when decimals is set to a negative value
+    }
+
+    var zeros = 1
+    var i = 0
+    while (i < decimals + 2) {
+      zeros *= 10
+      i += 1
+    }
+
+    val v = (d * zeros).toInt.toDouble / 100
+    v
+  }
+
+  /**
    *
    * @param coll                         - the collection on which to call the methods
    * @param collectionToSequenceImplicit - just like a view bound: CT <% Seq[T], but written explicitly (view bounds

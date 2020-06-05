@@ -1,6 +1,6 @@
 package org.clulab.utils
 
-import java.io.File
+import java.io.{File, PrintWriter}
 
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
@@ -15,6 +15,8 @@ abstract class Shell {
   def initialize(): Unit
   /** The actual work, including printing out the output */
   def work(text:String):Unit
+
+  protected val printWriter = new PrintWriter(System.out)
 
   val commands = ListMap(
     ":help" -> "show commands",
@@ -33,14 +35,16 @@ abstract class Shell {
     initialize()
 
     reader.setPrompt("(shell)>>> ")
-    println("\nWelcome to the shell!")
+    printWriter.println("\nWelcome to the shell!")
     printCommands()
+    printWriter.flush()
 
     var running = true
     while (running) {
       reader.readLine match {
         case ":help" =>
           printCommands()
+          printWriter.flush()
 
         case ":exit" | null =>
           running = false
@@ -49,9 +53,10 @@ abstract class Shell {
           if(text.trim.nonEmpty) {
             try {
               work(text)
+              printWriter.flush()
             } catch {
               case e:Throwable =>
-                println("Processing failed with the following error:")
+                printWriter.println("Processing failed with the following error:")
                 e.printStackTrace()
             }
           }
@@ -65,9 +70,9 @@ abstract class Shell {
 
   /** Summarizes available commands */
   def printCommands(): Unit = {
-    println("\nCOMMANDS:")
+    printWriter.println("\nCOMMANDS:")
     for ((cmd, msg) <- commands)
-      println(s"\t$cmd\t=> $msg")
-    println()
+      printWriter.println(s"\t$cmd\t=> $msg")
+    printWriter.println()
   }
 }

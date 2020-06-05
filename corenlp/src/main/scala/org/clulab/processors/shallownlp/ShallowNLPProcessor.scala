@@ -288,6 +288,10 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     // nothing here; see classes that extend this
   }
 
+  /** Semantic role labeling */
+  override def srl(doc: Document): Unit = {
+    // not implemented yet
+  }
 }
 
 object ShallowNLPProcessor {

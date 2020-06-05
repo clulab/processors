@@ -1,6 +1,6 @@
 package org.clulab.utils
 
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters._
 
@@ -39,4 +39,18 @@ trait Configured {
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
   def contains(argPath:String):Boolean = getConf.hasPath(argPath)
+}
+
+class ConfigWithDefaults(config:Config) extends Configured {
+  override def getConf: Config = config
+}
+
+object ConfigWithDefaults {
+  def apply(config:Config): ConfigWithDefaults = {
+    new ConfigWithDefaults(config)
+  }
+
+  def apply(configName:String): ConfigWithDefaults = {
+    new ConfigWithDefaults(ConfigFactory.load(configName))
+  }
 }
