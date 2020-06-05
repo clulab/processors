@@ -1,3 +1,6 @@
+import sbt.Tests.Group
+import sbt.Tests.SubProcess
+
 name := "processors-main"
 
 // for processors-models
@@ -43,5 +46,20 @@ libraryDependencies ++= {
     "org.clulab"               % "processors-models"          % "0.1.2",
     "org.clulab"               % "glove-840b-300d-10f"        % "1.0.0"
   )
+}
 
+{
+  def group(tests: Seq[TestDefinition]) = {
+    def newRunPolicy = SubProcess(ForkOptions())
+
+    val singletonTests = tests.filter(_.name.endsWith(".TestConstEmbeddingsGlove"))
+    val otherTests = tests.filter(!singletonTests.contains(_))
+
+    val singletonGroup = new Group("singleton", singletonTests, newRunPolicy)
+    val otherGroup = new Group("others", otherTests, newRunPolicy)
+
+    Seq(singletonGroup, otherGroup)
+  }
+
+  testGrouping in Test := group((definedTests in Test).value)
 }
