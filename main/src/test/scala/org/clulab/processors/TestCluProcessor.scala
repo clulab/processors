@@ -109,6 +109,13 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("Lemmatization is fine.")
   }
 
+  it should "recognize semantic roles correctly" in {
+    val doc = proc.annotate("John Doe visited China.")
+
+    doc.sentences.head.semanticRoles.get.hasEdge(2, 1, "A0") should be (true)
+    doc.sentences.head.semanticRoles.get.hasEdge(2, 3, "A1") should be (true)
+  }
+
   /*
   it should "parse text correctly" in {
     val doc = proc.annotate("John Doe went to China")
