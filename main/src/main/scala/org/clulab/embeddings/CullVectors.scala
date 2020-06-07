@@ -99,16 +99,16 @@ object CullVectors extends App {
 
     frequentWords
   }
-  // There must be a better way than to open the file twice.
-  val columns = Sourcer.sourceFromFile(inVectorFile).autoClose { source =>
-    val line = source.getLines.take(1).toSeq.head
-    val Array(_, columns) = line.split(' ')
+  val (columns, badFloats, goodLines) = Sourcer.sourceFromFile(inVectorFile).autoClose { source =>
+    val bufferedLines = source.getLines.buffered
+    val line = bufferedLines.head
+    val columns = {
+      val Array(_, columns) = line.split(' ')
 
-    columns.toInt
-  }
-  val badFloats = new Array[Float](columns)
-  val goodLines = Sourcer.sourceFromFile(inVectorFile).autoClose { source =>
-    source.getLines.drop(1).filter { line =>
+      columns.toInt
+    }
+    val badFloats = new Array[Float](columns)
+    val goodLines = bufferedLines.drop(1).filter { line =>
       val word = beforeFirst(line, ' ')
           .toLowerCase
       val (index, freq) = wordFrequencies.getOrElse(word, (-1, 0))
@@ -122,6 +122,7 @@ object CullVectors extends App {
       }
       good
     }.toVector
+    (columns, badFloats, goodLines)
   }
   // This skips over some options that are available in other versions of this program.
   val betterLines = goodLines
