@@ -1,0 +1,58 @@
+---
+title: Semantic Role Labeling
+parent: Metal
+has_children: true
+nav_order: 1
+---
+
+# Semantic Role Labeling
+
+```
+mtl {
+  shardsPerEpoch = 10
+  maxEpochs = 100
+  epochPatience = 5
+  numberOfTasks = 1
+  batchSize = 1
+  trainer = adam
+
+  layers {
+    initial {
+      learnedWordEmbeddingSize = 128
+      charEmbeddingSize = 32
+      charRnnStateSize = 16
+      posTagEmbeddingSize = 32
+      neTagEmbeddingSize = 16
+      positionEmbeddingSize = 16
+      positionWindowSize = 20
+      useIsPredicate = true
+      c2i = "org/clulab/c2i-en.txt"
+      tag2i = "org/clulab/tag2i-en.txt"
+      ne2i = "org/clulab/ne2i-en.txt"
+    }
+
+    intermediate1 {
+      rnnStateSize = 128
+      numLayers = 4
+      useHighwayConnections = true
+    }
+  }
+
+  task1 {
+    name = "En SRL arguments"
+    train = "dynet/en/srl/train-clu.txt"
+    dev = "dynet/en/srl/dev-clu.txt"
+    test = "dynet/en/srl/test-clu.txt"
+    type = "srl"
+
+    layers {
+      final {
+        inference = "greedy"
+      }
+    }
+  }
+
+}
+```
+
+
