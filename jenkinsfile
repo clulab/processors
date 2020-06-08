@@ -2,6 +2,15 @@ pipeline {
   agent any
   stages {
     stage('Test') {
+      when {
+        anyOf {
+          changeset "build.sbt"
+          changeset "main/**"
+          changeset "corenlp/**"
+          changeset "odin/**"
+          changeset "openie/**"
+        }
+      }
       steps {
           ansiColor('xterm') {
             echo "Testing..."
