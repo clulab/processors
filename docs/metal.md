@@ -1,7 +1,7 @@
 ---
 title: Metal
 has_children: true
-nav_order: 2
+nav_order: 4
 ---
 
 # Metal, a Multi-task Learning Framework for Sequence Modeling
