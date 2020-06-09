@@ -7,7 +7,7 @@ nav_order: 3
 
 ## Multi-task Learning
 
-```
+```yml
 mtl {
   shardsPerEpoch = 10
   maxEpochs = 50
