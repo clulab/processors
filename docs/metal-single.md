@@ -102,7 +102,7 @@ Parameter | Description | Default value
 `m.t.layers` | Layers that are unique to this task, i.e., are _not_ shared with any other task. This block _must_ contain at least a final layer that produces the labels to be learned. | N/A
 `m.t.l.final` | The final layer for this task. This is a feed forward layer with a softmax at the end, where the softmax layer is applied over all labels seen in training. | N/A
 `m.t.l.f.inference` | Type of inference to be used for this layer: "greedy" implements a left-to-right greedy prediction. "viterbi" implements a CRF layer. | "greedy"
-`m.t.l.f.nonlinearity` | If defined, applies a nonlinear transformation before the softmax. Current values accepted are: "relu", "tanh" | 
+`m.t.l.f.nonlinearity` | If defined, applies a nonlinear transformation before the softmax. Current values accepted are: "relu", "tanh". | 
 
 
 As mentioned above, `Metal` comes preconfigured with GloVe embeddings, which are used in a _static_ way, i.e., they are not updated during training. This design choice was made so that this large resource can be shared between different tasks. These words embeddings are configured in a separate configuration file, called `glove.conf`, which by default looks like this:
