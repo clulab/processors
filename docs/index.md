@@ -6,18 +6,15 @@ nav_order: 1
 
 # What is it?
 
-This is the main public code repository of the Computational Language Understanding (CLU) Lab at [University of Arizona](http://www.arizona.edu). 
+This is the main public code repository of the [Computational Language Understanding (CLU) Lab](http://clulab.org) at [University of Arizona](http://www.arizona.edu). 
 
 This repository contains:
 
++ A suite of natural language processors in the `org.clulab.processors` package. See the Processors section for details.
 + A rule-based event extraction (EE) framework called Odin (Open Domain INformer) in the `org.clulab.odin` package. See the Odin section for more details.
-+ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors (see below). The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster.
-+ A multi-task learning framework for deep learning and sequence modeling called [Metal](https://github.com/clulab/processors/wiki/Metal), which is implemented on top of [DyNet](https://dynet.readthedocs.io/en/latest/). This framework includes a simple domain-specific language (DSL) that allows you to ramp up sequence models very quickly without writing any Scala code. We use `Metal` to implement most of the components in `CluProcessor`. 
++ A multi-task learning framework for deep learning and sequence modeling called [Metal](https://github.com/clulab/processors/wiki/Metal), which is implemented on top of [DyNet](https://dynet.readthedocs.io/en/latest/). This framework includes a simple domain-specific language (DSL) that allows you to ramp up sequence models very quickly without writing any Scala code. We use `Metal` to implement most of the components in `CluProcessor`. See the Metal section for details.
++ Two full-fledged Rhetorical Structure Theory (RST) discourse parsers. The discourse parsers are transparently included in our natural language (NL) processors. The version in `CoreNLPProcessor` relies on constituent syntax, whereas the one in `FastNLPProcessor` uses dependency syntax. They perform approximately the same, but the latter is much faster.
 + A machine learning (ML) package (`org.clulab.learning`), which includes implementations for common ML algorithms (e.g., Perceptron, Logistic Regression, Support Vector Machines, Random Forests) for both classification and ranking.
-+ A suite of NL processors in the `org.clulab.processors` package. We currently provide the following APIs: 
-	+ `CoreNLPProcessor` - a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml), using its constituent parser;
-	+ `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
-	+ `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), and shallow syntactic parsing or chunking, and semantic role labeling. The last four components are implemented using `Metal`, our multi-task learning framework. 
 
 # Authors
 
