@@ -7,7 +7,7 @@ nav_order: 3
 
 ## Multi-task Learning
 
-![Multi-task learning architecture](https://github.com/clulab/processors/blob/master/docs/multi-arch.pdf)
+![Multi-task learning architecture](https://github.com/clulab/processors/blob/master/docs/images/multi-arch.png)
 
 ```yml
 mtl {
