@@ -138,7 +138,7 @@ elaboration (LeftToRight)
   TEXT:He visited Beijing , on January 10th , 2013 .
 ```
 
-For more details about the annotation data structures, please see the `org/clulab/processor/Document.scala` file.
+For more details about the annotation data structures, please see the `org/clulab/processors/Document.scala` file.
 
 Changing processors is trivial: just replace the first line in the above example with:
 
@@ -185,6 +185,15 @@ val proc:Processor = new FastNLPProcessor()
      head:5 modifier:6 label:amod
      head:5 modifier:7 label:punct
      head:5 modifier:8 label:num
+     
+Similarly, you can use our in-house processor with:
+
+```scala
+val proc:Processor = new CluProcessor()
+// everything else stays the same
+```
+
+Note that our processor has slightly different components. For example, our named entity recognizer currently includes only named entities, e.g., LOCATION, PERSON, and ORGANIZATION, and does not include numeric ones. On the other hand, `CluProcessor` includes a semantic role labeling component, which is missing from the CoreNLP processors.
 
 ### Annotating documents already split into sentences
 
@@ -204,7 +213,7 @@ val doc = annotateFromTokens(List(
 
 ## Using individual annotators
 
-You can of course use only some of the annotators provided by CoreNLP by calling them individually. To illustrate,
+You can use the annotators provided by CoreNLP separately by calling them individually. To illustrate,
 the `Processor.annotate()` method is implemented as follows:
 
 ```scala
@@ -266,8 +275,7 @@ val someAnnotation = serializer.load(fromString)
 ```
 
 Note that space required for these serialized annotations is considerably smaller (8 to 10 times) than the corresponding
-serialized Java objects. This is because we store only the information required to recreate these annotations (e.g., words, lemmas, etc.)
-without storing any of the Java/Scala objects and classes.
+serialized Java objects. This is because we store only the information required to recreate these annotations (e.g., words, lemmas, etc.) without storing any of the Java/Scala objects and classes.
 
 ### Serialization to/from `json`
 
@@ -275,8 +283,7 @@ As of v5.9.6, `Document` and `Mention` instances can be serialized to/from `json
 
 ## Cleaning up the interned strings
 
-Classes that implement the `Processor` trait intern String objects to avoid allocating memory repeatedly for the same string.
-This is implemented by maintaining an internal dictionary of strings previously seen. This dictionary is unlikely to
+Classes that implement the `Processor` trait may intern String objects to avoid allocating memory repeatedly for the same string. This is implemented by maintaining an internal dictionary of strings previously seen. This dictionary is unlikely to
 use a lot of memory due to the Zipfian distribution of language. But, if memory usage is a big concern, it can be cleaned by
 calling:
 
@@ -286,8 +293,8 @@ Processor.in.clear()
 
 I recommend you do this only _after_ you annotated all the documents you plan to keep in memory.
 
-Although I see no good reason for doing this, you can disable the interning of strings completely by setting the `internStrings = false` in the
-CoreNLProcessor constructor, as such:
+You can also disable the interning of strings completely by setting the `internStrings = false` in the
+processor constructor, as such:
 
 ```scala
 val processor = new CoreNLPProcessor(internStrings = false)
