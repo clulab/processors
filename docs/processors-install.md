@@ -64,3 +64,9 @@ Alternatively, you can run just the unit tests that do not require external bina
 
 `sbt 'test-only -- -l NeedsExternalBinary'`
 
+# How to compile the source code
+
+This is a standard sbt project, so use the usual commands, e.g., `sbt compile`, `sbt assembly`, to compile.
+Add the generated jar files under `target/` to your $CLASSPATH, along with the other necessary dependency jars. Take a look at `build.sbt` to see which dependencies are necessary at runtime.
+
+
