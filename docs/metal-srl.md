@@ -7,7 +7,7 @@ nav_order: 4
 
 # Semantic Role Labeling
 
-```
+```yml
 mtl {
   shardsPerEpoch = 10
   maxEpochs = 100
