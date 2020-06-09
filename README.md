@@ -2,7 +2,7 @@
 
 # What is it?
 
-This is the main public code repository of the [Computational Language Understanding (CLU) Lab](http://clulab.org) at [University of Arizona](http://www.arizona.edu). Please see [http://clulab.github.io/processors/](http://clulab.github.io/processors/) for more information about this software, and installation and usage instructions.
+This is the main public code repository of the [Computational Language Understanding (CLU) Lab](http://clulab.org) at [University of Arizona](http://www.arizona.edu). Please see [http://clulab.github.io/processors/](http://clulab.github.io/processors/) for more information about this software, installation and usage instructions.
 
 # Changes
 
