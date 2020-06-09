@@ -11,7 +11,7 @@ Let's start with a simpler task: named entity recognition (NER). The steps in tr
 
 ## 1. Preparing the datasets
 
-`Metal` expects the data for most of its tasks (note: there are exceptions, see [Semantic Role Labeling](https://github.com/clulab/processors/wiki/Metal#semantic-role-labeling)) to be formatted in a simple two-column format, where the first column contains the words, and the second column contains the labels to be learned. An empty line should be included between sentences. For example, our NER dataset looks like this:
+`Metal` expects the data for most of its tasks (note: there are exceptions, see Semantic Role Labeling) to be formatted in a simple two-column format, where the first column contains the words, and the second column contains the labels to be learned. An empty line should be included between sentences. For example, our NER dataset looks like this:
 
 ```
 Peter   B-PER
@@ -31,7 +31,7 @@ The labels do not have to be in the Beginning/Inside/Outside (BIO) format shown 
 
 Edit the task configuration to adjust it to your needs. For example, this is the [configuration file](https://github.com/clulab/processors/blob/master/main/src/main/resources/org/clulab/mtl-en-ner.conf) for the NER models we currently use:
 
-```
+```yml
 mtl {
   maxEpochs = 50
   epochPatience = 5
@@ -93,15 +93,17 @@ Parameter | Description | Default value
 `m.l.i.rnnStateSize` | Size of the word-level LSTM's hidden state. Because we use a biLSTM in this layer, the output state for the biLSTM is twice this value. | 128
 `m.l.i.useHighwayConnections` | If true, the state vector corresponding to each word concatenates the biLSTM state with the input embedding of the word. | false
 `m.l.i.numLayers` | Number of layers in the biLSTM | 1
-`mtl.task1` |  | N/A
-`m.t.name` | | N/A
-`m.t.train` | | N/A
-`m.t.dev` | | N/A
-`m.t.test` | | N/A
-`m.t.type` | | "basic"
-`m.t.layers` | | N/A
-`m.t.l.final` | | N/A
-`m.t.t.inference` | | "greedy"
+`mtl.task1` | Information for the actual task to be learned | N/A
+`m.t.name` | Name of the task, to be used for logging (any arbitrary text works) | N/A
+`m.t.train` | File name with the training dataset in the two-column format described above | N/A
+`m.t.dev` | File name with the development dataset | N/A
+`m.t.test` | File name with the testing dataset | N/A
+`m.t.type` | Type of task to be learned. "basic" indicates any task that is represented in the two-column format described above. See the Semantic Role Labeling section for an example of a different task. | "basic"
+`m.t.layers` | Layers that are unique to this task, i.e., are _not_ shared with any other task. This block _must_ contain at least a final layer that produces the labels to be learned. | N/A
+`m.t.l.final` | The final layer for this task. This is a feed forward layer with a softmax at the end, where the softmax layer is applied over all labels seen in training. | N/A
+`m.t.l.f.inference` | Type of inference to be used for this layer: "greedy" implements a left-to-right greedy prediction. "viterbi" implements a CRF layer. | "greedy"
+`m.t.l.f.nonlinearity` | If defined, applies a nonlinear transformation before the softmax. Current values accepted are: "relu", "tanh". | 
+
 
 As mentioned above, `Metal` comes preconfigured with GloVe embeddings, which are used in a _static_ way, i.e., they are not updated during training. This design choice was made so that this large resource can be shared between different tasks. These words embeddings are configured in a separate configuration file, called `glove.conf`, which by default looks like this:
 
