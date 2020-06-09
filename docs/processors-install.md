@@ -47,28 +47,28 @@ libraryDependencies ++= {
 }
 ```
 
-# External Dependencies
+## External Binaries
 
-Most of the `processors` dependencies are captured in the build file. However, a few `processors` unit tests depend also on `svm-rank`, which should be installed separately. Simply installing the `svm-rank` binaries to `/usr/local/bin` (or another generic location in your path) solves the problem:
+Most of the `processors` dependencies are captured in the build file. However, a few `processors` unit tests depend also on the `svm-rank` binary, which should be installed separately. Simply installing the `svm-rank` binaries to `/usr/local/bin` (or another generic location in your path) solves the problem:
 
 https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html
 
-## Installing external dependencies on Mac OS X via `homebrew`
+### Installing external dependencies on Mac OS X via `homebrew`
 
-On Mac OS X, you can also install these external dependencies using `brew`:
+On Mac OS X, you can also install these external binaries using `brew`:
 
 ```bash
 brew tap myedibleenso/nlp
 brew install svmlight svmrank
 ```
 
-## Skipping tests involving external dependencies
+### Skipping tests involving external binaries
 
 Or, alternatively, you can run just the unit tests that do not require external binaries with the following command:
 
 `sbt 'test-only -- -l NeedsExternalBinary'`
 
-# How to compile the source code
+## How to compile the source code
 
 This is a `sbt` project, so use the usual commands, e.g., `sbt compile`, to compile.
 
