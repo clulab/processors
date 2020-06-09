@@ -22,7 +22,7 @@ import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.DirectedGraphEdgeIterator
 
 // create the processor
-// any processor works here! Try FastNLPProcessor, BioNLPProcessor, or our own CluProcessor
+// any processor works here! Try FastNLPProcessor, or our own CluProcessor
 // use no arguments in the c'tor if you don't need the discourse parser
 val proc:Processor = new CoreNLPProcessor(ShallowNLPProcessor.WITH_DISCOURSE) 
 
@@ -189,11 +189,20 @@ val proc:Processor = new FastNLPProcessor()
 Similarly, you can use our in-house processor with:
 
 ```scala
+org.clulab.dynet.Utils.initializeDyNet()
 val proc:Processor = new CluProcessor()
 // everything else stays the same
 ```
 
 Note that our processor has slightly different components. For example, our named entity recognizer currently includes only named entities, e.g., LOCATION, PERSON, and ORGANIZATION, and does not include numeric ones. On the other hand, `CluProcessor` includes a semantic role labeling component, which is missing from the CoreNLP processors.
+
+Also note that because `CluProcessor` relies on DyNet, you will have to initialize DyNet first, as shown in the code. The default initialization parameters should work in most cases, but, if you want to increase the memory allocated to DyNet, you can pass the values to the `initializeDyNet` method as so:
+
+```scala
+org.clulab.dynet.Utils.initializeDyNet(autoBatch = false, mem = "1024,1024,1024,1024")
+```
+
+TODO: explain memory zones
 
 ### Annotating documents already split into sentences
 
