@@ -55,7 +55,7 @@ https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html
 
 ## Installing external dependencies on Mac OS X via `homebrew`
 
-You can install these external dependencies using `brew`:
+On Mac OS X, you can also install these external dependencies using `brew`:
 
 ```bash
 brew tap myedibleenso/nlp
