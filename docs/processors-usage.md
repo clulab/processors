@@ -202,7 +202,7 @@ Also note that because `CluProcessor` relies on DyNet, you will have to initiali
 org.clulab.dynet.Utils.initializeDyNet(autoBatch = false, mem = "1024,1024,1024,1024")
 ```
 
-TODO: explain memory zones
+The `mem` parameter is split into 4 values, because DyNet's memory consists of 4 zones. The first zone is used by the forward pass, the second by the backward (backpropagation) pass; the third zone stores the DyNet parameters; and the last one is the scratch zone. 
 
 ### Annotating documents already split into sentences
 
