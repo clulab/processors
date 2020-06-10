@@ -78,11 +78,11 @@ Note that `mtl.task1.type` is set to "srl", which corresponds to the task of ide
 
 Parameter | Description | Default value
 --- | --- | ---
-`m.l.i.posTagEmbeddingSize` | | 
-`m.l.i.neTagEmbeddingSize` | | 
-`m.l.i.positionEmbeddingSize` | | 
-`m.l.i.positionWindowSize` | | 
-`m.l.i.useIsPredicate` | | 
+`m.l.i.posTagEmbeddingSize` | | -1
+`m.l.i.neTagEmbeddingSize` | | -1
+`m.l.i.positionEmbeddingSize` | | -1 
+`m.l.i.positionWindowSize` | | -1
+`m.l.i.useIsPredicate` | | false
 `m.l.i.tag2i` | | "org/clulab/tag2i-en.txt"
 `m.l.i.ne2i` | | "org/clulab/ne2i-en.txt"
 
