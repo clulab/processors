@@ -37,6 +37,4 @@ For a complex, real-world domain built using Odin, please see our [`reach` proje
 
 # Odin Authors
 
-* Marco Valenzuela
-* Gustave Hahn-Powell
-* Mihai Surdeanu
+[Marco Valenzuela](https://github.com/marcovzla), [Gustave Hahn-Powell](https://github.com/myedibleenso), and [Mihai Surdeanu](http://surdeanu.info/mihai/)
