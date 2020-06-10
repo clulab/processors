@@ -24,6 +24,8 @@ Odin aims to address these issues with a new language and framework. We follow t
 
 Please read the [Odin Manual](http://arxiv.org/abs/1509.07513) for a thorough description of Odin's rule language and API. For a quick introduction, please see our [LREC paper that summarizes the Odin rule language](http://surdeanu.info/mihai/papers/lrec2016-odin.pdf).
 
+We also have an [interactive Odin tutorial](https://github.com/clu-ling/odin-tutorial).
+
 # A Toy Domain
 
 Please see this project for an example of a toy (yet complete!) domain:
