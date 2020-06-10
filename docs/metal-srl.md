@@ -74,4 +74,7 @@ mtl {
 }
 ```
 
+Note that `mtl.task1.type` is set to "srl", which corresponds to the task of identifying SRL arguments. For this task type, the initial layer has the following additional parameters:
+
+
 
