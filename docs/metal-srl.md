@@ -7,6 +7,22 @@ nav_order: 4
 
 # Semantic Role Labeling
 
+Similar to most works on SRL, we decompose the SRL task into two subtasks: (a) the identification of verbal and nominal predicates in a sentence, and (b) the identification of arguments for each predicate. As discussed in the previous section, we observed that the predicate identification subtask trains well in a MTL setting, However, the second subtask, argument identification, did not train well in the MTL setting. For this reason, we trained it separately, independently of all other tasks.
+
+As a reminder, our SRL data is formatted as follows:
+
+```
+Ms.     O       NNP     B-PER   O
+Haag    O       NNP     I-PER   A0
+plays   B-P     VBZ     O       O
+Elianti O       NNP     B-LOC   A1
+.       O       .       O       O
+...
+```
+where column 3 contains POS tags, and column 4 contains NER labels produced by our `Metal` NER model. 
+
+The [configuration file](https://github.com/clulab/processors/blob/master/main/src/main/resources/org/clulab/mtl-en-srla.conf) to train the identification of SRL arguments is the following:
+
 ```yml
 mtl {
   shardsPerEpoch = 10
