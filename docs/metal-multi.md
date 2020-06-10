@@ -7,6 +7,8 @@ nav_order: 3
 
 ## Multi-task Learning
 
+One core feature of `Metal` is the ability to jointly train multiple task at the same time, with some layers in the architecture being shared between tasks, and some specific to each task. The figure below shows some common scenarios:
+
 ![Multi-task learning architecture](images/multi-arch.png)
 
 ```yml
