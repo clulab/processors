@@ -11,6 +11,50 @@ One core feature of `Metal` is the ability to jointly train multiple task at the
 
 ![Multi-task learning architecture](images/multi-arch.png)
 
+The shared layers are defined under `mtl.layers`. They are not mandatory, but, if they exist, the shared layers must contain an initial layer. and must _not_ contain a final layer, as these are task specific. Task 1 in the figure shows the most common scenario in `Metal`, where a task relies on the shared layers to generate a representation of the text, and only includes a final layer, which contains the feed forward network to produce the task-specific labels. In general, all the layers that are specific to `task`_i_ are defined under `mtl.task`_i_`.layers`. `Metal` supports other configurations, as exemplified in the figure for tasks 2 and 3. For example, task 2 includes additional intermediate layers that are not shared with the other tasks. Task 3 also includes an initial layer. In the latter scenario, where a task includes a task-specific initial layer, no information produces by the shared layers is used. The task encodes the text from scratch using its own initial layer and following intermediate ones. 
+
+As a concrete example, we observed that part-of-speech (POS) tagging, syntactic chunking, and the identification of semantic role labeling (SRL) predicates train well in a multi-task learning (MTL) setting. The data for all these tasks is formatted as a basic `Metal` task. Below are a few examples from these datasets.
+
+POS tagging:
+```
+Pierre  NNP
+Vinken  NNP
+,       ,
+61      CD
+years   NNS
+old     JJ
+,       ,
+will    MD
+join    VB
+... 
+```
+
+Syntactic chunking:
+```
+Confidence      B-NP
+in      B-PP
+the     B-NP
+pound   I-NP
+is      B-VP
+widely  I-VP
+expected        I-VP
+to      I-VP
+take    I-VP
+...
+```
+
+SRL predicates (focus just on the first two columns for now):
+```
+Ms.     O       NNP     B-PER   O
+Haag    O       NNP     I-PER   A0
+plays   B-P     VBZ     O       O
+Elianti O       NNP     B-LOC   A1
+.       O       .       O       O
+...
+```
+
+The configuration file to jointly train these three tasks is the following:
+
 ```yml
 mtl {
   shardsPerEpoch = 10
@@ -73,4 +117,7 @@ mtl {
   }
 }
 ```
+
+Note that all three tasks follow the setting used for task 1 in the figure. As shown in the configuration file, the final layers are task-specific. For example, we observed that chunking benefits from the CRF layer ("viterbi"), whereas the other two tasks do not. 
+
 
