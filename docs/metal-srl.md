@@ -76,5 +76,13 @@ mtl {
 
 Note that `mtl.task1.type` is set to "srl", which corresponds to the task of identifying SRL arguments. For this task type, the initial layer has the following additional parameters:
 
-
+Parameter | Description | Default value
+--- | --- | ---
+`m.l.i.posTagEmbeddingSize` | | 
+`m.l.i.neTagEmbeddingSize` | | 
+`m.l.i.positionEmbeddingSize` | | 
+`m.l.i.positionWindowSize` | | 
+`m.l.i.useIsPredicate` | | 
+`m.l.i.tag2i` | | "org/clulab/tag2i-en.txt"
+`m.l.i.ne2i` | | "org/clulab/ne2i-en.txt"
 
