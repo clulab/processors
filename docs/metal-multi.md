@@ -53,7 +53,7 @@ Elianti O       NNP     B-LOC   A1
 ...
 ```
 
-The configuration file to jointly train these three tasks is the following:
+The [configuration file](https://github.com/clulab/processors/blob/master/main/src/main/resources/org/clulab/mtl-en-pos-chunk-srlp.conf) to jointly train these three tasks is the following:
 
 ```yml
 mtl {
