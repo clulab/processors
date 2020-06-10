@@ -22,7 +22,7 @@ set     B-P     VBN     O       O       O       O
 .       O       .       O       O       O       O
 ...
 ```
-where column 3 contains POS tags, column 4 contains NER labels produced by our `Metal` NER model, and the remaining columns contain argument labels for each predicate. 
+where column 3 contains POS tags, column 4 contains NER labels produced by our `Metal` NER model, and the remaining columns contain the argument labels for each predicate. For example, because the above sentence has three predicates, there are three additional columns for argument labels, where column 5 contains the arguments for "record", column 6 contains the arguments for "date", and column 7 contains the arguments for "set".
 
 The [configuration file](https://github.com/clulab/processors/blob/master/main/src/main/resources/org/clulab/mtl-en-srla.conf) to train the identification of SRL arguments is the following:
 
