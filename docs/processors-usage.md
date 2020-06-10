@@ -196,13 +196,13 @@ val proc:Processor = new CluProcessor()
 
 Note that our processor has slightly different components. For example, our named entity recognizer currently includes only named entities, e.g., LOCATION, PERSON, and ORGANIZATION, and does not include numeric ones. On the other hand, `CluProcessor` includes a semantic role labeling component, which is missing from the CoreNLP processors.
 
-Also note that because `CluProcessor` relies on DyNet, you will have to initialize DyNet first, as shown in the code. The default initialization parameters should work in most cases, but, if you want to increase the memory allocated to DyNet, you can pass the values to the `initializeDyNet` method as so:
+Also note that because `CluProcessor` relies on DyNet, you will have to initialize DyNet first, as shown in the code. The default initialization parameters should work in most cases, but, if you want to increase the memory that is initially allocated to DyNet, you can pass these values to the `initializeDyNet` method, e.g.:
 
 ```scala
 org.clulab.dynet.Utils.initializeDyNet(autoBatch = false, mem = "1024,1024,1024,1024")
 ```
 
-The `mem` parameter is split into 4 values, because DyNet's memory consists of 4 zones. The first zone is used by the forward pass, the second by the backward (backpropagation) pass; the third zone stores the DyNet parameters; and the last one is the scratch zone. 
+The `mem` parameter is split into 4 values, because DyNet's memory consists of 4 zones. The first zone is used by the forward pass, the second by the backward (backpropagation) pass; the third zone stores the DyNet parameters; and the last one is the scratch zone. More information about this exists in [DyNet's documentation](https://dynet.readthedocs.io/en/latest/commandline.html): "DyNet runs by default with 512MB of memory, which is split evenly for the forward and backward steps, parameter storage as well as scratch use. This will be expanded automatically every time one of the pools runs out of memory. By setting NUMBER here, DyNet will allocate more memory immediately at the initialization stage. Note that you can also individually set the amount of memory for forward calculation, backward calculation, parameters, and scratch use by using comma separated variables."
 
 ### Annotating documents already split into sentences
 
