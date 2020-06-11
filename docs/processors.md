@@ -16,13 +16,6 @@ We include a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/c
 * `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
 * `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), and shallow syntactic parsing or chunking, and semantic role labeling. The last four components are implemented using `Metal`, our multi-task learning framework. 
 
----
-title: Usage
-parent: Processors
-has_children: true
-nav_order: 2
----
-
 ## Common usage scenarios
 
 Most of the examples here use Scala. However, this software can be used as is from Java as well! Scroll down towards the end of this document to see a Java usage example.
