@@ -1,7 +1,7 @@
 ---
 title: Odin
-has_children: true
-nav_order: 3
+has_children: false
+nav_order: 4
 ---
 
 # Odin (Open Domain INformer)
