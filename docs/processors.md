@@ -6,8 +6,6 @@ nav_order: 3
 
 # Processors
 
-## What is it?
-
 This library contains a suite of natural language processors that include tokenization, part-of-speech tagging, named entity recognition, syntactic parsing, semantic role labeling, and discourse parsing.
 
 We include a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) as well as a toolkit built in house. We currently provide the following APIs: 
