@@ -78,11 +78,11 @@ Note that `mtl.task1.type` is set to "srl", which corresponds to the task of ide
 
 Parameter | Description | Default value
 --- | --- | ---
-`m.l.i.posTagEmbeddingSize` | | -1
-`m.l.i.neTagEmbeddingSize` | | -1
-`m.l.i.positionEmbeddingSize` | | -1 
-`m.l.i.positionWindowSize` | | -1
-`m.l.i.useIsPredicate` | | false
-`m.l.i.tag2i` | | "org/clulab/tag2i-en.txt"
+`m.l.i.posTagEmbeddingSize` | Size of the learned embeddings for POS tags. If -1, no embebddings are created for POS tags. | -1
+`m.l.i.neTagEmbeddingSize` | Size of the learned embeddings for NE labels. If -1, no embeddings are created for NE labels. | -1
+`m.l.i.positionEmbeddingSize` | Size of the learned embeddings for the _relative_ distance between the given predicate and the current token. For example, in the sentence "John ate cake", the distance between the predicate "ate" and "John" is -1. If the value of this parameter is -1, no embeddings are created for these distances. | -1 
+`m.l.i.positionWindowSize` | Window size considered for the above distance values. If the value of this parameter is _k_, we consider values in the window [ -_k_, _k_]. All the distances outside this window are mapped to either -_k + 1_ (if the token appears to the left of the predicate), or _k + 1_ (if the token is to the right of the predicate). | -1
+`m.l.i.useIsPredicate` | If true, we create a Boolean feature set to 1 if the current token is the predicate, and 0 otherwise. | false
+`m.l.i.tag2i` |  | "org/clulab/tag2i-en.txt"
 `m.l.i.ne2i` | | "org/clulab/ne2i-en.txt"
 
