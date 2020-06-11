@@ -1,8 +1,8 @@
 ---
-title: Pre-trained Metal Models
+title: Pre-trained Models
 parent: Metal
 has_children: true
-nav_order: 5
+nav_order: 6
 ---
 
 If you just want to use our pre-trained `Metal` models,  
