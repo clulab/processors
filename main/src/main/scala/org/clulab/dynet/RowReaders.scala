@@ -35,8 +35,8 @@ class BasicRowReader extends RowReader {
 }
 
 class SrlArgsRowReader extends RowReader {
-  def getPosTag(r: Row): String = r.get(2) // use this carefully; this may not be available in all datasets!
-  def getNeTag(r: Row): String = r.get(3) // use this carefully; this may not be available in all datasets!
+  def getPosTag(r: Row): String = r.get(2)
+  def getNeTag(r: Row): String = r.get(3)
 
   def getLabels(r: Row): IndexedSeq[String] = {
     val labels = new ArrayBuffer[String]()
@@ -66,4 +66,38 @@ class SrlArgsRowReader extends RowReader {
 
 object SrlArgsRowReader {
   val ARGS_START = 4 // column where SRL arguments begin
+}
+
+class DepLabelsRowReader extends RowReader {
+  def getHeadRelativeDistance(r: Row): Int = r.get(1).toInt
+  override def getLabel(r: Row): String = r.get(2)
+  def getPosTag(r: Row): String = r.get(3)
+
+  override def toAnnotatedSentence(rows: IndexedSeq[Row]): AnnotatedSentence = {
+    val words = rows.map(getWord)
+    val posTags = rows.map(getPosTag)
+    new AnnotatedSentence(words, Some(posTags), None)
+  }
+
+  override def toLabels(rows: IndexedSeq[Row],
+                        predicateIndex: Option[Int]): IndexedSeq[String] = {
+    rows.map(getLabel)
+  }
+
+  /** Converts the relative position of the heads into absolute positions in the sentence */
+  def getHeadPositions(rows: IndexedSeq[Row]): IndexedSeq[Int] = {
+    val relPos = rows.map(getHeadRelativeDistance)
+    val positions = new Array[Int](rows.length)
+    for(i <- positions.indices) {
+      if(relPos(i) == 0) {
+        // head is root
+        positions(i) = -1
+      } else {
+        positions(i) = i + relPos(i)
+        assert(positions(i) >= 0)
+        assert(positions(i) < positions.length)
+      }
+    }
+    positions
+  }
 }

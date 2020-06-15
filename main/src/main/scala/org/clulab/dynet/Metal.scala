@@ -127,6 +127,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     val basicReader = new BasicRowReader
     val srlArgsRowReader = new SrlArgsRowReader
+    val depsReader = new DepLabelsRowReader
 
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -162,11 +163,12 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val annotatedSentence = taskType match {
           case TaskManager.TYPE_BASIC => basicReader.toAnnotatedSentence(sentence)
           case TaskManager.TYPE_SRL => srlArgsRowReader.toAnnotatedSentence(sentence)
+          case TaskManager.TYPE_DEPS => depsReader.toAnnotatedSentence(sentence)
           case _ => throw new RuntimeException(s"ERROR: unknown reader for task type $taskType!")
         }
 
         val lossOpt =
-          // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
+          // any standard sequence modeling task, e.g., NER, POS tagging, prediction of SRL predicates
           if(taskManager.tasks(taskId).isBasic) {
             Some(flows(taskId).loss(annotatedSentence, basicReader.toLabels(sentence)))
           }
@@ -177,10 +179,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             val predicatePositions = srlArgsRowReader.getPredicatePositions(sentence)
 
             // traverse all SRL frames
-            if(predicatePositions.nonEmpty) {
+            if (predicatePositions.nonEmpty) {
               val allPredLoss = new ExpressionVector()
 
-              for(predIdx <- predicatePositions.indices) {
+              for (predIdx <- predicatePositions.indices) {
                 // token position of the predicate for this frame
                 val predPosition = predicatePositions(predIdx)
                 totalFrames += 1
@@ -188,7 +190,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
                 // gold arg labels for this frame
                 val labels = srlArgsRowReader.toLabels(sentence, Some(predIdx))
 
-                if(true) { // hasContent(labels)) { // does not seem to help
+                if (true) { // hasContent(labels)) { // does not seem to help
                   val loss = flows(taskId).loss(annotatedSentence, labels, Some(predPosition))
                   allPredLoss.add(loss)
                 } else {
@@ -196,12 +198,20 @@ class Metal(val taskManagerOpt: Option[TaskManager],
                 }
               }
 
-              if(allPredLoss.length > 0) Some(Expression.sum(allPredLoss))
+              if (allPredLoss.length > 0) Some(Expression.sum(allPredLoss))
               else None
             } else {
               None
             }
-          } else {
+          }
+
+          // prediction of dependency labels
+          else if(taskManager.tasks(taskId).isDeps) {
+            val headPositions = depsReader.getHeadPositions(sentence)
+            Some(flows(taskId).loss(annotatedSentence, depsReader.toLabels(sentence), headPositions))
+          }
+
+          else {
             throw new RuntimeException(s"ERROR: unknown task type ${taskManager.tasks(taskId).taskType}!")
           }
 

@@ -56,9 +56,16 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   def loss(sentence: AnnotatedSentence,
            goldLabels: IndexedSeq[String],
-           predicatePosition: Option[Int] = None): Expression = {
+           predicatePositions: IndexedSeq[Int] = IndexedSeq()): Expression = {
     assert(initialLayer.nonEmpty)
     assert(finalLayer.nonEmpty)
+
+    //
+    // predicatePositions can have the following lengths:
+    // a) 0, for all standard sequence modeling tasks
+    // b) 1, for SRL arguments, where it contains the position of the predicate
+    // c) sentence length, for dependency labels, where it contains the heads of all tokens in the sentence
+    //
 
     var states = initialLayer.get.forward(sentence, predicatePosition, doDropout = true)
     for(i <- intermediateLayers.indices) {
