@@ -127,6 +127,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     val basicReader = new BasicRowReader
     val srlArgsRowReader = new SrlArgsRowReader
+    val basicRowReaderWithPosTags = new BasicRowReaderWithPosTags
 
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -162,6 +163,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val annotatedSentence = taskType match {
           case TaskManager.TYPE_BASIC => basicReader.toAnnotatedSentence(sentence)
           case TaskManager.TYPE_SRL => srlArgsRowReader.toAnnotatedSentence(sentence)
+          case TaskManager.TYPE_DEPSH => basicRowReaderWithPosTags.toAnnotatedSentence(sentence)
           case _ => throw new RuntimeException(s"ERROR: unknown reader for task type $taskType!")
         }
 
@@ -169,6 +171,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
           if(taskManager.tasks(taskId).isBasic) {
             Some(flows(taskId).loss(annotatedSentence, basicReader.toLabels(sentence)))
+          }
+
+          // prediction of dependency head distances
+          else if(taskManager.tasks(taskId).isDepsHead) {
+            Some(flows(taskId).loss(annotatedSentence, basicRowReaderWithPosTags.toLabels(sentence)))
           }
 
           // prediction of SRL arguments
@@ -337,6 +344,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     val basicReader = new BasicRowReader
     val srlArgsReader = new SrlArgsRowReader
+    val basicRowReaderWithPosTags = new BasicRowReaderWithPosTags
 
     //
     // regular BIO evaluation, compatible with CoNLL-2003
@@ -347,6 +355,25 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         val sentence = basicReader.toAnnotatedSentence(sent)
         val golds = basicReader.toLabels(sent)
+
+        val preds = flows(taskId).predict(sentence)
+
+        val sc = SeqScorer.f1(golds, preds)
+        scoreCountsByLabel.incAll(sc)
+
+        printCoNLLOutput(pw, sentence.words, golds, preds)
+      }
+    }
+
+    //
+    // evaluation of dependency head distance
+    //
+    else if(taskManager.tasks(taskId).isDepsHead) {
+      for (sent <- sentences) {
+        sentCount += 1
+
+        val sentence = basicRowReaderWithPosTags.toAnnotatedSentence(sent)
+        val golds = basicRowReaderWithPosTags.toLabels(sent)
 
         val preds = flows(taskId).predict(sentence)
 
