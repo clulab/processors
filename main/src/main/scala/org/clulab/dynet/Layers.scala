@@ -169,7 +169,7 @@ object Layers {
 
     val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
     var done = false
-    for(i <- 1 to MAX_INTERMEDIATE_LAYERS if ! done) {
+    for(i <- 1 to MAX_INTERMEDIATE_LAYERS if ! done && config.contains(paramPrefix + s".intermediate$i" + ".type")) {
       if(inputSize.isEmpty) {
         throw new RuntimeException("ERROR: trying to construct an intermediate layer without a known input size!")
       }
@@ -179,7 +179,7 @@ object Layers {
       } else {
         LinearLayer.initialize(config, paramPrefix + s".intermediate$i", parameters, inputSize.get)
       }
-      if(intermediateLayer.nonEmpty) {
+      if (intermediateLayer.nonEmpty) {
         intermediateLayers += intermediateLayer.get
         inputSize = Some(intermediateLayer.get.outDim)
       } else {
