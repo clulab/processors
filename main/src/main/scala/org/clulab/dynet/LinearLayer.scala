@@ -1,18 +1,20 @@
 package org.clulab.dynet
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{Expression, ExpressionVector, LstmBuilder, Parameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LstmBuilder, Parameter, ParameterCollection, ParameterInit}
 import org.clulab.dynet.Utils.save
 import org.clulab.utils.Configured
 
 class LinearLayer(val parameters: ParameterCollection,
                   val inputSize: Int,
-                  val outputSize: Int,
-                  val W: Parameter,
-                  val b: Parameter) extends IntermediateLayer {
+                  val outputSize: Int) extends IntermediateLayer {
+
+  private val weight = parameters.addParameters(Dim(outputSize, inputSize), ParameterInit.glorot())
+  private val bias = parameters.addParameters(Dim(outputSize), ParameterInit.glorot())
+
   override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
-    val wp = Expression.parameter(W)
-    val bp = Expression.parameter(b)
+    val wp = Expression.parameter(weight)
+    val bp = Expression.parameter(bias)
     val z = for (e <- inputExpressions) yield e * wp + bp
     ExpressionVector.Seq2ExpressionVector(z)
   }
