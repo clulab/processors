@@ -173,7 +173,12 @@ object Layers {
       if(inputSize.isEmpty) {
         throw new RuntimeException("ERROR: trying to construct an intermediate layer without a known input size!")
       }
-      val intermediateLayer = RnnLayer.initialize(config, paramPrefix + s".intermediate$i", parameters, inputSize.get)
+      val intermediateLayerType = config.getArgString(paramPrefix + s".intermediate$i" + ".type", None)
+      val intermediateLayer = if (intermediateLayerType == "RNN") {
+        RnnLayer.initialize(config, paramPrefix + s".intermediate$i", parameters, inputSize.get)
+      } else {
+        LinearLayer.initialize(config, paramPrefix + s".intermediate$i", parameters, inputSize.get)
+      }
       if(intermediateLayer.nonEmpty) {
         intermediateLayers += intermediateLayer.get
         inputSize = Some(intermediateLayer.get.outDim)
