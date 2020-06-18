@@ -213,6 +213,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     save(printWriter, distanceWindowSize, "distanceWindowSize")
     save(printWriter, if(useIsPredicate) 1 else 0, "useIsPredicate")
     save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
+    save(printWriter, dropoutProb, "dropoutProb")
   }
 
   override def toString: String = {
@@ -245,6 +246,7 @@ object EmbeddingLayer {
     val byLineCounterBuilder = new ByLineStringCounterBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
     val byLineIntBuilder = new ByLineIntBuilder()
+    val byLineFloatBuilder = new ByLineFloatBuilder()
 
     val w2i = byLineStringMapBuilder.build(x2iIterator, "w2i")
     val w2f = byLineCounterBuilder.build(x2iIterator, "w2f")
@@ -283,6 +285,8 @@ object EmbeddingLayer {
     val useIsPredicate = useIsPredicateAsInt == 1
     val positionEmbeddingSize =
       byLineIntBuilder.build(x2iIterator, "positionEmbeddingSize", DEFAULT_POSITION_EMBEDDING_SIZE)
+    val dropoutProb =
+      byLineFloatBuilder.build(x2iIterator, "dropoutProb", DEFAULT_DROPOUT_PROB)
 
     //
     // make the loadable parameters
@@ -343,7 +347,8 @@ object EmbeddingLayer {
       posTagLookupParameters,
       neTagLookupParameters,
       distanceLookupParameters,
-      positionLookupParameters)
+      positionLookupParameters,
+      dropoutProb)
   }
 
   def initialize(config: Configured,

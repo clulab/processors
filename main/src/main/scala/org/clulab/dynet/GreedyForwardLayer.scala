@@ -3,9 +3,8 @@ package org.clulab.dynet
 import java.io.PrintWriter
 
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
-import org.clulab.dynet.ForwardLayer.{DROPOUT_PROB, TYPE_GREEDY}
-import org.clulab.dynet.Utils.{ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
-
+import org.clulab.dynet.ForwardLayer.{DEFAULT_DROPOUT_PROB, TYPE_GREEDY}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
 class GreedyForwardLayer (parameters:ParameterCollection,
@@ -15,7 +14,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           i2t: Array[String],
                           H: Parameter,
                           nonlinearity: Int,
-                          dropoutProb: Float = DROPOUT_PROB)
+                          dropoutProb: Float = DEFAULT_DROPOUT_PROB)
   extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
@@ -29,6 +28,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, if(hasPredicate) 1 else 0, "hasPredicate")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
+    save(printWriter, dropoutProb, "dropoutProb")
   }
 
   override def toString: String = {
@@ -48,6 +48,7 @@ object GreedyForwardLayer {
     // load the x2i info
     //
     val byLineIntBuilder = new ByLineIntBuilder()
+    val byLineFloatBuilder = new ByLineFloatBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
@@ -56,6 +57,7 @@ object GreedyForwardLayer {
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
+    val dropoutProb = byLineFloatBuilder.build(x2iIterator, "dropoutProb", ForwardLayer.DEFAULT_DROPOUT_PROB)
 
     //
     // make the loadable parameters
@@ -65,7 +67,7 @@ object GreedyForwardLayer {
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     new GreedyForwardLayer(parameters,
-      inputSize, hasPredicate, t2i, i2t, H, nonlinearity)
+      inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb)
   }
 }
 

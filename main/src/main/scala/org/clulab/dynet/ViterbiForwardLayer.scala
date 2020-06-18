@@ -3,7 +3,7 @@ import java.io.PrintWriter
 
 import edu.cmu.dynet.Expression.{lookup, randomNormal}
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
-import org.clulab.dynet.Utils.{ByLineIntBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
 class ViterbiForwardLayer(parameters:ParameterCollection,
@@ -14,7 +14,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
                           H: Parameter,
                           val T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
                           nonlinearity: Int,
-                          dropoutProb: Float = DROPOUT_PROB)
+                          dropoutProb: Float = DEFAULT_DROPOUT_PROB)
   extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model
@@ -75,6 +75,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     save(printWriter, if(hasPredicate) 1 else 0, "hasPredicate")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
+    save(printWriter, dropoutProb, "dropoutProb")
   }
 
   override def toString: String = {
@@ -97,6 +98,7 @@ object ViterbiForwardLayer {
     // load the x2i info
     //
     val byLineIntBuilder = new ByLineIntBuilder()
+    val byLineFloatBuilder = new ByLineFloatBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator)
@@ -105,6 +107,7 @@ object ViterbiForwardLayer {
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator)
     val i2t = fromIndexToString(t2i)
+    val dropoutProb = byLineFloatBuilder.build(x2iIterator, "dropoutProb", ForwardLayer.DEFAULT_DROPOUT_PROB)
 
     //
     // make the loadable parameters
@@ -114,7 +117,7 @@ object ViterbiForwardLayer {
     val T = mkTransitionMatrix(parameters, t2i)
 
     new ViterbiForwardLayer(parameters,
-      inputSize, hasPredicate, t2i, i2t, H, T, nonlinearity)
+      inputSize, hasPredicate, t2i, i2t, H, T, nonlinearity, dropoutProb)
   }
 }
 

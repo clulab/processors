@@ -14,7 +14,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val i2t: Array[String],
                              val H: Parameter,
                              val nonlinearity: Int,
-                             val dropoutProb: Float = DROPOUT_PROB)
+                             val dropoutProb: Float = DEFAULT_DROPOUT_PROB)
   extends FinalLayer {
 
   def forward(inputExpressions: ExpressionVector,
@@ -73,7 +73,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 object ForwardLayer {
   val logger: Logger = LoggerFactory.getLogger(classOf[ViterbiForwardLayer])
 
-  val DROPOUT_PROB = 0.2f
+  val DEFAULT_DROPOUT_PROB = 0.2f
 
   val TYPE_VITERBI = 1
   val TYPE_GREEDY = 2
@@ -109,7 +109,7 @@ object ForwardLayer {
     }
 
     val inferenceType = config.getArgString(paramPrefix + ".inference", Some("greedy"))
-    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DROPOUT_PROB))
+    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DEFAULT_DROPOUT_PROB))
 
     val nonlinAsString = config.getArgString(paramPrefix + ".nonlinearity", Some(""))
     val nonlin = nonlinAsString match {
