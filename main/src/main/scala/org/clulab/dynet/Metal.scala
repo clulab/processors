@@ -131,7 +131,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     var cummulativeLoss = 0.0
     var numTagged = 0
-    var sentCount = 0
     val rand = new Random(RANDOM_SEED)
 
     var maxAvgAcc = 0.0
@@ -146,6 +145,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
       val sentenceIterator = taskManager.getSentences(rand)
+      var sentCount = 0
 
       ComputationGraph.renew()
       var batchLosses: ExpressionVector = new ExpressionVector()
@@ -234,7 +234,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         numTagged += sentence.length
 
         if(sentCount % 1000 == 0) {
-          logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
+          logger.info("Cummulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)")
           cummulativeLoss = 0.0
           numTagged = 0
 
