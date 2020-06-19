@@ -15,7 +15,7 @@ class LinearLayer(val parameters: ParameterCollection,
   override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
     val wp = Expression.parameter(weight)
     val bp = Expression.parameter(bias)
-    val z = for (e <- inputExpressions) yield wp * e + bp
+    val z = for (e <- inputExpressions) yield Expression.rectify(wp * e + bp)
     ExpressionVector.Seq2ExpressionVector(z)
   }
 
