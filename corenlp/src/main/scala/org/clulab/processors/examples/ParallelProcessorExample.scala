@@ -126,6 +126,8 @@ object ParallelProcessorExample extends App {
   timer.start()
 
   parFiles.foreach { file =>
+    println(s"Processing ${file.getName}...")
+
     val text = {
       val source = Source.fromFile(file, utf8)
       val text = source.mkString
