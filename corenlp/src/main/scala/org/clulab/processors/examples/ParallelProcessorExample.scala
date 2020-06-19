@@ -112,12 +112,12 @@ object ParallelProcessorExample extends App {
   val threads = args(3).toInt
 
   val files = findFiles(inputDir, extension)
-  // Parallelizing by file results in a quick crash,
-  val parFiles = files // parallelize(files, threads)
+  // Parallelizing by file results in a quick crash.
+  val parFiles = parallelize(files, threads)
 
   Utils.initializeDyNet()
 
-  val processor: Processor = new CluProcessor(threads)
+  val processor: Processor = new CluProcessor()
   val documentSerializer = new DocumentSerializer
 
   val untimed = processor.annotate("Once upon a time there were three bears.")
@@ -140,6 +140,7 @@ object ParallelProcessorExample extends App {
     val outputFile = new File(outputDir + "/" + file.getName)
     val printWriter = new PrintWriter(new BufferedOutputStream(new FileOutputStream(outputFile)))
 
+    // This is done so that output of serial and parallel versions can be compared.
     printDocument(document, printWriter)
     printWriter.println(savedDocument)
     printWriter.close
