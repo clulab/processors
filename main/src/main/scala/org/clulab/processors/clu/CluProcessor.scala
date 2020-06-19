@@ -20,7 +20,7 @@ import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
   *   POS tagging, NER, chunking, dependency parsing - using our MTL architecture (dep parsing coming soon)
   */
-class CluProcessor (threads: Int = 1, val config: Config = ConfigFactory.load("cluprocessor")) extends Processor with Configured {
+class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) extends Processor with Configured {
 
   override def getConf: Config = config
 
@@ -109,46 +109,13 @@ class CluProcessor (threads: Int = 1, val config: Config = ConfigFactory.load("c
 
   class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
 
-  import scala.collection.parallel.ParSeq
-  def parallelize[T](seq: Seq[T], threads: Int = threads): ParSeq[T] = {
-    import scala.collection.parallel.ForkJoinTaskSupport
-    import scala.collection.parallel.ForkJoinTasks
-
-    val forkJoinPoolConstructor = {
-      // Get something of the right type.
-      val defaultForkJoinPool = ForkJoinTasks.defaultForkJoinPool
-      // Find the constructor.
-      defaultForkJoinPool.getClass.getConstructor(classOf[Int])
-    }
-
-    def newForkJoinPool(threads: Int) = {
-      // Invoke the constructor.
-      forkJoinPoolConstructor.newInstance(threads.asInstanceOf[Integer])
-
-      // For the record, this is the standard version
-      //new ForkJoinPool(threads)
-    }
-
-    val forkJoinPool = newForkJoinPool(threads)
-    val forkJoinTaskSupport = new ForkJoinTaskSupport(forkJoinPool)
-    val parSeq = seq.par
-
-    parSeq.tasksupport = forkJoinTaskSupport
-    parSeq
-  }
-
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
   override def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
 
-    // Test to see if it's working.
-    parallelize(0.until(1000)).foreach { index =>
-      println(index)
-    }
+    val preds = new ArrayBuffer[IndexedSeq[Int]]()
 
-    val sentences = parallelize(doc.sentences)
-
-    val preds = sentences.map { sent =>
+    for(sent <- doc.sentences) {
       val allLabels = mtlPosChunkSrlp.predictJointly(new AnnotatedSentence(sent.words))
       sent.tags = Some(allLabels(0).toArray)
       sent.chunks = Some(allLabels(1).toArray)
@@ -167,8 +134,8 @@ class CluProcessor (threads: Int = 1, val config: Config = ConfigFactory.load("c
           done = true
         }
       }
-      predsInSent
-    }.toIndexedSeq
+      preds += predsInSent
+    }
 
     // store the index of all predicates as a doc attachment
     doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(preds))
@@ -205,10 +172,7 @@ class CluProcessor (threads: Int = 1, val config: Config = ConfigFactory.load("c
   /** NER; modifies the document in place */
   override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
-
-    val sentences = parallelize(doc.sentences)
-
-    sentences.foreach { sent =>
+    for(sent <- doc.sentences) {
       val allLabels = mtlNer.predictJointly(new AnnotatedSentence(sent.words))
       sent.entities = Some(allLabels(0).toArray)
     }
@@ -226,10 +190,8 @@ class CluProcessor (threads: Int = 1, val config: Config = ConfigFactory.load("c
     val predicates = predicatesAttachment.get.asInstanceOf[PredicateAttachment].predicates
     assert(predicates.length == doc.sentences.length)
 
-    val indices = parallelize(predicates.indices)
-
     // generate SRL frames for each predicate in each sentence
-    indices.foreach { si =>
+    for(si <- predicates.indices) {
       val sentence = doc.sentences(si)
 
       val edges = new ListBuffer[Edge[String]]()
