@@ -54,21 +54,6 @@ class Layers (val initialLayer: Option[InitialLayer],
   def isEmpty: Boolean = initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty
   def nonEmpty: Boolean = ! isEmpty
 
-  def loss(sentence: AnnotatedSentence,
-           goldLabels: IndexedSeq[String],
-           predicatePosition: Option[Int] = None): Expression = {
-    assert(initialLayer.nonEmpty)
-    assert(finalLayer.nonEmpty)
-
-    var states = initialLayer.get.forward(sentence, predicatePosition, doDropout = true)
-    for(i <- intermediateLayers.indices) {
-      states = intermediateLayers(i).forward(states, doDropout = true)
-    }
-    states = finalLayer.get.forward(states, predicatePosition, doDropout = true)
-
-    finalLayer.get.loss(states, goldLabels)
-  }
-
   // strictly for testing purposes (doDropout = false for all layers)
   protected def forward(sentence: AnnotatedSentence,
                         predicatePosition: Option[Int] = None): ExpressionVector = {
@@ -106,24 +91,6 @@ class Layers (val initialLayer: Option[InitialLayer],
     }
 
     states
-  }
-
-  def predict(sentence: AnnotatedSentence,
-              predicatePosition: Option[Int] = None): IndexedSeq[String] = {
-    assert(initialLayer.nonEmpty)
-    assert(finalLayer.nonEmpty)
-
-    val emissionScores: Array[Array[Float]] =
-      this.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
-
-        ComputationGraph.renew()
-        val states = forward(sentence, predicatePosition)
-        Utils.emissionScoresToArrays(states)
-      }
-
-    val labels = finalLayer.get.inference(emissionScores)
-
-    labels
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
@@ -197,54 +164,6 @@ object Layers {
     new Layers(initialLayer, intermediateLayers, finalLayer)
   }
 
-  /** Merges one shared Layers with a task-specific Layers object */
-  def merge(sharedLayers: Layers, taskLayers: Layers): Layers = {
-    // the task Layers must have a final layer
-    if(taskLayers.finalLayer.isEmpty) {
-      throw new RuntimeException(s"ERROR: did not find final layer in the task Layers: ${taskLayers.toString}!")
-    }
-
-    // the shared Layers must NOT have a final layer
-    if(sharedLayers.finalLayer.nonEmpty) {
-      throw new RuntimeException(s"ERROR: did not expect final layer in the shared Layers: ${sharedLayers.toString}!")
-    }
-
-    // if the task Layers has an embedding layer, do not use any of the shared layers (start from scratch)
-    if(taskLayers.initialLayer.nonEmpty) {
-      return taskLayers
-    }
-
-    // if we're here, it means that the sharedLayers must have an embedding layer
-    if(sharedLayers.initialLayer.isEmpty) {
-      throw new RuntimeException(s"ERROR: did not find initial layer in the shared Layers: ${sharedLayers.toString}!")
-    }
-
-    val intermediateLayers = sharedLayers.intermediateLayers ++ taskLayers.intermediateLayers
-    var prevOutDim = sharedLayers.initialLayer.get.outDim
-    for(il <- intermediateLayers) {
-      if(il.inDim != prevOutDim) {
-        throw new RuntimeException(s"ERROR: the input dimension of intermediate layer ${il.toString} does not match the expected value of $prevOutDim!")
-      }
-      prevOutDim = il.outDim
-    }
-
-    if(intermediateLayers.isEmpty) {
-      throw new RuntimeException(s"ERROR: intermediate layers must exist in the merge!")
-    }
-
-    if(taskLayers.finalLayer.get.inDim != intermediateLayers.last.outDim) {
-      throw new RuntimeException(s"ERROR: the input dimension of final layer ${taskLayers.finalLayer.get.toString} does not match the expected value of ${intermediateLayers.last.outDim}!")
-    }
-
-    val merged = new Layers(
-      sharedLayers.initialLayer,
-      intermediateLayers,
-      taskLayers.finalLayer
-    )
-
-    merged
-  }
-
   val MAX_INTERMEDIATE_LAYERS = 10
 
   def loadX2i(parameters: ParameterCollection, lines: BufferedIterator[String]): Layers = {
@@ -285,7 +204,7 @@ object Layers {
                      sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
-    this.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
+    DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
       ComputationGraph.renew()
 
       // layers(0) contains the shared layers
@@ -312,5 +231,56 @@ object Layers {
     }
 
     labelsPerTask
+  }
+
+  private def forwardForTask(layers: IndexedSeq[Layers],
+                             taskId: Int,
+                             sentence: AnnotatedSentence,
+                             predPositionOpt: Option[Int] = None): ExpressionVector = {
+    //
+    // make sure this code is:
+    //   (a) called inside a synchronized block, and
+    //   (b) called after the computational graph is renewed (see predict below for correct usage)
+    //
+
+    val states = {
+      // layers(0) contains the shared layers
+      if (layers(0).nonEmpty) {
+        val sharedStates = layers(0).forward(sentence, predPositionOpt)
+        layers(taskId + 1).forwardFrom(sharedStates, predPositionOpt)
+      }
+
+      // no shared layer
+      else {
+        layers(taskId + 1).forward(sentence, predPositionOpt)
+      }
+    }
+
+    states
+  }
+
+  def predict(layers: IndexedSeq[Layers],
+              taskId: Int,
+              sentence: AnnotatedSentence,
+              predPositionOpt: Option[Int] = None): IndexedSeq[String] = {
+    val labelsForTask =
+      DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
+        ComputationGraph.renew()
+
+        val states = forwardForTask(layers, taskId, sentence, predPositionOpt)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        layers(taskId + 1).finalLayer.get.inference(emissionScores)
+      }
+
+    labelsForTask
+  }
+
+  def loss(layers: IndexedSeq[Layers],
+           taskId: Int,
+           sentence: AnnotatedSentence,
+           goldLabels: IndexedSeq[String],
+           predicatePosition: Option[Int] = None): Expression = {
+    val states = forwardForTask(layers, taskId, sentence, predicatePosition)
+    layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
 }

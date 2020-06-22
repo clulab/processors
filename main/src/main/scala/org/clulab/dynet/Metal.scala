@@ -28,9 +28,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
 
-  // One Layers object per task, which merges the shared Layers with the task-specific Layers for each task
-  protected lazy val flows: Array[Layers] = mkFlows(model)
-
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {
     assert(taskManagerOpt.isDefined)
@@ -65,17 +62,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     }
 
     layersPerTask
-  }
-
-  protected def mkFlows(layers: IndexedSeq[Layers]): Array[Layers] = {
-    val flows = new Array[Layers](layers.length - 1)
-    assert(flows.length + 1 == layers.length)
-
-    for(i <- flows.indices) {
-      flows(i) = Layers.merge(layers(0), layers(i + 1))
-    }
-
-    flows
   }
 
   protected def mkVocabularies(): (Array[Counter[String]], Array[Counter[String]]) = {
@@ -165,10 +151,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           case _ => throw new RuntimeException(s"ERROR: unknown reader for task type $taskType!")
         }
 
-        val lossOpt =
+        val lossOpt: Option[Expression] =
           // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
           if(taskManager.tasks(taskId).isBasic) {
-            Some(flows(taskId).loss(annotatedSentence, basicReader.toLabels(sentence)))
+            Some(Layers.loss(model, taskId, annotatedSentence, basicReader.toLabels(sentence)))
           }
 
           // prediction of SRL arguments
@@ -189,7 +175,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
                 val labels = srlArgsRowReader.toLabels(sentence, Some(predIdx))
 
                 if(true) { // hasContent(labels)) { // does not seem to help
-                  val loss = flows(taskId).loss(annotatedSentence, labels, Some(predPosition))
+                  val loss = Layers.loss(model, taskId, annotatedSentence, labels, Some(predPosition))
                   allPredLoss.add(loss)
                 } else {
                   skippedFrames += 1
@@ -348,7 +334,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val sentence = basicReader.toAnnotatedSentence(sent)
         val golds = basicReader.toLabels(sent)
 
-        val preds = flows(taskId).predict(sentence)
+        val preds = Layers.predict(model, taskId, sentence)
 
         val sc = SeqScorer.f1(golds, preds)
         scoreCountsByLabel.incAll(sc)
@@ -371,7 +357,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         // traverse the argument columns corresponding to each predicate
         for(j <- predPositions.indices) {
           val golds = srlArgsReader.toLabels(sent, Some(j))
-          val preds = flows(taskId).predict(annotatedSentence, Some(predPositions(j)))
+          val preds = Layers.predict(model, taskId, annotatedSentence, Some(predPositions(j)))
 
           val sc = SeqScorer.f1(golds, preds)
           scoreCountsByLabel.incAll(sc)
@@ -411,7 +397,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   def predict(taskId: Int,
               sentence: AnnotatedSentence,
               predPositionOpt: Option[Int]): IndexedSeq[String] = {
-    flows(taskId).predict(sentence, predPositionOpt)
+    Layers.predict(model, taskId, sentence, predPositionOpt)
   }
 
   def test(): Unit = {
