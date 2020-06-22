@@ -70,7 +70,7 @@ object ConstEmbeddingsGlove {
 
   def apply(matrixResourceName: String, isResource: Boolean): ConstEmbeddingsGlove = {
 
-    synchronized {
+    DyNetSync.synchronized {
       // these objects are read-only and they use a lot of RAM, so let's reuse them if they exist
       if(SINGLETON.isEmpty) {
         SINGLETON = Some(new ConstEmbeddingsGlove(matrixResourceName, isResource))

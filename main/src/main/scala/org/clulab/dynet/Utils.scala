@@ -34,7 +34,7 @@ object Utils {
   private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
-    this.synchronized {
+    DyNetSync.synchronized {
       if (!IS_DYNET_INITIALIZED) {
         logger.debug("Initializing DyNet...")
 
