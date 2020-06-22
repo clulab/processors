@@ -107,9 +107,7 @@ object ParallelProcessorExample {
       parSeq
     }
 
-    def printDocument(document: Document, printWriter: PrintWriter) {
-      document.prettyPrint(printWriter)
-    }
+    def printDocument(document: Document, printWriter: PrintWriter): Unit = document.prettyPrint(printWriter)
 
     val inputDir = args(0)
     val outputDir = args(1)
@@ -125,7 +123,7 @@ object ParallelProcessorExample {
     val processor: Processor = new CluProcessor()
     val documentSerializer = new DocumentSerializer
 
-    val untimed = processor.annotate("Once upon a time there were three bears.")
+    val untimed = processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
 
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
