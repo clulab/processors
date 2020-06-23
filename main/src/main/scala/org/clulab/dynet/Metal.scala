@@ -161,7 +161,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
           // prediction of dependency head distances
           else if(taskManager.tasks(taskId).isDepsHead) {
-            Some(flows(taskId).loss(annotatedSentence, basicRowReaderWithPosTags.toLabels(sentence)))
+            Some(Layers.loss(model, taskId, annotatedSentence, basicRowReaderWithPosTags.toLabels(sentence)))
           }
 
           // prediction of SRL arguments
@@ -361,7 +361,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val sentence = basicRowReaderWithPosTags.toAnnotatedSentence(sent)
         val golds = basicRowReaderWithPosTags.toLabels(sent)
 
-        val preds = flows(taskId).predict(sentence)
+        val preds = Layers.predict(model, taskId, sentence)
 
         val sc = SeqScorer.f1(golds, preds)
         scoreCountsByLabel.incAll(sc)
