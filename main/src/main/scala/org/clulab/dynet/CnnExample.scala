@@ -31,5 +31,6 @@ object CnnExample extends App {
   // TODO: this complains due to incorrect dimensions
   val cnnOut = Expression.conv2d(cnnIn, Expression.parameter(cnnParams), Expression.parameter(cnnBias), stride)
 
-
+  println(cnnOut.dim())
+  println(cnnOut.value().toVector().mkString(" "))
 }
