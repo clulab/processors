@@ -8,7 +8,7 @@ nav_order: 2
 
 This software requires Java 1.8 and Scala 2.11 or higher.
 
-The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.1.0`).  
+The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.1.1`).  
 
 Please note that one of the transitive dependencies for this project, [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), is not available at Maven Central because of size limitations there. However, Maven seems to fetch this transitive dependency automatically, so no additional configuration is needed. All you need are these dependencies:
 
