@@ -1,11 +1,74 @@
 package org.clulab.processors
 
+import java.util.Properties
+
+import edu.stanford.nlp.ie.NERClassifierCombiner
+import edu.stanford.nlp.ie.NERClassifierCombiner
+import edu.stanford.nlp.pipeline.Annotator
+import edu.stanford.nlp.pipeline.AnnotatorImplementations
+import edu.stanford.nlp.pipeline.NERCombinerAnnotator
+import edu.stanford.nlp.pipeline.StanfordCoreNLP
+import edu.stanford.nlp.util.MutableLong
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.scalatest._
 
 import scala.io.Source
 
 class TestFastNLPProcessorEnv extends FlatSpec with Matchers {
+
+  class TestableNERCombinerAnnotator(ner: NERClassifierCombiner, verbose: Boolean) extends NERCombinerAnnotator(ner, verbose) {
+    val myNer = ner
+
+    def this() = this(new NERClassifierCombiner(new Properties()), true)
+  }
+
+  class TestableStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true)
+      extends StanfordCoreNLP(props, enforceRequirements) {
+//    val myAnnotatorPool = annotatorPool
+    println("Got here!")
+    var nerCombinerAnnotatorOpt: Option[NERCombinerAnnotator] = if (nerCombinerAnnotatorOpt == null) None else nerCombinerAnnotatorOpt
+
+    override def addAnnotator(annotator: Annotator): Unit = {
+      val newAnnotator =
+        if (annotator.isInstanceOf[NERCombinerAnnotator]) {
+          val newAnnotator = new TestableNERCombinerAnnotator
+          nerCombinerAnnotatorOpt = Option(newAnnotator)
+          newAnnotator
+        }
+        else annotator
+      super.addAnnotator(newAnnotator)
+    }
+
+    override protected def getAnnotatorImplementations(): AnnotatorImplementations = {
+      val annotatorImplementations = super.getAnnotatorImplementations()
+
+      annotatorImplementations
+    }
+  }
+
+  class TestableFastNLPProcessor extends FastNLPProcessor() {
+    val myNer = ner // Do away with laziness.
+    var testableStanfordCoreNLPOpt: Option[TestableStanfordCoreNLP] = None
+
+    override protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true): StanfordCoreNLP = {
+      // Prevent knownLCWords from changing on us.  To be safe, this is added every time
+      // because of potential caching of annotators.  Yes, the 0 must be a string.
+      props.put("maxAdditionalKnownLCWords", "0")
+      val result = new TestableStanfordCoreNLP(props, enforceRequirements)
+
+      testableStanfordCoreNLPOpt = Option(result)
+      result
+    }
+
+    override def annotate(doc: Document): Document = {
+      tagPartsOfSpeech(doc)
+      lemmatize(doc)
+      recognizeNamedEntities(doc)
+      parse(doc)
+      // That's enough to show error.
+      doc
+    }
+  }
 
   def mkDocument(text: String, date: String): Document = {
     val tokenizedDoc = proc.mkDocument(text, keepText = true)
@@ -21,7 +84,7 @@ class TestFastNLPProcessorEnv extends FlatSpec with Matchers {
     norms
   }
 
-  var proc: Processor = new FastNLPProcessor()
+  var proc: TestableFastNLPProcessor = new TestableFastNLPProcessor()
 
   "FastNLPProcessor" should "get the same answer when reannotating a document" in {
       val inputDir = "./corenlp/src/test/resources/documents"
