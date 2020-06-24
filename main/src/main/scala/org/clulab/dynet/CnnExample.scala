@@ -12,7 +12,7 @@ object CnnExample extends App {
   val pc = new ParameterCollection()
 
   val embSize = 3
-  val embeddings = pc.addLookupParameters(5, Dim(embSize)) // embbedings of size 3 for 5 words
+  val embeddings = pc.addLookupParameters(5, Dim(1, 1, embSize)) // embbedings of size 3 for 5 words
 
   val winSize = 2 // size of the CNN window
   val filterSize = 10 // size of the CNN filter
