@@ -16,17 +16,21 @@ import scala.io.Source
 
 class TestFastNLPProcessorEnv extends FlatSpec with Matchers {
 
-  class TestableNERCombinerAnnotator(ner: NERClassifierCombiner, verbose: Boolean) extends NERCombinerAnnotator(ner, verbose) {
-    val myNer = ner
+  class TestableNERClassifierCombiner(props: Properties) extends NERClassifierCombiner(props) {
+    println("Hello World")
+  }
 
-    def this() = this(new NERClassifierCombiner(new Properties()), true)
+  class TestableNERCombinerAnnotator(ner: NERClassifierCombiner, verbose: Boolean) extends NERCombinerAnnotator(ner, verbose) {
+    val myNer = ner.asInstanceOf[TestableNERClassifierCombiner]
+
+    def this() = this(new TestableNERClassifierCombiner(new Properties()), true)
   }
 
   class TestableStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true)
       extends StanfordCoreNLP(props, enforceRequirements) {
 //    val myAnnotatorPool = annotatorPool
     println("Got here!")
-    var nerCombinerAnnotatorOpt: Option[NERCombinerAnnotator] = if (nerCombinerAnnotatorOpt == null) None else nerCombinerAnnotatorOpt
+    var nerCombinerAnnotatorOpt: Option[TestableNERCombinerAnnotator] = if (nerCombinerAnnotatorOpt == null) None else nerCombinerAnnotatorOpt
 
     override def addAnnotator(annotator: Annotator): Unit = {
       val newAnnotator =
@@ -47,8 +51,8 @@ class TestFastNLPProcessorEnv extends FlatSpec with Matchers {
   }
 
   class TestableFastNLPProcessor extends FastNLPProcessor() {
-    val myNer = ner // Do away with laziness.
     var testableStanfordCoreNLPOpt: Option[TestableStanfordCoreNLP] = None
+    var nsc = null
 
     override protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true): StanfordCoreNLP = {
       // Prevent knownLCWords from changing on us.  To be safe, this is added every time
@@ -57,6 +61,7 @@ class TestFastNLPProcessorEnv extends FlatSpec with Matchers {
       val result = new TestableStanfordCoreNLP(props, enforceRequirements)
 
       testableStanfordCoreNLPOpt = Option(result)
+
       result
     }
 
