@@ -24,7 +24,7 @@ This repository contains:
 
 Our code is licensed as follows:
 + **`main, odin`** - Apache License Version 2.0. Please note that these subprojects do not interact with the `corenlp` subproject below.
-+ **`corenlp`** - GLP Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/). If you use only `CluProcessor`, this dependency does not have to be included in your project.
++ **`corenlp`** - GPL Version 3 or higher, due to the dependency on [Stanford's CoreNLP](http://stanfordnlp.github.io/CoreNLP/). If you use only `CluProcessor`, this dependency does not have to be included in your project.
 
 
 # Citations
