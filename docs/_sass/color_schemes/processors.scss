@@ -1,0 +1,16 @@
+
+// $odinsonblue: #3F5A6C;
+$odinsonblue: #2D7DA8;
+$odinsonmustard: #8A7117;
+$teal: #176A8A;
+$grey_teal: #EBEFEF;
+
+$sidebar-color: $grey_teal;
+$link-color: $odinsonblue;
+$feedback-color: darken($sidebar-color, 8%);
+// $feedback-color: lighten($grey_teal, 30%);
+
+$body-heading-color: darken($odinsonblue, 10%);
+
+// $code-background-color: $grey-dk-250;
+$code-background-color: lighten($grey_teal, 3%);
