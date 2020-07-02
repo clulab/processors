@@ -31,6 +31,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val distanceEmbeddingSize: Int,
                       val distanceWindowSize: Int, // window considered for distance values (relative to predicate)
                       val positionEmbeddingSize: Int,
+                      val useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
                       val wordLookupParameters:LookupParameter,
                       val charLookupParameters:LookupParameter,
                       val charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
@@ -114,6 +115,16 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       }
 
     //
+    // 1 if this word is the predicate
+    //
+    val predEmbed =
+    if(predicatePosition.nonEmpty && useIsPredicate) {
+      Some(Expression.input(if(wordPosition == predicatePosition.get) 1f else 0f))
+    } else {
+      None
+    }
+
+    //
     // Distance embedding, relative to the distance to the predicate
     // We cut the distance down to values inside the window [-distanceWindowSize, +distanceWindowSize]
     //
@@ -148,6 +159,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     if(neTagEmbed.nonEmpty) embedParts.add(neTagEmbed.get)
     if(distanceEmbedding.nonEmpty) embedParts.add(distanceEmbedding.get)
     if(positionEmbedding.nonEmpty) embedParts.add(positionEmbedding.get)
+    if(predEmbed.nonEmpty) embedParts.add(predEmbed.get)
 
     val embed = concatenate(embedParts)
     assert(embed.dim().get(0) == outDim)
@@ -158,6 +170,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val posTagDim = if(posTagLookupParameters.nonEmpty) posTagEmbeddingSize else 0
     val neTagDim = if(neTagLookupParameters.nonEmpty) neTagEmbeddingSize else 0
     val distanceDim = if(distanceLookupParameters.nonEmpty) distanceEmbeddingSize else 0
+    val predicateDim = if(distanceLookupParameters.nonEmpty && useIsPredicate) 1 else 0
     val positionDim = if(positionLookupParameters.nonEmpty) positionEmbeddingSize else 0
 
     constEmbedder.dim +
@@ -166,7 +179,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     posTagDim +
     neTagDim +
     distanceDim +
-    positionDim
+    positionDim +
+    predicateDim
   }
 
   private def setCharRnnDropout(doDropout: Boolean): Unit = {
@@ -197,6 +211,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     save(printWriter, neTagEmbeddingSize, "neTagEmbeddingSize")
     save(printWriter, distanceEmbeddingSize, "distanceEmbeddingSize")
     save(printWriter, distanceWindowSize, "distanceWindowSize")
+    save(printWriter, if(useIsPredicate) 1 else 0, "useIsPredicate")
     save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
     save(printWriter, dropoutProb, "dropoutProb")
   }
@@ -220,6 +235,7 @@ object EmbeddingLayer {
   val DEFAULT_DISTANCE_EMBEDDING_SIZE: Int = -1 // no distance embeddings by default
   val DEFAULT_POSITION_EMBEDDING_SIZE: Int = -1 // no position embeddings by default
   val DEFAULT_DISTANCE_WINDOW_SIZE: Int = -1
+  val DEFAULT_USE_IS_PREDICATE: Int = -1
 
   def load(parameters: ParameterCollection,
            x2iIterator:BufferedIterator[String]): EmbeddingLayer = {
@@ -264,6 +280,9 @@ object EmbeddingLayer {
       byLineIntBuilder.build(x2iIterator, "distanceEmbeddingSize", DEFAULT_DISTANCE_EMBEDDING_SIZE)
     val distanceWindowSize =
       byLineIntBuilder.build(x2iIterator, "distanceWindowSize", DEFAULT_DISTANCE_WINDOW_SIZE)
+    val useIsPredicateAsInt =
+      byLineIntBuilder.build(x2iIterator, "useIsPredicate", DEFAULT_USE_IS_PREDICATE)
+    val useIsPredicate = useIsPredicateAsInt == 1
     val positionEmbeddingSize =
       byLineIntBuilder.build(x2iIterator, "positionEmbeddingSize", DEFAULT_POSITION_EMBEDDING_SIZE)
     val dropoutProb =
@@ -320,6 +339,7 @@ object EmbeddingLayer {
       distanceEmbeddingSize,
       distanceWindowSize,
       positionEmbeddingSize,
+      useIsPredicate,
       wordLookupParameters,
       charLookupParameters,
       charFwRnnBuilder,
@@ -360,6 +380,9 @@ object EmbeddingLayer {
     val distanceWindowSize =
       config.getArgInt(paramPrefix + ".distanceWindowSize",
         Some(DEFAULT_DISTANCE_WINDOW_SIZE))
+    val useIsPredicate =
+      config.getArgBoolean(paramPrefix + ".useIsPredicate",
+        Some(DEFAULT_USE_IS_PREDICATE == 1))
     val positionEmbeddingSize =
       config.getArgInt(paramPrefix + ".positionEmbeddingSize",
         Some(DEFAULT_POSITION_EMBEDDING_SIZE))
@@ -433,6 +456,7 @@ object EmbeddingLayer {
       distanceEmbeddingSize,
       distanceWindowSize,
       positionEmbeddingSize,
+      useIsPredicate,
       wordLookupParameters,
       charLookupParameters,
       charFwRnnBuilder,
