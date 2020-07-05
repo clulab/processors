@@ -19,10 +19,11 @@ class RnnLayer (val parameters:ParameterCollection,
                 val useHighwayConnections: Boolean,
                 val wordFwRnnBuilder:RnnBuilder,
                 val wordBwRnnBuilder:RnnBuilder,
-                val dropoutProb: Float = RnnLayer.DROPOUT_PROB) extends IntermediateLayer {
+                val dropoutProb: Float = RnnLayer.DEFAULT_DROPOUT_PROB) extends IntermediateLayer {
 
   override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
     setRnnDropout(wordFwRnnBuilder, dropoutProb, doDropout)
+    setRnnDropout(wordBwRnnBuilder, dropoutProb, doDropout)
     setRnnDropout(wordBwRnnBuilder, dropoutProb, doDropout)
 
     val fwEmbeddings = inputExpressions
@@ -59,6 +60,7 @@ class RnnLayer (val parameters:ParameterCollection,
     save(printWriter, numLayers, "numLayers")
     save(printWriter, rnnStateSize, "rnnStateSize")
     save(printWriter, if(useHighwayConnections) 1 else 0, "useHighwayConnections")
+    save(printWriter, dropoutProb, "dropoutProb")
   }
 
   override def toString: String = {
@@ -69,7 +71,7 @@ class RnnLayer (val parameters:ParameterCollection,
 object RnnLayer {
   val logger: Logger = LoggerFactory.getLogger(classOf[RnnLayer])
 
-  val DROPOUT_PROB = 0.2f
+  val DEFAULT_DROPOUT_PROB = 0.2f
 
   def load(parameters: ParameterCollection,
            x2iIterator: BufferedIterator[String]): RnnLayer = {
@@ -77,12 +79,14 @@ object RnnLayer {
     // load the x2i info
     //
     val byLineIntBuilder = new ByLineIntBuilder()
+    val byLineFloatBuilder = new ByLineFloatBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
     val numLayers = byLineIntBuilder.build(x2iIterator, "numLayers")
     val rnnStateSize = byLineIntBuilder.build(x2iIterator, "rnnStateSize")
     val useHighwayConnectionsAsInt = byLineIntBuilder.build(x2iIterator, "useHighwayConnections")
     val useHighwayConnections = useHighwayConnectionsAsInt == 1
+    val dropoutProb = byLineFloatBuilder.build(x2iIterator, "dropoutProb")
 
     //
     // make the loadable parameters
@@ -92,7 +96,7 @@ object RnnLayer {
 
     new RnnLayer(parameters,
       inputSize, numLayers, rnnStateSize, useHighwayConnections,
-      fwBuilder, bwBuilder)
+      fwBuilder, bwBuilder, dropoutProb)
   }
 
   def initialize(config: Configured,
@@ -106,7 +110,7 @@ object RnnLayer {
     val numLayers = config.getArgInt(paramPrefix + ".numLayers", Some(1))
     val rnnStateSize = config.getArgInt(paramPrefix + ".rnnStateSize", None)
     val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))
-    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DROPOUT_PROB))
+    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DEFAULT_DROPOUT_PROB))
 
     val wordFwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
     val wordBwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)

@@ -113,10 +113,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     val basicReader = new BasicRowReader
     val srlArgsRowReader = new SrlArgsRowReader
+    val basicRowReaderWithPosTags = new BasicRowReaderWithPosTags
 
     var cummulativeLoss = 0.0
     var numTagged = 0
-    var sentCount = 0
     val rand = new Random(RANDOM_SEED)
 
     var maxAvgAcc = 0.0
@@ -131,6 +131,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
       val sentenceIterator = taskManager.getSentences(rand)
+      var sentCount = 0
 
       ComputationGraph.renew()
       var batchLosses: ExpressionVector = new ExpressionVector()
@@ -148,6 +149,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val annotatedSentence = taskType match {
           case TaskManager.TYPE_BASIC => basicReader.toAnnotatedSentence(sentence)
           case TaskManager.TYPE_SRL => srlArgsRowReader.toAnnotatedSentence(sentence)
+          case TaskManager.TYPE_DEPSH => basicRowReaderWithPosTags.toAnnotatedSentence(sentence)
           case _ => throw new RuntimeException(s"ERROR: unknown reader for task type $taskType!")
         }
 
@@ -155,6 +157,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
           if(taskManager.tasks(taskId).isBasic) {
             Some(Layers.loss(model, taskId, annotatedSentence, basicReader.toLabels(sentence)))
+          }
+
+          // prediction of dependency head distances
+          else if(taskManager.tasks(taskId).isDepsHead) {
+            Some(Layers.loss(model, taskId, annotatedSentence, basicRowReaderWithPosTags.toLabels(sentence)))
           }
 
           // prediction of SRL arguments
@@ -213,7 +220,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         numTagged += sentence.length
 
         if(sentCount % 1000 == 0) {
-          logger.info("Cummulative loss: " + cummulativeLoss / numTagged)
+          logger.info("Cummulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)")
           cummulativeLoss = 0.0
           numTagged = 0
 
@@ -323,6 +330,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     val basicReader = new BasicRowReader
     val srlArgsReader = new SrlArgsRowReader
+    val basicRowReaderWithPosTags = new BasicRowReaderWithPosTags
 
     //
     // regular BIO evaluation, compatible with CoNLL-2003
@@ -333,6 +341,25 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         val sentence = basicReader.toAnnotatedSentence(sent)
         val golds = basicReader.toLabels(sent)
+
+        val preds = Layers.predict(model, taskId, sentence)
+
+        val sc = SeqScorer.f1(golds, preds)
+        scoreCountsByLabel.incAll(sc)
+
+        printCoNLLOutput(pw, sentence.words, golds, preds)
+      }
+    }
+
+    //
+    // evaluation of dependency head distance
+    //
+    else if(taskManager.tasks(taskId).isDepsHead) {
+      for (sent <- sentences) {
+        sentCount += 1
+
+        val sentence = basicRowReaderWithPosTags.toAnnotatedSentence(sent)
+        val golds = basicRowReaderWithPosTags.toLabels(sent)
 
         val preds = Layers.predict(model, taskId, sentence)
 

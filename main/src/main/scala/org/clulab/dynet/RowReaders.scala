@@ -34,6 +34,20 @@ class BasicRowReader extends RowReader {
     rows.map(getLabel)
 }
 
+class BasicRowReaderWithPosTags extends RowReader {
+  def getPosTag(r: Row): String = r.get(3)
+
+  override def toAnnotatedSentence(sentence: IndexedSeq[Row]): AnnotatedSentence = {
+    val words = sentence.map(getWord)
+    val tags = sentence.map(getPosTag)
+    new AnnotatedSentence(words, Some(tags))
+  }
+
+  override def toLabels(rows: IndexedSeq[Row],
+                        predicateIndex: Option[Int]): IndexedSeq[String] =
+    rows.map(getLabel)
+}
+
 class SrlArgsRowReader extends RowReader {
   def getPosTag(r: Row): String = r.get(2) // use this carefully; this may not be available in all datasets!
   def getNeTag(r: Row): String = r.get(3) // use this carefully; this may not be available in all datasets!

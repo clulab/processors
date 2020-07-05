@@ -28,8 +28,9 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val charRnnStateSize: Int, // size of each one of the char-level RNNs
                       val posTagEmbeddingSize: Int, // size of the POS tag embedding
                       val neTagEmbeddingSize: Int, // size of the NE tag embedding
+                      val distanceEmbeddingSize: Int,
+                      val distanceWindowSize: Int, // window considered for distance values (relative to predicate)
                       val positionEmbeddingSize: Int,
-                      val positionWindowSize: Int, // window considered for position values (relative to predicate)
                       val useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
                       val wordLookupParameters:LookupParameter,
                       val charLookupParameters:LookupParameter,
@@ -37,6 +38,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val charBwRnnBuilder:RnnBuilder,
                       val posTagLookupParameters:Option[LookupParameter],
                       val neTagLookupParameters:Option[LookupParameter],
+                      val distanceLookupParameters:Option[LookupParameter],
                       val positionLookupParameters:Option[LookupParameter],
                       val dropoutProb: Float = EmbeddingLayer.DEFAULT_DROPOUT_PROB) extends InitialLayer {
 
@@ -116,23 +118,34 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // 1 if this word is the predicate
     //
     val predEmbed =
-      if(predicatePosition.nonEmpty && useIsPredicate) {
-        Some(Expression.input(if(wordPosition == predicatePosition.get) 1f else 0f))
+    if(predicatePosition.nonEmpty && useIsPredicate) {
+      Some(Expression.input(if(wordPosition == predicatePosition.get) 1f else 0f))
+    } else {
+      None
+    }
+
+    //
+    // Distance embedding, relative to the distance to the predicate
+    // We cut the distance down to values inside the window [-distanceWindowSize, +distanceWindowSize]
+    //
+    val distanceEmbedding =
+      if(predicatePosition.nonEmpty && distanceLookupParameters.nonEmpty) {
+        var dist = wordPosition - predicatePosition.get
+        if (dist < - distanceWindowSize) dist = - distanceWindowSize - 1
+        if(dist > distanceWindowSize) dist = distanceWindowSize + 1
+        val posIndex = dist + distanceWindowSize + 1
+        Some(Expression.lookup(distanceLookupParameters.get, posIndex))
       } else {
         None
       }
 
     //
-    // Position embedding, relative to the position of the predicate
-    // We cut the distance down to values inside the window [-positionWindowSize, +positionWindowSize]
+    // Embedding that captures the absolute position of the token in the sentence
     //
     val positionEmbedding =
-      if(predicatePosition.nonEmpty && positionLookupParameters.nonEmpty) {
-        var dist = wordPosition - predicatePosition.get
-        if (dist < - positionWindowSize) dist = - positionWindowSize - 1
-        if(dist > positionWindowSize) dist = positionWindowSize + 1
-        val posIndex = dist + positionWindowSize + 1
-        Some(Expression.lookup(positionLookupParameters.get, posIndex))
+      if(positionLookupParameters.nonEmpty) {
+        val value = if(wordPosition >= 100) 100 else wordPosition
+        Some(Expression.lookup(positionLookupParameters.get, value))
       } else {
         None
       }
@@ -144,6 +157,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     embedParts.add(charEmbedding)
     if(posTagEmbed.nonEmpty) embedParts.add(posTagEmbed.get)
     if(neTagEmbed.nonEmpty) embedParts.add(neTagEmbed.get)
+    if(distanceEmbedding.nonEmpty) embedParts.add(distanceEmbedding.get)
     if(positionEmbedding.nonEmpty) embedParts.add(positionEmbedding.get)
     if(predEmbed.nonEmpty) embedParts.add(predEmbed.get)
 
@@ -155,14 +169,16 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   override def outDim: Int = {
     val posTagDim = if(posTagLookupParameters.nonEmpty) posTagEmbeddingSize else 0
     val neTagDim = if(neTagLookupParameters.nonEmpty) neTagEmbeddingSize else 0
+    val distanceDim = if(distanceLookupParameters.nonEmpty) distanceEmbeddingSize else 0
+    val predicateDim = if(distanceLookupParameters.nonEmpty && useIsPredicate) 1 else 0
     val positionDim = if(positionLookupParameters.nonEmpty) positionEmbeddingSize else 0
-    val predicateDim = if(positionLookupParameters.nonEmpty && useIsPredicate) 1 else 0
 
     constEmbedder.dim +
     learnedWordEmbeddingSize +
     charRnnStateSize * 2 +
     posTagDim +
     neTagDim +
+    distanceDim +
     positionDim +
     predicateDim
   }
@@ -193,9 +209,11 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     save(printWriter, charRnnStateSize, "charRnnStateSize")
     save(printWriter, posTagEmbeddingSize, "posTagEmbeddingSize")
     save(printWriter, neTagEmbeddingSize, "neTagEmbeddingSize")
-    save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
-    save(printWriter, positionWindowSize, "positionWindowSize")
+    save(printWriter, distanceEmbeddingSize, "distanceEmbeddingSize")
+    save(printWriter, distanceWindowSize, "distanceWindowSize")
     save(printWriter, if(useIsPredicate) 1 else 0, "useIsPredicate")
+    save(printWriter, positionEmbeddingSize, "positionEmbeddingSize")
+    save(printWriter, dropoutProb, "dropoutProb")
   }
 
   override def toString: String = {
@@ -214,8 +232,9 @@ object EmbeddingLayer {
   val DEFAULT_CHAR_RNN_STATE_SIZE: Int = 16
   val DEFAULT_POS_TAG_EMBEDDING_SIZE: Int = -1 // no POS tag embeddings by default
   val DEFAULT_NE_TAG_EMBEDDING_SIZE: Int = -1 // no NE tag embeddings by default
+  val DEFAULT_DISTANCE_EMBEDDING_SIZE: Int = -1 // no distance embeddings by default
   val DEFAULT_POSITION_EMBEDDING_SIZE: Int = -1 // no position embeddings by default
-  val DEFAULT_POSITION_WINDOW_SIZE: Int = -1
+  val DEFAULT_DISTANCE_WINDOW_SIZE: Int = -1
   val DEFAULT_USE_IS_PREDICATE: Int = -1
 
   def load(parameters: ParameterCollection,
@@ -227,6 +246,7 @@ object EmbeddingLayer {
     val byLineCounterBuilder = new ByLineStringCounterBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
     val byLineIntBuilder = new ByLineIntBuilder()
+    val byLineFloatBuilder = new ByLineFloatBuilder()
 
     val w2i = byLineStringMapBuilder.build(x2iIterator, "w2i")
     val w2f = byLineCounterBuilder.build(x2iIterator, "w2f")
@@ -256,13 +276,17 @@ object EmbeddingLayer {
       byLineIntBuilder.build(x2iIterator, "posTagEmbeddingSize", DEFAULT_POS_TAG_EMBEDDING_SIZE)
     val neTagEmbeddingSize =
       byLineIntBuilder.build(x2iIterator, "neTagEmbeddingSize", DEFAULT_NE_TAG_EMBEDDING_SIZE)
-    val positionEmbeddingSize =
-      byLineIntBuilder.build(x2iIterator, "positionEmbeddingSize", DEFAULT_POSITION_EMBEDDING_SIZE)
-    val positionWindowSize =
-      byLineIntBuilder.build(x2iIterator, "positionWindowSize", DEFAULT_POSITION_WINDOW_SIZE)
+    val distanceEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator, "distanceEmbeddingSize", DEFAULT_DISTANCE_EMBEDDING_SIZE)
+    val distanceWindowSize =
+      byLineIntBuilder.build(x2iIterator, "distanceWindowSize", DEFAULT_DISTANCE_WINDOW_SIZE)
     val useIsPredicateAsInt =
       byLineIntBuilder.build(x2iIterator, "useIsPredicate", DEFAULT_USE_IS_PREDICATE)
     val useIsPredicate = useIsPredicateAsInt == 1
+    val positionEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator, "positionEmbeddingSize", DEFAULT_POSITION_EMBEDDING_SIZE)
+    val dropoutProb =
+      byLineFloatBuilder.build(x2iIterator, "dropoutProb", DEFAULT_DROPOUT_PROB)
 
     //
     // make the loadable parameters
@@ -289,10 +313,17 @@ object EmbeddingLayer {
         None
       }
 
+    val distanceLookupParameters =
+      if(distanceEmbeddingSize > 0) {
+        // the +3 is needed for: distance 0, 1 to the left of the window, and 1 to the right of the window
+        Some(parameters.addLookupParameters(distanceWindowSize * 2 + 3, Dim(distanceEmbeddingSize)))
+      } else {
+        None
+      }
+
     val positionLookupParameters =
       if(positionEmbeddingSize > 0) {
-        // the +3 is needed for: position 0, 1 to the left of the window, and 1 to the right of the window
-        Some(parameters.addLookupParameters(positionWindowSize * 2 + 3, Dim(positionEmbeddingSize)))
+        Some(parameters.addLookupParameters(101, Dim(positionEmbeddingSize)))
       } else {
         None
       }
@@ -305,8 +336,9 @@ object EmbeddingLayer {
       charRnnStateSize,
       posTagEmbeddingSize,
       neTagEmbeddingSize,
+      distanceEmbeddingSize,
+      distanceWindowSize,
       positionEmbeddingSize,
-      positionWindowSize,
       useIsPredicate,
       wordLookupParameters,
       charLookupParameters,
@@ -314,7 +346,9 @@ object EmbeddingLayer {
       charBwRnnBuilder,
       posTagLookupParameters,
       neTagLookupParameters,
-      positionLookupParameters)
+      distanceLookupParameters,
+      positionLookupParameters,
+      dropoutProb)
   }
 
   def initialize(config: Configured,
@@ -340,15 +374,18 @@ object EmbeddingLayer {
     val neTagEmbeddingSize =
       config.getArgInt(paramPrefix + ".neTagEmbeddingSize",
         Some(DEFAULT_NE_TAG_EMBEDDING_SIZE))
-    val positionEmbeddingSize =
-      config.getArgInt(paramPrefix + ".positionEmbeddingSize",
-        Some(DEFAULT_POSITION_EMBEDDING_SIZE))
-    val positionWindowSize =
-      config.getArgInt(paramPrefix + ".positionWindowSize",
-        Some(DEFAULT_POSITION_WINDOW_SIZE))
+    val distanceEmbeddingSize =
+      config.getArgInt(paramPrefix + ".distanceEmbeddingSize",
+        Some(DEFAULT_DISTANCE_EMBEDDING_SIZE))
+    val distanceWindowSize =
+      config.getArgInt(paramPrefix + ".distanceWindowSize",
+        Some(DEFAULT_DISTANCE_WINDOW_SIZE))
     val useIsPredicate =
       config.getArgBoolean(paramPrefix + ".useIsPredicate",
         Some(DEFAULT_USE_IS_PREDICATE == 1))
+    val positionEmbeddingSize =
+      config.getArgInt(paramPrefix + ".positionEmbeddingSize",
+        Some(DEFAULT_POSITION_EMBEDDING_SIZE))
     val dropoutProb =
       config.getArgFloat(paramPrefix + ".dropoutProb",
         Some(EmbeddingLayer.DEFAULT_DROPOUT_PROB))
@@ -391,10 +428,18 @@ object EmbeddingLayer {
         (None, None)
       }
 
+    val distanceLookupParameters =
+      if(distanceEmbeddingSize > 0) {
+        // Position embeddings [-distanceWindowSize, distanceWindowSize] + < distanceWindowSize + > distanceWindowSize. total = 43
+        val distanceLookupParameters = parameters.addLookupParameters(distanceWindowSize * 2 + 3, Dim(distanceEmbeddingSize))
+        Some(distanceLookupParameters)
+      } else {
+        None
+      }
+
     val positionLookupParameters =
       if(positionEmbeddingSize > 0) {
-        // Position embeddings [-positionWindowSize, positionWindowSize] + < positionWindowSize + > positionWindowSize. total = 43
-        val positionLookupParameters = parameters.addLookupParameters(positionWindowSize * 2 + 3, Dim(positionEmbeddingSize))
+        val positionLookupParameters = parameters.addLookupParameters(101, Dim(positionEmbeddingSize))
         Some(positionLookupParameters)
       } else {
         None
@@ -408,8 +453,9 @@ object EmbeddingLayer {
       charRnnStateSize,
       posTagEmbeddingSize,
       neTagEmbeddingSize,
+      distanceEmbeddingSize,
+      distanceWindowSize,
       positionEmbeddingSize,
-      positionWindowSize,
       useIsPredicate,
       wordLookupParameters,
       charLookupParameters,
@@ -417,6 +463,7 @@ object EmbeddingLayer {
       charBwRnnBuilder,
       posTagLookupParameters,
       neTagLookupParameters,
+      distanceLookupParameters,
       positionLookupParameters,
       dropoutProb)
 

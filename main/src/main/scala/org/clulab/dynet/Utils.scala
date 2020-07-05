@@ -506,6 +506,12 @@ object Utils {
     printWriter.println() // Separator
   }
 
+  def save(printWriter: PrintWriter, value: Float, comment: String): Unit = {
+    printWriter.println("# " + comment)
+    printWriter.println(value)
+    printWriter.println() // Separator
+  }
+
   def save(printWriter: PrintWriter, value: String, comment: String): Unit = {
     printWriter.println("# " + comment)
     printWriter.println(value)
@@ -709,6 +715,27 @@ object Utils {
 
     override protected def setDefaultValue(intermediateValue: MutableNumber[Option[Int]],
                                            defaultValue: Int): Unit = {
+      intermediateValue.value = Some(defaultValue)
+    }
+  }
+
+  class ByLineFloatBuilder extends ByLineBuilder[MutableNumber[Option[Float]], Float, Float] {
+
+    def addLine(mutableNumberOpt: MutableNumber[Option[Float]], line: String): Unit = {
+      mutableNumberOpt.value = Some(line.toFloat)
+    }
+
+    override protected def build(lines: BufferedIterator[String],
+                                 fieldName: Option[String],
+                                 defaultValue: Option[Float]): Float = {
+      val mutableNumberOpt: MutableNumber[Option[Float]] = new MutableNumber(None)
+
+      addLines(mutableNumberOpt, lines, fieldName, defaultValue)
+      mutableNumberOpt.value.get
+    }
+
+    override protected def setDefaultValue(intermediateValue: MutableNumber[Option[Float]],
+                                           defaultValue: Float): Unit = {
       intermediateValue.value = Some(defaultValue)
     }
   }
