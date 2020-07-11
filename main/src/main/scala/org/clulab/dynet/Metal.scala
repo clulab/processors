@@ -127,6 +127,30 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     var skippedFrames = 0
     var totalFrames = 0
 
+    // builds a histogram of num of preds/sentence
+    /*
+    val sentenceIterator = taskManager.getSentences(rand)
+    val predCounts = new Counter[Int]
+    var totalValue = 0
+    var totalCount = 0
+    for(metaSentence <- sentenceIterator) {
+      val taskId = metaSentence._1
+      val sentence = metaSentence._2
+      var count = 0
+      for(row <- sentence) {
+        val l = srlArgsRowReader.getLabel(row)
+        if(l == "B-P") count += 1
+      }
+      predCounts.incrementCount(count)
+      totalValue += count
+      totalCount += 1
+    }
+    println(predCounts.sorted.mkString(", "))
+    println(s"AVG = ${totalValue.toDouble / totalCount}")
+    System.exit(1)
+    */
+
+
     for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
       logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
@@ -169,6 +193,19 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             // token positions for the predicates in this sentence
             val predicatePositions = srlArgsRowReader.getPredicatePositions(sentence)
 
+            val frameLabels = new ArrayBuffer[IndexedSeq[String]]
+            for(i <- predicatePositions.indices) {
+              // gold arg labels for this frame
+              val labels = srlArgsRowReader.toLabels(sentence, Some(i))
+              frameLabels += labels
+            }
+
+            val loss = Layers.loss(model, taskId, annotatedSentence,
+              frameLabels, predicatePositions)
+
+            Some(loss)
+
+            /*
             // traverse all SRL frames
             if(predicatePositions.nonEmpty) {
               val allPredLoss = new ExpressionVector()
@@ -194,6 +231,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             } else {
               None
             }
+            */
           } else {
             throw new RuntimeException(s"ERROR: unknown task type ${taskManager.tasks(taskId).taskType}!")
           }
@@ -381,6 +419,26 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         // find the token positions of all predicates in this sentence
         val predPositions = srlArgsReader.getPredicatePositions(sent)
 
+        val goldLabels = new ArrayBuffer[IndexedSeq[String]]()
+        // traverse the argument columns corresponding to each predicate
+        for(j <- predPositions.indices) {
+          val golds = srlArgsReader.toLabels(sent, Some(j))
+          goldLabels += golds
+        }
+
+        val predLabels = Layers.predict(model, taskId, annotatedSentence, predPositions)
+        assert(predLabels.length == goldLabels.length)
+        assert(predLabels.length == predPositions.length)
+
+        for(i <- predLabels.indices) {
+          val sc = SeqScorer.f1(goldLabels(i), predLabels(i))
+          scoreCountsByLabel.incAll(sc)
+
+          pw.println(s"pred = ${annotatedSentence.words(predPositions(i))} at position ${predPositions(i)}")
+          printCoNLLOutput(pw, annotatedSentence.words, goldLabels(i), predLabels(i))
+        }
+
+        /*
         // traverse the argument columns corresponding to each predicate
         for(j <- predPositions.indices) {
           val golds = srlArgsReader.toLabels(sent, Some(j))
@@ -392,6 +450,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           pw.println(s"pred = ${annotatedSentence.words(predPositions(j))} at position ${predPositions(j)}")
           printCoNLLOutput(pw, annotatedSentence.words, golds, preds)
         }
+        */
       }
     }
 

@@ -259,6 +259,32 @@ object Layers {
     states
   }
 
+  private def forwardForTaskUntilFinal(layers: IndexedSeq[Layers],
+                             taskId: Int,
+                             sentence: AnnotatedSentence,
+                             predPositions: IndexedSeq[Int]): ExpressionVector = {
+    //
+    // make sure this code is:
+    //   (a) called inside a synchronized block, and
+    //   (b) called after the computational graph is renewed (see predict below for correct usage)
+    //
+
+    val states = {
+      // layers(0) contains the shared layers
+      if (layers(0).nonEmpty) {
+        val sharedStates = layers(0).forwardUntilFinal(sentence, predPositions)
+        layers(taskId + 1).forwardFromUntilFinal(sharedStates, predPositions)
+      }
+
+      // no shared layer
+      else {
+        layers(taskId + 1).forwardUntilFinal(sentence, predPositions)
+      }
+    }
+
+    states
+  }
+
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
               sentence: AnnotatedSentence,
@@ -282,5 +308,38 @@ object Layers {
            predicatePosition: Option[Int] = None): Expression = {
     val states = forwardForTask(layers, taskId, sentence, predicatePosition)
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
+  }
+
+  def loss(layers: IndexedSeq[Layers],
+           taskId: Int,
+           sentence: AnnotatedSentence,
+           goldLabels: IndexedSeq[IndexedSeq[String]],
+           predicatePositions: IndexedSeq[Int]): Expression = {
+    val states = forwardForTaskUntilFinal(layers, taskId, sentence, predicatePositions)
+
+
+    layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
+  }
+
+  def predict(layers: IndexedSeq[Layers],
+              taskId: Int,
+              sentence: AnnotatedSentence,
+              predPositions: IndexedSeq[Int]): IndexedSeq[IndexedSeq[String]] = {
+    // TODO
+    /*
+    val labelsForTask =
+      DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
+        ComputationGraph.renew()
+
+        val states = forwardForTask(layers, taskId, sentence, predPositionOpt)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        layers(taskId + 1).finalLayer.get.inference(emissionScores)
+      }
+
+    labelsForTask
+
+     */
+
+    null
   }
 }
