@@ -224,7 +224,7 @@ class SlowLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNER
 
   override def build(kbs: Seq[String], overrideKBs: Option[Seq[String]],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean): SeparatedLexiconNER = {
-    logger.info("Beginning to load the KBs for the rule-based bio NER...")
+    logger.info("Beginning to load the KBs for the rule-based NER...")
     val buildState = new BuildState(lexicalVariationEngine)
     val overrideMatchers = getOverrideMatchers(overrideKBs, buildState) // first so they take priority during matching
     val standardMatchers = getStandardMatchers(kbs, buildState)
@@ -330,7 +330,7 @@ class FastLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNER
 
   override def build(kbs: Seq[String], overrideKBs: Option[Seq[String]],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean): LexiconNER = {
-    logger.info("Beginning to load the KBs for the rule-based bio NER...")
+    logger.info("Beginning to load the KBs for the rule-based NER...")
     val buildState = new BuildState(lexicalVariationEngine)
     addOverrideKBs(overrideKBs, buildState) // first so they take priority during matching
     addStandardKBs(kbs, buildState)
