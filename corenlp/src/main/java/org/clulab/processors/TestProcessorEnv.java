@@ -4,6 +4,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetEndAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.DocDateAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentenceIndexAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.NormalizedNamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokenBeginAnnotation;
@@ -118,7 +119,7 @@ class TestProcessorEnv {
         }
 
         public CoreDocument mkDocument(String docText, String docDate) {
-            CoreDocument document =  new CoreDocument(text1);
+            CoreDocument document =  new CoreDocument(docText);
             Annotation annotation = document.annotation();
 
             annotation.set(DocDateAnnotation.class, docDate);
@@ -127,17 +128,21 @@ class TestProcessorEnv {
         }
 
         public ArrayList<String> annotateMore(CoreDocument document) {
-            Annotation annotation = document.annotation();
-
-            posTagger.annotate(annotation);
-            lemmatizer.annotate(annotation);
-            neRecognizer.annotate(annotation);
+            posTagger.annotate(document);
+            lemmatizer.annotate(document);
+            neRecognizer.annotate(document);
 
             ArrayList<String> norms = new ArrayList<>();
 
             for (CoreSentence sentence: document.sentences()) {
                 for (CoreLabel token: sentence.tokens()) {
-                    norms.add(token.ner());
+//                    norms.add(token.ner());
+                    String norm = token.get(NormalizedNamedEntityTagAnnotation.class);
+
+                    if (norm == null)
+                        norms.add("O");
+                    else
+                        norms.add(norm);
                 }
 
             }
@@ -155,8 +160,8 @@ class TestProcessorEnv {
         Processor processor = new Processor();
 
         CoreDocument document1a = processor.mkDocument(text1, date1);
-        CoreDocument document1b = processor.mkDocument(text1, date1);
         CoreDocument document2  = processor.mkDocument(text2, date2);
+        CoreDocument document1b = processor.mkDocument(text1, date1);
 
         ArrayList<String> expected = processor.annotateMore(document1a);
         processor.annotateMore(document2);
