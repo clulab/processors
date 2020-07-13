@@ -67,10 +67,14 @@ class TestProcessorEnv {
     public static void main(String[] args) {
         Processor processor = new Processor();
 
+        // It doesn't especially matter what order these are in.
+        // It is important that date1 != date2.
         CoreDocument document1a = processor.mkDocument(text1, date1);
         CoreDocument document1b = processor.mkDocument(text1, date1);
         CoreDocument document2  = processor.mkDocument(text2, date2);
 
+        // The combination of text2 and date2 will cause SUTime to change
+        // the environment, which results in expected != actual.
         ArrayList<String> expected = processor.annotate(document1a);
         processor.annotate(document2);
         ArrayList<String> actual = processor.annotate(document1b);
