@@ -1,6 +1,6 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
 import ForwardLayer.{DIST_WIN_SIZE, _}
 import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}
@@ -12,6 +12,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val hasPredicate: Boolean,
                              val t2i: Map[String, Int],
                              val i2t: Array[String],
+                             val distanceLookupParameters: LookupParameter,
                              val H: Parameter,
                              val nonlinearity: Int,
                              val dropoutProb: Float = DEFAULT_DROPOUT_PROB)
@@ -160,7 +161,7 @@ object ForwardLayer {
       case TYPE_GREEDY_STRING =>
         Some(new GreedyForwardLayer(parameters,
           inputSize, hasPredicate,
-          t2i, i2t, distanceLookupParameters, H, nonlin, dropoutProb))
+          t2i, i2t, distanceLookupParameters.get, H, nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,

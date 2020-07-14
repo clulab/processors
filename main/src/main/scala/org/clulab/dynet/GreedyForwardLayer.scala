@@ -2,7 +2,7 @@ package org.clulab.dynet
 
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.clulab.dynet.ForwardLayer.{DEFAULT_DROPOUT_PROB, TYPE_GREEDY}
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
@@ -12,11 +12,11 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           hasPredicate: Boolean,
                           t2i: Map[String, Int],
                           i2t: Array[String],
-
+                          distanceLookupParameters: LookupParameter,
                           H: Parameter,
                           nonlinearity: Int,
                           dropoutProb: Float = DEFAULT_DROPOUT_PROB)
-  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, distanceLookupParameters, H, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -68,7 +68,7 @@ object GreedyForwardLayer {
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     new GreedyForwardLayer(parameters,
-      inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb)
+      inputSize, hasPredicate, t2i, i2t, null, H, nonlinearity, dropoutProb)
   }
 }
 
