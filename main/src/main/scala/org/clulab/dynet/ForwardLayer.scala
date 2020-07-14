@@ -2,7 +2,7 @@ package org.clulab.dynet
 
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
-import ForwardLayer._
+import ForwardLayer.{DIST_WIN_SIZE, _}
 import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
@@ -47,8 +47,25 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
         val predExp = Utils.expressionDropout(inputExpressions(predPosition), dropoutProb, doDropout)
 
+        var dist = i - predPosition
+        if (dist < - DIST_WIN_SIZE) dist = - DIST_WIN_SIZE - 1
+        if(dist > DIST_WIN_SIZE) dist = DIST_WIN_SIZE + 1
+        val posIndex = dist + DIST_WIN_SIZE + 1
+        val distEmbed = Utils.expressionDropout(Expression.tanh(Expression.lookup(distanceLookupParameters, posIndex)), dropoutProb, doDropout)
+
+        val predEmbed = Expression.input(if(i == predPosition) 1f else 0f)
+        val adjLeft = Expression.input(if(i == predPosition - 1) 1f else 0f)
+        val adjRight = Expression.input(if(i == predPosition + 1) 1f else 0f)
+        //val distAsNum = Expression.input((i - predPosition).toFloat)
+
+        /*
+        val ctxExp = Utils.expressionDropout(
+          mkContextExp(inputExpressions, i, predPosition),
+          dropoutProb, doDropout)
+        */
+
         // TODO: dropout before or after concatenate? - seems better before
-        val ss = Expression.concatenate(argExp, predExp)
+        val ss = Expression.concatenate(argExp, predExp, distEmbed, predEmbed, adjLeft, adjRight)
 
         var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
