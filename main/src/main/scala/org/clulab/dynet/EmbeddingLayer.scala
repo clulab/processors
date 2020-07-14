@@ -149,8 +149,10 @@ class EmbeddingLayer (val parameters:ParameterCollection,
 
         // TODO: try maxout
         val avg = Expression.sum(allDistances) / allDistances.length
+        assert(avg.dim().get(0) == distanceEmbeddingSize)
         Some(avg)
       } else {
+        assert(false) // TODO: remove me
         None
       }
 
