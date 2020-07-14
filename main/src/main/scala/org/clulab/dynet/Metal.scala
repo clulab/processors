@@ -193,17 +193,21 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             // token positions for the predicates in this sentence
             val predicatePositions = srlArgsRowReader.getPredicatePositions(sentence)
 
-            val frameLabels = new ArrayBuffer[IndexedSeq[String]]
-            for(i <- predicatePositions.indices) {
-              // gold arg labels for this frame
-              val labels = srlArgsRowReader.toLabels(sentence, Some(i))
-              frameLabels += labels
+            if(predicatePositions.nonEmpty) {
+              val frameLabels = new ArrayBuffer[IndexedSeq[String]]
+              for (i <- predicatePositions.indices) {
+                // gold arg labels for this frame
+                val labels = srlArgsRowReader.toLabels(sentence, Some(i))
+                frameLabels += labels
+              }
+
+              val loss = Layers.loss(model, taskId, annotatedSentence,
+                frameLabels, predicatePositions)
+
+              Some(loss)
+            } else {
+              None
             }
-
-            val loss = Layers.loss(model, taskId, annotatedSentence,
-              frameLabels, predicatePositions)
-
-            Some(loss)
 
             /*
             // traverse all SRL frames
@@ -419,23 +423,25 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         // find the token positions of all predicates in this sentence
         val predPositions = srlArgsReader.getPredicatePositions(sent)
 
-        val goldLabels = new ArrayBuffer[IndexedSeq[String]]()
-        // traverse the argument columns corresponding to each predicate
-        for(j <- predPositions.indices) {
-          val golds = srlArgsReader.toLabels(sent, Some(j))
-          goldLabels += golds
-        }
+        if(predPositions.nonEmpty) {
+          val goldLabels = new ArrayBuffer[IndexedSeq[String]]()
+          // traverse the argument columns corresponding to each predicate
+          for (j <- predPositions.indices) {
+            val golds = srlArgsReader.toLabels(sent, Some(j))
+            goldLabels += golds
+          }
 
-        val predLabels = Layers.predict(model, taskId, annotatedSentence, predPositions)
-        assert(predLabels.length == goldLabels.length)
-        assert(predLabels.length == predPositions.length)
+          val predLabels = Layers.predict(model, taskId, annotatedSentence, predPositions)
+          assert(predLabels.length == goldLabels.length)
+          assert(predLabels.length == predPositions.length)
 
-        for(i <- predLabels.indices) {
-          val sc = SeqScorer.f1(goldLabels(i), predLabels(i))
-          scoreCountsByLabel.incAll(sc)
+          for (i <- predLabels.indices) {
+            val sc = SeqScorer.f1(goldLabels(i), predLabels(i))
+            scoreCountsByLabel.incAll(sc)
 
-          pw.println(s"pred = ${annotatedSentence.words(predPositions(i))} at position ${predPositions(i)}")
-          printCoNLLOutput(pw, annotatedSentence.words, goldLabels(i), predLabels(i))
+            pw.println(s"pred = ${annotatedSentence.words(predPositions(i))} at position ${predPositions(i)}")
+            printCoNLLOutput(pw, annotatedSentence.words, goldLabels(i), predLabels(i))
+          }
         }
 
         /*
