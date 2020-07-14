@@ -12,6 +12,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           hasPredicate: Boolean,
                           t2i: Map[String, Int],
                           i2t: Array[String],
+
                           H: Parameter,
                           nonlinearity: Int,
                           dropoutProb: Float = DEFAULT_DROPOUT_PROB)

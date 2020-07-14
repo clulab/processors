@@ -141,14 +141,26 @@ object ForwardLayer {
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
 
-    val actualInputSize = if(hasPredicate) 2 * inputSize else inputSize
+    val distanceEmbeddingSize = DIST_EMBED_SIZE
+    val distanceWindowSize = DIST_WIN_SIZE
+    val distanceLookupParameters =
+      if(distanceEmbeddingSize > 0) {
+        // Position embeddings [-distanceWindowSize, distanceWindowSize] + < distanceWindowSize + > distanceWindowSize. total = 43
+        val distanceLookupParameters = parameters.addLookupParameters(distanceWindowSize * 2 + 3, Dim(distanceEmbeddingSize))
+
+        Some(distanceLookupParameters)
+      } else {
+        None
+      }
+
+    val actualInputSize = if(hasPredicate) (2 * inputSize + DIST_EMBED_SIZE + 3) else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     inferenceType match {
       case TYPE_GREEDY_STRING =>
         Some(new GreedyForwardLayer(parameters,
           inputSize, hasPredicate,
-          t2i, i2t, H, nonlin, dropoutProb))
+          t2i, i2t, distanceLookupParameters, H, nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
