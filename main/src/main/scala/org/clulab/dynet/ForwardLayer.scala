@@ -103,6 +103,8 @@ object ForwardLayer {
   val TYPE_VITERBI_STRING = "viterbi"
 
   val DEFAULT_HAS_PREDICATE = 0
+  val DIST_EMBED_SIZE = 64
+  val DIST_WIN_SIZE = 20
 
   def load(parameters: ParameterCollection,
            x2iIterator: BufferedIterator[String]): ForwardLayer = {
