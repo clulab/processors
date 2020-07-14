@@ -152,7 +152,6 @@ class EmbeddingLayer (val parameters:ParameterCollection,
         assert(avg.dim().get(0) == distanceEmbeddingSize)
         Some(avg)
       } else {
-        assert(false) // TODO: remove me
         None
       }
 
