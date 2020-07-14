@@ -206,6 +206,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       val preds = predicates(si)
       roots ++= preds
 
+      val allArgLabels = mtlSrla.predict(0, annotatedSentence, preds)
+      assert(allArgLabels.length == preds.length)
+      for(pi <- allArgLabels.indices) {
+        val pred = preds(pi)
+        for(ai <- allArgLabels(pi).indices) {
+          if(allArgLabels(pi)(ai) != "O") {
+            val edge = Edge[String](pred, ai, allArgLabels(pi)(ai))
+            edges += edge
+          }
+        }
+      }
+
+      /*
       for(pi <- preds.indices) {
         val pred = preds(pi)
         val argLabels = mtlSrla.predict(0, annotatedSentence, Some(pred))
@@ -217,6 +230,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
           }
         }
       }
+      */
 
       val sentGraph = new DirectedGraph[String](edges.toList, roots.toSet)
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> sentGraph

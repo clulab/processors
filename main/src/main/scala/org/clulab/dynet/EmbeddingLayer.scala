@@ -45,7 +45,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
   override def forward(sentence: AnnotatedSentence,
-                       predicatePosition: Option[Int] = None,
+                       predicatePositions: IndexedSeq[Int] = IndexedSeq(),
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
@@ -64,7 +64,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     for(i <- words.indices) {
       val tag = if(tags.isDefined) Some(tags.get(i)) else None
       val ne = if(nes.isDefined) Some(nes.get(i)) else None
-      embeddings.add(mkEmbedding(words(i), i, tag, ne, predicatePosition, constEmbeddings(i), doDropout))
+      embeddings.add(mkEmbedding(words(i), i, tag, ne, predicatePositions, constEmbeddings(i), doDropout))
     }
 
     embeddings
@@ -74,7 +74,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                           wordPosition: Int,
                           tag: Option[String],
                           ne: Option[String],
-                          predicatePosition: Option[Int],
+                          predicatePositions: IndexedSeq[Int],
                           constEmbedding: Expression,
                           doDropout: Boolean): Expression = {
     //
@@ -118,8 +118,14 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // 1 if this word is the predicate
     //
     val predEmbed =
-    if(predicatePosition.nonEmpty && useIsPredicate) {
-      Some(Expression.input(if(wordPosition == predicatePosition.get) 1f else 0f))
+    if(predicatePositions.nonEmpty && useIsPredicate) {
+      var isPredicate = false
+      for(pp <- predicatePositions if ! isPredicate) {
+        if(wordPosition == pp) {
+          isPredicate = true
+        }
+      }
+      Some(Expression.input(if(isPredicate) 1f else 0f))
     } else {
       None
     }
@@ -129,12 +135,21 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     // We cut the distance down to values inside the window [-distanceWindowSize, +distanceWindowSize]
     //
     val distanceEmbedding =
-      if(predicatePosition.nonEmpty && distanceLookupParameters.nonEmpty) {
-        var dist = wordPosition - predicatePosition.get
-        if (dist < - distanceWindowSize) dist = - distanceWindowSize - 1
-        if(dist > distanceWindowSize) dist = distanceWindowSize + 1
-        val posIndex = dist + distanceWindowSize + 1
-        Some(Expression.lookup(distanceLookupParameters.get, posIndex))
+      if(predicatePositions.nonEmpty && distanceLookupParameters.nonEmpty) {
+        val allDistances = new ExpressionVector()
+
+        for(pp <- predicatePositions) {
+          var dist = wordPosition - pp
+          if (dist < - distanceWindowSize) dist = - distanceWindowSize - 1
+          if(dist > distanceWindowSize) dist = distanceWindowSize + 1
+          val posIndex = dist + distanceWindowSize + 1
+          val exp = Expression.lookup(distanceLookupParameters.get, posIndex)
+          allDistances.add(exp)
+        }
+
+        // TODO: try maxout
+        val avg = Expression.sum(allDistances) / allDistances.length
+        Some(avg)
       } else {
         None
       }

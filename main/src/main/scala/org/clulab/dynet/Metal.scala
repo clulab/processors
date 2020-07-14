@@ -382,10 +382,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         val preds = Layers.predict(model, taskId, sentence)
 
-        val sc = SeqScorer.f1(golds, preds)
+        val sc = SeqScorer.f1(golds, preds(0))
         scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, sentence.words, golds, preds)
+        printCoNLLOutput(pw, sentence.words, golds, preds(0))
       }
     }
 
@@ -401,10 +401,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         val preds = Layers.predict(model, taskId, sentence)
 
-        val sc = SeqScorer.f1(golds, preds)
+        val sc = SeqScorer.f1(golds, preds(0))
         scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, sentence.words, golds, preds)
+        printCoNLLOutput(pw, sentence.words, golds, preds(0))
       }
     }
 
@@ -477,13 +477,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
   def predict(taskId: Int,
               sentence: AnnotatedSentence): IndexedSeq[String] = {
-    predict(taskId, sentence, None)
+    predict(taskId, sentence, IndexedSeq())(0)
   }
 
   def predict(taskId: Int,
               sentence: AnnotatedSentence,
-              predPositionOpt: Option[Int]): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence, predPositionOpt)
+              predPositions: IndexedSeq[Int]): IndexedSeq[IndexedSeq[String]] = {
+    Layers.predict(model, taskId, sentence, predPositions)
   }
 
   def test(): Unit = {
