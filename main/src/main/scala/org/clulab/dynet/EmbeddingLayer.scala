@@ -148,16 +148,16 @@ class EmbeddingLayer (val parameters:ParameterCollection,
         }
 
         // avg
-        /*
         val avg = Expression.sum(allDistances) / allDistances.length
         assert(avg.dim().get(0) == distanceEmbeddingSize)
         Some(avg)
-        */
 
+        /*
         // maxout
         val maxOut = Expression.max(allDistances)
         assert(maxOut.dim().get(0) == allDistances(0).dim().get(0))
         Some(maxOut)
+        */
 
       } else {
         None
