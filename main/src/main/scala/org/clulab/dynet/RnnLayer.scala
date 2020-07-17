@@ -1,7 +1,7 @@
 package org.clulab.dynet
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{Expression, ExpressionVector, LstmBuilder, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{Expression, ExpressionVector, GruBuilder, LstmBuilder, ParameterCollection, RnnBuilder}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -91,8 +91,8 @@ object RnnLayer {
     //
     // make the loadable parameters
     //
-    val fwBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
-    val bwBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
+    val fwBuilder = new GruBuilder(numLayers, inputSize, rnnStateSize, parameters)
+    val bwBuilder = new GruBuilder(numLayers, inputSize, rnnStateSize, parameters)
 
     new RnnLayer(parameters,
       inputSize, numLayers, rnnStateSize, useHighwayConnections,
@@ -112,8 +112,8 @@ object RnnLayer {
     val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))
     val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DEFAULT_DROPOUT_PROB))
 
-    val wordFwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
-    val wordBwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
+    val wordFwRnnBuilder = new GruBuilder(numLayers, inputSize, rnnStateSize, parameters)
+    val wordBwRnnBuilder = new GruBuilder(numLayers, inputSize, rnnStateSize, parameters)
 
     val layer = new RnnLayer(
       parameters,
