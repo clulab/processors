@@ -1,4 +1,5 @@
 # Changes
++ **8.1.2** - Better SRL model: about twice as fast with no drop in F1 score.
 + **8.1.1** - Bug fix in Metal that makes it thread safe.
 + **8.1.0** - CluProcessor now uses the new Metal framework on top of DyNet, and includes components for POS tagging, NER, syntactic chunking, and semantic role labeling.
 + **8.0.3** - Allow vars to be formatted as a yaml list in Odin.
