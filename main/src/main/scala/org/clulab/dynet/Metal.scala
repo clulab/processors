@@ -262,8 +262,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       val avgPrec = totalPrec / taskManager.taskCount
       val avgRec = totalRec / taskManager.taskCount
       val avgF1 = totalF1 / taskManager.taskCount
-      logger.info(s"Average accuracy across ${taskManager.taskCount} tasks: $avgAcc")
-      logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks: $avgPrec / $avgRec / $avgF1")
+      logger.info(s"Average accuracy across ${taskManager.taskCount} tasks in epoch $epoch: $avgAcc")
+      logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks in epoch $epoch: $avgPrec / $avgRec / $avgF1")
 
       if(avgF1 > maxAvgF1) {
         maxAvgF1 = avgF1
