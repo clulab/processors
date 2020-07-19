@@ -1,7 +1,7 @@
 package org.clulab.dynet
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{Expression, ExpressionVector, LstmBuilder, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{Expression, ExpressionVector, GruBuilder, LstmBuilder, ParameterCollection, RnnBuilder}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -17,6 +17,7 @@ class RnnLayer (val parameters:ParameterCollection,
                 val numLayers: Int,
                 val rnnStateSize: Int,
                 val useHighwayConnections: Boolean,
+                val rnnType: String, // "gru" or "lstm"
                 val wordFwRnnBuilder:RnnBuilder,
                 val wordBwRnnBuilder:RnnBuilder,
                 val dropoutProb: Float = RnnLayer.DEFAULT_DROPOUT_PROB) extends IntermediateLayer {
@@ -60,11 +61,12 @@ class RnnLayer (val parameters:ParameterCollection,
     save(printWriter, numLayers, "numLayers")
     save(printWriter, rnnStateSize, "rnnStateSize")
     save(printWriter, if(useHighwayConnections) 1 else 0, "useHighwayConnections")
+    save(printWriter, rnnType, "rnnType")
     save(printWriter, dropoutProb, "dropoutProb")
   }
 
   override def toString: String = {
-    s"RnnLayer($inDim, $outDim)"
+    s"RnnLayer($rnnType, $inDim, $outDim)"
   }
 }
 
@@ -80,23 +82,37 @@ object RnnLayer {
     //
     val byLineIntBuilder = new ByLineIntBuilder()
     val byLineFloatBuilder = new ByLineFloatBuilder()
+    val byLineStringBuilder = new ByLineStringBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
     val numLayers = byLineIntBuilder.build(x2iIterator, "numLayers")
     val rnnStateSize = byLineIntBuilder.build(x2iIterator, "rnnStateSize")
     val useHighwayConnectionsAsInt = byLineIntBuilder.build(x2iIterator, "useHighwayConnections")
     val useHighwayConnections = useHighwayConnectionsAsInt == 1
+    val rnnType = byLineStringBuilder.build(x2iIterator, "rnnType", defaultValue = "lstm")
     val dropoutProb = byLineFloatBuilder.build(x2iIterator, "dropoutProb")
 
     //
     // make the loadable parameters
     //
-    val fwBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
-    val bwBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
+    val fwBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
+    val bwBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
 
     new RnnLayer(parameters,
       inputSize, numLayers, rnnStateSize, useHighwayConnections,
-      fwBuilder, bwBuilder, dropoutProb)
+      rnnType, fwBuilder, bwBuilder, dropoutProb)
+  }
+
+  private def mkBuilder(rnnType: String,
+                        numLayers: Int,
+                        inputSize: Int,
+                        rnnStateSize: Int,
+                        parameters: ParameterCollection): RnnBuilder = {
+    rnnType match {
+      case "gru" => new GruBuilder(numLayers, inputSize, rnnStateSize, parameters)
+      case "lstm" => new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
+      case _ => throw new RuntimeException(s"""ERROR: unknown rnnType "$rnnType"!""")
+    }
   }
 
   def initialize(config: Configured,
@@ -110,15 +126,16 @@ object RnnLayer {
     val numLayers = config.getArgInt(paramPrefix + ".numLayers", Some(1))
     val rnnStateSize = config.getArgInt(paramPrefix + ".rnnStateSize", None)
     val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))
+    val rnnType = config.getArgString(paramPrefix + ".type", Some("lstm"))
     val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DEFAULT_DROPOUT_PROB))
 
-    val wordFwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
-    val wordBwRnnBuilder = new LstmBuilder(numLayers, inputSize, rnnStateSize, parameters)
+    val wordFwRnnBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
+    val wordBwRnnBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
 
     val layer = new RnnLayer(
       parameters,
       inputSize, numLayers, rnnStateSize, useHighwayConnections,
-      wordFwRnnBuilder, wordBwRnnBuilder,
+      rnnType, wordFwRnnBuilder, wordBwRnnBuilder,
       dropoutProb
     )
 

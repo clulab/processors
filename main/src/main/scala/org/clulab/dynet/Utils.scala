@@ -740,6 +740,31 @@ object Utils {
     }
   }
 
+  class ByLineStringBuilder extends ByLineBuilder[mutable.HashSet[String], String, String] {
+
+    def addLine(stringContainer: mutable.HashSet[String], line: String): Unit = {
+      set(stringContainer, line)
+    }
+
+    override protected def build(lines: BufferedIterator[String],
+                                 fieldName: Option[String],
+                                 defaultValue: Option[String]): String = {
+      val stringContainer = new mutable.HashSet[String]()
+      addLines(stringContainer, lines, fieldName, defaultValue)
+      stringContainer.head
+    }
+
+    override protected def setDefaultValue(intermediateValue: mutable.HashSet[String],
+                                           defaultValue: String): Unit = {
+      set(intermediateValue, defaultValue)
+    }
+
+    private def set(container:mutable.HashSet[String], value: String): Unit = {
+      container.clear()
+      container += value
+    }
+  }
+
   def newPrintWriter(filename: String): PrintWriter = {
     new PrintWriter(
       new OutputStreamWriter(
