@@ -370,7 +370,7 @@ object CoNLLSRLReader {
     labelStats(doc)
     moreStats(doc)
 
-    // saveSimplified(doc, args(1)) // TODO: uncomment
+    saveSimplified(doc, args(1))
   }
 
   def moreStats(document: Document): Unit = {
