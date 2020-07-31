@@ -4,7 +4,7 @@ import org.clulab.discourse.rstparser.RelationDirection
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.DirectedGraphEdgeIterator
 import org.scalatest._
-import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.processors.fastnlp.{FastNLPProcessor, FastNLPProcessorWithSemanticRoles}
 
 /**
  *
@@ -12,7 +12,7 @@ import org.clulab.processors.fastnlp.FastNLPProcessor
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends FlatSpec with Matchers {
-  var proc:Processor = new FastNLPProcessor(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
+  var proc:Processor = new FastNLPProcessorWithSemanticRoles(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {
     val doc = proc.annotate("John Smith went to China.")
@@ -91,6 +91,12 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
 
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "appos") should be (true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(16, 18, "appos") should be (true)
+  }
 
+  it should "recognize semantic roles correctly" in {
+    val doc = proc.annotate("John Doe visited China.")
+
+    doc.sentences.head.semanticRoles.get.hasEdge(2, 1, "A0") should be (true)
+    doc.sentences.head.semanticRoles.get.hasEdge(2, 3, "A1") should be (true)
   }
 }
