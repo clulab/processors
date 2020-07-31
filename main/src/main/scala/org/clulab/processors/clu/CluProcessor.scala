@@ -110,8 +110,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
 
   /** Produces POS tags, chunks, and semantic role predicates for one sentence */
-  def tagSentence(sent: Sentence): (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
-    val allLabels = mtlPosChunkSrlp.predictJointly(new AnnotatedSentence(sent.words))
+  def tagSentence(words: IndexedSeq[String]): (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
+    val allLabels = mtlPosChunkSrlp.predictJointly(new AnnotatedSentence(words))
     val tags = allLabels(0)
     val chunks = allLabels(1)
     val preds = allLabels(2)
@@ -119,8 +119,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** Produces NE labels for one sentence */
-  def nerSentence(sent: Sentence): IndexedSeq[String] = {
-    val allLabels = mtlNer.predictJointly(new AnnotatedSentence(sent.words))
+  def nerSentence(words: IndexedSeq[String]): IndexedSeq[String] = {
+    val allLabels = mtlNer.predictJointly(new AnnotatedSentence(words))
     allLabels(0)
   }
 
@@ -180,7 +180,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val predsForAllSents = new ArrayBuffer[IndexedSeq[Int]]()
 
     for(sent <- doc.sentences) {
-      val (tags, chunks, preds) = tagSentence(sent)
+      val (tags, chunks, preds) = tagSentence(sent.words)
       sent.tags = Some(tags.toArray)
       sent.chunks = Some(chunks.toArray)
       predsForAllSents += getPredicateIndexes(preds)
@@ -222,7 +222,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      sent.entities = Some(nerSentence(sent).toArray)
+      sent.entities = Some(nerSentence(sent.words).toArray)
     }
   }
 
