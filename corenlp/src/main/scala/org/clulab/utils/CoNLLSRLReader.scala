@@ -4,7 +4,6 @@ import java.io.{BufferedReader, File, FileReader, PrintWriter}
 
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
@@ -369,7 +368,35 @@ object CoNLLSRLReader {
     val doc = reader.read(file, proc, verbose = true)
 
     labelStats(doc)
-    saveSimplified(doc, args(1))
+    moreStats(doc)
+
+    // saveSimplified(doc, args(1)) // TODO: uncomment
+  }
+
+  def moreStats(document: Document): Unit = {
+    var moreThanTwoPreds = 0
+    var edgeCount = 0
+    var multPreds = 0
+    var argPredHisto = new Counter[Int] // how many arguments with this many predicates
+    for(s <- document.sentences) {
+      if(s.semanticRoles.get.roots.size > 1) {
+        moreThanTwoPreds += 1
+
+        val headCounts = new Counter[Int]() // counts the number of preds for each arg
+        for(edge <- s.semanticRoles.get.allEdges) {
+          edgeCount += 1
+          headCounts.incrementCount(edge._2) // _1 is the pred, _2 is the arg
+        }
+        for(arg <- headCounts.keySet) {
+          if(headCounts.getCount(arg) > 1) multPreds += 1
+          argPredHisto.incrementCount(headCounts.getCount(arg).toInt)
+        }
+      }
+    }
+
+    println(s"Found $moreThanTwoPreds/${document.sentences.length} sentences with more than two predicates.")
+    println(s"Out of $edgeCount (pred, arg) pairs, found $multPreds arguments with more than 1 predicate.")
+    println(s"argPredHisto: ${argPredHisto.sorted(true).mkString(", ")}")
   }
 
   def saveSimplified(doc: Document, outputFileName: String): Unit = {
