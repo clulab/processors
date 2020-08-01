@@ -370,7 +370,10 @@ object CoNLLSRLReader {
     labelStats(doc)
     moreStats(doc)
 
-    saveSimplified(doc, args(1))
+    //saveSimplified(doc, args(1))
+    val predsFile = args(1) + ".preds"
+    val argsFile = args(1) + ".args"
+    saveMetal(doc, predsFile, argsFile)
   }
 
   def moreStats(document: Document): Unit = {
@@ -405,6 +408,90 @@ object CoNLLSRLReader {
     println(s"Found $multPredPerArgSents/${document.sentences.length} sentences where at least 1 arg has more than 1 predicate.")
     println(s"Out of $edgeCount (pred, arg) pairs, found $multPreds arguments with more than 1 predicate.")
     println(s"argPredHisto: ${argPredHisto.sorted(true).mkString(", ")}")
+  }
+
+  def saveMetal(doc: Document, predsFile: String, argsFile: String): Unit = {
+    val predsPw = new PrintWriter(predsFile)
+    val argsPw = new PrintWriter(argsFile)
+    var selfLoopCount = 0
+
+    for(sent <- doc.sentences) {
+      val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
+
+      val heads = new Array[String](sent.words.length)
+      for(i <- heads.indices) heads(i) = "O"
+      var headPositions = new mutable.HashSet[Int]()
+      for(e <- g.edges) {
+        headPositions += e.source
+        heads(e.source) = "B-P"
+      }
+
+      //
+      // save predicate information
+      //
+      assert(heads.length == sent.words.length)
+      for(i <- heads.indices) {
+        predsPw.println(
+          sent.words(i) + "\t" +
+          heads(i) + "\t0\t" +
+          sent.tags.get(i) + "\t" +
+          sent.entities.get(i)
+        )
+      }
+
+      //
+      // save one frame for each predicate in the Metal format
+      //
+      val sortedHeadPositions = headPositions.toList.sorted
+      val headMap = sortedHeadPositions.zipWithIndex.toMap
+
+      val args = new Array[Array[String]](headMap.size)
+      for(i <- args.indices) {
+        args(i) = new Array[String](sent.size)
+        for(j <- args(i).indices) args(i)(j) = "O"
+      }
+
+      for(e <- g.edges) {
+        args(headMap(e.source))(e.destination) = e.relation
+
+        if(REMOVE_SELF_LOOPS) {
+          if(e.source == e.destination) {
+            args(headMap(e.source))(e.destination) = "O"
+            selfLoopCount += 1
+          }
+        }
+      }
+
+      // each frame saved separately
+      assert(headMap.size == args.length)
+      assert(sortedHeadPositions.size == args.length)
+      for(fi <- args.indices) {
+        val predPosition = sortedHeadPositions(fi)
+        val frame = args(fi)
+
+        assert(frame.length == sent.words.length)
+        for(i <- frame.indices) {
+          argsPw.println(
+            sent.words(i) + "\t" +
+            frame(i) + "\t" +
+            predPosition + "\t" +
+            sent.tags.get(i) + "\t" +
+            sent.entities.get(i)
+          )
+        }
+        argsPw.println()
+
+      }
+
+      predsPw.println()
+    }
+
+    predsPw.close()
+    argsPw.close()
+
+    if(REMOVE_SELF_LOOPS) {
+      logger.info(s"Removed $selfLoopCount self-argument loops.")
+    }
   }
 
   def saveSimplified(doc: Document, outputFileName: String): Unit = {
