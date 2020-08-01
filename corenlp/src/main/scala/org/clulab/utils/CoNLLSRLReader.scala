@@ -377,10 +377,12 @@ object CoNLLSRLReader {
     var moreThanTwoPreds = 0
     var edgeCount = 0
     var multPreds = 0
-    var argPredHisto = new Counter[Int] // how many arguments with this many predicates
+    var multPredPerArgSents = 0
+    val argPredHisto = new Counter[Int] // how many arguments with this many predicates
     for(s <- document.sentences) {
       if(s.semanticRoles.get.roots.size > 1) {
         moreThanTwoPreds += 1
+        var isMultPredArg = false
 
         val headCounts = new Counter[Int]() // counts the number of preds for each arg
         for(edge <- s.semanticRoles.get.allEdges) {
@@ -388,13 +390,19 @@ object CoNLLSRLReader {
           headCounts.incrementCount(edge._2) // _1 is the pred, _2 is the arg
         }
         for(arg <- headCounts.keySet) {
-          if(headCounts.getCount(arg) > 1) multPreds += 1
+          if(headCounts.getCount(arg) > 1) {
+            multPreds += 1
+            isMultPredArg = true
+          }
           argPredHisto.incrementCount(headCounts.getCount(arg).toInt)
         }
+
+        if(isMultPredArg) multPredPerArgSents += 1
       }
     }
 
     println(s"Found $moreThanTwoPreds/${document.sentences.length} sentences with more than two predicates.")
+    println(s"Found $multPredPerArgSents/${document.sentences.length} sentences where at least 1 arg has more than 1 predicate.")
     println(s"Out of $edgeCount (pred, arg) pairs, found $multPreds arguments with more than 1 predicate.")
     println(s"argPredHisto: ${argPredHisto.sorted(true).mkString(", ")}")
   }
