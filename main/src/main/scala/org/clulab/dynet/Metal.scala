@@ -384,7 +384,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         // traverse the argument columns corresponding to each predicate
         for(j <- predPositions.indices) {
           val golds = srlArgsReader.toLabels(sent, Some(j))
-          val preds = Layers.predict(model, taskId, annotatedSentence, Some(predPositions(j)))
+          val preds = ceilingPredict(annotatedSentence, predPositions, j, golds)
+          // Layers.predict(model, taskId, annotatedSentence, Some(predPositions(j)))
 
           val sc = SeqScorer.f1(golds, preds)
           scoreCountsByLabel.incAll(sc)
@@ -409,6 +410,35 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       scoreCountsByLabel.precision(),
       scoreCountsByLabel.recall(),
       scoreCountsByLabel.f1() )
+  }
+
+  def ceilingPredict(sentence: AnnotatedSentence, predPositions: IndexedSeq[Int], predIndex: Int, golds: IndexedSeq[String]): IndexedSeq[String] = {
+    val thisPred = predPositions(predIndex)
+    val preds = new Array[String](golds.length)
+    for(i <- preds.indices) {
+      preds(i) = "O"
+    }
+
+    for(i <- sentence.words.indices) {
+      val closestPred = findClosestPred(i, predPositions)
+      if(closestPred == thisPred) {
+        preds(i) = golds(i)
+      }
+    }
+
+    preds
+  }
+  def findClosestPred(argPosition: Int, predPositions: IndexedSeq[Int]): Int = {
+    var smallestDist = Int.MaxValue
+    var closestPred = -1
+    for(i <- predPositions.indices) {
+      val thisDist = math.abs(argPosition - predPositions(i))
+      if(thisDist < smallestDist) {
+        smallestDist = thisDist
+        closestPred = predPositions(i)
+      }
+    }
+    closestPred
   }
 
   // this only supports basic tasks for now
