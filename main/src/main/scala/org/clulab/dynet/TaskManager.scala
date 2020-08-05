@@ -98,6 +98,7 @@ class TaskManager(config:Config) extends Configured {
 
   def parseType(inf: String): Int = inf match {
     case "basic" => TaskManager.TYPE_BASIC
+    case "dual" => TaskManager.TYPE_DUAL
     case _ => throw new RuntimeException(s"ERROR: unknown task type $inf!")
   }
 
