@@ -45,16 +45,15 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val layersPerTask: Array[Layers] = new Array[Layers](taskManager.taskCount + 1)
     layersPerTask(0) =
       Layers(taskManager, "mtl.layers", parameters, taskWords(0),
-        None, hasPredicate = false, providedInputSize = None)
+        None, isDual = false, providedInputSize = None)
 
     val inputSize = layersPerTask(0).outDim
 
     for (i <- taskManager.indices) {
-      val hasPredicate = taskManager.tasks(i).isSrl
       layersPerTask(i + 1) =
         Layers(taskManager, s"mtl.task${i + 1}.layers",
           parameters, taskWords(i + 1), Some(taskLabels(i + 1)),
-          hasPredicate, inputSize)
+          isDual = taskManager.tasks(i).isDual, inputSize)
     }
     for(i <- layersPerTask.indices) {
       logger.debug(s"Summary of layersPerTask($i):")
@@ -75,20 +74,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
-    val basicReader = new BasicRowReader
-    val srlArgsReader = new SrlArgsRowReader
+    val reader = new MetalRowReader
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        for (token <- sentence) {
-          words(tid + 1) += basicReader.getWord(token)
-          words(0) += basicReader.getWord(token)
-          if (taskManager.tasks(tid).taskType == TaskManager.TYPE_SRL) {
-            val ls = srlArgsReader.getLabels(token)
-            for(l <- ls) labels(tid + 1) += l
-          } else { // basic tasks with the labels in the second column
-            labels(tid + 1) += basicReader.getLabel(token)
-          }
+        val (annotatedSentence, sentenceLabels) = reader.toAnnotatedSentence(sentence)
+
+        for (i <- annotatedSentence.indices) {
+          words(tid + 1) += annotatedSentence.words(i)
+          words(0) += annotatedSentence.words(i)
+          labels(tid + 1) += sentenceLabels(i)
         }
       }
     }
@@ -111,9 +106,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       case _ => throw new RuntimeException(s"ERROR: unknown trainer $trainerType!")
     }
 
-    val basicReader = new BasicRowReader
-    val srlArgsRowReader = new SrlArgsRowReader
-    val basicRowReaderWithPosTags = new BasicRowReaderWithPosTags
+    val reader = new MetalRowReader
 
     var cummulativeLoss = 0.0
     var numTagged = 0
@@ -123,9 +116,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     var maxAvgF1 = 0.0
     var bestEpoch = 0
     var epochPatience = taskManager.epochPatience
-
-    var skippedFrames = 0
-    var totalFrames = 0
 
     for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
       logger.info(s"Started epoch $epoch.")
@@ -142,79 +132,26 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
-        val taskType = taskManager.tasks(taskId).taskType
 
         sentCount += 1
 
-        val annotatedSentence = taskType match {
-          case TaskManager.TYPE_BASIC => basicReader.toAnnotatedSentence(sentence)
-          case TaskManager.TYPE_SRL => srlArgsRowReader.toAnnotatedSentence(sentence)
-          case TaskManager.TYPE_DEPSH => basicRowReaderWithPosTags.toAnnotatedSentence(sentence)
-          case _ => throw new RuntimeException(s"ERROR: unknown reader for task type $taskType!")
-        }
+        val (annotatedSentence, sentenceLabels) = reader.toAnnotatedSentence(sentence)
 
-        val lossOpt: Option[Expression] =
-          // any CoNLL BIO task, e.g., NER, POS tagging, prediction of SRL predicates
-          if(taskManager.tasks(taskId).isBasic) {
-            Some(Layers.loss(model, taskId, annotatedSentence, basicReader.toLabels(sentence)))
-          }
+        var loss = Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
 
-          // prediction of dependency head distances
-          else if(taskManager.tasks(taskId).isDepsHead) {
-            Some(Layers.loss(model, taskId, annotatedSentence, basicRowReaderWithPosTags.toLabels(sentence)))
-          }
+        // task weighting
+        if (taskManager.tasks(taskId).taskWeight != 1.0)
+          loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
 
-          // prediction of SRL arguments
-          else if(taskManager.tasks(taskId).isSrl) {
-            // token positions for the predicates in this sentence
-            val predicatePositions = srlArgsRowReader.getPredicatePositions(sentence)
+        batchLosses.add(loss)
 
-            // traverse all SRL frames
-            if(predicatePositions.nonEmpty) {
-              val allPredLoss = new ExpressionVector()
+        if(batchLosses.size >= batchSize) {
+          // backprop
+          cummulativeLoss += batchBackprop(batchLosses, trainer)
 
-              for(predIdx <- predicatePositions.indices) {
-                // token position of the predicate for this frame
-                val predPosition = predicatePositions(predIdx)
-                totalFrames += 1
-
-                // gold arg labels for this frame
-                val labels = srlArgsRowReader.toLabels(sentence, Some(predIdx))
-
-                if(true) { // hasContent(labels)) { // does not seem to help
-                  val loss = Layers.loss(model, taskId, annotatedSentence, labels, Some(predPosition))
-                  allPredLoss.add(loss)
-                } else {
-                  skippedFrames += 1
-                }
-              }
-
-              if(allPredLoss.length > 0) Some(Expression.sum(allPredLoss))
-              else None
-            } else {
-              None
-            }
-          } else {
-            throw new RuntimeException(s"ERROR: unknown task type ${taskManager.tasks(taskId).taskType}!")
-          }
-
-        if(lossOpt.isDefined) {
-          var loss = lossOpt.get
-
-          // task weighting
-          if (taskManager.tasks(taskId).taskWeight != 1.0)
-            loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
-
-          batchLosses.add(loss)
-
-          if(batchLosses.size >= batchSize) {
-            // backprop
-            cummulativeLoss += batchBackprop(batchLosses, trainer)
-
-            // start a new batch
-            ComputationGraph.renew()
-            batchLosses = new ExpressionVector()
-          }
+          // start a new batch
+          ComputationGraph.renew()
+          batchLosses = new ExpressionVector()
         }
 
         numTagged += sentence.length
@@ -223,10 +160,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           logger.info("Cummulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)")
           cummulativeLoss = 0.0
           numTagged = 0
-
-          if(skippedFrames > 0) {
-            logger.debug(s"Skipped $skippedFrames out of $totalFrames total SRL frames.")
-          }
         }
       }
 
@@ -328,71 +261,19 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       if(epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
 
-    val basicReader = new BasicRowReader
-    val srlArgsReader = new SrlArgsRowReader
-    val basicRowReaderWithPosTags = new BasicRowReaderWithPosTags
+    val reader = new MetalRowReader
 
-    //
-    // regular BIO evaluation, compatible with CoNLL-2003
-    //
-    if(taskManager.tasks(taskId).isBasic) {
-      for (sent <- sentences) {
-        sentCount += 1
+    for (sent <- sentences) {
+      sentCount += 1
 
-        val sentence = basicReader.toAnnotatedSentence(sent)
-        val golds = basicReader.toLabels(sent)
+      val (sentence, goldLabels) = reader.toAnnotatedSentence(sent)
 
-        val preds = Layers.predict(model, taskId, sentence)
+      val preds = Layers.predict(model, taskId, sentence)
 
-        val sc = SeqScorer.f1(golds, preds)
-        scoreCountsByLabel.incAll(sc)
+      val sc = SeqScorer.f1(goldLabels, preds)
+      scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, sentence.words, golds, preds)
-      }
-    }
-
-    //
-    // evaluation of dependency head distance
-    //
-    else if(taskManager.tasks(taskId).isDepsHead) {
-      for (sent <- sentences) {
-        sentCount += 1
-
-        val sentence = basicRowReaderWithPosTags.toAnnotatedSentence(sent)
-        val golds = basicRowReaderWithPosTags.toLabels(sent)
-
-        val preds = Layers.predict(model, taskId, sentence)
-
-        val sc = SeqScorer.f1(golds, preds)
-        scoreCountsByLabel.incAll(sc)
-
-        printCoNLLOutput(pw, sentence.words, golds, preds)
-      }
-    }
-
-    //
-    // evaluation of SRL arguments
-    //
-    else if(taskManager.tasks(taskId).isSrl) {
-      for (sent <- sentences) {
-        sentCount += 1
-        val annotatedSentence = srlArgsReader.toAnnotatedSentence(sent)
-
-        // find the token positions of all predicates in this sentence
-        val predPositions = srlArgsReader.getPredicatePositions(sent)
-
-        // traverse the argument columns corresponding to each predicate
-        for(j <- predPositions.indices) {
-          val golds = srlArgsReader.toLabels(sent, Some(j))
-          val preds = Layers.predict(model, taskId, annotatedSentence, Some(predPositions(j)))
-
-          val sc = SeqScorer.f1(golds, preds)
-          scoreCountsByLabel.incAll(sc)
-
-          pw.println(s"pred = ${annotatedSentence.words(predPositions(j))} at position ${predPositions(j)}")
-          printCoNLLOutput(pw, annotatedSentence.words, golds, preds)
-        }
-      }
+      printCoNLLOutput(pw, sentence.words, goldLabels, preds)
     }
 
     pw.close()
@@ -418,13 +299,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
   def predict(taskId: Int,
               sentence: AnnotatedSentence): IndexedSeq[String] = {
-    predict(taskId, sentence, None)
-  }
-
-  def predict(taskId: Int,
-              sentence: AnnotatedSentence,
-              predPositionOpt: Option[Int]): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence, predPositionOpt)
+    Layers.predict(model, taskId, sentence)
   }
 
   def test(): Unit = {

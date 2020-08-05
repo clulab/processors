@@ -9,75 +9,75 @@ import org.clulab.sequences.Row
 
 import scala.collection.mutable.ArrayBuffer
 
-class AnnotatedSentence(val words: IndexedSeq[String],
-                        var posTags: Option[IndexedSeq[String]] = None,
-                        var neTags: Option[IndexedSeq[String]] = None)
+import MetalRowReader._
+
+case class AnnotatedSentence(words: IndexedSeq[String],
+                             posTags: Option[IndexedSeq[String]] = None,
+                             neTags: Option[IndexedSeq[String]] = None,
+                             headPositions: Option[IndexedSeq[Int]] = None) {
+  def indices: Range = words.indices
+  def size: Int = words.size
+}
 
 trait RowReader {
-  def toAnnotatedSentence(rows: IndexedSeq[Row]): AnnotatedSentence
-
-  def toLabels(rows: IndexedSeq[Row],
-               predicateIndex: Option[Int] = None): IndexedSeq[String]
-
-  def getWord(r: Row): String = r.get(0)
-  def getLabel(r: Row): String = r.get(1)
+  /** Converts the tabular format into an AnnotatedSentence and a sequence of gold labels */
+  def toAnnotatedSentence(rows: IndexedSeq[Row]): (AnnotatedSentence, IndexedSeq[String])
 }
 
-class BasicRowReader extends RowReader {
-  override def toAnnotatedSentence(sentence: IndexedSeq[Row]): AnnotatedSentence = {
-    val words = sentence.map(getWord)
-    new AnnotatedSentence(words)
-  }
-
-  override def toLabels(rows: IndexedSeq[Row],
-                        predicateIndex: Option[Int]): IndexedSeq[String] =
-    rows.map(getLabel)
-}
-
-class BasicRowReaderWithPosTags extends RowReader {
-  def getPosTag(r: Row): String = r.get(3)
-
-  override def toAnnotatedSentence(sentence: IndexedSeq[Row]): AnnotatedSentence = {
-    val words = sentence.map(getWord)
-    val tags = sentence.map(getPosTag)
-    new AnnotatedSentence(words, Some(tags))
-  }
-
-  override def toLabels(rows: IndexedSeq[Row],
-                        predicateIndex: Option[Int]): IndexedSeq[String] =
-    rows.map(getLabel)
-}
-
-class SrlArgsRowReader extends RowReader {
-  def getPosTag(r: Row): String = r.get(2) // use this carefully; this may not be available in all datasets!
-  def getNeTag(r: Row): String = r.get(3) // use this carefully; this may not be available in all datasets!
-
-  def getLabels(r: Row): IndexedSeq[String] = {
+class MetalRowReader extends RowReader {
+  override def toAnnotatedSentence(rows: IndexedSeq[Row]): (AnnotatedSentence, IndexedSeq[String]) = {
+    val words = new ArrayBuffer[String]()
+    val posTags = new ArrayBuffer[String]()
+    val neLabels = new ArrayBuffer[String]()
+    val headPositions = new ArrayBuffer[Int]()
     val labels = new ArrayBuffer[String]()
-    for (j <- SrlArgsRowReader.ARGS_START until r.length) {
-      labels += r.get(j)
+
+    for(i <- rows.indices) {
+      if(rows(i).tokens.length == 2) {
+        // simple format, containing just words and labels
+        words += rows(i).get(WORD_POSITION)
+        labels += rows(i).get(LABEL_POSITION)
+      } else if(rows(i).tokens.length == 5) {
+        // complete format, with all five columns
+        words += rows(i).get(WORD_POSITION)
+        labels += rows(i).get(LABEL_POSITION)
+        posTags += rows(i).get(POS_TAG_POSITION)
+        neLabels += rows(i).get(NE_POSITION)
+
+        val head = try {
+          rows(i).get(HEAD_POSITION).toInt
+        } catch {
+          case _: NumberFormatException => -1
+        }
+        headPositions += head
+      } else {
+        throw new RuntimeException("ERROR: the Metal dataset format expects either 2 or 5 columns!")
+      }
     }
-    labels
-  }
 
-  def getPredicatePositions(rows: IndexedSeq[Row]): IndexedSeq[Int] =
-    rows.map(getLabel).zipWithIndex.filter(_._1 == "B-P").map(_._2)
+    val sentence =
+      if(headPositions.isEmpty) {
+        // simple format
+        AnnotatedSentence(words, None, None, None)
+      } else {
+        // full format
+        assert(headPositions.size == words.size)
+        assert(posTags.size == words.size)
+        assert(neLabels.size == words.size)
+        AnnotatedSentence(words,
+          Some(posTags),
+          Some(neLabels),
+          Some(headPositions))
+      }
 
-  override def toAnnotatedSentence(rows: IndexedSeq[Row]): AnnotatedSentence = {
-    val words = rows.map(getWord)
-    val posTags = rows.map(getPosTag)
-    val neTags = rows.map(getNeTag)
-    new AnnotatedSentence(words, Some(posTags), Some(neTags))
-  }
-
-  override def toLabels(rows: IndexedSeq[Row],
-                        predicateIndex: Option[Int]): IndexedSeq[String] = {
-    assert(predicateIndex.nonEmpty)
-    assert(predicateIndex.get >= 0)
-    rows.map(_.tokens(SrlArgsRowReader.ARGS_START + predicateIndex.get))
+    (sentence, labels)
   }
 }
 
-object SrlArgsRowReader {
-  val ARGS_START = 4 // column where SRL arguments begin
+object MetalRowReader {
+  val WORD_POSITION = 0
+  val LABEL_POSITION = 1
+  val HEAD_POSITION = 2
+  val POS_TAG_POSITION = 3
+  val NE_POSITION = 4
 }

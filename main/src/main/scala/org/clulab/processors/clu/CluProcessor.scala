@@ -111,7 +111,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Produces POS tags, chunks, and semantic role predicates for one sentence */
   def tagSentence(words: IndexedSeq[String]): (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
-    val allLabels = mtlPosChunkSrlp.predictJointly(new AnnotatedSentence(words))
+    val allLabels = mtlPosChunkSrlp.predictJointly(AnnotatedSentence(words))
     val tags = allLabels(0)
     val chunks = allLabels(1)
     val preds = allLabels(2)
@@ -120,7 +120,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Produces NE labels for one sentence */
   def nerSentence(words: IndexedSeq[String]): IndexedSeq[String] = {
-    val allLabels = mtlNer.predictJointly(new AnnotatedSentence(words))
+    val allLabels = mtlNer.predictJointly(AnnotatedSentence(words))
     allLabels(0)
   }
 
@@ -151,16 +151,21 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val edges = new ListBuffer[Edge[String]]()
     val roots = new mutable.HashSet[Int]()
 
-    // SRL needs POS tags and NEs!
-    val annotatedSentence =
-      new AnnotatedSentence(words, Some(posTags), Some(nerLabels))
-
     // all predicates become roots
     roots ++= predicateIndexes
 
     for(pi <- predicateIndexes.indices) {
+      // SRL needs POS tags and NEs, as well as the position of the predicate
+      val headPositions = new ArrayBuffer[Int]()
       val pred = predicateIndexes(pi)
-      val argLabels = mtlSrla.predict(0, annotatedSentence, Some(pred))
+      for(i <- words.indices) {
+        headPositions += pred
+      }
+
+      val annotatedSentence =
+        AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
+
+      val argLabels = mtlSrla.predict(0, annotatedSentence)
 
       for(ai <- argLabels.indices) {
         if(argLabels(ai) != "O") {

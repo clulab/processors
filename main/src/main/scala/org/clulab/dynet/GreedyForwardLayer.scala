@@ -9,13 +9,13 @@ import ForwardLayer._
 
 class GreedyForwardLayer (parameters:ParameterCollection,
                           inputSize: Int,
-                          hasPredicate: Boolean,
+                          isDual: Boolean,
                           t2i: Map[String, Int],
                           i2t: Array[String],
                           H: Parameter,
                           nonlinearity: Int,
                           dropoutProb: Float = DEFAULT_DROPOUT_PROB)
-  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -25,7 +25,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   override def saveX2i(printWriter: PrintWriter): Unit = {
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
-    save(printWriter, if(hasPredicate) 1 else 0, "hasPredicate")
+    save(printWriter, if(isDual) 1 else 0, "isDual")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -52,8 +52,8 @@ object GreedyForwardLayer {
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
-    val hasPredicateAsInt = byLineIntBuilder.build(x2iIterator, "hasPredicate", DEFAULT_HAS_PREDICATE)
-    val hasPredicate = hasPredicateAsInt == 1
+    val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
+    val isDual = isDualAsInt == 1
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
@@ -63,11 +63,11 @@ object GreedyForwardLayer {
     // make the loadable parameters
     //
     //println(s"making FF ${t2i.size} x ${2 * inputSize}")
-    val actualInputSize = if(hasPredicate) 2 * inputSize else inputSize
+    val actualInputSize = if(isDual) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     new GreedyForwardLayer(parameters,
-      inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb)
+      inputSize, isDual, t2i, i2t, H, nonlinearity, dropoutProb)
   }
 }
 
