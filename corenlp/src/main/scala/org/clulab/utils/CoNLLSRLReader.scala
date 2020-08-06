@@ -370,10 +370,17 @@ object CoNLLSRLReader {
     labelStats(doc)
     moreStats(doc)
 
+    // a simplified form of the CoNLL format
     //saveSimplified(doc, args(1))
+
     val predsFile = args(1) + ".preds"
     val argsFile = args(1) + ".args"
-    saveMetal(doc, predsFile, argsFile)
+
+    // older Metal format, with one frame per sentence
+    //saveMetal(doc, predsFile, argsFile)
+
+    // new Metal format, with all frames saved in the same sentence
+    saveMetalFull(doc, predsFile, argsFile)
   }
 
   def moreStats(document: Document): Unit = {
@@ -484,6 +491,96 @@ object CoNLLSRLReader {
       }
 
       predsPw.println()
+    }
+
+    predsPw.close()
+    argsPw.close()
+
+    if(REMOVE_SELF_LOOPS) {
+      logger.info(s"Removed $selfLoopCount self-argument loops.")
+    }
+  }
+
+  def saveMetalFull(doc: Document, predsFile: String, argsFile: String): Unit = {
+    val predsPw = new PrintWriter(predsFile)
+    val argsPw = new PrintWriter(argsFile)
+    var selfLoopCount = 0
+
+    for(sent <- doc.sentences) {
+      val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
+
+      val heads = new Array[String](sent.words.length)
+      for(i <- heads.indices) heads(i) = "O"
+      var headPositions = new mutable.HashSet[Int]()
+      for(e <- g.edges) {
+        headPositions += e.source
+        heads(e.source) = "B-P"
+      }
+
+      //
+      // save predicate information
+      //
+      assert(heads.length == sent.words.length)
+      for(i <- heads.indices) {
+        predsPw.println(
+          sent.words(i) + "\t" +
+            sent.tags.get(i) + "\t" +
+            sent.entities.get(i) + "\t" +
+            heads(i)
+        )
+      }
+      predsPw.println()
+
+      //
+      // save one frame for each predicate in the Metal format
+      //
+      if(headPositions.nonEmpty) {
+        val sortedHeadPositions = headPositions.toList.sorted
+        val headMap = sortedHeadPositions.zipWithIndex.toMap
+
+        val args = new Array[Array[String]](headMap.size)
+        for (i <- args.indices) {
+          args(i) = new Array[String](sent.size)
+          for (j <- args(i).indices) args(i)(j) = "O"
+        }
+
+        for (e <- g.edges) {
+          args(headMap(e.source))(e.destination) = e.relation
+
+          if (REMOVE_SELF_LOOPS) {
+            if (e.source == e.destination) {
+              args(headMap(e.source))(e.destination) = "O"
+              selfLoopCount += 1
+            }
+          }
+        }
+
+        // save all frames together, as separate columns
+        assert(headMap.size == args.length)
+        assert(sortedHeadPositions.size == args.length)
+        for (i <- sent.words.indices) {
+          // word, POS tag, NE label
+          argsPw.print(
+            sent.words(i) + "\t" +
+              sent.tags.get(i) + "\t" +
+              sent.entities.get(i)
+          )
+
+          // (label, head position)+
+          for (fi <- args.indices) {
+            val predPosition = sortedHeadPositions(fi)
+            val frame = args(fi)
+
+            argsPw.print(
+              "\t" + frame(i) +
+                "\t" + predPosition
+            )
+          }
+          argsPw.println()
+        }
+
+        argsPw.println()
+      }
     }
 
     predsPw.close()

@@ -78,12 +78,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        val (annotatedSentence, sentenceLabels) = reader.toAnnotatedSentence(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence)
 
-        for (i <- annotatedSentence.indices) {
-          words(tid + 1) += annotatedSentence.words(i)
-          words(0) += annotatedSentence.words(i)
-          labels(tid + 1) += sentenceLabels(i)
+        for(as <- annotatedSentences) {
+          val annotatedSentence = as._1
+          val sentenceLabels = as._2
+          for (i <- annotatedSentence.indices) {
+            words(tid + 1) += annotatedSentence.words(i)
+            words(0) += annotatedSentence.words(i)
+            labels(tid + 1) += sentenceLabels(i)
+          }
         }
       }
     }
@@ -135,13 +139,28 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         sentCount += 1
 
-        val (annotatedSentence, sentenceLabels) = reader.toAnnotatedSentence(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        assert(annotatedSentences.nonEmpty)
 
-        var loss = Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
+        val unweightedLoss = {
+          val lossSum = new ExpressionVector()
+          for (as <- annotatedSentences) {
+            val annotatedSentence = as._1
+            val sentenceLabels = as._2
+            val sentenceLoss = Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
+            lossSum.add(sentenceLoss)
+          }
+          Expression.sum(lossSum)
+        }
 
         // task weighting
-        if (taskManager.tasks(taskId).taskWeight != 1.0)
-          loss = loss * Expression.input(taskManager.tasks(taskId).taskWeight)
+        val loss = {
+          if (taskManager.tasks(taskId).taskWeight != 1.0) {
+            unweightedLoss * Expression.input(taskManager.tasks(taskId).taskWeight)
+          } else {
+            unweightedLoss
+          }
+        }
 
         batchLosses.add(loss)
 
@@ -167,10 +186,6 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       if(batchLosses.nonEmpty) {
         // backprop
         cummulativeLoss += batchBackprop(batchLosses, trainer)
-
-        // start a new batch
-        ComputationGraph.renew()
-        batchLosses = new ExpressionVector()
       }
 
       //
@@ -266,14 +281,19 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     for (sent <- sentences) {
       sentCount += 1
 
-      val (sentence, goldLabels) = reader.toAnnotatedSentence(sent)
+      val annotatedSentences = reader.toAnnotatedSentences(sent)
 
-      val preds = Layers.predict(model, taskId, sentence)
+      for(as <- annotatedSentences) {
+        val sentence = as._1
+        val goldLabels = as._2
 
-      val sc = SeqScorer.f1(goldLabels, preds)
-      scoreCountsByLabel.incAll(sc)
+        val preds = Layers.predict(model, taskId, sentence)
 
-      printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        val sc = SeqScorer.f1(goldLabels, preds)
+        scoreCountsByLabel.incAll(sc)
+
+        printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+      }
     }
 
     pw.close()
