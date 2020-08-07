@@ -402,7 +402,8 @@ object Utils {
       // gold tag for word at position i
       val goldTid = golds(i)
       // emissionScoresForSeq(i) = all tag emission scores for the word at position i
-      goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
+      if(emissionScoresForSeq(i) != null)
+        goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
     }
 
     sum(goldLosses)

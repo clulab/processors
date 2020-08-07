@@ -56,20 +56,26 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
       for(i <- inputExpressions.indices) {
         val headPosition = headPositionsOpt.get(i)
-        val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
-        val predExp = Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
 
-        val ss = Expression.concatenate(argExp, predExp)
+        if(headPosition >= 0) {
+          val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
+          val predExp = Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
 
-        var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+          val ss = Expression.concatenate(argExp, predExp)
 
-        l1 = nonlinearity match {
-          case NONLIN_TANH => Expression.tanh(l1)
-          case NONLIN_RELU => Expression.rectify(l1)
-          case _ => l1 // nothing to do otherwise
+          var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+
+          l1 = nonlinearity match {
+            case NONLIN_TANH => Expression.tanh(l1)
+            case NONLIN_RELU => Expression.rectify(l1)
+            case _ => l1 // nothing to do otherwise
+          }
+
+          emissionScores.add(l1)
+        } else {
+          // the head is root. no need to predict anything here
+          emissionScores.add(null) // TODO: very un-Scala way to encode None here...
         }
-
-        emissionScores.add(l1)
       }
     }
 
