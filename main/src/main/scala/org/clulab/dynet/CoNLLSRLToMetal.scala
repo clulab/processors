@@ -1,27 +1,30 @@
-package org.clulab.utils
+package org.clulab.dynet
 
 import java.io.{BufferedReader, File, FileReader, PrintWriter}
 
-import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
-import org.clulab.utils.CoNLLSRLReader._
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 
+import CoNLLSRLToMetal._
+
 
 /**
-  * Reads a CoNLL-2008 formatted file (containing semantic roles) and converts it to our own representation
+  * Reads a CoNLL-2008 formatted file (containing semantic roles) and converts it to our own Metal format
   * User: mihais
   * Date: 5/5/15
-  * Last Modified: Update for Scala 2.12: bug #10151 workaround.
+  * Last Modified:
+  *  08/05/2020: Added the latest Metal format
+  *  Update for Scala 2.12: bug #10151 workaround.
+  *
   */
-class CoNLLSRLReader {
+class CoNLLSRLToMetal {
   class CoNLLToken(
     val word:String,
     val pos:String,
@@ -349,8 +352,8 @@ class CoNLLSRLReader {
   }
 }
 
-object CoNLLSRLReader {
-  val logger: Logger = LoggerFactory.getLogger(classOf[CoNLLSRLReader])
+object CoNLLSRLToMetal {
+  val logger: Logger = LoggerFactory.getLogger(classOf[CoNLLSRLToMetal])
 
   val USE_CONLL_TOKENIZATION = false
   val SIMPLIFY_ARG_LABELS = true
@@ -363,7 +366,7 @@ object CoNLLSRLReader {
     Utils.initializeDyNet()
 
     val file = new File(args(0))
-    val reader = new CoNLLSRLReader
+    val reader = new CoNLLSRLToMetal
     val proc = new CluProcessor() // FastNLPProcessor()
     val doc = reader.read(file, proc, verbose = true)
 
