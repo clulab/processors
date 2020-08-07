@@ -40,7 +40,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val neTagLookupParameters:Option[LookupParameter],
                       val distanceLookupParameters:Option[LookupParameter],
                       val positionLookupParameters:Option[LookupParameter],
-                      val dropoutProb: Float = EmbeddingLayer.DEFAULT_DROPOUT_PROB) extends InitialLayer {
+                      val dropoutProb: Float) extends InitialLayer {
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
@@ -228,7 +228,7 @@ object EmbeddingLayer {
 
   val RANDOM = new Random(Utils.RANDOM_SEED)
 
-  val DEFAULT_DROPOUT_PROB: Float = 0.2f
+  val DEFAULT_DROPOUT_PROB: Float = Utils.DEFAULT_DROPOUT_PROBABILITY
   val DEFAULT_LEARNED_WORD_EMBEDDING_SIZE: Int = 128
   val DEFAULT_CHAR_EMBEDDING_SIZE: Int = 32
   val DEFAULT_CHAR_RNN_STATE_SIZE: Int = 16

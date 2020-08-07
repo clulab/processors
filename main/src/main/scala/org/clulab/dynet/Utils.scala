@@ -31,6 +31,8 @@ object Utils {
 
   val LOG_MIN_VALUE: Float = -10000
 
+  val DEFAULT_DROPOUT_PROBABILITY = 0f // no dropout by  default
+
   private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
@@ -402,8 +404,7 @@ object Utils {
       // gold tag for word at position i
       val goldTid = golds(i)
       // emissionScoresForSeq(i) = all tag emission scores for the word at position i
-      if(emissionScoresForSeq(i) != null)
-        goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
+      goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
     }
 
     sum(goldLosses)

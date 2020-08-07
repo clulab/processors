@@ -277,7 +277,7 @@ object Layers {
            taskId: Int,
            sentence: AnnotatedSentence,
            goldLabels: IndexedSeq[String]): Expression = {
-    val states = forwardForTask(layers, taskId, sentence, doDropout = false) // use dropout during training! // TODO
+    val states = forwardForTask(layers, taskId, sentence, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
 }

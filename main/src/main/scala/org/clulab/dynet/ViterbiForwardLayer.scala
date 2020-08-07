@@ -14,7 +14,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
                           H: Parameter,
                           val T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
                           nonlinearity: Int,
-                          dropoutProb: Float = DEFAULT_DROPOUT_PROB)
+                          dropoutProb: Float)
   extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model

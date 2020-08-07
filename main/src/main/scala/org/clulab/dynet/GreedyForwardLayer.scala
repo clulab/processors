@@ -3,7 +3,7 @@ package org.clulab.dynet
 import java.io.PrintWriter
 
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
-import org.clulab.dynet.ForwardLayer.{DEFAULT_DROPOUT_PROB, TYPE_GREEDY}
+import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
@@ -14,7 +14,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           i2t: Array[String],
                           H: Parameter,
                           nonlinearity: Int,
-                          dropoutProb: Float = DEFAULT_DROPOUT_PROB)
+                          dropoutProb: Float)
   extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {

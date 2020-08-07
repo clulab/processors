@@ -14,7 +14,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val i2t: Array[String],
                              val H: Parameter,
                              val nonlinearity: Int,
-                             val dropoutProb: Float = DEFAULT_DROPOUT_PROB)
+                             val dropoutProb: Float)
   extends FinalLayer {
 
   def forward(inputExpressions: ExpressionVector,
@@ -74,7 +74,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
           emissionScores.add(l1)
         } else {
           // the head is root. no need to predict anything here
-          emissionScores.add(null) // TODO: very un-Scala way to encode None here...
+          // TODO
         }
       }
     }
@@ -90,7 +90,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 object ForwardLayer {
   val logger: Logger = LoggerFactory.getLogger(classOf[ViterbiForwardLayer])
 
-  val DEFAULT_DROPOUT_PROB = 0.2f
+  val DEFAULT_DROPOUT_PROB: Float = Utils.DEFAULT_DROPOUT_PROBABILITY
 
   val TYPE_VITERBI = 1
   val TYPE_GREEDY = 2
