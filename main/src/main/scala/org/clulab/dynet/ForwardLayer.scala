@@ -74,7 +74,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
           emissionScores.add(l1)
         } else {
           // the head is root. no need to predict anything here
-          // TODO
+          // TODO: have a dedicated head Expression for root that is trained
         }
       }
     }
