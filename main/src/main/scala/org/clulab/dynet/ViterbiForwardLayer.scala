@@ -8,14 +8,14 @@ import ForwardLayer._
 
 class ViterbiForwardLayer(parameters:ParameterCollection,
                           inputSize: Int,
-                          hasPredicate: Boolean,
+                          isDual: Boolean,
                           t2i: Map[String, Int],
                           i2t: Array[String],
                           H: Parameter,
                           val T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
                           nonlinearity: Int,
-                          dropoutProb: Float = DEFAULT_DROPOUT_PROB)
-  extends ForwardLayer(parameters, inputSize, hasPredicate, t2i, i2t, H, nonlinearity, dropoutProb) {
+                          dropoutProb: Float)
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model
   def initializeTransitions(): Unit = {
@@ -72,7 +72,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
   override def saveX2i(printWriter: PrintWriter): Unit = {
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
-    save(printWriter, if(hasPredicate) 1 else 0, "hasPredicate")
+    save(printWriter, if(isDual) 1 else 0, "isDual")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -102,8 +102,8 @@ object ViterbiForwardLayer {
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator)
-    val hasPredicateAsInt = byLineIntBuilder.build(x2iIterator, "hasPredicate", DEFAULT_HAS_PREDICATE)
-    val hasPredicate = hasPredicateAsInt == 1
+    val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
+    val isDual = isDualAsInt == 1
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator)
     val i2t = fromIndexToString(t2i)
@@ -112,12 +112,12 @@ object ViterbiForwardLayer {
     //
     // make the loadable parameters
     //
-    val actualInputSize = if(hasPredicate) 2 * inputSize else inputSize
+    val actualInputSize = if(isDual) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val T = mkTransitionMatrix(parameters, t2i)
 
     new ViterbiForwardLayer(parameters,
-      inputSize, hasPredicate, t2i, i2t, H, T, nonlinearity, dropoutProb)
+      inputSize, isDual, t2i, i2t, H, T, nonlinearity, dropoutProb)
   }
 }
 

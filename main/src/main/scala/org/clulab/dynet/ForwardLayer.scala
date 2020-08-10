@@ -9,21 +9,25 @@ import org.clulab.utils.Configured
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
-                             val hasPredicate: Boolean,
+                             val isDual: Boolean,
                              val t2i: Map[String, Int],
                              val i2t: Array[String],
                              val H: Parameter,
                              val nonlinearity: Int,
-                             val dropoutProb: Float = DEFAULT_DROPOUT_PROB)
+                             val dropoutProb: Float)
   extends FinalLayer {
 
   def forward(inputExpressions: ExpressionVector,
-              predicatePositionOpt: Option[Int],
+              headPositionsOpt: Option[IndexedSeq[Int]],
               doDropout: Boolean): ExpressionVector = {
     val pH = Expression.parameter(H)
     val emissionScores = new ExpressionVector()
 
-    if(predicatePositionOpt.isEmpty) {
+    if(! isDual) {
+      //
+      // basic task
+      //
+
       for (i <- inputExpressions.indices) {
         var argExp = inputExpressions(i)
 
@@ -42,23 +46,36 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     }
 
     else {
-      val predPosition = predicatePositionOpt.get
+      //
+      // dual task
+      //
+
+      if(headPositionsOpt.isEmpty) {
+        throw new RuntimeException("ERROR: dual task without information about head positions!")
+      }
+
       for(i <- inputExpressions.indices) {
-        val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
-        val predExp = Utils.expressionDropout(inputExpressions(predPosition), dropoutProb, doDropout)
+        val headPosition = headPositionsOpt.get(i)
 
-        // TODO: dropout before or after concatenate? - seems better before
-        val ss = Expression.concatenate(argExp, predExp)
+        if(headPosition >= 0) {
+          val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
+          val predExp = Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
 
-        var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+          val ss = Expression.concatenate(argExp, predExp)
 
-        l1 = nonlinearity match {
-          case NONLIN_TANH => Expression.tanh(l1)
-          case NONLIN_RELU => Expression.rectify(l1)
-          case _ => l1 // nothing to do otherwise
+          var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+
+          l1 = nonlinearity match {
+            case NONLIN_TANH => Expression.tanh(l1)
+            case NONLIN_RELU => Expression.rectify(l1)
+            case _ => l1 // nothing to do otherwise
+          }
+
+          emissionScores.add(l1)
+        } else {
+          // the head is root. no need to predict anything here
+          // TODO: have a dedicated head Expression for root that is trained
         }
-
-        emissionScores.add(l1)
       }
     }
 
@@ -73,7 +90,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 object ForwardLayer {
   val logger: Logger = LoggerFactory.getLogger(classOf[ViterbiForwardLayer])
 
-  val DEFAULT_DROPOUT_PROB = 0.2f
+  val DEFAULT_DROPOUT_PROB: Float = Utils.DEFAULT_DROPOUT_PROBABILITY
 
   val TYPE_VITERBI = 1
   val TYPE_GREEDY = 2
@@ -85,7 +102,7 @@ object ForwardLayer {
   val TYPE_GREEDY_STRING = "greedy"
   val TYPE_VITERBI_STRING = "viterbi"
 
-  val DEFAULT_HAS_PREDICATE = 0
+  val DEFAULT_IS_DUAL = 0
 
   def load(parameters: ParameterCollection,
            x2iIterator: BufferedIterator[String]): ForwardLayer = {
@@ -102,7 +119,7 @@ object ForwardLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
-                 hasPredicate: Boolean,
+                 isDual: Boolean,
                  inputSize: Int): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
@@ -122,18 +139,18 @@ object ForwardLayer {
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
 
-    val actualInputSize = if(hasPredicate) 2 * inputSize else inputSize
+    val actualInputSize = if(isDual) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
 
     inferenceType match {
       case TYPE_GREEDY_STRING =>
         Some(new GreedyForwardLayer(parameters,
-          inputSize, hasPredicate,
+          inputSize, isDual,
           t2i, i2t, H, nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
-          inputSize, hasPredicate,
+          inputSize, isDual,
           t2i, i2t, H, T, nonlin, dropoutProb)
         layer.initializeTransitions()
         Some(layer)

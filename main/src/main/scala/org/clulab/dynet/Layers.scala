@@ -54,28 +54,27 @@ class Layers (val initialLayer: Option[InitialLayer],
   def isEmpty: Boolean = initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty
   def nonEmpty: Boolean = ! isEmpty
 
-  // strictly for testing purposes (doDropout = false for all layers)
-  protected def forward(sentence: AnnotatedSentence,
-                        predicatePosition: Option[Int] = None): ExpressionVector = {
+  protected def forward(sentence: AnnotatedSentence, doDropout: Boolean): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
 
-    var states = initialLayer.get.forward(sentence, predicatePosition, doDropout = false)
+    var states = initialLayer.get.forward(sentence, doDropout)
 
     for (i <- intermediateLayers.indices) {
-      states = intermediateLayers(i).forward(states, doDropout = false)
+      states = intermediateLayers(i).forward(states, doDropout)
     }
 
     if(finalLayer.nonEmpty) {
-      states = finalLayer.get.forward(states, predicatePosition, doDropout = false)
+      states = finalLayer.get.forward(states, sentence.headPositions, doDropout)
     }
 
     states
   }
 
   protected def forwardFrom(inStates: ExpressionVector,
-                            predicatePosition: Option[Int] = None): ExpressionVector = {
+                            headPositions: Option[IndexedSeq[Int]],
+                            doDropout: Boolean): ExpressionVector = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forwardFrom() on a Layers object that has an initial layer: $toString!")
     }
@@ -83,11 +82,11 @@ class Layers (val initialLayer: Option[InitialLayer],
     var states = inStates
 
     for (i <- intermediateLayers.indices) {
-      states = intermediateLayers(i).forward(states, doDropout = false)
+      states = intermediateLayers(i).forward(states, doDropout)
     }
 
     if(finalLayer.nonEmpty) {
-      states = finalLayer.get.forward(states, predicatePosition, doDropout = false)
+      states = finalLayer.get.forward(states, headPositions, doDropout)
     }
 
     states
@@ -121,7 +120,7 @@ object Layers {
             parameters: ParameterCollection,
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
-            hasPredicate: Boolean,
+            isDual: Boolean,
             providedInputSize: Option[Int]): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
@@ -156,7 +155,7 @@ object Layers {
         }
 
         ForwardLayer.initialize(config, paramPrefix + ".final", parameters,
-          labelCounterOpt.get, hasPredicate, inputSize.get)
+          labelCounterOpt.get, isDual, inputSize.get)
       } else {
         None
       }
@@ -209,10 +208,10 @@ object Layers {
 
       // layers(0) contains the shared layers
       if(layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence)
+        val sharedStates = layers(0).forward(sentence, doDropout = false)
 
         for (i <- 1 until layers.length) {
-          val states = layers(i).forwardFrom(sharedStates)
+          val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
@@ -222,7 +221,7 @@ object Layers {
       // no shared layer
       else {
         for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence)
+          val states = layers(i).forward(sentence, doDropout = false)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
@@ -236,7 +235,7 @@ object Layers {
   private def forwardForTask(layers: IndexedSeq[Layers],
                              taskId: Int,
                              sentence: AnnotatedSentence,
-                             predPositionOpt: Option[Int] = None): ExpressionVector = {
+                             doDropout: Boolean): ExpressionVector = {
     //
     // make sure this code is:
     //   (a) called inside a synchronized block, and
@@ -246,13 +245,13 @@ object Layers {
     val states = {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, predPositionOpt)
-        layers(taskId + 1).forwardFrom(sharedStates, predPositionOpt)
+        val sharedStates = layers(0).forward(sentence, doDropout)
+        layers(taskId + 1).forwardFrom(sharedStates, sentence.headPositions, doDropout)
       }
 
       // no shared layer
       else {
-        layers(taskId + 1).forward(sentence, predPositionOpt)
+        layers(taskId + 1).forward(sentence, doDropout)
       }
     }
 
@@ -261,13 +260,12 @@ object Layers {
 
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
-              sentence: AnnotatedSentence,
-              predPositionOpt: Option[Int] = None): IndexedSeq[String] = {
+              sentence: AnnotatedSentence): IndexedSeq[String] = {
     val labelsForTask =
       DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
         ComputationGraph.renew()
 
-        val states = forwardForTask(layers, taskId, sentence, predPositionOpt)
+        val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         layers(taskId + 1).finalLayer.get.inference(emissionScores)
       }
@@ -278,9 +276,8 @@ object Layers {
   def loss(layers: IndexedSeq[Layers],
            taskId: Int,
            sentence: AnnotatedSentence,
-           goldLabels: IndexedSeq[String],
-           predicatePosition: Option[Int] = None): Expression = {
-    val states = forwardForTask(layers, taskId, sentence, predicatePosition)
+           goldLabels: IndexedSeq[String]): Expression = {
+    val states = forwardForTask(layers, taskId, sentence, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
 }

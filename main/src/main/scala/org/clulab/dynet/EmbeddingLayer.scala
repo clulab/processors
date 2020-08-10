@@ -40,31 +40,33 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val neTagLookupParameters:Option[LookupParameter],
                       val distanceLookupParameters:Option[LookupParameter],
                       val positionLookupParameters:Option[LookupParameter],
-                      val dropoutProb: Float = EmbeddingLayer.DEFAULT_DROPOUT_PROB) extends InitialLayer {
+                      val dropoutProb: Float) extends InitialLayer {
 
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
   override def forward(sentence: AnnotatedSentence,
-                       predicatePosition: Option[Int] = None,
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
     val words = sentence.words
     val tags = sentence.posTags
     val nes = sentence.neTags
+    val headPositions = sentence.headPositions
 
     // const word embeddings such as GloVe
     val constEmbeddings = constEmbedder.mkEmbeddings(words)
     assert(constEmbeddings.length == words.length)
     if(tags.isDefined) assert(tags.get.length == words.length)
     if(nes.isDefined) assert(nes.get.length == words.length)
+    if(headPositions.isDefined) assert(headPositions.get.length == words.length)
 
     // build the word embeddings one by one
     val embeddings = new ExpressionVector()
     for(i <- words.indices) {
       val tag = if(tags.isDefined) Some(tags.get(i)) else None
       val ne = if(nes.isDefined) Some(nes.get(i)) else None
-      embeddings.add(mkEmbedding(words(i), i, tag, ne, predicatePosition, constEmbeddings(i), doDropout))
+      val headPosition = if(headPositions.isDefined) Some(headPositions.get(i)) else None
+      embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddings(i), doDropout))
     }
 
     embeddings
@@ -226,7 +228,7 @@ object EmbeddingLayer {
 
   val RANDOM = new Random(Utils.RANDOM_SEED)
 
-  val DEFAULT_DROPOUT_PROB: Float = 0.2f
+  val DEFAULT_DROPOUT_PROB: Float = Utils.DEFAULT_DROPOUT_PROBABILITY
   val DEFAULT_LEARNED_WORD_EMBEDDING_SIZE: Int = 128
   val DEFAULT_CHAR_EMBEDDING_SIZE: Int = 32
   val DEFAULT_CHAR_RNN_STATE_SIZE: Int = 16

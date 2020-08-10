@@ -31,6 +31,8 @@ object Utils {
 
   val LOG_MIN_VALUE: Float = -10000
 
+  val DEFAULT_DROPOUT_PROBABILITY = 0f // no dropout by  default
+
   private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {

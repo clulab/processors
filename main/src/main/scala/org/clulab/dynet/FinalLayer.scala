@@ -4,7 +4,7 @@ import edu.cmu.dynet.{Expression, ExpressionVector}
 
 trait FinalLayer extends Saveable {
   def forward(inputExpressions: ExpressionVector,
-              predicatePositionOpt: Option[Int],
+              headPositionsOpt: Option[IndexedSeq[Int]],
               doDropout: Boolean): ExpressionVector
 
   def inDim: Int

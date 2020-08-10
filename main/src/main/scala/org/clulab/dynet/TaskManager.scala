@@ -98,8 +98,7 @@ class TaskManager(config:Config) extends Configured {
 
   def parseType(inf: String): Int = inf match {
     case "basic" => TaskManager.TYPE_BASIC
-    case "srl" => TaskManager.TYPE_SRL
-    case "depsh" => TaskManager.TYPE_DEPSH
+    case "dual" => TaskManager.TYPE_DUAL
     case _ => throw new RuntimeException(s"ERROR: unknown task type $inf!")
   }
 
@@ -189,14 +188,12 @@ class Task(
     else None
 
   val isBasic:Boolean = taskType == TaskManager.TYPE_BASIC
-  val isSrl:Boolean = taskType == TaskManager.TYPE_SRL
-  val isDepsHead:Boolean = taskType == TaskManager.TYPE_DEPSH
+  val isDual:Boolean = taskType == TaskManager.TYPE_DUAL
 
   def prettyType: String =
     taskType match {
       case TaskManager.TYPE_BASIC => "basic"
-      case TaskManager.TYPE_SRL => "srl"
-      case TaskManager.TYPE_DEPSH => "depsh"
+      case TaskManager.TYPE_DUAL => "dual"
       case _ => "unknown"
     }
 
@@ -235,7 +232,6 @@ object TaskManager {
   val logger:Logger = LoggerFactory.getLogger(classOf[TaskManager])
 
   val TYPE_BASIC = 0
-  val TYPE_SRL = 1
-  val TYPE_DEPSH = 2
+  val TYPE_DUAL = 1
 
 }

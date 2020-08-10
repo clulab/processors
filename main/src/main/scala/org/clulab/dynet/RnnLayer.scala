@@ -20,7 +20,7 @@ class RnnLayer (val parameters:ParameterCollection,
                 val rnnType: String, // "gru" or "lstm"
                 val wordFwRnnBuilder:RnnBuilder,
                 val wordBwRnnBuilder:RnnBuilder,
-                val dropoutProb: Float = RnnLayer.DEFAULT_DROPOUT_PROB) extends IntermediateLayer {
+                val dropoutProb: Float) extends IntermediateLayer {
 
   override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
     setRnnDropout(wordFwRnnBuilder, dropoutProb, doDropout)
@@ -73,7 +73,7 @@ class RnnLayer (val parameters:ParameterCollection,
 object RnnLayer {
   val logger: Logger = LoggerFactory.getLogger(classOf[RnnLayer])
 
-  val DEFAULT_DROPOUT_PROB = 0.2f
+  val DEFAULT_DROPOUT_PROB: Float = Utils.DEFAULT_DROPOUT_PROBABILITY
 
   def load(parameters: ParameterCollection,
            x2iIterator: BufferedIterator[String]): RnnLayer = {
