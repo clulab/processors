@@ -13,6 +13,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val t2i: Map[String, Int],
                              val i2t: Array[String],
                              val H: Parameter,
+                             val rootParam: Parameter, 
                              val nonlinearity: Int,
                              val dropoutProb: Float)
   extends FinalLayer {
@@ -57,25 +58,27 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       for(i <- inputExpressions.indices) {
         val headPosition = headPositionsOpt.get(i)
 
-        if(headPosition >= 0) {
-          val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
-          val predExp = Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
-
-          val ss = Expression.concatenate(argExp, predExp)
-
-          var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
-
-          l1 = nonlinearity match {
-            case NONLIN_TANH => Expression.tanh(l1)
-            case NONLIN_RELU => Expression.rectify(l1)
-            case _ => l1 // nothing to do otherwise
-          }
-
-          emissionScores.add(l1)
+        val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
+        val predExp = if(headPosition >= 0) {
+          // there is an explicit head in the sentence
+          Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
         } else {
-          // the head is root. no need to predict anything here
-          // TODO: have a dedicated head Expression for root that is trained
+          // the head is root. we used a dedicated Parameter for root
+          // TODO
+          null
         }
+
+        val ss = Expression.concatenate(argExp, predExp)
+
+        var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+
+        l1 = nonlinearity match {
+          case NONLIN_TANH => Expression.tanh(l1)
+          case NONLIN_RELU => Expression.rectify(l1)
+          case _ => l1 // nothing to do otherwise
+        }
+
+        emissionScores.add(l1)
       }
     }
 
@@ -141,17 +144,20 @@ object ForwardLayer {
 
     val actualInputSize = if(isDual) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
+    val rootParam = parameters.addParameters(Dim(inputSize))
 
     inferenceType match {
       case TYPE_GREEDY_STRING =>
         Some(new GreedyForwardLayer(parameters,
           inputSize, isDual,
-          t2i, i2t, H, nonlin, dropoutProb))
+          t2i, i2t, H, rootParam,
+          nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
           inputSize, isDual,
-          t2i, i2t, H, T, nonlin, dropoutProb)
+          t2i, i2t, H, T, rootParam,  
+          nonlin, dropoutProb)
         layer.initializeTransitions()
         Some(layer)
       case _ =>
