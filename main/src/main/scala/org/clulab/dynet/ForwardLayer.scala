@@ -22,6 +22,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
               headPositionsOpt: Option[IndexedSeq[Int]],
               doDropout: Boolean): ExpressionVector = {
     val pH = Expression.parameter(H)
+    val pRoot = Expression.parameter(rootParam)
     val emissionScores = new ExpressionVector()
 
     if(! isDual) {
@@ -64,7 +65,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
           Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
         } else {
           // the head is root. we used a dedicated Parameter for root
-          Utils.expressionDropout(rootParam, dropoutProb, doDropout)
+          Utils.expressionDropout(pRoot, dropoutProb, doDropout)
         }
 
         val ss = Expression.concatenate(argExp, predExp)
