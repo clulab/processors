@@ -115,10 +115,11 @@ object ViterbiForwardLayer {
     //
     val actualInputSize = if(isDual) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
+    val rootParam = parameters.addParameters(Dim(inputSize))
     val T = mkTransitionMatrix(parameters, t2i)
 
     new ViterbiForwardLayer(parameters,
-      inputSize, isDual, t2i, i2t, H, T, nonlinearity, dropoutProb)
+      inputSize, isDual, t2i, i2t, H, T, rootParam, nonlinearity, dropoutProb)
   }
 }
 
