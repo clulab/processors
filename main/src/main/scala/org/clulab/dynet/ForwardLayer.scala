@@ -64,8 +64,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
           Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
         } else {
           // the head is root. we used a dedicated Parameter for root
-          // TODO
-          null
+          Utils.expressionDropout(rootParam, dropoutProb, doDropout)
         }
 
         val ss = Expression.concatenate(argExp, predExp)
