@@ -43,13 +43,13 @@ take    I-VP
 ...
 ```
 
-SRL predicates (focus just on the first two columns for now):
+SRL predicates (using the Simple Extended format - see the File Formats section for details):
 ```
-Ms.     O       NNP     B-PER   O
-Haag    O       NNP     I-PER   A0
-plays   B-P     VBZ     O       O
-Elianti O       NNP     B-LOC   A1
-.       O       .       O       O
+Ms.     NNP     B-PER   O
+Haag    NNP     I-PER   O
+plays   VBZ     O       B-P
+Elianti NNP     B-ORG   O
+.       .       O       O
 ...
 ```
 
@@ -72,8 +72,8 @@ mtl {
 
     intermediate1 {
       rnnStateSize = 128
-        useHighwayConnections = false
-        numLayers = 1
+      useHighwayConnections = false
+      numLayers = 1
     }
   }
 
@@ -93,7 +93,7 @@ mtl {
   task2 {
     name = "En chunking"
     train = "dynet/en/chunking/train.txt"
-    dev = "dynet/en/chunking/dev.txt"
+    dev = "dynet/en/chunking/test.txt"
     test = "dynet/en/chunking/test.txt"
 
     layers {
@@ -105,9 +105,9 @@ mtl {
 
   task3 {
     name = "En SRL predicates"
-    train = "dynet/en/srl/train.txt"
-    dev = "dynet/en/srl/dev.txt"
-    test = "dynet/en/srl/test.txt"
+    train = "dynet/en/srl/train.preds"
+    dev = "dynet/en/srl/dev.preds"
+    test = "dynet/en/srl/test-wsj.preds"
 
     layers {
       final {
