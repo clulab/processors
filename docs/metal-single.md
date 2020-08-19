@@ -11,7 +11,7 @@ Let's start with a simpler task: named entity recognition (NER). The steps in tr
 
 ## 1. Preparing the datasets
 
-`Metal` expects the data for most of its tasks (note: there are exceptions, see Semantic Role Labeling) to be formatted in a simple two-column format, where the first column contains the words, and the second column contains the labels to be learned. An empty line should be included between sentences. For example, our NER dataset looks like this:
+`Metal` expects the data for most of its tasks (note: other file formats are supported, see the File Formats section for details) to be formatted in a simple two-column format, where the first column contains the words, and the second column contains the labels to be learned. An empty line should be included between sentences. For example, our NER dataset looks like this:
 
 ```
 Peter   B-PER
