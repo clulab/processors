@@ -9,20 +9,20 @@ nav_order: 5
 
 Similar to most works on SRL, we decompose the SRL task into two subtasks: (a) identifying verbal and nominal predicates in a given sentence, and (b) identifying arguments for each predicate. As discussed in the previous section, we observed that the predicate identification subtask trains well in a MTL setting. However, the second subtask, argument identification, did not train well in a joint setting. For this reason, we trained it separately, independently of all other tasks.
 
-As a reminder, our SRL data is formatted as follows:
+Our SRL data for argument identification follows the Metal Full format:
 
 ```
-A       O       DT      O       O       O       O
-record  B-P     NN      O       O       A1      O
-date    B-P     NN      O       A1      O       A1
-has     O       VBZ     O       O       O       O
-n't     O       RB      O       O       O       AM-NEG
-been    O       VBN     O       O       O       O
-set     B-P     VBN     O       O       O       O
-.       O       .       O       O       O       O
+A       DT      O       O       1       O       2       O       6
+record  NN      O       O       1       A1      2       O       6
+date    NN      O       A1      1       O       2       A1      6
+has     VBZ     O       O       1       O       2       O       6
+n't     RB      O       O       1       O       2       AM-NEG  6
+been    VBN     O       O       1       O       2       O       6
+set     VBN     O       O       1       O       2       O       6
+.       .       O       O       1       O       2       O       6
 ...
 ```
-where column 3 contains POS tags, column 4 contains NER labels produced by our `Metal` NER model, and the remaining columns contain the argument labels for each predicate. For example, because the above sentence has three predicates, there are three additional columns for argument labels, where column 5 contains the arguments for "record", column 6 contains the arguments for "date", and column 7 contains the arguments for "set".
+Please see the File Formats section for details on this format.
 
 The [configuration file](https://github.com/clulab/processors/blob/master/main/src/main/resources/org/clulab/mtl-en-srla.conf) to train the identification of SRL arguments is the following:
 
@@ -43,7 +43,7 @@ mtl {
       posTagEmbeddingSize = 32
       neTagEmbeddingSize = 16
       distanceEmbeddingSize = 16
-      distanceWindowSize = 20
+      distanceWindowSize = 50
       useIsPredicate = true
       c2i = "org/clulab/c2i-en.txt"
       tag2i = "org/clulab/tag2i-en.txt"
@@ -52,17 +52,18 @@ mtl {
 
     intermediate1 {
       rnnStateSize = 128
-      numLayers = 4
+      numLayers = 1
       useHighwayConnections = true
+      type = "gru"
     }
   }
 
   task1 {
     name = "En SRL arguments"
-    train = "dynet/en/srl/train-clu.txt"
-    dev = "dynet/en/srl/dev-clu.txt"
-    test = "dynet/en/srl/test-clu.txt"
-    type = "srl"
+    train = "dynet/en/srl/train.args"
+    dev = "dynet/en/srl/dev.args"
+    test = "dynet/en/srl/test-wsj.args"
+    type = "dual"
 
     layers {
       final {
@@ -73,8 +74,7 @@ mtl {
 
 }
 ```
-
-Note that `mtl.task1.type` is set to "srl", which corresponds to the task of identifying SRL arguments. For this task type, the initial layer has the following additional parameters:
+Note that `mtl.task1.type` is set to "dual", which corresponds to the dual Metal task, where the last forward layer concatenates the embeddings of both argument and head for each prediction (hence the "dual" name). For this task type, the initial layer has the following additional parameters:
 
 Parameter | Description | Default value
 --- | --- | ---
