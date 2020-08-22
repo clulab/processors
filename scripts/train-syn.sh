@@ -4,7 +4,11 @@
 # Script to train a syntactic dependency parser model
 #
 
-MODEL=$1
+MODELH="$1"h
+MODELL="$1"l
 
-sbt 'runMain org.clulab.dynet.Metal -train '"$MODEL"' -conf org/clulab/mtl-en-depsh.conf'
+echo "Using $MODELH for heads and $MODELL for labels."
+
+sbt 'runMain org.clulab.dynet.Metal -train '"$MODELH"' -conf org/clulab/mtl-en-depsh.conf'
+sbt 'runMain org.clulab.dynet.Metal -train '"$MODELL"' -conf org/clulab/mtl-en-depsl.conf'
 
