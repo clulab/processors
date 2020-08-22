@@ -116,20 +116,22 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.semanticRoles.get.hasEdge(2, 3, "A1") should be (true)
   }
 
-  /*
   it should "parse text correctly" in {
-    val doc = proc.annotate("John Doe went to China")
+    val sent = "John likes cake that contains chocolate."
+    val doc = proc.annotate(sent)
 
-    //println("Basic universal dependencies:")
-    //println(doc.sentences.head.universalBasicDependencies.get)
+    println(s"Basic universal dependencies for sentence: $sent")
+    println(doc.sentences.head.universalBasicDependencies.get)
 
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "nsubj") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "nmod") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "case") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "nsubj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 2, "obj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 4, "parataxis") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "nsubj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 5, "obj") should be(true)
     println("Parsing is fine.")
   }
 
+  /*
   it should "parse MWEs correctly" in {
     val doc = proc.mkDocument("Foods such as icecream are tasty.")
 
