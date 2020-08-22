@@ -69,11 +69,23 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
   }
 
+  lazy val mtlDepsHead: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+  }
+
+  lazy val mtlDepsLabel: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+  }
+
   override def annotate(doc:Document): Document = {
-    tagPartsOfSpeech(doc) // the call to the syntax MTL is in here
+    tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
     recognizeNamedEntities(doc) // the call to the NER MTL is in here
     chunking(doc) // Nothing, kept for the record
-    parse(doc) // Nothing, kept for the record
+    parse(doc) // dependency parsing
 
     lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
 
@@ -141,6 +153,52 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
 
     predsInSent
+  }
+
+  /** Dependency parsing */
+  def parseSentence(words: IndexedSeq[String],
+                    posTags: IndexedSeq[String],
+                    nerLabels: IndexedSeq[String]): DirectedGraph[String] = {
+
+    //println(s"Words: ${words.mkString(", ")}")
+    //println(s"Tags: ${posTags.mkString(", ")}")
+    //println(s"NEs: ${nerLabels.mkString(", ")}")
+
+    val annotatedSentence =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+
+    val headsAsString = mtlDepsHead.predict(0, annotatedSentence)
+    //println(s"Heads: ${headsAsString.mkString(", ")}")
+    val heads = new ArrayBuffer[Int]()
+    for(i <- headsAsString.indices) {
+      val relativeHead = headsAsString(i).toInt
+      if(relativeHead == 0) { // this is the root
+        heads += -1
+      } else {
+        heads += i + relativeHead
+      }
+    }
+
+    val annotatedSentenceWithHeads =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
+
+    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads)
+    assert(labels.size == heads.size)
+    //println(s"Labels: ${labels.mkString(", ")}")
+
+    val edges = new ListBuffer[Edge[String]]()
+    val roots = new mutable.HashSet[Int]()
+
+    for(i <- heads.indices) {
+      if(heads(i) == -1) {
+        roots += i
+      } else {
+        val edge = Edge[String](heads(i), i, labels(i))
+        edges.append(edge)
+      }
+    }
+
+    new DirectedGraph[String](edges.toList, roots.toSet)
   }
 
   /** Produces semantic role frames for one sentence */
@@ -261,7 +319,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Syntactic parsing; modifies the document in place */
   def parse(doc:Document): Unit = {
-    // Nop, covered by MTL
+    if(doc.sentences.length > 0) {
+      assert(doc.sentences(0).tags.nonEmpty)
+      assert(doc.sentences(0).entities.nonEmpty)
+    }
+
+    for(sent <- doc.sentences) {
+      val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get)
+      sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+      // TODO: add enhanced dependencies
+    }
   }
 
   /** Shallow parsing; modifies the document in place */

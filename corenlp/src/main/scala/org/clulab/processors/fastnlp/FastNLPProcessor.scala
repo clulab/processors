@@ -1,11 +1,6 @@
 package org.clulab.processors.fastnlp
 
-import edu.stanford.nlp.semgraph.SemanticGraph
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
-import edu.stanford.nlp.semgraph.SemanticGraphFactory
-import edu.stanford.nlp.semgraph.SemanticGraphFactory.Mode
-import edu.stanford.nlp.trees.GrammaticalStructure
-import edu.stanford.nlp.util.MetaClass
 import org.clulab.processors.{Document, OpenIEAnnotator}
 import org.clulab.struct.GraphMap
 import org.clulab.discourse.rstparser.RSTParser
