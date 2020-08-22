@@ -14,7 +14,7 @@ Metal currently supports three file formats, all inspired from the simple tabula
 This format stores one token per line. Each token is represented using two columns, where the first column is the word itself, and the second column contains the label to be learned.
 Sentences are separated by empty lines.
 This format can be used for many common sequence modeling tasks such as named entity recognition or part-of-speech tagging.
-The three examples below show examples from these two tasks:
+The two examples below show a couple of annotated sentences from these two tasks:
 
 ```
 Only    O
