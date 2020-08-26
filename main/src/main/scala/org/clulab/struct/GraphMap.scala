@@ -13,6 +13,7 @@ object GraphMap {
   val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies
   val STANFORD_COLLAPSED = "stanford-collapsed" // collapsed Stanford dependencies
   val SEMANTIC_ROLES = "semantic-roles" // semantic roles from CoNLL 2008-09, which includes PropBank and NomBank
+  val HYBRID_DEPENDENCIES = "hybrid" // graph that merges SEMANTIC_ROLES and UNIVERSAL_ENHANCED
 
   def apply(existing: Map[String, DirectedGraph[String]]): GraphMap = {
     val gm = new GraphMap

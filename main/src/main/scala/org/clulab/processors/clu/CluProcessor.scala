@@ -3,8 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.Configured
-import org.clulab.utils.ScienceUtils
+import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -312,6 +311,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         predicateIndexes)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
+
+      if(sentence.graphs.contains(GraphMap.UNIVERSAL_ENHANCED)) {
+        val mergedGraph = DependencyUtils.mergeGraphs(
+          sentence.universalEnhancedDependencies.get,
+          semanticRoles)
+        sentence.graphs += GraphMap.HYBRID_DEPENDENCIES -> mergedGraph
+      }
     }
 
     doc.removeAttachment(PREDICATE_ATTACHMENT_NAME)
@@ -327,7 +333,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     for(sent <- doc.sentences) {
       val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get)
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
-      // TODO: add enhanced dependencies
+
+      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
+      sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
     }
   }
 
