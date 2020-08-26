@@ -9,7 +9,7 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-MODELL="$1"l
+MODELL=$1
 
 sbt 'runMain org.clulab.dynet.Metal -test '"$MODELL"' -conf org/clulab/mtl-en-depsl.conf'
 
