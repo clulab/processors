@@ -11,5 +11,5 @@ fi
 
 MODEL=$1
 
-sbt 'runMain org.clulab.dynet.Metal -train '"$MODEL"' -conf org/clulab/mtl-en-ner.conf'
+sbt 'runMain org.clulab.dynet.Metal -test '"$MODEL"' -conf org/clulab/mtl-en-ner.conf'
 
