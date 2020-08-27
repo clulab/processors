@@ -114,7 +114,7 @@ class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
   }
 
   it should "push subjects/objects inside relative clauses" in {
-    var doc = proc.annotate("the boy who lived")
+    var doc = proc.annotate("the boy who lived") // FAIL
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 1, "nsubj") should be(true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 2, "nsubj") should be(false)
 
