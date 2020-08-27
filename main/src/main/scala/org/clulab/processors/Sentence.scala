@@ -120,6 +120,8 @@ class Sentence(
   
   def semanticRoles:Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
 
+  def hybridDependencies:Option[DirectedGraph[String]] = graphs.get(HYBRID_DEPENDENCIES)
+
   def setDependencies(depType: String, deps: DirectedGraph[String]): Unit = graphs += (depType -> deps)
 
   /**
