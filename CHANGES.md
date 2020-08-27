@@ -1,5 +1,5 @@
 # Changes
-+ **8.1.4** - Added support for basic universal dependencies in CLU processor.
++ **8.1.4** - Added support for basic and enhanced universal dependencies in CluProcessor.
 + **8.1.4** - Metal now uses a single file format across all tasks. 
 + **8.1.4** - Bug fix in Metal dropout during training. 
 + **8.1.3** - Added SRL functionality to FastNLPProcessorWithSemanticRoles.
