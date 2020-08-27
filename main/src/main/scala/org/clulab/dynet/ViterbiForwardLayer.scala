@@ -90,6 +90,9 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
       transitionMatrix, t2i.size, t2i(START_TAG), t2i(STOP_TAG))
     labelsIds.map(i2t(_))
   }
+
+  override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] =
+    throw new RuntimeException("ERROR: inferenceWithScores not supported for ViterbiLayer!")
 }
 
 object ViterbiForwardLayer {

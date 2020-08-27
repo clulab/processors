@@ -317,9 +317,12 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     Layers.predictJointly(model, sentence)
   }
 
-  def predict(taskId: Int,
-              sentence: AnnotatedSentence): IndexedSeq[String] = {
+  def predict(taskId: Int, sentence: AnnotatedSentence): IndexedSeq[String] = {
     Layers.predict(model, taskId, sentence)
+  }
+
+  def predictWithScores(taskId: Int, sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    Layers.predictWithScores(model, taskId, sentence)
   }
 
   def test(): Unit = {
