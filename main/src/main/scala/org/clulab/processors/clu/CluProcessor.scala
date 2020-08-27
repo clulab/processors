@@ -174,6 +174,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
+    /*
     val headsAsString = mtlDepsHead.predict(0, annotatedSentence)
     println("REL HEADS: " + headsAsString.mkString(", "))
     val heads = new ArrayBuffer[Int]()
@@ -185,10 +186,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         heads += i + relativeHead
       }
     }
+    */
 
-    /*
     val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence)
-    //println(s"Heads: ${headsAsString.mkString(", ")}")
     val heads = new ArrayBuffer[Int]()
     for(wi <- headsAsStringsWithScores.indices) {
       val predictionsForThisWord = headsAsStringsWithScores(wi)
@@ -214,7 +214,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         heads += -1
       }
     }
-     */
 
     val annotatedSentenceWithHeads =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
