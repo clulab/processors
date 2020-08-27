@@ -153,14 +153,36 @@ object ToEnhancedDependencies {
           }
         }
 
+        // add the dobj of the left verb to the right, if the right doesn't have a dobj already
+        for(label <- List("dobj")) {
+          val leftObjs = dgi.findByHeadAndName(left, label)
+          val rightObjs = dgi.findByHeadAndName(right, label)
+          if (rightObjs.isEmpty && leftObjs.nonEmpty) {
+            for (o <- leftObjs) {
+              dgi.addEdge(right, o.destination, label)
+            }
+          }
+        }
+
         // add the prep_x/nmod_x of the right verb to the left, if the left doesn't have a similar prep_x/nmod_x already
-        var rightPreps =
+        val rightPreps =
           if(universal) dgi.findByHeadAndPattern(right, "^nmod_*".r)
           else dgi.findByHeadAndPattern(right, "^prep_*".r)
         for(rightPrep <- rightPreps) {
           val leftPreps = dgi.findByHeadAndName(left, rightPrep.relation)
           if(leftPreps.isEmpty) {
             dgi.addEdge(left, rightPrep.destination, rightPrep.relation)
+          }
+        }
+
+        // add the prep_x/nmod_x of the left verb to the right, if the right doesn't have a similar prep_x/nmod_x already
+        val leftPreps =
+          if(universal) dgi.findByHeadAndPattern(left, "^nmod_*".r)
+          else dgi.findByHeadAndPattern(left, "^prep_*".r)
+        for(leftPrep <- leftPreps) {
+          val rightPreps = dgi.findByHeadAndName(right, leftPrep.relation)
+          if(rightPreps.isEmpty) {
+            dgi.addEdge(right, leftPrep.destination, leftPrep.relation)
           }
         }
       }
