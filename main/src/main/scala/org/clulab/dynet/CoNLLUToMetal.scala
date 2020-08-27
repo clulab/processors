@@ -22,7 +22,7 @@ object CoNLLUToMetal {
         val posTag = tokens(4)
         val absHeadPosition = tokens(6).toInt - 1 // our positions start at 0
         val relativeHeadDist =
-          if(absHeadPosition == -1) 0 // we encode head position as 0
+          if(absHeadPosition == -1) 0 // we encode root position as 0
           else absHeadPosition - offset
         val depLabel = tokens(7)
 
