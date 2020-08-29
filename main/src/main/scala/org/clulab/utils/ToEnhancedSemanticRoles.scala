@@ -1,7 +1,9 @@
 package org.clulab.utils
 
 import org.clulab.processors.Sentence
-import org.clulab.struct.{DirectedGraph, DirectedGraphIndex}
+import org.clulab.struct.{DirectedGraph, DirectedGraphIndex, Edge}
+
+import scala.collection.mutable.ListBuffer
 
 /**
  * Converts CoNLL-style semantic role dependencies into an enahnced format, inspired by enhanced universal dependencies
@@ -30,7 +32,25 @@ object ToEnhancedSemanticRoles {
   def collapsePrepositions(sentence: Sentence,
                            depsIndex: DirectedGraphIndex[String],
                            rolesIndex: DirectedGraphIndex[String]): Unit = {
-    // TODO
+    val toRemove = new ListBuffer[Edge[String]]
+
+    for(predicate <- rolesIndex.outgoingEdges.indices) {
+      for(arg <- rolesIndex.outgoingEdges(predicate)) {
+        val modifier = arg._1
+        val label = arg._2
+
+        val prepObjects = depsIndex.findByModifierAndName(modifier, "case")
+        if(prepObjects.nonEmpty) { // by definition we can have at most 1 dependency here
+          val prepObject = prepObjects.head
+          val newArg = prepObject.source
+          val newLabel = label + "_" + sentence.words(prepObject.destination).toLowerCase()
+          rolesIndex.addEdge(predicate, newArg, newLabel)
+          toRemove += Edge(predicate, modifier, label)
+        }
+      }
+    }
+
+    toRemove.foreach(e => rolesIndex.removeEdge(e.source, e.destination, e.relation))
   }
 
   /**

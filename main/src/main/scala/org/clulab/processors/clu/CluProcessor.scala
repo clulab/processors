@@ -3,7 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies}
+import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -349,10 +349,20 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
 
-      if(sentence.graphs.contains(GraphMap.UNIVERSAL_ENHANCED)) {
+      // enhanced semantic roles need basic universal dependencies to be generated
+      if(sentence.graphs.contains(GraphMap.UNIVERSAL_BASIC)) {
+        val enhancedRoles = ToEnhancedSemanticRoles.generateEnhancedSemanticRoles(
+          sentence, sentence.universalBasicDependencies.get, semanticRoles)
+        sentence.graphs += GraphMap.ENHANCED_SEMANTIC_ROLES -> enhancedRoles
+      }
+
+      // hybrid = universal enhanced + roles enhanced
+      if(sentence.graphs.contains(GraphMap.UNIVERSAL_ENHANCED) &&
+         sentence.graphs.contains(GraphMap.ENHANCED_SEMANTIC_ROLES)) {
+
         val mergedGraph = DependencyUtils.mergeGraphs(
           sentence.universalEnhancedDependencies.get,
-          semanticRoles)
+          sentence.enhancedSemanticRoles.get)
         sentence.graphs += GraphMap.HYBRID_DEPENDENCIES -> mergedGraph
       }
     }
