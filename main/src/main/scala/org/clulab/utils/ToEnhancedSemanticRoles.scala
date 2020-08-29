@@ -43,7 +43,9 @@ object ToEnhancedSemanticRoles {
         if(prepObjects.nonEmpty) { // by definition we can have at most 1 dependency here
           val prepObject = prepObjects.head
           val newArg = prepObject.source
-          val newLabel = label + "_" + sentence.words(prepObject.destination).toLowerCase()
+          val newLabel =
+            if(label == "Ax") label + "_" + sentence.words(prepObject.destination).toLowerCase()
+            else label
           rolesIndex.addEdge(predicate, newArg, newLabel)
           toRemove += Edge(predicate, modifier, label)
         }
