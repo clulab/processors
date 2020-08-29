@@ -99,7 +99,7 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     incoming
   }
 
-  def size:Int = outgoingEdges.length
+  def size:Int = outgoingEdges.length // this was computed correctly using computeSize
 
   def getOutgoingEdges(node:Int): Array[(Int, E)] = outgoingEdges(node)
   def getIncomingEdges(node:Int): Array[(Int, E)] = incomingEdges(node)
@@ -239,8 +239,8 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     false
   }
 
-  def toDirectedGraphIndex: DirectedGraphIndex[E] = {
-    val dgi = new DirectedGraphIndex[E](size)
+  def toDirectedGraphIndex(sentenceLength:Int = size): DirectedGraphIndex[E] = {
+    val dgi = new DirectedGraphIndex[E](sentenceLength)
     roots.foreach(dgi.addRoot(_))
     allEdges.foreach(e => dgi.addEdge(e._1, e._2, e._3))
     dgi

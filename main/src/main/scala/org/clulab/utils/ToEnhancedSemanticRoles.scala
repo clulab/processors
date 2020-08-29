@@ -15,8 +15,8 @@ object ToEnhancedSemanticRoles {
   def generateEnhancedSemanticRoles(sentence:Sentence,
                                     basicDependencies:DirectedGraph[String],
                                     semanticRoles:DirectedGraph[String]): DirectedGraph[String] = {
-    val rolesIndex = semanticRoles.toDirectedGraphIndex
-    val depsIndex = basicDependencies.toDirectedGraphIndex
+    val rolesIndex = semanticRoles.toDirectedGraphIndex(basicDependencies.size)
+    val depsIndex = basicDependencies.toDirectedGraphIndex(basicDependencies.size)
 
     collapsePrepositions(sentence, depsIndex, rolesIndex)
     propagateArgsInConjPredicates(sentence, depsIndex, rolesIndex)
@@ -71,6 +71,35 @@ object ToEnhancedSemanticRoles {
   def propagateConjArgs(sentence: Sentence,
                         depsIndex: DirectedGraphIndex[String],
                         rolesIndex: DirectedGraphIndex[String]): Unit = {
-    // TODO
+    val conjs = depsIndex.findByName("conj").sortBy(_.source)
+    val toAdd = new ListBuffer[Edge[String]]
+
+    for(conj <- conjs) {
+      val left = math.min(conj.source, conj.destination)
+      val right = math.max(conj.source, conj.destination)
+
+      val leftRoles = rolesIndex.findByModifierAndPattern(left, "^A*".r).toSet
+      val rightRoles = rolesIndex.findByModifierAndPattern(right, "^A*".r).toSet
+
+      for(leftRole <- leftRoles) {
+        val predicate = leftRole.source
+        val label = leftRole.relation
+        val e = Edge(predicate, right, label)
+        if(! rightRoles.contains(e)) {
+          toAdd += e
+        }
+      }
+
+      for(rightRole <- rightRoles) {
+        val predicate = rightRole.source
+        val label = rightRole.relation
+        val e = Edge(predicate, left, label)
+        if(! leftRoles.contains(e)) {
+          toAdd += e
+        }
+      }
+    }
+
+    for(e <- toAdd) rolesIndex.addEdge(e.source, e.destination, e.relation)
   }
 }

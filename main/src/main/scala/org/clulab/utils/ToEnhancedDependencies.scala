@@ -20,7 +20,7 @@ import scala.collection.mutable.ListBuffer
   */
 object ToEnhancedDependencies {
   def generateStanfordEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
-    val dgi = dg.toDirectedGraphIndex
+    val dgi = dg.toDirectedGraphIndex()
     collapsePrepositionsStanford(sentence, dgi)
     raiseSubjects(dgi)
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = false)
@@ -30,7 +30,7 @@ object ToEnhancedDependencies {
   }
 
   def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
-    val dgi = dg.toDirectedGraphIndex
+    val dgi = dg.toDirectedGraphIndex()
     collapsePrepositionsUniversal(sentence, dgi)
     raiseSubjects(dgi)
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = true)
@@ -138,6 +138,17 @@ object ToEnhancedDependencies {
           if (leftSubjs.nonEmpty && rightSubjs.isEmpty) {
             for (s <- leftSubjs) {
               dgi.addEdge(right, s.destination, label)
+            }
+          }
+        }
+
+        // add the subject of the right verb to the left, if the left doesn't have a subject already
+        for(label <- List("nsubj", "nsubjpass", "agent")) {
+          val rightSubjs = dgi.findByHeadAndName(right, label)
+          val leftSubjs = dgi.findByHeadAndName(left, label)
+          if (rightSubjs.nonEmpty && leftSubjs.isEmpty) {
+            for (s <- rightSubjs) {
+              dgi.addEdge(left, s.destination, label)
             }
           }
         }
