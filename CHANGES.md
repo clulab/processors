@@ -1,4 +1,5 @@
 # Changes
++ **8.2.0** - Added simple lexicon-based sentiment analyzer, using Bing Liu's lexicon.
 + **8.2.0** - Added support for enhanced semantic roles to CluProcessor.
 + **8.2.0** - Added support for basic and enhanced universal dependencies in CluProcessor.
 + **8.2.0** - Metal now uses a single file format across all tasks. 
