@@ -117,8 +117,11 @@ class Sentence(
 
   /** Fetches the Stanford collapsed dependencies */
   def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_COLLAPSED)
-  
+
   def semanticRoles:Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
+  def enhancedSemanticRoles:Option[DirectedGraph[String]] = graphs.get(ENHANCED_SEMANTIC_ROLES)
+
+  def hybridDependencies:Option[DirectedGraph[String]] = graphs.get(HYBRID_DEPENDENCIES)
 
   def setDependencies(depType: String, deps: DirectedGraph[String]): Unit = graphs += (depType -> deps)
 

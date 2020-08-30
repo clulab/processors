@@ -155,6 +155,15 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
           pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
         }
       })
+      sentence.enhancedSemanticRoles.foreach(dependencies => {
+        pw.println("Enhanced semantic dependencies:")
+        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
+        while(iterator.hasNext) {
+          val dep = iterator.next
+          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
+          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
+        }
+      })
       sentence.syntacticTree.foreach(tree => {
         pw.println("Constituent tree: " + tree.toStringDepth(showHead = false))
         // see the org.clulab.struct.Tree class for more information

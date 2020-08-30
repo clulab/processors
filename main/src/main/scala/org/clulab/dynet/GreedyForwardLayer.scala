@@ -7,6 +7,8 @@ import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
+import scala.collection.mutable.ArrayBuffer
+
 class GreedyForwardLayer (parameters:ParameterCollection,
                           inputSize: Int,
                           isDual: Boolean,
@@ -39,6 +41,22 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   override def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String] = {
     val labelIds = Utils.greedyPredict(emissionScores)
     labelIds.map(i2t(_))
+  }
+
+  override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    val labelsWithScores = new ArrayBuffer[IndexedSeq[(String, Float)]]
+
+    for(scoresForPosition <- emissionScores) {
+      val labelsAndScores = new ArrayBuffer[(String, Float)]()
+      for(lid <- scoresForPosition.indices) {
+        val label = i2t(lid)
+        val score = scoresForPosition(lid)
+        labelsAndScores += Tuple2(label, score)
+      }
+      labelsWithScores += labelsAndScores.sortBy(- _._2)
+    }
+
+    labelsWithScores
   }
 }
 

@@ -3,7 +3,7 @@ package org.clulab.dynet
 import java.io.PrintWriter
 
 /**
- * Converts Robert's CoNLLY format (for syntactic dependencies) to Metal
+ * Converts Robert's CoNLLY format (for syntactic dependencies, from his LREC 2020 paper) to Metal
  */
 object CoNLLYToMetal {
   def main(args: Array[String]): Unit = {

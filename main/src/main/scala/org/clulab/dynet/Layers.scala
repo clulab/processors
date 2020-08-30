@@ -273,6 +273,21 @@ object Layers {
     labelsForTask
   }
 
+  def predictWithScores(layers: IndexedSeq[Layers],
+                        taskId: Int,
+                        sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    val labelsForTask =
+      DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
+        ComputationGraph.renew()
+
+        val states = forwardForTask(layers, taskId, sentence, doDropout = false)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
+      }
+
+    labelsForTask
+  }
+
   def loss(layers: IndexedSeq[Layers],
            taskId: Int,
            sentence: AnnotatedSentence,

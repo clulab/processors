@@ -3,8 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.Configured
-import org.clulab.utils.ScienceUtils
+import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -83,13 +82,21 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   override def annotate(doc:Document): Document = {
     tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+    //println("After POS")
+    //println(doc.sentences.head.tags.get.mkString(", "))
     recognizeNamedEntities(doc) // the call to the NER MTL is in here
+    //println("After NER")
+    //println(doc.sentences.head.entities.get.mkString(", "))
     chunking(doc) // Nothing, kept for the record
     parse(doc) // dependency parsing
+    //println("After parsing")
+    //println(doc.sentences.head.universalEnhancedDependencies.get)
 
     lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
 
     srl(doc) // SRL (arguments)
+    //println("After SRL")
+    //println(doc.sentences.head.semanticRoles.get)
 
     // these are not implemented yet
     resolveCoreference(doc)
@@ -167,8 +174,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
+    /*
     val headsAsString = mtlDepsHead.predict(0, annotatedSentence)
-    //println(s"Heads: ${headsAsString.mkString(", ")}")
+    println("REL HEADS: " + headsAsString.mkString(", "))
     val heads = new ArrayBuffer[Int]()
     for(i <- headsAsString.indices) {
       val relativeHead = headsAsString(i).toInt
@@ -176,6 +184,34 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         heads += -1
       } else {
         heads += i + relativeHead
+      }
+    }
+    */
+
+    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence)
+    val heads = new ArrayBuffer[Int]()
+    for(wi <- headsAsStringsWithScores.indices) {
+      val predictionsForThisWord = headsAsStringsWithScores(wi)
+
+      // pick the prediction with the highest score, which makes sense for the current sentence
+      var done = false
+      for(hi <- predictionsForThisWord.indices if ! done) {
+        val relativeHead = predictionsForThisWord(hi)._1.toInt
+        if(relativeHead == 0) { // this is the root
+          heads += -1
+          done = true
+        } else {
+          val headPosition = wi + relativeHead
+          if(headPosition >= 0 && headPosition < words.size) {
+            heads += headPosition
+            done = true
+          }
+        }
+      }
+      if(! done) {
+        // we should not be here, but let's be safe
+        // if nothing good was found, assume root
+        heads += -1
       }
     }
 
@@ -312,6 +348,23 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         predicateIndexes)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
+
+      // enhanced semantic roles need basic universal dependencies to be generated
+      if(sentence.graphs.contains(GraphMap.UNIVERSAL_BASIC)) {
+        val enhancedRoles = ToEnhancedSemanticRoles.generateEnhancedSemanticRoles(
+          sentence, sentence.universalBasicDependencies.get, semanticRoles)
+        sentence.graphs += GraphMap.ENHANCED_SEMANTIC_ROLES -> enhancedRoles
+      }
+
+      // hybrid = universal enhanced + roles enhanced
+      if(sentence.graphs.contains(GraphMap.UNIVERSAL_ENHANCED) &&
+         sentence.graphs.contains(GraphMap.ENHANCED_SEMANTIC_ROLES)) {
+
+        val mergedGraph = DependencyUtils.mergeGraphs(
+          sentence.universalEnhancedDependencies.get,
+          sentence.enhancedSemanticRoles.get)
+        sentence.graphs += GraphMap.HYBRID_DEPENDENCIES -> mergedGraph
+      }
     }
 
     doc.removeAttachment(PREDICATE_ATTACHMENT_NAME)
@@ -327,7 +380,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     for(sent <- doc.sentences) {
       val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get)
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
-      // TODO: add enhanced dependencies
+
+      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
+      sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
     }
   }
 

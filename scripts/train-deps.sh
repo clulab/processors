@@ -4,6 +4,11 @@
 # Script to train a syntactic dependency parser model
 #
 
+if [ "$#" -ne 1 ]; then
+    echo "You must provide the model name in the command line!"
+    exit 1
+fi
+
 MODELH="$1"h
 MODELL="$1"l
 

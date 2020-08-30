@@ -1,7 +1,10 @@
 package org.clulab.utils
 
 import org.clulab.processors.Sentence
-import org.clulab.struct.{ DirectedGraph, Interval }
+import org.clulab.struct.{DirectedGraph, Edge, Interval}
+
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /**
  * Utility functions for use with directed (dependency) graphs
@@ -217,6 +220,15 @@ object DependencyUtils {
     if((aSubgraph.isDefined && aSubgraph.get.contains(b)) ||
       (bSubgraph.isDefined && bSubgraph.get.contains(a))) true
     else false
+  }
+
+  def mergeGraphs[T](dg1: DirectedGraph[T], dg2: DirectedGraph[T]): DirectedGraph[T] = {
+    val roots = dg1.roots ++ dg1.roots
+    val edges = new mutable.HashSet[Edge[T]]
+    edges ++= dg1.edges
+    edges ++= dg2.edges
+
+    new DirectedGraph[T](edges.toList, roots)
   }
 }
 

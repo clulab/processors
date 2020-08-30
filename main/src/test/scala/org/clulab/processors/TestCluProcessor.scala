@@ -124,10 +124,10 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println(doc.sentences.head.universalBasicDependencies.get)
 
     doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "nsubj") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 2, "obj") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 4, "parataxis") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 2, "dobj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "acl:relcl") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "nsubj") should be(true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 5, "obj") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 5, "dobj") should be(true)
     println("Parsing is fine.")
   }
 

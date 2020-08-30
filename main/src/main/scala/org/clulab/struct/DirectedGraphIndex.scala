@@ -10,26 +10,31 @@ import scala.util.matching.Regex
   * Date: 8/2/17
   */
 class DirectedGraphIndex[E](
+  val size: Int,
   val roots:mutable.HashSet[Int],
   val outgoingEdges:Array[mutable.HashSet[(Int, E)]], // from head to modifier
+  val incomingEdges:Array[mutable.HashSet[(Int, E)]], // from modifier to head
   val edgesByName:mutable.HashMap[E, mutable.HashSet[(Int, Int)]]) { // indexes edges by label
 
-  def this(len:Int) {
-    this(
+  def this(sentenceLength:Int) {
+    this(sentenceLength,
       new mutable.HashSet[Int],
-      DirectedGraphIndex.mkOutgoing(len),
+      DirectedGraphIndex.mkOutgoing(sentenceLength),
+      DirectedGraphIndex.mkIncoming(sentenceLength),
       new mutable.HashMap[E, mutable.HashSet[(Int, Int)]]()
     )
   }
 
   def addEdge(head:Int, modifier:Int, label:E) {
     outgoingEdges(head) += Tuple2(modifier, label)
+    incomingEdges(modifier) += Tuple2(head, label)
     val byLabel = edgesByName.getOrElseUpdate(label, new mutable.HashSet[(Int, Int)]())
     byLabel += Tuple2(head, modifier)
   }
 
   def removeEdge(head:Int, modifier:Int, label:E): Unit = {
     outgoingEdges(head).remove(Tuple2(modifier, label))
+    incomingEdges(modifier).remove(Tuple2(head, label))
     val byLabel = edgesByName.get(label)
     if(byLabel.nonEmpty) {
       byLabel.get.remove(Tuple2(head, modifier))
@@ -58,9 +63,23 @@ class DirectedGraphIndex[E](
 
   def findByHeadAndPattern(head:Int, pattern:Regex): Seq[Edge[E]] = {
     val edges = new ListBuffer[Edge[E]]
-    for(e <- outgoingEdges(head).toList) {
-      if(pattern.findFirstMatchIn(e._2.toString).nonEmpty) {
-        edges += new Edge[E](head, e._1, e._2)
+    if(head < outgoingEdges.length) {
+      for (e <- outgoingEdges(head).toList) {
+        if (pattern.findFirstMatchIn(e._2.toString).nonEmpty) {
+          edges += new Edge[E](head, e._1, e._2)
+        }
+      }
+    }
+    edges
+  }
+
+  def findByModifierAndPattern(modifier:Int, pattern:Regex): Seq[Edge[E]] = {
+    val edges = new ListBuffer[Edge[E]]
+    if(modifier < incomingEdges.length) {
+      for (e <- incomingEdges(modifier).toList) {
+        if (pattern.findFirstMatchIn(e._2.toString).nonEmpty) {
+          edges += new Edge[E](e._1, modifier, e._2)
+        }
       }
     }
     edges
@@ -84,5 +103,12 @@ object DirectedGraphIndex {
     for(i <- outgoing.indices)
       outgoing(i) = new mutable.HashSet[(Int, E)]()
     outgoing
+  }
+
+  private def mkIncoming[E](len:Int): Array[mutable.HashSet[(Int, E)]] = {
+    val incoming = new Array[mutable.HashSet[(Int, E)]](len)
+    for(i <- incoming.indices)
+      incoming(i) = new mutable.HashSet[(Int, E)]()
+    incoming
   }
 }

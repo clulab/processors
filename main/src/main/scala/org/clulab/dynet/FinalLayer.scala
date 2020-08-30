@@ -13,4 +13,6 @@ trait FinalLayer extends Saveable {
   def loss(emissionScoresAsExpression: ExpressionVector, goldLabels: IndexedSeq[String]): Expression
 
   def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
+
+  def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]]
 }
