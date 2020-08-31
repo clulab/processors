@@ -62,7 +62,38 @@ object ToEnhancedSemanticRoles {
   def propagateArgsInConjPredicates(sentence: Sentence,
                                     depsIndex: DirectedGraphIndex[String],
                                     rolesIndex: DirectedGraphIndex[String]): Unit = {
-    // TODO
+    val conjs = depsIndex.findByName("conj").sortBy(_.source)
+    val toAdd = new ListBuffer[Edge[String]]
+
+    for(conj <- conjs) {
+      val left = math.min(conj.source, conj.destination)
+      val right = math.max(conj.source, conj.destination)
+
+      val leftRoles = rolesIndex.findByHeadAndPattern(left, "^A*".r).toSet
+      val rightRoles = rolesIndex.findByHeadAndPattern(right, "^A*".r).toSet
+
+      // add left roles to right predicate, if not present already
+      for(leftRole <- leftRoles) {
+        val modifier = leftRole.destination
+        val label = leftRole.relation
+        val e = Edge(right, modifier, label)
+        if(! rightRoles.contains(e)) {
+          toAdd += e
+        }
+      }
+
+      // add right roles to left predicate, if not present already
+      for(rightRole <- rightRoles) {
+        val modifier = rightRole.destination
+        val label = rightRole.relation
+        val e = Edge(left, modifier, label)
+        if(! leftRoles.contains(e)) {
+          toAdd += e
+        }
+      }
+    }
+
+    for(e <- toAdd) rolesIndex.addEdge(e.source, e.destination, e.relation)
   }
 
   /**
@@ -83,6 +114,7 @@ object ToEnhancedSemanticRoles {
       val leftRoles = rolesIndex.findByModifierAndPattern(left, "^A*".r).toSet
       val rightRoles = rolesIndex.findByModifierAndPattern(right, "^A*".r).toSet
 
+      // add left roles to right argument, if not present already
       for(leftRole <- leftRoles) {
         val predicate = leftRole.source
         val label = leftRole.relation
@@ -92,6 +124,7 @@ object ToEnhancedSemanticRoles {
         }
       }
 
+      // add right roles to left argument, if not present already
       for(rightRole <- rightRoles) {
         val predicate = rightRole.source
         val label = rightRole.relation
