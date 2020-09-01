@@ -1,4 +1,5 @@
 [![Build Status](http://jenkins.cs.arizona.edu:8090/buildStatus/icon?job=processors%2Fmaster)](http://jenkins.cs.arizona.edu:8090/job/processors) 
+[![Maven Central](https://img.shields.io/maven-central/v/org.clulab/processors-corenlp_2.12)](https://img.shields.io/maven-central/v/org.clulab/processors-corenlp_2.12)
 
 # What is it?
 
