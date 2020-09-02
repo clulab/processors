@@ -325,6 +325,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
   }
 
+  private def predicateCorrections(origPreds: IndexedSeq[Int], 
+  	sentence: Sentence): IndexedSeq[Int] = {
+
+  	TODO
+  }
+
   override def srl(doc: Document): Unit = {
     val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
     assert(predicatesAttachment.nonEmpty)
@@ -332,6 +338,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     if(doc.sentences.length > 0) {
       assert(doc.sentences(0).tags.nonEmpty)
       assert(doc.sentences(0).entities.nonEmpty)
+      assert(doc.sentences(0).universalBasicDependencies.nonEmpty)
     }
 
     val predicates = predicatesAttachment.get.asInstanceOf[PredicateAttachment].predicates
@@ -340,7 +347,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     // generate SRL frames for each predicate in each sentence
     for(si <- predicates.indices) {
       val sentence = doc.sentences(si)
-      val predicateIndexes = predicates(si)
+      val predicateIndexes = 
+      	predicateCorrections(predicates(si), sentence)
       val semanticRoles = srlSentence(
         sentence.words,
         sentence.tags.get,
