@@ -10,11 +10,20 @@ class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
     new CluProcessor()
   }
 
-  "CluProcessor" should "collapse prepositions" in {
+  "CluProcessor" should "collapse prepositions with noun objects" in {
     val doc = proc.annotate("He gave the book to Jane.")
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(1, 3, "A1") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(1, 5, "Ax_to") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(1, 4, "Ax") should be(false)
+  }
+
+  it should "collapse prepositions with verb objects" in {
+    val doc = proc.annotate("Food diversity increased the cost of feeding children.")
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(1, 0, "A1") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 1, "A0") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 4, "A4") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 6, "A1") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(6, 7, "Ax") should be(true) // TODO: this should probably be A1...
   }
 
   it should "propagate conjoined subjects and objects to same predicate" in {
