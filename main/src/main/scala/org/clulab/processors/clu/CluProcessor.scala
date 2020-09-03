@@ -325,6 +325,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
   }
 
+  private def hasDep[E](dependencies: Array[(Int, E)], label: E): Boolean = {
+    for(d <- dependencies) {
+      if (d._2 == label) {
+        return true
+      }
+    }
+
+    false
+  }
+
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
     val preds = origPreds.toArray
     val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
