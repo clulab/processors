@@ -336,6 +336,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
+
+    if(sentence.universalBasicDependencies.isEmpty) return false
+    if(sentence.tags.isEmpty) return false
+
     val preds = origPreds.toArray
     val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
     val words = sentence.words
@@ -344,7 +348,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     for(i <- preds.indices) {
       if(preds(i) == 0) {
         // -ing NN with a compound outgoing dependency
-        if(words(i).endsWith("ing") && tags(i).startsWith("NN") && hasDep(outgoing, "compound")) {
+        if(words(i).endsWith("ing") && tags(i).startsWith("NN") &&
+           outgoing.length > i && hasDep(outgoing(i), "compound")) {
           preds(i) = 1
         }
       }
