@@ -337,8 +337,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
 
-    if(sentence.universalBasicDependencies.isEmpty) return false
-    if(sentence.tags.isEmpty) return false
+    if(sentence.universalBasicDependencies.isEmpty) return origPreds
+    if(sentence.tags.isEmpty) return origPreds
 
     val preds = origPreds.toArray
     val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
