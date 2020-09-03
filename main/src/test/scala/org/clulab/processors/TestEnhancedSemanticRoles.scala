@@ -21,7 +21,7 @@ class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
     val doc = proc.annotate("Food diversity increased the cost of feeding children.")
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(1, 0, "A1") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 1, "A0") should be(true)
-    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 4, "A4") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 4, "A1") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 6, "A1") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(6, 7, "Ax") should be(true) // TODO: this should probably be A1...
   }
