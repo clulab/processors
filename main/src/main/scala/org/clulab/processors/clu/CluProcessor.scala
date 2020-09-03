@@ -325,7 +325,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
   }
 
-  private def hasDep[E](dependencies: Array[(Int, E)], label: E): Boolean = {
+  private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean = {
     for(d <- dependencies) {
       if (d._2 == label) {
         return true
