@@ -325,10 +325,22 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
   }
 
-  private def predicateCorrections(origPreds: IndexedSeq[Int], 
-  	sentence: Sentence): IndexedSeq[Int] = {
+  private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
+    val preds = origPreds.toArray
+    val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
+    val words = sentence.words
+    val tags = sentence.tags.get
 
-  	TODO
+    for(i <- preds.indices) {
+      if(preds(i) == 0) {
+        // -ing NN with a compound outgoing dependency
+        if(words(i).endsWith("ing") && tags(i).startsWith("NN") && hasDep(outgoing, "compound")) {
+          preds(i) = 1
+        }
+      }
+    }
+
+    preds.toIndexedSeq
   }
 
   override def srl(doc: Document): Unit = {
