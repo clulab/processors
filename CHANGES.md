@@ -1,4 +1,5 @@
 # Changes
++ **8.2.1** - Improvements to the generation of enhanced semantic roles.
 + **8.2.0** - Added simple lexicon-based sentiment analyzer, using Bing Liu's lexicon.
 + **8.2.0** - Added support for enhanced semantic roles to CluProcessor.
 + **8.2.0** - Added support for basic and enhanced universal dependencies in CluProcessor.
