@@ -1,0 +1,15 @@
+// Print-only styles.
+@media print {
+  .side-bar, .page-header { display: none; }
+  .main-content { max-width: auto; margin: 1em;}
+}
+
+// .site-nav, .site-header, .site-footer { width: 100%; }
+// @media (min-width: 66.5rem) { .site-nav, .site-header, .site-footer { width: 364px; } }
+
+// .side-bar { z-index: 0; display: flex; flex-wrap: wrap; background-color: #f5f6fa; }
+// @media (min-width: 50rem) { .side-bar { flex-wrap: nowrap; position: fixed; width: 248px; height: 100%; flex-direction: column; border-right: 1px solid #eeebee; align-items: flex-end; } }
+@media (min-width: 66.5rem) { .side-bar { width: calc((100% - 1264px) / 2 + 264px); min-width: 264px; } }
+
+@media (min-width: 50rem) { .main { position: relative; max-width: 800px; margin-left: 248px; } }
+@media (min-width: 66.5rem) { .main { margin-left: calc( (100% - 1064px) / 2 + 264px ); } }
