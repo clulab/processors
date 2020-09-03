@@ -39,7 +39,7 @@ object ToEnhancedSemanticRoles {
         val modifier = arg._1
         val label = arg._2
 
-        val prepObjects = depsIndex.findByModifierAndName(modifier, "case")
+        val prepObjects = depsIndex.findByModifierAndPattern(modifier, "case|mark".r)
         if(prepObjects.nonEmpty) { // by definition we can have at most 1 dependency here
           val prepObject = prepObjects.head
           val newArg = prepObject.source
