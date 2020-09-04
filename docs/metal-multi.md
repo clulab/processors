@@ -1,7 +1,7 @@
 ---
 title: Multi-task Learning
 parent: Metal
-has_children: true
+has_children: false
 nav_order: 3
 ---
 
