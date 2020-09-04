@@ -34,4 +34,11 @@ class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 1, "A0") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 5, "A1") should be(true)
   }
+
+  it should "apply the deterministic predicate corrections" in {
+    val doc = proc.annotate("The price of water trucking.")
+
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(1, 4, "A1") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 3, "A1") should be(true)
+  }
 }
