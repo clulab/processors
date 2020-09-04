@@ -339,23 +339,26 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
     if(sentence.universalBasicDependencies.isEmpty) return origPreds
     if(sentence.tags.isEmpty) return origPreds
+    
+    val preds = origPreds.toSet
+    val newPreds = new mutable.HashSet[Int]()
+    newPreds ++= preds
 
-    val preds = origPreds.toArray
     val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
     val words = sentence.words
     val tags = sentence.tags.get
 
-    for(i <- preds.indices) {
-      if(preds(i) == 0) {
+    for(i <- words.indices) {
+      if(! preds.contains(i)) {
         // -ing NN with a compound outgoing dependency
         if(words(i).endsWith("ing") && tags(i).startsWith("NN") &&
            outgoing.length > i && hasDep(outgoing(i), "compound")) {
-          preds(i) = 1
+          newPreds += i
         }
       }
     }
 
-    preds.toIndexedSeq
+    newPreds.toVector.sorted
   }
 
   override def srl(doc: Document): Unit = {
