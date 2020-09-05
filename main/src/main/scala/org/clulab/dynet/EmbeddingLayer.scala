@@ -24,6 +24,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val tag2i:Option[Map[String, Int]], // POS tag to index
                       val ne2i:Option[Map[String, Int]], // NE tag to index
                       val learnedWordEmbeddingSize: Int, // size of the learned word embedding
+                      val taskSpecificWordEmbeddingSize: Int, // size of the per-task learned word embedding 
                       val charEmbeddingSize: Int, // size of the character embedding
                       val charRnnStateSize: Int, // size of each one of the char-level RNNs
                       val posTagEmbeddingSize: Int, // size of the POS tag embedding
@@ -33,6 +34,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val positionEmbeddingSize: Int,
                       val useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
                       val wordLookupParameters:LookupParameter,
+                      val taskSpecificWordEmbedding:Array[LookupParameter],
                       val charLookupParameters:LookupParameter,
                       val charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
                       val charBwRnnBuilder:RnnBuilder,
@@ -45,7 +47,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
 
   override def forward(sentence: AnnotatedSentence,
-                       doDropout: Boolean): ExpressionVector = {
+                       doDropout: Boolean, taskId: Option[Int]): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
     val words = sentence.words
@@ -66,7 +68,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       val tag = if(tags.isDefined) Some(tags.get(i)) else None
       val ne = if(nes.isDefined) Some(nes.get(i)) else None
       val headPosition = if(headPositions.isDefined) Some(headPositions.get(i)) else None
-      embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddings(i), doDropout))
+      embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddings(i), doDropout, taskId))
     }
 
     embeddings
@@ -78,7 +80,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                           ne: Option[String],
                           predicatePosition: Option[Int],
                           constEmbedding: Expression,
-                          doDropout: Boolean): Expression = {
+                          doDropout: Boolean, taskId: Option[Int]): Expression = {
     //
     // Learned word embeddings
     // These are initialized randomly, and updated during backprop
@@ -86,7 +88,25 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     var id = w2i.getOrElse(word, 0) // 0 reserved for UNK in the vocab
     // sample uniformly with prob 0.5 from singletons; move all other singletons to UNK
     if(doDropout && id > 0 && w2f.getCount(word) == 1 && RANDOM.nextDouble() < 0.5) id = 0
-    val learnedWordEmbedding = Expression.lookup(wordLookupParameters, id)
+    val learnedWordEmbedding = if (taskId.isDefined) { 
+      val perTaskEmbedding = (0 until taskSpecificWordEmbedding.size).map { task => 
+        if (task == taskId.get) { 
+          if (doDropout) {
+            Expression.lookup(taskSpecificWordEmbedding(task), id) * (taskSpecificWordEmbedding.size.toFloat / (taskSpecificWordEmbedding.size-1)) // Scale
+          } else {
+            Expression.lookup(taskSpecificWordEmbedding(task), id) 
+          }
+        } else { 
+          Expression.zeros(Dim(taskSpecificWordEmbeddingSize)) 
+        }
+      }
+      Expression.concatenate(ExpressionVector.Seq2ExpressionVector(Expression.lookup(wordLookupParameters, id)+:perTaskEmbedding))
+    } else {
+      val perTaskEmbedding = (0 until taskSpecificWordEmbedding.size).map { task => 
+        Expression.lookup(taskSpecificWordEmbedding(task), id) 
+      }
+      Expression.concatenate(ExpressionVector.Seq2ExpressionVector(Expression.lookup(wordLookupParameters, id)+:perTaskEmbedding))
+    }
 
     //
     // biLSTM over character embeddings
@@ -162,7 +182,6 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     if(distanceEmbedding.nonEmpty) embedParts.add(distanceEmbedding.get)
     if(positionEmbedding.nonEmpty) embedParts.add(positionEmbedding.get)
     if(predEmbed.nonEmpty) embedParts.add(predEmbed.get)
-
     val embed = concatenate(embedParts)
     assert(embed.dim().get(0) == outDim)
     embed
@@ -177,6 +196,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
 
     constEmbedder.dim +
     learnedWordEmbeddingSize +
+    (taskSpecificWordEmbedding.size * taskSpecificWordEmbeddingSize) + 
     charRnnStateSize * 2 +
     posTagDim +
     neTagDim +
@@ -206,7 +226,9 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     } else {
       save(printWriter, 0, "hasNe2i")
     }
+    save(printWriter, taskSpecificWordEmbedding.size, "numberOfTasks")
     save(printWriter, learnedWordEmbeddingSize, "learnedWordEmbeddingSize")
+    save(printWriter, taskSpecificWordEmbeddingSize, "taskSpecificWordEmbeddingSize")
     save(printWriter, charEmbeddingSize, "charEmbeddingSize")
     save(printWriter, charRnnStateSize, "charRnnStateSize")
     save(printWriter, posTagEmbeddingSize, "posTagEmbeddingSize")
@@ -268,8 +290,11 @@ object EmbeddingLayer {
         None
       }
 
+    val numberOfTasks = byLineIntBuilder.build(x2iIterator,"numberOfTasks", 1)
     val learnedWordEmbeddingSize =
       byLineIntBuilder.build(x2iIterator,"learnedWordEmbeddingSize", DEFAULT_LEARNED_WORD_EMBEDDING_SIZE)
+    val taskSpecificWordEmbeddingSize =
+      byLineIntBuilder.build(x2iIterator,"taskSpecificWordEmbeddingSize", DEFAULT_LEARNED_WORD_EMBEDDING_SIZE)
     val charEmbeddingSize =
       byLineIntBuilder.build(x2iIterator,"charEmbeddingSize", DEFAULT_CHAR_EMBEDDING_SIZE)
     val charRnnStateSize =
@@ -294,6 +319,9 @@ object EmbeddingLayer {
     // make the loadable parameters
     //
     val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(learnedWordEmbeddingSize))
+    val taskSpecificWordEmbedding = Array.range(0, numberOfTasks).map { it => 
+              parameters.addLookupParameters(w2i.size, Dim(taskSpecificWordEmbeddingSize)) 
+            }
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(charEmbeddingSize))
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
@@ -334,6 +362,7 @@ object EmbeddingLayer {
       parameters,
       w2i, w2f, c2i, tag2i, ne2i,
       learnedWordEmbeddingSize,
+      taskSpecificWordEmbeddingSize,
       charEmbeddingSize,
       charRnnStateSize,
       posTagEmbeddingSize,
@@ -343,6 +372,7 @@ object EmbeddingLayer {
       positionEmbeddingSize,
       useIsPredicate,
       wordLookupParameters,
+      taskSpecificWordEmbedding,
       charLookupParameters,
       charFwRnnBuilder,
       charBwRnnBuilder,
@@ -361,9 +391,12 @@ object EmbeddingLayer {
       return None
     }
 
+    val maxNumberOfTasks = config.getArgInt("mtl.numberOfTasks", Some(1))
+    
     val learnedWordEmbeddingSize =
       config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize",
-        Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE))
+        Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE)) / (maxNumberOfTasks + 1)
+    val taskSpecificWordEmbeddingSize = learnedWordEmbeddingSize / 4
     val charEmbeddingSize =
       config.getArgInt(paramPrefix + ".charEmbeddingSize",
         Some(DEFAULT_CHAR_EMBEDDING_SIZE))
@@ -397,7 +430,8 @@ object EmbeddingLayer {
     val w2i = wordList.zipWithIndex.toMap
 
     val wordLookupParameters:LookupParameter = parameters.addLookupParameters(w2i.size, Dim(learnedWordEmbeddingSize))
-
+    val taskSpecificWordEmbedding = Array.range(0, maxNumberOfTasks)
+                .map { it => parameters.addLookupParameters(w2i.size, Dim(taskSpecificWordEmbeddingSize)) }
     val c2iFilename = config.getArgString(paramPrefix + ".c2i", Some("org/clulab/c2i-en.txt"))
     val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
       val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
@@ -451,6 +485,7 @@ object EmbeddingLayer {
       parameters:ParameterCollection,
       w2i, wordCounter, c2i, tag2i, ne2i,
       learnedWordEmbeddingSize,
+      taskSpecificWordEmbeddingSize,
       charEmbeddingSize,
       charRnnStateSize,
       posTagEmbeddingSize,
@@ -460,6 +495,7 @@ object EmbeddingLayer {
       positionEmbeddingSize,
       useIsPredicate,
       wordLookupParameters,
+      taskSpecificWordEmbedding,
       charLookupParameters,
       charFwRnnBuilder,
       charBwRnnBuilder,

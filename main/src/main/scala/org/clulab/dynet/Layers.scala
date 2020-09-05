@@ -54,12 +54,12 @@ class Layers (val initialLayer: Option[InitialLayer],
   def isEmpty: Boolean = initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty
   def nonEmpty: Boolean = ! isEmpty
 
-  protected def forward(sentence: AnnotatedSentence, doDropout: Boolean): ExpressionVector = {
+  protected def forward(sentence: AnnotatedSentence, doDropout: Boolean, taskId: Option[Int]): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
 
-    var states = initialLayer.get.forward(sentence, doDropout)
+    var states = initialLayer.get.forward(sentence, doDropout, taskId)
 
     for (i <- intermediateLayers.indices) {
       states = intermediateLayers(i).forward(states, doDropout)
@@ -208,7 +208,7 @@ object Layers {
 
       // layers(0) contains the shared layers
       if(layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, doDropout = false)
+        val sharedStates = layers(0).forward(sentence, doDropout = false, taskId = None)
 
         for (i <- 1 until layers.length) {
           val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
@@ -221,7 +221,7 @@ object Layers {
       // no shared layer
       else {
         for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence, doDropout = false)
+          val states = layers(i).forward(sentence, doDropout = false, taskId = None)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
@@ -245,13 +245,13 @@ object Layers {
     val states = {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, doDropout)
+        val sharedStates = layers(0).forward(sentence, doDropout, Some(taskId))
         layers(taskId + 1).forwardFrom(sharedStates, sentence.headPositions, doDropout)
       }
 
       // no shared layer
       else {
-        layers(taskId + 1).forward(sentence, doDropout)
+        layers(taskId + 1).forward(sentence, doDropout, Some(taskId))
       }
     }
 

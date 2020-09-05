@@ -7,7 +7,7 @@ import edu.cmu.dynet.ExpressionVector
  */
 trait InitialLayer extends Saveable {
   def forward(sentence: AnnotatedSentence,
-              doDropout: Boolean): ExpressionVector
+              doDropout: Boolean, taskId: Option[Int]): ExpressionVector
 
   def outDim:Int // output dimension
 }

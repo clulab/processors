@@ -16,6 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 import Metal._
+import java.io.File
 
 /**
  * Multi-task learning (MeTaL) for sequence modeling
@@ -414,7 +415,11 @@ object Metal {
     if(props.containsKey("train")) {
       assert(props.containsKey("conf"))
       val configName = props.getProperty("conf")
-      val config = ConfigFactory.load(configName)
+      // val config = ConfigFactory.load(configName)
+      val defaults = ConfigFactory.load()    
+      val file = new File(configName)    
+      val config = ConfigFactory.parseFile(file).withFallback(defaults)    
+
       val parameters = new ParameterCollection()
       val taskManager = new TaskManager(config)
       val modelName = props.getProperty("train")

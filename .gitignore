@@ -18,3 +18,15 @@ project/plugins/project/
 
 # Scala-IDE specific
 .scala_dependencies
+
+
+
+# TEMP
+
+.bloop/*
+.history/*
+.metals/*
+*.rnn
+*.x2i
+project/*
+task*
