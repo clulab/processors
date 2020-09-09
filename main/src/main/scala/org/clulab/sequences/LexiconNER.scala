@@ -297,7 +297,7 @@ class SlowLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNER
 class FastLexiconNERBuilder(caseInsensitiveMatching: Boolean) extends LexiconNERBuilder(caseInsensitiveMatching) {
 
   class BuildState(lexicalVariationEngine: LexicalVariations) {
-    val intHashTrie = new IntHashTrie
+    val intHashTrie = new IntHashTrie(caseInsensitiveMatching)
     val labelToIndex = new mutable.HashMap[String, Int] // This just maps the labels to an integer
     val knownCaseInsensitives = new mutable.HashSet[String]()
 
