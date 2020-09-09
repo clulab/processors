@@ -1,4 +1,5 @@
 # Changes
++ **8.2.1** - Bug fix in LexiconNER: we were ignoring case information before.
 + **8.2.1** - Improvements to the generation of enhanced semantic roles.
 + **8.2.0** - Added simple lexicon-based sentiment analyzer, using Bing Liu's lexicon.
 + **8.2.0** - Added support for enhanced semantic roles to CluProcessor.
