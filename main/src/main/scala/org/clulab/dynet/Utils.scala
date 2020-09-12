@@ -6,6 +6,7 @@ import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pi
 import edu.cmu.dynet._
 import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
+import org.clulab.fatdynet.utils.Initializer
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -31,28 +32,26 @@ object Utils {
 
   val LOG_MIN_VALUE: Float = -10000
 
-  val DEFAULT_DROPOUT_PROBABILITY = 0f // no dropout by  default
+  val DEFAULT_DROPOUT_PROBABILITY = 0f // no dropout by  default'
 
-  private var IS_DYNET_INITIALIZED = false
+  def initializeDyNetForInference(): Unit = {
+    initializeDyNet(train = false)
+  }
 
-  def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
-    DyNetSync.synchronized {
-      if (!IS_DYNET_INITIALIZED) {
-        logger.debug("Initializing DyNet...")
+  def initializeDyNet(train: Boolean, autoBatch: Boolean = false, mem: String = ""): Unit = {
+    logger.debug("Initializing DyNet...")
 
-        val params = new mutable.HashMap[String, Any]()
-        params += "random-seed" -> RANDOM_SEED
-        params += "weight-decay" -> WEIGHT_DECAY
-        if (autoBatch) {
-          params += "autobatch" -> 1
-          params += "dynet-mem" -> mem
-        }
+    val map = Map(
+      Initializer.RANDOM_SEED -> RANDOM_SEED,
+      Initializer.WEIGHT_DECAY -> WEIGHT_DECAY,
+      Initializer.FORWARD_ONLY -> { if (train) 0 else 1 },
+      Initializer.AUTOBATCH -> { if(autoBatch) 1 else 0 },
+      Initializer.DYNAMIC_MEM -> ! train,
+      Initializer.DYNET_MEM -> { if(mem != null && mem.length > 0) mem else "2048" }
+    )
 
-        Initialize.initialize(params.toMap)
-        logger.debug("DyNet initialization complete.")
-        IS_DYNET_INITIALIZED = true
-      }
-    }
+    Initializer.initialize(map)
+    logger.debug("DyNet initialization complete.")
   }
 
   def fromIndexToString(s2i: Map[String, Int]): Array[String] = {

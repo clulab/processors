@@ -409,9 +409,9 @@ object Metal {
 
   def main(args: Array[String]): Unit = {
     val props = StringUtils.argsToProperties(args)
-    initializeDyNet() // autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
 
     if(props.containsKey("train")) {
+      initializeDyNet(train = true) // autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
       assert(props.containsKey("conf"))
       val configName = props.getProperty("conf")
       val config = ConfigFactory.load(configName)
@@ -424,6 +424,7 @@ object Metal {
     }
 
     else if(props.containsKey("test")) {
+      initializeDyNet(train = false)
       assert(props.containsKey("conf"))
       val configName = props.getProperty("conf")
       val config = ConfigFactory.load(configName)
@@ -435,6 +436,7 @@ object Metal {
     }
 
     else if(props.containsKey("shell")) {
+      initializeDyNet(train = false)
       val modelName = props.getProperty("shell")
       val mtl = Metal(modelName)
       val shell = new MetalShell(mtl)

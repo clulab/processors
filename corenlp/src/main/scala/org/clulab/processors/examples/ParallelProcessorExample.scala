@@ -118,7 +118,7 @@ object ParallelProcessorExample {
     // Parallelizing by file results in a quick crash.
     val parFiles = parallelize(files, threads)
 
-    Utils.initializeDyNet()
+    Utils.initializeDyNet(train = false)
 
     val processor: Processor = new CluProcessor()
     val documentSerializer = new DocumentSerializer

@@ -25,7 +25,7 @@ class CluShell extends Shell {
 
 object CluShell {
   def main(args:Array[String]): Unit = {
-    Utils.initializeDyNet()
+    Utils.initializeDyNet(train = false)
     val sh = new CluShell
     sh.shell()
   }

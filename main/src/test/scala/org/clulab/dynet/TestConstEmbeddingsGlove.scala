@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
 
   lazy val embeddings = {
-    Utils.initializeDyNet()
+    Utils.initializeDyNet(train = false)
     ConstEmbeddingsGlove("/test_vectors.txt", true)
   }
 
