@@ -5,7 +5,7 @@ import edu.cmu.dynet.ExpressionVector
 /**
  * Intermediate layer in a sequence modeling architecture: goes from ExpressionVector to ExpressionVector
  */
-trait IntermediateLayer extends Saveable {
+trait IntermediateLayer extends Saveable with Cloneable {
   def forward(inputExpressions: ExpressionVector,
               doDropout: Boolean): ExpressionVector
 
