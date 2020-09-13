@@ -46,8 +46,8 @@ case class EmbeddingLayer (parameters:ParameterCollection,
 
   override def clone(): EmbeddingLayer = {
     copy(
-      charFwRnnBuilder = charFwRnnBuilder.clone.asInstanceOf[RnnBuilder],
-      charBwRnnBuilder = charBwRnnBuilder.clone.asInstanceOf[RnnBuilder]
+      charFwRnnBuilder = cloneBuilder(charFwRnnBuilder),
+      charBwRnnBuilder = cloneBuilder(charBwRnnBuilder),
     )
   }
 

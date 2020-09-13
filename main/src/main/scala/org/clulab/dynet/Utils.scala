@@ -845,6 +845,16 @@ object Utils {
       expression
     }
   }
+
+  def cloneBuilder(builder: RnnBuilder): RnnBuilder = {
+    if(builder.isInstanceOf[LstmBuilder]) {
+      builder.asInstanceOf[LstmBuilder].clone()
+    } else if(builder.isInstanceOf[GruBuilder]) {
+      builder.asInstanceOf[GruBuilder].clone()
+    } else {
+      throw new RuntimeException(s"ERROR: don't know how to clone a builder of type ${builder.getClass}!")
+    }
+  }
 }
 
 class Utils
