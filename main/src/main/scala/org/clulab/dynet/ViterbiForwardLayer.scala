@@ -18,7 +18,7 @@ case class ViterbiForwardLayer(override val parameters:ParameterCollection,
                                override val dropoutProb: Float)
   extends ForwardLayer {
 
-  override def clone(): ViterbiForwardLayer = copy()
+  override def clone(): ViterbiForwardLayer = this // copy()
 
   // call this *before* training a model, but not on a saved model
   def initializeTransitions(): Unit = {
