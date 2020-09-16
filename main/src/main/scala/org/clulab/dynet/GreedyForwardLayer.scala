@@ -4,21 +4,23 @@ import java.io.PrintWriter
 
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, cloneBuilder, fromIndexToString, save}
 import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
 
-class GreedyForwardLayer (parameters:ParameterCollection,
-                          inputSize: Int,
-                          isDual: Boolean,
-                          t2i: Map[String, Int],
-                          i2t: Array[String],
-                          H: Parameter,
-                          rootParam: Parameter, 
-                          nonlinearity: Int,
-                          dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, nonlinearity, dropoutProb) {
+case class GreedyForwardLayer (override val parameters:ParameterCollection,
+                               override val inputSize: Int,
+                               override val isDual: Boolean,
+                               override val t2i: Map[String, Int],
+                               override val i2t: Array[String],
+                               override val H: Parameter,
+                               override val rootParam: Parameter,
+                               override val nonlinearity: Int,
+                               override val dropoutProb: Float)
+  extends ForwardLayer {
+
+  override def clone(): GreedyForwardLayer = copy()
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)

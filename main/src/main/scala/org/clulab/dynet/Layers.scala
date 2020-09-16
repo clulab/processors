@@ -12,9 +12,24 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
  */
-class Layers (val initialLayer: Option[InitialLayer],
-              val intermediateLayers: IndexedSeq[IntermediateLayer],
-              val finalLayer: Option[FinalLayer]) extends Saveable {
+case class Layers (initialLayer: Option[InitialLayer],
+                   intermediateLayers: IndexedSeq[IntermediateLayer],
+                   finalLayer: Option[FinalLayer]) extends Saveable with Cloneable {
+
+  override def clone(): Layers = {
+    val clonedInitialLayer:Option[InitialLayer] =
+      initialLayer.map(_.clone().asInstanceOf[InitialLayer])
+    val clonedIntermediateLayers:IndexedSeq[IntermediateLayer] =
+      intermediateLayers.map(_.clone().asInstanceOf[IntermediateLayer])
+    val clonedFinalLayer: Option[FinalLayer] =
+      finalLayer.map(_.clone().asInstanceOf[FinalLayer])
+
+    copy(
+      initialLayer = clonedInitialLayer,
+      intermediateLayers = clonedIntermediateLayers,
+      finalLayer = clonedFinalLayer
+    )
+  }
 
   def outDim: Option[Int] = {
     if(finalLayer.nonEmpty) {
