@@ -20,7 +20,7 @@ case class GreedyForwardLayer (override val parameters:ParameterCollection,
                                override val dropoutProb: Float)
   extends ForwardLayer {
 
-  override def clone(): GreedyForwardLayer = copy()
+  override def clone(): GreedyForwardLayer = this
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
