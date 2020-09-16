@@ -251,9 +251,7 @@ object Layers {
                              sentence: AnnotatedSentence,
                              doDropout: Boolean): ExpressionVector = {
     //
-    // make sure this code is:
-    //   (a) called inside a synchronized block, and
-    //   (b) called after the computational graph is renewed (see predict below for correct usage)
+    // make sure this code is called after the computational graph is renewed (see predict below for correct usage)
     //
 
     val states = {
