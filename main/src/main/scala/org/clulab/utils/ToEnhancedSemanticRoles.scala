@@ -76,8 +76,8 @@ object ToEnhancedSemanticRoles {
       for(leftRole <- leftRoles) {
         val modifier = leftRole.destination
         val label = leftRole.relation
-        val e = Edge(right, modifier, label)
-        if(! rightRoles.contains(e)) {
+        if(! contains(rightRoles, right, label)) {
+          val e = Edge(right, modifier, label)
           toAdd += e
         }
       }
@@ -86,8 +86,8 @@ object ToEnhancedSemanticRoles {
       for(rightRole <- rightRoles) {
         val modifier = rightRole.destination
         val label = rightRole.relation
-        val e = Edge(left, modifier, label)
-        if(! leftRoles.contains(e)) {
+        if(! contains(leftRoles, left, label)) {
+          val e = Edge(left, modifier, label)
           toAdd += e
         }
       }
@@ -96,8 +96,17 @@ object ToEnhancedSemanticRoles {
     for(e <- toAdd) rolesIndex.addEdge(e.source, e.destination, e.relation)
   }
 
+  private def contains(roles: Set[Edge[String]], head: Int, label: String): Boolean = {
+    for(role <- roles) {
+      if(role.source == head && role.relation == label) {
+        return true
+      }
+    }
+    false
+  }
+
   /**
-   * Propagates conjoined subjects and objects to same verb (works for SD and UD)
+   * Propagates conjoined subjects and objects to same verb
    * Paul and Mary are reading a book => A0 from 4 to 0 and from 4 to 2
    * John is reading a book and a newspaper => A1 from 2 to 4 and from 2 to 7
    */

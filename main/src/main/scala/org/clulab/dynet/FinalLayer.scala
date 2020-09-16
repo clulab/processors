@@ -15,4 +15,6 @@ trait FinalLayer extends Saveable with Cloneable {
   def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
 
   def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]]
+
+  override def clone(): FinalLayer = ???
 }

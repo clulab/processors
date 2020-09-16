@@ -11,4 +11,6 @@ trait IntermediateLayer extends Saveable with Cloneable {
 
   def inDim: Int
   def outDim: Int
+
+  override def clone(): IntermediateLayer = ???
 }

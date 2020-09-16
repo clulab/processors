@@ -34,6 +34,7 @@ class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true
 
   override def dim: Int = lookupParameters.dim().get(0).toInt
 
+  /** Read-only access to the embedding for this word */
   def get(word:String): Expression = {
     if(w2i.contains(word)) {
       Expression.constLookup(lookupParameters, w2i(word))

@@ -10,4 +10,6 @@ trait InitialLayer extends Saveable with Cloneable {
               doDropout: Boolean): ExpressionVector
 
   def outDim:Int // output dimension
+
+  override def clone(): InitialLayer = ???
 }

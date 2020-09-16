@@ -24,9 +24,16 @@ import Metal._
  */
 class Metal(val taskManagerOpt: Option[TaskManager],
             val parameters: ParameterCollection,
-            modelOpt: Option[IndexedSeq[Layers]]) {
+            modelOpt: Option[IndexedSeq[Layers]],
+            val multiThreaded: Boolean) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
+
+  // Model to be used only during inference, and only if the configuration indicates multi-threaded execution
+  protected lazy val multiThreadedModel: ThreadLocal[IndexedSeq[Layers]] =
+    ThreadLocal.withInitial(new LayersSupplier(model))
+
+  protected def getInferenceModel: IndexedSeq[Layers] = if(multiThreaded) multiThreadedModel.get() else model
 
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {
@@ -287,7 +294,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val sentence = as._1
         val goldLabels = as._2
 
-        val preds = Layers.predict(model, taskId, sentence)
+        val preds = Layers.predict(getInferenceModel, taskId, sentence)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
@@ -314,15 +321,15 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
   // this only supports basic tasks for now
   def predictJointly(sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, sentence)
+    Layers.predictJointly(getInferenceModel, sentence)
   }
 
   def predict(taskId: Int, sentence: AnnotatedSentence): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence)
+    Layers.predict(getInferenceModel, taskId, sentence)
   }
 
   def predictWithScores(taskId: Int, sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictWithScores(model, taskId, sentence)
+    Layers.predictWithScores(getInferenceModel, taskId, sentence)
   }
 
   def test(): Unit = {
@@ -396,14 +403,14 @@ object Metal {
   def apply(modelFilenamePrefix: String, taskManager: TaskManager): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
-    val mtl = new Metal(Some(taskManager), parameters, Some(model))
+    val mtl = new Metal(Some(taskManager), parameters, Some(model), multiThreaded = false)
     mtl
   }
 
   def apply(modelFilenamePrefix: String): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
-    val mtl = new Metal(None, parameters, Some(model))
+    val mtl = new Metal(None, parameters, Some(model), multiThreaded = true)
     mtl
   }
 
@@ -419,7 +426,7 @@ object Metal {
       val taskManager = new TaskManager(config)
       val modelName = props.getProperty("train")
 
-      val mtl = new Metal(Some(taskManager), parameters, None)
+      val mtl = new Metal(Some(taskManager), parameters, None, multiThreaded = false)
       mtl.train(modelName)
     }
 

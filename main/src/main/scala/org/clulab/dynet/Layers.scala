@@ -6,6 +6,7 @@ import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterC
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -17,12 +18,10 @@ case class Layers (initialLayer: Option[InitialLayer],
                    finalLayer: Option[FinalLayer]) extends Saveable with Cloneable {
 
   override def clone(): Layers = {
-    val clonedInitialLayer:Option[InitialLayer] =
-      initialLayer.map(_.clone().asInstanceOf[InitialLayer])
-    val clonedIntermediateLayers:IndexedSeq[IntermediateLayer] =
-      intermediateLayers.map(_.clone().asInstanceOf[IntermediateLayer])
-    val clonedFinalLayer: Option[FinalLayer] =
-      finalLayer.map(_.clone().asInstanceOf[FinalLayer])
+    Layers.logger.debug(s"Cloning layers: $toString...")
+    val clonedInitialLayer:Option[InitialLayer] = initialLayer.map(_.clone())
+    val clonedIntermediateLayers:IndexedSeq[IntermediateLayer] = intermediateLayers.map(_.clone())
+    val clonedFinalLayer: Option[FinalLayer] = finalLayer.map(_.clone())
 
     copy(
       initialLayer = clonedInitialLayer,
@@ -130,6 +129,8 @@ case class Layers (initialLayer: Option[InitialLayer],
 }
 
 object Layers {
+  val logger: Logger = LoggerFactory.getLogger(classOf[Layers])
+
   def apply(config: Configured,
             paramPrefix: String,
             parameters: ParameterCollection,

@@ -95,7 +95,7 @@ abstract class ForwardLayer extends FinalLayer {
 }
 
 object ForwardLayer {
-  val logger: Logger = LoggerFactory.getLogger(classOf[ViterbiForwardLayer])
+  val logger: Logger = LoggerFactory.getLogger(classOf[ForwardLayer])
 
   val DEFAULT_DROPOUT_PROB: Float = Utils.DEFAULT_DROPOUT_PROBABILITY
 
