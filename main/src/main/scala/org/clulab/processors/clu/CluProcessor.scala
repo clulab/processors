@@ -196,16 +196,21 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       // pick the prediction with the highest score, which makes sense for the current sentence
       var done = false
       for(hi <- predictionsForThisWord.indices if ! done) {
-        val relativeHead = predictionsForThisWord(hi)._1.toInt
-        if(relativeHead == 0) { // this is the root
-          heads += -1
-          done = true
-        } else {
-          val headPosition = wi + relativeHead
-          if(headPosition >= 0 && headPosition < words.size) {
-            heads += headPosition
+        try {
+          val relativeHead = predictionsForThisWord(hi)._1.toInt
+          if (relativeHead == 0) { // this is the root
+            heads += -1
             done = true
+          } else {
+            val headPosition = wi + relativeHead
+            if (headPosition >= 0 && headPosition < words.size) {
+              heads += headPosition
+              done = true
+            }
           }
+        } catch {
+          // some valid predictions may not be integers, e.g., "<STOP>" may be predicted by the sequence model
+          case e: NumberFormatException => done = false
         }
       }
       if(! done) {
