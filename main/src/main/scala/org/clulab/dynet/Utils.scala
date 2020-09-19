@@ -847,18 +847,9 @@ object Utils {
   }
 
   def cloneBuilder(builder: RnnBuilder): RnnBuilder = {
-    val newBuilder =
-      if(builder.isInstanceOf[LstmBuilder]) {
-        builder.asInstanceOf[LstmBuilder].clone()
-      } else if(builder.isInstanceOf[GruBuilder]) {
-        builder.asInstanceOf[GruBuilder].clone()
-      } else {
-        throw new RuntimeException(s"ERROR: don't know how to clone a builder of type ${builder.getClass}!")
-      }
+    val newBuilder = builder.clone()
 
-    // this will be called in a new thread, so we might need to reset the builder with the new computation graph
-    newBuilder.newGraph() // TODO: is this needed? Test it!
-
+    newBuilder.newGraph()
     newBuilder
   }
 }
