@@ -131,7 +131,18 @@ class TestCluProcessor extends FlatSpec with Matchers {
     println("Parsing is fine.")
   }
 
-  /*
+  it should "create semantic dependencies of the correct length" in {
+    val text = "John ate cake, zz zz zz."
+    val doc = proc.annotate(text)
+
+    val sent = doc.sentences.head
+
+    sent.semanticRoles.get.outgoingEdges.length should be(sent.size)
+    sent.semanticRoles.get.incomingEdges.length should be(sent.size)
+    sent.enhancedSemanticRoles.get.outgoingEdges.length should be(sent.size)
+    sent.enhancedSemanticRoles.get.incomingEdges.length should be(sent.size)
+  }
+
   it should "parse MWEs correctly" in {
     val doc = proc.mkDocument("Foods such as icecream are tasty.")
 
@@ -142,7 +153,6 @@ class TestCluProcessor extends FlatSpec with Matchers {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be (true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
   }
-  */
 
   /* // TODO
   it should "parse a long sentence correctly" in {

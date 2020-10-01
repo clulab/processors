@@ -22,7 +22,7 @@ object ToEnhancedSemanticRoles {
     propagateArgsInConjPredicates(sentence, depsIndex, rolesIndex)
     propagateConjArgs(sentence, depsIndex, rolesIndex)
 
-    rolesIndex.toDirectedGraph
+    rolesIndex.toDirectedGraph(Some(basicDependencies.size))
   }
 
   /**
