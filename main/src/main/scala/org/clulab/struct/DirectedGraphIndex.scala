@@ -85,7 +85,7 @@ class DirectedGraphIndex[E](
     edges
   }
 
-  def toDirectedGraph: DirectedGraph[E] = {
+  def toDirectedGraph(prefferedSize: Option[Int] = None): DirectedGraph[E] = {
     val edges = new ListBuffer[Edge[E]]
     for(head <- outgoingEdges.indices) {
       for(ml <- outgoingEdges(head)) {
@@ -93,7 +93,7 @@ class DirectedGraphIndex[E](
         edges += e
       }
     }
-    new DirectedGraph[E](edges.toList, roots.toSet)
+    new DirectedGraph[E](edges.toList, roots.toSet, prefferedSize)
   }
 }
 
