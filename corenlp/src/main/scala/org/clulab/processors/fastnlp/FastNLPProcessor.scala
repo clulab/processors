@@ -68,6 +68,7 @@ class FastNLPProcessor(
       // convert parens to Penn Treebank symbols because this is what the parser has seen in training
       val words = CoreNLPUtils.parensToSymbols(sa.get(classOf[CoreAnnotations.TokensAnnotation]))
       sa.set(classOf[CoreAnnotations.TokensAnnotation], words)
+      val sentenceSize = words.size()
 
       // println("Parsing sentence: " + words.map(_.word()).mkString(" "))
 
@@ -83,8 +84,8 @@ class FastNLPProcessor(
       sa.set(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation], enhancedDeps)
 
       // convert to our own directed graph
-      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in))
-      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in))
+      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in, Some(sentenceSize)))
+      doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in, Some(sentenceSize)))
 
       //println("Output directed graph:")
       //println(dg)
