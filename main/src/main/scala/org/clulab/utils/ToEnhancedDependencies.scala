@@ -26,7 +26,7 @@ object ToEnhancedDependencies {
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = false)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = false)
     propagateConjSubjectsAndObjects(sentence, dgi)
-    dgi.toDirectedGraph()
+    dgi.toDirectedGraph(Some(sentence.size))
   }
 
   def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
@@ -36,7 +36,7 @@ object ToEnhancedDependencies {
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = true)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = true)
     propagateConjSubjectsAndObjects(sentence, dgi)
-    dgi.toDirectedGraph()
+    dgi.toDirectedGraph(Some(sentence.size))
   }
 
   /**
