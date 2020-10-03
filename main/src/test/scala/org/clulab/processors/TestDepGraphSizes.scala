@@ -14,7 +14,10 @@ class TestDepGraphSizes extends FlatSpec with Matchers {
   }
 
   "CluProcessor" should "produce dependency graphs that have the same size as the sentence" in {
-    val text = "In order to reduce the risk of civil conflict in this context , it is necessary to increase the costs of participating in \n\n"
+    // Document 3
+    val text = "Raise fertility on \n\n"
+    // Document 11
+    // val text = "In order to reduce the risk of civil conflict in this context , it is necessary to increase the costs of participating in \n\n"
     text.length > 0 should be(true)
 
     val doc = proc.annotate(text)
