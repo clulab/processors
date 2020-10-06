@@ -46,7 +46,7 @@ object CoreNLPUtils {
     processedWords
   }
 
-  def toDirectedGraph(sg:SemanticGraph, interning: (String) => String, debug:Boolean = false):DirectedGraph[String] = {
+  def toDirectedGraph(sg:SemanticGraph, interning: (String) => String, preferredSize: Option[Int] = None, debug:Boolean = false):DirectedGraph[String] = {
     // this needs to be a set rather than a list because CoreNLP sometimes duplicates the enhanced deps it creates
     val edgeBuffer = new mutable.HashSet[Edge[String]]
     for (edge <- sg.edgeIterable().asScala) {
@@ -68,7 +68,7 @@ object CoreNLPUtils {
       roots.add(iw.get(classOf[IndexAnnotation]) - 1)
     }
 
-    val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
+    val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet, preferredSize)
     //println(dg)
     dg
   }
