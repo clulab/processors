@@ -30,3 +30,4 @@ project/plugins/project/
 *.x2i
 project/*
 task*
+models/*

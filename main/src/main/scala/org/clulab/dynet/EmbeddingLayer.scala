@@ -92,7 +92,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       val perTaskEmbedding = (0 until taskSpecificWordEmbedding.size).map { task => 
         if (task == taskId.get) { 
           if (doDropout) {
-            Expression.lookup(taskSpecificWordEmbedding(task), id) * (taskSpecificWordEmbedding.size.toFloat / (taskSpecificWordEmbedding.size-1)) // Scale
+            // Like dropout
+            Expression.lookup(taskSpecificWordEmbedding(task), id) //* (taskSpecificWordEmbedding.size.toFloat / (taskSpecificWordEmbedding.size-1)) // Scale
           } else {
             Expression.lookup(taskSpecificWordEmbedding(task), id) 
           }
@@ -395,8 +396,8 @@ object EmbeddingLayer {
     
     val learnedWordEmbeddingSize =
       config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize",
-        Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE)) / (maxNumberOfTasks + 1)
-    val taskSpecificWordEmbeddingSize = learnedWordEmbeddingSize / 4
+        Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE))
+    val taskSpecificWordEmbeddingSize = 32
     val charEmbeddingSize =
       config.getArgInt(paramPrefix + ".charEmbeddingSize",
         Some(DEFAULT_CHAR_EMBEDDING_SIZE))
