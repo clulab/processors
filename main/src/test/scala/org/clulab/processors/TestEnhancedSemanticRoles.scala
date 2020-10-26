@@ -50,4 +50,17 @@ class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(1, 4, "A1") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 3, "A1") should be(true)
   }
+
+  it should "not allow self loops for enhanced roles" in {
+    val doc = proc.mkDocument("In that vein, more recent definitions clearly differentiate food security and nutrition security; for example, a report by FAO, IFAD, and WFP (2013) uses the following definitions:")
+
+    println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
+
+    proc.annotate(doc)
+    val roles = doc.sentences.head.enhancedSemanticRoles.get
+
+    roles.hasEdge(10, 10, "A1") should be (false)
+    roles.hasEdge(13, 13, "A1") should be (false)
+
+  }
 }
