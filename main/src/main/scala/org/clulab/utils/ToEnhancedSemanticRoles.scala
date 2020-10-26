@@ -75,20 +75,24 @@ object ToEnhancedSemanticRoles {
       // add left roles to right predicate, if not present already
       for(leftRole <- leftRoles) {
         val modifier = leftRole.destination
-        val label = leftRole.relation
-        val e = Edge(right, modifier, label)
-        if(! rightRoles.contains(e)) {
-          toAdd += e
+        if(modifier != right) { // no self loops
+          val label = leftRole.relation
+          val e = Edge(right, modifier, label)
+          if (!rightRoles.contains(e)) {
+            toAdd += e
+          }
         }
       }
 
       // add right roles to left predicate, if not present already
       for(rightRole <- rightRoles) {
         val modifier = rightRole.destination
-        val label = rightRole.relation
-        val e = Edge(left, modifier, label)
-        if(! leftRoles.contains(e)) {
-          toAdd += e
+        if(modifier != left) { // no self loops
+          val label = rightRole.relation
+          val e = Edge(left, modifier, label)
+          if (!leftRoles.contains(e)) {
+            toAdd += e
+          }
         }
       }
     }
@@ -110,27 +114,36 @@ object ToEnhancedSemanticRoles {
     for(conj <- conjs) {
       val left = math.min(conj.source, conj.destination)
       val right = math.max(conj.source, conj.destination)
+      //println(s"CONJ LEFT $left and RIGHT $right")
 
       val leftRoles = rolesIndex.findByModifierAndPattern(left, "^A*".r).toSet
+      //println(s"Left roles: ${leftRoles.mkString(", ")}")
       val rightRoles = rolesIndex.findByModifierAndPattern(right, "^A*".r).toSet
+      //println(s"Right roles: ${rightRoles.mkString(", ")}")
 
       // add left roles to right argument, if not present already
       for(leftRole <- leftRoles) {
         val predicate = leftRole.source
-        val label = leftRole.relation
-        val e = Edge(predicate, right, label)
-        if(! rightRoles.contains(e)) {
-          toAdd += e
+        if(predicate != right) { // do not construct a self loop here
+          val label = leftRole.relation
+          val e = Edge(predicate, right, label)
+          //println(s"Adding left role to right argument: ${e}")
+          if (!rightRoles.contains(e)) {
+            toAdd += e
+          }
         }
       }
 
       // add right roles to left argument, if not present already
       for(rightRole <- rightRoles) {
         val predicate = rightRole.source
-        val label = rightRole.relation
-        val e = Edge(predicate, left, label)
-        if(! leftRoles.contains(e)) {
-          toAdd += e
+        if(predicate != left) { // do not construct a left loop here
+          val label = rightRole.relation
+          val e = Edge(predicate, left, label)
+          //println(s"Adding right role to left argument: ${e}")
+          if (!leftRoles.contains(e)) {
+            toAdd += e
+          }
         }
       }
     }
