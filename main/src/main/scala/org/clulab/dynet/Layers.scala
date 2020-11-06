@@ -6,15 +6,29 @@ import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterC
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
  */
-class Layers (val initialLayer: Option[InitialLayer],
-              val intermediateLayers: IndexedSeq[IntermediateLayer],
-              val finalLayer: Option[FinalLayer]) extends Saveable {
+case class Layers (initialLayer: Option[InitialLayer],
+                   intermediateLayers: IndexedSeq[IntermediateLayer],
+                   finalLayer: Option[FinalLayer]) extends Saveable with Cloneable {
+
+  override def clone(): Layers = {
+    Layers.logger.debug(s"Cloning layers: $toString...")
+    val clonedInitialLayer:Option[InitialLayer] = initialLayer.map(_.clone())
+    val clonedIntermediateLayers:IndexedSeq[IntermediateLayer] = intermediateLayers.map(_.clone())
+    val clonedFinalLayer: Option[FinalLayer] = finalLayer.map(_.clone())
+
+    copy(
+      initialLayer = clonedInitialLayer,
+      intermediateLayers = clonedIntermediateLayers,
+      finalLayer = clonedFinalLayer
+    )
+  }
 
   def outDim: Option[Int] = {
     if(finalLayer.nonEmpty) {
@@ -115,6 +129,8 @@ class Layers (val initialLayer: Option[InitialLayer],
 }
 
 object Layers {
+  val logger: Logger = LoggerFactory.getLogger(classOf[Layers])
+
   def apply(config: Configured,
             paramPrefix: String,
             parameters: ParameterCollection,
@@ -203,29 +219,27 @@ object Layers {
                      sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
-    DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
-      ComputationGraph.renew()
+    ComputationGraph.renew()
 
-      // layers(0) contains the shared layers
-      if(layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, doDropout = false)
+    // layers(0) contains the shared layers
+    if(layers(0).nonEmpty) {
+      val sharedStates = layers(0).forward(sentence, doDropout = false)
 
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
-        }
+      for (i <- 1 until layers.length) {
+        val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        val labels = layers(i).finalLayer.get.inference(emissionScores)
+        labelsPerTask += labels
       }
+    }
 
-      // no shared layer
-      else {
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
-        }
+    // no shared layer
+    else {
+      for (i <- 1 until layers.length) {
+        val states = layers(i).forward(sentence, doDropout = false)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        val labels = layers(i).finalLayer.get.inference(emissionScores)
+        labelsPerTask += labels
       }
     }
 
@@ -237,9 +251,7 @@ object Layers {
                              sentence: AnnotatedSentence,
                              doDropout: Boolean): ExpressionVector = {
     //
-    // make sure this code is:
-    //   (a) called inside a synchronized block, and
-    //   (b) called after the computational graph is renewed (see predict below for correct usage)
+    // make sure this code is called after the computational graph is renewed (see predict below for correct usage)
     //
 
     val states = {
@@ -261,14 +273,11 @@ object Layers {
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
               sentence: AnnotatedSentence): IndexedSeq[String] = {
-    val labelsForTask =
-      DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
-        ComputationGraph.renew()
+    ComputationGraph.renew()
 
-        val states = forwardForTask(layers, taskId, sentence, doDropout = false)
-        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        layers(taskId + 1).finalLayer.get.inference(emissionScores)
-      }
+    val states = forwardForTask(layers, taskId, sentence, doDropout = false)
+    val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+    val labelsForTask = layers(taskId + 1).finalLayer.get.inference(emissionScores)
 
     labelsForTask
   }
@@ -276,14 +285,11 @@ object Layers {
   def predictWithScores(layers: IndexedSeq[Layers],
                         taskId: Int,
                         sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    val labelsForTask =
-      DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
-        ComputationGraph.renew()
+    ComputationGraph.renew()
 
-        val states = forwardForTask(layers, taskId, sentence, doDropout = false)
-        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
-      }
+    val states = forwardForTask(layers, taskId, sentence, doDropout = false)
+    val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+    val labelsForTask = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
 
     labelsForTask
   }

@@ -1,6 +1,9 @@
 # Changes
++ **8.3.0** - Added support for proper multi-threaded execution of CluProcessor by cloning parameters in each thread.
 + **8.2.3** - Do not allow loops in enhanced semantic roles.
 + **8.2.2** - Bug fix: we now guarantee that the SRL graph has the same number of nodes as the words in the sentence.
++ **8.2.2** - Bug fixes in the generation of enhanced semantic roles.
++ **8.2.1** - Improvements in the generation of enhanced semantic roles.
 + **8.2.1** - Bug fix in LexiconNER: we were ignoring case information before.
 + **8.2.1** - Improvements to the generation of enhanced semantic roles.
 + **8.2.0** - Added simple lexicon-based sentiment analyzer, using Bing Liu's lexicon.

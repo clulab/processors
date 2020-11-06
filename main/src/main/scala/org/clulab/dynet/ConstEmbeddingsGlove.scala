@@ -34,6 +34,7 @@ class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true
 
   override def dim: Int = lookupParameters.dim().get(0).toInt
 
+  /** Read-only access to the embedding for this word */
   def get(word:String): Expression = {
     if(w2i.contains(word)) {
       Expression.constLookup(lookupParameters, w2i(word))
@@ -70,7 +71,7 @@ object ConstEmbeddingsGlove {
 
   def apply(matrixResourceName: String, isResource: Boolean): ConstEmbeddingsGlove = {
 
-    DyNetSync.synchronized {
+    this.synchronized {
       // these objects are read-only and they use a lot of RAM, so let's reuse them if they exist
       if(SINGLETON.isEmpty) {
         SINGLETON = Some(new ConstEmbeddingsGlove(matrixResourceName, isResource))

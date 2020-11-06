@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 /** Makes sure that CluProcessor produces dependency graphs of correct sizes */
 class TestDepGraphSizes extends FlatSpec with Matchers {
   lazy val proc = {
-    Utils.initializeDyNet()
+    Utils.initializeDyNet(train = false)
     new CluProcessor()
   }
 

@@ -17,7 +17,7 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
 
   /** Used for SRL */
   lazy val cluProcessor = {
-    Utils.initializeDyNet()
+    Utils.initializeDyNet(train = false)
     new CluProcessor()
   }
 

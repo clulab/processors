@@ -8,7 +8,7 @@ import edu.cmu.dynet.{Dim, Expression, ParameterCollection, UnsignedVector}
 // https://github.com/neubig/nn4nlp-code/blob/970d91a51664b3d91a9822b61cd76abea20218cb/05-cnn/cnn-class.py#L45
 //
 object CnnExample extends App {
-  Utils.initializeDyNet()
+  Utils.initializeDyNet(train = true)
   val pc = new ParameterCollection()
 
   val embSize = 3

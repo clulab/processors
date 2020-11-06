@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
   val proc = {
-    Utils.initializeDyNet()
+    Utils.initializeDyNet(train = false)
     new CluProcessor()
   }
 
@@ -35,13 +35,38 @@ class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(3, 6, "A1") should be(true)
   }
 
-  it should "propagate subjects and objects in conjoined predicates" in {
+  it should "propagate subjects and objects in conjoined predicates (1)" in {
     val doc = proc.annotate("The store buys and sells cameras.")
 
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 1, "A0") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 5, "A1") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 1, "A0") should be(true)
     doc.sentences.head.enhancedSemanticRoles.get.hasEdge(4, 5, "A1") should be(true)
+  }
+
+  it should "propagate subjects and objects in conjoined predicates (2)" in {
+    val doc = proc.annotate("John and Mary eat cake and drink wine.")
+
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(3, 0, "A0") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(3, 2, "A0") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(6, 0, "A0") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(6, 2, "A0") should be(true)
+
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(3, 4, "A1") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(3, 7, "A1") should be(false)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(6, 4, "A1") should be(false)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(6, 7, "A1") should be(true)
+  }
+
+  it should "propagate subjects and objects in conjoined predicates (3)" in {
+    val doc = proc.annotate("The store buys pizzas and sells cameras.")
+
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 1, "A0") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 3, "A1") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(5, 1, "A0") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(5, 6, "A1") should be(true)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(2, 6, "A1") should be(false)
+    doc.sentences.head.enhancedSemanticRoles.get.hasEdge(5, 3, "A1") should be(false)
   }
 
   it should "apply the deterministic predicate corrections" in {

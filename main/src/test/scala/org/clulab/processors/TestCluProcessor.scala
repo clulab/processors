@@ -11,7 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
   */
 class TestCluProcessor extends FlatSpec with Matchers {
   val proc = {
-    Utils.initializeDyNet()
+    Utils.initializeDyNet(train = false)
     new CluProcessor()
   }
   

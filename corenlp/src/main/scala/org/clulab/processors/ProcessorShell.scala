@@ -67,7 +67,7 @@ object ProcessorShell extends App {
       case ":clu" =>
         reader.setPrompt("(clu)>>> ")
         println("Preparing CluProcessor...\n")
-        Utils.initializeDyNet()
+        Utils.initializeDyNet(train = false)
         proc = clu
         proc.annotate("initialize me!")
 
