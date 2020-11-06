@@ -274,7 +274,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       }
     }
 
-    new DirectedGraph[String](edges.toList, roots.toSet)
+    new DirectedGraph[String](edges.toList, roots.toSet, Some(words.length))
   }
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */

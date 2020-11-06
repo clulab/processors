@@ -13,9 +13,12 @@ import scala.util.hashing.MurmurHash3._
  * User: mihais
  * Date: 3/5/13
  */
-case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Set[Int]) extends Serializable {
-  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, roots)
-  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, roots)
+case class DirectedGraph[E](edges: List[Edge[E]],
+                            roots: collection.immutable.Set[Int],
+                            preferredSize: Option[Int] = None) extends Serializable {
+
+  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, roots, preferredSize)
+  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, roots, preferredSize)
 
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
 
@@ -47,11 +50,16 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
 
   // (src, dest, rel) <- allEdges
 
-  private def mkOutgoing(edges:List[Edge[E]], roots: collection.immutable.Set[Int]): Array[Array[(Int, E)]] = {
+  private def mkOutgoing(edges:List[Edge[E]],
+                         roots: collection.immutable.Set[Int],
+                         preferredSize: Option[Int]): Array[Array[(Int, E)]] = {
+
     //println("EDGES:")
     //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
-    val size = computeSize(edges, roots)
+
+    val size = preferredSize.getOrElse(computeSize(edges, roots))
     //println("size = " + size)
+
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)
     var offset = 0
     while(offset < nodes.length) {
@@ -74,9 +82,13 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     outgoing
   }
 
-  private def mkIncoming(edges:List[Edge[E]], roots: collection.immutable.Set[Int]): Array[Array[(Int, E)]] = {
-    val size = computeSize(edges, roots)
+  private def mkIncoming(edges:List[Edge[E]],
+                         roots: collection.immutable.Set[Int],
+                         preferredSize: Option[Int]): Array[Array[(Int, E)]] = {
+
+    val size = preferredSize.getOrElse(computeSize(edges, roots))
     //println("size = " + size)
+
     val nodes = new Array[ArrayBuffer[(Int, E)]](size)
     var offset = 0
     while(offset < nodes.length) {
@@ -99,7 +111,7 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
     incoming
   }
 
-  def size:Int = outgoingEdges.length // this was computed correctly using computeSize
+  def size:Int = outgoingEdges.length // this was computed correctly in mkOutgoing!
 
   def getOutgoingEdges(node:Int): Array[(Int, E)] = outgoingEdges(node)
   def getIncomingEdges(node:Int): Array[(Int, E)] = incomingEdges(node)
@@ -249,7 +261,7 @@ case class DirectedGraph[E](edges: List[Edge[E]], roots: collection.immutable.Se
 }
 
 class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[(Int, Int, E)] {
-  var node = findNextNodeWithEdges(0)
+  var node: Int = findNextNodeWithEdges(0)
   var nodeEdgeOffset = 0
 
   def findNextNodeWithEdges(start:Int):Int = {
