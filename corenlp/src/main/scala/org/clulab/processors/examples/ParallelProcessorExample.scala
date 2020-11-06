@@ -13,6 +13,8 @@ import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.serialization.DocumentSerializer
 
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -96,7 +98,7 @@ object ParallelProcessorExample {
         forkJoinPoolConstructor.newInstance(threads.asInstanceOf[Integer])
 
         // For the record, this is the standard version
-        //new ForkJoinPool(threads)
+        // new ForkJoinPool(threads)
       }
 
       val forkJoinPool = newForkJoinPool(threads)
@@ -113,22 +115,33 @@ object ParallelProcessorExample {
     val outputDir = args(1)
     val extension = args(2)
     val threads = args(3).toInt
+    val parallel = true
 
     val files = findFiles(inputDir, extension)
+    val sortedFiles = files.sortBy(-_.length)
     // Parallelizing by file results in a quick crash.
-    val parFiles = parallelize(files, threads)
+    val parFiles = parallelize(sortedFiles, threads)
 
-    Utils.initializeDyNet(train = false)
+    val startupTimer = new Timer("This is how long it takes to start up")
+    startupTimer.start()
+
+    Utils.initializeDyNet(train = !parallel)
 
     val processor: Processor = new CluProcessor()
+//    val processor: Processor = new FastNLPProcessor()
+//    val processor: Processor = new FastNLPProcessorWithSemanticRoles()
+
     val documentSerializer = new DocumentSerializer
 
     val untimed = processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
+    startupTimer.stop()
+    println(startupTimer.toString)
+
 
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
 
-    parFiles.foreach { file =>
+    (if (parallel) parFiles else files).foreach { file =>
       println(s"Processing ${file.getName}...")
 
       val text = {
@@ -140,7 +153,15 @@ object ParallelProcessorExample {
       }
 
       val outputFile = new File(outputDir + "/" + file.getName)
-      val document = processor.annotate(text)
+      val document = try {
+        val document = processor.annotate(text)
+        document
+      }
+      catch {
+        case throwable: Throwable =>
+          println(s"Threw exception for ${file.getName}")
+          throw throwable
+      }
       val printedDocument = {
         val stringWriter = new StringWriter
         val printWriter = new PrintWriter(stringWriter)
