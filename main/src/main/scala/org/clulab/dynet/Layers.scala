@@ -227,6 +227,8 @@ object Layers {
           labelsPerTask += labels
         }
       }
+
+      ComputationGraph.clear()
     }
 
     labelsPerTask
@@ -267,7 +269,10 @@ object Layers {
 
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        layers(taskId + 1).finalLayer.get.inference(emissionScores)
+        val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
+
+        ComputationGraph.clear()
+        out
       }
 
     labelsForTask
@@ -282,7 +287,10 @@ object Layers {
 
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
+        val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
+
+        ComputationGraph.clear()
+        out
       }
 
     labelsForTask
