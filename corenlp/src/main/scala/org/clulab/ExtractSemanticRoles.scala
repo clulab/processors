@@ -35,7 +35,7 @@ object ExtractSemanticRoles extends App {
   val texts = files.map { file =>
     file.getName -> getText(file)
   }.toMap
-  val fileNames = files.map(_.getName).sorted
+  val fileNames = files.sortBy(_.length).map(_.getName)
 
   val runtime = Runtime.getRuntime
   println(s"TotalMemory: ${runtime.totalMemory}")
@@ -43,13 +43,13 @@ object ExtractSemanticRoles extends App {
   println(s"  MAX_VALUE: ${Long.MaxValue}")
   val scanner = new Scanner(System.in)
 
-  var seed = -1
+  var seed = 0
   while (true) {
-    seed += 1
     println(s"Seed is $seed")
     scanner.nextLine()
     val random = new Random(seed)
-    Range(0, 3).foreach { _ => // Give it 10 chances to mess up.
+    seed += 1
+    Range(0, 3).foreach { _ => // Give it 3 chances to mess up.
       val shuffledNames = random.shuffle(fileNames)
       shuffledNames.foreach { fileName =>
         println(s"Extracting from ${fileName}")
