@@ -7,7 +7,7 @@ import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 
 import scala.io.Source
 
-object ExtractSemanticRoles extends App {
+object ExtractSemanticRolesDeterministic extends App {
 
   def findFiles(collectionDir: String, extension: String): Seq[File] = {
     val dir = new File(collectionDir)
@@ -28,10 +28,14 @@ object ExtractSemanticRoles extends App {
   val inputDir = args(0)
 
   val files = findFiles(inputDir, "json")
+  val processor = new FastNLPProcessorWithSemanticRoles {
+    annotate("This is a test.")
+  }
   val texts = files.map { file =>
     file.getName -> getText(file)
   }.toMap
-  val fileNames = files.sortBy(_.length).map(_.getName)
+  // The program was finally killed with the smallest one.
+  val fileNames = files.sortBy(_.length).drop(2).map(_.getName)
   // Optionally
 
   val runtime = Runtime.getRuntime
@@ -39,10 +43,6 @@ object ExtractSemanticRoles extends App {
   println(s"  MaxMemory: ${runtime.maxMemory}")
   println(s"  MAX_VALUE: ${Long.MaxValue}")
   val scanner = new Scanner(System.in)
-
-  val processor = new FastNLPProcessorWithSemanticRoles {
-    annotate("This is a test.")
-  }
 
   def extractFrom(fileName: String): Unit = {
     // Include a self loop.
@@ -52,10 +52,10 @@ object ExtractSemanticRoles extends App {
     processor.annotate(toText, true)
   }
 
-  fileNames.zipWithIndex.par.foreach { case (fromFileName, fromIndex) =>
-    fileNames.zipWithIndex.par.foreach { case (toFileName, toIndex) =>
+  fileNames.zipWithIndex.foreach { case (fromFileName, fromIndex) =>
+    fileNames.zipWithIndex.foreach { case (toFileName, toIndex) =>
       if (toIndex == fromIndex)
-        // Include a self loop.
+      // Include a self loop.
         extractFrom(toFileName)
       else if (toIndex > fromIndex) {
         extractFrom(fromFileName)

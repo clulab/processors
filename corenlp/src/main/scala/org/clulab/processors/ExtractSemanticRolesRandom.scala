@@ -6,8 +6,9 @@ import java.util.Scanner
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 
 import scala.io.Source
+import scala.util.Random
 
-object ExtractSemanticRoles extends App {
+object ExtractSemanticRolesRandom extends App {
 
   def findFiles(collectionDir: String, extension: String): Seq[File] = {
     val dir = new File(collectionDir)
@@ -27,12 +28,14 @@ object ExtractSemanticRoles extends App {
 
   val inputDir = args(0)
 
-  val files = findFiles(inputDir, "json")
+  val files = findFiles(inputDir, "txt")
+  val processor = new FastNLPProcessorWithSemanticRoles {
+    annotate("This is a test.")
+  }
   val texts = files.map { file =>
     file.getName -> getText(file)
   }.toMap
   val fileNames = files.sortBy(_.length).map(_.getName)
-  // Optionally
 
   val runtime = Runtime.getRuntime
   println(s"TotalMemory: ${runtime.totalMemory}")
@@ -40,30 +43,21 @@ object ExtractSemanticRoles extends App {
   println(s"  MAX_VALUE: ${Long.MaxValue}")
   val scanner = new Scanner(System.in)
 
-  val processor = new FastNLPProcessorWithSemanticRoles {
-    annotate("This is a test.")
-  }
+  var seed = 0
+  while (true) {
+    println(s"Seed is $seed")
+//    scanner.nextLine()
+    val random = new Random(seed)
+    seed += 1
+    Range(0, 1).foreach { _ => // Give it 3 chances to mess up.
+      val shuffledNames = random.shuffle(fileNames)
+      shuffledNames.par.foreach { fileName =>
+        println(s"Extracting from ${fileName}")
+        println(s" FreeMemory: ${runtime.freeMemory}")
 
-  def extractFrom(fileName: String): Unit = {
-    // Include a self loop.
-    println(s"Extracting from ${fileName}")
-    println(s" FreeMemory: ${runtime.freeMemory}")
-    val toText = texts(fileName)
-    processor.annotate(toText, true)
-  }
-
-  fileNames.zipWithIndex.par.foreach { case (fromFileName, fromIndex) =>
-    fileNames.zipWithIndex.par.foreach { case (toFileName, toIndex) =>
-      if (toIndex == fromIndex)
-        // Include a self loop.
-        extractFrom(toFileName)
-      else if (toIndex > fromIndex) {
-        extractFrom(fromFileName)
-        extractFrom(toFileName)
+        val text = texts(fileName)
+        processor.annotate(text, true)
       }
     }
-    // Close the last loop
-    extractFrom(fromFileName)
   }
-  extractFrom(fileNames.last)
 }

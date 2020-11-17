@@ -36,6 +36,10 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
       val (tags, _, preds) = cluProcessor.tagSentence(words)
       val predIndexes = cluProcessor.getPredicateIndexes(preds)
       val entities = cluProcessor.nerSentence(words)
+      val wordsSize = words.length
+      assert(wordsSize == tags.length)
+      assert(wordsSize == entities.length)
+      assert(wordsSize >= predIndexes.length)
       val semanticRoles = cluProcessor.srlSentence(
         words, tags, entities, predIndexes
       )

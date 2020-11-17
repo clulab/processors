@@ -265,13 +265,13 @@ object Layers {
               sentence: AnnotatedSentence): IndexedSeq[String] = {
     val labelsForTask =
       DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
+        ComputationGraph.clear()
         ComputationGraph.renew()
 
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
 
-        ComputationGraph.clear()
         out
       }
 
