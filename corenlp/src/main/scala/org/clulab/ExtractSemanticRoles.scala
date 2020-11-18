@@ -27,12 +27,11 @@ object ExtractSemanticRoles extends App {
 
   val inputDir = args(0)
 
-  val files = findFiles(inputDir, "json")
+  val files = findFiles(inputDir, "txt")
   val texts = files.map { file =>
     file.getName -> getText(file)
   }.toMap
-  val fileNames = files.sortBy(_.length).map(_.getName)
-  // Optionally
+  val fileNames = files.sortBy(_.length).map(_.getName).toArray
 
   val runtime = Runtime.getRuntime
   println(s"TotalMemory: ${runtime.totalMemory}")
@@ -65,5 +64,5 @@ object ExtractSemanticRoles extends App {
     // Close the last loop
     extractFrom(fromFileName)
   }
-  extractFrom(fileNames.last)
+//  extractFrom(fileNames.last)
 }

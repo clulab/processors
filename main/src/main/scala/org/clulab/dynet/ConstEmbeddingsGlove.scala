@@ -69,13 +69,10 @@ object ConstEmbeddingsGlove {
   private var SINGLETON: Option[ConstEmbeddingsGlove] = None
 
   def apply(matrixResourceName: String, isResource: Boolean): ConstEmbeddingsGlove = {
-
-    DyNetSync.synchronized {
-      // these objects are read-only and they use a lot of RAM, so let's reuse them if they exist
-      if(SINGLETON.isEmpty) {
-        SINGLETON = Some(new ConstEmbeddingsGlove(matrixResourceName, isResource))
-      }
-      SINGLETON.get
-    }
+    // These objects are read-only and they use a lot of RAM, so let's reuse them if they exist.
+    // No ComputationGraph is touched during this process, so synchronization is not required.
+    if (SINGLETON.isEmpty)
+      SINGLETON = Some(new ConstEmbeddingsGlove(matrixResourceName, isResource))
+    SINGLETON.get
   }
 }
