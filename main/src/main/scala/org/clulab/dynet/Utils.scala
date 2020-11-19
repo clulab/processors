@@ -359,25 +359,27 @@ object Utils {
                            charFwRnnBuilder: RnnBuilder,
                            charBwRnnBuilder: RnnBuilder): Expression = {
     //println(s"make embedding for word [$word]")
-    val charEmbeddings = new ArrayBuffer[Expression]()
-    for (i <- word.indices) {
-      if (c2i.contains(word.charAt(i))) {
-        charEmbeddings += lookup(charLookupParameters, c2i(word.charAt(i)))
-      } else {
-        charEmbeddings += lookup(charLookupParameters, 0) // 0 reserved for unknown chars
-      }
+    val charEmbeddings = word.map { c: Char =>
+      lookup(charLookupParameters, c2i.getOrElse(c, 0))
     }
 
-    // Some embeddings may be empty in some weird Unicode encodings
-    val fwOuts = transduce(charEmbeddings, charFwRnnBuilder)
-    val fwOut =
-      if (fwOuts.nonEmpty) fwOuts.last
-      else transduce(Array(lookup(charLookupParameters, 0)), charFwRnnBuilder).head // 0 = UNK
+    def safelyTransduce(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+      val outs = transduce(charEmbeddings, rnnBuilder)
+      val out =
+        if (outs.nonEmpty) outs.last
+        // Some embeddings may be empty in some weird Unicode encodings.
+        else {
+          println("Start strange character")
+          val result = transduce(Array(lookup(charLookupParameters, 0)), rnnBuilder).head
+          println("End strange character")
+          result
+        } // 0 = UNK
 
-    val bwOuts = transduce(charEmbeddings.reverse, charBwRnnBuilder)
-    val bwOut =
-      if (bwOuts.nonEmpty) bwOuts.last
-      else transduce(Array(lookup(charLookupParameters, 0)), charBwRnnBuilder).head // 0 = UNK
+      out
+    }
+
+    val fwOut = safelyTransduce(charEmbeddings, charFwRnnBuilder)
+    val bwOut = safelyTransduce(charEmbeddings.reverse, charBwRnnBuilder)
 
     concatenate(fwOut, bwOut)
   }
