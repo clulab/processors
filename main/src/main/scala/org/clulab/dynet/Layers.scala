@@ -203,11 +203,9 @@ object Layers {
                      sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
-    DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
-      ComputationGraph.renew()
-
+    DyNetSync.withComputationGraph { // DyNet's computation graph is a static variable, so this block must be synchronized
       // layers(0) contains the shared layers
-      if(layers(0).nonEmpty) {
+      if (layers(0).nonEmpty) {
         val sharedStates = layers(0).forward(sentence, doDropout = false)
 
         for (i <- 1 until layers.length) {
@@ -217,7 +215,6 @@ object Layers {
           labelsPerTask += labels
         }
       }
-
       // no shared layer
       else {
         for (i <- 1 until layers.length) {
@@ -262,9 +259,7 @@ object Layers {
               taskId: Int,
               sentence: AnnotatedSentence): IndexedSeq[String] = {
     val labelsForTask =
-      DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
-        ComputationGraph.renew()
-
+      DyNetSync.withComputationGraph { // DyNet's computation graph is a static variable, so this block must be synchronized
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         layers(taskId + 1).finalLayer.get.inference(emissionScores)
@@ -277,12 +272,12 @@ object Layers {
                         taskId: Int,
                         sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
-      DyNetSync.synchronized { // DyNet's computation graph is a static variable, so this block must be synchronized
-        ComputationGraph.renew()
-
+      DyNetSync.withComputationGraph { // DyNet's computation graph is a static variable, so this block must be synchronized
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
+        val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
+
+        out
       }
 
     labelsForTask
