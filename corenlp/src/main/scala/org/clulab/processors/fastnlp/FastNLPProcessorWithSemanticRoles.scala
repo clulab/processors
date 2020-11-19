@@ -40,9 +40,20 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
       assert(wordsSize == tags.length)
       assert(wordsSize == entities.length)
       assert(wordsSize >= predIndexes.length)
-      val semanticRoles = cluProcessor.srlSentence(
-        words, tags, entities, predIndexes
-      )
+      val semanticRoles = try {
+        cluProcessor.srlSentence(
+          words, tags, entities, predIndexes
+        )
+      }
+      catch {
+        case throwable: Throwable =>
+          throwable.printStackTrace()
+          println(doc.id)
+          println(words)
+          cluProcessor.srlSentence(
+            words, tags, entities, predIndexes
+          )
+      }
 
       sent.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
     }
