@@ -4,11 +4,16 @@ import edu.cmu.dynet.ComputationGraph
 
 /** Use this object for synchronized statements in DyNet */
 object DyNetSync {
+  protected var expectedVersion = 0
 
   def withComputationGraph[T](f: => T): T = {
+    // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
       try {
-        f
+        require(ComputationGraph.version == expectedVersion)
+        val result = f
+        require(ComputationGraph.version == expectedVersion)
+        result
       }
       finally {
         // Make sure the nodes are freed immediately.  This prevents live object
@@ -16,14 +21,20 @@ object DyNetSync {
         ComputationGraph.clear()
         // Wait for the rest to disappear during finalization which need not be synchronized.
         ComputationGraph.renew()
+        expectedVersion += 1
       }
     }
   }
 
   def withoutComputationGraph[T](f: => T): T = {
+    // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
       try {
-        f
+        val expectedVersion = 0
+        require(ComputationGraph.version == expectedVersion)
+        val result = f
+        require(ComputationGraph.version == expectedVersion)
+        result
       }
       finally {
         // Make sure there is a ComputationGraph now as long as we're synchronized and
