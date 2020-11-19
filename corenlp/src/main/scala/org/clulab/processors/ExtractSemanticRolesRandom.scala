@@ -27,8 +27,9 @@ object ExtractSemanticRolesRandom extends App {
   }
 
   val inputDir = args(0)
+  val extension = args(1)
 
-  val files = findFiles(inputDir, "txt")
+  val files = findFiles(inputDir, extension)
   val processor = new FastNLPProcessorWithSemanticRoles {
     annotate("This is a test.")
   }
