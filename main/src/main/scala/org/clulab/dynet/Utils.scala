@@ -369,7 +369,7 @@ object Utils {
         if (outs.nonEmpty) outs.last
         // Some embeddings may be empty in some weird Unicode encodings.
         else {
-          println("Start strange character")
+          println(s"Start strange character in word '$word'")
           val result = transduce(Array(lookup(charLookupParameters, 0)), rnnBuilder).head
           println("End strange character")
           result
