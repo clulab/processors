@@ -358,10 +358,6 @@ object Utils {
                            charLookupParameters: LookupParameter,
                            charFwRnnBuilder: RnnBuilder,
                            charBwRnnBuilder: RnnBuilder): Expression = {
-    //println(s"make embedding for word [$word]")
-    val charEmbeddings = word.map { c: Char =>
-      lookup(charLookupParameters, c2i.getOrElse(c, 0))
-    }
 
     def safelyTransduce(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outs = transduce(charEmbeddings, rnnBuilder)
@@ -370,7 +366,8 @@ object Utils {
         // Some embeddings may be empty in some weird Unicode encodings.
         else {
           println(s"Start strange character in word '$word'")
-          val result = transduce(Array(lookup(charLookupParameters, 0)), rnnBuilder).head
+          val altCharEmbeddings = Array(lookup(charLookupParameters, 0))
+          val result = transduce(altCharEmbeddings, rnnBuilder).last
           println("End strange character")
           result
         } // 0 = UNK
@@ -378,6 +375,10 @@ object Utils {
       out
     }
 
+    //println(s"make embedding for word [$word]")
+    val charEmbeddings = word.map { c: Char =>
+      lookup(charLookupParameters, c2i.getOrElse(c, 0))
+    }
     val fwOut = safelyTransduce(charEmbeddings, charFwRnnBuilder)
     val bwOut = safelyTransduce(charEmbeddings.reverse, charBwRnnBuilder)
 
