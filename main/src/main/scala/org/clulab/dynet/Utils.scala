@@ -366,17 +366,16 @@ object Utils {
 
     def safelyTransduce(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outs = transduce(charEmbeddings, rnnBuilder)
-      val out =
-        if (outs.nonEmpty) outs.last
-        // Some embeddings may be empty in some weird Unicode encodings.
+      val nonEmptyOuts =
+        if (outs.nonEmpty) outs
         else {
+          // Some embeddings may be empty in some weird Unicode encodings.
           logger.warn(s"A strange character was encountered in word '$word'.")
-          val altCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
-          val result = transduce(altCharEmbeddings, rnnBuilder).last
-          result
+          val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+          // This one shouldn't be empty, or could it be?
+          transduce(safeCharEmbeddings, rnnBuilder)
         }
-
-      out
+      nonEmptyOuts.last
     }
 
     //println(s"make embedding for word [$word]")
