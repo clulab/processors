@@ -4,6 +4,7 @@ import java.io._
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
+import edu.cmu.dynet.ComputationGraph
 import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.struct.{Counter, MutableNumber}
@@ -23,6 +24,8 @@ object Utils {
   val UNK_WORD = "<UNK>"
   val EOS_WORD = "<EOS>"
 
+  val UNK_EMBEDDING = 0
+
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
@@ -36,8 +39,10 @@ object Utils {
   private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
-    DyNetSync.synchronized {
-      if (!IS_DYNET_INITIALIZED) {
+    // Since the random seed is not being changed, the complete initialization
+    // will be ignored by DyNet, so ignore it from the get-go.
+    if (!IS_DYNET_INITIALIZED) {
+      DyNetSync.withoutComputationGraph {
         logger.debug("Initializing DyNet...")
 
         val params = new mutable.HashMap[String, Any]()
@@ -358,26 +363,28 @@ object Utils {
                            charLookupParameters: LookupParameter,
                            charFwRnnBuilder: RnnBuilder,
                            charBwRnnBuilder: RnnBuilder): Expression = {
-    //println(s"make embedding for word [$word]")
-    val charEmbeddings = new ArrayBuffer[Expression]()
-    for (i <- word.indices) {
-      if (c2i.contains(word.charAt(i))) {
-        charEmbeddings += lookup(charLookupParameters, c2i(word.charAt(i)))
-      } else {
-        charEmbeddings += lookup(charLookupParameters, 0) // 0 reserved for unknown chars
-      }
+
+    def safelyTransduce(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+      val outs = transduce(charEmbeddings, rnnBuilder)
+      val out =
+        if (outs.nonEmpty) outs.last
+        // Some embeddings may be empty in some weird Unicode encodings.
+        else {
+          logger.warn(s"A strange character was encountered in word '$word'.")
+          val altCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+          val result = transduce(altCharEmbeddings, rnnBuilder).last
+          result
+        }
+
+      out
     }
 
-    // Some embeddings may be empty in some weird Unicode encodings
-    val fwOuts = transduce(charEmbeddings, charFwRnnBuilder)
-    val fwOut =
-      if (fwOuts.nonEmpty) fwOuts.last
-      else transduce(Array(lookup(charLookupParameters, 0)), charFwRnnBuilder).head // 0 = UNK
-
-    val bwOuts = transduce(charEmbeddings.reverse, charBwRnnBuilder)
-    val bwOut =
-      if (bwOuts.nonEmpty) bwOuts.last
-      else transduce(Array(lookup(charLookupParameters, 0)), charBwRnnBuilder).head // 0 = UNK
+    //println(s"make embedding for word [$word]")
+    val charEmbeddings = word.map { c: Char =>
+      lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
+    }
+    val fwOut = safelyTransduce(charEmbeddings, charFwRnnBuilder)
+    val bwOut = safelyTransduce(charEmbeddings.reverse, charBwRnnBuilder)
 
     concatenate(fwOut, bwOut)
   }
