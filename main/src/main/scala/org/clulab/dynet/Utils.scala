@@ -4,6 +4,7 @@ import java.io._
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
+import edu.cmu.dynet.ComputationGraph
 import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.struct.{Counter, MutableNumber}
@@ -23,6 +24,8 @@ object Utils {
   val UNK_WORD = "<UNK>"
   val EOS_WORD = "<EOS>"
 
+  val UNK_EMBEDDING = 0
+
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
 
@@ -36,8 +39,10 @@ object Utils {
   private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
-    DyNetSync.withoutComputationGraph {
-      if (!IS_DYNET_INITIALIZED) {
+    // Since the random seed is not being changed, the complete initialization
+    // will be ignored by DyNet, so ignore it from the get-go.
+    if (!IS_DYNET_INITIALIZED) {
+      DyNetSync.withoutComputationGraph {
         logger.debug("Initializing DyNet...")
 
         val params = new mutable.HashMap[String, Any]()
@@ -361,23 +366,21 @@ object Utils {
 
     def safelyTransduce(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outs = transduce(charEmbeddings, rnnBuilder)
-      val out =
-        if (outs.nonEmpty) outs.last
-        // Some embeddings may be empty in some weird Unicode encodings.
+      val nonEmptyOuts =
+        if (outs.nonEmpty) outs
         else {
-          println(s"Start strange character in word '$word'")
-          val altCharEmbeddings = Array(lookup(charLookupParameters, 0))
-          val result = transduce(altCharEmbeddings, rnnBuilder).last
-          println("End strange character")
-          result
-        } // 0 = UNK
-
-      out
+          // Some embeddings may be empty in some weird Unicode encodings.
+          logger.warn(s"A strange character was encountered in word '$word'.")
+          val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+          // This one shouldn't be empty, or could it be?
+          transduce(safeCharEmbeddings, rnnBuilder)
+        }
+      nonEmptyOuts.last
     }
 
     //println(s"make embedding for word [$word]")
     val charEmbeddings = word.map { c: Char =>
-      lookup(charLookupParameters, c2i.getOrElse(c, 0))
+      lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
     }
     val fwOut = safelyTransduce(charEmbeddings, charFwRnnBuilder)
     val bwOut = safelyTransduce(charEmbeddings.reverse, charBwRnnBuilder)

@@ -30,7 +30,9 @@ object DyNetSync {
     // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
       try {
-        val expectedVersion = 0
+        // The expectedVersion may not be 0 if initialization was performed previously.
+        // This version checking will itself bring in the computation graph before finally.
+        val expectedVersion = ComputationGraph.version
         require(ComputationGraph.version == expectedVersion)
         val result = f
         require(ComputationGraph.version == expectedVersion)
