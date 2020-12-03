@@ -1,6 +1,8 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{ParameterCollection, Trainer}
+//import edu.cmu.dynet.{ParameterCollection, Trainer}
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.trainers.Trainer
 import org.slf4j.{Logger, LoggerFactory}
 
 class SafeTrainer(val trainer: Trainer, val clipThreshold:Float) {

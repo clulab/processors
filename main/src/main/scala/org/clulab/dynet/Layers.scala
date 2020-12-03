@@ -2,7 +2,12 @@ package org.clulab.dynet
 
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterCollection}
+//import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterCollection}
+import org.clulab.scaladynet.ComputationGraph
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.vectors.ExpressionVector
+
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._

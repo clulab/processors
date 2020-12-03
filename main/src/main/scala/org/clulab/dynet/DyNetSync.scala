@@ -1,6 +1,7 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.ComputationGraph
+//import edu.cmu.dynet.ComputationGraph
+import org.clulab.scaladynet.ComputationGraph
 
 /** Use this object for synchronized statements in DyNet */
 object DyNetSync {

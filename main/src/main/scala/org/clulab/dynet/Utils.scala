@@ -2,11 +2,29 @@ package org.clulab.dynet
 
 import java.io._
 
-import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
-import edu.cmu.dynet._
-import edu.cmu.dynet.ComputationGraph
+import scala.language.implicitConversions
+import scala.collection.JavaConverters._
+
+//import edu.cmu.dynet.Dim
+//import edu.cmu.dynet.Expression
+//import edu.cmu.dynet.ExpressionVector
+//import edu.cmu.dynet.FloatVector
+//import edu.cmu.dynet.Initialize
+//import edu.cmu.dynet.LookupParameter
+//import edu.cmu.dynet.ParameterCollection
+//import edu.cmu.dynet.RnnBuilder
+import org.clulab.scaladynet.builders.RnnBuilder
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.loaders.BaseTextLoader
+import org.clulab.scaladynet.parameters.LookupParameter
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.utils.Dim
+import org.clulab.scaladynet.utils.Initialize
+import org.clulab.scaladynet.vectors.ExpressionVector
+import org.clulab.scaladynet.vectors.FloatVector
+
 import org.clulab.embeddings.WordEmbeddingMap
-import org.clulab.fatdynet.utils.BaseTextLoader
+//import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -187,7 +205,7 @@ object Utils {
       // the only possible starting tag is START; all others are disabled
       //
       val alphaAtT0: Float = if (t == startTag) 0 else LOG_MIN_VALUE
-      forward.add(input(alphaAtT0))
+      forward.add(Expression.input(alphaAtT0))
     }
 
     for (t <- emissionScoresForSeq.indices) {
@@ -196,7 +214,7 @@ object Utils {
 
       for (nextTag <- 0 until tagCount) {
         val alphasForTag = new ExpressionVector()
-        val emitScore = pick(emitScores, nextTag) // scalar: emision score for nextTag
+        val emitScore = Expression.pick(emitScores, nextTag) // scalar: emision score for nextTag
 
         for (srcTag <- 0 until tagCount) {
           val transScore = pick2D(transitionMatrix, nextTag, srcTag) // scalar: transition score to nextTag from srcTag
@@ -208,7 +226,7 @@ object Utils {
           alphasForTag.add(alphaToTagFromSrc)
         }
 
-        alphasAtT.add(logSumExp(alphasForTag))
+        alphasAtT.add(Expression.logSumExp(alphasForTag))
       }
 
       forward = alphasAtT
@@ -219,7 +237,7 @@ object Utils {
       terminalVars.add(forward(t) + pick2D(transitionMatrix, stopTag, t))
     }
 
-    val total = logSumExp(terminalVars)
+    val total = Expression.logSumExp(terminalVars)
     total
   }
 
@@ -321,7 +339,7 @@ object Utils {
 
   /** Picks the scalar element from an expression that is a matrix */
   def pick2D(matrix: ExpressionVector, row: Int, column: Int): Expression = {
-    pick(matrix(row), column)
+    Expression.pick(matrix(row), column)
   }
 
   /** Computes the score of the given sequence of tags (tagSeq) */
@@ -341,7 +359,7 @@ object Utils {
       }
 
       // emission score for the current tag
-      score = score + pick(emissionScoresForSeq(i), tagSeq(i))
+      score = score + Expression.pick(emissionScoresForSeq(i), tagSeq(i))
     }
 
     // conclude with the transition score to STOP from last tag
@@ -353,7 +371,7 @@ object Utils {
   def concatenateStates(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
     val c = new ArrayBuffer[Expression]()
     for (e <- l1.zip(l2)) {
-      c += concatenate(e._1, e._2)
+      c += Expression.concatenate(e._1, e._2)
     }
     c
   }
@@ -371,7 +389,7 @@ object Utils {
         else {
           // Some embeddings may be empty in some weird Unicode encodings.
           logger.warn(s"A strange character was encountered in word '$word'.")
-          val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+          val safeCharEmbeddings = Array(Expression.lookup(charLookupParameters, UNK_EMBEDDING))
           // This one shouldn't be empty, or could it be?
           transduce(safeCharEmbeddings, rnnBuilder)
         }
@@ -380,12 +398,12 @@ object Utils {
 
     //println(s"make embedding for word [$word]")
     val charEmbeddings = word.map { c: Char =>
-      lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
+      Expression.lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
     }
     val fwOut = safelyTransduce(charEmbeddings, charFwRnnBuilder)
     val bwOut = safelyTransduce(charEmbeddings.reverse, charBwRnnBuilder)
 
-    concatenate(fwOut, bwOut)
+    Expression.concatenate(fwOut, bwOut)
   }
 
   def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): mutable.IndexedSeq[Expression] = {
@@ -410,10 +428,10 @@ object Utils {
       // gold tag for word at position i
       val goldTid = golds(i)
       // emissionScoresForSeq(i) = all tag emission scores for the word at position i
-      goldLosses.add(pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
+      goldLosses.add(Expression.pickNegLogSoftmax(emissionScoresForSeq(i), goldTid))
     }
 
-    sum(goldLosses)
+    Expression.sum(goldLosses)
   }
 
   /**
@@ -450,11 +468,11 @@ object Utils {
   }
 
   def emissionScoresToArraysAllTasks(expressions: Array[ExpressionVector]): Array[Array[Array[Float]]] = {
-    val latticesAllTasks = new Array[Array[Array[Float]]](expressions.length)
+    val latticesAllTasks: Array[Array[Array[Float]]] = new Array[Array[Array[Float]]](expressions.length)
 
-    for (tid <- latticesAllTasks.indices) {
+    for (tid: Int <- latticesAllTasks.indices) {
       val lattice = new ArrayBuffer[Array[Float]]()
-      for (expression <- expressions(tid)) {
+      for (expression: Expression <- expressions(tid)) {
         val probs = expression.value().toVector().toArray
         lattice += probs
       }
@@ -467,7 +485,7 @@ object Utils {
   def transitionMatrixToArrays(trans: LookupParameter, size: Int): Array[Array[Float]] = {
     val transitionMatrix = new ArrayBuffer[Array[Float]]()
     for (i <- 0 until size) {
-      transitionMatrix += lookup(trans, i).value().toVector().toArray
+      transitionMatrix += Expression.lookup(trans, i).value().toVector().toArray
     }
     transitionMatrix.toArray
   }

@@ -1,6 +1,8 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Expression, ExpressionVector}
+//import edu.cmu.dynet.{Expression, ExpressionVector}
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.vectors.ExpressionVector
 
 trait FinalLayer extends Saveable {
   def forward(inputExpressions: ExpressionVector,

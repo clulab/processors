@@ -2,7 +2,13 @@ package org.clulab.dynet
 
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+//import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import org.clulab.scaladynet.utils.Dim
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.vectors.ExpressionVector
+import org.clulab.scaladynet.parameters.Parameter
+import org.clulab.scaladynet.parameters.ParameterCollection
+
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._

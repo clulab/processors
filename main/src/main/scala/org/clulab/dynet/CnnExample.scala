@@ -1,6 +1,10 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Dim, Expression, ParameterCollection, UnsignedVector}
+//import edu.cmu.dynet.{Dim, Expression, ParameterCollection, UnsignedVector}
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.utils.Dim
+import org.clulab.scaladynet.vectors.UnsignedVector
 
 //
 // See also:

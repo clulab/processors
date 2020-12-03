@@ -1,6 +1,7 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.ExpressionVector
+//import edu.cmu.dynet.ExpressionVector
+import org.clulab.scaladynet.vectors.ExpressionVector
 
 /**
  * Intermediate layer in a sequence modeling architecture: goes from ExpressionVector to ExpressionVector

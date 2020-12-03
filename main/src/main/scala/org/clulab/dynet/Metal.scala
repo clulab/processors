@@ -3,14 +3,25 @@ package org.clulab.dynet
 import java.io.{FileWriter, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
-import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
+
+//import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression,  ExpressionVector, ParameterCollection , RMSPropTrainer, SimpleSGDTrainer}
+import org.clulab.scaladynet.ComputationGraph
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.trainers.AdamTrainer
+import org.clulab.scaladynet.trainers.RMSPropTrainer
+import org.clulab.scaladynet.trainers.SimpleSGDTrainer
+import org.clulab.scaladynet.vectors.ExpressionVector
+
 import org.clulab.dynet.Utils._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.{Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
-import org.clulab.fatdynet.utils.CloseableModelSaver
+
+//import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.scaladynet.loaders.CloseableModelSaver
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random

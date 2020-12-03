@@ -1,8 +1,15 @@
 package org.clulab.dynet
 import java.io.PrintWriter
 
-import edu.cmu.dynet.Expression.{lookup, randomNormal}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
+//import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.parameters.LookupParameter
+import org.clulab.scaladynet.parameters.Parameter
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.utils.Dim
+import org.clulab.scaladynet.vectors.ExpressionVector
+import org.clulab.scaladynet.vectors.FloatVector
+
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
@@ -32,7 +39,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     val transScores = new Array[Float](size)
 
     for(i <- 0 until size) {
-      transScores(i) = randomNormal(Dim(1)).value().toFloat() / size // pseudo Glorot
+      transScores(i) = Expression.randomNormal(Dim(1)).value().toFloat() / size // pseudo Glorot
     }
 
     // discourage transitions to START from anything
@@ -63,7 +70,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     // fetch the transition probabilities from the lookup storage
     val transitionMatrix = new ExpressionVector
     for(i <- 0 until t2i.size) {
-      transitionMatrix.add(lookup(T, i))
+      transitionMatrix.add(Expression.lookup(T, i))
     }
 
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)

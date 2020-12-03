@@ -1,6 +1,12 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+//import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import org.clulab.scaladynet.utils.Dim
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.vectors.ExpressionVector
+import org.clulab.scaladynet.parameters.Parameter
+import org.clulab.scaladynet.parameters.ParameterCollection
+
 import org.slf4j.{Logger, LoggerFactory}
 import ForwardLayer._
 import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}

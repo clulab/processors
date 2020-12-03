@@ -1,7 +1,14 @@
 package org.clulab.dynet
 import java.io.PrintWriter
 
-import edu.cmu.dynet.{Expression, ExpressionVector, GruBuilder, LstmBuilder, ParameterCollection, RnnBuilder}
+//import edu.cmu.dynet.{Expression, ExpressionVector, GruBuilder, LstmBuilder, ParameterCollection, RnnBuilder}
+import org.clulab.scaladynet.builders.GruBuilder
+import org.clulab.scaladynet.builders.LstmBuilder
+import org.clulab.scaladynet.builders.RnnBuilder
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.vectors.ExpressionVector
+
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer

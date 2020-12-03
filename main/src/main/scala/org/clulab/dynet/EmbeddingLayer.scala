@@ -2,8 +2,15 @@ package org.clulab.dynet
 
 import java.io.PrintWriter
 
-import edu.cmu.dynet.Expression.concatenate
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
+//import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
+import org.clulab.scaladynet.builders.LstmBuilder
+import org.clulab.scaladynet.builders.RnnBuilder
+import org.clulab.scaladynet.expressions.Expression
+import org.clulab.scaladynet.parameters.LookupParameter
+import org.clulab.scaladynet.parameters.ParameterCollection
+import org.clulab.scaladynet.utils.Dim
+import org.clulab.scaladynet.vectors.ExpressionVector
+
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
@@ -163,7 +170,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     if(positionEmbedding.nonEmpty) embedParts.add(positionEmbedding.get)
     if(predEmbed.nonEmpty) embedParts.add(predEmbed.get)
 
-    val embed = concatenate(embedParts)
+    val embed = Expression.concatenate(embedParts)
     assert(embed.dim().get(0) == outDim)
     embed
   }
