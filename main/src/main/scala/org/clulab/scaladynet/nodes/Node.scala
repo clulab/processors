@@ -4,9 +4,16 @@ import org.clulab.scaladynet.ComputationGraph
 import org.clulab.scaladynet.utils.Dim
 
 abstract class Node {
-  val dim_forward: Seq[Dim] = Seq.empty
-  def forward()
-  def arity: Int
-  def setCg(cg: ComputationGraph): Unit
-  def getCg: ComputationGraph
+//  protected var computationGraphOpt: Option[ComputationGraph] = None
+//  protected val dim = 3
+
+//  val dim_forward: Seq[Dim] = Seq.empty
+
+//  def forward(): Unit
+//
+//  def arity: Int = dim
+
+//  def setCg(cg: ComputationGraph): Unit = computationGraphOpt = Option(cg)
+//
+//  def getCg: ComputationGraph = computationGraphOpt.get
 }

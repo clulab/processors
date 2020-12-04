@@ -15,7 +15,7 @@ import scala.collection.JavaConverters._
 //import edu.cmu.dynet.RnnBuilder
 import org.clulab.scaladynet.builders.RnnBuilder
 import org.clulab.scaladynet.expressions.Expression
-import org.clulab.scaladynet.loaders.BaseTextLoader
+import org.clulab.scaladynet.io.BaseTextLoader
 import org.clulab.scaladynet.parameters.LookupParameter
 import org.clulab.scaladynet.parameters.ParameterCollection
 import org.clulab.scaladynet.utils.Dim
@@ -409,11 +409,10 @@ object Utils {
   def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): mutable.IndexedSeq[Expression] = {
     builder.newGraph()
     builder.startNewSequence()
-    val ev = new ExpressionVector()
-    for(e <- embeddings) {
-      ev.add(builder.addInput(e))
-    }
-    //val states = embeddings.map(builder.addInput)
+
+    val expressions = embeddings.map(builder.addInput).toSeq
+    val ev = new ExpressionVector(expressions)
+
     ev
   }
 

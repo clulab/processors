@@ -10,4 +10,8 @@ object ComputationGraph {
   def backward(last: Expression): Unit = ???
   def version: Int = ???
   def clear(): Unit = ???
+
+  // internal
+  def current: ComputationGraph = null
 }
+

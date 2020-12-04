@@ -1,5 +1,4 @@
 package org.clulab.scaladynet.vectors
 
-class UnsignedVector() {
-  def this(values: Seq[Long]) = this()
+class UnsignedVector(values: Seq[Long] = Seq.empty) extends ImmutableVector[Long](values) {
 }

@@ -1,6 +1,8 @@
 package org.clulab.dynet
 
 //import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, ParameterCollection}
+//import edu.cmu.dynet.ExpressionVector
+//import edu.cmu.dynet.Expression
 import org.clulab.scaladynet.expressions.Expression
 import org.clulab.scaladynet.parameters.LookupParameter
 import org.clulab.scaladynet.parameters.ParameterCollection
@@ -52,11 +54,8 @@ class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true
   }
 
   override def mkEmbeddings(words: Iterable[String]): ExpressionVector = {
-    val ev = new ExpressionVector()
-
-    for(word <- words) {
-      ev.add(get(word))
-    }
+    val expressions: Seq[Expression] = words.map(get).toSeq
+    val ev = new ExpressionVector(expressions)
 
     ev
   }

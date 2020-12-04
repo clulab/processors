@@ -1,8 +1,8 @@
 package org.clulab.scaladynet.vectors
 
-class FloatVector {
-  def this(values: Seq[Float] = Seq.empty) = this()
+class FloatVector(values: Seq[Float] = Seq.empty) extends ImmutableVector[Float](values) {
 
-  def mkString(sep: String): String = ???
-  def toArray: Array[Float] = ???
+  def mkString(sep: String): String = values.mkString(sep)
+
+  def toArray: Array[Float] = values.toArray
 }

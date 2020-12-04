@@ -1,5 +1,6 @@
 package org.clulab.scaladynet.expressions
 
+import org.clulab.scaladynet.ComputationGraph
 import org.clulab.scaladynet.parameters.LookupParameter
 import org.clulab.scaladynet.parameters.Parameter
 import org.clulab.scaladynet.utils.Dim
@@ -26,13 +27,10 @@ class Expression {
 object Expression {
   def concatenate(ev: ExpressionVector): Expression = ???
   def concatenate(exprs: Expression*): Expression = ???
-
   def input(s: Float): Expression = ???
   def logSumExp(ev: ExpressionVector): Expression = ???
-//  def lookup
   def pick(e: Expression, v: Int): Expression = ???
   def pickNegLogSoftmax(e: Expression, v: Long): Expression = ???
-//  def randomNormal
   def sum(ev: ExpressionVector): Expression = ???
   def lookup(p: LookupParameter, index: Int): Expression = ???
   def concatenateCols(exprs: Expression*): Expression = ???
@@ -44,4 +42,7 @@ object Expression {
   def rectify(e: Expression): Expression = ???
   def randomNormal(d: Dim): Expression = ???
   def dropout(e: Expression, prob: Float): Expression = ???
+
+  // Internal
+  def const_parameter(g: ComputationGraph, p: Parameter): Expression = ???
 }

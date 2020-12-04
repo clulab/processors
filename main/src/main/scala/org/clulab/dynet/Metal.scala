@@ -21,7 +21,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 //import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
-import org.clulab.scaladynet.loaders.CloseableModelSaver
+import org.clulab.scaladynet.io.CloseableModelSaver
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random

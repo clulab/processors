@@ -1,4 +1,4 @@
-package org.clulab.scaladynet.loaders
+package org.clulab.scaladynet.io
 
 import org.clulab.scaladynet.parameters.ParameterCollection
 
