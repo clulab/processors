@@ -4,11 +4,8 @@ import org.clulab.scaladynet.ComputationGraph
 import org.clulab.scaladynet.expressions.Expression
 import org.clulab.scaladynet.parameters.Parameter
 import org.clulab.scaladynet.parameters.ParameterCollection
-import org.clulab.scaladynet.parameters.ParameterInitConst
+import org.clulab.scaladynet.parameters.init.ParameterInitConst
 import org.clulab.scaladynet.utils.Dim
-
-import scala.collection.mutable
-import scala.collection.mutable
 
 // See VanillaLSTMBuilder
 class LstmBuilder(layers: Long, input_dim: Long, hidden_dim: Long, model: ParameterCollection) extends RnnBuilder {
