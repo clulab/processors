@@ -1,20 +1,30 @@
 package org.clulab.scaladynet.utils
 
-class Dim(protected val values: Seq[Long]) {
-  val d: Array[Int] = Array(10)
-  val nd = 6
+class Dim(val d: Seq[Int] /* Array of dimension */, val bd: Int /* Batch dimension */) {
+  val nd = d.size // Number of dimensions
+  val batchSize = d.foldLeft(1)(_ * _)
 
-  def get(i: Long): Long = values(i.toInt) // Watch for overflow.
+  // Batch dimension
+  def batch_elems(): Int = bd
+
+  def get(i: Int): Int = d(i)
 
   def apply(i: Int): Int = d(i)
+
+  // Total size of a batch
+  def size(): Int = batch_size() * bd
+
+  // Size of a batch (product of all dimensions)
+  def batch_size(): Int = batchSize
 }
 
 object Dim {
 
-  def apply(values: Seq[Long], b: Long = 0): Dim = {
-    require(b == 0)
-    new Dim(values.map(_.toLong))
-  }
+  def apply(): Dim = apply(Seq.empty, 1)
 
-  def apply(values: Long*): Dim = apply(values)
+  def apply(values: Int*): Dim = apply(values, 1)
+
+  def apply(other: Dim, bd: Int): Dim = apply(other.d, bd)
+
+  def apply(values: Seq[Int], b: Int): Dim = new Dim(values, b)
 }

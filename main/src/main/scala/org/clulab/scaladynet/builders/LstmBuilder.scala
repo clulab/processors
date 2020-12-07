@@ -8,10 +8,10 @@ import org.clulab.scaladynet.parameters.init.ParameterInitConst
 import org.clulab.scaladynet.utils.Dim
 
 // See VanillaLSTMBuilder
-class LstmBuilder(layers: Long, input_dim: Long, hidden_dim: Long, model: ParameterCollection) extends RnnBuilder {
+class LstmBuilder(layers: Int, input_dim: Int, hidden_dim: Int, model: ParameterCollection) extends RnnBuilder {
   protected val local_model: ParameterCollection = model.add_subcollection("vanilla-lstm-builder")
   protected val params: Seq[Seq[Parameter]] = Range(0, layers.toInt).map { i: Int =>
-    val layer_input_dim: Long = if (i == 0) input_dim else hidden_dim
+    val layer_input_dim: Int = if (i == 0) input_dim else hidden_dim
     // i
     val p_x2i: Parameter = local_model.add_parameters(Dim(hidden_dim * 4, layer_input_dim))
     val p_h2i: Parameter = local_model.add_parameters(Dim(hidden_dim * 4, hidden_dim))

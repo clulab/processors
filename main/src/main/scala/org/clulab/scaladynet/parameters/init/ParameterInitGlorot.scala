@@ -2,7 +2,6 @@ package org.clulab.scaladynet.parameters.init
 import org.clulab.scaladynet.utils.Tensor
 import org.clulab.scaladynet.utils.TensorTools
 
-// This is internal
 class ParameterInitGlorot(is_lookup: Boolean, gain: Float) extends ParameterInit {
 
   override def initialize_params(values: Tensor): Unit = {
