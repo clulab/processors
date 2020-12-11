@@ -374,6 +374,8 @@ object Metal {
       val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered
 
+      Thread.sleep(10000) // make it take longer so that other things can happen.
+
       val layersCount = new Utils.ByLineIntBuilder().build(lines)
       for(i <- 0 until layersCount) {
         val layers = Layers.loadX2i(parameters, lines)
@@ -389,7 +391,7 @@ object Metal {
     //
     Utils.loadParameters(dynetFilename, parameters)
 
-    logger.debug("MTL loading complete.")
+    logger.debug(s"Loading MTL model from $modelFilenamePrefix complete.")
     layersSeq
   }
 
