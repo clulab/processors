@@ -374,7 +374,9 @@ object Metal {
       val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered
 
-      Thread.sleep(10000) // make it take longer so that other things can happen.
+      println("Started sleeping...")
+      Thread.sleep(20000) // make it take longer so that other things can happen.
+      println("Finished sleeping.")
 
       val layersCount = new Utils.ByLineIntBuilder().build(lines)
       for(i <- 0 until layersCount) {
