@@ -42,7 +42,7 @@ object Utils {
     // Since the random seed is not being changed, the complete initialization
     // will be ignored by DyNet, so ignore it from the get-go.
     if (!IS_DYNET_INITIALIZED) {
-      DyNetSync.withoutComputationGraph {
+      DyNetSync.withoutComputationGraph("Utils.initializeDyNet()") {
         logger.debug("Initializing DyNet...")
 
         val params = new mutable.HashMap[String, Any]()

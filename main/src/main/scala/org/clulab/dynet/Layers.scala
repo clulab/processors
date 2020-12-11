@@ -203,7 +203,7 @@ object Layers {
                      sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
-    DyNetSync.withComputationGraph { // DyNet's computation graph is a static variable, so this block must be synchronized
+    DyNetSync.withComputationGraph("Layers.predictJointly()") { // DyNet's computation graph is a static variable, so this block must be synchronized
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
         val sharedStates = layers(0).forward(sentence, doDropout = false)
@@ -259,7 +259,7 @@ object Layers {
               taskId: Int,
               sentence: AnnotatedSentence): IndexedSeq[String] = {
     val labelsForTask =
-      DyNetSync.withComputationGraph { // DyNet's computation graph is a static variable, so this block must be synchronized
+      DyNetSync.withComputationGraph("Layers.predict()") { // DyNet's computation graph is a static variable, so this block must be synchronized
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
@@ -274,7 +274,7 @@ object Layers {
                         taskId: Int,
                         sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
-      DyNetSync.withComputationGraph { // DyNet's computation graph is a static variable, so this block must be synchronized
+      DyNetSync.withComputationGraph("Layers.predictWithScores") { // DyNet's computation graph is a static variable, so this block must be synchronized
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)

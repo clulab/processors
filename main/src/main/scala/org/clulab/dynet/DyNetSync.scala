@@ -5,10 +5,15 @@ import edu.cmu.dynet.ComputationGraph
 /** Use this object for synchronized statements in DyNet */
 object DyNetSync {
   protected var expectedVersion = 0
+  protected var count = 0
 
-  def withComputationGraph[T](f: => T): T = {
+  def withComputationGraph[T](message: String)(f: => T): T = {
     // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
+      val localCount = count
+      count += 1
+      val threadId = Thread.currentThread.getId
+      println(s"Synchronize\t$localCount\tstart\t$threadId\t$message")
       try {
         require(ComputationGraph.version == expectedVersion)
         val result = f
@@ -16,6 +21,11 @@ object DyNetSync {
         result
       }
       finally {
+        println(s"Synchronize\t$localCount\tstop\t$threadId\t$message")
+        val checkCount = count
+        if (localCount + 1 != checkCount)
+          println("Check this out!")
+        assert(localCount + 1 == checkCount)
         // Make sure the nodes are freed immediately.  This prevents live object
         // from being trashed and may help prevent memory fragmentation.
         ComputationGraph.clear()
@@ -26,9 +36,13 @@ object DyNetSync {
     }
   }
 
-  def withoutComputationGraph[T](f: => T): T = {
+  def withoutComputationGraph[T](message: String)(f: => T): T = {
     // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
+      val localCount = count
+      count += 1
+      val threadId = Thread.currentThread.getId
+      println(s"Synchronize\t$localCount\tstart\t$threadId\t$message")
       try {
         // The expectedVersion may not be 0 if initialization was performed previously.
         // This version checking will itself bring in the computation graph before finally.
@@ -39,6 +53,11 @@ object DyNetSync {
         result
       }
       finally {
+        println(s"Synchronize\t$localCount\tstop\t$threadId\t$message")
+        val checkCount = count
+        if (localCount + 1 != checkCount)
+          println("Check this out!")
+        assert(localCount + 1 == checkCount)
         // Make sure there is a ComputationGraph now as long as we're synchronized and
         // this typically runs before DyNet can be used.  It is otherwise possible
         // that the first graph is constructed when a model loads, without synchronization.
