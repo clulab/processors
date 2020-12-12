@@ -374,7 +374,7 @@ object Metal {
       val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered
 
-      if (modelFilenamePrefix == "mtl-en-srla-avg-e3e5e2e6e4") {
+      if (modelFilenamePrefix == "org/clulab/processors/clu/mtl-en-srla-avg-e3e5e2e6e4") {
         println("Started sleeping...")
         Thread.sleep(40000) // make it take longer so that other things can happen.
         println("Finished sleeping.")

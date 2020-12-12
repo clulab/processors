@@ -57,7 +57,7 @@ object DyNetSync {
         val checkCount = count
         if (localCount + 1 != checkCount)
           println("Check this out!")
-        assert(localCount + 1 == checkCount)
+//        assert(localCount + 1 == checkCount)
         // Make sure there is a ComputationGraph now as long as we're synchronized and
         // this typically runs before DyNet can be used.  It is otherwise possible
         // that the first graph is constructed when a model loads, without synchronization.
