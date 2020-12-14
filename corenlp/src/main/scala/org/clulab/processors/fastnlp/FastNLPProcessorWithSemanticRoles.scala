@@ -18,7 +18,11 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
   /** Used for SRL */
   lazy val cluProcessor = {
     Utils.initializeDyNet()
-    new CluProcessor()
+    new CluProcessor() {
+      // Since this skips CluProcessor.srl() and goes straight for srlSentence(), there isn't
+      // a chance to make sure CluProcessor.mtlSrla is initialized, so it is done here.
+      assert(this.mtlSrla != null)
+    }
   }
 
   def this(internStrings:Boolean = true,
