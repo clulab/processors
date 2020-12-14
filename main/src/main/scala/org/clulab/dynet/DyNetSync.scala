@@ -23,8 +23,6 @@ object DyNetSync {
       finally {
         println(s"Synchronize\t$localCount\tstop\t$threadId\t$message")
         val checkCount = count
-        if (localCount + 1 != checkCount)
-          println("Check this out!")
         assert(localCount + 1 == checkCount)
         // Make sure the nodes are freed immediately.  This prevents live object
         // from being trashed and may help prevent memory fragmentation.
@@ -55,9 +53,7 @@ object DyNetSync {
       finally {
         println(s"Synchronize\t$localCount\tstop\t$threadId\t$message")
         val checkCount = count
-        if (localCount + 1 != checkCount)
-          println("Check this out!")
-//        assert(localCount + 1 == checkCount)
+        assert(localCount + 1 == checkCount)
         // Make sure there is a ComputationGraph now as long as we're synchronized and
         // this typically runs before DyNet can be used.  It is otherwise possible
         // that the first graph is constructed when a model loads, without synchronization.

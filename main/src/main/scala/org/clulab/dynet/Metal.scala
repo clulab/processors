@@ -373,13 +373,6 @@ object Metal {
     val layersSeq = Serializer.using(Utils.newSource(x2iFilename)) { source =>
       val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered
-
-      if (modelFilenamePrefix == "org/clulab/processors/clu/mtl-en-srla-avg-e3e5e2e6e4") {
-        println("Started sleeping...")
-        Thread.sleep(40000) // make it take longer so that other things can happen.
-        println("Finished sleeping.")
-      }
-
       val layersCount = new Utils.ByLineIntBuilder().build(lines)
       for(i <- 0 until layersCount) {
         val layers = Layers.loadX2i(parameters, lines)
