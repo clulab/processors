@@ -274,7 +274,7 @@ object Layers {
                         taskId: Int,
                         sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
-      DyNetSync.withComputationGraph("Layers.predictWithScores") { // DyNet's computation graph is a static variable, so this block must be synchronized
+      DyNetSync.withComputationGraph("Layers.predictWithScores()") { // DyNet's computation graph is a static variable, so this block must be synchronized
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)

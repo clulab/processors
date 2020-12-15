@@ -4,37 +4,62 @@ import edu.cmu.dynet.ComputationGraph
 
 /** Use this object for synchronized statements in DyNet */
 object DyNetSync {
-  protected var expectedVersion = 0
+  protected val debug = true
+  protected var expectedVersion = 0L
   protected var count = 0
-  var isSynchronized = false
+  protected var inSynchronized = false
+  // Allow public query of the read-only version.
+  def isSynchronized() = inSynchronized
+
+  def before(message: String, expectedVersion: Long): Int = {
+    // It is possible for the same thread to re-enter the synchronized section.  Avoid that!
+    assert(!inSynchronized)
+    inSynchronized = true
+    val startCount = count
+    count += 1 // Something else will see a different count now.
+    if (debug) {
+      val threadId = Thread.currentThread.getId
+      println(s"Synchronize\t$startCount\tstart\t$threadId\t$message")
+    }
+    require(ComputationGraph.version == expectedVersion)
+
+    startCount
+  }
+
+  def after(startCount: Int, message: String): Unit = {
+    require(ComputationGraph.version == expectedVersion)
+    if (debug) {
+      val threadId = Thread.currentThread.getId // This had better be the original threadId.
+      println(s"Synchronize\t$startCount\tstop\t$threadId\t$message")
+    }
+    val stopCount = count
+    assert(startCount + 1 == stopCount)
+  }
 
   def withComputationGraph[T](message: String)(f: => T): T = {
     // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
-      isSynchronized = true
-      val localCount = count
-      count += 1
-      val threadId = Thread.currentThread.getId
-      println(s"Synchronize\t$localCount\tstart\t$threadId\t$message")
+      val startCount = before(message, expectedVersion)
       try {
-        require(ComputationGraph.version == expectedVersion)
         val result = f // This needs to make all the nodes
-        require(ComputationGraph.version == expectedVersion)
         result
       }
+      catch {
+        case throwable: Throwable =>
+          throwable.printStackTrace()
+          throw throwable
+      }
       finally {
-        println(s"Synchronize\t$localCount\tstop\t$threadId\t$message")
-        val checkCount = count
-        assert(localCount + 1 == checkCount)
-        // Make sure the nodes are freed immediately.  This prevents live object
+        after(startCount, message)
+        // Make sure the nodes are freed immediately with clear().  This prevents live object
         // from being trashed and may help prevent memory fragmentation.
-        // However, the line is redundant because ComputationGraph.renew calls
+        // However, the line is redundant because ComputationGraph.renew() calls
         // delete immediately and there is no wait for garbage collection.
         // ComputationGraph.clear()
         // Wait for the rest to disappear during finalization which need not be synchronized.
         ComputationGraph.renew()
         expectedVersion += 1
-        isSynchronized = false
+        inSynchronized = false
       }
     }
   }
@@ -42,24 +67,20 @@ object DyNetSync {
   def withoutComputationGraph[T](message: String)(f: => T): T = {
     // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
-      isSynchronized = true
-      val localCount = count
-      count += 1
-      val threadId = Thread.currentThread.getId
-      println(s"Synchronize\t$localCount\tstart\t$threadId\t$message")
+      // The expectedVersion may not be 0 if initialization was performed previously.
+      // This version checking will itself bring in the computation graph in finally.
+      val startCount = before(message, ComputationGraph.version)
       try {
-        // The expectedVersion may not be 0 if initialization was performed previously.
-        // This version checking will itself bring in the computation graph before finally.
-        val expectedVersion = ComputationGraph.version
-        require(ComputationGraph.version == expectedVersion)
         val result = f
-        require(ComputationGraph.version == expectedVersion)
         result
       }
+      catch {
+        case throwable: Throwable =>
+          throwable.printStackTrace()
+          throw throwable
+      }
       finally {
-        println(s"Synchronize\t$localCount\tstop\t$threadId\t$message")
-        val checkCount = count
-        assert(localCount + 1 == checkCount)
+        after(startCount, message)
         // Make sure there is a ComputationGraph now as long as we're synchronized and
         // this typically runs before DyNet can be used.  It is otherwise possible
         // that the first graph is constructed when a model loads, without synchronization.
@@ -74,7 +95,7 @@ object DyNetSync {
         // This seems to do the trick without referring to any internals.
         // classOf[ComputationGraph] does not compile, so the Java version is used.
         ComputationGraph.getClass
-        isSynchronized = false
+        inSynchronized = false
       }
     }
   }

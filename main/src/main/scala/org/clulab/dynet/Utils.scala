@@ -352,18 +352,14 @@ object Utils {
   }
 
   def concatenateStates(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
-    val c = new ArrayBuffer[Expression]()
-    for (e <- l1.zip(l2)) {
-      c += concatenate(e._1, e._2)
-    }
-    c
+    l1.zip(l2).map { case (left, right) => concatenate(left, right) }
   }
 
   def mkCharacterEmbedding(word: String,
-    c2i: Map[Char, Int],
-    charLookupParameters: LookupParameter,
-    charFwRnnBuilder: RnnBuilder,
-    charBwRnnBuilder: RnnBuilder): Expression = {
+      c2i: Map[Char, Int],
+      charLookupParameters: LookupParameter,
+      charFwRnnBuilder: RnnBuilder,
+      charBwRnnBuilder: RnnBuilder): Expression = {
 
     def safelyTransduceLast(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outsOpt = transduceLastOpt(charEmbeddings, rnnBuilder)
@@ -414,10 +410,9 @@ object Utils {
     builder.newGraph()
     builder.startNewSequence()
     val ev = new ExpressionVector()
-    for(e <- embeddings) {
+    for (e <- embeddings) {
       ev.add(builder.addInput(e))
     }
-    //val states = embeddings.map(builder.addInput)
     ev
   }
 
