@@ -6,17 +6,19 @@ import edu.cmu.dynet.ComputationGraph
 object DyNetSync {
   protected var expectedVersion = 0
   protected var count = 0
+  var isSynchronized = false
 
   def withComputationGraph[T](message: String)(f: => T): T = {
     // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
+      isSynchronized = true
       val localCount = count
       count += 1
       val threadId = Thread.currentThread.getId
       println(s"Synchronize\t$localCount\tstart\t$threadId\t$message")
       try {
         require(ComputationGraph.version == expectedVersion)
-        val result = f
+        val result = f // This needs to make all the nodes
         require(ComputationGraph.version == expectedVersion)
         result
       }
@@ -26,10 +28,13 @@ object DyNetSync {
         assert(localCount + 1 == checkCount)
         // Make sure the nodes are freed immediately.  This prevents live object
         // from being trashed and may help prevent memory fragmentation.
-        ComputationGraph.clear()
+        // However, the line is redundant because ComputationGraph.renew calls
+        // delete immediately and there is no wait for garbage collection.
+        // ComputationGraph.clear()
         // Wait for the rest to disappear during finalization which need not be synchronized.
         ComputationGraph.renew()
         expectedVersion += 1
+        isSynchronized = false
       }
     }
   }
@@ -37,6 +42,7 @@ object DyNetSync {
   def withoutComputationGraph[T](message: String)(f: => T): T = {
     // In parallel version, synchronize on Thread.currentThread.
     this.synchronized {
+      isSynchronized = true
       val localCount = count
       count += 1
       val threadId = Thread.currentThread.getId
@@ -68,6 +74,7 @@ object DyNetSync {
         // This seems to do the trick without referring to any internals.
         // classOf[ComputationGraph] does not compile, so the Java version is used.
         ComputationGraph.getClass
+        isSynchronized = false
       }
     }
   }

@@ -20,6 +20,7 @@ import scala.io.Source
  */
 object Utils {
   private val logger: Logger = LoggerFactory.getLogger(classOf[Utils])
+  var concatenateCount = 0
 
   val UNK_WORD = "<UNK>"
   val EOS_WORD = "<EOS>"
@@ -366,7 +367,7 @@ object Utils {
 
     def safelyTransduce(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outs = transduce(charEmbeddings, rnnBuilder)
-      val nonEmptyOuts =
+      val nonEmptyOuts = {
         if (outs.nonEmpty) outs
         else {
           // Some embeddings may be empty in some weird Unicode encodings.
@@ -375,6 +376,10 @@ object Utils {
           // This one shouldn't be empty, or could it be?
           transduce(safeCharEmbeddings, rnnBuilder)
         }
+      }
+      println(s"Concatenate ${nonEmptyOuts.vector.swigCPtr}") // See if these are somehow deleted in the meantime by printing during finalization.
+      // The expressions are otherwise abandoned.  Perhaps this causes a problem
+      // when only the last one is preserved?  Maybe it is not held on to long enough?
       nonEmptyOuts.last
     }
 
@@ -382,13 +387,34 @@ object Utils {
     val charEmbeddings = word.map { c: Char =>
       lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
     }
+
+    val count = concatenateCount
+    concatenateCount += 1
+    println(s"Concatenate $count ($word) starting.")
+
     val fwOut = safelyTransduce(charEmbeddings, charFwRnnBuilder)
     val bwOut = safelyTransduce(charEmbeddings.reverse, charBwRnnBuilder)
-
-    concatenate(fwOut, bwOut)
+    val result = concatenate(fwOut, bwOut)
+    println(s"Concatenate $count ending.")
+    result
   }
 
-  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): mutable.IndexedSeq[Expression] = {
+  // This is meant to be the same as transduce(...).last except that the ExpressionVector that
+  // is
+  // never returned as a whole or even used.  This is because the ExpressionVector can get
+  // garbage collected
+  def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+    builder.newGraph()
+    builder.startNewSequence()
+    val ev = new ExpressionVector()
+    for(e <- embeddings) {
+      ev.add(builder.addInput(e))
+    }
+    //val states = embeddings.map(builder.addInput)
+    ev
+  }
+
+  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
     builder.newGraph()
     builder.startNewSequence()
     val ev = new ExpressionVector()
