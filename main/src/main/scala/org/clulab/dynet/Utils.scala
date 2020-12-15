@@ -102,10 +102,10 @@ object Utils {
   }
 
   def viterbi( emissionScores: Array[Array[Float]],
-               transitionMatrix: Array[Array[Float]],
-               tagCount: Int,
-               startTagIdx: Int,
-               stopTagIdx: Int): Array[Int] = {
+    transitionMatrix: Array[Array[Float]],
+    tagCount: Int,
+    startTagIdx: Int,
+    stopTagIdx: Int): Array[Int] = {
 
     // initial scores in log space
     val initScores = new Array[Float](tagCount)
@@ -176,8 +176,8 @@ object Utils {
    * This code inspired by this PyTorch implementation: https://pytorch.org/tutorials/beginner/nlp/advanced_tutorial.html
    */
   def mkPartitionScore(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
-                       transitionMatrix: ExpressionVector,
-                       startTag: Int, stopTag: Int): Expression = { // Dim: tagCount x tagCount
+    transitionMatrix: ExpressionVector,
+    startTag: Int, stopTag: Int): Expression = { // Dim: tagCount x tagCount
     val tagCount = transitionMatrix.size
 
     // sum of scores of reaching each tag at this time step
@@ -203,8 +203,8 @@ object Utils {
           val transScore = pick2D(transitionMatrix, nextTag, srcTag) // scalar: transition score to nextTag from srcTag
           val alphaToTagFromSrc =
             forward(srcTag) +
-              transScore +
-              emitScore
+                transScore +
+                emitScore
 
           alphasForTag.add(alphaToTagFromSrc)
         }
@@ -233,9 +233,9 @@ object Utils {
   }
 
   def printCoNLLOutput(pw: PrintWriter,
-                       words: IndexedSeq[String],
-                       golds: IndexedSeq[String],
-                       preds: IndexedSeq[String]): Unit = {
+    words: IndexedSeq[String],
+    golds: IndexedSeq[String],
+    preds: IndexedSeq[String]): Unit = {
 
     assert(words.length == golds.length)
     assert(words.length == preds.length)
@@ -327,11 +327,11 @@ object Utils {
 
   /** Computes the score of the given sequence of tags (tagSeq) */
   def sentenceScore(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
-                    transitionMatrix: ExpressionVector, // Dim: tagCount x tagCount
-                    tagCount: Int,
-                    tagSeq: IndexedSeq[Int],
-                    startTag: Int,
-                    stopTag: Int): Expression = {
+    transitionMatrix: ExpressionVector, // Dim: tagCount x tagCount
+    tagCount: Int,
+    tagSeq: IndexedSeq[Int],
+    startTag: Int,
+    stopTag: Int): Expression = {
     // start with the transition score to first tag from START
     var score = pick2D(transitionMatrix, tagSeq.head, startTag)
 
@@ -360,27 +360,22 @@ object Utils {
   }
 
   def mkCharacterEmbedding(word: String,
-                           c2i: Map[Char, Int],
-                           charLookupParameters: LookupParameter,
-                           charFwRnnBuilder: RnnBuilder,
-                           charBwRnnBuilder: RnnBuilder): Expression = {
+    c2i: Map[Char, Int],
+    charLookupParameters: LookupParameter,
+    charFwRnnBuilder: RnnBuilder,
+    charBwRnnBuilder: RnnBuilder): Expression = {
 
-    def safelyTransduce(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
-      val outs = transduce(charEmbeddings, rnnBuilder)
-      val nonEmptyOuts = {
-        if (outs.nonEmpty) outs
-        else {
-          // Some embeddings may be empty in some weird Unicode encodings.
-          logger.warn(s"A strange character was encountered in word '$word'.")
-          val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
-          // This one shouldn't be empty, or could it be?
-          transduce(safeCharEmbeddings, rnnBuilder)
-        }
+    def safelyTransduceLast(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+      val outsOpt = transduceLastOpt(charEmbeddings, rnnBuilder)
+      val nonEmptyOuts = outsOpt.getOrElse {
+        // Some embeddings may be empty in some weird Unicode encodings.
+        logger.warn(s"A strange character was encountered in word '$word'.")
+        val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+        // This one shouldn't be empty, or could it be?
+        transduceLastOpt(safeCharEmbeddings, rnnBuilder).get
       }
-      println(s"Concatenate ${nonEmptyOuts.vector.swigCPtr}") // See if these are somehow deleted in the meantime by printing during finalization.
-      // The expressions are otherwise abandoned.  Perhaps this causes a problem
-      // when only the last one is preserved?  Maybe it is not held on to long enough?
-      nonEmptyOuts.last
+
+      nonEmptyOuts
     }
 
     //println(s"make embedding for word [$word]")
@@ -392,26 +387,27 @@ object Utils {
     concatenateCount += 1
     println(s"Concatenate $count ($word) starting.")
 
-    val fwOut = safelyTransduce(charEmbeddings, charFwRnnBuilder)
-    val bwOut = safelyTransduce(charEmbeddings.reverse, charBwRnnBuilder)
+    val fwOut = safelyTransduceLast(charEmbeddings, charFwRnnBuilder)
+    val bwOut = safelyTransduceLast(charEmbeddings.reverse, charBwRnnBuilder)
     val result = concatenate(fwOut, bwOut)
     println(s"Concatenate $count ending.")
     result
   }
 
-  // This is meant to be the same as transduce(...).last except that the ExpressionVector that
-  // is
-  // never returned as a whole or even used.  This is because the ExpressionVector can get
-  // garbage collected
-  def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+  // This is meant to be the same as transduce(...).last except that the ExpressionVector involved
+  // in that is never returned as a whole or even used.  This is because the ExpressionVector can get
+  // garbage collected after last() is called so that the last Expression is no longer valid.
+  def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): Option[Expression] = {
     builder.newGraph()
     builder.startNewSequence()
-    val ev = new ExpressionVector()
-    for(e <- embeddings) {
-      ev.add(builder.addInput(e))
+
+    if (embeddings.isEmpty)
+      None
+    else {
+      var lastExpressionOpt: Option[Expression] = None
+      embeddings.foreach { embedding => lastExpressionOpt = Some(builder.addInput(embedding)) }
+      lastExpressionOpt
     }
-    //val states = embeddings.map(builder.addInput)
-    ev
   }
 
   def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
@@ -427,7 +423,7 @@ object Utils {
 
   /** Greedy loss function, ignoring transition scores */
   def sentenceLossGreedy(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
-                         golds: IndexedSeq[Int]): Expression = { // Dim: sentenceSize
+    golds: IndexedSeq[Int]): Expression = { // Dim: sentenceSize
 
     val goldLosses = new ExpressionVector()
     assert(emissionScoresForSeq.length == golds.length)
@@ -451,9 +447,9 @@ object Utils {
    * @return the negative prob of the gold sequence (in log space)
    */
   def sentenceLossCrf(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
-                      transitionMatrix: ExpressionVector, // Dim: tagCount x tagCount
-                      golds: IndexedSeq[Int],
-                      t2i: Map[String, Int]): Expression = { // Dim: sentenceSize
+    transitionMatrix: ExpressionVector, // Dim: tagCount x tagCount
+    golds: IndexedSeq[Int],
+    t2i: Map[String, Int]): Expression = { // Dim: sentenceSize
     val startTag = t2i(START_TAG)
     val stopTag = t2i(STOP_TAG)
 
@@ -555,7 +551,7 @@ object Utils {
   abstract class ByLineBuilder[IntermediateValueType, FinalValueType, DefaultValueType] {
 
     protected def setDefaultValue(intermediateValue: IntermediateValueType,
-                                  defaultValue: DefaultValueType)
+      defaultValue: DefaultValueType)
 
     protected def getComment(line: String): String = {
       assert(line.startsWith("#"))
@@ -563,9 +559,9 @@ object Utils {
     }
 
     protected def addLines(intermediateValue: IntermediateValueType,
-                           lines: BufferedIterator[String],
-                           fieldName: Option[String],
-                           defaultValue: Option[DefaultValueType]): Unit = {
+      lines: BufferedIterator[String],
+      fieldName: Option[String],
+      defaultValue: Option[DefaultValueType]): Unit = {
 
       //
       // sanity check: verify if we are reading the expected field, by checking the string in the comment
@@ -622,28 +618,28 @@ object Utils {
     def addLine(intermediateValue: IntermediateValueType, line: String): Unit
 
     protected def build(lines: BufferedIterator[String],
-                        fieldName: Option[String],
-                        defaultValue: Option[DefaultValueType]): FinalValueType
+      fieldName: Option[String],
+      defaultValue: Option[DefaultValueType]): FinalValueType
 
     def build(lines: BufferedIterator[String]): FinalValueType = {
       build(lines, None, None)
     }
 
     def build(lines: BufferedIterator[String],
-              fieldName: String): FinalValueType = {
+      fieldName: String): FinalValueType = {
       build(lines, Some(fieldName), None)
     }
 
     def build(lines: BufferedIterator[String],
-              fieldName: String,
-              defaultValue: DefaultValueType): FinalValueType = {
+      fieldName: String,
+      defaultValue: DefaultValueType): FinalValueType = {
       build(lines, Some(fieldName), Some(defaultValue))
     }
   }
 
   // This is a little fancy because it works with both String and Char keys.
   class ByLineMapBuilder[KeyType](val converter: String => KeyType)
-    extends ByLineBuilder[mutable.Map[KeyType, Int], Map[KeyType, Int], IndexedSeq[(KeyType, Int)]] {
+      extends ByLineBuilder[mutable.Map[KeyType, Int], Map[KeyType, Int], IndexedSeq[(KeyType, Int)]] {
 
     def addLine(mutableMap: mutable.Map[KeyType, Int], line: String): Unit = {
       //println(s"READING LINE [$line]")
@@ -653,8 +649,8 @@ object Utils {
     }
 
     override protected def build(lines: BufferedIterator[String],
-                                 fieldName: Option[String],
-                                 defaultValue: Option[IndexedSeq[(KeyType, Int)]]): Map[KeyType, Int] = {
+      fieldName: Option[String],
+      defaultValue: Option[IndexedSeq[(KeyType, Int)]]): Map[KeyType, Int] = {
       val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
 
       addLines(mutableMap, lines, fieldName, defaultValue)
@@ -662,7 +658,7 @@ object Utils {
     }
 
     override protected def setDefaultValue(mutableMap: mutable.Map[KeyType, Int],
-                                           defaultValue: IndexedSeq[(KeyType, Int)]): Unit = {
+      defaultValue: IndexedSeq[(KeyType, Int)]): Unit = {
       for(kv <- defaultValue) {
         mutableMap += kv
       }
@@ -670,7 +666,7 @@ object Utils {
   }
 
   class ByLineCounterBuilder[KeyType](val converter: String => KeyType)
-    extends ByLineBuilder[Counter[KeyType], Counter[KeyType], IndexedSeq[(KeyType, Double)]] {
+      extends ByLineBuilder[Counter[KeyType], Counter[KeyType], IndexedSeq[(KeyType, Double)]] {
 
     def addLine(counter: Counter[KeyType], line: String): Unit = {
       val Array(key, value) = line.split('\t')
@@ -679,8 +675,8 @@ object Utils {
     }
 
     override protected def build(lines: BufferedIterator[String],
-                                 fieldName: Option[String],
-                                 defaultValue: Option[IndexedSeq[(KeyType, Double)]]): Counter[KeyType] = {
+      fieldName: Option[String],
+      defaultValue: Option[IndexedSeq[(KeyType, Double)]]): Counter[KeyType] = {
       val counter: Counter[KeyType] = new Counter[KeyType]()
 
       addLines(counter, lines, fieldName, defaultValue)
@@ -688,7 +684,7 @@ object Utils {
     }
 
     override protected def setDefaultValue(counter: Counter[KeyType],
-                                           defaultValue: IndexedSeq[(KeyType, Double)]): Unit = {
+      defaultValue: IndexedSeq[(KeyType, Double)]): Unit = {
       for(kv <- defaultValue) {
         counter.setCount(kv._1, kv._2)
       }
@@ -716,8 +712,8 @@ object Utils {
     }
 
     override protected def build(lines: BufferedIterator[String],
-                                 fieldName: Option[String],
-                                 defaultValue: Option[IndexedSeq[String]]): Array[String] = {
+      fieldName: Option[String],
+      defaultValue: Option[IndexedSeq[String]]): Array[String] = {
       val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
 
       addLines(arrayBuffer, lines, fieldName, defaultValue)
@@ -725,7 +721,7 @@ object Utils {
     }
 
     override protected def setDefaultValue(intermediateValue: ArrayBuffer[String],
-                                           defaultValue: IndexedSeq[String]): Unit = {
+      defaultValue: IndexedSeq[String]): Unit = {
       for(v <- defaultValue) {
         intermediateValue += v
       }
@@ -739,8 +735,8 @@ object Utils {
     }
 
     override protected def build(lines: BufferedIterator[String],
-                                 fieldName: Option[String],
-                                 defaultValue: Option[Int]): Int = {
+      fieldName: Option[String],
+      defaultValue: Option[Int]): Int = {
       val mutableNumberOpt: MutableNumber[Option[Int]] = new MutableNumber(None)
 
       addLines(mutableNumberOpt, lines, fieldName, defaultValue)
@@ -748,7 +744,7 @@ object Utils {
     }
 
     override protected def setDefaultValue(intermediateValue: MutableNumber[Option[Int]],
-                                           defaultValue: Int): Unit = {
+      defaultValue: Int): Unit = {
       intermediateValue.value = Some(defaultValue)
     }
   }
@@ -760,8 +756,8 @@ object Utils {
     }
 
     override protected def build(lines: BufferedIterator[String],
-                                 fieldName: Option[String],
-                                 defaultValue: Option[Float]): Float = {
+      fieldName: Option[String],
+      defaultValue: Option[Float]): Float = {
       val mutableNumberOpt: MutableNumber[Option[Float]] = new MutableNumber(None)
 
       addLines(mutableNumberOpt, lines, fieldName, defaultValue)
@@ -769,7 +765,7 @@ object Utils {
     }
 
     override protected def setDefaultValue(intermediateValue: MutableNumber[Option[Float]],
-                                           defaultValue: Float): Unit = {
+      defaultValue: Float): Unit = {
       intermediateValue.value = Some(defaultValue)
     }
   }
@@ -781,15 +777,15 @@ object Utils {
     }
 
     override protected def build(lines: BufferedIterator[String],
-                                 fieldName: Option[String],
-                                 defaultValue: Option[String]): String = {
+      fieldName: Option[String],
+      defaultValue: Option[String]): String = {
       val stringContainer = new mutable.HashSet[String]()
       addLines(stringContainer, lines, fieldName, defaultValue)
       stringContainer.head
     }
 
     override protected def setDefaultValue(intermediateValue: mutable.HashSet[String],
-                                           defaultValue: String): Unit = {
+      defaultValue: String): Unit = {
       set(intermediateValue, defaultValue)
     }
 
