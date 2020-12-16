@@ -16,6 +16,9 @@ class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true
   /** These parameters are never updated, so we can share this object between models */
   private val parameters = new ParameterCollection()
   val (lookupParameters, w2i) = mkLookupParams()
+  // All other values should be >= 0.
+  val w2iUNK = w2i.getOrElse(UNK, -1)
+  val w2iContainsUNK = w2iUNK != -1
 
   def mkLookupParams(): (LookupParameter, Map[String, Int]) = {
     val wordVectors = CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
@@ -35,12 +38,12 @@ class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true
   override def dim: Int = lookupParameters.dim().get(0).toInt
 
   def get(word:String): Expression = {
-    if(w2i.contains(word)) {
-      Expression.constLookup(lookupParameters, w2i(word))
-    } else {
-      assert(w2i.contains(UNK))
-      Expression.constLookup(lookupParameters, w2i(UNK))
-    }
+    val w2iWord = w2i.getOrElse(word, {
+      assert(w2iContainsUNK)
+      w2iUNK
+    })
+
+    Expression.constLookup(lookupParameters, w2iWord)
   }
 
   override def mkEmbeddings(words: Iterable[String]): ExpressionVector = {
