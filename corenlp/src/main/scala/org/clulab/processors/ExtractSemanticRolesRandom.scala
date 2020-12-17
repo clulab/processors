@@ -32,6 +32,7 @@ object ExtractSemanticRolesRandom extends App {
   val files = findFiles(inputDir, extension)
   val processor = new FastNLPProcessorWithSemanticRoles {
     annotate("This is a test.")
+    annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
   }
   val texts = files.map { file =>
     file.getName -> getText(file)
@@ -52,7 +53,7 @@ object ExtractSemanticRolesRandom extends App {
     seed += 1
     Range(0, 1).foreach { _ => // Give it 3 chances to mess up.
       val shuffledNames = random.shuffle(fileNames)
-      shuffledNames.par.foreach { fileName =>
+      shuffledNames.foreach { fileName =>
         println(s"Extracting from ${fileName}")
         println(s" FreeMemory: ${runtime.freeMemory}")
 

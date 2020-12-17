@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
 import java.io._
-
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
 import edu.cmu.dynet.ComputationGraph
@@ -11,6 +10,7 @@ import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
@@ -381,12 +381,20 @@ object Utils {
 
     val count = concatenateCount
     concatenateCount += 1
-    println(s"Concatenate $count ($word) starting.")
+//    println(s"Concatenate $count ($word) starting.")
 
-    val fwOut = safelyTransduceLast(charEmbeddings, charFwRnnBuilder)
-    val bwOut = safelyTransduceLast(charEmbeddings.reverse, charBwRnnBuilder)
-    val result = concatenate(fwOut, bwOut)
-    println(s"Concatenate $count ending.")
+//    val fwOuts: ExpressionVector = transduce(charEmbeddings, charFwRnnBuilder)
+//    val bwOuts = transduce(charEmbeddings.reverse, charBwRnnBuilder)
+//    val fwOutsLast = fwOuts.last
+//    val bwOutsLast = bwOuts.last
+
+    val fwOutsLast = transduceLastOpt(charEmbeddings, charFwRnnBuilder).get
+    val bwOutsLast = transduceLastOpt(charEmbeddings.reverse, charBwRnnBuilder).get
+    val result = concatenate(fwOutsLast, bwOutsLast)
+
+//    val tmpFw = fwOuts.last
+//    val tmpBw = bwOuts.last
+//    println(s"Concatenate $count ending.")
     result
   }
 
@@ -394,8 +402,8 @@ object Utils {
   // in that is never returned as a whole or even used.  This is because the ExpressionVector can get
   // garbage collected after last() is called so that the last Expression is no longer valid.
   def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): Option[Expression] = {
-    builder.newGraph()
-    builder.startNewSequence()
+//    builder.newGraph()
+//    builder.startNewSequence()
 
     if (embeddings.isEmpty)
       None
@@ -404,9 +412,12 @@ object Utils {
       embeddings.foreach { embedding => lastExpressionOpt = Some(builder.addInput(embedding)) }
       lastExpressionOpt
     }
+
+    builder.newGraph()
+    builder.startNewSequence()
   }
 
-  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+  def transduceEV(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
     builder.newGraph()
     builder.startNewSequence()
     val ev = new ExpressionVector()
@@ -414,6 +425,19 @@ object Utils {
       ev.add(builder.addInput(e))
     }
     ev
+  }
+
+  def transduceItr(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+    builder.newGraph()
+    builder.startNewSequence()
+    val expressions = embeddings.map(builder.addInput).toSeq
+
+    expressions
+  }
+
+  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+//    transduceEV(embeddings, builder)
+    transduceItr(embeddings, builder)
   }
 
   /** Greedy loss function, ignoring transition scores */
