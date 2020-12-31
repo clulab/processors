@@ -361,7 +361,7 @@ object Utils {
       charFwRnnBuilder: RnnBuilder,
       charBwRnnBuilder: RnnBuilder): Expression = {
 
-    def safelyTransduceLast(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+    def safelyTransduceLast1(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outsOpt = transduceLastOpt(charEmbeddings, rnnBuilder)
       val nonEmptyOuts = outsOpt.getOrElse {
         // Some embeddings may be empty in some weird Unicode encodings.
@@ -373,6 +373,21 @@ object Utils {
 
       nonEmptyOuts
     }
+
+    def safelyTransduceLast(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+      val outs = transduce(charEmbeddings, rnnBuilder)
+      val nonEmptyOuts = if (outs.length != 0) outs else {
+        // Some embeddings may be empty in some weird Unicode encodings.
+        logger.warn(s"A strange character was encountered in word '$word'.")
+        val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+        // This one shouldn't be empty, or could it be?
+        transduce(safeCharEmbeddings, rnnBuilder)
+      }
+
+      nonEmptyOuts(nonEmptyOuts.length - 1)
+    }
+
+
 
     //println(s"make embedding for word [$word]")
     val charEmbeddings = word.map { c: Char =>
@@ -388,8 +403,8 @@ object Utils {
 //    val fwOutsLast = fwOuts.last
 //    val bwOutsLast = bwOuts.last
 
-    val fwOutsLast = transduceLastOpt(charEmbeddings, charFwRnnBuilder).get
-    val bwOutsLast = transduceLastOpt(charEmbeddings.reverse, charBwRnnBuilder).get
+    val fwOutsLast = safelyTransduceLast(charEmbeddings, charFwRnnBuilder)
+    val bwOutsLast = safelyTransduceLast(charEmbeddings.reverse, charBwRnnBuilder)
     val result = concatenate(fwOutsLast, bwOutsLast)
 
 //    val tmpFw = fwOuts.last
@@ -402,8 +417,8 @@ object Utils {
   // in that is never returned as a whole or even used.  This is because the ExpressionVector can get
   // garbage collected after last() is called so that the last Expression is no longer valid.
   def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): Option[Expression] = {
-//    builder.newGraph()
-//    builder.startNewSequence()
+    builder.newGraph()
+    builder.startNewSequence()
 
     if (embeddings.isEmpty)
       None
@@ -413,8 +428,8 @@ object Utils {
       lastExpressionOpt
     }
 
-    builder.newGraph()
-    builder.startNewSequence()
+//    builder.newGraph()
+//    builder.startNewSequence()
   }
 
   def transduceEV(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {

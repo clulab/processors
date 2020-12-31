@@ -128,6 +128,7 @@ object ParallelProcessorExample {
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
 
+while (true)
     parFiles.foreach { file =>
       println(s"Processing ${file.getName}...")
 

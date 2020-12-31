@@ -53,12 +53,13 @@ object ExtractSemanticRolesRandom extends App {
     seed += 1
     Range(0, 1).foreach { _ => // Give it 3 chances to mess up.
       val shuffledNames = random.shuffle(fileNames)
-      shuffledNames.foreach { fileName =>
+      shuffledNames.par.foreach { fileName =>
         println(s"Extracting from ${fileName}")
         println(s" FreeMemory: ${runtime.freeMemory}")
 
         val text = texts(fileName)
         processor.annotate(text, true)
+        println(s"Extracted from ${fileName}")
       }
     }
   }

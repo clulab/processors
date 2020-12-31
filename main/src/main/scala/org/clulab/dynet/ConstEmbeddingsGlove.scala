@@ -47,13 +47,14 @@ class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true
   }
 
   override def mkEmbeddings(words: Iterable[String]): ExpressionVector = {
-    val ev = new ExpressionVector()
-
-    for(word <- words) {
-      ev.add(get(word))
-    }
-
-    ev
+    words.map(get).toSeq
+//    val ev = new ExpressionVector()
+//
+//    for(word <- words) {
+//      ev.add(get(word))
+//    }
+//
+//    ev
   }
 }
 
