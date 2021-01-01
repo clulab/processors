@@ -4,7 +4,7 @@ import edu.cmu.dynet.ComputationGraph
 
 /** Use this object for synchronized statements in DyNet */
 object DyNetSync {
-  protected val debug = true
+  protected val debug = false
   protected var expectedVersion = 0L
   protected var count = 0
   protected var inSynchronized = false

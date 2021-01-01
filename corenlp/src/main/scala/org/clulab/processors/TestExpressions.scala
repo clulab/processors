@@ -47,7 +47,7 @@ object TestExpressions extends App {
   val dim = Dim(1)
   val value = 3.14f
   val ex = Expression.constant(dim, value)
-  val cg = ex.expr.getPg
+//  val cg = ex.expr.getPg
 
 /*
   val (ex1, ev1) = {
@@ -78,17 +78,17 @@ object TestExpressions extends App {
 //  val (ex2, ev2) =
   {
     val ex = Expression.constant(dim, value)
-    val cg1 = ex.expr.getPg
+//    val cg1 = ex.expr.getPg
 
     val ev = new ExpressionVector(Seq(ex))
-    val cg2 = ev(0).expr.getPg
+//    val cg2 = ev(0).expr.getPg
 
     // This does delete the one expression in the vector, but it is a copy.
-    ev.vector.delete() // Something goes wrong.  GC?
+//    ev.vector.delete() // Something goes wrong.  GC?
     // There will be a crash in the C++ code shortly after this double delete.
     // C++ tries to take size of vector which results in access violation.
 
-    val cg3 = ex.expr.getPg // This works on the original copy.
+//    val cg3 = ex.expr.getPg // This works on the original copy.
 //    val cg4 = ev(0).expr.getPg // This crashes because the vector isn't even there.
 
 //    println("The test is finished.")
