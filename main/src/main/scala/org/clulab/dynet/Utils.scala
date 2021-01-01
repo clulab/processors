@@ -6,6 +6,7 @@ import edu.cmu.dynet._
 import edu.cmu.dynet.ComputationGraph
 import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
+import org.clulab.fatdynet.utils.Initializer
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
@@ -43,21 +44,19 @@ object Utils {
     // Since the random seed is not being changed, the complete initialization
     // will be ignored by DyNet, so ignore it from the get-go.
     if (!IS_DYNET_INITIALIZED) {
-      DyNetSync.withoutComputationGraph("Utils.initializeDyNet()") {
-        logger.debug("Initializing DyNet...")
+      logger.debug("Initializing DyNet...")
 
-        val params = new mutable.HashMap[String, Any]()
-        params += "random-seed" -> RANDOM_SEED
-        params += "weight-decay" -> WEIGHT_DECAY
-        if (autoBatch) {
-          params += "autobatch" -> 1
-          params += "dynet-mem" -> mem
-        }
-
-        Initialize.initialize(params.toMap)
-        logger.debug("DyNet initialization complete.")
-        IS_DYNET_INITIALIZED = true
+      val params = new mutable.HashMap[String, Any]()
+      params += "random-seed" -> RANDOM_SEED
+      params += "weight-decay" -> WEIGHT_DECAY
+      if (autoBatch) {
+        params += "autobatch" -> 1
+        params += "dynet-mem" -> mem
       }
+
+      Initializer.initialize(params.toMap)
+      logger.debug("DyNet initialization complete.")
+      IS_DYNET_INITIALIZED = true
     }
   }
 
