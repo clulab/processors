@@ -1,11 +1,11 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-
 import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterCollection}
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._
+import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -203,7 +203,8 @@ object Layers {
                      sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
-    DyNetSync.withComputationGraph("Layers.predictJointly()") { // DyNet's computation graph is a static variable, so this block must be synchronized
+    // DyNet's computation graph is a static variable, so this block must be synchronized
+    Synchronizer.withComputationGraph("Layers.predictJointly()") {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
         val sharedStates = layers(0).forward(sentence, doDropout = false)
@@ -259,7 +260,8 @@ object Layers {
               taskId: Int,
               sentence: AnnotatedSentence): IndexedSeq[String] = {
     val labelsForTask =
-      DyNetSync.withComputationGraph("Layers.predict()") { // DyNet's computation graph is a static variable, so this block must be synchronized
+      // DyNet's computation graph is a static variable, so this block must be synchronized.
+      Synchronizer.withComputationGraph("Layers.predict()") {
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
@@ -274,7 +276,8 @@ object Layers {
                         taskId: Int,
                         sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
-      DyNetSync.withComputationGraph("Layers.predictWithScores()") { // DyNet's computation graph is a static variable, so this block must be synchronized
+      // DyNet's computation graph is a static variable, so this block must be synchronized
+      Synchronizer.withComputationGraph("Layers.predictWithScores()") {
         val states = forwardForTask(layers, taskId, sentence, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
