@@ -115,7 +115,6 @@ object ParallelProcessorExample {
     val threads = args(3).toInt
 
     val files = findFiles(inputDir, extension)
-    // Parallelizing by file results in a quick crash.
     val parFiles = parallelize(files, threads)
 
     Utils.initializeDyNet()
@@ -128,7 +127,6 @@ object ParallelProcessorExample {
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
 
-while (true)
     parFiles.foreach { file =>
       println(s"Processing ${file.getName}...")
 
