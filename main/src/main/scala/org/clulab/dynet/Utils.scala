@@ -360,6 +360,7 @@ object Utils {
       charFwRnnBuilder: RnnBuilder,
       charBwRnnBuilder: RnnBuilder): Expression = {
 
+    // Do not use an ExpressionVector, but instead just take the last element.
     def safelyTransduceLast1(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outsOpt = transduceLastOpt(charEmbeddings, rnnBuilder)
       val nonEmptyOuts = outsOpt.getOrElse {
@@ -373,7 +374,8 @@ object Utils {
       nonEmptyOuts
     }
 
-    def safelyTransduceLast(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+    // Transduce the entire sequence, resulting in an ExpressionVector, then take the last element.
+    def safelyTransduceLast2(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
       val outs = transduce(charEmbeddings, rnnBuilder)
       val nonEmptyOuts = if (outs.length != 0) outs else {
         // Some embeddings may be empty in some weird Unicode encodings.
@@ -386,71 +388,53 @@ object Utils {
       nonEmptyOuts(nonEmptyOuts.length - 1)
     }
 
-
-
-    //println(s"make embedding for word [$word]")
     val charEmbeddings = word.map { c: Char =>
       lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
     }
-
-    val count = concatenateCount
-    concatenateCount += 1
-//    println(s"Concatenate $count ($word) starting.")
-
-//    val fwOuts: ExpressionVector = transduce(charEmbeddings, charFwRnnBuilder)
-//    val bwOuts = transduce(charEmbeddings.reverse, charBwRnnBuilder)
-//    val fwOutsLast = fwOuts.last
-//    val bwOutsLast = bwOuts.last
-
-    val fwOutsLast = safelyTransduceLast(charEmbeddings, charFwRnnBuilder)
-    val bwOutsLast = safelyTransduceLast(charEmbeddings.reverse, charBwRnnBuilder)
+    val fwOutsLast = safelyTransduceLast1(charEmbeddings, charFwRnnBuilder)
+    val bwOutsLast = safelyTransduceLast1(charEmbeddings.reverse, charBwRnnBuilder)
+  // val fwOutsLast = safelyTransduceLast2(charEmbeddings, charFwRnnBuilder)
+  // val bwOutsLast = safelyTransduceLast2(charEmbeddings.reverse, charBwRnnBuilder)
     val result = concatenate(fwOutsLast, bwOutsLast)
 
-//    val tmpFw = fwOuts.last
-//    val tmpBw = bwOuts.last
-//    println(s"Concatenate $count ending.")
     result
   }
 
-  // This is meant to be the same as transduce(...).last except that the ExpressionVector involved
-  // in that is never returned as a whole or even used.  This is because the ExpressionVector can get
-  // garbage collected after last() is called so that the last Expression is no longer valid.
   def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): Option[Expression] = {
-    builder.newGraph()
-    builder.startNewSequence()
 
     if (embeddings.isEmpty)
       None
     else {
-      var lastExpressionOpt: Option[Expression] = None
-      embeddings.foreach { embedding => lastExpressionOpt = Some(builder.addInput(embedding)) }
-      lastExpressionOpt
+      builder.newGraph()
+      builder.startNewSequence()
+      embeddings.dropRight(1).foreach { embedding => builder.addInput(embedding) }
+      Some(builder.addInput(embeddings.last))
     }
-
-//    builder.newGraph()
-//    builder.startNewSequence()
-  }
-
-  def transduceEV(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
-    builder.newGraph()
-    builder.startNewSequence()
-    val ev = new ExpressionVector()
-    for (e <- embeddings) {
-      ev.add(builder.addInput(e))
-    }
-    ev
-  }
-
-  def transduceItr(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
-    builder.newGraph()
-    builder.startNewSequence()
-    val expressions = embeddings.map(builder.addInput).toSeq
-
-    expressions
   }
 
   def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
-//    transduceEV(embeddings, builder)
+
+    // Build up an ExpressionVector one Expression at a time.
+    def transduceEV(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+      builder.newGraph()
+      builder.startNewSequence()
+      val ev = new ExpressionVector()
+      for (e <- embeddings) {
+        ev.add(builder.addInput(e))
+      }
+      ev
+    }
+
+    // Iterate through the expressions and construct the ExpressionVector at the end.
+    def transduceItr(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+      builder.newGraph()
+      builder.startNewSequence()
+      val expressions = embeddings.map(builder.addInput).toSeq
+
+      expressions
+    }
+
+    // transduceEV(embeddings, builder)
     transduceItr(embeddings, builder)
   }
 

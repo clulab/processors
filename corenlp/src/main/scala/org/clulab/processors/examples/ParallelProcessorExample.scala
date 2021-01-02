@@ -8,11 +8,11 @@ import java.io.FilenameFilter
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.nio.charset.StandardCharsets
-
 import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.serialization.DocumentSerializer
 
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -119,7 +119,7 @@ object ParallelProcessorExample {
 
     Utils.initializeDyNet()
 
-    val processor: Processor = new CluProcessor()
+    val processor: Processor = new FastNLPProcessorWithSemanticRoles()
     val documentSerializer = new DocumentSerializer
 
     val untimed = processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
