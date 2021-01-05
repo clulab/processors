@@ -1,4 +1,5 @@
 # Changes
++ **8.2.4** - Bug fix: we now guarantee that the Stanford dependency graph produced by CoreNLP has the same number of nodes as the words in the sentence.
 + **8.2.3** - Do not allow loops in enhanced semantic roles.
 + **8.2.2** - Bug fix: we now guarantee that the SRL graph has the same number of nodes as the words in the sentence.
 + **8.2.1** - Bug fix in LexiconNER: we were ignoring case information before.
