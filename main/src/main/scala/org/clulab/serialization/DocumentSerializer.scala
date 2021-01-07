@@ -465,6 +465,7 @@ class DocumentSerializer extends LazyLogging {
   private def saveDependencies(dg: DirectedGraph[String], dependencyType: String, os: PrintWriter) {
     // The size is written out here and might be used to set prefferedSize when reread.
     os.println(START_DEPENDENCIES + SEP + dependencyType + SEP + dg.size)
+    println(dg.size)
     os.println(dg.roots.mkString(sep = SEP))
     val it = new DirectedGraphEdgeIterator[String](dg)
     while(it.hasNext) {
