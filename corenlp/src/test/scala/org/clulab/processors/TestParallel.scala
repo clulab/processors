@@ -15,7 +15,7 @@ class TestParallel extends FlatSpec with Matchers {
 
   behavior of "Processing documents in parallel"
 
-  ignore should "match processing documents serially" in {
+  it should "match processing documents serially" in {
     val inputDir = "./corenlp/src/test/resources/documents"
     val outputDir = "."
     val extension = "txt"
