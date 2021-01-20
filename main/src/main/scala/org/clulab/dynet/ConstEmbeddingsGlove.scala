@@ -70,7 +70,7 @@ object ConstEmbeddingsGlove {
     apply(matrixResourceName, isResource)
   }
 
-  private var SINGLETON: Option[ConstEmbeddingsGlove] = None
+  var SINGLETON: Option[ConstEmbeddingsGlove] = None
 
   def apply(matrixResourceName: String, isResource: Boolean): ConstEmbeddingsGlove = {
     // These objects are read-only and they use a lot of RAM, so let's reuse them if they exist.

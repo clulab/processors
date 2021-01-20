@@ -1,5 +1,7 @@
 package org.clulab.processors.examples
 
+import org.clulab.dynet.ConstEmbeddingsGlove
+
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileNotFoundException
@@ -160,7 +162,7 @@ object ParallelProcessorExample {
     println(timer.toString)
   }
 
-  def main(args: Array[String]): Unit = {
+  def run(args: Array[String]): Unit = {
 
     mainWithCallback(args) { case (file: File, contents: String) =>
       // Print these to a file for analysis.
@@ -169,5 +171,15 @@ object ParallelProcessorExample {
       printWriter.println(contents)
       printWriter.close
     }
+
+    ConstEmbeddingsGlove.SINGLETON = null
+  }
+
+  def main(args: Array[String]): Unit = {
+    import org.clulab.fatdynet.utils.Utils
+
+    Utils.startup()
+    run(args)
+    Utils.shutdown()
   }
 }

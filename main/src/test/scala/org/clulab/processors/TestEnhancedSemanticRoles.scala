@@ -1,11 +1,13 @@
 package org.clulab.processors
 
+import org.clulab.FatdynetTest
+import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
-  val proc = {
+class TestEnhancedSemanticRoles extends FatdynetTest {
+  var proc = {
     Utils.initializeDyNet()
     new CluProcessor()
   }
@@ -62,5 +64,10 @@ class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
     roles.hasEdge(10, 10, "A1") should be (false)
     roles.hasEdge(13, 13, "A1") should be (false)
 
+  }
+
+  it should "stop" in {
+    proc = null
+    ConstEmbeddingsGlove.SINGLETON = null
   }
 }

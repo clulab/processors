@@ -1,5 +1,7 @@
 package org.clulab.processors
 
+import org.clulab.FatdynetTest
+import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.scalatest.{FlatSpec, Matchers}
@@ -9,8 +11,8 @@ import org.scalatest.{FlatSpec, Matchers}
   * User: mihais
   * Date: 6/17/17
   */
-class TestCluProcessor extends FlatSpec with Matchers {
-  val proc = {
+class TestCluProcessor extends FatdynetTest {
+  var proc = {
     Utils.initializeDyNet()
     new CluProcessor()
   }
@@ -175,4 +177,9 @@ class TestCluProcessor extends FlatSpec with Matchers {
     deps.hasEdge(2, 9, "nmod") should be (true)
   }
   */
+
+  it should "stop" in {
+    proc = null
+    ConstEmbeddingsGlove.SINGLETON = null
+  }
 }
