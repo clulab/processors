@@ -295,6 +295,9 @@ object EmbeddingLayer {
     //
     val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(learnedWordEmbeddingSize))
     val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(charEmbeddingSize))
+    // The following line would normally provoke construction of the initial ComputationGraph
+    // and do that outside of a synchronized area.  This is avoided by ensuring that construction
+    // happens in Utils.initializeDyNet instead, just to be safe.
     val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
     val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
 

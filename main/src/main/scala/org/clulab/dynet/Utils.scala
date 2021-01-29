@@ -4,12 +4,15 @@ import java.io._
 
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
+import edu.cmu.dynet.ComputationGraph
 import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
+import org.clulab.fatdynet.utils.Initializer
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
@@ -19,9 +22,12 @@ import scala.io.Source
  */
 object Utils {
   private val logger: Logger = LoggerFactory.getLogger(classOf[Utils])
+  var concatenateCount = 0
 
   val UNK_WORD = "<UNK>"
   val EOS_WORD = "<EOS>"
+
+  val UNK_EMBEDDING = 0
 
   val START_TAG = "<START>"
   val STOP_TAG = "<STOP>"
@@ -36,22 +42,22 @@ object Utils {
   private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
-    DyNetSync.synchronized {
-      if (!IS_DYNET_INITIALIZED) {
-        logger.debug("Initializing DyNet...")
+    // Since the random seed is not being changed, the complete initialization
+    // will be ignored by DyNet, so ignore it from the get-go.
+    if (!IS_DYNET_INITIALIZED) {
+      logger.debug("Initializing DyNet...")
 
-        val params = new mutable.HashMap[String, Any]()
-        params += "random-seed" -> RANDOM_SEED
-        params += "weight-decay" -> WEIGHT_DECAY
-        if (autoBatch) {
-          params += "autobatch" -> 1
-          params += "dynet-mem" -> mem
-        }
-
-        Initialize.initialize(params.toMap)
-        logger.debug("DyNet initialization complete.")
-        IS_DYNET_INITIALIZED = true
+      val params = new mutable.HashMap[String, Any]()
+      params += "random-seed" -> RANDOM_SEED
+      params += "weight-decay" -> WEIGHT_DECAY
+      if (autoBatch) {
+        params += "autobatch" -> 1
+        params += "dynet-mem" -> mem
       }
+
+      Initializer.initialize(params.toMap)
+      logger.debug("DyNet initialization complete.")
+      IS_DYNET_INITIALIZED = true
     }
   }
 
@@ -346,51 +352,91 @@ object Utils {
   }
 
   def concatenateStates(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
-    val c = new ArrayBuffer[Expression]()
-    for (e <- l1.zip(l2)) {
-      c += concatenate(e._1, e._2)
-    }
-    c
+    l1.zip(l2).map { case (left, right) => concatenate(left, right) }
   }
 
   def mkCharacterEmbedding(word: String,
-                           c2i: Map[Char, Int],
-                           charLookupParameters: LookupParameter,
-                           charFwRnnBuilder: RnnBuilder,
-                           charBwRnnBuilder: RnnBuilder): Expression = {
-    //println(s"make embedding for word [$word]")
-    val charEmbeddings = new ArrayBuffer[Expression]()
-    for (i <- word.indices) {
-      if (c2i.contains(word.charAt(i))) {
-        charEmbeddings += lookup(charLookupParameters, c2i(word.charAt(i)))
-      } else {
-        charEmbeddings += lookup(charLookupParameters, 0) // 0 reserved for unknown chars
+      c2i: Map[Char, Int],
+      charLookupParameters: LookupParameter,
+      charFwRnnBuilder: RnnBuilder,
+      charBwRnnBuilder: RnnBuilder): Expression = {
+
+    // Do not use an ExpressionVector, but instead just take the last element.
+    def safelyTransduceLast1(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+      val outsOpt = transduceLastOpt(charEmbeddings, rnnBuilder)
+      val nonEmptyOuts = outsOpt.getOrElse {
+        // Some embeddings may be empty in some weird Unicode encodings.
+        logger.warn(s"A strange character was encountered in word '$word'.")
+        val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+        // This one shouldn't be empty, or could it be?
+        transduceLastOpt(safeCharEmbeddings, rnnBuilder).get
       }
+
+      nonEmptyOuts
     }
 
-    // Some embeddings may be empty in some weird Unicode encodings
-    val fwOuts = transduce(charEmbeddings, charFwRnnBuilder)
-    val fwOut =
-      if (fwOuts.nonEmpty) fwOuts.last
-      else transduce(Array(lookup(charLookupParameters, 0)), charFwRnnBuilder).head // 0 = UNK
+    // Transduce the entire sequence, resulting in an ExpressionVector, then take the last element.
+    def safelyTransduceLast2(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+      val outs = transduce(charEmbeddings, rnnBuilder)
+      val nonEmptyOuts = if (outs.length != 0) outs else {
+        // Some embeddings may be empty in some weird Unicode encodings.
+        logger.warn(s"A strange character was encountered in word '$word'.")
+        val safeCharEmbeddings = Array(lookup(charLookupParameters, UNK_EMBEDDING))
+        // This one shouldn't be empty, or could it be?
+        transduce(safeCharEmbeddings, rnnBuilder)
+      }
 
-    val bwOuts = transduce(charEmbeddings.reverse, charBwRnnBuilder)
-    val bwOut =
-      if (bwOuts.nonEmpty) bwOuts.last
-      else transduce(Array(lookup(charLookupParameters, 0)), charBwRnnBuilder).head // 0 = UNK
+      nonEmptyOuts(nonEmptyOuts.length - 1)
+    }
 
-    concatenate(fwOut, bwOut)
+    val charEmbeddings = word.map { c: Char =>
+      lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
+    }
+    val fwOutsLast = safelyTransduceLast1(charEmbeddings, charFwRnnBuilder)
+    val bwOutsLast = safelyTransduceLast1(charEmbeddings.reverse, charBwRnnBuilder)
+  // val fwOutsLast = safelyTransduceLast2(charEmbeddings, charFwRnnBuilder)
+  // val bwOutsLast = safelyTransduceLast2(charEmbeddings.reverse, charBwRnnBuilder)
+    val result = concatenate(fwOutsLast, bwOutsLast)
+
+    result
   }
 
-  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): mutable.IndexedSeq[Expression] = {
-    builder.newGraph()
-    builder.startNewSequence()
-    val ev = new ExpressionVector()
-    for(e <- embeddings) {
-      ev.add(builder.addInput(e))
+  def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): Option[Expression] = {
+
+    if (embeddings.isEmpty)
+      None
+    else {
+      builder.newGraph()
+      builder.startNewSequence()
+      embeddings.dropRight(1).foreach { embedding => builder.addInput(embedding) }
+      Some(builder.addInput(embeddings.last))
     }
-    //val states = embeddings.map(builder.addInput)
-    ev
+  }
+
+  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+
+    // Build up an ExpressionVector one Expression at a time.
+    def transduceEV(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+      builder.newGraph()
+      builder.startNewSequence()
+      val ev = new ExpressionVector()
+      for (e <- embeddings) {
+        ev.add(builder.addInput(e))
+      }
+      ev
+    }
+
+    // Iterate through the expressions and construct the ExpressionVector at the end.
+    def transduceItr(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+      builder.newGraph()
+      builder.startNewSequence()
+      val expressions = embeddings.map(builder.addInput).toSeq
+
+      expressions
+    }
+
+    // transduceEV(embeddings, builder)
+    transduceItr(embeddings, builder)
   }
 
   /** Greedy loss function, ignoring transition scores */
