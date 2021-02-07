@@ -1,16 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.FatdynetTest
-import org.clulab.dynet.ConstEmbeddingsGlove
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
-import org.scalatest.{FlatSpec, Matchers}
-
 class TestEnhancedSemanticRoles extends FatdynetTest {
-  var proc = {
-    Utils.initializeDyNet()
-    new CluProcessor()
-  }
 
   "CluProcessor" should "collapse prepositions with noun objects" in {
     val doc = proc.annotate("He gave the book to Jane.")
@@ -64,10 +54,5 @@ class TestEnhancedSemanticRoles extends FatdynetTest {
     roles.hasEdge(10, 10, "A1") should be (false)
     roles.hasEdge(13, 13, "A1") should be (false)
 
-  }
-
-  it should "stop" in {
-    proc = null
-    ConstEmbeddingsGlove.SINGLETON = null
   }
 }

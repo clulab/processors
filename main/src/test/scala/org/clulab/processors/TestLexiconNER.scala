@@ -1,16 +1,15 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
-import org.scalatest.{FlatSpec, Matchers}
+
+import scala.Console.in
 
 /**
   * Tests the LexiconNER
   * User: mihais
   * Date: 10/3/17
   */
-class TestLexiconNER extends FlatSpec with Matchers {
-  val proc = new CluProcessor()
+class TestLexiconNER extends FatdynetTest {
 
   "LexiconNER" should "match categories correctly" in {
     val ner = LexiconNER(List("org/clulab/processors/A.tsv", "org/clulab/processors/B.tsv"))

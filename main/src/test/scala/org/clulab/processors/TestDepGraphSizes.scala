@@ -1,19 +1,9 @@
 package org.clulab.processors
 
-import org.clulab.FatdynetTest
-import org.clulab.TestUtils
-import org.clulab.dynet.ConstEmbeddingsGlove
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
 import org.clulab.struct.DirectedGraph
-import org.scalatest.{FlatSpec, Matchers}
 
 /** Makes sure that CluProcessor produces dependency graphs of correct sizes */
 class TestDepGraphSizes extends FatdynetTest {
-  var proc = {
-    Utils.initializeDyNet()
-    new CluProcessor()
-  }
 
   "CluProcessor" should "produce dependency graphs that have the same size as the sentence" in {
     // Document 3
@@ -43,9 +33,6 @@ class TestDepGraphSizes extends FatdynetTest {
       checkGraph(sent, d4, "enhancedSemanticRoles")
       d4.size should be (size)
     }
-
-    proc = null
-    ConstEmbeddingsGlove.SINGLETON = null
   }
 
   def checkGraph(sent: Sentence, graph: DirectedGraph[String], name: String): Unit = {
