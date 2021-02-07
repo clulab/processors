@@ -6,5 +6,5 @@ import org.clulab.processors.clu.CluProcessor
 class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
   extends CluProcessor(config) {
 
-  // TODO: ner merge, SRL ner labels, doc date, shell
+  // TODO: ner merge, SRL ner labels, doc date, tests
 }

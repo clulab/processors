@@ -3,12 +3,13 @@ package org.clulab.processors
 import scala.collection.immutable.ListMap
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.{FastNLPProcessor, FastNLPProcessorWithSemanticRoles}
-import java.io.{File, PrintWriter}
 
+import java.io.{File, PrintWriter}
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clucore.CluCoreProcessor
 
 /**
   * A simple interactive shell
@@ -31,6 +32,7 @@ object ProcessorShell extends App {
     ":core" -> "use CoreNLPProcessor",
     ":fast" -> "use FastNLPProcessor",
     ":clu" -> "use CluProcessor",
+    ":clucore" -> "use CluCoreProcessor",
     ":exit" -> "exit system"
   )
 
@@ -38,9 +40,12 @@ object ProcessorShell extends App {
   lazy val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
   lazy val fast: Processor = new FastNLPProcessorWithSemanticRoles() // this uses the faster dependency parser
   lazy val clu: Processor = new CluProcessor()
+  lazy val cluCore: Processor = new CluCoreProcessor() // CLU + CoreNLP's numeric entity recognizer
 
-  var proc = core
-  reader.setPrompt("(core)>>> ")
+  Utils.initializeDyNet()
+
+  var proc = cluCore
+  reader.setPrompt("(clucore)>>> ")
   println("\nWelcome to the ProcessorShell!")
   printCommands()
 
@@ -67,8 +72,13 @@ object ProcessorShell extends App {
       case ":clu" =>
         reader.setPrompt("(clu)>>> ")
         println("Preparing CluProcessor...\n")
-        Utils.initializeDyNet()
         proc = clu
+        proc.annotate("initialize me!")
+
+      case ":clucore" =>
+        reader.setPrompt("(clucore)>>> ")
+        println("Preparing CluCoreProcessor...\n")
+        proc = cluCore
         proc.annotate("initialize me!")
 
       case ":exit" | null =>
