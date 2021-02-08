@@ -8,8 +8,6 @@ import org.clulab.struct.DirectedGraph
 
 import scala.collection.mutable.ArrayBuffer
 
-// TODO: tests (doc date + all labels)
-
 class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
   extends CluProcessor(config) {
 
