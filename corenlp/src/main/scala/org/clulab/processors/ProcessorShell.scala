@@ -1,9 +1,9 @@
 package org.clulab.processors
 
 import java.io.PrintWriter
-
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clucore.CluCoreProcessor
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.{FastNLPProcessor, FastNLPProcessorWithSemanticRoles}
 import org.clulab.utils.CliReader
@@ -23,11 +23,14 @@ object ProcessorShell extends App {
   lazy val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
   lazy val fast: Processor = new FastNLPProcessorWithSemanticRoles() // this uses the faster dependency parser
   lazy val clu: Processor = new CluProcessor()
+  lazy val cluCore: Processor = new CluCoreProcessor() // CLU + CoreNLP's numeric entity recognizer
 
-  var proc = core // The initial proc does not get initialized.
-  val corePrompt = "(core)>>> "
+  Utils.initializeDyNet()
 
-  val lineReader = new CliReader(corePrompt, "user.home", ".processorshellhistory")
+  var proc = cluCore // The initial proc does not get initialized.
+  val cluCorePrompt = "(clucore)>>> "
+
+  val lineReader = new CliReader(cluCorePrompt, "user.home", ".processorshellhistory")
   val printWriter = new PrintWriter(System.out)
 
   def prepareProcessor(prompt: String, message: String, processor: Processor): Boolean = {
@@ -39,14 +42,17 @@ object ProcessorShell extends App {
   }
 
   def prepareCore(menu: Menu, text: String): Boolean =
-    prepareProcessor(corePrompt, "Preparing CoreNLPProcessor...", core)
+    prepareProcessor("(core)>>>", "Preparing CoreNLPProcessor...", core)
 
   def prepareFast(menu: Menu, text: String): Boolean =
     prepareProcessor("(fast)>>> ", "Preparing FastNLPProcessor...", fast)
 
   def prepareClu(menu: Menu, text: String): Boolean = {
-    Utils.initializeDyNet()
     prepareProcessor("(clu)>>> ", "Preparing CluProcessor...", clu)
+  }
+
+  def prepareCluCore(menu: Menu, text: String): Boolean = {
+    prepareProcessor(cluCorePrompt, "Preparing CluCoreProcessor...", cluCore)
   }
 
   def annotate(menu: Menu, text: String): Boolean = {
@@ -61,6 +67,7 @@ object ProcessorShell extends App {
     new MainMenuItem(":core", "use CoreNLPProcessor", prepareCore),
     new MainMenuItem(":fast", "use FastNLPProcessor", prepareFast),
     new MainMenuItem(":clu", "use CluProcessor", prepareClu),
+    new MainMenuItem(":clucore", "use CluCoreProcessor", prepareCluCore),
     new ExitMenuItem(":exit", "exit system")
   )
   val defaultMenuItem = new DefaultMenuItem(annotate)
