@@ -2,8 +2,8 @@
 package org.clulab.processors.clucore
 
 import edu.stanford.nlp.ie.regexp.NumberSequenceClassifier
-import edu.stanford.nlp.ie.{NERClassifierCombiner, QuantifiableEntityNormalizer}
-import edu.stanford.nlp.ling.CoreAnnotations.{AnswerAnnotation, NormalizedNamedEntityTagAnnotation}
+import edu.stanford.nlp.ie.QuantifiableEntityNormalizer
+import edu.stanford.nlp.ling.CoreAnnotations.NormalizedNamedEntityTagAnnotation
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.util.ArrayCoreMap
 
@@ -15,11 +15,11 @@ import scala.collection.mutable.ArrayBuffer
 class NumericEntityRecognizer {
   val numSeqClassifier = new NumberSequenceClassifier()
 
-  def classify(words: Seq[String],
-               tags: Seq[String],
-               startCharOffsets: Seq[Int],
-               endCharOffsets: Seq[Int],
-               docDateOpt: Option[String]): (Seq[String], Seq[String]) = {
+  def classify(words: IndexedSeq[String],
+               tags: IndexedSeq[String],
+               startCharOffsets: IndexedSeq[Int],
+               endCharOffsets: IndexedSeq[Int],
+               docDateOpt: Option[String]): (IndexedSeq[String], IndexedSeq[String]) = {
 
     assert(words != null && tags != null)
     assert(words.length == tags.length)
@@ -61,7 +61,7 @@ class NumericEntityRecognizer {
     mkOutputs(outputs, words.length)
   }
 
-  def mkOutputs(outputs: Option[Iterable[CoreLabel]], length: Int): (Seq[String], Seq[String]) = {
+  def mkOutputs(outputs: Option[Iterable[CoreLabel]], length: Int): (IndexedSeq[String], IndexedSeq[String]) = {
     val labels = new ArrayBuffer[String]()
     val norms = new ArrayBuffer[String]()
 
@@ -76,6 +76,8 @@ class NumericEntityRecognizer {
         var norm = output.get(classOf[NormalizedNamedEntityTagAnnotation])
         if(norm == null) norm = ""
         //println(output.word() + " " + label + " " + norm)
+
+        TODO: add B- and I-
 
         labels += label
         norms += norm

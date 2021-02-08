@@ -138,9 +138,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** Produces NE labels for one sentence */
-  def nerSentence(words: IndexedSeq[String]): IndexedSeq[String] = {
+  def nerSentence(words: IndexedSeq[String],
+                  tags: IndexedSeq[String], // this are only used by the NumericEntityRecognizer
+                  startCharOffsets: IndexedSeq[Int],
+                  endCharOffsets: IndexedSeq[Int],
+                  docDateOpt: Option[String]): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
     val allLabels = mtlNer.predictJointly(AnnotatedSentence(words))
-    allLabels(0)
+    (allLabels(0), None)
   }
 
   /** Gets the index of all predicates in this sentence */
@@ -242,6 +246,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     new DirectedGraph[String](edges.toList, roots.toSet)
   }
 
+  def srlSentence(sent: Sentence, predicateIndexes: IndexedSeq[Int]): DirectedGraph[String] = {
+    srlSentence(sent.words, sent.tags.get, sent.entities.get, predicateIndexes)
+  }
+
   /** Produces semantic role frames for one sentence */
   def srlSentence(words: IndexedSeq[String],
                   posTags: IndexedSeq[String],
@@ -325,8 +333,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** NER; modifies the document in place */
   override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
+    val docDate = doc.getDCT
     for(sent <- doc.sentences) {
-      sent.entities = Some(nerSentence(sent.words).toArray)
+      val (labels, norms) = nerSentence(
+        sent.words,
+        sent.tags.get,
+        sent.startOffsets,
+        sent.endOffsets,
+        docDate)
+
+      sent.entities = Some(labels.toArray)
+      if(norms.nonEmpty) {
+        sent.norms = Some(norms.get.toArray)
+      }
     }
   }
 
@@ -384,11 +403,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       val sentence = doc.sentences(si)
       val predicateIndexes = 
       	predicateCorrections(predicates(si), sentence)
-      val semanticRoles = srlSentence(
-        sentence.words,
-        sentence.tags.get,
-        sentence.entities.get,
-        predicateIndexes)
+      val semanticRoles = srlSentence(sentence, predicateIndexes)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
 
