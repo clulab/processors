@@ -3,7 +3,10 @@ package org.clulab.processors.clucore
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.processors.Sentence
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clucore.CluCoreProcessor.{EMPTY, NAMED_LABELS_FOR_SRL, OUTSIDE}
 import org.clulab.struct.DirectedGraph
+
+import scala.collection.mutable.ArrayBuffer
 
 // TODO: tests (doc date + all labels)
 
@@ -11,9 +14,6 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
   extends CluProcessor(config) {
 
   val numericEntityRecognizer = new NumericEntityRecognizer
-
-  val outside = "O"
-  val empty = ""
 
   /** Produces NE labels for one sentence by merging the CLU NER with the NumericEntityRecognizer */
   override def nerSentence(words: IndexedSeq[String],
@@ -30,12 +30,12 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
     val norms = new Array[String](cluLabels.length)
 
     for(i <- cluLabels.indices) {
-      norms(i) = empty
-      labels(i) = outside
+      norms(i) = EMPTY
+      labels(i) = OUTSIDE
 
-      if(cluLabels(i) != outside) {
+      if(cluLabels(i) != OUTSIDE) {
         labels(i) = cluLabels(i)
-      } else if(numericLabels(i) != outside) {
+      } else if(numericLabels(i) != OUTSIDE) {
         labels(i) = numericLabels(i)
         norms(i) = numericNorms(i)
       }
@@ -54,8 +54,28 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
   }
 
   def removeNumericLabels(allLabels: Array[String]): Array[String] = {
-    val labels = new Array[String](allLabels.length)
-    // TODO: remove numeric labels
-    labels
+    val labels = new ArrayBuffer[String]
+    for(l <- allLabels) {
+      if(NAMED_LABELS_FOR_SRL.contains(l)) {
+        labels += l
+      } else {
+        labels += OUTSIDE
+      }
+    }
+    // println("Using labels for SRL: " + labels.mkString(", "))
+    labels.toArray
   }
+}
+
+object CluCoreProcessor {
+  val OUTSIDE = "O"
+  val EMPTY = ""
+
+  // These are the NE labels used to train the SRL model
+  val NAMED_LABELS_FOR_SRL = Set(
+    "B-PER", "I-PER",
+    "B-ORG", "I-ORG",
+    "B-LOC", "I-LOC",
+    "B-MISC", "I-MISC"
+  )
 }

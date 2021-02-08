@@ -14,6 +14,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class NumericEntityRecognizer {
   val numSeqClassifier = new NumberSequenceClassifier()
+  val outside = "O"
 
   def classify(words: IndexedSeq[String],
                tags: IndexedSeq[String],
@@ -71,16 +72,25 @@ class NumericEntityRecognizer {
         norms += ""
       }
     } else {
+      var prevLabel = "O"
       for (output <- outputs.get) {
         val label = output.get(classOf[CoreAnnotations.NamedEntityTagAnnotation])
         var norm = output.get(classOf[NormalizedNamedEntityTagAnnotation])
         if(norm == null) norm = ""
         //println(output.word() + " " + label + " " + norm)
 
-        TODO: add B- and I-
+        var prefix = ""
+        if(label != outside) {
+          if(label != prevLabel) {
+            prefix = "B-"
+          } else {
+            prefix = "I-"
+          }
+        }
 
-        labels += label
+        labels += prefix + label
         norms += norm
+        prevLabel = label
       }
     }
 

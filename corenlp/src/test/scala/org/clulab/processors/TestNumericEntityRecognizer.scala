@@ -17,12 +17,12 @@ class TestNumericEntityRecognizer extends FlatSpec with Matchers {
     println(labels.mkString(", "))
     println(norms.mkString(", "))
 
-    labels(4) should be ("DATE")
-    labels(5) should be ("DATE")
-    labels(6) should be ("DATE")
-    labels(7) should be ("DATE")
+    labels(4) should be ("B-DATE")
+    labels(5) should be ("I-DATE")
+    labels(6) should be ("I-DATE")
+    labels(7) should be ("I-DATE")
     labels(8) should be ("O")
-    labels(9) should be ("DATE")
+    labels(9) should be ("B-DATE")
 
     norms(4) should be ("1966-01-01")
     norms(9) should be ("1997")
@@ -39,9 +39,9 @@ class TestNumericEntityRecognizer extends FlatSpec with Matchers {
     println(labels.mkString(", "))
     println(norms.mkString(", "))
 
-    labels(4) should be ("DATE")
-    labels(5) should be ("DATE")
-    labels(6) should be ("DATE")
+    labels(4) should be ("B-DATE")
+    labels(5) should be ("I-DATE")
+    labels(6) should be ("I-DATE")
 
     norms(4) should be ("1996/1997")
   }
