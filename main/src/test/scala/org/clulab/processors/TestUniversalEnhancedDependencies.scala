@@ -1,14 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
-import org.scalatest.{FlatSpec, Matchers}
-
-class TestUniversalEnhancedDependencies extends FlatSpec with Matchers {
-    val proc = {
-    Utils.initializeDyNet()
-    new CluProcessor()
-  }
+class TestUniversalEnhancedDependencies extends FatdynetTest {
 
   "CluProcessor" should "parse some basic sentences correctly" in {
     var doc = proc.annotate("Ras1 is associated with cancer.")

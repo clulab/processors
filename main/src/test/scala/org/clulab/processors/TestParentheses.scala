@@ -1,8 +1,5 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.CluProcessor
-import org.scalatest.{FlatSpec, Matchers}
-
 /**
   * Makes sure that we process parentheses correctly
   * The corpora used to train the dependency parsers and the NERs keep parentheses NOT normalized
@@ -10,8 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * So, we'll keep parens NOT normalized since this is more common, and normalize them inside the constituent parser
   *     (see CoreNLPProcessor)
   */
-class TestParentheses extends FlatSpec with Matchers {
-  val proc = new CluProcessor()
+class TestParentheses extends FatdynetTest {
 
   "CluProcessor" should "tokenize, lemmatize, and POS tag parentheses correctly" in {
     // TODO: add back when we have a POS tagger

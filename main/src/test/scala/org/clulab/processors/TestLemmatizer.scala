@@ -1,11 +1,8 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Sourcer
-import org.scalatest.{FlatSpec, Matchers}
 
-class TestLemmatizer extends FlatSpec with Matchers {
-  val proc = new CluProcessor()
+class TestLemmatizer extends FatdynetTest {
 
   "the lemmatizer" should "not crash when processing this weird file" in {
     val source = Sourcer.sourceFromResource("/CORD19_DOC_2762.txt")

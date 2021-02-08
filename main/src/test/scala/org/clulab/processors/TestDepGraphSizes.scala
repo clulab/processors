@@ -1,17 +1,9 @@
 package org.clulab.processors
 
-import org.clulab.TestUtils
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
 import org.clulab.struct.DirectedGraph
-import org.scalatest.{FlatSpec, Matchers}
 
 /** Makes sure that CluProcessor produces dependency graphs of correct sizes */
-class TestDepGraphSizes extends FlatSpec with Matchers {
-  lazy val proc = {
-    Utils.initializeDyNet()
-    new CluProcessor()
-  }
+class TestDepGraphSizes extends FatdynetTest {
 
   "CluProcessor" should "produce dependency graphs that have the same size as the sentence" in {
     // Document 3
@@ -21,6 +13,7 @@ class TestDepGraphSizes extends FlatSpec with Matchers {
     text.length > 0 should be(true)
 
     val doc = proc.annotate(text)
+
     for(sent <- doc.sentences) {
       val size = sent.size
 

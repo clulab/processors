@@ -27,23 +27,20 @@ class RnnLayer (val parameters:ParameterCollection,
     setRnnDropout(wordBwRnnBuilder, dropoutProb, doDropout)
     setRnnDropout(wordBwRnnBuilder, dropoutProb, doDropout)
 
+    assert(inputExpressions.nonEmpty)
     val fwEmbeddings = inputExpressions
     val fwStates = Utils.transduce(fwEmbeddings, wordFwRnnBuilder)
+    assert(fwStates.length == inputExpressions.length)
     val bwEmbeddings = fwEmbeddings.reverse
     val bwStates = Utils.transduce(bwEmbeddings, wordBwRnnBuilder).reverse
-    assert(fwStates.length == bwStates.length)
+    assert(bwStates.length == inputExpressions.length)
 
     // the word state concatenates the fwd and bwd LSTM hidden states; and the input embedding if useHighwayConnections
-    val states = new ArrayBuffer[Expression]()
-    for(i <- fwStates.indices) {
-      val state =
-        if(useHighwayConnections) {
-          Expression.concatenate(fwStates(i), bwStates(i), inputExpressions(i))
-        } else {
-          Expression.concatenate(fwStates(i), bwStates(i))
-        }
-
-      states += state
+    val states = fwStates.indices.map { i =>
+      if (useHighwayConnections)
+        Expression.concatenate(fwStates(i), bwStates(i), inputExpressions(i))
+      else
+        Expression.concatenate(fwStates(i), bwStates(i))
     }
 
     states
