@@ -1,11 +1,8 @@
 package org.clulab.processors
 
 import org.clulab.TestUtils
-import org.clulab.processors.clu.CluProcessor
-import org.scalatest.{FlatSpec, Matchers}
 
-class TestCharacterOffsets extends FlatSpec with Matchers {
-  val proc = new CluProcessor()
+class TestCharacterOffsets extends FatdynetTest {
 
   "the tokenizer" should "generate correct character offsets in a single sentence" in {
     val doc = proc.mkDocument("John Doe went to China on January 15th, 2001.", keepText = true)

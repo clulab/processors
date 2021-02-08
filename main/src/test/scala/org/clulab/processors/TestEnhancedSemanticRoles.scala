@@ -1,14 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
-import org.scalatest.{FlatSpec, Matchers}
-
-class TestEnhancedSemanticRoles extends FlatSpec with Matchers {
-  val proc = {
-    Utils.initializeDyNet()
-    new CluProcessor()
-  }
+class TestEnhancedSemanticRoles extends FatdynetTest {
 
   "CluProcessor" should "collapse prepositions with noun objects" in {
     val doc = proc.annotate("He gave the book to Jane.")

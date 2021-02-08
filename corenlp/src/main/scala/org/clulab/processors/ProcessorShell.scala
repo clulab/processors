@@ -1,15 +1,17 @@
 package org.clulab.processors
 
-import scala.collection.immutable.ListMap
-import org.clulab.processors.corenlp.CoreNLPProcessor
-import org.clulab.processors.fastnlp.{FastNLPProcessor, FastNLPProcessorWithSemanticRoles}
-
-import java.io.{File, PrintWriter}
-import jline.console.ConsoleReader
-import jline.console.history.FileHistory
+import java.io.PrintWriter
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clucore.CluCoreProcessor
+import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.processors.fastnlp.{FastNLPProcessor, FastNLPProcessorWithSemanticRoles}
+import org.clulab.utils.CliReader
+import org.clulab.utils.DefaultMenuItem
+import org.clulab.utils.ExitMenuItem
+import org.clulab.utils.HelpMenuItem
+import org.clulab.utils.MainMenuItem
+import org.clulab.utils.Menu
 
 /**
   * A simple interactive shell
@@ -18,25 +20,6 @@ import org.clulab.processors.clucore.CluCoreProcessor
   * Last Modified: Fix compiler warning: remove redundant match case clause.
  */
 object ProcessorShell extends App {
-
-  val history = new FileHistory(new File(System.getProperty("user.home"), ".processorshellhistory"))
-  sys addShutdownHook {
-    history.flush() // flush file before exiting
-  }
-
-  val reader = new ConsoleReader
-  reader.setHistory(history)
-
-  val commands = ListMap(
-    ":help" -> "show commands",
-    ":core" -> "use CoreNLPProcessor",
-    ":fast" -> "use FastNLPProcessor",
-    ":clu" -> "use CluProcessor",
-    ":clucore" -> "use CluCoreProcessor",
-    ":exit" -> "exit system"
-  )
-
-  // create the processor
   lazy val core: Processor = new CoreNLPProcessor() // this uses the slower constituent parser
   lazy val fast: Processor = new FastNLPProcessorWithSemanticRoles() // this uses the faster dependency parser
   lazy val clu: Processor = new CluProcessor()
@@ -44,63 +27,51 @@ object ProcessorShell extends App {
 
   Utils.initializeDyNet()
 
-  var proc = cluCore
-  reader.setPrompt("(clucore)>>> ")
-  println("\nWelcome to the ProcessorShell!")
-  printCommands()
+  var proc = cluCore // The initial proc does not get initialized.
+  val cluCorePrompt = "(clucore)>>> "
 
-  var running = true
+  val lineReader = new CliReader(cluCorePrompt, "user.home", ".processorshellhistory")
   val printWriter = new PrintWriter(System.out)
 
-  while (running) {
-    reader.readLine match {
-      case ":help" =>
-        printCommands()
-
-      case ":core" =>
-        reader.setPrompt("(core)>>> ")
-        println("Preparing CoreNLPProcessor...\n")
-        proc = core
-        proc.annotate("initialize me!")
-
-      case ":fast" =>
-        reader.setPrompt("(fast)>>> ")
-        println("Preparing FastNLPProcessor...\n")
-        proc = fast
-        proc.annotate("initialize me!")
-
-      case ":clu" =>
-        reader.setPrompt("(clu)>>> ")
-        println("Preparing CluProcessor...\n")
-        proc = clu
-        proc.annotate("initialize me!")
-
-      case ":clucore" =>
-        reader.setPrompt("(clucore)>>> ")
-        println("Preparing CluCoreProcessor...\n")
-        proc = cluCore
-        proc.annotate("initialize me!")
-
-      case ":exit" | null =>
-        running = false
-
-      case text =>
-        val doc = proc.annotate(text)
-        doc.prettyPrint(printWriter)
-        printWriter.flush()
-    }
+  def prepareProcessor(prompt: String, message: String, processor: Processor): Boolean = {
+    lineReader.setPrompt(prompt)
+    println(message)
+    proc = processor
+    proc.annotate("initialize me!")
+    true
   }
 
-  // manual terminal cleanup
-  reader.getTerminal.restore()
-  reader.shutdown()
+  def prepareCore(menu: Menu, text: String): Boolean =
+    prepareProcessor("(core)>>>", "Preparing CoreNLPProcessor...", core)
 
+  def prepareFast(menu: Menu, text: String): Boolean =
+    prepareProcessor("(fast)>>> ", "Preparing FastNLPProcessor...", fast)
 
-  /** summarize available commands */
-  def printCommands(): Unit = {
-    println("\nCOMMANDS:")
-    for ((cmd, msg) <- commands)
-      println(s"\t$cmd\t=> $msg")
-    println()
+  def prepareClu(menu: Menu, text: String): Boolean = {
+    prepareProcessor("(clu)>>> ", "Preparing CluProcessor...", clu)
   }
+
+  def prepareCluCore(menu: Menu, text: String): Boolean = {
+    prepareProcessor(cluCorePrompt, "Preparing CluCoreProcessor...", cluCore)
+  }
+
+  def annotate(menu: Menu, text: String): Boolean = {
+    val doc = proc.annotate(text)
+    doc.prettyPrint(printWriter)
+    printWriter.flush()
+    true
+  }
+
+  val mainMenuItems = Seq(
+    new HelpMenuItem(":help", "show commands"),
+    new MainMenuItem(":core", "use CoreNLPProcessor", prepareCore),
+    new MainMenuItem(":fast", "use FastNLPProcessor", prepareFast),
+    new MainMenuItem(":clu", "use CluProcessor", prepareClu),
+    new MainMenuItem(":clucore", "use CluCoreProcessor", prepareCluCore),
+    new ExitMenuItem(":exit", "exit system")
+  )
+  val defaultMenuItem = new DefaultMenuItem(annotate)
+  val menu = new Menu("Welcome to the ProcessorShell!", lineReader, mainMenuItems, defaultMenuItem)
+
+  menu.run()
 }

@@ -1,20 +1,12 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
-import org.scalatest.{FlatSpec, Matchers}
-
 /**
   * Unit tests for CluProcessor
   * User: mihais
   * Date: 6/17/17
   */
-class TestCluProcessor extends FlatSpec with Matchers {
-  val proc = {
-    Utils.initializeDyNet()
-    new CluProcessor()
-  }
-  
+class TestCluProcessor extends FatdynetTest {
+
   "CluProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
     doc.clear()

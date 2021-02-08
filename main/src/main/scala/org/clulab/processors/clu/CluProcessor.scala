@@ -398,6 +398,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val predicates = predicatesAttachment.get.asInstanceOf[PredicateAttachment].predicates
     assert(predicates.length == doc.sentences.length)
 
+    // If there are no predicates, a test sentence will not provoke the calling of srlSentence(), which
+    // will prevent reference to the lazy val mtlSrla.  This means that the model will not be created
+    // until later, possibly in a parallel processing situation which will result sooner or later and
+    // under the right conditions in DyNet crashing.  Therefore, make preemptive reference to mtlSrla
+    // here so that it is sure to be initialized, regardless of the priming sentence.
+    assert(mtlSrla != null)
+
     // generate SRL frames for each predicate in each sentence
     for(si <- predicates.indices) {
       val sentence = doc.sentences(si)

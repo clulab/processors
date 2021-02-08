@@ -9,10 +9,12 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.nio.charset.StandardCharsets
 
+import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.serialization.DocumentSerializer
 
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -115,12 +117,11 @@ object ParallelProcessorExample {
     val threads = args(3).toInt
 
     val files = findFiles(inputDir, extension)
-    // Parallelizing by file results in a quick crash.
     val parFiles = parallelize(files, threads)
 
     Utils.initializeDyNet()
 
-    val processor: Processor = new CluProcessor()
+    val processor: Processor = new FastNLPProcessorWithSemanticRoles()
     val documentSerializer = new DocumentSerializer
 
     val untimed = processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
@@ -161,7 +162,7 @@ object ParallelProcessorExample {
     println(timer.toString)
   }
 
-  def main(args: Array[String]): Unit = {
+  def run(args: Array[String]): Unit = {
 
     mainWithCallback(args) { case (file: File, contents: String) =>
       // Print these to a file for analysis.
@@ -170,5 +171,15 @@ object ParallelProcessorExample {
       printWriter.println(contents)
       printWriter.close
     }
+
+    ConstEmbeddingsGlove.SINGLETON = null
+  }
+
+  def main(args: Array[String]): Unit = {
+    import org.clulab.fatdynet.utils.Utils
+
+    Utils.startup()
+    run(args)
+    Utils.shutdown()
   }
 }
