@@ -5,15 +5,11 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Shell
 
 class LexiconNERShell(val lexiconNer: LexiconNER) extends Shell {
-  var proc: CluProcessor = _
-
-  override def initialize(): Unit = {
-    proc = new CluProcessor()
-  }
+  val proc: CluProcessor = new CluProcessor()
 
   override def work(text: String): Unit = {
     val doc = proc.mkDocument(text)
-    for(sent <- doc.sentences) {
+    for (sent <- doc.sentences) {
       val labels = lexiconNer.find(sent)
       println(labels.mkString(", "))
     }
