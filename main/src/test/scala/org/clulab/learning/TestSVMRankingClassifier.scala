@@ -16,8 +16,12 @@ object NeedsExternalBinary extends Tag("NeedsExternalBinary")
   * Last Modified: Fix compiler issue: import scala.io.Source.
   */
 class TestSVMRankingClassifier extends FlatSpec with Matchers {
+  // It is assumed that the existence of this one binary implies the existence of the other,
+  // svm_rank_learn, which unfortunately requires user input and will wait for it indefinitely.
+  val hasExternalBinary = "svm_rank_classify -h".! == 0
 
   "SVMRankingClassifier" should "perform similarly to the command line svm_rank_classify" taggedAs (NeedsExternalBinary) in {
+    assume(hasExternalBinary)
     val dataset = new BVFRankingDataset[String]
 
     val qid1 = new ListBuffer[Datum[Int, String]]
