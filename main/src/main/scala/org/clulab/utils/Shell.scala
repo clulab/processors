@@ -1,11 +1,5 @@
 package org.clulab.utils
 
-import java.io.{File, PrintWriter}
-import jline.console.ConsoleReader
-import jline.console.history.FileHistory
-
-import scala.collection.immutable.ListMap
-
 /**
  * An interactive shell to be used to test various NLP components
  */
