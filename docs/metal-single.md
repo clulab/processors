@@ -89,7 +89,7 @@ Parameter | Description | Default value
 `m.l.i.charRnnStateSize` | Size of the character LSTM's hidden state. Because we use a biLSTM to encode characters, the output state for the biLSTM is twice this value.  | 16 
 `m.l.i.c2i` | File that maps characters to unique integer indices that are used internally by `Metal`. The provided file for English contains characters that were extracted from the 1-billion-word-language-modeling-benchmark-r13output. We use two special characters: 0, which stands for UNKNOWN, and 1, which stands for  the virtual character end of sentence (EOS). The first column in this file contains characters stored as integers; the second contains the index value. If you use `Metal` for another language, adjust this file to include the relevant characters in that language. | ["org/clulab/c2i-en.txt"](https://github.com/clulab/processors/blob/master/main/src/main/resources/org/clulab/c2i-en.txt)
 `mtl.layers.intermediate1` | The intermediate layer that operates on top of the vectors produced by the initial layer. Currently this layer is always a biLSTM, but it doesn't have to be. Any layer that takes a sequence of vectors and produces another sequence of vectors would work, e.g., CNNs or transformers.  | 
-`mtl.layers.intermediate`_i_ | `Metal` accepts up to 10 intermediate layers. Just number them using continuous intigers, from `intermediate1` to `intermediate10`. | N/A
+`mtl.layers.intermediate`_i_ | `Metal` accepts up to 10 intermediate layers. Just number them using continuous integers, from `intermediate1` to `intermediate10`. | N/A
 `m.l.i.rnnStateSize` | Size of the word-level LSTM's hidden state. Because we use a biLSTM in this layer, the output state for the biLSTM is twice this value. | 128
 `m.l.i.useHighwayConnections` | If true, the state vector corresponding to each word concatenates the biLSTM state with the input embedding of the word. | false
 `m.l.i.numLayers` | Number of layers in the biLSTM | 1
@@ -151,9 +151,9 @@ This command will output various statistics as training progresses, e.g., cumula
 20:21:56.574 [run-main-0] DEBUG org.clulab.dynet.Metal - initial = EmbeddingLayer(460) intermediate (1) = RnnLayer(460, 716)
 20:21:56.574 [run-main-0] DEBUG org.clulab.dynet.Metal - Summary of layersPerTask(1):
 20:21:56.574 [run-main-0] DEBUG org.clulab.dynet.Metal - final = ViterbiForwardLayer(716, 11)
-20:22:22.333 [run-main-0] INFO  org.clulab.dynet.Metal - Cummulative loss: 0.5874771406676204
-20:23:03.994 [run-main-0] INFO  org.clulab.dynet.Metal - Cummulative loss: 0.22642924679232757
-20:23:37.110 [run-main-0] INFO  org.clulab.dynet.Metal - Cummulative loss: 0.1477900150116382
+20:22:22.333 [run-main-0] INFO  org.clulab.dynet.Metal - Cumulative loss: 0.5874771406676204
+20:23:03.994 [run-main-0] INFO  org.clulab.dynet.Metal - Cumulative loss: 0.22642924679232757
+20:23:37.110 [run-main-0] INFO  org.clulab.dynet.Metal - Cumulative loss: 0.1477900150116382
 ...
 21:55:26.605 [run-main-0] DEBUG org.clulab.dynet.Metal - Started evaluation on the development dataset for task 1 (En NER)...
 21:55:57.477 [run-main-0] INFO  org.clulab.dynet.Metal - Accuracy on 3466 development sentences for task 1 (En NER): 98.63
