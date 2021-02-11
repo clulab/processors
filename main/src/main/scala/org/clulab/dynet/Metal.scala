@@ -176,7 +176,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         numTagged += sentence.length
 
         if(sentCount % 1000 == 0) {
-          logger.info("Cummulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)")
+          logger.info("Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)")
           cummulativeLoss = 0.0
           numTagged = 0
         }
