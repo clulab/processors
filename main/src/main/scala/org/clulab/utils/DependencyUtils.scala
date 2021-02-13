@@ -80,36 +80,45 @@ object DependencyUtils {
    */
   def findHeads(span: Interval, graph: DependencyGraph): Seq[Int] = {
     @annotation.tailrec
-    def countSteps(toksWithDist: List[(Int, Double)], seen: Set[Int]): Double = toksWithDist match {
-      case Nil =>
-        // we couldn't find a root in the graph
-        // maybe it is not a valid dependency graph?
-        throw new DependencyUtilsException("can't find a root")
-      case (tok, dist) :: rest if seen contains tok =>
-        // we already explored this token, skip
-        countSteps(rest, seen)
-      case (tok, dist) :: rest if graph.roots contains tok =>
-        // found a root
-        // it is the closest one because we are searching breath-first
-        // return distance
-        dist
-      case (tok, dist) :: rest =>
-        // explore
-        val incoming = followIncoming(tok, graph)
-        if (incoming.isEmpty) {
-          // this token has no incomings, but it is not a root
-          // it looks like a collapsed dependency graph
-          // (it couldn't be farther from the root)
-          Double.PositiveInfinity
-        } else {
-          // keep looking, breadth-first
-          val nextStep = incoming.map(i => (i, dist + 1)).toList
-          countSteps(rest ::: nextStep, seen + tok)
-        }
+    def countSteps(toksWithDist: List[(Int, Double)], seen: Set[Int]): Double = {
+      // println("\tcountSteps: " + toksWithDist.mkString(", "))
+
+      toksWithDist match {
+        case Nil =>
+          // we couldn't find a root in the graph. maybe it is not a valid dependency graph?
+          // ms: this may happen due to cycles in the tree so we must handle it robustly
+
+          // throw new DependencyUtilsException("can't find a root")
+          Double.MaxValue
+        case (tok, dist) :: rest if seen contains tok =>
+          // we already explored this token, skip
+          countSteps(rest, seen)
+        case (tok, dist) :: rest if graph.roots contains tok =>
+          // found a root
+          // it is the closest one because we are searching breath-first
+          // return distance
+          dist
+        case (tok, dist) :: rest =>
+          // explore
+          val incoming = followIncoming(tok, graph)
+          if (incoming.isEmpty) {
+            // this token has no incomings, but it is not a root
+            // it looks like a collapsed dependency graph
+            // (it couldn't be farther from the root)
+            Double.PositiveInfinity
+          } else {
+            // keep looking, breadth-first
+            val nextStep = incoming.map(i => (i, dist + 1)).toList
+            countSteps(rest ::: nextStep, seen + tok)
+          }
+      }
     }
 
     // returns the distance to the closest root for a given token
-    def distToRoot(token: Int): Double = countSteps(List((token, 0)), Set.empty)
+    def distToRoot(token: Int): Double = {
+      // println(s"distToRoot for token: $token:")
+      countSteps(List((token, 0)), Set.empty)
+    }
 
     // get the distance to root for each token in span
     val toksWithDist = span.map(t => (t, distToRoot(t)))
