@@ -49,6 +49,8 @@ object CoreNLPUtils {
   def toDirectedGraph(sg:SemanticGraph, interning: (String) => String, preferredSize: Option[Int] = None, debug:Boolean = false):DirectedGraph[String] = {
     // this needs to be a set rather than a list because CoreNLP sometimes duplicates the enhanced deps it creates
     val edgeBuffer = new mutable.HashSet[Edge[String]]
+    val heads = new mutable.HashSet[Int]()
+    val modifiers = new mutable.HashSet[Int]()
     for (edge <- sg.edgeIterable().asScala) {
       val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
       val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
@@ -61,11 +63,40 @@ object CoreNLPUtils {
       }
 
       edgeBuffer += Edge(head - 1, modifier - 1, interning(label))
+      heads += head - 1
+      modifiers += modifier - 1
     }
 
     val roots = new mutable.HashSet[Int]
     for (iw <- sg.getRoots.asScala) {
       roots.add(iw.get(classOf[IndexAnnotation]) - 1)
+    }
+
+    //
+    // make sure each graph has a root
+    //
+    if(roots.isEmpty) {
+      var root = -1
+
+      // find the left-most head that is not a modifier to some other head
+      val sortedHeads = heads.toList.sorted
+      for(h <- sortedHeads if root == -1) {
+        if(! modifiers.contains(h)) {
+          root = h
+        }
+      }
+
+      // we somehow failed. just choose the left-most head then
+      if(root == -1 && sortedHeads.nonEmpty) {
+        root = sortedHeads.head
+      }
+
+      // we are still failing. just choose the left-most token then...
+      if(root == -1) {
+        root = 0
+      }
+
+      roots.add(root)
     }
 
     val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet, preferredSize)

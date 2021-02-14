@@ -1,4 +1,5 @@
 # Changes
++ **8.2.6** - Bug fix: handle cycles in dependency trees produced by CoreNLPProcessor.
 + **8.2.5** - Added CluCoreProcessor, which uses all our tools + Stanford's numeric entity recognizer. 
 + **8.2.5** - Update to FatDynet 0.3.0 in serial mode. This fixes memory leaks and crashed in the DyNet Scala wrapper. 
 + **8.2.4** - Bug fix: the statement below holds even when the dependency graph is deserialized via the DocumentSerializer.
