@@ -95,7 +95,7 @@ class TestDependencyUtils extends FlatSpec with Matchers {
 
   // this test comes from sentence 23556 in file /data/nlp/corpora/agiga/data/xml/afp_eng_199405.xml.gz
   // the dependency parse has an erroneous loop in token 11 that makes it impossible to reach the root from the given interval
-  it should "throw a DependencyUtilsException if the dependency parse is malformed" in {
+  it should "handle invalid dependency trees in findHeads" in {
     val edges = List(
       (3, 0, "det"), (3, 1, "nn"), (3, 2, "nn"), (5, 3, "nsubj"), (5, 4, "dep"), (5, 10, "ccomp"),
       (8, 7, "det"), (10, 6, "tmod"), (10, 8, "nsubj"), (10, 9, "dep"), (10, 14, "prep_with"), (10, 27, "neg"),
@@ -106,7 +106,7 @@ class TestDependencyUtils extends FlatSpec with Matchers {
     )
     val graph = DirectedGraph(DirectedGraph.triplesToEdges[String](edges), Set(5))
     val interval = Interval(21, 23)
-    a [DependencyUtilsException] shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
+    println(s"heads for interval ${interval} are: " + DependencyUtils.findHeads(interval, graph).mkString(", "))
   }
 
 }

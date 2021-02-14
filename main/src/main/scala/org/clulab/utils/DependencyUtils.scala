@@ -89,7 +89,7 @@ object DependencyUtils {
           // ms: this may happen due to cycles in the tree so we must handle it robustly
 
           // throw new DependencyUtilsException("can't find a root")
-          Double.MaxValue
+          Double.MaxValue // this means the distance to the head is infinite, i.e., the head is not reachable
         case (tok, dist) :: rest if seen contains tok =>
           // we already explored this token, skip
           countSteps(rest, seen)
