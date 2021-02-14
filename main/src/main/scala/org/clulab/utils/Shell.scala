@@ -1,78 +1,41 @@
 package org.clulab.utils
 
-import java.io.{File, PrintWriter}
-
-import jline.console.ConsoleReader
-import jline.console.history.FileHistory
-
-import scala.collection.immutable.ListMap
-
 /**
  * An interactive shell to be used to test various NLP components
  */
 abstract class Shell {
-  /** Initialize the NLP component needed for the work method */
-  def initialize(): Unit
+  /** Initialize the NLP component needed for the work method
+   * if that needs to happen after shell() is called.  Otherwise,
+   * such initialization can happen in the subclass constructor. */
+  def initialize(): Unit = ()
   /** The actual work, including printing out the output */
-  def work(text:String):Unit
-
-  protected val printWriter = new PrintWriter(System.out)
-
-  val commands = ListMap(
-    ":help" -> "show commands",
-    ":exit" -> "exit system"
-  )
+  def work(text: String): Unit
 
   def shell() {
-    val history = new FileHistory(new File(System.getProperty("user.home"), ".shellhistory"))
-    sys addShutdownHook {
-      history.flush() // flush file before exiting
-    }
 
-    val reader = new ConsoleReader
-    reader.setHistory(history)
+    def workSafely(menu: Menu, text: String): Boolean = {
+      if (text.trim.nonEmpty)
+        try {
+          work(text)
+        }
+        catch {
+          case exception: Throwable =>
+            println("Processing failed with the following error:")
+            exception.printStackTrace()
+        }
+      true
+    }
 
     initialize()
 
-    reader.setPrompt("(shell)>>> ")
-    printWriter.println("\nWelcome to the shell!")
-    printCommands()
-    printWriter.flush()
+    val lineReader = new CliReader("(shell)>>> ", "user.home", ".shellhistory")
+    val mainMenuItems = Seq(
+      new HelpMenuItem(":help", "show commands"),
+      new ExitMenuItem(":exit", "exit system")
+    )
+    val defaultMenuItem = new DefaultMenuItem(workSafely)
+    val menu = new Menu("Welcome to the shell!", lineReader, mainMenuItems, defaultMenuItem)
 
-    var running = true
-    while (running) {
-      reader.readLine match {
-        case ":help" =>
-          printCommands()
-          printWriter.flush()
-
-        case ":exit" | null =>
-          running = false
-
-        case text =>
-          if(text.trim.nonEmpty) {
-            try {
-              work(text)
-              printWriter.flush()
-            } catch {
-              case e:Throwable =>
-                printWriter.println("Processing failed with the following error:")
-                e.printStackTrace()
-            }
-          }
-      }
-    }
-
-    // manual terminal cleanup
-    reader.getTerminal.restore()
-    reader.shutdown()
-  }
-
-  /** Summarizes available commands */
-  def printCommands(): Unit = {
-    printWriter.println("\nCOMMANDS:")
-    for ((cmd, msg) <- commands)
-      printWriter.println(s"\t$cmd\t=> $msg")
-    printWriter.println()
+    menu.run()
   }
 }

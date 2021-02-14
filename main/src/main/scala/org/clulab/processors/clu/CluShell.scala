@@ -1,9 +1,9 @@
 package org.clulab.processors.clu
 
-import java.io.PrintWriter
-
 import org.clulab.dynet.Utils
 import org.clulab.utils.Shell
+
+import java.io.PrintWriter
 
 /**
   * An interactive shell for CluProcessor
@@ -11,11 +11,8 @@ import org.clulab.utils.Shell
   * Date: 8/2/17
   */
 class CluShell extends Shell {
-  var proc: CluProcessor = _
-
-  override def initialize(): Unit = {
-    proc = new CluProcessor()
-  }
+  val printWriter = new PrintWriter(System.out, true)
+  val proc: CluProcessor = new CluProcessor()
 
   override def work(text: String): Unit = {
     val doc = proc.annotate(text)
@@ -24,7 +21,7 @@ class CluShell extends Shell {
 }
 
 object CluShell {
-  def main(args:Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
     Utils.initializeDyNet()
     val sh = new CluShell
     sh.shell()
