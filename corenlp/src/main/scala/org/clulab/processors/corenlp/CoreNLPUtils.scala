@@ -45,6 +45,8 @@ object CoreNLPUtils {
   def toDirectedGraph(sg: SemanticGraph, interning: (String) => String, preferredSize: Option[Int] = None, debug: Boolean = false): DirectedGraph[String] = {
 
     def mkEdges(): List[Edge[String]] = {
+      // Using list.distinct instead of Set.toList will preserve the order of edges.
+      // Set can be sorted in different ways even on different runs with the same data.
       sg.edgeIterable().asScala.toList.map { edge =>
         val head: Int = edge.getGovernor.get(classOf[IndexAnnotation])
         val modifier: Int = edge.getDependent.get(classOf[IndexAnnotation])
@@ -72,6 +74,7 @@ object CoreNLPUtils {
         // Skip the heads collection and get them instead from edge.source.
         val root = sortedEdges
             // Find the left-most head that is not a modifier to some other head.
+            // There may be some duplicate heads searched, but probably not many.
             .find { edge => !modifiers.contains(edge.source) }
             // Get the head of the found edge.
             .map(_.source)
