@@ -106,7 +106,7 @@ class TestDependencyUtils extends FlatSpec with Matchers {
     )
     val graph = DirectedGraph(DirectedGraph.triplesToEdges[String](edges), Set(5))
     val interval = Interval(21, 23)
-    println(s"heads for interval ${interval} are: " + DependencyUtils.findHeads(interval, graph).mkString(", "))
+    noException shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
   }
 
 }
