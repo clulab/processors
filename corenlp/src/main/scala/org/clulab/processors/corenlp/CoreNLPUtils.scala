@@ -1,8 +1,6 @@
 package org.clulab.processors.corenlp
 
 import java.util
-
-import scala.collection.JavaConverters._
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
 import edu.stanford.nlp.ling.CoreAnnotations.{IndexAnnotation, TokensAnnotation}
@@ -13,8 +11,6 @@ import edu.stanford.nlp.trees.SemanticHeadFinder
 import edu.stanford.nlp.trees.TreeCoreAnnotations.{BinarizedTreeAnnotation, TreeAnnotation}
 import edu.stanford.nlp.util.{ArrayCoreMap, CoreMap}
 
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import org.clulab.processors.clu.tokenizer.TokenizerStepNormalization
 
@@ -46,60 +42,52 @@ object CoreNLPUtils {
     processedWords
   }
 
-  def toDirectedGraph(sg:SemanticGraph, interning: (String) => String, preferredSize: Option[Int] = None, debug:Boolean = false):DirectedGraph[String] = {
-    // this needs to be a set rather than a list because CoreNLP sometimes duplicates the enhanced deps it creates
-    val edgeBuffer = new mutable.HashSet[Edge[String]]
-    val heads = new mutable.HashSet[Int]()
-    val modifiers = new mutable.HashSet[Int]()
-    for (edge <- sg.edgeIterable().asScala) {
-      val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
-      val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
-      var label = edge.getRelation.getShortName
-      val spec = edge.getRelation.getSpecific
-      if (spec != null) label = label + "_" + spec
+  def toDirectedGraph(sg: SemanticGraph, interning: (String) => String, preferredSize: Option[Int] = None, debug: Boolean = false): DirectedGraph[String] = {
 
-      if(debug) {
-        println(s"Adding the following dependency: (${head - 1}, ${modifier - 1}, $label)")
-      }
-
-      edgeBuffer += Edge(head - 1, modifier - 1, interning(label))
-      heads += head - 1
-      modifiers += modifier - 1
+    def mkEdges(): List[Edge[String]] = {
+      sg.edgeIterable().asScala.toList.map { edge =>
+        val head: Int = edge.getGovernor.get(classOf[IndexAnnotation])
+        val modifier: Int = edge.getDependent.get(classOf[IndexAnnotation])
+        val specOpt = Option(edge.getRelation.getSpecific)
+        val label = edge.getRelation.getShortName + specOpt.map("_" + _).getOrElse("")
+        if (debug)
+          println(s"Adding the following dependency: (${head - 1}, ${modifier - 1}, $label)")
+        // Of the Edge, the source is head - 1, the destination is modifier - 1.
+        Edge(head - 1, modifier - 1, interning(label))
+      }.distinct
+      // An extra distinct needs to be called on edges because CoreNLP sometimes duplicates the enhanced deps it creates.
     }
 
-    val roots = new mutable.HashSet[Int]
-    for (iw <- sg.getRoots.asScala) {
-      roots.add(iw.get(classOf[IndexAnnotation]) - 1)
+    def mkRoots(edges: List[Edge[String]]): Set[Int] = {
+      val sgRoots = sg.getRoots.asScala
+      if (sgRoots.nonEmpty)
+        sgRoots.map { iw =>
+          iw.get(classOf[IndexAnnotation]) - 1
+        }.toSet
+      else {
+        // Make sure each graph has a root.
+        val sortedEdges = edges.sortBy(_.source) // Sort them by head.
+        // In case we have to search repeatedly for a good head, cache these values.
+        val modifiers = edges.map(_.destination).toSet
+        // Skip the heads collection and get them instead from edge.source.
+        val root = sortedEdges
+            // Find the left-most head that is not a modifier to some other head.
+            .find { edge => !modifiers.contains(edge.source) }
+            // Get the head of the found edge.
+            .map(_.source)
+            .getOrElse(
+                // We somehow failed. Just choose the left-most head then.
+                sortedEdges.headOption.map(_.source)
+                // We are still failing. Just choose the left-most token, the 0th.
+                .getOrElse(0)
+            )
+        Set(root)
+      }
     }
 
-    //
-    // make sure each graph has a root
-    //
-    if(roots.isEmpty) {
-      var root = -1
-
-      // find the left-most head that is not a modifier to some other head
-      val sortedHeads = heads.toList.sorted
-      for(h <- sortedHeads if root == -1) {
-        if(! modifiers.contains(h)) {
-          root = h
-        }
-      }
-
-      // we somehow failed. just choose the left-most head then
-      if(root == -1 && sortedHeads.nonEmpty) {
-        root = sortedHeads.head
-      }
-
-      // we are still failing. just choose the left-most token then...
-      if(root == -1) {
-        root = 0
-      }
-
-      roots.add(root)
-    }
-
-    val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet, preferredSize)
+    val edges = mkEdges()
+    val roots = mkRoots(edges)
+    val dg = new DirectedGraph[String](edges, roots, preferredSize)
     //println(dg)
     dg
   }
