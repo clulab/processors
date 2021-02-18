@@ -14,13 +14,14 @@ import org.clulab.utils.ConfigWithDefaults
 class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true) extends ConstEmbeddings {
 
   /** These parameters are never updated, so we can share this object between models */
+    /*
   private val parameters = new ParameterCollection()
-  val (lookupParameters, w2i) = mkLookupParams()
+  val (lookupParameters, w2i, wordVectors) = mkLookupParams()
   // All other values should be >= 0.
   val w2iUNK = w2i.getOrElse(UNK, -1)
   val w2iContainsUNK = w2iUNK != -1
 
-  def mkLookupParams(): (LookupParameter, Map[String, Int]) = {
+  def mkLookupParams(): (LookupParameter, Map[String, Int], CompactWordEmbeddingMap) = {
     val wordVectors = CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
     val w2i = wordVectors.keys.toList.sorted.zipWithIndex.toMap
 
@@ -32,23 +33,30 @@ class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true
     }
     logger.debug(s"Completed loading word embeddings of dimension $dim for ${w2i.size} words.")
 
-    (wordLookupParameters, w2i)
+    (wordLookupParameters, w2i, wordVectors)
   }
 
   override def dim: Int = lookupParameters.dim().get(0).toInt
+  */
 
-  def get(word:String): Expression = {
+  val wordVectors = CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
+
+  override def dim: Int = wordVectors.get(UNK).get.length // TODO: we need the length method implemented in CompactWordEmbeddingMap
+
+  override def mkEmbedding(word:String): Expression = {
+    val vector = wordVectors.get(word).getOrElse(wordVectors.get(UNK).get) // TODO: we should have a getOrElse in the CompactWordEmbeddingMap
+    Expression.input(Dim(vector.length), new FloatVector(vector))
+
+    /*
     val w2iWord = w2i.getOrElse(word, {
       assert(w2iContainsUNK)
       w2iUNK
     })
 
     Expression.constLookup(lookupParameters, w2iWord)
+    */
   }
 
-  override def mkEmbeddings(words: Iterable[String]): ExpressionVector = {
-    words.map(get).toSeq
-  }
 }
 
 object ConstEmbeddingsGlove {
