@@ -21,7 +21,7 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   }
 
   val filename = "/test_vectors.txt"
-  val fullsizeText = new WordEmbeddingMap(Sourcer.sourceFromResource(filename), None, false)
+  val fullsizeText = new SanitizedWordEmbeddingMap(Sourcer.sourceFromResource(filename), None, false)
   val compactText = CompactWordEmbeddingMap(filename, resource = true, cached = false)
   val tmpFile = File.createTempFile("test_vectors.", ".txt")
   compactText.save(tmpFile.getAbsolutePath())
