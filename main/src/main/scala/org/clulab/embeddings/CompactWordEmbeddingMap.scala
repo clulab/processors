@@ -57,7 +57,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) exte
   override def getOrElseUnknown(word: String): ArrayType = {
     val emb = get(word)
     if(emb.isEmpty) {
-      val unkEmb = get("") // TODO: need to decide on a protocol for UNKNOWN words here!
+      val unkEmb = get(CompactWordEmbeddingMap.UNK)
       if(unkEmb.isEmpty) {
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
       }
@@ -68,7 +68,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) exte
   }
 
   /** The dimension of an embedding vector */
-  override def dim: Float = columns
+  override def dim: Int = columns
 
   def keys: Iterable[String] = map.keys // debug use only
 
@@ -184,6 +184,8 @@ object CompactWordEmbeddingMap {
 
   protected type BuildType = (MapType, ArrayType)
   protected type StoreType = (String, ArrayType)
+
+  protected val UNK = "" // token to be used for unknowns
 
   protected val logger: Logger = LoggerFactory.getLogger(classOf[CompactWordEmbeddingMap])
 

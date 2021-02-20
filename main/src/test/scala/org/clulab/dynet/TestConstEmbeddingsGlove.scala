@@ -9,7 +9,7 @@ class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
       Utils.initializeDyNet()
       ConstEmbeddingsGlove("/test_vectors.txt", true)
     }
-    var e = embeddings.get("time")
+    var e = embeddings.mkEmbedding("time")
     e != null should be(true)
     e.dim().get(0) should be(5)
     e = null

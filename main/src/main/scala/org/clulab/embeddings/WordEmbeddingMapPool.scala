@@ -12,7 +12,11 @@ object WordEmbeddingMapPool {
   }
 
   /** Fetches an embedding from the pool if it exists, or creates it otherwise */
-  def getOrElseCreate(filename: String, resource: Boolean = true, cached: Boolean = false, compact: Boolean = false): Unit = {
+  def getOrElseCreate(filename: String,
+                      resource: Boolean = true,
+                      cached: Boolean = false,
+                      compact: Boolean = false): WordEmbeddingMap = {
+
     this.synchronized {
       pool.getOrElseUpdate(mkKey(filename, compact),
         if(compact) CompactWordEmbeddingMap(filename, resource, cached)

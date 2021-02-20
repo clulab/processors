@@ -13,7 +13,7 @@ trait WordEmbeddingMap {
   def getOrElseUnknown(word: String): ArrayType
 
   /** The dimension of an embedding vector */
-  def dim: Float
+  def dim: Int
 
   /** Normalize this vector to length 1, in place. (If the length is zero, do nothing.) */
   def norm(array: ArrayType): ArrayType = {

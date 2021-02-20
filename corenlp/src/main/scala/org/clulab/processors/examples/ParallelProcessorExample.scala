@@ -171,8 +171,6 @@ object ParallelProcessorExample {
       printWriter.println(contents)
       printWriter.close
     }
-
-    ConstEmbeddingsGlove.SINGLETON = null
   }
 
   def main(args: Array[String]): Unit = {

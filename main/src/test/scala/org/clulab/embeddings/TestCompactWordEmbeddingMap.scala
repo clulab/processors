@@ -8,13 +8,13 @@ import org.scalatest._
 
 class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
 
-  protected def matches(array1: CompactWordEmbeddingMap.ArrayType, array2: Array[Double], epsilon: Double): Boolean = {
+  protected def matches(array1: WordEmbeddingMap.ArrayType, array2: Array[Double], epsilon: Double): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) < epsilon
     }
   }
 
-  protected def matches(array1: CompactWordEmbeddingMap.ArrayType, array2: CompactWordEmbeddingMap.ArrayType): Boolean = {
+  protected def matches(array1: WordEmbeddingMap.ArrayType, array2: WordEmbeddingMap.ArrayType): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) == 0
     }

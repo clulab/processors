@@ -34,6 +34,5 @@ class FatdynetTest extends FlatSpec with Matchers with BeforeAndAfterAll {
   def stop(): Unit = {
     // This is for debugging memory leaks.  It will cause other tests to crash.
     proc = null
-    ConstEmbeddingsGlove.SINGLETON = null
   }
 }
