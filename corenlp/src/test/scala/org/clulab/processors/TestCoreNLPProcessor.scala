@@ -121,10 +121,13 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
     proc.tagPartsOfSpeech(doc)
     doc.clear()
 
+    println(s"Tags are: ${doc.sentences(0).tags.get.mkString(" ")}")
+
     doc.sentences(0).tags.get(0) should be ("NNP")
     doc.sentences(0).tags.get(1) should be ("NNP")
     doc.sentences(0).tags.get(2) should be ("VBD")
-    doc.sentences(0).tags.get(3) should be ("TO")
+    val tag3 = doc.sentences(0).tags.get(3)
+    (tag3.equals("IN") || tag3.equals("TO")) should be (true) // make robust to CoreNLP v3 and v4
     doc.sentences(0).tags.get(4) should be ("NNP")
     doc.sentences(0).tags.get(5) should be (".")
     doc.sentences(1).tags.get(0) should be ("RB")
@@ -165,7 +168,9 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
 
     doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be (true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "nsubj") should be (true)
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "nmod") should be (true)
+
+    (doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "nmod") || // make robust to CoreNLP v3 and v4
+      doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 4, "obl")) should be (true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 3, "case") should be (true)
 
     doc.sentences.head.syntacticTree.foreach(t => {
@@ -261,10 +266,14 @@ class TestCoreNLPProcessor extends FlatSpec with Matchers {
   }
 
   it should "run the constituent parser correctly on texts with parentheses" in {
-    val doc = proc.mkDocumentFromSentences(List("the tyrosine phosphorylation of pp60(c-src) is closely associated with the activation of phosphatidylinositol 3-kinase (PIK)."), keepText = false)
-    proc.parse(doc)
+    val doc = proc.annotate("the tyrosine phosphorylation of pp60(c-src) is closely associated with the activation of phosphatidylinositol 3-kinase (PIK).")
     doc.clear()
 
+    println("""Tokens for the sentence "the tyrosine phosphorylation of pp60(c-src) is...":""")
+    println(doc.sentences.head.words.mkString(" "))
+    println("""POS tags for the sentence "the tyrosine phosphorylation of pp60(c-src) is...":""")
+    println(doc.sentences.head.tags.get.mkString(" "))
+    println("""Universal dependencies for the sentence "the tyrosine phosphorylation of pp60(c-src) is...":""")
     println(doc.sentences.head.universalBasicDependencies.get)
 
     doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "dep") should be (true) // this probably should be "appos", but oh well...
