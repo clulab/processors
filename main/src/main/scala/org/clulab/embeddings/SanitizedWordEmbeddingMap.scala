@@ -19,7 +19,7 @@ import scala.io.Source
  * Last Modified: Fix compiler issue: import scala.io.Source.
  */
 
-@deprecated("ExplicitWordEmbeddingMap should replace the functionality in this class")
+@deprecated("ExplicitWordEmbeddingMap should replace the functionality in this class", "processors 8.3.0")
 class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) {
 
   lazy val dimensions: Int = matrix.values.head.length

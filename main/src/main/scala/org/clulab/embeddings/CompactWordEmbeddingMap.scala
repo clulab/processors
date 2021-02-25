@@ -1,15 +1,16 @@
 package org.clulab.embeddings
 
 import java.io._
+
+import org.clulab.embeddings.WordEmbeddingMap.ArrayType
+import org.clulab.embeddings.WordEmbeddingMap.ValueType
+import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
-import org.slf4j.{Logger, LoggerFactory}
+import org.clulab.utils.Logging
+import org.clulab.utils.Sourcer
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
-import org.clulab.embeddings.WordEmbeddingMap.ArrayType
-import org.clulab.embeddings.WordEmbeddingMap.ValueType
-import org.clulab.utils.Logging
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -39,17 +40,20 @@ import org.clulab.utils.Logging
   * resulting return value, call save(compactFilename).  Thereafter, for normal, speedy processing,
   * use CompactWord2Vec(compactFilename, resource = false, cached = true).
   */
-class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
-  override val wordSanitizer = new DefaultWordSanitizer()
+class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val wordSanitizer: WordSanitizing = new DefaultWordSanitizer)
+    extends WordEmbeddingMap {
 
   protected val map: CompactWordEmbeddingMap.MapType = buildType._1 // (word -> row)
   protected val array: ArrayType = buildType._2 // flattened matrix
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
   // Cache this special value.
-  val unkEmbeddingOpt = get(CompactWordEmbeddingMap.UNK)
+  val unkEmbeddingOpt: Option[ArrayType] = get(CompactWordEmbeddingMap.UNK)
 
-  def get(word: String): Option[ArrayType] = { // debug use only
+  /** The dimension of an embedding vector */
+  override val dim: Int = columns
+
+  def get(word: String): Option[ArrayType] = {
     map.get(word).map { row =>
       val offset = row * columns
 
@@ -67,14 +71,11 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) exte
     )
   }
 
-  /** The dimension of an embedding vector */
-  override def dim: Int = columns
-
   override def isOutOfVocabulary(word: String): Boolean =
-    word == CompactWordEmbeddingMap.UNK || !map.contains(EmbeddingUtils.sanitizeWord(word))
+    word == CompactWordEmbeddingMap.UNK || !map.contains(wordSanitizer.sanitizeWord(word))
 
   /** Computes the embedding of a text, as an unweighted average of all words */
-  override def makeCompositeVector(text: Iterable[String]): Option[ArrayType] = {
+  override def makeCompositeVector(text: Iterable[String]): ArrayType = {
     val total = new ArrayType(columns) // automatically initialized to zero
 
     text.foreach { word =>
@@ -84,7 +85,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) exte
     norm(total)
   }
 
-  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Option[ArrayType] = {
+  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType = {
     val total = new ArrayType(columns) // automatically initialized to zero
 
     (text, weights).zipped.foreach { (word, weight) =>
@@ -109,19 +110,6 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) exte
     }
   }
 
-  protected def dotProduct(row1: Int, row2: Int): ValueType = {
-    val offset1 = row1 * columns
-    val offset2 = row2 * columns
-    var sum = 0.asInstanceOf[ValueType] // optimization
-    var i = 0 // optimization
-
-    while (i < columns) {
-      sum += array(offset1 + i) * array(offset2 + i)
-      i += 1
-    }
-    sum
-  }
-
   protected def add(dest: ArrayType, srcRow: Int): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
@@ -143,7 +131,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) exte
   }
 
   // Find the average embedding similarity between any two words in these two texts.
-  override protected def sanitizedAvgSimilarity(texts1: Iterable[String], texts2: Iterable[String]): Option[ValueType] = {
+  override protected def sanitizedAvgSimilarity(texts1: Iterable[String], texts2: Iterable[String]): ValueType = {
     var sum = 0.asInstanceOf[ValueType] // optimization
     var count = 0 // optimization
 
@@ -161,8 +149,21 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) exte
         }
       }
     }
-    if (count != 0) Some(sum / count)
-    else None
+    if (count != 0) sum / count
+    else 0
+  }
+
+  def dotProduct(row1: Int, row2: Int): ValueType = {
+    val offset1 = row1 * columns
+    val offset2 = row2 * columns
+    var sum = 0.asInstanceOf[ValueType] // optimization
+    var i = 0 // optimization
+
+    while (i < columns) {
+      sum += array(offset1 + i) * array(offset2 + i)
+      i += 1
+    }
+    sum
   }
 }
 

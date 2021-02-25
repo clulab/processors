@@ -8,17 +8,17 @@ import org.clulab.embeddings.WordEmbeddingMap._
 trait WordEmbeddingMap {
   val wordSanitizer: WordSanitizing
 
+  /** The dimension of an embedding vector */
+  def dim: Int
+
   /** Retrieves the embedding for this word, if it exists in the map */
   def get(word: String): Option[ArrayType]
 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
   def getOrElseUnknown(word: String): ArrayType
 
-  /** The dimension of an embedding vector */
-  def dim: Int
-
   /** Normalize this vector to length 1, in place, if possible. */
-  def norm(array: ArrayType): Option[ArrayType] = {
+  def norm(array: ArrayType): ArrayType = {
 
     def calcLength(): ValueType = {
       var len = 0.asInstanceOf[ValueType] // optimization
@@ -43,17 +43,17 @@ trait WordEmbeddingMap {
 
     val length = calcLength()
 
-    if (length != 0)  Some(divide(length))
-    else None
+    if (length != 0)  divide(length)
+    else array
   }
 
   def isOutOfVocabulary(word: String): Boolean
 
-  def makeCompositeVector(text: Iterable[String]): Option[ArrayType]
+  def makeCompositeVector(text: Iterable[String]): ArrayType
 
-  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Option[ArrayType]
+  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType
 
-  protected def sanitizedAvgSimilarity(text1: Iterable[String], text2: Iterable[String]): Option[ValueType]
+  protected def sanitizedAvgSimilarity(text1: Iterable[String], text2: Iterable[String]): ValueType
 
   // Find the average embedding similarity between any two words in these two texts.
   // IMPORTANT: words here must be words not lemmas!
