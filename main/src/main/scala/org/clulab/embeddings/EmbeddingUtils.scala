@@ -1,5 +1,16 @@
 package org.clulab.embeddings
 
+trait WordSanitizing {
+  def sanitizeWord(word: String, keepNumbers: Boolean = true): String
+}
+
+class DefaultWordSanitizer extends WordSanitizing {
+
+  override def sanitizeWord(word: String, keepNumbers: Boolean = true): String = {
+    EmbeddingUtils.sanitizeWord(word, keepNumbers)
+  }
+}
+
 object EmbeddingUtils {
 
   /**

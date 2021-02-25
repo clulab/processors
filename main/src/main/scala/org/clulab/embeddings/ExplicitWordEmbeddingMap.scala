@@ -1,5 +1,7 @@
 package org.clulab.embeddings
+
 import org.clulab.embeddings.WordEmbeddingMap.ArrayType
+import org.clulab.embeddings.WordEmbeddingMap.ValueType
 
 /**
  * Implements an word embedding map, where each embedding is stored as a distinct array
@@ -24,6 +26,22 @@ class ExplicitWordEmbeddingMap extends WordEmbeddingMap {
 
   /** The dimension of an embedding vector */
   override def dim: Int = 0 // TODO
+
+  def isOutOfVocabulary(word: String): Boolean = {
+    ???
+  }
+
+  def makeCompositeVector(text: Iterable[String]): ArrayType = {
+    ???
+  }
+
+  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType = {
+    ???
+  }
+
+  def avgSimilarity(text1: Iterable[String], text2: Iterable[String]): ValueType = {
+    ???
+  }
 }
 
 object ExplicitWordEmbeddingMap {
