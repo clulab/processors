@@ -11,6 +11,7 @@ import org.clulab.utils.Sourcer
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
+import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -83,6 +84,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
       map.get(word).foreach { index => add(total, index) }
     }
     norm(total)
+    total
   }
 
   override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType = {
@@ -93,22 +95,10 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
       map.get(word).foreach { index => addWeighted(total, index, weight) }
     }
     norm(total)
+    total
   }
 
   def keys: Iterable[String] = map.keys // debug use only
-
-  def save(filename: String): Unit = {
-    // Sort the map entries (word -> row) by row and then keep just the word.
-    // This should put "", the unknown word, first.
-    val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
-
-    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
-      // Writing is performed in two steps so that the parts can be
-      // processed separately when read back in.
-      objectOutputStream.writeObject(words)
-      objectOutputStream.writeObject(array)
-    }
-  }
 
   protected def add(dest: ArrayType, srcRow: Int): Unit = {
     val srcOffset = srcRow * columns
@@ -165,6 +155,19 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
     }
     sum
   }
+
+  def save(filename: String): Unit = {
+    // Sort the map entries (word -> row) by row and then keep just the word.
+    // This should put "", the unknown word, first.
+    val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
+
+    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
+      // Writing is performed in two steps so that the parts can be
+      // processed separately when read back in.
+      objectOutputStream.writeObject(words)
+      objectOutputStream.writeObject(array)
+    }
+  }
 }
 
 object CompactWordEmbeddingMap extends Logging {
@@ -181,6 +184,7 @@ object CompactWordEmbeddingMap extends Logging {
 
   protected val UNK = "" // token to be used for unknowns
 
+  // TODO Need a sanitizer here
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
     val buildType =
@@ -236,29 +240,15 @@ object CompactWordEmbeddingMap extends Logging {
     }
   }
 
+  protected def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {
+    val offset = rowIndex * columns
+
+    WordEmbeddingMap.norm(
+      array.view(offset, offset + columns).asInstanceOf[MutableIndexedSeqLike[ValueType, ArrayType]]
+    )
+  }
+
   protected def buildMatrix(lines: Iterator[String]): BuildType = {
-
-    // TODO, reuse this in class
-    def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {
-      val offset = rowIndex * columns
-      var len = 0.asInstanceOf[ValueType] // optimization
-      var i = 0 // optimization
-
-      while (i < columns) {
-        len += array(offset + i) * array(offset + i)
-        i += 1
-      }
-      len = math.sqrt(len).asInstanceOf[ValueType]
-
-      if (len != 0) {
-        i = 0
-        while (i < columns) {
-          array(offset + i) /= len
-          i += 1
-        }
-      }
-    }
-
     val linesZipWithIndex = lines.zipWithIndex
     val (wordCount, columns) =
       if (linesZipWithIndex.hasNext) {

@@ -2,6 +2,8 @@ package org.clulab.embeddings
 
 import org.clulab.embeddings.WordEmbeddingMap._
 
+import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
+
 /**
  * Basic functionality required by all implementations of word embeddings
  */
@@ -18,34 +20,8 @@ trait WordEmbeddingMap {
   def getOrElseUnknown(word: String): ArrayType
 
   /** Normalize this vector to length 1, in place, if possible. */
-  def norm(array: ArrayType): ArrayType = {
-
-    def calcLength(): ValueType = {
-      var len = 0.asInstanceOf[ValueType] // optimization
-      var i = 0 // optimization
-
-      while (i < array.length) {
-        len += array(i) * array(i)
-        i += 1
-      }
-      math.sqrt(len).asInstanceOf[ValueType]
-    }
-
-    def divide(divisor: ValueType): ArrayType = {
-      var i = 0 // optimization
-
-      while (i < array.length) {
-        array(i) /= divisor
-        i += 1
-      }
-      array
-    }
-
-    val length = calcLength()
-
-    if (length != 0)  divide(length)
-    else array
-  }
+  def norm(array: MutableIndexedSeqLike[ValueType, ArrayType]): Unit =
+    WordEmbeddingMap.norm(array)
 
   def isOutOfVocabulary(word: String): Boolean
 
@@ -63,9 +39,40 @@ trait WordEmbeddingMap {
 
     sanitizedAvgSimilarity(sanitizedText1, sanitizedText2)
   }
+
+  /** Save this object in binary format. */
+  def save(filename: String): Unit
 }
 
 object WordEmbeddingMap {
   type ValueType = Float
   type ArrayType = Array[ValueType]
+
+  /** Normalize this vector to length 1, in place, if possible. */
+  def norm(array: MutableIndexedSeqLike[ValueType, ArrayType]): Unit = {
+
+    def calcLength(): ValueType = {
+      var len = 0.asInstanceOf[ValueType] // optimization
+      var i = 0 // optimization
+
+      while (i < array.length) {
+        len += array(i) * array(i)
+        i += 1
+      }
+      math.sqrt(len.toDouble).asInstanceOf[ValueType]
+    }
+
+    def divide(divisor: ValueType): Unit = {
+      var i = 0 // optimization
+
+      while (i < array.length) {
+        array(i) /= divisor
+        i += 1
+      }
+    }
+
+    val length = calcLength()
+
+    if (length != 0)  divide(length)
+  }
 }
