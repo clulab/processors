@@ -8,10 +8,10 @@ import org.clulab.utils.ConfigWithDefaults
  * Implements the ConstEmbeddings as a thin wrapper around WordEmbeddingMap
  *   with additional functionality to produce embeddings as DyNet Expressions
  */
-class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true) extends ConstEmbeddings {
+class ConstEmbeddingsGlove(matrixResourceName: String) extends ConstEmbeddings {
 
   val wordVectors =
-    WordEmbeddingMapPool.getOrElseCreate(matrixResourceName, resource = isResource, cached = false, compact = true)
+    WordEmbeddingMapPool.getOrElseCreate(matrixResourceName, compact = true)
     // CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
 
   override def dim: Int = wordVectors.dim
@@ -31,11 +31,7 @@ object ConstEmbeddingsGlove {
   def apply(configName:String = "org/clulab/glove.conf"): ConstEmbeddingsGlove = {
     val config = ConfigWithDefaults(configName)
     val matrixResourceName = config.getArgString("glove.matrixResourceName", None)
-    val isResource = config.getArgBoolean("glove.isResource", Some(true))
-    apply(matrixResourceName, isResource)
-  }
-
-  def apply(matrixResourceName: String, isResource: Boolean): ConstEmbeddingsGlove = {
-    new ConstEmbeddingsGlove(matrixResourceName, isResource)
+//    val isResource = config.getArgBoolean("glove.isResource", Some(true))
+    new ConstEmbeddingsGlove(matrixResourceName)
   }
 }

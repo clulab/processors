@@ -2,12 +2,25 @@ package org.clulab.dynet
 
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.io.Source
+
 class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
+
+  println("Keith was here")
+
+  val classLoader = this.getClass.getClassLoader
+  val result = classLoader.getResourceAsStream("/test_vectors.txt")
+  println(result)
+
+  val source = Source.fromFile("./main/src/test/resources/test_vectors.txt")
+  println(source)
 
   "ConstEmbeddingsGlove" should "look realistic" in {
     var embeddings = {
       Utils.initializeDyNet()
-      ConstEmbeddingsGlove("/test_vectors.txt", true)
+      // it worked with ./
+      // is there the wrong Resource thing?
+      new ConstEmbeddingsGlove("/test_vectors")
     }
     var e = embeddings.mkEmbedding("time")
     e != null should be(true)

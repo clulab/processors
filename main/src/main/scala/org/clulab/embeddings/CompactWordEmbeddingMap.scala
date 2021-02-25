@@ -12,6 +12,7 @@ import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
 import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
 import scala.io.BufferedSource
+import scala.io.Source
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -194,13 +195,24 @@ object CompactWordEmbeddingMap extends Logging {
     new CompactWordEmbeddingMap(buildType, wordSanitizer)
   }
 
-  def apply(source: BufferedSource, binary: Boolean): CompactWordEmbeddingMap = {
-    null
+  def apply(inputStream: InputStream, binary: Boolean): CompactWordEmbeddingMap = {
+    val buildType = if (binary) {
+      val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
+      loadBin(objectInputStream)
+    }
+    else {
+      val source = Source.fromInputStream(inputStream)
+      val lines = source.getLines()
+
+      buildMatrix(lines)
+    }
+
+    new CompactWordEmbeddingMap(buildType) // where is sanitizer?
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
     (
-        // Check first line for two columns, otherwise calculate it.
+      // Check first line for two columns, otherwise calculate it.
       if (resource) Sourcer.sourceFromResource(filename)
       else Sourcer.sourceFromFile(filename)
     ).autoClose { source =>
@@ -211,15 +223,13 @@ object CompactWordEmbeddingMap extends Logging {
   }
 
   protected def loadBin(filename: String): BuildType = {
-    // This is the original code
-    //    val (text, array) = updatedLoad[StoreType](filename, this)
-    //    val words = text.split('\n')
-    //    val map: MapType = words.zipWithIndex.toMap.asInstanceOf[MapType]
-    //    (map, array)
-
-    // This is "unrolled" for performance purposes.
     new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
-      val map: MapType = new MutableMapType()
+      loadBin(objectInputStream)
+    }
+  }
+
+  protected def loadBin(objectInputStream: ObjectInputStream): BuildType = {
+    val map: MapType = new MutableMapType()
 
     {
       // This block is so that text can be abandoned at the end of the block, before the array is read.
@@ -239,9 +249,8 @@ object CompactWordEmbeddingMap extends Logging {
       map += ((stringBuilder.result(), map.size))
     }
 
-      val array = objectInputStream.readObject().asInstanceOf[ArrayType]
-      (map, array)
-    }
+    val array = objectInputStream.readObject().asInstanceOf[ArrayType]
+    (map, array)
   }
 
   protected def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {

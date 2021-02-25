@@ -1,8 +1,11 @@
 package org.clulab.embeddings
 
+import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sourcer
 
+import java.io.FileInputStream
+import java.io.InputStream
 import scala.collection.mutable
 import scala.io.BufferedSource
 import scala.util.Failure
@@ -23,16 +26,29 @@ object WordEmbeddingMapPool {
     val Txt, Bin = Value
   }
 
-  def getSource(name: String): Option[(BufferedSource, Location.Location, Format.Format)] = {
+  def getFileAsStream(name: String): FileInputStream = new FileInputStream(name)
+
+  def getResourceAsStream(name: String): InputStream = {
+    val classLoader = this.getClass.getClassLoader
+    // This is null without an exception on failure.
+    val result = classLoader.getResourceAsStream(name)
+
+    Option(result).getOrElse(throw new RuntimeException(s"Resource $name not found."))
+//    new ClassLoaderObjectInputStream(classLoader, classLoader.getResourceAsStream(name))
+  }
+
+  def getSource(name: String): Option[(InputStream, Location.Location, Format.Format)] = {
     val binName = name + binExtension
     val txtName = name + txtExtension
 
-    Failure(null)
-        .orElse(Try(Sourcer.sourceFromFile(binName),     Location.File,     Format.Bin))
-        .orElse(Try(Sourcer.sourceFromFile(txtName),     Location.File,     Format.Txt))
-        .orElse(Try(Sourcer.sourceFromResource(binName), Location.Resource, Format.Bin))
-        .orElse(Try(Sourcer.sourceFromResource(txtName), Location.Resource, Format.Txt))
+    val result = Failure(null)
+        .orElse(Try(getFileAsStream(binName),     Location.File,     Format.Bin))
+        .orElse(Try(getFileAsStream(txtName),     Location.File,     Format.Txt))
+        .orElse(Try(getResourceAsStream(binName), Location.Resource, Format.Bin))
+        .orElse(Try(getResourceAsStream(txtName), Location.Resource, Format.Txt))
         .toOption
+
+    result
   }
 
   case class Key(name: String, compact: Boolean)
@@ -55,13 +71,13 @@ object WordEmbeddingMapPool {
   }
 
   protected def loadEmbedding(name: String, compact: Boolean): WordEmbeddingMap = {
-    val (source, _, format) = getSource(name)
+    val (inputStream, _, format) = getSource(name)
         .getOrElse(throw new RuntimeException(s"WordEmbeddingMap $name could not be opened."))
-    val wordEmbeddingMap = source.autoClose { source =>
+    val wordEmbeddingMap = inputStream.autoClose { inputStream =>
       val binary = format == Format.Bin
 
-      if (compact) CompactWordEmbeddingMap(source, binary)
-      else ExplicitWordEmbeddingMap(source, binary)
+      if (compact) CompactWordEmbeddingMap(inputStream, binary)
+      else ExplicitWordEmbeddingMap(inputStream, binary)
     }
 
     wordEmbeddingMap

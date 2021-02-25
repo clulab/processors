@@ -8,7 +8,7 @@ import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
-import scala.io.BufferedSource
+import scala.io.Source
 
 /**
  * Implements an word embedding map, where each embedding is stored as a distinct array
@@ -136,15 +136,26 @@ object ExplicitWordEmbeddingMap extends Logging {
     new ExplicitWordEmbeddingMap(buildType, wordSanitizer)
   }
 
-  def apply(source: BufferedSource, binary: Boolean): ExplicitWordEmbeddingMap = {
-    null
+  def apply(inputStream: InputStream, binary: Boolean): ExplicitWordEmbeddingMap = {
+    val buildType = if (binary) {
+      val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
+      loadBin(objectInputStream)
+    }
+    else {
+      val source = Source.fromInputStream(inputStream)
+      val lines = source.getLines()
+
+      buildMatrix(lines)
+    }
+
+    new ExplicitWordEmbeddingMap(buildType) // , wordSanitizer)
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
     (
-        if (resource) Sourcer.sourceFromResource(filename)
-        else Sourcer.sourceFromFile(filename)
-        ).autoClose { source =>
+      if (resource) Sourcer.sourceFromResource(filename)
+      else Sourcer.sourceFromFile(filename)
+    ).autoClose { source =>
       val lines = source.getLines()
 
       buildMatrix(lines)
@@ -153,8 +164,12 @@ object ExplicitWordEmbeddingMap extends Logging {
 
   protected def loadBin(filename: String): BuildType = {
     new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
-      objectInputStream.readObject().asInstanceOf[BuildType]
+      loadBin(objectInputStream)
     }
+  }
+
+  protected def loadBin(objectInputStream: ClassLoaderObjectInputStream): BuildType = {
+    objectInputStream.readObject().asInstanceOf[BuildType]
   }
 
   private def buildMatrix(lines: Iterator[String]): BuildType = {
