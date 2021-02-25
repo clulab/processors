@@ -8,6 +8,7 @@ import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
+import scala.io.BufferedSource
 
 /**
  * Implements an word embedding map, where each embedding is stored as a distinct array
@@ -125,14 +126,18 @@ object ExplicitWordEmbeddingMap extends Logging {
 
   protected val UNK = "" // token used for unknowns
 
-  // TODO need a sanitizer here
-  def apply(filename: String, resource: Boolean = true, cached: Boolean = false): ExplicitWordEmbeddingMap = {
+  def apply(filename: String, resource: Boolean = true, cached: Boolean = false,
+      wordSanitizer: WordSanitizing = new DefaultWordSanitizer): ExplicitWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
     val buildType =
       if (cached) loadBin(filename)
       else loadTxt(filename, resource)
     logger.trace("Completed embedding matrix loading.")
-    new ExplicitWordEmbeddingMap(buildType)
+    new ExplicitWordEmbeddingMap(buildType, wordSanitizer)
+  }
+
+  def apply(source: BufferedSource, binary: Boolean): ExplicitWordEmbeddingMap = {
+    null
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {

@@ -1,7 +1,6 @@
 package org.clulab.embeddings
 
 import java.io._
-
 import org.clulab.embeddings.WordEmbeddingMap.ArrayType
 import org.clulab.embeddings.WordEmbeddingMap.ValueType
 import org.clulab.utils.ClassLoaderObjectInputStream
@@ -12,6 +11,7 @@ import org.clulab.utils.Sourcer
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
 import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
+import scala.io.BufferedSource
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -184,14 +184,18 @@ object CompactWordEmbeddingMap extends Logging {
 
   protected val UNK = "" // token to be used for unknowns
 
-  // TODO Need a sanitizer here
-  def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
+  def apply(filename: String, resource: Boolean = true, cached: Boolean = false,
+      wordSanitizer: WordSanitizing = new DefaultWordSanitizer): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
     val buildType =
       if (cached) loadBin(filename)
       else loadTxt(filename, resource)
     logger.trace("Completed embedding matrix loading.")
-    new CompactWordEmbeddingMap(buildType)
+    new CompactWordEmbeddingMap(buildType, wordSanitizer)
+  }
+
+  def apply(source: BufferedSource, binary: Boolean): CompactWordEmbeddingMap = {
+    null
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
