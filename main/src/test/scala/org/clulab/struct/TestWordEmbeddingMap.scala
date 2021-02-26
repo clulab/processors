@@ -7,22 +7,23 @@ import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
 class TestWordEmbeddingMap extends FlatSpec with Matchers {
+  val name = "./test_vectors"
 
   behavior of "ExplicitWordEmbeddingMap"
 
   it should "load and cache in text format" in {
-    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate("./test_vectors", compact = false)
+    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = false)
     wordEmbeddingMap.getClass.getSimpleName should be ("ExplicitWordEmbeddingMap")
 
     val timeOpt = wordEmbeddingMap.get("time")
     timeOpt should be ('defined)
 
-    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate("./test_vectors", compact = false)
+    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = false)
     cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
   }
 
   it should "have a unknown vector" in {
-    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate("./test_vectors", compact = false)
+    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = false)
     val map = wordEmbeddingMap.asInstanceOf[ExplicitWordEmbeddingMap]
 
     map.unkEmbeddingOpt should be ('defined)
@@ -35,25 +36,37 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     map.getOrElseUnknown("timeout").eq(unknown) should be (true)
   }
 
-  it should "load in binary format" in {
+  it should "load and cache in binary format" in {
+    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = false)
+    val map = wordEmbeddingMap.asInstanceOf[ExplicitWordEmbeddingMap]
 
+    val txtName = "explicitWordEmbeddingMap"
+    map.save(txtName + WordEmbeddingMapPool.binExtension)
+
+    val binWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName)
+    binWordEmbeddingMap.getClass.getSimpleName should be ("ExplicitWordEmbeddingMap")
+
+    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName, compact = false)
+    cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
   }
+
+  // Check this one for unknown vector and vector for time
 
   behavior of "CompactWordEmbeddingMap"
 
   it should "load and cache in text format" in {
-    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate("./test_vectors", compact = true)
+    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
     wordEmbeddingMap.getClass.getSimpleName should be ("CompactWordEmbeddingMap")
 
     val timeOpt = wordEmbeddingMap.get("time")
     timeOpt should be ('defined)
 
-    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate("./test_vectors", compact = true)
+    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
     cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
   }
 
   it should "have a unknown vector" in {
-    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate("./test_vectors", compact = true)
+    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
     val map = wordEmbeddingMap.asInstanceOf[CompactWordEmbeddingMap]
 
     map.unkEmbeddingOpt should be ('defined)
@@ -66,11 +79,24 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     map.getOrElseUnknown("timeout").eq(unknown) should be (true)
   }
 
-  it should "load in binary format" in {
+  it should "load and cache in binary format" in {
+    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
+    val map = wordEmbeddingMap.asInstanceOf[CompactWordEmbeddingMap]
 
+    val txtName = "compactWordEmbeddingMap"
+    map.save(txtName + WordEmbeddingMapPool.binExtension)
+
+    val binWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName)
+    binWordEmbeddingMap.getClass.getSimpleName should be ("CompactWordEmbeddingMap")
+    // TODO erase the files
+
+    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName, compact = true)
+    cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
   }
 
-  behavior of "the pair"
+  // Check this one for unknown vector and vector for time
+
+  behavior of "the quadruplet"
 
   it should "be identical" in {
 
