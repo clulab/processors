@@ -21,16 +21,22 @@ import org.clulab.struct.BooleanHashTrie
   * Created: 5/11/15
   * Modified: 9/27/17 - Clean up from RuleNER into LexiconNER
   */
-@SerialVersionUID(1000L)  
+@SerialVersionUID(1000L)
 class SeparatedLexiconNER(
     val matchers: Array[BooleanHashTrie],
     knownCaseInsensitives: Set[String],
     useLemmas: Boolean,
     val entityValidator: EntityValidator) extends LexiconNER(knownCaseInsensitives, useLemmas) {
-  // The matchers were all created by LexiconNER.apply which can only have one value for
-  // caseInsensitiveMatching, so all these matchers should have the same value for caseInsensitive.
-  protected val requiresCaseInsensitiveWords: Boolean = matchers.exists(_.caseInsensitive)
-  protected val requiresCaseSensitiveWords: Boolean = matchers.exists(!_.caseInsensitive)
+
+  override def isCloseEnough(other: AnyRef): Boolean = {
+    other.isInstanceOf[SeparatedLexiconNER] && {
+      val that = other.asInstanceOf[SeparatedLexiconNER]
+
+      super.isCloseEnough(that) &&
+      this.matchers.zip(that.matchers).forall { case (thisMatcher, thatMatcher) => thisMatcher.isCloseEnough(thatMatcher) }
+      this.entityValidator.isCloseEnough(that.entityValidator)
+    }
+  }
 
   def toString(stringBuilder: StringBuilder): Unit = {
     if (matchers.size > 0) {
@@ -55,7 +61,7 @@ class SeparatedLexiconNER(
     seq
   }
 
-  def getLabels: Seq[String] = matchers.map(_.label)
+  def getLabels: Seq[String] = matchers.map(_.label).distinct
 
   /**
     * Finds the longest match across all matchers.
@@ -64,8 +70,8 @@ class SeparatedLexiconNER(
     */
   protected def findLongestMatch(sentence: Sentence): Array[String] = {
     val tokens = getTokens(sentence)
-    // This is only needed if at least one is case insensitive.
-    val caseInsensitiveWords = if (requiresCaseInsensitiveWords) tokens.map(_.toLowerCase) else tokens
+    // Calculate this just once here for all matchers.
+    val caseInsensitiveTokens = tokens.map(_.toLowerCase)
     val labels = new Array[String](tokens.length)
     var offset = 0
 
@@ -75,7 +81,7 @@ class SeparatedLexiconNER(
     }
 
     while (offset < tokens.length) {
-      val (span, index) = findAt(tokens, caseInsensitiveWords, offset)
+      val (span, index) = findAt(tokens, caseInsensitiveTokens, offset)
 
       if (span > 0) {
         if (contentfulSpan(sentence, offset, span) && // does this look like a valid entity span?
@@ -97,9 +103,9 @@ class SeparatedLexiconNER(
     labels
   }
 
-  protected def findAt(seq: Array[String], caseInsensitiveSeq: Array[String], offset: Int): (Int, Int) = {
+  protected def findAt(tokens: Array[String], caseInsensitiveTokens: Array[String], offset: Int): (Int, Int) = {
     def findAt(matcher: BooleanHashTrie): Int =
-        matcher.findAt(if (matcher.caseInsensitive) caseInsensitiveSeq else seq, offset).length
+        matcher.findAt(if (matcher.caseInsensitive) caseInsensitiveTokens else tokens, offset).length
 
     matchers.indices.foldLeft((0, -1)) { case ((bestSpan, bestIndex), index) =>
       val span = findAt(matchers(index))

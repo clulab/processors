@@ -18,8 +18,26 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true, va
   val bLabel: String = "B-" + label
   val iLabel: String = "I-" + label
 
+  def isCloseEnough(other: AnyRef): Boolean = {
+    other.isInstanceOf[BooleanHashTrie] && {
+      val that = other.asInstanceOf[BooleanHashTrie]
+      val thisString = this.toString()
+      val thatString = that.toString()
+
+      val result = this.label == that.label &&
+      this.caseInsensitive == that.caseInsensitive &&
+      this.internStrings == that.internStrings &&
+      thisString == thatString
+
+      if (!result)
+        println("What?")
+      result
+    }
+  }
+
   def toString(stringBuilder: StringBuilder): Unit = {
-    entries.values.foreach { trieNode =>
+    entries.keySet.toArray.sorted.foreach { key =>
+      val trieNode = entries(key)
       trieNode.toString(stringBuilder, Some(label))
       stringBuilder.append("\n")
     }

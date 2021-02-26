@@ -16,11 +16,31 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
   /** Stores the first layer, i.e., the entry points in the trie */
   val entries = new mutable.HashMap[String, IntTrieNode]()
 
+  def isCloseEnough(other: AnyRef, labels: Seq[String]): Boolean = {
+    other.isInstanceOf[IntHashTrie] && {
+      val that = other.asInstanceOf[IntHashTrie]
+      val thisString = this.toString(labels)
+      val thatString = that.toString(labels)
+
+      this.caseInsensitive == that.caseInsensitive &&
+      this.internStrings == that.internStrings &&
+      thisString == thatString
+    }
+  }
+
   def toString(stringBuilder: StringBuilder, labels: Seq[String]): Unit = {
-    entries.values.foreach { trieNode =>
+    entries.keySet.toArray.sorted.foreach { key =>
+      val trieNode = entries(key)
       trieNode.toString(stringBuilder, Some(labels))
       stringBuilder.append("\n")
     }
+  }
+
+  def toString(labels: Seq[String]): String = {
+    val stringBuilder = new StringBuilder()
+
+    toString(stringBuilder, labels)
+    stringBuilder.toString
   }
 
   def entriesSize: Int = entries.size
@@ -32,17 +52,23 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
     internedS
   }
 
-  def add(tokens: Array[String], completePath: Int): Unit = {
+  def add(tokens: Array[String], completePath: Int, overwrite: Boolean): Unit = {
+
+    def mayOverwrite(tree: IntTrieNode): Boolean = tree.completePath < 0 ||
+        // We can replace a value if it has a lower number.
+        (overwrite && completePath < tree.completePath)
+
     if (tokens != null && tokens.length > 0) {
       // first layer
       val inTokens = tokens.map(in) // Do them all at once so that trie doesn't need to
       val token = inTokens.head
       val tree = entries.get(token).map { tree =>
         // If there was already a completePath, do not overwrite.it.
-        if (tokens.length == 1 && tree.completePath < 0) tree.completePath = completePath
+        if (tokens.length == 1 && mayOverwrite(tree)) tree.completePath = completePath
         tree
       }
       .getOrElse {
+        // New nodes can always be overwritten.  The completePath value is used.
         val tree = new IntTrieNode(token, if (tokens.length == 1) completePath else -1)
 
         entries.put(token, tree)
