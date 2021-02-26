@@ -67,7 +67,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
   override def getOrElseUnknown(word: String): ArrayType = {
     get(word).getOrElse(
       // Make this more direct.
-      unkEmbeddingOpt.map(_.clone).getOrElse( // because we want a mutable copy
+      unkEmbeddingOpt.getOrElse( // because we want a mutable copy
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
       )
     )

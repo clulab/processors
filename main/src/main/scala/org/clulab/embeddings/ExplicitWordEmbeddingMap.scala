@@ -184,7 +184,7 @@ object ExplicitWordEmbeddingMap extends Logging {
 
     lines.zipWithIndex.foreach { case (line, index) =>
       total += 1
-      val bits = line.split("\\s+")
+       val bits = line.split("\\s+")
       if (first) {
         dims = bits(1).toInt
         first = false
@@ -200,7 +200,7 @@ object ExplicitWordEmbeddingMap extends Logging {
           val weights = new ArrayType(dims)
           var i = 0
           while (i < dims) {
-            weights(i) = bits(i + 1).asInstanceOf[ValueType]
+            weights(i) = bits(i + 1).toDouble.asInstanceOf[ValueType]
             i += 1
           }
           norm(weights)
@@ -209,6 +209,6 @@ object ExplicitWordEmbeddingMap extends Logging {
       }
     }
     logger.debug(s"Completed matrix loading. Kept $kept words out of a total of $total words.")
-    map.toMap.asInstanceOf[BuildType]
+    map
   }
 }
