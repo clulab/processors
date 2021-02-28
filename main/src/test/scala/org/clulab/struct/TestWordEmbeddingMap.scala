@@ -6,6 +6,8 @@ import org.clulab.embeddings.WordEmbeddingMapPool
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
+import java.io.File
+
 class TestWordEmbeddingMap extends FlatSpec with Matchers {
   val name = "./test_vectors"
 
@@ -40,17 +42,17 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = false)
     val map = wordEmbeddingMap.asInstanceOf[ExplicitWordEmbeddingMap]
 
-    val txtName = "explicitWordEmbeddingMap"
-    map.save(txtName + WordEmbeddingMapPool.binExtension)
+    val binKey = "explicitWordEmbeddingMap"
+    val binName = binKey + WordEmbeddingMapPool.binExtension
+    map.save(binName)
 
-    val binWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName)
+    val binWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(binKey, compact = false)
     binWordEmbeddingMap.getClass.getSimpleName should be ("ExplicitWordEmbeddingMap")
+    new File(binName).delete()
 
-    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName, compact = false)
-    cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
+    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(binKey, compact = false)
+    cachedWordEmbeddingMap should be (wordEmbeddingMap)
   }
-
-  // Check this one for unknown vector and vector for time
 
   behavior of "CompactWordEmbeddingMap"
 
@@ -83,18 +85,17 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
     val map = wordEmbeddingMap.asInstanceOf[CompactWordEmbeddingMap]
 
-    val txtName = "compactWordEmbeddingMap"
-    map.save(txtName + WordEmbeddingMapPool.binExtension)
+    val binKey = "compactWordEmbeddingMap"
+    val binName = binKey + WordEmbeddingMapPool.binExtension
+    map.save(binName)
 
-    val binWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName)
+    val binWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(binKey, compact = true)
     binWordEmbeddingMap.getClass.getSimpleName should be ("CompactWordEmbeddingMap")
-    // TODO erase the files
+    new File(binName).delete
 
-    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(txtName, compact = true)
-    cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
+    val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(binKey, compact = true)
+    cachedWordEmbeddingMap should be (wordEmbeddingMap)
   }
-
-  // Check this one for unknown vector and vector for time
 
   behavior of "the quadruplet"
 

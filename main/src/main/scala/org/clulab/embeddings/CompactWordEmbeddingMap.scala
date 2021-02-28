@@ -55,6 +55,43 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
   /** The dimension of an embedding vector */
   override val dim: Int = columns
 
+  def compare(lefts: ArrayType, rights: ArrayType): Boolean = {
+    true &&
+        lefts.length == rights.length &&
+        lefts.zip(rights).forall { case (left, right) =>
+          left - right < 0.0001f
+        }
+  }
+
+  def compare(left: CompactWordEmbeddingMap.MapType, right: CompactWordEmbeddingMap.MapType): Boolean = {
+    left.keySet == right.keySet && {
+      left.keySet.forall { key =>
+        left(key) == right(key)
+      }
+    }
+  }
+
+  override def equals(other: Any): Boolean = {
+    other.isInstanceOf[CompactWordEmbeddingMap] && {
+      val that = other.asInstanceOf[CompactWordEmbeddingMap]
+
+      true &&
+          this.dim == that.dim &&
+          this.columns == that.columns &&
+          this.rows == that.rows &&
+          ((this.unkEmbeddingOpt, that.unkEmbeddingOpt) match {
+            case (None, None) => true
+            case (Some(lefts), Some(rights)) => compare(lefts, rights)
+            case _ => false
+          }) &&
+          compare(this.array, that.array) &&
+          compare(this.map, that.map) &&
+          this.wordSanitizer == that.wordSanitizer
+    }
+  }
+
+  override def hashCode(): Int = 0
+
   def get(word: String): Option[ArrayType] = {
     map.get(word).map { row =>
       val offset = row * columns
@@ -167,6 +204,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
       // processed separately when read back in.
       objectOutputStream.writeObject(words)
       objectOutputStream.writeObject(array)
+      objectOutputStream.writeObject(wordSanitizer)
     }
   }
 }
@@ -188,26 +226,27 @@ object CompactWordEmbeddingMap extends Logging {
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false,
       wordSanitizer: WordSanitizing = new DefaultWordSanitizer): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
-    val buildType =
+    val (buildType, wordSanitizer) =
       if (cached) loadBin(filename)
-      else loadTxt(filename, resource)
+      else (loadTxt(filename, resource), new DefaultWordSanitizer) // TODO: This is wrong!
     logger.trace("Completed embedding matrix loading.")
     new CompactWordEmbeddingMap(buildType, wordSanitizer)
   }
 
   def apply(inputStream: InputStream, binary: Boolean): CompactWordEmbeddingMap = {
-    val buildType = if (binary) {
+    val (buildType, wordSanitizer) = if (binary) {
       val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
       loadBin(objectInputStream)
     }
     else {
       val source = Source.fromInputStream(inputStream)
       val lines = source.getLines()
+      val buildType = buildMatrix(lines)
 
-      buildMatrix(lines)
+      (buildType, new DefaultWordSanitizer) // TODO: This is wrong!
     }
 
-    new CompactWordEmbeddingMap(buildType) // where is sanitizer?
+    new CompactWordEmbeddingMap(buildType, wordSanitizer) // where is sanitizer?
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
@@ -222,16 +261,17 @@ object CompactWordEmbeddingMap extends Logging {
     }
   }
 
-  protected def loadBin(filename: String): BuildType = {
+  protected def loadBin(filename: String): (BuildType, WordSanitizing) = {
     new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
       loadBin(objectInputStream)
     }
   }
 
-  protected def loadBin(objectInputStream: ObjectInputStream): BuildType = {
+  protected def loadBin(objectInputStream: ObjectInputStream): (BuildType, WordSanitizing) = {
     val map: MapType = new MutableMapType()
 
     {
+      // TODO this differently
       // This block is so that text can be abandoned at the end of the block, before the array is read.
       val text = objectInputStream.readObject().asInstanceOf[String]
       val stringBuilder = new StringBuilder
@@ -250,7 +290,8 @@ object CompactWordEmbeddingMap extends Logging {
     }
 
     val array = objectInputStream.readObject().asInstanceOf[ArrayType]
-    (map, array)
+    val wordSanitizer = objectInputStream.readObject().asInstanceOf[WordSanitizing]
+    ((map, array), wordSanitizer)
   }
 
   protected def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {
