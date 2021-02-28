@@ -2,6 +2,7 @@ package org.clulab.struct
 
 import org.clulab.embeddings.CompactWordEmbeddingMap
 import org.clulab.embeddings.ExplicitWordEmbeddingMap
+import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.embeddings.WordEmbeddingMapPool
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
@@ -77,7 +78,6 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     val timeoutOpt = map.get("timeout")
     timeoutOpt should be ('empty)
     map.getOrElseUnknown("timeout") should be (unknown)
-    // TODO, see if this cached one can be returned or does it need to be copied?
     map.getOrElseUnknown("timeout").eq(unknown) should be (true)
   }
 
@@ -100,6 +100,38 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
   behavior of "the quadruplet"
 
   it should "be identical" in {
+    val keysAndCompacts = Seq(
+      ("./test_vectors", false),
+      ("./test_vectors", true),
+      ("explicitWordEmbeddingMap", false),
+      ("compactWordEmbeddingMap", true)
+    )
+    val wordEmbeddingMaps = keysAndCompacts.map { case (key, compact) => WordEmbeddingMapPool.getOrElseCreate(key, compact) }
 
+    wordEmbeddingMaps.foreach { wordEmbeddingMap =>
+      wordEmbeddingMap.get("time") should be ('defined)
+      wordEmbeddingMap.get("timeout") should not be ('defined)
+
+      wordEmbeddingMap.isOutOfVocabulary("time") should be (false)
+      wordEmbeddingMap.isOutOfVocabulary("timeout") should be (true)
+      wordEmbeddingMap.isOutOfVocabulary("") should be (true)
+    }
+
+    def resultsMatch[T](expected: WordEmbeddingMap, actuals: Seq[WordEmbeddingMap])(f: WordEmbeddingMap => T): Unit = {
+      val expectedResult = f(expected)
+
+      actuals.foreach { actual =>
+        val actualResult = f(actual)
+
+        actualResult should be (expectedResult)
+      }
+    }
+
+    val expected = wordEmbeddingMaps.head
+    val actuals = wordEmbeddingMaps.tail
+
+    resultsMatch(expected, actuals) { wordEmbeddingMap => wordEmbeddingMap.makeCompositeVector(Seq("Once", "upon", "a", "time")) }
+    resultsMatch(expected, actuals) { wordEmbeddingMap => wordEmbeddingMap.makeCompositeVectorWeighted(Seq("Once", "upon", "a", "time"), Seq(1f, 2f, 3f, 4f)) }
+    resultsMatch(expected, actuals) { wordEmbeddingMap => wordEmbeddingMap.avgSimilarity(Seq("Once", "upon", "a", "time"), Seq("Any", "time", "at", "all")) }
   }
 }

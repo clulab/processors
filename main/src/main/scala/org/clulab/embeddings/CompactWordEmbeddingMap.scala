@@ -103,7 +103,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
   override def getOrElseUnknown(word: String): ArrayType = {
     get(word).getOrElse(
-      // Make this more direct.
+      // TODO: It is unclear whether this should be a copy or not.
       unkEmbeddingOpt.getOrElse( // because we want a mutable copy
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
       )
@@ -268,29 +268,18 @@ object CompactWordEmbeddingMap extends Logging {
   }
 
   protected def loadBin(objectInputStream: ObjectInputStream): (BuildType, WordSanitizing) = {
-    val map: MapType = new MutableMapType()
-
-    {
-      // TODO this differently
-      // This block is so that text can be abandoned at the end of the block, before the array is read.
-      val text = objectInputStream.readObject().asInstanceOf[String]
-      val stringBuilder = new StringBuilder
-
-      for (i <- 0 until text.length) {
-        val c = text(i)
-
-        if (c == '\n') {
-          map += ((stringBuilder.result(), map.size))
-          stringBuilder.clear()
-        }
-        else
-          stringBuilder.append(c)
+    val map = {
+      val words = objectInputStream.readObject().asInstanceOf[String].split('\n')
+      // Were it not for MapType, the following could be Map(words.zipWithIndex: _*)
+      val map: MapType = new MutableMapType()
+      words.foreach { word =>
+        map += word -> map.size
       }
-      map += ((stringBuilder.result(), map.size))
+      map
     }
-
     val array = objectInputStream.readObject().asInstanceOf[ArrayType]
     val wordSanitizer = objectInputStream.readObject().asInstanceOf[WordSanitizing]
+
     ((map, array), wordSanitizer)
   }
 

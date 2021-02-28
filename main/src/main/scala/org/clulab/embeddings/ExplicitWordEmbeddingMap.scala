@@ -60,6 +60,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType, va
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
   override def getOrElseUnknown(word: String): ArrayType = {
     get(word).getOrElse(
+      // TODO: It is unclear whether this should be a copy or not.
       unkEmbeddingOpt.getOrElse(
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
       )
