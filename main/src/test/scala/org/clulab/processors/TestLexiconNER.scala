@@ -52,10 +52,10 @@ class TestLexiconNER extends FatdynetTest {
     // Sometimes the strings are identical.
     if (nerBytesString != reconstitutedNerBytesString) {
       // Sometimes the set will be different
-      if (!ner.isCloseEnough(reconstitutedNer)) {
+      if (!ner.equalsForSerialization(reconstitutedNer)) {
         assert(false, "The NER didn't serialize properly.")
         // Debug the following line to see what went wrong.
-        ner.isCloseEnough(reconstitutedNer)
+        ner.equalsForSerialization(reconstitutedNer)
       }
     }
     reconstitutedNer

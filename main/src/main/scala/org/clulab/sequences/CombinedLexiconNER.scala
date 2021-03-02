@@ -6,20 +6,25 @@ import org.clulab.struct.EntityValidator
 import org.clulab.struct.IntHashTrie
 
 /**
-  * Lexicon-based NER, which efficiently recognizes entities from large dictionaries
-  * Note: This is a cleaned-up version of the old SeparatedLexiconNER.
-  * Create a LexiconNER object using LexiconNER.apply() (not the c'tor, which is private).
-  * Use it by calling the find() method on a single sentence.
-  * See org.clulab.processors.TextLexiconNER for usage examples.
+  * Lexicon-based NER which efficiently recognizes entities from large dictionaries by
+  * combining like matchers
+  *
+  * Case insensitive matching is performed by one matcher and case sensitive by the other.
+  * Each can account for multiple KBs.  Each [[org.clulab.struct.IntHashTrie IntHashTrie]]
+  * stores Ints which indicate which of the KBs an entry comes from.  The KBs, either from
+  * the kbs or overrideKBs in
+  * [[[org.clulab.sequences.LexiconNER$#apply(kbs:Seq[String],overrideKBs:Option[Seq[String]],caseInsensitiveMatchings:Seq[Boolean],entityValidator:org\.clulab\.struct\.EntityValidator,lexicalVariationEngine:org\.clulab\.sequences\.LexicalVariations,useLemmasForMatching:Boolean,defaultCaseInsensitive:Boolean):org\.clulab\.sequences\.LexiconNER* LexiconNER.apply]]],
+  * have priorities, and the one with highest priority is recorded.
   *
   * @param caseInsensitiveMatcher A map of tries to be matched for for case insensitive KBs
   * @param caseSensitiveMatcher A map of tries to be matched for for case sensitive KBs
-  * @param knownCaseInsensitives Set of single-token entity names that can be spelled using lower case, according to the KB(s)
+  * @param labels Labels matching all of the kbs and overrideKBs used in the matchers.  They
+  * should be in the order that the kbs were specified and continue in the order that any
+  * additional labels are encountered in overrideKBs.
+  * @param knownCaseInsensitives Set of single-token entity names that can be spelled using
+  * lower case, according to the KB(s)
   * @param useLemmas If true, tokens are matched using lemmas, otherwise using words
-  *
-  * Author: mihais
-  * Created: 5/11/15
-  * Modified: 9/27/17 - Clean up from RuleNER into LexiconNER
+  * @param entityValidator An object able to validate any matches that are found
   */
 @SerialVersionUID(1000L)
 class CombinedLexiconNER (
@@ -37,14 +42,14 @@ class CombinedLexiconNER (
   protected val bLabels: Seq[String] = labels.map("B-" + _)
   protected val iLabels: Seq[String] = labels.map("I-" + _)
 
-  override def isCloseEnough(other: AnyRef): Boolean = {
+  override def equalsForSerialization(other: AnyRef): Boolean = {
     other.isInstanceOf[CombinedLexiconNER] && {
       val that = other.asInstanceOf[CombinedLexiconNER]
 
-      super.isCloseEnough(that) &&
-      this.caseInsensitiveMatcher.isCloseEnough(that.caseInsensitiveMatcher, labels) &&
-      this.caseSensitiveMatcher.isCloseEnough(that.caseSensitiveMatcher,labels) &&
-      this.entityValidator.isCloseEnough(that.entityValidator)
+      super.equalsForSerialization(that) &&
+      this.caseInsensitiveMatcher.equalsForSerialization(that.caseInsensitiveMatcher, labels) &&
+      this.caseSensitiveMatcher.equalsForSerialization(that.caseSensitiveMatcher,labels) &&
+      this.entityValidator.equalsForSerialization(that.entityValidator)
     }
   }
 

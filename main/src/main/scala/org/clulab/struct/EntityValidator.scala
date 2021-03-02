@@ -12,7 +12,7 @@ import org.clulab.sequences.LexiconNER
 trait EntityValidator extends Serializable {
   def validMatch(sentence: Sentence, start:Int, end:Int):Boolean
 
-  def isCloseEnough(that: AnyRef): Boolean = {
+  def equalsForSerialization(that: AnyRef): Boolean = {
     this.getClass == that.getClass
   }
 }

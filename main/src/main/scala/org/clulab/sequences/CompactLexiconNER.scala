@@ -12,6 +12,20 @@ import org.clulab.struct.IntTrieNode
 
 import scala.collection.mutable
 
+/** Lexicon-based NER similar to [[org.clulab.sequences.CombinedLexiconNER CombinedLexiconNER]] but which
+  * also adds efficient serialization, deserialization, and storage by using the
+  * [[org.clulab.sequences.CompactTrie CompactTrie]]
+  *
+  * @param caseInsensitiveMatcher A CompactTrie to be matched for for case insensitive KBs
+  * @param caseSensitiveMatcher A CompactTrie to be matched for for case sensitive KBs
+  * @param labels Labels matching all of the kbs and overrideKBs used in the matchers.  They
+  * should be in the order that the kbs were specified and continue in the order that any
+  * additional labels are encountered in overrideKBs.
+  * @param knownCaseInsensitives Set of single-token entity names that can be spelled using
+  * lower case, according to the KB(s)
+  * @param useLemmas If true, tokens are matched using lemmas, otherwise using words
+  * @param entityValidator An object able to validate any matches that are found
+  */
 @SerialVersionUID(1000L)
 // These are var for serialization optimization and then only to preserve compatibility with other LexiconNERs.
 class CompactLexiconNER(

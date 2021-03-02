@@ -1,3 +1,8 @@
+/**
+  * This file was extracted from LexiconNER that used to contain both the NERs and the NER builders.
+  * Each of these separate builders might eventually be added to the files of their particular NER.
+  */
+
 package org.clulab.sequences
 
 import java.util.function.Consumer
@@ -19,6 +24,19 @@ import scala.collection.mutable.{
 }
 import scala.collection.mutable.ArrayBuffer
 
+/**
+  * Concrete subclasses are responsible for building various NERs.  The mapping is as follows:
+  * <ul>
+  *   <li>The [[org.clulab.sequences.SlowLexiconNERBuilder SlowLexiconNERBuilder]] builds a [[org.clulab.sequences.SeparatedLexiconNER SeparatedLexiconNER]].</li>
+  *   <li>The [[org.clulab.sequences.FastLexiconNERBuilder FastLexiconNERBuilder]] builds either a
+  *     <ul>
+  *       <li>[[org.clulab.sequences.CombinedLexiconNER CombinedLexiconNER]] or a</li>
+  *       <li>[[org.clulab.sequences.CompactLexiconNER CompactLexiconNER]], depending on the value of useCompact.</li>
+  *     </ul>
+  *   </li>
+  * </ul>
+  * For an explanation of how the NERs differ from each other, see their superclass, [[org.clulab.sequences.LexiconNER LexiconNER]].
+  */
 abstract class LexiconNERBuilder() {
   val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
   val INTERN_STRINGS: Boolean = false
@@ -57,6 +75,12 @@ abstract class LexiconNERBuilder() {
   }
 }
 
+/**
+  * A class that builds a [[org.clulab.sequences.SeparatedLexiconNER SeparatedLexiconNER]]
+  *
+  * The building performed here works on a text file.  The [[org.clulab.sequences.SeparatedLexiconNER SeparatedLexiconNER]] is also
+  * Serializable and can be loaded as an object without the text parsing.
+  */
 class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
 
   class BuildState(lexicalVariationEngine: LexicalVariations) {
@@ -183,7 +207,21 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
   }
 }
 
-class FastLexiconNERBuilder() extends LexiconNERBuilder() {
+/**
+  * A class that builds either a
+  * <ul>
+  *   <li>[[org.clulab.sequences.CombinedLexiconNER CombinedLexiconNER]] or</li>
+  *   <li>[[org.clulab.sequences.CompactLexiconNER CompactLexiconNER]]
+  * </ul>
+  * depending on the value of useCompact.
+  *
+  * The building performed here works on a text file.  Both kinds of NERs are also
+  * Serializable and can be loaded as objects without the text parsing.
+  *
+  * @constructor create a new NER that combines its KBs into a small number of tries for fewer lookups, making it fast
+  * @param useCompact use the compact representation of the combined NER, which is faster to load from disk once serialized
+  */
+class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder() {
 
   class BuildState(lexicalVariationEngine: LexicalVariations, caseInsensitive: Boolean,
       knownCaseInsensitives: MutableSet[String], labelToIndex: MutableMap[String, Int]) {
@@ -238,7 +276,7 @@ class FastLexiconNERBuilder() extends LexiconNERBuilder() {
 
     logger.info("KB loading completed.")
 
-    if (LexiconNER.USE_COMPACT)
+    if (useCompact)
       // These intHashTries need to be in the right order.
       CompactLexiconNER(caseInsensitiveBuildState.intHashTrie, caseSensitiveBuildState.intHashTrie, labelsWithOverrides, toSet(knownCaseInsensitives), useLemmasForMatching, entityValidator)
     else

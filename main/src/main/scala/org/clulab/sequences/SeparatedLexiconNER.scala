@@ -7,10 +7,16 @@ import org.clulab.struct.BooleanHashTrie
 
 /**
   * Lexicon-based NER, which efficiently recognizes entities from large dictionaries
-  * Note: This is a cleaned-up version of the old RuleNER.
-  * Create a LexiconNER object using LexiconNER.apply() (not the c'tor, which is private).
-  * Use it by calling the find() method on a single sentence.
-  * See org.clulab.processors.TextLexiconNER for usage examples.
+  *
+  * Note: This is a cleaned-up version of the old RuleNER.  It may have been known
+  * simply as LexiconNER at one point, but was renamed to emphasize the fact that each
+  * KB is stored in a separate matcher ([[org.clulab.struct.BooleanHashTrie BooleanHashTrie]]).
+  * Other variations get by with fewer matchers.
+  *
+  * Create a SeparatedLexiconNER object using either LexiconNER.apply() or
+  * [[org.clulab.sequences.SlowLexiconNERBuilder#build SlowLexiconNERBuilder.build()]] rather
+  * than by the constructor if at all possible.  Use it by calling the find() method on a
+  * single sentence.
   *
   * @param matchers A map of tries to be matched for each given category label
   *                 The order of the matchers is important: it indicates priority during ties (first has higher priority)
@@ -28,13 +34,13 @@ class SeparatedLexiconNER(
     useLemmas: Boolean,
     val entityValidator: EntityValidator) extends LexiconNER(knownCaseInsensitives, useLemmas) {
 
-  override def isCloseEnough(other: AnyRef): Boolean = {
+  override def equalsForSerialization(other: AnyRef): Boolean = {
     other.isInstanceOf[SeparatedLexiconNER] && {
       val that = other.asInstanceOf[SeparatedLexiconNER]
 
-      super.isCloseEnough(that) &&
-      this.matchers.zip(that.matchers).forall { case (thisMatcher, thatMatcher) => thisMatcher.isCloseEnough(thatMatcher) }
-      this.entityValidator.isCloseEnough(that.entityValidator)
+      super.equalsForSerialization(that) &&
+      this.matchers.zip(that.matchers).forall { case (thisMatcher, thatMatcher) => thisMatcher.equalsForSerialization(thatMatcher) }
+      this.entityValidator.equalsForSerialization(that.entityValidator)
     }
   }
 

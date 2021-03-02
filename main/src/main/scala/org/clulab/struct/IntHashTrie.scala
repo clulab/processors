@@ -16,7 +16,7 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
   /** Stores the first layer, i.e., the entry points in the trie */
   val entries = new mutable.HashMap[String, IntTrieNode]()
 
-  def isCloseEnough(other: AnyRef, labels: Seq[String]): Boolean = {
+  def equalsForSerialization(other: AnyRef, labels: Seq[String]): Boolean = {
     other.isInstanceOf[IntHashTrie] && {
       val that = other.asInstanceOf[IntHashTrie]
       val thisString = this.toString(labels)

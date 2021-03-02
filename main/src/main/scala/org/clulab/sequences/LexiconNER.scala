@@ -5,6 +5,46 @@ import org.clulab.struct.{EntityValidator, TrueEntityValidator}
 
 import scala.collection.mutable
 
+/**
+  * The abstract base class for several concrete child classes used for Named Entity
+  * Recognition (NER) based on the contents of lexica, which are lists of words and
+  * phrases representing named entities
+  *
+  * For all of these classes, NER labels are derived from the file names of the lexica
+  * or the records in overrideKBs by the [[org.clulab.sequences.LexiconNERBuilder LexiconNERBuilders]].
+  * This class, via variables [[org.clulab.sequences.LexiconNER.USE_FAST USE_FAST]] and
+  * [[org.clulab.sequences.LexiconNER.USE_COMPACT USE_COMPACT]], controls which builder
+  * use used.
+  *
+  * The collection of child classes is small:
+  * <ul>
+  *   <li>
+  *     The [[org.clulab.sequences.SeparatedLexiconNER SeparatedLexiconNER]] is closest
+  *     to the original implementation.  It has a [[org.clulab.struct.BooleanHashTrie BooleanHashTrie]]
+  *     for each label and in that trie, Boolean values indicate that the sequence of
+  *     strings leading there is a named entity.  Each trie structure must be searched for
+  *     potential named entities.
+  *   </li>
+  *   <li>
+  *     The [[org.clulab.sequences.CombinedLexiconNER CombinedLexiconNER]] stores instead
+  *     of the Boolean in the BooleanHashTrie an Int in an [[org.clulab.struct.IntHashTrie IntHashTrie]].
+  *     The Int indicates which of the labels is the one to use for the entity just found.
+  *     In this way, only one trie (or two if there are different case sensitivity settings)
+  *     needs to be searched no matter how many labels there are (at least until Integer.MAX_VALUE).
+  *   </li>
+  *   <li>
+  *     The [[org.clulab.sequences.CompactLexiconNER CompactLexiconNER]] uses the same
+  *     strategy to minimize the number of tries, but also converts the tries into
+  *     [[org.clulab.sequences.CompactTrie CompactTries]] which consist of arrays
+  *     of integers indicating offsets into other arrays.  In this way the time it takes
+  *     to de/serialize the NER is reduced, and some lookup operations are made more efficient.
+  *   </li>
+  * </ul>
+  *
+  * @param knownCaseInsensitives Words known to appear with and without capitalized letters which help determine
+  * whether a span of text is contentful
+  * @param useLemmas If false, use the words of a sentence; if true, the lemmas
+  */
 // These knownCaseInsensitives are used to check for contentful spans.
 abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas: Boolean) extends Tagger[String] with Serializable {
   /**
@@ -15,8 +55,14 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
   def find(sentence: Sentence): Array[String]
   def getLabels: Seq[String]
 
-
-  def isCloseEnough(other: AnyRef): Boolean = {
+  /**
+    * The class is serializable and this method is used during testing to determine whether a reconstitued
+    * object is equal to the original without interfering with the operation of equals and getting into
+    * hash codes.  Is is not necessary for this operation to be efficient or complete.
+    * @param other The object to compare to
+    * @return Whether this and other are equal, at least as far is serialization is concerned
+    */
+  def equalsForSerialization(other: AnyRef): Boolean = {
     other.isInstanceOf[LexiconNER] && {
       val that = other.asInstanceOf[LexiconNER]
 
@@ -71,15 +117,44 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
 }
 
 object LexiconNER {
-  // These are configuration values that affect object creation.
-  var USE_FAST = true // Otherwise, slow will be used
-  var USE_COMPACT = true // This applies to fast only
+  /**
+    * When true indicates use of the [[org.clulab.sequences.FastLexiconNERBuilder FastLexiconNERBuilder]]
+    * and otherwise the [[org.clulab.sequences.SlowLexiconNERBuilder SlowLexiconNERBuilder]]
+    * to construct the LexiconNER
+    */
+  var USE_FAST = true
+  /**
+    * If the [[org.clulab.sequences.FastLexiconNERBuilder FastLexiconNERBuilder]] is beind used,
+    * indicates when true that a [[org.clulab.sequences.CompactLexiconNER CompactLexiconNER]]
+    * should be created and otherwise a [[org.clulab.sequences.CombinedLexiconNER CombinedLexiconNER]]
+    */
+  var USE_COMPACT = true
   val USE_DEBUG = false // This applies to the slow one only
   val OVERRIDE_ENTITY_VALIDATOR = false // true is only for testing!
 
   val OUTSIDE_LABEL: String = "O"
   val KNOWN_CASE_INSENSITIVE_LENGTH: Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
 
+  def something(kbs: Seq[String], overrideKBs: Option[Seq[String]], caseInsensitiveMatchings: Seq[Boolean], entityValidator: EntityValidator): Boolean = true
+  def something(b: Float, c: Boolean): Boolean = false
+
+  /** Create a LexiconNER from a pair of sequences of knowledge bases (KBs), the kbs and overrideKBs,
+    * with control over the case sensitivity of individual KBs via caseInsensitiveMatchings
+    *
+    * The matchings run parallel to the KBs.  That is, caseInsensitiveMatchings(n) is used for kbs(n).
+    * It is possible that contents of an overrideKB refers to a KB that does not exist.  In that
+    * situation, caseInsensitiveMatching is used as a fallback value.  With that, this method should
+    * encompass all the functionality of the other apply methods, which now feed into it.
+    *
+    * @param kbs KBs containing known entity names
+    * @param overrideKBs KBs containing override labels for entity names from kbs (necessary for the bio domain)
+    * @param caseInsensitiveMatchings case insensitivities corresponding to the kbs, matched by index
+    * @param entityValidator Filter which decides if a matched entity is valid
+    * @param lexicalVariationEngine Generates alternative spellings of an entity name (necessary for the bio domain)
+    * @param useLemmasForMatching If true, we use Sentence.lemmas instead of Sentence.words during matching
+    * @param defaultCaseInsensitive If true, tokens are matched case insensitively
+    * @return The new LexiconNER
+    */
   def apply(kbs: Seq[String], overrideKBs: Option[Seq[String]], caseInsensitiveMatchings: Seq[Boolean],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
       defaultCaseInsensitive: Boolean): LexiconNER = {
@@ -87,7 +162,7 @@ object LexiconNER {
       if (OVERRIDE_ENTITY_VALIDATOR) EntityValidator.TRUE_VALIDATOR
       else  entityValidator
     val builder =
-      if (USE_FAST) new FastLexiconNERBuilder()
+      if (USE_FAST) new FastLexiconNERBuilder(USE_COMPACT)
       else new SlowLexiconNERBuilder()
 
     builder.build(kbs, caseInsensitiveMatchings, overrideKBs, newEntityValidator, lexicalVariationEngine,
