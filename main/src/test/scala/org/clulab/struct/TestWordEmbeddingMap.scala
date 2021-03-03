@@ -150,7 +150,7 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
 
     {
       // Race from file system
-      if (true) {
+      if (false) {
         val start = System.currentTimeMillis()
         val inputStream = WordEmbeddingMapPool.getFileAsStream(name + WordEmbeddingMapPool.txtExtension)
         val glove = inputStream.autoClose { inputStream =>
