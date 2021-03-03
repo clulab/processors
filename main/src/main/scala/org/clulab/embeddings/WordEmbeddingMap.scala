@@ -12,7 +12,6 @@ import scala.util.Try
  * Basic functionality required by all implementations of word embeddings
  */
 trait WordEmbeddingMap {
-  val wordSanitizer: WordSanitizing
 
   /** The dimension of an embedding vector */
   def dim: Int
@@ -37,7 +36,8 @@ trait WordEmbeddingMap {
 
   // Find the average embedding similarity between any two words in these two texts.
   // IMPORTANT: words here must be words not lemmas!
-  def avgSimilarity(text1: Iterable[String], text2: Iterable[String]): ValueType = {
+  def avgSimilarity(text1: Iterable[String], text2: Iterable[String],
+      wordSanitizer: WordSanitizing = WordEmbeddingMap.defaultWordSanitizer): ValueType = {
     val sanitizedText1 = text1.map(wordSanitizer.sanitizeWord(_))
     val sanitizedText2 = text2.map(wordSanitizer.sanitizeWord(_))
 
@@ -51,6 +51,8 @@ trait WordEmbeddingMap {
 object WordEmbeddingMap {
   type ValueType = Float
   type ArrayType = Array[ValueType]
+
+  lazy val defaultWordSanitizer = new DefaultWordSanitizer()
 
   /** Normalize this vector to length 1, in place, if possible. */
   def norm(array: MutableIndexedSeqLike[ValueType, ArrayType]): Unit = {

@@ -13,7 +13,7 @@ import scala.io.Source
 /**
  * Implements an word embedding map, where each embedding is stored as a distinct array
  */
-class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType, val wordSanitizer: WordSanitizing = new DefaultWordSanitizer) extends WordEmbeddingMap {
+class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
   val map: ExplicitWordEmbeddingMap.MapType = buildType
   val unkEmbeddingOpt: Option[ArrayType] = get(ExplicitWordEmbeddingMap.UNK)
 
@@ -47,8 +47,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType, va
             case (Some(lefts), Some(rights)) => compare(lefts, rights)
             case _ => false
           }) &&
-          compare(this.map, that.map) &&
-          this.wordSanitizer == that.wordSanitizer
+          compare(this.map, that.map)
     }
   }
 
@@ -67,8 +66,9 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType, va
     )
   }
 
+  // Be careful because this word may not be sanitized!
   def isOutOfVocabulary(word: String): Boolean =
-    word == ExplicitWordEmbeddingMap.UNK || !map.contains(wordSanitizer.sanitizeWord(word))
+    word == ExplicitWordEmbeddingMap.UNK || !map.contains(word)
 
   def makeCompositeVector(text: Iterable[String]): ArrayType = {
     val total = new ArrayType(dim)
@@ -146,7 +146,6 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType, va
   def save(filename: String): Unit = {
     new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
       objectOutputStream.writeObject(map)
-      objectOutputStream.writeObject(wordSanitizer)
     }
   }
 }
@@ -160,30 +159,28 @@ object ExplicitWordEmbeddingMap extends Logging {
 
   protected val UNK = "" // token used for unknowns
 
-  def apply(filename: String, resource: Boolean = true, cached: Boolean = false,
-      wordSanitizer: WordSanitizing = new DefaultWordSanitizer): ExplicitWordEmbeddingMap = {
+  def apply(filename: String, resource: Boolean = true, cached: Boolean = false): ExplicitWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
-    val (buildType, wordSanitizer) =
+    val buildType =
       if (cached) loadBin(filename)
-      else (loadTxt(filename, resource), new DefaultWordSanitizer) // TODO: This is wrong!
+      else loadTxt(filename, resource)
     logger.trace("Completed embedding matrix loading.")
-    new ExplicitWordEmbeddingMap(buildType, wordSanitizer)
+    new ExplicitWordEmbeddingMap(buildType)
   }
 
   def apply(inputStream: InputStream, binary: Boolean): ExplicitWordEmbeddingMap = {
-    val (buildType, wordSanitizer) = if (binary) {
+    val buildType = if (binary) {
       val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
       loadBin(objectInputStream)
     }
     else {
       val source = Source.fromInputStream(inputStream)
       val lines = source.getLines()
-      val buildType = buildMatrix(lines)
 
-      (buildType, new DefaultWordSanitizer) // TODO: This is wrong!
+      buildMatrix(lines)
     }
 
-    new ExplicitWordEmbeddingMap(buildType, wordSanitizer)
+    new ExplicitWordEmbeddingMap(buildType)
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
@@ -197,17 +194,16 @@ object ExplicitWordEmbeddingMap extends Logging {
     }
   }
 
-  protected def loadBin(filename: String): (BuildType, WordSanitizing) = {
+  protected def loadBin(filename: String): BuildType = {
     new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
       loadBin(objectInputStream)
     }
   }
 
-  protected def loadBin(objectInputStream: ClassLoaderObjectInputStream): (BuildType, WordSanitizing) = {
+  protected def loadBin(objectInputStream: ClassLoaderObjectInputStream): BuildType = {
     val buildType = objectInputStream.readObject().asInstanceOf[BuildType]
-    val wordSanitizer = objectInputStream.readObject().asInstanceOf[WordSanitizing]
 
-    (buildType, wordSanitizer)
+    buildType
   }
 
   private def buildMatrix(lines: Iterator[String]): BuildType = {

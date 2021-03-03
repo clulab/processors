@@ -11,7 +11,6 @@ import org.clulab.utils.Sourcer
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
 import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
-import scala.io.BufferedSource
 import scala.io.Source
 
 /**
@@ -42,7 +41,7 @@ import scala.io.Source
   * resulting return value, call save(compactFilename).  Thereafter, for normal, speedy processing,
   * use CompactWord2Vec(compactFilename, resource = false, cached = true).
   */
-class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val wordSanitizer: WordSanitizing = new DefaultWordSanitizer)
+class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     extends WordEmbeddingMap {
 
   protected val map: CompactWordEmbeddingMap.MapType = buildType._1 // (word -> row)
@@ -85,8 +84,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
             case _ => false
           }) &&
           compare(this.array, that.array) &&
-          compare(this.map, that.map) &&
-          this.wordSanitizer == that.wordSanitizer
+          compare(this.map, that.map)
     }
   }
 
@@ -110,8 +108,9 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
     )
   }
 
+  // Be careful because this word may not be sanitized!
   override def isOutOfVocabulary(word: String): Boolean =
-    word == CompactWordEmbeddingMap.UNK || !map.contains(wordSanitizer.sanitizeWord(word))
+    word == CompactWordEmbeddingMap.UNK || !map.contains(word)
 
   /** Computes the embedding of a text, as an unweighted average of all words */
   override def makeCompositeVector(text: Iterable[String]): ArrayType = {
@@ -204,7 +203,6 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType, val 
       // processed separately when read back in.
       objectOutputStream.writeObject(words)
       objectOutputStream.writeObject(array)
-      objectOutputStream.writeObject(wordSanitizer)
     }
   }
 }
@@ -223,30 +221,28 @@ object CompactWordEmbeddingMap extends Logging {
 
   protected val UNK = "" // token to be used for unknowns
 
-  def apply(filename: String, resource: Boolean = true, cached: Boolean = false,
-      wordSanitizer: WordSanitizing = new DefaultWordSanitizer): CompactWordEmbeddingMap = {
+  def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
-    val (buildType, wordSanitizer) =
+    val buildType =
       if (cached) loadBin(filename)
-      else (loadTxt(filename, resource), new DefaultWordSanitizer) // TODO: This is wrong!
+      else loadTxt(filename, resource)
     logger.trace("Completed embedding matrix loading.")
-    new CompactWordEmbeddingMap(buildType, wordSanitizer)
+    new CompactWordEmbeddingMap(buildType)
   }
 
   def apply(inputStream: InputStream, binary: Boolean): CompactWordEmbeddingMap = {
-    val (buildType, wordSanitizer) = if (binary) {
+    val buildType = if (binary) {
       val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
       loadBin(objectInputStream)
     }
     else {
       val source = Source.fromInputStream(inputStream)
       val lines = source.getLines()
-      val buildType = buildMatrix(lines)
 
-      (buildType, new DefaultWordSanitizer) // TODO: This is wrong!
+      buildMatrix(lines)
     }
 
-    new CompactWordEmbeddingMap(buildType, wordSanitizer) // where is sanitizer?
+    new CompactWordEmbeddingMap(buildType)
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
@@ -261,13 +257,13 @@ object CompactWordEmbeddingMap extends Logging {
     }
   }
 
-  protected def loadBin(filename: String): (BuildType, WordSanitizing) = {
+  protected def loadBin(filename: String): BuildType = {
     new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
       loadBin(objectInputStream)
     }
   }
 
-  protected def loadBin(objectInputStream: ObjectInputStream): (BuildType, WordSanitizing) = {
+  protected def loadBin(objectInputStream: ObjectInputStream): BuildType = {
     val map = {
       val words = objectInputStream.readObject().asInstanceOf[String].split('\n')
       // Were it not for MapType, the following could be Map(words.zipWithIndex: _*)
@@ -278,9 +274,8 @@ object CompactWordEmbeddingMap extends Logging {
       map
     }
     val array = objectInputStream.readObject().asInstanceOf[ArrayType]
-    val wordSanitizer = objectInputStream.readObject().asInstanceOf[WordSanitizing]
 
-    ((map, array), wordSanitizer)
+    (map, array)
   }
 
   protected def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {
