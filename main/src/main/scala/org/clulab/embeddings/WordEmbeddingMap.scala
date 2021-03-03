@@ -1,12 +1,8 @@
 package org.clulab.embeddings
 
 import org.clulab.embeddings.WordEmbeddingMap._
-import org.clulab.utils.Sourcer
 
 import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
-import scala.io.BufferedSource
-import scala.util.Failure
-import scala.util.Try
 
 /**
  * Basic functionality required by all implementations of word embeddings

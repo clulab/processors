@@ -4,6 +4,8 @@ import org.clulab.embeddings.CompactWordEmbeddingMap
 import org.clulab.embeddings.ExplicitWordEmbeddingMap
 import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.embeddings.WordEmbeddingMapPool
+import org.clulab.utils.Closer.AutoCloser
+
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
@@ -11,7 +13,6 @@ import java.io.File
 
 class TestWordEmbeddingMap extends FlatSpec with Matchers {
   val name = "/test_vectors"
-  // val name = "/org/clulab/glove/glove.840B.300d.10f"
 
   behavior of "ExplicitWordEmbeddingMap"
 
@@ -134,5 +135,44 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     resultsMatch(expected, actuals) { wordEmbeddingMap => wordEmbeddingMap.makeCompositeVector(Seq("Once", "upon", "a", "time")) }
     resultsMatch(expected, actuals) { wordEmbeddingMap => wordEmbeddingMap.makeCompositeVectorWeighted(Seq("Once", "upon", "a", "time"), Seq(1f, 2f, 3f, 4f)) }
     resultsMatch(expected, actuals) { wordEmbeddingMap => wordEmbeddingMap.avgSimilarity(Seq("Once", "upon", "a", "time"), Seq("Any", "time", "at", "all")) }
+  }
+
+  behavior of "glove"
+
+  it should "load faster serialized" in {
+    val name = "glove.840B.300d.10f"
+
+    if (false) {
+      // Copy the text resource to a local file.
+      val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
+      wordEmbeddingMap.save("glove.840B.300d.10f.bin")
+    }
+
+    {
+      // Race from file system
+      if (false) {
+        val start = System.currentTimeMillis()
+        val inputStream = WordEmbeddingMapPool.getFileAsStream(name + WordEmbeddingMapPool.txtExtension)
+        val glove = inputStream.autoClose { inputStream =>
+          ExplicitWordEmbeddingMap(inputStream, false)
+        }
+        val stop = System.currentTimeMillis()
+        val elapsed = stop - start
+        println(s"Elapsed time for txt version: $elapsed")
+      }
+
+      if (false) {
+        val start = System.currentTimeMillis()
+        val inputStream = WordEmbeddingMapPool.getFileAsStream(name + WordEmbeddingMapPool.binExtension)
+        val glove = inputStream.autoClose { inputStream =>
+          CompactWordEmbeddingMap(inputStream, true)
+        }
+        val stop = System.currentTimeMillis()
+        val elapsed = stop - start
+        println(s"Elapsed time for bin version: $elapsed")
+      }
+    }
+
+    // Race from jar
   }
 }

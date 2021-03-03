@@ -1,13 +1,10 @@
 package org.clulab.embeddings
 
-import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.Sourcer
 
 import java.io.FileInputStream
 import java.io.InputStream
 import scala.collection.mutable
-import scala.io.BufferedSource
 import scala.util.Failure
 import scala.util.Try
 
