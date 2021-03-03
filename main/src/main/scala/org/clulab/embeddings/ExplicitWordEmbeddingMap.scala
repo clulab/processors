@@ -207,42 +207,41 @@ object ExplicitWordEmbeddingMap extends Logging {
   }
 
   private def buildMatrix(lines: Iterator[String]): BuildType = {
-
-    def norm(array: ArrayType): Unit = WordEmbeddingMap.norm(array)
-
     val map = new MutableMapType()
-    var first = true
-    var dims = 0
-    var total = 0
-    var kept = 0
+    val bufferedLines = lines.buffered
+    val (dims, offset) = {
+      val line = bufferedLines.head
+      val bits = line.split("\\s+")
 
-    lines.zipWithIndex.foreach { case (line, index) =>
-      total += 1
-       val bits = line.split("\\s+")
-      if (first) {
-        dims = bits(1).toInt
-        first = false
+      require(bits.length >= 2, "A glove file must have at least two columns everywhere.")
+      if (bits.length == 2) {
+        bufferedLines.next() // Go ahead and consume the first line, making the offset 1.
+        (bits(1).toInt, 1)
       }
-      else {
-        if (bits.length != dims + 1) {
-          println(s"${bits.length} != ${dims + 1} found on line ${index + 1}")
-        }
-        assert(bits.length == dims + 1)
-        val w = bits(0)
-        if (true) {
-          kept += 1
-          val weights = new ArrayType(dims)
-          var i = 0
-          while (i < dims) {
-            weights(i) = bits(i + 1).toDouble.asInstanceOf[ValueType]
-            i += 1
-          }
-          norm(weights)
-          map.put(w, weights)
-        }
-      }
+      else
+        (bits.length - 1, 0) // Do not consume the first line, leaving the offset at 0.
     }
-    logger.debug(s"Completed matrix loading. Kept $kept words out of a total of $total words.")
+
+    var total = 0
+
+    bufferedLines.zipWithIndex.foreach { case (line, index) =>
+      total += 1
+      val bits = line.split("\\s+")
+      require(bits.length == dims + 1, s"${bits.length} != ${dims + 1} found on line ${index + offset}")
+      val word = bits(0)
+      val weights = {
+        val weights = new ArrayType(dims)
+        var i = 0
+        while (i < dims) {
+          weights(i) = bits(i + 1).toDouble.asInstanceOf[ValueType]
+          i += 1
+        }
+        WordEmbeddingMap.norm(weights)
+        weights
+      }
+      map.put(word, weights)
+    }
+    logger.debug(s"Completed matrix loading. Kept ${map.size} words out of a total of $total words.")
     map
   }
 }
