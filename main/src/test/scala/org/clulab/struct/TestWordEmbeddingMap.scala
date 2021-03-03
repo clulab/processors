@@ -140,17 +140,17 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
   behavior of "glove"
 
   it should "load faster serialized" in {
-    val name = "glove.840B.300d.10f"
+    val name = "../glove.840B.300d.10f"
 
     if (false) {
       // Copy the text resource to a local file.
       val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
-      wordEmbeddingMap.save("glove.840B.300d.10f.bin")
+      wordEmbeddingMap.save(name + WordEmbeddingMapPool.binExtension)
     }
 
     {
       // Race from file system
-      if (false) {
+      if (true) {
         val start = System.currentTimeMillis()
         val inputStream = WordEmbeddingMapPool.getFileAsStream(name + WordEmbeddingMapPool.txtExtension)
         val glove = inputStream.autoClose { inputStream =>
