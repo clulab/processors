@@ -29,12 +29,14 @@ object WordEmbeddingMapPool {
   def getFileAsStream(name: String): FileInputStream = new FileInputStream(name)
 
   def getResourceAsStream(name: String): InputStream = {
-    val classLoader = this.getClass.getClassLoader
-    // This is null without an exception on failure.
-    val result = classLoader.getResourceAsStream(name)
+//    val result = {
+//      // This works for ./ resources, not / resources, and doesn't therefore work for library jars like glove.
+//      val classLoader = this.getClass.getClassLoader
+//      classLoader.getResourceAsStream(name)
+//    }
+    val result = this.getClass.getResourceAsStream(name)
 
     Option(result).getOrElse(throw new RuntimeException(s"Resource $name not found."))
-//    new ClassLoaderObjectInputStream(classLoader, classLoader.getResourceAsStream(name))
   }
 
   def getSource(name: String): Option[(InputStream, Location.Location, Format.Format)] = {

@@ -10,7 +10,8 @@ import org.scalatest.Matchers
 import java.io.File
 
 class TestWordEmbeddingMap extends FlatSpec with Matchers {
-  val name = "./test_vectors"
+  val name = "/test_vectors"
+  // val name = "/org/clulab/glove/glove.840B.300d.10f"
 
   behavior of "ExplicitWordEmbeddingMap"
 
@@ -101,8 +102,8 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
 
   it should "be identical" in {
     val keysAndCompacts = Seq(
-      ("./test_vectors", false),
-      ("./test_vectors", true),
+      (name, false),
+      (name, true),
       ("explicitWordEmbeddingMap", false),
       ("compactWordEmbeddingMap", true)
     )
