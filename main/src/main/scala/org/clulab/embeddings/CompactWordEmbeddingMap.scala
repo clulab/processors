@@ -287,7 +287,7 @@ object CompactWordEmbeddingMap extends Logging {
     )
   }
 
-  def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
+  protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
     val (line, _) = linesAndIndices.head
     val bits = line.split(' ')
 
@@ -302,7 +302,7 @@ object CompactWordEmbeddingMap extends Logging {
 
   protected def buildMatrix(lines: Iterator[String]): BuildType = {
     val linesAndIndices = lines.zipWithIndex.buffered
-    var map = new ImplementationMapType() // mutablemap might be faster
+    val map = new ImplementationMapType()
     val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
     val dim = wordCountOpt.map(_ * columns).getOrElse(1000 * columns)
     val arrayBuffer = new ArrayBuffer[ValueType](dim)

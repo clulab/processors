@@ -206,33 +206,34 @@ object ExplicitWordEmbeddingMap extends Logging {
     buildType
   }
 
-  private def buildMatrix(lines: Iterator[String]): BuildType = {
-    val map = new MutableMapType()
-    val bufferedLines = lines.buffered
-    val (dims, offset) = {
-      val line = bufferedLines.head
-      val bits = line.split("\\s+")
+  protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
+    val (line, _) = linesAndIndices.head
+    val bits = line.split(' ')
 
-      require(bits.length >= 2, "A glove file must have at least two columns everywhere.")
-      if (bits.length == 2) {
-        bufferedLines.next() // Go ahead and consume the first line, making the offset 1.
-        (bits(1).toInt, 1)
-      }
-      else
-        (bits.length - 1, 0) // Do not consume the first line, leaving the offset at 0.
+    require(bits.length >= 2, "A glove file must have at least two columns everywhere.")
+    if (bits.length == 2) {
+      linesAndIndices.next() // Go ahead and consume the first Line.
+      (Some(bits(0).toInt), bits(1).toInt)
     }
+    else
+      (None, bits.length - 1)
+  }
 
+  private def buildMatrix(lines: Iterator[String]): BuildType = {
+    val linesAndIndices = lines.zipWithIndex.buffered
+    val map = new MutableMapType()
+    val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
     var total = 0
 
-    bufferedLines.zipWithIndex.foreach { case (line, index) =>
+    linesAndIndices.foreach { case (line, index) =>
       total += 1
       val bits = line.split("\\s+")
-      require(bits.length == dims + 1, s"${bits.length} != ${dims + 1} found on line ${index + offset}")
+      require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
       val word = bits(0)
       val weights = {
-        val weights = new ArrayType(dims)
+        val weights = new ArrayType(columns)
         var i = 0
-        while (i < dims) {
+        while (i < columns) {
           weights(i) = bits(i + 1).toDouble.asInstanceOf[ValueType]
           i += 1
         }
@@ -241,7 +242,9 @@ object ExplicitWordEmbeddingMap extends Logging {
       }
       map.put(word, weights)
     }
-    logger.debug(s"Completed matrix loading. Kept ${map.size} words out of a total of $total words.")
+    logger.debug(s"Completed matrix loading. Kept ${map.size} words out of a total of $total.")
+    if (wordCountOpt.isDefined)
+      require(wordCountOpt.get == total, s"The file should have had ${map.size} words.")
     map
   }
 }
