@@ -2,6 +2,7 @@ package org.clulab.embeddings
 
 import java.io._
 import org.clulab.embeddings.WordEmbeddingMap.ArrayType
+import org.clulab.embeddings.WordEmbeddingMap.SeqType
 import org.clulab.embeddings.WordEmbeddingMap.ValueType
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
@@ -50,12 +51,12 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
   // Cache this special value.
-  val unkEmbeddingOpt: Option[ArrayType] = get(CompactWordEmbeddingMap.UNK)
+  val unkEmbeddingOpt: Option[SeqType] = get(CompactWordEmbeddingMap.UNK)
 
   /** The dimension of an embedding vector */
   override val dim: Int = columns
 
-  def compare(lefts: ArrayType, rights: ArrayType): Boolean = {
+  def compare(lefts: SeqType, rights: SeqType): Boolean = {
     true &&
         lefts.length == rights.length &&
         lefts.zip(rights).forall { case (left, right) =>
@@ -91,19 +92,18 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
 
   override def hashCode(): Int = 0
 
-  def get(word: String): Option[ArrayType] = {
+  def get(word: String): Option[SeqType] = {
     map.get(word).map { row =>
       val offset = row * columns
 
-      array.slice(offset, offset + columns)
+      array.view(offset, offset + columns)
     }
   }
 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
-  override def getOrElseUnknown(word: String): ArrayType = {
+  override def getOrElseUnknown(word: String): SeqType = {
     get(word).getOrElse(
-      // TODO: It is unclear whether this should be a copy or not.
-      unkEmbeddingOpt.getOrElse( // because we want a mutable copy
+      unkEmbeddingOpt.getOrElse(
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
       )
     )

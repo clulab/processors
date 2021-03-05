@@ -13,10 +13,10 @@ trait WordEmbeddingMap {
   def dim: Int
 
   /** Retrieves the embedding for this word, if it exists in the map */
-  def get(word: String): Option[ArrayType]
+  def get(word: String): Option[SeqType]
 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
-  def getOrElseUnknown(word: String): ArrayType
+  def getOrElseUnknown(word: String): SeqType
 
   /** Normalize this vector to length 1, in place, if possible. */
   def norm(array: MutableIndexedSeqLike[ValueType, ArrayType]): Unit =
@@ -47,6 +47,7 @@ trait WordEmbeddingMap {
 object WordEmbeddingMap {
   type ValueType = Float
   type ArrayType = Array[ValueType]
+  type SeqType = Seq[ValueType]
 
   lazy val defaultWordSanitizer = new DefaultWordSanitizer()
 

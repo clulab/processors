@@ -27,7 +27,7 @@ class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
   it should "look realistic" in {
     var embeddings = {
       Utils.initializeDyNet()
-      new ConstEmbeddingsGlove("./test_vectors")
+      new ConstEmbeddingsGlove("/test_vectors")
     }
     var e = embeddings.mkEmbedding("time")
     e != null should be(true)

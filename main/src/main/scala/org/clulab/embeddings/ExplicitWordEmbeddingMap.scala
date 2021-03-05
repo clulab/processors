@@ -15,12 +15,12 @@ import scala.io.Source
  */
 class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
   val map: ExplicitWordEmbeddingMap.MapType = buildType
-  val unkEmbeddingOpt: Option[ArrayType] = get(ExplicitWordEmbeddingMap.UNK)
+  val unkEmbeddingOpt: Option[SeqType] = get(ExplicitWordEmbeddingMap.UNK)
 
   /** The dimension of an embedding vector */
   override val dim: Int = map.values.head.length
 
-  def compare(lefts: ArrayType, rights: ArrayType): Boolean = {
+  def compare(lefts: SeqType, rights: SeqType): Boolean = {
     true &&
         lefts.length == rights.length &&
         lefts.zip(rights).forall { case (left, right) =>
@@ -54,12 +54,11 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
   override def hashCode(): Int = 0
 
   /** Retrieves the embedding for this word, if it exists in the map */
-  override def get(word: String): Option[ArrayType] = map.get(word)
+  override def get(word: String): Option[SeqType] = map.get(word).map(_.toSeq)
 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
-  override def getOrElseUnknown(word: String): ArrayType = {
+  override def getOrElseUnknown(word: String): SeqType = {
     get(word).getOrElse(
-      // TODO: It is unclear whether this should be a copy or not.
       unkEmbeddingOpt.getOrElse(
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
       )
@@ -91,7 +90,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     total
   }
 
-  protected def add(dest: ArrayType, src: ArrayType): Unit = {
+  protected def add(dest: ArrayType, src: SeqType): Unit = {
     var i = 0
 
     while (i < dim) {
@@ -100,7 +99,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     }
   }
 
-  protected def addWeighted(dest: ArrayType, src: ArrayType, weight: Float): Unit = {
+  protected def addWeighted(dest: ArrayType, src: SeqType, weight: Float): Unit = {
     var i = 0
 
     while (i < dim) {
@@ -131,7 +130,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     else 0
   }
 
-  protected def dotProduct(v1: ArrayType, v2: ArrayType): ValueType = {
+  protected def dotProduct(v1: ArrayType, v2: SeqType): ValueType = {
     require(v1.length == v2.length)
     var sum = 0.asInstanceOf[ValueType] // optimization
     var i = 0 // optimization

@@ -8,19 +8,19 @@ import org.scalatest._
 
 class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
 
-  protected def matches(array1: WordEmbeddingMap.ArrayType, array2: Array[Double], epsilon: Double): Boolean = {
+  protected def matches(array1: WordEmbeddingMap.SeqType, array2: Array[Double], epsilon: Double): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) < epsilon
     }
   }
 
-  protected def matches(array1: WordEmbeddingMap.ArrayType, array2: WordEmbeddingMap.ArrayType): Boolean = {
+  protected def matches(array1: WordEmbeddingMap.SeqType, array2: WordEmbeddingMap.SeqType): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) == 0
     }
   }
 
-  val filename = "/test_vectors.txt"
+  val filename = "/test_vectors_sanitized.txt"
   val fullsizeText = new SanitizedWordEmbeddingMap(Sourcer.sourceFromResource(filename), None, false)
   val compactText = CompactWordEmbeddingMap(filename, resource = true, cached = false)
   val tmpFile = File.createTempFile("test_vectors.", ".txt")
