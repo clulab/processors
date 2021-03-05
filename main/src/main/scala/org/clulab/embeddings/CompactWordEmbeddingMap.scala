@@ -9,6 +9,7 @@ import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
 import scala.collection.immutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
 import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
 import scala.io.Source
@@ -278,53 +279,57 @@ object CompactWordEmbeddingMap extends Logging {
     (map, array)
   }
 
-  protected def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {
+  protected def norm(arrayBuffer: ArrayBuffer[ValueType], rowIndex: Int, columns: Int): Unit = {
     val offset = rowIndex * columns
 
     WordEmbeddingMap.norm(
-      array.view(offset, offset + columns).asInstanceOf[MutableIndexedSeqLike[ValueType, ArrayType]]
+      arrayBuffer.view(offset, offset + columns).asInstanceOf[MutableIndexedSeqLike[ValueType, ArrayType]]
     )
   }
 
-  protected def buildMatrix(lines: Iterator[String]): BuildType = {
-    val linesZipWithIndex = lines.zipWithIndex
-    val (wordCount, columns) =
-      if (linesZipWithIndex.hasNext) {
-        val bits = linesZipWithIndex.next()._1.split(' ')
+  def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
+    val (line, _) = linesAndIndices.head
+    val bits = line.split(' ')
 
-        assert(bits.length == 2, "The first line must specify wordCount and dimension.")
-        (bits(0).toInt, bits(1).toInt)
-      }
-      else (0, 0)
-    var map = new ImplementationMapType()
-    val array = new ArrayType(wordCount * columns)
-
-    for ((line, lineIndex) <- linesZipWithIndex) {
-      val bits = line.split(' ')
-      assert(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${lineIndex + 1}")
-      val word = bits(0)
-      val row =
-        if (map.contains(word)) {
-          logger.info(s"'$word' is duplicated in the vector file.")
-          // Use space because we will not be looking for words like that.
-          // The array will not be filled in for this map.size value.
-          map += (" " + map.size -> map.size)
-          map(word)
-        }
-        else map.size
-      assert(row < wordCount)
-      map += (word -> row)
-
-      val offset = row * columns
-      var i = 0 // optimization
-
-      while (i < columns) {
-        array(offset + i) = bits(i + 1).toDouble.asInstanceOf[ValueType]
-        i += 1
-      }
-      norm(array, row, columns)
+    require(bits.length >= 2, "A glove file must have at least two columns everywhere.")
+    if (bits.length == 2) {
+      linesAndIndices.next() // Go ahead and consume the first Line.
+      (Some(bits(0).toInt), bits(1).toInt)
     }
-    assert(map.size == wordCount, s"The file should have had ${map.size} words.")
-    (map, array)
+    else
+      (None, bits.length - 1)
+  }
+
+  protected def buildMatrix(lines: Iterator[String]): BuildType = {
+    val linesAndIndices = lines.zipWithIndex.buffered
+    var map = new ImplementationMapType() // mutablemap might be faster
+    val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
+    val dim = wordCountOpt.map(_ * columns).getOrElse(1000 * columns)
+    val arrayBuffer = new ArrayBuffer[ValueType](dim)
+    var total = 0
+
+    linesAndIndices.foreach { case (line, index) =>
+      total += 1
+      val bits = line.split(' ')
+      require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
+      val word = bits(0)
+      if (map.contains(word))
+        logger.info(s"'$word' is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
+      else {
+        val row = map.size
+        var i = 0 // optimization
+
+        while (i < columns) {
+          arrayBuffer += bits(i + 1).toDouble.asInstanceOf[ValueType]
+          i += 1
+        }
+        norm(arrayBuffer, row, columns)
+        map += (word -> row)
+      }
+    }
+    logger.debug(s"Completed matrix loading. Kept ${map.size} words out of a total of $total.")
+    if (wordCountOpt.isDefined)
+      require(wordCountOpt.get == total, s"The file should have had ${map.size} words.")
+    (map, arrayBuffer.toArray)
   }
 }
