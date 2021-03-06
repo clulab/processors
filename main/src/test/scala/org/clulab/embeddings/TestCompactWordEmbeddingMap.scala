@@ -31,16 +31,22 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   behavior of "compactText version"
 
   it should "have the same size" in {
-    compactText.rows should be (fullsizeText.matrix.size)
+    val compactRows = compactText.rows + compactText.unkEmbeddingOpt.map(_ => 1).getOrElse(0)
+
+    compactRows should be (fullsizeText.matrix.size)
     compactText.columns should be (fullsizeText.dimensions)
   }
 
   it should "have the same contents" in {
-    compactText.keys.toSet should be (fullsizeText.matrix.keys.toSet)
+    val compactSet = compactText.keys.toSet ++ compactText.unkEmbeddingOpt.map(_ => Set(CompactWordEmbeddingMap.UNK)).getOrElse(Set.empty)
+
+    compactSet should be (fullsizeText.matrix.keys.toSet)
 
     compactText.keys.foreach { key =>
       matches(compactText.get(key).get, fullsizeText.matrix.get(key).get, epsilon) should be (true)
     }
+    if (compactText.unkEmbeddingOpt.isDefined)
+      matches(compactText.unkEmbeddingOpt.get, fullsizeText.matrix.get(CompactWordEmbeddingMap.UNK).get, epsilon) should be (true)
   }
 
   it should "be normalized" in {

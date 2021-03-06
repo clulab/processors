@@ -86,11 +86,6 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
       this.dim == that.dim &&
           this.columns == that.columns &&
           this.rows == that.rows &&
-          ((this.unkEmbeddingOpt, that.unkEmbeddingOpt) match {
-            case (None, None) => true
-            case (Some(lefts), Some(rights)) => compare(lefts, rights)
-            case _ => false
-          }) &&
           compare(this.array, that.array) &&
           compare(this.map, that.map) &&
           compare(this.unkEmbeddingOpt, that.unkEmbeddingOpt)
@@ -226,7 +221,7 @@ object CompactWordEmbeddingMap extends Logging {
   protected type BuildType = (MapType, ArrayType, Option[SeqType])
   protected type StoreType = (String, ArrayType)
 
-  protected val UNK = "" // token to be used for unknowns
+  val UNK = "" // token to be used for unknowns
 
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
@@ -352,7 +347,7 @@ object CompactWordEmbeddingMap extends Logging {
     if (unknownArrayBufferOpt.isDefined)
       logger.info(s"An unknown vector is defined for the matrix.")
     if (wordCountOpt.isDefined)
-      require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines or words.")
+      require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
     (map, arrayBuffer.toArray, unknownArrayBufferOpt.map(_.toArray))
   }
 }

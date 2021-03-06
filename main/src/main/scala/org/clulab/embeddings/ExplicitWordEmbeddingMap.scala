@@ -14,15 +14,14 @@ import scala.io.Source
  * Implements an word embedding map, where each embedding is stored as a distinct array
  */
 class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
-  val map: ExplicitWordEmbeddingMap.MapType = buildType
-  val unkEmbeddingOpt: Option[SeqType] = get(ExplicitWordEmbeddingMap.UNK)
+  val map: ExplicitWordEmbeddingMap.MapType = buildType._1
+  val unkEmbeddingOpt: Option[SeqType] = buildType._2
 
   /** The dimension of an embedding vector */
   override val dim: Int = map.values.head.length
 
   def compare(lefts: SeqType, rights: SeqType): Boolean = {
-    true &&
-        lefts.length == rights.length &&
+    lefts.length == rights.length &&
         lefts.zip(rights).forall { case (left, right) =>
           left - right < 0.0001f
         }
@@ -36,18 +35,21 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     }
   }
 
+  def compare(left: Option[SeqType], right: Option[SeqType]): Boolean = {
+    (left, right) match {
+      case (None, None) => true
+      case (Some(left), Some(right)) => compare(left, right)
+      case _ => false
+    }
+  }
+
   override def equals(other: Any): Boolean = {
     other.isInstanceOf[ExplicitWordEmbeddingMap] && {
       val that = other.asInstanceOf[ExplicitWordEmbeddingMap]
 
-      true &&
-          this.dim == that.dim &&
-          ((this.unkEmbeddingOpt, that.unkEmbeddingOpt) match {
-            case (None, None) => true
-            case (Some(lefts), Some(rights)) => compare(lefts, rights)
-            case _ => false
-          }) &&
-          compare(this.map, that.map)
+      this.dim == that.dim &&
+          compare(this.map, that.map) &&
+          compare(this.unkEmbeddingOpt, that.unkEmbeddingOpt)
     }
   }
 
@@ -66,8 +68,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
   }
 
   // Be careful because this word may not be sanitized!
-  def isOutOfVocabulary(word: String): Boolean =
-    word == ExplicitWordEmbeddingMap.UNK || !map.contains(word)
+  def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
 
   def makeCompositeVector(text: Iterable[String]): ArrayType = {
     val total = new ArrayType(dim)
@@ -145,6 +146,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
   def save(filename: String): Unit = {
     new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
       objectOutputStream.writeObject(map)
+      objectOutputStream.writeObject(unkEmbeddingOpt)
     }
   }
 }
@@ -154,9 +156,9 @@ object ExplicitWordEmbeddingMap extends Logging {
 
   type MapType = MutableMap[String, ArrayType]
 
-  protected type BuildType = MapType
+  protected type BuildType = (MapType, Option[SeqType])
 
-  protected val UNK = "" // token used for unknowns
+  val UNK = "" // token used for unknowns
 
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): ExplicitWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
@@ -200,9 +202,10 @@ object ExplicitWordEmbeddingMap extends Logging {
   }
 
   protected def loadBin(objectInputStream: ClassLoaderObjectInputStream): BuildType = {
-    val buildType = objectInputStream.readObject().asInstanceOf[BuildType]
+    val map = objectInputStream.readObject().asInstanceOf[MapType]
+    val unkEmbeddingOpt = objectInputStream.readObject().asInstanceOf[Option[SeqType]]
 
-    buildType
+    (map, unkEmbeddingOpt)
   }
 
   protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
@@ -222,6 +225,7 @@ object ExplicitWordEmbeddingMap extends Logging {
     val linesAndIndices = lines.zipWithIndex.buffered
     val map = new MutableMapType()
     val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
+    var unknownWeightsOpt: Option[SeqType] = None
     var total = 0
 
     linesAndIndices.foreach { case (line, index) =>
@@ -239,11 +243,14 @@ object ExplicitWordEmbeddingMap extends Logging {
         WordEmbeddingMap.norm(weights)
         weights
       }
-      map.put(word, weights)
+      if (word == UNK)
+        unknownWeightsOpt = Some(weights.toSeq)
+      else
+        map.put(word, weights)
     }
-    logger.debug(s"Completed matrix loading. Kept ${map.size} words out of a total of $total.")
+    logger.info(s"Completed matrix loading. Kept ${map.size} words out of a total of $total.")
     if (wordCountOpt.isDefined)
-      require(wordCountOpt.get == total, s"The file should have had ${map.size} words.")
-    map
+      require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
+    (map, unknownWeightsOpt)
   }
 }
