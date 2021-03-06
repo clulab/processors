@@ -51,14 +51,13 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
   // Cache this special value.
-  val unkEmbeddingOpt: Option[SeqType] = get(CompactWordEmbeddingMap.UNK)
+  val unkEmbeddingOpt: Option[SeqType] = buildType._3
 
   /** The dimension of an embedding vector */
   override val dim: Int = columns
 
   def compare(lefts: SeqType, rights: SeqType): Boolean = {
-    true &&
-        lefts.length == rights.length &&
+    lefts.length == rights.length &&
         lefts.zip(rights).forall { case (left, right) =>
           left - right < 0.0001f
         }
@@ -72,12 +71,19 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     }
   }
 
+  def compare(left: Option[SeqType], right: Option[SeqType]): Boolean = {
+    (left, right) match {
+      case (None, None) => true
+      case (Some(left), Some(right)) => compare(left, right)
+      case _ => false
+    }
+  }
+
   override def equals(other: Any): Boolean = {
     other.isInstanceOf[CompactWordEmbeddingMap] && {
       val that = other.asInstanceOf[CompactWordEmbeddingMap]
 
-      true &&
-          this.dim == that.dim &&
+      this.dim == that.dim &&
           this.columns == that.columns &&
           this.rows == that.rows &&
           ((this.unkEmbeddingOpt, that.unkEmbeddingOpt) match {
@@ -86,7 +92,8 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
             case _ => false
           }) &&
           compare(this.array, that.array) &&
-          compare(this.map, that.map)
+          compare(this.map, that.map) &&
+          compare(this.unkEmbeddingOpt, that.unkEmbeddingOpt)
     }
   }
 
@@ -95,7 +102,6 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
   def get(word: String): Option[SeqType] = {
     map.get(word).map { row =>
       val offset = row * columns
-
       array.view(offset, offset + columns)
     }
   }
@@ -110,8 +116,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
   }
 
   // Be careful because this word may not be sanitized!
-  override def isOutOfVocabulary(word: String): Boolean =
-    word == CompactWordEmbeddingMap.UNK || !map.contains(word)
+  override def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
 
   /** Computes the embedding of a text, as an unweighted average of all words */
   override def makeCompositeVector(text: Iterable[String]): ArrayType = {
@@ -204,6 +209,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
       // processed separately when read back in.
       objectOutputStream.writeObject(words)
       objectOutputStream.writeObject(array)
+      objectOutputStream.writeObject(unkEmbeddingOpt)
     }
   }
 }
@@ -217,7 +223,7 @@ object CompactWordEmbeddingMap extends Logging {
   // These were meant to allow easy switching between implementations.
   type MapType = MutableMap[String, Int]
 
-  protected type BuildType = (MapType, ArrayType)
+  protected type BuildType = (MapType, ArrayType, Option[SeqType])
   protected type StoreType = (String, ArrayType)
 
   protected val UNK = "" // token to be used for unknowns
@@ -275,8 +281,9 @@ object CompactWordEmbeddingMap extends Logging {
       map
     }
     val array = objectInputStream.readObject().asInstanceOf[ArrayType]
+    val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[SeqType]]
 
-    (map, array)
+    (map, array, unknownArrayOpt)
   }
 
   protected def norm(arrayBuffer: ArrayBuffer[ValueType], rowIndex: Int, columns: Int): Unit = {
@@ -306,6 +313,7 @@ object CompactWordEmbeddingMap extends Logging {
     val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
     val dim = wordCountOpt.map(_ * columns).getOrElse(1000 * columns)
     val arrayBuffer = new ArrayBuffer[ValueType](dim)
+    var unknownArrayBufferOpt: Option[ArrayBuffer[ValueType]] = None
     var total = 0
 
     linesAndIndices.foreach { case (line, index) =>
@@ -314,22 +322,37 @@ object CompactWordEmbeddingMap extends Logging {
       require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
       val word = bits(0)
       if (map.contains(word))
-        logger.info(s"'$word' is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
+        logger.warn(s"The word '$word' is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
+      else if (word == UNK && unknownArrayBufferOpt.isDefined)
+        logger.warn(s"The unknown vector is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
       else {
-        val row = map.size
+        val buffer =
+          if (word == UNK) {
+            val unknownArrayBuffer = new ArrayBuffer[ValueType](columns)
+            unknownArrayBufferOpt = Some(unknownArrayBuffer)
+            unknownArrayBuffer
+          }
+          else
+            arrayBuffer
         var i = 0 // optimization
-
         while (i < columns) {
-          arrayBuffer += bits(i + 1).toDouble.asInstanceOf[ValueType]
+          buffer += bits(i + 1).toDouble.asInstanceOf[ValueType]
           i += 1
         }
-        norm(arrayBuffer, row, columns)
-        map += (word -> row)
+        if (word == UNK)
+          norm(buffer, 0, columns)
+        else {
+          val row = map.size
+          norm(buffer, row, columns)
+          map += (word -> row)
+        }
       }
     }
-    logger.debug(s"Completed matrix loading. Kept ${map.size} words out of a total of $total.")
+    logger.info(s"Completed matrix loading. Kept ${map.size} words from $total lines of words.")
+    if (unknownArrayBufferOpt.isDefined)
+      logger.info(s"An unknown vector is defined for the matrix.")
     if (wordCountOpt.isDefined)
-      require(wordCountOpt.get == total, s"The file should have had ${map.size} words.")
-    (map, arrayBuffer.toArray)
+      require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines or words.")
+    (map, arrayBuffer.toArray, unknownArrayBufferOpt.map(_.toArray))
   }
 }
