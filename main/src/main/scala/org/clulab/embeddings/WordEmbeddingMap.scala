@@ -2,7 +2,7 @@ package org.clulab.embeddings
 
 import org.clulab.embeddings.WordEmbeddingMap._
 
-import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
+import scala.collection.mutable.{IndexedSeq => MutableIndexedSeq}
 
 /**
  * Basic functionality required by all implementations of word embeddings
@@ -17,10 +17,6 @@ trait WordEmbeddingMap {
 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
   def getOrElseUnknown(word: String): SeqType
-
-  /** Normalize this vector to length 1, in place, if possible. */
-  def norm(array: MutableIndexedSeqLike[ValueType, ArrayType]): Unit =
-    WordEmbeddingMap.norm(array)
 
   def isOutOfVocabulary(word: String): Boolean
 
@@ -46,13 +42,13 @@ trait WordEmbeddingMap {
 
 object WordEmbeddingMap {
   type ValueType = Float
-  type ArrayType = Array[ValueType]
-  type SeqType = Seq[ValueType]
+  type ArrayType = MutableIndexedSeq[ValueType]
+  type SeqType = IndexedSeq[ValueType]
 
   lazy val defaultWordSanitizer = new DefaultWordSanitizer()
 
   /** Normalize this vector to length 1, in place, if possible. */
-  def norm(array: MutableIndexedSeqLike[ValueType, ArrayType]): Unit = {
+  def norm(array: ArrayType): Unit = {
 
     def calcLength(): ValueType = {
       var len = 0.asInstanceOf[ValueType] // optimization
@@ -77,5 +73,18 @@ object WordEmbeddingMap {
     val length = calcLength()
 
     if (length != 0)  divide(length)
+  }
+
+  def dotProduct(v1: ArrayType, v2: SeqType): ValueType = {
+    require(v1.length == v2.length) //should we always assume that v2 is longer? perhaps set shorter to length of longer...
+    // This would be way prettier, but it is ~20 times slower
+    // v1.indices.foldRight(0.0f)((i, sum) => sum + v1(i) * v2(i))
+    var sum = 0.asInstanceOf[ValueType] // optimization
+    var i = 0 // optimization
+    while (i < v1.length) {
+      sum += v1(i) * v2(i)
+      i += 1
+    }
+    sum
   }
 }

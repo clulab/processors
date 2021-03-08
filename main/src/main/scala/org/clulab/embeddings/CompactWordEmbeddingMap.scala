@@ -1,6 +1,7 @@
 package org.clulab.embeddings
 
 import java.io._
+
 import org.clulab.embeddings.WordEmbeddingMap.ArrayType
 import org.clulab.embeddings.WordEmbeddingMap.SeqType
 import org.clulab.embeddings.WordEmbeddingMap.ValueType
@@ -9,10 +10,8 @@ import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
-import scala.collection.immutable.HashMap
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
-import scala.collection.mutable.{IndexedSeqLike => MutableIndexedSeqLike}
+import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
 
 /**
@@ -46,24 +45,24 @@ import scala.io.Source
 class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     extends WordEmbeddingMap {
 
-  protected val map: CompactWordEmbeddingMap.MapType = buildType._1 // (word -> row)
-  protected val array: ArrayType = buildType._2 // flattened matrix
+  protected val map: CompactWordEmbeddingMap.ImplMapType = buildType.map // (word -> row)
+  protected val array: CompactWordEmbeddingMap.ImplArrayType = buildType.array // flattened matrix
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
   // Cache this special value.
-  val unkEmbeddingOpt: Option[SeqType] = buildType._3
+  val unkEmbeddingOpt: Option[SeqType] = buildType.unknownArray.asInstanceOf[Option[SeqType]]
 
   /** The dimension of an embedding vector */
   override val dim: Int = columns
 
-  def compare(lefts: SeqType, rights: SeqType): Boolean = {
+  def compare(lefts: CompactWordEmbeddingMap.ImplSeqType, rights: CompactWordEmbeddingMap.ImplSeqType): Boolean = {
     lefts.length == rights.length &&
         lefts.zip(rights).forall { case (left, right) =>
           left - right < 0.0001f
         }
   }
 
-  def compare(left: CompactWordEmbeddingMap.MapType, right: CompactWordEmbeddingMap.MapType): Boolean = {
+  def compare(left: CompactWordEmbeddingMap.ImplMapType, right: CompactWordEmbeddingMap.ImplMapType): Boolean = {
     left.keySet == right.keySet && {
       left.keySet.forall { key =>
         left(key) == right(key)
@@ -71,7 +70,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     }
   }
 
-  def compare(left: Option[SeqType], right: Option[SeqType]): Boolean = {
+  def compare(left: Option[CompactWordEmbeddingMap.ImplSeqType], right: Option[CompactWordEmbeddingMap.ImplSeqType]): Boolean = {
     (left, right) match {
       case (None, None) => true
       case (Some(left), Some(right)) => compare(left, right)
@@ -115,30 +114,30 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
 
   /** Computes the embedding of a text, as an unweighted average of all words */
   override def makeCompositeVector(text: Iterable[String]): ArrayType = {
-    val total = new ArrayType(columns) // automatically initialized to zero
+    val total = new CompactWordEmbeddingMap.ImplArrayType(columns) // automatically initialized to zero
 
     text.foreach { word =>
       // This therefore skips the unknown words, which may not be the right strategy.
       map.get(word).foreach { index => add(total, index) }
     }
-    norm(total)
+    WordEmbeddingMap.norm(total)
     total
   }
 
   override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType = {
-    val total = new ArrayType(columns) // automatically initialized to zero
+    val total = new CompactWordEmbeddingMap.ImplArrayType(columns) // automatically initialized to zero
 
     (text, weights).zipped.foreach { (word, weight) =>
       // This therefore skips the unknown words, which may not be the right strategy.
       map.get(word).foreach { index => addWeighted(total, index, weight) }
     }
-    norm(total)
+    WordEmbeddingMap.norm(total)
     total
   }
 
   def keys: Iterable[String] = map.keys // debug use only
 
-  protected def add(dest: ArrayType, srcRow: Int): Unit = {
+  protected def add(dest: CompactWordEmbeddingMap.ImplArrayType, srcRow: Int): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
@@ -148,7 +147,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     }
   }
 
-  protected def addWeighted(dest: ArrayType, srcRow: Int, weight: Float): Unit = {
+  protected def addWeighted(dest: CompactWordEmbeddingMap.ImplArrayType, srcRow: Int, weight: Float): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
@@ -210,16 +209,11 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
 }
 
 object CompactWordEmbeddingMap extends Logging {
-  protected type MutableMapType = MutableHashMap[String, Int]
-  protected type ImmutableMapType = HashMap[String, Int]
+  protected type ImplArrayType = Array[ValueType]
+  protected type ImplSeqType = Seq[ValueType]
+  protected type ImplMapType = MutableHashMap[String, Int]
 
-  protected type ImplementationMapType = MutableMapType // optimization
-
-  // These were meant to allow easy switching between implementations.
-  type MapType = MutableMap[String, Int]
-
-  protected type BuildType = (MapType, ArrayType, Option[SeqType])
-  protected type StoreType = (String, ArrayType)
+  case class BuildType(map: ImplMapType, array: ImplArrayType, unknownArray: Option[ImplSeqType])
 
   val UNK = "" // token to be used for unknowns
 
@@ -269,23 +263,23 @@ object CompactWordEmbeddingMap extends Logging {
     val map = {
       val words = objectInputStream.readObject().asInstanceOf[String].split('\n')
       // Were it not for MapType, the following could be Map(words.zipWithIndex: _*)
-      val map: MapType = new MutableMapType()
+      val map: ImplMapType = new ImplMapType()
       words.foreach { word =>
         map += word -> map.size
       }
       map
     }
-    val array = objectInputStream.readObject().asInstanceOf[ArrayType]
-    val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[SeqType]]
+    val array = objectInputStream.readObject().asInstanceOf[ImplArrayType]
+    val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[ImplSeqType]]
 
-    (map, array, unknownArrayOpt)
+    BuildType(map, array, unknownArrayOpt)
   }
 
   protected def norm(arrayBuffer: ArrayBuffer[ValueType], rowIndex: Int, columns: Int): Unit = {
     val offset = rowIndex * columns
 
     WordEmbeddingMap.norm(
-      arrayBuffer.view(offset, offset + columns).asInstanceOf[MutableIndexedSeqLike[ValueType, ArrayType]]
+      arrayBuffer.view(offset, offset + columns)
     )
   }
 
@@ -304,7 +298,7 @@ object CompactWordEmbeddingMap extends Logging {
 
   protected def buildMatrix(lines: Iterator[String]): BuildType = {
     val linesAndIndices = lines.zipWithIndex.buffered
-    val map = new ImplementationMapType()
+    val map = new ImplMapType()
     val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
     val dim = wordCountOpt.map(_ * columns).getOrElse(1000 * columns)
     val arrayBuffer = new ArrayBuffer[ValueType](dim)
@@ -348,6 +342,6 @@ object CompactWordEmbeddingMap extends Logging {
       logger.info(s"An unknown vector is defined for the matrix.")
     if (wordCountOpt.isDefined)
       require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
-    (map, arrayBuffer.toArray, unknownArrayBufferOpt.map(_.toArray))
+    BuildType(map, arrayBuffer.toArray, unknownArrayBufferOpt.map(_.toArray))
   }
 }
