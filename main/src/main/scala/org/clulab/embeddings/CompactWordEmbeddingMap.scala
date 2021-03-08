@@ -209,8 +209,8 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
 }
 
 object CompactWordEmbeddingMap extends Logging {
-  protected type ImplArrayType = Array[ValueType]
-  protected type ImplSeqType = Seq[ValueType]
+  type ImplArrayType = Array[ValueType]
+  type ImplSeqType = Seq[ValueType]
   protected type ImplMapType = MutableHashMap[String, Int]
 
   case class BuildType(map: ImplMapType, array: ImplArrayType, unknownArray: Option[ImplSeqType])

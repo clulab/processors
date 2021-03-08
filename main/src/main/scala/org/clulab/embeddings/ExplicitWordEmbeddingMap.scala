@@ -143,8 +143,8 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
 }
 
 object ExplicitWordEmbeddingMap extends Logging {
-  protected type ImplArrayType = Array[ValueType]
-  protected type ImplSeqType = Seq[ValueType]
+  type ImplArrayType = Array[ValueType]
+  type ImplSeqType = Seq[ValueType]
   protected type ImplMapType = MutableHashMap[String, ArrayType]
 
   case class BuildType(map: ImplMapType, unknownArray: Option[ImplSeqType])

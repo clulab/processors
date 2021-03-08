@@ -75,7 +75,7 @@ object WordEmbeddingMap {
     if (length != 0)  divide(length)
   }
 
-  def dotProduct(v1: ArrayType, v2: SeqType): ValueType = {
+  def dotProduct(v1: SeqType, v2: SeqType): ValueType = {
     require(v1.length == v2.length) //should we always assume that v2 is longer? perhaps set shorter to length of longer...
     // This would be way prettier, but it is ~20 times slower
     // v1.indices.foldRight(0.0f)((i, sum) => sum + v1(i) * v2(i))
