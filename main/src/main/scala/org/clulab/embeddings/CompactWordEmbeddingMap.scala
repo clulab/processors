@@ -2,7 +2,6 @@ package org.clulab.embeddings
 
 import java.io._
 
-import org.clulab.embeddings.WordEmbeddingMap.ArrayType
 import org.clulab.embeddings.WordEmbeddingMap.SeqType
 import org.clulab.embeddings.WordEmbeddingMap.ValueType
 import org.clulab.utils.ClassLoaderObjectInputStream
@@ -113,7 +112,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
   override def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
 
   /** Computes the embedding of a text, as an unweighted average of all words */
-  override def makeCompositeVector(text: Iterable[String]): ArrayType = {
+  override def makeCompositeVector(text: Iterable[String]): SeqType = {
     val total = new CompactWordEmbeddingMap.ImplArrayType(columns) // automatically initialized to zero
 
     text.foreach { word =>
@@ -124,7 +123,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     total
   }
 
-  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType = {
+  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): SeqType = {
     val total = new CompactWordEmbeddingMap.ImplArrayType(columns) // automatically initialized to zero
 
     (text, weights).zipped.foreach { (word, weight) =>
@@ -210,7 +209,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
 
 object CompactWordEmbeddingMap extends Logging {
   type ImplArrayType = Array[ValueType]
-  type ImplSeqType = Seq[ValueType]
+  type ImplSeqType = Array[ValueType] // Seq[ValueType]
   protected type ImplMapType = MutableHashMap[String, Int]
 
   case class BuildType(map: ImplMapType, array: ImplArrayType, unknownArray: Option[ImplSeqType])

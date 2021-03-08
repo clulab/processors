@@ -20,9 +20,9 @@ trait WordEmbeddingMap {
 
   def isOutOfVocabulary(word: String): Boolean
 
-  def makeCompositeVector(text: Iterable[String]): ArrayType
+  def makeCompositeVector(text: Iterable[String]): SeqType
 
-  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType
+  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): SeqType
 
   protected def sanitizedAvgSimilarity(text1: Iterable[String], text2: Iterable[String]): ValueType
 
@@ -42,13 +42,13 @@ trait WordEmbeddingMap {
 
 object WordEmbeddingMap {
   type ValueType = Float
-  type ArrayType = MutableIndexedSeq[ValueType]
-  type SeqType = IndexedSeq[ValueType]
+  type ArrayType = Array[ValueType] // MutableIndexedSeq[ValueType] // Check to see if this still compiles.
+  type SeqType = Array[ValueType] // IndexedSeq[ValueType] // These are not supposed to be writable and used for results of calculations.
 
   lazy val defaultWordSanitizer = new DefaultWordSanitizer()
 
   /** Normalize this vector to length 1, in place, if possible. */
-  def norm(array: ArrayType): Unit = {
+  def norm(array: MutableIndexedSeq[ValueType]): Unit = {
 
     def calcLength(): ValueType = {
       var len = 0.asInstanceOf[ValueType] // optimization

@@ -73,7 +73,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
   // Be careful because this word may not be sanitized!
   def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
 
-  def makeCompositeVector(text: Iterable[String]): ArrayType = {
+  def makeCompositeVector(text: Iterable[String]): SeqType = {
     val total = new ExplicitWordEmbeddingMap.ImplArrayType(dim)
 
     text.foreach { word =>
@@ -83,7 +83,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     total
   }
 
-  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): ArrayType = {
+  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): SeqType = {
     val total = new ExplicitWordEmbeddingMap.ImplArrayType(dim) // automatically initialized to zero
 
     (text, weights).zipped.foreach { (word, weight) =>
