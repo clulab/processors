@@ -2,9 +2,6 @@ package org.clulab.embeddings
 
 import java.io._
 
-import org.clulab.embeddings.WordEmbeddingMap.ArrayType
-import org.clulab.embeddings.WordEmbeddingMap.SeqType
-import org.clulab.embeddings.WordEmbeddingMap.ValueType
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
@@ -16,14 +13,17 @@ import scala.io.Source
 /**
  * Implements an word embedding map, where each embedding is stored as a distinct array
  */
-class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
+class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
   val map: ExplicitWordEmbeddingMap.ImplMapType = buildType.map
-  val unkEmbeddingOpt: Option[SeqType] = buildType.unknownArray.asInstanceOf[Option[SeqType]]
+  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.toIndexedSeq)
 
   /** The dimension of an embedding vector */
   override val dim: Int = map.values.head.length
 
-  def compare(lefts: ExplicitWordEmbeddingMap.ImplSeqType, rights: ExplicitWordEmbeddingMap.ImplSeqType): Boolean = {
+  // Be careful because this word may not be sanitized!
+  def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
+
+  def compare(lefts: IndexedSeq[Float], rights: IndexedSeq[Float]): Boolean = {
     lefts.length == rights.length &&
         lefts.zip(rights).forall { case (left, right) =>
           left - right < 0.0001f
@@ -38,7 +38,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     }
   }
 
-  def compare(left: Option[ExplicitWordEmbeddingMap.ImplSeqType], right: Option[ExplicitWordEmbeddingMap.ImplSeqType]): Boolean = {
+  def compare(left: Option[IndexedSeq[Float]], right: Option[IndexedSeq[Float]]): Boolean = {
     (left, right) match {
       case (None, None) => true
       case (Some(left), Some(right)) => compare(left, right)
@@ -56,13 +56,13 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     }
   }
 
-  override def hashCode(): Int = 0
+  override def hashCode(): Int = 0 // Don't even try.
 
   /** Retrieves the embedding for this word, if it exists in the map */
-  override def get(word: String): Option[SeqType] = map.get(word).map(_.toSeq).asInstanceOf[Option[SeqType]]
+  override def get(word: String): Option[IndexedSeq[Float]] = map.get(word).map(_.toIndexedSeq)
 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
-  override def getOrElseUnknown(word: String): SeqType = {
+  override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
     get(word).getOrElse(
       unkEmbeddingOpt.getOrElse(
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
@@ -70,11 +70,9 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     )
   }
 
-  // Be careful because this word may not be sanitized!
-  def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
 
-  def makeCompositeVector(text: Iterable[String]): SeqType = {
-    val total = new ExplicitWordEmbeddingMap.ImplArrayType(dim)
+  def makeCompositeVector(text: Iterable[String]): Array[Float] = {
+    val total = new Array[Float](dim) // automatically initialized to zero
 
     text.foreach { word =>
       map.get(word).foreach { addend => add(total, addend) }
@@ -83,8 +81,8 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     total
   }
 
-  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): SeqType = {
-    val total = new ExplicitWordEmbeddingMap.ImplArrayType(dim) // automatically initialized to zero
+  def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Array[Float] = {
+    val total = new Array[Float](dim) // automatically initialized to zero
 
     (text, weights).zipped.foreach { (word, weight) =>
       // This therefore skips the unknown words, which may not be the right strategy.
@@ -94,7 +92,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     total
   }
 
-  protected def add(dest: ExplicitWordEmbeddingMap.ImplArrayType, src: ExplicitWordEmbeddingMap.ImplSeqType): Unit = {
+  protected def add(dest: Array[Float], src: IndexedSeq[Float]): Unit = {
     var i = 0
 
     while (i < dim) {
@@ -103,7 +101,7 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     }
   }
 
-  protected def addWeighted(dest: ExplicitWordEmbeddingMap.ImplArrayType, src: ExplicitWordEmbeddingMap.ImplSeqType, weight: Float): Unit = {
+  protected def addWeighted(dest: Array[Float], src: IndexedSeq[Float], weight: Float): Unit = {
     var i = 0
 
     while (i < dim) {
@@ -112,8 +110,8 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
     }
   }
 
-  override protected def sanitizedAvgSimilarity(texts1: Iterable[String], texts2: Iterable[String]): ValueType = {
-    var sum = 0.asInstanceOf[ValueType] // optimization
+  def avgSimilarity(texts1: Iterable[String], texts2: Iterable[String]): Float = {
+    var sum = 0f // optimization
     var count = 0 // optimization
 
     texts1.foreach { text1 =>
@@ -137,19 +135,17 @@ class ExplicitWordEmbeddingMap(buildType: ExplicitWordEmbeddingMap.BuildType) ex
   def save(filename: String): Unit = {
     new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
       objectOutputStream.writeObject(map)
-      objectOutputStream.writeObject(unkEmbeddingOpt)
+      objectOutputStream.writeObject(buildType.unknownArray)
     }
   }
 }
 
 object ExplicitWordEmbeddingMap extends Logging {
-  type ImplArrayType = Array[ValueType]
-  type ImplSeqType = Seq[ValueType]
-  protected type ImplMapType = MutableHashMap[String, ArrayType]
+  protected type ImplMapType = MutableHashMap[String, Array[Float]]
 
-  case class BuildType(map: ImplMapType, unknownArray: Option[ImplSeqType])
+  case class BuildType(map: ImplMapType, unknownArray: Option[Array[Float]])
 
-  val UNK = "" // token used for unknowns
+  val UNK = "" // token for unknowns
 
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): ExplicitWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
@@ -194,7 +190,7 @@ object ExplicitWordEmbeddingMap extends Logging {
 
   protected def loadBin(objectInputStream: ClassLoaderObjectInputStream): BuildType = {
     val map = objectInputStream.readObject().asInstanceOf[ImplMapType]
-    val unkEmbeddingOpt = objectInputStream.readObject().asInstanceOf[Option[SeqType]]
+    val unkEmbeddingOpt = objectInputStream.readObject().asInstanceOf[Option[Array[Float]]]
 
     BuildType(map, unkEmbeddingOpt)
   }
@@ -216,7 +212,7 @@ object ExplicitWordEmbeddingMap extends Logging {
     val linesAndIndices = lines.zipWithIndex.buffered
     val map = new ImplMapType()
     val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
-    var unknownWeightsOpt: Option[ImplSeqType] = None
+    var unknownWeightsOpt: Option[Array[Float]] = None
     var total = 0
 
     linesAndIndices.foreach { case (line, index) =>
@@ -225,17 +221,17 @@ object ExplicitWordEmbeddingMap extends Logging {
       require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
       val word = bits(0)
       val weights = {
-        val weights = new ImplArrayType(columns)
+        val weights = new Array[Float](columns)
         var i = 0
         while (i < columns) {
-          weights(i) = bits(i + 1).toDouble.asInstanceOf[ValueType]
+          weights(i) = bits(i + 1).toFloat
           i += 1
         }
         WordEmbeddingMap.norm(weights)
         weights
       }
       if (word == UNK)
-        unknownWeightsOpt = Some(weights.toSeq)
+        unknownWeightsOpt = Some(weights)
       else
         map.put(word, weights)
     }

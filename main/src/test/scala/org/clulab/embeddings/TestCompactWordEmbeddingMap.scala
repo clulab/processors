@@ -5,16 +5,15 @@ import java.io.File
 
 import org.scalatest._
 
-
 class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
 
-  protected def matches(array1: WordEmbeddingMap.SeqType, array2: Array[Double], epsilon: Double): Boolean = {
+  protected def matches(array1: IndexedSeq[Float], array2: IndexedSeq[Double], epsilon: Double): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) < epsilon
     }
   }
 
-  protected def matches(array1: WordEmbeddingMap.SeqType, array2: WordEmbeddingMap.SeqType): Boolean = {
+  protected def matches(array1: IndexedSeq[Float], array2: IndexedSeq[Float]): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>
       math.abs(value1 - value2) == 0
     }
@@ -22,10 +21,10 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
 
   val filename = "/test_vectors_sanitized.txt"
   val fullsizeText = new SanitizedWordEmbeddingMap(Sourcer.sourceFromResource(filename), None, false)
-  val compactText = CompactWordEmbeddingMap(filename, resource = true, cached = false)
-  val tmpFile = File.createTempFile("test_vectors.", ".txt")
-  compactText.save(tmpFile.getAbsolutePath())
-  val compactBin = CompactWordEmbeddingMap(tmpFile.getAbsolutePath(), resource = false, cached = true)
+  val compactText: CompactWordEmbeddingMap = CompactWordEmbeddingMap(filename, resource = true, cached = false)
+  val tmpFile: File = File.createTempFile("test_vectors.", ".txt")
+  compactText.save(tmpFile.getAbsolutePath)
+  val compactBin: CompactWordEmbeddingMap = CompactWordEmbeddingMap(tmpFile.getAbsolutePath, resource = false, cached = true)
   val epsilon = 0.000001
 
   behavior of "compactText version"
@@ -44,14 +43,14 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
 
     compactText.keys.foreach { key =>
       val compactResult = compactText.get(key).get
-      val fullsizeResult = fullsizeText.matrix.get(key).get
+      val fullsizeResult = fullsizeText.matrix(key)
 
 //      val compactArray = compactResult.asInstanceOf[Array[Float]]
 //      val fullsizeArray = fullsizeResult.asInstanceOf[Array[Double]]
       matches(compactResult, fullsizeResult, epsilon) should be (true)
     }
     if (compactText.unkEmbeddingOpt.isDefined)
-      matches(compactText.unkEmbeddingOpt.get, fullsizeText.matrix.get(CompactWordEmbeddingMap.UNK).get, epsilon) should be (true)
+      matches(compactText.unkEmbeddingOpt.get, fullsizeText.matrix(CompactWordEmbeddingMap.UNK), epsilon) should be (true)
   }
 
   it should "be normalized" in {
@@ -63,15 +62,23 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   }
 
   it should "get the same results" in {
+    val sanitizer = WordEmbeddingMap.defaultWordSanitizer
+
     compactText.keys.foreach { key1 =>
       compactText.keys.foreach { key2 =>
 
-        val result1a = compactText.avgSimilarity(Array(key1), Array(key2))
+        val result1a = compactText.avgSimilarity(
+          Array(sanitizer.sanitizeWord(key1)),
+          Array(sanitizer.sanitizeWord(key2))
+        )
         val result2a = fullsizeText.avgSimilarity(Array(key1), Array(key2))
 
         (math.abs(result1a - result2a) < epsilon) should be(true)
 
-        val result1b = compactText.avgSimilarity(Array(key1, key2), Array(key2, key1))
+        val result1b = compactText.avgSimilarity(
+          Array(sanitizer.sanitizeWord(key1), sanitizer.sanitizeWord(key2)),
+          Array(sanitizer.sanitizeWord(key2), sanitizer.sanitizeWord(key1))
+        )
         val result2b = fullsizeText.avgSimilarity(Array(key1, key2), Array(key2, key1))
 
         (math.abs(result1b - result2b) < epsilon) should be(true)

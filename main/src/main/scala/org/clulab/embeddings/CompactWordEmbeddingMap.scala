@@ -2,8 +2,6 @@ package org.clulab.embeddings
 
 import java.io._
 
-import org.clulab.embeddings.WordEmbeddingMap.SeqType
-import org.clulab.embeddings.WordEmbeddingMap.ValueType
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
@@ -41,20 +39,21 @@ import scala.io.Source
   * resulting return value, call save(compactFilename).  Thereafter, for normal, speedy processing,
   * use CompactWord2Vec(compactFilename, resource = false, cached = true).
   */
-class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
+class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.BuildType)
     extends WordEmbeddingMap {
-
   protected val map: CompactWordEmbeddingMap.ImplMapType = buildType.map // (word -> row)
-  protected val array: CompactWordEmbeddingMap.ImplArrayType = buildType.array // flattened matrix
+  protected val array: Array[Float] = buildType.array // flattened matrix
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
-  // Cache this special value.
-  val unkEmbeddingOpt: Option[SeqType] = buildType.unknownArray.asInstanceOf[Option[SeqType]]
+  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.toIndexedSeq)
 
   /** The dimension of an embedding vector */
   override val dim: Int = columns
 
-  def compare(lefts: CompactWordEmbeddingMap.ImplSeqType, rights: CompactWordEmbeddingMap.ImplSeqType): Boolean = {
+  // Be careful because this word may not be sanitized!
+  override def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
+
+  def compare(lefts: IndexedSeq[Float], rights: IndexedSeq[Float]): Boolean = {
     lefts.length == rights.length &&
         lefts.zip(rights).forall { case (left, right) =>
           left - right < 0.0001f
@@ -69,7 +68,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     }
   }
 
-  def compare(left: Option[CompactWordEmbeddingMap.ImplSeqType], right: Option[CompactWordEmbeddingMap.ImplSeqType]): Boolean = {
+  def compare(left: Option[IndexedSeq[Float]], right: Option[IndexedSeq[Float]]): Boolean = {
     (left, right) match {
       case (None, None) => true
       case (Some(left), Some(right)) => compare(left, right)
@@ -90,9 +89,9 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     }
   }
 
-  override def hashCode(): Int = 0
+  override def hashCode(): Int = 0 // Don't even try.
 
-  def get(word: String): Option[SeqType] = {
+  def get(word: String): Option[IndexedSeq[Float]] = {
     map.get(word).map { row =>
       val offset = row * columns
       array.view(offset, offset + columns)
@@ -100,7 +99,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
   }
 
   /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
-  override def getOrElseUnknown(word: String): SeqType = {
+  override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
     get(word).getOrElse(
       unkEmbeddingOpt.getOrElse(
         throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
@@ -108,12 +107,9 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     )
   }
 
-  // Be careful because this word may not be sanitized!
-  override def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
-
   /** Computes the embedding of a text, as an unweighted average of all words */
-  override def makeCompositeVector(text: Iterable[String]): SeqType = {
-    val total = new CompactWordEmbeddingMap.ImplArrayType(columns) // automatically initialized to zero
+  override def makeCompositeVector(text: Iterable[String]): Array[Float] = {
+    val total = new Array[Float](columns) // automatically initialized to zero
 
     text.foreach { word =>
       // This therefore skips the unknown words, which may not be the right strategy.
@@ -123,8 +119,8 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     total
   }
 
-  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): SeqType = {
-    val total = new CompactWordEmbeddingMap.ImplArrayType(columns) // automatically initialized to zero
+  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Array[Float] = {
+    val total = new Array[Float](columns) // automatically initialized to zero
 
     (text, weights).zipped.foreach { (word, weight) =>
       // This therefore skips the unknown words, which may not be the right strategy.
@@ -136,7 +132,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
 
   def keys: Iterable[String] = map.keys // debug use only
 
-  protected def add(dest: CompactWordEmbeddingMap.ImplArrayType, srcRow: Int): Unit = {
+  protected def add(dest: Array[Float], srcRow: Int): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
@@ -146,7 +142,7 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     }
   }
 
-  protected def addWeighted(dest: CompactWordEmbeddingMap.ImplArrayType, srcRow: Int, weight: Float): Unit = {
+  protected def addWeighted(dest: Array[Float], srcRow: Int, weight: Float): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
@@ -157,8 +153,8 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
   }
 
   // Find the average embedding similarity between any two words in these two texts.
-  override protected def sanitizedAvgSimilarity(texts1: Iterable[String], texts2: Iterable[String]): ValueType = {
-    var sum = 0.asInstanceOf[ValueType] // optimization
+  override def avgSimilarity(texts1: Iterable[String], texts2: Iterable[String]): Float = {
+    var sum = 0f // optimization
     var count = 0 // optimization
 
     texts1.foreach { text1 =>
@@ -176,13 +172,13 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
       }
     }
     if (count != 0) sum / count
-    else 0
+    else 0f
   }
 
-  def dotProduct(row1: Int, row2: Int): ValueType = {
+  def dotProduct(row1: Int, row2: Int): Float = {
     val offset1 = row1 * columns
     val offset2 = row2 * columns
-    var sum = 0.asInstanceOf[ValueType] // optimization
+    var sum = 0f
     var i = 0 // optimization
 
     while (i < columns) {
@@ -198,23 +194,19 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType)
     val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
     new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
-      // Writing is performed in two steps so that the parts can be
-      // processed separately when read back in.
       objectOutputStream.writeObject(words)
       objectOutputStream.writeObject(array)
-      objectOutputStream.writeObject(unkEmbeddingOpt)
+      objectOutputStream.writeObject(buildType.unknownArray)
     }
   }
 }
 
 object CompactWordEmbeddingMap extends Logging {
-  type ImplArrayType = Array[ValueType]
-  type ImplSeqType = Array[ValueType] // Seq[ValueType]
   protected type ImplMapType = MutableHashMap[String, Int]
 
-  case class BuildType(map: ImplMapType, array: ImplArrayType, unknownArray: Option[ImplSeqType])
+  case class BuildType(map: ImplMapType, array: Array[Float], unknownArray: Option[Array[Float]])
 
-  val UNK = "" // token to be used for unknowns
+  val UNK = "" // token for unknowns
 
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
@@ -268,18 +260,16 @@ object CompactWordEmbeddingMap extends Logging {
       }
       map
     }
-    val array = objectInputStream.readObject().asInstanceOf[ImplArrayType]
-    val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[ImplSeqType]]
+    val array = objectInputStream.readObject().asInstanceOf[Array[Float]]
+    val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[Array[Float]]]
 
     BuildType(map, array, unknownArrayOpt)
   }
 
-  protected def norm(arrayBuffer: ArrayBuffer[ValueType], rowIndex: Int, columns: Int): Unit = {
+  protected def norm(arrayBuffer: ArrayBuffer[Float], rowIndex: Int, columns: Int): Unit = {
     val offset = rowIndex * columns
 
-    WordEmbeddingMap.norm(
-      arrayBuffer.view(offset, offset + columns)
-    )
+    WordEmbeddingMap.norm(arrayBuffer.view(offset, offset + columns))
   }
 
   protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
@@ -300,11 +290,12 @@ object CompactWordEmbeddingMap extends Logging {
     val map = new ImplMapType()
     val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
     val dim = wordCountOpt.map(_ * columns).getOrElse(1000 * columns)
-    val arrayBuffer = new ArrayBuffer[ValueType](dim)
-    var unknownArrayBufferOpt: Option[ArrayBuffer[ValueType]] = None
+    val arrayBuffer = new ArrayBuffer[Float](dim)
+    var unknownArrayBufferOpt: Option[ArrayBuffer[Float]] = None
     var total = 0
 
     linesAndIndices.foreach { case (line, index) =>
+      println(index)
       total += 1
       val bits = line.split(' ')
       require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
@@ -316,7 +307,7 @@ object CompactWordEmbeddingMap extends Logging {
       else {
         val buffer =
           if (word == UNK) {
-            val unknownArrayBuffer = new ArrayBuffer[ValueType](columns)
+            val unknownArrayBuffer = new ArrayBuffer[Float](columns)
             unknownArrayBufferOpt = Some(unknownArrayBuffer)
             unknownArrayBuffer
           }
@@ -324,7 +315,7 @@ object CompactWordEmbeddingMap extends Logging {
             arrayBuffer
         var i = 0 // optimization
         while (i < columns) {
-          buffer += bits(i + 1).toDouble.asInstanceOf[ValueType]
+          buffer += bits(i + 1).toFloat
           i += 1
         }
         if (word == UNK)

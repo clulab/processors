@@ -1,7 +1,7 @@
 package org.clulab.embeddings
 
 trait WordSanitizing extends Serializable {
-  def sanitizeWord(word: String, keepNumbers: Boolean = true): String
+  def sanitizeWord(word: String): String
 
   override def equals(other: Any): Boolean =
     this.getClass == other.getClass
@@ -9,8 +9,8 @@ trait WordSanitizing extends Serializable {
 
 class DefaultWordSanitizer extends WordSanitizing {
 
-  override def sanitizeWord(word: String, keepNumbers: Boolean = true): String = {
-    EmbeddingUtils.sanitizeWord(word, keepNumbers)
+  override def sanitizeWord(word: String): String = {
+    EmbeddingUtils.sanitizeWord(word, keepNumbers = true)
   }
 }
 

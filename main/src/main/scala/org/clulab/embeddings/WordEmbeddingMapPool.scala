@@ -69,6 +69,12 @@ object WordEmbeddingMapPool {
     }
   }
 
+  def clear(): Unit = {
+    this.synchronized {
+      pool.clear()
+    }
+  }
+
   protected def loadEmbedding(name: String, compact: Boolean): WordEmbeddingMap = {
     val (inputStream, _, format) = getSource(name)
         .getOrElse(throw new RuntimeException(s"WordEmbeddingMap $name could not be opened."))
