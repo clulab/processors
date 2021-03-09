@@ -3,6 +3,7 @@ import edu.cmu.dynet.{Dim, Expression, FloatVector}
 import org.clulab.embeddings.WordEmbeddingMapPool
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.utils.ConfigWithDefaults
+import org.clulab.utils.StringUtils
 
 /**
  * Implements the ConstEmbeddings as a thin wrapper around WordEmbeddingMap
@@ -10,9 +11,14 @@ import org.clulab.utils.ConfigWithDefaults
  */
 class ConstEmbeddingsGlove(matrixResourceName: String) extends ConstEmbeddings {
 
-  val wordVectors =
-    WordEmbeddingMapPool.getOrElseCreate(matrixResourceName, compact = true)
-    // CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
+  val wordVectors = {
+    // This is really meant to be a resource location, but we'll take a file if it's there.
+    val name = StringUtils.afterLast(matrixResourceName, '/', all = true, keep = false)
+    val location = StringUtils.beforeLast(matrixResourceName, '/', all = false, keep = true)
+
+    WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
+  }
+  // CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
 
   override def dim: Int = wordVectors.dim
 
