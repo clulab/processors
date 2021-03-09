@@ -6,14 +6,14 @@ import java.io.InputStream
 import scala.util.Failure
 import scala.util.Try
 
-class InputStreamer(val provider: AnyRef = this, direct: Boolean = true) {
+class InputStreamer(val provider: AnyRef = InputStreamer, direct: Boolean = true) {
   import InputStreamer.Format
   import InputStreamer.StreamResult
   import InputStreamer.Location
 
-  protected def getFileAsStream(name: String): FileInputStream = new FileInputStream(name)
+  def getFileAsStream(name: String): FileInputStream = new FileInputStream(name)
 
-  protected def getResourceAsStream(name: String): InputStream = {
+  def getResourceAsStream(name: String): InputStream = {
     val inputStream =
       if (direct) provider.getClass.getResourceAsStream(name)
       else provider.getClass.getClassLoader.getResourceAsStream(name)
