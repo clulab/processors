@@ -29,12 +29,23 @@ class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
       Utils.initializeDyNet()
       new ConstEmbeddingsGlove("/test_vectors")
     }
-    var e = embeddings.mkEmbedding("time")
-    e != null should be(true)
-    e.dim().get(0) should be(5)
-    e = null
-    embeddings = null
-    // This is for debugging memory leaks.  It will cause other tests to crash.
-    // ConstEmbeddingsGlove.SINGLETON = null
+
+    0.until(100).foreach { index =>
+      var e1 = embeddings.mkEmbedding("time")
+      e1 != null should be(true)
+      e1.dim().get(0) should be(5)
+      e1 = null
+
+      var e2 = embeddings.mkEmbedding("timeout")
+      e2 != null should be(true)
+      e2.dim().get(0) should be(5)
+      e2 = null
+    }
+
+    {
+      embeddings = null
+      // This is for debugging memory leaks.  It will cause other tests to crash.
+      // ConstEmbeddingsGlove.SINGLETON = null
+    }
   }
 }
