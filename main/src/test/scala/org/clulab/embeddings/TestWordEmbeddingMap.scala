@@ -1,9 +1,5 @@
-package org.clulab.struct
+package org.clulab.embeddings
 
-import org.clulab.embeddings.CompactWordEmbeddingMap
-import org.clulab.embeddings.ExplicitWordEmbeddingMap
-import org.clulab.embeddings.WordEmbeddingMap
-import org.clulab.embeddings.WordEmbeddingMapPool
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.scalatest.FlatSpec

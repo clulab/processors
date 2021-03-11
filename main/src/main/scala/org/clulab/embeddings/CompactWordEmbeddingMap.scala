@@ -295,7 +295,8 @@ object CompactWordEmbeddingMap extends Logging {
     var total = 0
 
     linesAndIndices.foreach { case (line, index) =>
-      println(index)
+      if (index % 1000 == 0)
+        println(index)
       total += 1
       val bits = line.split(' ')
       require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
