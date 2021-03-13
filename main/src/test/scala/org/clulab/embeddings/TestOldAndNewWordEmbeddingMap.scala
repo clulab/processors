@@ -1,5 +1,6 @@
 package org.clulab.embeddings
 
+import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.SeqOdometer
@@ -9,7 +10,6 @@ import org.scalatest.Matchers
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
-import scala.collection.mutable
 
 class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   val unused = false
@@ -54,8 +54,8 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
 
     val available = (useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) match {
       case (false, false, _,    _   ) => false // The don't have the bin version as a resource.
-      case (true,  false, true, true) => false // file, binary, explicit, old is not there.
-      case _ => true
+      case (true,  false, true, true) => true  // file, binary, explicit, old is not there.
+      case _ => false
     }
 
     val description = {
@@ -102,10 +102,10 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     }
   }
 
-  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
-  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
-  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
-  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
+//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
+//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
+//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
+//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
 
   new WordEmbeddingConfigIterator().foreach { wordEmbeddingConfig =>
     val available = wordEmbeddingConfig.available
@@ -125,6 +125,12 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
             case WordEmbeddingConfig(true /* file */ , true /* txt */ , true /* explicit */ , _) =>
               new OldWordEmbeddingMap(locationName)
             case WordEmbeddingConfig(true /* file */ , false /* bin */ , true /* explicit */ , _) =>
+              val inputStreamer = new InputStreamer()
+              val inputStream = inputStreamer.getFileAsStream(locationName)
+              inputStream.autoClose { inputStream =>
+                val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
+                objectInputStream.readObject().asInstanceOf[OldWordEmbeddingMap]
+              }
             // OldWordEmbeddingMap.fromBinary(locationName) // This is not right.
             case WordEmbeddingConfig(false /* resource */ , true /* txt */ , true /* explicit */ , _) =>
               val inputStreamer = new InputStreamer()
@@ -133,7 +139,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
                 new OldWordEmbeddingMap(inputStream, None, false)
               }
             case WordEmbeddingConfig(false /* resource */ , false /* bin */ , true /* explicit */ , _) =>
-              ???
+              ??? // This option is not available
 
             case WordEmbeddingConfig(_, _, false /* compact */ , _) =>
               OldCompactWordEmbeddingMap(locationName, resource, cached)
