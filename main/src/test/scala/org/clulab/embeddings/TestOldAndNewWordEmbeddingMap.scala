@@ -6,104 +6,155 @@ import org.clulab.utils.SeqOdometer
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
+import java.io.BufferedOutputStream
+import java.io.FileOutputStream
+import java.io.ObjectOutputStream
+import scala.collection.mutable
+
 class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
-  val compactExt = ".compact"
-  val explicitExt = ".explicit"
-  val oldExt = ".old"
-  val newExt = ".new"
+  val unused = false
   val fileName = "../glove.840B.300d.10f"
   val resourceName = "/org/clulab/glove/glove.840B.300d.10f"
 
-  if (false) {
-    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(fileName, compact = true)
-    wordEmbeddingMap.save(fileName + InputStreamer.binExtension + compactExt + newExt)
-  }
+  case class WordEmbeddingConfig(useFileElseResource: Boolean, useTxtElseBin: Boolean,
+      useExplicitElseCompact: Boolean, useOldElseNew: Boolean) {
+    val compactExt = ".compact"
+    val explicitExt = ".explicit"
+    val oldExt = ".old"
+    val newExt = ".new"
 
-  if (false) {
-    val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(fileName, compact = false)
-    wordEmbeddingMap.save(fileName + InputStreamer.binExtension + explicitExt + newExt)
-  }
+    val useFile = useFileElseResource
+    val useResource = !useFileElseResource
 
-  if (false) {
-    val wordEmbeddingMap = OldCompactWordEmbeddingMap(fileName + InputStreamer.txtExtension, resource = false, cached = false)
-    wordEmbeddingMap.save(fileName + InputStreamer.binExtension + compactExt + oldExt)
-  }
+    val useTxt = useTxtElseBin
+    val useBin = !useTxtElseBin
 
-  if (false) {
-    val wordEmbeddingMap = new OldWordEmbeddingMap(fileName + InputStreamer.txtExtension)
-    wordEmbeddingMap.saveMatrix(fileName + InputStreamer.binExtension + explicitExt + oldExt)
-  }
+    val useExplicit = useExplicitElseCompact
+    val useCompact = !useExplicitElseCompact
 
-  val    useFileElseResource: Array[Boolean] = Array(true, false)
-  val          useTxtElseBin: Array[Boolean] = Array(true, false)
-  val useExplicitElseCompact: Array[Boolean] = Array(true, false)
-  val          useOldElseNew: Array[Boolean] = Array(true, false)
+    val useOld = useOldElseNew
+    val useNew = !useOldElseNew
 
-  val odometer = new SeqOdometer[Boolean](Array(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew))
+    val locationName = {
+      val head =
+        (if (useFileElseResource) fileName
+        else resourceName) +
+        (if (useTxtElseBin) InputStreamer.txtExtension
+        else InputStreamer.binExtension)
+      val tail =
+        if (useResource) ""
+        else
+          (if (useExplicitElseCompact) explicitExt
+          else compactExt) +
+          (if (useOldElseNew) oldExt
+          else newExt)
 
-  odometer.foreach { case Seq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) =>
+      head + tail
+    }
+
     val available = (useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) match {
       case (false, false, _,    _   ) => false // The don't have the bin version as a resource.
       case (true,  false, true, true) => false // file, binary, explicit, old is not there.
       case _ => true
     }
 
+    val description = {
+      val top = s"(useFileElseResource = $useFileElseResource, useTxtElseBin = $useTxtElseBin, useExplicitElseCompact = $useExplicitElseCompact, useOldElseNew = $useOldElseNew)"
+      val bot = s"| $useFileElseResource | $useTxtElseBin | $useExplicitElseCompact | $useOldElseNew |"
+
+      s"$top\n$bot"
+    }
+  }
+
+  class WordEmbeddingConfigIterator extends Iterator[WordEmbeddingConfig] {
+    val    useFileElseResource: Array[Boolean] = Array(true, false)
+    val          useTxtElseBin: Array[Boolean] = Array(true, false)
+    val useExplicitElseCompact: Array[Boolean] = Array(true, false)
+    val          useOldElseNew: Array[Boolean] = Array(true, false)
+    val odometer = new SeqOdometer[Boolean](Array(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew))
+
+    override def hasNext: Boolean = odometer.hasNext
+
+    override def next(): WordEmbeddingConfig = {
+      val Seq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) = odometer.next()
+
+      WordEmbeddingConfig(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew)
+    }
+  }
+
+  def mkFileBin(wordEmbeddingConfig: WordEmbeddingConfig): Unit = {
+    // This assumes that the original resource has already been copied to fileName.txt.
+    wordEmbeddingConfig match {
+      // useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew
+      case WordEmbeddingConfig(_, _, true, true) =>
+        val wordEmbeddingMap = new OldWordEmbeddingMap(fileName + InputStreamer.txtExtension)
+        new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(wordEmbeddingConfig.locationName))).autoClose { objectOutputStream =>
+          objectOutputStream.writeObject(wordEmbeddingMap)
+        }
+        // This just does output in text again, so favor the above version.
+        // wordEmbeddingMap.saveMatrix(wordEmbeddingConfig.locationName)
+      case WordEmbeddingConfig(_, _, false, true) =>
+        val wordEmbeddingMap = OldCompactWordEmbeddingMap(fileName + InputStreamer.txtExtension, resource = false, cached = false)
+        wordEmbeddingMap.save(wordEmbeddingConfig.locationName)
+      case WordEmbeddingConfig(_, _, _, false) =>
+        val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(fileName, wordEmbeddingConfig.useCompact)
+        wordEmbeddingMap.save(wordEmbeddingConfig.locationName)
+    }
+  }
+
+  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
+  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
+  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
+  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
+
+  new WordEmbeddingConfigIterator().foreach { wordEmbeddingConfig =>
+    val available = wordEmbeddingConfig.available
+    val description = wordEmbeddingConfig.description
+    val locationName = wordEmbeddingConfig.locationName
+
+    val resource = wordEmbeddingConfig.useResource
+    val cached = wordEmbeddingConfig.useBin
+
     if (available) {
-      val description = s"(useFileElseResource = $useFileElseResource, useTxtElseBin = $useTxtElseBin, useExplicitElseCompact = $useExplicitElseCompact, useOldElseNew = $useOldElseNew)"
-      val name = {
-        val baseName = if (useFileElseResource) fileName else resourceName
-        val baseExtName = baseName + (if (useTxtElseBin) InputStreamer.txtExtension else InputStreamer.binExtension)
-        val name = baseExtName + (
-          if (!useTxtElseBin)
-              (if (useExplicitElseCompact) explicitExt else compactExt) +
-              (if (useOldElseNew) oldExt else newExt)
-          else ""
-        )
-
-        name
-      }
-      println(s"Starting test of $name with $description.")
+      println(s"Starting test of $locationName with $description.")
       val start = System.currentTimeMillis()
+      val wordEmbeddingMap =
+        if (wordEmbeddingConfig.useOld)
+          wordEmbeddingConfig match {
+            // useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew
+            case WordEmbeddingConfig(true /* file */ , true /* txt */ , true /* explicit */ , _) =>
+              new OldWordEmbeddingMap(locationName)
+            case WordEmbeddingConfig(true /* file */ , false /* bin */ , true /* explicit */ , _) =>
+            // OldWordEmbeddingMap.fromBinary(locationName) // This is not right.
+            case WordEmbeddingConfig(false /* resource */ , true /* txt */ , true /* explicit */ , _) =>
+              val inputStreamer = new InputStreamer()
+              val inputStream = inputStreamer.getResourceAsStream(locationName)
+              inputStream.autoClose { inputStream =>
+                new OldWordEmbeddingMap(inputStream, None, false)
+              }
+            case WordEmbeddingConfig(false /* resource */ , false /* bin */ , true /* explicit */ , _) =>
+              ???
 
-      if (useOldElseNew) {
-        val resource = !useFileElseResource
-        val cached = !useTxtElseBin
+            case WordEmbeddingConfig(_, _, false /* compact */ , _) =>
+              OldCompactWordEmbeddingMap(locationName, resource, cached)
+          }
+        else {
+          val inputStreamer = new InputStreamer()
+          val inputStream =
+            if (wordEmbeddingConfig.useFileElseResource) inputStreamer.getFileAsStream(locationName)
+            else inputStreamer.getResourceAsStream(locationName)
 
-        if (useExplicitElseCompact) {
-          if (useFileElseResource) {
-            if (useTxtElseBin)
-              new OldWordEmbeddingMap(name)
+          inputStream.autoClose { inputStream =>
+            if (wordEmbeddingConfig.useExplicitElseCompact)
+              ExplicitWordEmbeddingMap(inputStream, wordEmbeddingConfig.useBin)
             else
-              OldWordEmbeddingMap.fromBinary(name) // This is not right.
-          }
-          else {
-            val inputStreamer = new InputStreamer()
-            val inputStream = inputStreamer.getResourceAsStream(name)
-            inputStream.autoClose { inputStream =>
-              new OldWordEmbeddingMap(inputStream, None, false)
-            }
+              CompactWordEmbeddingMap(inputStream, wordEmbeddingConfig.useBin)
           }
         }
-        else
-          OldCompactWordEmbeddingMap(name, resource, cached)
-      }
-      else {
-        val binary = !useTxtElseBin
-        val inputStreamer = new InputStreamer()
-        val inputStream =
-          if (useFileElseResource) inputStreamer.getFileAsStream(name)
-          else inputStreamer.getResourceAsStream(name)
-
-        inputStream.autoClose { inputStream =>
-          if (useExplicitElseCompact)
-            ExplicitWordEmbeddingMap(inputStream, binary)
-          else
-            CompactWordEmbeddingMap(inputStream, binary)
-        }
-      }
       val stop = System.currentTimeMillis()
       val elapsed = stop - start
-      println(s"Ending test after $elapsed ms of $name with $description.")
+
+      println(s"Ending test after $elapsed ms of $locationName with $description.")
     }
   }
 }

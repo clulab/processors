@@ -19,7 +19,8 @@ import scala.io.Source
   * Last Modified: Fix compiler issue: import scala.io.Source.
   */
 
-class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) {
+@SerialVersionUID(1000L)
+class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) extends Serializable {
 
   lazy val dimensions: Int = matrix.values.head.length
 
