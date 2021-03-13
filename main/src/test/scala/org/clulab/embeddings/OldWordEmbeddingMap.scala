@@ -20,9 +20,7 @@ import scala.io.Source
   */
 
 @SerialVersionUID(1000L)
-class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) extends Serializable {
-
-  lazy val dimensions: Int = matrix.values.head.length
+class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends WordEmbeddingMap with Serializable {
 
   /** alternate constructor to allow loading from a file, possibly with a set of words to constrain the vocab */
   def this(mf: String, wordsToUse: Option[Set[String]] = None, caseInsensitiveWordsToUse:Boolean = false) = {
@@ -41,6 +39,8 @@ class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) exte
 
   // laziness here causes problems with InputStream-based alternate constructor
   val matrix : Map[String, Array[Double]] = matrixConstructor
+
+  val dimensions: Int = matrix.values.head.length
 
   def saveMatrix(mf: String) {
     val pw = new PrintWriter(mf)
@@ -120,7 +120,7 @@ class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) exte
     case None => List()
   }
 
-  def makeCompositeVector(t:Iterable[String]):Array[Double] = {
+  def makeDoubleCompositeVector(t:Iterable[String]):Array[Double] = {
     val vTotal = new Array[Double](dimensions)
     for(s <- t) {
       val v = getEmbedding(s)
@@ -157,8 +157,8 @@ class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) exte
     * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
     */
   def sanitizedTextSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
-    val v1 = makeCompositeVector(t1)
-    val v2 = makeCompositeVector(t2)
+    val v1 = makeDoubleCompositeVector(t1)
+    val v2 = makeDoubleCompositeVector(t2)
     OldWordEmbeddingMap.dotProduct(v1, v2)
   }
 
@@ -294,7 +294,7 @@ class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) exte
     * Finds the average embedding similarity between any two words in these two texts
     * IMPORTANT: words here must be words not lemmas!
     */
-  def avgSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
+  def avgDoubleSimilarity(t1:Iterable[String], t2:Iterable[String]):Double = {
     val st1 = new ArrayBuffer[String]()
     t1.foreach(st1 += OldWordEmbeddingMap.sanitizeWord(_))
     val st2 = new ArrayBuffer[String]()
@@ -365,6 +365,35 @@ class OldWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]) exte
     OldWordEmbeddingMap.norm(v)
     v
   }
+
+  /** The dimension (width) of an embedding vector */
+  override def dim: Int = dimensions
+
+  override def isOutOfVocabulary(word: String): Boolean = ???
+
+  /** Retrieves the embedding for this word, if it exists in the map */
+  override def get(word: String): Option[IndexedSeq[Float]] = ???
+
+  /** Retrieves the embedding for this word; if it doesn't exist in the map uses the unknown
+    * embedding instead.  That embedding is defined in the vector file.  If it is needed,
+    * but doesn't exist, a RuntimeException is thrown.
+    */
+  // This is the only use used in performance testing.
+
+  val fakeResult = new Array[Float](dimensions)
+  override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
+    getEmbedding(word) // For the sake of timing
+    fakeResult
+  }
+
+  override def makeCompositeVector(text: Iterable[String]): Array[Float] = ???
+
+  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Array[Float] = ???
+
+  override def avgSimilarity(text1: Iterable[String], text2: Iterable[String]): Float = ???
+
+  /** Save this object in binary format. */
+  override def save(filename: String): Unit = ???
 }
 
 object OldWordEmbeddingMap {

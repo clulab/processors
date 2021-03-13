@@ -37,13 +37,13 @@ import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
   * resulting return value, call save(compactFilename).  Thereafter, for normal, speedy processing,
   * use CompactWord2Vec(compactFilename, resource = false, cached = true).
   */
-class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType) {
+class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
   protected val map: OldCompactWordEmbeddingMap.MapType = buildType._1 // (word -> row)
   protected val array: OldCompactWordEmbeddingMap.ArrayType = buildType._2 // flattened matrix
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
 
-  def get(word: String): Option[OldCompactWordEmbeddingMap.ArrayType] = { // debug use only
+  def oldGet(word: String): Option[OldCompactWordEmbeddingMap.ArrayType] = { // debug use only
     map.get(word).map { row =>
       val offset = row * columns
 
@@ -171,6 +171,23 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
     }
     if (count != 0) avg / count
     else 0
+  }
+
+  /** The dimension (width) of an embedding vector */
+  override def dim: Int = columns
+
+  /** Retrieves the embedding for this word, if it exists in the map */
+  override def get(word: String): Option[IndexedSeq[Float]] = ???
+
+  /** Retrieves the embedding for this word; if it doesn't exist in the map uses the unknown
+    * embedding instead.  That embedding is defined in the vector file.  If it is needed,
+    * but doesn't exist, a RuntimeException is thrown.
+    */
+
+  val fakeResult = new Array[Float](columns)
+  override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
+    oldGet(word)
+    fakeResult
   }
 }
 
