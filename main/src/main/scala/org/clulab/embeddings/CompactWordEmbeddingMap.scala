@@ -266,12 +266,6 @@ object CompactWordEmbeddingMap extends Logging {
     BuildType(map, array, unknownArrayOpt)
   }
 
-  protected def norm(arrayBuffer: ArrayBuffer[Float], rowIndex: Int, columns: Int): Unit = {
-    val offset = rowIndex * columns
-
-    WordEmbeddingMap.norm(arrayBuffer.view(offset, offset + columns))
-  }
-
   protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
     val (line, _) = linesAndIndices.head
     val bits = line.split(' ')
@@ -285,54 +279,94 @@ object CompactWordEmbeddingMap extends Logging {
       (None, bits.length - 1)
   }
 
+  abstract class Appender(val columns: Int) {
+    def append(value: Float): Unit
+    def norm(): Unit
+    def toArray: Array[Float]
+  }
+
+  object Appender {
+
+    def apply(wordCountOpt: Option[Int], columns: Int): Appender = {
+      wordCountOpt.map { wordCount =>
+        val array = new Array[Float](wordCount * columns)
+        new ArrayAppender(array, columns)
+      }.getOrElse {
+        val arrayBuffer = new ArrayBuffer[Float](100000 * columns)
+        new ArrayBufferAppender(arrayBuffer, columns)
+      }
+    }
+  }
+
+  class ArrayAppender(array: Array[Float], columns: Int) extends Appender(columns) {
+    var index = 0
+
+    def append(value: Float): Unit = {
+      array(index) = value
+      index += 1
+    }
+
+    def norm(): Unit = {
+      WordEmbeddingMap.norm(array.view(index - columns, index))
+    }
+
+    def toArray: Array[Float] = array
+  }
+
+  class ArrayBufferAppender(arrayBuffer: ArrayBuffer[Float], columns: Int) extends Appender(columns) {
+
+    def append(value: Float): Unit = arrayBuffer += value
+
+    def norm(): Unit = {
+      WordEmbeddingMap.norm(arrayBuffer.view(arrayBuffer.size - columns, arrayBuffer.size))
+    }
+
+    // Norm the whole thing and then only after converted to array
+    // Call it normed
+    def toArray: Array[Float] = arrayBuffer.toArray
+  }
+
   protected def buildMatrix(lines: Iterator[String]): BuildType = {
     val linesAndIndices = lines.zipWithIndex.buffered
     val map = new ImplMapType()
     val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
-    val dim = wordCountOpt.map(_ * columns).getOrElse(1000 * columns)
-    val arrayBuffer = new ArrayBuffer[Float](dim)
-    var unknownArrayBufferOpt: Option[ArrayBuffer[Float]] = None
+    val knownAppender = Appender(wordCountOpt, columns)
+    var unknownAppenderOpt: Option[Appender] = None
     var total = 0
 
     linesAndIndices.foreach { case (line, index) =>
-//      if (index % 1000 == 0)
-//        println(index)
       total += 1
       val bits = line.split(' ')
       require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
       val word = bits(0)
       if (map.contains(word))
         logger.warn(s"The word '$word' is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
-      else if (word == UNK && unknownArrayBufferOpt.isDefined)
+      else if (word == UNK && unknownAppenderOpt.isDefined)
         logger.warn(s"The unknown vector is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
       else {
-        val buffer =
+        val appender =
           if (word == UNK) {
-            val unknownArrayBuffer = new ArrayBuffer[Float](columns)
-            unknownArrayBufferOpt = Some(unknownArrayBuffer)
-            unknownArrayBuffer
+            val unknownAppender = Appender(Some(1), columns)
+            unknownAppenderOpt = Some(unknownAppender)
+            unknownAppender
           }
-          else
-            arrayBuffer
+          else {
+            map += (word -> map.size)
+            knownAppender
+          }
         var i = 0 // optimization
         while (i < columns) {
-          buffer += bits(i + 1).toFloat
+          appender.append(bits(i + 1).toFloat)
           i += 1
         }
-        if (word == UNK)
-          norm(buffer, 0, columns)
-        else {
-          val row = map.size
-          norm(buffer, row, columns)
-          map += (word -> row)
-        }
+        appender.norm() // TODO: Do just once at the end and return array
       }
     }
     logger.info(s"Completed matrix loading. Kept ${map.size} words from $total lines of words.")
-    if (unknownArrayBufferOpt.isDefined)
+    if (unknownAppenderOpt.isDefined)
       logger.info(s"An unknown vector is defined for the matrix.")
     if (wordCountOpt.isDefined)
       require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
-    BuildType(map, arrayBuffer.toArray, unknownArrayBufferOpt.map(_.toArray))
+    BuildType(map, knownAppender.toArray, unknownAppenderOpt.map(_.toArray))
   }
 }

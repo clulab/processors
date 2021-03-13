@@ -45,7 +45,7 @@ object WordEmbeddingMap {
   def norm(array: MutableIndexedSeq[Float]): Unit = {
 
     def calcLength(): Float = {
-      var len = 0.asInstanceOf[Float] // optimization
+      var len = 0f // optimization
       var i = 0 // optimization
 
       while (i < array.length) {
