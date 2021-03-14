@@ -1,13 +1,13 @@
 package org.clulab.embeddings
 
 import java.io._
-
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
 
@@ -284,9 +284,10 @@ object CompactWordEmbeddingMap extends Logging {
     def normed(): Array[Float]
 
     def norm(array: Array[Float]): Array[Float] = {
-      var index = 0
+      val length = array.length
+      var index = 0 // optimization
 
-      while (index < array.length) {
+      while (index < length) {
         WordEmbeddingMap.norm(array.view(index, index + columns))
         index += columns
       }
@@ -298,17 +299,19 @@ object CompactWordEmbeddingMap extends Logging {
 
     def apply(wordCountOpt: Option[Int], columns: Int): Appender = {
       wordCountOpt.map { wordCount =>
-        val array = new Array[Float](wordCount * columns)
-        new ArrayAppender(array, columns)
+       new SizedAppender(wordCount, columns)
       }.getOrElse {
-        val arrayBuffer = new ArrayBuffer[Float](100000 * columns)
-        new ArrayBufferAppender(arrayBuffer, columns)
+        new ArrayBuilderAppender(columns)   //  48,308 ms
+        // new ArrayBufferAppender(columns) // 286,159 ms
       }
     }
   }
 
-  class ArrayAppender(array: Array[Float], columns: Int) extends Appender(columns) {
-    var index = 0
+  class SizedAppender protected (array: Array[Float], columns: Int) extends Appender(columns) {
+
+    def this(rows: Integer, columns: Integer) = this(new Array[Float](rows * columns), columns)
+
+    protected var index = 0
 
     def append(value: Float): Unit = {
       array(index) = value
@@ -318,11 +321,24 @@ object CompactWordEmbeddingMap extends Logging {
     def normed(): Array[Float] = norm(array)
   }
 
-  class ArrayBufferAppender(arrayBuffer: ArrayBuffer[Float], columns: Int) extends Appender(columns) {
+  abstract class UnsizedAppender(columns: Int) extends Appender(columns)
+
+  class ArrayBufferAppender protected (arrayBuffer: ArrayBuffer[Float], columns: Int) extends UnsizedAppender(columns) {
+
+    def this(columns: Int) = this(new ArrayBuffer[Float](100000 * columns), columns)
 
     def append(value: Float): Unit = arrayBuffer += value
 
     def normed(): Array[Float] = norm(arrayBuffer.toArray)
+  }
+
+  class ArrayBuilderAppender protected (arrayBuilder: ArrayBuilder[Float], columns: Int) extends UnsizedAppender(columns) {
+
+    def this(columns: Int) = this(new ArrayBuilder.ofFloat, columns)
+
+    def append(value: Float): Unit = arrayBuilder += value
+
+    def normed(): Array[Float] = norm(arrayBuilder.result)
   }
 
   protected def buildMatrix(lines: Iterator[String]): BuildType = {
