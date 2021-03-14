@@ -251,6 +251,7 @@ object CompactWordEmbeddingMap extends Logging {
     }
   }
 
+  // This saves about a second over plain text.split('\n').
   class SplitterIter(text: String) extends Iterator[(String, Int)] {
     protected var index: Int = 0
     protected var count: Int = 0
