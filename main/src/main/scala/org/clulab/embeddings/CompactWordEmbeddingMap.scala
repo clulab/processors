@@ -46,7 +46,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   protected val array: Array[Float] = buildType.array // flattened matrix
   val columns: Int = array.length / map.size
   val rows: Int = array.length / columns
-  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.toIndexedSeq)
+  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.view)
 
   /** The dimension of an embedding vector */
   override val dim: Int = columns
@@ -251,15 +251,29 @@ object CompactWordEmbeddingMap extends Logging {
     }
   }
 
+  class SplitterIter(text: String) extends Iterator[(String, Int)] {
+    protected var index: Int = 0
+    protected var count: Int = 0
+
+    override def hasNext: Boolean = index < text.length
+
+    override def next(): (String, Int) = {
+      val nextSeparator = text.indexOf('\n', index)
+      val until = if (nextSeparator >= 0) nextSeparator else text.length
+      val word = text.slice(index, until)
+      val result = word -> count
+
+      index = until + 1 // skip the LF (or trailing \0)
+      count += 1
+      result
+    }
+  }
+
   protected def loadBin(objectInputStream: ObjectInputStream): BuildType = {
     val map = {
-      val words = objectInputStream.readObject().asInstanceOf[String].split('\n')
-      // Were it not for MapType, the following could be Map(words.zipWithIndex: _*)
+      val text = objectInputStream.readObject().asInstanceOf[String]
       val map: ImplMapType = new ImplMapType()
-      words.foreach { word =>
-        map += word -> map.size
-      }
-      map
+      map ++= new SplitterIter(text)
     }
     val array = objectInputStream.readObject().asInstanceOf[Array[Float]]
     val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[Array[Float]]]
