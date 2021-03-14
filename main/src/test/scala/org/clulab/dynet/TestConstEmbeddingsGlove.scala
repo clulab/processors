@@ -27,7 +27,7 @@ class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
   it should "look realistic" in {
     var embeddings = {
       Utils.initializeDyNet()
-      new ConstEmbeddingsGlove("/test_vectors")
+      ConstEmbeddingsGlove("/test_vectors")
     }
 
     0.until(100).foreach { index =>
