@@ -27,7 +27,7 @@ libraryDependencies ++= {
     // for machine learning
     "de.bwaldvogel"            %  "liblinear"                 % "2.30",
     "tw.edu.ntu.csie"          %  "libsvm"                    % "3.23",
-    "org.clulab"              %%  "fatdynet"                  % "0.3.0", // "0-cuda.2.6-SNAPSHOT"
+    "org.clulab"              %%  "fatdynet"                  % "0.3.1-SNAPSHOT", // "0-cuda.2.6-SNAPSHOT"
 
     // NLP tools used by CluProcessor
     "org.antlr"                %  "antlr4-runtime"            % "4.6",   // for tokenization

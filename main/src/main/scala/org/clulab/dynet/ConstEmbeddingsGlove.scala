@@ -18,12 +18,7 @@ class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbe
   override def mkEmbedding(word: String): Expression = {
     val embeddingSeq: IndexedSeq[Float] = wordEmbeddingMap.getOrElseUnknown(word)
     val floatVector = new FloatVector(embeddingSeq.length)
-    // Populate this manually to avoid floatToFloat and asJavaCollection
-    var i = 0
-    while (i < embeddingSeq.length) {
-      floatVector.update(i, embeddingSeq(i))
-      i += 1
-    }
+    floatVector.addAll(embeddingSeq)
     Expression.input(dynetDim, floatVector)
   }
 }
