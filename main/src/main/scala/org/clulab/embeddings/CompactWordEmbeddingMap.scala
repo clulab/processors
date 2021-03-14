@@ -281,8 +281,17 @@ object CompactWordEmbeddingMap extends Logging {
 
   abstract class Appender(val columns: Int) {
     def append(value: Float): Unit
-    def norm(): Unit
-    def toArray: Array[Float]
+    def normed(): Array[Float]
+
+    def norm(array: Array[Float]): Array[Float] = {
+      var index = 0
+
+      while (index < array.length) {
+        WordEmbeddingMap.norm(array.view(index, index + columns))
+        index += columns
+      }
+      array
+    }
   }
 
   object Appender {
@@ -306,24 +315,14 @@ object CompactWordEmbeddingMap extends Logging {
       index += 1
     }
 
-    def norm(): Unit = {
-      WordEmbeddingMap.norm(array.view(index - columns, index))
-    }
-
-    def toArray: Array[Float] = array
+    def normed(): Array[Float] = norm(array)
   }
 
   class ArrayBufferAppender(arrayBuffer: ArrayBuffer[Float], columns: Int) extends Appender(columns) {
 
     def append(value: Float): Unit = arrayBuffer += value
 
-    def norm(): Unit = {
-      WordEmbeddingMap.norm(arrayBuffer.view(arrayBuffer.size - columns, arrayBuffer.size))
-    }
-
-    // Norm the whole thing and then only after converted to array
-    // Call it normed
-    def toArray: Array[Float] = arrayBuffer.toArray
+    def normed(): Array[Float] = norm(arrayBuffer.toArray)
   }
 
   protected def buildMatrix(lines: Iterator[String]): BuildType = {
@@ -337,7 +336,7 @@ object CompactWordEmbeddingMap extends Logging {
     linesAndIndices.foreach { case (line, index) =>
       total += 1
       val bits = line.split(' ')
-      require(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${index + 1}")
+      require(bits.length == columns + 1, { s"${bits.length} != ${columns + 1} found on line ${index + 1}" })
       val word = bits(0)
       if (map.contains(word))
         logger.warn(s"The word '$word' is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
@@ -345,21 +344,20 @@ object CompactWordEmbeddingMap extends Logging {
         logger.warn(s"The unknown vector is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
       else {
         val appender =
-          if (word == UNK) {
+          if (word != UNK) {
+            map += (word -> map.size)
+            knownAppender
+          }
+          else {
             val unknownAppender = Appender(Some(1), columns)
             unknownAppenderOpt = Some(unknownAppender)
             unknownAppender
-          }
-          else {
-            map += (word -> map.size)
-            knownAppender
           }
         var i = 0 // optimization
         while (i < columns) {
           appender.append(bits(i + 1).toFloat)
           i += 1
         }
-        appender.norm() // TODO: Do just once at the end and return array
       }
     }
     logger.info(s"Completed matrix loading. Kept ${map.size} words from $total lines of words.")
@@ -367,6 +365,6 @@ object CompactWordEmbeddingMap extends Logging {
       logger.info(s"An unknown vector is defined for the matrix.")
     if (wordCountOpt.isDefined)
       require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
-    BuildType(map, knownAppender.toArray, unknownAppenderOpt.map(_.toArray))
+    BuildType(map, knownAppender.normed(), unknownAppenderOpt.map(_.normed()))
   }
 }
