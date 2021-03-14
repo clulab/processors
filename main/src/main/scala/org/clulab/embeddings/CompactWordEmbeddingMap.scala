@@ -44,8 +44,8 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
     extends WordEmbeddingMap {
   protected val map: CompactWordEmbeddingMap.ImplMapType = buildType.map // (word -> row)
   protected val array: Array[Float] = buildType.array // flattened matrix
-  val columns: Int = array.length / map.size
-  val rows: Int = array.length / columns
+  val columns: Int = buildType.columns
+  val rows: Int = map.size // which is not necessarily the same as array.length / columns
   val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.view)
 
   /** The dimension of an embedding vector */
@@ -198,6 +198,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
       objectOutputStream.writeObject(words)
       objectOutputStream.writeObject(array)
       objectOutputStream.writeObject(buildType.unknownArray)
+      objectOutputStream.writeObject(columns)
     }
   }
 }
@@ -205,7 +206,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
 object CompactWordEmbeddingMap extends Logging {
   protected type ImplMapType = MutableHashMap[String, Int]
 
-  case class BuildType(map: ImplMapType, array: Array[Float], unknownArray: Option[Array[Float]])
+  case class BuildType(map: ImplMapType, array: Array[Float], unknownArray: Option[Array[Float]], columns: Int)
 
   val UNK = "" // token for unknowns
 
@@ -278,8 +279,9 @@ object CompactWordEmbeddingMap extends Logging {
     }
     val array = objectInputStream.readObject().asInstanceOf[Array[Float]]
     val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[Array[Float]]]
+    val columns = objectInputStream.readObject().asInstanceOf[Int]
 
-    BuildType(map, array, unknownArrayOpt)
+    BuildType(map, array, unknownArrayOpt, columns)
   }
 
   protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
@@ -378,6 +380,8 @@ object CompactWordEmbeddingMap extends Logging {
       else {
         val appender =
           if (word != UNK) {
+            // If there is an unknown vector, then the array will not be completely filled.
+            // That's also the case if there are duplicate words.  Use the tree size for the real count.
             map += (word -> map.size)
             knownAppender
           }
@@ -398,6 +402,6 @@ object CompactWordEmbeddingMap extends Logging {
       logger.info(s"An unknown vector is defined for the matrix.")
     if (wordCountOpt.isDefined)
       require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
-    BuildType(map, knownAppender.normed(), unknownAppenderOpt.map(_.normed()))
+    BuildType(map, knownAppender.normed(), unknownAppenderOpt.map(_.normed()), columns)
   }
 }

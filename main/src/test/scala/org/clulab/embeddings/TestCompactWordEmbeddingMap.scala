@@ -45,8 +45,6 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
       val compactResult = compactText.get(key).get
       val fullsizeResult = fullsizeText.matrix(key)
 
-//      val compactArray = compactResult.asInstanceOf[Array[Float]]
-//      val fullsizeArray = fullsizeResult.asInstanceOf[Array[Double]]
       matches(compactResult, fullsizeResult, epsilon) should be (true)
     }
     if (compactText.unkEmbeddingOpt.isDefined)
