@@ -60,7 +60,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
 
     val available = (useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) match {
       case (false, false, _,    _   ) => false // The don't have the bin version as a resource.
-      case (false, true, false, false) => true // Try to optimize this one.
+      case (true, false, false, false) => true // Try to optimize this one.
       case _ => false // usually true
     }
 
