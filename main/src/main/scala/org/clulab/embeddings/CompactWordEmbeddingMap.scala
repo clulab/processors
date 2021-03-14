@@ -6,6 +6,7 @@ import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
+import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.{HashMap => MutableHashMap}
@@ -223,7 +224,7 @@ object CompactWordEmbeddingMap extends Logging {
       loadBin(objectInputStream)
     }
     else {
-      val source = Source.fromInputStream(inputStream)
+      val source = Source.fromInputStream(inputStream, StandardCharsets.ISO_8859_1.toString)
       val lines = source.getLines()
 
       buildMatrix(lines)
@@ -235,8 +236,8 @@ object CompactWordEmbeddingMap extends Logging {
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
     (
       // Check first line for two columns, otherwise calculate it.
-      if (resource) Sourcer.sourceFromResource(filename)
-      else Sourcer.sourceFromFile(filename)
+      if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
+      else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
     ).autoClose { source =>
       val lines = source.getLines()
 
@@ -288,6 +289,7 @@ object CompactWordEmbeddingMap extends Logging {
       var index = 0 // optimization
 
       while (index < length) {
+        // Lengths of vectors are generally around 5.  They are _not_ normalized.
         WordEmbeddingMap.norm(array.view(index, index + columns))
         index += columns
       }

@@ -1,11 +1,11 @@
 package org.clulab.embeddings
 
 import java.io._
-
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.nio.charset.StandardCharsets
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
 
@@ -218,8 +218,8 @@ object OldCompactWordEmbeddingMap {
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
     (
-        if (resource) Sourcer.sourceFromResource(filename)
-        else Sourcer.sourceFromFile(filename)
+        if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
+        else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
         ).autoClose { source =>
       val lines = source.getLines()
 
