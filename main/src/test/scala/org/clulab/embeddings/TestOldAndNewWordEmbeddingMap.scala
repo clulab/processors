@@ -3,6 +3,7 @@ package org.clulab.embeddings
 import edu.cmu.dynet.Dim
 import edu.cmu.dynet.Expression
 import edu.cmu.dynet.FloatVector
+import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
@@ -60,8 +61,8 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
 
     val available = (useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) match {
       case (false, false, _,    _   ) => false // The don't have the bin version as a resource.
-//      case (true, false, false, false) => true // Try to optimize this one.
-      case _ => true // usually true
+      case (true, false, false, false) => true // Try to optimize this one.
+      case _ => false // usually true
     }
 
     val description =
@@ -176,14 +177,13 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   def runWordEmbeddingMap(wordEmbeddingMap: WordEmbeddingMap, wordEmbeddingConfig: WordEmbeddingConfig, words: Iterable[String]): Unit = {
     val description = wordEmbeddingConfig.description
     val locationName = wordEmbeddingConfig.locationName
-    val dim = Dim(wordEmbeddingMap.dim)
+    val constEmbeddingsGlove = new ConstEmbeddingsGlove(wordEmbeddingMap)
 
     println(s"Starting run test of ${wordEmbeddingMap.getClass.getSimpleName} at $locationName with $description.")
     val start = System.currentTimeMillis()
 
     words.foreach { word =>
-      val vector = wordEmbeddingMap.getOrElseUnknown(word)
-      Expression.input(dim, new FloatVector(vector))
+      constEmbeddingsGlove.mkEmbedding(word)
     }
 
     val stop = System.currentTimeMillis()
