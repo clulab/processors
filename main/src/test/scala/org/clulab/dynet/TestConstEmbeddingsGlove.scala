@@ -1,5 +1,7 @@
 package org.clulab.dynet
 
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigValueFactory
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
@@ -27,7 +29,10 @@ class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
   it should "look realistic" in {
     var embeddings = {
       Utils.initializeDyNet()
-      ConstEmbeddingsGlove("/test_vectors")
+      val config = ConfigFactory
+          .empty
+          .withValue("glove.matrixResourceName", ConfigValueFactory.fromAnyRef(s"/test_vectors"))
+      ConstEmbeddingsGlove(config)
     }
 
     0.until(100).foreach { index =>
