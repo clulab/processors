@@ -17,21 +17,28 @@ object WordEmbeddingMapPool {
 
   protected val inputStreamer = new InputStreamer()
   protected val maxWaitTime = Duration.Inf
+  protected val enabled = true
 
   /** Stores all embedding maps that have been accessed */
   protected val pool = new mutable.HashMap[Key, Future[WordEmbeddingMap]]()
 
   /** Fetches an embedding from the pool if it exists, or creates it otherwise */
   def getOrElseCreate(name: String, compact: Boolean = false, fileLocation: String = "", resourceLocation: String = ""): WordEmbeddingMap = {
-    val wordEmbeddingMapFuture = this.synchronized {
-      // Access the shared pool inside the synchronized section.
-      pool.getOrElseUpdate(
-        Key(name, compact),
+    val wordEmbeddingMapFuture =
+      if (enabled)
+        this.synchronized {
+          // Access the shared pool inside the synchronized section.
+          pool.getOrElseUpdate(
+            Key(name, compact),
+            Future {
+              loadEmbedding(name, fileLocation, resourceLocation, compact = compact)
+            }
+          )
+        }
+      else
         Future {
           loadEmbedding(name, fileLocation, resourceLocation, compact = compact)
         }
-      )
-    }
     // Wait for the result outside the synchronized section.
     Await.result(wordEmbeddingMapFuture, maxWaitTime)
   }
