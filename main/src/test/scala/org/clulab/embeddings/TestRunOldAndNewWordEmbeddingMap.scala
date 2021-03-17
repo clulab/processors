@@ -6,12 +6,14 @@ import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.SeqOdometer
+import org.scalatest.FlatSpec
+import org.scalatest.Matchers
 
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
 
-class TestOldAndNewWordEmbeddingMap extends App {
+class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   val unused = false
   val fileName = "../glove.840B.300d.10f"
   val resourceName = "/org/clulab/glove/glove.840B.300d.10f"
@@ -56,7 +58,7 @@ class TestOldAndNewWordEmbeddingMap extends App {
 
     val available = (useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) match {
       case (false, false, _,    _   ) => false // The don't have the bin version as a resource.
-      //case (true, false, false, false) => true // Try to optimize this one.
+      // case (true, false, true, false) => true // Try to optimize this one.
       case _ => true // usually true
     }
 
@@ -108,10 +110,12 @@ class TestOldAndNewWordEmbeddingMap extends App {
     }
   }
 
-//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
-//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
-//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
-//  mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
+  def mkFileBins(): Unit = {
+    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
+    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
+    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
+    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
+  }
 
   def loadWordEmbeddingMap(wordEmbeddingConfig: WordEmbeddingConfig): WordEmbeddingMap = {
     val description = wordEmbeddingConfig.description
@@ -202,5 +206,10 @@ class TestOldAndNewWordEmbeddingMap extends App {
     }
   }
 
-  run()
+  behavior of "WordEmbeddingMap"
+
+  it should "run" in {
+    // mkFileBins()
+    run()
+  }
 }
