@@ -1,8 +1,9 @@
 val scala11 = "2.11.12" // up to 2.11.12
 val scala12 = "2.12.13" // up to 2.12.13
 val scala13 = "2.13.5"  // up to 2.13.5
+// scala13 is waiting on ai.lum %% common.
 
-ThisBuild / crossScalaVersions := Seq(scala12, scala11, scala13)
+ThisBuild / crossScalaVersions := Seq(scala12, scala11)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))

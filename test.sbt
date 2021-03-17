@@ -1,1 +1,1 @@
-Test / parallelExecution := false
+ThisBuild / Test / parallelExecution := false

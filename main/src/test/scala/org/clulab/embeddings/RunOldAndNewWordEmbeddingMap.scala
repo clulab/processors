@@ -6,14 +6,12 @@ import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.SeqOdometer
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
 
-class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
+class TestOldAndNewWordEmbeddingMap extends App {
   val unused = false
   val fileName = "../glove.840B.300d.10f"
   val resourceName = "/org/clulab/glove/glove.840B.300d.10f"
@@ -190,7 +188,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     println(wordEmbeddingConfig.summary("run", wordEmbeddingMap, elapsed))
   }
 
-  def test(): Unit = {
+  def run(): Unit = {
     val words = {
       val compactWordEmbeddingMap = CompactWordEmbeddingMap(fileName + ".bin.compact.new", resource = false, cached = true)
       compactWordEmbeddingMap.keys
@@ -204,9 +202,5 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     }
   }
 
-  behavior of "WordEmbeddings"
-
-  it should "test" in {
-    test()
-  }
+  run()
 }
