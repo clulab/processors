@@ -13,7 +13,8 @@ pipeline {
           // We have the external binaries installed and besides, the tests
           // are able to configure themselves dynamically.
           // The scalaVersion is configured internally and is plural.
-          sh "sbt +test"
+          sh "sbt ++2.12.13 test"
+          sh "sbt ++2.11.12 test"
         }
       }
     }
