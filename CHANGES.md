@@ -1,4 +1,5 @@
 # Changes
++ **8.3.0** - Use a WordEmbeddingMapPool so that glove files can be shared.
 + **8.2.6** - Bug fix: handle cycles in dependency trees produced by CoreNLPProcessor.
 + **8.2.5** - Added CluCoreProcessor, which uses all our tools + Stanford's numeric entity recognizer. 
 + **8.2.5** - Update to FatDynet 0.3.0 in serial mode. This fixes memory leaks and crashed in the DyNet Scala wrapper. 

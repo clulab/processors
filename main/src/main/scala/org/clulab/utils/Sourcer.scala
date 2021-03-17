@@ -12,20 +12,20 @@ object Sourcer {
   val logger = LoggerFactory.getLogger(this.getClass())
   val utf8 = StandardCharsets.UTF_8.toString
   
-  def sourceFromResource(path: String): BufferedSource = {
+  def sourceFromResource(path: String, encoding: String = utf8): BufferedSource = {
     val url = Option(Sourcer.getClass.getResource(path))
         .getOrElse(throw newFileNotFoundException(path))
 
     logger.info("Sourcing resource " + url.getPath())
-    Source.fromURL(url, utf8)
+    Source.fromURL(url, encoding)
   }
   
-  def sourceFromFile(file: File): BufferedSource = {
+  def sourceFromFile(file: File, encoding: String = utf8): BufferedSource = {
     logger.info("Sourcing file " + file.getPath())
-    Source.fromFile(file, utf8)
+    Source.fromFile(file, encoding)
   }
 
-  def sourceFromFile(path: String): BufferedSource = sourceFromFile(new File(path))
+  def sourceFromFilename(filename: String, encoding: String = utf8): BufferedSource = sourceFromFile(new File(filename), encoding)
 
   def newFileNotFoundException(path: String): FileNotFoundException = {
     val message1 = path + " (The system cannot find the path specified"
