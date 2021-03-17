@@ -208,7 +208,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
 
   behavior of "WordEmbeddingMap"
 
-  it should "run" in {
+  ignore should "run" in {
     // mkFileBins()
     run()
   }

@@ -13,6 +13,9 @@ ThisBuild / licenses := List(
   "Apache License, Version 2.0" ->
       url("http://www.apache.org/licenses/LICENSE-2.0.html")
 )
+ThisBuild / organization := "org.clulab"
+ThisBuild / organizationHomepage := Some(url("http://clulab.org/"))
+ThisBuild / organizationName := "Computational Language Understanding (CLU) Lab"
 // The sonatype plugin seems to overwrite these two values.
 ThisBuild / pomIncludeRepository := { _ => false }
 ThisBuild / publishMavenStyle := true
