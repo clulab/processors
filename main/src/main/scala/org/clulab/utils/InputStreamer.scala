@@ -21,9 +21,10 @@ class InputStreamer(val provider: AnyRef = InputStreamer, direct: Boolean = true
     Option(inputStream).getOrElse(throw new RuntimeException(s"Resource $name not found."))
   }
 
-  protected def getInputStream(name: String, fileLocation: String, resourceLocation: String): Option[StreamResult] = {
-    val binName = name + InputStreamer.binExtension
-    val txtName = name + InputStreamer.txtExtension
+  protected def getInputStream(name: String, fileLocation: String, resourceLocation: String,
+      txtExtension: String, binExtension: String): Option[StreamResult] = {
+    val binName = name + binExtension
+    val txtName = name + txtExtension
     val streamResult = Failure(null)
         .orElse(Try(StreamResult(getFileAsStream(fileLocation + binName),         Location.File,     Format.Bin)))
         .orElse(Try(StreamResult(getFileAsStream(fileLocation + txtName),         Location.File,     Format.Txt)))
@@ -34,8 +35,10 @@ class InputStreamer(val provider: AnyRef = InputStreamer, direct: Boolean = true
     streamResult
   }
 
-  def stream(name: String, fileLocation: String, resourceLocation: String): Option[StreamResult] =
-    getInputStream(name, fileLocation, resourceLocation)
+  def stream(name: String, fileLocation: String, resourceLocation: String,
+      txtExtension: String = InputStreamer.txtExtension, binExtension: String = InputStreamer.binExtension):
+      Option[StreamResult] =
+    getInputStream(name, fileLocation, resourceLocation, txtExtension, binExtension)
 
   def stream(name: String, location: String): Option[StreamResult] =
     stream(name, location, location)
@@ -49,6 +52,13 @@ class InputStreamer(val provider: AnyRef = InputStreamer, direct: Boolean = true
 }
 
 object InputStreamer {
+  /**
+    * The terms bin and txt here are slight misnomers.  Perhaps they should be computer readable
+    * and human readable, compressed and expanded, digested and raw, optimized and inefficient.
+    * The typical example is that some .txt file requiring much parsing and error checking is
+    * ingested once and then saved in a .bin file that can be read with little interpretation.
+    * These are the default extensions that can be changed in the call to stream().
+    */
   val binExtension = ".bin"
   val txtExtension = ".txt"
 
