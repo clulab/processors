@@ -10,8 +10,10 @@ import scala.collection.mutable
 
 class TestParallel extends FlatSpec with Matchers {
 
-  def save(map: mutable.HashMap[String, String], file: File, value: String): Unit =
+  def save(map: mutable.HashMap[String, String], file: File, value: String): Unit = {
+    println(s" Completed ${file.getName}.")
     map(file.getName) = value
+  }
 
   behavior of "Processing documents in parallel"
 
