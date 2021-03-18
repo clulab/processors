@@ -16,7 +16,11 @@ class TestParallel extends FlatSpec with Matchers {
   behavior of "Processing documents in parallel"
 
   it should "match processing documents serially" in {
-    val inputDir = "./corenlp/src/test/resources/documents"
+    // If fork is true in sbt, then already in corenlp directory.
+    // This is not the case if fork is false.
+    // This is also not the case in IntelliJ by default.
+    // val inputDir = "./corenlp/src/test/resources/documents"
+    val inputDir = "./src/test/resources/documents"
     val outputDir = "."
     val extension = "txt"
 
