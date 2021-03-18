@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
 import java.io._
-
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
 import edu.cmu.dynet.ComputationGraph
@@ -12,6 +11,7 @@ import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -39,12 +39,12 @@ object Utils {
 
   val DEFAULT_DROPOUT_PROBABILITY = 0f // no dropout by  default
 
-  private var IS_DYNET_INITIALIZED = false
+  private val IS_DYNET_INITIALIZED: AtomicBoolean = new AtomicBoolean(false)
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
     // Since the random seed is not being changed, the complete initialization
     // will be ignored by DyNet, so ignore it from the get-go.
-    if (!IS_DYNET_INITIALIZED) {
+    if (!IS_DYNET_INITIALIZED.getAndSet(true)) {
       logger.debug("Initializing DyNet...")
 
       val params = new mutable.HashMap[String, Any]()
@@ -57,7 +57,6 @@ object Utils {
 
       Initializer.initialize(params.toMap)
       logger.debug("DyNet initialization complete.")
-      IS_DYNET_INITIALIZED = true
     }
   }
 
