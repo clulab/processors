@@ -16,10 +16,10 @@ lazy val root = (project in file("."))
 lazy val main = project
 
 lazy val corenlp = project
-  .dependsOn(main % "compile->compile; test->test")
+  .dependsOn(main % "compile -> compile; test -> test")
 
 lazy val odin = project
-  .dependsOn(main % "compile->compile; test->test")
+  .dependsOn(main % "compile -> compile; test -> test")
 
 lazy val openie = project
-  .dependsOn(main % "compile->compile; test->test", odin)
+  .dependsOn(main % "compile -> compile; test -> test", odin)
