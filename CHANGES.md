@@ -5,7 +5,7 @@
 + **8.3.0** - Replace it with a trait and two implementations (Explicit or Compact) with pipeline to updated fatdynet.
 + **8.3.0** - Remove word sanitization responsibility from trait, but provide DefaultWordSanitizer.
 + **8.3.0** - Supply InputStreamer to aid in reading materials from resources and files, possibly after serialization.
-+ **8.3.0** - Modernize build with separate sbt files, improved scoping, updated plugins.
++ **8.3.0** - Modernize build with separate sbt files, improved scoping, updated plugins, and most recent versions of Scala 11 and 12.
 + **8.3.0** - Update Jenkins file for memory, Scala version, cross testing.
 + **8.2.6** - Bug fix: handle cycles in dependency trees produced by CoreNLPProcessor.
 + **8.2.5** - Added CluCoreProcessor, which uses all our tools + Stanford's numeric entity recognizer. 
