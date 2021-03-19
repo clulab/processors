@@ -1,8 +1,6 @@
 package org.clulab.processors
 
 import java.io.File
-
-import org.clulab.dynet.Utils
 import org.clulab.processors.examples.ParallelProcessorExample
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
@@ -10,10 +8,6 @@ import org.scalatest.Matchers
 import scala.collection.mutable
 
 class TestParallel extends FlatSpec with Matchers {
-  // Do this sooner rather than later.  Otherwise, parallel processing might
-  // already have started and one call to initializeDyNet can have started
-  // so that the next skips over it and accesses DyNet uninitialized.
-  Utils.initializeDyNet()
 
   def save(map: mutable.HashMap[String, String], file: File, value: String): Unit = {
     println(s" Completed ${file.getName}.")
