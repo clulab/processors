@@ -39,24 +39,28 @@ object Utils {
 
   val DEFAULT_DROPOUT_PROBABILITY = 0f // no dropout by  default
 
-  private val IS_DYNET_INITIALIZED: AtomicBoolean = new AtomicBoolean(false)
+  private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
-    // Since the random seed is not being changed, the complete initialization
-    // will be ignored by DyNet, so ignore it from the get-go.
-    if (!IS_DYNET_INITIALIZED.getAndSet(true)) {
-      logger.debug("Initializing DyNet...")
+    // At the very least, IS_DYNET_INITIALIZED must be protected.
+    Utils.synchronized {
+      if (!IS_DYNET_INITIALIZED) {
+        logger.debug("Initializing DyNet...")
 
-      val params = new mutable.HashMap[String, Any]()
-      params += "random-seed" -> RANDOM_SEED
-      params += "weight-decay" -> WEIGHT_DECAY
-      if (autoBatch) {
-        params += "autobatch" -> 1
-        params += "dynet-mem" -> mem
+        val params = new mutable.HashMap[String, Any]()
+        params += "random-seed" -> RANDOM_SEED
+        params += "weight-decay" -> WEIGHT_DECAY
+        if (autoBatch) {
+          params += "autobatch" -> 1
+          params += "dynet-mem" -> mem
+        }
+
+        Initializer.initialize(params.toMap)
+        logger.debug("DyNet initialization complete.")
+        IS_DYNET_INITIALIZED = true
       }
-
-      Initializer.initialize(params.toMap)
-      logger.debug("DyNet initialization complete.")
+      else
+        logger.debug("DyNet re-initialization skipped.")
     }
   }
 
