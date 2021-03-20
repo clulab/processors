@@ -3,26 +3,53 @@ package org.clulab.processors.clucore
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.processors.Sentence
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.processors.clucore.CluCoreProcessor.{EMPTY, NAMED_LABELS_FOR_SRL, OUTSIDE}
-import org.clulab.struct.DirectedGraph
+import org.clulab.processors.clucore.CluCoreProcessor.{EMPTY, EMPTY_GRAPH, NAMED_LABELS_FOR_SRL, OUTSIDE}
+import org.clulab.sequences.LexiconNER
+import org.clulab.struct.{DirectedGraph, GraphMap}
+import org.clulab.utils.SeqUtils
 
 import scala.collection.mutable.ArrayBuffer
 
-class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
+class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"),
+                       val optionalNER: Option[LexiconNER] = None)
   extends CluProcessor(config) {
 
   val numericEntityRecognizer = new NumericEntityRecognizer
 
   /** Produces NE labels for one sentence by merging the CLU NER with the NumericEntityRecognizer */
   override def nerSentence(words: IndexedSeq[String],
+                           lemmas: Option[IndexedSeq[String]],
                            tags: IndexedSeq[String], // this are only used by the NumericEntityRecognizer
                            startCharOffsets: IndexedSeq[Int],
                            endCharOffsets: IndexedSeq[Int],
                            docDateOpt: Option[String]): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
-    val (cluLabels, _) = super.nerSentence(words, tags, startCharOffsets, endCharOffsets, docDateOpt)
+    val (cluLabels, _) = super.nerSentence(words, lemmas, tags, startCharOffsets, endCharOffsets, docDateOpt)
     val (numericLabels, numericNorms) = numericEntityRecognizer.classify(words, tags, startCharOffsets, endCharOffsets, docDateOpt)
     assert(cluLabels.length == numericLabels.length)
     assert(cluLabels.length == numericNorms.length)
+
+    val optionalNERLabels: Option[Array[String]] = {
+      if(optionalNER.isEmpty) {
+        None
+      } else {
+        val sentence = Sentence(
+          words.toArray,
+          startCharOffsets.toArray,
+          endCharOffsets.toArray,
+          words.toArray,
+          Some(tags.toArray),
+          lemmas = if(lemmas.isEmpty) None else Some(lemmas.get.toArray),
+          entities = None,
+          norms = None,
+          chunks = None,
+          tree = None,
+          deps = EMPTY_GRAPH,
+          relations = None
+        )
+
+        Some(optionalNER.get.find(sentence))
+      }
+    }
 
     val labels = new Array[String](cluLabels.length)
     val norms = new Array[String](cluLabels.length)
@@ -31,7 +58,9 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
       norms(i) = EMPTY
       labels(i) = OUTSIDE
 
-      if(cluLabels(i) != OUTSIDE) {
+      if(optionalNERLabels.nonEmpty && optionalNERLabels.get(i) != OUTSIDE) {
+        labels(i) = optionalNERLabels.get(i)
+      } else if(cluLabels(i) != OUTSIDE) {
         labels(i) = cluLabels(i)
       } else if(numericLabels(i) != OUTSIDE) {
         labels(i) = numericLabels(i)
@@ -68,6 +97,8 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"))
 object CluCoreProcessor {
   val OUTSIDE = "O"
   val EMPTY = ""
+
+  val EMPTY_GRAPH = new GraphMap
 
   // These are the NE labels used to train the SRL model
   val NAMED_LABELS_FOR_SRL = Set(

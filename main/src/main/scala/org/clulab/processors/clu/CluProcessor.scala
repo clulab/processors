@@ -3,7 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, SeqUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -139,6 +139,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Produces NE labels for one sentence */
   def nerSentence(words: IndexedSeq[String],
+                  lemmas: Option[IndexedSeq[String]],
                   tags: IndexedSeq[String], // this are only used by the NumericEntityRecognizer
                   startCharOffsets: IndexedSeq[Int],
                   endCharOffsets: IndexedSeq[Int],
@@ -337,6 +338,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     for(sent <- doc.sentences) {
       val (labels, norms) = nerSentence(
         sent.words,
+        SeqUtils.asIndexedSeqOpt(sent.lemmas),
         sent.tags.get,
         sent.startOffsets,
         sent.endOffsets,

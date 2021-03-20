@@ -6,6 +6,7 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clu.tokenizer.TokenizerStep
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.GraphMap
+import org.clulab.utils.SeqUtils
 
 /** Adds SRL functionality to FastNLPProcessor */
 class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerStep],
@@ -36,11 +37,12 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
     val docDate = doc.getDCT
     for(sent <- doc.sentences) {
       val words = sent.words
+      val lemmas = sent.lemmas
 
       // The SRL model relies on NEs produced by CluProcessor, so run the NER first
       val (tags, _, preds) = cluProcessor.tagSentence(words)
       val predIndexes = cluProcessor.getPredicateIndexes(preds)
-      val (entities, _) = cluProcessor.nerSentence(words, tags, sent.startOffsets, sent.endOffsets, docDate)
+      val (entities, _) = cluProcessor.nerSentence(words, SeqUtils.asIndexedSeqOpt(lemmas), tags, sent.startOffsets, sent.endOffsets, docDate)
       val semanticRoles = cluProcessor.srlSentence(
         words, tags, entities, predIndexes
       )
