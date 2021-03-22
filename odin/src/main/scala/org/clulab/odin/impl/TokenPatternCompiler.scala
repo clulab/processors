@@ -18,7 +18,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
 
   def splitPattern: Parser[ProgramFragment] =
     rep1sep(concatPattern, "|") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
           val split = Split(lhs.in, rhs.in)
           ProgramFragment(split, lhs.out ++ rhs.out)
@@ -27,7 +27,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
 
   def concatPattern: Parser[ProgramFragment] =
     rep1(quantifiedPattern) ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => ProgramFragment(lhs, rhs)
       }
     }
@@ -121,7 +121,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
 
   def splitPatternRev: Parser[ProgramFragment] =
     rep1sep(concatPatternRev, "|") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
           val split = Split(lhs.in, rhs.in)
           ProgramFragment(split, lhs.out ++ rhs.out)
@@ -130,7 +130,7 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
 
   def concatPatternRev: Parser[ProgramFragment] =
     rep1(quantifiedPatternRev) ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => ProgramFragment(rhs, lhs)
       }
     }
@@ -299,7 +299,7 @@ object ProgramFragment {
 
   def apply(fragments: Seq[ProgramFragment]): ProgramFragment = {
     require(fragments.nonEmpty)
-    (fragments.head /: fragments.tail) {
+    fragments.tail.foldLeft(fragments.head) {
       case (lhs, rhs) => ProgramFragment(lhs, rhs)
     }
   }

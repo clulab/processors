@@ -251,7 +251,7 @@ object MathUtils {
     val (min, max) = (xs.min, xs.max)
     val step = (max - min) / numBuckets
     require(step != 0, "xs has all same values")
-    val divisions = (min + step) to (max - step / 2) by step
+    val divisions = Range.BigDecimal(min + step, max - step / 2, step).map(_.doubleValue)
     histogram(xs, divisions)
   }
 

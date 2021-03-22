@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.dynet.{ConstEmbeddingsGlove, Utils => DynetUtils}
+import org.clulab.dynet.{Utils => DynetUtils}
 import org.clulab.fatdynet.utils.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
