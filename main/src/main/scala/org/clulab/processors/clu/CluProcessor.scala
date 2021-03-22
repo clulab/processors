@@ -138,11 +138,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** Produces NE labels for one sentence */
-  def nerSentence(words: IndexedSeq[String],
-                  lemmas: Option[IndexedSeq[String]],
-                  tags: IndexedSeq[String], // this are only used by the NumericEntityRecognizer
-                  startCharOffsets: IndexedSeq[Int],
-                  endCharOffsets: IndexedSeq[Int],
+  def nerSentence(words: Array[String],
+                  lemmas: Option[Array[String]],
+                  tags: Array[String], // this are only used by the NumericEntityRecognizer
+                  startCharOffsets: Array[Int],
+                  endCharOffsets: Array[Int],
                   docDateOpt: Option[String]): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
     val allLabels = mtlNer.predictJointly(AnnotatedSentence(words))
     (allLabels(0), None)
@@ -338,7 +338,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     for(sent <- doc.sentences) {
       val (labels, norms) = nerSentence(
         sent.words,
-        SeqUtils.asIndexedSeqOpt(sent.lemmas),
+        sent.lemmas,
         sent.tags.get,
         sent.startOffsets,
         sent.endOffsets,

@@ -17,11 +17,11 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"),
   val numericEntityRecognizer = new NumericEntityRecognizer
 
   /** Produces NE labels for one sentence by merging the CLU NER with the NumericEntityRecognizer */
-  override def nerSentence(words: IndexedSeq[String],
-                           lemmas: Option[IndexedSeq[String]],
-                           tags: IndexedSeq[String], // this are only used by the NumericEntityRecognizer
-                           startCharOffsets: IndexedSeq[Int],
-                           endCharOffsets: IndexedSeq[Int],
+  override def nerSentence(words: Array[String],
+                           lemmas: Option[Array[String]],
+                           tags: Array[String], // this are only used by the NumericEntityRecognizer
+                           startCharOffsets: Array[Int],
+                           endCharOffsets: Array[Int],
                            docDateOpt: Option[String]): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
     val (cluLabels, _) = super.nerSentence(words, lemmas, tags, startCharOffsets, endCharOffsets, docDateOpt)
     val (numericLabels, numericNorms) = numericEntityRecognizer.classify(words, tags, startCharOffsets, endCharOffsets, docDateOpt)
@@ -33,12 +33,12 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"),
         None
       } else {
         val sentence = Sentence(
-          words.toArray,
-          startCharOffsets.toArray,
-          endCharOffsets.toArray,
-          words.toArray,
-          Some(tags.toArray),
-          lemmas = if(lemmas.isEmpty) None else Some(lemmas.get.toArray),
+          words,
+          startCharOffsets,
+          endCharOffsets,
+          words,
+          Some(tags),
+          lemmas = lemmas,
           entities = None,
           norms = None,
           chunks = None,

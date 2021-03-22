@@ -12,12 +12,4 @@ object SeqUtils {
     for(o <- orig) reverse.insert(0, o)
     reverse
   }
-
-  def asIndexedSeqOpt[T](oa: Option[Array[T]]): Option[IndexedSeq[T]] = {
-    if(oa.isEmpty) {
-      None
-    } else {
-      Some(oa.get.asInstanceOf[IndexedSeq[T]])
-    }
-  }
 }
