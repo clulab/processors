@@ -11,7 +11,7 @@ import scala.util.Try
 object NeedsExternalBinary extends Tag("NeedsExternalBinary")
 
 /**
-  * Tests training svm_rank; needs the svm_rank_classify in the $PATH!
+  * Tests training svm_rank; needs the svm_rank_classify in the \$PATH!
   * User: mihais
   * Date: 4/25/13
   * Last Modified: Fix compiler issue: import scala.io.Source.
