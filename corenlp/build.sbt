@@ -9,3 +9,9 @@ libraryDependencies ++= {
     "edu.stanford.nlp"    %  "stanford-corenlp"  % corenlpV classifier "models"
   )
 }
+
+// This is an exception to all the other projects.
+ThisBuild / licenses := List(
+  "GNU General Public License v3 (GPLv3)" ->
+      url("https://www.gnu.org/licenses/gpl-3.0.txt")
+)
