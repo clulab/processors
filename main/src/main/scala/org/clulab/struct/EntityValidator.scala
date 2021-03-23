@@ -11,6 +11,10 @@ import org.clulab.sequences.LexiconNER
 @SerialVersionUID(1000L)
 trait EntityValidator extends Serializable {
   def validMatch(sentence: Sentence, start:Int, end:Int):Boolean
+
+  def equalsForSerialization(that: AnyRef): Boolean = {
+    this.getClass == that.getClass
+  }
 }
 
 /**

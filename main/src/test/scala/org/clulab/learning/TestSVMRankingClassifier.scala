@@ -1,11 +1,12 @@
 package org.clulab.learning
 
 import java.io.{File, PrintWriter}
-
 import org.scalatest._
+
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.sys.process._
+import scala.util.Try
 
 object NeedsExternalBinary extends Tag("NeedsExternalBinary")
 
@@ -18,7 +19,7 @@ object NeedsExternalBinary extends Tag("NeedsExternalBinary")
 class TestSVMRankingClassifier extends FlatSpec with Matchers {
   // It is assumed that the existence of this one binary implies the existence of the other,
   // svm_rank_learn, which unfortunately requires user input and will wait for it indefinitely.
-  val hasExternalBinary = "svm_rank_classify -h".! == 0
+  val hasExternalBinary = Try("svm_rank_classify -h".! == 0).getOrElse(false)
 
   "SVMRankingClassifier" should "perform similarly to the command line svm_rank_classify" taggedAs (NeedsExternalBinary) in {
     assume(hasExternalBinary)
@@ -84,6 +85,7 @@ class TestSVMRankingClassifier extends FlatSpec with Matchers {
   }
 
   it should "perform better than 0.50 P@1 on this dataset" taggedAs (NeedsExternalBinary) in {
+    assume(hasExternalBinary)
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankResource("org/clulab/learning/ranking_train.txt.gz")
 
     val classifier = new SVMRankingClassifier[String](".", keepIntermediateFiles = true)
