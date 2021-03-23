@@ -1,4 +1,5 @@
 name := "processors-corenlp"
+description := "processors-corenlp"
 
 libraryDependencies ++= {
   val corenlpV = "3.9.2"
