@@ -1,4 +1,5 @@
 name := "processors-main"
+description := "processors-main"
 
 pomIncludeRepository := { (repo: MavenRepository) =>
   repo.root.startsWith("http://artifactory.cs.arizona.edu")
