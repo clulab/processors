@@ -74,14 +74,14 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
 
   def disjunctiveGraphPattern: Parser[GraphPatternNode] =
     rep1sep(concatGraphPattern, "|") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => new DisjunctiveGraphPattern(lhs, rhs)
       }
     }
 
   def concatGraphPattern: Parser[GraphPatternNode] =
     rep1(stepGraphPattern) ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => new ConcatGraphPattern(lhs, rhs)
       }
     }
@@ -108,7 +108,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
   // helper function that repeats a pattern N times
   private def repeatPattern(pattern: GraphPatternNode, n: Int): GraphPatternNode = {
     require(n > 0, "'n' must be greater than zero")
-    (pattern /: Seq.fill(n - 1)(pattern)) {
+    Seq.fill(n - 1)(pattern).foldLeft(pattern) {
       case (lhs, rhs) => new ConcatGraphPattern(lhs, rhs)
     }
   }

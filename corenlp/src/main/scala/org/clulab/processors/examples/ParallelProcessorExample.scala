@@ -81,7 +81,11 @@ object ParallelProcessorExample {
       }
 
       val result = Option(dir.listFiles(filter))
-          .getOrElse(throw new FileNotFoundException(collectionDir))
+          .getOrElse( {
+            val here = new File(".").getAbsolutePath
+            println(s"Can't find $collectionDir from $here.")
+            throw new FileNotFoundException(collectionDir)
+          })
       result
     }
 
@@ -171,8 +175,6 @@ object ParallelProcessorExample {
       printWriter.println(contents)
       printWriter.close
     }
-
-    ConstEmbeddingsGlove.SINGLETON = null
   }
 
   def main(args: Array[String]): Unit = {

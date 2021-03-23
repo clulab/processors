@@ -1,13 +1,16 @@
 package org.clulab.embeddings
 
 import java.io._
-
+import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
-import org.slf4j.{Logger, LoggerFactory}
+import org.clulab.utils.Logging
+import org.clulab.utils.Sourcer
 
-import scala.collection.immutable.HashMap
-import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
+import java.nio.charset.StandardCharsets
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuilder
+import scala.collection.mutable.{HashMap => MutableHashMap}
+import scala.io.Source
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -37,48 +40,100 @@ import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
   * resulting return value, call save(compactFilename).  Thereafter, for normal, speedy processing,
   * use CompactWord2Vec(compactFilename, resource = false, cached = true).
   */
-class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) {
-  protected val map: CompactWordEmbeddingMap.MapType = buildType._1 // (word -> row)
-  protected val array: CompactWordEmbeddingMap.ArrayType = buildType._2 // flattened matrix
-  val columns: Int = array.length / map.size
-  val rows: Int = array.length / columns
+class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.BuildType)
+    extends WordEmbeddingMap {
+  protected val map: CompactWordEmbeddingMap.ImplMapType = buildType.map // (word -> row)
+  protected val array: Array[Float] = buildType.array // flattened matrix
+  val columns: Int = buildType.columns
+  val rows: Int = map.size // which is not necessarily the same as array.length / columns
+  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.view)
 
-  def get(word: String): Option[CompactWordEmbeddingMap.ArrayType] = { // debug use only
+  /** The dimension of an embedding vector */
+  override val dim: Int = columns
+
+  // Be careful because this word may not be sanitized!
+  override def isOutOfVocabulary(word: String): Boolean = !map.contains(word)
+
+  def compare(lefts: IndexedSeq[Float], rights: IndexedSeq[Float]): Boolean = {
+    lefts.length == rights.length &&
+        lefts.zip(rights).forall { case (left, right) =>
+          left - right < 0.0001f
+        }
+  }
+
+  def compare(left: CompactWordEmbeddingMap.ImplMapType, right: CompactWordEmbeddingMap.ImplMapType): Boolean = {
+    left.keySet == right.keySet && {
+      left.keySet.forall { key =>
+        left(key) == right(key)
+      }
+    }
+  }
+
+  def compare(left: Option[IndexedSeq[Float]], right: Option[IndexedSeq[Float]]): Boolean = {
+    (left, right) match {
+      case (None, None) => true
+      case (Some(left), Some(right)) => compare(left, right)
+      case _ => false
+    }
+  }
+
+  override def equals(other: Any): Boolean = {
+    other.isInstanceOf[CompactWordEmbeddingMap] && {
+      val that = other.asInstanceOf[CompactWordEmbeddingMap]
+
+      this.dim == that.dim &&
+          this.columns == that.columns &&
+          this.rows == that.rows &&
+          compare(this.array, that.array) &&
+          compare(this.map, that.map) &&
+          compare(this.unkEmbeddingOpt, that.unkEmbeddingOpt)
+    }
+  }
+
+  override def hashCode(): Int = 0 // Don't even try.
+
+  def get(word: String): Option[IndexedSeq[Float]] = {
     map.get(word).map { row =>
       val offset = row * columns
-
-      array.slice(offset, offset + columns)
+      array.view(offset, offset + columns)
     }
+  }
+
+  /** Retrieves the embedding for this word; if it doesn't exist in the map uses the Unknown token instead */
+  override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
+    get(word).getOrElse(
+      unkEmbeddingOpt.getOrElse(
+        throw new RuntimeException("ERROR: can't find embedding for the unknown token!")
+      )
+    )
+  }
+
+  /** Computes the embedding of a text, as an unweighted average of all words */
+  override def makeCompositeVector(text: Iterable[String]): Array[Float] = {
+    val total = new Array[Float](columns) // automatically initialized to zero
+
+    text.foreach { word =>
+      // This therefore skips the unknown words, which may not be the right strategy.
+      map.get(word).foreach { index => add(total, index) }
+    }
+    WordEmbeddingMap.norm(total)
+    total
+  }
+
+  override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Array[Float] = {
+    val total = new Array[Float](columns) // automatically initialized to zero
+
+    (text, weights).zipped.foreach { (word, weight) =>
+      // This therefore skips the unknown words, which may not be the right strategy.
+      map.get(word).foreach { index => addWeighted(total, index, weight) }
+    }
+    WordEmbeddingMap.norm(total)
+    total
   }
 
   def keys: Iterable[String] = map.keys // debug use only
 
-  def save(filename: String): Unit = {
-    // Sort the map entries (word -> row) by row and then keep just the word.
-    val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
-
-    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
-      // Writing is performed in two steps so that the parts can be
-      // processed separately when read back in.
-      objectOutputStream.writeObject(words)
-      objectOutputStream.writeObject(array)
-    }
-  }
-
-  def dotProduct(row1: Int, row2: Int): CompactWordEmbeddingMap.ValueType = {
-    val offset1 = row1 * columns
-    val offset2 = row2 * columns
-    var sum = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
-    var i = 0 // optimization
-
-    while (i < columns) {
-      sum += array(offset1 + i) * array(offset2 + i)
-      i += 1
-    }
-    sum
-  }
-
-  protected def add(dest: CompactWordEmbeddingMap.ArrayType, srcRow: Int): Unit = {
+  protected def add(dest: Array[Float], srcRow: Int): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
@@ -88,107 +143,72 @@ class CompactWordEmbeddingMap(buildType: CompactWordEmbeddingMap.BuildType) {
     }
   }
 
-  protected def addWeighted(dest: CompactWordEmbeddingMap.ArrayType, srcRow: Int, weight:Float): Unit = {
+  protected def addWeighted(dest: Array[Float], srcRow: Int, weight: Float): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization
 
     while (i < columns) {
-      dest(i) += array(srcOffset + i)*weight
+      dest(i) += array(srcOffset + i) * weight
       i += 1
     }
   }
 
-  def isOutOfVocabulary(word: String): Boolean = !map.contains(EmbeddingUtils.sanitizeWord(word))
-
-  // Normalize this vector to length 1, in place.
-  // (If the length is zero, do nothing.)
-  protected def norm(array: CompactWordEmbeddingMap.ArrayType): CompactWordEmbeddingMap.ArrayType = {
-    var len = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
-    var i = 0 // optimization
-
-    while (i < array.length) {
-      len += array(i) * array(i)
-      i += 1
-    }
-    len = math.sqrt(len).asInstanceOf[CompactWordEmbeddingMap.ValueType]
-
-    if (len != 0) {
-      i = 0
-      while (i < array.length) {
-        array(i) /= len
-        i += 1
-      }
-    }
-    array
-  }
-
-  def makeCompositeVector(text: Iterable[String]): CompactWordEmbeddingMap.ArrayType = {
-    val total = new CompactWordEmbeddingMap.ArrayType(columns)
-
-    text.foreach { word =>
-      map.get(word).foreach { index => add(total, index) }
-    }
-    norm(total)
-  }
-
-  def makeCompositeVectorWeighted(text: Iterable[String], weights:Iterable[Float]): CompactWordEmbeddingMap.ArrayType = {
-    val total = new CompactWordEmbeddingMap.ArrayType(columns)
-
-    (text, weights).zipped.foreach { (word, weight) =>
-      map.get(word).foreach { index => addWeighted(total, index, weight) }
-    }
-
-    norm(total)
-  }
-
   // Find the average embedding similarity between any two words in these two texts.
-  // IMPORTANT: words here must be words not lemmas!
-  def avgSimilarity(text1: Iterable[String], text2: Iterable[String]): CompactWordEmbeddingMap.ValueType = {
-    val sanitizedText1 = text1.map(EmbeddingUtils.sanitizeWord(_))
-    val sanitizedText2 = text2.map(EmbeddingUtils.sanitizeWord(_))
-
-    sanitizedAvgSimilarity(sanitizedText1, sanitizedText2)
-  }
-
-  // Find the average embedding similarity between any two words in these two texts.
-  protected def sanitizedAvgSimilarity(text1: Iterable[String], text2: Iterable[String]): CompactWordEmbeddingMap.ValueType = {
-    var avg = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
+  override def avgSimilarity(texts1: Iterable[String], texts2: Iterable[String]): Float = {
+    var sum = 0f // optimization
     var count = 0 // optimization
 
-    for (word1 <- text1) {
-      val row1 = map.get(word1)
+    texts1.foreach { text1 =>
+      val row1Opt = map.get(text1)
 
-      if (row1.isDefined) {
-        for (word2 <- text2) {
-          val row2 = map.get(word2)
+      if (row1Opt.isDefined) {
+        texts2.foreach { text2 =>
+          val row2Opt = map.get(text2)
 
-          if (row2.isDefined) {
-            avg += dotProduct(row1.get, row2.get)
+          if (row2Opt.isDefined) {
+            sum += dotProduct(row1Opt.get, row2Opt.get)
             count += 1
           }
         }
       }
     }
-    if (count != 0) avg / count
-    else 0
+    if (count != 0) sum / count
+    else 0f
+  }
+
+  def dotProduct(row1: Int, row2: Int): Float = {
+    val offset1 = row1 * columns
+    val offset2 = row2 * columns
+    var sum = 0f
+    var i = 0 // optimization
+
+    while (i < columns) {
+      sum += array(offset1 + i) * array(offset2 + i)
+      i += 1
+    }
+    sum
+  }
+
+  def save(filename: String): Unit = {
+    // Sort the map entries (word -> row) by row and then keep just the word.
+    // This should put "", the unknown word, first.
+    val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
+
+    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
+      objectOutputStream.writeObject(words)
+      objectOutputStream.writeObject(array)
+      objectOutputStream.writeObject(buildType.unknownArray)
+      objectOutputStream.writeObject(columns)
+    }
   }
 }
 
-object CompactWordEmbeddingMap {
-  protected type MutableMapType = MutableHashMap[String, Int]
-  protected type ImmutableMapType = HashMap[String, Int]
+object CompactWordEmbeddingMap extends Logging {
+  protected type ImplMapType = MutableHashMap[String, Int]
 
-  protected type ImplementationMapType = MutableMapType // optimization
+  case class BuildType(map: ImplMapType, array: Array[Float], unknownArray: Option[Array[Float]], columns: Int)
 
-  // These were meant to allow easy switching between implementations.
-  type MapType = MutableMap[String, Int]
-  type ValueType = Float
-  type ArrayType = Array[ValueType]
-
-  protected type BuildType = (MapType, ArrayType)
-  protected type StoreType = (String, ArrayType)
-
-  protected val logger: Logger = LoggerFactory.getLogger(classOf[CompactWordEmbeddingMap])
+  val UNK = "" // token for unknowns
 
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
@@ -199,10 +219,26 @@ object CompactWordEmbeddingMap {
     new CompactWordEmbeddingMap(buildType)
   }
 
+  def apply(inputStream: InputStream, binary: Boolean): CompactWordEmbeddingMap = {
+    val buildType = if (binary) {
+      val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
+      loadBin(objectInputStream)
+    }
+    else {
+      val source = Source.fromInputStream(inputStream, StandardCharsets.ISO_8859_1.toString)
+      val lines = source.getLines()
+
+      buildMatrix(lines)
+    }
+
+    new CompactWordEmbeddingMap(buildType)
+  }
+
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
     (
-      if (resource) Sourcer.sourceFromResource(filename)
-      else Sourcer.sourceFromFile(filename)
+      // Check first line for two columns, otherwise calculate it.
+      if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
+      else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
     ).autoClose { source =>
       val lines = source.getLines()
 
@@ -211,99 +247,161 @@ object CompactWordEmbeddingMap {
   }
 
   protected def loadBin(filename: String): BuildType = {
-    // This is the original code
-    //    val (text, array) = updatedLoad[StoreType](filename, this)
-    //    val words = text.split('\n')
-    //    val map: MapType = words.zipWithIndex.toMap.asInstanceOf[MapType]
-    //    (map, array)
-
-    // This is "unrolled" for performance purposes.
     new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
-      val map: MapType = new MutableMapType()
-
-    {
-      // This block is so that text can be abandoned at the end of the block, before the array is read.
-      val text = objectInputStream.readObject().asInstanceOf[String]
-      val stringBuilder = new StringBuilder
-
-      for (i <- 0 until text.length) {
-        val c = text(i)
-
-        if (c == '\n') {
-          map += ((stringBuilder.result(), map.size))
-          stringBuilder.clear()
-        }
-        else
-          stringBuilder.append(c)
-      }
-      map += ((stringBuilder.result(), map.size))
-    }
-
-      val array = objectInputStream.readObject().asInstanceOf[ArrayType]
-      (map, array)
+      loadBin(objectInputStream)
     }
   }
 
-  protected def buildMatrix(lines: Iterator[String]): BuildType = {
+  // This saves about a second over plain text.split('\n').
+  class SplitterIter(text: String) extends Iterator[(String, Int)] {
+    protected var index: Int = 0
+    protected var count: Int = 0
 
-    def norm(array: ArrayType, rowIndex: Int, columns: Int): Unit = {
-      val offset = rowIndex * columns
-      var len = 0.asInstanceOf[CompactWordEmbeddingMap.ValueType] // optimization
-      var i = 0 // optimization
+    override def hasNext: Boolean = index < text.length
 
-      while (i < columns) {
-        len += array(offset + i) * array(offset + i)
-        i += 1
+    override def next(): (String, Int) = {
+      val nextSeparator = text.indexOf('\n', index)
+      val until = if (nextSeparator >= 0) nextSeparator else text.length
+      val word = text.slice(index, until)
+      val result = word -> count
+
+      index = until + 1 // skip the LF (or trailing \0)
+      count += 1
+      result
+    }
+  }
+
+  protected def loadBin(objectInputStream: ObjectInputStream): BuildType = {
+    val map = {
+      val text = objectInputStream.readObject().asInstanceOf[String]
+      val map: ImplMapType = new ImplMapType()
+      map ++= new SplitterIter(text)
+    }
+    val array = objectInputStream.readObject().asInstanceOf[Array[Float]]
+    val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[Array[Float]]]
+    val columns = objectInputStream.readObject().asInstanceOf[Int]
+
+    BuildType(map, array, unknownArrayOpt, columns)
+  }
+
+  protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
+    val (line, _) = linesAndIndices.head
+    val bits = line.split(' ')
+
+    require(bits.length >= 2, "A glove file must have at least two columns everywhere.")
+    if (bits.length == 2) {
+      linesAndIndices.next() // Go ahead and consume the first Line.
+      (Some(bits(0).toInt), bits(1).toInt)
+    }
+    else
+      (None, bits.length - 1)
+  }
+
+  abstract class Appender(val columns: Int) {
+    def append(value: Float): Unit
+    def normed(): Array[Float]
+
+    def norm(array: Array[Float]): Array[Float] = {
+      val length = array.length
+      var index = 0 // optimization
+
+      while (index < length) {
+        // Lengths of vectors are generally around 5.  They are _not_ normalized.
+        WordEmbeddingMap.norm(array.view(index, index + columns))
+        index += columns
       }
-      len = math.sqrt(len).asInstanceOf[ValueType]
+      array
+    }
+  }
 
-      if (len != 0) {
-        i = 0
+  object Appender {
+
+    def apply(wordCountOpt: Option[Int], columns: Int): Appender = {
+      wordCountOpt.map { wordCount =>
+       new SizedAppender(wordCount, columns)
+      }.getOrElse {
+        new ArrayBuilderAppender(columns)   //  48,308 ms
+        // new ArrayBufferAppender(columns) // 286,159 ms
+      }
+    }
+  }
+
+  class SizedAppender protected (array: Array[Float], columns: Int) extends Appender(columns) {
+
+    def this(rows: Integer, columns: Integer) = this(new Array[Float](rows * columns), columns)
+
+    protected var index = 0
+
+    def append(value: Float): Unit = {
+      array(index) = value
+      index += 1
+    }
+
+    def normed(): Array[Float] = norm(array)
+  }
+
+  abstract class UnsizedAppender(columns: Int) extends Appender(columns)
+
+  class ArrayBufferAppender protected (arrayBuffer: ArrayBuffer[Float], columns: Int) extends UnsizedAppender(columns) {
+
+    def this(columns: Int) = this(new ArrayBuffer[Float](100000 * columns), columns)
+
+    def append(value: Float): Unit = arrayBuffer += value
+
+    def normed(): Array[Float] = norm(arrayBuffer.toArray)
+  }
+
+  class ArrayBuilderAppender protected (arrayBuilder: ArrayBuilder[Float], columns: Int) extends UnsizedAppender(columns) {
+
+    def this(columns: Int) = this(new ArrayBuilder.ofFloat, columns)
+
+    def append(value: Float): Unit = arrayBuilder += value
+
+    def normed(): Array[Float] = norm(arrayBuilder.result)
+  }
+
+  protected def buildMatrix(lines: Iterator[String]): BuildType = {
+    val linesAndIndices = lines.zipWithIndex.buffered
+    val map = new ImplMapType()
+    val (wordCountOpt, columns) = getWordCountOptAndColumns(linesAndIndices)
+    val knownAppender = Appender(wordCountOpt, columns)
+    var unknownAppenderOpt: Option[Appender] = None
+    var total = 0
+
+    linesAndIndices.foreach { case (line, index) =>
+      total += 1
+      val bits = line.split(' ')
+      require(bits.length == columns + 1, { s"${bits.length} != ${columns + 1} found on line ${index + 1}" })
+      val word = bits(0)
+      if (map.contains(word))
+        logger.warn(s"The word '$word' is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
+      else if (word == UNK && unknownAppenderOpt.isDefined)
+        logger.warn(s"The unknown vector is duplicated in the vector file on line ${index + 1} and this later instance is skipped.")
+      else {
+        val appender =
+          if (word != UNK) {
+            // If there is an unknown vector, then the array will not be completely filled.
+            // That's also the case if there are duplicate words.  Use the tree size for the real count.
+            map += (word -> map.size)
+            knownAppender
+          }
+          else {
+            val unknownAppender = Appender(Some(1), columns)
+            unknownAppenderOpt = Some(unknownAppender)
+            unknownAppender
+          }
+        var i = 0 // optimization
         while (i < columns) {
-          array(offset + i) /= len
+          appender.append(bits(i + 1).toFloat)
           i += 1
         }
       }
     }
-
-    val linesZipWithIndex = lines.zipWithIndex
-    val (wordCount, columns) =
-      if (linesZipWithIndex.hasNext) {
-        val bits = linesZipWithIndex.next()._1.split(' ')
-
-        assert(bits.length == 2, "The first line must specify wordCount and dimension.")
-        (bits(0).toInt, bits(1).toInt)
-      }
-      else (0, 0)
-    var map = new ImplementationMapType()
-    val array = new ArrayType(wordCount * columns)
-
-    for ((line, lineIndex) <- linesZipWithIndex) {
-      val bits = line.split(' ')
-      assert(bits.length == columns + 1, s"${bits.length} != ${columns + 1} found on line ${lineIndex + 1}")
-      val word = bits(0)
-      val row =
-        if (map.contains(word)) {
-          logger.info(s"'$word' is duplicated in the vector file.")
-          // Use space because we will not be looking for words like that.
-          // The array will not be filled in for this map.size value.
-          map += (" " + map.size -> map.size)
-          map(word)
-        }
-        else map.size
-      assert(row < wordCount)
-      map += (word -> row)
-
-      val offset = row * columns
-      var i = 0 // optimization
-
-      while (i < columns) {
-        array(offset + i) = bits(i + 1).toDouble.asInstanceOf[ValueType]
-        i += 1
-      }
-      norm(array, row, columns)
-    }
-    assert(map.size == wordCount, s"The file should have had ${map.size} words.")
-    (map, array)
+    logger.info(s"Completed matrix loading. Kept ${map.size} words from $total lines of words.")
+    if (unknownAppenderOpt.isDefined)
+      logger.info(s"An unknown vector is defined for the matrix.")
+    if (wordCountOpt.isDefined)
+      require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
+    BuildType(map, knownAppender.normed(), unknownAppenderOpt.map(_.normed()), columns)
   }
 }

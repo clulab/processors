@@ -70,8 +70,8 @@ class LemmatizeEmbeddings(val frequencyFile:String,
 
       // unknown word in Gigaword => add vector to the UNK token
       else {
-        totalWeights.incrementCount(WordEmbeddingMap.UNK)
-        add(ne, WordEmbeddingMap.UNK, vector)
+        totalWeights.incrementCount(SanitizedWordEmbeddingMap.UNK)
+        add(ne, SanitizedWordEmbeddingMap.UNK, vector)
       }
     }
 

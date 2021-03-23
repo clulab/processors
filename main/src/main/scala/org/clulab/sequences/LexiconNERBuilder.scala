@@ -47,10 +47,6 @@ abstract class LexiconNERBuilder() {
       // This default value is used when there are overrideKBs with labels that don't match a regular KB.
       defaultCaseInsensitive: Boolean): LexiconNER
 
-  protected def toJavaConsumer[T](consumer: T => Unit): Consumer[T] = {
-    (t: T) => consumer(t)
-  }
-
   protected def extractKBName(kb: String): String = {
     val slash = kb.lastIndexOf("/")
     val dot = kb.indexOf('.')
@@ -60,9 +56,10 @@ abstract class LexiconNERBuilder() {
 
   protected def readLines(path: String)(addLine: String => Unit): Unit = {
     Serializer.using(loadStreamFromClasspath(path)) { reader =>
-      reader.lines.forEach(toJavaConsumer[String] { line: String =>
-        addLine(line)
-      })
+      val consumer = new Consumer[String]() {
+        def accept(line: String): Unit = addLine(line)
+      }
+      reader.lines.forEach(consumer)
     }
   }
 

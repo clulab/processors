@@ -1,5 +1,9 @@
 pipeline {
   agent any
+  environment {
+    _JAVA_OPTIONS = "-Xmx10g"
+    JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8"
+  }
   stages {
     stage('Test') {
       steps {
@@ -8,7 +12,8 @@ pipeline {
           // sh "sbt ++2.12.4 'testOnly -- -l NeedsExternalBinary'"
           // We have the external binaries installed and besides, the tests
           // are able to configure themselves dynamically.
-          sh "sbt ++2.12.4 test"
+          // The scalaVersion is configured internally and is plural.
+          sh "sbt +test"
         }
       }
     }

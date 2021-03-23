@@ -1,17 +1,17 @@
 package org.clulab.dynet
 
 import java.io._
-
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
 import edu.cmu.dynet.ComputationGraph
-import org.clulab.embeddings.WordEmbeddingMap
+import org.clulab.embeddings.SanitizedWordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.Initializer
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -42,22 +42,25 @@ object Utils {
   private var IS_DYNET_INITIALIZED = false
 
   def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
-    // Since the random seed is not being changed, the complete initialization
-    // will be ignored by DyNet, so ignore it from the get-go.
-    if (!IS_DYNET_INITIALIZED) {
-      logger.debug("Initializing DyNet...")
+    // At the very least, IS_DYNET_INITIALIZED must be protected.
+    Utils.synchronized {
+      if (!IS_DYNET_INITIALIZED) {
+        logger.debug("Initializing DyNet...")
 
-      val params = new mutable.HashMap[String, Any]()
-      params += "random-seed" -> RANDOM_SEED
-      params += "weight-decay" -> WEIGHT_DECAY
-      if (autoBatch) {
-        params += "autobatch" -> 1
-        params += "dynet-mem" -> mem
+        val params = new mutable.HashMap[String, Any]()
+        params += "random-seed" -> RANDOM_SEED
+        params += "weight-decay" -> WEIGHT_DECAY
+        if (autoBatch) {
+          params += "autobatch" -> 1
+          params += "dynet-mem" -> mem
+        }
+
+        Initializer.initialize(params.toMap)
+        logger.debug("DyNet initialization complete.")
+        IS_DYNET_INITIALIZED = true
       }
-
-      Initializer.initialize(params.toMap)
-      logger.debug("DyNet initialization complete.")
-      IS_DYNET_INITIALIZED = true
+      else
+        logger.debug("DyNet re-initialization skipped.")
     }
   }
 
@@ -859,7 +862,7 @@ object Utils {
 
   def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
-  def mkWordVocab(w2v: WordEmbeddingMap): Map[String, Int] = {
+  def mkWordVocab(w2v: SanitizedWordEmbeddingMap): Map[String, Int] = {
     val commonWords = new ListBuffer[String]
     commonWords += Utils.UNK_WORD // the word at position 0 is reserved for unknown words
     for (w <- w2v.matrix.keySet.toList.sorted) {
@@ -869,7 +872,7 @@ object Utils {
     w2i
   }
 
-  def initializeEmbeddings(w2v: WordEmbeddingMap, w2i: Map[String, Int], lookupParameters: LookupParameter): Unit = {
+  def initializeEmbeddings(w2v: SanitizedWordEmbeddingMap, w2i: Map[String, Int], lookupParameters: LookupParameter): Unit = {
     logger.debug("Initializing DyNet embedding parameters...")
     for (word <- w2v.matrix.keySet) {
       lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))

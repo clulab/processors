@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.dynet.{ConstEmbeddingsGlove, Utils => DynetUtils}
+import org.clulab.dynet.{Utils => DynetUtils}
 import org.clulab.fatdynet.utils.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -34,6 +34,5 @@ class FatdynetTest extends FlatSpec with Matchers with BeforeAndAfterAll {
   def stop(): Unit = {
     // This is for debugging memory leaks.  It will cause other tests to crash.
     proc = null
-    ConstEmbeddingsGlove.SINGLETON = null
   }
 }

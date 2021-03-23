@@ -1,76 +1,47 @@
 package org.clulab.dynet
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, ParameterCollection}
-import org.clulab.embeddings.CompactWordEmbeddingMap
+import com.typesafe.config.Config
+import edu.cmu.dynet.{Dim, Expression}
+import org.clulab.embeddings.WordEmbeddingMap
+import org.clulab.embeddings.WordEmbeddingMapPool
 import org.slf4j.{Logger, LoggerFactory}
-import ConstEmbeddingsGlove._
 import org.clulab.utils.ConfigWithDefaults
+import org.clulab.utils.StringUtils
 
 /**
- * Implements the ConstEmbeddings using GloVe vectors
- * Note: two difference from the vanilla GloVe vectors are:
- * - Words with low frequency may be filtered out of the matrix
- * - The empty string ("") stands for UNK; it is typically computed by averaging the embeddings of the culled words
+ * Implements the ConstEmbeddings as a thin wrapper around WordEmbeddingMap
+ *   with additional functionality to produce embeddings as DyNet Expressions
  */
-class ConstEmbeddingsGlove(matrixResourceName: String, isResource:Boolean = true) extends ConstEmbeddings {
+class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbeddings {
+  protected val dynetDim: Dim = Dim(wordEmbeddingMap.dim)
 
-  /** These parameters are never updated, so we can share this object between models */
-  private val parameters = new ParameterCollection()
-  val (lookupParameters, w2i) = mkLookupParams()
-  // All other values should be >= 0.
-  val w2iUNK = w2i.getOrElse(UNK, -1)
-  val w2iContainsUNK = w2iUNK != -1
+  override def dim: Int = wordEmbeddingMap.dim
 
-  def mkLookupParams(): (LookupParameter, Map[String, Int]) = {
-    val wordVectors = CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
-    val w2i = wordVectors.keys.toList.sorted.zipWithIndex.toMap
-
-    val dim = wordVectors.columns
-    val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(dim))
-
-    for(word <- wordVectors.keys) {
-      wordLookupParameters.initialize(w2i(word), new FloatVector(wordVectors.get(word).get))
-    }
-    logger.debug(s"Completed loading word embeddings of dimension $dim for ${w2i.size} words.")
-
-    (wordLookupParameters, w2i)
-  }
-
-  override def dim: Int = lookupParameters.dim().get(0).toInt
-
-  def get(word:String): Expression = {
-    val w2iWord = w2i.getOrElse(word, {
-      assert(w2iContainsUNK)
-      w2iUNK
-    })
-
-    Expression.constLookup(lookupParameters, w2iWord)
-  }
-
-  override def mkEmbeddings(words: Iterable[String]): ExpressionVector = {
-    words.map(get).toSeq
+  override def mkEmbedding(word: String): Expression = {
+    val vector = wordEmbeddingMap.getOrElseUnknown(word)
+    Expression.input(dynetDim, vector)
   }
 }
 
 object ConstEmbeddingsGlove {
   val logger:Logger = LoggerFactory.getLogger(classOf[ConstEmbeddingsGlove])
 
-  private def UNK:String = "" // empty string for UNK
+  def apply(configName: String = "org/clulab/glove.conf"): ConstEmbeddingsGlove =
+      apply(ConfigWithDefaults(configName))
 
-  def apply(configName:String = "org/clulab/glove.conf"): ConstEmbeddingsGlove = {
-    val config = ConfigWithDefaults(configName)
+  def apply(conf: Config): ConstEmbeddingsGlove = apply(ConfigWithDefaults(conf))
+
+  def apply(config: ConfigWithDefaults): ConstEmbeddingsGlove = {
     val matrixResourceName = config.getArgString("glove.matrixResourceName", None)
-    val isResource = config.getArgBoolean("glove.isResource", Some(true))
-    apply(matrixResourceName, isResource)
-  }
+    val wordEmbeddingMap = {
+      // This is really meant to be a resource location, but we'll take a file if it's there.
+      // val isResource = config.getArgBoolean("glove.isResource", Some(true))
+      val name = StringUtils.afterLast(matrixResourceName, '/', all = true, keep = false)
+      val location = StringUtils.beforeLast(matrixResourceName, '/', all = false, keep = true)
 
-  // This is not marked private for debugging purposes.
-  var SINGLETON: Option[ConstEmbeddingsGlove] = None
+      WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
+      // CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
+    }
 
-  def apply(matrixResourceName: String, isResource: Boolean): ConstEmbeddingsGlove = {
-    // These objects are read-only and they use a lot of RAM, so let's reuse them if they exist.
-    // No ComputationGraph is touched during this process, so synchronization is not required.
-    if (SINGLETON.isEmpty)
-      SINGLETON = Some(new ConstEmbeddingsGlove(matrixResourceName, isResource))
-    SINGLETON.get
+    new ConstEmbeddingsGlove(wordEmbeddingMap)
   }
 }

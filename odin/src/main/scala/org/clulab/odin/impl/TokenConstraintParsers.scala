@@ -31,14 +31,14 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 
   def disjunctiveConstraint: Parser[TokenConstraint] =
     rep1sep(conjunctiveConstraint, "|") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => new DisjunctiveConstraint(lhs, rhs)
       }
     }
 
   def conjunctiveConstraint: Parser[TokenConstraint] =
     rep1sep(negatedConstraint, "&") ^^ { chunks =>
-      (chunks.head /: chunks.tail) {
+      chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => new ConjunctiveConstraint(lhs, rhs)
       }
     }
@@ -68,7 +68,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
   /** for numerical comparisons */
   def numericExpression: Parser[NumericExpression] =
     productExpression ~ rep(("+" | "-") ~ productExpression) ^^ {
-      case prod ~ list => (prod /: list) {
+      case prod ~ list => list.foldLeft(prod) {
         case (lhs, "+" ~ rhs) => new Addition(lhs, rhs)
         case (lhs, "-" ~ rhs) => new Subtraction(lhs, rhs)
         case _ => sys.error("unrecognized numericExpression operator")
@@ -77,7 +77,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 
   def productExpression: Parser[NumericExpression] =
     termExpression ~ rep(("*" | "//" | "/" | "%") ~ termExpression) ^^ {
-      case prod ~ list => (prod /: list) {
+      case prod ~ list => list.foldLeft(prod) {
         case (lhs, "*" ~ rhs) => new Multiplication(lhs, rhs)
         case (lhs, "/" ~ rhs) => new Division(lhs, rhs)
         case (lhs, "//" ~ rhs) => new EuclideanQuotient(lhs, rhs)
@@ -113,7 +113,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
       case lhs ~ op ~ rhs ~ rest =>
         var prev = rhs
         val first = mkCompare(lhs, op, rhs)
-        (first /: rest) {
+        rest.foldLeft(first) {
           case (l, op ~ expr) =>
             val r = mkCompare(prev, op, expr)
             prev = expr
