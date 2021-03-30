@@ -173,7 +173,7 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
             val label = blocks.last // grab the label of the named entity
             val tokens = entity.split("\\s+")
             val matcher = matchersMap.getOrElseUpdate(label, {
-              orderMap(label) = orderMap.size // It won't be here, either.
+              orderMap.getOrElseUpdate(label, orderMap.size)
               val matcher = new BooleanHashTrie(label, caseInsensitiveMap(label))
               matchersArray += matcher
               matcher
