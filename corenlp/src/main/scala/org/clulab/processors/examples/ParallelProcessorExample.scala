@@ -9,17 +9,13 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.nio.charset.StandardCharsets
 
-import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.serialization.DocumentSerializer
+import org.clulab.utils.ThreadUtils
 
-import scala.collection.parallel.ForkJoinTaskSupport
-import scala.collection.parallel.ForkJoinTasks
-import scala.collection.parallel.ParSeq
 import scala.io.Source
 
 object ParallelProcessorExample {
@@ -89,30 +85,6 @@ object ParallelProcessorExample {
       result
     }
 
-    def parallelize[T](seq: Seq[T], threads: Int): ParSeq[T] = {
-      val forkJoinPoolConstructor = {
-        // Get something of the right type.
-        val defaultForkJoinPool = ForkJoinTasks.defaultForkJoinPool
-        // Find the constructor.
-        defaultForkJoinPool.getClass.getConstructor(classOf[Int])
-      }
-
-      def newForkJoinPool(threads: Int) = {
-        // Invoke the constructor.
-        forkJoinPoolConstructor.newInstance(threads.asInstanceOf[Integer])
-
-        // For the record, this is the standard version
-        //new ForkJoinPool(threads)
-      }
-
-      val forkJoinPool = newForkJoinPool(threads)
-      val forkJoinTaskSupport = new ForkJoinTaskSupport(forkJoinPool)
-      val parSeq = seq.par
-
-      parSeq.tasksupport = forkJoinTaskSupport
-      parSeq
-    }
-
     def printDocument(document: Document, printWriter: PrintWriter): Unit = document.prettyPrint(printWriter)
 
     val inputDir = args(0)
@@ -121,7 +93,7 @@ object ParallelProcessorExample {
     val threads = args(3).toInt
 
     val files = findFiles(inputDir, extension)
-    val parFiles = parallelize(files, threads)
+    val parFiles = ThreadUtils.parallelize(files, threads)
 
     Utils.initializeDyNet()
 
@@ -132,7 +104,7 @@ object ParallelProcessorExample {
 
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
-
+    
     parFiles.foreach { file =>
       println(s"Processing ${file.getName}...")
 
