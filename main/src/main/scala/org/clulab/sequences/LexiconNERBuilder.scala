@@ -158,13 +158,9 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
 
   private def getOverrideMatchers(overrideKBsOpt: Option[Seq[String]], buildState: BuildState, caseInsensitiveMap: Map[String, Boolean], orderMap: MutableMap[String, Int]): Seq[BooleanHashTrie] = {
     overrideKBsOpt.map { overrideKBs =>
-      val matchersMap = new MutableHashMap[String, BooleanHashTrie]()
-      // This array is used to keep track of the order in which matchers are added for the sake of consistency.
-      val matchersArray = new ArrayBuffer[BooleanHashTrie]
-
       // In these KBs, the name of the entity must be the first token, and the label must be the last.
       // Tokenization is performed around TABs here.
-      def addLine(inputLine: String): Unit = {
+      def addLine(matchersMap: MutableHashMap[String, BooleanHashTrie], matchersArray: ArrayBuffer[BooleanHashTrie])(inputLine: String): Unit = {
         val line = inputLine.trim
         if (!line.startsWith("#")) { // skip comments starting with #
           val blocks = line.split("\t")
@@ -173,7 +169,7 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
             val label = blocks.last // grab the label of the named entity
             val tokens = entity.split("\\s+")
             val matcher = matchersMap.getOrElseUpdate(label, {
-              orderMap(label) = orderMap.size // It won't be here, either.
+              orderMap.getOrElseUpdate(label, orderMap.size)
               val matcher = new BooleanHashTrie(label, caseInsensitiveMap(label))
               matchersArray += matcher
               matcher
@@ -184,22 +180,21 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
         }
       }
 
+      val matchersArray = new ArrayBuffer[BooleanHashTrie]
       overrideKBs.foreach { overrideKB =>
-        readLines(overrideKB)(addLine)
+        // Each overrideKB gets its own copies of these now.
+        val matchersMap = new MutableHashMap[String, BooleanHashTrie]()
+        val tmpMatchersArray = new ArrayBuffer[BooleanHashTrie]
+
+        readLines(overrideKB)(addLine(matchersMap, tmpMatchersArray))
+        // These are no longer sorted alphabetically.
+        matchersArray ++= tmpMatchersArray
       }
 
-      // The order should be all the withRegular first, in that regular order,
-      // and then the ones withoutRegular in the order they were encountered.
-      val (withRegular, withoutRegular) = matchersArray.partition { matcher =>
-        caseInsensitiveMap.contains(matcher.label)
-      }
-      val sortedRegular = withRegular.sortBy { matcher => orderMap(matcher.label) }
-      val sortedMatchers = sortedRegular ++ withoutRegular
-
-      sortedMatchers.foreach { matcher =>
+      matchersArray.foreach { matcher =>
         logger.info(s"Loaded OVERRIDE matcher for label ${matcher.label}.  The size of the first layer is ${matcher.entriesSize}.")
       }
-      sortedMatchers
+      matchersArray
     }.getOrElse(Seq.empty[BooleanHashTrie])
   }
 }

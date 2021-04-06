@@ -1,4 +1,6 @@
 # Changes
++ **8.3.1** - Fix a serious error in the LexiconNER which causes labels to be scrambled.  Please don't use 8.3.0.
++ **8.3.1** - Revert the precedence rules for ties encountered in override KBs to match past behavior.
 + **8.3.0** - Use a WordEmbeddingMapPool to enable sharing of glove files.  Get yours there.
 + **8.3.0** - Support headerless glove files straight from Stanford (at a small price for buffering), with or without an out-of-vocabularly vector.
 + **8.3.0** - Rename WordEmbeddingMap to SanitizedWordEmbeddingMap and deprecate it.

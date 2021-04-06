@@ -56,7 +56,9 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
 
     def mayOverwrite(tree: IntTrieNode): Boolean = tree.completePath < 0 ||
         // We can replace a value if it has a lower number.
-        (overwrite && completePath < tree.completePath)
+        // (overwrite && completePath < tree.completePath)
+        // Nothing doing.  Overwriting is not allowed to preserve past behavior.
+        false // overwrite
 
     if (tokens != null && tokens.length > 0) {
       // first layer
