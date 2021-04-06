@@ -23,3 +23,7 @@ lazy val odin = project
 
 lazy val openie = project
   .dependsOn(main % "compile -> compile; test -> test", odin)
+
+lazy val timex = project
+  .dependsOn(main % "compile -> compile; test -> test", odin)
+
