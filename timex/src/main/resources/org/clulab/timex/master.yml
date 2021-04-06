@@ -1,0 +1,17 @@
+taxonomy:
+  - Element:
+      - Month
+      - Year
+  - Temporal:
+      - Date
+
+rules:
+  - import: org/clulab/timex/elements.yml
+    vars:
+      # We need our elements before we can match complex dates
+      rulepriority: "1"
+
+  - import: org/clulab/timex/dates.yml
+    vars:
+      label: Date
+      rulepriority: "2"

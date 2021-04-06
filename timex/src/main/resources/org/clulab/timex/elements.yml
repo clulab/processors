@@ -1,0 +1,11 @@
+#
+# rules for the basic elements of date expressions such as month names or year values
+#
+
+- name: month-name
+  priority: ${rulepriority}
+  label: Month
+  type: token
+  pattern:
+    /January|February/
+

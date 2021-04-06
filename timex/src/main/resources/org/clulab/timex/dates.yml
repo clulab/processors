@@ -1,0 +1,11 @@
+#
+# rules to recognize common date expressions
+#
+
+- name: month-year
+  priority: ${rulepriority}
+  label: Date
+  type: token
+  pattern: |
+    @month:Month /2000/
+
