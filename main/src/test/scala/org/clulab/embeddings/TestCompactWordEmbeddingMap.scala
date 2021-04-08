@@ -37,11 +37,11 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   }
 
   it should "have the same contents" in {
-    val compactSet = compactText.keys.toSet ++ compactText.unkEmbeddingOpt.map(_ => Set(CompactWordEmbeddingMap.UNK)).getOrElse(Set.empty)
+    val compactSet = compactText.knownKeys.toSet ++ compactText.unkEmbeddingOpt.map(_ => Set(CompactWordEmbeddingMap.UNK)).getOrElse(Set.empty)
 
     compactSet should be (fullsizeText.matrix.keys.toSet)
 
-    compactText.keys.foreach { key =>
+    compactText.knownKeys.foreach { key =>
       val compactResult = compactText.get(key).get
       val fullsizeResult = fullsizeText.matrix(key)
 
@@ -62,8 +62,8 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   it should "get the same results" in {
     val sanitizer = WordEmbeddingMap.defaultWordSanitizer
 
-    compactText.keys.foreach { key1 =>
-      compactText.keys.foreach { key2 =>
+    compactText.knownKeys.foreach { key1 =>
+      compactText.knownKeys.foreach { key2 =>
 
         val result1a = compactText.avgSimilarity(
           Array(sanitizer.sanitizeWord(key1)),
@@ -93,16 +93,16 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   }
 
   it should "have the same contents" in {
-    compactText.keys should be (compactBin.keys)
+    compactText.knownKeys should be (compactBin.knownKeys)
 
-    compactText.keys.foreach { key =>
+    compactText.knownKeys.foreach { key =>
       matches(compactText.get(key).get, compactBin.get(key).get) should be (true)
     }
   }
 
   it should "get the same results" in {
-    compactText.keys.foreach { key1 =>
-      compactText.keys.foreach { key2 =>
+    compactText.knownKeys.foreach { key1 =>
+      compactText.knownKeys.foreach { key2 =>
 
         val result1a = compactText.avgSimilarity(Array(key1), Array(key2))
         val result2a = compactBin.avgSimilarity(Array(key1), Array(key2))

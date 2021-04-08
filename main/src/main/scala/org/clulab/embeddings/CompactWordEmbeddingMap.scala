@@ -131,7 +131,10 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
     total
   }
 
-  def keys: Iterable[String] = map.keys // debug use only
+  def knownKeys: Iterable[String] = map.keys // debug use only
+
+  /** Returns all keys presented in the map, including the key for the unknown token */
+  override def keys: Set[String] = map.keys.toSet + CompactWordEmbeddingMap.UNK
 
   protected def add(dest: Array[Float], srcRow: Int): Unit = {
     val srcOffset = srcRow * columns

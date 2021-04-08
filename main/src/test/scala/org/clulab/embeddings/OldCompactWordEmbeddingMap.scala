@@ -51,7 +51,9 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
     }
   }
 
-  def keys: Iterable[String] = map.keys // debug use only
+  def knownKeys: Iterable[String] = map.keys // debug use only
+
+  override def keys: Set[String] = map.keys.toSet // debug use only
 
   def save(filename: String): Unit = {
     // Sort the map entries (word -> row) by row and then keep just the word.
