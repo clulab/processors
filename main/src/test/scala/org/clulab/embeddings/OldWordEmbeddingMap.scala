@@ -394,6 +394,9 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
 
   /** Save this object in binary format. */
   override def save(filename: String): Unit = ???
+
+  /** Returns all keys presented in the map, including the key for the unknown token */
+  override def keys: Set[String] = matrix.keySet
 }
 
 object OldWordEmbeddingMap {

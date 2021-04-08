@@ -138,6 +138,9 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
       objectOutputStream.writeObject(buildType.unknownArray)
     }
   }
+
+  /** Returns all keys presented in the map, including the key for the unknown token */
+  override def keys: Set[String] = map.keys.toSet + ExplicitWordEmbeddingMap.UNK
 }
 
 object ExplicitWordEmbeddingMap extends Logging {
