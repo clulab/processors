@@ -18,7 +18,13 @@ class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbe
 
   override def mkEmbedding(word: String): Expression = {
     val vector = wordEmbeddingMap.getOrElseUnknown(word)
-    Expression.input(dynetDim, vector)
+    Expression.input(dynetDim, mkVectorDeepCopy(vector))
+  }
+
+  private def mkVectorDeepCopy(src: IndexedSeq[Float]): IndexedSeq[Float] = {
+    val dst = new Array[Float](src.size)
+    for(i <- src.indices) dst(i) = src(i)
+    dst
   }
 }
 
