@@ -38,7 +38,14 @@ class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbe
     val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(dim))
 
     for(word <- keys) {
-      wordLookupParameters.initialize(w2i(word), new FloatVector(wordEmbeddingMap.get(word).get))
+      try {
+        wordLookupParameters.initialize(w2i(word), new FloatVector(wordEmbeddingMap.get(word).get))
+      } catch {
+        case e: NoSuchElementException =>
+          println(s"Could not find vector for key: $word")
+          e.printStackTrace()
+          throw e
+      }
     }
     logger.debug(s"Completed the creation of LookupParameters of dimension $dim for ${w2i.size} words.")
 
