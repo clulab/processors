@@ -1,30 +1,46 @@
 package org.clulab.dynet
 import com.typesafe.config.Config
-import edu.cmu.dynet.{Dim, Expression}
+import edu.cmu.dynet.{Dim, Expression, FloatVector, LookupParameter, ParameterCollection}
 import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.embeddings.WordEmbeddingMapPool
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.utils.ConfigWithDefaults
 import org.clulab.utils.StringUtils
 
+import ConstEmbeddingsGlove.logger
+
 /**
  * Implements the ConstEmbeddings as a thin wrapper around WordEmbeddingMap
  *   with additional functionality to produce embeddings as DyNet Expressions
  */
 class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbeddings {
-  protected val dynetDim: Dim = Dim(wordEmbeddingMap.dim)
+
+  /** These parameters are never updated, so we can share this object between models */
+  private val parameters = new ParameterCollection()
+
+  private val (lookupParameters, w2i) = mkLookupParams()
 
   override def dim: Int = wordEmbeddingMap.dim
 
   override def mkEmbedding(word: String): Expression = {
-    val vector = wordEmbeddingMap.getOrElseUnknown(word)
-    Expression.input(dynetDim, mkVectorDeepCopy(vector))
+    val idx = w2i.getOrElse(word, w2i.get(wordEmbeddingMap.unknownKey).get)
+    Expression.constLookup(lookupParameters, idx)
   }
 
-  private def mkVectorDeepCopy(src: IndexedSeq[Float]): IndexedSeq[Float] = {
-    val dst = new Array[Float](src.size)
-    for(i <- src.indices) dst(i) = src(i)
-    dst
+  private def mkLookupParams(): (LookupParameter, Map[String, Int]) = {
+    logger.debug("Started converting word embeddings into DyNet LookupParameters...")
+    // note: it is important that the key for the unknown token be included in this
+    val keys = wordEmbeddingMap.keys
+    val w2i = keys.toList.sorted.zipWithIndex.toMap
+
+    val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(dim))
+
+    for(word <- keys) {
+      wordLookupParameters.initialize(w2i(word), new FloatVector(wordEmbeddingMap.get(word).get))
+    }
+    logger.debug(s"Completed the creation of LookupParameters of dimension $dim for ${w2i.size} words.")
+
+    (wordLookupParameters, w2i)
   }
 }
 
