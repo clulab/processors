@@ -55,6 +55,8 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
 
   override def keys: Set[String] = map.keys.toSet // debug use only
 
+  def unknownKey: String = ???
+
   def save(filename: String): Unit = {
     // Sort the map entries (word -> row) by row and then keep just the word.
     val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
