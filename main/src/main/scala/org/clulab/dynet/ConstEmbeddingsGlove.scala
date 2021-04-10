@@ -22,8 +22,10 @@ class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbe
 
   override def dim: Int = wordEmbeddingMap.dim
 
+  private val unknownIdx = w2i(wordEmbeddingMap.unknownKey)
+
   override def mkEmbedding(word: String): Expression = {
-    val idx = w2i.getOrElse(word, w2i.get(wordEmbeddingMap.unknownKey).get)
+    val idx = w2i.getOrElse(word, unknownIdx)
     Expression.constLookup(lookupParameters, idx)
   }
 
