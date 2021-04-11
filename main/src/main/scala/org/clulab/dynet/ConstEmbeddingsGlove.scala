@@ -27,30 +27,23 @@ class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbe
     Expression.constLookup(lookupParameters, idx)
   }
 
+  protected def shift(range: Range, n: Int): Range = {
+    require(!range.isInclusive)
+    Range(range.start + n, range.end + n, range.step)
+  }
+
   private def mkLookupParams(): (LookupParameter, Map[String, Int]) = {
     logger.debug("Started converting word embeddings into DyNet LookupParameters...")
-    // keys in the embedding map, without the unknown token
-    val keys = wordEmbeddingMap.keys
+    val keys = wordEmbeddingMap.keys.toArray.sorted
     // add 1 to the index because 0 is reserved for unknown
-    val w2i = keys.toList.sorted.zipWithIndex.map(t => Tuple2(t._1, t._2 + 1)).toMap
-
-    val wordLookupParameters = parameters.addLookupParameters(w2i.size + 1, Dim(dim))
+    val w2i = keys.zip(shift(keys.indices, 1)).toMap
+    val wordLookupParameters = parameters.addLookupParameters(keys.length + 1, Dim(dim))
 
     // index 0 reserved for the embedding of the unknown token
     wordLookupParameters.initialize(0, new FloatVector(wordEmbeddingMap.unknownEmbedding))
-
-    for(word <- keys) {
-      try {
-        wordLookupParameters.initialize(w2i(word), new FloatVector(wordEmbeddingMap.get(word).get))
-      } catch {
-        case e: NoSuchElementException =>
-          println(s"Could not find vector for key: $word")
-          e.printStackTrace()
-          throw e
-      }
-    }
+    for((word, index) <- w2i)
+      wordLookupParameters.initialize(index, new FloatVector(wordEmbeddingMap.getOrElseUnknown(word)))
     logger.debug(s"Completed the creation of LookupParameters of dimension $dim for ${w2i.size} words.")
-
     (wordLookupParameters, w2i)
   }
 }
