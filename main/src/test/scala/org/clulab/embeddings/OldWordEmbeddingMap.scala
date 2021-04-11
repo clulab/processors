@@ -399,6 +399,8 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
   override def keys: Set[String] = matrix.keySet
 
   def unknownKey: String = ???
+
+  override def unknownEmbedding: IndexedSeq[Float] = ???
 }
 
 object OldWordEmbeddingMap {

@@ -22,20 +22,22 @@ class ConstEmbeddingsGlove(wordEmbeddingMap: WordEmbeddingMap) extends ConstEmbe
 
   override def dim: Int = wordEmbeddingMap.dim
 
-  private val unknownIdx = w2i(wordEmbeddingMap.unknownKey)
-
   override def mkEmbedding(word: String): Expression = {
-    val idx = w2i.getOrElse(word, unknownIdx)
+    val idx = w2i.getOrElse(word, 0) // 0 is unknown
     Expression.constLookup(lookupParameters, idx)
   }
 
   private def mkLookupParams(): (LookupParameter, Map[String, Int]) = {
     logger.debug("Started converting word embeddings into DyNet LookupParameters...")
-    // note: it is important that the key for the unknown token be included in this
+    // keys in the embedding map, without the unknown token
     val keys = wordEmbeddingMap.keys
-    val w2i = keys.toList.sorted.zipWithIndex.toMap
+    // add 1 to the index because 0 is reserved for unknown
+    val w2i = keys.toList.sorted.zipWithIndex.map(t => Tuple2(t._1, t._2 + 1)).toMap
 
-    val wordLookupParameters = parameters.addLookupParameters(w2i.size, Dim(dim))
+    val wordLookupParameters = parameters.addLookupParameters(w2i.size + 1, Dim(dim))
+
+    // index 0 reserved for the embedding of the unknown token
+    wordLookupParameters.initialize(0, new FloatVector(wordEmbeddingMap.unknownEmbedding))
 
     for(word <- keys) {
       try {
@@ -61,18 +63,29 @@ object ConstEmbeddingsGlove {
 
   def apply(conf: Config): ConstEmbeddingsGlove = apply(ConfigWithDefaults(conf))
 
-  def apply(config: ConfigWithDefaults): ConstEmbeddingsGlove = {
-    val matrixResourceName = config.getArgString("glove.matrixResourceName", None)
-    val wordEmbeddingMap = {
-      // This is really meant to be a resource location, but we'll take a file if it's there.
-      // val isResource = config.getArgBoolean("glove.isResource", Some(true))
-      val name = StringUtils.afterLast(matrixResourceName, '/', all = true, keep = false)
-      val location = StringUtils.beforeLast(matrixResourceName, '/', all = false, keep = true)
+  // This is not marked private for debugging purposes.
+  var SINGLETON: Option[ConstEmbeddingsGlove] = None
 
-      WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
-      // CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
+  def apply(config: ConfigWithDefaults): ConstEmbeddingsGlove = {
+
+    this.synchronized {
+      if (SINGLETON.isEmpty) {
+        val matrixResourceName = config.getArgString("glove.matrixResourceName", None)
+
+        val wordEmbeddingMap = {
+          // This is really meant to be a resource location, but we'll take a file if it's there.
+          // val isResource = config.getArgBoolean("glove.isResource", Some(true))
+          val name = StringUtils.afterLast(matrixResourceName, '/', all = true, keep = false)
+          val location = StringUtils.beforeLast(matrixResourceName, '/', all = false, keep = true)
+
+          WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
+          // CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
+        }
+
+        SINGLETON = Some(new ConstEmbeddingsGlove(wordEmbeddingMap))
+      }
     }
 
-    new ConstEmbeddingsGlove(wordEmbeddingMap)
+    SINGLETON.get
   }
 }
