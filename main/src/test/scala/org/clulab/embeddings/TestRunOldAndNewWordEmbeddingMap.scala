@@ -176,7 +176,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   def runWordEmbeddingMap(wordEmbeddingMap: WordEmbeddingMap, wordEmbeddingConfig: WordEmbeddingConfig, words: Iterable[String]): Unit = {
     val description = wordEmbeddingConfig.description
     val locationName = wordEmbeddingConfig.locationName
-    val constEmbeddingsGlove = new ConstEmbeddingsGlove(wordEmbeddingMap)
+    val constEmbeddingsGlove = ConstEmbeddingsGlove(wordEmbeddingMap)
 
     println(s"Starting run test of ${wordEmbeddingMap.getClass.getSimpleName} at $locationName with $description.")
     val start = System.currentTimeMillis()
