@@ -138,8 +138,6 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
 
   override def unknownEmbedding: IndexedSeq[Float] = unkEmbeddingOpt.get
 
-  def unknownKey: String = CompactWordEmbeddingMap.UNK
-
   protected def add(dest: Array[Float], srcRow: Int): Unit = {
     val srcOffset = srcRow * columns
     var i = 0 // optimization

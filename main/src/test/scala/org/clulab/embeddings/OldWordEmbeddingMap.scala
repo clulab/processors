@@ -398,9 +398,9 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
   /** Returns all keys presented in the map, including the key for the unknown token */
   override def keys: Set[String] = matrix.keySet
 
-  def unknownKey: String = ???
-
-  override def unknownEmbedding: IndexedSeq[Float] = ???
+  override def unknownEmbedding: IndexedSeq[Float] = {
+    throw new RuntimeException("ERROR: unknownEmbedding not supported in this class!")
+  }
 }
 
 object OldWordEmbeddingMap {

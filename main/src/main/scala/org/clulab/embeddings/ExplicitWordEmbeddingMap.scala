@@ -142,8 +142,6 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
   /** Returns all keys presented in the map, excluding the key for the unknown token */
   override def keys: Set[String] = map.keys.toSet // + ExplicitWordEmbeddingMap.UNK
 
-  def unknownKey: String = ExplicitWordEmbeddingMap.UNK
-
   override def unknownEmbedding: IndexedSeq[Float] = unkEmbeddingOpt.get
 }
 

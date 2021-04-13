@@ -27,8 +27,6 @@ trait WordEmbeddingMap {
   /** Returns all keys presented in the map, excluding the key for the unknown token */
   def keys: Set[String]
 
-  def unknownKey: String
-
   /** The embedding corresponding to the unknown token */
   def unknownEmbedding: IndexedSeq[Float]
 

@@ -61,7 +61,7 @@ object ConstEmbeddingsGlove {
 
   def apply(config: ConfigWithDefaults): ConstEmbeddingsGlove = {
 
-    this.synchronized {
+    this.synchronized { // synchronized so we don't create multiple SINGLETON objects
       if (SINGLETON.isEmpty) {
         val matrixResourceName = config.getArgString("glove.matrixResourceName", None)
 
