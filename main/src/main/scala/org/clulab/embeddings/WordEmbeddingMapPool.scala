@@ -22,6 +22,16 @@ object WordEmbeddingMapPool {
   /** Stores all embedding maps that have been accessed */
   protected val pool = new mutable.HashMap[Key, Future[WordEmbeddingMap]]()
 
+  // Check whether it is by chance there already before something creates its own.
+  def get(name: String, compact: Boolean = false): Option[WordEmbeddingMap] = {
+    val wordEmbeddingMapFutureOpt = this.synchronized {
+       pool.get(Key(name, compact))
+    }
+    val wordEmbeddingMapOpt = wordEmbeddingMapFutureOpt.map(Await.result(_, maxWaitTime))
+
+    wordEmbeddingMapOpt
+  }
+
   /** Fetches an embedding from the pool if it exists, or creates it otherwise */
   def getOrElseCreate(name: String, compact: Boolean = false, fileLocation: String = "", resourceLocation: String = ""): WordEmbeddingMap = {
     val wordEmbeddingMapFuture =
