@@ -45,11 +45,19 @@ object ConstEmbeddingsGlove {
         val location = StringUtils.beforeLast(matrixResourceName, '/', all = false, keep = true)
 
         val wordEmbeddingMap = {
-          //WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
-          //CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
+          // First check to see if one is already available.
+          val wordEmbeddingMapOpt = WordEmbeddingMapPool.get(name, compact = true)
 
-          // load wo/ storing it in the pool
-          WordEmbeddingMapPool.loadEmbedding(name, location, location, compact = true)
+          wordEmbeddingMapOpt.getOrElse {
+            // If it should be created and cached, do this:
+            //WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
+
+            // If it should just be created and should be hard-coded to be compact, do this:
+            //CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
+
+            // Load without storing it in the pool.
+            WordEmbeddingMapPool.loadEmbedding(name, location, location, compact = true)
+          }
         }
 
         val (parameters, lookupParameters, w2i, dim) = mkLookupParams(wordEmbeddingMap)
