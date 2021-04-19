@@ -24,6 +24,12 @@ trait WordEmbeddingMap {
     */
   def getOrElseUnknown(word: String): IndexedSeq[Float]
 
+  /** Returns all keys presented in the map, excluding the key for the unknown token */
+  def keys: Set[String]
+
+  /** The embedding corresponding to the unknown token */
+  def unknownEmbedding: IndexedSeq[Float]
+
   // These three methods are primarily for use with grounding.  The returned array is a copy and
   // it's probably not a good idea to edit it, but doing so will not affect other embeddings.
 
