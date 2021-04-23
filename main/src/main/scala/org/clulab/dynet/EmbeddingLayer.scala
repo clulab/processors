@@ -42,9 +42,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val positionLookupParameters:Option[LookupParameter],
                       val dropoutProb: Float) extends InitialLayer {
 
-  lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
-
   override def forward(sentence: AnnotatedSentence,
+                       constLookupParams: LookupParameter,
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
@@ -54,7 +53,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val headPositions = sentence.headPositions
 
     // const word embeddings such as GloVe
-    val constEmbeddings = constEmbedder.mkEmbeddings(words)
+    val constEmbeddings = mkConstEmbeddings(words, constLookupParams)
     assert(constEmbeddings.length == words.length)
     if(tags.isDefined) assert(tags.get.length == words.length)
     if(nes.isDefined) assert(nes.get.length == words.length)
@@ -69,6 +68,15 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddings(i), doDropout))
     }
 
+    embeddings
+  }
+
+  private def mkConstEmbeddings(words: IndexedSeq[String], constLookupParams: LookupParameter): ExpressionVector = {
+    val embeddings = new ExpressionVector()
+    // the position in the sentence serves as index in the constLookupParams
+    for(i <- words.indices) {
+      embeddings.add(Expression.constLookup(constLookupParams, i))
+    }
     embeddings
   }
 
@@ -175,7 +183,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val predicateDim = if(distanceLookupParameters.nonEmpty && useIsPredicate) 1 else 0
     val positionDim = if(positionLookupParameters.nonEmpty) positionEmbeddingSize else 0
 
-    constEmbedder.dim +
+    ConstEmbeddingsGlove.dim +
     learnedWordEmbeddingSize +
     charRnnStateSize * 2 +
     posTagDim +

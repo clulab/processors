@@ -13,6 +13,7 @@ import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
 
+/* FIX ME
 class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   val unused = false
   val fileName = "../glove.840B.300d.10f"
@@ -213,3 +214,5 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     run()
   }
 }
+
+*/
