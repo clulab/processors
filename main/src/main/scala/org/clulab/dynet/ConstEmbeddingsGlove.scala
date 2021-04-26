@@ -38,7 +38,10 @@ object ConstEmbeddingsGlove {
 
     val wordLookupParameters = parameters.addLookupParameters(words.length, Dim(dim))
     for((word, index) <- w2i) {
-      wordLookupParameters.initialize(index, new FloatVector(embeddings.getOrElseUnknown(word)))
+      val vec = embeddings.getOrElseUnknown(word)
+      wordLookupParameters.initialize(index, new FloatVector(vec))
+
+      println(s"Vector for [$word]: ${vec.mkString(" ")}")
     }
 
     (parameters, wordLookupParameters)
