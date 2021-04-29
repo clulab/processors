@@ -41,7 +41,7 @@ object ConstEmbeddingsGlove {
       val vec = embeddings.getOrElseUnknown(word)
       wordLookupParameters.initialize(index, new FloatVector(vec))
 
-      println(s"Vector for [$word]: ${vec.mkString(" ")}")
+//      println(s"Vector for [$word]: ${vec.mkString(" ")}")
     }
 
     (parameters, wordLookupParameters)

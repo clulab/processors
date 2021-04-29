@@ -40,13 +40,19 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
       val lemmas = sent.lemmas
 
       // The SRL model relies on NEs produced by CluProcessor, so run the NER first
+      println("Start tagSentence")
       val (tags, _, preds) = cluProcessor.tagSentence(words)
+      println(" Stop tagSentence")
       val predIndexes = cluProcessor.getPredicateIndexes(preds)
       val tagsAsArray = tags.toArray
+      println("Start nerSentence")
       val (entities, _) = cluProcessor.nerSentence(words, lemmas, tagsAsArray, sent.startOffsets, sent.endOffsets, docDate)
+      println(" Stop nerSentence")
+      println("Start srlSentence")
       val semanticRoles = cluProcessor.srlSentence(
         words, tagsAsArray, entities, predIndexes
       )
+      println(" Stop srlSentence")
 
       sent.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
     }

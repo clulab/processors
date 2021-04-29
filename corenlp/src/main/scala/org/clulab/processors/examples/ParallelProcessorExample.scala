@@ -104,36 +104,37 @@ object ParallelProcessorExample {
 
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
-    
-    parFiles.foreach { file =>
-      println(s"Processing ${file.getName}...")
 
-      val text = {
-        val source = Source.fromFile(file, utf8)
-        val text = source.mkString
+      files.foreach { file =>
+        1.to(2).foreach { index =>
+        println(s"Processing ${file.getName}...")
 
-        source.close
-        text
+        val text = {
+          val source = Source.fromFile(file, utf8)
+          val text = source.mkString
+
+          source.close
+          text
+        }
+
+        val outputFile = new File(outputDir + "/" + file.getName)
+        val document = processor.annotate(text)
+        val printedDocument = {
+          val stringWriter = new StringWriter
+          val printWriter = new PrintWriter(stringWriter)
+
+          printDocument(document, printWriter)
+          printWriter.close()
+
+          val result = stringWriter.toString
+          result
+        }
+        val savedDocument = documentSerializer.save(document)
+        val outputDocument = printedDocument + savedDocument
+
+        callback(outputFile, outputDocument)
       }
-
-      val outputFile = new File(outputDir + "/" + file.getName)
-      val document = processor.annotate(text)
-      val printedDocument = {
-        val stringWriter = new StringWriter
-        val printWriter = new PrintWriter(stringWriter)
-
-        printDocument(document, printWriter)
-        printWriter.close()
-
-        val result = stringWriter.toString
-        result
-      }
-      val savedDocument = documentSerializer.save(document)
-      val outputDocument = printedDocument + savedDocument
-
-      callback(outputFile, outputDocument)
     }
-
     timer.stop()
     println(timer.toString)
   }
