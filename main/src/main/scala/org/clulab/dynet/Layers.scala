@@ -199,37 +199,36 @@ object Layers {
     new Layers(initialLayer, intermediateLayers, finalLayer)
   }
 
-  def predictJointly(layers: IndexedSeq[Layers],
-                     sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
-    val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
+  // These are inner classes in order to access the protected forward method of Layers.
+  class StateMakerWithSharedState(layers: IndexedSeq[Layers], sentence: AnnotatedSentence)
+      extends StateMaker(layers, sentence) {
+    val sharedStates: ExpressionVector = layers(0).forward(sentence, constLookupParams, doDropout = false)
 
+    def makeStates(i: Int): ExpressionVector = {
+      layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
+    }
+  }
+
+  class StateMakerWithoutSharedState(layers: IndexedSeq[Layers], sentence: AnnotatedSentence)
+      extends StateMaker(layers, sentence) {
+
+    def makeStates(i: Int): ExpressionVector = {
+      layers(i).forward(sentence, constLookupParams, doDropout = false)
+    }
+  }
+
+  def predictJointly(layers: IndexedSeq[Layers], sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
     // DyNet's computation graph is a static variable, so this block must be synchronized
     Synchronizer.withComputationGraph("Layers.predictJointly()") {
-      val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+      val stateMaker = StateMaker(layers, sentence)
 
-      // layers(0) contains the shared layers
-      if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, constLookupParams, doDropout = false)
+      layers.indices.tail.map { i =>
+        val states = stateMaker.makeStates(i)
+        val emissionScores = Utils.emissionScoresToArrays(states)
 
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
-        }
-      }
-      // no shared layer
-      else {
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence, constLookupParams, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
-        }
+        layers(i).finalLayer.get.inference(emissionScores)
       }
     }
-
-    labelsPerTask
   }
 
   private def forwardForTask(layers: IndexedSeq[Layers],
@@ -303,5 +302,19 @@ object Layers {
 
     val states = forwardForTask(layers, taskId, sentence, constLookupParams, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
+  }
+}
+
+abstract class StateMaker(val layers: IndexedSeq[Layers], sentence: AnnotatedSentence) {
+  val (_, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+
+  def makeStates(i: Int): ExpressionVector
+}
+
+object StateMaker {
+
+  def apply(layers: IndexedSeq[Layers], sentence: AnnotatedSentence): StateMaker = {
+    if (layers.head.nonEmpty) new Layers.StateMakerWithSharedState(layers, sentence)
+    else new Layers.StateMakerWithoutSharedState(layers, sentence)
   }
 }
