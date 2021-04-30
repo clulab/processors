@@ -256,34 +256,24 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
                   posTags: IndexedSeq[String],
                   nerLabels: IndexedSeq[String],
                   predicateIndexes: IndexedSeq[Int]): DirectedGraph[String] = {
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new mutable.HashSet[Int]()
-
-    // all predicates become roots
-    roots ++= predicateIndexes
-
-    for(pi <- predicateIndexes.indices) {
+    val roots = predicateIndexes.toSet // All predicates become roots.
+    require(roots.size == predicateIndexes.size) // We shouldn't get duplicate edges later.
+    val edges = predicateIndexes.toList.flatMap { predicateIndex =>
       // SRL needs POS tags and NEs, as well as the position of the predicate
-      val headPositions = new ArrayBuffer[Int]()
-      val pred = predicateIndexes(pi)
-      for(i <- words.indices) {
-        headPositions += pred
-      }
-
-      val annotatedSentence =
-        AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
-
+      val headPositions = Array.fill[Int](words.length)(predicateIndex)
+      val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
       val argLabels = mtlSrla.predict(0, annotatedSentence)
+      val newEdges = argLabels
+          .zipWithIndex // This happens before the filter so that the original indices are maintained.
+          .filter { case (argLabel, _) => argLabel != "O" }
+          .map { case (argLabel, argIndex) =>
+            Edge[String](predicateIndex, argIndex, argLabel)
+          }
 
-      for(ai <- argLabels.indices) {
-        if(argLabels(ai) != "O") {
-          val edge = Edge[String](pred, ai, argLabels(ai))
-          edges += edge
-        }
-      }
+      newEdges
     }
 
-    new DirectedGraph[String](edges.toList, roots.toSet, Some(words.length))
+    new DirectedGraph[String](edges, roots, Some(words.length))
   }
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
