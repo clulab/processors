@@ -27,7 +27,7 @@ object ConstEmbeddingsGlove {
     SINGLETON_WORD_EMBEDDING_MAP.get.dim
   }
 
-  def mkConstLookupParams(words: IndexedSeq[String]): (ParameterCollection, LookupParameter) = {
+  def mkConstLookupParams(words: IndexedSeq[String]): LookupParameter = {
     // This does not need to be synchronized, but the singleton must be created before.
     assert(SINGLETON_WORD_EMBEDDING_MAP.isDefined)
 
@@ -48,7 +48,7 @@ object ConstEmbeddingsGlove {
           wordLookupParameters.initialize(wordIndex, floatVector)
         }
 
-    (parameters, wordLookupParameters)
+    wordLookupParameters
   }
 
   def load(configName: String = "org/clulab/glove.conf") {

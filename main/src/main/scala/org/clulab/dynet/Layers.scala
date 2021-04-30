@@ -264,7 +264,7 @@ object Layers {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized.
       Synchronizer.withComputationGraph("Layers.predict()") {
-        val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+        val constLookupParams = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
 
         val states = forwardForTask(layers, taskId, sentence, constLookupParams, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
@@ -282,7 +282,7 @@ object Layers {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized
       Synchronizer.withComputationGraph("Layers.predictWithScores()") {
-        val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+        val constLookupParams = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
 
         val states = forwardForTask(layers, taskId, sentence, constLookupParams, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
@@ -298,7 +298,7 @@ object Layers {
            taskId: Int,
            sentence: AnnotatedSentence,
            goldLabels: IndexedSeq[String]): Expression = {
-    val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+    val constLookupParams = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
 
     val states = forwardForTask(layers, taskId, sentence, constLookupParams, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
@@ -306,7 +306,7 @@ object Layers {
 }
 
 abstract class StateMaker(val layers: IndexedSeq[Layers], sentence: AnnotatedSentence) {
-  val (_, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+  val constLookupParams = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
 
   def makeStates(i: Int): ExpressionVector
 }
