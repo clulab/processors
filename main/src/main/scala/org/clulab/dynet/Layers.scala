@@ -227,8 +227,6 @@ object Layers {
           labelsPerTask += labels
         }
       }
-
-      msgFree(sentence)
     }
 
     labelsPerTask
@@ -261,10 +259,6 @@ object Layers {
     states
   }
 
-  private def msgFree(sentence: AnnotatedSentence): Unit = {
-    println("Freeing vectors for sentence: " + sentence.words.mkString(" "))
-  }
-
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
               sentence: AnnotatedSentence): IndexedSeq[String] = {
@@ -277,7 +271,6 @@ object Layers {
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
 
-        msgFree(sentence)
         out
       }
 
@@ -296,7 +289,6 @@ object Layers {
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
 
-        msgFree(sentence)
         out
       }
 
