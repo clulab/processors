@@ -28,19 +28,25 @@ object ConstEmbeddingsGlove {
   }
 
   def mkConstLookupParams(words: IndexedSeq[String]): (ParameterCollection, LookupParameter) = {
-    // this does not need to be synchronized, but the singleton must be created before
+    // This does not need to be synchronized, but the singleton must be created before.
     assert(SINGLETON_WORD_EMBEDDING_MAP.isDefined)
 
-    val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
     val parameters = new ParameterCollection()
+    val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
     val dim = embeddings.dim
-    val w2i = words.zipWithIndex
-
     val wordLookupParameters = parameters.addLookupParameters(words.length, Dim(dim))
-    for((word, index) <- w2i) {
-      val vec = embeddings.getOrElseUnknown(word)
-      wordLookupParameters.initialize(index, new FloatVector(vec))
-    }
+    // This single object will be reused to shuffle data to the wordLookupParameters.
+    val floatVector = new FloatVector(dim)
+
+    words
+        .map(embeddings.getOrElseUnknown)
+        .zipWithIndex
+        .foreach { case (embedding, wordIndex) =>
+          embedding.zipWithIndex.foreach { case (float, floatIndex) =>
+            floatVector.update(floatIndex, float)
+          }
+          wordLookupParameters.initialize(wordIndex, floatVector)
+        }
 
     (parameters, wordLookupParameters)
   }
