@@ -34,14 +34,12 @@ object ConstEmbeddingsGlove {
     val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
     val parameters = new ParameterCollection()
     val dim = embeddings.dim
-    val w2i = words.zipWithIndex.toMap // the index is the position in the sentence
+    val w2i = words.zipWithIndex
 
     val wordLookupParameters = parameters.addLookupParameters(words.length, Dim(dim))
     for((word, index) <- w2i) {
       val vec = embeddings.getOrElseUnknown(word)
       wordLookupParameters.initialize(index, new FloatVector(vec))
-
-      println(s"Vector for [$word]: ${vec.mkString(" ")}")
     }
 
     (parameters, wordLookupParameters)
