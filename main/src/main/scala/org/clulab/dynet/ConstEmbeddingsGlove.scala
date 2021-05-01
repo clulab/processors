@@ -47,7 +47,6 @@ object ConstEmbeddingsGlove {
           }
           wordLookupParameters.initialize(wordIndex, floatVector)
         }
-
     wordLookupParameters
   }
 
