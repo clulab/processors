@@ -287,7 +287,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val sentence = as._1
         val goldLabels = as._2
 
-        val preds = Layers.predict(model, taskId, sentence)
+        val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
@@ -313,16 +314,21 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   }
 
   // this only supports basic tasks for now
-  def predictJointly(sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, sentence)
+  def predictJointly(sentence: AnnotatedSentence,
+                     constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
+    Layers.predictJointly(model, sentence, constEmbeddings)
   }
 
-  def predict(taskId: Int, sentence: AnnotatedSentence): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence)
+  def predict(taskId: Int,
+              sentence: AnnotatedSentence,
+              constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
+    Layers.predict(model, taskId, sentence, constEmbeddings)
   }
 
-  def predictWithScores(taskId: Int, sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictWithScores(model, taskId, sentence)
+  def predictWithScores(taskId: Int,
+                        sentence: AnnotatedSentence,
+                        constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
   }
 
   def test(): Unit = {

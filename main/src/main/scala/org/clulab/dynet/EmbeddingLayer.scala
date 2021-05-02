@@ -43,7 +43,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val dropoutProb: Float) extends InitialLayer {
 
   override def forward(sentence: AnnotatedSentence,
-                       constLookupParams: LookupParameter,
+                       constEmbeddings: ConstEmbeddingParameters,
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
@@ -53,8 +53,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val headPositions = sentence.headPositions
 
     // const word embeddings such as GloVe
-    val constEmbeddings = mkConstEmbeddings(words, constLookupParams)
-    assert(constEmbeddings.length == words.length)
+    val constEmbeddingsExpressions = mkConstEmbeddings(words, constEmbeddings)
+    assert(constEmbeddingsExpressions.length == words.length)
     if(tags.isDefined) assert(tags.get.length == words.length)
     if(nes.isDefined) assert(nes.get.length == words.length)
     if(headPositions.isDefined) assert(headPositions.get.length == words.length)
@@ -65,17 +65,19 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       val tag = if(tags.isDefined) Some(tags.get(i)) else None
       val ne = if(nes.isDefined) Some(nes.get(i)) else None
       val headPosition = if(headPositions.isDefined) Some(headPositions.get(i)) else None
-      embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddings(i), doDropout))
+      embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddingsExpressions(i), doDropout))
     }
 
     embeddings
   }
 
-  private def mkConstEmbeddings(words: IndexedSeq[String], constLookupParams: LookupParameter): ExpressionVector = {
+  private def mkConstEmbeddings(words: IndexedSeq[String],
+                                constEmbeddings: ConstEmbeddingParameters): ExpressionVector = {
     val embeddings = new ExpressionVector()
     // the position in the sentence serves as index in the constLookupParams
-    for(i <- words.indices) {
-      embeddings.add(Expression.constLookup(constLookupParams, i))
+    for(word <- words) {
+      val idx = constEmbeddings.w2i(word)
+      embeddings.add(Expression.constLookup(constEmbeddings.lookupParameters, idx))
     }
     embeddings
   }

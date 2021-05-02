@@ -1,7 +1,7 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-import edu.cmu.dynet.{Expression, ExpressionVector, LookupParameter, ParameterCollection}
+import edu.cmu.dynet.{Expression, ExpressionVector, ParameterCollection}
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._
@@ -54,12 +54,14 @@ class Layers (val initialLayer: Option[InitialLayer],
   def isEmpty: Boolean = initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty
   def nonEmpty: Boolean = ! isEmpty
 
-  protected def forward(sentence: AnnotatedSentence, constEmbeddings: ConstEmbeddingParameters, doDropout: Boolean): ExpressionVector = {
+  protected def forward(sentence: AnnotatedSentence,
+                        constEmbeddings: ConstEmbeddingParameters,
+                        doDropout: Boolean): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
 
-    var states = initialLayer.get.forward(sentence, constLookupParams, doDropout)
+    var states = initialLayer.get.forward(sentence, constEmbeddings, doDropout)
 
     for (i <- intermediateLayers.indices) {
       states = intermediateLayers(i).forward(states, doDropout)
@@ -200,16 +202,15 @@ object Layers {
   }
 
   def predictJointly(layers: IndexedSeq[Layers],
-                     sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[String]] = {
+                     sentence: AnnotatedSentence,
+                     constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
     // DyNet's computation graph is a static variable, so this block must be synchronized
     Synchronizer.withComputationGraph("Layers.predictJointly()") {
-      val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, constLookupParams, doDropout = false)
+        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
 
         for (i <- 1 until layers.length) {
           val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
@@ -221,7 +222,7 @@ object Layers {
       // no shared layer
       else {
         for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence, constLookupParams, doDropout = false)
+          val states = layers(i).forward(sentence, constEmbeddings, doDropout = false)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
@@ -278,13 +279,12 @@ object Layers {
 
   def predictWithScores(layers: IndexedSeq[Layers],
                         taskId: Int,
-                        sentence: AnnotatedSentence): IndexedSeq[IndexedSeq[(String, Float)]] = {
+                        sentence: AnnotatedSentence,
+                        constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized
       Synchronizer.withComputationGraph("Layers.predictWithScores()") {
-        val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-
-        val states = forwardForTask(layers, taskId, sentence, constLookupParams, doDropout = false)
+        val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
 
@@ -298,9 +298,9 @@ object Layers {
            taskId: Int,
            sentence: AnnotatedSentence,
            goldLabels: IndexedSeq[String]): Expression = {
-    val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+    val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
 
-    val states = forwardForTask(layers, taskId, sentence, constLookupParams, doDropout = true) // use dropout during training!
+    val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
 }

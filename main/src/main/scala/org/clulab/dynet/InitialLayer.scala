@@ -7,7 +7,7 @@ import edu.cmu.dynet.{ExpressionVector, LookupParameter}
  */
 trait InitialLayer extends Saveable {
   def forward(sentence: AnnotatedSentence,
-              constLookupParams: LookupParameter,
+              constEmbeddings: ConstEmbeddingParameters,
               doDropout: Boolean): ExpressionVector
 
   def outDim:Int // output dimension
