@@ -6,7 +6,6 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clucore.CluCoreProcessor.{EMPTY, EMPTY_GRAPH, NAMED_LABELS_FOR_SRL, OUTSIDE}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, GraphMap}
-import org.clulab.utils.SeqUtils
 
 import scala.collection.mutable.ArrayBuffer
 
