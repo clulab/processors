@@ -41,6 +41,7 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "POS tag correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
+    proc.mkConstEmbeddings(doc)
     proc.lemmatize(doc)
     proc.tagPartsOfSpeech(doc)
     doc.clear()
@@ -62,6 +63,7 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "POS tag parentheses correctly" in {
     val doc = proc.mkDocument("This is a test (of parentheses).")
+    proc.mkConstEmbeddings(doc)
     proc.lemmatize(doc)
     proc.tagPartsOfSpeech(doc)
 
@@ -71,6 +73,7 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "recognize syntactic chunks correctly" in {
     val doc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
+    proc.mkConstEmbeddings(doc)
     proc.lemmatize(doc)
     proc.tagPartsOfSpeech(doc)
     proc.chunking(doc)
@@ -92,6 +95,7 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "lemmatize text correctly" in {
     val doc = proc.mkDocument("John Doe went to the shops.")
+    proc.mkConstEmbeddings(doc)
     proc.lemmatize(doc)
     doc.clear()
 
