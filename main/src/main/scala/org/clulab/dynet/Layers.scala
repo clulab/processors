@@ -54,7 +54,7 @@ class Layers (val initialLayer: Option[InitialLayer],
   def isEmpty: Boolean = initialLayer.isEmpty && intermediateLayers.isEmpty && finalLayer.isEmpty
   def nonEmpty: Boolean = ! isEmpty
 
-  protected def forward(sentence: AnnotatedSentence, constLookupParams: LookupParameter, doDropout: Boolean): ExpressionVector = {
+  protected def forward(sentence: AnnotatedSentence, constEmbeddings: ConstEmbeddingParameters, doDropout: Boolean): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
@@ -235,7 +235,7 @@ object Layers {
   private def forwardForTask(layers: IndexedSeq[Layers],
                              taskId: Int,
                              sentence: AnnotatedSentence,
-                             constLookupParams: LookupParameter,
+                             constEmbeddings: ConstEmbeddingParameters,
                              doDropout: Boolean): ExpressionVector = {
     //
     // make sure this code is:
@@ -246,13 +246,13 @@ object Layers {
     val states = {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, constLookupParams, doDropout)
+        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout)
         layers(taskId + 1).forwardFrom(sharedStates, sentence.headPositions, doDropout)
       }
 
       // no shared layer
       else {
-        layers(taskId + 1).forward(sentence, constLookupParams, doDropout)
+        layers(taskId + 1).forward(sentence, constEmbeddings, doDropout)
       }
     }
 
@@ -261,13 +261,12 @@ object Layers {
 
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
-              sentence: AnnotatedSentence): IndexedSeq[String] = {
+              sentence: AnnotatedSentence,
+              constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized.
       Synchronizer.withComputationGraph("Layers.predict()") {
-        val (constParamCollection, constLookupParams) = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-
-        val states = forwardForTask(layers, taskId, sentence, constLookupParams, doDropout = false)
+        val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
 

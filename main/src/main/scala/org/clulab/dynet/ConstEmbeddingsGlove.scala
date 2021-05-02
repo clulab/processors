@@ -1,12 +1,20 @@
 package org.clulab.dynet
 import com.typesafe.config.Config
-import edu.cmu.dynet.{Dim, Expression, FloatVector, LookupParameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, FloatVector, LookupParameter, ParameterCollection}
 import org.clulab.embeddings.{WordEmbeddingMap, WordEmbeddingMapPool}
+import org.clulab.processors.{Document, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.utils.ConfigWithDefaults
 import org.clulab.utils.StringUtils
 
+import scala.collection.mutable
+
 class ConstEmbeddingsGlove
+
+/** Stores lookup parameters + the map from strings to ids */
+case class ConstEmbeddingParameters(collection: ParameterCollection,
+                                    lookupParameters: LookupParameter,
+                                    w2i: Map[String, Int])
 
 /**
  * Implements the ConstEmbeddings as a thin wrapper around WordEmbeddingMap
@@ -16,7 +24,7 @@ object ConstEmbeddingsGlove {
   val logger:Logger = LoggerFactory.getLogger(classOf[ConstEmbeddingsGlove])
 
   // This is not marked private for debugging purposes
-  var SINGLETON_WORD_EMBEDDING_MAP: Option[WordEmbeddingMap] = None
+  private var SINGLETON_WORD_EMBEDDING_MAP: Option[WordEmbeddingMap] = None
 
   // make sure the singleton is loaded
   load()
@@ -27,22 +35,38 @@ object ConstEmbeddingsGlove {
     SINGLETON_WORD_EMBEDDING_MAP.get.dim
   }
 
-  def mkConstLookupParams(words: IndexedSeq[String]): (ParameterCollection, LookupParameter) = {
+  def mkConstLookupParams(words: IndexedSeq[String]): ConstEmbeddingParameters =
+    mkConstLookupParams(words.toSet)
+
+  def mkConstLookupParams(sentence: Sentence): ConstEmbeddingParameters =
+    mkConstLookupParams(sentence.words.toSet)
+
+  def mkConstLookupParams(doc: Document): ConstEmbeddingParameters = {
+    val words = new mutable.HashSet[String]()
+    for(s <- doc.sentences) {
+      words ++= s.words
+    }
+    mkConstLookupParams(words.toSet)
+  }
+
+
+  /** Constructs ConstEmbeddingParameters from a *set* of words, which may come from a Sentence or a Document */
+  private def mkConstLookupParams(words: Set[String]): ConstEmbeddingParameters = {
     // this does not need to be synchronized, but the singleton must be created before
     assert(SINGLETON_WORD_EMBEDDING_MAP.isDefined)
 
     val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
     val parameters = new ParameterCollection()
     val dim = embeddings.dim
-    val w2i = words.zipWithIndex
+    val w2i = words.zipWithIndex.toMap
 
-    val wordLookupParameters = parameters.addLookupParameters(words.length, Dim(dim))
+    val wordLookupParameters = parameters.addLookupParameters(words.size, Dim(dim))
     for((word, index) <- w2i) {
       val vec = embeddings.getOrElseUnknown(word)
       wordLookupParameters.initialize(index, new FloatVector(vec))
     }
 
-    (parameters, wordLookupParameters)
+    ConstEmbeddingParameters(parameters, wordLookupParameters, w2i)
   }
 
   def load(configName: String = "org/clulab/glove.conf") {
