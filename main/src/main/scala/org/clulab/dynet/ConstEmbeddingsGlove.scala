@@ -58,15 +58,26 @@ object ConstEmbeddingsGlove {
     val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
     val parameters = new ParameterCollection()
     val dim = embeddings.dim
-    val w2i = words.zipWithIndex.toMap
 
-    val wordLookupParameters = parameters.addLookupParameters(words.size, Dim(dim))
-    for((word, index) <- w2i) {
-      val vec = embeddings.getOrElseUnknown(word)
-      wordLookupParameters.initialize(index, new FloatVector(vec))
+    var knownCount = 0
+    val w2i = new mutable.HashMap[String, Int]()
+    for(word <- words) {
+      if(! embeddings.isOutOfVocabulary(word)) {
+        knownCount += 1
+        w2i += word -> knownCount // 0 is reserved for unknown
+      }
     }
 
-    ConstEmbeddingParameters(parameters, wordLookupParameters, w2i)
+    val wordLookupParameters = parameters.addLookupParameters(knownCount + 1, Dim(dim)) // one extra position for unknown
+    wordLookupParameters.initialize(0, embeddings.unknownEmbedding) // 0 is reserved for unknown
+    for(word <- w2i.keySet) {
+      val index = w2i(word)
+      val vec = embeddings.get(word)
+      assert(vec.isDefined) // we checked above, so this should be true
+      wordLookupParameters.initialize(index, new FloatVector(vec.get))
+    }
+
+    ConstEmbeddingParameters(parameters, wordLookupParameters, w2i.toMap)
   }
 
   def load(configName: String = "org/clulab/glove.conf") {

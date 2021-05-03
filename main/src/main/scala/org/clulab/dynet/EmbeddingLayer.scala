@@ -76,7 +76,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val embeddings = new ExpressionVector()
     // the position in the sentence serves as index in the constLookupParams
     for(word <- words) {
-      val idx = constEmbeddings.w2i(word)
+      val idx = constEmbeddings.w2i.getOrElse(word, 0) // 0 is reserved for the unknown embedding
       embeddings.add(Expression.constLookup(constEmbeddings.lookupParameters, idx))
     }
     embeddings
