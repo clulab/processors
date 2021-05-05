@@ -36,7 +36,44 @@ object ToEnhancedDependencies {
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = true)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = true)
     propagateConjSubjectsAndObjects(sentence, dgi)
+    mergeNsubjXcomp(sentence, dgi)
+    expandConj(sentence, dgi)
     dgi.toDirectedGraph(Some(sentence.size))
+  }
+
+  def mergeNsubjXcomp(sentence: Sentence, dgi: DirectedGraphIndex[String]): Unit = {
+    val nsubjs = dgi.findByName("nsubj")
+    for(nsubj <- nsubjs) {
+      for(xcomp <- dgi.findByHeadAndName(nsubj.source, "xcomp")){
+        dgi.addEdge(nsubj.destination, xcomp.destination, "nsubj:xsubj")
+      }
+    }
+  }
+
+  private def remove(edges: Seq[Edge[String]], dgi: DirectedGraphIndex[String]): Unit = {
+    edges.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))
+  }
+
+  /**
+   * Collapses conj and cc into cong
+   * @param sentence
+   * @param dgi
+   */
+  def expandConj(sentence: Sentence, dgi: DirectedGraphIndex[String]): Unit = {
+    val toRemove = new ListBuffer[Edge[String]]
+    val conjs = dgi.findByName("conj")
+    for (conj <- conjs) {
+      var shouldRemove = false
+      for(cc <- dgi.findByName("cc").filter(_.source == conj.source)) {
+        val ccWord = sentence.words(cc.destination).toLowerCase()
+        dgi.addEdge(conj.source, conj.destination, s"conj_$ccWord")
+        shouldRemove = true
+      }
+      if(shouldRemove) {
+        toRemove += conj
+      }
+    }
+    remove(toRemove, dgi)
   }
 
   /**
@@ -56,7 +93,7 @@ object ToEnhancedDependencies {
         toRemove += pobj
       }
     }
-    toRemove.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))
+    remove(toRemove, dgi)
   }
 
   /**
@@ -79,7 +116,7 @@ object ToEnhancedDependencies {
         dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
       }
     }
-    toRemove.foreach(e => dgi.removeEdge(e.source, e.destination, e.relation))
+    remove(toRemove, dgi)
   }
 
   def findMultiWord(first: String, firstPos: Int, sentence: Sentence, dgi:DirectedGraphIndex[String]): String = {
