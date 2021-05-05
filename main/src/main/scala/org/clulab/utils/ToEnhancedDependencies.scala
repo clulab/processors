@@ -36,12 +36,34 @@ object ToEnhancedDependencies {
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = true)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = true)
     propagateConjSubjectsAndObjects(sentence, dgi)
-    mergeNsubjXcomp(sentence, dgi)
+    mergeNsubjXcomp(dgi)
+    replicateCopulativeSubjects(sentence, dgi)
     expandConj(sentence, dgi)
     dgi.toDirectedGraph(Some(sentence.size))
   }
 
-  def mergeNsubjXcomp(sentence: Sentence, dgi: DirectedGraphIndex[String]): Unit = {
+  /**
+   * Replicates copulative subjects across conjunctions
+   * It is difficult and expensive => nsubj from 2 to 0 and from 4 to 0
+   */
+  def replicateCopulativeSubjects(sentence: Sentence, dgi: DirectedGraphIndex[String]): Unit = {
+    val nsubjs = dgi.findByName("nsubj")
+    for(nsubj <- nsubjs) {
+      val cops = dgi.findByHeadAndName(nsubj.source, "cop")
+      if(cops.nonEmpty) { // found a copulative nsubj
+        val conjs = dgi.findByHeadAndName(nsubj.source, "conj")
+        for(conj <- conjs) {
+          dgi.addEdge(conj.destination, nsubj.destination, "nsubj")
+        }
+      }
+    }
+  }
+
+  /**
+   * nsubj + xcomp => nsubj:xsubj
+   * Disagreements over land rights for crop cultivation and livestock grazing continue to be a major source of conflict. => nsubj:xsubj from "Disagreements" to "source"
+   */
+  def mergeNsubjXcomp(dgi: DirectedGraphIndex[String]): Unit = {
     val nsubjs = dgi.findByName("nsubj")
     for(nsubj <- nsubjs) {
       for(xcomp <- dgi.findByHeadAndName(nsubj.source, "xcomp")){
@@ -55,7 +77,8 @@ object ToEnhancedDependencies {
   }
 
   /**
-   * Collapses conj and cc into cong
+   * Collapses conj and cc into conj_CCWORD
+   * John and Mary ate cake => conj_and from 0 to 2
    * @param sentence
    * @param dgi
    */
