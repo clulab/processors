@@ -135,16 +135,48 @@ object LexiconNER {
   val OUTSIDE_LABEL: String = "O"
   val KNOWN_CASE_INSENSITIVE_LENGTH: Int = 3 // this was tuned for Reach; if changed please rerun Reach unit tests
 
-  def something(kbs: Seq[String], overrideKBs: Option[Seq[String]], caseInsensitiveMatchings: Seq[Boolean], entityValidator: EntityValidator): Boolean = true
-  def something(b: Float, c: Boolean): Boolean = false
+  /** Create a LexiconNER from a pair of sequences of knowledge base sources for the kbs and overrideKBs.
+    * There are versions of the sources for knowledge bases stored in files and those stored in memory.
+    * Each StandardKbSource knows its own caseSensitivityMatching, so no list of those need be supplied.
+    * It is possible that contents of an overrideKB refers to a KB (label) that does not exist.  In that
+    * situation, caseInsensitiveMatching is used as a fallback value.  With that, this method should
+    * encompass all the functionality of the other apply methods, which now feed into it.
+    * Note that some of the arugments are in a different order than the other build methods in order
+    * to overload the method despite type erasure.
+    *
+    * @param standardKbSources KB sources containing known entity names
+    * @param overrideKbSourcesOpt KB sources containing override labels for entity names from kbs (necessary for the bio domain)
+    * @param entityValidator Filter which decides if a matched entity is valid
+    * @param caseInsensitiveMatchings case insensitivities corresponding to the kbs, matched by index
+    * @param lexicalVariationEngine Generates alternative spellings of an entity name (necessary for the bio domain)
+    * @param useLemmasForMatching If true, we use Sentence.lemmas instead of Sentence.words during matching
+    * @param defaultCaseInsensitive If true, tokens are matched case insensitively
+    * @return The new LexiconNER
+    */
+  def apply(
+    standardKbSources: Seq[StandardKbSource], overrideKbSourcesOpt: Option[Seq[OverrideKbSource]],
+    // The change in order here is to allow a method overload despite type erasure.
+    lexicalVariationEngine: LexicalVariations, entityValidator: EntityValidator, useLemmasForMatching: Boolean,
+    // This default value is used when there are overrideKBs with labels that don't match a regular KB.
+    defaultCaseInsensitive: Boolean
+  ): LexiconNER = {
+    val newEntityValidator =
+      if (OVERRIDE_ENTITY_VALIDATOR) EntityValidator.TRUE_VALIDATOR
+      else  entityValidator
+    val builder =
+      if (USE_FAST) new FastLexiconNERBuilder(USE_COMPACT)
+      else new SlowLexiconNERBuilder()
+
+    builder.build(standardKbSources, overrideKbSourcesOpt, newEntityValidator, lexicalVariationEngine,
+      useLemmasForMatching, defaultCaseInsensitive)
+  }
 
   /** Create a LexiconNER from a pair of sequences of knowledge bases (KBs), the kbs and overrideKBs,
     * with control over the case sensitivity of individual KBs via caseInsensitiveMatchings
     *
     * The matchings run parallel to the KBs.  That is, caseInsensitiveMatchings(n) is used for kbs(n).
     * It is possible that contents of an overrideKB refers to a KB that does not exist.  In that
-    * situation, caseInsensitiveMatching is used as a fallback value.  With that, this method should
-    * encompass all the functionality of the other apply methods, which now feed into it.
+    * situation, caseInsensitiveMatching is used as a fallback value.
     *
     * @param kbs KBs containing known entity names
     * @param overrideKBs KBs containing override labels for entity names from kbs (necessary for the bio domain)
@@ -157,17 +189,12 @@ object LexiconNER {
     */
   def apply(kbs: Seq[String], overrideKBs: Option[Seq[String]], caseInsensitiveMatchings: Seq[Boolean],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
-      defaultCaseInsensitive: Boolean): LexiconNER = {
-    val newEntityValidator =
-      if (OVERRIDE_ENTITY_VALIDATOR) EntityValidator.TRUE_VALIDATOR
-      else  entityValidator
-    val builder =
-      if (USE_FAST) new FastLexiconNERBuilder(USE_COMPACT)
-      else new SlowLexiconNERBuilder()
-
-    builder.build(kbs, caseInsensitiveMatchings, overrideKBs, newEntityValidator, lexicalVariationEngine,
-        useLemmasForMatching, defaultCaseInsensitive)
-  }
+      defaultCaseInsensitive: Boolean
+  ): LexiconNER = this(
+    kbs.zip(caseInsensitiveMatchings).map { case (kb,caseInsensitiveMatchings) => new ResourceStandardKbSource(kb, caseInsensitiveMatchings) },
+    overrideKBs.map { overrideKBs => overrideKBs.map { overrideKB => new ResourceOverrideKbSource(overrideKB) } },
+    lexicalVariationEngine, entityValidator, useLemmasForMatching, defaultCaseInsensitive
+  )
 
   /** Same apply with some default values filled in */
   def apply(kbs: Seq[String],
@@ -177,7 +204,7 @@ object LexiconNER {
     apply(
       kbs, None, caseInsensitiveMatchings,
       entityValidator, new NoLexicalVariations, useLemmasForMatching,
-      false
+      defaultCaseInsensitive = false
     )
   }
 
