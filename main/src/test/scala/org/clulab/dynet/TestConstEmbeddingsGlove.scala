@@ -1,10 +1,10 @@
 package org.clulab.dynet
 
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigValueFactory
+import org.clulab.embeddings.WordEmbeddingMapPool
 import org.scalatest.{FlatSpec, Matchers}
 
-/* FIX ME
+// The obsolete tests that were previously here have been removed.
+// ConstEmbeddingsGlove is an object and is not readily testable.
 class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
 
   try {
@@ -28,24 +28,18 @@ class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
   behavior of "ConstEmbeddingsGlove"
 
   it should "look realistic" in {
-    var embeddings = {
-      Utils.initializeDyNet()
-      val config = ConfigFactory
-          .empty
-          .withValue("glove.matrixResourceName", ConfigValueFactory.fromAnyRef(s"/test_vectors"))
-      ConstEmbeddingsGlove(config)
-    }
+    var embeddings = WordEmbeddingMapPool.getOrElseCreate("/test_vectors")
 
     0.until(100).foreach { index =>
-      var e1 = embeddings.mkEmbedding("time")
-      e1 != null should be(true)
-      e1.dim().get(0) should be(5)
-      e1 = null
+      val e1 = embeddings.get("time")
+      e1.isDefined should be (true)
+      e1.get.length should be(5)
 
-      var e2 = embeddings.mkEmbedding("timeout")
-      e2 != null should be(true)
-      e2.dim().get(0) should be(5)
-      e2 = null
+      val e2 = embeddings.get("timeout")
+      e2.isDefined should be(false)
+
+      val e3 = embeddings.getOrElseUnknown("timeout")
+      e3.length should be(5)
     }
 
     {
@@ -55,5 +49,3 @@ class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
     }
   }
 }
-
-*/
