@@ -134,4 +134,10 @@ class TestUniversalEnhancedDependencies extends FatdynetTest {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(9, 7, "nsubj") should be(true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(11, 7, "nsubj") should be(true)
   }
+
+  it should "replicate nmod_ dependencies across conjunctions" in {
+    val doc = proc.annotate("Conflict and economic decline have led to violence and displacement.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 7, "nmod_to") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 9, "nmod_to") should be(true)
+  }
 }

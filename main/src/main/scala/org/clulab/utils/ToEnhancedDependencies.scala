@@ -3,7 +3,7 @@ package org.clulab.utils
 import org.clulab.processors.Sentence
 import org.clulab.struct.{DirectedGraph, DirectedGraphIndex, Edge}
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Converts Stanford basic dependencies to collapsed ones
@@ -31,15 +31,30 @@ object ToEnhancedDependencies {
 
   def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
-    collapsePrepositionsUniversal(sentence, dgi)
+    val collapsedNmods = collapsePrepositionsUniversal(sentence, dgi)
+    replicateCollapsedNmods(collapsedNmods, dgi)
     raiseSubjects(dgi)
     pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = true)
     propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = true)
     propagateConjSubjectsAndObjects(sentence, dgi)
     mergeNsubjXcomp(dgi)
     replicateCopulativeSubjects(sentence, dgi)
-    expandConj(sentence, dgi)
+    expandConj(sentence, dgi) // this must be last because several of the above methods expect "conj" labels
     dgi.toDirectedGraph(Some(sentence.size))
+  }
+
+  /**
+   * Replicates nmod_* accross conj dependencies
+   * economic decline has led to violence and displacement => nmod_to from "led" to both "violence" and "displacement"
+   */
+  def replicateCollapsedNmods(collapsedNmods: Seq[(Int, Int, String)],
+                              dgi: DirectedGraphIndex[String]): Unit = {
+    for(nmod <- collapsedNmods) {
+      val conjs = dgi.findByHeadAndName(nmod._2, "conj")
+      for(conj <- conjs) {
+        dgi.addEdge(nmod._1, conj.destination, nmod._3)
+      }
+    }
   }
 
   /**
@@ -120,12 +135,13 @@ object ToEnhancedDependencies {
   }
 
   /**
-    * Collapses nmod + case into nmod:x (universal dependencies)
-    * Mary gave a book to Jane => nmod:to from 1 to 5
+    * Collapses nmod + case into nmod_x (universal dependencies)
+    * Mary gave a book to Jane => nmod_to from 1 to 5
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def collapsePrepositionsUniversal(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+  def collapsePrepositionsUniversal(sentence:Sentence, dgi:DirectedGraphIndex[String]): Seq[(Int, Int, String)] = {
+    val collapsedNmods = new ArrayBuffer[(Int, Int, String)]()
     val toRemove = new ListBuffer[Edge[String]]
     val preps = dgi.findByName("nmod")
     for(prep <- preps) {
@@ -137,9 +153,11 @@ object ToEnhancedDependencies {
 
         // TODO: add nmod:agent (if word == "by") and passive voice here?
         dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
+        collapsedNmods += Tuple3(prep.source, prep.destination, s"nmod_$mwe")
       }
     }
     remove(toRemove, dgi)
+    collapsedNmods
   }
 
   def findMultiWord(first: String, firstPos: Int, sentence: Sentence, dgi:DirectedGraphIndex[String]): String = {
