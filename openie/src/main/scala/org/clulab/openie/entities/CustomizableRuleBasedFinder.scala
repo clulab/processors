@@ -7,7 +7,7 @@ import org.clulab.openie.utils.TagSet
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 
-import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
+import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 
 
@@ -138,12 +138,12 @@ object CustomizableRuleBasedFinder {
     val avoidEngine = ExtractorEngine(avoidRules)
 
     val tagSet: TagSet = TagSet(config.getString("CustomRuleBasedEntityFinder.language"))
-    val stopNER: Set[String] = config.getStringList("CustomRuleBasedEntityFinder.stopNER").toSet
+    val stopNER: Set[String] = config.getStringList("CustomRuleBasedEntityFinder.stopNER").asScala.toSet
     val maxHops: Int = config.getInt("CustomRuleBasedEntityFinder.maxHops")
     val maxLength: Int = config.getInt("CustomRuleBasedEntityFinder.maxLength")
-    val invalidOutgoing: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.invalidOutgoing").toSet)
-    val invalidIncoming: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.invalidIncoming").toSet)
-    val validOutgoing: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.validOutgoing").toSet)
+    val invalidOutgoing: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.invalidOutgoing").asScala.toSet)
+    val invalidIncoming: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.invalidIncoming").asScala.toSet)
+    val validOutgoing: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.validOutgoing").asScala.toSet)
 
     new CustomizableRuleBasedFinder(
       entityEngine,
