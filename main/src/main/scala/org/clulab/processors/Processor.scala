@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.struct.Internalizer
+import org.clulab.utils.Timers
 
 /**
   * User: mihais
@@ -88,16 +89,36 @@ trait Processor {
     * is an NLP pipeline of side-effecting calls.
     */
   def annotate (doc:Document): Document = {
-    tagPartsOfSpeech(doc)
-    lemmatize(doc)
-    recognizeNamedEntities(doc)
-    parse(doc)
-    chunking(doc)
-    relationExtraction(doc)
-    srl(doc)
-    resolveCoreference(doc)
-    discourse(doc)
-    doc.clear()
+    Timers.getOrNew("tagPartsOfSpeech").time {
+      tagPartsOfSpeech(doc)
+    }
+    Timers.getOrNew("lemmatize").time {
+      lemmatize(doc)
+    }
+    Timers.getOrNew("recognizeNamedEntities").time {
+      recognizeNamedEntities(doc)
+    }
+    Timers.getOrNew("parse").time {
+      parse(doc)
+    }
+    Timers.getOrNew("chunking").time {
+      chunking(doc)
+    }
+    Timers.getOrNew("relationExtraction").time {
+      relationExtraction(doc)
+    }
+    Timers.getOrNew("srl").time {
+      srl(doc)
+    }
+    Timers.getOrNew("resolveCoreference").time {
+      resolveCoreference(doc)
+    }
+    Timers.getOrNew("discourse").time {
+      discourse(doc)
+    }
+    Timers.getOrNew("clear").time {
+      doc.clear()
+    }
     doc
   }
 }

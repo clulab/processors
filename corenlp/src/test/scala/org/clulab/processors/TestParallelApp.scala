@@ -27,11 +27,11 @@ object TestParallelApp extends App {
 
   println("Starting processing in parallel...")
 
-  while (true)
-    ParallelProcessorExample.mainWithCallback(Array(inputDir, outputDir, extension, "2")) { case (file, contents) =>
-      save(parResults, file, contents)
-    }
-  println("Parallel processing complete.")
+//  while (true)
+//    ParallelProcessorExample.mainWithCallback(Array(inputDir, outputDir, extension, "2")) { case (file, contents) =>
+//      save(parResults, file, contents)
+//    }
+//  println("Parallel processing complete.")
 
   println("Starting processing serially...")
   ParallelProcessorExample.mainWithCallback(Array(inputDir, outputDir, extension, "1")) { case (file, contents) =>

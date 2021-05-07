@@ -11,6 +11,9 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.utils.Timers
+
+import scala.collection.immutable.HashMap
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -92,31 +95,53 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   override def annotate(doc:Document): Document = {
     // we need this before using the DyNet models
-    mkConstEmbeddings(doc)
+    Timers.getOrNew("mkConstEmbeddings").time {
+      mkConstEmbeddings(doc)
+    }
 
-    tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+    Timers.getOrNew("tagPartsOfSpeech").time {
+      tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+    }
     //println("After POS")
     //println(doc.sentences.head.tags.get.mkString(", "))
-    recognizeNamedEntities(doc) // the call to the NER MTL is in here
+    Timers.getOrNew("recognizedNamedEntities").time {
+      recognizeNamedEntities(doc) // the call to the NER MTL is in here
+    }
     //println("After NER")
     //println(doc.sentences.head.entities.get.mkString(", "))
-    chunking(doc) // Nothing, kept for the record
-    parse(doc) // dependency parsing
+    Timers.getOrNew("chunking").time {
+      chunking(doc) // Nothing, kept for the record
+    }
+    Timers.getOrNew("parse").time {
+      parse(doc) // dependency parsing
+    }
     //println("After parsing")
     //println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+    Timers.getOrNew("lemmatize").time {
+      lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+    }
 
-    srl(doc) // SRL (arguments)
+    Timers.getOrNew("srl").time {
+      srl(doc) // SRL (arguments)
+    }
     //println("After SRL")
     //println(doc.sentences.head.semanticRoles.get)
 
     // these are not implemented yet
-    resolveCoreference(doc)
-    discourse(doc)
+    Timers.getOrNew("resolveCoreference").time {
+      resolveCoreference(doc)
+    }
+    Timers.getOrNew("discourse").time {
+      discourse(doc)
+    }
 
-    doc.clear()
-    doc.removeAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME)
+    Timers.getOrNew("clear").time {
+      doc.clear()
+    }
+    Timers.getOrNew("removeAttachment").time {
+      doc.removeAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME)
+    }
     doc
   }
 

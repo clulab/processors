@@ -2,6 +2,7 @@ package org.clulab.processors
 
 import java.io.File
 import org.clulab.processors.examples.ParallelProcessorExample
+import org.clulab.utils.Timers
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
@@ -30,11 +31,11 @@ class TestParallel extends FlatSpec with Matchers {
     val parResults = mutable.HashMap.empty[String, String]
     val serResults = mutable.HashMap.empty[String, String]
 
-    println("Starting processing in parallel...")
-    ParallelProcessorExample.mainWithCallback(Array(inputDir, outputDir, extension, "2")) { case (file, contents) =>
-      save(parResults, file, contents)
-    }
-    println("Parallel processing complete.")
+//    println("Starting processing in parallel...")
+//    ParallelProcessorExample.mainWithCallback(Array(inputDir, outputDir, extension, "2")) { case (file, contents) =>
+//      save(parResults, file, contents)
+//    }
+//    println("Parallel processing complete.")
 
     println("Starting processing serially...")
     ParallelProcessorExample.mainWithCallback(Array(inputDir, outputDir, extension, "1")) { case (file, contents) =>
@@ -42,6 +43,8 @@ class TestParallel extends FlatSpec with Matchers {
     }
     println("Serial processing complete.")
 
-    parResults should contain theSameElementsAs serResults
+    Timers.summarize()
+
+//    parResults should contain theSameElementsAs serResults
   }
 }
