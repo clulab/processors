@@ -1,6 +1,6 @@
 package org.clulab.openie.entities
 
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.openie.ResourceUtils
 import org.clulab.odin.{ExtractorEngine, Mention, State, TextBoundMention}
 import org.clulab.openie.utils.TagSet
@@ -132,7 +132,7 @@ class CustomizableRuleBasedFinder(
 
 object CustomizableRuleBasedFinder {
 
-  def fromConfig(config: Config): CustomizableRuleBasedFinder = {
+  def fromConfig(config: Config = ConfigFactory.load()): CustomizableRuleBasedFinder = {
     val entityRulesPath: String = config.getString("CustomRuleBasedEntityFinder.entityRulesPath")
     val entityRules = ResourceUtils.readResource(entityRulesPath)
     val entityEngine = ExtractorEngine(entityRules)
@@ -142,7 +142,7 @@ object CustomizableRuleBasedFinder {
     val avoidEngine = ExtractorEngine(avoidRules)
 
     val tagSet: TagSet = TagSet(config.getString("CustomRuleBasedEntityFinder.language"))
-    val stopNER: Set[String] = config.getStringList("CustomRuleBasedEntityFinder.maxHops").toSet
+    val stopNER: Set[String] = config.getStringList("CustomRuleBasedEntityFinder.stopNER").toSet
     val maxHops: Int = config.getInt("CustomRuleBasedEntityFinder.maxHops")
     val maxLength: Int = config.getInt("CustomRuleBasedEntityFinder.maxLength")
     val invalidOutgoing: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.invalidOutgoing").toSet)
