@@ -20,8 +20,7 @@ class CustomizableRuleBasedFinder(
   maxLength: Int,
   override val INVALID_OUTGOING: Set[scala.util.matching.Regex],
   override val INVALID_INCOMING: Set[scala.util.matching.Regex],
-  override val VALID_OUTGOING: Set[scala.util.matching.Regex],
-
+  override val VALID_OUTGOING: Set[scala.util.matching.Regex]
   ) extends RuleBasedEntityFinder(entityEngine, avoidEngine, maxHops, maxLength) {
   /**
    * Performs rule-based entity extraction with selective expansion along syntactic dependencies.
