@@ -28,10 +28,10 @@ class CustomizableRuleBasedFinder(
    * For filtering, see filterEntities.
    * @param doc an org.clulab.processors.Document
    */
-  def find(doc: Document, initialState: State = new State()): Seq[Mention] = {
+  override def extract(doc: Document): Seq[Mention] = {
     // avoid refs, etc.
     val avoid = avoidEngine.extractFrom(doc)
-    val stateFromAvoid = initialState.updated(avoid)
+    val stateFromAvoid = State(avoid)
     val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filter{ entity => ! stateFromAvoid.contains(entity) }
     // make sure that all are valid (i.e., contain a noun or would have contained a noun except for trigger avoidance)
     val validBaseEntities = baseEntities.filter(isValidBaseEntity)
@@ -84,9 +84,7 @@ class CustomizableRuleBasedFinder(
    * @return TextBoundMention with valid interval
    */
   def trimEntityEdges(entity: Mention, tagSet: TagSet): Mention = {
-    //     println(s"trying to trim entity: ${entity.text}")
     // Check starting tag, get the location of first valid tag
-
     val tags = entity.document.sentences(entity.sentence).tags.get
     val startToken = entity.tokenInterval.start
     val startTag = tags(startToken)
@@ -96,7 +94,6 @@ class CustomizableRuleBasedFinder(
     val endToken = entity.tokenInterval.end - 1  // subtracting 1 bc interval is exclusive
     val endTag = tags(endToken)
     val lastValidEnd = if (validEdgeTag(endTag, tagSet)) endToken else lastValid(tags, endToken, tagSet)
-
 
     if (firstValidStart == startToken && lastValidEnd == endToken) {
       // No trimming needed because both first and last were valid
