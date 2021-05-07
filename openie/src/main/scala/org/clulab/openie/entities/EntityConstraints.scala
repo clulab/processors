@@ -2,14 +2,13 @@ package org.clulab.openie.entities
 
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.odin.Mention
+import org.clulab.openie.utils.TagSet
 
 
 /**
   * Utilities for validating entities
   */
 object EntityConstraints extends LazyLogging {
-
-  val VALID_FINAL_TAG = """^(NN|VB|\-R[SR]B).*"""
 
   // POS tags for splitting conjunctions
   val coordPOS = Set(
@@ -18,10 +17,9 @@ object EntityConstraints extends LazyLogging {
   )
 
   /** Ensure final token of mention span is valid */
-  def validFinalTag(mention: Mention): Boolean = mention.tags match {
-    case None => true
-    case Some(tags) => tags.last.matches(VALID_FINAL_TAG)
-  }
+  def validFinalTag(mention: Mention, tagSet: TagSet): Boolean =
+    mention.tags.isEmpty || tagSet.isValidFinal(mention.tags.get.last)
+
 
   /** Limit entity mentions to at most n tokens */
   def withinMaxLength(mention: Mention, n: Int): Boolean = mention.words.size <= n
@@ -52,6 +50,9 @@ object EntityConstraints extends LazyLogging {
   }
 
   /** Decide if the sentence element is a conjunction using just the POS tag **/
-  def isCoord(i: Int, m: Mention): Boolean = coordPOS.contains(m.sentenceObj.tags.get(i))
+  def isCoord(i: Int, mention: Mention, tagSet: TagSet): Boolean = {
+    if (i > 0 && tagSet.isAnyAdjective(mention.sentenceObj.tags.get(i - 1))) false
+    else tagSet.isCoordinating(mention.sentenceObj.tags.get(i))
+  }
 
 }

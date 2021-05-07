@@ -2,8 +2,9 @@ package org.clulab.openie.entities
 
 import com.typesafe.scalalogging.LazyLogging
 import org.clulab.openie.ResourceUtils
-import org.clulab.odin.{ ExtractorEngine, Mention, State, TextBoundMention }
-import org.clulab.processors.{ Document, Sentence }
+import org.clulab.odin.{ExtractorEngine, Mention, State, TextBoundMention}
+import org.clulab.openie.utils.{EnglishTagSet, TagSet}
+import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 
 import scala.annotation.tailrec
@@ -23,6 +24,8 @@ class RuleBasedEntityFinder(
   val maxHops: Int,
   val maxLength: Int = RuleBasedEntityFinder.DEFAULT_MAX_LENGTH
 ) extends EntityFinder with LazyLogging {
+
+  val tagSet: TagSet = new EnglishTagSet
 
   // avoid expanding along these dependencies
   val INVALID_OUTGOING = Set[scala.util.matching.Regex](
@@ -99,7 +102,7 @@ class RuleBasedEntityFinder(
     val longest = RuleBasedEntityFinder.keepLongest(filteredEntities, new State())
     for {
       m <- longest
-      if EntityConstraints.validFinalTag(m)
+      if EntityConstraints.validFinalTag(m, tagSet)
       if EntityConstraints.matchingBrackets(m)
     } yield m
   }
@@ -140,12 +143,14 @@ class RuleBasedEntityFinder(
   }
 
   /** Checks if the indexed token is a coordination **/
-  def isCoord(i: Int, m: Mention): Boolean = EntityConstraints.isCoord(i, m)
+  def isCoord(i: Int, m: Mention): Boolean = EntityConstraints.isCoord(i, m, tagSet)
 
   /**
     * Expands an entity up to the specified number of hops along valid grammatical relations.
     */
   def expand(entity: Mention, maxHops: Int): Mention = {
+    // if you're not expanding, just return the mention
+    if (maxHops == 0) return entity
     val interval = traverseOutgoing(entity, maxHops)
     new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
   }
