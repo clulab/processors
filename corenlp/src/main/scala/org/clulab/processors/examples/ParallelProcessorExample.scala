@@ -54,8 +54,8 @@ object ParallelProcessorExample {
     Utils.initializeDyNet()
 
 //    val processor: Processor = new FastNLPProcessorWithSemanticRoles()
-    val processor: Processor = new FastNLPProcessor()
-//    val processor: Processor = new CluProcessor()
+//    val processor: Processor = new FastNLPProcessor()
+    val processor: Processor = new CluProcessor()
 
     val documentSerializer = new DocumentSerializer
 

@@ -504,7 +504,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get, embeddings)
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
-      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
+      val enhancedDepGraph = Timers.getOrNew("generateUniversalEnhancedDependencies").time {
+        ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
+      }
       sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
     }
   }
