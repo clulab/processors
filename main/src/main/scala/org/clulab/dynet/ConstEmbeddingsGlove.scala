@@ -60,7 +60,7 @@ object ConstEmbeddingsGlove {
     val dim = embeddings.dim
     val w2i = words
         .view
-        .filter(!embeddings.isOutOfVocabulary(_))
+        .filterNot(embeddings.isOutOfVocabulary(_))
         .zip(1.to(words.size)) // usually 0.until(words.size) but 0 is reserved for unknown
         .toMap[String, Int]
     val wordLookupParameters = parameters.addLookupParameters(w2i.size + 1, Dim(dim)) // one extra position for unknown
@@ -74,6 +74,7 @@ object ConstEmbeddingsGlove {
         wordLookupParameters.initialize(index, floatVector)
     }
 
+    // It is almost always the case that there are unknown words, so the necessity of this is unchecked.
     initializeWordLookupParameters(0, embeddings.unknownEmbedding) // 0 is reserved for unknown
     for ((word, index) <- w2i)
       initializeWordLookupParameters(index, embeddings.get(word).get)
