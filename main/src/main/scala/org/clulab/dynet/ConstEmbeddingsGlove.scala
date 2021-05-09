@@ -60,7 +60,7 @@ object ConstEmbeddingsGlove {
     val dim = embeddings.dim
     val w2i = words
         .view
-        .filterNot(embeddings.isOutOfVocabulary(_))
+        .filterNot(embeddings.isOutOfVocabulary)
         .zip(1.to(words.size)) // usually 0.until(words.size) but 0 is reserved for unknown
         .toMap[String, Int]
     val wordLookupParameters = parameters.addLookupParameters(w2i.size + 1, Dim(dim)) // one extra position for unknown
