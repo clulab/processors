@@ -115,4 +115,38 @@ class TestUniversalEnhancedDependencies extends FatdynetTest {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 1, "dobj") should be(true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 3, "dobj") should be(false)
   }
+
+  it should "generate correct conj_ dependencies" in {
+    var doc = proc.annotate("Disagreements over land rights for crop cultivation and livestock grazing continue to be a major source of conflict.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(6, 9, "conj_and") should be(true)
+
+    doc = proc.annotate("Because of this inadequate transportation infrastructure, it is difficult and expensive for subsistence farmers to transport surpluses to markets.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(9, 11, "conj_and") should be(true)
+
+    doc = proc.annotate("Use of improved cultivars and mechanization will be increased and use of critical interventions may lead to increases in productivity and efficient use of resources.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 5, "conj_and") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(8, 15, "conj_and") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(19, 21, "conj_and") should be(true) // this is not great, but better than nothing...
+  }
+
+  it should "create xsubj dependencies" in {
+    val doc = proc.annotate("Disagreements over land rights for crop cultivation and livestock grazing continue to be a major source of conflict.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 15, "nsubj:xsubj") should be(true)
+  }
+
+  it should "replicate copulative nsubj across conjunctions" in {
+    val doc = proc.annotate("Because of this inadequate transportation infrastructure, it is difficult and expensive for subsistence farmers to transport surpluses to markets.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(9, 7, "nsubj") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(11, 7, "nsubj") should be(true)
+  }
+
+  it should "replicate nmod_ dependencies across conjunctions" in {
+    var doc = proc.annotate("Conflict and economic decline have led to violence and displacement.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 7, "nmod_to") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(5, 9, "nmod_to") should be(true)
+
+    doc = proc.annotate("Use of improved cultivars and mechanization will be increased and use of critical interventions may lead to increases in productivity and efficient use of resources.")
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_of") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 5, "nmod_of") should be(true)
+  }
 }

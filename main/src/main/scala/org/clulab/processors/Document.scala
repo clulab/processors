@@ -118,7 +118,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     var sentenceCount = 0
     for (sentence <- sentences) {
       pw.println("Sentence #" + sentenceCount + ":")
-      pw.println("Tokens: " + sentence.words.mkString(" "))
+      pw.println("Tokens: " + sentence.words.zipWithIndex.mkString(" "))
       pw.println("Start character offsets: " + sentence.startOffsets.mkString(" "))
       pw.println("End character offsets: " + sentence.endOffsets.mkString(" "))
 
