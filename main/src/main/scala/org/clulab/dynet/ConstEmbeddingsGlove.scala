@@ -58,12 +58,11 @@ object ConstEmbeddingsGlove {
     val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
     val parameters = new ParameterCollection()
     val dim = embeddings.dim
-    val w2i: Map[String, Int] = words
+    val w2i = words
         .view
         .filter(!embeddings.isOutOfVocabulary(_))
-        .zipWithIndex
-        .map { case (value, index) => (value, index + 1) } // 0 is reserved for unknown
-        .toMap
+        .zip(1.to(words.size)) // usually 0.until(words.size) but 0 is reserved for unknown
+        .toMap[String, Int]
     val wordLookupParameters = parameters.addLookupParameters(w2i.size + 1, Dim(dim)) // one extra position for unknown
     val initializeWordLookupParameters: (Int, IndexedSeq[Float]) => Unit = {
       // Sneak in this single FloatVector to reuse for all transfers of values to the wordLookupParameters.
