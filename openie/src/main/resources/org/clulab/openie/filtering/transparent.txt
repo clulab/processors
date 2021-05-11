@@ -1,0 +1,11 @@
+# Transparent words (lemma form)
+category
+form
+group
+kind
+level
+set
+sort
+style
+type
+variety

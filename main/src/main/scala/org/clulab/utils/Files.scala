@@ -52,6 +52,10 @@ object Files {
   }
 
   /** Recursively finds all files with the given extension in the given directory */
+    @deprecated(
+      "This call to findFiles is deprecated.  Please use org.clulab.utils.FileUtils.findFiles() instead.",
+      since = "8.3.3"
+    )
   def findFiles(dir:String, ext:String):List[File] = {
     val files = new ListBuffer[File]
 
