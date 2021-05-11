@@ -42,9 +42,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val positionLookupParameters:Option[LookupParameter],
                       val dropoutProb: Float) extends InitialLayer {
 
-  lazy val constEmbedder: ConstEmbeddings = ConstEmbeddingsGlove()
-
   override def forward(sentence: AnnotatedSentence,
+                       constEmbeddings: ConstEmbeddingParameters,
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
@@ -54,8 +53,8 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val headPositions = sentence.headPositions
 
     // const word embeddings such as GloVe
-    val constEmbeddings = constEmbedder.mkEmbeddings(words)
-    assert(constEmbeddings.length == words.length)
+    val constEmbeddingsExpressions = mkConstEmbeddings(words, constEmbeddings)
+    assert(constEmbeddingsExpressions.length == words.length)
     if(tags.isDefined) assert(tags.get.length == words.length)
     if(nes.isDefined) assert(nes.get.length == words.length)
     if(headPositions.isDefined) assert(headPositions.get.length == words.length)
@@ -66,9 +65,20 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       val tag = if(tags.isDefined) Some(tags.get(i)) else None
       val ne = if(nes.isDefined) Some(nes.get(i)) else None
       val headPosition = if(headPositions.isDefined) Some(headPositions.get(i)) else None
-      embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddings(i), doDropout))
+      embeddings.add(mkEmbedding(words(i), i, tag, ne, headPosition, constEmbeddingsExpressions(i), doDropout))
     }
 
+    embeddings
+  }
+
+  private def mkConstEmbeddings(words: IndexedSeq[String],
+                                constEmbeddings: ConstEmbeddingParameters): ExpressionVector = {
+    val embeddings = new ExpressionVector()
+    // the position in the sentence serves as index in the constLookupParams
+    for(word <- words) {
+      val idx = constEmbeddings.w2i.getOrElse(word, 0) // 0 is reserved for the unknown embedding
+      embeddings.add(Expression.constLookup(constEmbeddings.lookupParameters, idx))
+    }
     embeddings
   }
 
@@ -175,7 +185,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val predicateDim = if(distanceLookupParameters.nonEmpty && useIsPredicate) 1 else 0
     val positionDim = if(positionLookupParameters.nonEmpty) positionEmbeddingSize else 0
 
-    constEmbedder.dim +
+    ConstEmbeddingsGlove.dim +
     learnedWordEmbeddingSize +
     charRnnStateSize * 2 +
     posTagDim +

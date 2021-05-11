@@ -1,101 +1,109 @@
 package org.clulab.dynet
 import com.typesafe.config.Config
-import edu.cmu.dynet.{Dim, Expression, FloatVector, LookupParameter, ParameterCollection}
-import org.clulab.dynet.ConstEmbeddingsGlove.mkLookupParams
-import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMap, WordEmbeddingMapPool}
+import edu.cmu.dynet.{Dim, FloatVector, LookupParameter, ParameterCollection}
+import org.clulab.embeddings.{WordEmbeddingMap, WordEmbeddingMapPool}
+import org.clulab.processors.{Document, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.utils.ConfigWithDefaults
 import org.clulab.utils.StringUtils
+
+import scala.collection.mutable
+
+class ConstEmbeddingsGlove
+
+/** Stores lookup parameters + the map from strings to ids */
+case class ConstEmbeddingParameters(collection: ParameterCollection,
+                                    lookupParameters: LookupParameter,
+                                    w2i: Map[String, Int])
 
 /**
  * Implements the ConstEmbeddings as a thin wrapper around WordEmbeddingMap
  *   with additional functionality to produce embeddings as DyNet Expressions
  */
-class ConstEmbeddingsGlove(val parameters: ParameterCollection,
-                           val lookupParameters: LookupParameter,
-                           val w2i: Map[String, Int],
-                           val columns: Int) extends ConstEmbeddings {
-  override def dim: Int = columns
-
-  override def mkEmbedding(word: String): Expression = {
-    val idx = w2i.getOrElse(word, 0) // 0 is unknown
-    Expression.constLookup(lookupParameters, idx)
-  }
-}
-
 object ConstEmbeddingsGlove {
   val logger:Logger = LoggerFactory.getLogger(classOf[ConstEmbeddingsGlove])
 
-  def apply(configName: String = "org/clulab/glove.conf"): ConstEmbeddingsGlove =
-      apply(ConfigWithDefaults(configName))
+  // This is not marked private for debugging purposes
+  private var SINGLETON_WORD_EMBEDDING_MAP: Option[WordEmbeddingMap] = None
 
-  def apply(conf: Config): ConstEmbeddingsGlove = apply(ConfigWithDefaults(conf))
+  // make sure the singleton is loaded
+  load()
 
-  // This is not marked private for debugging purposes.
-  var SINGLETON: Option[ConstEmbeddingsGlove] = None
+  def dim: Int = {
+    // this does not need to be synchronized, but the singleton must be created before
+    assert(SINGLETON_WORD_EMBEDDING_MAP.isDefined)
+    SINGLETON_WORD_EMBEDDING_MAP.get.dim
+  }
 
-  def apply(config: ConfigWithDefaults): ConstEmbeddingsGlove = {
+  def mkConstLookupParams(words: IndexedSeq[String]): ConstEmbeddingParameters =
+    mkConstLookupParams(words.toSet)
 
+  def mkConstLookupParams(sentence: Sentence): ConstEmbeddingParameters =
+    mkConstLookupParams(sentence.words.toSet)
+
+  def mkConstLookupParams(doc: Document): ConstEmbeddingParameters = {
+    val words = new mutable.HashSet[String]()
+    for(s <- doc.sentences) {
+      words ++= s.words
+    }
+    mkConstLookupParams(words.toSet)
+  }
+
+
+  /** Constructs ConstEmbeddingParameters from a *set* of words, which may come from a Sentence or a Document */
+  private def mkConstLookupParams(words: Set[String]): ConstEmbeddingParameters = {
+    // this does not need to be synchronized, but the singleton must be created before
+    assert(SINGLETON_WORD_EMBEDDING_MAP.isDefined)
+
+    val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
+    val parameters = new ParameterCollection()
+    val dim = embeddings.dim
+    val w2i = words
+        .view
+        .filterNot(embeddings.isOutOfVocabulary)
+        .zip(1.to(words.size)) // usually 0.until(words.size) but 0 is reserved for unknown
+        .toMap[String, Int]
+    val wordLookupParameters = parameters.addLookupParameters(w2i.size + 1, Dim(dim)) // one extra position for unknown
+    val initializeWordLookupParameters: (Int, IndexedSeq[Float]) => Unit = {
+      // Sneak in this single FloatVector to reuse for all transfers of values to the wordLookupParameters.
+      val floatVector = new FloatVector(dim)
+
+      (index: Int, embedding: IndexedSeq[Float]) =>
+        for ((embedding, index) <- embedding.zipWithIndex)
+          floatVector.update(index, embedding)
+        wordLookupParameters.initialize(index, floatVector)
+    }
+
+    // It is almost always the case that there are unknown words, so the necessity of this is unchecked.
+    initializeWordLookupParameters(0, embeddings.unknownEmbedding) // 0 is reserved for unknown
+    for ((word, index) <- w2i)
+      initializeWordLookupParameters(index, embeddings.get(word).get)
+    ConstEmbeddingParameters(parameters, wordLookupParameters, w2i)
+  }
+
+  def load(configName: String = "org/clulab/glove.conf") {
+    load(ConfigWithDefaults(configName))
+  }
+
+  def load(conf: Config) {
+    load(ConfigWithDefaults(conf))
+  }
+
+  def load(config: ConfigWithDefaults) {
     this.synchronized { // synchronized so we don't create multiple SINGLETON objects
-      if (SINGLETON.isEmpty) {
+      if (SINGLETON_WORD_EMBEDDING_MAP.isEmpty) {
         val matrixResourceName = config.getArgString("glove.matrixResourceName", None)
         // This is really meant to be a resource location, but we'll take a file if it's there.
         // val isResource = config.getArgBoolean("glove.isResource", Some(true))
         val name = StringUtils.afterLast(matrixResourceName, '/', all = true, keep = false)
         val location = StringUtils.beforeLast(matrixResourceName, '/', all = false, keep = true)
 
-        val wordEmbeddingMap = {
-          // First check to see if one is already available.
-          val wordEmbeddingMapOpt = WordEmbeddingMapPool.get(name, compact = true)
+        val embeddings = WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
+        // CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
 
-          wordEmbeddingMapOpt.getOrElse {
-            // If it should be created and cached, do this:
-            //WordEmbeddingMapPool.getOrElseCreate(name, compact = true, location, location)
-
-            // If it should just be created and should be hard-coded to be compact, do this:
-            //CompactWordEmbeddingMap(matrixResourceName, resource = isResource, cached = false)
-
-            // Load without storing it in the pool.
-            WordEmbeddingMapPool.loadEmbedding(name, location, location, compact = true)
-          }
-        }
-
-        val (parameters, lookupParameters, w2i, dim) = mkLookupParams(wordEmbeddingMap)
-
-        SINGLETON = Some(new ConstEmbeddingsGlove(parameters, lookupParameters, w2i, dim))
+        SINGLETON_WORD_EMBEDDING_MAP = Some(embeddings)
       }
     }
-
-    SINGLETON.get
   }
 
-  protected def shift(range: Range, n: Int): Range = {
-    require(!range.isInclusive)
-    Range(range.start + n, range.end + n, range.step)
-  }
-
-  private def mkLookupParams(wordEmbeddingMap: WordEmbeddingMap): (ParameterCollection, LookupParameter, Map[String, Int], Int) = {
-    val parameters = new ParameterCollection()
-    val dim = wordEmbeddingMap.dim
-
-    logger.debug("Started converting word embeddings into DyNet LookupParameters...")
-    val keys = wordEmbeddingMap.keys.toArray.sorted
-    // add 1 to the index because 0 is reserved for unknown
-    val w2i = keys.zip(shift(keys.indices, 1)).toMap
-    val wordLookupParameters = parameters.addLookupParameters(keys.length + 1, Dim(dim))
-
-    // index 0 reserved for the embedding of the unknown token
-    wordLookupParameters.initialize(0, new FloatVector(wordEmbeddingMap.unknownEmbedding))
-    for((word, index) <- w2i)
-      wordLookupParameters.initialize(index, new FloatVector(wordEmbeddingMap.getOrElseUnknown(word)))
-    logger.debug(s"Completed the creation of LookupParameters of dimension $dim for ${w2i.size} words.")
-
-    (parameters, wordLookupParameters, w2i, dim)
-  }
-
-  /** Make a standalone ConstEmbeddingsGlove not stored in the singleton */
-  def apply(wordEmbeddingMap: WordEmbeddingMap): ConstEmbeddingsGlove = {
-    val (parameters, lookupParameters, w2i, dim) = mkLookupParams(wordEmbeddingMap)
-    new ConstEmbeddingsGlove(parameters, lookupParameters, w2i, dim)
-  }
 }

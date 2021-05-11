@@ -3,13 +3,13 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, SeqUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
-import org.clulab.dynet.{AnnotatedSentence, Metal}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 
 /**
@@ -80,7 +80,20 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
   }
 
+  case class EmbeddingsAttachment (embeddings: ConstEmbeddingParameters)
+    extends IntermediateDocumentAttachment
+
+  def mkConstEmbeddings(doc: Document): Unit = {
+    // fetch the const embeddings from GloVe. All our models need them
+    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
+    // now set them as an attachment, so they are available to all downstream methods wo/ changing the API
+    doc.addAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME, EmbeddingsAttachment(embeddings))
+  }
+
   override def annotate(doc:Document): Document = {
+    // we need this before using the DyNet models
+    mkConstEmbeddings(doc)
+
     tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
     //println("After POS")
     //println(doc.sentences.head.tags.get.mkString(", "))
@@ -103,6 +116,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     discourse(doc)
 
     doc.clear()
+    doc.removeAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME)
     doc
   }
 
@@ -129,8 +143,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
 
   /** Produces POS tags, chunks, and semantic role predicates for one sentence */
-  def tagSentence(words: IndexedSeq[String]): (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
-    val allLabels = mtlPosChunkSrlp.predictJointly(AnnotatedSentence(words))
+  def tagSentence(words: IndexedSeq[String], embeddings: ConstEmbeddingParameters):
+    (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
+
+    val allLabels = mtlPosChunkSrlp.predictJointly(AnnotatedSentence(words), embeddings)
     val tags = allLabels(0)
     val chunks = allLabels(1)
     val preds = allLabels(2)
@@ -143,8 +159,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
                   tags: Array[String], // this are only used by the NumericEntityRecognizer
                   startCharOffsets: Array[Int],
                   endCharOffsets: Array[Int],
-                  docDateOpt: Option[String]): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
-    val allLabels = mtlNer.predictJointly(AnnotatedSentence(words))
+                  docDateOpt: Option[String],
+                  embeddings: ConstEmbeddingParameters): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
+    val allLabels = mtlNer.predictJointly(AnnotatedSentence(words), embeddings)
     (allLabels(0), None)
   }
 
@@ -170,7 +187,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** Dependency parsing */
   def parseSentence(words: IndexedSeq[String],
                     posTags: IndexedSeq[String],
-                    nerLabels: IndexedSeq[String]): DirectedGraph[String] = {
+                    nerLabels: IndexedSeq[String],
+                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
 
     //println(s"Words: ${words.mkString(", ")}")
     //println(s"Tags: ${posTags.mkString(", ")}")
@@ -193,7 +211,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
     */
 
-    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence)
+    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence, embeddings)
     val heads = new ArrayBuffer[Int]()
     for(wi <- headsAsStringsWithScores.indices) {
       val predictionsForThisWord = headsAsStringsWithScores(wi)
@@ -228,7 +246,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val annotatedSentenceWithHeads =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
 
-    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads)
+    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
     assert(labels.size == heads.size)
     //println(s"Labels: ${labels.mkString(", ")}")
 
@@ -247,15 +265,18 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     new DirectedGraph[String](edges.toList, roots.toSet)
   }
 
-  def srlSentence(sent: Sentence, predicateIndexes: IndexedSeq[Int]): DirectedGraph[String] = {
-    srlSentence(sent.words, sent.tags.get, sent.entities.get, predicateIndexes)
+  def srlSentence(sent: Sentence,
+                  predicateIndexes: IndexedSeq[Int],
+                  embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+    srlSentence(sent.words, sent.tags.get, sent.entities.get, predicateIndexes, embeddings)
   }
 
   /** Produces semantic role frames for one sentence */
   def srlSentence(words: IndexedSeq[String],
                   posTags: IndexedSeq[String],
                   nerLabels: IndexedSeq[String],
-                  predicateIndexes: IndexedSeq[Int]): DirectedGraph[String] = {
+                  predicateIndexes: IndexedSeq[Int],
+                  embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
     val edges = new ListBuffer[Edge[String]]()
     val roots = new mutable.HashSet[Int]()
 
@@ -273,7 +294,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       val annotatedSentence =
         AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
 
-      val argLabels = mtlSrla.predict(0, annotatedSentence)
+      val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
 
       for(ai <- argLabels.indices) {
         if(argLabels(ai) != "O") {
@@ -286,14 +307,18 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     new DirectedGraph[String](edges.toList, roots.toSet, Some(words.length))
   }
 
+  private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
+    doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
+
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
   override def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
 
+    val embeddings = getEmbeddings(doc)
     val predsForAllSents = new ArrayBuffer[IndexedSeq[Int]]()
 
     for(sent <- doc.sentences) {
-      val (tags, chunks, preds) = tagSentence(sent.words)
+      val (tags, chunks, preds) = tagSentence(sent.words, embeddings)
       sent.tags = Some(tags.toArray)
       sent.chunks = Some(chunks.toArray)
       predsForAllSents += getPredicateIndexes(preds)
@@ -334,6 +359,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** NER; modifies the document in place */
   override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
+    val embeddings = getEmbeddings(doc)
     val docDate = doc.getDCT
     for(sent <- doc.sentences) {
       val (labels, norms) = nerSentence(
@@ -342,7 +368,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         sent.tags.get,
         sent.startOffsets,
         sent.endOffsets,
-        docDate)
+        docDate,
+        embeddings)
 
       sent.entities = Some(labels.toArray)
       if(norms.nonEmpty) {
@@ -390,6 +417,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   override def srl(doc: Document): Unit = {
     val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
     assert(predicatesAttachment.nonEmpty)
+    assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
+    val embeddings = getEmbeddings(doc)
 
     if(doc.sentences.length > 0) {
       assert(doc.sentences(0).tags.nonEmpty)
@@ -412,7 +441,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       val sentence = doc.sentences(si)
       val predicateIndexes = 
       	predicateCorrections(predicates(si), sentence)
-      val semanticRoles = srlSentence(sentence, predicateIndexes)
+      val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
 
@@ -443,9 +472,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       assert(doc.sentences(0).tags.nonEmpty)
       assert(doc.sentences(0).entities.nonEmpty)
     }
+    assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
+    val embeddings = getEmbeddings(doc)
 
     for(sent <- doc.sentences) {
-      val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get)
+      val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get, embeddings)
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
@@ -478,6 +509,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       throw new RuntimeException("ERROR: Document.sentences == null!")
     if (doc.sentences.length != 0 && doc.sentences(0).words == null)
       throw new RuntimeException("ERROR: Sentence.words == null!")
+    if(doc.getAttachment(CluProcessor.CONST_EMBEDDINGS_ATTACHMENT_NAME).isEmpty)
+      throw new RuntimeException("ERROR: Const embeddings not set!")
   }
 
 }
@@ -535,6 +568,8 @@ object CluProcessor {
   val prefix:String = "CluProcessor"
 
   val PREDICATE_ATTACHMENT_NAME = "predicates"
+
+  val CONST_EMBEDDINGS_ATTACHMENT_NAME = "ce"
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
