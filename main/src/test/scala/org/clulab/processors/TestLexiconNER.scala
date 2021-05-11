@@ -7,7 +7,11 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import org.clulab.sequences.LexiconNER
+import org.clulab.sequences.MemoryOverrideKbSource
+import org.clulab.sequences.MemoryStandardKbSource
 import org.clulab.sequences.NoLexicalVariations
+import org.clulab.sequences.ResourceOverrideKbSource
+import org.clulab.sequences.ResourceStandardKbSource
 import org.clulab.struct.EntityValidator
 import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.Closer.AutoCloser
@@ -66,6 +70,20 @@ class TestLexiconNER extends FatdynetTest {
       entityValidator: EntityValidator, useLemmas: Boolean, caseInsensitive: Boolean,
       caseInsensitivesOpt: Option[Seq[Boolean]] = None, lexicalVariationsOpt: Option[LexicalVariations] = None): Unit = {
     val sentence = mkSentence(text)
+
+    def testNer(ner: LexiconNER): Unit = {
+      val suffix = s"entityValidator = ${entityValidator.getClass.getSimpleName} useLemmas = $useLemmas caseInsensitive = $caseInsensitive"
+      val name = s"${ner.getClass.getSimpleName} with $suffix from $kbs and $overrideKBs"
+      println(s"Testing $name")
+
+      val labels = ner.find(sentence)
+      labels should be(nes)
+
+      val reconstitutedNer = reconstitute(ner)
+      val reconstitutedLabels = reconstitutedNer.find(sentence)
+      reconstitutedLabels should be(nes)
+    }
+
     val lexicalVariations = lexicalVariationsOpt.getOrElse(new NoLexicalVariations())
     val fastsAndCompacts = Seq(
       (false, false), // SeparatedLexiconNER
@@ -77,21 +95,36 @@ class TestLexiconNER extends FatdynetTest {
       LexiconNER.USE_FAST = fast
       LexiconNER.USE_COMPACT = compact
 
-      val ner =
+      val ner1 =
         if (caseInsensitivesOpt.isEmpty)
           LexiconNER(kbs, Some(overrideKBs), entityValidator, lexicalVariations, useLemmas, caseInsensitive)
         else
           LexiconNER(kbs, Some(overrideKBs), caseInsensitivesOpt.get, entityValidator, lexicalVariations, useLemmas, caseInsensitive)
-      val suffix = s"entityValidator = ${entityValidator.getClass.getSimpleName} useLemmas = $useLemmas caseInsensitive = $caseInsensitive"
-      val name = s"${ner.getClass.getSimpleName} with $suffix from $kbs and $overrideKBs"
-      println(s"Testing $name")
 
-      val labels = ner.find(sentence)
-      labels should be(nes)
+      testNer(ner1)
 
-      val reconstitutedNer = reconstitute(ner)
-      val reconstitutedLabels = reconstitutedNer.find(sentence)
-      reconstitutedLabels should be(nes)
+      val ner2 = {
+        val caseInsensitives = caseInsensitivesOpt.getOrElse {
+          kbs.map(_ => caseInsensitive)
+        }
+        val standardKbSources = kbs.zip(caseInsensitives).map { case (kb, caseInsensitive) =>
+          val resourceStandardKbSource = new ResourceStandardKbSource(kb, caseInsensitive)
+          val label = resourceStandardKbSource.getLabel
+          val lines = resourceStandardKbSource.getLines
+
+          new MemoryStandardKbSource(label, lines, caseInsensitive)
+        }
+        val overrideKbSources = overrideKBs.map { overrideKB =>
+          val resourceOverriceKbSource = new ResourceOverrideKbSource(overrideKB)
+          val lines = resourceOverriceKbSource.getLines
+
+          new MemoryOverrideKbSource(lines)
+        }
+
+        LexiconNER(standardKbSources, Some(overrideKbSources), lexicalVariations, entityValidator, useLemmas, caseInsensitive)
+      }
+
+      testNer(ner2)
     }
   }
 

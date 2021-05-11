@@ -41,26 +41,14 @@ abstract class LexiconNERBuilder() {
   val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
   val INTERN_STRINGS: Boolean = false
 
-  // The kbs and caseInsensitiveMatchines sequences should be parallel.
-  def build(kbs: Seq[String], caseInsensitiveMatchings: Seq[Boolean], overrideKBs: Option[Seq[String]],
-      entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
-      // This default value is used when there are overrideKBs with labels that don't match a regular KB.
-      defaultCaseInsensitive: Boolean): LexiconNER
+  def build(standardKbSources: Seq[StandardKbSource], overrideKbSourcesOpt: Option[Seq[OverrideKbSource]],
+    entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
+    // This default value is used when there are overrideKBs with labels that don't match a regular KB.
+    defaultCaseInsensitive: Boolean): LexiconNER
 
-  protected def extractKBName(kb: String): String = {
-    val slash = kb.lastIndexOf("/")
-    val dot = kb.indexOf('.')
-    val name = kb.substring(slash + 1, dot)
-    name
-  }
-
-  protected def readLines(path: String)(addLine: String => Unit): Unit = {
-    Serializer.using(loadStreamFromClasspath(path)) { reader =>
-      val consumer = new Consumer[String]() {
-        def accept(line: String): Unit = addLine(line)
-      }
-      reader.lines.forEach(consumer)
-    }
+  protected def requireUniqueStandardKbSources(standardKbSources: Seq[StandardKbSource]): Unit = {
+    val labels = standardKbSources.map(_.getLabel)
+    require(labels.distinct.length == labels.length, "KB labels are repeated!")
   }
 
   // Convert the mutable set into an immutable one consistently.
@@ -72,6 +60,172 @@ abstract class LexiconNERBuilder() {
   }
 }
 
+// Heads up.  The following code is tricky because there are many cases to deal with:
+// separated, combined, or compact LexiconNERs, standard or override KBs, resource or memory
+// storage, and case sensitive or not.
+trait KbSource
+
+abstract class StandardKbSource(caseInsensitiveMatching: Boolean) extends KbSource {
+  def getLabel: String
+  def getCaseInsensitiveMatching: Boolean
+  def withTokens(f: Array[String] => Unit): Unit
+
+  protected def processLine(line: String, f: Array[String] => Unit): Unit = {
+    val trimmedLine = line.trim
+    if (trimmedLine.nonEmpty && !trimmedLine.startsWith("#")) {
+      val tokens = trimmedLine.split("\\s+")
+      f(tokens)
+    }
+  }
+}
+
+trait ResourceKbSource {
+
+  def mkConsumer(f: String => Unit): Consumer[String] = {
+    new Consumer[String]() {
+      def accept(line: String): Unit = {
+        f(line)
+      }
+    }
+  }
+
+  def consume(resourceName: String, consumer: Consumer[String]): Unit = {
+    Serializer.using(loadStreamFromClasspath(resourceName)) { bufferedReader =>
+      bufferedReader.lines.forEach(consumer)
+    }
+  }
+
+  // This is for testing and only for short files.
+  def getLines(resourceName: String): Iterable[String] = {
+    var lines: List[String] = Nil
+
+    consume(resourceName, mkConsumer { line: String => lines = line :: lines } )
+    lines.reverse
+  }
+}
+
+class ResourceStandardKbSource(resourceName: String, caseInsensitiveMatching: Boolean)
+    extends StandardKbSource(caseInsensitiveMatching) with ResourceKbSource {
+
+  def getLabel: String = {
+    val slash = resourceName.lastIndexOf("/")
+    val dot = resourceName.indexOf('.')
+    val label = resourceName.substring(slash + 1, dot)
+    label
+  }
+
+  def getCaseInsensitiveMatching: Boolean = caseInsensitiveMatching
+
+  def withTokens(f: Array[String] => Unit): Unit = {
+    consume(resourceName, mkConsumer { line: String => processLine(line, f) })
+  }
+
+  def getLines: Iterable[String] = getLines(resourceName)
+}
+
+class MemoryStandardKbSource(label: String, lines: Iterable[String], caseInsensitiveMatching: Boolean) extends
+    StandardKbSource(caseInsensitiveMatching) {
+
+  def getLabel: String = label
+
+  def getCaseInsensitiveMatching: Boolean = caseInsensitiveMatching
+
+  def withTokens(f: Array[String] => Unit): Unit = {
+    lines.foreach { line =>
+      processLine(line, f)
+    }
+  }
+}
+
+abstract class OverrideKbSource() extends KbSource {
+  def withLabelAndTokens(f: (String, Array[String]) => Unit): Unit
+
+  protected def processLine(line: String, f: (String, Array[String]) => Unit): Unit = {
+    // In override KBs, the name of the entity must be the first token, and the label must be the last.
+    // Tokenization is performed around TABs here.
+    val trimmedLine = line.trim
+    if (trimmedLine.nonEmpty && !trimmedLine.startsWith("#")) {
+      val blocks = trimmedLine.split("\t")
+      if (blocks.size >= 2) {
+        val entity = blocks.head // grab the text of the named entity
+        val label = blocks.last // grab the label of the named entity
+        val tokens = entity.split("\\s+")
+
+        f(label, tokens)
+      }
+    }
+  }
+}
+
+class ResourceOverrideKbSource(resourceName: String) extends OverrideKbSource() with ResourceKbSource {
+
+  def withLabelAndTokens(f: (String, Array[String]) => Unit): Unit = {
+    consume(resourceName, mkConsumer { line: String => processLine(line, f) })
+  }
+
+  def getLines: Iterable[String] = getLines(resourceName)
+}
+
+class MemoryOverrideKbSource(lines: Iterable[String]) extends OverrideKbSource() {
+
+  override def withLabelAndTokens(f: (String, Array[String]) => Unit): Unit = {
+    lines.foreach { line =>
+      processLine(line, f)
+    }
+  }
+}
+
+// The BuildState is intended to encapsulate many of the differences between the Slow and Fast
+// LexiconNERBuilders and smooth out handling of standard and override KBs as well as the case
+// sensitivity options.
+trait BuildState
+
+class SlowBuildState(lexicalVariationEngine: LexicalVariations) extends BuildState {
+  val knownCaseInsensitives = new MutableHashSet[String]()
+
+  def addWithLexicalVariations(matcher: BooleanHashTrie, tokens: Array[String]): Unit = {
+    // Keep track of all lower case entities that are single tokens (necessary for case-insensitive matching).
+    if (tokens.length == 1) {
+      val token = tokens.head
+      val caseInsensitive = matcher.caseInsensitive
+      // All single tokens for a case insensitive matcher that are lowercase are added.
+      // This collection provides evidence of the contentfulness of the tokens.
+      if (caseInsensitive && token.toLowerCase == token)
+        knownCaseInsensitives.add(token)
+    }
+    // add the original form
+    matcher.add(tokens)
+    // add the lexical variations
+    lexicalVariationEngine.lexicalVariations(tokens).foreach(matcher.add)
+  }
+}
+
+class FastBuildState(lexicalVariationEngine: LexicalVariations, caseInsensitive: Boolean,
+    knownCaseInsensitives: MutableSet[String], labelToIndex: MutableMap[String, Int]) extends BuildState {
+  val intHashTrie = new IntHashTrie(caseInsensitive)
+
+  def getCount: Int = intHashTrie.entriesSize
+
+  protected def add(label: String, tokens: Array[String], overwrite: Boolean): Unit = {
+    val index = labelToIndex.getOrElseUpdate(label, labelToIndex.size)
+
+    intHashTrie.add(tokens, index, overwrite)
+  }
+
+  def addWithLexicalVariations(label: String, tokens: Array[String], caseInsensitive: Boolean, overwrite: Boolean): Unit = {
+    // Keep track of all lower case entities that are single tokens (necessary for case-insensitive matching).
+    if (tokens.length == 1) {
+      val token = tokens.head
+      if (caseInsensitive && token.toLowerCase == token)
+        knownCaseInsensitives.add(token)
+    }
+    // add the original form
+    add(label, tokens, overwrite)
+    // add the lexical variations // use overwrite
+    lexicalVariationEngine.lexicalVariations(tokens).foreach { tokens => add(label, tokens, overwrite) }
+  }
+}
+
 /**
   * A class that builds a [[org.clulab.sequences.SeparatedLexiconNER SeparatedLexiconNER]]
   *
@@ -80,48 +234,29 @@ abstract class LexiconNERBuilder() {
   */
 class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
 
-  class BuildState(lexicalVariationEngine: LexicalVariations) {
-    val knownCaseInsensitives = new MutableHashSet[String]()
-
-    def addWithLexicalVariations(matcher: BooleanHashTrie, tokens: Array[String]): Unit = {
-      // Keep track of all lower case entities that are single tokens (necessary for case-insensitive matching).
-      if (tokens.length == 1) {
-        val token = tokens.head
-        val caseInsensitive = matcher.caseInsensitive
-        // All single tokens for a case insensitive matcher that are lowercase are added.
-        // This collection provides evidence of the contentfulness of the tokens.
-        if (caseInsensitive && token.toLowerCase == token)
-          knownCaseInsensitives.add(token)
-      }
-      // add the original form
-      matcher.add(tokens)
-      // add the lexical variations
-      lexicalVariationEngine.lexicalVariations(tokens).foreach(matcher.add)
-    }
-  }
-
   protected def newMatcher(label: String, caseInsensitive: Boolean): BooleanHashTrie =
     if (LexiconNER.USE_DEBUG)
       new DebugBooleanHashTrie(label, caseInsensitive, internStrings = INTERN_STRINGS)
     else
       new BooleanHashTrie(label, caseInsensitive, internStrings = INTERN_STRINGS)
 
-  override def build(kbs: Seq[String], caseInsensitiveMatchings: Seq[Boolean], overrideKBs: Option[Seq[String]],
+  override def build(standardKbSources: Seq[StandardKbSource], overrideKbSourcesOpt: Option[Seq[OverrideKbSource]],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
       defaultCaseInsensitive: Boolean): SeparatedLexiconNER = {
     logger.info("Beginning to load the KBs for the rule-based NER...")
+    requireUniqueStandardKbSources(standardKbSources)
 
     // The case sensitivity of the overrideKBs will be taken from the matching regular KBs.
     // See https://stackoverflow.com/questions/5042878/how-can-i-convert-immutable-map-to-mutable-map-in-scala.
-    val labels = kbs.map(extractKBName)
-    require(labels.distinct.length == labels.length, "KB labels are repeated!")
+    val labels = standardKbSources.map(_.getLabel)
+    val caseInsensitiveMatchings = standardKbSources.map(_.getCaseInsensitiveMatching)
     // We need to know the order so that the overrideKBs can be sorted the same way as the regular ones.
     val orderMap = MutableMap(labels.zipWithIndex: _*)
     val caseInsensitiveMap = Map(labels.zip(caseInsensitiveMatchings): _*).withDefaultValue(defaultCaseInsensitive)
 
-    val buildState = new BuildState(lexicalVariationEngine)
-    val overrideMatchers = getOverrideMatchers(overrideKBs, buildState, caseInsensitiveMap, orderMap)
-    val standardMatchers = getStandardMatchers(kbs, buildState, caseInsensitiveMap)
+    val buildState = new SlowBuildState(lexicalVariationEngine)
+    val overrideMatchers = getOverrideMatchers(overrideKbSourcesOpt, buildState, caseInsensitiveMap, orderMap)
+    val standardMatchers = getStandardMatchers(standardKbSources, buildState, caseInsensitiveMap)
 
     logger.info("KB loading completed.")
     // Put overrideMatchers first so they take priority during matching.
@@ -137,56 +272,40 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
     // in which the NE was encountered in the one or more files.  This matches original behavior.
   }
 
-  private def getStandardMatchers(kbs: Seq[String], buildState: BuildState, caseInsensitiveMap: Map[String, Boolean]): Seq[BooleanHashTrie] = {
-    kbs.map { kb =>
-      val label = extractKBName(kb)
+  private def getStandardMatchers(standardKbSources: Seq[StandardKbSource], buildState: SlowBuildState,
+      caseInsensitiveMap: Map[String, Boolean]): Seq[BooleanHashTrie] = {
+    standardKbSources.map { standardKbSource =>
+      val label = standardKbSource.getLabel
       val caseInsensitive = caseInsensitiveMap(label)
       val matcher = newMatcher(label, caseInsensitive)
 
-      readLines(kb) { inputLine =>
-        val line = inputLine.trim
-        if (!line.startsWith("#")) {
-          val tokens = line.split("\\s+")
-          buildState.addWithLexicalVariations(matcher, tokens)
-        }
+      standardKbSource.withTokens { tokens: Array[String] =>
+        buildState.addWithLexicalVariations(matcher, tokens)
       }
-
       logger.info(s"Loaded matcher for label $label. The size of the first layer is ${matcher.entriesSize}.")
       matcher
     }
   }
 
-  private def getOverrideMatchers(overrideKBsOpt: Option[Seq[String]], buildState: BuildState, caseInsensitiveMap: Map[String, Boolean], orderMap: MutableMap[String, Int]): Seq[BooleanHashTrie] = {
-    overrideKBsOpt.map { overrideKBs =>
-      // In these KBs, the name of the entity must be the first token, and the label must be the last.
-      // Tokenization is performed around TABs here.
-      def addLine(matchersMap: MutableHashMap[String, BooleanHashTrie], matchersArray: ArrayBuffer[BooleanHashTrie])(inputLine: String): Unit = {
-        val line = inputLine.trim
-        if (!line.startsWith("#")) { // skip comments starting with #
-          val blocks = line.split("\t")
-          if (blocks.size >= 2) {
-            val entity = blocks.head // grab the text of the named entity
-            val label = blocks.last // grab the label of the named entity
-            val tokens = entity.split("\\s+")
-            val matcher = matchersMap.getOrElseUpdate(label, {
-              orderMap.getOrElseUpdate(label, orderMap.size)
-              val matcher = new BooleanHashTrie(label, caseInsensitiveMap(label))
-              matchersArray += matcher
-              matcher
-            })
-
-            buildState.addWithLexicalVariations(matcher, tokens)
-          }
-        }
-      }
-
+  private def getOverrideMatchers(overrideKbSourcesOpt: Option[Seq[OverrideKbSource]], buildState: SlowBuildState,
+      caseInsensitiveMap: Map[String, Boolean], orderMap: MutableMap[String, Int]): Seq[BooleanHashTrie] = {
+    overrideKbSourcesOpt.map { overrideKbSources =>
       val matchersArray = new ArrayBuffer[BooleanHashTrie]
-      overrideKBs.foreach { overrideKB =>
+      overrideKbSources.foreach { overrideKbSource =>
         // Each overrideKB gets its own copies of these now.
         val matchersMap = new MutableHashMap[String, BooleanHashTrie]()
         val tmpMatchersArray = new ArrayBuffer[BooleanHashTrie]
 
-        readLines(overrideKB)(addLine(matchersMap, tmpMatchersArray))
+        overrideKbSource.withLabelAndTokens { case (label, tokens) =>
+          val matcher = matchersMap.getOrElseUpdate(label, {
+            orderMap.getOrElseUpdate(label, orderMap.size)
+            val matcher = new BooleanHashTrie(label, caseInsensitiveMap(label))
+            matchersArray += matcher
+            matcher
+          })
+
+          buildState.addWithLexicalVariations(matcher, tokens)
+        }
         // These are no longer sorted alphabetically.
         matchersArray ++= tmpMatchersArray
       }
@@ -215,55 +334,30 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
   */
 class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder() {
 
-  class BuildState(lexicalVariationEngine: LexicalVariations, caseInsensitive: Boolean,
-      knownCaseInsensitives: MutableSet[String], labelToIndex: MutableMap[String, Int]) {
-    val intHashTrie = new IntHashTrie(caseInsensitive)
-
-    def getCount: Int = intHashTrie.entriesSize
-
-    protected def add(label: String, tokens: Array[String], overwrite: Boolean): Unit = {
-      val index = labelToIndex.getOrElseUpdate(label, labelToIndex.size)
-
-      intHashTrie.add(tokens, index, overwrite)
-    }
-
-    def addWithLexicalVariations(label: String, tokens: Array[String], caseInsensitive: Boolean, overwrite: Boolean): Unit = {
-      // Keep track of all lower case entities that are single tokens (necessary for case-insensitive matching).
-      if (tokens.length == 1) {
-        val token = tokens.head
-        if (caseInsensitive && token.toLowerCase == token)
-          knownCaseInsensitives.add(token)
-      }
-      // add the original form
-      add(label, tokens, overwrite)
-      // add the lexical variations // use overwrite
-      lexicalVariationEngine.lexicalVariations(tokens).foreach { tokens => add(label, tokens, overwrite) }
-    }
-  }
-
   protected def newMatcher(label: String, caseInsensitive: Boolean) =
       new IntHashTrie(caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
 
-  override def build(kbs: Seq[String], caseInsensitiveMatchings: Seq[Boolean], overrideKBs: Option[Seq[String]],
+  // The Strings here are for filenames.
+  override def build(standardKbSources: Seq[StandardKbSource], overrideKbSourcesOpt: Option[Seq[OverrideKbSource]],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
       defaultCaseInsensitive: Boolean): LexiconNER = {
     logger.info("Beginning to load the KBs for the rule-based NER...")
+    requireUniqueStandardKbSources(standardKbSources)
     val knownCaseInsensitives = new MutableHashSet[String]()
 
     // The case sensitivity of the overrideKBs will be taken from the matching regular KBs.
     // We do know the case sensitivity for labels that we haven't seen, devaultCaseInsensitive,
     // but we won't similarly know the label index for new lables, because they are dependent
     // See https://stackoverflow.com/questions/5042878/how-can-i-convert-immutable-map-to-mutable-map-in-scala.
-    val labels = kbs.map(extractKBName)
-    require(labels.distinct.length == labels.length, "KB labels are repeated!")
-    // We need to know the order so that the overrideKBs can be sorted the same way as the regular ones.
+    val labels = standardKbSources.map(_.getLabel)
+    val caseInsensitiveMatchings = standardKbSources.map(_.getCaseInsensitiveMatching)
     val labelToIndex = MutableMap(labels.zipWithIndex: _*)
     val caseInsensitiveMap = Map(labels.zip(caseInsensitiveMatchings): _*).withDefaultValue(defaultCaseInsensitive)
 
-    val caseInsensitiveBuildState = new BuildState(lexicalVariationEngine, caseInsensitive = true, knownCaseInsensitives, labelToIndex)
-    val caseSensitiveBuildState = new BuildState(lexicalVariationEngine, caseInsensitive = false, knownCaseInsensitives, labelToIndex)
-    addOverrideKBs(overrideKBs, caseInsensitiveBuildState, caseSensitiveBuildState, caseInsensitiveMap)
-    addStandardKBs(kbs, caseInsensitiveBuildState, caseSensitiveBuildState, caseInsensitiveMap)
+    val caseInsensitiveBuildState = new FastBuildState(lexicalVariationEngine, caseInsensitive = true, knownCaseInsensitives, labelToIndex)
+    val caseSensitiveBuildState = new FastBuildState(lexicalVariationEngine, caseInsensitive = false, knownCaseInsensitives, labelToIndex)
+    addOverrideKBs(overrideKbSourcesOpt, caseInsensitiveBuildState, caseSensitiveBuildState, caseInsensitiveMap)
+    addStandardKBs(standardKbSources, caseInsensitiveBuildState, caseSensitiveBuildState, caseInsensitiveMap)
     val labelsWithOverrides = labelToIndex.toArray.sortBy(_._2).map(_._1)
 
     logger.info("KB loading completed.")
@@ -285,20 +379,16 @@ class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder()
     // should match the result of the slow version.
   }
 
-  private def addStandardKBs(kbs: Seq[String], caseInsensitiveBuildState: BuildState,
-      caseSensitiveBuildState: BuildState, caseInsensitiveMap: Map[String, Boolean]): Unit = {
-    kbs.foreach { kb =>
-      val label = extractKBName(kb)
+  private def addStandardKBs(standardKbSources: Seq[StandardKbSource], caseInsensitiveBuildState: FastBuildState,
+      caseSensitiveBuildState: FastBuildState, caseInsensitiveMap: Map[String, Boolean]): Unit = {
+    standardKbSources.foreach { standardKbSource =>
+      val label = standardKbSource.getLabel
       val caseInsensitive = caseInsensitiveMap(label)
       val buildState = if (caseInsensitive) caseInsensitiveBuildState else caseSensitiveBuildState
       val beforeCount = buildState.getCount
 
-      readLines(kb) { inputLine =>
-        val line = inputLine.trim
-        if (!line.startsWith("#")) {
-          val tokens = line.split("\\s+")
-          buildState.addWithLexicalVariations(label, tokens, caseInsensitive, overwrite = false)
-        }
+      standardKbSource.withTokens { tokens: Array[String] =>
+        buildState.addWithLexicalVariations(label, tokens, caseInsensitive, overwrite = false)
       }
 
       var afterCount = buildState.getCount
@@ -306,30 +396,19 @@ class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder()
     }
   }
 
-  private def addOverrideKBs(overrideKBsOpt: Option[Seq[String]], caseInsensitiveBuildState: BuildState,
-      caseSensitiveBuildState: BuildState, caseInsensitiveMap: Map[String, Boolean]): Unit = {
-    overrideKBsOpt.foreach { overrideKBs =>
-      // In these KBs, the name of the entity must be the first token, and the label must be the last.
-      // Tokenization is performed around TABs here.
-      def addLine(inputLine: String): Unit = {
-        val line = inputLine.trim
-        if (!line.startsWith("#")) { // skip comments starting with #
-          val blocks = line.split("\t")
-          if (blocks.size >= 2) {
-            val entity = blocks.head // grab the text of the named entity
-            val label = blocks.last // grab the label of the named entity
-            val tokens = entity.split("\\s+")
-
-            val caseInsensitive = caseInsensitiveMap(label)
-            val buildState = if (caseInsensitive) caseInsensitiveBuildState else caseSensitiveBuildState
-            buildState.addWithLexicalVariations(label, tokens, caseInsensitive, overwrite = true)
-          }
-        }
-      }
-
-      overrideKBsOpt.getOrElse(Seq.empty).foreach { overrideKB =>
+  private def addOverrideKBs(overrideKbSourcesOpt: Option[Seq[OverrideKbSource]], caseInsensitiveBuildState: FastBuildState,
+      caseSensitiveBuildState: FastBuildState, caseInsensitiveMap: Map[String, Boolean]): Unit = {
+    overrideKbSourcesOpt.foreach { overrideKbSources =>
+      overrideKbSources.foreach { overrideKbSource =>
         val beforeCount = caseInsensitiveBuildState.getCount + caseSensitiveBuildState.getCount
-        readLines(overrideKB)(addLine)
+
+        overrideKbSource.withLabelAndTokens { case (label, tokens) =>
+          val caseInsensitive = caseInsensitiveMap(label)
+          val buildState = if (caseInsensitive) caseInsensitiveBuildState else caseSensitiveBuildState
+
+          buildState.addWithLexicalVariations(label, tokens, caseInsensitive, overwrite = true)
+        }
+
         var afterCount = caseInsensitiveBuildState.getCount + caseSensitiveBuildState.getCount
         logger.info(s"Loaded OVERRIDE matchers for all labels.  The number of entries added to the first layer was ${afterCount - beforeCount}.")
       }

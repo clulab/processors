@@ -1,4 +1,5 @@
 # Changes
++ **8.3.3** - Allow KBs to be provided by more generic Standard- and OverrideKbSources.
 + **8.3.3** - Use per sentence lookup parameters for embeddings
 + **8.3.3** - Better handling of enhanced dependencies, mimicking CoreNLP better.
 + **8.3.2** - Fixed a crash in ConstEmbeddingsGlove. The current implementation seems to not crash, but it is not efficient.
