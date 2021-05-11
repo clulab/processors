@@ -1,12 +1,12 @@
 package org.clulab.processors.clucore
 
 import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.dynet.ConstEmbeddingParameters
 import org.clulab.processors.Sentence
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clucore.CluCoreProcessor.{EMPTY, EMPTY_GRAPH, NAMED_LABELS_FOR_SRL, OUTSIDE}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, GraphMap}
-import org.clulab.utils.SeqUtils
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -22,8 +22,9 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"),
                            tags: Array[String], // this are only used by the NumericEntityRecognizer
                            startCharOffsets: Array[Int],
                            endCharOffsets: Array[Int],
-                           docDateOpt: Option[String]): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
-    val (cluLabels, _) = super.nerSentence(words, lemmas, tags, startCharOffsets, endCharOffsets, docDateOpt)
+                           docDateOpt: Option[String],
+                           embeddings: ConstEmbeddingParameters): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
+    val (cluLabels, _) = super.nerSentence(words, lemmas, tags, startCharOffsets, endCharOffsets, docDateOpt, embeddings)
     val (numericLabels, numericNorms) = numericEntityRecognizer.classify(words, tags, startCharOffsets, endCharOffsets, docDateOpt)
     assert(cluLabels.length == numericLabels.length)
     assert(cluLabels.length == numericNorms.length)
@@ -71,13 +72,15 @@ class CluCoreProcessor(config: Config = ConfigFactory.load("cluprocessor"),
     (labels, Some(norms))
   }
 
-  override def srlSentence(sent: Sentence, predicateIndexes: IndexedSeq[Int]): DirectedGraph[String] = {
+  override def srlSentence(sent: Sentence,
+                           predicateIndexes: IndexedSeq[Int],
+                           embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
     val words = sent.words
     val tags = sent.tags.get
     // the SRL models were trained using only named (CoNLL) entities, not numeric ones
     val onlyNamedLabels = removeNumericLabels(sent.entities.get)
 
-    srlSentence(words, tags, onlyNamedLabels, predicateIndexes)
+    srlSentence(words, tags, onlyNamedLabels, predicateIndexes, embeddings)
   }
 
   def removeNumericLabels(allLabels: Array[String]): Array[String] = {

@@ -111,10 +111,10 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   }
 
   def mkFileBins(): Unit = {
-    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
-    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
-    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
-    // mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
+     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
+     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
+     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
+     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
   }
 
   def loadWordEmbeddingMap(wordEmbeddingConfig: WordEmbeddingConfig): WordEmbeddingMap = {
@@ -176,13 +176,14 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   def runWordEmbeddingMap(wordEmbeddingMap: WordEmbeddingMap, wordEmbeddingConfig: WordEmbeddingConfig, words: Iterable[String]): Unit = {
     val description = wordEmbeddingConfig.description
     val locationName = wordEmbeddingConfig.locationName
-    val constEmbeddingsGlove = ConstEmbeddingsGlove(wordEmbeddingMap)
+    // ConstEmbeddingsGlove is now an object and can't be constructed.
+//    val constEmbeddingsGlove = ConstEmbeddingsGlove(wordEmbeddingMap)
 
     println(s"Starting run test of ${wordEmbeddingMap.getClass.getSimpleName} at $locationName with $description.")
     val start = System.currentTimeMillis()
 
     words.foreach { word =>
-      constEmbeddingsGlove.mkEmbedding(word)
+//      constEmbeddingsGlove.mkEmbedding(word)
     }
 
     val stop = System.currentTimeMillis()
@@ -209,7 +210,8 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   behavior of "WordEmbeddingMap"
 
   ignore should "run" in {
-    // mkFileBins()
+//    mkFileBins()
     run()
   }
 }
+

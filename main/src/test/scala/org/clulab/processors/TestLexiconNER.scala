@@ -22,6 +22,7 @@ class TestLexiconNER extends FatdynetTest {
   def mkSentence(text: String): Sentence = {
     val doc = proc.mkDocument(text)
 
+    proc.mkConstEmbeddings(doc)
     proc.lemmatize(doc)
     doc.sentences.head
   }
