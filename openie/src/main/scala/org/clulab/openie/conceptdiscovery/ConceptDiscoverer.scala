@@ -1,6 +1,6 @@
 package org.clulab.openie.conceptdiscovery
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import org.clulab.dynet.Utils
 import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMapPool}
 import org.clulab.openie.entities.{CustomizableRuleBasedFinder, RuleBasedEntityFinder}
@@ -37,7 +37,7 @@ class ConceptDiscoverer(
     documents: Seq[DiscoveryDocument],
     proportionSentencesKeep: Option[Double],
     frequencyThreshold: Double,
-    topK: Int
+    topK: Int = scala.Int.MaxValue
   ): Vector[Concept] = {
     discoverConcepts(documents, proportionSentencesKeep)
       // keep the concepts that have a frequency above the threshold and aren't a stop word
@@ -58,9 +58,11 @@ class ConceptDiscoverer(
     */
   def discoverConcepts(
     documents: Seq[DiscoveryDocument],
-    proportionSentencesKeep: Option[Double]
+    proportionSentencesKeep: Option[Double] = None
   ): Vector[Concept] = {
-
+    if (proportionSentencesKeep.isDefined) {
+      println()
+    }
     // For each concept (key) holds the document locations (values) where that
     // concept occurred in the corpus.
     val conceptLocations = mutable.Map.empty[String, Set[DocumentLocation]]
@@ -96,13 +98,12 @@ class ConceptDiscoverer(
     val numKeep = scala.math.ceil(sentences.length * proportionKeep).toInt
     val sorted = sentences.sortBy(-_.score)
     // the last valid score to keep, since we're using a >= criterion
-    Some(sorted(numKeep).score)
+    Some(sorted(numKeep - 1).score)
   }
 
   private def keepSentence(sentence: ScoredSentence, maybeThreshold: Option[Double]): Boolean = {
-    if (sentence.text.isEmpty) return false
-
-    if (maybeThreshold.isEmpty) true
+    if (sentence.text.isEmpty) false
+    else if (maybeThreshold.isEmpty) true
     else sentence.score >= maybeThreshold.get
   }
 
@@ -145,7 +146,12 @@ class ConceptDiscoverer(
 object ConceptDiscoverer {
   def fromConfig(config: Config = ConfigFactory.load()): ConceptDiscoverer = {
     val processor = new CluProcessor()
-    val entityFinder = CustomizableRuleBasedFinder.fromConfig(config)
+    val entityFinder = CustomizableRuleBasedFinder.fromConfig(
+      config.withValue(
+        "CustomRuleBasedEntityFinder.maxHops",
+        ConfigValueFactory.fromAnyRef(0)
+      )
+    )
     val stopManager = StopWordManager.fromConfig(config)
     val embed_file_path: String = config.getString("glove.matrixResourceName")
     val wordEmbeddings = WordEmbeddingMapPool
