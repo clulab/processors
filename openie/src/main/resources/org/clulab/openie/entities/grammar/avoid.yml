@@ -28,3 +28,10 @@ rules:
     pattern: |
       # avoid xrefs
       [tag=NNP] "et" "al." @Avoid
+
+  - name: "avoid_urls"
+    label: Avoid
+    priority: 3
+    type: token
+    pattern: |
+      [word = /www|http|[.]com|[.]org|[.]edu/]
