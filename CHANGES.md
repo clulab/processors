@@ -1,4 +1,5 @@
 # Changes
++ **8.3.3** - Handle stopwords in processors, port TagSet and FileUtils from eidos
 + **8.3.3** - Allow KBs to be provided by more generic Standard- and OverrideKbSources.
 + **8.3.3** - Use per sentence lookup parameters for embeddings
 + **8.3.3** - Better handling of enhanced dependencies, mimicking CoreNLP better.
