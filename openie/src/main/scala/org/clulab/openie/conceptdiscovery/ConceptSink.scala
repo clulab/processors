@@ -12,19 +12,19 @@ class ConceptSink(scorededConcepts: Seq[ScoredConcept]) {
       scorededConcepts.toList.map { scoredConcept =>
         ("concept" ->
           ("phrase" -> scoredConcept.concept.phrase) ~
-            ("locations" -> new JArray( {
-              val documentIdsAndSentenceIndexes = scoredConcept.concept.documentLocations.toList.map { documentLocation =>
-                (documentLocation.docid, documentLocation.sent)
-              }.sortBy(_._2)
-              val jObjects = documentIdsAndSentenceIndexes.map { case (documentId, sentenceIndex) =>
-                ("document_id" -> documentId) ~
-                  ("sentence_index" -> sentenceIndex)
-              }
+          ("locations" -> new JArray( {
+            val documentIdsAndSentenceIndexes = scoredConcept.concept.documentLocations.toList.map { documentLocation =>
+              (documentLocation.docid, documentLocation.sent)
+            }.sortBy(_._2)
+            val jObjects = documentIdsAndSentenceIndexes.map { case (documentId, sentenceIndex) =>
+              ("document_id" -> documentId) ~
+              ("sentence_index" -> sentenceIndex)
+            }
 
-              jObjects
-            }))
-          ) ~
-          ("saliency" -> scoredConcept.saliency)
+            jObjects
+          }))
+        ) ~
+        ("saliency" -> scoredConcept.saliency)
       }
     )
 

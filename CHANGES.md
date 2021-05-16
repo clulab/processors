@@ -1,5 +1,5 @@
 # Changes
-+ **8.3.3** - Added concept discovery package in `openie`.
++ **8.3.4** - Added concept discovery package in `openie`.
 + **8.3.3** - Handle stopwords in processors, port TagSet and FileUtils from eidos
 + **8.3.3** - Allow KBs to be provided by more generic Standard- and OverrideKbSources.
 + **8.3.3** - Use per sentence lookup parameters for embeddings
