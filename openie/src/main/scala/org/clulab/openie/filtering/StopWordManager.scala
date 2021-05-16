@@ -55,8 +55,6 @@ class StopWordManager(stopWordsPath: String, transparentPath: String, tagSet: Ta
     hasNonStopContent(lemmas, tags, entities)
   }
 
-
-
 }
 
 object StopWordManager {
