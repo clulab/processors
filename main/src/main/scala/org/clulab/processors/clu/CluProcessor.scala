@@ -271,7 +271,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val annotatedSentenceWithHeads =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
 
-    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
+    //val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
+    val labels = new ArrayBuffer[String]()
+    for(i <- heads.indices) labels += "nsubj"
     assert(labels.size == heads.size)
     //println(s"Labels: ${labels.mkString(", ")}")
 

@@ -15,10 +15,11 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           t2i: Map[String, Int],
                           i2t: Array[String],
                           H: Parameter,
-                          rootParam: Parameter, 
+                          rootParam: Parameter,
+                          span: Option[Seq[(Int, Int)]],
                           nonlinearity: Int,
                           dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, span, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -32,6 +33,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
+    // TODO
   }
 
   override def toString: String = {
@@ -87,7 +89,7 @@ object GreedyForwardLayer {
     val rootParam = parameters.addParameters(Dim(inputSize))
 
     new GreedyForwardLayer(parameters,
-      inputSize, isDual, t2i, i2t, H, rootParam, nonlinearity, dropoutProb)
+      inputSize, isDual, t2i, i2t, H, rootParam, None, nonlinearity, dropoutProb) // TODO
   }
 }
 

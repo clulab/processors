@@ -7,16 +7,32 @@ import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransition
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 
+import scala.collection.mutable.ArrayBuffer
+
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
                              val isDual: Boolean,
                              val t2i: Map[String, Int],
                              val i2t: Array[String],
                              val H: Parameter,
-                             val rootParam: Parameter, 
+                             val rootParam: Parameter,
+                             val spans: Option[Seq[(Int, Int)]],
                              val nonlinearity: Int,
                              val dropoutProb: Float)
   extends FinalLayer {
+
+  def pickSpan(v: Expression): Expression = {
+    if(spans.isEmpty) {
+      v
+    } else {
+      val vs = new ExpressionVector()
+      for(span <- spans.get) {
+        val e = Expression.pickrange(v, span._1, span._2, 0)
+        vs.add(e)
+      }
+      Expression.concatenate(vs)
+    }
+  }
 
   def forward(inputExpressions: ExpressionVector,
               headPositionsOpt: Option[IndexedSeq[Int]],
@@ -31,12 +47,16 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       //
 
       for (i <- inputExpressions.indices) {
-        var argExp = inputExpressions(i)
+        // fetch the relevant span from the RNN's hidden state // SPAN
+        var argExp = pickSpan(inputExpressions(i))
 
+        // dropout on the hidden state
         argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
 
+        // forward layer + dropout on that
         var l1 = Utils.expressionDropout(pH * argExp, dropoutProb, doDropout)
 
+        // the last nonlinearity
         l1 = nonlinearity match {
           case NONLIN_TANH => Expression.tanh(l1)
           case NONLIN_RELU => Expression.rectify(l1)
@@ -59,13 +79,13 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       for(i <- inputExpressions.indices) {
         val headPosition = headPositionsOpt.get(i)
 
-        val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
+        val argExp = Utils.expressionDropout(pickSpan(inputExpressions(i)), dropoutProb, doDropout)
         val predExp = if(headPosition >= 0) {
           // there is an explicit head in the sentence
-          Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
+          Utils.expressionDropout(pickSpan(inputExpressions(headPosition)), dropoutProb, doDropout)
         } else {
           // the head is root. we used a dedicated Parameter for root
-          Utils.expressionDropout(pRoot, dropoutProb, doDropout)
+          Utils.expressionDropout(pickSpan(pRoot), dropoutProb, doDropout)
         }
 
         val ss = Expression.concatenate(argExp, predExp)
@@ -85,7 +105,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     emissionScores
   }
 
-  override def inDim: Int = inputSize
+  override def inDim: Int = if(spans.nonEmpty) spanLength(spans.get) else inputSize
 
   override def outDim: Int = t2i.size
 }
@@ -118,6 +138,29 @@ object ForwardLayer {
     }
   }
 
+  private def parseSpan(spanParam: String, inputSize: Int): Seq[(Int, Int)] = {
+    val spans = new ArrayBuffer[(Int, Int)]()
+    val spanParamTokens = spanParam.split(",")
+    for(spanParamToken <- spanParamTokens) {
+      val spanTokens = spanParamToken.split('-')
+      assert(spanTokens.length == 2)
+      val startPct = spanTokens(0).toFloat
+      val endPct = spanTokens(1).toFloat
+      val start = ((startPct / 100.0) * inputSize).toInt
+      val end = ((endPct / 100.0) * inputSize).toInt
+      spans += Tuple2(start, end)
+    }
+    spans
+  }
+
+  private def spanLength(spans: Seq[(Int, Int)]): Int = {
+    var sum = 0
+    for(x <- spans) {
+      sum += x._2 - x._1
+    }
+    sum
+  }
+
   def initialize(config: Configured,
                  paramPrefix: String,
                  parameters: ParameterCollection,
@@ -142,7 +185,25 @@ object ForwardLayer {
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
 
-    val actualInputSize = if(isDual) 2 * inputSize else inputSize
+    val spanConfig = config.getArgString(paramPrefix + ".span", Some(""))
+    val span =
+      if(spanConfig.isEmpty) {
+        None
+      } else {
+        val spans = parseSpan(spanConfig, inputSize)
+        println(s"SPANS = ${spans.mkString(", ")}")
+        Some(spans)
+      }
+
+    val actualInputSize =
+      if(span.nonEmpty) {
+        val len = spanLength(span.get)
+        if(isDual) 2 * len else len
+      } else {
+        if(isDual) 2 * inputSize else inputSize
+      }
+    println(s"ACTUAL INPUT SIZE: $actualInputSize")
+
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
 
@@ -151,13 +212,13 @@ object ForwardLayer {
         Some(new GreedyForwardLayer(parameters,
           inputSize, isDual,
           t2i, i2t, H, rootParam,
-          nonlin, dropoutProb))
+          span, nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
           inputSize, isDual,
-          t2i, i2t, H, T, rootParam,  
-          nonlin, dropoutProb)
+          t2i, i2t, H, T, rootParam,
+          span, nonlin, dropoutProb)
         layer.initializeTransitions()
         Some(layer)
       case _ =>
