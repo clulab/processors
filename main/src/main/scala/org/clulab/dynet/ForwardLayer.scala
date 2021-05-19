@@ -138,7 +138,7 @@ object ForwardLayer {
     }
   }
 
-  private def parseSpan(spanParam: String, inputSize: Int): Seq[(Int, Int)] = {
+  def parseSpan(spanParam: String, inputSize: Int): Seq[(Int, Int)] = {
     val spans = new ArrayBuffer[(Int, Int)]()
     val spanParamTokens = spanParam.split(",")
     for(spanParamToken <- spanParamTokens) {
@@ -151,6 +151,20 @@ object ForwardLayer {
       spans += Tuple2(start, end)
     }
     spans
+  }
+
+  /** Produces a string representation of spans, which can be parsed by parseSpan */
+  def spanToString(spans: Seq[(Int, Int)]): String = {
+    val sb = new StringBuilder
+    var first = true
+    for(span <- spans) {
+      if(! first) sb.append(",")
+      sb.append(span._1)
+      sb.append("-")
+      sb.append(span._2)
+      first = false
+    }
+    sb.toString()
   }
 
   private def spanLength(spans: Seq[(Int, Int)]): Int = {

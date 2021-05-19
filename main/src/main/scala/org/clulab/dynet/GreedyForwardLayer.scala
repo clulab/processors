@@ -1,10 +1,9 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
@@ -30,6 +29,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if(isDual) 1 else 0, "isDual")
+    save(printWriter, if(span.nonEmpty) spanToString(span.get) else "", "span")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -70,10 +70,13 @@ object GreedyForwardLayer {
     val byLineIntBuilder = new ByLineIntBuilder()
     val byLineFloatBuilder = new ByLineFloatBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
+    val byLineStringBuilder = new ByLineStringBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
+    val spanValue = byLineStringBuilder.build(x2iIterator, "span", "")
+    val span = if(spanValue.isEmpty) None else Some(parseSpan(spanValue, inputSize))
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
@@ -87,10 +90,9 @@ object GreedyForwardLayer {
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
 
-    // TODO: add load/save for spans
     new GreedyForwardLayer(parameters,
       inputSize, isDual, t2i, i2t, H, rootParam,
-      None, nonlinearity, dropoutProb)
+      span, nonlinearity, dropoutProb)
   }
 }
 

@@ -1,9 +1,8 @@
 package org.clulab.dynet
 import java.io.PrintWriter
-
 import edu.cmu.dynet.Expression.{lookup, randomNormal}
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
 class ViterbiForwardLayer(parameters:ParameterCollection,
@@ -75,6 +74,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if(isDual) 1 else 0, "isDual")
+    save(printWriter, if(span.nonEmpty) spanToString(span.get) else "", "span")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -105,10 +105,13 @@ object ViterbiForwardLayer {
     val byLineIntBuilder = new ByLineIntBuilder()
     val byLineFloatBuilder = new ByLineFloatBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
+    val byLineStringBuilder = new ByLineStringBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator)
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
+    val spanValue = byLineStringBuilder.build(x2iIterator, "span", "")
+    val span = if(spanValue.isEmpty) None else Some(parseSpan(spanValue, inputSize))
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator)
     val i2t = fromIndexToString(t2i)
@@ -122,10 +125,9 @@ object ViterbiForwardLayer {
     val rootParam = parameters.addParameters(Dim(inputSize))
     val T = mkTransitionMatrix(parameters, t2i)
 
-    // TODO: add load/save for spans
     new ViterbiForwardLayer(parameters,
       inputSize, isDual, t2i, i2t, H, T, rootParam,
-      None, nonlinearity, dropoutProb)
+      span, nonlinearity, dropoutProb)
   }
 }
 
