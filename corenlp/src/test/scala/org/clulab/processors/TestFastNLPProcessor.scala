@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.discourse.rstparser.RelationDirection
+import org.clulab.dynet.Utils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.DirectedGraphEdgeIterator
 import org.scalatest._
@@ -12,6 +13,7 @@ import org.clulab.processors.fastnlp.{FastNLPProcessor, FastNLPProcessorWithSema
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends FlatSpec with Matchers {
+  Utils.initializeDyNet()
   var proc:Processor = new FastNLPProcessorWithSemanticRoles(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {
@@ -98,5 +100,17 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
 
     doc.sentences.head.semanticRoles.get.hasEdge(2, 1, "A0") should be (true)
     doc.sentences.head.semanticRoles.get.hasEdge(2, 3, "A1") should be (true)
+  }
+
+  it should "create semantic dependencies of the correct length" in {
+    val text = "John ate cake, zz zz zz."
+    val doc = proc.annotate(text)
+
+    val sent = doc.sentences.head
+
+    sent.semanticRoles.get.outgoingEdges.length should be(sent.size)
+    sent.semanticRoles.get.incomingEdges.length should be(sent.size)
+    sent.enhancedSemanticRoles.get.outgoingEdges.length should be(sent.size)
+    sent.enhancedSemanticRoles.get.incomingEdges.length should be(sent.size)
   }
 }

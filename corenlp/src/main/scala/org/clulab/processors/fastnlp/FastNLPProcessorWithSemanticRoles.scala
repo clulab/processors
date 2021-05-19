@@ -6,6 +6,7 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clu.tokenizer.TokenizerStep
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.GraphMap
+import org.clulab.utils.ToEnhancedSemanticRoles
 
 /** Adds SRL functionality to FastNLPProcessor */
 class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerStep],
@@ -51,6 +52,13 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
       )
 
       sent.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
+
+      // enhanced semantic roles need basic universal dependencies to be generated
+      if(sent.graphs.contains(GraphMap.UNIVERSAL_BASIC)) {
+        val enhancedRoles = ToEnhancedSemanticRoles.generateEnhancedSemanticRoles(
+          sent, sent.universalBasicDependencies.get, semanticRoles)
+        sent.graphs += GraphMap.ENHANCED_SEMANTIC_ROLES -> enhancedRoles
+      }
     }
   }
 }
