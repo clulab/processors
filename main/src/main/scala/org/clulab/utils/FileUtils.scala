@@ -228,4 +228,19 @@ object FileUtils {
       newFile.delete()
     oldFile.renameTo(newFile)
   }
+
+  // If fork is true in sbt, then . is already in the subprojectDir.
+  // This is not the case if fork is false, nor is it in IntelliJ with default settings.
+  // The default value works readily for IntelliJ, but not for sbt.
+  def getSubprojectDir(subprojectDir: String): String = {
+    if (new File(subprojectDir).exists) subprojectDir
+    else {
+      val projectDir = "." + subprojectDir
+      if (new File(projectDir).exists) projectDir
+      else {
+        val workingDir = new File(".").getAbsolutePath
+        throw new RuntimeException(s"Couldn't find $subprojectDir from $workingDir")
+      }
+    }
+  }
 }

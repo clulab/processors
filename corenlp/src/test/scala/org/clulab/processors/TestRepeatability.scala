@@ -4,6 +4,7 @@ import org.clulab.dynet.Utils
 import org.clulab.processors.examples.ParallelProcessorExample
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.serialization.DocumentSerializer
+import org.clulab.utils.FileUtils
 import org.clulab.utils.Sourcer.utf8
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
@@ -31,11 +32,7 @@ class TestRepeatability extends FlatSpec with Matchers {
   behavior of "processing a document twice"
 
   it should "produce the same answer each time" in {
-    val relativeToProjectDir = "./corenlp/src/test/resources/documents"
-    val relativeToSubprojectDir = "./src/test/resources/documents"
-    val inputDir =
-        if (new File(relativeToProjectDir).exists) relativeToProjectDir
-        else relativeToSubprojectDir
+    val inputDir = FileUtils.getSubprojectDir("./corenlp/src/test/resources/documents")
     val file = new File(inputDir + "/16_South Sudan - Key Message Update_ Thu, 2018-01-25.txt")
     val text = {
       val source = Source.fromFile(file, utf8)
