@@ -85,7 +85,7 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
 
     val binKey = "compactWordEmbeddingMap"
     val binName = binKey + InputStreamer.binExtension
-    map.save(binName)
+    map.saveKryo(binName) // default to kryo format now
 
     val binWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(binKey, compact = true)
     binWordEmbeddingMap.getClass.getSimpleName should be ("CompactWordEmbeddingMap")

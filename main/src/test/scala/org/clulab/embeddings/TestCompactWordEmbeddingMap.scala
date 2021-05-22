@@ -23,7 +23,7 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   val fullsizeText = new SanitizedWordEmbeddingMap(Sourcer.sourceFromResource(filename), None, false)
   val compactText: CompactWordEmbeddingMap = CompactWordEmbeddingMap(filename, resource = true, cached = false)
   val tmpFile: File = File.createTempFile("test_vectors.", ".txt")
-  compactText.save(tmpFile.getAbsolutePath)
+  compactText.saveKryo(tmpFile.getAbsolutePath) // default to kryo format now
   val compactBin: CompactWordEmbeddingMap = CompactWordEmbeddingMap(tmpFile.getAbsolutePath, resource = false, cached = true)
   val epsilon = 0.000001
 
