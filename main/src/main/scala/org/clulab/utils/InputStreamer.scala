@@ -59,7 +59,7 @@ object InputStreamer {
     * ingested once and then saved in a .bin file that can be read with little interpretation.
     * These are the default extensions that can be changed in the call to stream().
     */
-  val binExtension = ".bin"
+  val binExtension = ".kryo"
   val txtExtension = ".txt"
 
   object Location extends Enumeration {
