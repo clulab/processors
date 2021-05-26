@@ -27,19 +27,19 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     val oldExt = ".old"
     val newExt = ".new"
 
-    val useFile = useFileElseResource
-    val useResource = !useFileElseResource
+    val useFile: Boolean = useFileElseResource
+    val useResource: Boolean = !useFileElseResource
 
-    val useTxt = useTxtElseBin
-    val useBin = !useTxtElseBin
+    val useTxt: Boolean = useTxtElseBin
+    val useBin: Boolean = !useTxtElseBin // Sometimes bin is java serialization and sometimes it is kryo.
 
-    val useExplicit = useExplicitElseCompact
-    val useCompact = !useExplicitElseCompact
+    val useExplicit: Boolean = useExplicitElseCompact
+    val useCompact: Boolean = !useExplicitElseCompact
 
-    val useOld = useOldElseNew
-    val useNew = !useOldElseNew
+    val useOld: Boolean = useOldElseNew
+    val useNew: Boolean = !useOldElseNew
 
-    val locationName = {
+    val locationName: String = {
       val head =
         (if (useFileElseResource) fileName
         else resourceName) +
@@ -56,7 +56,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
       head + tail
     }
 
-    val available = (useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) match {
+    val available: Boolean = (useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) match {
       case (false, false, _,    _   ) => false // The don't have the bin version as a resource.
       // case (true, false, true, false) => true // Try to optimize this one.
       case _ => true // usually true
@@ -111,9 +111,9 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   }
 
   def mkFileBins(): Unit = {
-     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
-     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
-     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
+//     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = true))
+//     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = true))
+//     mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = true,  useOldElseNew = false))
      mkFileBin(WordEmbeddingConfig(useFileElseResource = true, useTxtElseBin = false, useExplicitElseCompact = false, useOldElseNew = false))
   }
 
@@ -176,15 +176,11 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   def runWordEmbeddingMap(wordEmbeddingMap: WordEmbeddingMap, wordEmbeddingConfig: WordEmbeddingConfig, words: Iterable[String]): Unit = {
     val description = wordEmbeddingConfig.description
     val locationName = wordEmbeddingConfig.locationName
-    // ConstEmbeddingsGlove is now an object and can't be constructed.
-//    val constEmbeddingsGlove = ConstEmbeddingsGlove(wordEmbeddingMap)
 
     println(s"Starting run test of ${wordEmbeddingMap.getClass.getSimpleName} at $locationName with $description.")
     val start = System.currentTimeMillis()
 
-    words.foreach { word =>
-//      constEmbeddingsGlove.mkEmbedding(word)
-    }
+    ConstEmbeddingsGlove.mkConstLookupParams(words.toSet, wordEmbeddingMap)
 
     val stop = System.currentTimeMillis()
     val elapsed = stop - start
@@ -209,9 +205,8 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
 
   behavior of "WordEmbeddingMap"
 
-  ignore should "run" in {
+  it should "run" in {
 //    mkFileBins()
-    run()
+//    run()
   }
 }
-

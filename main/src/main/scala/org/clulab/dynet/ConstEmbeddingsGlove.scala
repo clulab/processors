@@ -49,20 +49,14 @@ object ConstEmbeddingsGlove {
     mkConstLookupParams(words.toSet)
   }
 
-
-  /** Constructs ConstEmbeddingParameters from a *set* of words, which may come from a Sentence or a Document */
-  private def mkConstLookupParams(words: Set[String]): ConstEmbeddingParameters = {
-    // this does not need to be synchronized, but the singleton must be created before
-    assert(SINGLETON_WORD_EMBEDDING_MAP.isDefined)
-
-    val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
+  def mkConstLookupParams(words: Set[String], embeddings: WordEmbeddingMap): ConstEmbeddingParameters = {
     val parameters = new ParameterCollection()
     val dim = embeddings.dim
     val w2i = words
-        .view
-        .filterNot(embeddings.isOutOfVocabulary)
-        .zip(1.to(words.size)) // usually 0.until(words.size) but 0 is reserved for unknown
-        .toMap[String, Int]
+      .view
+      .filterNot(embeddings.isOutOfVocabulary)
+      .zip(1.to(words.size)) // usually 0.until(words.size) but 0 is reserved for unknown
+      .toMap[String, Int]
     val wordLookupParameters = parameters.addLookupParameters(w2i.size + 1, Dim(dim)) // one extra position for unknown
     val initializeWordLookupParameters: (Int, IndexedSeq[Float]) => Unit = {
       // Sneak in this single FloatVector to reuse for all transfers of values to the wordLookupParameters.
@@ -79,6 +73,16 @@ object ConstEmbeddingsGlove {
     for ((word, index) <- w2i)
       initializeWordLookupParameters(index, embeddings.get(word).get)
     ConstEmbeddingParameters(parameters, wordLookupParameters, w2i)
+  }
+
+  /** Constructs ConstEmbeddingParameters from a *set* of words, which may come from a Sentence or a Document */
+  private def mkConstLookupParams(words: Set[String]): ConstEmbeddingParameters = {
+    // this does not need to be synchronized, but the singleton must be created before
+    assert(SINGLETON_WORD_EMBEDDING_MAP.isDefined)
+
+    val embeddings = SINGLETON_WORD_EMBEDDING_MAP.get
+
+    mkConstLookupParams(words, embeddings)
   }
 
   def load(configName: String = "org/clulab/glove.conf") {
