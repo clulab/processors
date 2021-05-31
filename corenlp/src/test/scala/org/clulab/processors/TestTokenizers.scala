@@ -61,12 +61,16 @@ class TestTokenizers extends FlatSpec with Matchers {
     shallow.mkDocument("initialize me")
 
     var start = System.currentTimeMillis()
+    // Just one time doesn't seem to be accurate enough.
+    1.to(10).foreach { _ => shallow.mkDocument(text, keepText = false) }
     val coreDoc = shallow.mkDocument(text, keepText = false)
     var end = System.currentTimeMillis()
     val coreTime = end - start
     printSents(coreDoc.sentences)
 
     start = System.currentTimeMillis()
+    // Just one time doesn't seem to be accurate enough.
+    1.to(10).foreach { _ => clu.mkDocument(text, keepText = false) }
     val cluDoc = clu.mkDocument(text, keepText = false)
     end = System.currentTimeMillis()
     val cluTime = end - start
