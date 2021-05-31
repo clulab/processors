@@ -75,7 +75,10 @@ object InfiniteParallelProcessorExample {
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
 
-    while (true) {
+    var done = false
+
+    // In the debugger you can change done to true in order to stop looping and check memory.
+    while (!done) {
       processFiles(parFiles, processorProvider.newOrReusedProcessor)
     }
 
@@ -103,6 +106,6 @@ object InfiniteParallelProcessorExample {
       "2",
       "false"
     ))
-    Utils.shutdown()
+    Utils.shutdown(true)
   }
 }
