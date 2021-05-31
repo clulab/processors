@@ -1,14 +1,19 @@
 package org.clulab.embeddings
 
+import com.esotericsoftware.kryo.Kryo
+import com.esotericsoftware.kryo.io.Input
+import com.esotericsoftware.kryo.io.Output
+
 import java.io._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
+import org.clulab.utils.Timers
 
 import java.nio.charset.StandardCharsets
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ArrayBuilder
+import scala.collection.mutable.ArrayBuffer // IntelliJ doesn't complain about this.
+import scala.collection.mutable.{ArrayBuilder => MutableArrayBuilder}
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
 
@@ -194,21 +199,38 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
     sum
   }
 
-  def save(filename: String): Unit = {
+  protected def mkTextFromMap(): String =
     // Sort the map entries (word -> row) by row and then keep just the word.
     // This should put "", the unknown word, first.
-    val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
+    map.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
+  def save(filename: String): Unit = {
     new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
-      objectOutputStream.writeObject(words)
+      objectOutputStream.writeObject(mkTextFromMap())
       objectOutputStream.writeObject(array)
-      objectOutputStream.writeObject(buildType.unknownArray)
+      objectOutputStream.writeObject(buildType.unknownArray.orNull)
       objectOutputStream.writeObject(columns)
+    }
+  }
+
+  def saveKryo(filename: String): Unit = {
+    val kryo = CompactWordEmbeddingMap.newKryo()
+
+    new Output(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { output =>
+      kryo.writeObject(output, mkTextFromMap())
+      kryo.writeObject(output, array)
+      kryo.writeObject(output, buildType.unknownArray.orNull)
+      kryo.writeObject(output, columns)
     }
   }
 }
 
 object CompactWordEmbeddingMap extends Logging {
+  // Choose one of these.  If loadBin() is called, this setting is used to route the request to
+  // a particular binary format.
+  val binIsSer    = false
+  val binIsKryo   = !binIsSer
+
   protected type ImplMapType = MutableHashMap[String, Int]
 
   case class BuildType(map: ImplMapType, array: Array[Float], unknownArray: Option[Array[Float]], columns: Int)
@@ -218,42 +240,95 @@ object CompactWordEmbeddingMap extends Logging {
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
     val buildType =
-      if (cached) loadBin(filename)
-      else loadTxt(filename, resource)
+        // Cached versions are expected to be binary.
+        if (cached) loadBin(filename)
+        else loadTxt(filename, resource)
+    val result = new CompactWordEmbeddingMap(buildType)
     logger.trace("Completed embedding matrix loading.")
-    new CompactWordEmbeddingMap(buildType)
+    result
   }
 
   def apply(inputStream: InputStream, binary: Boolean): CompactWordEmbeddingMap = {
-    val buildType = if (binary) {
-      val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
-      loadBin(objectInputStream)
-    }
-    else {
-      val source = Source.fromInputStream(inputStream, StandardCharsets.ISO_8859_1.toString)
-      val lines = source.getLines()
-
-      buildMatrix(lines)
-    }
+    val buildType =
+        if (binary) loadBin(inputStream)
+        else loadTxt(inputStream)
 
     new CompactWordEmbeddingMap(buildType)
   }
 
-  protected def loadTxt(filename: String, resource: Boolean): BuildType = {
-    (
-      // Check first line for two columns, otherwise calculate it.
-      if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
-      else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
-    ).autoClose { source =>
+  def loadTxt(filename: String, resource: Boolean): BuildType = {
+    loadTxt(
+        if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
+        else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
+    )
+  }
+
+  def loadTxt(inputStream: InputStream): BuildType =
+      loadTxt(Source.fromInputStream(inputStream, StandardCharsets.ISO_8859_1.toString))
+
+  def loadTxt(source: Source): BuildType = {
+    source.autoClose { source =>
       val lines = source.getLines()
 
       buildMatrix(lines)
     }
   }
 
-  protected def loadBin(filename: String): BuildType = {
-    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
-      loadBin(objectInputStream)
+  def loadBin(filename: String): BuildType = {
+    if (binIsSer)
+      loadSer(filename)
+    else if (binIsKryo)
+      loadKryo(filename)
+    else
+      throw new RuntimeException("Unknown binary serialization format")
+  }
+
+  def loadBin(inputStream: InputStream): BuildType = {
+    if (binIsSer)
+      loadSer(inputStream)
+    else if (binIsKryo)
+      loadKryo(inputStream)
+    else
+      throw new RuntimeException("Unknown binary serialization format")
+  }
+
+  protected def mkMapFromText(text: String): ImplMapType = {
+    val map: ImplMapType = new ImplMapType()
+    map ++= new SplitterIter(text)
+  }
+
+  def loadSer(filename: String): BuildType = loadSer(new FileInputStream(filename))
+
+  def loadSer(inputStream: InputStream): BuildType = {
+    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(inputStream)).autoClose { objectInputStream =>
+      val map = mkMapFromText(objectInputStream.readObject().asInstanceOf[String])
+      val array = objectInputStream.readObject().asInstanceOf[Array[Float]]
+      val unknownArrayOpt = Option(objectInputStream.readObject().asInstanceOf[Array[Float]])
+      val columns = objectInputStream.readObject().asInstanceOf[Int]
+
+      BuildType(map, array, unknownArrayOpt, columns)
+    }
+  }
+
+  protected def newKryo(): Kryo = {
+    val kryo = new Kryo()
+    kryo.register(classOf[Array[Float]])
+
+    kryo
+  }
+
+  def loadKryo(filename: String): BuildType = loadKryo(new FileInputStream(filename))
+
+  def loadKryo(inputStream: InputStream): BuildType = {
+    val kryo = newKryo()
+
+    new Input(new BufferedInputStream(inputStream)).autoClose { input =>
+      val map = mkMapFromText(kryo.readObject(input, classOf[String]))
+      val array = kryo.readObject(input, classOf[Array[Float]])
+      val unknownArrayOpt = Option(kryo.readObjectOrNull(input, classOf[Array[Float]]))
+      val columns = kryo.readObject(input, classOf[Int])
+
+      BuildType(map, array, unknownArrayOpt, columns)
     }
   }
 
@@ -274,19 +349,6 @@ object CompactWordEmbeddingMap extends Logging {
       count += 1
       result
     }
-  }
-
-  protected def loadBin(objectInputStream: ObjectInputStream): BuildType = {
-    val map = {
-      val text = objectInputStream.readObject().asInstanceOf[String]
-      val map: ImplMapType = new ImplMapType()
-      map ++= new SplitterIter(text)
-    }
-    val array = objectInputStream.readObject().asInstanceOf[Array[Float]]
-    val unknownArrayOpt = objectInputStream.readObject().asInstanceOf[Option[Array[Float]]]
-    val columns = objectInputStream.readObject().asInstanceOf[Int]
-
-    BuildType(map, array, unknownArrayOpt, columns)
   }
 
   protected def getWordCountOptAndColumns(linesAndIndices: BufferedIterator[(String, Int)]): (Option[Int], Int) = {
@@ -356,9 +418,9 @@ object CompactWordEmbeddingMap extends Logging {
     def normed(): Array[Float] = norm(arrayBuffer.toArray)
   }
 
-  class ArrayBuilderAppender protected (arrayBuilder: ArrayBuilder[Float], columns: Int) extends UnsizedAppender(columns) {
+  class ArrayBuilderAppender protected (arrayBuilder: MutableArrayBuilder[Float], columns: Int) extends UnsizedAppender(columns) {
 
-    def this(columns: Int) = this(new ArrayBuilder.ofFloat, columns)
+    def this(columns: Int) = this(new MutableArrayBuilder.ofFloat, columns)
 
     def append(value: Float): Unit = arrayBuilder += value
 
@@ -409,4 +471,28 @@ object CompactWordEmbeddingMap extends Logging {
       require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
     BuildType(map, knownAppender.normed(), unknownAppenderOpt.map(_.normed()), columns)
   }
+}
+
+object CompactWordEmbeddingMapApp extends App {
+  val filename = "../glove.840B.300d.10f.txt"
+  val buildType = Timers.getOrNew("load text").time {
+    CompactWordEmbeddingMap.loadTxt(filename: String, resource = false)
+  }
+  val compactWordEmbeddingMap = new CompactWordEmbeddingMap(buildType)
+
+  Timers.getOrNew("save ser").time {
+    compactWordEmbeddingMap.save("../glove.840B.300d.10f.ser")
+  }
+  Timers.getOrNew("save kryo").time {
+    compactWordEmbeddingMap.saveKryo("../glove.840B.300d.10f.kryo")
+  }
+
+  Timers.getOrNew("load ser").time {
+    CompactWordEmbeddingMap.loadSer("../glove.840B.300d.10f.ser")
+  }
+  Timers.getOrNew("load kryo").time {
+    CompactWordEmbeddingMap.loadKryo("../glove.840B.300d.10f.kryo")
+  }
+
+  Timers.summarize()
 }

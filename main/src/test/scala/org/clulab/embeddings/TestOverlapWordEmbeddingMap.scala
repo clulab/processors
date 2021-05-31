@@ -6,9 +6,9 @@ import org.scalatest.Matchers
 class TestOverlapWordEmbeddingMap extends FlatSpec with Matchers {
 
   def overlap(): Unit = {
-    val compact = Seq(false, true)
+    val compact = Seq(true, true) // False is no longer available.
 
-    compact.par.foreach { compact =>
+    compact.foreach { compact =>
       // Explicit is started first, but compact usually finishes first.
       WordEmbeddingMapPool.getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", compact)
     }
