@@ -1,4 +1,6 @@
 # Changes
++ **8.3.5** - In CluProcessor manually close out the lookupParameters and collection to recover C++ memory sooner
++ **8.3.5** - Supply glove in a serialized format, kryo, for faster loading
 + **8.3.4** - FastNLPProcessorWithSemanticRoles now has enhanced SRL dependencies.
 + **8.3.3** - Handle stopwords in processors, port TagSet and FileUtils from eidos
 + **8.3.3** - Allow KBs to be provided by more generic Standard- and OverrideKbSources.
