@@ -37,6 +37,12 @@ libraryDependencies ++= {
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
     "org.clulab"                  % "processors-models"        % "0.1.9",
-    "com.esotericsoftware"        % "kryo"                     % "5.1.1"
+    "com.esotericsoftware"        % "kryo"                     % "5.1.1",
+
+    // for odin
+    "org.apache.commons"      % "commons-text"             % "1.1",
+    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+    "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
+    "org.yaml"                % "snakeyaml"                % "1.14"
   )
 }
