@@ -6,3 +6,18 @@ rules:
     pattern: |
       [entity=/B-MONTH/] [entity=/I-MONTH/]*
 
+  - name: measurement-unit
+    label: MeasurementUnit
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [entity=/B-MEASUREMENT-UNIT/] [entity=/I-MEASUREMENT-UNIT/]*
+
+  - name: number
+    label: Number
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [tag=/CD/]+
+
+

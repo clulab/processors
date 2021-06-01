@@ -16,6 +16,11 @@ taxonomy:
 
 rules:
   - import: org/clulab/numeric/atomic.yml
+    # Atomic entities that are the building blocks for compositional ones
     vars:
-      # Atomic entities that are the building blocks for compositional ones
       rulepriority: "1"
+
+  - import: org/clulab/numeric/measurements.yml
+    # Measurements such as NUMBER UNIT
+    vars:
+      rulepriority: "2"

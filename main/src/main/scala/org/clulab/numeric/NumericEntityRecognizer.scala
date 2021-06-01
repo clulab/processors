@@ -9,8 +9,14 @@ class NumericEntityRecognizer {
 
   // this matches essential dictionaries such as month names
   val lexiconNer = LexiconNER(
-    Seq("org/clulab/numeric/MONTH.tsv"),
-    Seq(false), // false = case sensitive matching
+    Seq(
+      "org/clulab/numeric/MONTH.tsv",
+      "org/clulab/numeric/MEASUREMENT-UNIT.tsv"
+    ),
+    Seq(
+      false, // false = case sensitive matching
+      true
+    ),
     new TrueEntityValidator,
     useLemmasForMatching = false
   )

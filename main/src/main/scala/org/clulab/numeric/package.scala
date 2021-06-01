@@ -10,6 +10,7 @@ package object numeric {
       println(s"sentence #$i")
       println(s.getSentenceText)
       println("Tokens: " + (s.words.indices, s.words, s.tags.get).zipped.mkString(", "))
+      s.tags foreach (x => println("Tags: " + x.mkString(", ")))
       s.entities foreach (x => println("Entities: " + x.mkString(", ")))
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))
       println
