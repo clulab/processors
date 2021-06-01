@@ -1,0 +1,21 @@
+taxonomy:
+  - Entity:
+      - NumericEntity
+          - Atomic
+              - PossibleDay
+              - PossibleMonth
+              - PossibleYear
+              - Number
+          - Compositional
+              - Date
+              - DateRange
+              - Measurement
+      - NamedEntity
+          - Month
+          - MeasurementUnit
+
+rules:
+  - import: org/clulab/numeric/atomic.yml
+    vars:
+      # Atomic entities that are the building blocks for compositional ones
+      rulepriority: "1"

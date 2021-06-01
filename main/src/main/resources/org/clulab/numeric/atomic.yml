@@ -1,0 +1,8 @@
+rules:
+  - name: month-name
+      label: PossibleMonth
+      priority: ${ rulepriority }
+      type: token
+      pattern: |
+        [entity=/B-MONTH/] [entity=/I-MONTH/]*
+
