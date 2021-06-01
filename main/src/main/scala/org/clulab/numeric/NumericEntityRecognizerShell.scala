@@ -1,5 +1,6 @@
 package org.clulab.numeric
 
+import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Shell
 
@@ -15,6 +16,7 @@ class NumericEntityRecognizerShell extends Shell {
 }
 
 object NumericEntityRecognizerShell extends App {
+  Utils.initializeDyNet()
   val sh = new NumericEntityRecognizerShell()
   sh.shell()
 }

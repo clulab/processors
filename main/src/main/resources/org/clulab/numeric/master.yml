@@ -1,16 +1,16 @@
 taxonomy:
   - Entity:
-      - NumericEntity
-          - Atomic
+      - NumericEntity:
+          - Atomic:
               - PossibleDay
               - PossibleMonth
               - PossibleYear
               - Number
-          - Compositional
+          - Compositional:
               - Date
               - DateRange
               - Measurement
-      - NamedEntity
+      - NamedEntity:
           - Month
           - MeasurementUnit
 

@@ -10,8 +10,8 @@ package object numeric {
       println(s"sentence #$i")
       println(s.getSentenceText)
       println("Tokens: " + (s.words.indices, s.words, s.tags.get).zipped.mkString(", "))
-      println("Entities: " + s.entities.get.mkString(", "))
-      println("Norms: " + s.norms.get.mkString(", "))
+      s.entities foreach (x => println("Entities: " + x.mkString(", ")))
+      s.norms foreach (x => println("Norms: " + x.mkString(", ")))
       println
 
       val sortedMentions = mentionsBySentence(i).filter(_.isInstanceOf[TextBoundMention]).sortBy(_.label)
