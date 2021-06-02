@@ -21,6 +21,12 @@ rules:
       rulepriority: "1"
 
   - import: org/clulab/numeric/measurements.yml
-    # Measurements such as NUMBER UNIT
+    # Compositional rules for measurements such as NUMBER UNIT
     vars:
-      rulepriority: "2"
+      rulepriority: "3"
+
+  - import: org/clulab/numeric/dates.yml
+    # Compositional rules for dates
+    vars:
+      rulepriority: "4"
+

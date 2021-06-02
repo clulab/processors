@@ -1,0 +1,10 @@
+rules:
+  - name: date-1
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      @number:Number @month:PossibleMonth
+
+
+
