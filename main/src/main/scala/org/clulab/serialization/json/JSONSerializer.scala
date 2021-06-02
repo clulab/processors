@@ -16,11 +16,15 @@ object JSONSerializer {
 
   implicit val formats = DefaultFormats
 
+  def jsonAST(s: String): JValue = {
+    parse(s)
+  }
+
   def jsonAST(f: File): JValue = {
     val source = scala.io.Source.fromFile(f)
     val contents = source.getLines.mkString
     source.close()
-    parse(contents)
+    jsonAST(contents)
   }
 
   protected def addDocumentAttachments(doc: Document, jValue: JValue): Unit = {
@@ -63,6 +67,7 @@ object JSONSerializer {
   }
   def toDocument(docHash: String, djson: JValue): Document = toDocument(djson \ docHash)
   def toDocument(f: File): Document = toDocument(jsonAST(f))
+  def toDocument(s: String): Document = toDocument(jsonAST(s))
 
   def toSentence(json: JValue): Sentence = {
 
