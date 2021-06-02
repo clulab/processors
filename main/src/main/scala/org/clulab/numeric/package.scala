@@ -1,6 +1,6 @@
 package org.clulab
 
-import org.clulab.odin.{Mention, TextBoundMention}
+import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.Document
 
 package object numeric {
@@ -15,7 +15,7 @@ package object numeric {
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))
       println
 
-      val sortedMentions = mentionsBySentence(i).filter(_.isInstanceOf[TextBoundMention]).sortBy(_.label)
+      val sortedMentions = mentionsBySentence(i).sortBy(_.label)
       sortedMentions foreach displayMention
       println
     }
@@ -29,20 +29,25 @@ package object numeric {
     val mentionType = mention.getClass.toString.split("""\.""").last
     println(s"\tType => $mentionType")
     println(boundary)
-    mention match {
-      case tb: TextBoundMention =>
-        println(s"\t${tb.labels.mkString(", ")} => ${tb.text}")
-        displayArguments(tb)
-      case _ => ()
+    if (mention.arguments.nonEmpty) {
+      println("\tArgs:")
+      mention match {
+        case em: EventMention =>
+          println(s"\ttrigger: ${em.trigger}")
+          displayArguments(em)
+        case _ =>
+          displayArguments(mention)
+      }
+      println(s"$boundary")
     }
-    println(s"$boundary\n")
+    println()
   }
 
   def displayArguments(b: Mention): Unit = {
     b.arguments foreach {
       case (argName, ms) =>
         ms foreach { v =>
-          println(s"\t$argName ${v.labels.mkString("(", ", ", ")")} => ${v.text}")
+          println(s"\t  * $argName ${v.labels.mkString("(", ", ", ")")} => ${v.text}")
         }
     }
   }
