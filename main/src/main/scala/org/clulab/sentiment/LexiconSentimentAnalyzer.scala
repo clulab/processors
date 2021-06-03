@@ -1,20 +1,18 @@
 package org.clulab.sentiment
 
-import java.io.PrintWriter
-
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.Processor
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.Counter
-import org.slf4j.{Logger, LoggerFactory}
-
-import scala.io.Source
-import LexiconSentimentAnalyzer._
-import org.clulab.processors.Processor
+import org.clulab.utils.FileUtils
 import org.clulab.utils.MathUtils
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
 
 class LexiconSentimentAnalyzer {
+  import LexiconSentimentAnalyzer._
+
   val lexiconNer: LexiconNER = mkLexicon()
   val proc: Processor = new CluProcessor()
 
@@ -110,7 +108,7 @@ object LexiconSentimentAnalyzer {
 
     val inputFile = args(0)
 
-    val text = Source.fromFile(inputFile).getLines().mkString("\n")
+    val text = FileUtils.getTextFromFile(inputFile)
     println(s"Analyzing text:\n$text\n")
     val stats = analyzer.annotate(text)
     println(stats)

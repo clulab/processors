@@ -1,6 +1,7 @@
 package org.clulab.processors.examples
 
 import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.utils.FileUtils
 
 import scala.io.Source
 
@@ -13,7 +14,7 @@ object ProcessorFileExample {
   val proc = new FastNLPProcessor()
 
   def main(args:Array[String]) {
-    val text = Source.fromFile(args(0), "UTF-8").getLines().mkString(" ")
+    val text = FileUtils.getTextFromFile(args(0))
     proc.annotate(text)
   }
 }
