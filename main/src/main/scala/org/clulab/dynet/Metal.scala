@@ -334,6 +334,17 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
   }
 
+  /**
+    * Custom method for the parsing algorithm
+    * @param sentence Input sentence
+    * @param constEmbeddings Constant embeddings for this sentence
+    * @return Tuple of (head, label) for each word in the sentence
+    */
+  def parse(sentence: AnnotatedSentence,
+            constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
+    Layers.parse(model, sentence, constEmbeddings)
+  }
+
   def test(): Unit = {
     require(taskManagerOpt.isDefined)
 

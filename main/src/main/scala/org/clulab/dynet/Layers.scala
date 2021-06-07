@@ -294,6 +294,12 @@ object Layers {
     labelsForTask
   }
 
+  def parse(layers: IndexedSeq[Layers],
+            sentence: AnnotatedSentence,
+            constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
+    null // TODO
+  }
+
   def loss(layers: IndexedSeq[Layers],
            taskId: Int,
            sentence: AnnotatedSentence,
