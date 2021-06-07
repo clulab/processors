@@ -11,6 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.utils.BeforeAndAfter
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -80,44 +81,36 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
   }
 
-  case class EmbeddingsAttachment (embeddings: ConstEmbeddingParameters)
-    extends IntermediateDocumentAttachment
-
-  def mkConstEmbeddings(doc: Document): Unit = {
-    // fetch the const embeddings from GloVe. All our models need them
-    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
-    // now set them as an attachment, so they are available to all downstream methods wo/ changing the API
-    doc.addAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME, EmbeddingsAttachment(embeddings))
-  }
+  // Although this uses no class members, the method is sometimes called from tests
+  // and can't easily be moved to a separate class without changing client code.
+  def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
   override def annotate(doc:Document): Document = {
-    // we need this before using the DyNet models
-    mkConstEmbeddings(doc)
+    GivenConstEmbeddingsAttachment(doc).perform {
+      tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+      //println("After POS")
+      //println(doc.sentences.head.tags.get.mkString(", "))
+      recognizeNamedEntities(doc) // the call to the NER MTL is in here
+      //println("After NER")
+      //println(doc.sentences.head.entities.get.mkString(", "))
+      chunking(doc) // Nothing, kept for the record
+      parse(doc) // dependency parsing
+      //println("After parsing")
+      //println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
-    //println("After POS")
-    //println(doc.sentences.head.tags.get.mkString(", "))
-    recognizeNamedEntities(doc) // the call to the NER MTL is in here
-    //println("After NER")
-    //println(doc.sentences.head.entities.get.mkString(", "))
-    chunking(doc) // Nothing, kept for the record
-    parse(doc) // dependency parsing
-    //println("After parsing")
-    //println(doc.sentences.head.universalEnhancedDependencies.get)
+      lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
 
-    lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+      srl(doc) // SRL (arguments)
+      //println("After SRL")
+      //println(doc.sentences.head.semanticRoles.get)
 
-    srl(doc) // SRL (arguments)
-    //println("After SRL")
-    //println(doc.sentences.head.semanticRoles.get)
+      // these are not implemented yet
+      resolveCoreference(doc)
+      discourse(doc)
 
-    // these are not implemented yet
-    resolveCoreference(doc)
-    discourse(doc)
-
-    doc.clear()
-    doc.removeAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME)
-    doc
+      doc.clear()
+      doc
+    }
   }
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
@@ -649,4 +642,35 @@ object CluProcessor {
   }
 }
 
+case class EmbeddingsAttachment(embeddings: ConstEmbeddingParameters)
+    extends IntermediateDocumentAttachment
 
+class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
+
+  def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
+
+  def after(): Unit = {
+    val attachment = doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
+    doc.removeAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME)
+
+    // This is a memory management optimization.
+    val embeddings = attachment.embeddings
+    // FatDynet needs to be updated before these can be used.
+    embeddings.lookupParameters.close()
+    embeddings.collection.close()
+  }
+}
+
+object GivenConstEmbeddingsAttachment {
+  def apply(doc: Document) = new GivenConstEmbeddingsAttachment(doc)
+
+  // This is static so that it can be called without an object.
+  def mkConstEmbeddings(doc: Document): Unit = {
+    // Fetch the const embeddings from GloVe. All our models need them.
+    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
+    val attachment = EmbeddingsAttachment(embeddings)
+
+    // Now set them as an attachment, so they are available to all downstream methods wo/ changing the API.
+    doc.addAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME, attachment)
+  }
+}

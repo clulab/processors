@@ -2,6 +2,7 @@ package org.clulab.processors
 
 import java.io.File
 import org.clulab.processors.examples.ParallelProcessorExample
+import org.clulab.utils.FileUtils
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
@@ -17,13 +18,7 @@ class TestParallel extends FlatSpec with Matchers {
   behavior of "Processing documents in parallel"
 
   it should "match processing documents serially" in {
-    // If fork is true in sbt, then . is already in corenlp directory, the subprojectDir.
-    // This is not the case if fork is false, nor is it in IntelliJ with default settings.
-    val relativeToProjectDir = "./corenlp/src/test/resources/documents"
-    val relativeToSubprojectDir = "./src/test/resources/documents"
-    val inputDir =
-      if (new File(relativeToProjectDir).exists) relativeToProjectDir
-      else relativeToSubprojectDir
+    val inputDir = FileUtils.getSubprojectDir("./corenlp/src/test/resources/documents")
     val outputDir = "."
     val extension = "txt"
 

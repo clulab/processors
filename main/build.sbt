@@ -21,7 +21,7 @@ libraryDependencies ++= {
     "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4",
     "com.io7m.xom"                % "xom"                      % "1.2.10",
     // for machine learning
-    "org.clulab"                 %% "fatdynet"                 % "0.3.1", // "0-cuda.2.6-SNAPSHOT"
+    "org.clulab"                 %% "fatdynet"                 % "0.3.2", // "0-cuda.2.6-SNAPSHOT"
     "de.bwaldvogel"               % "liblinear"                % "2.30",
     "tw.edu.ntu.csie"             % "libsvm"                   % "3.23",
     // NLP tools used by CluProcessor
@@ -35,7 +35,14 @@ libraryDependencies ++= {
     "org.scalatest"              %% "scalatest"                % "3.0.1"  % Test,
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
-    "org.clulab"                  % "glove-840b-300d-10f"      % "1.0.0",
-    "org.clulab"                  % "processors-models"        % "0.1.9"
+    "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
+    "org.clulab"                  % "processors-models"        % "0.1.9",
+    "com.esotericsoftware"        % "kryo"                     % "5.1.1",
+
+    // for odin
+    "org.apache.commons"      % "commons-text"             % "1.1",
+    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+    "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
+    "org.yaml"                % "snakeyaml"                % "1.14"
   )
 }
