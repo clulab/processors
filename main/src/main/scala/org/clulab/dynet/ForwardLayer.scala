@@ -145,6 +145,7 @@ object ForwardLayer {
     for(spanParamToken <- spanParamTokens) {
       val spanTokens = spanParamToken.split('-')
       assert(spanTokens.length == 2)
+      println(s"spanTokens: ${spanTokens.mkString(", ")}")
       val startPct = spanTokens(0).toFloat
       val endPct = spanTokens(1).toFloat
       val start = ((startPct / 100.0) * inputSize).toInt
