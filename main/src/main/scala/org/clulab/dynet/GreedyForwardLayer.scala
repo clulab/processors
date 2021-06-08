@@ -89,14 +89,11 @@ object GreedyForwardLayer {
     //val actualInputSize = if(isDual) 2 * inputSize else inputSize
     val actualInputSize =
       if(span.nonEmpty) {
-        println(s"span = ${span.get.mkString(", ")}")
         val len = ForwardLayer.spanLength(span.get)
-        println(s"len = $len")
         if(isDual) 2 * len else len
       } else {
         if(isDual) 2 * inputSize else inputSize
       }
-    println(s"actualInputSize = $actualInputSize")
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))

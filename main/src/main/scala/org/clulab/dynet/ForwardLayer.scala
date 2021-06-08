@@ -139,14 +139,12 @@ object ForwardLayer {
   }
 
   def parseSpan(spanParam: String, inputSize: Int): Seq[(Int, Int)] = {
-    println(s"spanParam = $spanParam")
     val spans = new ArrayBuffer[(Int, Int)]()
     val spanParamTokens = spanParam.split(",")
     for(spanParamToken <- spanParamTokens) {
       val spanTokens = spanParamToken.split('-')
       assert(spanTokens.length == 2)
-      println(s"spanTokens: ${spanTokens.mkString(", ")}")
-      val start = spanTokens(0).toInt
+      val start = spanTokens(0).toInt // these are actual values, not percentages as in the config file
       val end = spanTokens(1).toInt
       spans += Tuple2(start, end)
     }
