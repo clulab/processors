@@ -94,6 +94,7 @@ object GreedyForwardLayer {
       } else {
         if(isDual) 2 * inputSize else inputSize
       }
+    println(s"actualInputSize = $actualInputSize")
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))

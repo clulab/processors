@@ -121,14 +121,13 @@ object ViterbiForwardLayer {
     // make the loadable parameters
     //
     //val actualInputSize = if(isDual) 2 * inputSize else inputSize
-    val actualInputSize = {
+    val actualInputSize =
     if(span.nonEmpty) {
       val len = ForwardLayer.spanLength(span.get)
       if(isDual) 2 * len else len
     } else {
       if(isDual) 2 * inputSize else inputSize
     }
-    println(s"actualInputSize = $actualInputSize")
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
     val T = mkTransitionMatrix(parameters, t2i)
