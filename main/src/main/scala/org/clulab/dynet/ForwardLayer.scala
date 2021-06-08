@@ -146,10 +146,8 @@ object ForwardLayer {
       val spanTokens = spanParamToken.split('-')
       assert(spanTokens.length == 2)
       println(s"spanTokens: ${spanTokens.mkString(", ")}")
-      val startPct = spanTokens(0).toFloat
-      val endPct = spanTokens(1).toFloat
-      val start = ((startPct / 100.0) * inputSize).toInt
-      val end = ((endPct / 100.0) * inputSize).toInt
+      val start = spanTokens(0).toInt
+      val end = spanTokens(1).toInt
       spans += Tuple2(start, end)
     }
     spans
