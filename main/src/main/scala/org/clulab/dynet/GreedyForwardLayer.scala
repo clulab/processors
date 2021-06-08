@@ -86,7 +86,15 @@ object GreedyForwardLayer {
     // make the loadable parameters
     //
     //println(s"making FF ${t2i.size} x ${2 * inputSize}")
-    val actualInputSize = if(isDual) 2 * inputSize else inputSize
+    //val actualInputSize = if(isDual) 2 * inputSize else inputSize
+    val actualInputSize =
+      if(span.nonEmpty) {
+        val len = ForwardLayer.spanLength(span.get)
+        if(isDual) 2 * len else len
+      } else {
+        if(isDual) 2 * inputSize else inputSize
+      }
+
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
 

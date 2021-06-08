@@ -167,7 +167,7 @@ object ForwardLayer {
     sb.toString()
   }
 
-  private def spanLength(spans: Seq[(Int, Int)]): Int = {
+  def spanLength(spans: Seq[(Int, Int)]): Int = {
     var sum = 0
     for(x <- spans) {
       sum += x._2 - x._1
