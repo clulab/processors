@@ -139,6 +139,7 @@ object ForwardLayer {
   }
 
   def parseSpan(spanParam: String, inputSize: Int): Seq[(Int, Int)] = {
+    println(s"spanParam = $spanParam")
     val spans = new ArrayBuffer[(Int, Int)]()
     val spanParamTokens = spanParam.split(",")
     for(spanParamToken <- spanParamTokens) {
