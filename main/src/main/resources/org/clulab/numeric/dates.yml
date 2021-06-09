@@ -7,4 +7,18 @@ rules:
       @number:Number @month:PossibleMonth
 
 
-
+#   $TIMEOFDAY = "/morning|afternoon|evening|night|noon|midnight|teatime|lunchtime|dinnertime|suppertime|afternoon|midday|dusk|dawn|sunup|sunrise|sundown|twilight|daybreak/";
+  - name: time_of_day
+    label: TIMEOFDAY
+    priority: ${rulepriority}
+    type: token
+    pattern: |
+      /morning|afternoon|evening|night|noon|midnight|teatime|lunchtime|dinnertime|suppertime|afternoon|midday|dusk|dawn|sunup|sunrise|sundown|twilight|daybreak/
+  
+  
+  #   $FREQ_MOD = ( /each/ | /every/ $NUM_ORD | /every/ /other|alternate|alternating/? | /alternate|alternating/ );
+  - name: date-3
+    label: FREQ_MOD
+    priority: ${rulepriority}
+    pattern: |
+      each | every @NUM_ORD | every /other|alternate|alternating/? | /alternate|alternating/
