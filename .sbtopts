@@ -1,2 +1,2 @@
--J-Xmx8g
--J-XX:MaxMetaspaceSize=8g
+-J-Xmx10g
+-J-XX:MaxMetaspaceSize=10g

@@ -1,11 +1,9 @@
 package org.clulab.processors
 
-import org.clulab.discourse.rstparser.RelationDirection
 import org.clulab.dynet.Utils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.struct.DirectedGraphEdgeIterator
 import org.scalatest._
-import org.clulab.processors.fastnlp.{FastNLPProcessor, FastNLPProcessorWithSemanticRoles}
+import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 
 /**
  *
@@ -40,17 +38,6 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
     doc.sentences.head.dependencies.get.hasEdge(1, 3, "dobj") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(1, 4, "punct") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(3, 2, "det") should be (true)
-  }
-
-  "FastNLPProcessor" should "generate correct discourse relations in test 3" in {
-    val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
-    doc.clear()
-
-    val d = doc.discourseTree.get
-    d.relationLabel should be ("elaboration")
-    d.relationDirection should be (RelationDirection.LeftToRight)
-    d.isTerminal should be (false)
-    d.children.length should be (2)
   }
 
   // For more information, see
