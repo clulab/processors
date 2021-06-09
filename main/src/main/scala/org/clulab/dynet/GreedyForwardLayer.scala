@@ -76,7 +76,7 @@ object GreedyForwardLayer {
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
     val spanValue = byLineStringBuilder.build(x2iIterator, "span", "")
-    val span = if(spanValue.isEmpty) None else Some(parseSpan(spanValue, inputSize))
+    val span = if(spanValue.isEmpty || spanValue == "none") None else Some(parseSpan(spanValue, inputSize))
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)

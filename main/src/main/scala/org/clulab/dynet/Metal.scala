@@ -390,6 +390,7 @@ object Metal {
     //
     // load the x2i meta data
     //
+    //println(s"Opening $x2iFilename")
     val layersSeq = Serializer.using(Utils.newSource(x2iFilename)) { source =>
       val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered
