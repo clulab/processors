@@ -447,14 +447,37 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   }
 
   /**
-    * Autogenerate markdown file that shows the metadata for each rule in the grammar.
+    * Autogenerate markdown file that shows the metadata for each rule in the grammar using a Master file.
     * This is useful for those who have a harder time sifting through the yaml files which
     * may be quite nested.  One md block per rule, sorted alphabetically.
-    * @param input the String content of the master yaml file
+    * @param input yaml rule string
     * @param outname the path to the output md file
     */
   def exportRuleSchemasFromMaster(input: String, outname: String): Unit = {
     val rules = rulesFromMasterFile(input)
+    exportRuleSchemas(rules, outname)
+  }
+
+  /**
+    * Autogenerate markdown file that shows the metadata for each rule in the grammar using a Simple file.
+    * This is useful for those who have a harder time sifting through the yaml files which
+    * may be quite nested.  One md block per rule, sorted alphabetically.
+    * @param input yaml rule string
+    * @param outname the path to the output md file
+    */
+  def exportRuleSchemasFromSimple(input: String, outname: String): Unit = {
+    val rules = rulesFromSimpleFile(input)
+    exportRuleSchemas(rules, outname)
+  }
+
+  /**
+    * Autogenerate markdown file that shows the metadata for each rule in the grammar.
+    * This is useful for those who have a harder time sifting through the yaml files which
+    * may be quite nested.  One md block per rule, sorted alphabetically.
+    * @param rules Rules in the grammar
+    * @param outname the path to the output md file
+    */
+  def exportRuleSchemas(rules: Seq[Rule], outname: String): Unit = {
     val extractors = mkExtractors(rules)
     // To get all the information, we need both the rules and the extractors
     val markdownLines = rules
@@ -477,11 +500,36 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     * the Label from the internal Taxonomy).  This view of the grammar tells consumers what
     * they can expect to see (or what they _could_ expect to see) in an Extraction/Mention of
     * a given Type (or Label).
-    * @param input the String content of the master yaml file
+    * @param input the String content of the Master yaml file
     * @param outname output markdown file
     */
   def exportExtractionSchemasFromMaster(input: String, outname: String): Unit = {
     val rules = rulesFromMasterFile(input)
+    exportExtractionSchemas(rules, outname)
+  }
+
+  /**
+    * Autogenerate markdown documentation for a grammar, aggregating by _Type_ (i.e.,
+    * the Label from the internal Taxonomy).  This view of the grammar tells consumers what
+    * they can expect to see (or what they _could_ expect to see) in an Extraction/Mention of
+    * a given Type (or Label).
+    * @param input the String content of the simple yaml file
+    * @param outname output markdown file
+    */
+  def exportExtractionSchemasFromSimple(input: String, outname: String): Unit = {
+    val rules = rulesFromSimpleFile(input)
+    exportExtractionSchemas(rules, outname)
+  }
+
+  /**
+    * Autogenerate markdown documentation for a grammar, aggregating by _Type_ (i.e.,
+    * the Label from the internal Taxonomy).  This view of the grammar tells consumers what
+    * they can expect to see (or what they _could_ expect to see) in an Extraction/Mention of
+    * a given Type (or Label).
+    * @param rules grammar Rules
+    * @param outname output markdown file
+    */
+  def exportExtractionSchemas(rules: Seq[Rule], outname: String): Unit = {
     val extractors = mkExtractors(rules)
     val byLabel = rules.zip(extractors)
       .groupBy(_._2.label)
