@@ -23,7 +23,7 @@ object MarkdownGeneration {
       s"#### rule: _${extractor.name}_",
       "",
       s"attribute | value",
-      "-----  |   ---- ",
+      "-----  |   ---- "
     )
 
     val lines = extractor match {
@@ -76,7 +76,7 @@ object MarkdownGeneration {
       s"type   | `GraphExtractor` (${x.config.graph})",
       s"labels        |  ${labelsString(x.labels)}",
       s"priority      |  ${priorityString(x.priority)}",
-      s"keep          |  ${booleanString(x.keep)}",
+      s"keep          |  ${booleanString(x.keep)}"
     )
     if (r.action != DefaultAction) table.append(s"action | `${r.action}` ")
     table.append("")
@@ -129,7 +129,7 @@ object MarkdownGeneration {
       "<summary>Config variables</summary>",
       "",
       "**Attribute** | **Type** | **Value**",
-      "----|----|----",
+      "----|----|----"
     )
     val keys = map.keys.toList.sortWith(_ < _) // alphasort
     val body = keys.map( key =>  "%s | String | %s".format(key, map(key)) )
@@ -186,7 +186,7 @@ object MarkdownGeneration {
           "",
           "_Arguments_",
           "|name        | **label(s)**  | **quantifier(s)** | **required?**|",
-          "| :--------  | :----         | :----             | :---- ",
+          "| :--------  | :----         | :----             | :---- "
         )
       )
       val argLines = for {
