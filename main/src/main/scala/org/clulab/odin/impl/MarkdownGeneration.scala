@@ -61,7 +61,7 @@ object MarkdownGeneration {
       "type | `TokenExtractor`",
       s"labels    | ${labelsString(x.labels)}",
       s"priority  | ${priorityString(x.priority)}",
-      s"keep      | ${booleanString(x.keep)}",
+      s"keep      | ${booleanString(x.keep)}"
     )
     if (r.action != DefaultAction) table.append(s"action | `${r.action}` ")
     table.append("")
