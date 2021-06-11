@@ -69,6 +69,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
   }
 
+  /*
   lazy val mtlDepsHead: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
@@ -79,6 +80,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+  }
+  */
+  lazy val mtlDeps: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
   }
 
   // Although this uses no class members, the method is sometimes called from tests
@@ -190,21 +197,27 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
-    /*
-    val headsAsString = mtlDepsHead.predict(0, annotatedSentence)
-    println("REL HEADS: " + headsAsString.mkString(", "))
-    val heads = new ArrayBuffer[Int]()
-    for(i <- headsAsString.indices) {
-      val relativeHead = headsAsString(i).toInt
-      if(relativeHead == 0) { // this is the root
-        heads += -1
+    val headsAndLabels = mtlDeps.parse(annotatedSentence, embeddings)
+
+    val edges = new ListBuffer[Edge[String]]()
+    val roots = new mutable.HashSet[Int]()
+
+    for(i <- headsAndLabels.indices) {
+      val head = headsAndLabels(i)._1
+      val label = headsAndLabels(i)._2
+      if(head == -1) { // found a root
+        roots += i
       } else {
-        heads += i + relativeHead
+        val edge = Edge[String](head, i, label)
+        edges.append(edge)
       }
     }
-    */
 
-    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence, embeddings)
+    //
+    // Old algorithm, with separate models for heads and labels
+    //
+    /*
+    val headsAsStringsWithScores = mtlDeps.predictWithScores(0, annotatedSentence, embeddings)
     val heads = new ArrayBuffer[Int]()
     for(wi <- headsAsStringsWithScores.indices) {
       val predictionsForThisWord = headsAsStringsWithScores(wi)
@@ -254,6 +267,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         edges.append(edge)
       }
     }
+    */
 
     new DirectedGraph[String](edges.toList, roots.toSet)
   }

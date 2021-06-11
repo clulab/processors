@@ -1,4 +1,6 @@
 # Changes
++ **8.4.0** - Removed the discourse parser. Too much fat, and it is rarely used.
++ **8.4.0** - Faster CluProcessor: the syntactic parser now uses a multi-task learning model.
 + **8.3.6** - Moved the odin subproject in main. This way, we can add processors in main that rely on odin.
 + **8.3.5** - In CluProcessor manually close out the lookupParameters and collection to recover C++ memory sooner
 + **8.3.5** - Supply glove in a serialized format, kryo, for faster loading
