@@ -1,2 +1,49 @@
-# measurement units, case insensitive so everything is lower case for simplicity
-ha
+# measurement units, case insensitive so everything is lower case for simplicity. The first column is the actual name and the second column is its various forms. power is keep as it is now for simplicity.
+meter	m
+nanometer	nm
+femtometer	fm
+micrometer	mm
+inch	in
+foot	ft
+mile	mi
+yard	yd
+square meter	m2
+acre
+hectare	ha
+square kilometer	km2
+square centimeter	cm2
+square foot	ft2
+square inch	in2
+square mile	mi2
+square yard	yd2
+kilogram	kg
+gram	g
+milligram	mg
+grain	gr
+ounce	oz
+pennyweight	dwt
+pound	lb
+ton	tonne	t
+kilogram per square meter	kg/m2
+ounce per square foot	oz/ft2
+ounce per square inch	oz/in2
+ounce per square yard	oz/yard
+pound per square foot	lb/ft2
+pound per square inch	lb/in2
+kilogram per meter	kg/m
+gram per meter	g/m
+denier
+pound per foot lb/ft
+pound per inch	lb/in
+pound per yard	lb/yd
+kilogram per cubic meter kg/m3
+kilogram per liter kg/l
+milligram per cubic metric	mg/m3
+milligram per liter	mg/l
+gram per liter	g/l
+pound per cubic foot	lb/ft3
+pound per cubic inch	lb/in3
+pound per cubic yard	lb/yd3
+pound per gallon	lb/gal
+ounce per gallon	oz/gal
+ounce per cubic inch	oz/in3
