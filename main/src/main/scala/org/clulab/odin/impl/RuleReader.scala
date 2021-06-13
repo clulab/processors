@@ -490,7 +490,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     // export
     val pw = FileUtils.printWriterFromFile(new File(outname))
     pw.autoClose { pw =>
-      pw.println("# Odin Rule Schemas")
+      pw.println("# Odin Rule Schemas\n")
       markdownLines foreach pw.println
     }
   }
