@@ -192,7 +192,7 @@ object MarkdownGeneration {
       )
       val argLines = for {
         (name, patterns) <- argsByName
-        labels = labelsString(patterns.map(_.label))
+        labels = labelsString(patterns.map(_.label).distinct)
         possibleQuantifiers = quantifierString(patterns.map(_.quantifier))
         optionalities = booleanString(patterns.map(_.required))
       } yield s"| _${name}_ | ${labels} | ${possibleQuantifiers} | ${optionalities}"
