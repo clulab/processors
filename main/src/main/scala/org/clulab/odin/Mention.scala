@@ -87,6 +87,9 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   /** returns true if the StringMatcher matches any of the mention labels */
   def matches(matcher: StringMatcher): Boolean = labels exists matcher.matches
 
+  /** returns all raw (original, no processing applied) tokens in mention */
+  def raw: Seq[String] = sentenceObj.raw.slice(start, end)
+
   /** returns all tokens in mention */
   def words: Seq[String] = sentenceObj.words.slice(start, end)
 
@@ -140,10 +143,10 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     case Some(txt) => txt.slice(startOffset, endOffset)
     case None =>
       // try to reconstruct the sentence using the character offsets
-      val bits = words.head +: tokenInterval.drop(1).map { i =>
+      val bits = raw.head +: tokenInterval.drop(1).map { i =>
         val spaces = " " * (sentenceObj.startOffsets(i) - sentenceObj.endOffsets(i - 1))
-        val word = sentenceObj.words(i)
-        spaces + word
+        val rawWord = sentenceObj.raw(i)
+        spaces + rawWord
       }
       bits.mkString
   }
