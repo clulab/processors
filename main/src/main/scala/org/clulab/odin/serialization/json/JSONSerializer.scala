@@ -1,15 +1,12 @@
 package org.clulab.odin.serialization.json
 
 import java.io.File
-
-import scala.io.Source
-
 import org.clulab.processors.Document
 import org.clulab.struct.{DirectedGraph, Edge, Interval}
 import org.clulab.odin
 import org.clulab.odin._
 import org.clulab.serialization.json.DocOps
-
+import org.clulab.utils.FileUtils
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -35,12 +32,7 @@ object JSONSerializer {
     ("mentions" -> mentionList)
   }
 
-  def jsonAST(f: File): JValue = {
-    val source = Source.fromFile(f)
-    val contents = source.getLines.mkString
-    source.close()
-    parse(contents)
-  }
+  def jsonAST(f: File): JValue = parse(FileUtils.getTextFromFile(f))
 
   /** Produce a sequence of mentions from json */
   def toMentions(json: JValue): Seq[Mention] = {

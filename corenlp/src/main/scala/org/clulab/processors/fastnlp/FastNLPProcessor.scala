@@ -3,8 +3,6 @@ package org.clulab.processors.fastnlp
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 import org.clulab.processors.{Document, OpenIEAnnotator}
 import org.clulab.struct.GraphMap
-import org.clulab.discourse.rstparser.RSTParser
-import org.clulab.discourse.rstparser.Utils._
 import org.clulab.processors.corenlp.CoreNLPUtils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import edu.stanford.nlp.ling.CoreAnnotations
@@ -43,9 +41,6 @@ class FastNLPProcessor(
            withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) {
     this(None, internStrings, withChunks, withRelationExtraction, withDiscourse)
   }
-
-  /** RST discourse parser using only dependency based syntax */
-  lazy val rstDependencyParser: RSTParser = fetchRSTParser(RSTParser.DEFAULT_DEPENDENCYSYNTAX_MODEL_PATH)
 
   /** Stanford's NN dependency parser */
   lazy val stanfordDepParser: DependencyParser = fetchStanfordParser()
@@ -95,21 +90,8 @@ class FastNLPProcessor(
     }
   }
 
-  override def discourse(doc:Document) {
-    if(withDiscourse == ShallowNLPProcessor.NO_DISCOURSE) return
-    basicSanityCheck(doc, checkAnnotation = false)
-
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before discourse parsing!")
-    if(! hasDeps(doc.sentences.head))
-      throw new RuntimeException("ERROR: you have to run the dependency parser before discourse parsing!")
-
-    val out = rstDependencyParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
-    doc.discourseTree = Some(out._1)
-
-    //println("FOUND DISCOURSE TREE:\n" + out._1)
+  override def discourse(doc:Document): Unit = {
+    // no longer used
   }
 
   /** Semantic role labeling */
@@ -126,15 +108,6 @@ object FastNLPProcessor {
       if(stanfordDependencyParser.isEmpty)
         stanfordDependencyParser = Some(DependencyParser.loadFromModelFile(DependencyParser.DEFAULT_MODEL, new Properties()))
       stanfordDependencyParser.get
-    }
-  }
-
-  var rstParser:Option[RSTParser] = None
-
-  def fetchRSTParser(path:String):RSTParser = {
-    this.synchronized {
-      if(rstParser.isEmpty) rstParser = Some(RSTParser.loadFrom(path))
-      rstParser.get
     }
   }
 }

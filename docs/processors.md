@@ -6,7 +6,7 @@ nav_order: 3
 
 # Processors
 
-This library contains a suite of natural language processors that include tokenization, part-of-speech tagging, named entity recognition, syntactic parsing, semantic role labeling, and discourse parsing.
+This library contains a suite of natural language processors that include tokenization, part-of-speech tagging, named entity recognition, syntactic parsing, and semantic role labeling.
 
 We include a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) as well as a toolkit built in house. We currently provide the following APIs: 
 
@@ -30,8 +30,7 @@ import org.clulab.struct.DirectedGraphEdgeIterator
 
 // create the processor
 // any processor works here! Try FastNLPProcessor, or our own CluProcessor
-// use no arguments in the c'tor if you don't need the discourse parser
-val proc:Processor = new CoreNLPProcessor(ShallowNLPProcessor.WITH_DISCOURSE) 
+val proc:Processor = new CoreNLPProcessor() 
 
 // the actual work is done here
 val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")
@@ -86,11 +85,6 @@ doc.coreferenceChains.foreach(chains => {
   }
 })
 
-// let's print the discourse tree
-doc.discourseTree.foreach(dt => {
-  println("Document-wide discourse tree:")
-  println(dt.toString())
-})
 ```
 The above code generates the following output:
 
@@ -139,10 +133,6 @@ Found one coreference chain containing the following mentions:
 Found one coreference chain containing the following mentions:
   sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5 text: [China]
 
-Document-wide discourse tree:
-elaboration (LeftToRight)
-  TEXT:John Smith went to China .
-  TEXT:He visited Beijing , on January 10th , 2013 .
 ```
 
 For more details about the annotation data structures, please see the `org/clulab/processors/Document.scala` file.
@@ -241,7 +231,6 @@ def annotate(doc:Document): Document = {
   chunking(doc)
   labelSemanticRoles(doc)
   resolveCoreference(doc)
-  discourse(doc)
   doc.clear()
   doc
 }
@@ -324,7 +313,6 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
 package org.clulab.processors;
 
 
-import org.clulab.discourse.rstparser.DiscourseTree;
 import org.clulab.processors.fastnlp.FastNLPProcessor;
 import org.clulab.processors.corenlp.CoreNLPProcessor;
 import org.clulab.struct.CorefMention;
@@ -402,12 +390,6 @@ public class ProcessorsJavaExample {
                         " endTokenOffset:" + mention.endOffset());
                 }
             }
-        }
-	
-        // let's print the discourse tree
-        if(doc.discourseTree().isDefined()) {
-            DiscourseTree tree = doc.discourseTree().get();
-            System.out.println("Discourse tree:\n" + tree);
         }
     }
 
@@ -523,23 +505,4 @@ The output of this code is:
 		sentenceIndex:0 headIndex:4 startTokenOffset:4 endTokenOffset:5
     Found one coreference chain containing the following mentions:
 		sentenceIndex:1 headIndex:8 startTokenOffset:8 endTokenOffset:9
-    Discourse tree:
-    elaboration (LeftToRight)
-    	TEXT:John Smith went to China .
-        TEXT:He visited Beijing , on January 10th , 2013 .
-
-## The discourse parser
-
-The discourse parser in `processors` is inspired by the parser of [Feng and Hirst](http://www.cs.toronto.edu/~weifeng/software.html) and the HILDA parser of [Hernault et al.](http://elanguage.net/journals/dad/article/view/591), but with a different feature set.
-It is transparently integrated in both `CoreNLPProcessor` and `FastNLPProcessor`: just instantiate it as `CoreNLPProcessor(withDiscourse = true)` or `FastNLPProcessor(withDiscourse = true)`. If discourse is enabled, `Document.discourseTree` stores the discourse tree for the entire document as an instance of the `DiscourseTree` class.
-
-Following the conventions from other modern discourse parsing work, the discourse tree:
-+ Is represented as a binary tree, containing hypotactic relations (containing one nucleus and one satellite node) or paratactic relations (both nodes have equal importance).
-+ Stores the relation labels in the parent node (in `DiscourseTree.relationLabel`) rather than the satellite nodes (like the RST corpus). We use the same 18 labels as Feng and Hirst.
-+ Stores the relation direction in `DiscourseTree.relationDirection`. The direction can be `LeftToRight` (meaning the nucleus is the left child), `RightToLeft` (the right node is the nucleus), or `None` (for paratactic relations).
-
-Developers only: For more details on the discourse parsers, please see [this Wiki page](https://github.com/clulab/processors/wiki/Discourse-Parsers-Details).
-
-
-
 

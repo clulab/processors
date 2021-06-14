@@ -1,7 +1,6 @@
 package org.clulab.processors;
 
 
-import org.clulab.discourse.rstparser.DiscourseTree;
 import org.clulab.processors.fastnlp.FastNLPProcessor;
 import org.clulab.processors.corenlp.CoreNLPProcessor;
 import org.clulab.struct.CorefMention;
@@ -81,11 +80,6 @@ public class ProcessorsJavaExample {
             }
         }
 
-        // let's print the discourse tree
-        if(doc.discourseTree().isDefined()) {
-            DiscourseTree tree = doc.discourseTree().get();
-            System.out.println("Discourse tree:\n" + tree);
-        }
     }
 
     public static String mkString(String [] sa, String sep) {
