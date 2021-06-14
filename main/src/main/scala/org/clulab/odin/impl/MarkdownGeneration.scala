@@ -185,6 +185,7 @@ object MarkdownGeneration {
         List(
           "",
           "_Arguments_",
+          "",
           "|name        | **label(s)**  | **quantifier(s)** | **required?**|",
           "| :--------  | :----         | :----             | :---- "
         )

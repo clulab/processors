@@ -490,7 +490,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     // export
     val pw = FileUtils.printWriterFromFile(new File(outname))
     pw.autoClose { pw =>
-      pw.println("# Odin Rule Schemas")
+      pw.println("# Odin Rule Schemas\n")
       markdownLines foreach pw.println
     }
   }
@@ -542,7 +542,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
 
     val pw = FileUtils.printWriterFromFile(new File(outname))
     pw.autoClose { pw =>
-      pw.println(s"# Odin Extraction Schemas")
+      pw.println(s"# Odin Extraction Schemas\n")
       for (label <- order) {
         val rulesAndExtractorsForLabel = byLabel(label)
         val markdownLines = toMarkdown(label, rulesAndExtractorsForLabel)
