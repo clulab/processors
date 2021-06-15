@@ -7,16 +7,16 @@ object TempEvalFormatter {
   def mkDate(day: Option[Seq[String]], month: Option[Seq[String]], year: Option[Seq[String]]): String = {
     val dayValue =
       if(day.isEmpty) 0
-      else parse(day.get).toInt
+      else parse(day.get).get.toInt
 
     val monthValue =
       if(month.isEmpty) 0
       else if(month.get.head(0).isLetter) convertLiteralMonth(month.get.head)
-      else parse(month.get).toInt
+      else parse(month.get).get.toInt
 
     val yearValue =
       if(year.isEmpty) 0
-      else parse(year.get).toInt
+      else parse(year.get).get.toInt
 
     val dayAsString = formatNumber(dayValue, 2)
     val monthAsString = formatNumber(monthValue, 2)
