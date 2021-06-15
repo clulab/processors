@@ -37,36 +37,36 @@ object NumberParser {
         totalSum += billionMultiplier * americanNumberSystem("billion")
       }
       if (millionIndex > -1) {
-				var millionMultiplier: Int = 0
-				if (billionIndex > -1) {
-					millionMultiplier = numberFormation(cleanWords.slice(billionIndex+1, millionIndex))
-				} else {
-					millionMultiplier = numberFormation(cleanWords.slice(0, millionIndex))
-				}
-				totalSum += millionMultiplier * americanNumberSystem("million")
-			}
+        var millionMultiplier: Int = 0
+        if (billionIndex > -1) {
+          millionMultiplier = numberFormation(cleanWords.slice(billionIndex+1, millionIndex))
+        } else {
+          millionMultiplier = numberFormation(cleanWords.slice(0, millionIndex))
+        }
+        totalSum += millionMultiplier * americanNumberSystem("million")
+      }
       if (thousandIndex > -1) {
-				var thousandMultiplier: Int = 0
-				if (millionIndex > -1) {
-					thousandMultiplier = numberFormation(cleanWords.slice(millionIndex+1, thousandIndex))
-				} else if (billionIndex > -1 && millionIndex == -1) {
-					thousandMultiplier = numberFormation(cleanWords.slice(billionIndex+1, thousandIndex))
-				} else {
-					thousandMultiplier = numberFormation(cleanWords.slice(0, thousandIndex))
-				}
-				totalSum += thousandMultiplier * americanNumberSystem("thousand")
-			}
+        var thousandMultiplier: Int = 0
+        if (millionIndex > -1) {
+          thousandMultiplier = numberFormation(cleanWords.slice(millionIndex+1, thousandIndex))
+        } else if (billionIndex > -1 && millionIndex == -1) {
+          thousandMultiplier = numberFormation(cleanWords.slice(billionIndex+1, thousandIndex))
+        } else {
+          thousandMultiplier = numberFormation(cleanWords.slice(0, thousandIndex))
+        }
+        totalSum += thousandMultiplier * americanNumberSystem("thousand")
+      }
       var hundreds: Int = 0
-			if (thousandIndex > -1 && thousandIndex != cleanWords.size-1) {
-				hundreds = numberFormation(cleanWords.slice(thousandIndex+1, cleanWords.size))
-			} else if (millionIndex > -1 && millionIndex != cleanWords.size-1) {
-				hundreds = numberFormation(cleanWords.slice(millionIndex+1, cleanWords.size))
-			} else if (billionIndex > -1 && billionIndex != cleanWords.size-1) {
-				hundreds = numberFormation(cleanWords.slice(billionIndex+1, cleanWords.size))
-			} else if (thousandIndex == -1 && millionIndex == -1 && billionIndex == -1) {
-				hundreds = numberFormation(cleanWords)
-			}
-			totalSum += hundreds
+      if (thousandIndex > -1 && thousandIndex != cleanWords.size-1) {
+        hundreds = numberFormation(cleanWords.slice(thousandIndex+1, cleanWords.size))
+      } else if (millionIndex > -1 && millionIndex != cleanWords.size-1) {
+        hundreds = numberFormation(cleanWords.slice(millionIndex+1, cleanWords.size))
+      } else if (billionIndex > -1 && billionIndex != cleanWords.size-1) {
+        hundreds = numberFormation(cleanWords.slice(billionIndex+1, cleanWords.size))
+      } else if (thousandIndex == -1 && millionIndex == -1 && billionIndex == -1) {
+        hundreds = numberFormation(cleanWords)
+      }
+      totalSum += hundreds
     }
 
   return Some(totalSum)
