@@ -73,7 +73,7 @@ object NumberParser {
 
   }
 
-  def cleanNumber(words: Seq[String]): Vector[String] = {
+  def cleanNumber(words: Seq[String]): Array[String] = {
     val cleanWords = ArrayBuffer.empty[String]
     for (word <- words) {
       val w = word.toLowerCase()
@@ -81,10 +81,10 @@ object NumberParser {
         cleanWords += w
       }
     }
-    return cleanWords.toVector
+    return cleanWords.toArray
   }
 
-  def numberFormation(words: Vector[String]): Int = {
+  def numberFormation(words: Array[String]): Int = {
     val numbers = ArrayBuffer.empty[Int]
     for (w <- words) {
       numbers += americanNumberSystem(w)
@@ -102,7 +102,7 @@ object NumberParser {
     s.forall(_.isDigit)
   }
 
-  val decimalWords = Vector("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
+  val decimalWords = Array("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 
   // note that billions have 9 zeros
   val americanNumberSystem = Map[String, Int](
