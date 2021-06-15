@@ -3,23 +3,43 @@ package org.clulab.numeric
 import NumberParser._
 
 object TempEvalFormatter {
-  val NO_VALUE = "XXXX"
 
   def mkDate(day: Option[Seq[String]], month: Option[Seq[String]], year: Option[Seq[String]]): String = {
     val dayValue =
-      if(day.isEmpty) NO_VALUE
-      else parse(day.get).toInt.toString
+      if(day.isEmpty) 0
+      else parse(day.get).toInt
 
     val monthValue =
-      if(month.isEmpty) NO_VALUE
-      else if(month.get.head(0).isLetter) convertLiteralMonth(month.get.head).toString
-      else parse(month.get).toInt.toString
+      if(month.isEmpty) 0
+      else if(month.get.head(0).isLetter) convertLiteralMonth(month.get.head)
+      else parse(month.get).toInt
 
     val yearValue =
-      if(year.isEmpty) NO_VALUE
-      else parse(year.get).toInt.toString
+      if(year.isEmpty) 0
+      else parse(year.get).toInt
 
-    s"$yearValue-$monthValue-$dayValue"
+    val dayAsString = formatNumber(dayValue, 2)
+    val monthAsString = formatNumber(monthValue, 2)
+    val yearAsString = formatNumber(yearValue, 4)
+
+    s"$yearAsString-$monthAsString-$dayAsString"
+  }
+
+  private def formatNumber(v: Int, length: Int): String = {
+    if(v == 0) "X" * length
+    else {
+      val content = v.toString
+      val paddingLength = length - content.length
+      if(paddingLength > 0) {
+        // println(s"paddingLength for $v is $paddingLength")
+        val sb = new StringBuilder
+        sb.append("0" * paddingLength)
+        sb.append(content)
+        sb.toString()
+      } else {
+        content
+      }
+    }
   }
 
   private def convertLiteralMonth(s: String): Int = {
