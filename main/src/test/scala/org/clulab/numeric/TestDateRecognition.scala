@@ -15,8 +15,10 @@ class TestDateRecognition extends FlatSpec with Matchers {
   //
 
   "the numeric entity recognizer" should "recognize dates in the European format" in {
-    val (words, ents, norms) = numericParse("It is 12 May, 2000")
-    ensure(words, ents, norms, Interval(2, 6), "DATE", "2000-05-12")
+    // these should be captured by rules date-1 and date-2
+    ensure("It is 12 May, 2000", Interval(2, 6), "DATE", "2000-05-12")
+    ensure("It was May 2000", Interval(2, 4), "DATE", "2000-05-XX")
+    ensure("It was 25 May", Interval(2, 4), "DATE", "XXXX-05-25")
   }
 
   //
@@ -24,12 +26,12 @@ class TestDateRecognition extends FlatSpec with Matchers {
   //
 
   /** Makes sure that the given span has the right entity labels and norms */
-  def ensure(words: Array[String],
-             entities: Array[String],
-             norms: Array[String],
+  def ensure(sentence: String,
              span: Interval,
              goldEntity: String,
              goldNorm: String): Unit = {
+    val (words, entities, norms) = numericParse(sentence)
+
     println("Verifying the following text:")
     println("Words:    " + words.mkString(", "))
     println("Entities: " + entities.mkString(", "))
