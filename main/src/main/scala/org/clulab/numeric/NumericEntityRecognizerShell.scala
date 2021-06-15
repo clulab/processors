@@ -11,7 +11,11 @@ class NumericEntityRecognizerShell extends Shell {
   /** The actual work, including printing out the output */
   override def work(text: String): Unit = {
     val doc = proc.annotate(text)
-    ner.extractFrom(doc)
+    val mentions = ner.extractFrom(doc)
+
+    setLabelsAndNorms(doc, mentions)
+
+    displayMentions(mentions, doc)
   }
 }
 

@@ -1,8 +1,22 @@
 rules:
+  # European date format, with mandatory day
   - name: date-1
     label: Date
     priority: ${ rulepriority }
     type: token
+    example: "It was 12 May 2000"
+    action: mkDateMention
     pattern: |
-      @number:Number @month:PossibleMonth
+      @day:PossibleDay @month:PossibleMonth ","? ( @year:PossibleYear )?
+
+  # European date format, with mandatory year
+  - name: date-2
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May 2000"
+    action: mkDateMention
+    pattern: |
+      ( @month:PossibleMonth ","? )? @year:PossibleYear
+
 
