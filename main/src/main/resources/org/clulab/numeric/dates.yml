@@ -19,4 +19,20 @@ rules:
     pattern: |
       ( @month:PossibleMonth ","? )? @year:PossibleYear
 
+  # TODOs:
+  # rules for american dates: year month day: 2000, May 24 (same as above)
+
+  # Rule for YYYY-MM-DD (accepts -, :, / as separators)
+  - name: date-yyyy-mm-dd
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2021-06-15"
+    action: mkDateMentionYyyyMmDd
+    pattern: |
+      [word=/^(1\d\d\d|20\d\d)(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(0?[1-9]|[12]\d|3[01])$/]
+
+  # TODOs:
+  # expand rules for numeric dates: see the examples in our google doc
+  # default to American in case of ambiguities
 

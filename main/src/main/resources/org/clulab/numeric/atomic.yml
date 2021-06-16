@@ -14,7 +14,7 @@ rules:
     priority: ${ rulepriority }
     type: token
     pattern: |
-      [word=/^([1-9]|11|12)$/]
+      [word=/^([1-9]|1[012])$/]
 
   # measurement units, from the MEASUREMENT-UNIT lexicon
   - name: measurement-unit
@@ -40,13 +40,6 @@ rules:
     pattern: |
       [word=/^([1-9]|1\d|2\d|3[01])(st|nd|rd|th)?$/]
 
-  # catch all for all other numbers
-  - name: number
-    label: Number
-    priority: ${ rulepriority }
-    type: token
-    pattern: |
-      [tag=/CD/]+
 
 
 

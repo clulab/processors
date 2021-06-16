@@ -10,9 +10,14 @@ class NumericActions extends Actions {
   // local actions
   //
 
-  /** Constructs a DateMention */
+  /** Constructs a DateMention from a token pattern */
   def mkDateMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     mentions.map(_.toDateMention)
+  }
+
+  /** Constructs a DateMention from the yyyy-mm-dd single token */
+  def mkDateMentionYyyyMmDd(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateMentionYyyyMmDd)
   }
 
   //
