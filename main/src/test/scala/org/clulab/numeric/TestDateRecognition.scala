@@ -22,10 +22,15 @@ class TestDateRecognition extends FlatSpec with Matchers {
   }
 
   it should "recognize numeric dates" in {
-    // these should be captured by rules date-yyyy-mm-dd and TODO
+    // these should be captured by rule date-yyyy-mm-dd
     ensure("It is 2000:05:12", Interval(2, 3), "DATE", "2000-05-12")
     ensure("It is 2000/05/12", Interval(2, 3), "DATE", "2000-05-12")
     ensure("It is 2000-05-12", Interval(2, 3), "DATE", "2000-05-12")
+
+    // these should be captured by rule date-dd-mm-yyyy
+    ensure("It is 12/05/2000", Interval(2, 3), "DATE", "2000-05-12")
+    ensure("It is 12:05:2000", Interval(2, 3), "DATE", "2000-05-12")
+    ensure("It is 12-05-2000", Interval(2, 3), "DATE", "2000-05-12")
   }
 
   //

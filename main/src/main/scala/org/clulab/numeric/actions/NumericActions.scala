@@ -20,6 +20,11 @@ class NumericActions extends Actions {
     mentions.map(_.toDateMentionYyyyMmDd)
   }
 
+  /** Constructs a DateMention from the dd-mm-yyyy single token */
+  def mkDateMentionDdMmYyyy(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateMentionDdMmYyyy)
+  }
+
   //
   // global actions below this points
   //
