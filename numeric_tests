@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sbt 'testOnly org.clulab.numeric.TestDateRecognition'
+
