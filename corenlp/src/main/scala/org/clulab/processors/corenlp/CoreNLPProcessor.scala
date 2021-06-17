@@ -2,7 +2,6 @@ package org.clulab.processors.corenlp
 
 import java.util
 
-import org.clulab.discourse.rstparser.RSTParser
 import org.clulab.processors._
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct._
@@ -17,7 +16,6 @@ import edu.stanford.nlp.util.CoreMap
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel, IndexedWord}
 import edu.stanford.nlp.trees.{GrammaticalStructure, GrammaticalStructureFactory, SemanticHeadFinder, TreeCoreAnnotations, Tree => StanfordTree}
 import edu.stanford.nlp.semgraph.{SemanticGraph, SemanticGraphCoreAnnotations}
-import org.clulab.discourse.rstparser.Utils._
 import CoreNLPUtils._
 import edu.stanford.nlp.coref.CorefCoreAnnotations.CorefChainAnnotation
 import org.slf4j.{Logger, LoggerFactory}
@@ -49,8 +47,6 @@ class CoreNLPProcessor(
   }
 
   lazy val coref: StanfordCoreNLP = mkCoref
-
-  lazy val rstConstituentParser:RSTParser = CoreNLPProcessor.fetchParser(RSTParser.DEFAULT_CONSTITUENTSYNTAX_MODEL_PATH)
 
   //
   // we maintain our own copy of a LexicalizedParser to control which sentences are parsed
@@ -231,23 +227,8 @@ class CoreNLPProcessor(
     }
   }
 
-  override def discourse(doc:Document) {
-    if(withDiscourse == ShallowNLPProcessor.NO_DISCOURSE) return
-    basicSanityCheck(doc, checkAnnotation = false)
-
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before discourse parsing!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before discourse parsing!")
-    if(! hasDeps(doc.sentences.head))
-      throw new RuntimeException("ERROR: you have to run the dependency parser before discourse parsing!")
-    if(doc.sentences.head.syntacticTree.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the constituent parser before discourse parsing!")
-
-    val out = rstConstituentParser.parse(doc, withDiscourse == ShallowNLPProcessor.JUST_EDUS)
-    doc.discourseTree = Some(out._1)
-
-    //println("FOUND DISCOURSE TREE:\n" + out._1)
+  override def discourse(doc:Document): Unit = {
+    // no longer used
   }
 
   /** Semantic role labeling */
@@ -257,13 +238,5 @@ class CoreNLPProcessor(
 }
 
 object CoreNLPProcessor {
-  var rstParser:Option[RSTParser] = None
   val logger: Logger = LoggerFactory.getLogger(classOf[CoreNLPProcessor])
-
-  def fetchParser(path:String):RSTParser = {
-    this.synchronized {
-      if(rstParser.isEmpty) rstParser = Some(RSTParser.loadFrom(path))
-      rstParser.get
-    }
-  }
 }

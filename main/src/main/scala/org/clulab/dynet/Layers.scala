@@ -294,6 +294,71 @@ object Layers {
     labelsForTask
   }
 
+  def parse(layers: IndexedSeq[Layers],
+            sentence: AnnotatedSentence,
+            constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
+    val headsAndLabels =
+      // DyNet's computation graph is a static variable, so this block must be synchronized
+      Synchronizer.withComputationGraph("Layers.parse()") {
+        //
+        // first get the output of the layers that are shared between the two tasks
+        //
+        assert(layers(0).nonEmpty)
+        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
+
+        //
+        // now predict the heads (first task)
+        //
+        val headStates = layers(1).forwardFrom(sharedStates, None, doDropout = false)
+        val headEmissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(headStates)
+        val headScores = layers(1).finalLayer.get.inferenceWithScores(headEmissionScores)
+
+        // store the head values here
+        val heads = new ArrayBuffer[Int]()
+        for(wi <- headScores.indices) {
+          val predictionsForThisWord = headScores(wi)
+
+          // pick the prediction with the highest score, which is within the boundaries of the current sentence
+          var done = false
+          for(hi <- predictionsForThisWord.indices if ! done) {
+            try {
+              val relativeHead = predictionsForThisWord(hi)._1.toInt
+              if (relativeHead == 0) { // this is the root
+                heads += -1
+                done = true
+              } else {
+                val headPosition = wi + relativeHead
+                if (headPosition >= 0 && headPosition < sentence.size) {
+                  heads += headPosition
+                  done = true
+                }
+              }
+            } catch {
+              // some valid predictions may not be integers, e.g., "<STOP>" may be predicted by the sequence model
+              case e: NumberFormatException => done = false
+            }
+          }
+          if(! done) {
+            // we should not be here, but let's be safe
+            // if nothing good was found, assume root
+            heads += -1
+          }
+        }
+
+        //
+        // next, predict the labels using the predicted heads
+        //
+        val labelStates = layers(2).forwardFrom(sharedStates, Some(heads), doDropout = false)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)
+        val labels = layers(2).finalLayer.get.inference(emissionScores)
+        assert(labels.size == heads.size)
+
+        heads.zip(labels)
+      }
+
+    headsAndLabels
+  }
+
   def loss(layers: IndexedSeq[Layers],
            taskId: Int,
            sentence: AnnotatedSentence,

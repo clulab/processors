@@ -25,7 +25,7 @@ libraryDependencies ++= {
     "de.bwaldvogel"               % "liblinear"                % "2.30",
     "tw.edu.ntu.csie"             % "libsvm"                   % "3.23",
     // NLP tools used by CluProcessor
-    "org.antlr"                   % "antlr4-runtime"           % "4.6",   // for tokenization
+    "org.antlr"                   % "antlr4-runtime"           % "4.9.2",   // for tokenization
     "org.clulab"                  % "lemport"                  % "0.9.10", // Portuguese lemmatizer
     // logging
     "ch.qos.logback"              % "logback-classic"          % "1.0.10",
@@ -36,7 +36,7 @@ libraryDependencies ++= {
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
-    "org.clulab"                  % "processors-models"        % "0.1.9",
+    "org.clulab"                  % "processors-models"        % "0.1.10",
     "com.esotericsoftware"        % "kryo"                     % "5.1.1",
 
     // for odin

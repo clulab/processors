@@ -1,10 +1,10 @@
 package org.clulab.serialization.json
 
 import java.io.File
-
 import org.clulab.processors.DocumentAttachmentBuilderFromJson
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.{DirectedGraph, GraphMap}
+import org.clulab.utils.FileUtils
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -16,12 +16,9 @@ object JSONSerializer {
 
   implicit val formats = DefaultFormats
 
-  def jsonAST(f: File): JValue = {
-    val source = scala.io.Source.fromFile(f)
-    val contents = source.getLines.mkString
-    source.close()
-    parse(contents)
-  }
+  def jsonAST(s: String): JValue = parse(s)
+
+  def jsonAST(f: File): JValue = jsonAST(FileUtils.getTextFromFile(f))
 
   protected def addDocumentAttachments(doc: Document, jValue: JValue): Unit = {
     // See also DocumentSerializer for text version of nearly the same thing.
@@ -63,6 +60,7 @@ object JSONSerializer {
   }
   def toDocument(docHash: String, djson: JValue): Document = toDocument(djson \ docHash)
   def toDocument(f: File): Document = toDocument(jsonAST(f))
+  def toDocument(s: String): Document = toDocument(jsonAST(s))
 
   def toSentence(json: JValue): Sentence = {
 

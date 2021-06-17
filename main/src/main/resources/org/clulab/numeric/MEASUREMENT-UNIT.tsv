@@ -1,2 +1,9 @@
-# measurement units, case insensitive so everything is lower case for simplicity
+# measurement units, case insensitive so everything is lower case for simplicity. The first column is the actual name and the second column is its various forms. power is keep as it is now for simplicity.
+meter
+m
+square meter
+m2
+m 2
+acre
+hectare
 ha

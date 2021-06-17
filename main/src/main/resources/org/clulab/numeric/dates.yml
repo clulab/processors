@@ -1,10 +1,45 @@
 rules:
+  # European date format, with mandatory day
   - name: date-1
     label: Date
     priority: ${ rulepriority }
     type: token
+    example: "It was 12 May 2000"
+    action: mkDateMention
     pattern: |
-      @number:Number @month:PossibleMonth
+      @day:PossibleDay @month:PossibleMonth ","? ( @year:PossibleYear )?
 
+  # European date format, with mandatory year
+  - name: date-2
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May 2000"
+    action: mkDateMention
+    pattern: |
+      ( @month:PossibleMonth ","? )? @year:PossibleYear
+
+  # TODOs:
+  # rules for american dates: year month day: 2000, May 24 (same as above)
+
+  # Rule for YYYY-MM-DD (accepts -, :, / as separators)
+  - name: date-yyyy-mm-dd
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2021-06-15"
+    action: mkDateMentionYyyyMmDd
+    pattern: |
+      [word=/^(1\d\d\d|20\d\d)(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(0?[1-9]|[12]\d|3[01])$/]
+
+  # Rule for DD-MM-YYYY (accepts -, :, / as separators)
+  - name: date-dd-mm-yyyy
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 16-06-2021"
+    action: mkDateMentionDdMmYyyy
+    pattern: |
+      [word=/^(0?[1-9]|[12]\d|3[01])(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(1\d\d\d|20\d\d)$/]
 
 

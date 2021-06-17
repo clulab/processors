@@ -119,8 +119,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     var maxAvgAcc = 0.0
     var maxAvgF1 = 0.0
     var bestEpoch = 0
+    val allEpochScores = new ArrayBuffer[(Int, Double)]() // tuples of epoch number and overall score per epoch
     var epochPatience = taskManager.epochPatience
-
     for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
       logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
@@ -212,6 +212,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       val avgF1 = totalF1 / taskManager.taskCount
       logger.info(s"Average accuracy across ${taskManager.taskCount} tasks in epoch $epoch: $avgAcc")
       logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks in epoch $epoch: $avgPrec / $avgRec / $avgF1")
+      allEpochScores += Tuple2(epoch, avgF1)
 
       if(avgF1 > maxAvgF1) {
         maxAvgF1 = avgF1
@@ -228,11 +229,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
       save(s"$modelNamePrefix-epoch$epoch")
     }
-  }
 
-  /** Returns true if this contains at least 1 non-O label */
-  private def hasContent(labels: IndexedSeq[String]): Boolean = {
-    labels.exists(_ != "O")
+    // sort epochs in descending order of scores
+    val sortedEpochs = allEpochScores.sortBy(- _._2)
+    logger.info("Epochs in descending order of scores:")
+    for(t <- sortedEpochs) {
+      logger.info(s"Epoch #${t._1}: ${t._2}")
+    }
   }
 
   def batchBackprop(batchLosses: ExpressionVector, trainer: SafeTrainer): Float = {
@@ -331,6 +334,17 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
   }
 
+  /**
+    * Custom method for the parsing algorithm
+    * @param sentence Input sentence
+    * @param constEmbeddings Constant embeddings for this sentence
+    * @return Tuple of (head, label) for each word in the sentence
+    */
+  def parse(sentence: AnnotatedSentence,
+            constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
+    Layers.parse(model, sentence, constEmbeddings)
+  }
+
   def test(): Unit = {
     require(taskManagerOpt.isDefined)
 
@@ -376,6 +390,7 @@ object Metal {
     //
     // load the x2i meta data
     //
+    //println(s"Opening $x2iFilename")
     val layersSeq = Serializer.using(Utils.newSource(x2iFilename)) { source =>
       val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered

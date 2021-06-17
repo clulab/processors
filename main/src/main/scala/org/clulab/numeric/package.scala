@@ -1,5 +1,6 @@
 package org.clulab
 
+import org.clulab.numeric.mentions.DateMention
 import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.Document
 
@@ -51,4 +52,53 @@ package object numeric {
         }
     }
   }
+
+  /**
+    * Sets the entities and norms fields in each Sentence based on the given numeric mentions
+    * @param doc This document is modified in place
+    * @param mentions The numeric mentions previously extracted
+    */
+  def setLabelsAndNorms(doc: Document, mentions: Seq[Mention]): Unit = {
+    //
+    // initialize entities and norms
+    //
+    for(s <- doc.sentences) {
+      if(s.entities.isEmpty) {
+        s.entities = Some(new Array[String](s.size))
+        for(i <- s.entities.get.indices) {
+          s.entities.get(i) = "O"
+        }
+      }
+      if(s.norms.isEmpty) {
+        s.norms = Some(new Array[String](s.size))
+        for(i <- s.norms.get.indices) {
+          s.norms.get(i) = ""
+        }
+      }
+    }
+
+    //
+    // convert numeric entities to entity labels and norms
+    //
+    for(mention <- mentions) {
+      mention match {
+        case m: DateMention =>
+          val s = m.sentenceObj
+          val tokenInt = m.tokenInterval
+          var first = true
+          for(i <- tokenInt.indices) {
+            val prefix = if(first) "B-" else "I-"
+            s.entities.get(i) = prefix + m.neLabel
+            s.norms.get(i) = m.neNorm
+            first = false
+          }
+
+        // TODO: add measurement units here
+
+        case _ =>
+          // nothing to do for other mention types
+      }
+    }
+  }
+
 }

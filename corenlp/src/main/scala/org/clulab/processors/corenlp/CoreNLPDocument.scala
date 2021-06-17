@@ -1,6 +1,5 @@
 package org.clulab.processors.corenlp
 
-import org.clulab.discourse.rstparser.DiscourseTree
 import org.clulab.processors.{Document, Sentence}
 import edu.stanford.nlp.pipeline.Annotation
 import org.clulab.struct.CorefChains
@@ -27,13 +26,11 @@ object CoreNLPDocument {
   def apply(
     sentences: Array[Sentence],
     coref: Option[CorefChains],
-    dtree: Option[DiscourseTree],
     annotation: Option[Annotation],
     text: Option[String]
   ): CoreNLPDocument = {
     val coreDoc = new CoreNLPDocument(sentences)
     coreDoc.coreferenceChains = coref
-    coreDoc.discourseTree = dtree
     coreDoc.annotation = annotation
     coreDoc
   }

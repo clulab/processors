@@ -6,7 +6,6 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
 import com.typesafe.scalalogging.LazyLogging
-import org.clulab.discourse.rstparser.{DiscourseTree, RelationDirection, TokenOffset, TreeKind}
 import org.clulab.processors.DocumentAttachment
 import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, Sentence}
@@ -62,12 +61,6 @@ class DocumentSerializer extends LazyLogging {
       }
     } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT && bits(0) != START_ATTACHMENTS)
 
-    var discourse:Option[DiscourseTree] = None
-    if (bits(0) == START_DISCOURSE) {
-      discourse = Some(loadDiscourse(r))
-      bits = read(r)
-    }
-
     var text: Option[String] = None
     if (bits(0) == START_TEXT) {
       if (bits.length != 2)
@@ -113,7 +106,6 @@ class DocumentSerializer extends LazyLogging {
 
     val doc = Document(sents.toArray)
     doc.coreferenceChains = coref
-    doc.discourseTree = discourse
     doc.text = text
 
 
@@ -139,7 +131,7 @@ class DocumentSerializer extends LazyLogging {
   private def read(r:BufferedReader, howManyTokens:Int = 0): Array[String] = {
     val line = r.readLine()
     // println("READ LINE: [" + line + "]")
-    if (line.length == 0) return new Array[String](0)
+    if (line.isEmpty) return new Array[String](0)
     line.split(SEP, howManyTokens)
   }
 
@@ -304,11 +296,6 @@ class DocumentSerializer extends LazyLogging {
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
     }
 
-    if (doc.discourseTree.nonEmpty) {
-      os.println(START_DISCOURSE)
-      doc.discourseTree.foreach(d => saveDiscourse(d, os))
-    }
-
     if (keepText && doc.text.nonEmpty) {
       val txtLen = doc.text.get.length
       if (txtLen > 0) {
@@ -471,68 +458,6 @@ class DocumentSerializer extends LazyLogging {
       os.println(edge._1 + SEP + edge._2 + SEP + edge._3)
     }
     os.println(END_OF_DEPENDENCIES)
-  }
-
-  private def loadDiscourse(r:BufferedReader):DiscourseTree = {
-    val bits = read(r, 12)
-    if(bits.length != 12)
-      throw new RuntimeException(s"ERROR: found ${bits.length} tokens in invalid discourse tree line: " + bits.mkString(" "))
-    val label = bits(0) match {
-      case "nil" => ""
-      case _ => bits(0)
-    }
-    val dir = bits(1) match {
-      case "LeftToRight" => RelationDirection.LeftToRight
-      case "RightToLeft" => RelationDirection.RightToLeft
-      case "None" => RelationDirection.None
-      case _ => throw new RuntimeException("ERROR: unknown relation direction " + bits(1))
-    }
-    val charOffsets = (bits(2).toInt, bits(3).toInt)
-    val firstToken = TokenOffset(bits(4).toInt, bits(5).toInt)
-    val lastToken = TokenOffset(bits(6).toInt, bits(7).toInt)
-    val firstEDU = bits(8).toInt
-    val lastEDU = bits(9).toInt
-    val childrenCount = bits(10).toInt
-    val children:Array[DiscourseTree] = childrenCount match {
-      case 0 => null
-      case _ => new Array[DiscourseTree](childrenCount)
-    }
-    val text:String = bits(11) match {
-      case "nil" => null
-      case _ => bits(11)
-    }
-
-    val d = new DiscourseTree(
-      label, dir,
-      children,
-      TreeKind.Nucleus, // not used
-      text,
-      charOffsets,
-      firstToken,
-      lastToken,
-      firstEDU,
-      lastEDU)
-
-    for(i <- 0 until childrenCount) {
-      d.children(i) = loadDiscourse(r)
-    }
-
-    d
-  }
-
-  private def saveDiscourse(d:DiscourseTree, os:PrintWriter) {
-    var childrenCount = 0
-    if(! d.isTerminal) childrenCount = d.children.length
-    var label = d.relationLabel
-    if(label == "") label = "nil"
-    var text = d.rawText
-    if(text == null) text = "nil"
-    os.println(s"$label\t${d.relationDirection}\t${d.charOffsets._1}\t${d.charOffsets._2}\t${d.firstToken.sentence}\t${d.firstToken.token}\t${d.lastToken.sentence}\t${d.lastToken.token}\t${d.firstEDU}\t${d.lastEDU}\t$childrenCount\t$text")
-    if(childrenCount > 0) {
-      for(c <- d.children) {
-        saveDiscourse(c, os)
-      }
-    }
   }
 
   private def saveCoref(cg:CorefChains, os:PrintWriter) {

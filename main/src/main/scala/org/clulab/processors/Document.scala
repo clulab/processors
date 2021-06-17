@@ -2,7 +2,6 @@ package org.clulab.processors
 
 import java.io.PrintWriter
 
-import org.clulab.discourse.rstparser.DiscourseTree
 import org.clulab.struct.{CorefChains, DirectedGraphEdgeIterator}
 import org.clulab.utils.Serializer
 import org.json4s.JString
@@ -24,9 +23,6 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
 
   /** Clusters of coreferent mentions */
   var coreferenceChains: Option[CorefChains] = None
-
-  /** The RST discourse tree for this text */
-  var discourseTree: Option[DiscourseTree] = None
 
   /** The original text corresponding to this document, if it was preserved by the corresponding processor */
   var text: Option[String] = None
@@ -189,11 +185,6 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
       }
     })
 
-    // let's print the discourse tree
-    discourseTree.foreach(dt => {
-      pw.println("Document-wide discourse tree:")
-      pw.println(dt.toString())
-    })
   }
 }
 
@@ -201,18 +192,17 @@ object Document {
 
   def apply(sentences: Array[Sentence]): Document = new Document(sentences)
 
-  def apply(id: Option[String], sentences: Array[Sentence], coref: Option[CorefChains], dtree: Option[DiscourseTree], text: Option[String]): Document = {
+  def apply(id: Option[String], sentences: Array[Sentence], coref: Option[CorefChains], text: Option[String]): Document = {
     val d = Document(sentences)
     d.id = id
     d.coreferenceChains = coref
-    d.discourseTree = dtree
     d.text = text
     d
   }
 
   /** Return a new Document with relevant fields copied from the given Document. */
   def apply (doc: Document): Document =
-    Document(doc.id, doc.sentences, doc.coreferenceChains, doc.discourseTree, doc.text)
+    Document(doc.id, doc.sentences, doc.coreferenceChains, doc.text)
 
 }
 

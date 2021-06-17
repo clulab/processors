@@ -22,7 +22,8 @@ PARENS: '-LRB-' | '-RRB-' | '-LCB-' | '-RCB-' | '-LSB-' | '-RSB-';
 QUOTES: '"' | '``' | '\'\'' | '\u2018' | '\u201c' | '\u2019' | '\u201d';
 
 // common date formats
-DATE: ONE_TO_TWO_DIGITS ('-'|'/') ONE_TO_TWO_DIGITS ('-'|'/') TWO_TO_FOUR_DIGITS;
+DATE1: ONE_TO_TWO_DIGITS ('-'|'/'|':') ONE_TO_TWO_DIGITS ('-'|'/'|':') TWO_TO_FOUR_DIGITS;
+DATE2: FOUR_DIGITS ('-'|'/'|':') ONE_TO_TWO_DIGITS ('-'|'/'|':') ONE_TO_TWO_DIGITS;
 
 // positive or negative numbers
 NUMBER: ('-'|'+')? NUM;
@@ -95,6 +96,7 @@ fragment NUM: DIGIT+ | (DIGIT* (('.'|':'|','|'\u00AD'|'\u066B'|'\u066C') DIGIT+)
 fragment ONE_TO_TWO_DIGITS: DIGIT DIGIT?;
 fragment TWO_TO_FOUR_DIGITS: DIGIT DIGIT DIGIT? DIGIT?;
 fragment ONE_TO_FOUR_DIGITS: DIGIT DIGIT? DIGIT? DIGIT?;
+fragment FOUR_DIGITS: DIGIT DIGIT DIGIT DIGIT;
 fragment PUNCTUATION: '.'|'?'|'!'|';'|',';
 fragment FILENAME_EXT:  'bat'|'bmp'|'c'|'class'|'cgi'|'cpp'|'dll'|'doc'|'docx'|'exe'|'gif'|'gz'|'h'|'htm'|'html'|'jar'|'java'|'jpeg'|'jpg'|'mov'|'mp3'|'pdf'|'php'|'pl'|'png'|'ppt'|'pptx'|'ps'|'py'|'scala'|'sql'|'tar'|'tgz'|'txt'|'wav'|'xml'|'zip';
 fragment URL_BLOCK1: ~(' '|'\t'|'\n'|'\f'|'\r'|'"'|'<'|'>'|'|'|'('|')'|'{'|'}');
