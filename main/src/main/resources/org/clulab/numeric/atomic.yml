@@ -1,0 +1,45 @@
+rules:
+
+  # month names
+  - name: month-name-1
+    label: PossibleMonth
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [entity=/B-MONTH/] [entity=/I-MONTH/]*
+
+  # month values, 1 to 12
+  - name: month-values
+    label: PossibleMonth
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [word=/^([1-9]|1[012])$/]
+
+  # measurement units, from the MEASUREMENT-UNIT lexicon
+  - name: measurement-unit
+    label: MeasurementUnit
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [entity=/B-MEASUREMENT-UNIT/] [entity=/I-MEASUREMENT-UNIT/]*
+
+  # possible years, from 1ddd to 20dd
+  - name: year
+    label: PossibleYear
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [word=/^(1\d\d\d|20\d\d)$/]
+
+  # possible day values, from 1 to 31
+  - name: day
+    label: PossibleDay
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [word=/^([1-9]|1\d|2\d|3[01])(st|nd|rd|th)?$/]
+
+
+
+

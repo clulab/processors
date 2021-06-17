@@ -45,6 +45,9 @@ extends IndexedSeq[Int] with Ordered[Interval] with Serializable {
       this.start < that.end
     } else true
 
+  override def indices: Range = {
+    new Range(start, end, step = 1)
+  }
 }
 
 private[struct] object Empty extends Interval(0, 0) {
