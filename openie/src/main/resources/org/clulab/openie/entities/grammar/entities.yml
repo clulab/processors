@@ -1,4 +1,4 @@
-taxonomy: org/clulab/openie/entities/grammar/master.yml
+taxonomy: org/clulab/openie/entities/grammar/taxonomy.yml
 
 rules:
   - name: simple-np
