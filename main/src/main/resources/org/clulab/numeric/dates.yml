@@ -19,8 +19,29 @@ rules:
     pattern: |
       ( @month:PossibleMonth ","? )? @year:PossibleYear
 
-  # TODOs:
-  # rules for american dates: year month day: 2000, May 24 (same as above)
+  # American dates format, with mandatory day:
+  - name: date-3
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2000, May 12"
+    action: mkDateMention
+    pattern: |
+      ( @year:PossibleYear  ","? )? @month:PossibleMonth @day:PossibleDay
+
+  # American date format, with mandatory year
+  - name: date-4
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2000"
+    action: mkDateMention
+    pattern: |
+      @year:PossibleYear ( ","? @month:PossibleMonth )?
+
+  # TODOs:    
+  # American date format: It is the 13th of May, 2020
+
 
   # Rule for YYYY-MM-DD (accepts -, :, / as separators)
   - name: date-yyyy-mm-dd
