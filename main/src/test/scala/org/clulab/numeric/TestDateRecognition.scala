@@ -21,12 +21,12 @@ class TestDateRecognition extends FlatSpec with Matchers {
   }
 
   // these should be captured by rules date-3 and date-4
-  // "the numeric entity recognizer" should "recognize dates in the American format" in {
-  //   ensure("It is 2000, May 12", Interval(2, 6), "DATE", "2000-05-12")
-  //   ensure("It was May 31", Interval(2, 4), "DATE", "XXXX-05-31")
-  //   ensure("It was 2000", Interval(2,3), "DATE", "2000-XX-XX")
-  //   ensure("It was 2000, May", Interval(2, 5), "DATE", "2000-05-XX")
-  // }
+   it should "recognize dates in the American format" in {
+     ensure("It is 2000, May 12", Interval(2, 6), "DATE", "2000-05-12")
+     ensure("It was May 31", Interval(2, 4), "DATE", "XXXX-05-31")
+     ensure("It was 2000", Interval(2,3), "DATE", "2000-XX-XX")
+     ensure("It was 2000, May", Interval(2, 5), "DATE", "2000-05-XX")
+   }
 
   it should "recognize numeric dates" in {
     // these should be captured by rule date-yyyy-mm-dd
