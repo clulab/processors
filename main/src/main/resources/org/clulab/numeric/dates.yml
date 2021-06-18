@@ -37,9 +37,9 @@ rules:
     example: "It was 2000"
     action: mkDateMention
     pattern: |
-      @year:PossibleYear ","?  ( @month:PossibleMonth )? @month:PossibleMonth @day:PossibleDay 
+      @year:PossibleYear ","?  ( @month:PossibleMonth )? ( @day:PossibleDay )? 
 
-  # TODOs[Mihai]:    
+  # TODOs:    
   # American date format: It is the 13th of May, 2020
 
 

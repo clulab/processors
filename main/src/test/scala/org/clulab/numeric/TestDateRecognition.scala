@@ -11,15 +11,22 @@ class TestDateRecognition extends FlatSpec with Matchers {
   val proc = new CluProcessor()
 
   //
-  // unit tests here
+  // unit tests starts here
   //
-
+  // these should be captured by rules date-1 and date-2
   "the numeric entity recognizer" should "recognize dates in the European format" in {
-    // these should be captured by rules date-1 and date-2
     ensure("It is 12 May, 2000", Interval(2, 6), "DATE", "2000-05-12")
     ensure("It was May 2000", Interval(2, 4), "DATE", "2000-05-XX")
     ensure("It was 25 May", Interval(2, 4), "DATE", "XXXX-05-25")
   }
+
+  // these should be captured by rules date-3 and date-4
+  // "the numeric entity recognizer" should "recognize dates in the American format" in {
+  //   ensure("It is 2000, May 12", Interval(2, 6), "DATE", "2000-05-12")
+  //   ensure("It was May 31", Interval(2, 4), "DATE", "XXXX-05-31")
+  //   ensure("It was 2000", Interval(2,3), "DATE", "2000-XX-XX")
+  //   ensure("It was 2000, May", Interval(2, 5), "DATE", "2000-05-XX")
+  // }
 
   it should "recognize numeric dates" in {
     // these should be captured by rule date-yyyy-mm-dd
@@ -32,6 +39,7 @@ class TestDateRecognition extends FlatSpec with Matchers {
     ensure("It is 12:05:2000", Interval(2, 3), "DATE", "2000-05-12")
     ensure("It is 12-05-2000", Interval(2, 3), "DATE", "2000-05-12")
   }
+  // End unit tests for date recognition.
 
   //
   // Help methods below this point
