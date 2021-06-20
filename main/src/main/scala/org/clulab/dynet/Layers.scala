@@ -6,15 +6,29 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
  */
-class Layers (val initialLayer: Option[InitialLayer],
-              val intermediateLayers: IndexedSeq[IntermediateLayer],
-              val finalLayer: Option[FinalLayer]) extends Saveable {
+case class Layers (initialLayer: Option[InitialLayer],
+              intermediateLayers: IndexedSeq[IntermediateLayer],
+              finalLayer: Option[FinalLayer]) extends Saveable with Cloneable {
+
+  override def clone(): Layers = {
+    Layers.logger.debug(s"Cloning layers: $toString...")
+    val clonedInitialLayer:Option[InitialLayer] = initialLayer.map(_.clone())
+    val clonedIntermediateLayers:IndexedSeq[IntermediateLayer] = intermediateLayers.map(_.clone())
+    val clonedFinalLayer: Option[FinalLayer] = finalLayer.map(_.clone())
+
+    copy(
+      initialLayer = clonedInitialLayer,
+      intermediateLayers = clonedIntermediateLayers,
+      finalLayer = clonedFinalLayer
+    )
+  }
 
   def outDim: Option[Int] = {
     if(finalLayer.nonEmpty) {
@@ -117,6 +131,8 @@ class Layers (val initialLayer: Option[InitialLayer],
 }
 
 object Layers {
+  val logger: Logger = LoggerFactory.getLogger(classOf[Layers])
+
   def apply(config: Configured,
             paramPrefix: String,
             parameters: ParameterCollection,
@@ -239,9 +255,7 @@ object Layers {
                              constEmbeddings: ConstEmbeddingParameters,
                              doDropout: Boolean): ExpressionVector = {
     //
-    // make sure this code is:
-    //   (a) called inside a synchronized block, and
-    //   (b) called after the computational graph is renewed (see predict below for correct usage)
+    // make sure this code is called after the computational graph is renewed (see predict below for correct usage)
     //
 
     val states = {

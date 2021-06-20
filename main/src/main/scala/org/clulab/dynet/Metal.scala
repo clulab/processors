@@ -24,9 +24,16 @@ import Metal._
  */
 class Metal(val taskManagerOpt: Option[TaskManager],
             val parameters: ParameterCollection,
-            modelOpt: Option[IndexedSeq[Layers]]) {
+            modelOpt: Option[IndexedSeq[Layers]],
+            val multiThreaded: Boolean) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
+
+  // Model to be used only during inference, and only if the configuration indicates multi-threaded execution
+  protected lazy val multiThreadedModel: ThreadLocal[IndexedSeq[Layers]] =
+    ThreadLocal.withInitial(new LayersSupplier(model))
+
+  protected def getInferenceModel: IndexedSeq[Layers] = if(multiThreaded) multiThreadedModel.get() else model
 
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {
@@ -291,7 +298,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val goldLabels = as._2
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+        val preds = Layers.predict(getInferenceModel, taskId, sentence, constEmbeddings)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
@@ -319,19 +326,19 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   // this only supports basic tasks for now
   def predictJointly(sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, sentence, constEmbeddings)
+    Layers.predictJointly(getInferenceModel, sentence, constEmbeddings)
   }
 
   def predict(taskId: Int,
               sentence: AnnotatedSentence,
               constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence, constEmbeddings)
+    Layers.predict(getInferenceModel, taskId, sentence, constEmbeddings)
   }
 
   def predictWithScores(taskId: Int,
                         sentence: AnnotatedSentence,
                         constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+    Layers.predictWithScores(getInferenceModel, taskId, sentence, constEmbeddings)
   }
 
   /**
@@ -416,22 +423,23 @@ object Metal {
   def apply(modelFilenamePrefix: String, taskManager: TaskManager): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
-    val mtl = new Metal(Some(taskManager), parameters, Some(model))
+    val mtl = new Metal(Some(taskManager), parameters, Some(model), multiThreaded = true)
     mtl
   }
 
   def apply(modelFilenamePrefix: String): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
-    val mtl = new Metal(None, parameters, Some(model))
+    val mtl = new Metal(None, parameters, Some(model), multiThreaded = true)
     mtl
   }
 
   def main(args: Array[String]): Unit = {
     val props = StringUtils.argsToProperties(args)
-    initializeDyNet() // autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
+    val train = props.containsKey("train")
+    initializeDyNet(train) // autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
 
-    if(props.containsKey("train")) {
+    if(train) {
       assert(props.containsKey("conf"))
       val configName = props.getProperty("conf")
       val config = ConfigFactory.load(configName)
@@ -439,7 +447,7 @@ object Metal {
       val taskManager = new TaskManager(config)
       val modelName = props.getProperty("train")
 
-      val mtl = new Metal(Some(taskManager), parameters, None)
+      val mtl = new Metal(Some(taskManager), parameters, None, multiThreaded = false)
       mtl.train(modelName)
     }
 

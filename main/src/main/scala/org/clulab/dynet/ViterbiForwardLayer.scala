@@ -5,18 +5,20 @@ import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupPara
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
-class ViterbiForwardLayer(parameters:ParameterCollection,
-                          inputSize: Int,
-                          isDual: Boolean,
-                          t2i: Map[String, Int],
-                          i2t: Array[String],
-                          H: Parameter,
-                          val T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
-                          rootParam: Parameter,
-                          span: Option[Seq[(Int, Int)]],
-                          nonlinearity: Int,
-                          dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, span, nonlinearity, dropoutProb) {
+case class ViterbiForwardLayer(override val parameters:ParameterCollection,
+  override val inputSize: Int,
+  override val isDual: Boolean,
+  override val t2i: Map[String, Int],
+  override val i2t: Array[String],
+  override val H: Parameter,
+                          T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
+  override val rootParam: Parameter,
+  override val spans: Option[Seq[(Int, Int)]],
+  override val nonlinearity: Int,
+  override val dropoutProb: Float
+) extends ForwardLayer {
+
+  override def clone(): ViterbiForwardLayer = this
 
   // call this *before* training a model, but not on a saved model
   def initializeTransitions(): Unit = {
@@ -74,7 +76,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if(isDual) 1 else 0, "isDual")
-    save(printWriter, if(span.nonEmpty) spanToString(span.get) else "", "span")
+    save(printWriter, if(spans.nonEmpty) spanToString(spans.get) else "", "span")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")

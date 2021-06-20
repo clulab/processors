@@ -41,21 +41,27 @@ object Utils {
 
   private var IS_DYNET_INITIALIZED = false
 
-  def initializeDyNet(autoBatch: Boolean = false, mem: String = ""): Unit = {
+  def initializeDyNetForInference(): Unit = {
+    initializeDyNet(train = false)
+  }
+
+  // If not training, then dynet is free to run in parallel.
+  def initializeDyNet(train: Boolean = false, autoBatch: Boolean = false, mem: String = ""): Unit = {
     // At the very least, IS_DYNET_INITIALIZED must be protected.
     Utils.synchronized {
       if (!IS_DYNET_INITIALIZED) {
         logger.debug("Initializing DyNet...")
 
-        val params = new mutable.HashMap[String, Any]()
-        params += "random-seed" -> RANDOM_SEED
-        params += "weight-decay" -> WEIGHT_DECAY
-        if (autoBatch) {
-          params += "autobatch" -> 1
-          params += "dynet-mem" -> mem
-        }
+        val map = Map(
+          Initializer.RANDOM_SEED -> RANDOM_SEED,
+          Initializer.WEIGHT_DECAY -> WEIGHT_DECAY,
+          Initializer.FORWARD_ONLY -> { if (train) 0 else 1 },
+          Initializer.AUTOBATCH -> { if (autoBatch) 1 else 0 },
+          Initializer.DYNAMIC_MEM -> !train,
+          Initializer.DYNET_MEM -> { if (mem != null && mem.length > 0) mem else "2048" }
+        )
 
-        Initializer.initialize(params.toMap)
+        Initializer.initialize(map)
         logger.debug("DyNet initialization complete.")
         IS_DYNET_INITIALIZED = true
       }
@@ -894,6 +900,13 @@ object Utils {
     } else {
       expression
     }
+  }
+
+  def cloneBuilder(builder: RnnBuilder): RnnBuilder = {
+    val newBuilder = builder.clone()
+
+    newBuilder.newGraph()
+    newBuilder
   }
 }
 

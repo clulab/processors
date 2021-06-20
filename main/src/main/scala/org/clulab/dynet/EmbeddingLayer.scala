@@ -17,30 +17,37 @@ import scala.util.Random
  * This layer takes a sequence of words and produces a sequence of Expression that stores the words' full embeddings
  * @author Mihai
  */
-class EmbeddingLayer (val parameters:ParameterCollection,
-                      val w2i:Map[String, Int], // word to index
-                      val w2f:Counter[String], // word to frequency
-                      val c2i:Map[Char, Int], // character to index
-                      val tag2i:Option[Map[String, Int]], // POS tag to index
-                      val ne2i:Option[Map[String, Int]], // NE tag to index
-                      val learnedWordEmbeddingSize: Int, // size of the learned word embedding
-                      val charEmbeddingSize: Int, // size of the character embedding
-                      val charRnnStateSize: Int, // size of each one of the char-level RNNs
-                      val posTagEmbeddingSize: Int, // size of the POS tag embedding
-                      val neTagEmbeddingSize: Int, // size of the NE tag embedding
-                      val distanceEmbeddingSize: Int,
-                      val distanceWindowSize: Int, // window considered for distance values (relative to predicate)
-                      val positionEmbeddingSize: Int,
-                      val useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
-                      val wordLookupParameters:LookupParameter,
-                      val charLookupParameters:LookupParameter,
-                      val charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
-                      val charBwRnnBuilder:RnnBuilder,
-                      val posTagLookupParameters:Option[LookupParameter],
-                      val neTagLookupParameters:Option[LookupParameter],
-                      val distanceLookupParameters:Option[LookupParameter],
-                      val positionLookupParameters:Option[LookupParameter],
-                      val dropoutProb: Float) extends InitialLayer {
+case class EmbeddingLayer (parameters:ParameterCollection,
+                      w2i:Map[String, Int], // word to index
+                      w2f:Counter[String], // word to frequency
+                      c2i:Map[Char, Int], // character to index
+                      tag2i:Option[Map[String, Int]], // POS tag to index
+                      ne2i:Option[Map[String, Int]], // NE tag to index
+                      learnedWordEmbeddingSize: Int, // size of the learned word embedding
+                      charEmbeddingSize: Int, // size of the character embedding
+                      charRnnStateSize: Int, // size of each one of the char-level RNNs
+                      posTagEmbeddingSize: Int, // size of the POS tag embedding
+                      neTagEmbeddingSize: Int, // size of the NE tag embedding
+                      distanceEmbeddingSize: Int,
+                      distanceWindowSize: Int, // window considered for distance values (relative to predicate)
+                      positionEmbeddingSize: Int,
+                      useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
+                      wordLookupParameters:LookupParameter,
+                      charLookupParameters:LookupParameter,
+                      charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
+                      charBwRnnBuilder:RnnBuilder,
+                      posTagLookupParameters:Option[LookupParameter],
+                      neTagLookupParameters:Option[LookupParameter],
+                      distanceLookupParameters:Option[LookupParameter],
+                      positionLookupParameters:Option[LookupParameter],
+                      dropoutProb: Float) extends InitialLayer {
+
+  override def clone(): EmbeddingLayer = {
+    copy(
+      charFwRnnBuilder = cloneBuilder(charFwRnnBuilder),
+      charBwRnnBuilder = cloneBuilder(charBwRnnBuilder)
+    )
+  }
 
   override def forward(sentence: AnnotatedSentence,
                        constEmbeddings: ConstEmbeddingParameters,

@@ -9,17 +9,21 @@ import org.clulab.utils.Configured
 
 import scala.collection.mutable.ArrayBuffer
 
-abstract class ForwardLayer (val parameters:ParameterCollection,
-                             val inputSize: Int,
-                             val isDual: Boolean,
-                             val t2i: Map[String, Int],
-                             val i2t: Array[String],
-                             val H: Parameter,
-                             val rootParam: Parameter,
-                             val spans: Option[Seq[(Int, Int)]],
-                             val nonlinearity: Int,
-                             val dropoutProb: Float)
-  extends FinalLayer {
+abstract class ForwardLayer extends FinalLayer {
+
+  //
+  // all these accessor methods will be redefined as vals in the children classes
+  //
+  def parameters:ParameterCollection
+  def inputSize: Int
+  def isDual: Boolean
+  def t2i: Map[String, Int]
+  def i2t: Array[String]
+  def H: Parameter
+  def rootParam: Parameter
+  def spans: Option[Seq[(Int, Int)]]
+  def nonlinearity: Int
+  def dropoutProb: Float
 
   def pickSpan(v: Expression): Expression = {
     if(spans.isEmpty) {
@@ -111,7 +115,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 }
 
 object ForwardLayer {
-  val logger: Logger = LoggerFactory.getLogger(classOf[ViterbiForwardLayer])
+  val logger: Logger = LoggerFactory.getLogger(classOf[ForwardLayer])
 
   val DEFAULT_DROPOUT_PROB: Float = Utils.DEFAULT_DROPOUT_PROBABILITY
 

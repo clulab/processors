@@ -12,15 +12,22 @@ import org.clulab.utils.Configured
  * This layer applies a biLSTM over the sequence of Expressions produced by a previous layer
  * @author Mihai
  */
-class RnnLayer (val parameters:ParameterCollection,
-                val inputSize: Int,
-                val numLayers: Int,
-                val rnnStateSize: Int,
-                val useHighwayConnections: Boolean,
-                val rnnType: String, // "gru" or "lstm"
-                val wordFwRnnBuilder:RnnBuilder,
-                val wordBwRnnBuilder:RnnBuilder,
-                val dropoutProb: Float) extends IntermediateLayer {
+case class RnnLayer (parameters:ParameterCollection,
+                inputSize: Int,
+                numLayers: Int,
+                rnnStateSize: Int,
+                useHighwayConnections: Boolean,
+                rnnType: String, // "gru" or "lstm"
+                wordFwRnnBuilder:RnnBuilder,
+                wordBwRnnBuilder:RnnBuilder,
+                dropoutProb: Float) extends IntermediateLayer {
+
+  override def clone(): RnnLayer = {
+    copy(
+      wordFwRnnBuilder = cloneBuilder(wordFwRnnBuilder),
+      wordBwRnnBuilder = cloneBuilder(wordBwRnnBuilder)
+    )
+  }
 
   override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
     setRnnDropout(wordFwRnnBuilder, dropoutProb, doDropout)

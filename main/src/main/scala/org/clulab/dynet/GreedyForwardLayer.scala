@@ -8,17 +8,19 @@ import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
 
-class GreedyForwardLayer (parameters:ParameterCollection,
-                          inputSize: Int,
-                          isDual: Boolean,
-                          t2i: Map[String, Int],
-                          i2t: Array[String],
-                          H: Parameter,
-                          rootParam: Parameter,
-                          span: Option[Seq[(Int, Int)]],
-                          nonlinearity: Int,
-                          dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, span, nonlinearity, dropoutProb) {
+case class GreedyForwardLayer(override val parameters:ParameterCollection,
+  override val inputSize: Int,
+  override val isDual: Boolean,
+  override val t2i: Map[String, Int],
+  override val i2t: Array[String],
+  override val H: Parameter,
+  override val rootParam: Parameter,
+  override val spans: Option[Seq[(Int, Int)]],
+  override val nonlinearity: Int,
+  override val dropoutProb: Float
+) extends ForwardLayer {
+
+  override def clone(): GreedyForwardLayer = this
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -29,7 +31,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if(isDual) 1 else 0, "isDual")
-    save(printWriter, if(span.nonEmpty) spanToString(span.get) else "", "span")
+    save(printWriter, if(spans.nonEmpty) spanToString(spans.get) else "", "span")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
