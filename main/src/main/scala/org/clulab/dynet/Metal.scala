@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
 import java.io.{FileWriter, PrintWriter}
-
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
@@ -11,10 +10,10 @@ import org.clulab.utils.{Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
+import org.clulab.fatdynet.utils.Initializer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
-
 import Metal._
 
 /**
@@ -24,8 +23,9 @@ import Metal._
  */
 class Metal(val taskManagerOpt: Option[TaskManager],
             val parameters: ParameterCollection,
-            modelOpt: Option[IndexedSeq[Layers]],
-            val multiThreaded: Boolean) {
+            modelOpt: Option[IndexedSeq[Layers]]) {
+  val multiThreaded = Initializer.isThreaded
+
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
 
@@ -33,7 +33,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   protected lazy val multiThreadedModel: ThreadLocal[IndexedSeq[Layers]] =
     ThreadLocal.withInitial(new LayersSupplier(model))
 
-  protected def getInferenceModel: IndexedSeq[Layers] = if(multiThreaded) multiThreadedModel.get() else model
+  protected def getInferenceModel: IndexedSeq[Layers] = if (multiThreaded) multiThreadedModel.get() else model
 
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {
@@ -349,7 +349,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     */
   def parse(sentence: AnnotatedSentence,
             constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
-    Layers.parse(model, sentence, constEmbeddings)
+    Layers.parse(getInferenceModel, sentence, constEmbeddings)
   }
 
   def test(): Unit = {
@@ -423,14 +423,14 @@ object Metal {
   def apply(modelFilenamePrefix: String, taskManager: TaskManager): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
-    val mtl = new Metal(Some(taskManager), parameters, Some(model), multiThreaded = true)
+    val mtl = new Metal(Some(taskManager), parameters, Some(model))
     mtl
   }
 
   def apply(modelFilenamePrefix: String): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
-    val mtl = new Metal(None, parameters, Some(model), multiThreaded = true)
+    val mtl = new Metal(None, parameters, Some(model))
     mtl
   }
 
@@ -447,7 +447,7 @@ object Metal {
       val taskManager = new TaskManager(config)
       val modelName = props.getProperty("train")
 
-      val mtl = new Metal(Some(taskManager), parameters, None, multiThreaded = false)
+      val mtl = new Metal(Some(taskManager), parameters, None)
       mtl.train(modelName)
     }
 

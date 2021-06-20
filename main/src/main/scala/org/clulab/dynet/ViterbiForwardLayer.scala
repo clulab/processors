@@ -5,13 +5,14 @@ import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupPara
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
-case class ViterbiForwardLayer(override val parameters:ParameterCollection,
+case class ViterbiForwardLayer(
+  override val parameters:ParameterCollection,
   override val inputSize: Int,
   override val isDual: Boolean,
   override val t2i: Map[String, Int],
   override val i2t: Array[String],
   override val H: Parameter,
-                          T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
+               T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
   override val rootParam: Parameter,
   override val spans: Option[Seq[(Int, Int)]],
   override val nonlinearity: Int,

@@ -17,30 +17,32 @@ import scala.util.Random
  * This layer takes a sequence of words and produces a sequence of Expression that stores the words' full embeddings
  * @author Mihai
  */
-case class EmbeddingLayer (parameters:ParameterCollection,
-                      w2i:Map[String, Int], // word to index
-                      w2f:Counter[String], // word to frequency
-                      c2i:Map[Char, Int], // character to index
-                      tag2i:Option[Map[String, Int]], // POS tag to index
-                      ne2i:Option[Map[String, Int]], // NE tag to index
-                      learnedWordEmbeddingSize: Int, // size of the learned word embedding
-                      charEmbeddingSize: Int, // size of the character embedding
-                      charRnnStateSize: Int, // size of each one of the char-level RNNs
-                      posTagEmbeddingSize: Int, // size of the POS tag embedding
-                      neTagEmbeddingSize: Int, // size of the NE tag embedding
-                      distanceEmbeddingSize: Int,
-                      distanceWindowSize: Int, // window considered for distance values (relative to predicate)
-                      positionEmbeddingSize: Int,
-                      useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
-                      wordLookupParameters:LookupParameter,
-                      charLookupParameters:LookupParameter,
-                      charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
-                      charBwRnnBuilder:RnnBuilder,
-                      posTagLookupParameters:Option[LookupParameter],
-                      neTagLookupParameters:Option[LookupParameter],
-                      distanceLookupParameters:Option[LookupParameter],
-                      positionLookupParameters:Option[LookupParameter],
-                      dropoutProb: Float) extends InitialLayer {
+case class EmbeddingLayer (
+  parameters:ParameterCollection,
+  w2i:Map[String, Int], // word to index
+  w2f:Counter[String], // word to frequency
+  c2i:Map[Char, Int], // character to index
+  tag2i:Option[Map[String, Int]], // POS tag to index
+  ne2i:Option[Map[String, Int]], // NE tag to index
+  learnedWordEmbeddingSize: Int, // size of the learned word embedding
+  charEmbeddingSize: Int, // size of the character embedding
+  charRnnStateSize: Int, // size of each one of the char-level RNNs
+  posTagEmbeddingSize: Int, // size of the POS tag embedding
+  neTagEmbeddingSize: Int, // size of the NE tag embedding
+  distanceEmbeddingSize: Int,
+  distanceWindowSize: Int, // window considered for distance values (relative to predicate)
+  positionEmbeddingSize: Int,
+  useIsPredicate: Boolean, // if true, add a Boolean bit to indicate if current word is the predicate
+  wordLookupParameters:LookupParameter,
+  charLookupParameters:LookupParameter,
+  charFwRnnBuilder:RnnBuilder, // RNNs for the character representation
+  charBwRnnBuilder:RnnBuilder,
+  posTagLookupParameters:Option[LookupParameter],
+  neTagLookupParameters:Option[LookupParameter],
+  distanceLookupParameters:Option[LookupParameter],
+  positionLookupParameters:Option[LookupParameter],
+  dropoutProb: Float
+) extends InitialLayer {
 
   override def clone(): EmbeddingLayer = {
     copy(
