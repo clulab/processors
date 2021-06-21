@@ -104,7 +104,7 @@ object InfiniteParallelProcessorExample {
       ".",
       "txt",
       "2",
-      "false"
+      "true"
     ))
     Utils.shutdown(true)
   }
