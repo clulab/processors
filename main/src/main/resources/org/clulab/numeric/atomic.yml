@@ -40,6 +40,13 @@ rules:
     pattern: |
       [word=/^([1-9]|1\d|2\d|3[01])(st|nd|rd|th)?$/]
 
-
+  # possible numbers, both using numeric notation and literal
+  # TODO: fix me. this is over inclusive. needs proper rule(s)
+  - name: numbers
+    label: Number
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [tag=CD]+
 
 
