@@ -42,6 +42,7 @@ rules:
 
   # possible numbers, both using numeric notation and literal
   # TODO: fix me. this is over inclusive. needs proper rule(s)
+  # TODO: add action to create the number value in norm
   - name: numbers
     label: Number
     priority: ${ rulepriority }
