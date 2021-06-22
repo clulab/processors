@@ -25,6 +25,26 @@ class NumericActions extends Actions {
     mentions.map(_.toDateMentionDdMmYyyy)
   }
 
+  /** Constructs a DateMention from the mm-yyyy single token */
+  def mkDateMentionMmYyyy(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateMentionMmYyyy)
+  }
+
+  /** Constructs a DateMention from the yyyy-mm single token */
+  def mkDateMentionYyyyMm(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateMentionYyyyMm)
+  }
+
+  /** Constructs a DateMention from the yy-mm single token */
+  def mkDateMentionYyMm(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateMentionYyMm)
+  }
+
+  /** Constructs a DateMention from the yy-mm single token */
+  def mkDateMentionYyMmDd(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateMentionYyMmDd)
+  }
+
   //
   // global actions below this points
   //
