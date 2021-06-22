@@ -89,7 +89,7 @@ package object mentions {
       case m: DateMention => m
 
       case m: TextBoundMention =>
-        val (year, month, day) = parseMmYyyy(m.words.head)
+        val (year, month) = parseMmYyyy(m.words.head)
         new DateMention(
           m.labels,
           m.tokenInterval,
@@ -98,7 +98,7 @@ package object mentions {
           m.keep,
           m.foundBy,
           m.attachments,
-          Some(Seq(day)), Some(Seq(month)), Some(Seq(year))
+          None, Some(Seq(month)), Some(Seq(year))
         )
 
       case m =>
@@ -108,7 +108,7 @@ package object mentions {
       case m: DateMention => m
 
       case m: TextBoundMention =>
-        val (year, month, day) = parseYyyyMm(m.words.head)
+        val (year, month) = parseYyyyMm(m.words.head)
         new DateMention(
           m.labels,
           m.tokenInterval,
@@ -117,7 +117,7 @@ package object mentions {
           m.keep,
           m.foundBy,
           m.attachments,
-          Some(Seq(day)), Some(Seq(month)), Some(Seq(year))
+          None, Some(Seq(month)), Some(Seq(year))
         )
 
       case m =>
@@ -127,7 +127,7 @@ package object mentions {
       case m: DateMention => m
 
       case m: TextBoundMention =>
-        val (year, month, day) = parseYyMm(m.words.head)
+        val (year, month) = parseYyMm(m.words.head)
         new DateMention(
           m.labels,
           m.tokenInterval,
@@ -136,7 +136,7 @@ package object mentions {
           m.keep,
           m.foundBy,
           m.attachments,
-          Some(Seq(day)), Some(Seq(month)), Some(Seq(year))
+          None, Some(Seq(month)), Some(Seq(year))
         )
 
       case m =>
@@ -167,7 +167,7 @@ package object mentions {
   private def parseYyMmDd(v: String): (String, String, String) = {
     val m = DATE_DD_DD_DD.matcher(v)
     if(m.matches()) {
-      val year = "XX" + m.group(1)
+      val year = m.group(1)
       val month = m.group(2)
       val day = m.group(3)
 
@@ -190,41 +190,38 @@ package object mentions {
     }
   }
 
-  private def parseMmYyyy(v:String): (String, String, String) = {
+  private def parseMmYyyy(v:String): (String, String) = {
     val m = DATE_DD_DD.matcher(v)
     if(m.matches()) {
-      val day = "XX"
       val month = m.group(1)
       val year = m.group(2)
 
-      Tuple3(year, month, day)
+      Tuple2(year, month)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }
   }
 
 
-  private def parseYyyyMm(v:String): (String, String, String) = {
+  private def parseYyyyMm(v:String): (String, String) = {
     val m = DATE_DD_DD.matcher(v)
     if(m.matches()) {
-      val day = "XX"
       val year = m.group(1)
       val month = m.group(2)
 
-      Tuple3(year, month, day)
+      Tuple2(year, month)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }
   }
 
-  private def parseYyMm(v:String): (String, String, String) = {
+  private def parseYyMm(v:String): (String, String) = {
     val m = DATE_DD_DD.matcher(v)
     if(m.matches()) {
-      val day = "XX"
-      val year = "XX" + m.group(1)
+      val year = m.group(1)
       val month = m.group(2)
 
-      Tuple3(year, month, day)
+      Tuple2(year, month)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }

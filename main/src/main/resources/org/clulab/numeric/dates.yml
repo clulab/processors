@@ -39,10 +39,6 @@ rules:
     pattern: |
       @year:PossibleYear ( ","? @month:PossibleMonth )?
 
-  # TODOs:    
-  # American date format: It is the 13th of May, 2020
-
-
   # Rule for YYYY-MM-DD (accepts -, :, / as separators)
   - name: date-yyyy-mm-dd
     label: Date
@@ -73,7 +69,8 @@ rules:
     pattern: |
       [word=/^(\d\d)(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(0?[1-9]|[12]\d|3[01])$/]
 
-  # Rule for YY-MM (accepts -, :, /, as separators)
+  # Rule for YY-MM (accepts -, :, as separators)
+  # ms: Let's not accept "/" as separator here, as this makes it too similar to a regular fraction!
   - name: date-yy-mm
     label: Date
     priority: ${ rulepriority }
@@ -81,7 +78,7 @@ rules:
     example: "It was 21.06."
     action: mkDateMentionYyMm
     pattern: |
-       [word=/^(\d\d)(:|\/|\-)(0?[1-9]|1[012])$/]
+       [word=/^(\d\d)(:|\-)(0?[1-9]|1[012])$/]
 
   # Rule for MM-YYYY (accepts -, :, /, as separators)
   - name: date-mm-yyyy

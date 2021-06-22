@@ -13,6 +13,7 @@ class TestDateRecognition extends FlatSpec with Matchers {
   //
   // unit tests starts here
   //
+
   // these should be captured by rules date-1 and date-2
   "the numeric entity recognizer" should "recognize dates in the European format" in {
     ensure("It is 12 May, 2000", Interval(2, 6), "DATE", "2000-05-12")
@@ -56,33 +57,35 @@ class TestDateRecognition extends FlatSpec with Matchers {
 
   }
 
-//  it should "recognize numeric dates in yy-mm-dd" in  {
-//    ensure(sentence= "88/02/15.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX88-02-15")
-//    ensure(sentence= "ISO date is 88/02/15.", Interval(3, 4), goldEntity= "DATE", goldNorm= "XX88-02-15")
-//  }
-//
-//  it should "recognize numeric dates in mm-yyyy" in  {
-//    // These tests should be captured by rule mm-yyyy
-//    ensure(sentence= "02-1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//    ensure(sentence= "ISO date is 02/1988.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//    ensure(sentence= "02/1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//    ensure(sentence= "ISO date is 02/1988.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//    ensure(sentence= "02/1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//  }
-//
-//  it should "recognize numeric dates in yyyy-mm" in {
-//    // These tests are captured by rule yyyy-mm
-//    ensure(sentence= "ISO date is 1988-02.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//    ensure(sentence= "1988-02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//    ensure(sentence= "ISO date is 1988/02.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//    ensure(sentence= "1988/02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
-//  }
+  it should "recognize numeric dates in yy-mm-dd" in  {
+    ensure(sentence= "88/02/15.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX88-02-15")
+    ensure(sentence= "ISO date is 88/02/15.", Interval(3, 4), goldEntity= "DATE", goldNorm= "XX88-02-15")
+  }
 
-//  it should "recognize numeric dates in yy-mm" in {
-//    ensure(sentence= "19/02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX19-02-XX")
-//  }
+  it should "recognize numeric dates in mm-yyyy" in  {
+    // These tests should be captured by rule mm-yyyy
+    ensure(sentence= "02-1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
+    ensure(sentence= "ISO date is 02/1988.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
+    ensure(sentence= "02/1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
+    ensure(sentence= "ISO date is 02/1988.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
+    ensure(sentence= "02/1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
+  }
 
+  it should "recognize numeric dates in yyyy-mm" in {
+    // These tests are captured by rule yyyy-mm
+    ensure(sentence= "ISO date is 1988-02.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
+    ensure(sentence= "1988-02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
+    ensure(sentence= "ISO date is 1988/02.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
+    ensure(sentence= "1988/02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
+  }
+
+  it should "recognize numeric dates in yy-mm" in {
+    ensure(sentence= "19:02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX19-02-XX")
+  }
+
+  //
   // End unit tests for date recognition.
+  //
 
   //
   // Help methods below this point

@@ -20,12 +20,12 @@ object TempEvalFormatter {
 
     val dayAsString = formatNumber(dayValue, 2)
     val monthAsString = formatNumber(monthValue, 2)
-    val yearAsString = formatNumber(yearValue, 4)
+    val yearAsString = formatNumber(yearValue, 4, "X")
 
     s"$yearAsString-$monthAsString-$dayAsString"
   }
 
-  private def formatNumber(v: Int, length: Int): String = {
+  private def formatNumber(v: Int, length: Int, padding: String = "0"): String = {
     if(v == 0) "X" * length
     else {
       val content = v.toString
@@ -33,7 +33,7 @@ object TempEvalFormatter {
       if(paddingLength > 0) {
         // println(s"paddingLength for $v is $paddingLength")
         val sb = new StringBuilder
-        sb.append("0" * paddingLength)
+        sb.append(padding * paddingLength)
         sb.append(content)
         sb.toString()
       } else {
