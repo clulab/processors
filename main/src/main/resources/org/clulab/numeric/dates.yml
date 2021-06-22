@@ -19,8 +19,29 @@ rules:
     pattern: |
       ( @month:PossibleMonth ","? )? @year:PossibleYear
 
-  # TODOs:
-  # rules for american dates: year month day: 2000, May 24 (same as above)
+  # American dates format, with mandatory day:
+  - name: date-3
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2000, May 12"
+    action: mkDateMention
+    pattern: |
+      ( @year:PossibleYear  ","? )? @month:PossibleMonth @day:PossibleDay
+
+  # American date format, with mandatory year
+  - name: date-4
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2000"
+    action: mkDateMention
+    pattern: |
+      @year:PossibleYear ( ","? @month:PossibleMonth )?
+
+  # TODOs:    
+  # American date format: It is the 13th of May, 2020
+
 
   # Rule for YYYY-MM-DD (accepts -, :, / as separators)
   - name: date-yyyy-mm-dd
@@ -32,7 +53,7 @@ rules:
     pattern: |
       [word=/^(1\d\d\d|20\d\d)(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(0?[1-9]|[12]\d|3[01])$/]
 
-  # Rule for DD-MM-YYYY (accepts -, :, / as separators)
+  # Rule for DD-MM-YYYY (accepts -, :, /, as separators)
   - name: date-dd-mm-yyyy
     label: Date
     priority: ${ rulepriority }
@@ -42,4 +63,42 @@ rules:
     pattern: |
       [word=/^(0?[1-9]|[12]\d|3[01])(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(1\d\d\d|20\d\d)$/]
 
+  # Rule for YY-MM-DD (accepts -, :, /, as separators)
+  - name: date-yy-mm-dd
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 21-06-16"
+    action: mkDateMentionYyMmDd
+    pattern: |
+      [word=/^(\d\d)(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(0?[1-9]|[12]\d|3[01])$/]
 
+  # Rule for YY-MM (accepts -, :, /, as separators)
+  - name: date-yy-mm
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 21.06."
+    action: mkDateMentionYyMm
+    pattern: |
+       [word=/^(\d\d)(:|\/|\-)(0?[1-9]|1[012])$/]
+
+  # Rule for MM-YYYY (accepts -, :, /, as separators)
+  - name: date-mm-yyyy
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 06.2021. "
+    action: mkDateMentionMmYyyy
+    pattern: |
+      [word=/^(0?[1-9]|1[012])(:|\/|\-)(1\d\d\d|2\d\d\d)$/]
+
+  # Rule for YYYY-MM (accepts -, :, /, as separators)
+  - name: date-yyyy-mm
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2021/06. "
+    action: mkDateMentionYyyyMm
+    pattern: |
+      [word=/^(1\d\d\d|2\d\d\d)(:|\/|\-)(0?[1-9]|1[012])$/]
