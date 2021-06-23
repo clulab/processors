@@ -8,6 +8,7 @@ import java.io.StringWriter
 import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.Closer.AutoCloser
@@ -25,25 +26,40 @@ object ParallelProcessorExample {
     val outputDir = args(1)
     val extension = args(2)
     val threads = args(3).toInt
+    val parallel = args.lift(4).exists(_ == "true")
 
     val files = FileUtils.findFiles(inputDir, extension)
-    val parFiles = ThreadUtils.parallelize(files, threads)
+    val serFiles = files.sortBy(-_.length)
+    val parFiles = ThreadUtils.parallelize(serFiles, threads)
     val documentSerializer = new DocumentSerializer
+
+    val startupTimer = new Timer("This is how long it takes to start up")
+    startupTimer.start()
 
     Utils.initializeDyNet()
 
-    val processor: Processor = new FastNLPProcessorWithSemanticRoles()
-    val untimed = processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
+    val processor: Processor = new CluProcessor()
+    processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
+    startupTimer.stop()
+    println(startupTimer.toString)
 
     val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
     timer.start()
-    
-    parFiles.foreach { file =>
+
+    (if (parallel) parFiles else serFiles).foreach { file =>
       println(s"Processing ${file.getName}...")
 
       val text = FileUtils.getTextFromFile(file)
       val outputFile = new File(outputDir + "/" + file.getName)
-      val document = processor.annotate(text)
+      val document = try {
+        val document = processor.annotate(text)
+        document
+      }
+      catch {
+        case throwable: Throwable =>
+          println(s"Threw exception for ${file.getName}")
+          throw throwable
+      }
       val printedDocument = {
         val stringWriter = new StringWriter
 
@@ -77,7 +93,13 @@ object ParallelProcessorExample {
     import org.clulab.fatdynet.utils.Utils
 
     Utils.startup()
-    run(args)
+    run(Array(
+      FileUtils.getSubprojectDir("./corenlp/src/test/resources/documents"),
+      ".",
+      "txt",
+      "8",
+      "false"
+    ))
     Utils.shutdown()
   }
 }
