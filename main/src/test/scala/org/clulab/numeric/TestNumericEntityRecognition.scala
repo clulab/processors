@@ -80,6 +80,12 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "19:02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX19-02-XX")
   }
 
+  it should "recognize date ranges" in {
+    ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 - 2020-11-11")
+    ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 - XXXX-07-31")
+    ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 - XXXX-07-31")
+  }
+
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")
 

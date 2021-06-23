@@ -30,3 +30,8 @@ rules:
     vars:
       rulepriority: "4"
 
+  - import: org/clulab/numeric/date-ranges.yml
+    # Compositional rules for date ranges such as "between Date1 to Date2"
+    vars:
+      rulepriority: "5"
+

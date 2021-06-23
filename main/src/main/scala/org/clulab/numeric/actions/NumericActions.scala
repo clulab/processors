@@ -2,6 +2,7 @@ package org.clulab.numeric.actions
 
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
+import org.clulab.numeric._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -13,6 +14,16 @@ class NumericActions extends Actions {
   /** Constructs a MeasurementMention from a token pattern */
   def mkMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     mentions.map(_.toMeasurementMention)
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateRangeMention)
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithNumber(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateRangeMentionWithNumber)
   }
 
   /** Constructs a DateMention from a token pattern */
@@ -55,15 +66,17 @@ class NumericActions extends Actions {
   //
 
   /** Global action for the numeric grammar */
-  def cleanupAction(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val r1 = keepLongestDates(mentions)
+  def cleanupAction(mentions: Seq[Mention], state: State): Seq[Mention] =
+    cleanupAction(mentions)
 
+  def cleanupAction(mentions: Seq[Mention]): Seq[Mention] = {
+    val r1 = keepLongestDates(mentions)
     r1
   }
 
-  /** Keeps a date mention only if it is not contained in another */
+  /** Keeps a date (or date range) mention only if it is not contained in another */
   def keepLongestDates(mentions: Seq[Mention]): Seq[Mention] = {
-    val dates = mentions.filter(m => m.isInstanceOf[DateMention])
+    val dates = mentions.filter(m => m.isInstanceOf[DateMention] || m.isInstanceOf[DateRangeMention])
 
     val filteredDates = new ArrayBuffer[Mention]()
     for(date <- dates) {
@@ -75,12 +88,14 @@ class NumericActions extends Actions {
       }
       if(! foundContainer) {
         filteredDates += date
+      } else {
+        println(s"REMOVED MENTION: ${date.raw.mkString(" ")}")
       }
     }
 
     val filteredMentions = new ArrayBuffer[Mention]()
     filteredMentions ++= filteredDates
-    filteredMentions ++= mentions.filterNot(_.isInstanceOf[DateMention])
+    filteredMentions ++= mentions.filterNot(m => m.isInstanceOf[DateMention] || m.isInstanceOf[DateRangeMention])
 
     filteredMentions
   }

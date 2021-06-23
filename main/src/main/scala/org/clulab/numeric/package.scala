@@ -1,6 +1,6 @@
 package org.clulab
 
-import org.clulab.numeric.mentions.{DateMention, MeasurementMention, Norm}
+import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMention, Norm}
 import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
@@ -30,6 +30,11 @@ package object numeric {
     println(s"\tRule => ${mention.foundBy}")
     val mentionType = mention.getClass.toString.split("""\.""").last
     println(s"\tType => $mentionType")
+    println(s"\tInterval => ${mention.tokenInterval}")
+    if(mention.isInstanceOf[Norm]) {
+      println(s"\tNorm => ${mention.asInstanceOf[Norm].neNorm}")
+      println(s"\tNE => ${mention.asInstanceOf[Norm].neLabel}")
+    }
     println(boundary)
     if (mention.arguments.nonEmpty) {
       println("\tArgs:")
@@ -89,6 +94,9 @@ package object numeric {
         case m: MeasurementMention =>
           addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
 
+        case m: DateRangeMention =>
+          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
+
         case _ =>
           // nothing to do for other mention types
       }
@@ -97,10 +105,11 @@ package object numeric {
 
   private def addLabelsAndNorms(m: Norm, s: Sentence, tokenInt: Interval): Unit = {
     var first = true
+    val norm = m.neNorm
     for(i <- tokenInt.indices) {
       val prefix = if(first) "B-" else "I-"
       s.entities.get(i) = prefix + m.neLabel
-      s.norms.get(i) = m.neNorm
+      s.norms.get(i) = norm
       first = false
     }
   }
