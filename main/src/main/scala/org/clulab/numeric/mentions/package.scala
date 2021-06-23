@@ -7,6 +7,26 @@ import java.util.regex.Pattern
 package object mentions {
   implicit class MentionOps(mention: Mention) {
 
+    def toMeasurementMention: MeasurementMention =  mention match {
+      case m:  MeasurementMention => m
+
+      case m: RelationMention =>
+        new MeasurementMention(
+          m.labels,
+          m.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          getArgWords("number", m),
+          getArgWords("unit", m)
+        )
+
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to MeasurementMention!")
+    }
+
     def toDateMention: DateMention =  mention match {
       case m: DateMention => m
 
@@ -47,6 +67,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionDdMmYyyy: DateMention =  mention match {
       case m: DateMention => m
 
@@ -66,6 +87,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionYyMmDd: DateMention =  mention match {
       case m: DateMention => m
 
@@ -85,6 +107,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionMmYyyy: DateMention = mention match {
       case m: DateMention => m
 
@@ -104,6 +127,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"Error: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionYyyyMm: DateMention = mention match {
       case m: DateMention => m
 
@@ -123,6 +147,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"Error: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionYyMm: DateMention = mention match {
       case m: DateMention => m
 

@@ -10,6 +10,11 @@ class NumericActions extends Actions {
   // local actions
   //
 
+  /** Constructs a MeasurementMention from a token pattern */
+  def mkMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toMeasurementMention)
+  }
+
   /** Constructs a DateMention from a token pattern */
   def mkDateMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     mentions.map(_.toDateMention)

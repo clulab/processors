@@ -1,8 +1,9 @@
 package org.clulab
 
-import org.clulab.numeric.mentions.DateMention
+import org.clulab.numeric.mentions.{DateMention, MeasurementMention, Norm}
 import org.clulab.odin.{EventMention, Mention}
-import org.clulab.processors.Document
+import org.clulab.processors.{Document, Sentence}
+import org.clulab.struct.Interval
 
 package object numeric {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
@@ -83,17 +84,10 @@ package object numeric {
     for(mention <- mentions) {
       mention match {
         case m: DateMention =>
-          val s = m.sentenceObj
-          val tokenInt = m.tokenInterval
-          var first = true
-          for(i <- tokenInt.indices) {
-            val prefix = if(first) "B-" else "I-"
-            s.entities.get(i) = prefix + m.neLabel
-            s.norms.get(i) = m.neNorm
-            first = false
-          }
+          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
 
-        // TODO: add measurement units here
+        case m: MeasurementMention =>
+          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
 
         case _ =>
           // nothing to do for other mention types
@@ -101,4 +95,13 @@ package object numeric {
     }
   }
 
+  private def addLabelsAndNorms(m: Norm, s: Sentence, tokenInt: Interval): Unit = {
+    var first = true
+    for(i <- tokenInt.indices) {
+      val prefix = if(first) "B-" else "I-"
+      s.entities.get(i) = prefix + m.neLabel
+      s.norms.get(i) = m.neNorm
+      first = false
+    }
+  }
 }
