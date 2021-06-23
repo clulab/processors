@@ -26,7 +26,7 @@ object ParallelProcessorExample {
     val outputDir = args(1)
     val extension = args(2)
     val threads = args(3).toInt
-    val parallel = args.lift(4).map(_ == "true").getOrElse(false)
+    val parallel = args.lift(4).exists(_ == "true")
 
     val files = FileUtils.findFiles(inputDir, extension)
     val serFiles = files.sortBy(-_.length)
@@ -46,7 +46,10 @@ object ParallelProcessorExample {
     startupTimer.stop()
     println(startupTimer.toString)
 
-    val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
+    val label =
+        if (parallel) s"$threads threads processing ${parFiles.size} files in parallel"
+        else s"1 threads processing ${parFiles.size} files in serial"
+    val timer = new Timer(label)
     timer.start()
     
     (if (parallel) parFiles else serFiles).foreach { file =>
