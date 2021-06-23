@@ -43,7 +43,10 @@ object ParallelProcessorExample {
     startupTimer.stop()
     println(startupTimer.toString)
 
-    val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
+    val label =
+        if (parallel) s"$threads threads processing ${parFiles.size} files in parallel"
+        else s"1 threads processing ${parFiles.size} files in serial"
+    val timer = new Timer(label)
     timer.start()
 
     (if (parallel) parFiles else serFiles).foreach { file =>
