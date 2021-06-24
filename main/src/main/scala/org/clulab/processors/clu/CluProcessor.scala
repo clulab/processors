@@ -12,6 +12,7 @@ import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
+import org.clulab.utils.SeqUtils
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -174,23 +175,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** Gets the index of all predicates in this sentence */
-  def getPredicateIndexes(preds: IndexedSeq[String]): IndexedSeq[Int] = {
-    val predsInSent = new ArrayBuffer[Int]()
-    var done = false
-    var offset = 0
-    while(! done) {
-      val idx = preds.indexOf("B-P", offset)
-
-      if(idx >= 0) {
-        predsInSent += idx
-        offset = idx + 1
-      } else {
-        done = true
-      }
-    }
-
-    predsInSent
-  }
+  def getPredicateIndexes(preds: IndexedSeq[String]): IndexedSeq[Int] =
+    SeqUtils.indexesOf(preds, "B-P")
 
   /** Dependency parsing */
   def parseSentence(words: IndexedSeq[String],
