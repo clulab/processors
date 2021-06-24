@@ -10,7 +10,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
-import org.clulab.numeric.NumericEntityRecognizer
+import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
 
@@ -279,7 +279,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   def srlSentence(sent: Sentence,
                   predicateIndexes: IndexedSeq[Int],
                   embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
-    // the SRL models were trained using only named (CoNLL) entities, not numeric ones
+    // the SRL models were trained using only named (CoNLL) entities, not numeric ones, so let's remove them
+    // TODO: retrain the SRL using numeric entities too, when NumericEntityRecognizer is stable
     val onlyNamedLabels = removeNumericLabels(sent.entities.get)
 
     srlSentence(sent.words, sent.tags.get, onlyNamedLabels, predicateIndexes, embeddings)
@@ -386,6 +387,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** NER; modifies the document in place */
   override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
+
+    //
+    // names entities from CoNLL
+    //
     val embeddings = getEmbeddings(doc)
     val docDate = doc.getDCT
     for(sent <- doc.sentences) {
@@ -404,7 +409,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       }
     }
 
-    // TODO: numeric
+    //
+    // numeric entities using our Odin rules
+    //
+    val numericMentions = numericEntityRecognizer.extractFrom(doc)
+    setLabelsAndNorms(doc, numericMentions)
   }
 
   private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean = {

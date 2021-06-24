@@ -106,6 +106,8 @@ package object numeric {
   private def addLabelsAndNorms(m: Norm, s: Sentence, tokenInt: Interval): Unit = {
     var first = true
     val norm = m.neNorm
+    // careful here: we may override some existing entities and norms
+    // but, given that the numeric entity rules tend to be high precision, this is probably Ok...
     for(i <- tokenInt.indices) {
       val prefix = if(first) "B-" else "I-"
       s.entities.get(i) = prefix + m.neLabel
