@@ -26,6 +26,12 @@ class TestNumberParser extends FlatSpec with Matchers {
 	it should "convert words to numbers" in {
 		NumberParser.parse("-1".split(" ")) shouldEqual Some(-1)
 		NumberParser.parse("1/2".split(" ")) shouldEqual Some(0.5)
+		NumberParser.parse("-1/2".split(" ")) shouldEqual Some(-0.5)
+		NumberParser.parse("-1/-2".split(" ")) shouldEqual Some(0.5)
+		NumberParser.parse("- 1".split(" ")) shouldEqual Some(-1)
+		NumberParser.parse("1 / 2".split(" ")) shouldEqual Some(0.5)
+		NumberParser.parse("- 1 / 2".split(" ")) shouldEqual Some(-0.5)
+		NumberParser.parse("- 1 / - 2".split(" ")) shouldEqual Some(0.5)
 		NumberParser.parse("1.2".split(" ")) shouldEqual Some(1.2)
 		NumberParser.parse("1.2 million".split(" ")) shouldEqual Some(1200000)
 		NumberParser.parse("twenty one".split(" ")) shouldEqual Some(21)
