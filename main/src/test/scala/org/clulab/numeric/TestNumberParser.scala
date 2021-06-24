@@ -41,6 +41,10 @@ class TestNumberParser extends FlatSpec with Matchers {
 		NumberParser.parse("two thousand one".split(" ")) shouldEqual Some(2001)
 		// NumberParser.parse("two thousand and one".split(" ")) shouldEqual Some(2001)
 		NumberParser.parse("one hundred twenty three million four hundred fifty six thousand seven hundred eighty nine".split(" ")) shouldEqual Some(123456789)
+		NumberParser.parse("5.2 million".split(" ")) shouldEqual Some(5200000)
+		NumberParser.parse("5.2 billion".split(" ")) shouldEqual Some(5200000000d)
+		NumberParser.parse("5.2 trillion".split(" ")) shouldEqual Some(5200000000000d)
+		NumberParser.parse("5.2 quadrillion".split(" ")) shouldEqual Some(5200000000000000d)
 	}
 
 }
