@@ -93,11 +93,14 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
+  case class SentenceAndIndex(sentence: Sentence, index: Int)
   // This maps sentence length to the (sentence object, index in document).
-  type GroupsOfSentences = Map[Int, Array[(Sentence, Int)]]
+  type GroupsOfSentencesAndIndexes = Map[Int, Array[SentenceAndIndex]]
 
-  def groupSentences(doc: Document): GroupsOfSentences =
-    doc.sentences.zipWithIndex.groupBy(_._1.words.length)
+  def groupSentences(doc: Document): GroupsOfSentencesAndIndexes = doc.sentences
+      .zipWithIndex
+      .map { case (sentence, index) => SentenceAndIndex(sentence, index) }
+      .groupBy(_.sentence.words.length)
 
   override def annotate(doc:Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
@@ -162,14 +165,18 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     (tags, chunks, preds)
   }
 
+  def nerSentence(wordses: Array[Array[String]], embeddings: ConstEmbeddingParameters): Array[IndexedSeq[String]] = ???
+
   /** Produces NE labels for one sentence */
-  def nerSentence(words: Array[String],
-                  lemmas: Option[Array[String]],
-                  tags: Array[String], // this are only used by the NumericEntityRecognizer
-                  startCharOffsets: Array[Int],
-                  endCharOffsets: Array[Int],
-                  docDateOpt: Option[String],
-                  embeddings: ConstEmbeddingParameters): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
+  def nerSentence(
+    words: Array[String],
+    lemmas: Option[Array[String]],
+    tags: Array[String], // this are only used by the NumericEntityRecognizer
+    startCharOffsets: Array[Int],
+    endCharOffsets: Array[Int],
+    docDateOpt: Option[String],
+    embeddings: ConstEmbeddingParameters
+  ):  (IndexedSeq[String], Option[IndexedSeq[String]]) = {
     val allLabels = mtlNer.predictJointly(AnnotatedSentence(words), embeddings)
     (allLabels(0), None)
   }
@@ -315,7 +322,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   override def tagPartsOfSpeech(doc: Document): Unit =
     tagPartsOfSpeech(doc, groupSentences(doc))
 
-  def tagPartsOfSpeech(doc: Document, groupsOfSentences: GroupsOfSentences): Unit = {
+  def tagPartsOfSpeech(doc: Document, groupsOfSentences: GroupsOfSentencesAndIndexes): Unit = {
     basicSanityCheck(doc)
 
     val embeddings = getEmbeddings(doc)
@@ -363,23 +370,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** NER; modifies the document in place */
   override def recognizeNamedEntities(doc: Document): Unit = recognizeNamedEntities(doc, groupSentences(doc))
 
-  def recognizeNamedEntities(doc:Document, groupsOfSentences: GroupsOfSentences): Unit = {
+  def recognizeNamedEntities(doc:Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
     basicSanityCheck(doc)
     val embeddings = getEmbeddings(doc)
-    val docDate = doc.getDCT
-    for (sent <- doc.sentences) {
-      val (labels, norms) = nerSentence(
-        sent.words,
-        sent.lemmas,
-        sent.tags.get,
-        sent.startOffsets,
-        sent.endOffsets,
-        docDate,
-        embeddings)
+    groupsOfSentencesAndIndexes.values.foreach { sentencesAndIndexes: Array[SentenceAndIndex] =>
+      val wordses: Array[Array[String]] = sentencesAndIndexes.map(_.sentence.words)
+      val labelses: Array[IndexedSeq[String]] = nerSentence(wordses, embeddings)
 
-      sent.entities = Some(labels.toArray)
-      if (norms.nonEmpty)
-        sent.norms = Some(norms.get.toArray)
+      sentencesAndIndexes.zip(labelses).foreach { case (SentenceAndIndex(sentence, _), labels) =>
+        sentence.entities = Some(labels.toArray)
+      }
     }
   }
 
@@ -397,7 +397,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
     if(sentence.universalBasicDependencies.isEmpty) return origPreds
     if(sentence.tags.isEmpty) return origPreds
-    
+
     val preds = origPreds.toSet
     val newPreds = new mutable.HashSet[Int]()
     newPreds ++= preds
@@ -421,7 +421,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   override def srl(doc: Document): Unit = srl(doc, groupSentences(doc))
 
-  def srl(doc: Document, groupsOfSentences: GroupsOfSentences): Unit = {
+  def srl(doc: Document, groupsOfSentences: GroupsOfSentencesAndIndexes): Unit = {
     val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
     assert(predicatesAttachment.nonEmpty)
     assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
@@ -476,7 +476,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** Syntactic parsing; modifies the document in place */
   def parse(doc: Document): Unit = parse(doc, groupSentences(doc))
 
-  def parse(doc: Document, groupsOfSentences: GroupsOfSentences): Unit = {
+  def parse(doc: Document, groupsOfSentences: GroupsOfSentencesAndIndexes): Unit = {
     if(doc.sentences.length > 0) {
       assert(doc.sentences(0).tags.nonEmpty)
       assert(doc.sentences(0).entities.nonEmpty)
