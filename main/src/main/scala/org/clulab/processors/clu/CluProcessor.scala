@@ -92,22 +92,30 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
+  // This maps sentence length to the (sentence object, index in document).
+  type GroupsOfSentences = Map[Int, Array[(Sentence, Int)]]
+
+  def groupSentences(doc: Document): GroupsOfSentences =
+    doc.sentences.zipWithIndex.groupBy(_._1.words.length)
+
   override def annotate(doc:Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
-      tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+      val groupsOfSentences = groupSentences(doc) // Do this just once.
+
+      tagPartsOfSpeech(doc, groupsOfSentences) // the call to the POS/chunking/SRLp MTL is in here
       //println("After POS")
       //println(doc.sentences.head.tags.get.mkString(", "))
-      recognizeNamedEntities(doc) // the call to the NER MTL is in here
+      recognizeNamedEntities(doc, groupsOfSentences) // the call to the NER MTL is in here
       //println("After NER")
       //println(doc.sentences.head.entities.get.mkString(", "))
       chunking(doc) // Nothing, kept for the record
-      parse(doc) // dependency parsing
+      parse(doc, groupsOfSentences) // dependency parsing
       //println("After parsing")
       //println(doc.sentences.head.universalEnhancedDependencies.get)
 
       lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
 
-      srl(doc) // SRL (arguments)
+      srl(doc, groupsOfSentences) // SRL (arguments)
       //println("After SRL")
       //println(doc.sentences.head.semanticRoles.get)
 
@@ -318,17 +326,20 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
-  override def tagPartsOfSpeech(doc:Document) {
+  override def tagPartsOfSpeech(doc: Document): Unit =
+    tagPartsOfSpeech(doc, groupSentences(doc))
+
+  def tagPartsOfSpeech(doc: Document, groupsOfSentences: GroupsOfSentences): Unit = {
     basicSanityCheck(doc)
 
     val embeddings = getEmbeddings(doc)
-    val predsForAllSents = new ArrayBuffer[IndexedSeq[Int]]()
-
-    for(sent <- doc.sentences) {
+    // These preds need to stay in the same order as the sentences.
+    val predsForAllSents = doc.sentences.map { sent =>
       val (tags, chunks, preds) = tagSentence(sent.words, embeddings)
       sent.tags = Some(tags.toArray)
       sent.chunks = Some(chunks.toArray)
-      predsForAllSents += getPredicateIndexes(preds)
+
+      getPredicateIndexes(preds)
     }
 
     // store the index of all predicates as a doc attachment
@@ -364,11 +375,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** NER; modifies the document in place */
-  override def recognizeNamedEntities(doc:Document): Unit = {
+  override def recognizeNamedEntities(doc: Document): Unit = recognizeNamedEntities(doc, groupSentences(doc))
+
+  def recognizeNamedEntities(doc:Document, groupsOfSentences: GroupsOfSentences): Unit = {
     basicSanityCheck(doc)
     val embeddings = getEmbeddings(doc)
     val docDate = doc.getDCT
-    for(sent <- doc.sentences) {
+    for (sent <- doc.sentences) {
       val (labels, norms) = nerSentence(
         sent.words,
         sent.lemmas,
@@ -379,9 +392,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         embeddings)
 
       sent.entities = Some(labels.toArray)
-      if(norms.nonEmpty) {
+      if (norms.nonEmpty)
         sent.norms = Some(norms.get.toArray)
-      }
     }
   }
 
@@ -421,7 +433,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     newPreds.toVector.sorted
   }
 
-  override def srl(doc: Document): Unit = {
+  override def srl(doc: Document): Unit = srl(doc, groupSentences(doc))
+
+  def srl(doc: Document, groupsOfSentences: GroupsOfSentences): Unit = {
     val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
     assert(predicatesAttachment.nonEmpty)
     assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
@@ -446,8 +460,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     // generate SRL frames for each predicate in each sentence
     for(si <- predicates.indices) {
       val sentence = doc.sentences(si)
-      val predicateIndexes = 
-      	predicateCorrections(predicates(si), sentence)
+      val predicateIndexes =
+        predicateCorrections(predicates(si), sentence)
       val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
@@ -461,7 +475,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
       // hybrid = universal enhanced + roles enhanced
       if(sentence.graphs.contains(GraphMap.UNIVERSAL_ENHANCED) &&
-         sentence.graphs.contains(GraphMap.ENHANCED_SEMANTIC_ROLES)) {
+          sentence.graphs.contains(GraphMap.ENHANCED_SEMANTIC_ROLES)) {
 
         val mergedGraph = DependencyUtils.mergeGraphs(
           sentence.universalEnhancedDependencies.get,
@@ -474,7 +488,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** Syntactic parsing; modifies the document in place */
-  def parse(doc:Document): Unit = {
+  def parse(doc: Document): Unit = parse(doc, groupSentences(doc))
+
+  def parse(doc: Document, groupsOfSentences: GroupsOfSentences): Unit = {
     if(doc.sentences.length > 0) {
       assert(doc.sentences(0).tags.nonEmpty)
       assert(doc.sentences(0).entities.nonEmpty)
