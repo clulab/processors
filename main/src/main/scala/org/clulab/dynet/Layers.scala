@@ -202,31 +202,40 @@ object Layers {
   }
 
   def predictJointly(layers: IndexedSeq[Layers],
+      sentences: Array[AnnotatedSentence],
+      constEmbeddings: ConstEmbeddingParameters): Array[IndexedSeq[IndexedSeq[String]]] = {
+    // This is done on a single computation graph because the sentences are supposed to have the same lenths.
+
+    // DyNet's computation graph is a static variable, so this block must be synchronized
+    Synchronizer.withComputationGraph("Layers.predictJointly()") {
+      sentences.map(predictJointly(layers, _, constEmbeddings))
+      // Does the CG need to be renewed or something?
+    }
+  }
+
+  protected def predictJointly(layers: IndexedSeq[Layers],
                      sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
-    // DyNet's computation graph is a static variable, so this block must be synchronized
-    Synchronizer.withComputationGraph("Layers.predictJointly()") {
-      // layers(0) contains the shared layers
-      if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
+    // layers(0) contains the shared layers
+    if (layers(0).nonEmpty) {
+      val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
 
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
-        }
+      for (i <- 1 until layers.length) {
+        val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        val labels = layers(i).finalLayer.get.inference(emissionScores)
+        labelsPerTask += labels
       }
-      // no shared layer
-      else {
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence, constEmbeddings, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
-        }
+    }
+    // no shared layer
+    else {
+      for (i <- 1 until layers.length) {
+        val states = layers(i).forward(sentence, constEmbeddings, doDropout = false)
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        val labels = layers(i).finalLayer.get.inference(emissionScores)
+        labelsPerTask += labels
       }
     }
 

@@ -318,14 +318,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
   // this only supports basic tasks for now
   def predictJointly(sentence: AnnotatedSentence,
-                     constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, sentence, constEmbeddings)
+      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
+    Layers.predictJointly(model, Array(sentence), constEmbeddings).head
   }
 
-  def predictJointly(annotatedSentences: Array[AnnotatedSentence],
+  def predictJointly(sentences: Array[AnnotatedSentence],
       constEmbeddings: ConstEmbeddingParameters): Array[IndexedSeq[IndexedSeq[String]]] = {
-    // TODO
-    annotatedSentences.map(Layers.predictJointly(model, _, constEmbeddings))
+    Layers.predictJointly(model, sentences, constEmbeddings)
   }
 
   def predict(taskId: Int,
