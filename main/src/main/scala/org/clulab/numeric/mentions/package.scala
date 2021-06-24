@@ -7,6 +7,83 @@ import java.util.regex.Pattern
 package object mentions {
   implicit class MentionOps(mention: Mention) {
 
+    def toMeasurementMention: MeasurementMention =  mention match {
+      case m:  MeasurementMention => m
+
+      case m: RelationMention =>
+        new MeasurementMention(
+          m.labels,
+          m.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          getArgWords("number", m),
+          getArgWords("unit", m)
+        )
+
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to MeasurementMention!")
+    }
+
+    def toDateRangeMention: DateRangeMention =  mention match {
+      case m: DateRangeMention => m
+
+      case m: RelationMention =>
+        val date1Norm = getArgNorm("date1", m)
+        if(date1Norm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument date1 in mention ${m.raw.mkString(" ")}!")
+        val date2Norm = getArgNorm("date2", m)
+        if(date2Norm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument date2 in mention ${m.raw.mkString(" ")}!")
+
+        new DateRangeMention(
+          m.labels,
+          m.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          date1Norm.get,
+          date2Norm.get
+        )
+
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+    }
+
+    def toDateRangeMentionWithNumber: DateRangeMention =  mention match {
+      case m: DateRangeMention => m
+
+      case m: RelationMention =>
+        val numberNorm = getArgWords("number", m)
+        if(numberNorm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument number in mention ${m.raw.mkString(" ")}!")
+        val numberVal = NumberParser.parse(numberNorm.get)
+        if(numberVal.isEmpty)
+          throw new RuntimeException(s"ERROR: could not parse number ${numberNorm.get.mkString(" ")} in mention ${m.raw.mkString(" ")}!")
+        val date2Norm = getArgNorm("date2", m)
+        if(date2Norm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument date2 in mention ${m.raw.mkString(" ")}!")
+
+        new DateRangeMention(
+          m.labels,
+          m.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          TempEvalFormatter.mkDate1Norm(numberVal.get, date2Norm.get),
+          date2Norm.get
+        )
+
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+    }
+
     def toDateMention: DateMention =  mention match {
       case m: DateMention => m
 
@@ -47,6 +124,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionDdMmYyyy: DateMention =  mention match {
       case m: DateMention => m
 
@@ -66,6 +144,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionYyMmDd: DateMention =  mention match {
       case m: DateMention => m
 
@@ -85,6 +164,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionMmYyyy: DateMention = mention match {
       case m: DateMention => m
 
@@ -104,6 +184,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"Error: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionYyyyMm: DateMention = mention match {
       case m: DateMention => m
 
@@ -123,6 +204,7 @@ package object mentions {
       case m =>
         throw new RuntimeException(s"Error: cannot convert mention of type ${m.getClass.toString} to DateMention!")
     }
+
     def toDateMentionYyMm: DateMention = mention match {
       case m: DateMention => m
 
@@ -233,6 +315,19 @@ package object mentions {
     } else {
       val arg = m.arguments(argName).head
       Some(arg.words)
+    }
+  }
+
+  private def getArgNorm(argName: String, m:Mention): Option[String] = {
+    if(! m.arguments.contains(argName)){
+      None
+    } else {
+      val arg = m.arguments(argName).head
+      if(arg.isInstanceOf[Norm]) {
+        Some(arg.asInstanceOf[Norm].neNorm)
+      } else {
+        None
+      }
     }
   }
 }

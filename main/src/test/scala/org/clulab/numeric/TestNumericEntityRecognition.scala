@@ -5,7 +5,7 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.struct.Interval
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestDateRecognition extends FlatSpec with Matchers {
+class TestNumericEntityRecognition extends FlatSpec with Matchers {
   Utils.initializeDyNet()
   val ner = new NumericEntityRecognizer
   val proc = new CluProcessor()
@@ -41,9 +41,6 @@ class TestDateRecognition extends FlatSpec with Matchers {
     ensure("It is 12-05-2000", Interval(2, 3), "DATE", "2000-05-12")
   }
 
-  // Timex.fromXml("<TIMEX3 tid=\"t3\" value=\"1988-02-17\" type=\"DATE\">1988-02-17</TIMEX3>"),
-  // Timex.fromXml("<TIMEX3 tid=\"t4\" value=\"XX10-02-19\" type=\"DATE\">19.02.10</TIMEX3>"),
-  // Timex.fromXml("<TIMEX3 tid=\"t5\" value=\"2010-02-19\" type=\"DATE\">19.02.2010</TIMEX3>")
   it should "recognize numeric dates 2" in {
     // these tests should be captured by yyyy-mm-dd
     ensure(sentence= "ISO date is 1988-02-17.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-17")
@@ -57,12 +54,12 @@ class TestDateRecognition extends FlatSpec with Matchers {
 
   }
 
-  it should "recognize numeric dates in yy-mm-dd" in  {
+  it should "recognize numeric dates of form yy-mm-dd" in  {
     ensure(sentence= "88/02/15.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX88-02-15")
     ensure(sentence= "ISO date is 88/02/15.", Interval(3, 4), goldEntity= "DATE", goldNorm= "XX88-02-15")
   }
 
-  it should "recognize numeric dates in mm-yyyy" in  {
+  it should "recognize numeric dates of form mm-yyyy" in  {
     // These tests should be captured by rule mm-yyyy
     ensure(sentence= "02-1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
     ensure(sentence= "ISO date is 02/1988.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
@@ -71,7 +68,7 @@ class TestDateRecognition extends FlatSpec with Matchers {
     ensure(sentence= "02/1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
   }
 
-  it should "recognize numeric dates in yyyy-mm" in {
+  it should "recognize numeric dates of form yyyy-mm" in {
     // These tests are captured by rule yyyy-mm
     ensure(sentence= "ISO date is 1988-02.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
     ensure(sentence= "1988-02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
@@ -79,8 +76,26 @@ class TestDateRecognition extends FlatSpec with Matchers {
     ensure(sentence= "1988/02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
   }
 
-  it should "recognize numeric dates in yy-mm" in {
+  it should "recognize numeric dates of form yy-mm" in {
     ensure(sentence= "19:02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX19-02-XX")
+  }
+
+  it should "recognize date ranges" in {
+    ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 - 2020-11-11")
+    ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 - XXXX-07-31")
+    ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 - XXXX-07-31")
+  }
+
+  it should "recognize measurement units" in {
+    ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")
+
+    // TODO: need to implement UnitNormalizer.norm (Mihai)
+    ensure("It was 12 hectares", Interval(2, 4), "MEASUREMENT", "12.0 ha")
+
+    // TODO: need to implement a number grammar (Marco)
+    ensure("It was twelve hundred ha", Interval(2, 5), "MEASUREMENT", "1200.0 ha")
+    ensure("It was 12 hundred ha", Interval(2, 5), "MEASUREMENT", "1200.0 ha")
+
   }
 
   //
@@ -88,7 +103,7 @@ class TestDateRecognition extends FlatSpec with Matchers {
   //
 
   //
-  // Help methods below this point
+  // Helper methods below this point
   //
 
   /** Makes sure that the given span has the right entity labels and norms */

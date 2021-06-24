@@ -29,6 +29,16 @@ rules:
     pattern: |
       ( @year:PossibleYear  ","? )? @month:PossibleMonth @day:PossibleDay
 
+  # American dates format, with mandatory day:
+  - name: date-3b
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May 12, 2000"
+    action: mkDateMention
+    pattern: |
+      @month:PossibleMonth @day:PossibleDay ","? @year:PossibleYear
+
   # American date format, with mandatory year
   - name: date-4
     label: Date

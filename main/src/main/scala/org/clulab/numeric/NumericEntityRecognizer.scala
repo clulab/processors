@@ -24,12 +24,13 @@ class NumericEntityRecognizer {
     useLemmasForMatching = false
   )
 
+  val actions = new NumericActions
+
   // this matches the grammars for both atomic and compositional entities
   val extractor = {
     val source = io.Source.fromURL(getClass.getResource("/org/clulab/numeric/master.yml"))
     val rules = source.mkString
     source.close()
-    val actions = new NumericActions
     ExtractorEngine(rules, actions, actions.cleanupAction)
   }
 
@@ -59,12 +60,15 @@ class NumericEntityRecognizer {
     val originalEntities = matchLexiconNer(doc)
 
     // grammars
-    val mentions = extractor.extractFrom(doc)
+    var mentions = extractor.extractFrom(doc)
 
     // restore the original entities
     for(i <- originalEntities.indices) {
       doc.sentences(i).entities = originalEntities(i)
     }
+
+    // global actions *after* all grammars are done
+    mentions = actions.cleanupAction(mentions)
 
     mentions
   }

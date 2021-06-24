@@ -59,4 +59,13 @@ object TempEvalFormatter {
     else if(v.startsWith("dec")) 12
     else throw new RuntimeException(s"ERROR: unknown month $s!")
   }
+
+  def mkDate1Norm(number: Double, dateNorm: String): String = {
+    // replace the day value with number
+    val lastHyphen = dateNorm.lastIndexOf('-')
+    val prefix = dateNorm.substring(0, lastHyphen + 1)
+
+    val newDay = formatNumber(number.toInt, 2)
+    prefix + newDay
+  }
 }

@@ -150,6 +150,33 @@ class TestCluProcessor extends FatdynetTest {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
   }
 
+  it should "recognize dates" in {
+    var sent = proc.annotate("It was 12 January, 2021.").sentences.head
+    sent.entities.get(2) should be ("B-DATE")
+    sent.entities.get(3) should be ("I-DATE")
+    sent.entities.get(4) should be ("I-DATE")
+    sent.entities.get(5) should be ("I-DATE")
+    sent.norms.get(2) should be ("2021-01-12")
+
+    sent = proc.annotate("It was January 12.").sentences.head
+    sent.entities.get(2) should be ("B-DATE")
+    sent.entities.get(3) should be ("I-DATE")
+    sent.norms.get(2) should be ("XXXX-01-12")
+  }
+
+  it should "recognize date ranges" in {
+    var sent = proc.annotate("It happened between 12 January, 2021 and Feb. 2022.").sentences.head
+    sent.entities.get(2) should be ("B-DATE-RANGE")
+    sent.entities.get(3) should be ("I-DATE-RANGE")
+    sent.entities.get(4) should be ("I-DATE-RANGE")
+    sent.entities.get(5) should be ("I-DATE-RANGE")
+    sent.entities.get(6) should be ("I-DATE-RANGE")
+    sent.entities.get(7) should be ("I-DATE-RANGE")
+    sent.entities.get(8) should be ("I-DATE-RANGE")
+    sent.entities.get(9) should be ("I-DATE-RANGE")
+    sent.norms.get(2) should be ("2021-01-12 - 2022-02-XX")
+  }
+
   /* // TODO
   it should "parse a long sentence correctly" in {
     val doc = proc.annotate("Her T score of 63 on the Attention Problems scale is in the At Risk range suggesting that she sometimes daydreams or is easily distracted and unable to concentrate more than momentarily .")

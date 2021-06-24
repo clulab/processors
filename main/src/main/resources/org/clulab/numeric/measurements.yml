@@ -3,6 +3,7 @@ rules:
     label: Measurement
     priority: ${ rulepriority }
     type: token
+    action: mkMeasurementMention
     pattern: |
       @number:Number @unit:MeasurementUnit
 
