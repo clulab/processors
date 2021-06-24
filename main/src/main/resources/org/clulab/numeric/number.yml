@@ -12,7 +12,10 @@ rules:
     priority: 1
     type: token
     pattern: |
-      /^(\d+\.\d*|\.\d+|\d+)$/ (hundred|thousand|million|billion|trillion|quadrillion)
+      /^[+-]$/?
+      /^[+-]?(\d+\.\d*|\.\d+|\d+|\d+\/\d+)$/
+      (/\// /^[+-]$/? /^([+-]?\d+)$/)?
+      (hundred|thousand|million|billion|trillion|quadrillion)?
 
   # special case for number like "twelve hundred thirty four"
   # result must be >1000
