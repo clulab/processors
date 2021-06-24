@@ -89,7 +89,7 @@ class NumericActions extends Actions {
       if(! foundContainer) {
         filteredDates += date
       } else {
-        println(s"REMOVED MENTION: ${date.raw.mkString(" ")}")
+        //println(s"REMOVED MENTION: ${date.raw.mkString(" ")}")
       }
     }
 
