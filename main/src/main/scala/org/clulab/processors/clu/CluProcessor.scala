@@ -102,6 +102,32 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       .map { case (sentence, index) => SentenceAndIndex(sentence, index) }
       .groupBy(_.sentence.words.length)
 
+  case class NerInput(
+    words: Array[String],
+    lemmas: Option[Array[String]],
+    tags: Array[String],
+    startCharOffsets: Array[Int],
+    endCharOffsets: Array[Int],
+    docDateOpt: Option[String]
+  )
+
+  object NerInput {
+
+    def apply(document: Document, sentence: Sentence): NerInput = NerInput(
+      sentence.words,
+      sentence.lemmas,
+      sentence.tags.get,
+      sentence.startOffsets,
+      sentence.endOffsets,
+      document.getDCT
+    )
+  }
+
+  case class NerOutput(
+    labels: IndexedSeq[String],
+    normsOpt: Option[IndexedSeq[String]]
+  )
+
   override def annotate(doc:Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
       val groupsOfSentences = groupSentences(doc) // Do this just once.
@@ -165,9 +191,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     (tags, chunks, preds)
   }
 
-  def nerSentence(wordses: Array[Array[String]], embeddings: ConstEmbeddingParameters): Array[IndexedSeq[String]] = ???
+  def nerSentence(nerInputs: Array[NerInput], embeddings: ConstEmbeddingParameters): Array[NerOutput] = {
+    val nerOutputs = nerInputs.map { nerInput =>
+      val labelsAndNormsOpt = nerSentence(nerInput.words, nerInput.lemmas, nerInput.tags,
+          nerInput.startCharOffsets, nerInput.endCharOffsets, nerInput.docDateOpt, embeddings)
+
+      NerOutput(labelsAndNormsOpt._1, labelsAndNormsOpt._2)
+    }
+
+    nerOutputs
+  }
 
   /** Produces NE labels for one sentence */
+    // TODO: Turn this into array and call above?
   def nerSentence(
     words: Array[String],
     lemmas: Option[Array[String]],
@@ -370,15 +406,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** NER; modifies the document in place */
   override def recognizeNamedEntities(doc: Document): Unit = recognizeNamedEntities(doc, groupSentences(doc))
 
-  def recognizeNamedEntities(doc:Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
+  def recognizeNamedEntities(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
     basicSanityCheck(doc)
     val embeddings = getEmbeddings(doc)
     groupsOfSentencesAndIndexes.values.foreach { sentencesAndIndexes: Array[SentenceAndIndex] =>
-      val wordses: Array[Array[String]] = sentencesAndIndexes.map(_.sentence.words)
-      val labelses: Array[IndexedSeq[String]] = nerSentence(wordses, embeddings)
+      val sentences = sentencesAndIndexes.map(_.sentence)
+      val nerInputs = sentences.map(NerInput(doc, _))
+      val nerOutputs = nerSentence(nerInputs, embeddings)
 
-      sentencesAndIndexes.zip(labelses).foreach { case (SentenceAndIndex(sentence, _), labels) =>
-        sentence.entities = Some(labels.toArray)
+      sentences.zip(nerOutputs).foreach { case (sentence, nerOutput) =>
+        sentence.entities = Some(nerOutput.labels.toArray)
+        val normsOpt = nerOutput.normsOpt
+        if (normsOpt.nonEmpty)
+          sentence.norms = Some(normsOpt.get.toArray)
       }
     }
   }
