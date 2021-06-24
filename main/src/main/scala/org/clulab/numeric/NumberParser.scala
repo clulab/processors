@@ -101,6 +101,7 @@ object NumberParser {
     }
   }
 
+  // https://en.wikipedia.org/wiki/Names_of_large_numbers
   val americanNumberSystem: Map[String, Double] = Map[String, Double](
     "zero"        -> 0,
     "one"         -> 1,
