@@ -128,6 +128,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     normsOpt: Option[IndexedSeq[String]]
   )
 
+  object NerOutput {
+
+    def apply(labelses: IndexedSeq[IndexedSeq[String]]): NerOutput = NerOutput(labelses.head, None)
+  }
+
   override def annotate(doc:Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
       val groupsOfSentences = groupSentences(doc) // Do this just once.
@@ -192,18 +197,14 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   def nerSentence(nerInputs: Array[NerInput], embeddings: ConstEmbeddingParameters): Array[NerOutput] = {
-    val nerOutputs = nerInputs.map { nerInput =>
-      val labelsAndNormsOpt = nerSentence(nerInput.words, nerInput.lemmas, nerInput.tags,
-          nerInput.startCharOffsets, nerInput.endCharOffsets, nerInput.docDateOpt, embeddings)
-
-      NerOutput(labelsAndNormsOpt._1, labelsAndNormsOpt._2)
-    }
+    val annotatedSentences = nerInputs.map { nerInput => AnnotatedSentence(nerInput.words) }
+    val predictions = mtlNer.predictJointly(annotatedSentences, embeddings)
+    val nerOutputs = predictions.map(NerOutput(_))
 
     nerOutputs
   }
 
   /** Produces NE labels for one sentence */
-    // TODO: Turn this into array and call above?
   def nerSentence(
     words: Array[String],
     lemmas: Option[Array[String]],
@@ -212,9 +213,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     endCharOffsets: Array[Int],
     docDateOpt: Option[String],
     embeddings: ConstEmbeddingParameters
-  ):  (IndexedSeq[String], Option[IndexedSeq[String]]) = {
-    val allLabels = mtlNer.predictJointly(AnnotatedSentence(words), embeddings)
-    (allLabels(0), None)
+  ): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
+    val nerInput = NerInput(words, lemmas, tags, startCharOffsets, endCharOffsets, docDateOpt)
+    val nerOutputs = nerSentence(Array(nerInput), embeddings)
+
+    (nerOutputs.head.labels, None)
   }
 
   /** Gets the index of all predicates in this sentence */
