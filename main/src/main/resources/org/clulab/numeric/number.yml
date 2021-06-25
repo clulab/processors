@@ -24,8 +24,12 @@ rules:
     priority: 4
     type: token
     pattern: |
-      # twelve hundred thirty four => 1234
-      @WordTens hundred @WordTens
+      # numbers 10-19
+      (ten | eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
+      # or numbers 20-99
+      twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
+      sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit?)
+      hundred @WordTens
 
   - name: word_quadrillions
     label: WordQuadrillions
