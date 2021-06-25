@@ -46,17 +46,14 @@ object NumberParser {
   }
 
   def parseWords(words: Seq[String]): Option[Double] = {
-
     // if single token then return corresponding number
     if (words.length == 1) {
       return americanNumberSystem.get(words.head)
     }
-
     try {
       // accumulate result here
       var totalSum: Double = 0
       var remainingWords = words.toArray
-
       for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand")) {
         val index = remainingWords.indexOf(w)
         var multiplier: Double = 0
@@ -66,10 +63,8 @@ object NumberParser {
           totalSum += multiplier * americanNumberSystem(w)
         }
       }
-
       // handle hundreds
       totalSum += numberFormation(remainingWords)
-
       // return number
       Some(totalSum)
     } catch {
