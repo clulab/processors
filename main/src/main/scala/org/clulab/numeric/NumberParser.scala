@@ -15,38 +15,33 @@ object NumberParser {
   }
 
   def parseNumeric(words: Seq[String]): Option[Double] = {
-    var number: Double = 1
-    var numerator: Double = 0
-    for (w <- words) {
-      w match {
-        case "-" =>
-          number *= -1
-        case "/" =>
-          numerator = number
-          number = 1
-        case w if w.contains("/") =>
-          val Array(w1, w2) = w.split("/")
-          try {
+    try {
+      var number: Double = 1
+      var numerator: Option[Double] = None
+      for (w <- words) {
+        w match {
+          case "-" =>
+            number *= -1
+          case "/" =>
+            numerator = Some(number)
+            number = 1
+          case w if w.contains("/") =>
+            val Array(w1, w2) = w.split("/")
             number *= w1.toDouble
-            numerator = number
+            numerator = Some(number)
             number = w2.toDouble
-          } catch {
-            case _: Exception => return None
-          }
-        case w if americanNumberSystem.contains(w) =>
-          number *= americanNumberSystem(w)
-        case w =>
-          try {
+          case w if americanNumberSystem.contains(w) =>
+            number *= americanNumberSystem(w)
+          case w =>
             number *= w.toDouble
-          } catch {
-            case _: Exception => return None
-          }
+        }
       }
-    }
-    if (numerator == 0) {
-      return Some(number)
-    } else {
-      return Some(numerator / number)
+      numerator match {
+        case None => Some(number)
+        case Some(n) => Some(n / number)
+      }
+    } catch {
+      case _: Exception => None
     }
   }
 
@@ -57,33 +52,29 @@ object NumberParser {
       return americanNumberSystem.get(words.head)
     }
 
-    // accumulate result here
-    var totalSum: Double = 0
-    var remainingWords = words.toArray
-
-    for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand")) {
-      val index = remainingWords.indexOf(w)
-      var multiplier: Double = 0
-      if (index >= 0) {
-        try {
-          multiplier = numberFormation(remainingWords.slice(0, index))
-        } catch {
-          case _: Exception => return None
-        }
-        remainingWords = remainingWords.drop(index + 1)
-        totalSum += multiplier * americanNumberSystem(w)
-      }
-    }
-
-    // handle hundreds
     try {
-      totalSum += numberFormation(remainingWords)
-    } catch {
-      case _: Exception => return None
-    }
+      // accumulate result here
+      var totalSum: Double = 0
+      var remainingWords = words.toArray
 
-    // return number
-    Some(totalSum)
+      for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand")) {
+        val index = remainingWords.indexOf(w)
+        var multiplier: Double = 0
+        if (index >= 0) {
+          multiplier = numberFormation(remainingWords.slice(0, index))
+          remainingWords = remainingWords.drop(index + 1)
+          totalSum += multiplier * americanNumberSystem(w)
+        }
+      }
+
+      // handle hundreds
+      totalSum += numberFormation(remainingWords)
+
+      // return number
+      Some(totalSum)
+    } catch {
+      case _: Exception => None
+    }
   }
 
   def numberFormation(words: Array[String]): Double = {
