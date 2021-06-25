@@ -56,9 +56,8 @@ object NumberParser {
       var remainingWords = words.toArray
       for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand")) {
         val index = remainingWords.indexOf(w)
-        var multiplier: Double = 0
         if (index >= 0) {
-          multiplier = numberFormation(remainingWords.slice(0, index))
+          val multiplier = numberFormation(remainingWords.slice(0, index))
           remainingWords = remainingWords.drop(index + 1)
           totalSum += multiplier * americanNumberSystem(w)
         }
