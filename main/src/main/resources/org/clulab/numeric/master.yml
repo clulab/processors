@@ -6,6 +6,17 @@ taxonomy:
               - PossibleMonth
               - PossibleYear
               - Number
+          - Subatomic:
+              - NumberWord
+              - WordNumberSpecial
+              - WordQuadrillions
+              - WordTrillions
+              - WordBillions
+              - WordMillions
+              - WordThousands
+              - WordHundreds
+              - WordTens
+              - WordDigit
           - Compositional:
               - Date
               - DateRange
@@ -18,20 +29,23 @@ rules:
   - import: org/clulab/numeric/atomic.yml
     # Atomic entities that are the building blocks for compositional ones
     vars:
-      rulepriority: "1"
+      rulepriority: "11"
+
+  - import: org/clulab/numeric/number.yml
+    # numbers written with words or digits
 
   - import: org/clulab/numeric/measurements.yml
     # Compositional rules for measurements such as NUMBER UNIT
     vars:
-      rulepriority: "3"
+      rulepriority: "13"
 
   - import: org/clulab/numeric/dates.yml
     # Compositional rules for dates
     vars:
-      rulepriority: "4"
+      rulepriority: "14"
 
   - import: org/clulab/numeric/date-ranges.yml
     # Compositional rules for date ranges such as "between Date1 to Date2"
     vars:
-      rulepriority: "5"
+      rulepriority: "15"
 

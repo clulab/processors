@@ -24,11 +24,30 @@ class TestNumberParser extends FlatSpec with Matchers {
 	}
 
 	it should "convert words to numbers" in {
+		NumberParser.parse("-1".split(" ")) shouldEqual Some(-1)
+		NumberParser.parse("1/2".split(" ")) shouldEqual Some(0.5)
+		NumberParser.parse("-1/2".split(" ")) shouldEqual Some(-0.5)
+		NumberParser.parse("1/-2".split(" ")) shouldEqual Some(-0.5)
+		NumberParser.parse("-1/-2".split(" ")) shouldEqual Some(0.5)
+		NumberParser.parse("- 1".split(" ")) shouldEqual Some(-1)
+		NumberParser.parse("1 / 2".split(" ")) shouldEqual Some(0.5)
+		NumberParser.parse("- 1 / 2".split(" ")) shouldEqual Some(-0.5)
+		NumberParser.parse("1 / - 2".split(" ")) shouldEqual Some(-0.5)
+		NumberParser.parse("- 1 / - 2".split(" ")) shouldEqual Some(0.5)
+		NumberParser.parse("1.2".split(" ")) shouldEqual Some(1.2)
+		NumberParser.parse("1.2 million".split(" ")) shouldEqual Some(1200000)
 		NumberParser.parse("twenty one".split(" ")) shouldEqual Some(21)
 		NumberParser.parse("thirty three".split(" ")) shouldEqual Some(33)
 		NumberParser.parse("twelve hundred".split(" ")) shouldEqual Some(1200)
-		NumberParser.parse("two thousand and one".split(" ")) shouldEqual Some(2001)
-		NumberParser.parse("two million three hundred forty five thousand six hundred seventy eight".split(" ")) shouldEqual Some(2345678)
+		NumberParser.parse("twelve hundred thirty four".split(" ")) shouldEqual Some(1234)
+		NumberParser.parse("one thousand two hundred thirty four".split(" ")) shouldEqual Some(1234)
+		NumberParser.parse("two thousand one".split(" ")) shouldEqual Some(2001)
+		// NumberParser.parse("two thousand and one".split(" ")) shouldEqual Some(2001)
+		NumberParser.parse("one hundred twenty three million four hundred fifty six thousand seven hundred eighty nine".split(" ")) shouldEqual Some(123456789)
+		NumberParser.parse("5.2 million".split(" ")) shouldEqual Some(5200000)
+		NumberParser.parse("5.2 billion".split(" ")) shouldEqual Some(5200000000d)
+		NumberParser.parse("5.2 trillion".split(" ")) shouldEqual Some(5200000000000d)
+		NumberParser.parse("5.2 quadrillion".split(" ")) shouldEqual Some(5200000000000000d)
 	}
 
 }

@@ -39,14 +39,3 @@ rules:
     type: token
     pattern: |
       [word=/^([1-9]|1\d|2\d|3[01])(st|nd|rd|th)?$/]
-
-  # possible numbers, both using numeric notation and literal
-  # TODO: fix me. this is under inclusive. needs proper rule(s) for numeric and literal numbers
-  - name: numbers
-    label: Number
-    priority: ${ rulepriority }
-    type: token
-    pattern: |
-      [word=/^(\-|\+)?\d+(\/\d+)?$/]
-
-
