@@ -1,11 +1,132 @@
-# measurement units, case insensitive so everything is lower case for simplicity. The first column is the actual name and the second column is its various forms. power is keep as it is now for simplicity.
+# measurement units, case insensitive so everything is lower case for simplicity.
+kilometer
+kilometers
+km
 meter
+meters
 m
+centimeter
+centimeters
+cm
+millimeter
+millimeters
+mm
+micrometer
+micrometers
+μm
+mile
+miles
+mi
+yard
+yards
+yd
+foot
+feet
+ft
+inch
+inches
+in
+square kilometer
+square kilometers
+km2
 square meter
 square meters
 m2
+square
 acre
 acres
 hectare
 hectares
 ha
+square foot
+square feet
+ft2
+square inch
+square inches
+in2
+square yard
+square yards
+yd2
+kilogram
+kg
+gram
+g
+milligram
+mg
+grain
+gr
+ton
+t
+carat
+pound
+lb
+ounce
+oz
+pennyweight
+dwt
+year
+years
+nanosecond
+nanoseconds
+ns
+day
+days
+d
+ds
+month
+months
+minutes
+minute
+min
+mins
+second
+seconds
+s
+hour
+hours
+h
+hs
+cubic meter
+cubic meters
+m3
+liter
+liters
+l
+milliliter
+milliliters
+ml
+teaspoon
+teaspoons
+tablespoon
+tablespoons
+pint
+pints
+liq pt
+dry pt
+quart
+quarts
+qt
+dry qt
+fl oz
+gallon
+gallons
+gl
+cup
+cups
+barrel
+barrels
+bbl
+acre-foot
+acre-feet
+cubic foot
+cubic feet
+ft3
+cubic inch
+cubic inches
+in3
+cubic mile
+cubic miles
+mi3
+cubic yard
+cubic yards
+yd3
