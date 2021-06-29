@@ -144,7 +144,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     GivenConstEmbeddingsAttachment(doc).perform {
       val groupsOfSentences = groupSentences(doc) // Do this just once.
 
-      tagPartsOfSpeech(doc, groupsOfSentences) // the call to the POS/chunking/SRLp MTL is in here
+      tagPartsOfSpeeches(doc, groupsOfSentences) // the call to the POS/chunking/SRLp MTL is in here
       //println("After POS")
       //println(doc.sentences.head.tags.get.mkString(", "))
       recognizeNamedEntities(doc, groupsOfSentences) // the call to the NER MTL is in here
@@ -194,8 +194,13 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Produces POS tags, chunks, and semantic role predicates for one sentence */
   def tagSentence(words: IndexedSeq[String], embeddings: ConstEmbeddingParameters): TagOutput = {
-    val allLabels = mtlPosChunkSrlp.predictJointly(AnnotatedSentence(words), embeddings)
-    TagOutput(tags = allLabels(0), chunks = allLabels(1), preds = allLabels(2))
+    tagSentences(Array(words), embeddings).head
+  }
+
+  def tagSentences(wordses: Array[IndexedSeq[String]], embeddings: ConstEmbeddingParameters): Array[TagOutput] = {
+    val annotatedSentences = wordses.map(AnnotatedSentence(_))
+    val allLabelses = mtlPosChunkSrlp.predictJointly(annotatedSentences, embeddings)
+    allLabelses.map { allLabels => TagOutput(tags = allLabels(0), chunks = allLabels(1), preds = allLabels(2)) }
   }
 
   /** Produces NE labels for multiple sentences which have been converted into NerInput.
@@ -364,19 +369,20 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
   override def tagPartsOfSpeech(doc: Document): Unit =
-    tagPartsOfSpeech(doc, groupSentences(doc))
+    tagPartsOfSpeeches(doc, groupSentences(doc))
 
-  def tagPartsOfSpeech(doc: Document, groupsOfSentences: GroupsOfSentencesAndIndexes): Unit = {
+  def tagPartsOfSpeeches(doc: Document, groupsOfSentences: GroupsOfSentencesAndIndexes): Unit = {
     basicSanityCheck(doc)
 
     val embeddings = getEmbeddings(doc)
     // These preds need to stay in the same order as the sentences.
-    val predsForAllSents = doc.sentences.map { sent =>
+    val predsForAllSents: Array[IndexedSeq[Int]] = new Array(doc.sentences.length)
+    doc.sentences.zipWithIndex.foreach { case (sent, index) =>
       val TagOutput(tags, chunks, preds) = tagSentence(sent.words, embeddings)
       sent.tags = Some(tags.toArray)
       sent.chunks = Some(chunks.toArray)
 
-      getPredicateIndexes(preds)
+      predsForAllSents(index) = getPredicateIndexes(preds)
     }
 
     // store the index of all predicates as a doc attachment

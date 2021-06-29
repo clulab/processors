@@ -3,6 +3,7 @@ package org.clulab.processors.fastnlp
 import org.clulab.dynet.{ConstEmbeddingsGlove, Utils}
 import org.clulab.processors.Document
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.TagOutput
 import org.clulab.processors.clu.tokenizer.TokenizerStep
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.GraphMap
@@ -41,7 +42,7 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
       val lemmas = sent.lemmas
 
       // The SRL model relies on NEs produced by CluProcessor, so run the NER first
-      val (tags, _, preds) = cluProcessor.tagSentence(words, embeddings)
+      val TagOutput(tags, _, preds) = cluProcessor.tagSentence(words, embeddings)
       val predIndexes = cluProcessor.getPredicateIndexes(preds)
       val tagsAsArray = tags.toArray
       val (entities, _) = cluProcessor.nerSentence(
