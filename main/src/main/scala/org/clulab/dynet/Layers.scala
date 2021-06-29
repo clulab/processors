@@ -202,22 +202,32 @@ object Layers {
   }
 
   def predictJointly(layers: IndexedSeq[Layers],
-      sentences: Array[AnnotatedSentence],
-      constEmbeddings: ConstEmbeddingParameters): Array[IndexedSeq[IndexedSeq[String]]] = {
-    // This is done on a single computation graph because the sentences are supposed to have the same lenths.
-
+                     sentence: AnnotatedSentence,
+                     constEmbeddings: ConstEmbeddingParameters  ): IndexedSeq[IndexedSeq[String]] = {
     // DyNet's computation graph is a static variable, so this block must be synchronized
     Synchronizer.withComputationGraph("Layers.predictJointly()") {
-      sentences.map {
-        // Does the CG need to be renewed or something?
-        predictJointly(layers, _, constEmbeddings)
+      predictJointlyWithComputationGraph(layers, sentence, constEmbeddings)
+    }
+  }
+
+  def predictJointly(
+    layers: IndexedSeq[Layers],
+    sentences: Array[AnnotatedSentence],
+    constEmbeddings: ConstEmbeddingParameters
+  ): Array[IndexedSeq[IndexedSeq[String]]] = {
+    // DyNet's computation graph is a static variable, so this block must be synchronized
+    Synchronizer.withComputationGraph("Layers.predictJointly()") {
+      sentences.map { sentence =>
+        predictJointlyWithComputationGraph(layers, sentence, constEmbeddings)
       }
     }
   }
 
-  protected def predictJointly(layers: IndexedSeq[Layers],
-                     sentence: AnnotatedSentence,
-                     constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
+  protected def predictJointlyWithComputationGraph(
+    layers: IndexedSeq[Layers],
+    sentence: AnnotatedSentence,
+    constEmbeddings: ConstEmbeddingParameters
+  ): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
     // layers(0) contains the shared layers
@@ -275,99 +285,157 @@ object Layers {
               taskId: Int,
               sentence: AnnotatedSentence,
               constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
-    val labelsForTask =
-      // DyNet's computation graph is a static variable, so this block must be synchronized.
-      Synchronizer.withComputationGraph("Layers.predict()") {
-        val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
-        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
+    // DyNet's computation graph is a static variable, so this block must be synchronized.
+    Synchronizer.withComputationGraph("Layers.predict()") {
+      predictWithComputationGraph(layers, taskId, sentence, constEmbeddings)
+    }
+  }
 
-        out
+  def predict(
+    layers: IndexedSeq[Layers],
+    taskId: Int,
+    sentences: Array[AnnotatedSentence],
+    constEmbeddings: ConstEmbeddingParameters
+  ): Array[IndexedSeq[String]] = {
+    // DyNet's computation graph is a static variable, so this block must be synchronized.
+    Synchronizer.withComputationGraph("Layers.predict()") {
+      sentences.map { sentence =>
+        predictWithComputationGraph(layers, taskId, sentence, constEmbeddings)
       }
+    }
+  }
 
-    labelsForTask
+  protected def predictWithComputationGraph(
+    layers: IndexedSeq[Layers],
+    taskId: Int,
+    sentence: AnnotatedSentence,
+    constEmbeddings: ConstEmbeddingParameters
+  ): IndexedSeq[String] = {
+    val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
+    val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+    val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
+
+    out
   }
 
   def predictWithScores(layers: IndexedSeq[Layers],
                         taskId: Int,
                         sentence: AnnotatedSentence,
-                        constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    val labelsForTask =
-      // DyNet's computation graph is a static variable, so this block must be synchronized
-      Synchronizer.withComputationGraph("Layers.predictWithScores()") {
-        val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
-        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
+                        constEmbeddings: ConstEmbeddingParameters  ): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    // DyNet's computation graph is a static variable, so this block must be synchronized
+    Synchronizer.withComputationGraph("Layers.predictWithScores()") {
+      predictWithScoresWithComputationGraph(layers, taskId, sentence, constEmbeddings)
+    }
+  }
 
-        out
+  def predictWithScores(
+    layers: IndexedSeq[Layers],
+    taskId: Int,
+    sentences: Array[AnnotatedSentence],
+    constEmbeddings: ConstEmbeddingParameters
+  ): Array[IndexedSeq[IndexedSeq[(String, Float)]]] = {
+    // DyNet's computation graph is a static variable, so this block must be synchronized
+    Synchronizer.withComputationGraph("Layers.predictWithScores()") {
+      sentences.map { sentence =>
+        predictWithScoresWithComputationGraph(layers, taskId, sentence, constEmbeddings)
       }
+    }
+  }
 
-    labelsForTask
+  protected def predictWithScoresWithComputationGraph(
+    layers: IndexedSeq[Layers],
+    taskId: Int,
+    sentence: AnnotatedSentence,
+    constEmbeddings: ConstEmbeddingParameters
+  ): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
+    val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+    val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
+
+    out
   }
 
   def parse(layers: IndexedSeq[Layers],
             sentence: AnnotatedSentence,
             constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
-    val headsAndLabels =
-      // DyNet's computation graph is a static variable, so this block must be synchronized
-      Synchronizer.withComputationGraph("Layers.parse()") {
-        //
-        // first get the output of the layers that are shared between the two tasks
-        //
-        assert(layers(0).nonEmpty)
-        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
+    // DyNet's computation graph is a static variable, so this block must be synchronized
+    Synchronizer.withComputationGraph("Layers.parse()") {
+      parseWithComputationGraph(layers, sentence, constEmbeddings)
+    }
+  }
 
-        //
-        // now predict the heads (first task)
-        //
-        val headStates = layers(1).forwardFrom(sharedStates, None, doDropout = false)
-        val headEmissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(headStates)
-        val headScores = layers(1).finalLayer.get.inferenceWithScores(headEmissionScores)
+  def parse(
+    layers: IndexedSeq[Layers],
+    sentences: Array[AnnotatedSentence],
+    constEmbeddings: ConstEmbeddingParameters
+  ): Array[IndexedSeq[(Int, String)]] = {
+    // DyNet's computation graph is a static variable, so this block must be synchronized
+    Synchronizer.withComputationGraph("Layers.parse()") {
+      sentences.map { sentence =>
+        parseWithComputationGraph(layers, sentence, constEmbeddings)
+      }
+    }
+  }
 
-        // store the head values here
-        val heads = new ArrayBuffer[Int]()
-        for(wi <- headScores.indices) {
-          val predictionsForThisWord = headScores(wi)
+  protected def parseWithComputationGraph(
+    layers: IndexedSeq[Layers],
+    sentence: AnnotatedSentence,
+    constEmbeddings: ConstEmbeddingParameters
+  ): IndexedSeq[(Int, String)] = {
+    //
+    // first get the output of the layers that are shared between the two tasks
+    //
+    assert(layers(0).nonEmpty)
+    val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
 
-          // pick the prediction with the highest score, which is within the boundaries of the current sentence
-          var done = false
-          for(hi <- predictionsForThisWord.indices if ! done) {
-            try {
-              val relativeHead = predictionsForThisWord(hi)._1.toInt
-              if (relativeHead == 0) { // this is the root
-                heads += -1
-                done = true
-              } else {
-                val headPosition = wi + relativeHead
-                if (headPosition >= 0 && headPosition < sentence.size) {
-                  heads += headPosition
-                  done = true
-                }
-              }
-            } catch {
-              // some valid predictions may not be integers, e.g., "<STOP>" may be predicted by the sequence model
-              case e: NumberFormatException => done = false
+    //
+    // now predict the heads (first task)
+    //
+    val headStates = layers(1).forwardFrom(sharedStates, None, doDropout = false)
+    val headEmissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(headStates)
+    val headScores = layers(1).finalLayer.get.inferenceWithScores(headEmissionScores)
+
+    // store the head values here
+    val heads = new ArrayBuffer[Int]()
+    for(wi <- headScores.indices) {
+      val predictionsForThisWord = headScores(wi)
+
+      // pick the prediction with the highest score, which is within the boundaries of the current sentence
+      var done = false
+      for(hi <- predictionsForThisWord.indices if ! done) {
+        try {
+          val relativeHead = predictionsForThisWord(hi)._1.toInt
+          if (relativeHead == 0) { // this is the root
+            heads += -1
+            done = true
+          } else {
+            val headPosition = wi + relativeHead
+            if (headPosition >= 0 && headPosition < sentence.size) {
+              heads += headPosition
+              done = true
             }
           }
-          if(! done) {
-            // we should not be here, but let's be safe
-            // if nothing good was found, assume root
-            heads += -1
-          }
+        } catch {
+          // some valid predictions may not be integers, e.g., "<STOP>" may be predicted by the sequence model
+          case e: NumberFormatException => done = false
         }
-
-        //
-        // next, predict the labels using the predicted heads
-        //
-        val labelStates = layers(2).forwardFrom(sharedStates, Some(heads), doDropout = false)
-        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)
-        val labels = layers(2).finalLayer.get.inference(emissionScores)
-        assert(labels.size == heads.size)
-
-        heads.zip(labels)
       }
+      if(! done) {
+        // we should not be here, but let's be safe
+        // if nothing good was found, assume root
+        heads += -1
+      }
+    }
 
-    headsAndLabels
+    //
+    // next, predict the labels using the predicted heads
+    //
+    val labelStates = layers(2).forwardFrom(sharedStates, Some(heads), doDropout = false)
+    val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)
+    val labels = layers(2).finalLayer.get.inference(emissionScores)
+    assert(labels.size == heads.size)
+
+    heads.zip(labels)
   }
 
   def loss(layers: IndexedSeq[Layers],
