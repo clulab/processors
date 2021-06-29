@@ -208,8 +208,10 @@ object Layers {
 
     // DyNet's computation graph is a static variable, so this block must be synchronized
     Synchronizer.withComputationGraph("Layers.predictJointly()") {
-      sentences.map(predictJointly(layers, _, constEmbeddings))
-      // Does the CG need to be renewed or something?
+      sentences.map {
+        // Does the CG need to be renewed or something?
+        predictJointly(layers, _, constEmbeddings)
+      }
     }
   }
 

@@ -14,6 +14,44 @@ import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
 import org.clulab.utils.SeqUtils
 
+/** This is the per sentence information necessary for NER. */
+case class NerInput(
+  words: Array[String],
+  lemmas: Option[Array[String]],
+  tags: Array[String],
+  startCharOffsets: Array[Int],
+  endCharOffsets: Array[Int]
+)
+
+object NerInput {
+
+  def apply(sentence: Sentence): NerInput = NerInput(
+    sentence.words,
+    sentence.lemmas,
+    sentence.tags.get,
+    sentence.startOffsets,
+    sentence.endOffsets
+  )
+}
+
+/** Again this is per sentence so that it can be grouped for multiple sentences. */
+case class NerOutput(
+  labels: IndexedSeq[String],
+  normsOpt: Option[IndexedSeq[String]]
+)
+
+object NerOutput {
+
+  def apply(labelses: IndexedSeq[IndexedSeq[String]]): NerOutput = NerOutput(labelses.head, None)
+}
+
+/** Again this is per sentence so that it can be grouped for multiple sentences. */
+case class TagOutput(
+  tags: IndexedSeq[String],
+  chunks: IndexedSeq[String],
+  preds: IndexedSeq[String]
+)
+
 /**
   * Processor that uses only tools that are under Apache License
   * Currently supports:
@@ -102,37 +140,6 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       .map { case (sentence, index) => SentenceAndIndex(sentence, index) }
       .groupBy(_.sentence.words.length)
 
-  case class NerInput(
-    words: Array[String],
-    lemmas: Option[Array[String]],
-    tags: Array[String],
-    startCharOffsets: Array[Int],
-    endCharOffsets: Array[Int],
-    docDateOpt: Option[String]
-  )
-
-  object NerInput {
-
-    def apply(document: Document, sentence: Sentence): NerInput = NerInput(
-      sentence.words,
-      sentence.lemmas,
-      sentence.tags.get,
-      sentence.startOffsets,
-      sentence.endOffsets,
-      document.getDCT
-    )
-  }
-
-  case class NerOutput(
-    labels: IndexedSeq[String],
-    normsOpt: Option[IndexedSeq[String]]
-  )
-
-  object NerOutput {
-
-    def apply(labelses: IndexedSeq[IndexedSeq[String]]): NerOutput = NerOutput(labelses.head, None)
-  }
-
   override def annotate(doc:Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
       val groupsOfSentences = groupSentences(doc) // Do this just once.
@@ -186,17 +193,15 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
 
   /** Produces POS tags, chunks, and semantic role predicates for one sentence */
-  def tagSentence(words: IndexedSeq[String], embeddings: ConstEmbeddingParameters):
-    (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
-
+  def tagSentence(words: IndexedSeq[String], embeddings: ConstEmbeddingParameters): TagOutput = {
     val allLabels = mtlPosChunkSrlp.predictJointly(AnnotatedSentence(words), embeddings)
-    val tags = allLabels(0)
-    val chunks = allLabels(1)
-    val preds = allLabels(2)
-    (tags, chunks, preds)
+    TagOutput(tags = allLabels(0), chunks = allLabels(1), preds = allLabels(2))
   }
 
-  def nerSentence(nerInputs: Array[NerInput], embeddings: ConstEmbeddingParameters): Array[NerOutput] = {
+  /** Produces NE labels for multiple sentences which have been converted into NerInput.
+    * It is required that the number of words in each sentence is the same.
+    */
+  def nerSentences(nerInputs: Array[NerInput], docDateOpt: Option[String], embeddings: ConstEmbeddingParameters): Array[NerOutput] = {
     val annotatedSentences = nerInputs.map { nerInput => AnnotatedSentence(nerInput.words) }
     val predictions = mtlNer.predictJointly(annotatedSentences, embeddings)
     val nerOutputs = predictions.map(NerOutput(_))
@@ -204,7 +209,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     nerOutputs
   }
 
-  /** Produces NE labels for one sentence */
+  /** Produces NE labels for one sentence which is converted into an NerInput */
   def nerSentence(
     words: Array[String],
     lemmas: Option[Array[String]],
@@ -214,8 +219,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     docDateOpt: Option[String],
     embeddings: ConstEmbeddingParameters
   ): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
-    val nerInput = NerInput(words, lemmas, tags, startCharOffsets, endCharOffsets, docDateOpt)
-    val nerOutputs = nerSentence(Array(nerInput), embeddings)
+    val nerInput = NerInput(words, lemmas, tags, startCharOffsets, endCharOffsets)
+    val nerOutputs = nerSentences(Array(nerInput), docDateOpt, embeddings)
 
     (nerOutputs.head.labels, None)
   }
@@ -367,7 +372,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val embeddings = getEmbeddings(doc)
     // These preds need to stay in the same order as the sentences.
     val predsForAllSents = doc.sentences.map { sent =>
-      val (tags, chunks, preds) = tagSentence(sent.words, embeddings)
+      val TagOutput(tags, chunks, preds) = tagSentence(sent.words, embeddings)
       sent.tags = Some(tags.toArray)
       sent.chunks = Some(chunks.toArray)
 
@@ -414,8 +419,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val embeddings = getEmbeddings(doc)
     groupsOfSentencesAndIndexes.values.foreach { sentencesAndIndexes: Array[SentenceAndIndex] =>
       val sentences = sentencesAndIndexes.map(_.sentence)
-      val nerInputs = sentences.map(NerInput(doc, _))
-      val nerOutputs = nerSentence(nerInputs, embeddings)
+      val nerInputs = sentences.map(NerInput(_))
+      val nerOutputs = nerSentences(nerInputs, doc.getDCT, embeddings)
 
       sentences.zip(nerOutputs).foreach { case (sentence, nerOutput) =>
         sentence.entities = Some(nerOutput.labels.toArray)
