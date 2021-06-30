@@ -350,6 +350,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     Layers.parse(model, sentence, constEmbeddings)
   }
 
+  def parse(sentences: Array[AnnotatedSentence],
+    constEmbeddings: ConstEmbeddingParameters): Array[IndexedSeq[(Int, String)]] = {
+    Layers.parse(model, sentences, constEmbeddings)
+  }
+
   def test(): Unit = {
     require(taskManagerOpt.isDefined)
 

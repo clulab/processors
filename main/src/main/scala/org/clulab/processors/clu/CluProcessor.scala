@@ -1,18 +1,16 @@
 package org.clulab.processors.clu
 
-import org.clulab.processors.clu.tokenizer._
-import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
+import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
+import org.clulab.processors.clu.CluProcessor._
+import org.clulab.processors.clu.tokenizer._
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles, SeqUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import CluProcessor._
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
-import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
-import org.clulab.utils.BeforeAndAfter
-import org.clulab.utils.SeqUtils
+import scala.collection.mutable.ArrayBuffer
 
 /** This is the per sentence information necessary for NER. */
 case class NerInput(
@@ -52,11 +50,17 @@ case class TagOutput(
   preds: IndexedSeq[String]
 )
 
-case class ParseInput(
-  words: IndexedSeq[String],
-  posTags: IndexedSeq[String],
-  nerLabels: IndexedSeq[String]
+case class SrlInput(
+  words: Array[String],
+  tags: Array[String],
+  entities: Array[String],
+  predicateIndexes: IndexedSeq[Int]
 )
+
+object SrlInput {
+  def apply(sentence: Sentence, predicateIndexes: IndexedSeq[Int]): SrlInput =
+    new SrlInput(sentence.words, sentence.tags.get, sentence.entities.get, predicateIndexes)
+}
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -141,10 +145,14 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   // This maps sentence length to the (sentence object, index in document).
   type GroupsOfSentencesAndIndexes = Map[Int, Array[SentenceAndIndex]]
 
+  // TODO: Make this just sentences and indexes, i.e., take values at end
   def groupSentences(doc: Document): GroupsOfSentencesAndIndexes = doc.sentences
       .zipWithIndex
       .map { case (sentence, index) => SentenceAndIndex(sentence, index) }
       .groupBy(_.sentence.words.length)
+
+  def toAnnotatedSentence(sentence: Sentence): AnnotatedSentence =
+      AnnotatedSentence(sentence.words, sentence.tags.map(_.toIndexedSeq), sentence.entities.map(_.toIndexedSeq))
 
   override def annotate(doc:Document): Document = {
     val groupsOfSentencesAndIndexes = groupSentences(doc) // Do this just once.
@@ -160,23 +168,29 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   def annotateBySentence(doc: Document): Unit = {
     tagPartsOfSpeech(doc)
-    recognizeNamedEntities(doc) // the call to the NER MTL is in here
-    chunking(doc) // Nothing, kept for the record
-    parse(doc) // dependency parsing
-    lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
-    srl(doc) // SRL (arguments)
+    // The above has the side-effect of adding a predicate attachment that srl() needs.
+    GivenExistingPredicateAttachment(doc).perform {
+      recognizeNamedEntities(doc) // the call to the NER MTL is in here
+      chunking(doc) // Nothing, kept for the record
+      parse(doc) // dependency parsing
+      lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+      srl(doc) // SRL (arguments)
+    }
     // these are not implemented yet
     resolveCoreference(doc)
     discourse(doc)
   }
 
   def annotateBySentences(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
-    tagPartsOfSpeeches(doc, groupsOfSentencesAndIndexes) // the call to the POS/chunking/SRLp MTL is in here
-    recognizeNamedEntities(doc, groupsOfSentencesAndIndexes) // the call to the NER MTL is in here
-    chunkings(doc, groupsOfSentencesAndIndexes) // Nothing, kept for the record
-    parses(doc, groupsOfSentencesAndIndexes) // dependency parsing
-    lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
-    srls(doc, groupsOfSentencesAndIndexes) // SRL (arguments)
+    tagPartsOfSpeech(doc, groupsOfSentencesAndIndexes) // the call to the POS/chunking/SRLp MTL is in here
+    // The above has the side-effect of adding a predicate attachment that srl() needs.
+    GivenExistingPredicateAttachment(doc).perform {
+      recognizeNamedEntities(doc, groupsOfSentencesAndIndexes) // the call to the NER MTL is in here
+      chunking(doc, groupsOfSentencesAndIndexes) // Nothing, kept for the record
+      parse(doc, groupsOfSentencesAndIndexes) // dependency parsing
+      lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+      srl(doc, groupsOfSentencesAndIndexes) // SRL (arguments)
+    }
     // these are not implemented yet
     resolveCoreference(doc)
     discourse(doc)
@@ -206,13 +220,31 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   /** Produces POS tags, chunks, and semantic role predicates for one sentence */
   def tagSentence(words: IndexedSeq[String], embeddings: ConstEmbeddingParameters): TagOutput = {
-    tagSentences(Array(words.toArray), embeddings).head
-  }
+    val allLabels = mtlPosChunkSrlp.predictJointly(AnnotatedSentence(words), embeddings)
+    val tags = allLabels(0)
+    val chunks = allLabels(1)
+    val preds = allLabels(2)
+    TagOutput(tags, chunks, preds)
+}
 
   def tagSentences(wordses: Array[Array[String]], embeddings: ConstEmbeddingParameters): Array[TagOutput] = {
     val annotatedSentences = wordses.map(AnnotatedSentence(_))
     val allLabelses = mtlPosChunkSrlp.predictJointly(annotatedSentences, embeddings)
     allLabelses.map { allLabels => TagOutput(tags = allLabels(0), chunks = allLabels(1), preds = allLabels(2)) }
+  }
+
+  /** Produces NE labels for one sentence */
+  def nerSentence(words: Array[String],
+                  lemmas: Option[Array[String]],
+                  tags: Array[String], // this are only used by the NumericEntityRecognizer
+                  startCharOffsets: Array[Int],
+                  endCharOffsets: Array[Int],
+                  docDateOpt: Option[String],
+                  embeddings: ConstEmbeddingParameters): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
+    val nerInput = NerInput(words, lemmas, tags, startCharOffsets, endCharOffsets)
+    val nerOutputs = nerSentences(Array(nerInput), docDateOpt, embeddings)
+
+    (nerOutputs.head.labels, None)
   }
 
   /** Produces NE labels for multiple sentences which have been converted into NerInput.
@@ -226,56 +258,20 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     nerOutputs
   }
 
-  /** Produces NE labels for one sentence which is converted into an NerInput */
-  def nerSentence(
-    words: Array[String],
-    lemmas: Option[Array[String]],
-    tags: Array[String], // this are only used by the NumericEntityRecognizer
-    startCharOffsets: Array[Int],
-    endCharOffsets: Array[Int],
-    docDateOpt: Option[String],
-    embeddings: ConstEmbeddingParameters
-  ): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
-    val nerInput = NerInput(words, lemmas, tags, startCharOffsets, endCharOffsets)
-    val nerOutputs = nerSentences(Array(nerInput), docDateOpt, embeddings)
-
-    (nerOutputs.head.labels, None)
-  }
-
   /** Gets the index of all predicates in this sentence */
   def getPredicateIndexes(preds: IndexedSeq[String]): IndexedSeq[Int] =
     SeqUtils.indexesOf(preds, "B-P")
 
-  def parseSentence(parseInput: ParseInput, embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
-    parseSentences(Array(parseInput), embeddings).head
-  }
+  def parseSentence(annotatedSentence: AnnotatedSentence,
+                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
 
-  /** Dependency parsing */
-  def parseSentences(parseInputs: Array[ParseInput],
-                    embeddings: ConstEmbeddingParameters): Array[DirectedGraph[String]] = {
 
     //println(s"Words: ${words.mkString(", ")}")
     //println(s"Tags: ${posTags.mkString(", ")}")
     //println(s"NEs: ${nerLabels.mkString(", ")}")
 
-    val annotatedSentences = parseInputs.map { parseInput =>
-      AnnotatedSentence(parseInput.words, Some(parseInput.posTags), Some(parseInput.nerLabels))
-    }
-    val headsAndLabelses = mtlDeps.parse(annotatedSentences, embeddings)
-
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new mutable.HashSet[Int]()
-
-    for(i <- headsAndLabels.indices) {
-      val head = headsAndLabels(i)._1
-      val label = headsAndLabels(i)._2
-      if(head == -1) { // found a root
-        roots += i
-      } else {
-        val edge = Edge[String](head, i, label)
-        edges.append(edge)
-      }
-    }
+    val headsAndLabels: IndexedSeq[(Int, String)] = mtlDeps.parse(annotatedSentence, embeddings)
+    val directedGraph = newDirectedGraph(headsAndLabels)
 
     //
     // Old algorithm, with separate models for heads and labels
@@ -333,59 +329,93 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
     */
 
+    directedGraph
+  }
+
+  def newDirectedGraph(headsAndLabels: IndexedSeq[(Int, String)]): DirectedGraph[String] = {
+    val headGroups = headsAndLabels.zipWithIndex.groupBy { case ((head, _), _) => head == -1 }
+    val roots = headGroups(true).map { case (_, index) => index }
+    val edges = headGroups(false).map { case ((head, label), index) => Edge[String](head, index, label) }
+
     new DirectedGraph[String](edges.toList, roots.toSet)
+  }
+
+  /** Dependency parsing */
+  def parseSentence(
+    annotatedSentences: Array[AnnotatedSentence],
+    embeddings: ConstEmbeddingParameters
+  ): Array[DirectedGraph[String]] = {
+    val headsAndLabelses: Array[IndexedSeq[(Int, String)]] = mtlDeps.parse(annotatedSentences, embeddings)
+    val directedGraphs = headsAndLabelses.map(newDirectedGraph)
+
+    directedGraphs
   }
 
   def srlSentence(sent: Sentence,
                   predicateIndexes: IndexedSeq[Int],
                   embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
-    srlSentence(sent.words, sent.tags.get, sent.entities.get, predicateIndexes, embeddings)
+    srlSentence(SrlInput(sent, predicateIndexes), embeddings)
   }
 
   /** Produces semantic role frames for one sentence */
-  def srlSentence(words: IndexedSeq[String],
-                  posTags: IndexedSeq[String],
-                  nerLabels: IndexedSeq[String],
-                  predicateIndexes: IndexedSeq[Int],
-                  embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new mutable.HashSet[Int]()
-
-    // all predicates become roots
-    roots ++= predicateIndexes
-
-    for(pi <- predicateIndexes.indices) {
-      // SRL needs POS tags and NEs, as well as the position of the predicate
-      val headPositions = new ArrayBuffer[Int]()
-      val pred = predicateIndexes(pi)
-      for(i <- words.indices) {
-        headPositions += pred
-      }
-
+  def srlSentence(srlInput: SrlInput, embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+    val edges = srlInput.predicateIndexes.flatMap { pred => // This must be done for every single predicate.
+      // SRL needs POS tags and NEs, as well as the position of the predicate.
+      val headPositions = Array.fill(srlInput.words.length)(pred) // Fill with the single value?
       val annotatedSentence =
-        AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
-
+        AnnotatedSentence(srlInput.words, Some(srlInput.tags), Some(srlInput.entities), Some(headPositions))
       val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
+      val predEdges = argLabels.zipWithIndex
+          .filter { case (argLabel, _) => argLabel != "O" }
+          .map { case (argLabel, index) => Edge[String](pred, index, argLabel) }
 
-      for(ai <- argLabels.indices) {
-        if(argLabels(ai) != "O") {
-          val edge = Edge[String](pred, ai, argLabels(ai))
-          edges += edge
-        }
-      }
+      predEdges
     }
 
-    new DirectedGraph[String](edges.toList, roots.toSet, Some(words.length))
+    // All predicates become roots.
+    new DirectedGraph[String](edges.toList, roots = srlInput.predicateIndexes.toSet, Some(srlInput.words.length))
   }
+
+  // TODO
+  def srlSentence(arlInputs: Array[SrlInput], embeddings: ConstEmbeddingParameters): Array[DirectedGraph[String]] = {
+    null
+  }
+
+  private def hasEmbeddings(doc: Document): Boolean =
+    doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined
 
   private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
     doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
 
-  /** Part of speech tagging + chunking + SRL (predicates), jointly */
-  override def tagPartsOfSpeech(doc: Document): Unit =
-    tagPartsOfSpeeches(doc, groupSentences(doc))
+  private def hasPredicates(doc: Document): Boolean =
+    doc.getAttachment(PREDICATE_ATTACHMENT_NAME).isDefined
 
-  def tagPartsOfSpeeches(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
+  private def getPredicates(doc: Document): IndexedSeq[IndexedSeq[Int]] =
+    doc.getAttachment(PREDICATE_ATTACHMENT_NAME).get.asInstanceOf[PredicateAttachment].predicates
+
+  private def setPredicates(doc: Document, predicates: IndexedSeq[IndexedSeq[Int]]): Unit =
+    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predicates))
+
+
+  /** Part of speech tagging + chunking + SRL (predicates), jointly */
+  override def tagPartsOfSpeech(doc:Document) {
+    basicSanityCheck(doc)
+
+    val embeddings = getEmbeddings(doc)
+    val predsForAllSents = new ArrayBuffer[IndexedSeq[Int]]()
+
+    for(sent <- doc.sentences) {
+      val TagOutput(tags, chunks, preds) = tagSentence(sent.words, embeddings)
+      sent.tags = Some(tags.toArray)
+      sent.chunks = Some(chunks.toArray)
+      predsForAllSents += getPredicateIndexes(preds)
+    }
+
+    // store the index of all predicates as a doc attachment
+    setPredicates(doc, predsForAllSents)
+  }
+
+  def tagPartsOfSpeech(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
     basicSanityCheck(doc)
 
     val embeddings = getEmbeddings(doc)
@@ -401,7 +431,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       }
     }
     // store the index of all predicates as a doc attachment
-    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predsForAllSents))
+    setPredicates(doc, predsForAllSents)
   }
 
   /** Lematization; modifies the document in place */
@@ -433,7 +463,26 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   /** NER; modifies the document in place */
-  override def recognizeNamedEntities(doc: Document): Unit = recognizeNamedEntities(doc, groupSentences(doc))
+  override def recognizeNamedEntities(doc:Document): Unit = {
+    basicSanityCheck(doc)
+    val embeddings = getEmbeddings(doc)
+    val docDate = doc.getDCT
+    for(sent <- doc.sentences) {
+      val (labels, norms) = nerSentence(
+        sent.words,
+        sent.lemmas,
+        sent.tags.get,
+        sent.startOffsets,
+        sent.endOffsets,
+        docDate,
+        embeddings)
+
+      sent.entities = Some(labels.toArray)
+      if(norms.nonEmpty) {
+        sent.norms = Some(norms.get.toArray)
+      }
+    }
+  }
 
   def recognizeNamedEntities(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
     basicSanityCheck(doc)
@@ -488,22 +537,19 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     newPreds.toVector.sorted
   }
 
-  override def srl(doc: Document): Unit = srls(doc, groupSentences(doc))
+  protected def srlSanityCheck(doc: Document): Unit = {
+    assert(hasPredicates(doc))
+    assert(hasEmbeddings(doc))
 
-  def srls(doc: Document, groupsOfSentences: GroupsOfSentencesAndIndexes): Unit = {
-    val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
-    assert(predicatesAttachment.nonEmpty)
-    assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
-    val embeddings = getEmbeddings(doc)
+    if (doc.sentences.length > 0) {
+      val sentences = doc.sentences.head
 
-    if(doc.sentences.length > 0) {
-      assert(doc.sentences(0).tags.nonEmpty)
-      assert(doc.sentences(0).entities.nonEmpty)
-      assert(doc.sentences(0).universalBasicDependencies.nonEmpty)
+      assert(sentences.tags.nonEmpty)
+      assert(sentences.entities.nonEmpty)
+      assert(sentences.universalBasicDependencies.nonEmpty)
     }
 
-    val predicates = predicatesAttachment.get.asInstanceOf[PredicateAttachment].predicates
-    assert(predicates.length == doc.sentences.length)
+    assert(getPredicates(doc).length == doc.sentences.length)
 
     // If there are no predicates, a test sentence will not provoke the calling of srlSentence(), which
     // will prevent reference to the lazy val mtlSrla.  This means that the model will not be created
@@ -511,54 +557,110 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     // under the right conditions in DyNet crashing.  Therefore, make preemptive reference to mtlSrla
     // here so that it is sure to be initialized, regardless of the priming sentence.
     assert(mtlSrla != null)
-
-    // generate SRL frames for each predicate in each sentence
-    for(si <- predicates.indices) {
-      val sentence = doc.sentences(si)
-      val predicateIndexes = predicateCorrections(predicates(si), sentence)
-      val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
-
-      sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
-
-      // enhanced semantic roles need basic universal dependencies to be generated
-      if(sentence.graphs.contains(GraphMap.UNIVERSAL_BASIC)) {
-        val enhancedRoles = ToEnhancedSemanticRoles.generateEnhancedSemanticRoles(
-          sentence, sentence.universalBasicDependencies.get, semanticRoles)
-        sentence.graphs += GraphMap.ENHANCED_SEMANTIC_ROLES -> enhancedRoles
-      }
-
-      // hybrid = universal enhanced + roles enhanced
-      if(sentence.graphs.contains(GraphMap.UNIVERSAL_ENHANCED) &&
-          sentence.graphs.contains(GraphMap.ENHANCED_SEMANTIC_ROLES)) {
-
-        val mergedGraph = DependencyUtils.mergeGraphs(
-          sentence.universalEnhancedDependencies.get,
-          sentence.enhancedSemanticRoles.get)
-        sentence.graphs += GraphMap.HYBRID_DEPENDENCIES -> mergedGraph
-      }
-    }
-
-    doc.removeAttachment(PREDICATE_ATTACHMENT_NAME)
   }
 
-  /** Syntactic parsing; modifies the document in place */
-  def parse(doc: Document): Unit = parses(doc, groupSentences(doc))
+  protected def addEnhancedSemanticRoles(sentence: Sentence, semanticRoles: DirectedGraph[String]): Unit = {
+    // enhanced semantic roles need basic universal dependencies to be generated
+    if (sentence.graphs.contains(GraphMap.UNIVERSAL_BASIC)) {
+      val enhancedRoles = ToEnhancedSemanticRoles.generateEnhancedSemanticRoles(
+          sentence, sentence.universalBasicDependencies.get, semanticRoles)
+      sentence.graphs += GraphMap.ENHANCED_SEMANTIC_ROLES -> enhancedRoles
+    }
+  }
 
-  def parses(doc: Document, groupsOfSentences: GroupsOfSentencesAndIndexes): Unit = {
-    if(doc.sentences.length > 0) {
+  protected def addHybridDependencies(sentence: Sentence): Unit = {
+    // hybrid = universal enhanced + roles enhanced
+    if (sentence.graphs.contains(GraphMap.UNIVERSAL_ENHANCED) &&
+        sentence.graphs.contains(GraphMap.ENHANCED_SEMANTIC_ROLES)) {
+      val mergedGraph = DependencyUtils.mergeGraphs(
+          sentence.universalEnhancedDependencies.get, sentence.enhancedSemanticRoles.get)
+      sentence.graphs += GraphMap.HYBRID_DEPENDENCIES -> mergedGraph
+    }
+  }
+
+  protected def addUniversalEnhancedDependencies(sentence: Sentence, depGraph: DirectedGraph[String]): Unit = {
+    val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sentence, depGraph)
+    sentence.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+  }
+
+  override def srl(doc: Document): Unit = {
+    srlSanityCheck(doc)
+
+    val docPredicates = getPredicates(doc)
+    val embeddings = getEmbeddings(doc)
+
+    // Generate SRL frames for each predicate in each sentence.
+    doc.sentences.zip(docPredicates).foreach { case (sentence, predicates) =>
+      val srlInput = {
+        val predicateIndexes = predicateCorrections(predicates, sentence)
+        SrlInput(sentence, predicateIndexes)
+      }
+      val semanticRoles = srlSentence(srlInput, embeddings)
+
+      sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
+      addEnhancedSemanticRoles(sentence, semanticRoles)
+      addHybridDependencies(sentence)
+    }
+  }
+
+  def srl(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
+    srlSanityCheck(doc)
+
+    val docPredicates = getPredicates(doc)
+    val embeddings = getEmbeddings(doc)
+
+    groupsOfSentencesAndIndexes.zip(docPredicates).foreach { case ((_, sentencesAndIndexes), predicates) =>
+      val sentences = sentencesAndIndexes.map(_.sentence)
+      val srlInputs = sentences.map { sentence =>
+        val predicateIndexes = predicateCorrections(predicates, sentence)
+        SrlInput(sentence, predicateIndexes)
+      }
+      val semanticRoles: Array[DirectedGraph[String]] = srlSentence(srlInputs, embeddings)
+
+      sentences.zip(semanticRoles).foreach { case (sentence, semanticRoles) =>
+        sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
+        addEnhancedSemanticRoles(sentence, semanticRoles)
+        addHybridDependencies(sentence)
+      }
+    }
+  }
+
+  protected def parseSanityCheck(doc: Document): Unit = {
+    if (doc.sentences.length > 0) {
       assert(doc.sentences(0).tags.nonEmpty)
       assert(doc.sentences(0).entities.nonEmpty)
     }
-    assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
+    assert(hasEmbeddings(doc))
+  }
+
+  /** Syntactic parsing; modifies the document in place */
+  def parse(doc:Document): Unit = {
+    parseSanityCheck(doc)
+
     val embeddings = getEmbeddings(doc)
 
-    for(sent <- doc.sentences) {
-      val parseInput = ParseInput(sent.words, sent.tags.get, sent.entities.get)
-      val depGraph = parseSentences(parseInput, embeddings)
-      sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+    doc.sentences.foreach { sentence =>
+      val annotatedSentence = toAnnotatedSentence(sentence)
+      val depGraph = parseSentence(annotatedSentence, embeddings)
 
-      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
-      sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+      sentence.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+      addUniversalEnhancedDependencies(sentence, depGraph)
+    }
+  }
+
+  def parse(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
+    parseSanityCheck(doc)
+
+    val embeddings = getEmbeddings(doc)
+
+    groupsOfSentencesAndIndexes.foreach { case (_, sentencesAndIndexes) =>
+      val annotatedSentences = sentencesAndIndexes.map { sentenceAndIndex => toAnnotatedSentence(sentenceAndIndex.sentence) }
+      val depGraphs: Array[DirectedGraph[String]] = parseSentence(annotatedSentences, embeddings)
+
+      sentencesAndIndexes.zip(depGraphs).foreach { case (SentenceAndIndex(sentence, index), depGraph) =>
+        sentence.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+        addUniversalEnhancedDependencies(sentence, depGraph)
+      }
     }
   }
 
@@ -567,7 +669,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     // Nop, covered by MTL
   }
 
-  def chunkings(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
+  def chunking(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
     // Nop, covered by MTL
   }
 
@@ -587,14 +689,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   def basicSanityCheck(doc:Document): Unit = {
-    if (doc.sentences == null)
-      throw new RuntimeException("ERROR: Document.sentences == null!")
-    if (doc.sentences.length != 0 && doc.sentences(0).words == null)
-      throw new RuntimeException("ERROR: Sentence.words == null!")
-    if(doc.getAttachment(CluProcessor.CONST_EMBEDDINGS_ATTACHMENT_NAME).isEmpty)
-      throw new RuntimeException("ERROR: Const embeddings not set!")
+    assert(!(doc.sentences == null), "ERROR: Document.sentences == null!")
+    assert(!(doc.sentences.nonEmpty && doc.sentences.head.words == null), "ERROR: Sentence.words == null!")
+    assert(hasEmbeddings(doc), "ERROR: Const embeddings not set!")
   }
-
 }
 
 trait SentencePostProcessor {
@@ -762,4 +860,18 @@ object GivenConstEmbeddingsAttachment {
     // Now set them as an attachment, so they are available to all downstream methods wo/ changing the API.
     doc.addAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME, attachment)
   }
+}
+
+class GivenExistingPredicateAttachment(doc: Document) extends BeforeAndAfter {
+
+  def before(): Unit = ()
+
+  def after(): Unit = {
+    doc.removeAttachment(PREDICATE_ATTACHMENT_NAME)
+  }
+}
+
+object GivenExistingPredicateAttachment {
+
+  def apply(doc: Document) = new GivenExistingPredicateAttachment(doc)
 }
