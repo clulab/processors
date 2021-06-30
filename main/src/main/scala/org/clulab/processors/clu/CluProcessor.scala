@@ -91,7 +91,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = EmbeddingsAttachment.set(doc)
 
-  //
+  // These next few items are used in grouping sentences into those with equal lengths.
   case class SentenceAndIndex(sentence: Sentence, index: Int)
 
   type SentencesAndIndexes = Array[SentenceAndIndex]
@@ -109,11 +109,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   override def annotate(doc: Document): Document = {
     val groupsOfSentencesAndIndexes = groupSentences(doc) // Do this just once.
-    val isWorthGrouping = groupsOfSentencesAndIndexes.size.toFloat / doc.sentences.length >= 0.7f
+    val isWorthGrouping = true // groupsOfSentencesAndIndexes.size.toFloat / doc.sentences.length >= 0.7f
 
     GivenConstEmbeddingsAttachment(doc).perform {
       if (isWorthGrouping) annotateBySentences(doc, groupsOfSentencesAndIndexes)
-      else annotateBySentence(doc)
+      else annotateBySentence(doc) // Alternatively, call superclass.
       doc.clear()
       doc
     }
@@ -183,7 +183,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   def tagSentence(words: IndexedSeq[String], embeddings: ConstEmbeddingParameters): TagOutput = {
     val annotatedSentence = AnnotatedSentence(words)
     val allLabels = mtlPosChunkSrlp.predictJointly(annotatedSentence, embeddings)
-    TagOutput(allLabels(0), allLabels(1),allLabels(2))
+    TagOutput(tags = allLabels(0), chunks = allLabels(1), preds = allLabels(2))
   }
 
   def tagSentence(groupsOfWords: Array[Array[String]], embeddings: ConstEmbeddingParameters): Array[TagOutput] = {
@@ -315,8 +315,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     annotatedSentences: Array[AnnotatedSentence],
     embeddings: ConstEmbeddingParameters
   ): Array[DirectedGraph[String]] = {
-    val headsAndLabelses: Array[IndexedSeq[(Int, String)]] = mtlDeps.parse(annotatedSentences, embeddings)
-    val directedGraphs = headsAndLabelses.map(newDirectedGraph)
+    val groupsOfHeadsAndLabels: Array[IndexedSeq[(Int, String)]] = mtlDeps.parse(annotatedSentences, embeddings)
+    val directedGraphs = groupsOfHeadsAndLabels.map(newDirectedGraph)
 
     directedGraphs
   }
@@ -341,9 +341,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   def srlSentence(srlInput: SrlInput, embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
     val edges = srlInput.predicateIndexes.flatMap { pred => // This must be done for every single predicate.
       // SRL needs POS tags and NEs, as well as the position of the predicate.
-      val headPositions = Array.fill(srlInput.words.length)(pred) // Fill with the single value?
-      val annotatedSentence =
-        AnnotatedSentence(srlInput.words, Some(srlInput.tags), Some(srlInput.entities), Some(headPositions))
+      val annotatedSentence = srlInput.toAnnotatedSentence(pred)
       val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
       val predEdges = argLabels.zipWithIndex
           .filter { case (argLabel, _) => argLabel != "O" }
@@ -356,11 +354,27 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     new DirectedGraph[String](edges.toList, roots = srlInput.predicateIndexes.toSet, Some(srlInput.words.length))
   }
 
-  // TODO
-  def srlSentence(arlInputs: Array[SrlInput], embeddings: ConstEmbeddingParameters): Array[DirectedGraph[String]] = {
+  // TODO!!!!!!!
+  def srlSentence(srlInputs: Array[SrlInput], embeddings: ConstEmbeddingParameters): Array[DirectedGraph[String]] = {
+    srlInputs.foreach { srlInput =>
+      val edges = srlInput.predicateIndexes.flatMap { pred => // This must be done for every single predicate.
+        // SRL needs POS tags and NEs, as well as the position of the predicate.
+        val annotatedSentences = srlInputs.map(_put.toAnnotatedSentence(pred)
+        val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
+        val predEdges = argLabels.zipWithIndex
+            .filter { case (argLabel, _) => argLabel != "O" }
+            .map { case (argLabel, index) => Edge[String](pred, index, argLabel) }
+
+        predEdges
+      }
+
+      // All predicates become roots.
+      new DirectedGraph[String](edges.toList, roots = srlInput.predicateIndexes.toSet, Some(srlInput.words.length))
+    }
     null
   }
 
+  // TODO Fix the buffer
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
   override def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
@@ -458,15 +472,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
   }
 
-  private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean = {
-    for(d <- dependencies) {
-      if (d._2 == label) {
-        return true
-      }
-    }
-
-    false
-  }
+  private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean =
+    dependencies.exists(_._2 == label)
 
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
 
@@ -825,7 +832,14 @@ case class SrlInput(
   tags: IndexedSeq[String],
   entities: IndexedSeq[String],
   predicateIndexes: IndexedSeq[Int]
-)
+) {
+
+  def toAnnotatedSentence(predicateIndex: Int): AnnotatedSentence = {
+    val headPositions = Array.fill(words.length)(predicateIndex) // Fill with the single value?
+
+    AnnotatedSentence(words, Some(tags), Some(entities), Some(headPositions))
+  }
+}
 
 object SrlInput {
   def apply(sentence: Sentence, predicateIndexes: IndexedSeq[Int]): SrlInput =
