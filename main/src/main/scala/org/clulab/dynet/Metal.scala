@@ -333,6 +333,12 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     Layers.predict(model, taskId, sentence, constEmbeddings)
   }
 
+  def predict(taskId: Int,
+     sentences: Array[AnnotatedSentence],
+     constEmbeddings: ConstEmbeddingParameters): Array[IndexedSeq[String]] = {
+    Layers.predict(model, taskId, sentences, constEmbeddings)
+  }
+
   def predictWithScores(taskId: Int,
                         sentence: AnnotatedSentence,
                         constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
