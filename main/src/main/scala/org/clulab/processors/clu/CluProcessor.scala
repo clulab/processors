@@ -356,40 +356,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     predicateIndexes: IndexedSeq[Int],
     embeddings: ConstEmbeddingParameters
   ): DirectedGraph[String] = {
-//    srlSentence(SrlInput(words, posTags, nerLabels, predicateIndexes), embeddings)
-
-    println(words)
-    println(predicateIndexes)
-
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new mutable.HashSet[Int]()
-
-    // all predicates become roots
-    roots ++= predicateIndexes
-
-    for(pi <- predicateIndexes.indices) {
-      // SRL needs POS tags and NEs, as well as the position of the predicate
-      val headPositions = new ArrayBuffer[Int]()
-      val pred = predicateIndexes(pi)
-      for(i <- words.indices) {
-        headPositions += pred
-      }
-
-      val annotatedSentence =
-        AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
-
-      val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
-
-      println(argLabels)
-      for(ai <- argLabels.indices) {
-        if(argLabels(ai) != "O") {
-          println(s"edge $pred $ai ${argLabels(ai)}")
-          val edge = Edge[String](pred, ai, argLabels(ai))
-          edges += edge
-        }
-      }
-    }
-    new DirectedGraph[String](edges.toList, roots.toSet, Some(words.length))
+    srlSentence(SrlInput(words, posTags, nerLabels, predicateIndexes), embeddings)
   }
 
   def newDirectedGraph(srlInput: SrlInput, groupsOfArgLabels: Array[IndexedSeq[String]]): DirectedGraph[String] = {
@@ -609,14 +576,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
     // Generate SRL frames for each predicate in each sentence.
     doc.sentences.zip(docPredicates).foreach { case (sentence, predicates) =>
-//      val srlInput = {
-//        val predicateIndexes = predicateCorrections(predicates, sentence)
-//        SrlInput(sentence, predicateIndexes)
-//      }
-      val predicateIndexes = predicateCorrections(predicates, sentence)
-//      new SrlInput(sentence.words, sentence.tags.get, sentence.entities.get, predicateIndexes)
-      val semanticRoles = srlSentence(sentence.words, sentence.tags.get, sentence.entities.get, predicateIndexes, embeddings)
-//      val semanticRoles = srlSentence(srlInput, embeddings)
+      val srlInput = {
+        val predicateIndexes = predicateCorrections(predicates, sentence)
+        SrlInput(sentence, predicateIndexes)
+      }
+      val semanticRoles = srlSentence(srlInput, embeddings)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
       addEnhancedSemanticRoles(sentence, semanticRoles)
