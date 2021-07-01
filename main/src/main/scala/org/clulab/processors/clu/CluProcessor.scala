@@ -11,7 +11,6 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -234,32 +233,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     SeqUtils.indexesOf(preds, "B-P")
 
   def newDirectedGraph(headsAndLabels: IndexedSeq[(Int, String)]): DirectedGraph[String] = {
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new mutable.HashSet[Int]()
-
-    for(i <- headsAndLabels.indices) {
-      val head = headsAndLabels(i)._1
-      val label = headsAndLabels(i)._2
-      if(head == -1) { // found a root
-        roots += i
-      } else {
-        val edge = Edge[String](head, i, label)
-        edges.append(edge)
-      }
-    }
-    new DirectedGraph[String](edges.toList, roots.toSet)
-  }
-
-  def newDirectedGraph2(headsAndLabels: IndexedSeq[(Int, String)]): DirectedGraph[String] = {
     val groupsOfHeadsAndLabelsAndIndexes = headsAndLabels.zipWithIndex.groupBy { case ((head, _), _) => head == -1 }
-    if (groupsOfHeadsAndLabelsAndIndexes.size == 2) {
-      val roots = groupsOfHeadsAndLabelsAndIndexes(true).map { case (_, index) => index }
-      val edges = groupsOfHeadsAndLabelsAndIndexes(false).map { case ((head, label), index) => Edge[String](head, index, label) }
+    // There may not be any roots or edges, so the gets() returning Options[] are important.
+    val roots = groupsOfHeadsAndLabelsAndIndexes.get(true)
+        .map(_.map { case (_, index) => index })
+        .getOrElse(IndexedSeq.empty)
+    val edges = groupsOfHeadsAndLabelsAndIndexes.get(false)
+        .map(_.map { case ((head, label), index) => Edge[String](head, index, label) })
+        .getOrElse(IndexedSeq.empty)
 
-      new DirectedGraph[String](edges.toList, roots.toSet)
-    }
-    else
-      new DirectedGraph[String](List.empty, Set.empty)
+    new DirectedGraph[String](edges.toList, roots.toSet)
   }
 
   def parseSentence(annotatedSentence: AnnotatedSentence,
