@@ -6,11 +6,12 @@ import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processo
 import org.clulab.processors.clu.CluProcessor._
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
-import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles, SeqUtils}
+import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, ScienceUtils, SeqUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -109,7 +110,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
   override def annotate(doc: Document): Document = {
     val groupsOfSentencesAndIndexes = groupSentences(doc) // Do this just once.
-    val isWorthGrouping = true // groupsOfSentencesAndIndexes.size.toFloat / doc.sentences.length >= 0.7f
+    val isWorthGrouping = false // groupsOfSentencesAndIndexes.size.toFloat / doc.sentences.length >= 0.7f
 
     GivenConstEmbeddingsAttachment(doc).perform {
       if (isWorthGrouping) annotateBySentences(doc, groupsOfSentencesAndIndexes)
@@ -233,11 +234,32 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     SeqUtils.indexesOf(preds, "B-P")
 
   def newDirectedGraph(headsAndLabels: IndexedSeq[(Int, String)]): DirectedGraph[String] = {
-    val groupsOfHeadsAndLabelsAndIndexes = headsAndLabels.zipWithIndex.groupBy { case ((head, _), _) => head == -1 }
-    val roots = groupsOfHeadsAndLabelsAndIndexes(true).map { case (_, index) => index }
-    val edges = groupsOfHeadsAndLabelsAndIndexes(false).map { case ((head, label), index) => Edge[String](head, index, label) }
+    val edges = new ListBuffer[Edge[String]]()
+    val roots = new mutable.HashSet[Int]()
 
+    for(i <- headsAndLabels.indices) {
+      val head = headsAndLabels(i)._1
+      val label = headsAndLabels(i)._2
+      if(head == -1) { // found a root
+        roots += i
+      } else {
+        val edge = Edge[String](head, i, label)
+        edges.append(edge)
+      }
+    }
     new DirectedGraph[String](edges.toList, roots.toSet)
+  }
+
+  def newDirectedGraph2(headsAndLabels: IndexedSeq[(Int, String)]): DirectedGraph[String] = {
+    val groupsOfHeadsAndLabelsAndIndexes = headsAndLabels.zipWithIndex.groupBy { case ((head, _), _) => head == -1 }
+    if (groupsOfHeadsAndLabelsAndIndexes.size == 2) {
+      val roots = groupsOfHeadsAndLabelsAndIndexes(true).map { case (_, index) => index }
+      val edges = groupsOfHeadsAndLabelsAndIndexes(false).map { case ((head, label), index) => Edge[String](head, index, label) }
+
+      new DirectedGraph[String](edges.toList, roots.toSet)
+    }
+    else
+      new DirectedGraph[String](List.empty, Set.empty)
   }
 
   def parseSentence(annotatedSentence: AnnotatedSentence,
@@ -334,20 +356,59 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     predicateIndexes: IndexedSeq[Int],
     embeddings: ConstEmbeddingParameters
   ): DirectedGraph[String] = {
-    srlSentence(SrlInput(words, posTags, nerLabels, predicateIndexes), embeddings)
+//    srlSentence(SrlInput(words, posTags, nerLabels, predicateIndexes), embeddings)
+
+    println(words)
+    println(predicateIndexes)
+
+    val edges = new ListBuffer[Edge[String]]()
+    val roots = new mutable.HashSet[Int]()
+
+    // all predicates become roots
+    roots ++= predicateIndexes
+
+    for(pi <- predicateIndexes.indices) {
+      // SRL needs POS tags and NEs, as well as the position of the predicate
+      val headPositions = new ArrayBuffer[Int]()
+      val pred = predicateIndexes(pi)
+      for(i <- words.indices) {
+        headPositions += pred
+      }
+
+      val annotatedSentence =
+        AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
+
+      val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
+
+      println(argLabels)
+      for(ai <- argLabels.indices) {
+        if(argLabels(ai) != "O") {
+          println(s"edge $pred $ai ${argLabels(ai)}")
+          val edge = Edge[String](pred, ai, argLabels(ai))
+          edges += edge
+        }
+      }
+    }
+    new DirectedGraph[String](edges.toList, roots.toSet, Some(words.length))
+  }
+
+  def newDirectedGraph(srlInput: SrlInput, groupsOfArgLabels: Array[IndexedSeq[String]]): DirectedGraph[String] = {
+    val predicateIndexes = srlInput.predicateIndexes
+    val edges = groupsOfArgLabels.zip(predicateIndexes).flatMap { case (argLabels, predicateIndex) =>
+      argLabels.zipWithIndex
+          .filter { case (argLabel, _) => argLabel != "O" }
+          .map { case (argLabel, argIndex) => Edge[String](predicateIndex, argIndex, argLabel) }
+    }
+
+    new DirectedGraph[String](edges.toList, roots = predicateIndexes.toSet, Some(srlInput.words.length))
   }
 
   /** Produces semantic role frames for one sentence */
   def srlSentence(srlInput: SrlInput, embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
     val annotatedSentences = srlInput.predicateIndexes.map(srlInput.toAnnotatedSentence)
     val groupsOfArgLabels = mtlSrla.predict(0, annotatedSentences.toArray, embeddings)
-    val edges = groupsOfArgLabels.zip(srlInput.predicateIndexes).flatMap { case (argLabels, predicateIndex) =>
-      argLabels.zipWithIndex
-          .filter { case (argLabel, _) => argLabel != "O" }
-          .map { case (argLabel, argIndex) => Edge[String](predicateIndex, argIndex, argLabel) }
-    }
 
-    new DirectedGraph[String](edges.toList, roots = srlInput.predicateIndexes.toSet, Some(srlInput.words.length))
+    newDirectedGraph(srlInput, groupsOfArgLabels)
   }
 
   def srlSentence(srlInputs: Array[SrlInput], embeddings: ConstEmbeddingParameters): Array[DirectedGraph[String]] = {
@@ -362,15 +423,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val groupsOfArgLabels = mtlSrla.predict(0, annotatedSentences, embeddings)
     val sentenceIndexToGroupsOfArgLabels = sentenceIndexes.zip(groupsOfArgLabels).groupBy(_._1)
     val directedGraphs = srlInputs.indices.map { sentenceIndex =>
-      val srlInput = srlInputs(sentenceIndex)
       val groupsOfArgLabels = sentenceIndexToGroupsOfArgLabels(sentenceIndex).map(_._2)
-      val edges = groupsOfArgLabels.zip(srlInputs(sentenceIndex).predicateIndexes).flatMap { case (argLabels, predicateIndex) =>
-        argLabels.zipWithIndex
-            .filter { case (argLabel, _) => argLabel != "O" }
-            .map { case (argLabel, argIndex) => Edge[String](predicateIndex, argIndex, argLabel) }
-      }
 
-      new DirectedGraph[String](edges.toList, roots = srlInput.predicateIndexes.toSet, Some(srlInput.words.length))
+      newDirectedGraph(srlInputs(sentenceIndex), groupsOfArgLabels)
     }
 
     directedGraphs.toArray
@@ -554,11 +609,14 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
     // Generate SRL frames for each predicate in each sentence.
     doc.sentences.zip(docPredicates).foreach { case (sentence, predicates) =>
-      val srlInput = {
-        val predicateIndexes = predicateCorrections(predicates, sentence)
-        SrlInput(sentence, predicateIndexes)
-      }
-      val semanticRoles = srlSentence(srlInput, embeddings)
+//      val srlInput = {
+//        val predicateIndexes = predicateCorrections(predicates, sentence)
+//        SrlInput(sentence, predicateIndexes)
+//      }
+      val predicateIndexes = predicateCorrections(predicates, sentence)
+//      new SrlInput(sentence.words, sentence.tags.get, sentence.entities.get, predicateIndexes)
+      val semanticRoles = srlSentence(sentence.words, sentence.tags.get, sentence.entities.get, predicateIndexes, embeddings)
+//      val semanticRoles = srlSentence(srlInput, embeddings)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
       addEnhancedSemanticRoles(sentence, semanticRoles)
