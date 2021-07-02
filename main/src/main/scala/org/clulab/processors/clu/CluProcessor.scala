@@ -20,6 +20,7 @@ import org.clulab.utils.Configured
 import org.clulab.utils.DependencyUtils
 import org.clulab.utils.ScienceUtils
 import org.clulab.utils.SeqUtils
+import org.clulab.utils.Timers
 import org.clulab.utils.ToEnhancedDependencies
 import org.clulab.utils.ToEnhancedSemanticRoles
 import org.slf4j.Logger
@@ -35,7 +36,7 @@ import scala.collection.mutable.ArrayBuffer
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
   *   POS tagging, NER, chunking, dependency parsing - using our MTL architecture (dep parsing coming soon)
   */
-class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) extends Processor with Configured {
+class CluProcessor(val config: Config = ConfigFactory.load("cluprocessor")) extends Processor with Configured {
 
   override def getConf: Config = config
 
@@ -124,55 +125,92 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       AnnotatedSentence(sentence.words, sentence.tags.map(_.toIndexedSeq), sentence.entities.map(_.toIndexedSeq))
 
   override def annotate(doc: Document): Document = {
-    val groupsOfSentencesAndIndexes = groupSentences(doc) // Do this just once.
+    val groupsOfSentencesAndIndexes = Timers.getOrNew("group").time {
+      groupSentences(doc)
+    } // Do this just once.
     val isWorthGrouping = true // groupsOfSentencesAndIndexes.size.toFloat / doc.sentences.length >= 0.7f
 
     GivenConstEmbeddingsAttachment(doc).perform {
       if (isWorthGrouping) annotateBySentences(doc, groupsOfSentencesAndIndexes)
       else annotateBySentence(doc) // Alternatively, call superclass.
-      doc.clear()
+
+      Timers.getOrNew("clear").time {
+        doc.clear()
+      }
       doc
     }
   }
 
   def annotateBySentence(doc: Document): Unit = {
-    tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+    Timers.getOrNew("tagPartsOfSpeech").time {
+      tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+    }
     //println("After POS")
     //println(doc.sentences.head.tags.get.mkString(", "))
     // The above has the side-effect of adding a predicate attachment that srl() needs.
     GivenExistingPredicateAttachment(doc).perform {
-      recognizeNamedEntities(doc) // the call to the NER MTL is in here
+      Timers.getOrNew("recognizeNamedEntities").time {
+        recognizeNamedEntities(doc) // the call to the NER MTL is in here
+      }
       //println("After NER")
       //println(doc.sentences.head.entities.get.mkString(", "))
-      chunking(doc) // Nothing, kept for the record
-      parse(doc) // dependency parsing
+      Timers.getOrNew("chunking").time {
+        chunking(doc) // Nothing, kept for the record
+      }
+      Timers.getOrNew("parse").time {
+        parse(doc) // dependency parsing
+      }
       //println("After parsing")
       //println(doc.sentences.head.universalEnhancedDependencies.get)
 
-      lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+      Timers.getOrNew("lemmatize").time {
+        lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+      }
 
-      srl(doc) // SRL (arguments)
+      Timers.getOrNew("srl").time {
+        srl(doc) // SRL (arguments)
+      }
       //println("After SRL")
       //println(doc.sentences.head.semanticRoles.get)
     }
     // these are not implemented yet
-    resolveCoreference(doc)
-    discourse(doc)
+    Timers.getOrNew("resolveCoreference").time {
+      resolveCoreference(doc)
+    }
+    Timers.getOrNew("discourse").time {
+      discourse(doc)
+    }
   }
 
   def annotateBySentences(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
-    tagPartsOfSpeech(doc, groupsOfSentencesAndIndexes) // the call to the POS/chunking/SRLp MTL is in here
+    Timers.getOrNew("tagPartsOfSpeech").time {
+      tagPartsOfSpeech(doc, groupsOfSentencesAndIndexes) // the call to the POS/chunking/SRLp MTL is in here
+    }
     // The above has the side-effect of adding a predicate attachment that srl() needs.
     GivenExistingPredicateAttachment(doc).perform {
-      recognizeNamedEntities(doc, groupsOfSentencesAndIndexes) // the call to the NER MTL is in here
-      chunking(doc, groupsOfSentencesAndIndexes) // Nothing, kept for the record
-      parse(doc, groupsOfSentencesAndIndexes) // dependency parsing
-      lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
-      srl(doc, groupsOfSentencesAndIndexes) // SRL (arguments)
+      Timers.getOrNew("recognizeNamedEntities").time {
+        recognizeNamedEntities(doc, groupsOfSentencesAndIndexes) // the call to the NER MTL is in here
+      }
+      Timers.getOrNew("chunking").time {
+        chunking(doc, groupsOfSentencesAndIndexes) // Nothing, kept for the record
+      }
+      Timers.getOrNew("parse").time {
+        parse(doc, groupsOfSentencesAndIndexes) // dependency parsing
+      }
+      Timers.getOrNew("lemmatize").time {
+        lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
+      }
+      Timers.getOrNew("srl").time {
+        srl(doc, groupsOfSentencesAndIndexes) // SRL (arguments)
+      }
     }
     // these are not implemented yet
-    resolveCoreference(doc)
-    discourse(doc)
+    Timers.getOrNew("resolveCoreference").time {
+      resolveCoreference(doc)
+    }
+    Timers.getOrNew("discourse").time {
+      discourse(doc)
+    }
   }
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
@@ -388,7 +426,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     val annotatedSentences = srlInputs.flatMap { srlInput =>
       srlInput.predicateIndexes.map(srlInput.toAnnotatedSentence)
     }
-    val groupsOfArgLabels = mtlSrla.predict(0, annotatedSentences, embeddings)
+    println(s"AnnotatedSentences count: ${annotatedSentences.length}")
+    val groupsOfArgLabels = Timers.getOrNew("mtlSrla.predict").time {
+      mtlSrla.predict(0, annotatedSentences, embeddings)
+    }
     val srlInputIndexToGroupsOfArgLabels = srlInputIndexes.zip(groupsOfArgLabels).groupBy(_._1)
     val directedGraphs = srlInputs.indices.map { srlInputIndex =>
       val srlInput = srlInputs(srlInputIndex)
