@@ -145,12 +145,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   def annotateBySentences(doc: Document, groupsOfSentencesAndIndexes: GroupsOfSentencesAndIndexes): Unit = {
-    tagPartsOfSpeech(doc /*, groupsOfSentencesAndIndexes*/) // the call to the POS/chunking/SRLp MTL is in here
+    tagPartsOfSpeech(doc, groupsOfSentencesAndIndexes) // the call to the POS/chunking/SRLp MTL is in here
     // The above has the side-effect of adding a predicate attachment that srl() needs.
     GivenExistingPredicateAttachment(doc).perform {
-      recognizeNamedEntities(doc /*, groupsOfSentencesAndIndexes*/) // the call to the NER MTL is in here
-      chunking(doc /*, groupsOfSentencesAndIndexes*/) // Nothing, kept for the record
-      parse(doc/*, groupsOfSentencesAndIndexes*/) // dependency parsing
+      recognizeNamedEntities(doc, groupsOfSentencesAndIndexes) // the call to the NER MTL is in here
+      chunking(doc, groupsOfSentencesAndIndexes) // Nothing, kept for the record
+      parse(doc, groupsOfSentencesAndIndexes) // dependency parsing
       lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
       srl(doc, groupsOfSentencesAndIndexes) // SRL (arguments)
     }
@@ -378,7 +378,8 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       val srlInput = srlInputs(srlInputIndex)
       // If some srlInputs had no predicates, get() must be used for the Option.
       val groupsOfArgLabels = srlInputIndexToGroupsOfArgLabels.get(srlInputIndex)
-          .map(_.map(_._2)).getOrElse(Array.empty[IndexedSeq[String]])
+          .map(_.map(_._2))
+          .getOrElse(Array.empty)
 
       newDirectedGraph(srlInput, groupsOfArgLabels)
     }

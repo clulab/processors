@@ -101,7 +101,7 @@ object ParallelProcessorExample {
       ".",
       "txt",
       "8",
-      "false"
+      "true"
     ))
     Utils.shutdown()
   }
