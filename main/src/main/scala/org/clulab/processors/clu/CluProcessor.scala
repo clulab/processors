@@ -1,13 +1,29 @@
 package org.clulab.processors.clu
 
-import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
-import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import org.clulab.dynet.AnnotatedSentence
+import org.clulab.dynet.ConstEmbeddingParameters
+import org.clulab.dynet.ConstEmbeddingsGlove
+import org.clulab.dynet.Metal
+import org.clulab.processors.Document
+import org.clulab.processors.IntermediateDocumentAttachment
+import org.clulab.processors.Processor
+import org.clulab.processors.Sentence
 import org.clulab.processors.clu.CluProcessor._
 import org.clulab.processors.clu.tokenizer._
-import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
-import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, ScienceUtils, SeqUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
-import org.slf4j.{Logger, LoggerFactory}
+import org.clulab.struct.DirectedGraph
+import org.clulab.struct.Edge
+import org.clulab.struct.GraphMap
+import org.clulab.utils.BeforeAndAfter
+import org.clulab.utils.Configured
+import org.clulab.utils.DependencyUtils
+import org.clulab.utils.ScienceUtils
+import org.clulab.utils.SeqUtils
+import org.clulab.utils.ToEnhancedDependencies
+import org.clulab.utils.ToEnhancedSemanticRoles
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
