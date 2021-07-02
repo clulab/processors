@@ -42,10 +42,8 @@ object ConstEmbeddingsGlove {
     mkConstLookupParams(sentence.words.toSet)
 
   def mkConstLookupParams(doc: Document): ConstEmbeddingParameters = {
-    val words = new mutable.HashSet[String]()
-    for(s <- doc.sentences) {
-      words ++= s.words
-    }
+    val words = doc.sentences.flatMap(_.words).toSet
+
     mkConstLookupParams(words.toSet)
   }
 
