@@ -451,7 +451,8 @@ class DocumentSerializer extends LazyLogging {
 
   private def saveDependencies(dg: DirectedGraph[String], dependencyType: String, os: PrintWriter) {
     os.println(START_DEPENDENCIES + SEP + dependencyType + SEP + dg.size)
-    os.println(dg.roots.mkString(sep = SEP))
+    // For consistent output, contents of sets must be sorted.
+    os.println(dg.roots.toSeq.sorted.mkString(sep = SEP))
     val it = new DirectedGraphEdgeIterator[String](dg)
     while(it.hasNext) {
       val edge = it.next()
