@@ -1,4 +1,5 @@
 # Changes
++ **8.4.2** - Improve markdown code, fix serialization stability issue 
 + **8.4.1** - Fix markdown syntax and duplicate labels, recover mention text from raw strings
 + **8.4.0** - Odin RuleReader can now generate markdown summaries of the grammars, grouped by rule or by extraction type.
 + **8.4.0** - Removed the discourse parser. Too much fat, and it is rarely used.
