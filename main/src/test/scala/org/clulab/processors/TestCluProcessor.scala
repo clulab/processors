@@ -140,14 +140,21 @@ class TestCluProcessor extends FatdynetTest {
   }
 
   it should "parse MWEs correctly" in {
-    val doc = proc.mkDocument("Foods such as icecream are tasty.")
-
+    var doc = proc.mkDocument("Foods such as icecream are tasty.")
     println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
 
     proc.annotate(doc)
 
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be (true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
+
+    doc = proc.mkDocument("There was famine due to drought.")
+    println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
+
+    proc.annotate(doc)
+
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod_due_to") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod") should be (false)
   }
 
   /* // TODO
