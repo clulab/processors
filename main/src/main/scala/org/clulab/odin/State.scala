@@ -40,6 +40,10 @@ class State(val lookUpTable: MentionLUT) {
   def mentionsFor(sent: Int, tok: Int, label: String): Seq[Mention] =
     mentionsFor(sent, tok).filter(_ matches label)
 
+  /** Checks for the existence of a label among all mentions for a given sentence and token */
+  def hasMentionsFor(sent: Int, tok: Int, label: String): Boolean =
+    mentionsFor(sent, tok).exists(_ matches label)
+
   /** Returns all mentions for a given sentence and token that match any of the given labels */
   def mentionsFor(sent: Int, tok: Int, labels: Seq[String]): Seq[Mention] =
     labels.flatMap(l => mentionsFor(sent, tok, l)).distinct
@@ -54,12 +58,15 @@ class State(val lookUpTable: MentionLUT) {
   def mentionsFor(sent: Int, toks: Seq[Int], label: String): Seq[Mention] =
     toks.flatMap(t => mentionsFor(sent, t, label)).distinct
 
+  /** Checks for the existence of a label among all mentions for a given sentence and tokens */
+  def hasMentionsFor(sent: Int, toks: Seq[Int], label: String): Boolean =
+    toks.exists(hasMentionsFor(sent, _, label))
+
   /** Returns all mentions for a given sentence and any of the given tokens
     * that match any of the given labels
     */
   def mentionsFor(sent: Int, toks: Seq[Int], labels: Seq[String]): Seq[Mention] =
     toks.flatMap(t => mentionsFor(sent, t, labels)).distinct
-
 }
 
 object State {

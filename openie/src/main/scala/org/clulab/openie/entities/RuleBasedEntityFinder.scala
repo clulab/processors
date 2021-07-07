@@ -60,7 +60,7 @@ class RuleBasedEntityFinder(
     // avoid refs, etc.
     val avoid = avoidEngine.extractFrom(doc)
     val stateFromAvoid = State(avoid)
-    val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filter{ entity => ! stateFromAvoid.contains(entity) }
+    val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filterNot(stateFromAvoid.contains)
     val expandedEntities: Seq[Mention] = baseEntities.map(entity => expand(entity, maxHops))
     // split entities on likely coordinations
     val splitEntities = (baseEntities ++ expandedEntities).flatMap(splitCoordinatedEntities)
@@ -72,7 +72,7 @@ class RuleBasedEntityFinder(
     } else {
       // check that our expanded entities haven't swallowed any avoid mentions
       val avoidLabel = avoid.head.labels.last
-      distinctEntities.filter{ m => stateFromAvoid.mentionsFor(m.sentence, m.tokenInterval, avoidLabel).isEmpty }
+      distinctEntities.filterNot { m => stateFromAvoid.hasMentionsFor(m.sentence, m.tokenInterval, avoidLabel) }
     }
     res
   }

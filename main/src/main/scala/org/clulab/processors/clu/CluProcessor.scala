@@ -305,34 +305,20 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
                   nerLabels: IndexedSeq[String],
                   predicateIndexes: IndexedSeq[Int],
                   embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new mutable.HashSet[Int]()
-
-    // all predicates become roots
-    roots ++= predicateIndexes
-
-    for(pi <- predicateIndexes.indices) {
+    val edges = predicateIndexes.flatMap { pred =>
       // SRL needs POS tags and NEs, as well as the position of the predicate
-      val headPositions = new ArrayBuffer[Int]()
-      val pred = predicateIndexes(pi)
-      for(i <- words.indices) {
-        headPositions += pred
-      }
-
-      val annotatedSentence =
-        AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
-
+      val headPositions = Array.fill(words.length)(pred)
+      val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
       val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
 
-      for(ai <- argLabels.indices) {
-        if(argLabels(ai) != "O") {
-          val edge = Edge[String](pred, ai, argLabels(ai))
-          edges += edge
-        }
-      }
+      argLabels.zipWithIndex
+          .filter { case (argLabel, _) => argLabel != "O" }
+          .map { case (argLabel, argIndex) => Edge[String](pred, argIndex, argLabel) }
     }
-
-    new DirectedGraph[String](edges.toList, roots.toSet, Some(words.length))
+    val sources = edges.map(_.source).toSet
+    val destinations = edges.map(_.destination).toSet
+    val roots = sources -- destinations
+    new DirectedGraph[String](edges.toList, roots, Some(words.length))
   }
 
   private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
@@ -347,13 +333,28 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
     for(sent <- doc.sentences) {
       val (tags, chunks, preds) = tagSentence(sent.words, embeddings)
-      sent.tags = Some(tags.toArray)
+      sent.tags = Some(postprocessPartOfSpeechTags(sent.words, tags.toArray))
       sent.chunks = Some(chunks.toArray)
       predsForAllSents += getPredicateIndexes(preds)
     }
 
     // store the index of all predicates as a doc attachment
     doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predsForAllSents))
+  }
+
+  /** POS tag corrections, in place */
+  private def postprocessPartOfSpeechTags(words: Array[String], tags: Array[String]): Array[String] = {
+    for(i <- words.indices) {
+
+      // "due" in "due to" must be a preposition
+      if(i < words.length - 1 &&
+        words(i).equalsIgnoreCase("due") &&
+        words(i + 1).equalsIgnoreCase("to")) {
+        tags(i) = "IN"
+      }
+    }
+
+    tags
   }
 
   /** Lematization; modifies the document in place */

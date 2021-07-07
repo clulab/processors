@@ -28,16 +28,17 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
 
-  def read(input: String): Vector[Extractor] =
-    try {
-      readMasterFile(input)
-    } catch {
-      case e: ConstructorException => readSimpleFile(input)
-    }
-
-  def readSimpleFile(input: String): Vector[Extractor] = {
-    val rules = rulesFromSimpleFile(input)
+  def read(input: String): Vector[Extractor] = {
+    val rules = getRules(input)
     mkExtractors(rules)
+  }
+
+  def getRules(input: String): Seq[Rule] = {
+    try {
+      rulesFromMasterFile(input)
+    } catch {
+      case e: ConstructorException => rulesFromSimpleFile(input)
+    }
   }
 
   private def rulesFromSimpleFile(input: String): Seq[Rule] = {
@@ -47,11 +48,6 @@ class RuleReader(val actions: Actions, val charset: Charset) {
     val resources = OdinResourceManager(Map.empty)
     val config = OdinConfig(resources = resources)
     readRules(jRules, config)
-  }
-
-  def readMasterFile(input: String): Vector[Extractor] = {
-    val rules = rulesFromMasterFile(input)
-    mkExtractors(rules)
   }
 
   private def rulesFromMasterFile(input: String): Seq[Rule] = {
@@ -447,107 +443,108 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   }
 
   /**
-    * Autogenerate markdown file that shows the metadata for each rule in the grammar using a Master file.
+    * Autogenerate markdown file string content that shows the metadata for each rule in
+    * the grammar.
     * This is useful for those who have a harder time sifting through the yaml files which
     * may be quite nested.  One md block per rule, sorted alphabetically.
     * @param input yaml rule string
-    * @param outname the path to the output md file
+    * @return String contents of the rule documentation file
     */
-  def exportRuleSchemasFromMaster(input: String, outname: String): Unit = {
-    val rules = rulesFromMasterFile(input)
-    exportRuleSchemas(rules, outname)
+  def ruleSchemas(input: String): String = {
+    val schemas = ruleSchemaObjects(input)
+    // File header and contents
+    (List("# Odin Rule Schemas\n") ++ schemas.map(_.toMarkdown)).mkString("\n")
   }
 
   /**
-    * Autogenerate markdown file that shows the metadata for each rule in the grammar using a Simple file.
-    * This is useful for those who have a harder time sifting through the yaml files which
-    * may be quite nested.  One md block per rule, sorted alphabetically.
+    * Autogenerate objects that can represent themselves as markdown blocks that show
+    * the metadata for each rule in the grammar using a Master file.
+    * This entrypoint is for people who want to edit what is produced prior to exporting.
+    * One md block per rule, sorted alphabetically.
     * @param input yaml rule string
-    * @param outname the path to the output md file
+    * @return scala Map with markdown table contents
     */
-  def exportRuleSchemasFromSimple(input: String, outname: String): Unit = {
-    val rules = rulesFromSimpleFile(input)
-    exportRuleSchemas(rules, outname)
-  }
-
-  /**
-    * Autogenerate markdown file that shows the metadata for each rule in the grammar.
-    * This is useful for those who have a harder time sifting through the yaml files which
-    * may be quite nested.  One md block per rule, sorted alphabetically.
-    * @param rules Rules in the grammar
-    * @param outname the path to the output md file
-    */
-  def exportRuleSchemas(rules: Seq[Rule], outname: String): Unit = {
+  def ruleSchemaObjects(input: String): Seq[RuleSchema] = {
+    val rules = getRules(input)
     val extractors = mkExtractors(rules)
     // To get all the information, we need both the rules and the extractors
-    val markdownLines = rules
+    rules
       // pair each rule with its corresponding extractor
       .zip(extractors)
       // put them in alphabetical order by type and rule name
       .sortBy(e => (e._1.labels.head, e._1.name))
       // convert each to markdown representation
-      .map(Function.tupled(toMarkdown))
+      .map(Function.tupled(toRuleSchema))
+  }
+
+  /**
+    * Autogenerate markdown **file** that shows the metadata for each rule in the grammar.
+    * This is useful for those who have a harder time sifting through the yaml files which
+    * may be quite nested.  One md block per rule, sorted alphabetically.
+    * @param input odin grammar yaml string
+    * @param outname the path to the output md file
+    */
+  def exportRuleSchemas(input: String, outname: String): Unit = {
+    val markdown = ruleSchemas(input)
     // export
-    val pw = FileUtils.printWriterFromFile(new File(outname))
-    pw.autoClose { pw =>
-      pw.println("# Odin Rule Schemas\n")
-      markdownLines foreach pw.println
+    FileUtils.printWriterFromFile(new File(outname)).autoClose { pw =>
+      pw.println(markdown)
     }
   }
 
   /**
-    * Autogenerate markdown documentation for a grammar, aggregating by _Type_ (i.e.,
+    * Autogenerate aggregated markdown documentation string for a grammar, aggregating by _Type_ (i.e.,
     * the Label from the internal Taxonomy).  This view of the grammar tells consumers what
     * they can expect to see (or what they _could_ expect to see) in an Extraction/Mention of
     * a given Type (or Label).
-    * @param input the String content of the Master yaml file
-    * @param outname output markdown file
+    * @param input the String content of the grammar yaml file
+    * @return markdown file contents
     */
-  def exportExtractionSchemasFromMaster(input: String, outname: String): Unit = {
-    val rules = rulesFromMasterFile(input)
-    exportExtractionSchemas(rules, outname)
+  def extractionSchemas(input: String, minimal: Boolean = false): String = {
+    val schemas = extractionSchemaObjects(input)
+    (List(s"# Odin Extraction Schemas\n") ++ schemas.map(_.toMarkdown(minimal))).mkString("\n")
   }
 
   /**
-    * Autogenerate markdown documentation for a grammar, aggregating by _Type_ (i.e.,
-    * the Label from the internal Taxonomy).  This view of the grammar tells consumers what
-    * they can expect to see (or what they _could_ expect to see) in an Extraction/Mention of
-    * a given Type (or Label).
+    * Autogenerate extractionSchema objects for a grammar, aggregating by _Type_ (i.e.,
+    * the Label from the internal Taxonomy).
+    * This entrypoint is for people who want to edit what is produced prior to exporting.
     * @param input the String content of the simple yaml file
-    * @param outname output markdown file
     */
-  def exportExtractionSchemasFromSimple(input: String, outname: String): Unit = {
-    val rules = rulesFromSimpleFile(input)
-    exportExtractionSchemas(rules, outname)
-  }
-
-  /**
-    * Autogenerate markdown documentation for a grammar, aggregating by _Type_ (i.e.,
-    * the Label from the internal Taxonomy).  This view of the grammar tells consumers what
-    * they can expect to see (or what they _could_ expect to see) in an Extraction/Mention of
-    * a given Type (or Label).
-    * @param rules grammar Rules
-    * @param outname output markdown file
-    */
-  def exportExtractionSchemas(rules: Seq[Rule], outname: String): Unit = {
+  def extractionSchemaObjects(input: String): Seq[ExtractionSchema] = {
+    val rules = getRules(input)
     val extractors = mkExtractors(rules)
-    val byLabel = rules.zip(extractors)
-      .groupBy(_._2.label)
 
+    // the order in which to present the schemas
     val order = extractors
       .map(e => (e.labels.reverse.mkString(","), e.label))
       .distinct
       .sortBy(_._1)
       .map(_._2)
 
-    val pw = FileUtils.printWriterFromFile(new File(outname))
-    pw.autoClose { pw =>
-      pw.println(s"# Odin Extraction Schemas\n")
-      for (label <- order) {
-        val rulesAndExtractorsForLabel = byLabel(label)
-        val markdownLines = toMarkdown(label, rulesAndExtractorsForLabel)
-        markdownLines foreach pw.println
-      }
+    // aggregate the rules by the type of Mention produced (ref: the taxonomy)
+    val byLabel = rules.zip(extractors)
+      .groupBy(_._2.label)
+
+    for {
+      label <- order
+      rulesAndExtractorsForLabel = byLabel(label)
+    } yield toExtractionSchema(label, rulesAndExtractorsForLabel)
+
+  }
+
+  /**
+    * Autogenerate aggregated markdown documentation **file** for a grammar, aggregating by _Type_ (i.e.,
+    * the Label from the internal Taxonomy).  This view of the grammar tells consumers what
+    * they can expect to see (or what they _could_ expect to see) in an Extraction/Mention of
+    * a given Type (or Label).
+    * @param input the String content of the grammar yaml file
+    * @param outname output markdown file
+    */
+  def exportExtractionSchemas(input: String, outname: String, minimal: Boolean = false): Unit = {
+    val markdown = extractionSchemas(input, minimal)
+    FileUtils.printWriterFromFile(new File(outname)).autoClose { pw =>
+      pw.println(markdown)
     }
   }
 
@@ -587,6 +584,17 @@ object RuleReader {
       case other => new URL(other)
     }
   }
+
+//  case class RuleSchema(
+//                         name: String,
+//                         extractorType: String,
+//                         labels: Seq[String],
+//                         priority: String,
+//                         action: Option[String],
+//                         keep: Boolean,
+//                         additional: Map[String, String],
+//                         arguments: Seq[ArgumentSchema]
+
 
   // rule intermediary representation
   class Rule(

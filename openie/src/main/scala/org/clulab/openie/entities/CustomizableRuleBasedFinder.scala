@@ -31,7 +31,7 @@ class CustomizableRuleBasedFinder(
     // avoid refs, etc.
     val avoid = avoidEngine.extractFrom(doc)
     val stateFromAvoid = State(avoid)
-    val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filter{ entity => ! stateFromAvoid.contains(entity) }
+    val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filterNot(stateFromAvoid.contains)
     // make sure that all are valid (i.e., contain a noun or would have contained a noun except for trigger avoidance)
     val validBaseEntities = baseEntities.filter(isValidBaseEntity)
     // Expand
@@ -48,7 +48,7 @@ class CustomizableRuleBasedFinder(
     } else {
       // check that our expanded entities haven't swallowed any avoid mentions
       val avoidLabel = avoid.head.labels.last
-      trimmedEntities.filter{ m => stateFromAvoid.mentionsFor(m.sentence, m.tokenInterval, avoidLabel).isEmpty }
+      trimmedEntities.filterNot { m => stateFromAvoid.hasMentionsFor(m.sentence, m.tokenInterval, avoidLabel) }
     }
     res
   }
