@@ -312,13 +312,28 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
 
     for(sent <- doc.sentences) {
       val (tags, chunks, preds) = tagSentence(sent.words, embeddings)
-      sent.tags = Some(tags.toArray)
+      sent.tags = Some(postprocessPartOfSpeechTags(sent.words, tags.toArray))
       sent.chunks = Some(chunks.toArray)
       predsForAllSents += getPredicateIndexes(preds)
     }
 
     // store the index of all predicates as a doc attachment
     doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predsForAllSents))
+  }
+
+  /** POS tag corrections, in place */
+  private def postprocessPartOfSpeechTags(words: Array[String], tags: Array[String]): Array[String] = {
+    for(i <- words.indices) {
+
+      // "due" in "due to" must be a preposition
+      if(i < words.length - 1 &&
+        words(i).equalsIgnoreCase("due") &&
+        words(i + 1).equalsIgnoreCase("to")) {
+        tags(i) = "IN"
+      }
+    }
+
+    tags
   }
 
   /** Lematization; modifies the document in place */

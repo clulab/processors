@@ -136,7 +136,8 @@ object ToEnhancedDependencies {
 
   /**
     * Collapses nmod + case into nmod_x (universal dependencies)
-    * Mary gave a book to Jane => nmod_to from 1 to 5
+    *     Mary gave a book to Jane => nmod_to from 1 to 5
+    *     There was famine due to drought => nmod_due_to from 2 to 5
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
