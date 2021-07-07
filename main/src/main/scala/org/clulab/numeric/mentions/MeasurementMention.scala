@@ -23,11 +23,9 @@ class MeasurementMention ( labels: Seq[String],
     val numValueOpt = NumberParser.parse(value.get)
     if(numValueOpt.isEmpty)
       throw new RuntimeException(s"ERROR: could not parse the number in the measurement ${raw.mkString(" ")}!")
-    val unitNormOpt = UnitNormalizer.norm(unit.get)
-    if(unitNormOpt.isEmpty)
-      throw new RuntimeException(s"ERROR: could not normalize the unit in the measurement ${raw.mkString(" ")}!")
+    val unitNorm = UnitNormalizer.norm(unit.get)
 
-    numValueOpt.get + " " + unitNormOpt.get
+    numValueOpt.get + " " + unitNorm
   }
 
   override def neLabel: String = {
