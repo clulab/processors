@@ -28,6 +28,7 @@ class DirectedGraphIndex[E](
   def addEdge(head:Int, modifier:Int, label:E) {
     outgoingEdges(head) += Tuple2(modifier, label)
     incomingEdges(modifier) += Tuple2(head, label)
+    updateRoots()
     val byLabel = edgesByName.getOrElseUpdate(label, new mutable.HashSet[(Int, Int)]())
     byLabel += Tuple2(head, modifier)
   }
@@ -35,12 +36,21 @@ class DirectedGraphIndex[E](
   def removeEdge(head:Int, modifier:Int, label:E): Unit = {
     outgoingEdges(head).remove(Tuple2(modifier, label))
     incomingEdges(modifier).remove(Tuple2(head, label))
+    updateRoots()
     val byLabel = edgesByName.get(label)
     if(byLabel.nonEmpty) {
       byLabel.get.remove(Tuple2(head, modifier))
     }
   }
 
+  protected def updateRoots(): Unit = {
+    roots.clear()
+    roots ++= DirectedGraph.calculateRoots(mkEdges())
+  }
+
+  // Warning: This "root" isn't necessarily one that would be calculated.
+  // It has hopefully already been added as a side-effect of the
+  // addition or removal of an edge.
   def addRoot(index:Int) { roots += index }
 
   def findByName(label:E): Seq[Edge[E]] = {
@@ -85,15 +95,22 @@ class DirectedGraphIndex[E](
     edges
   }
 
-  def toDirectedGraph(prefferedSize: Option[Int] = None): DirectedGraph[E] = {
+  def mkEdges(): List[Edge[E]] = {
     val edges = new ListBuffer[Edge[E]]
-    for(head <- outgoingEdges.indices) {
-      for(ml <- outgoingEdges(head)) {
+
+    for (head <- outgoingEdges.indices) {
+      for (ml <- outgoingEdges(head)) {
         val e = new Edge[E](head, ml._1, ml._2)
         edges += e
       }
     }
-    new DirectedGraph[E](edges.toList, roots.toSet, prefferedSize)
+    edges.toList
+  }
+
+  def toDirectedGraph(preferredSize: Option[Int] = None): DirectedGraph[E] = {
+    val edges = mkEdges()
+
+    new DirectedGraph[E](edges, roots.toSet, preferredSize)
   }
 }
 

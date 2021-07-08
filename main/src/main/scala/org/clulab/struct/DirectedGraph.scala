@@ -17,6 +17,13 @@ case class DirectedGraph[E](edges: List[Edge[E]],
                             roots: collection.immutable.Set[Int],
                             preferredSize: Option[Int] = None) extends Serializable {
 
+  /* Use for debugging.  roots in the constructor would need to be a var.
+  val calculatedRoots = DirectedGraph.calculateRoots(edges)
+  if (calculatedRoots != roots) {
+    println("The roots of the directed graph are not as expected!")
+    roots = calculatedRoots
+  } */
+
   val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, roots, preferredSize)
   val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, roots, preferredSize)
 
@@ -290,6 +297,14 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
 }
 
 object DirectedGraph {
+
+  def calculateRoots[E](edges: List[Edge[E]]): Set[Int] = {
+    val sources = edges.map(_.source).toSet
+    val destinations = edges.map(_.destination).toSet
+    val roots = sources -- destinations
+
+    roots
+  }
 
   def triplesToEdges[E](triples: List[(Int, Int, E)]): List[Edge[E]] = for {
     triple <- triples
