@@ -19,8 +19,8 @@ class DirectedGraphIndex[E](
   def this(sentenceLength:Int) {
     this(sentenceLength,
       new mutable.HashSet[Int],
-      DirectedGraphIndex.mkOutgoing(sentenceLength),
-      DirectedGraphIndex.mkIncoming(sentenceLength),
+      DirectedGraphIndex.mkOutgoing[E](sentenceLength),
+      DirectedGraphIndex.mkIncoming[E](sentenceLength),
       new mutable.HashMap[E, mutable.HashSet[(Int, Int)]]()
     )
   }
@@ -45,13 +45,8 @@ class DirectedGraphIndex[E](
 
   protected def updateRoots(): Unit = {
     roots.clear()
-    roots ++= DirectedGraph.calculateRoots(mkEdges())
+    roots ++= DirectedGraph.calculateRoots(mkEdges(), size)
   }
-
-  // Warning: This "root" isn't necessarily one that would be calculated.
-  // It has hopefully already been added as a side-effect of the
-  // addition or removal of an edge.
-  def addRoot(index:Int) { roots += index }
 
   def findByName(label:E): Seq[Edge[E]] = {
     val edges = new ListBuffer[Edge[E]]

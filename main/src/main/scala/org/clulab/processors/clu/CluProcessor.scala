@@ -205,9 +205,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     for(i <- headsAndLabels.indices) {
       val head = headsAndLabels(i)._1
       val label = headsAndLabels(i)._2
-      if(head == -1) { // found a root
-        roots += i
-      } else {
+      if (head >= 0) {
         val edge = Edge[String](head, i, label)
         edges.append(edge)
       }
@@ -269,7 +267,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     }
     */
 
-    new DirectedGraph[String](edges.toList, roots.toSet)
+    new DirectedGraph[String](edges.toList, Set.empty)
   }
 
   def srlSentence(sent: Sentence,
@@ -294,10 +292,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
           .filter { case (argLabel, _) => argLabel != "O" }
           .map { case (argLabel, argIndex) => Edge[String](pred, argIndex, argLabel) }
     }
-    val sources = edges.map(_.source).toSet
-    val destinations = edges.map(_.destination).toSet
-    val roots = sources -- destinations
-    new DirectedGraph[String](edges.toList, roots, Some(words.length))
+    new DirectedGraph[String](edges.toList, Set.empty, Some(words.length))
   }
 
   private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
