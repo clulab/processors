@@ -31,7 +31,7 @@ case class DirectedGraph[E](
   val outgoingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkOutgoing(edges, size)
   val incomingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkIncoming(edges, size)
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
-  val roots: Set[Int] = DirectedGraph.calculateRoots(edges, size, outgoingEdges, incomingEdges)
+  lazy val roots: Set[Int] = DirectedGraph.calculateRoots(size, outgoingEdges, incomingEdges)
 
   /**
     * Used to compare DirectedGraphs.
@@ -289,15 +289,18 @@ object DirectedGraph {
     val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, size)
     val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, size)
 
-    calculateRoots(edges, size, outgoingEdges, incomingEdges)
+    calculateRoots(size, outgoingEdges, incomingEdges)
   }
 
   protected class Node(val index: Int) {
     var visited: Boolean = false
   }
 
-  def calculateRoots[E](edges: List[Edge[E]], size: Int, outgoingEdges: Array[Array[(Int, E)]],
+  def calculateRoots[E](size: Int, outgoingEdges: Array[Array[(Int, E)]],
       incomingEdges: Array[Array[(Int, E)]]): Set[Int] = {
+    require(size == outgoingEdges.length)
+    require(size == incomingEdges.length)
+
     val nodes = {
       val iterator = Range(0, size).iterator
       Array.fill(size)(new Node(iterator.next))
