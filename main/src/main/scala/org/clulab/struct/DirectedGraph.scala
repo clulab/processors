@@ -13,18 +13,30 @@ import scala.util.hashing.MurmurHash3._
  * User: mihais
  * Date: 3/5/13
  */
-case class DirectedGraph[E](edges: List[Edge[E]],
-                            roots: collection.immutable.Set[Int],
-                            preferredSize: Option[Int] = None) extends Serializable {
+case class DirectedGraph[E](
+  edges: List[Edge[E]],
+  preferredSizeOpt: Option[Int] = None
+) extends Serializable {
+  val size: Int = {
+    val minimumSize = computeSize(edges)
+    val actualSize = preferredSizeOpt.map { preferredSize =>
+      if (preferredSize >= minimumSize)
+        preferredSize
+      else
+        throw new RuntimeException(s"Preferred size, $preferredSize, of directed graph is smaller than actual size, $minimumSize.")
+    }.getOrElse(minimumSize)
 
-  val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, roots, preferredSize)
-  val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, roots, preferredSize)
-
+    actualSize
+  }
+  val outgoingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkOutgoing(edges, size)
+  val incomingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkIncoming(edges, size)
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
+  val roots: Set[Int] = DirectedGraph.calculateRoots(edges, size, outgoingEdges, incomingEdges)
 
   /**
     * Used to compare DirectedGraphs.
-    * @return a hash (Int) based on the [[edges]] and [[roots]]
+    *
+    * @return a hash (Int) based on the [[edges]]
     */
   def equivalenceHash: Int = {
     val stringCode = "org.clulab.struct.DirectedGraph"
@@ -32,86 +44,15 @@ case class DirectedGraph[E](edges: List[Edge[E]],
     // decided to use the class name
     val h0 = stringHash(stringCode)
     val h1 = mix(h0, edges.hashCode)
-    val h2 = mix(h1, roots.hashCode)
-    finalizeHash(h2, 2)
+    finalizeHash(h1, 1)
   }
 
-  private def computeSize(edges:List[Edge[_]], roots: collection.immutable.Set[Int]):Int = {
-    var size = 0
-    for (e <- edges) {
-      size = math.max(e.source + 1, size)
-      size = math.max(e.destination + 1, size)
-    }
-    for(r <- roots) {
-      size = math.max(r + 1, size)
-    }
-    size
+  protected def computeSize(edges: List[Edge[_]]):Int = {
+    val maxVertex = edges.foldLeft(0) { (max, edge) => math.max(max, math.max(edge.source, edge.destination)) }
+    val maxEdge = if (edges.nonEmpty) maxVertex + 1 else 0
+
+    maxEdge
   }
-
-  // (src, dest, rel) <- allEdges
-
-  private def mkOutgoing(edges:List[Edge[E]],
-                         roots: collection.immutable.Set[Int],
-                         preferredSize: Option[Int]): Array[Array[(Int, E)]] = {
-
-    //println("EDGES:")
-    //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
-
-    val size = preferredSize.getOrElse(computeSize(edges, roots))
-    //println("size = " + size)
-
-    val nodes = new Array[ArrayBuffer[(Int, E)]](size)
-    var offset = 0
-    while(offset < nodes.length) {
-      nodes(offset) = new ArrayBuffer[(Int, E)]
-      offset += 1
-    }
-
-    for (edge <- edges) {
-      //logger.debug("storing edge: " + edge)
-      nodes(edge.source).+=((edge.destination, edge.relation))
-    }
-
-    val outgoing = new Array[Array[(Int, E)]](size)
-    offset = 0
-    while(offset < nodes.length) {
-      outgoing(offset) = nodes(offset).sortBy(e => e._1).toArray
-      offset += 1
-    }
-
-    outgoing
-  }
-
-  private def mkIncoming(edges:List[Edge[E]],
-                         roots: collection.immutable.Set[Int],
-                         preferredSize: Option[Int]): Array[Array[(Int, E)]] = {
-
-    val size = preferredSize.getOrElse(computeSize(edges, roots))
-    //println("size = " + size)
-
-    val nodes = new Array[ArrayBuffer[(Int, E)]](size)
-    var offset = 0
-    while(offset < nodes.length) {
-      nodes(offset) = new ArrayBuffer[(Int, E)]
-      offset += 1
-    }
-
-    for (edge <- edges) {
-      //logger.debug("storing edge: " + edge)
-      nodes(edge.destination).+=((edge.source, edge.relation))
-    }
-
-    val incoming = new Array[Array[(Int, E)]](size)
-    offset = 0
-    while(offset < nodes.length) {
-      incoming(offset) = nodes(offset).sortBy(e => e._1).toArray
-      offset += 1
-    }
-
-    incoming
-  }
-
-  def size:Int = outgoingEdges.length // this was computed correctly in mkOutgoing!
 
   def getOutgoingEdges(node:Int): Array[(Int, E)] = outgoingEdges(node)
   def getIncomingEdges(node:Int): Array[(Int, E)] = incomingEdges(node)
@@ -253,7 +194,8 @@ case class DirectedGraph[E](edges: List[Edge[E]],
 
   def toDirectedGraphIndex(sentenceLength:Int = size): DirectedGraphIndex[E] = {
     val dgi = new DirectedGraphIndex[E](sentenceLength)
-    roots.foreach(dgi.addRoot(_))
+    // Roots are now managed automatically.
+    // suggestedRoots.foreach(dgi.addRoot)
     allEdges.foreach(e => dgi.addEdge(e._1, e._2, e._3))
     dgi
   }
@@ -291,6 +233,114 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
 
 object DirectedGraph {
 
+  protected def mkOutgoing[E](edges:List[Edge[E]], size: Int): Array[Array[(Int, E)]] = {
+    //println("EDGES:")
+    //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
+    //println("size = " + size)
+
+    val nodes = new Array[ArrayBuffer[(Int, E)]](size)
+    var offset = 0
+    while(offset < nodes.length) {
+      nodes(offset) = new ArrayBuffer[(Int, E)]
+      offset += 1
+    }
+
+    for (edge <- edges) {
+      //logger.debug("storing edge: " + edge)
+      nodes(edge.source).+=((edge.destination, edge.relation))
+    }
+
+    val outgoing = new Array[Array[(Int, E)]](size)
+    offset = 0
+    while(offset < nodes.length) {
+      outgoing(offset) = nodes(offset).sortBy(e => e._1).toArray
+      offset += 1
+    }
+
+    outgoing
+  }
+
+  protected def mkIncoming[E](edges:List[Edge[E]], size: Int): Array[Array[(Int, E)]] = {
+    //println("size = " + size)
+
+    val nodes = new Array[ArrayBuffer[(Int, E)]](size)
+    var offset = 0
+    while(offset < nodes.length) {
+      nodes(offset) = new ArrayBuffer[(Int, E)]
+      offset += 1
+    }
+
+    for (edge <- edges) {
+      //logger.debug("storing edge: " + edge)
+      nodes(edge.destination).+=((edge.source, edge.relation))
+    }
+
+    val incoming = new Array[Array[(Int, E)]](size)
+    offset = 0
+    while(offset < nodes.length) {
+      incoming(offset) = nodes(offset).sortBy(e => e._1).toArray
+      offset += 1
+    }
+
+    incoming
+  }
+
+  def calculateRoots[E](edges: List[Edge[E]], size: Int): Set[Int] = {
+    val outgoingEdges: Array[Array[(Int, E)]] = mkOutgoing(edges, size)
+    val incomingEdges: Array[Array[(Int, E)]] = mkIncoming(edges, size)
+
+    calculateRoots(edges, size, outgoingEdges, incomingEdges)
+  }
+
+  protected class Node(val index: Int) {
+    var visited: Boolean = false
+  }
+
+  def calculateRoots[E](edges: List[Edge[E]], size: Int, outgoingEdges: Array[Array[(Int, E)]],
+      incomingEdges: Array[Array[(Int, E)]]): Set[Int] = {
+    val nodes = {
+      val iterator = Range(0, size).iterator
+      Array.fill(size)(new Node(iterator.next))
+    }
+
+    def visit(node: Node): Unit = {
+      if (!node.visited) {
+        node.visited = true
+        outgoingEdges(node.index).foreach { case (destination, _) =>
+          visit(nodes(destination))
+        }
+      }
+    }
+
+    def help(unreachableLinks: Array[Node]): List[Node] = {
+      if (unreachableLinks.isEmpty) Nil
+      else {
+        val helper = unreachableLinks.head
+        visit(helper)
+        val newUnreachableLinks = unreachableLinks.filterNot(_.visited)
+        helper :: help(newUnreachableLinks)
+      }
+    }
+
+    val loners = nodes.filter { node => outgoingEdges(node.index).length == 0 && incomingEdges(node.index).length == 0 }
+    val sources = nodes.filter { node => outgoingEdges(node.index).length > 0 && incomingEdges(node.index).length == 0 }
+    // val sinks = nodes.filter { node => outgoingEdges(node.index).length == 0 && incomingEdges(node.index).length > 0 }
+    val links = nodes.filter { node => outgoingEdges(node.index).length > 0 && incomingEdges(node.index).length > 0 }
+
+    sources.foreach(visit)
+
+    // val reachableLinks = links.filter { node => node.visited }
+    val unreachableLinks = links.filterNot(_.visited)
+    val helpers = help(unreachableLinks)
+    val roots = loners ++ sources ++ helpers
+
+    /* { // debugging
+      loners.foreach { source => visit(source) }
+      assert(nodes.forall(_.visited))
+    } */
+    roots.map(_.index).toSet
+  }
+
   def triplesToEdges[E](triples: List[(Int, Int, E)]): List[Edge[E]] = for {
     triple <- triples
   } yield Edge[E](source = triple._1, destination = triple._2, relation = triple._3)
@@ -305,14 +355,12 @@ object DirectedGraph {
    */
   def mkGraph(dependencies: Array[String]): DirectedGraph[String] = {
     val edges = new ListBuffer[Edge[String]]
-    val roots = new mutable.HashSet[Int]()
     for (depLine <- dependencies) {
       parseDep(depLine).foreach(dep => {
         edges += Edge(dep._1, dep._2, dep._3)
-        if (dep._1 == -1) roots.add(dep._2)
       })
     }
-    DirectedGraph[String](edges.toList, roots.toSet)
+    DirectedGraph[String](edges.toList)
   }
 
   /** Parses a line of the form "nsubjpass(expressed-15, CDK6-13)" into a tuple(14, 12, nsubjpass) */

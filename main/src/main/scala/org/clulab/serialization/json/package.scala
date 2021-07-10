@@ -38,6 +38,7 @@ package object json {
   implicit class DirectedGraphOps(dg: DirectedGraph[String]) extends JSONSerialization {
     def jsonAST: JValue = {
       ("edges" -> dg.edges.map(_.jsonAST)) ~
+      // The roots are being saved for backward compatibility and human consumption.
       ("roots" -> dg.roots)
     }
   }

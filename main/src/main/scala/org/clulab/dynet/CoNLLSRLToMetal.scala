@@ -180,16 +180,13 @@ class CoNLLSRLToMetal {
 
   def toDirectedGraph(tokens:Array[CoNLLToken]):DirectedGraph[String] = {
     val edges = new mutable.ListBuffer[(Int, Int, String)] // head, modifier, label
-    val roots = new mutable.HashSet[Int]()
     for(modifier <- tokens.indices) {
       val head = tokens(modifier).dep._1
       if(head >= 0)
         edges += Tuple3(head, modifier, tokens(modifier).dep._2)
-      else
-        roots += modifier
       ()                                    // workaround for bug #10151
     }
-    DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
+    DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList))
   }
 
   def mkSemanticDependencies(sentence:Array[CoNLLToken]):DirectedGraph[String] = {
@@ -218,14 +215,7 @@ class CoNLLSRLToMetal {
       }
     }
 
-    val roots = new mutable.HashSet[Int]()
-    for(h <- heads) {
-      if(! modifiers.contains(h)) {
-        roots += h
-      }
-    }
-
-    DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList), roots.toSet)
+    DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList))
   }
 
   val KEEP_LABELS = Set("A0", "A1", "R-A0", "R-A1", "AM-TMP", "AM-LOC", "AM-MOD", "AM-NEG")
