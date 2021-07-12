@@ -11,16 +11,14 @@ import scala.util.matching.Regex
   */
 class DirectedGraphIndex[E](
   val size: Int,
-  val roots:mutable.HashSet[Int],
   val outgoingEdges:Array[mutable.HashSet[(Int, E)]], // from head to modifier
   val incomingEdges:Array[mutable.HashSet[(Int, E)]], // from modifier to head
   val edgesByName:mutable.HashMap[E, mutable.HashSet[(Int, Int)]]) { // indexes edges by label
 
   def this(sentenceLength:Int) {
     this(sentenceLength,
-      new mutable.HashSet[Int],
-      DirectedGraphIndex.mkOutgoing(sentenceLength),
-      DirectedGraphIndex.mkIncoming(sentenceLength),
+      DirectedGraphIndex.mkOutgoing[E](sentenceLength),
+      DirectedGraphIndex.mkIncoming[E](sentenceLength),
       new mutable.HashMap[E, mutable.HashSet[(Int, Int)]]()
     )
   }
@@ -40,8 +38,6 @@ class DirectedGraphIndex[E](
       byLabel.get.remove(Tuple2(head, modifier))
     }
   }
-
-  def addRoot(index:Int) { roots += index }
 
   def findByName(label:E): Seq[Edge[E]] = {
     val edges = new ListBuffer[Edge[E]]
@@ -85,15 +81,22 @@ class DirectedGraphIndex[E](
     edges
   }
 
-  def toDirectedGraph(prefferedSize: Option[Int] = None): DirectedGraph[E] = {
+  def mkEdges(): List[Edge[E]] = {
     val edges = new ListBuffer[Edge[E]]
-    for(head <- outgoingEdges.indices) {
-      for(ml <- outgoingEdges(head)) {
+
+    for (head <- outgoingEdges.indices) {
+      for (ml <- outgoingEdges(head)) {
         val e = new Edge[E](head, ml._1, ml._2)
         edges += e
       }
     }
-    new DirectedGraph[E](edges.toList, roots.toSet, prefferedSize)
+    edges.toList
+  }
+
+  def toDirectedGraph(preferredSize: Option[Int] = None): DirectedGraph[E] = {
+    val edges = mkEdges()
+
+    new DirectedGraph[E](edges, preferredSize)
   }
 }
 

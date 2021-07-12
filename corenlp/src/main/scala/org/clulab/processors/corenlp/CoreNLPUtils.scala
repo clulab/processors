@@ -60,37 +60,8 @@ object CoreNLPUtils {
       // An extra distinct needs to be called on edges because CoreNLP sometimes duplicates the enhanced deps it creates.
     }
 
-    def mkRoots(edges: List[Edge[String]]): Set[Int] = {
-      val sgRoots = sg.getRoots.asScala
-      if (sgRoots.nonEmpty)
-        sgRoots.map { iw =>
-          iw.get(classOf[IndexAnnotation]) - 1
-        }.toSet
-      else {
-        // Make sure each graph has a root.
-        val sortedEdges = edges.sortBy(_.source) // Sort them by head.
-        // In case we have to search repeatedly for a good head, cache these values.
-        val modifiers = edges.map(_.destination).toSet
-        // Skip the heads collection and get them instead from edge.source.
-        val root = sortedEdges
-            // Find the left-most head that is not a modifier to some other head.
-            // There may be some duplicate heads searched, but probably not many.
-            .find { edge => !modifiers.contains(edge.source) }
-            // Get the head of the found edge.
-            .map(_.source)
-            .getOrElse(
-                // We somehow failed. Just choose the left-most head then.
-                sortedEdges.headOption.map(_.source)
-                // We are still failing. Just choose the left-most token, the 0th.
-                .getOrElse(0)
-            )
-        Set(root)
-      }
-    }
-
     val edges = mkEdges()
-    val roots = mkRoots(edges)
-    val dg = new DirectedGraph[String](edges, roots, preferredSize)
+    val dg = new DirectedGraph[String](edges, preferredSize)
     //println(dg)
     dg
   }
