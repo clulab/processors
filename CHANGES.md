@@ -1,4 +1,5 @@
 # Changes
++ **8.4.3** - Move calculation of roots to DirectedGraph
 + **8.4.3** - Fixed POS tagging errors such as "due" in "due to" not being a IN. 
 + **8.4.2** - Improve markdown code, fix serialization stability issue 
 + **8.4.1** - Fix markdown syntax and duplicate labels, recover mention text from raw strings

@@ -340,6 +340,7 @@ object DirectedGraph {
     /* { // debugging
       loners.foreach { source => visit(source) }
       assert(nodes.forall(_.visited))
+      assert(size == 0 || roots.nonEmpty)
     } */
     roots.map(_.index).toSet
   }
