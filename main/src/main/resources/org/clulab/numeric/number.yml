@@ -15,7 +15,7 @@ rules:
       /^[+-]$/?
       /^[+-]?(\d+\.\d*|\.\d+|\d+|\d+\/\d+)$/
       (/\// /^[+-]$/? /^([+-]?\d+)$/)?
-      (hundred|thousand|million|billion|trillion|quadrillion)?
+      /^(hundred|thousand|million|billion|trillion|quadrillion)s?$/?
 
   # special case for number like "twelve hundred thirty four"
   # result must be >1000
@@ -29,49 +29,49 @@ rules:
       # or numbers 20-99
       twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
       sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit?)
-      hundred @WordTens
+      /^hundreds?$/ @WordTens?
 
   - name: word_quadrillions
     label: WordQuadrillions
     priority: 8
     type: token
     pattern: |
-      (@WordHundreds quadrillion)? @WordTrillions
+      (@WordHundreds /^quadrillions?$/)? @WordTrillions
 
   - name: word_trillions
     label: WordTrillions
     priority: 7
     type: token
     pattern: |
-      (@WordHundreds trillion)? @WordBillions
+      (@WordHundreds /^trillions?$/)? @WordBillions
 
   - name: word_billions
     label: WordBillions
     priority: 6
     type: token
     pattern: |
-      (@WordHundreds billion)? @WordMillions
+      (@WordHundreds /^billions?$/)? @WordMillions
 
   - name: word_millions
     label: WordMillions
     priority: 5
     type: token
     pattern: |
-      (@WordHundreds million)? @WordThousands
+      (@WordHundreds /^millions?$/)? @WordThousands
 
   - name: word_thousands
     label: WordThousands
     priority: 4
     type: token
     pattern: |
-      (@WordHundreds thousand)? @WordHundreds
+      (@WordHundreds /^thousands?$/)? @WordHundreds
 
   - name: word_hundreds
     label: WordHundreds
     priority: 3
     type: token
     pattern: |
-      (@WordDigit hundred)? @WordTens
+      (@WordDigit /^hundreds?$/)? @WordTens
 
   - name: word_tens
     label: WordTens

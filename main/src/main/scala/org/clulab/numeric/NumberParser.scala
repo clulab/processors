@@ -10,7 +10,12 @@ object NumberParser {
   def parse(words: Seq[String]): Option[Double] = {
     words match {
       case Seq() => None
-      case words => parseWords(words) orElse parseNumeric(words)
+      case words =>
+	    // remove 's' from words like "thousands"
+	    val cleanWords = words.map { w =>
+		  if (w.endsWith("s")) w.dropRight(1) else w
+	    }
+	    parseWords(cleanWords) orElse parseNumeric(cleanWords)
     }
   }
 
