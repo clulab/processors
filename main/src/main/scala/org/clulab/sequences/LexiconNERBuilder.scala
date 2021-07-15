@@ -63,7 +63,17 @@ abstract class LexiconNERBuilder() {
 // Heads up.  The following code is tricky because there are many cases to deal with:
 // separated, combined, or compact LexiconNERs, standard or override KBs, resource or memory
 // storage, and case sensitive or not.
-trait KbSource
+trait KbSource {
+  /** removes comments that start with // from the end of the line */
+  protected def removeCommentsAndTrim(line: String): String = {
+    val commentStart = line.indexOf("//")
+    if(commentStart >= 0) {
+      line.substring(0, commentStart).trim
+    } else {
+      line.trim
+    }
+  }
+}
 
 abstract class StandardKbSource(caseInsensitiveMatching: Boolean) extends KbSource {
   def getLabel: String
@@ -71,7 +81,7 @@ abstract class StandardKbSource(caseInsensitiveMatching: Boolean) extends KbSour
   def withTokens(f: Array[String] => Unit): Unit
 
   protected def processLine(line: String, f: Array[String] => Unit): Unit = {
-    val trimmedLine = line.trim
+    val trimmedLine = removeCommentsAndTrim(line)
     if (trimmedLine.nonEmpty && !trimmedLine.startsWith("#")) {
       val tokens = trimmedLine.split("\\s+")
       f(tokens)
@@ -143,7 +153,7 @@ abstract class OverrideKbSource() extends KbSource {
   protected def processLine(line: String, f: (String, Array[String]) => Unit): Unit = {
     // In override KBs, the name of the entity must be the first token, and the label must be the last.
     // Tokenization is performed around TABs here.
-    val trimmedLine = line.trim
+    val trimmedLine = removeCommentsAndTrim(line)
     if (trimmedLine.nonEmpty && !trimmedLine.startsWith("#")) {
       val blocks = trimmedLine.split("\t")
       if (blocks.size >= 2) {

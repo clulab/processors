@@ -1,0 +1,5 @@
+#!/bin/bash
+# shell that runs the numeric entity recognizer by itself
+
+sbt 'runMain org.clulab.numeric.NumericEntityRecognizerShell'
+

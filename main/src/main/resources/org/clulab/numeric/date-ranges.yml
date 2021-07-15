@@ -1,0 +1,23 @@
+
+#
+# recognizes date ranges
+#
+
+- name: date-range-1
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place between 12 May 2000 and 12 June 2020"
+  action: mkDateRangeMention
+  pattern: |
+    /(?i)(from|between)/? @date1:Date /(?i)(to|and|\-)/ @date2:Date
+
+- name: date-range-2
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place between 10 and 12 June 2020"
+  action: mkDateRangeMentionWithNumber
+  pattern: |
+    /(?i)(from|between)/? @number:Number /(?i)(to|and)/ @date2:Date
+

@@ -1,0 +1,9 @@
+rules:
+  - name: measurement-1
+    label: Measurement
+    priority: ${ rulepriority }
+    type: token
+    action: mkMeasurementMention
+    pattern: |
+      @number:Number @unit:MeasurementUnit
+

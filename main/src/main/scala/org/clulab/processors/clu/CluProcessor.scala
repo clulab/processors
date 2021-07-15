@@ -10,6 +10,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
+import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
 
@@ -61,6 +62,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
     case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
   }
+
+  // recognizes numeric entities using Odin rules
+  lazy val numericEntityRecognizer = new NumericEntityRecognizer
 
   // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
   lazy val mtlSrla: Metal = getArgString(s"$prefix.language", Some("EN")) match {
@@ -273,7 +277,24 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   def srlSentence(sent: Sentence,
                   predicateIndexes: IndexedSeq[Int],
                   embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
-    srlSentence(sent.words, sent.tags.get, sent.entities.get, predicateIndexes, embeddings)
+    // the SRL models were trained using only named (CoNLL) entities, not numeric ones, so let's remove them
+    // TODO: retrain the SRL using numeric entities too, when NumericEntityRecognizer is stable
+    val onlyNamedLabels = removeNumericLabels(sent.entities.get)
+
+    srlSentence(sent.words, sent.tags.get, onlyNamedLabels, predicateIndexes, embeddings)
+  }
+
+  def removeNumericLabels(allLabels: Array[String]): Array[String] = {
+    val labels = new ArrayBuffer[String]
+    for(l <- allLabels) {
+      if(NAMED_LABELS_FOR_SRL.contains(l)) {
+        labels += l
+      } else {
+        labels += OUTSIDE
+      }
+    }
+    // println("Using labels for SRL: " + labels.mkString(", "))
+    labels.toArray
   }
 
   /** Produces semantic role frames for one sentence */
@@ -362,6 +383,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   /** NER; modifies the document in place */
   override def recognizeNamedEntities(doc:Document): Unit = {
     basicSanityCheck(doc)
+
+    //
+    // names entities from CoNLL
+    //
     val embeddings = getEmbeddings(doc)
     val docDate = doc.getDCT
     for(sent <- doc.sentences) {
@@ -379,6 +404,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
         sent.norms = Some(norms.get.toArray)
       }
     }
+
+    //
+    // numeric entities using our Odin rules
+    //
+    val numericMentions = numericEntityRecognizer.extractFrom(doc)
+    setLabelsAndNorms(doc, numericMentions)
   }
 
   private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean = {
@@ -569,6 +600,16 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
 object CluProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
   val prefix:String = "CluProcessor"
+
+  val OUTSIDE = "O"
+
+  // These are the NE labels used to train the SRL model
+  val NAMED_LABELS_FOR_SRL = Set(
+    "B-PER", "I-PER",
+    "B-ORG", "I-ORG",
+    "B-LOC", "I-LOC",
+    "B-MISC", "I-MISC"
+  )
 
   val PREDICATE_ATTACHMENT_NAME = "predicates"
 
