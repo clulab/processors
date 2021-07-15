@@ -272,7 +272,7 @@ class DocumentSerializer extends LazyLogging {
         edges += edge
       }
     } while(bits(0) != END_OF_DEPENDENCIES)
-    val dg = new DirectedGraph[String](edges.toList, roots.toSet, Some(sz))
+    val dg = new DirectedGraph[String](edges.toList, Some(sz))
     //println(dg)
     dg
   }

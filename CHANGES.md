@@ -1,6 +1,7 @@
 # Changes
-+ **8.4.3** - Added support for number, date, and measurement recognition to CluProcessor.
-+ **8.4.3** - Removed CluCoreProcessor, as CluProcessor now natively supports numeric entities.
++ **8.4.4** - Added support for number, date, and measurement recognition to CluProcessor.
++ **8.4.4** - Removed CluCoreProcessor, as CluProcessor now natively supports numeric entities.
++ **8.4.3** - Move calculation of roots to DirectedGraph
 + **8.4.3** - Fixed POS tagging errors such as "due" in "due to" not being a IN. 
 + **8.4.2** - Improve markdown code, fix serialization stability issue 
 + **8.4.1** - Fix markdown syntax and duplicate labels, recover mention text from raw strings

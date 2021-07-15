@@ -3,8 +3,10 @@ package org.clulab.serialization.json
 import java.io.File
 import org.clulab.processors.DocumentAttachmentBuilderFromJson
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.struct.Edge
 import org.clulab.struct.{DirectedGraph, GraphMap}
 import org.clulab.utils.FileUtils
+import org.json4s
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -71,7 +73,9 @@ object JSONSerializer {
 
     val s = json.extract[Sentence]
     // build dependencies
-    val graphs = (json \ "graphs").extract[Map[String, DirectedGraph[String]]]
+    val graphs = (json \ "graphs").extract[JObject].obj.map { case (key, json) =>
+      key -> toDirectedGraph(json)
+    }.toMap
     s.graphs = GraphMap(graphs)
     // build labels
     s.tags = getLabels(json, "tags")
@@ -80,6 +84,14 @@ object JSONSerializer {
     s.norms = getLabels(json, "norms")
     s.chunks = getLabels(json, "chunks")
     s
+  }
+
+  def toDirectedGraph(json: JValue): DirectedGraph[String] = {
+    val edges = (json \ "edges").extract[List[Edge[String]]]
+    // The roots remain for backward compatibility, but they are ignored.
+    val roots = (json \ "roots").extract[Set[Int]]
+
+    new DirectedGraph(edges)
   }
 
   private def getStringOption(json: JValue, key: String): Option[String] = json \ key match {

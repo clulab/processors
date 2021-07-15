@@ -232,12 +232,11 @@ object DependencyUtils {
   }
 
   def mergeGraphs[T](dg1: DirectedGraph[T], dg2: DirectedGraph[T]): DirectedGraph[T] = {
-    val roots = dg1.roots ++ dg1.roots
-    val edges = new mutable.HashSet[Edge[T]]
-    edges ++= dg1.edges
-    edges ++= dg2.edges
+    // Roots cannot simply be combined.
+    // val roots = dg1.suggestedRoots ++ dg1.suggestedRoots
+    val edges = dg1.edges ++ dg2.edges
 
-    new DirectedGraph[T](edges.toList, roots)
+    new DirectedGraph(edges)
   }
 }
 
