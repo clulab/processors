@@ -11,11 +11,18 @@ object NumberParser {
     words match {
       case Seq() => None
       case words =>
-	    // remove 's' from words like "thousands"
-	    val cleanWords = words.map { w =>
-		  if (w.endsWith("s")) w.dropRight(1) else w
-	    }
-	    parseWords(cleanWords) orElse parseNumeric(cleanWords)
+        val cleanWords = words.map { w =>
+          // lowercase
+          var word = w.toLowerCase()
+          // remove commas from numbers like 100,000
+          word = word.replace(",", "")
+          // remove 's' from words like "thousands"
+          if (word.endsWith("s")) {
+            word = word.dropRight(1)
+          }
+          word
+        }
+        parseWords(cleanWords) orElse parseNumeric(cleanWords)
     }
   }
 
