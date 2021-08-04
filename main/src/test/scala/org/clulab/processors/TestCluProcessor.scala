@@ -172,7 +172,7 @@ class TestCluProcessor extends FatdynetTest {
   }
 
   it should "recognize date ranges" in {
-    var sent = proc.annotate("It happened between 12 January, 2021 and Feb. 2022.").sentences.head
+    val sent = proc.annotate("It happened between 12 January, 2021 and Feb. 2022.").sentences.head
     sent.entities.get(2) should be ("B-DATE-RANGE")
     sent.entities.get(3) should be ("I-DATE-RANGE")
     sent.entities.get(4) should be ("I-DATE-RANGE")
@@ -182,6 +182,16 @@ class TestCluProcessor extends FatdynetTest {
     sent.entities.get(8) should be ("I-DATE-RANGE")
     sent.entities.get(9) should be ("I-DATE-RANGE")
     sent.norms.get(2) should be ("2021-01-12 - 2022-02-XX")
+  }
+
+  it should "recognize custom names entities" in {
+    val sent = proc.annotate("Jack Doe and John Doe were friends in yyy zzz.").sentences.head
+    sent.entities.get(0) should be ("B-D")
+    sent.entities.get(1) should be ("I-D")
+    sent.entities.get(3) should be ("B-PER")
+    sent.entities.get(4) should be ("I-PER")
+    sent.entities.get(8) should be ("B-D")
+    sent.entities.get(9) should be ("I-D")
   }
 
   /* // TODO

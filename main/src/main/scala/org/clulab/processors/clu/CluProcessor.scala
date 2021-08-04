@@ -11,6 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
+import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
 
@@ -21,7 +22,8 @@ import org.clulab.utils.BeforeAndAfter
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
   *   POS tagging, NER, chunking, dependency parsing - using our MTL architecture (dep parsing coming soon)
   */
-class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) extends Processor with Configured {
+class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
+                    val optionalNER: Option[LexiconNER] = None) extends Processor with Configured {
 
   override def getConf: Config = config
 
@@ -165,8 +167,53 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
                   endCharOffsets: Array[Int],
                   docDateOpt: Option[String],
                   embeddings: ConstEmbeddingParameters): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
+
+    // NER labels from the statistical model
     val allLabels = mtlNer.predictJointly(AnnotatedSentence(words), embeddings)
-    (allLabels(0), None)
+
+    // NER labels from the custom NER
+    val optionalNERLabels: Option[Array[String]] = {
+      if(optionalNER.isEmpty) {
+        None
+      } else {
+        val sentence = Sentence(
+          words,
+          startCharOffsets,
+          endCharOffsets,
+          words,
+          Some(tags),
+          lemmas = lemmas,
+          entities = None,
+          norms = None,
+          chunks = None,
+          tree = None,
+          deps = EMPTY_GRAPH,
+          relations = None
+        )
+
+        Some(optionalNER.get.find(sentence))
+      }
+    }
+
+    if(optionalNERLabels.isEmpty) {
+      (allLabels(0), None)
+    } else {
+      (mergeNerLabels(allLabels(0), optionalNERLabels.get), None)
+    }
+  }
+
+  // The custom labels override the generic ones!
+  private def mergeNerLabels(generic: IndexedSeq[String], custom: IndexedSeq[String]): Array[String] = {
+    assert(generic.length == custom.length)
+    val labels = new Array[String](generic.length)
+    for(i <- generic.indices) {
+      if(custom(i) != OUTSIDE) {
+        labels(i) = custom(i)
+      } else {
+        labels(i) = generic(i)
+      }
+    }
+    labels
   }
 
   /** Gets the index of all predicates in this sentence */
@@ -602,6 +649,8 @@ object CluProcessor {
   val prefix:String = "CluProcessor"
 
   val OUTSIDE = "O"
+
+  val EMPTY_GRAPH = new GraphMap
 
   // These are the NE labels used to train the SRL model
   val NAMED_LABELS_FOR_SRL = Set(

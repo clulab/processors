@@ -208,6 +208,17 @@ object LexiconNER {
     )
   }
 
+  /** Same apply with more default values filled in */
+  def apply(kbs: Seq[String],
+            caseInsensitiveMatchings: Seq[Boolean],
+            useLemmasForMatching: Boolean): LexiconNER = {
+    apply(
+      kbs, None, caseInsensitiveMatchings,
+      new TrueEntityValidator, new NoLexicalVariations, useLemmasForMatching,
+      defaultCaseInsensitive = false
+    )
+  }
+
   /**
     * Creates a LexiconNER from a list of KBs
     * Note that file name (minus the extension) for each KB becomes the name of the corresponding category.
