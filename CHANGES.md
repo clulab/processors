@@ -1,4 +1,6 @@
 # Changes
++ **8.4.5** - Odin can now operate over hybrid dependencies that combine semantic roles and syntax.
++ **8.4.5** - Added support for custom NERs to CluProcessor.
 + **8.4.4** - Added support for number, date, and measurement recognition to CluProcessor.
 + **8.4.4** - Removed CluCoreProcessor, as CluProcessor now natively supports numeric entities.
 + **8.4.3** - Move calculation of roots to DirectedGraph
