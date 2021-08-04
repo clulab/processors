@@ -3,6 +3,8 @@ package org.clulab.processors
 import org.clulab.dynet.{Utils => DynetUtils}
 import org.clulab.fatdynet.utils.Utils
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.sequences.LexiconNER
+import org.clulab.struct.TrueEntityValidator
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 class FatdynetTest extends FlatSpec with Matchers with BeforeAndAfterAll {
@@ -27,8 +29,14 @@ class FatdynetTest extends FlatSpec with Matchers with BeforeAndAfterAll {
   }
 
   def newCluProcessor(): CluProcessor = {
+    // A custom NER to make sure this works
+    val kbs = Seq(
+      "org/clulab/processors/D.tsv"
+    )
+    val lexiconNer = LexiconNER(kbs, Seq(false), useLemmasForMatching = false) // case sensitive match on this KB
+
     DynetUtils.initializeDyNet()
-    new CluProcessor()
+    new CluProcessor(optionalNER = Some(lexiconNer))
   }
 
   def stop(): Unit = {
