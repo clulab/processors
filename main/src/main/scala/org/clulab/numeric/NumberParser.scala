@@ -6,6 +6,7 @@ import scala.collection.mutable.ArrayBuffer
   * Parses textual numbers, e.g., "twelve hundred", into numbers, e.g., "1200"
   */
 object NumberParser {
+  val numWithOrdinalSuffix = """^\d+(st|nd|rd|th)$""".r
 
   def parse(words: Seq[String]): Option[Double] = {
     words match {
@@ -19,6 +20,10 @@ object NumberParser {
           // remove 's' from words like "thousands"
           if (word.endsWith("s")) {
             word = word.dropRight(1)
+          }
+          // remove ordinal sufixes from numbers, e.g., "st" from "1st"
+          if (numWithOrdinalSuffix.findFirstIn(word).nonEmpty) {
+              word = word.dropRight(2)
           }
           // split on dashes
           if (hyphenated.contains(word)) {

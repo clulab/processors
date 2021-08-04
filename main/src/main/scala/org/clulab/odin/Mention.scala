@@ -102,6 +102,9 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   /** returns all entities in mention */
   def entities: Option[Seq[String]] = sentenceObj.entities.map(_.slice(start, end))
 
+  /** returns the norm value of this mention, if available */
+  def norm: Option[String] = sentenceObj.norms.map(x => x(start))
+
   /** returns all chunks in mention */
   def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end))
 

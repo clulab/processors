@@ -6,8 +6,11 @@ object TempEvalFormatter {
 
   def mkDate(day: Option[Seq[String]], month: Option[Seq[String]], year: Option[Seq[String]]): String = {
     val dayValue =
-      if(day.isEmpty) 0
-      else parse(day.get).get.toInt
+      if(day.isEmpty) {
+        0
+      } else {
+        parse(day.get).get.toInt
+      }
 
     val monthValue =
       if(month.isEmpty) 0

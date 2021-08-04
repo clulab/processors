@@ -26,6 +26,8 @@ object OdinConfig {
     GraphMap.UNIVERSAL_BASIC,
     GraphMap.STANFORD_COLLAPSED,
     GraphMap.STANFORD_BASIC,
-    GraphMap.SEMANTIC_ROLES
+    GraphMap.SEMANTIC_ROLES,
+    GraphMap.ENHANCED_SEMANTIC_ROLES,
+    GraphMap.HYBRID_DEPENDENCIES
   )
 }
