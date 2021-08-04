@@ -181,7 +181,7 @@ class TestCluProcessor extends FatdynetTest {
     sent.entities.get(7) should be ("I-DATE-RANGE")
     sent.entities.get(8) should be ("I-DATE-RANGE")
     sent.entities.get(9) should be ("I-DATE-RANGE")
-    sent.norms.get(2) should be ("2021-01-12 - 2022-02-XX")
+    sent.norms.get(2) should be ("2021-01-12 -- 2022-02-XX")
   }
 
   it should "recognize custom names entities" in {
