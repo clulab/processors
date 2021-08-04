@@ -20,8 +20,8 @@ object NumberParser {
           if (word.endsWith("s")) {
             word = word.dropRight(1)
           }
-		  // split on dashes
-          word.split("-")
+          // split on dashes
+          hyphenated.getOrElse(word, Array(word))
         }
         parseWords(cleanWords) orElse parseNumeric(cleanWords)
     }
@@ -135,6 +135,88 @@ object NumberParser {
     "billion"     -> 1e9,
     "trillion"    -> 1e12,
     "quadrillion" -> 1e15
+  )
+
+  val hyphenated = Map(
+    "twenty-one" -> Array("twenty", "one"),
+    "twenty-two" -> Array("twenty", "two"),
+    "twenty-three" -> Array("twenty", "three"),
+    "twenty-four" -> Array("twenty", "four"),
+    "twenty-five" -> Array("twenty", "five"),
+    "twenty-six" -> Array("twenty", "six"),
+    "twenty-seven" -> Array("twenty", "seven"),
+    "twenty-eight" -> Array("twenty", "eight"),
+    "twenty-nine" -> Array("twenty", "nine"),
+
+    "thirty-one" -> Array("thirty", "one"),
+    "thirty-two" -> Array("thirty", "two"),
+    "thirty-three" -> Array("thirty", "three"),
+    "thirty-four" -> Array("thirty", "four"),
+    "thirty-five" -> Array("thirty", "five"),
+    "thirty-six" -> Array("thirty", "six"),
+    "thirty-seven" -> Array("thirty", "seven"),
+    "thirty-eight" -> Array("thirty", "eight"),
+    "thirty-nine" -> Array("thirty", "nine"),
+
+    "forty-one" -> Array("forty", "one"),
+    "forty-two" -> Array("forty", "two"),
+    "forty-three" -> Array("forty", "three"),
+    "forty-four" -> Array("forty", "four"),
+    "forty-five" -> Array("forty", "five"),
+    "forty-six" -> Array("forty", "six"),
+    "forty-seven" -> Array("forty", "seven"),
+    "forty-eight" -> Array("forty", "eight"),
+    "forty-nine" -> Array("forty", "nine"),
+
+    "fifty-one" -> Array("fifty", "one"),
+    "fifty-two" -> Array("fifty", "two"),
+    "fifty-three" -> Array("fifty", "three"),
+    "fifty-four" -> Array("fifty", "four"),
+    "fifty-five" -> Array("fifty", "five"),
+    "fifty-six" -> Array("fifty", "six"),
+    "fifty-seven" -> Array("fifty", "seven"),
+    "fifty-eight" -> Array("fifty", "eight"),
+    "fifty-nine" -> Array("fifty", "nine"),
+
+    "sixty-one" -> Array("sixty", "one"),
+    "sixty-two" -> Array("sixty", "two"),
+    "sixty-three" -> Array("sixty", "three"),
+    "sixty-four" -> Array("sixty", "four"),
+    "sixty-five" -> Array("sixty", "five"),
+    "sixty-six" -> Array("sixty", "six"),
+    "sixty-seven" -> Array("sixty", "seven"),
+    "sixty-eight" -> Array("sixty", "eight"),
+    "sixty-nine" -> Array("sixty", "nine"),
+
+    "seventy-one" -> Array("seventy", "one"),
+    "seventy-two" -> Array("seventy", "two"),
+    "seventy-three" -> Array("seventy", "three"),
+    "seventy-four" -> Array("seventy", "four"),
+    "seventy-five" -> Array("seventy", "five"),
+    "seventy-six" -> Array("seventy", "six"),
+    "seventy-seven" -> Array("seventy", "seven"),
+    "seventy-eight" -> Array("seventy", "eight"),
+    "seventy-nine" -> Array("seventy", "nine"),
+
+    "eighty-one" -> Array("eighty", "one"),
+    "eighty-two" -> Array("eighty", "two"),
+    "eighty-three" -> Array("eighty", "three"),
+    "eighty-four" -> Array("eighty", "four"),
+    "eighty-five" -> Array("eighty", "five"),
+    "eighty-six" -> Array("eighty", "six"),
+    "eighty-seven" -> Array("eighty", "seven"),
+    "eighty-eight" -> Array("eighty", "eight"),
+    "eighty-nine" -> Array("eighty", "nine"),
+
+    "ninety-one" -> Array("ninety", "one"),
+    "ninety-two" -> Array("ninety", "two"),
+    "ninety-three" -> Array("ninety", "three"),
+    "ninety-four" -> Array("ninety", "four"),
+    "ninety-five" -> Array("ninety", "five"),
+    "ninety-six" -> Array("ninety", "six"),
+    "ninety-seven" -> Array("ninety", "seven"),
+    "ninety-eight" -> Array("ninety", "eight"),
+    "ninety-nine" -> Array("ninety", "nine"),
   )
 
 }
