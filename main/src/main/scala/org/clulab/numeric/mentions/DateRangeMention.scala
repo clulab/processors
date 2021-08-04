@@ -16,7 +16,7 @@ class DateRangeMention ( labels: Seq[String],
   extends TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments) with Norm {
 
   override def neNorm: String = {
-    date1Norm + " - " + date2Norm
+    date1Norm + " -- " + date2Norm
   }
 
   override def neLabel: String = {
