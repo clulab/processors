@@ -12,15 +12,24 @@ object NumberParser {
     words match {
       case Seq() => None
       case words =>
-        val cleanWords = words.map { w =>
-          if(numWithOrdinalSuffix.findFirstIn(w).nonEmpty) {
-            // remove ordinal sufixes from numbers, e.g., "st" from "1st"
-            w.dropRight(2)
-          } else if (w.endsWith("s")) {
-            // remove 's' from words like "thousands"
-            w.dropRight(1)
+        val cleanWords = words.flatMap { w =>
+          // lowercase
+          var word = w.toLowerCase()
+          // remove commas from numbers like 100,000
+          word = word.replace(",", "")
+          // remove 's' from words like "thousands"
+          if (word.endsWith("s")) {
+            word = word.dropRight(1)
+          }
+          // remove ordinal sufixes from numbers, e.g., "st" from "1st"
+          if (numWithOrdinalSuffix.findFirstIn(word).nonEmpty) {
+              word = word.dropRight(2)
+          }
+          // split on dashes
+          if (hyphenated.contains(word)) {
+              word.split("-")
           } else {
-            w
+              Array(word)
           }
         }
         parseWords(cleanWords) orElse parseNumeric(cleanWords)
@@ -135,6 +144,17 @@ object NumberParser {
     "billion"     -> 1e9,
     "trillion"    -> 1e12,
     "quadrillion" -> 1e15
+  )
+
+  val hyphenated = Set(
+    "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five", "twenty-six", "twenty-seven", "twenty-eight", "twenty-nine",
+    "thirty-one", "thirty-two", "thirty-three", "thirty-four", "thirty-five", "thirty-six", "thirty-seven", "thirty-eight", "thirty-nine",
+    "forty-one", "forty-two", "forty-three", "forty-four", "forty-five", "forty-six", "forty-seven", "forty-eight", "forty-nine",
+    "fifty-one", "fifty-two", "fifty-three", "fifty-four", "fifty-five", "fifty-six", "fifty-seven", "fifty-eight", "fifty-nine",
+    "sixty-one", "sixty-two", "sixty-three", "sixty-four", "sixty-five", "sixty-six", "sixty-seven", "sixty-eight", "sixty-nine",
+    "seventy-one", "seventy-two", "seventy-three", "seventy-four", "seventy-five", "seventy-six", "seventy-seven", "seventy-eight", "seventy-nine",
+    "eighty-one", "eighty-two", "eighty-three", "eighty-four", "eighty-five", "eighty-six", "eighty-seven", "eighty-eight", "eighty-nine",
+    "ninety-one", "ninety-two", "ninety-three", "ninety-four", "ninety-five", "ninety-six", "ninety-seven", "ninety-eight", "ninety-nine"
   )
 
 }
