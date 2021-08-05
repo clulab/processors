@@ -1,5 +1,6 @@
+#
 # Common measurements units + concentration(water+soil) units
-
+#
 t per ha                       // t/ha
 t ha–1                         // t/ha
 t/ha                           // t/ha
@@ -11,6 +12,9 @@ metric tons per hectare        // t/ha
 metric tons                    // t
 mt                             // t
 MT                             // t
+tonnes                         // t
+tonnes /ha                     // t/ha
+tonnes/ha                      // t/ha
 MT/ha                          // t/ha
 kg/ha                          // kg/ha
 kg ha–1                        // kg/ha
@@ -71,3 +75,5 @@ ng.L-1
 pg/mL
 pg.mL-1
 fg/μL
+m3 /ha                             // m3/ha
+m3/ha                              // m3/ha
