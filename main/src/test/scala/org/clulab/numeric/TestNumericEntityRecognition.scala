@@ -16,8 +16,8 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
 
   // these should be captured by rules date-1 and date-2
   "the numeric entity recognizer" should "recognize dates in the European format" in {
-    ensure("It is 12 May, 2000", Interval(2, 6), "DATE", "2000-05-12")
-    ensure("It was May 2000", Interval(2, 4), "DATE", "2000-05-XX")
+    ensure("It is 12 May, 200", Interval(2, 6), "DATE", "2000-05-12")
+    ensure("It was May 200", Interval(2, 4), "DATE", "2000-05-XX")
     ensure("It was 25 May", Interval(2, 4), "DATE", "XXXX-05-25")
   }
 //
