@@ -108,6 +108,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "It is 2010-08", Interval(2,3), goldEntity= "DATE", goldNorm= "2010-08-XX")
     ensure(sentence= "2010-10", Interval(0,1), goldEntity= "DATE", goldNorm= "2010-10-XX")
     ensure(sentence= "2010-12", Interval(0,1), goldEntity= "DATE", goldNorm= "2010-12-XX")
+
   }
 
   it should "recognize numeric dates of form yy-mm" in {
@@ -118,6 +119,20 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 - 2020-11-11")
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 - XXXX-07-31")
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 - XXXX-07-31")
+    
+    // Added by Hubert 
+    ensure(sentence= "the highest grain yield in 1998/99", Interval(5,7), goldEntity= "DATE-RANGE", goldNorm= "1998-XX-XX - 1999-XX-XX")
+  
+  }
+
+  // Other dates that should be recognized
+
+  it should "recognize numeric dates of form dd-mm" in {
+    ensure(sentence= "Rice is normally sown at the end of May and transplanted during the 1st week of July", Interval(13, 17), goldEntity= "DATE", goldNorm= "XXXX-07-01")
+    ensure(sentence= "The crop sown on 31st May produced the maximum plant height (92.80cm)", Interval(4, 6), goldEntity= "DATE", goldNorm= "XXXX-04-31")
+    ensure(sentence= "Full dose of phosphorus as SSP and potassium SOP were applied at sowing time on 24th of June, 2010", Interval(15, 20), goldEntity= "DATE", goldNorm= "XXXX-06-24")
+    ensure(sentence= "(July) in 2016", Interval(0, 3), goldEntity= "DATE", goldNorm= "2016-07-XX")
+  
   }
 
   it should "recognize measurement units" in {
@@ -133,6 +148,43 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("It was 12 hundred ha", Interval(2, 5), "MEASUREMENT", "1200.0 ha")
     ensure(sentence= "Crops are 2 thousands ha wide.", Interval(2,5), goldEntity="MEASUREMENT", goldNorm= "2000.0 ha")
     ensure(sentence= "Rice crops are 1.5 thousands ha wide", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm= "1500.0 ha")
+  }
+
+  // tests for recognizing fertilizer, seeds and yield units
+  it should "recognize literal measurement units" in {
+    // these tests pass
+    ensure(sentence= "Imports of rice in the decade 2008–2017 amounted on average to 1500000 tonnes", Interval(13, 15), goldEntity="MEASUREMENT", goldNorm="1500000.0 t")
+    ensure(sentence= "They had yield potentials of 10 metric tons per hectare", Interval(5, 10), goldEntity="MEASUREMENT", goldNorm="10.0 t/ha")
+    ensure(sentence= "Such observations were replaced with a cap value of 700 kilograms per hectare", Interval(9, 13), goldEntity="MEASUREMENT", goldNorm="700.0 kg/ha")
+    ensure(sentence= "The production from the SRV was therefore 360000 tons of paddy", Interval(7, 9), goldEntity="MEASUREMENT", goldNorm="360000.0 t")
+    ensure(sentence= "Total production was 6883 thousand tons", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm="6883000.0 t")
+    ensure(sentence= "During 2009-10, area under rice cultivation was 2883 thousand hectares", Interval(10, 13), goldEntity="MEASUREMENT", goldNorm="2883000.0 ha")
+
+ 
+    // numbers with these units are not recognised by the module
+    ensure(sentence= "Imports of rice in the decade 2008–2017 amounted on average to 1,500,000 tonnes", Interval(13, 15), goldEntity="MEASUREMENT", goldNorm="1500000.0 t")
+    ensure(sentence= "The production from the SRV was therefore 360.000 tons of paddy", Interval(7, 11), goldEntity="MEASUREMENT", goldNorm="360000.0 t")
+
+
+}
+  // I would enjoy contributing in fixing this
+  it should "recognize complex measurement units" in {
+    ensure(sentence= "Recommended seed usage is 130 kg/ha", Interval(4, 8), goldEntity="MEASUREMENT", goldNorm="130.0 kg/ha")
+    ensure(sentence= "1.25 to 1.65 mt/ha higher on average", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="1.25 to 1.65 t/ha")
+    ensure(sentence= "With average yields of 6-7 mt/ha", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="6-7 t/ha")
+    ensure(sentence= "Average yield reached 7.2 t ha–1 in 1999", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm="7.2 t/ha")
+    ensure(sentence= "The Nakhlet farmers’ organization bought 7 tonnes of urea", Interval(5, 9), goldEntity="MEASUREMENT", goldNorm="7.0 t")
+    ensure(sentence= "Application dosage is 200kg/ha for compound fertilizer and 180kg/ha for urea", Interval(3, 4), goldEntity="MEASUREMENT", goldNorm="7.0 t")
+    ensure(sentence= "Fertilizers were given to farmers proportionally to their cultivated area at the rate of 250 kg urea ha–1", Interval(14, 18), goldEntity="MEASUREMENT", goldNorm="250.0 kg/ha")
+    ensure(sentence= "Rainfed rice yields average 1-2 MT/hectare", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="1-2 t/ha")
+    ensure(sentence= "having a gross plot size of 3.0 m × 6.0 m", Interval(6, 11), goldEntity="MEASUREMENT", goldNorm="18.0 m2")
+    ensure(sentence= "500 mL acre-1 was applied on moist soil after 30-35 days of planting each crop", Interval(0, 3), goldEntity="MEASUREMENT", goldNorm="500.0 ml/acre")
+    ensure(sentence= "The total area represented in each image was 3.24 cm2", Interval(8, 10), goldEntity="MEASUREMENT", goldNorm="3.24 cm2")
+
+
+
+
+      
   }
 
   //

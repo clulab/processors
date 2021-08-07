@@ -15,6 +15,7 @@ MT                             // t
 tonnes                         // t
 tonnes /ha                     // t/ha
 tonnes/ha                      // t/ha
+ton/ha                         // t/ha
 MT/ha                          // t/ha
 kg/ha                          // kg/ha
 kg ha–1                        // kg/ha
@@ -29,51 +30,43 @@ kg N ha–1                      // kg/ha
 kg P ha–1                      // kg/ha
 kg DAP ha–1                    // kg/ha
 kg TSP ha–1                    // kg/ha
+kgP2O5/ha                      // kg/ha
 Mg ha–1                        // mg/ha
-mg/L
-mg.L-1
-mg/kg
-mg.kg-1
-mg kg–1
-g/kg
-g.kg-1                          // g/kg
-g kg–1
-mg/g
-mg.g-1
-g/L
-g.L-1
-mg/mL
-mg.mL-1
-μg/μL
-μg.μL-1
-mg/kg
-mg.kg-1
-μg/g
-μg.g-1
-mg/L
-mg.L-1
-μg/mL
-μg.mL-1
-ng/μL
-ng.μL-1
-μg/kg
-μg.kg-1
-ng/g
-ng.g-1
-μg/L
-μg.L-1
-ng/mL
-ng.mL-1
-pg/μL
-pg.μL-1
-ng/kg
-ng.kg-1
-pg/g
-pg.g-1
-ng/L
-ng.L-1
-pg/mL
-pg.mL-1
-fg/μL
-m3 /ha                             // m3/ha
-m3/ha                              // m3/ha
+
+mg/L                           // mg/l
+mg.L-1                         // mg/l
+mg/kg                          // mg/kg
+mg.kg-1                        // mg/kg
+mg kg–1                        // mg/kg
+g/kg                           // g/kg
+g.kg-1                         // g/kg
+g kg–1                         // g/kg
+mg/g                           // mg/g
+mg.g-1                         // mg/g
+g/L                            // g/l
+g.L-1                          // g/l
+mg/mL                          // mg/ml
+mg.mL-1                        // mg/ml
+μg/μL                          // μg/μl
+μg.μL-1                        // μg/μl
+μg/g                           // μg/g
+μg.g-1                         // μg/g
+ng/μL                          // ng/μl
+ng.μL-1                        // ng/μl
+μg/kg                          // μg/kg
+μg.kg-1                        // μg/kg
+ng/g                           // ng/g
+ng.g-1                         // ng/g
+ng/kg                          // ng/kg
+ng.kg-1                        // ng/kg
+ng/mL                          // ng/ml
+ng.mL-1                        // ng/ml
+pg/μL                          // pg/μl 
+pg.μL-1                        // pg/μl
+pg/g                           // pg/g
+pg.g-1                         // pg/g
+ng/mL                          // ng/ml
+pg.mL-1                        // ng/ml
+fg/μL                          // fg/μl
+m3 /ha                         // m3/ha
+m3/ha                          // m3/ha
