@@ -6,11 +6,11 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 }
 
 // for processors-models
-resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
+resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
 
 libraryDependencies ++= {
   val json4sVersion = "3.5.2"
-  val procVer = "8.3.5"
+
   Seq(
     // common tools
     "commons-io"                  % "commons-io"               % "2.5",
@@ -35,8 +35,6 @@ libraryDependencies ++= {
     "org.scalatest"              %% "scalatest"                % "3.0.1"  % Test,
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
-    "org.clulab" %% "processors-main" % procVer,
-    "org.clulab" %% "processors-corenlp" % procVer,
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
     "org.clulab"                  % "processors-models"        % "0.1.10",
     "com.esotericsoftware"        % "kryo"                     % "5.1.1",
