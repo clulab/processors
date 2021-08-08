@@ -54,4 +54,12 @@ class TestNumberParser extends FlatSpec with Matchers {
 		NumberParser.parse("2 thousands".split(" ")) shouldEqual Some(2000)
 	}
 
+	// Added by Hubert
+	it should "parse range of numbers" in {
+		NumberParser.parse("3–7".split(" ")) shouldEqual "3-7".toString
+		NumberParser.parse("6 to 8".split(" ")) shouldEqual "6-8".toString
+		NumberParser.parse("from around 400 000 to almost 900 000".split(" ")) shouldEqual "400000-900000".toString
+		// NumberParser.parse("78,000 and 114,000".split(" ")) shouldEqual Some(-1)
+		
+	}
 }
