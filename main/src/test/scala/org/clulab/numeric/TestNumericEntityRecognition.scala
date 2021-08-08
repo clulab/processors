@@ -66,10 +66,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "02/1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
     ensure(sentence= "ISO date is 02/1988.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-XX")
     ensure(sentence= "02/1988.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-XX")
-
-    //TODO : below all were new dote formats found in habitus docs. add on august 8th 2021. Need mihai approval
-    ensure(sentence= "during a general meeting in April 1999.", Interval(5, 7), goldEntity= "DATE", goldNorm= "1999-04-XX")
-
+    ensure(sentence= "April 1999.", Interval(0, 2), goldEntity= "DATE", goldNorm= "1999-04-XX")
   }
 
   it should "recognize numeric dates of form yyyy-mm" in {
