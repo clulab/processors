@@ -60,6 +60,9 @@ grain               // gr
 gr                  // gr
 ton                 // t
 t                   // t
+tonnes              // t
+metric tonnes       // mt
+mt                  // mt
 carat               // carat
 pound               // lb
 lb                  // lb
@@ -133,7 +136,5 @@ mi3                 // mi3
 cubic yard          // yd3
 cubic yards         // yd3
 yd3                 // yd3
-tonnes              // tns
-metric tonnes       // mt
-mt                  // mt
+
 
