@@ -122,6 +122,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 -- 2020-11-11")
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
+    ensure("Harvest occurred from 4 to 7 November", Interval(2, 6), "DATE-RANGE", "XXXX-11-04 -- XXXX-11-07")
   }
 
   it should "recognize measurement units" in {
