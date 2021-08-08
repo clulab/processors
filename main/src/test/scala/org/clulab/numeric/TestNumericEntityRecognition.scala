@@ -115,7 +115,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   }
 
   it should "recognize dates with ordinal days" in {
-    ensure(sentence = "Planting dates are between July 1st and August 2nd.", Interval(3, 9), goldEntity = "DATE-RANGE", "XXXX-07-01 -- XXXX-08-02")
+      ensure(sentence = "Planting dates are between July 1st and August 2nd.", Interval(3, 9), goldEntity = "DATE-RANGE", "XXXX-07-01 -- XXXX-08-02")
   }
 
   it should "recognize date ranges" in {
@@ -123,6 +123,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
     ensure("Harvest occurred from 4 to 7 November", Interval(2, 6), "DATE-RANGE", "XXXX-11-04 -- XXXX-11-07")
+    ensure("from 1987 to 2015", Interval(0, 3), "DATE-RANGE", "1987-XX-XX -- 2015-XX-XX")
   }
 
   it should "recognize measurement units" in {
