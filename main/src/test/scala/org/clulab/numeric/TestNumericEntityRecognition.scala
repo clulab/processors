@@ -122,8 +122,10 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 -- 2020-11-11")
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
+    //TODO : below all were new dote format found in habitus docs. add on august 8th 2021. Need mihai approval
     ensure("Harvest occurred from 4 to 7 November", Interval(2, 6), "DATE-RANGE", "XXXX-11-04 -- XXXX-11-07")
     ensure("from 1987 to 2015", Interval(0, 3), "DATE-RANGE", "1987-XX-XX -- 2015-XX-XX")
+    ensure("a rainy season from July to October", Interval(3, 6), "DATE-RANGE", "XXXX-07-XX -- XXXX-10-XX")
   }
 
   it should "recognize measurement units" in {
