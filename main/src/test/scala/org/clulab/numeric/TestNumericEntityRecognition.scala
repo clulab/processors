@@ -135,14 +135,16 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")
     //TODO : below all were new measurement formats found in habitus docs. added on august 8th 2021. Need mihai approval
     ensure(sentence= "yield potentials of 12 mt.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 mt")
-    ensure(sentence= "yield potentials of 12 metric tonnes.", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm= "12.0 mt")
     ensure(sentence= "yield potentials of 12 tonnes.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 t")
+    ensure(sentence= "yield potentials of 12 mega grams.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 meg")
 
 
     // tests for unit normalization
     ensure("It was 12 hectares", Interval(2, 4), "MEASUREMENT", "12.0 ha")
     ensure(sentence= "It was 12 meters long.", Interval(2, 4), goldEntity="MEASUREMENT", goldNorm= "12.0 m")
     ensure(sentence= "It was 12 kilograms.", Interval(2,4), goldEntity="MEASUREMENT", goldNorm= "12.0 kg")
+    //TODO : below all were new measurement formats found in habitus docs. added on august 8th 2021. Need mihai approval
+    ensure(sentence= "yield potentials of 12 metric tonnes.", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm= "12.0 mt")
 
     // test for parsing literal numbers
     ensure("It was twelve hundred ha", Interval(2, 5), "MEASUREMENT", "1200.0 ha")
