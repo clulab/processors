@@ -59,14 +59,19 @@ grammes             // g
 milligram           // mg
 mg                  // mg
 mega gram           // meg
-mega grams           // meg
+mega grams          // meg
 grain               // gr
 gr                  // gr
 ton                 // t
 t                   // t
+tonne               // t
 tonnes              // t
 metric tonnes       // mt
 mt                  // mt
+mega ton            // met
+mega tons           // met
+mega tonne          // met
+mega tonnes         // met
 carat               // carat
 pound               // lb
 lb                  // lb

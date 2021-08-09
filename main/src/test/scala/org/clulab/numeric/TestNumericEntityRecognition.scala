@@ -137,6 +137,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "yield potentials of 12 mt.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 mt")
     ensure(sentence= "yield potentials of 12 tonnes.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 t")
     ensure(sentence= "yield potentials of 12 mega grams.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 meg")
+    ensure(sentence= "yield potentials of 12 mega tonnes.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 met")
 
 
     // tests for unit normalization
