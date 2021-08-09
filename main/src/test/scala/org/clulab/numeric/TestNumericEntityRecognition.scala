@@ -129,7 +129,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("released annually between 2016 and 2019", Interval(2, 6), "DATE-RANGE", "2016-XX-XX -- 2019-XX-XX")
     // below two test cases fail. TODO:  discuss if grammar change is needed to incorporate this.
     ensure("In 1998, 1999 and 2000, farmers", Interval(1, 2), "DATE", "1998-XX-XX")
-    ensure("In 1998, 1999 and 2000, farmers", Interval(3, 5), "DATE-RANGE", "1999-XX-XX -- 2000-XX-XX")
+    ensure("In 1998, 1999 and 2000, farmers", Interval(3, 6), "DATE-RANGE", "1999-XX-XX -- 2000-XX-XX")
     // This next test will fail.
     ensure("a rainy season from July to October", Interval(3, 7), "DATE-RANGE", "XXXX-07-XX -- XXXX-10-XX")
 
