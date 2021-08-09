@@ -127,6 +127,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("planting from mid-March", Interval(2, 5), "DATE", "XXXX-03-14")
     ensure("planting from mid-February and mid-March", Interval(3, 9), "DATE-RANGE",  "XXXX-02-14 - XXXX-03-14")
     ensure("harvesting from October through December", Interval(1, 5), "DATE-RANGE",  "XXXX-10-XX - XXXX-12-XX")
+    ensure("sowing from 25th Oct to 10th Dec", Interval(1 9), "DATE-RANGE",  "XXXX-10-25 - XXXX-12-10")
 
   }
 
@@ -199,7 +200,12 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "P-Olsen ranged from 4.3 to 17 g.kg-1 soil", Interval(5, 11), goldEntity="MEASUREMENT", goldNorm="4.3-17.0 g/kg")
     ensure(sentence= "with concentrations reaching 3.99 mg kg−1", Interval(3, 8), goldEntity="MEASUREMENT", goldNorm="3.99 mg/kg")
     ensure(sentence= "the irrigation water supply was above 700 mm", Interval(6, 8), goldEntity="MEASUREMENT", goldNorm="700.0 mm")
-   
+    ensure(sentence= "sugar 6976 µg/g", Interval(1, 5), goldEntity="MEASUREMENT", goldNorm="6976 µg/g")
+    ensure(sentence= "1.1 mg/g uronic acid", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="1.1 mg/g")
+    ensure(sentence= "731.5 µg/g protein", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="731.5 µg/g")
+    ensure(sentence= "Saturated water content 4.54 m3 m-3", Interval(3, 7), goldEntity="MEASUREMENT", goldNorm="4.54 m3/m3")
+    ensure(sentence= "Soil organic carbon (SOC) under fallow varied from 7.1 g kg-1", Interval(8, 13), goldEntity="MEASUREMENT", goldNorm="7.1 g/kg")
+
   }
 
   //
