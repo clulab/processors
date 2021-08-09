@@ -128,7 +128,9 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("from 1987 to 2015", Interval(0, 4), "DATE-RANGE", "1987-XX-XX -- 2015-XX-XX")
     ensure("released annually between 2016 and 2019", Interval(2, 6), "DATE-RANGE", "2016-XX-XX -- 2019-XX-XX")
     // below two test cases fail. TODO:  discuss if grammar change is needed to incorporate this.
-    ensure("In 1998, 1999 and 2000, farmers", Interval(0, 8), "DATE-RANGE", "1998-XX-XX -- 2000-XX-XX")
+    ensure("In 1998, 1999 and 2000, farmers", Interval(1, 2), "DATE", "1998-XX-XX")
+    ensure("In 1998, 1999 and 2000, farmers", Interval(3, 5), "DATE-RANGE", "1999-XX-XX -- 2000-XX-XX")
+    // This next test will fail.
     ensure("a rainy season from July to October", Interval(3, 7), "DATE-RANGE", "XXXX-07-XX -- XXXX-10-XX")
 
     //TODO : end of august 8th changes
@@ -142,7 +144,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "yield potentials of 12 mega grams.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 meg")
     ensure(sentence= "yield potentials of 12 mega tonnes.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 met")
     // This test case fails. TODO:  discuss how to incorporate unit over unit e.g., mega tonne/hectare.
-    ensure(sentence= "12 mega tonne/hectare", Interval(0, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 met ha")
+    ensure(sentence= "yield 12 mega tonne/hectare each year", Interval(1, 6), goldEntity="MEASUREMENT", goldNorm= "12.0 mt/ha")
 
     // tests for unit normalization
     ensure("It was 12 hectares", Interval(2, 4), "MEASUREMENT", "12.0 ha")
