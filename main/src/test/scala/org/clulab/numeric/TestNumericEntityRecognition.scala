@@ -127,6 +127,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("Harvest occurred from 4 to 7 November", Interval(2, 7), "DATE-RANGE", "XXXX-11-04 -- XXXX-11-07")
     ensure("from 1987 to 2015", Interval(0, 4), "DATE-RANGE", "1987-XX-XX -- 2015-XX-XX")
     ensure("released annually between 2016 and 2019", Interval(2, 6), "DATE-RANGE", "2016-XX-XX -- 2019-XX-XX")
+
     ensure("In 1998, 1999 and 2000, farmers", Interval(0, 8), "DATE-RANGE", "1998-XX-XX -- 2000-XX-XX")
     ensure("a rainy season from July to October", Interval(3, 7), "DATE-RANGE", "XXXX-07-XX -- XXXX-10-XX")
 
@@ -140,6 +141,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "yield potentials of 12 tonnes.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 t")
     ensure(sentence= "yield potentials of 12 mega grams.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 meg")
     ensure(sentence= "yield potentials of 12 mega tonnes.", Interval(3, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 met")
+    ensure(sentence= "12 mega tonne/hectare", Interval(0, 5), goldEntity="MEASUREMENT", goldNorm= "12.0 met ha")
 
     // tests for unit normalization
     ensure("It was 12 hectares", Interval(2, 4), "MEASUREMENT", "12.0 ha")
