@@ -128,6 +128,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("from 1987 to 2015", Interval(0, 4), "DATE-RANGE", "1987-XX-XX -- 2015-XX-XX")
     ensure("released annually between 2016 and 2019", Interval(2, 6), "DATE-RANGE", "2016-XX-XX -- 2019-XX-XX")
     ensure("a rainy season from July to October", Interval(3, 7), "DATE-RANGE", "XXXX-07-XX -- XXXX-10-XX")
+    ensure("In 1998, 1999 and 2000, farmers", Interval(0, 8), "DATE-RANGE", "1998-XX-XX -- 2000-XX-XX")
     //TODO : end of august 8th changes
   }
 
