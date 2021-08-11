@@ -141,6 +141,7 @@ tonnes              // t
 tons                // t
 tons per hectare    // t/ha
 ton per hectare     // t/ha
+ton for one hectare  // t/ha
 metric ton per hectare     // t/ha
 metric tons per hectare    // t/ha
 metric tons                // t
@@ -229,3 +230,7 @@ m3 h−1                     // m3/h
 m3/h                       // m3/h
 ˚C                         // ˚C
 Celecius                   // ˚C
+t m-3                      // t/m3
+t/m3                       // t/m3
+Mg/m3                      // Mg/m3
+Mg m-3                     // Mg/m3
