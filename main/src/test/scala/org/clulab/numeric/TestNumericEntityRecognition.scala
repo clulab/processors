@@ -150,7 +150,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
 
   // tests for recognizing fertilizer, seeds and yield measurement units
   it should "recognize literal measurement units" in {
-    
     // these tests should pass 
     ensure(sentence= "Imports of rice in the decade 2008–2017 amounted on average to 1500000 tonnes", Interval(13, 15), goldEntity="MEASUREMENT", goldNorm="1500000.0 t")
     ensure(sentence= "They had yield potentials of 10 metric tons per hectare", Interval(5, 10), goldEntity="MEASUREMENT", goldNorm="10.0 t/ha")
@@ -164,7 +163,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "1.68 ton for one hectare as a result of that the rainfall", Interval(0, 5), goldEntity="MEASUREMENT", goldNorm="1.68 t/ha")
     ensure(sentence= "Rice is planted in early May next 5% reduction is only 7 d after that (24 April)", Interval(11, 13), goldEntity="MEASUREMENT", goldNorm="7 d")
 
-    // numbers with these units are not recognised by the module
+    // these tests will fail as range numbers, numbers with commas and dot etc are not yet handled.
     ensure(sentence= "Imports of rice in the decade 2008–2017 amounted on average to 1,500,000 tonnes", Interval(13, 15), goldEntity="MEASUREMENT", goldNorm="1500000.0 t")
     ensure(sentence= "The production from the SRV was therefore 360.000 tons of paddy", Interval(7, 9), goldEntity="MEASUREMENT", goldNorm="360000.0 t")
     ensure(sentence= "Weeding timing ranged from –2 to 17 days", Interval(4, 0), goldEntity="MEASUREMENT", goldNorm="2-17 d")
@@ -176,7 +175,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
 
   // tests for recognizing units which are sticked to values
   it should "recognize measurement units which are sticked to values" in {
-    
     // TODO: Mihai ==> How do we handle such cases?
     ensure(sentence= "Single cropping rice area is 4561.9km2", Interval(5, 7), goldEntity="MEASUREMENT", goldNorm="4561.9 km2")
     ensure(sentence= "Application dosage is 200kg/ha for compound fertilizer and 180kg/ha for urea", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm="200.0 kg/ha")
@@ -187,12 +185,12 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   // tests for recognizing units which change their meaning after normalization
   it should "recognize measurement units which should not be normalized" in {
     
-    // TODO: Mihai ==> How do we handle such cases? (Mg/ha or Mg/m3) shouldn't be normalized as this is one of the prefered unit for yield or application rate
+    // TODO: Mihai ==> How do we handle cases like (Mg/ha or Mg/m3) which shouldn't be normalized as this is one of the prefered unit for yield or application rate
     ensure(sentence= "Genetically improved rice varieties have grain yield potential of 10 Mg ha-1", Interval(9, 13), goldEntity="MEASUREMENT", goldNorm="10.0 Mg/ha")
 
   }
 
-  // I would enjoy contributing in fixing this
+  // tests for recognizing complex measurement units
   it should "recognize complex measurement units" in {
     ensure(sentence= "Recommended seed usage is 130 kg/ha", Interval(4, 8), goldEntity="MEASUREMENT", goldNorm="130.0 kg/ha")
     ensure(sentence= "1.25 to 1.65 mt/ha higher on average", Interval(0, 6), goldEntity="MEASUREMENT", goldNorm="1.25-1.65 t/ha")
