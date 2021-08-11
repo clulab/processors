@@ -7,3 +7,11 @@ rules:
     pattern: |
       @number:Number @unit:MeasurementUnit
 
+  - name: measurement-2
+    label: Measurement
+    priority: ${ rulepriority }
+    type: token
+    action: mkMeasurementWithRangeMention
+    pattern: |
+      @number:NumberRange @unit:MeasurementUnit
+
