@@ -83,7 +83,7 @@ abstract class StandardKbSource(caseInsensitiveMatching: Boolean) extends KbSour
   protected def processLine(line: String, f: Array[String] => Unit): Unit = {
     val trimmedLine = removeCommentsAndTrim(line)
     if (trimmedLine.nonEmpty && !trimmedLine.startsWith("#")) {
-      val tokens = trimmedLine.split("\\s+")
+      val tokens = trimmedLine.split("\\s+") // this means entries in the KBs must be pre-tokenized!!
       f(tokens)
     }
   }
