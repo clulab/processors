@@ -147,6 +147,12 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "Rice crops are one hundred thousand ha wide", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm= "100000.0 ha")
   }
 
+  // the variableprocessor should not break on this one!
+  it should "recognize the number in measurement + 4 l" in {
+    ensure(sentence= "Sown cultivar and areaJaya: 15.0 haJaya: 27.5 haJaya: 26.6 haSahel 202: 27.5 haSahel 202: 22.5 haSahel 108: 12.5 haSahel 108: 0.9 haJaya: 5.0 haWeedingtype and rate2 l 2-4D ha–1+ 4 l Propanil ha–12 l 2-4D ha–1+ 4 l Propanil ha–1manual2 l 2-4D ha–1+ 4 l Propanil ha–12 l 2-4D ha–1+ 4 l Propanil",
+        Interval(41, 42), goldEntity="MEASUREMENT", goldNorm = "4.0 l")
+  }
+
   //
   // End unit tests for date recognition.
   //
