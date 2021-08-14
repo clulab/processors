@@ -124,6 +124,46 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
   }
 
+  // Happening in the middle of months
+
+  it should "recognize dates as the middle part of months" in {
+    ensure("planting from mid-February ", Interval(2, 5), "DATE", "XXXX-02-15")
+    ensure("planting from mid-March", Interval(2, 5), "DATE", "XXXX-03-15")
+    // New
+    ensure("As a function of the onset of rains, rice was sown mid-July in 2016 and early July in 2017", Interval(2, 5), "DATE", "XXXX-03-15")
+
+
+    }
+
+  // Additional dates ranges 
+
+  it should "recognize date ranges" in {
+    ensure(sentence= "the highest grain yield in 1998/99", Interval(5,7), goldEntity= "DATE-RANGE", goldNorm= "1998-XX-XX -- 1999-XX-XX")
+    ensure("to harvesting in June-July", Interval(3, 6), "DATE-RANGE", "XXXX-06-XX -- XXXX-07-XX")
+    ensure("planting from mid-February and mid-March", Interval(3, 9), "DATE-RANGE",  "XXXX-02-14 -- XXXX-03-14")
+    ensure("harvesting from October through December", Interval(1, 5), "DATE-RANGE",  "XXXX-10-XX -- XXXX-12-XX")
+    ensure("sowing from 25th Oct to 10th Dec", Interval(1 9), "DATE-RANGE",  "XXXX-10-25 -- XXXX-12-10")
+  
+
+  }
+
+  // Other dates that should be recognized
+
+  it should "recognize numeric dates of form mm-dd" in {
+    ensure(sentence= "Rice is normally sown at the end of May and transplanted during the 1st week of July", Interval(13, 17), goldEntity= "DATE", goldNorm= "XXXX-07-01")
+    ensure(sentence= "The crop sown on produced the maximum plant height (92.80cm)", Interval(4, 6), goldEntity= "DATE", goldNorm= "XXXX-04-31")
+    ensure(sentence= "Full dose of phosphorus as SSP and potassium SOP were applied at sowing time on 24th of June, 2010", Interval(15, 20), goldEntity= "DATE", goldNorm= "XXXX-06-24")
+    ensure(sentence= "(July) in 2016", Interval(0, 3), goldEntity= "DATE", goldNorm= "2016-07-XX")
+  }
+
+
+
+
+
+
+
+
+
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")
 
@@ -190,3 +230,5 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     Tuple3(sent.words, sent.entities.get, sent.norms.get)
   }
 }
+
+
