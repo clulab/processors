@@ -17,6 +17,8 @@ object NumberParser {
           var word = w.toLowerCase()
           // remove commas from numbers like 100,000
           word = word.replace(",", "")
+          // remove "+"
+          word = word.replace("+", "")
           // remove 's' from words like "thousands"
           if (word.endsWith("s")) {
             word = word.dropRight(1)
@@ -31,7 +33,7 @@ object NumberParser {
           } else {
               Array(word)
           }
-        }
+        }.filterNot(_.isEmpty)
         parseWords(cleanWords) orElse parseNumeric(cleanWords)
     }
   }
