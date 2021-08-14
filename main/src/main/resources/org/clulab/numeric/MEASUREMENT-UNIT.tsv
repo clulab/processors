@@ -100,6 +100,7 @@ cubic meters        // m3
 m3                  // m3
 liter               // l
 liters              // l
+liters ha-1         // l/ha
 l                   // l
 milliliter          // ml
 milliliters         // ml
@@ -151,34 +152,35 @@ kilograms per hectare      // kg/ha
 kilogram per hectare       // kg/ha
 kg / ha                    // kg/ha
 t per ha                   // t/ha
-t ha–1                     // t/ha
+t ha-1                     // t/ha
 t / ha                     // t/ha
 kg N / ha                  // kg/ha
 tonnes / ha                // t/ha
 ton / ha                   // t/ha
 mt / ha                    // t/ha
-kg ha–1                    // kg/ha
+kg ha-1                    // kg/ha
 g m−2                      // g/m2
 g / m2                     // g/m2
 mt per hectare             // t/ha
 mt / hectare               // t/ha
-kg urea ha–1               // kg/ha
-kg N ha–1                  // kg/ha
-kg P ha–1                  // kg/ha
-kg DAP ha–1                // kg/ha
-kg TSP ha–1                // kg/ha
+kg urea ha-1               // kg/ha
+kg N ha-1                  // kg/ha
+kg P ha-1                  // kg/ha
+kg DAP ha-1                // kg/ha
+kg TSP ha-1                // kg/ha
 kg P2O5 /ha                // kg/ha
 kgP2O5/ha                  // kg/ha
-Mg ha–1                    // Mg/ha
+Mg ha-1                    // Mg/ha
 mg / l                     // mg/l
 mg.l-1                     // mg/l
 mg / kg                    // mg/kg
 mg.kg-1                    // mg/kg
-mg kg–1                    // mg/kg
+mg kg-1                    // mg/kg
 g / kg                     // g/kg
 g.kg-1                     // g/kg
-g kg–1                     // g/kg
+g kg-1                     // g/kg
 mg / g                     // mg/g
+mg g-1                     // mg/g
 mg.g-1                     // mg/g
 g / l                      // g/l
 g.l-1                      // g/l
@@ -226,9 +228,11 @@ g m−3                      // g/m3
 g / m3                     // g/m3
 cmol / l                   // cmol/l
 cmol l−1                   // cmol/l
+cmol kg-1                  // cmol/kg
 cubic meter per hour       // m3/h
 m3 h−1                     // m3/h
 m3 / h                     // m3/h
+C                          // ˚C
 ˚C                         // ˚C
 Celecius                   // ˚C
 t m-3                      // t/m3

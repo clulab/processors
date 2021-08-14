@@ -1,14 +1,53 @@
 package org.clulab.numeric
 
 import org.clulab.dynet.Utils
+import org.clulab.processors.Sentence
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.tokenizer.Tokenizer
 import org.clulab.struct.Interval
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.util.matching.Regex
+
 class TestNumericEntityRecognition extends FlatSpec with Matchers {
+
+  class HabitusTokenizer(tokenizer: Tokenizer) extends Tokenizer(tokenizer.lexer, tokenizer.steps, tokenizer.sentenceSplitter) {
+    // TODO: Make sure en dash is preserved in raw somehow!
+
+    override def tokenize(text: String, sentenceSplit: Boolean = true): Array[Sentence] = {
+      // Cheat and swap out some en dashes if necessary.
+      val habitusText =
+        if (text.contains(HabitusTokenizer.endash))
+          HabitusTokenizer.regex.replaceAllIn(text,HabitusTokenizer.replacer)
+        else
+          text
+
+      tokenizer.tokenize(habitusText, sentenceSplit)
+    }
+  }
+
+  object HabitusTokenizer {
+    val dash = "-"
+    val endash = "\u2013"
+    val regex = {
+      val start = "^"
+      val end = "$"
+      val notDigit = "[^\\d]"
+      val exponent = "[12]" // So far 1 and are all we've encountered as exponents.
+
+      s"($start|$notDigit)$endash($exponent($notDigit|$end))".r
+    }
+    val replacer: Regex.Match => String = m => s"${m.group(1)}$dash${m.group(2)}"
+  }
+
+  class HabitusProcessor() extends CluProcessor {
+    lazy val habitusTokenizer: HabitusTokenizer = new HabitusTokenizer(localTokenizer)
+    override lazy val tokenizer: Tokenizer = habitusTokenizer
+  }
+
   Utils.initializeDyNet()
   val ner = new NumericEntityRecognizer
-  val proc = new CluProcessor()
+  val proc = new HabitusProcessor()
 
   //
   // unit tests starts here
@@ -240,6 +279,23 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "the rainfall during October and November was about (144 ml) during 2015–2016 season may cause better moisture availability", Interval(9, 11), goldEntity="MEASUREMENT", goldNorm="144 ml")
   }
 
+  it should "work correctly with en dashes" in {
+    val endash = "\u2013"
+
+    ensure(sentence= "Imports of rice in the decade 2008" + endash + "2017 amounted on average to 1500000 tonnes", Interval(13, 15), goldEntity="MEASUREMENT", goldNorm="1500000.0 t")
+    ensure(sentence= "Imports of rice in the decade 2008" + endash + "2017 amounted on average to 1,500,000 tonnes", Interval(13, 15), goldEntity="MEASUREMENT", goldNorm="1500000.0 t")
+    ensure(sentence= "Average yield reached 7.2 t ha" + endash + "1 in 1999", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm="7.2 t/ha")
+    ensure(sentence= "Fertilizers were given to farmers proportionally to their cultivated area at the rate of 250 kg urea ha" + endash + "1", Interval(14, 18), goldEntity="MEASUREMENT", goldNorm="250.0 kg/ha")
+    //lowercase N ensure(sentence= "close to the recommendations of 120 kg N ha" + endash + "1", Interval(5, 9), goldEntity="MEASUREMENT", goldNorm="120.0 kg/ha")
+    //lowercase P ensure(sentence= "19 kg P ha" + endash + "1 were applied in two top-dressed applications", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="19.0 kg/ha")
+    ensure(sentence= "cultivated area at the rate of 250 kg urea ha" + endash + "1", Interval(6, 10), goldEntity="MEASUREMENT", goldNorm="250.0 kg/ha")
+    ensure(sentence= "farmers applied a combination of propanil 4 liters ha" + endash + "1", Interval(6, 9), goldEntity="MEASUREMENT", goldNorm="4.0 l/ha")
+    //interval ensure(sentence= "daily maximum temperature of 40" + endash + "45 C in May", Interval(4, 8), goldEntity="MEASUREMENT", goldNorm="40 -- 45 °C")
+    ensure(sentence= "CEC varied from 18 to 29 cmol kg" + endash + "1", Interval(2, 5), goldEntity="MEASUREMENT", goldNorm="18.0 -- 29.0 cmol/kg") // TODO: check on interval, get two BIO sets
+    ensure(sentence= "C content ranged from 4.4 to 7.9 mg g" + endash + "1 soil, ", Interval(3, 9), goldEntity="MEASUREMENT", goldNorm="4.4 -- 7.9 mg/g")
+    ensure(sentence= "the rainfall during October and November was about (144 ml) during 2015" + endash + "2016 season may cause better moisture availability", Interval(9, 11), goldEntity="MEASUREMENT", goldNorm="144.0 ml")
+  }
+
   //
   // End unit tests for date recognition.
   //
@@ -280,6 +336,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
 
     // assume 1 sentence per doc
     val sent = doc.sentences.head
-    Tuple3(sent.words, sent.entities.get, sent.norms.get)
+    (sent.words, sent.entities.get, sent.norms.get)
   }
 }
