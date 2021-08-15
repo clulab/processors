@@ -11,9 +11,18 @@ class NumericActions extends Actions {
   // local actions
   //
 
+  /** Constructs a NumberRange mention from a token pattern */
+  def mkNumberRangeMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toNumberRangeMention)
+  }
+
   /** Constructs a MeasurementMention from a token pattern */
   def mkMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     mentions.map(_.toMeasurementMention)
+  }
+
+  def mkMeasurementWithRangeMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toMeasurementWithRangeMention)
   }
 
   /** Constructs a DateRangeMention from a token pattern */

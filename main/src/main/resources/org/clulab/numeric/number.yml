@@ -13,7 +13,7 @@ rules:
     type: token
     pattern: |
       /^[+-]$/?
-      /^[+-]?(\d+\.\d*|\.\d+|\d+|\d+\/\d+)$/
+      /^[+-]?(\d+\.\d*|\.\d+|\d+|\d+\/\d+|\d+(\,\d+)+)$/
       (/\// /^[+-]$/? /^([+-]?\d+)$/)?
       /^(hundred|thousand|million|billion|trillion|quadrillion)s?$/?
 
