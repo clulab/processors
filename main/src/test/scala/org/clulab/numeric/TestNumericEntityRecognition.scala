@@ -118,50 +118,92 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence = "Planting dates are between July 1st and August 2nd.", Interval(3, 9), goldEntity = "DATE-RANGE", "XXXX-07-01 -- XXXX-08-02")
   }
 
-  it should "recognize date ranges" in {
+  // TODO: We need a parser for  dot dates separated
+  it should "recognize Numerical dates with dot separated" in {
+    ensure("on 15.07.2016", Interval(0, 2), "DATE", "2016-07-15")
+    ensure("on 07.2016", Interval(0, 2), "DATE", "2016-07-XX")
+    ensure("on 15.07", Interval(0, 2), "DATE", "XXXX-07-15")
+    ensure("Sowing depended on the available soil moisture and was done on 15.07.2016", Interval(10, 12), "DATE", "2016-07-15")
+    ensure("resulting in harvest in October or November", Interval(4, 7), "DATE", "XXXX-11-XX")
+
+  }
+
+  it should "recognize literal date ranges" in {
     ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 -- 2020-11-11")
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
+  
   }
 
-  // Happening in the middle of months
+  // Happenings in the middle of months
 
   it should "recognize dates as the middle part of months" in {
     ensure("planting from mid-February ", Interval(2, 5), "DATE", "XXXX-02-15")
     ensure("planting from mid-March", Interval(2, 5), "DATE", "XXXX-03-15")
-    // New
     ensure("As a function of the onset of rains, rice was sown mid-July in 2016 and early July in 2017", Interval(2, 5), "DATE", "XXXX-03-15")
-
+    ensure("sowing normally occurs in summer mid-June", Interval(5, 8), "DATE-RANGE",  "XXXX-10-25 -- XXXX-12-10")
 
     }
 
-  // Additional dates ranges 
+  // Additional mixed dates ranges 
 
   it should "recognize date ranges" in {
-    ensure(sentence= "the highest grain yield in 1998/99", Interval(5,7), goldEntity= "DATE-RANGE", goldNorm= "1998-XX-XX -- 1999-XX-XX")
     ensure("to harvesting in June-July", Interval(3, 6), "DATE-RANGE", "XXXX-06-XX -- XXXX-07-XX")
     ensure("planting from mid-February and mid-March", Interval(3, 9), "DATE-RANGE",  "XXXX-02-14 -- XXXX-03-14")
     ensure("harvesting from October through December", Interval(1, 5), "DATE-RANGE",  "XXXX-10-XX -- XXXX-12-XX")
-    ensure("sowing from 25th Oct to 10th Dec", Interval(1 9), "DATE-RANGE",  "XXXX-10-25 -- XXXX-12-10")
-  
+    ensure("sowing from 25th Oct to 10th Dec", Interval(1, 9), "DATE-RANGE",  "XXXX-10-25 -- XXXX-12-10")
+    ensure("rainfall pattern from June to mid-September", Interval(2, 8), "DATE-RANGE",  "XXXX-06-XX -- XXXX-09-15")
+    ensure("when heading occurred between August 10 and 25", Interval(3, 8), "DATE-RANGE",  "XXXX-08-10 -- XXXX-08-25")
+    ensure("drier season between November and March", Interval(2, 8), "DATE-RANGE",  "XXXX-11-XX -- XXXX-03-XX")
+    ensure("flooding are expected to occur in July to August 2021", Interval(5, 10), "DATE-RANGE",  "2021-07-XX -- 2021-08-XX")
+    ensure("farmers sowed Jaya between 20 June and 1 July", Interval(3, 8), "DATE-RANGE",  "XXXX-06-20 -- XXXX-07-01")
+
+  // TODO: It would be interesting to handle such dates ranges 1st week of July: "XXXX-07-01 -- XXXX-07-07
+    // ensure(sentence= "transplanted during the 1st week of July", Interval(3, 7), goldEntity= "DATE", goldNorm= "XXXX-07-01")
 
   }
 
   // Other dates that should be recognized
 
-  it should "recognize numeric dates of form mm-dd" in {
-    ensure(sentence= "Rice is normally sown at the end of May and transplanted during the 1st week of July", Interval(13, 17), goldEntity= "DATE", goldNorm= "XXXX-07-01")
-    ensure(sentence= "The crop sown on produced the maximum plant height (92.80cm)", Interval(4, 6), goldEntity= "DATE", goldNorm= "XXXX-04-31")
-    ensure(sentence= "Full dose of phosphorus as SSP and potassium SOP were applied at sowing time on 24th of June, 2010", Interval(15, 20), goldEntity= "DATE", goldNorm= "XXXX-06-24")
-    ensure(sentence= "(July) in 2016", Interval(0, 3), goldEntity= "DATE", goldNorm= "2016-07-XX")
+  it should "recognize numeric dates of form mm" in {
+    ensure(sentence= "Rice is normally sown at the end of May", Interval(8, 9), goldEntity= "DATE", goldNorm= "XXXX-05-XX")
+    ensure(sentence= "harvested the following August", Interval(3, 4), goldEntity= "DATE", goldNorm= "XXXX-08-XX")
+    ensure(sentence= "wheat is mostly sown in late September", Interval(6, 7), goldEntity= "DATE", goldNorm= "XXXX-09-XX")
+    ensure(sentence= "Rains are expected to start in July", Interval(6, 7), goldEntity= "DATE", goldNorm= "XXXX-07-XX")
+  
   }
 
+  it should "recognize numeric dates of form dd-mm" in {
+    ensure(sentence= "transplanted during the 1st of July", Interval(3, 6), goldEntity= "DATE", goldNorm= "XXXX-07-01")
+    ensure(sentence= "the 20th of October", Interval(1, 4), goldEntity= "DATE", goldNorm= "XXXX-10-20")
+  }
 
+  // TODO: need to decide on the output of such dates
+  it should "recognize numeric dates of form yyyy" in {
+    ensure(sentence= "the highest grain yield in 1998/99", Interval(5,7), goldEntity= "DATE-RANGE", goldNorm= "1999-XX-XX")
+  }
 
+  it should "recognize numeric dates of form mm-dd" in {
+    ensure(sentence= "before Aug. 15th", Interval(1, 3), goldEntity= "DATE", goldNorm= "XXXX-08-15")
+    ensure(sentence= "after March 5th", Interval(1, 3), goldEntity= "DATE", goldNorm= "XXXX-03-05")
+    ensure(sentence= "Farmers planted on July 11", Interval(3, 5), goldEntity= "DATE", goldNorm= "XXXX-07-11")
 
+  }
 
+  it should "recognize numeric dates of form mm-yy" in {
+    ensure(sentence= "July in 2016", Interval(0, 3), goldEntity= "DATE", goldNorm= "2016-07-XX")
+    ensure(sentence= "we’ll have more seed available again in Nov/Dec 2021", Interval(7, 11), goldEntity= "DATE", goldNorm= "2021-12-XX")
+  }
 
+  it should "recognize numeric dates of form dd-mm-yy" in {
+    ensure(sentence= "SSP and potassium SOP were applied at sowing time on 24th of June, 2010", Interval(10, 15), goldEntity= "DATE", goldNorm= "2010-06-24")
+    ensure(sentence= "Jaya was planted on 14th of July 2020", Interval(4, 8), goldEntity= "DATE", goldNorm= "2000-07-14")
+    ensure(sentence= "on 6th Jan, 2009", Interval(1, 5), goldEntity= "DATE", goldNorm= "2009-01-06")
+    ensure(sentence= "on 18th of Oct 2019", Interval(1, 5), goldEntity= "DATE", goldNorm= "2019-10-18")
+    ensure(sentence= "old seedlings transplanted on 14 July in 1999/00", Interval(4, 8), goldEntity= "DATE", goldNorm= "2000-07-14")
 
+  }
+  
 
 
   it should "recognize measurement units" in {
