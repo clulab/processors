@@ -10,7 +10,8 @@ object NumberParser {
 
   def parse(words: Seq[String]): Option[Double] = {
     words match {
-      case Seq() => None
+      case Seq() =>
+        None
       case words =>
         val cleanWords = words.flatMap { w =>
           // lowercase
@@ -34,7 +35,11 @@ object NumberParser {
               Array(word)
           }
         }.filterNot(_.isEmpty)
-        parseWords(cleanWords) orElse parseNumeric(cleanWords)
+        if(cleanWords.nonEmpty) {
+          parseWords(cleanWords) orElse parseNumeric(cleanWords)
+        } else {
+          None
+        }
     }
   }
 
