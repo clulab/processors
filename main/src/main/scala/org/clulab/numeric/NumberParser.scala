@@ -10,13 +10,16 @@ object NumberParser {
 
   def parse(words: Seq[String]): Option[Double] = {
     words match {
-      case Seq() => None
+      case Seq() =>
+        None
       case words =>
         val cleanWords = words.flatMap { w =>
           // lowercase
           var word = w.toLowerCase()
           // remove commas from numbers like 100,000
           word = word.replace(",", "")
+          // remove "+"
+          word = word.replace("+", "")
           // remove 's' from words like "thousands"
           if (word.endsWith("s")) {
             word = word.dropRight(1)
@@ -31,8 +34,12 @@ object NumberParser {
           } else {
               Array(word)
           }
+        }.filterNot(_.isEmpty)
+        if(cleanWords.nonEmpty) {
+          parseWords(cleanWords) orElse parseNumeric(cleanWords)
+        } else {
+          None
         }
-        parseWords(cleanWords) orElse parseNumeric(cleanWords)
     }
   }
 
