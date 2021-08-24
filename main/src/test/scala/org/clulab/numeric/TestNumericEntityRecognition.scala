@@ -208,7 +208,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     // ensure(sentence= "The production from the SRV was therefore 360.000 tons of paddy", Interval(7, 9), goldEntity="MEASUREMENT", goldNorm="360000.0 t")
 
     // measurements that contain number ranges should work
-    ensure(sentence= "Weeding timing ranged from 2 to 17 days", Interval(4, 0), goldEntity="MEASUREMENT", goldNorm="2.0 -- 17.0 d")
+    ensure(sentence= "Weeding timing ranged from 2 to 17 days", Interval(3, 8), goldEntity="MEASUREMENT", goldNorm="2.0 -- 17.0 d")
     
     // TODO: not sure what should be the output of such measurement '3 or 4 days'
     ensure(sentence= "and lasted 3 or 4 days in both wet seasons", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="4.0 d")
