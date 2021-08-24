@@ -186,7 +186,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "Rice crops are one hundred thousand ha wide", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm= "100000.0 ha")
   }
 
-
   // tests for recognizing fertilizer, seeds and yield measurement units
   it should "recognize literal measurement units" in {
     // these tests should pass 
@@ -312,6 +311,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "the rainfall during October and November was about (144 ml) during 2015" + endash + "2016 season may cause better moisture availability", Interval(9, 11), goldEntity="MEASUREMENT", goldNorm="144.0 ml")
   }
 
+  it should "it should not crash on weird texts" in {
+    ensure(sentence= "Sown cultivar and areaJaya: 15.0 haJaya: 27.5 haJaya: 26.6 haSahel 202: 27.5 haSahel 202: 22.5 haSahel 108: 12.5 haSahel 108: 0.9 haJaya: 5.0 haWeedingtype and rate2 l 2-4D ha–1+ 4 l Propanil ha–12 l 2-4D ha–1+ 4 l Propanil ha–1manual2 l 2-4D ha–1+ 4 l Propanil ha–12 l 2-4D ha–1+ 4 l Propanil",
+        Interval(0, 1), goldEntity="", goldNorm = "")
+  }
+
   //
   // End unit tests for date recognition.
   //
@@ -332,15 +336,17 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     println("Entities: " + entities.mkString(", "))
     println("Norms:    " + norms.mkString(", "))
 
-    var first = true
-    for(i <- span.indices) {
-      val prefix = if(first) "B-" else "I-"
-      val label = prefix + goldEntity
+    if(goldEntity.nonEmpty) {
+      var first = true
+      for (i <- span.indices) {
+        val prefix = if (first) "B-" else "I-"
+        val label = prefix + goldEntity
 
-      entities(i) should be (label)
-      norms(i) should be (goldNorm)
+        entities(i) should be(label)
+        norms(i) should be(goldNorm)
 
-      first = false
+        first = false
+      }
     }
   }
 
