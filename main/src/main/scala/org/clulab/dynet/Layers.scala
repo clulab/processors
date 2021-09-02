@@ -1,5 +1,7 @@
 package org.clulab.dynet
 
+import edu.cmu.dynet.ComputationGraph
+
 import java.io.PrintWriter
 import edu.cmu.dynet.{Expression, ExpressionVector, ParameterCollection}
 import org.clulab.struct.Counter
@@ -244,6 +246,10 @@ object Layers {
           labelsPerTask += labels
         }
       }
+
+      println(sentence.words)
+      println(labelsPerTask)
+      ComputationGraph.printGraphViz()
     }
 
     labelsPerTask
@@ -284,6 +290,10 @@ object Layers {
         val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
+
+        println(sentence.words)
+        println(out)
+        ComputationGraph.printGraphViz()
 
         out
       }

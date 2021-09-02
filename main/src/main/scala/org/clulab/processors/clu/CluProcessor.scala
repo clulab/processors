@@ -102,7 +102,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       //println(doc.sentences.head.entities.get.mkString(", "))
       chunking(doc) // Nothing, kept for the record
       parse(doc) // dependency parsing
-      //println("After parsing")
+/*      //println("After parsing")
       //println(doc.sentences.head.universalEnhancedDependencies.get)
 
       lemmatize(doc) // lemmatization has access to POS tags, which are needed in some languages
@@ -114,7 +114,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       // these are not implemented yet
       resolveCoreference(doc)
       discourse(doc)
-
+*/
       doc.clear()
       doc
     }

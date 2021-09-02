@@ -29,7 +29,7 @@ object ParallelProcessorExample {
     val parallel = args.lift(4).exists(_ == "true")
 
     val files = FileUtils.findFiles(inputDir, extension)
-    val serFiles = files.sortBy(-_.length)
+    val serFiles = files.sortBy(-_.length).take(1) // kwa added
     val parFiles = ThreadUtils.parallelize(serFiles, threads)
     val documentSerializer = new DocumentSerializer
 
@@ -42,6 +42,8 @@ object ParallelProcessorExample {
 //    val processor: Processor = new FastNLPProcessor()
 //    val processor: Processor = new FastNLPProcessorWithSemanticRoles()
 
+    // With this all computation graphs should be made?  All models?  All parameters need to be collected
+    // so that new computation graphs can be regenerated.
     processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
     startupTimer.stop()
     println(startupTimer.toString)
