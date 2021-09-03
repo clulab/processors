@@ -27,18 +27,23 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   val multiThreaded = Initializer.isThreaded
 
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
-  protected lazy val model: IndexedSeq[Layers] = {
+  protected val model: IndexedSeq[Layers] = {
     val tmp: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
-    val result = tmp // tmp.map(_.clone())
+    val result = tmp // .map(_.clone()) // Make a copy and see if it works.
     println("It actually recalculated, but I prevented it!")
     result
   }
 
   // Model to be used only during inference, and only if the configuration indicates multi-threaded execution
-  protected lazy val multiThreadedModel: ThreadLocal[IndexedSeq[Layers]] =
-    ThreadLocal.withInitial(new LayersSupplier(model))
+  protected val multiThreadedModel: ThreadLocal[IndexedSeq[Layers]] =
+    if (multiThreaded) ThreadLocal.withInitial(new LayersSupplier(model)) else null
 
-  protected def getInferenceModel: IndexedSeq[Layers] = if (multiThreaded) multiThreadedModel.get() else model
+  protected def singleThreadedModel: IndexedSeq[Layers] = {
+    ComputationGraph.renew()
+    model.map(_.clone())
+  }
+
+  protected def getInferenceModel: IndexedSeq[Layers] = if (multiThreaded) multiThreadedModel.get() else singleThreadedModel
 
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {

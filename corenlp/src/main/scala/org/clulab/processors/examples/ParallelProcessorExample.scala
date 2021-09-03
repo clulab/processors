@@ -44,7 +44,10 @@ object ParallelProcessorExample {
 
     // With this all computation graphs should be made?  All models?  All parameters need to be collected
     // so that new computation graphs can be regenerated.
-    processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
+    val primer = "I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation."
+    processor.annotate(primer) // Maybe do this twice to check dumps
+    processor.annotate(primer)
+    processor.annotate(primer)
     startupTimer.stop()
     println(startupTimer.toString)
 

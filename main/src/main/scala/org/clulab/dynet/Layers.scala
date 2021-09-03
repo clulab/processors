@@ -8,6 +8,7 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
+import org.clulab.utils.Dumper
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -227,12 +228,19 @@ object Layers {
     // DyNet's computation graph is a static variable, so this block must be synchronized
     Synchronizer.withComputationGraph("Layers.predictJointly()") {
       // layers(0) contains the shared layers
+      println("I'm in predictJointly and may not have hit the breakpoint.")
       if (layers(0).nonEmpty) {
         val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
 
         for (i <- 1 until layers.length) {
           val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+
+          val allEmissionScores = emissionScores.flatten
+          if (allEmissionScores.exists(score => score.isNaN))
+            println("Something went wrong!")
+          println(allEmissionScores.mkString(", "))
+
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
         }
@@ -242,6 +250,12 @@ object Layers {
         for (i <- 1 until layers.length) {
           val states = layers(i).forward(sentence, constEmbeddings, doDropout = false)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+
+          val allEmissionScores = emissionScores.flatten
+          if (allEmissionScores.exists(score => score.isNaN))
+            println("Something went wrong!")
+          println(allEmissionScores.mkString(", "))
+
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
         }
@@ -249,7 +263,7 @@ object Layers {
 
       println(sentence.words)
       println(labelsPerTask)
-      ComputationGraph.printGraphViz()
+      Dumper.dump("-predictJointly")
     }
 
     labelsPerTask
@@ -293,8 +307,7 @@ object Layers {
 
         println(sentence.words)
         println(out)
-        ComputationGraph.printGraphViz()
-
+        Dumper.dump("-predict")
         out
       }
 

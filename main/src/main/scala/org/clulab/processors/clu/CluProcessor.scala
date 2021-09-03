@@ -9,6 +9,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
+import edu.cmu.dynet.ComputationGraph
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
@@ -49,10 +50,16 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
   }
 
   // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
-  lazy val mtlPosChunkSrlp: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+  val mtlPosChunkSrlp: Metal = {
+    val metal = getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+    }
+//    ComputationGraph.renew()
+    // Eventually copy this.
+    val newMetal = metal // Metal(metal.taskManagerOpt, metal.parameters, metal.)
+    newMetal
   }
 
   // one of the multi-task learning (MTL) models, which covers: NER
@@ -97,11 +104,11 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor")) ext
       tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
       //println("After POS")
       //println(doc.sentences.head.tags.get.mkString(", "))
-      recognizeNamedEntities(doc) // the call to the NER MTL is in here
+//      recognizeNamedEntities(doc) // the call to the NER MTL is in here
       //println("After NER")
       //println(doc.sentences.head.entities.get.mkString(", "))
-      chunking(doc) // Nothing, kept for the record
-      parse(doc) // dependency parsing
+//      chunking(doc) // Nothing, kept for the record
+//      parse(doc) // dependency parsing
 /*      //println("After parsing")
       //println(doc.sentences.head.universalEnhancedDependencies.get)
 
