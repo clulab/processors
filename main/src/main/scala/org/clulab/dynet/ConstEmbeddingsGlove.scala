@@ -7,6 +7,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.utils.ConfigWithDefaults
 import org.clulab.utils.StringUtils
 
+import java.io.Closeable
 import scala.collection.mutable
 
 class ConstEmbeddingsGlove
@@ -14,7 +15,12 @@ class ConstEmbeddingsGlove
 /** Stores lookup parameters + the map from strings to ids */
 case class ConstEmbeddingParameters(collection: ParameterCollection,
                                     lookupParameters: LookupParameter,
-                                    w2i: Map[String, Int])
+                                    w2i: Map[String, Int]) extends Closeable {
+  def close(): Unit = {
+    lookupParameters.close()
+    collection.close()
+  }
+}
 
 /**
  * Implements the ConstEmbeddings as a thin wrapper around WordEmbeddingMap

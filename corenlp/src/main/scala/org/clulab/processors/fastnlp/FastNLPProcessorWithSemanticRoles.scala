@@ -3,6 +3,8 @@ package org.clulab.processors.fastnlp
 import org.clulab.dynet.{ConstEmbeddingsGlove, Utils}
 import org.clulab.processors.Document
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.backend.EmbeddingsAttachment
+import org.clulab.processors.clu.backend.MetalBackend
 import org.clulab.processors.clu.tokenizer.TokenizerStep
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.GraphMap
@@ -22,7 +24,7 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
     new CluProcessor() {
       // Since this skips CluProcessor.srl() and goes straight for srlSentence(), there isn't
       // a chance to make sure CluProcessor.mtlSrla is initialized, so it is done here.
-      assert(this.mtlSrla != null)
+      assert(this.srlaBackend != null)
     }
   }
 
@@ -34,21 +36,21 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
   }
 
   override def srl(doc: Document): Unit = {
-    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
+    val embeddingsAttachment = new EmbeddingsAttachment(MetalBackend.mkEmbeddings(doc))
     val docDate = doc.getDCT
     for(sent <- doc.sentences) {
       val words = sent.words
       val lemmas = sent.lemmas
 
       // The SRL model relies on NEs produced by CluProcessor, so run the NER first
-      val (tags, _, preds) = cluProcessor.tagSentence(words, embeddings)
+      val (tags, _, preds) = cluProcessor.tagSentence(words, embeddingsAttachment)
       val predIndexes = cluProcessor.getPredicateIndexes(preds)
       val tagsAsArray = tags.toArray
       val (entities, _) = cluProcessor.nerSentence(
-        words, lemmas, tagsAsArray, sent.startOffsets, sent.endOffsets, docDate, embeddings
+        words, lemmas, tagsAsArray, sent.startOffsets, sent.endOffsets, docDate, embeddingsAttachment
       )
       val semanticRoles = cluProcessor.srlSentence(
-        words, tagsAsArray, entities, predIndexes, embeddings
+        words, tagsAsArray, entities, predIndexes, embeddingsAttachment
       )
 
       sent.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
@@ -60,5 +62,6 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
         sent.graphs += GraphMap.ENHANCED_SEMANTIC_ROLES -> enhancedRoles
       }
     }
+    embeddingsAttachment.close()
   }
 }
