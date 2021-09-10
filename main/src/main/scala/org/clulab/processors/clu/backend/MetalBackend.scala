@@ -16,7 +16,7 @@ object MetalBackend extends CluBackend {
 }
 
 class MetalPosBackend(modelFilenamePrefix: String) extends PosBackend {
-  lazy val mtlPosChunkSrlp: Metal = Metal(modelFilenamePrefix)
+  protected val mtlPosChunkSrlp: Metal = Metal(modelFilenamePrefix)
 
   def predict(annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
@@ -27,7 +27,7 @@ class MetalPosBackend(modelFilenamePrefix: String) extends PosBackend {
 }
 
 class MetalNerBackend(modelFilenamePrefix: String) extends NerBackend {
-  lazy val mtlNer: Metal = Metal(modelFilenamePrefix)
+  protected val mtlNer: Metal = Metal(modelFilenamePrefix)
 
   def predict(annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       IndexedSeq[String] =
@@ -35,7 +35,7 @@ class MetalNerBackend(modelFilenamePrefix: String) extends NerBackend {
 }
 
 class MetalSrlaBackend(modelFilenamePrefix: String) extends SrlaBackend {
-  lazy val mtlSrla: Metal = Metal(modelFilenamePrefix)
+  protected val mtlSrla: Metal = Metal(modelFilenamePrefix)
 
   def predict(taskId: Int, annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       IndexedSeq[String] =
@@ -43,7 +43,7 @@ class MetalSrlaBackend(modelFilenamePrefix: String) extends SrlaBackend {
 }
 
 class MetalDepsBackend(modelFilenamePrefix: String) extends DepsBackend {
-  lazy val mtlDeps: Metal = Metal(modelFilenamePrefix)
+  protected val mtlDeps: Metal = Metal(modelFilenamePrefix)
 
   def predict(annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       IndexedSeq[(Int, String)] =
