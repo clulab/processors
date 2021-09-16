@@ -9,7 +9,6 @@ class ColumnReader:
     sentence = list()
     sentences = list()
     for line in source:
-      print (line)
       l = line.strip()
       if (l is ""):
         # end of sentence
@@ -18,10 +17,10 @@ class ColumnReader:
           sentence = list()
       else:
         # within the same sentence
-        bits = l.split("\\s")
+        bits = l.split("\t")
         if (len(bits) < 2):
           raise RuntimeError(f"ERROR: invalid line {l}!")
-        sentence += Row(bits)
+        sentence += [Row(bits)]
 
     if (sentence):
       sentences += [sentence]
