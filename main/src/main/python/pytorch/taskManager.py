@@ -46,17 +46,16 @@ class TaskManager:
         crtShard = shardsByTasks[j][i]
         interleavedShards += [crtShard]
 
-    
-    # print ("All shards:")
-    # for(i <- interleavedShards.indices)
-    #   print (s"${interleavedShards(i)}")
-
-
     return interleavedShards
 
   # Iterator over all sentences coming from all interleaved shards 
   def getSentences(self):
-    return SentenceIterator(self.tasks, self.shards, self.random)
+    random.seed(self.random)
+    randomizedShards = random.sample(self.shards, len(self.shards))
+    for shard in randomizedShards:
+      sents = random.sample(range(shard.startPosition, shard.endPosition), shard.endPosition-shard.startPosition)
+      for sent in sents:
+        yield (shard.taskId, self.tasks[shard.taskId].trainSentences[sent])
 
   # Reads all tasks from disk in memory 
   def readTasks(self):
@@ -92,7 +91,7 @@ class TaskManager:
       sentCount = 0
       taskId = 0
       totalSents = 0
-      for sentence in getSentences():
+      for sentence in self.getSentences():
         totalSents += 1
         if(sentence[0] != taskId):
           print (f"Read {sentCount} sentences from task {taskId}")
@@ -102,56 +101,6 @@ class TaskManager:
           sentCount += 1
       print (f"Read {sentCount} sentences from task {taskId}")
       print (f"Read {totalSents} sentences in epoch {epoch}.")
-
-class SentenceIterator(object):
-  def __init__(tasks, shards, random):
-
-    self.tasks = tasks
-    self.shards = shards
-    self.random = random #random seed
-
-    # Offset in randomizedSentencePositions array 
-    self.sentenceOffset = 0
-    self.randomizedSentencePositions = randomizeSentences()
-
-  class Sentence:
-    def __init__(self, taskId, sentencePosition):
-      self.taskId = taskId
-      self.sentencePosition = sentencePosition
-
-  # Randomizes all sentences across all tasks 
-  def randomizeSentences():
-    # first, randomize the shards
-    random.seed(self.random)
-    randomizedShards = random.shuffle(self.shards)
-    randomizedSents = list()
-    for shard in randomizedShards:
-      # second, randomize the sentences inside each shard
-      sents = random.shuffle(list(range(shard.startPosition, shard.endPosition)))
-      for sent in sents:
-        # store the randomized sentences
-        randomizedSents += [Sentence(shard.taskId, sent)]
-    return randomizedSents
-
-  def __len__(self):
-    return len(self.randomizedSentencePositions)
-
-  def __iter__(self):
-    return self
-
-  def hasNext(self): return self.sentenceOffset < len(self.randomizedSentencePositions)
-
-  def __next__(self):
-    assert(self.sentenceOffset >= 0 and self.sentenceOffset < len(self.randomizedSentencePositions))
-
-    s = self.randomizedSentencePositions[sentenceOffset]
-    tid = s.taskId
-    sentence = self.tasks[tid].trainSentences[s.sentencePosition]
-    self.sentenceOffset += 1
-
-    #print ("shardPosition = $shardPosition, sentencePosition = $sentencePosition")
-
-    return (tid, sentence)
 
 class Shard:
   def __init__(self, taskId, startPosition, endPosition):
