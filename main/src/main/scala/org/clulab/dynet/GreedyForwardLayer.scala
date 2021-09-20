@@ -3,7 +3,7 @@ package org.clulab.dynet
 import java.io.PrintWriter
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, fromIndexToString, save}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, fromIndexToT, save}
 import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
@@ -81,7 +81,7 @@ object GreedyForwardLayer {
     val span = if(spanValue.isEmpty || spanValue == "none") None else Some(parseSpan(spanValue, inputSize))
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
-    val i2t = fromIndexToString(t2i)
+    val i2t = fromIndexToT(t2i)
     val dropoutProb = byLineFloatBuilder.build(x2iIterator, "dropoutProb", ForwardLayer.DEFAULT_DROPOUT_PROB)
 
     //

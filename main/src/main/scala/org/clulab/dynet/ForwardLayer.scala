@@ -3,7 +3,7 @@ package org.clulab.dynet
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
 import ForwardLayer._
-import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}
+import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToT, mkTransitionMatrix}
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 
@@ -199,7 +199,7 @@ object ForwardLayer {
     }
 
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
-    val i2t = fromIndexToString(t2i)
+    val i2t = fromIndexToT(t2i)
 
     val spanConfig = config.getArgString(paramPrefix + ".span", Some(""))
     val span =

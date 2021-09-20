@@ -16,6 +16,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
+import scala.reflect.ClassTag
 
 /**
  * Utility methods used by DyNet applications
@@ -70,33 +71,13 @@ object Utils {
     }
   }
 
-  def fromIndexToString(s2i: Map[String, Int]): Array[String] = {
-    var max = Int.MinValue
-    for (v <- s2i.values) {
-      if (v > max) {
-        max = v
-      }
-    }
-    assert(max > 0)
-    val i2s = new Array[String](max + 1)
-    for (k <- s2i.keySet) {
-      i2s(s2i(k)) = k
-    }
-    i2s
-  }
+  def fromIndexToT[T](s2i: Map[T, Int])(implicit classTag: ClassTag[T]): Array[T] = {
+    assert(s2i.nonEmpty)
+    val max = s2i.maxBy(_._2)._2
+    assert(max + 1 == s2i.size)
+    val i2s = new Array[T](max + 1)
 
-  def fromIndexToChar(s2i: Map[Char, Int]): Array[Char] = {
-    var max = Int.MinValue
-    for (v <- s2i.values) {
-      if (v > max) {
-        max = v
-      }
-    }
-    assert(max > 0)
-    val i2s = new Array[Char](max + 1)
-    for (k <- s2i.keySet) {
-      i2s(s2i(k)) = k
-    }
+    s2i.foreach { case (k, v) => i2s(v) = k }
     i2s
   }
 
