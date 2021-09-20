@@ -1,6 +1,7 @@
 import random
 import math
 from sequences.columnReader import ColumnReader
+from dataclasses import dataclass
 
 TYPE_BASIC = 0
 TYPE_DUAL = 1
@@ -102,11 +103,11 @@ class TaskManager:
       print (f"Read {sentCount} sentences from task {taskId}")
       print (f"Read {totalSents} sentences in epoch {epoch}.")
 
+@dataclass
 class Shard:
-  def __init__(self, taskId, startPosition, endPosition):
-    self.taskId = taskId
-    self.startPosition = startPosition 
-    self.endPosition = endPosition
+  taskId: int
+  startPosition: int
+  endPosition: int
 
 class Task:
   def __init__(self,
