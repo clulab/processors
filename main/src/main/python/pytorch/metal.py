@@ -1,4 +1,4 @@
-from utils import Utils
+from utils import *
 from collections import Counter
 from sequences.rowReader import *
 
@@ -18,15 +18,15 @@ class Metal():
 
         layersPerTask = [None for _ in range(taskManager.taskCount + 1)]
 
-        layersPerTask[0] = Layers(taskManager, "mtl.layers", parameters, taskWords(0), None, isDual = false, providedInputSize = None)
+        layersPerTask[0] = Layers.apply(taskManager, "mtl.layers", parameters, taskWords(0), None, isDual = false, providedInputSize = None)
 
         inputSize = layersPerTask[0].outDim
 
         for i in taskManager.indices:
-            layersPerTask[i+1] = Layers(taskManager, s"mtl.task${i + 1}.layers", parameters, taskWords(i + 1), Some(taskLabels(i + 1)), isDual = taskManager.tasks(i).isDual, inputSize)
+            layersPerTask[i+1] = Layers.apply(taskManager, f"mtl.task{i+1}.layers", parameters, taskWords(i + 1), Some(taskLabels(i + 1)), isDual = taskManager.tasks(i).isDual, inputSize)
 
         for i in range(len(layersPerTask)):
-            print (s"Summary of layersPerTask({i}):")
+            print (f"Summary of layersPerTask({i}):")
             print (layersPerTask[i])
 
         return layersPerTask
@@ -35,23 +35,23 @@ class Metal():
         # index 0 reserved for the shared Layers; tid + 1 corresponds to each task
         labels = [Counter() for _ in range(taskManager.taskCount + 1)]
         for i in range(1, len(labels)): # labels(0) not used, since only task-specific layers have a final layer
-          labels[i][Utils.START_TAG] += 1
-          labels[i][Utils.STOP_TAG] += 1
+          labels[i][START_TAG] += 1
+          labels[i][STOP_TAG] += 1
 
         words = [Counter() for _ in range(taskManager.taskCount + 1)]
 
         reader = MetalRowReader()
 
         for tid in taskManager.indices:
-          for sentence in taskManager.tasks[tid].trainSentences
+          for sentence in taskManager.tasks[tid].trainSentences:
             annotatedSentences = reader.toAnnotatedSentences(sentence)
 
             for asent in annotatedSentences:
               annotatedSentence = asent[0]
               sentenceLabels = asent[1]
-              for i in annotatedSentence.indices:
-                words[tid + 1][annotatedSentence.words[i]] += 1
-                words[0][annotatedSentence.words[i]] += 1
+              for i, word in enumerate(annotatedSentence.words):
+                words[tid + 1][word] += 1
+                words[0][word] += 1
                 labels[tid + 1][sentenceLabels[i]] += 1
 
         return words, labels

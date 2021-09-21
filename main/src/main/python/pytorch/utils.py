@@ -1,22 +1,29 @@
 
-class Utils:
-    def __init__(self):
-        self.concatenateCount = 0
+concatenateCount = 0
 
-        self.UNK_WORD = "<UNK>"
-        self.EOS_WORD = "<EOS>"
+UNK_WORD = "<UNK>"
+EOS_WORD = "<EOS>"
 
-        self.UNK_EMBEDDING = 0
+UNK_EMBEDDING = 0
 
-        self.START_TAG = "<START>"
-        self.STOP_TAG = "<STOP>"
+START_TAG = "<START>"
+STOP_TAG = "<STOP>"
 
-        self.RANDOM_SEED = 2522620396L # used for both DyNet, and the JVM seed for shuffling data
-        self.WEIGHT_DECAY = 1e-5
+RANDOM_SEED = 2522620396L # used for both DyNet, and the JVM seed for shuffling data
+WEIGHT_DECAY = 1e-5
 
-        self.LOG_MIN_VALUE = -10000.0
+LOG_MIN_VALUE = -10000.0
 
-        self.DEFAULT_DROPOUT_PROBABILITY = 0.0 # no dropout by  default
+DEFAULT_DROPOUT_PROBABILITY = 0.0 # no dropout by  default
 
-        self.IS_DYNET_INITIALIZED = False
+IS_DYNET_INITIALIZED = False
+
+def save(file, values, comment):
+    file.write("# " + comment + "\n")
+    for key, value in values.items():
+        file.write(f"{key}\t{value}\n")
+    file.write("\n")
+
+
+
 
