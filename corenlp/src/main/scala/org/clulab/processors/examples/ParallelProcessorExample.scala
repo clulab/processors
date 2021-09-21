@@ -29,7 +29,7 @@ object ParallelProcessorExample {
     val parallel = args.lift(4).exists(_ == "true")
 
     val files = FileUtils.findFiles(inputDir, extension)
-    val serFiles = files.sortBy(-_.length).take(1) // kwa added
+    val serFiles = files.sortBy(-_.length)
     val parFiles = ThreadUtils.parallelize(serFiles, threads)
     val documentSerializer = new DocumentSerializer
 

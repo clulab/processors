@@ -15,7 +15,7 @@ class TestParallel extends FlatSpec with Matchers {
     println(s" Completed ${file.getName}.")
     map(file.getName) = value
 
-    val outFile = new File((if (par) "./par/" else "./ser/") + file.getName)
+    val outFile = new File((if (par) "../pars/" else "../sers/") + file.getName)
     FileUtils.printWriterFromFile(outFile).autoClose { printWriter =>
       printWriter.println(value)
     }
