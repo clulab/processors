@@ -7,7 +7,7 @@ import java.io.PrintWriter
 
 /** Reads, tokenizes, and breaks into sentences a collection of text files */
 object SentToTsv {
-  val FILTER = "believ|belief|think|thought".r
+  val FILTER = "believ|belief|think|thought|accept|consider|conclude|doubt|reject|suppose|suggest|submit|theorize|offer|repudiate|view|sure|certain|convinced|confident|positive|hesitant|credible|convincing|believable|likely|provable|possible|probable|plausible|reasonable|conclusive|unsupportable|questionable|unquestionable|axiomatic|true|false|established|debatable|equivocal|dubious|suspect|incontrovertible|indubitable|skeptical|inconceivable|absurd|unimaginable|unthinkable|preposterous|wish|want|intend|desire|expect|anticipate|predict|look\\s+forward|worried|concerned|uneasy|apprehensive|fatalistic|pessimistic|sanguine|skeptical|hopeful|optimistic|prefer|favor".r
 
   def filter(sent: Sentence): Boolean = {
     for(w <- sent.words) {
