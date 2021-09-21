@@ -9,7 +9,7 @@ UNK_EMBEDDING = 0
 START_TAG = "<START>"
 STOP_TAG = "<STOP>"
 
-RANDOM_SEED = 2522620396L # used for both DyNet, and the JVM seed for shuffling data
+RANDOM_SEED = 2522620396 # used for both DyNet, and the JVM seed for shuffling data
 WEIGHT_DECAY = 1e-5
 
 LOG_MIN_VALUE = -10000.0
@@ -23,6 +23,9 @@ def save(file, values, comment):
     for key, value in values.items():
         file.write(f"{key}\t{value}\n")
     file.write("\n")
+
+def mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder):
+    TODO
 
 
 

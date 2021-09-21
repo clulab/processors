@@ -126,8 +126,8 @@ class Task:
     self.devSentences = ColumnReader.readColumns(devFileName) if devFileName else None
     self.testSentences = ColumnReader.readColumns(testFileName) if testFileName else None
 
-    self.isBasic:Boolean = taskType == TYPE_BASIC
-    self.isDual:Boolean = taskType == TYPE_DUAL
+    self.isBasic:bool = taskType == TYPE_BASIC
+    self.isDual:bool = taskType == TYPE_DUAL
 
     if taskType == TYPE_BASIC: 
       self.prettyType = "basic"

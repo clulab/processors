@@ -1,5 +1,6 @@
 import torch.nn as nn
 from utils import *
+from embeddingLayer import EmbeddingLayer
 
 class Layers(nn.Module):
     def __init__(self, initialLayer, intermediateLayers, finalLayer):
@@ -66,8 +67,9 @@ class Layers(nn.Module):
         else:
             x2i['hasInitial'] = 0
         x2i['intermediateCount'] = len(intermediateLayers)
+        x2i['intermediateLayers'] = list()
         for il in self.intermediateLayers:
-            il.saveX2i()
+            x2i['intermediateLayers'].append(il.saveX2i())
         if self.finalLayer.nonEmpty:
             x2i['hasFinal'] = 1
             x2i['finalLayer'] = self.finalLayer.saveX2i()
@@ -77,8 +79,8 @@ class Layers(nn.Module):
         return x2i
 
     @classmethod
-    def apply(cls, config, paramPrefix, parameters, wordCounter, labelCounter, isDual, providedInputSize):
-        initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
+    def apply(cls, config, paramPrefix, wordCounter, labelCounter, isDual, providedInputSize):
+        initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", wordCounter)
 
         if(initialLayer):
             inputSize = initialLayer.outDim
@@ -97,7 +99,7 @@ class Layers(nn.Module):
             if inputSize is None:
                 raise RuntimeError("ERROR: trying to construct an intermediate layer without a known input size!")
 
-            intermediateLayer = RnnLayer.initialize(config, paramPrefix + f".intermediate{i}", parameters, inputSize)
+            intermediateLayer = RnnLayer.initialize(config, paramPrefix + f".intermediate{i}", inputSize)
 
             if intermediateLayer:
                 intermediateLayers.append(intermediateLayer)
@@ -109,25 +111,25 @@ class Layers(nn.Module):
             if inputSize is None:
                 raise RuntimeError("ERROR: trying to construct a final layer without a known input size!")
             else:
-                finalLayer = ForwardLayer.initialize(config, paramPrefix + ".final", parameters, labelCounter, isDual, inputSize)
+                finalLayer = ForwardLayer.initialize(config, paramPrefix + ".final", labelCounter, isDual, inputSize)
         else:
             finalLayer = None
 
         return cls(initialLayer, intermediateLayers, finalLayer)
 
     @classmethod
-    def loadX2i(cls, models, x2i):
+    def loadX2i(cls, x2i):
         hasInitial = x2i['hasInitial']
-        initialLayer = EmbeddingLayer.load(models, x2i) if hasInitial == 1 else None
+        initialLayer = EmbeddingLayer.load(x2i['initialLayer']) if hasInitial == 1 else None
 
         intermediateLayers = list()
         intermediateCount = x2i['intermediateCount']
-        for _ in range(intermediateCount):
-            il = RnnLayer.load(models, x2i)
+        for i in range(intermediateCount):
+            il = RnnLayer.load(x2i['intermediateLayers'][i])
             intermediateLayers.append(il)
 
         hasFinal = x2i['hasFinal']
-        finalLayer = ForwardLayer.load(models, x2i) if hasFinal == 1 else none
+        finalLayer = ForwardLayer.load(x2i['finalLayer']) if hasFinal == 1 else none
 
         return cls(initialLayer, intermediateLayers, finalLayer)
 

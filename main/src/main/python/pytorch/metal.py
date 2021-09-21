@@ -1,10 +1,10 @@
-from utils import *
+from pytorch.utils import *
 from collections import Counter
-from sequences.rowReader import *
+from sequences.rowReaders import *
 
 class Metal():
     """docstring for Metal"""
-    def __init__(self, taskManager, parameters, modelOpt):
+    def __init__(self, taskManager, modelOpt):
         # One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
         if modelOpt:
             self.model = modelOpt
@@ -18,12 +18,12 @@ class Metal():
 
         layersPerTask = [None for _ in range(taskManager.taskCount + 1)]
 
-        layersPerTask[0] = Layers.apply(taskManager, "mtl.layers", parameters, taskWords(0), None, isDual = false, providedInputSize = None)
+        layersPerTask[0] = Layers.apply(taskManager, "mtl.layers", taskWords[0], None, False, None)
 
         inputSize = layersPerTask[0].outDim
 
         for i in taskManager.indices:
-            layersPerTask[i+1] = Layers.apply(taskManager, f"mtl.task{i+1}.layers", parameters, taskWords(i + 1), Some(taskLabels(i + 1)), isDual = taskManager.tasks(i).isDual, inputSize)
+            layersPerTask[i+1] = Layers.apply(taskManager, f"mtl.task{i+1}.layers", taskWords[i + 1], taskLabels[i + 1], taskManager.tasks[i].isDual, inputSize)
 
         for i in range(len(layersPerTask)):
             print (f"Summary of layersPerTask({i}):")

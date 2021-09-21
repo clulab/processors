@@ -64,7 +64,7 @@ class MetalRowReader(RowReader):
         return AnnotatedSentence(words), posTags, neLabels, labels
 
     # Parser for the full format: word, POS tag, NE label, (label head)+ 
-    def parseFull(rows: IndexedSeq[Row]):
+    def parseFull(rows):
         assert(len(rows.head) >= 5)
         numSent = (len(rows.head) - 3) / 2
         assert(numSent >= 1)

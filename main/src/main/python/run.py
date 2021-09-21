@@ -1,6 +1,7 @@
 from pyhocon import ConfigFactory
 import argparse
 from pytorch.taskManager import TaskManager
+from pytorch.metal import Metal
 
 if __name__ == '__main__':
 
@@ -16,8 +17,10 @@ if __name__ == '__main__':
     if args.train:
         config = ConfigFactory.parse_file(f'../resources/org/clulab/{args.config}.conf')
         taskManager = TaskManager(config, args.seed)
-        # modelName = args.model_file
-        # mtl = Metal(taskManager, parameters, None)
+        modelName = args.model_file
+        print (taskManager.debugTraversal())
+
+        # mtl = Metal(taskManager, None, None)
         # mtl.train(modelName)
     elif args.test:
         pass
