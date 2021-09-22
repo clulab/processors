@@ -6,7 +6,6 @@ import org.clulab.struct.DirectedGraph
 import org.clulab.struct.GraphMap
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.jackson._
 
 import java.io.PrintWriter
 
@@ -23,15 +22,18 @@ class JSONSerializer(val printWriter: PrintWriter) {
   }
 
   def toJValue(directedGraph: DirectedGraph[String]): JValue = {
-    directedGraph.edges
-        .sortBy { edge => (edge.source, edge.destination, edge.relation) }
-        .map { edge =>
-          new JArray(List(edge.source, edge.destination, edge.relation))
-        }
+    directedGraph.edges.map { edge =>
+      // This happens to be both the way to sort and to print.
+      (edge.source, edge.destination, edge.relation)
+    }
+    .sorted
+    .map { triple =>
+      new JArray(List(triple._1, triple._2, triple._3))
+    }
  }
 
   def toJValue(doc: Document): JValue = {
-    val jSentences = doc.sentences.toList.map { sentence =>
+    doc.sentences.toList.map { sentence =>
 
       def graphToJValueOpt(key: String): Option[JValue] = sentence.graphs.get(key).map(toJValue)
 
@@ -49,7 +51,7 @@ class JSONSerializer(val printWriter: PrintWriter) {
       val jEnhancedSyntacticDependenciesOpt = graphToJValueOpt(GraphMap.UNIVERSAL_ENHANCED)
       val jSemanticDependenciesOpt          = graphToJValueOpt(GraphMap.SEMANTIC_ROLES)
       val jEnhancedSemanticDependenciesOpt  = graphToJValueOpt(GraphMap.ENHANCED_SEMANTIC_ROLES)
-      val jSentence: JObject = {
+      val jSentence: JObject =
           ("Tokens" -> jTokens) ~
           ("Chunks" -> jChunksOpt) ~
           ("Start_character_offsets" -> jStarts) ~
@@ -58,11 +60,8 @@ class JSONSerializer(val printWriter: PrintWriter) {
           ("Enhanced_syntactic_dependencies" -> jEnhancedSyntacticDependenciesOpt) ~
           ("Semantic_dependencies"           -> jSemanticDependenciesOpt) ~
           ("Enhanced_semantic_dependencies"  -> jEnhancedSemanticDependenciesOpt)
-      }
 
       jSentence
     }
-
-    jSentences
   }
 }
