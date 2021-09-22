@@ -9,7 +9,7 @@ import org.json4s.JsonDSL._
 
 import java.io.PrintWriter
 
-class JSONSerializer(val printWriter: PrintWriter) {
+class JSONSerializer(printWriter: PrintWriter) {
   implicit val formats = DefaultFormats
 
   def serialize(doc: Document): Unit = printWriter.println(toJson(doc))
@@ -30,7 +30,7 @@ class JSONSerializer(val printWriter: PrintWriter) {
     .map { triple =>
       new JArray(List(triple._1, triple._2, triple._3))
     }
- }
+  }
 
   def toJValue(doc: Document): JValue = {
     doc.sentences.toList.map { sentence =>
