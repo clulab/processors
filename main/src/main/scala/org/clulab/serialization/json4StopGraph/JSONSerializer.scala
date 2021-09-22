@@ -51,7 +51,7 @@ class JSONSerializer(val printWriter: PrintWriter) {
       val jEnhancedSyntacticDependenciesOpt = graphToJValueOpt(GraphMap.UNIVERSAL_ENHANCED)
       val jSemanticDependenciesOpt          = graphToJValueOpt(GraphMap.SEMANTIC_ROLES)
       val jEnhancedSemanticDependenciesOpt  = graphToJValueOpt(GraphMap.ENHANCED_SEMANTIC_ROLES)
-      val jSentence: JObject =
+      val jSentence =
           ("Tokens" -> jTokens) ~
           ("Chunks" -> jChunksOpt) ~
           ("Start_character_offsets" -> jStarts) ~
