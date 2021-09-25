@@ -1,3 +1,5 @@
+import torch.nn as nn
+import torch
 
 concatenateCount = 0
 
@@ -24,9 +26,26 @@ def save(file, values, comment):
         file.write(f"{key}\t{value}\n")
     file.write("\n")
 
-def mkCharacterEmbedding(word, c2i, charLookupParameters, charFwRnnBuilder, charBwRnnBuilder):
-    TODO
+def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder, hidden_dim):
+    charEmbeddings = charLookupParameters(torch.LongTensor([c2i[c] for c in word]))
+    (h, c) =  (torch.zeros(2, 1, hidden_dim), torch.zeros(2, 1, hidden_dim)) 
+    output, (result, c) = charRnnBuilder(charEmbeddings.view(len(word), 1, -1), (h, c))
+    return result.view(1, hidden_dim*2)
 
+def readString2Ids(s2iFilename):
+    s2i = dict()
+    with open(s2iFilename) as f:
+        for line in f:
+            if not line.startswith("#"):
+                k, v = line.strip().split('\t')
+                s2i[k] = int(v)
 
+def readChar2Ids(s2iFilename):
+    s2i = dict()
+    with open(s2iFilename) as f:
+        for line in f:
+            if not line.startswith("#"):
+                k, v = line.strip().split('\t')
+                s2i[char(int(k))] = int(v)
 
 

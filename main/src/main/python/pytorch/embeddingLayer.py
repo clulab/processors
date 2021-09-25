@@ -1,6 +1,8 @@
 from initialLayer import InitialLayer
 import random
 from utils import *
+import torch.nn as nn
+import torch
 
 DEFAULT_DROPOUT_PROB: float = DEFAULT_DROPOUT_PROBABILITY
 DEFAULT_LEARNED_WORD_EMBEDDING_SIZE: int = 128
@@ -66,7 +68,7 @@ class EmbeddingLayer(InitialLayer):
         positionDim = 1 if distanceLookupParameters and useIsPredicate else 0
         predicateDim = positionEmbeddingSize if positionLookupParameters else 0
 
-        self.outDim =    TODO:ConstEmbeddingsGlove.dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
+        self.outDim =    ConstEmbeddingsGlove().dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
         random.seed(RANDOM_SEED)
     
     def forward(self, sentence, constEmbeddings, doDropout):
@@ -111,7 +113,7 @@ class EmbeddingLayer(InitialLayer):
         #
         # biLSTM over character embeddings
         #
-        TODO: charEmbedding = mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder)
+        charEmbedding = torch.cat([mkCharacterEmbedding(word, c2i, self.charLookupParameters, self.charRnnBuilder, self.charRnnStateSize) for word in words])
 
         #
         # POS tag embedding
@@ -219,9 +221,6 @@ class EmbeddingLayer(InitialLayer):
         wordLookupParameters = nn.Embedding(len(w2i), learnedWordEmbeddingSize)
         charLookupParameters = nn.Embedding(len(c2i), charEmbeddingSize)
         
-        #????? The following line would normally provoke construction of the initial ComputationGraph
-        #????? and do that outside of a synchronized area.  This is avoided by ensuring that construction
-        #????? happens in Utils.initializeDyNet instead, just to be safe.
         charRnnBuilder = nn.LSTM(charEmbeddingSize, charRnnStateSize, 1, bidirectional=True, dropout=dropoutProb)
 
         posTagLookupParameters   = nn.Embedding(len(tag2i), posTagEmbeddingSize) if x2i['hasTag2i'] == 1 else None
@@ -271,20 +270,21 @@ class EmbeddingLayer(InitialLayer):
         wordLookupParameters = nn.Embedding(len(w2i), learnedWordEmbeddingSize)
 
         c2iFilename = config.get_string(paramPrefix + ".c2i", "org/clulab/c2i-en.txt")
-        c2i = TODO
+        c2i = readChar2Ids(c2iFilename)
 
         charLookupParameters = nn.Embedding(len(c2i), charEmbeddingSize)
         charRnnBuilder = nn.LSTM(charEmbeddingSize, charRnnStateSize, 1, bidirectional=True, dropout=dropoutProb)
 
         if(posTagEmbeddingSize > 0):
-            tag2i = TODO
+
+            tag2i = readString2Ids(config.get_string(paramPrefix + ".tag2i", "../resources/org/clulab/tag2i-en.txt"))
             posTagLookupParameters = nn.Embedding(len(tag2i), posTagEmbeddingSize)
         else:
             tag2i = None
             posTagLookupParameters = None
 
         if(neTagEmbeddingSize > 0):
-            ne2i = TODO
+            ne2i = readString2Ids(config.get_string(paramPrefix + ".ne2i", "../resources/org/clulab/ne2i-en.txt"))
             neTagLookupParameters = nn.Embedding(len(ne2i), neTagEmbeddingSize)
         else:
             ne2i = None
