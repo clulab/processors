@@ -113,7 +113,7 @@ class EmbeddingLayer(InitialLayer):
         #
         # biLSTM over character embeddings
         #
-        charEmbedding = torch.cat([mkCharacterEmbedding(word, c2i, self.charLookupParameters, self.charRnnBuilder, self.charRnnStateSize) for word in words])
+        charEmbedding = torch.cat([mkCharacterEmbedding(word, c2i, self.charLookupParameters, self.charRnnBuilder) for word in words])
 
         #
         # POS tag embedding
