@@ -1,5 +1,7 @@
 import torch
 import torch.nn
+from torch.autograd import Variable
+import torch.nn.functional as F
 
 from finalLayer import FinalLayer
 from greedyForwardLayer import GreedyForwardLayer
@@ -7,7 +9,7 @@ from viterbiForwardLayer import ViterbiForwardLayer
 
 from utils import *
 
-def ForwardLayer(FinalLayer):
+class ForwardLayer(FinalLayer):
     def __init__(self, inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans = None):
         self.inputSize = inputSize
         self.isDual = isDual
@@ -17,7 +19,7 @@ def ForwardLayer(FinalLayer):
         self.nonlinearity = nonlinearity
 
         self.pH = nn.Linear(actualInputSize, len(t2i))
-        self.pRoot = torch.rand(inputSize) #TODO: Not sure about the shape here
+        self.pRoot = Variable(torch.rand(inputSize)) #TODO: Not sure about the shape here
         self.dropoutProb = dropoutProb
 
         self.inDim = spanLength(spans) if spans is not None else inputSize
@@ -43,9 +45,9 @@ def ForwardLayer(FinalLayer):
                 argExp = expressionDropout(self.pickSpan(e), self.dropoutProb, doDropout)
                 l1 = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
                 if nonlinearity == NONLIN_TANH:
-                    l1 = torch.tanh(l1)
+                    l1 = F.tanh(l1)
                 elif nonlinearity == NONLIN_RELU:
-                    l1 = torch.relu(l1)
+                    l1 = F.relu(l1)
                 emissionScores.append(l1)
         else:
             if headPositionsOpt is None:
@@ -63,9 +65,9 @@ def ForwardLayer(FinalLayer):
                 ss = torch.cat([argExp, predExp])
                 l1 = expressionDropout(self.pH(ss), self.dropoutProb, doDropout)
                 if nonlinearity == NONLIN_TANH:
-                    l1 = torch.tanh(l1)
+                    l1 = F.tanh(l1)
                 elif nonlinearity == NONLIN_RELU:
-                    l1 = torch.relu(l1)
+                    l1 = F.relu(l1)
                 emissionScores.append(l1)
         return torch.stack(emissionScores)
 
@@ -111,40 +113,27 @@ def ForwardLayer(FinalLayer):
             actualInputSize = 2*inputSize if isDual else inputSize
 
         if inferenceType == TYPE_GREEDY_STRING:
-            return GreedyForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, span, nonlin, dropoutProb)
+            return GreedyForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, nonlin, dropoutProb, span)
         elif inferenceType == TYPE_VITERBI_STRING:
             pass
             # TODO
-            # layer = ViterbiForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, span, nonlin, dropoutProb)
+            # layer = ViterbiForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, nonlin, dropoutProb, span)
             # layer.initializeTransitions()
             # return layer
         else:
             raise RuntimeError(f"ERROR: unknown inference type {inferenceType}!")
     
 def spanLength(spans):
-    s = 0
-    for x in spans:
-        s += x[1] - x[0]
-    return s
+    sum(end - start for start, end in spans)
 
 def parseSpan(spanParam, inputSize):
-    spans = list()
-    spanParamTokens = spanParam.split(",")
-    for spanParamToken in spanParamTokens:
-        spanTokens = spanParamToken.split('-')
-        assert(len(spanTokens) == 2)
-        spans.append((int(spanTokens[0]), int(spanTokens[1])))
+    # Zheng: Why do we need inputSize here?
+    token1, token2 = map(int, spanParamToken.split('-'))
+    spans.append((token1, token2))
     return spans
 
 def spanToString(spans):
-    s = ""
-    first = True
-    for span in spans:
-        if not first:
-            s += ","
-        s += f"{span[0]}-{span[1]}"
-        first = False
-    return s
+    return ','.join(f'{start}-{end}' for start, end in spans)
 
 
 

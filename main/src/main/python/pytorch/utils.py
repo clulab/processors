@@ -1,5 +1,8 @@
 import torch.nn as nn
 import torch
+from torch.autograd import Variable
+
+import numpy as np
 
 concatenateCount = 0
 
@@ -91,6 +94,19 @@ def expressionDropout(expression, dropoutProb, doDropout):
         return dropout(expression)
     else:
         return expression
+
+def sentenceLossGreedy(emissionScoresForSeq, golds):
+    assert(emissionScoresForSeq.shape(0) == len(golds))
+    criterion = nn.CrossEntropyLoss()
+    golds = Variable(torch.LongTensor(golds))
+    return criterion(emissionScoresForSeq, golds)
+    
+
+
+
+
+
+
 
 
 
