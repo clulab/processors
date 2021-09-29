@@ -20,6 +20,20 @@ DEFAULT_DROPOUT_PROBABILITY = 0.0 # no dropout by  default
 
 IS_DYNET_INITIALIZED = False
 
+TYPE_VITERBI = 1
+TYPE_GREEDY = 2
+
+NONLIN_NONE = 0
+NONLIN_RELU = 1
+NONLIN_TANH = 2
+
+nonlin_map = {"relu":NONLIN_RELU, "tanh":NONLIN_TANH, "":NONLIN_NONE}
+
+TYPE_GREEDY_STRING = "greedy"
+TYPE_VITERBI_STRING = "viterbi"
+
+DEFAULT_IS_DUAL = 0
+
 def save(file, values, comment):
     file.write("# " + comment + "\n")
     for key, value in values.items():
@@ -70,6 +84,13 @@ def transduce(embeddings, builder):
             output, result = builder(embeddings.view(len(word), 1, -1), h)
 
     return output, result
+
+def expressionDropout(expression, dropoutProb, doDropout):
+    if doDropout and dropoutProb > 0:
+        dropout = nn.Dropout(dropoutProb)
+        return dropout(expression)
+    else:
+        return expression
 
 
 
