@@ -163,6 +163,8 @@ class Task:
     # Current position in the training sentences when we iterate during training
     currentTrainingSentencePosition = 0
 
+    self.taskWeight = taskWeight
+
     print (f"============ starting task {taskNumber} ============")
     print (f"Read {len(self.trainSentences)} training sentences for task {taskNumber}, with shard size {self.shardSize}.")
     if(self.devSentences is not None):

@@ -36,16 +36,16 @@ class ForwardLayer(FinalLayer):
                 vs.append(e)
             return torch.cat(vs)
 
-    def forward(inputExpressions, doDropout, headPositionsOpt = None):
+    def forward(self, inputExpressions, doDropout, headPositionsOpt = None):
         emissionScores = list()
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
             for i, e in enumerate(inputExpressions):
                 argExp = expressionDropout(self.pickSpan(e), self.dropoutProb, doDropout)
                 l1 = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
-                if nonlinearity == NONLIN_TANH:
+                if self.nonlinearity == NONLIN_TANH:
                     l1 = F.tanh(l1)
-                elif nonlinearity == NONLIN_RELU:
+                elif self.nonlinearity == NONLIN_RELU:
                     l1 = F.relu(l1)
                 emissionScores.append(l1)
         else:

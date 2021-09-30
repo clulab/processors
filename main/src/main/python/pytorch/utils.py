@@ -46,8 +46,9 @@ def save(file, values, comment):
 def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
     hidden_dim = charRnnBuilder.hidden_size
     charEmbeddings = charLookupParameters(torch.LongTensor([c2i[c] for c in word]))
-    _, result = transduce(charEmbeddings, charRnnBuilder, len(word))
-    return result.view(1, hidden_dim*2)
+    _, result = transduce(charEmbeddings, charRnnBuilder)
+    # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
+    return result.view(hidden_dim*2)
 
 def readString2Ids(s2iFilename):
     s2i = dict()
@@ -67,26 +68,28 @@ def readChar2Ids(s2iFilename):
                 s2i[chr(int(k))] = int(v)
     return s2i
 
-def transduce(embeddings, builder, l):
+def transduce(embeddings, builder):
+
+    builder = builder.float()
 
     hidden_dim = builder.hidden_size
     bi_direct = builder.bidirectional
     mode = builder.mode
-    
+
     if mode == 'LSTM':
         if bi_direct:
             (h, c) =  (torch.zeros(2, 1, hidden_dim), torch.zeros(2, 1, hidden_dim)) 
-            output, (result, c) = builder(embeddings.view(l, 1, -1), (h, c))
+            output, (result, c) = builder(embeddings.unsqueeze(1), (h, c))
         else:
             (h, c) =  (torch.zeros(1, 1, hidden_dim), torch.zeros(1, 1, hidden_dim)) 
-            output, (result, c) = builder(embeddings.view(l, 1, -1), (h, c))
+            output, (result, c) = builder(embeddings.unsqueeze(1), (h, c))
     elif mode == 'GRU':
         if bi_direct:
             h =  torch.zeros(2, 1, hidden_dim) 
-            output, result = builder(embeddings.view(l, 1, -1), h)
+            output, result = builder(embeddings.unsqueeze(1), h)
         else:
             h =  torch.zeros(1, 1, hidden_dim)
-            output, result = builder(embeddings.view(l, 1, -1), h)
+            output, result = builder(embeddings.unsqueeze(1), h)
 
     return output, result
 
@@ -98,7 +101,7 @@ def expressionDropout(expression, dropoutProb, doDropout):
         return expression
 
 def sentenceLossGreedy(emissionScoresForSeq, golds):
-    assert(emissionScoresForSeq.shape(0) == len(golds))
+    assert(emissionScoresForSeq.size(0) == len(golds))
     criterion = nn.CrossEntropyLoss()
     golds = Variable(torch.LongTensor(golds))
     return criterion(emissionScoresForSeq, golds)

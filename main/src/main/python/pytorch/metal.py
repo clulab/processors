@@ -133,7 +133,7 @@ class Metal(object):
                 numTagged += len(sentence)
 
                 if(sentCount % 1000 == 0):
-                    print (f"Cumulative loss: {cummulativeLoss/numTagged} ({sentCount} {sentences})")
+                    print (f"Cumulative loss: {cummulativeLoss/numTagged} ({sentCount} sentences)")
                     cummulativeLoss = 0.0
                     numTagged = 0
             # we may have an incomplete batch here
