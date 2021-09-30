@@ -1,10 +1,10 @@
 import torch.nn as nn
 from utils import *
 from embeddingLayer import EmbeddingLayer
+from constEmbeddingsGlove import ConstEmbeddingsGlove
 
-class Layers(nn.Module):
+class Layers(object):
     def __init__(self, initialLayer, intermediateLayers, finalLayer):
-        super().__init__()
         if finalLayer:
             self.outDim = finalLayer.outDim
         elif intermediateLayers:
@@ -37,10 +37,10 @@ class Layers(nn.Module):
           s += "final = " + finalLayer
         return s
 
-    def forward(self, sentence, constEmnbeddings, doDropout):
+    def forward(self, sentence, constEmbeddings, doDropout):
         if self.initialLayer.isEmpty:
             raise RuntimeError(f"ERROR: you can't call forward() on a Layers object that does not have an initial layer: {self}!")
-        states = self.initialLayer(sentence, constEmnbeddings, doDropout)
+        states = self.initialLayer(sentence, constEmbeddings, doDropout)
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states, doDropout)
         if self.finalLayer.nonEmpty:
@@ -133,18 +133,103 @@ class Layers(nn.Module):
 
         return cls(initialLayer, intermediateLayers, finalLayer)
 
-    def predictJointly(layers, sentence, constEmnbeddings):
-        TODO
-    def forwardForTask(layers, taskId, sentence, constEmnbeddings, doDropout):
-        TODO
-    def predict(layers, taskId, sentence, constEmnbeddings):
-        TODO
-    def predictWithScores(layers, taskId, sentence, constEmnbeddings):
-        TODO
-    def parse(layers, sentence, constEmnbeddings):
-        TODO
+    @staticmethod
+    def predictJointly(layers, sentence, constEmbeddings):
+        labelsPerTask = list()
+        # layers(0) contains the shared layers
+        if layers[0]:
+            sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout=False)
+            for i in range(1, len(layers)):
+                states = layers[i].forwardFrom(sharedStates, sentence.headPositions, doDropout=False)
+                emissionScores = emissionScoresToArrays(states)
+                labels = layers[i].finalLayer.inference(emissionScores)
+                labelsPerTask += [labels]
+        # no shared layer
+        else:
+            for i in range(1, len(layers)):
+                states = layers[i].forward(sentence, sentence.headPositions, doDropout=False)
+                emissionScores = emissionScoresToArrays(states)
+                labels = layers[i].finalLayer.inference(emissionScores)
+                labelsPerTask += [labels]
+
+        return labelsPerTask
+
+    @staticmethod
+    def forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout):
+        if layers[0]:
+            sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout)
+            states = layers[taskId+1].forwardFrom(sharedStates, sentence.headPositions, doDropout)
+        else:
+            states = layers[taskId+1].forward(sentence, constEmbeddings, doDropout)
+        return states
+
+    @staticmethod
+    def predict(layers, taskId, sentence, constEmbeddings):
+        states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=False)
+        emissionScores = emissionScoresToArrays(states)
+        return layers[taskId+1].finalLayer.inference(emissionScores)
+
+    @staticmethod
+    def predictWithScores(layers, taskId, sentence, constEmbeddings):
+        states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=False)
+        emissionScores = emissionScoresToArrays(states)
+        return layers[taskId+1].finalLayer.inferenceWithScores(emissionScores)
+
+    @staticmethod
+    def parse(layers, sentence, constEmbeddings):
+        #
+        # first get the output of the layers that are shared between the two tasks
+        #
+        assert(layers[0].nonEmpty)
+        sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout=False)
+
+        #
+        # now predict the heads (first task)
+        #
+        headStates = layers[1].forwardFrom(sharedStates, None, doDropout=False)
+        headEmissionScores = emissionScoresToArrays(headStates)
+        headScores = layers[1].finalLayer.inference(headEmissionScores)
+
+        # store the head values here
+        heads = list()
+        for wi, predictionsForThisWord in enumerate(headScores):
+            # pick the prediction with the highest score, which is within the boundaries of the current sentence
+            done = False
+            for hi, relative in enumerate(predictionsForThisWord):
+                if done:
+                    break
+                try:
+                    relativeHead = int(relative[0])
+                    if relativeHead == 0:
+                        heads.append(1)
+                        done = True
+                    else:
+                        headPosition = wi + relativeHead
+                        heads.append(headPosition)
+                        done = True
+                except:
+                    raise RuntimeError('''some valid predictions may not be integers, e.g., "<STOP>" may be predicted by the sequence model''')
+            if not done:
+                # we should not be here, but let's be safe
+                # if nothing good was found, assume root
+                heads.append(1)
+        
+        #
+        # next, predict the labels using the predicted heads
+        #
+        labelStates = layers[2].forwardFrom(sharedStates, heads, doDropout=False)
+        emissionScores = emissionScoresToArrays(labelStates)
+        labels = layers[2].finalLayer.inference(emissionScores)
+        assert(len(labels)==len(heads))
+
+        return zip(heads, labels)
+
+    @staticmethod
     def loss(layers, taskId, sentence, goldLabels):
-        TODO
+        # Zheng: I am not sure this is the suitable way to load embeddings or not, need help...
+        constEmbeddings = ConstEmbeddingsGlove().mkConstLookupParams(sentence.words)
+        states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=True) # use dropout during training!
+        return layers[taskId+1].finalLayer.loss(states, goldLabels)
 
 
 

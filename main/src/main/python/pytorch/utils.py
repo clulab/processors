@@ -100,6 +100,13 @@ def sentenceLossGreedy(emissionScoresForSeq, golds):
     criterion = nn.CrossEntropyLoss()
     golds = Variable(torch.LongTensor(golds))
     return criterion(emissionScoresForSeq, golds)
+
+def emissionScoresToArrays(expressions):
+    lattice = list()
+    for expr in expressions:
+        probs = expr.data.tolist()
+        lattice += [probs]
+    return lattice
     
 
 
