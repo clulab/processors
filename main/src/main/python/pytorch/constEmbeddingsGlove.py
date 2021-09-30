@@ -2,6 +2,8 @@ from dataclasses import dataclass
 import torch.nn as nn
 from embeddings.wordEmbeddingMap import *
 from pyhocon import ConfigFactory
+import numpy as np
+import torch
 
 @dataclass
 class ConstEmbeddingParameters:
@@ -21,11 +23,11 @@ class _ConstEmbeddingsGlove:
 
     def mkConstLookupParams(self, words):
         w2i = dict()
+        weights = np.zeros((len(words), self.dim))
         for i,w  in enumerate(words):
-            weights[i] = self.SINGLETON_WORD_EMBEDDING_MAP.emd_dict.get(w, self.SINGLETON_WORD_EMBEDDING_MAP.emd_dict[0])
+            weights[i] = self.SINGLETON_WORD_EMBEDDING_MAP.emb_dict.get(w, self.SINGLETON_WORD_EMBEDDING_MAP.emb_dict["<UNK>"])
             w2i[w] = i
-        emd = nn.Embedding.from_pretrained(weight)
-        emd.weight.requires_grad=False
+        emb = nn.Embedding.from_pretrained(torch.tensor(weights), freeze=True)
         return ConstEmbeddingParameters(emb ,w2i)
 
 ConstEmbeddingsGlove = _ConstEmbeddingsGlove()

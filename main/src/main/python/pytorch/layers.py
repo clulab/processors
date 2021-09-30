@@ -48,8 +48,45 @@ class Layers(object):
             parameters += [p for p in self.finalLayer.parameters() if p.requires_grad]
         return parameters
 
+    def start_train(self):
+        if self.initialLayer is not None:
+            self.initialLayer.train()
+        for il in self.intermediateLayers:
+            il.train()
+        if self.finalLayer is not None:
+            self.finalLayer.train()
+    
+    def start_eval(self):
+        if self.initialLayer is not None:
+            self.initialLayer.eval()
+        for il in self.intermediateLayers:
+            il.eval()
+        if self.finalLayer is not None:
+            self.finalLayer.eval()
+
+    def get_state_dict(self):
+        params = dict()
+        if self.initialLayer is not None:
+            params['initialLayer'] = self.initialLayer.state_dict()
+        if self.intermediateLayers:
+            params['intermediateLayers'] = list()
+        for il in self.intermediateLayers:
+            params['intermediateLayers'].append(il.state_dict())
+        if self.finalLayer is not None:
+            params['finalLayer'] = self.finalLayer.state_dict()
+        return params
+
+    def load_state_dict(self, params):
+        if self.initialLayer is not None:
+            self.initialLayer.load_state_dict(params['initialLayer'])
+        for i, il in enumerate(self.intermediateLayers):
+            il.load_state_dict(params['intermediateLayers'][i])
+        if self.finalLayer is not None:
+            self.finalLayer.load_state_dict(params['finalLayer'])
+
+
     def forward(self, sentence, constEmbeddings, doDropout):
-        if self.initialLayer.isEmpty:
+        if self.initialLayer is None:
             raise RuntimeError(f"ERROR: you can't call forward() on a Layers object that does not have an initial layer: {self}!")
         states = self.initialLayer(sentence, constEmbeddings, doDropout)
         for intermediateLayer in self.intermediateLayers:

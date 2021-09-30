@@ -87,16 +87,16 @@ class EmbeddingLayer(InitialLayer):
         if(headPositions): assert(len(headPositions) == len(words))
 
         # build the word embeddings one by one
-        embeddings = self.mkEmbeddings(words, constEmbeddingsExpressions, tags, nes, headPositions)
+        embeddings = self.mkEmbeddings(words, constEmbeddingsExpressions, doDropout, tags, nes, headPositions)
 
         return embeddings
 
     def mkConstEmbeddings(self, words, constEmbeddings):
-        idxs = [constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words]
-        embeddings = self.constEmbeddings.emb(idxs)
+        idxs = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
+        embeddings = constEmbeddings.emb(idxs)
         return embeddings
 
-    def mkEmbeddings(self, words, constEmbeddings, tags=None, nes=None, headPositions=None):
+    def mkEmbeddings(self, words, constEmbeddings, doDropout, tags=None, nes=None, headPositions=None):
         #
         # Learned word embeddings
         # These are initialized randomly, and updated during backprop
@@ -107,14 +107,14 @@ class EmbeddingLayer(InitialLayer):
             wordPositions.append(i)
             id = self.w2i.get(word, 0) # 0 reserved for UNK in the vocab
             # sample uniformly with prob 0.5 from singletons; move all other singletons to UNK
-            if(self.doDropout and id > 0 and self.w2f[word] == 1 and random.random() < 0.5): id = 0
+            if(doDropout and id > 0 and self.w2f[word] == 1 and random.random() < 0.5): id = 0
             ids.append(id) 
         learnedWordEmbeddings = self.wordLookupParameters(torch.LongTensor(ids))
 
         #
         # biLSTM over character embeddings
         #
-        charEmbedding = torch.stack([mkCharacterEmbedding(word, c2i, self.charLookupParameters, self.charRnnBuilder) for word in words])
+        charEmbedding = torch.stack([mkCharacterEmbedding(word, self.c2i, self.charLookupParameters, self.charRnnBuilder) for word in words])
 
         #
         # POS tag embedding

@@ -46,7 +46,7 @@ def save(file, values, comment):
 def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
     hidden_dim = charRnnBuilder.hidden_size
     charEmbeddings = charLookupParameters(torch.LongTensor([c2i[c] for c in word]))
-    _, result = transduce(charEmbeddings, charRnnBuilder, True)
+    _, result = transduce(charEmbeddings, charRnnBuilder, len(word))
     return result.view(1, hidden_dim*2)
 
 def readString2Ids(s2iFilename):
@@ -67,26 +67,26 @@ def readChar2Ids(s2iFilename):
                 s2i[chr(int(k))] = int(v)
     return s2i
 
-def transduce(embeddings, builder):
+def transduce(embeddings, builder, l):
 
     hidden_dim = builder.hidden_size
     bi_direct = builder.bidirectional
-    mode = build.mode
+    mode = builder.mode
     
     if mode == 'LSTM':
         if bi_direct:
             (h, c) =  (torch.zeros(2, 1, hidden_dim), torch.zeros(2, 1, hidden_dim)) 
-            output, (result, c) = builder(embeddings.view(len(word), 1, -1), (h, c))
+            output, (result, c) = builder(embeddings.view(l, 1, -1), (h, c))
         else:
             (h, c) =  (torch.zeros(1, 1, hidden_dim), torch.zeros(1, 1, hidden_dim)) 
-            output, (result, c) = builder(embeddings.view(len(word), 1, -1), (h, c))
+            output, (result, c) = builder(embeddings.view(l, 1, -1), (h, c))
     elif mode == 'GRU':
         if bi_direct:
             h =  torch.zeros(2, 1, hidden_dim) 
-            output, result = builder(embeddings.view(len(word), 1, -1), h)
+            output, result = builder(embeddings.view(l, 1, -1), h)
         else:
             h =  torch.zeros(1, 1, hidden_dim)
-            output, result = builder(embeddings.view(len(word), 1, -1), h)
+            output, result = builder(embeddings.view(l, 1, -1), h)
 
     return output, result
 
@@ -109,6 +109,15 @@ def emissionScoresToArrays(expressions):
         probs = expr.data.tolist()
         lattice += [probs]
     return lattice
+
+def printCoNLLOutput(pw, words, golds, preds):
+
+    assert(len(words) == len(golds))
+    assert(len(words) == len(preds))
+
+    for i in range(len(words)):
+      pw.write(f"{words[i]} {golds[i]} {preds[i]}\n")
+    pw.write("\n")
     
 
 

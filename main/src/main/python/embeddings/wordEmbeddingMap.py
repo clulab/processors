@@ -9,7 +9,6 @@ class WordEmbeddingMap:
         return word not in self.emb_dict
 
 def load(config):
-    emb_matrix = None
     emb_dict = dict()
     for line in open(config.get_string("glove.matrixResourceName")):
         if not len(line.split()) == 2:
