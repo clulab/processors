@@ -1,8 +1,9 @@
-from initialLayer import InitialLayer
+from pytorch.initialLayer import InitialLayer
 import random
-from utils import *
+from pytorch.utils import *
 import torch.nn as nn
 import torch
+from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 
 DEFAULT_DROPOUT_PROB: float = DEFAULT_DROPOUT_PROBABILITY
 DEFAULT_LEARNED_WORD_EMBEDDING_SIZE: int = 128
@@ -16,7 +17,7 @@ DEFAULT_DISTANCE_WINDOW_SIZE: int = -1
 DEFAULT_USE_IS_PREDICATE: int = -1
 
 class EmbeddingLayer(InitialLayer):
-    def __init__(w2i, # word to index
+    def __init__(self, w2i, # word to index
                  w2f, # word to frequency
                  c2i, # character to index
                  tag2i, # POS tag to index
@@ -68,7 +69,7 @@ class EmbeddingLayer(InitialLayer):
         positionDim = 1 if distanceLookupParameters and useIsPredicate else 0
         predicateDim = positionEmbeddingSize if positionLookupParameters else 0
 
-        self.outDim =    ConstEmbeddingsGlove().dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
+        self.outDim =    ConstEmbeddingsGlove.dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
         random.seed(RANDOM_SEED)
     
     def forward(self, sentence, constEmbeddings, doDropout):
@@ -81,9 +82,9 @@ class EmbeddingLayer(InitialLayer):
         # const word embeddings such as GloVe
         constEmbeddingsExpressions = self.mkConstEmbeddings(words, constEmbeddings)
         assert(constEmbeddingsExpressions.size(0) == len(words))
-        if(tags) assert(len(tags) == len(words))
-        if(nes) assert(len(nes) == len(words))
-        if(headPositions) assert(len(headPositions) == len(words))
+        if(tags): assert(len(tags) == len(words))
+        if(nes): assert(len(nes) == len(words))
+        if(headPositions): assert(len(headPositions) == len(words))
 
         # build the word embeddings one by one
         embeddings = self.mkEmbeddings(words, constEmbeddingsExpressions, tags, nes, headPositions)
@@ -250,7 +251,7 @@ class EmbeddingLayer(InitialLayer):
     @classmethod
     def initialize(cls, config, paramPrefix, wordCounter):
 
-        if(not config.__contains__(paramPrefix)):
+        if(not config.contains(paramPrefix)):
             return None
 
         learnedWordEmbeddingSize = config.get_int(paramPrefix + ".learnedWordEmbeddingSize",DEFAULT_LEARNED_WORD_EMBEDDING_SIZE)
@@ -260,9 +261,9 @@ class EmbeddingLayer(InitialLayer):
         neTagEmbeddingSize       = config.get_int(paramPrefix + ".neTagEmbeddingSize",DEFAULT_NE_TAG_EMBEDDING_SIZE)
         distanceEmbeddingSize    = config.get_int(paramPrefix + ".distanceEmbeddingSize",DEFAULT_DISTANCE_EMBEDDING_SIZE)
         distanceWindowSize       = config.get_int(paramPrefix + ".distanceWindowSize",DEFAULT_DISTANCE_WINDOW_SIZE)
-        useIsPredicate           = config.getArgBoolean(paramPrefix + ".useIsPredicate",DEFAULT_USE_IS_PREDICATE == 1)
+        useIsPredicate           = config.get_bool(paramPrefix + ".useIsPredicate",DEFAULT_USE_IS_PREDICATE == 1)
         positionEmbeddingSize    = config.get_int(paramPrefix + ".positionEmbeddingSize",DEFAULT_POSITION_EMBEDDING_SIZE)
-        dropoutProb              = config.get_float(paramPrefix + ".dropoutProb",EmbeddingLayer.DEFAULT_DROPOUT_PROB)
+        dropoutProb              = config.get_float(paramPrefix + ".dropoutProb",DEFAULT_DROPOUT_PROB)
 
         wordList = [UNK_WORD] + sorted(wordCounter.keys())
         w2i = {w:i for i, w in enumerate(wordList)}
@@ -293,7 +294,7 @@ class EmbeddingLayer(InitialLayer):
         distanceLookupParameters = nn.Embedding(distanceWindowSize * 2 + 3, distanceEmbeddingSize) if distanceEmbeddingSize > 0 else None
         positionLookupParameters = nn.Embedding(101, positionEmbeddingSize) if positionEmbeddingSize > 0 else None
 
-        return cls(w2i, w2f, c2i, tag2i, ne2i,
+        return cls(w2i, wordCounter, c2i, tag2i, ne2i,
                   learnedWordEmbeddingSize,
                   charEmbeddingSize,
                   charRnnStateSize,
@@ -311,6 +312,8 @@ class EmbeddingLayer(InitialLayer):
                   distanceLookupParameters,
                   positionLookupParameters,
                   dropoutProb)
+
+
 
 
 

@@ -20,8 +20,8 @@ if __name__ == '__main__':
         modelName = args.model_file
         print (taskManager.debugTraversal())
 
-        mtl = Metal(taskManager, None, None)
-        # mtl.train(modelName)
+        mtl = Metal(taskManager, None)
+        mtl.train(modelName)
     elif args.test:
         pass
     elif args.shell:

@@ -1,7 +1,9 @@
 import torch.nn as nn
-from utils import *
-from embeddingLayer import EmbeddingLayer
-from constEmbeddingsGlove import ConstEmbeddingsGlove
+from pytorch.utils import *
+from pytorch.embeddingLayer import EmbeddingLayer
+from pytorch.rnnLayer import RnnLayer
+from pytorch.forwardLayer import ForwardLayer
+from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 
 class Layers(object):
     def __init__(self, initialLayer, intermediateLayers, finalLayer):
@@ -14,8 +16,7 @@ class Layers(object):
         else:
             self.outDim = None
 
-        if initialLayer and intermediateLayers and finalLayer:
-            self.nonEmpty = True
+        self.nonEmpty = initialLayer is not None and intermediateLayers is not None and finalLayer is not None
         self.isEmpty = not self.nonEmpty
 
         self.initialLayer = initialLayer
@@ -25,17 +26,27 @@ class Layers(object):
     def __str__(self):
         s = ""
         started = False
-        if(initialLayer.nonEmpty):
-            s += "initial = " + initialLayer
+        if(self.initialLayer is not None):
+            s += "initial = " + str(self.initialLayer)
             started = True
-        for i in intermediateLayers.indices:
-            if(started) s += " "
-            s += s"intermediate ({i+1}) = " + intermediateLayers[i]
+        for i in range(len(self.intermediateLayers)):
+            if(started): s += " "
+            s += f"intermediate ({i+1}) = " + str(self.intermediateLayers[i])
             started = True
-        if(finalLayer.nonEmpty):
-          if(started) s += " "
-          s += "final = " + finalLayer
+        if(self.finalLayer is not None):
+          if(started): s += " "
+          s += "final = " + str(self.finalLayer)
         return s
+
+    def get_parameters(self):
+        parameters = list()
+        if self.initialLayer is not None:
+            parameters += [p for p in self.initialLayer.parameters() if p.requires_grad]
+        for il in self.intermediateLayers:
+            parameters += [p for p in il.parameters() if p.requires_grad]
+        if self.finalLayer is not None:
+            parameters += [p for p in self.finalLayer.parameters() if p.requires_grad]
+        return parameters
 
     def forward(self, sentence, constEmbeddings, doDropout):
         if self.initialLayer.isEmpty:
@@ -43,25 +54,25 @@ class Layers(object):
         states = self.initialLayer(sentence, constEmbeddings, doDropout)
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states, doDropout)
-        if self.finalLayer.nonEmpty:
+        if self.finalLayer is not None:
             states = self.finalLayer(states, sentence.headPositions, doDropout)
 
         return states
 
     def forwardFrom(self, inStates, headPositions, doDropout):
-        if self.initialLayer.nonEmpty:
+        if self.initialLayer is not None:
             raise RuntimeError(f"ERROR: you can't call forwardFrom() on a Layers object that has an initial layer: {self}")
         states = inStates
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states, doDropout)
-        if self.finalLayer.nonEmpty:
+        if self.finalLayer is not None:
             states = self.finalLayer(states, sentence.headPositions, doDropout)
 
         return states
 
     def saveX2i(self):
         x2i = dict()
-        if self.initialLayer.nonEmpty:
+        if self.initialLayer is not None:
             x2i['hasInitial'] = 1
             x2i['initialLayer'] = self.initialLayer.saveX2i()
         else:
@@ -70,7 +81,7 @@ class Layers(object):
         x2i['intermediateLayers'] = list()
         for il in self.intermediateLayers:
             x2i['intermediateLayers'].append(il.saveX2i())
-        if self.finalLayer.nonEmpty:
+        if self.finalLayer is not None:
             x2i['hasFinal'] = 1
             x2i['finalLayer'] = self.finalLayer.saveX2i()
         else:
@@ -227,7 +238,7 @@ class Layers(object):
     @staticmethod
     def loss(layers, taskId, sentence, goldLabels):
         # Zheng: I am not sure this is the suitable way to load embeddings or not, need help...
-        constEmbeddings = ConstEmbeddingsGlove().mkConstLookupParams(sentence.words)
+        constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
         states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=True) # use dropout during training!
         return layers[taskId+1].finalLayer.loss(states, goldLabels)
 

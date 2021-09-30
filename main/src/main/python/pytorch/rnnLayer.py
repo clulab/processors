@@ -1,5 +1,5 @@
-from intermediateLayer import IntermediateLayer
-from utils import *
+from pytorch.intermediateLayer import IntermediateLayer
+from pytorch.utils import *
 import torch
 import torch.nn as nn
 
@@ -12,7 +12,7 @@ class RnnLayer(IntermediateLayer):
         rnnType, 
         wordRnnBuilder, 
         dropoutProb):
-
+        super().__init__()
         self.inDim = self.inputSize = inputSize
         self.numLayers = numLayers
         self.rnnStateSize = rnnStateSize 
@@ -64,7 +64,7 @@ class RnnLayer(IntermediateLayer):
     @classmethod
     def initialize(cls, config, paramPrefix, inputSize):
 
-        if(not config.__contains__(paramPrefix)):
+        if(not config.contains(paramPrefix)):
             return None
 
         numLayers = config.get_int(paramPrefix + ".numLayers", 1)
@@ -73,9 +73,9 @@ class RnnLayer(IntermediateLayer):
         rnnType = config.get_string(paramPrefix + ".type", "lstm")
         dropoutProb = config.get_float(paramPrefix + ".dropoutProb", DEFAULT_DROPOUT_PROBABILITY)
 
-        builder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize)
+        builder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, dropoutProb)
 
-        return (inputSize, numLayers, rnnStateSize, useHighwayConnections, rnnType, builder, dropoutProb)
+        return cls(inputSize, numLayers, rnnStateSize, useHighwayConnections, rnnType, builder, dropoutProb)
 
 def mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, dropoutProb):
     if rnnType == 'gru':

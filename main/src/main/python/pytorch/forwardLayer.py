@@ -3,14 +3,13 @@ import torch.nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-from finalLayer import FinalLayer
-from greedyForwardLayer import GreedyForwardLayer
-from viterbiForwardLayer import ViterbiForwardLayer
+from pytorch.finalLayer import FinalLayer
 
-from utils import *
+from pytorch.utils import *
 
 class ForwardLayer(FinalLayer):
     def __init__(self, inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans = None):
+        super().__init__()
         self.inputSize = inputSize
         self.isDual = isDual
         self.t2i = t2i
@@ -73,6 +72,8 @@ class ForwardLayer(FinalLayer):
 
     @staticmethod
     def load(x2i):
+        from pytorch.greedyForwardLayer import GreedyForwardLayer
+        from pytorch.viterbiForwardLayer import ViterbiForwardLayer
         inferenceType = x2i["inferenceType"]
         if inferenceType == TYPE_VITERBI:
             pass
@@ -85,7 +86,9 @@ class ForwardLayer(FinalLayer):
 
     @staticmethod
     def initialize(config, paramPrefix, labelCounter, isDual, inputSize):
-        if(not config.__contains__(paramPrefix)):
+        from pytorch.greedyForwardLayer import GreedyForwardLayer
+        from pytorch.viterbiForwardLayer import ViterbiForwardLayer
+        if(not config.contains(paramPrefix)):
             return None
 
         inferenceType = config.get_string(paramPrefix + ".inference", "greedy")

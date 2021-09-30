@@ -6,7 +6,7 @@ from dataclasses import dataclass
 TYPE_BASIC = 0
 TYPE_DUAL = 1
 
-class TaskManager:
+class TaskManager():
 
   def __init__(self, config, seed):
 
@@ -30,6 +30,27 @@ class TaskManager:
 
     # Training shards from all tasks 
     self.shards = self.mkShards()
+
+  def contains(self, paramPrefix):
+    return self.config.__contains__(paramPrefix)
+
+  def get_int(self, x, defualt=None):
+    return self.config.get_int(x, defualt)
+
+  def get_string(self, x, defualt=None):
+    return self.config.get_string(x, defualt)
+
+  def get_float(self, x, defualt=None):
+    return self.config.get_float(x, defualt)
+
+  def get_bool(self, x, defualt=None):
+    return self.config.get_bool(x, defualt)
+
+  def get_list(self, x, defualt=None):
+    return self.config.get_list(x, defualt)
+
+  def get_config(self, x, defualt=None):
+    return self.config.get_config(x, defualt)
 
   # Construct training shards by interleaving shards from all tasks 
   def mkShards(self):

@@ -44,4 +44,4 @@ class Row:
   def get(self, idx):
     if(idx >= self.length):
       raise RuntimeError(f"ERROR: trying to read field #{idx}, which does not exist in this row: {tokens}!")
-    return tokens[idx]
+    return self.tokens[idx]

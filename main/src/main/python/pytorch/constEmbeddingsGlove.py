@@ -1,16 +1,18 @@
 from dataclasses import dataclass
 import torch.nn as nn
 from embeddings.wordEmbeddingMap import *
+from pyhocon import ConfigFactory
 
 @dataclass
 class ConstEmbeddingParameters:
     emb: nn.Embedding
     w2i: dict
 
-def ConstEmbeddingsGlove:
+class _ConstEmbeddingsGlove:
     def __init__(self):
         self.SINGLETON_WORD_EMBEDDING_MAP = None
-        self.load('../resources/org/clulab/glove.conf')
+        config = ConfigFactory.parse_file('../resources/org/clulab/glove.conf')
+        self.load(config)
         self.dim = self.SINGLETON_WORD_EMBEDDING_MAP.dim
 
     def load(self, config):
@@ -25,3 +27,5 @@ def ConstEmbeddingsGlove:
         emd = nn.Embedding.from_pretrained(weight)
         emd.weight.requires_grad=False
         return ConstEmbeddingParameters(emb ,w2i)
+
+ConstEmbeddingsGlove = _ConstEmbeddingsGlove()

@@ -26,18 +26,18 @@ class MetalRowReader(RowReader):
         self.LABEL_START_OFFSET = 3
 
     def toAnnotatedSentences(self, rows):
-        if (len(rows.head) == 2):
-            self.parseSimple(rows)
-        elif (len(rows.head) == 4):
-            self.parseSimpleExtended(rows)
-        elif (len(rows.head) >= 5):
-            self.parseFull(rows)
+        if (rows[0].length == 2):
+            return self.parseSimple(rows)
+        elif (rows[0].length == 4):
+            return self.parseSimpleExtended(rows)
+        elif (rows[0].length >= 5):
+            return self.parseFull(rows)
         else:
             raise RuntimeError("ERROR: the Metal format expects 2, 4, or 5+ columns!")
 
     # Parser for the simple format: word, label 
-    def parseSimple(rows):
-        assert(len(rows.head) == 2)
+    def parseSimple(self, rows):
+        assert(rows[0].length == 2)
         words = list()
         labels = list()
 
@@ -45,11 +45,11 @@ class MetalRowReader(RowReader):
             words += [row.get(self.WORD_POSITION)]
             labels += [row.get(self.WORD_POSITION + 1)]
 
-        return AnnotatedSentence(words), labels
+        return [(AnnotatedSentence(words), labels)]
 
     # Parser for the simple extended format: word, POS tag, NE label, label
-    def parseSimpleExtended(rows):
-        assert(len(rows.head) == 4)
+    def parseSimpleExtended(self, rows):
+        assert(rows[0].length == 4)
         words = list()
         posTags = list()
         neLabels = list()
@@ -61,12 +61,12 @@ class MetalRowReader(RowReader):
             neLabels += [row.get(self.NE_LABEL_POSITION)]
             labels += [row.get(self.LABEL_START_OFFSET)]
 
-        return AnnotatedSentence(words), posTags, neLabels, labels
+        return [(AnnotatedSentence(words), posTags, neLabels, labels)]
 
     # Parser for the full format: word, POS tag, NE label, (label head)+ 
-    def parseFull(rows):
-        assert(len(rows.head) >= 5)
-        numSent = (len(rows.head) - 3) / 2
+    def parseFull(self, rows):
+        assert(rows[0].length >= 5)
+        numSent = (rows[0].length - 3) / 2
         assert(numSent >= 1)
 
         words = list()

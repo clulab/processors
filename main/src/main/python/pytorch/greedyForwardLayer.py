@@ -1,5 +1,5 @@
-from forwardLayer import *
-from utils import *
+from pytorch.forwardLayer import *
+from pytorch.utils import *
 import numpy as np
 
 class GreedyForwardLayer(ForwardLayer):
@@ -23,7 +23,7 @@ class GreedyForwardLayer(ForwardLayer):
         return x2i
 
     def __str__(self):
-        return f"GreedyForwardLayer({inDim}, {outDim})"
+        return f"GreedyForwardLayer({self.inDim}, {self.outDim})"
 
     def inference(self, emissionScores):
         labelIds = np.argmax(lattice.data.numpy(), axis=1).tolist()

@@ -1,7 +1,7 @@
-from forwardLayer import *
-from utils import *
+from pytorch.forwardLayer import *
+from pytorch.utils import *
 
-class GreedyForwardLayer(ForwardLayer):
+class ViterbiForwardLayer(ForwardLayer):
     def __init__(self, inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans = None):
         super().__init__(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans)
 
