@@ -107,11 +107,7 @@ def sentenceLossGreedy(emissionScoresForSeq, golds):
     return criterion(emissionScoresForSeq, golds)
 
 def emissionScoresToArrays(expressions):
-    lattice = list()
-    for expr in expressions:
-        probs = expr.data.numpy()
-        lattice += [probs]
-    return lattice
+    return [expr.data.tolist() for expr in expressions]
 
 def printCoNLLOutput(pw, words, golds, preds):
 

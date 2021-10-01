@@ -5,7 +5,7 @@ from pytorch.layers import Layers
 from pytorch.seqScorer import *
 from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 
-from torch.optim import SGD, Adam
+from torch.optim import SGD, Adam, RMSprop
 
 import json
 

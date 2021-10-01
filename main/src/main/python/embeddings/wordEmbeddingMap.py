@@ -16,10 +16,8 @@ def load(config):
                 delimiter = "\t"
             else:
                 delimiter = " "
-            line_split = line.rstrip().split(delimiter)
-            # extract word and vector
-            word = line_split[0]
-            x = np.array([float(i) for i in line_split[1:]])
+            word, *rest = line.rstrip().split(delimiter)
+            x = np.array(list(map(float, rest)))
             vector = (x /np.linalg.norm(x))
             embedding_size = vector.shape[0]
             emb_dict[word] = vector
