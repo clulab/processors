@@ -164,6 +164,7 @@ class Task:
     currentTrainingSentencePosition = 0
 
     self.taskWeight = taskWeight
+    self.taskName = taskName
 
     print (f"============ starting task {taskNumber} ============")
     print (f"Read {len(self.trainSentences)} training sentences for task {taskNumber}, with shard size {self.shardSize}.")

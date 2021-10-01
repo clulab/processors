@@ -3,6 +3,7 @@ from collections import Counter
 from sequences.rowReaders import *
 from pytorch.layers import Layers
 from pytorch.seqScorer import *
+from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 
 from torch.optim import SGD, Adam
 
@@ -160,13 +161,13 @@ class Metal(object):
                     totalRec += rec
                     totalF1 += f1
 
-            avgAcc = totalAcc / taskManager.taskCount
-            avgPrec = totalPrec / taskManager.taskCount
-            avgRec = totalRec / taskManager.taskCount
-            avgF1 = totalF1 / taskManager.taskCount
+            avgAcc = totalAcc / self.taskManager.taskCount
+            avgPrec = totalPrec / self.taskManager.taskCount
+            avgRec = totalRec / self.taskManager.taskCount
+            avgF1 = totalF1 / self.taskManager.taskCount
 
-            print (f"Average accuracy across {taskManager.taskCount} tasks in epoch {epoch}: {avgAcc}")
-            print (f"Average P/R/F1 across {taskManager.taskCount} tasks in epoch $epoch: {avgPrec} / {avgRec} / {avgF1}")
+            print (f"Average accuracy across {self.taskManager.taskCount} tasks in epoch {epoch}: {avgAcc}")
+            print (f"Average P/R/F1 across {self.taskManager.taskCount} tasks in epoch $epoch: {avgPrec} / {avgRec} / {avgF1}")
 
             allEpochScores.append((epoch, avgF1))
 
@@ -218,12 +219,12 @@ class Metal(object):
         
         pw.close()
 
-        print (f"Accuracy on {sentences.length} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.accuracy()}")
-        print (f"Precision on {sentences.length} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.precision()}")
-        print (f"Recall on {sentences.length} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.recall()}")
-        print (f"Micro F1 on {sentences.length} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.f1()}")
-        for label in scoreCountsByLabel.labels:
-            print (f"\tP/R/F1 for label {label} ({scoreCountsByLabel.map(label).gold}): {scoreCountsByLabel.precision(label)} / {scoreCountsByLabel.recall(label)} / {scoreCountsByLabel.f1(label)}")
+        print (f"Accuracy on {len(sentences)} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.accuracy()}")
+        print (f"Precision on {len(sentences)} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.precision()}")
+        print (f"Recall on {len(sentences)} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.recall()}")
+        print (f"Micro F1 on {len(sentences)} {name} sentences for task {taskNumber} ({taskName}): {scoreCountsByLabel.f1()}")
+        for label in scoreCountsByLabel.labels():
+            print (f"\tP/R/F1 for label {label} ({scoreCountsByLabel.map[label].gold}): {scoreCountsByLabel.precision(label)} / {scoreCountsByLabel.recall(label)} / {scoreCountsByLabel.f1(label)}")
 
         return ( scoreCountsByLabel.accuracy(), scoreCountsByLabel.precision(), scoreCountsByLabel.recall(), scoreCountsByLabel.f1() )
 
@@ -252,21 +253,23 @@ class Metal(object):
     def save(self, baseFilename):
 
         params = list()
+        j_params = list()
         for layers in self.model:
-            sd = layers.get_state_dict()
+            sd, j_sd = layers.get_state_dict()
             x2i = layers.saveX2i()
             params.append({"model": sd, "x2i": x2i})
+            j_params.append({"model": j_sd, "x2i": x2i})
 
         # torch pickle save
         try:
-            torch.save(params, baseFilename)
+            torch.save(params, baseFilename+".torch")
             print("model saved to {}".format(baseFilename+".torch"))
         except BaseException:
             print("[Warning: Saving failed... continuing anyway.]")
 
         # We can also save as text json file:
-        with open(baseFilename+".json") as f:
-            f.write(json.dumps(params))
+        with open(baseFilename+".json", "w") as f:
+            f.write(json.dumps(j_params))
 
 
     @classmethod

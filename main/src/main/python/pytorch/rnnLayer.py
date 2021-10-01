@@ -39,7 +39,7 @@ class RnnLayer(IntermediateLayer):
         x2i['inputSize'] = self.inputSize
         x2i['numLayers'] = self.numLayers
         x2i['rnnStateSize'] = self.rnnStateSize
-        x2i['useHighwayConnections'] = 1 if useHighwayConnections else 0
+        x2i['useHighwayConnections'] = 1 if self.useHighwayConnections else 0
         x2i['rnnType'] = self.rnnType
         x2i['dropoutProb'] = self.dropoutProb
         return x2i

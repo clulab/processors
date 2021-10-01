@@ -45,7 +45,7 @@ def save(file, values, comment):
 
 def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
     hidden_dim = charRnnBuilder.hidden_size
-    charEmbeddings = charLookupParameters(torch.LongTensor([c2i[c] for c in word]))
+    charEmbeddings = charLookupParameters(torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word]))
     _, result = transduce(charEmbeddings, charRnnBuilder)
     # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
     return result.view(hidden_dim*2)
@@ -109,7 +109,7 @@ def sentenceLossGreedy(emissionScoresForSeq, golds):
 def emissionScoresToArrays(expressions):
     lattice = list()
     for expr in expressions:
-        probs = expr.data.tolist()
+        probs = expr.data.numpy()
         lattice += [probs]
     return lattice
 

@@ -5,15 +5,15 @@ OUTSIDE_LABEL = "O"
 
 @dataclass
 class ScoreCounts:
-    correct: int
-    gold: int
-    predicted: int
+    correct: int = 0
+    gold: int = 0
+    predicted: int = 0
 
 class SeqScorer:
 
     @staticmethod
     def f1(golds, preds):
-        scoreCountsByLabel = scoreCountsByLabel()
+        scoreCountsByLabel = ScoreCountsByLabel()
 
         for e1, e2 in zip(preds, golds):
             scoreCountsByLabel.total += 1
@@ -53,14 +53,14 @@ class ScoreCountsByLabel:
         counts.correct += value
 
     def incAll(self, counts):
-        correct += counts.correct
-        total += counts.total
+        self.correct += counts.correct
+        self.total += counts.total
 
         for label in counts.labels():
             c = counts.map[label]
-            incGold(label, c.gold)
-            incPredicted(label, c.predicted)
-            incCorrect(label, c.correct)
+            self.incGold(label, c.gold)
+            self.incPredicted(label, c.predicted)
+            self.incCorrect(label, c.correct)
 
     def precision(self, label="*", decimals=2):
         c = self.map[label].correct
@@ -74,7 +74,7 @@ class ScoreCountsByLabel:
         c = self.map[label].correct
         g = self.map[label].gold
 
-        reca = c/g if p!=0 else 0
+        reca = c/g if g!=0 else 0
 
         return round(reca, decimals) if decimals>0 else reca
 
@@ -82,7 +82,7 @@ class ScoreCountsByLabel:
         p = self.precision(label, decimals=-1)
         r = self.recall(label, decimals=-1)
 
-        f1 = 2.0 * p * r / (p + r), decimals if (p!=0 and r!=0) else 0
+        f1 = 2.0 * p * r / (p + r) if (p!=0 and r!=0) else 0
 
         return round(f1, decimals) if decimals>0 else f1
 
