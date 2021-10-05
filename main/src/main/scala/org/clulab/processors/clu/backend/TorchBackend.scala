@@ -1,6 +1,6 @@
 package org.clulab.processors.clu.backend
 
-import org.clulab.dynet.AnnotatedSentence
+import org.clulab.processors.clu.AnnotatedSentence
 
 object TorchBackend extends CluBackend
 

@@ -1,9 +1,9 @@
 package org.clulab.processors.clu.backend
 
-import org.clulab.dynet.AnnotatedSentence
 import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Metal
 import org.clulab.processors.Document
+import org.clulab.processors.clu.AnnotatedSentence
 
 import java.io.Closeable
 

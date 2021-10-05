@@ -6,6 +6,7 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
+import org.clulab.processors.clu.AnnotatedSentence
 
 import scala.collection.mutable.ArrayBuffer
 

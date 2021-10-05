@@ -8,16 +8,8 @@ package org.clulab.dynet
 import org.clulab.sequences.Row
 
 import scala.collection.mutable.ArrayBuffer
-
 import MetalRowReader._
-
-case class AnnotatedSentence(words: IndexedSeq[String],
-                             posTags: Option[IndexedSeq[String]] = None,
-                             neTags: Option[IndexedSeq[String]] = None,
-                             headPositions: Option[IndexedSeq[Int]] = None) {
-  def indices: Range = words.indices
-  def size: Int = words.size
-}
+import org.clulab.processors.clu.AnnotatedSentence
 
 trait RowReader {
   /** Converts the tabular format into one or more (AnnotatedSentence, sequence of gold labels) pairs */

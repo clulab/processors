@@ -1,8 +1,8 @@
 package org.clulab.processors.clu.backend
 
-import org.clulab.dynet.AnnotatedSentence
 import org.clulab.processors.Document
 import org.clulab.processors.IntermediateDocumentAttachment
+import org.clulab.processors.clu.AnnotatedSentence
 
 import java.io.Closeable
 

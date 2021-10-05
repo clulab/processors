@@ -17,7 +17,6 @@ import org.clulab.processors.clu.backend.MetalSrlaBackend
 import org.clulab.processors.clu.backend.NerBackend
 import org.clulab.processors.clu.backend.PosBackend
 import org.clulab.processors.clu.backend.SrlaBackend
-import org.clulab.dynet.AnnotatedSentence
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.processors.clu.backend.EmbeddingsAttachment
 import org.clulab.processors.clu.backend.MetalBackend
