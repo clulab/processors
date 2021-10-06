@@ -8,8 +8,24 @@ abstract class Shell {
    * if that needs to happen after shell() is called.  Otherwise,
    * such initialization can happen in the subclass constructor. */
   def initialize(): Unit = ()
+
   /** The actual work, including printing out the output */
   def work(text: String): Unit
+
+  /** Override me to reload rules */
+  def reload(): Unit = {
+    println("reloading not supported")
+  }
+
+  def reload(menu: Menu, text: String): Boolean = {
+    try {
+      reload()
+    }
+    catch {
+      case e: Throwable => println(s"error reloading: ${e.getMessage}")
+    }
+    true
+  }
 
   def shell() {
 
@@ -31,6 +47,7 @@ abstract class Shell {
     val lineReader = new CliReader("(shell)>>> ", "user.home", ".shellhistory")
     val mainMenuItems = Seq(
       new HelpMenuItem(":help", "show commands"),
+      new MainMenuItem(":reload", "reload rules from filesystem", reload),
       new ExitMenuItem(":exit", "exit system")
     )
     val defaultMenuItem = new DefaultMenuItem(workSafely)
@@ -38,4 +55,5 @@ abstract class Shell {
 
     menu.run()
   }
+
 }
