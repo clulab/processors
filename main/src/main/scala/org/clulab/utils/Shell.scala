@@ -11,31 +11,20 @@ abstract class Shell {
   /** The actual work, including printing out the output */
   def work(text: String): Unit
 
-  def shell() {
-
-    def workSafely(menu: Menu, text: String): Boolean = {
-      if (text.trim.nonEmpty)
-        try {
-          work(text)
-        }
-        catch {
-          case exception: Throwable =>
-            println("Processing failed with the following error:")
-            exception.printStackTrace()
-        }
-      true
-    }
-
-    initialize()
-
+  /** If your subclass's menu is different, override this method. */
+  def mkMenu(): Menu = {
     val lineReader = new CliReader("(shell)>>> ", "user.home", ".shellhistory")
     val mainMenuItems = Seq(
       new HelpMenuItem(":help", "show commands"),
       new ExitMenuItem(":exit", "exit system")
     )
-    val defaultMenuItem = new DefaultMenuItem(workSafely)
-    val menu = new Menu("Welcome to the shell!", lineReader, mainMenuItems, defaultMenuItem)
+    val defaultMenuItem = new SafeDefaultMenuItem(work)
 
-    menu.run()
+    new Menu("Welcome to the shell!", lineReader, mainMenuItems, defaultMenuItem)
+  }
+
+  def shell() {
+    initialize()
+    mkMenu().run()
   }
 }
