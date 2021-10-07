@@ -83,9 +83,7 @@ class ForwardLayer(FinalLayer):
         from pytorch.viterbiForwardLayer import ViterbiForwardLayer
         inferenceType = x2i["inferenceType"]
         if inferenceType == TYPE_VITERBI:
-            pass
-            # TODO
-            # return ViterbiForwardLayer.load(x2i)
+            return ViterbiForwardLayer.load(x2i)
         elif inferenceType == TYPE_GREEDY:
             return GreedyForwardLayer.load(x2i)
         else:
@@ -125,11 +123,9 @@ class ForwardLayer(FinalLayer):
         if inferenceType == TYPE_GREEDY_STRING:
             return GreedyForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, nonlin, dropoutProb, span)
         elif inferenceType == TYPE_VITERBI_STRING:
-            pass
-            # TODO
-            # layer = ViterbiForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, nonlin, dropoutProb, span)
-            # layer.initializeTransitions()
-            # return layer
+            layer = ViterbiForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, nonlin, dropoutProb, span)
+            layer.initializeTransitions()
+            return layer
         else:
             raise RuntimeError(f"ERROR: unknown inference type {inferenceType}!")
     
