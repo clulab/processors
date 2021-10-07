@@ -143,7 +143,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
                            keepText:Boolean = false,
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document = {
-    CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
+    CluProcessor.mkDocumentFromTokens(sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
   }
 
   class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
@@ -704,8 +704,7 @@ object CluProcessor {
   }
 
   /** Constructs a document of tokens from an array of tokenized sentences */
-  def mkDocumentFromTokens(tokenizer:Tokenizer,
-                           sentences:Iterable[Iterable[String]],
+  def mkDocumentFromTokens(sentences:Iterable[Iterable[String]],
                            keepText:Boolean,
                            charactersBetweenSentences:Int,
                            charactersBetweenTokens:Int): Document = {
