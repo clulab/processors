@@ -1,6 +1,8 @@
 package org.clulab.processors.clu
 
 import org.clulab.dynet.Utils
+import org.clulab.utils.ReloadableProcessor
+import org.clulab.utils.ReloadableShell
 import org.clulab.utils.Shell
 
 import java.io.PrintWriter
@@ -10,20 +12,25 @@ import java.io.PrintWriter
   * User: mihais
   * Date: 8/2/17
   */
-class CluShell extends Shell {
-  val printWriter = new PrintWriter(System.out, true)
-  val proc: CluProcessor = new CluProcessor()
+class CluShell extends ReloadableShell {
+  Utils.initializeDyNet()
 
-  override def work(text: String): Unit = {
-    val doc = proc.annotate(text)
+  val printWriter = new PrintWriter(System.out, true)
+  val proc = new ReloadableProcessor(() => new CluProcessor(), true)
+
+  def work(text: String): Unit = {
+    val doc = proc.get.annotate(text)
     doc.prettyPrint(printWriter)
+  }
+
+  def reload(): Unit = {
+    println("The processor is reloading...")
+    proc.reload()
   }
 }
 
 object CluShell {
   def main(args: Array[String]): Unit = {
-    Utils.initializeDyNet()
-    val sh = new CluShell
-    sh.shell()
+    new CluShell().shell()
   }
 }
