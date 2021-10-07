@@ -124,7 +124,6 @@ class ForwardLayer(FinalLayer):
             return GreedyForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, nonlin, dropoutProb, span)
         elif inferenceType == TYPE_VITERBI_STRING:
             layer = ViterbiForwardLayer(inputSize, isDual, t2i, i2t, actualInputSize, nonlin, dropoutProb, span)
-            layer.initializeTransitions()
             return layer
         else:
             raise RuntimeError(f"ERROR: unknown inference type {inferenceType}!")
