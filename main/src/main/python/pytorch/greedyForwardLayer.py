@@ -26,9 +26,11 @@ class GreedyForwardLayer(ForwardLayer):
         return f"GreedyForwardLayer({self.inDim}, {self.outDim})"
 
     def inference(self, emissionScores):
+        emissionScores = emissionScoresToArrays(states)
         return [self.i2t[np.argmax(es)] for es in emissionScores]
 
     def inferenceWithScores(self, emissionScores):
+        emissionScores = emissionScoresToArrays(states)
         return [sorted([(i, s) for i, s in enumerate(scoresForPosition)], key=lambda x: x[1]) for scoresForPosition in emissionScores]
 
     @classmethod

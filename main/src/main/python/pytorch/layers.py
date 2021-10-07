@@ -194,15 +194,13 @@ class Layers(object):
             sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout=False)
             for i in range(1, len(layers)):
                 states = layers[i].forwardFrom(sharedStates, sentence.headPositions, doDropout=False)
-                emissionScores = emissionScoresToArrays(states)
-                labels = layers[i].finalLayer.inference(emissionScores)
+                labels = layers[i].finalLayer.inference(states)
                 labelsPerTask += [labels]
         # no shared layer
         else:
             for i in range(1, len(layers)):
                 states = layers[i].forward(sentence, sentence.headPositions, doDropout=False)
-                emissionScores = emissionScoresToArrays(states)
-                labels = layers[i].finalLayer.inference(emissionScores)
+                labels = layers[i].finalLayer.inference(states)
                 labelsPerTask += [labels]
 
         return labelsPerTask
@@ -219,14 +217,12 @@ class Layers(object):
     @staticmethod
     def predict(layers, taskId, sentence, constEmbeddings):
         states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=False)
-        emissionScores = emissionScoresToArrays(states)
-        return layers[taskId+1].finalLayer.inference(emissionScores)
+        return layers[taskId+1].finalLayer.inference(states)
 
     @staticmethod
     def predictWithScores(layers, taskId, sentence, constEmbeddings):
         states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=False)
-        emissionScores = emissionScoresToArrays(states)
-        return layers[taskId+1].finalLayer.inferenceWithScores(emissionScores)
+        return layers[taskId+1].finalLayer.inferenceWithScores(states)
 
     @staticmethod
     def parse(layers, sentence, constEmbeddings):
@@ -240,8 +236,7 @@ class Layers(object):
         # now predict the heads (first task)
         #
         headStates = layers[1].forwardFrom(sharedStates, None, doDropout=False)
-        headEmissionScores = emissionScoresToArrays(headStates)
-        headScores = layers[1].finalLayer.inference(headEmissionScores)
+        headScores = layers[1].finalLayer.inference(headStates)
 
         # store the head values here
         heads = list()
@@ -271,8 +266,7 @@ class Layers(object):
         # next, predict the labels using the predicted heads
         #
         labelStates = layers[2].forwardFrom(sharedStates, heads, doDropout=False)
-        emissionScores = emissionScoresToArrays(labelStates)
-        labels = layers[2].finalLayer.inference(emissionScores)
+        labels = layers[2].finalLayer.inference(labelStates)
         assert(len(labels)==len(heads))
 
         return zip(heads, labels)
