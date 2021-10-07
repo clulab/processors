@@ -32,23 +32,29 @@ class ForwardLayer(FinalLayer):
             # Zheng: Will spans overlap?
             vs = list()
             for span in self.spans:
-                e = torch.index_select(v, 0, torch.tensor([span[0], span[1]]))
+                e = torch.index_select(v, 1, torch.tensor([span[0], span[1]]))
                 vs.append(e)
             return torch.cat(vs)
 
     def forward(self, inputExpressions, doDropout, headPositionsOpt = None):
-        emissionScores = list()
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
-            for i, e in enumerate(inputExpressions):
-                argExp = expressionDropout(self.pickSpan(e), self.dropoutProb, doDropout)
-                l1 = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
-                if self.nonlinearity == NONLIN_TANH:
-                    l1 = F.tanh(l1)
-                elif self.nonlinearity == NONLIN_RELU:
-                    l1 = F.relu(l1)
-                emissionScores.append(l1)
+            argExp = expressionDropout(self.pickSpan(inputExpressions), self.dropoutProb, doDropout)
+            emissionScores = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
+            if self.nonlinearity == NONLIN_TANH:
+                emissionScores = F.tanh(emissionScores)
+            elif self.nonlinearity == NONLIN_RELU:
+                emissionScores = F.relu(emissionScores)
+            # for i, e in enumerate(inputExpressions):
+            #     argExp = expressionDropout(self.pickSpan(e), self.dropoutProb, doDropout)
+            #     l1 = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
+            #     if self.nonlinearity == NONLIN_TANH:
+            #         l1 = F.tanh(l1)
+            #     elif self.nonlinearity == NONLIN_RELU:
+            #         l1 = F.relu(l1)
+            #     emissionScores.append(l1)
         else:
+            emissionScores = list()
             if headPositionsOpt is None:
                 raise RuntimeError("ERROR: dual task without information about head positions!")
             for i, e in enumerate(inputExpressions):
@@ -68,7 +74,8 @@ class ForwardLayer(FinalLayer):
                 elif nonlinearity == NONLIN_RELU:
                     l1 = F.relu(l1)
                 emissionScores.append(l1)
-        return torch.stack(emissionScores)
+            emissionScores = torch.stack(emissionScores)
+        return emissionScores
 
     @staticmethod
     def load(x2i):

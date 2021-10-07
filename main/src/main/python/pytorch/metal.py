@@ -106,7 +106,8 @@ class Metal(object):
                 layers.start_train()
             trainer.zero_grad()
 
-            batchLosses = list()
+            batchLoss = 0
+            i = 0
 
             # traverse all training sentences
             for metaSentence in sentenceIterator:
@@ -118,18 +119,21 @@ class Metal(object):
                 annotatedSentences = reader.toAnnotatedSentences(sentence)
                 assert(annotatedSentences is not None)
 
-                unweightedLoss = sum([Layers.loss(self.model, taskId, a_sent[0], a_sent[1]) for a_sent in annotatedSentences])
+                unweightedLoss = 0
+                for a_sent in annotatedSentences:
+                    unweightedLoss += Layers.loss(self.model, taskId, a_sent[0], a_sent[1])
 
                 loss = unweightedLoss * self.taskManager.tasks[taskId].taskWeight # Zheng: I don't think this is necessary: if self.taskManager.tasks[taskId].taskWeight!=1.0 else unweightedLoss
 
-                batchLosses.append(loss)
+                batchLoss += loss
+                i += 1
 
-                if len(batchLosses) >= batchSize:
-                    batchLoss = sum(batchLosses)
-                    cummulativeLoss = batchLoss.item()
+                if i >= batchSize:
+                    cummulativeLoss += batchLoss.item()
                     batchLoss.backward()
                     trainer.step()
-                    batchLosses = list()
+                    batchLoss = 0
+                    i = 0
 
                 numTagged += len(sentence)
 
@@ -138,12 +142,12 @@ class Metal(object):
                     cummulativeLoss = 0.0
                     numTagged = 0
             # we may have an incomplete batch here
-            if batchLosses:
-                batchLoss = sum(batchLosses)
+            if batchLoss:
                 cummulativeLoss = batchLoss.item()
                 batchLoss.backward()
                 trainer.step()
-                batchLosses = list()
+                batchLoss = 0
+                i = 0
 
             # check dev performance in this epoch, for all tasks
             totalAcc = 0.0
@@ -209,7 +213,7 @@ class Metal(object):
                 sentence = asent[0]
                 goldLabels = asent[1]
 
-                constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+                constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
                 preds = Layers.predict(self.model, taskId, sentence, constEmbeddings)
 
                 sc = SeqScorer.f1(goldLabels, preds)
@@ -229,12 +233,18 @@ class Metal(object):
         return ( scoreCountsByLabel.accuracy(), scoreCountsByLabel.precision(), scoreCountsByLabel.recall(), scoreCountsByLabel.f1() )
 
     def predictJointly(self, sentence, constEmbeddings):
+        for layers in self.model:
+            layers.start_eval()
         return Layers.predictJointly(self.model, sentence, constEmbeddings)
 
     def predict(self, taskId, sentence, constEmbeddings):
+        for layers in self.model:
+            layers.start_eval()
         return Layers.predict(self.model, taskId, sentence, constEmbeddings)
 
     def predictWithScores(self, taskId, sentence, constEmbeddings):
+        for layers in self.model:
+            layers.start_eval()
         return Layers.predictWithScores(self.model, taskId, sentence, constEmbeddings)
 
     # Custom method for the parsing algorithm

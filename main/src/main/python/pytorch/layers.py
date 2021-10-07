@@ -280,9 +280,10 @@ class Layers(object):
     @staticmethod
     def loss(layers, taskId, sentence, goldLabels):
         # Zheng: I am not sure this is the suitable way to load embeddings or not, need help...
-        constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+        constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
         states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=True) # use dropout during training!
-        return layers[taskId+1].finalLayer.loss(states, goldLabels)
+        loss = layers[taskId+1].finalLayer.loss(states, goldLabels)
+        return loss
 
 
 
