@@ -12,6 +12,7 @@ import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.ReloadableShell
 import org.clulab.utils.SafeDefaultMenuItem
 import org.clulab.utils.SafeMainMenuItem
+import org.clulab.utils.Shell
 
 import java.io.PrintWriter
 
@@ -21,7 +22,7 @@ import java.io.PrintWriter
   * Date: 3/13/14
   * Last Modified: Fix compiler warning: remove redundant match case clause.
   */
-class ProcessorShell extends ReloadableShell {
+class ProcessorShell extends Shell {
   Utils.initializeDyNet()
 
   val core = new PromptedReloadableProcessor("(core)>>> ", () => new CoreNLPProcessor()) // this uses the slower constituent parser
@@ -53,6 +54,7 @@ class ProcessorShell extends ReloadableShell {
     printWriter.flush()
   }
 
+  // We inherit now just from Shell, so no reloading is performed.
   def reload(): Unit = {
     println("The processor is reloading...")
     proc.reload()
@@ -64,7 +66,7 @@ class ProcessorShell extends ReloadableShell {
       new SafeMainMenuItem(":core", "use CoreNLPProcessor", prepareCore),
       new SafeMainMenuItem(":fast", "use FastNLPProcessor", prepareFast),
       new SafeMainMenuItem(":clu", "use CluProcessor", prepareClu),
-      new SafeMainMenuItem(":reload", "reload rules for current processor from filesystem", reload),
+      // new SafeMainMenuItem(":reload", "reload rules for current processor from filesystem", reload),
       new ExitMenuItem(":exit", "exit system")
     )
     val defaultMenuItem = new SafeDefaultMenuItem(work)

@@ -66,7 +66,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
   }
 
   // recognizes numeric entities using Odin rules
-  lazy val numericEntityRecognizer = new NumericEntityRecognizer
+  lazy val numericEntityRecognizer = NumericEntityRecognizer()
 
   // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
   lazy val mtlSrla: Metal = getArgString(s"$prefix.language", Some("EN")) match {

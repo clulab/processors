@@ -3,9 +3,9 @@ package org.clulab.sequences
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.ReloadableProcessor
-import org.clulab.utils.ReloadableShell
+import org.clulab.utils.Shell
 
-class LexiconNERShell(val lexiconNer: LexiconNER) extends ReloadableShell {
+class LexiconNERShell(val lexiconNer: LexiconNER) extends Shell {
   val proc = new ReloadableProcessor(() => new CluProcessor(), true)
 
   override def work(text: String): Unit = {
@@ -16,7 +16,9 @@ class LexiconNERShell(val lexiconNer: LexiconNER) extends ReloadableShell {
     }
   }
 
-  override def reload(): Unit = {
+
+  // We inherit now just from Shell, so no reloading is performed.
+  def reload(): Unit = {
     println("The processor is reloading...")
     proc.reload()
   }

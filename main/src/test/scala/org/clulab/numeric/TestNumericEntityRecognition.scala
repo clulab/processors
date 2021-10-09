@@ -46,7 +46,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   }
 
   Utils.initializeDyNet()
-  val ner = new NumericEntityRecognizer
+  val ner = NumericEntityRecognizer()
   val proc = new HabitusProcessor()
 
   //

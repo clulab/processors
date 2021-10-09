@@ -100,6 +100,15 @@ trait Processor {
     doc.clear()
     doc
   }
+
+  /**
+    * Make the quickest possible copy of this processor with anything that might have
+    * changed on disk or in the environment updated in the returned processor.  The
+    * current processor should be left unchanged.  Most processors have nothing to
+    * update, so the default implementation is to return the original.
+    */
+  // This is not yet used.
+  // def reloaded: Processor = this
 }
 
 

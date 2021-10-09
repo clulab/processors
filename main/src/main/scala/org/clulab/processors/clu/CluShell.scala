@@ -2,7 +2,6 @@ package org.clulab.processors.clu
 
 import org.clulab.dynet.Utils
 import org.clulab.utils.ReloadableProcessor
-import org.clulab.utils.ReloadableShell
 import org.clulab.utils.Shell
 
 import java.io.PrintWriter
@@ -12,7 +11,7 @@ import java.io.PrintWriter
   * User: mihais
   * Date: 8/2/17
   */
-class CluShell extends ReloadableShell {
+class CluShell extends Shell {
   Utils.initializeDyNet()
 
   val printWriter = new PrintWriter(System.out, true)
@@ -23,6 +22,7 @@ class CluShell extends ReloadableShell {
     doc.prettyPrint(printWriter)
   }
 
+  // We inherit now just from Shell, so no reloading is performed.
   def reload(): Unit = {
     println("The processor is reloading...")
     proc.reload()
