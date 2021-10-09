@@ -46,9 +46,10 @@ def save(file, values, comment):
 def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
     hidden_dim = charRnnBuilder.hidden_size
     charEmbeddings = charLookupParameters(torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word]))
-    _, result = transduce(charEmbeddings, charRnnBuilder)
+    output, _ = transduce(charEmbeddings, charRnnBuilder)
+    result = output.squeeze(1)[-1]
     # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
-    return result.view(hidden_dim*2)
+    return result
 
 def readString2Ids(s2iFilename):
     s2i = dict()
@@ -78,17 +79,17 @@ def transduce(embeddings, builder):
 
     if mode == 'LSTM':
         if bi_direct:
-            (h, c) =  (torch.zeros(2, 1, hidden_dim), torch.zeros(2, 1, hidden_dim)) 
+            (h, c) =  (torch.rand(2, 1, hidden_dim), torch.rand(2, 1, hidden_dim)) 
             output, (result, c) = builder(embeddings.unsqueeze(1), (h, c))
         else:
-            (h, c) =  (torch.zeros(1, 1, hidden_dim), torch.zeros(1, 1, hidden_dim)) 
+            (h, c) =  (torch.rand(1, 1, hidden_dim), torch.rand(1, 1, hidden_dim)) 
             output, (result, c) = builder(embeddings.unsqueeze(1), (h, c))
     elif mode == 'GRU':
         if bi_direct:
-            h =  torch.zeros(2, 1, hidden_dim) 
+            h =  torch.rand(2, 1, hidden_dim) 
             output, result = builder(embeddings.unsqueeze(1), h)
         else:
-            h =  torch.zeros(1, 1, hidden_dim)
+            h =  torch.rand(1, 1, hidden_dim)
             output, result = builder(embeddings.unsqueeze(1), h)
 
     return output, result
@@ -121,7 +122,7 @@ def argmax(vec):
     # return the argmax as a python int
     _, idx = torch.max(vec, 1)
     return idx.item()
-    
+
 def log_sum_exp(vec):
     max_score = vec[0, argmax(vec)]
     max_score_broadcast = max_score.view(1, -1).expand(1, vec.size()[1])

@@ -65,7 +65,7 @@ class Metal(object):
         return words, labels
 
     def train(self, modelNamePrefix):
-        learningRate = self.taskManager.get_float("mtl.learningRate", 0.001)
+        learningRate = self.taskManager.get_float("mtl.learningRate", 1e-5)
         trainerType = self.taskManager.get_string("mtl.trainer", "adam")
         batchSize = self.taskManager.get_int("mtl.batchSize", 1)
         assert(batchSize>0)
@@ -75,11 +75,11 @@ class Metal(object):
             parameters += layers.get_parameters()
 
         if trainerType == "adam":
-            trainer = Adam(parameters, lr=learningRate)
+            trainer = Adam(parameters, lr=learningRate, weight_decay=WEIGHT_DECAY)
         elif trainerType == "rmsprop":
-            trainer = RMSprop(parameters, lr=learningRate)
+            trainer = RMSprop(parameters, lr=learningRate, weight_decay=WEIGHT_DECAY)
         elif trainerType == "sgd":
-            trainer = SDG(parameters, lr=learningRate)
+            trainer = SDG(parameters, lr=learningRate, weight_decay=WEIGHT_DECAY)
         else:
             raise RuntimeError(f"ERROR: unknown trainer {trainerType}!")
 
