@@ -9,8 +9,17 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
+import org.clulab.processors.clu.backend.DepsBackend
+import org.clulab.processors.clu.backend.MetalDepsBackend
+import org.clulab.processors.clu.backend.MetalNerBackend
+import org.clulab.processors.clu.backend.MetalPosBackend
+import org.clulab.processors.clu.backend.MetalSrlaBackend
+import org.clulab.processors.clu.backend.NerBackend
+import org.clulab.processors.clu.backend.PosBackend
+import org.clulab.processors.clu.backend.SrlaBackend
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
+import org.clulab.processors.clu.backend.EmbeddingsAttachment
+import org.clulab.processors.clu.backend.MetalBackend
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
@@ -52,27 +61,28 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
   }
 
   // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
-  lazy val mtlPosChunkSrlp: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+  lazy val posBackend: PosBackend = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+    // Use the config to decide which one to use.
+    case _ => new MetalPosBackend(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
   }
 
   // one of the multi-task learning (MTL) models, which covers: NER
-  lazy val mtlNer: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+  lazy val nerBackend: NerBackend = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+    case _ => new MetalNerBackend(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
   }
 
   // recognizes numeric entities using Odin rules
   lazy val numericEntityRecognizer = new NumericEntityRecognizer
 
   // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
-  lazy val mtlSrla: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+  lazy val srlaBackend: SrlaBackend = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+    case _ => new MetalSrlaBackend(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
   }
 
   /*
@@ -88,10 +98,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
   }
   */
-  lazy val mtlDeps: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+  lazy val depsBackend: DepsBackend = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
+    case _ => new MetalDepsBackend(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
   }
 
   // Although this uses no class members, the method is sometimes called from tests
@@ -149,14 +159,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
   class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
 
   /** Produces POS tags, chunks, and semantic role predicates for one sentence */
-  def tagSentence(words: IndexedSeq[String], embeddings: ConstEmbeddingParameters):
+  def tagSentence(words: IndexedSeq[String], embeddingsAttachment: EmbeddingsAttachment):
     (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = {
 
-    val allLabels = mtlPosChunkSrlp.predictJointly(AnnotatedSentence(words), embeddings)
-    val tags = allLabels(0)
-    val chunks = allLabels(1)
-    val preds = allLabels(2)
-    (tags, chunks, preds)
+    posBackend.predict(AnnotatedSentence(words), embeddingsAttachment)
   }
 
   /** Produces NE labels for one sentence */
@@ -166,10 +172,10 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
                   startCharOffsets: Array[Int],
                   endCharOffsets: Array[Int],
                   docDateOpt: Option[String],
-                  embeddings: ConstEmbeddingParameters): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
+                  embeddingsAttachment: EmbeddingsAttachment): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
 
     // NER labels from the statistical model
-    val allLabels = mtlNer.predictJointly(AnnotatedSentence(words), embeddings)
+    val labels = nerBackend.predict(AnnotatedSentence(words), embeddingsAttachment)
 
     // NER labels from the custom NER
     val optionalNERLabels: Option[Array[String]] = {
@@ -196,9 +202,9 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     }
 
     if(optionalNERLabels.isEmpty) {
-      (allLabels(0), None)
+      (labels, None)
     } else {
-      (mergeNerLabels(allLabels(0), optionalNERLabels.get), None)
+      (mergeNerLabels(labels, optionalNERLabels.get), None)
     }
   }
 
@@ -239,7 +245,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
   def parseSentence(words: IndexedSeq[String],
                     posTags: IndexedSeq[String],
                     nerLabels: IndexedSeq[String],
-                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+                    embeddingsAttachment: EmbeddingsAttachment): DirectedGraph[String] = {
 
     //println(s"Words: ${words.mkString(", ")}")
     //println(s"Tags: ${posTags.mkString(", ")}")
@@ -248,7 +254,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
-    val headsAndLabels = mtlDeps.parse(annotatedSentence, embeddings)
+    val headsAndLabels = depsBackend.predict(annotatedSentence, embeddingsAttachment)
 
     val edges = new ListBuffer[Edge[String]]()
     val roots = new mutable.HashSet[Int]()
@@ -323,12 +329,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
 
   def srlSentence(sent: Sentence,
                   predicateIndexes: IndexedSeq[Int],
-                  embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+                  embeddingsAttachment: EmbeddingsAttachment): DirectedGraph[String] = {
     // the SRL models were trained using only named (CoNLL) entities, not numeric ones, so let's remove them
     // TODO: retrain the SRL using numeric entities too, when NumericEntityRecognizer is stable
     val onlyNamedLabels = removeNumericLabels(sent.entities.get)
 
-    srlSentence(sent.words, sent.tags.get, onlyNamedLabels, predicateIndexes, embeddings)
+    srlSentence(sent.words, sent.tags.get, onlyNamedLabels, predicateIndexes, embeddingsAttachment)
   }
 
   def removeNumericLabels(allLabels: Array[String]): Array[String] = {
@@ -349,12 +355,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
                   posTags: IndexedSeq[String],
                   nerLabels: IndexedSeq[String],
                   predicateIndexes: IndexedSeq[Int],
-                  embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+                  embeddingsAttachment: EmbeddingsAttachment): DirectedGraph[String] = {
     val edges = predicateIndexes.flatMap { pred =>
       // SRL needs POS tags and NEs, as well as the position of the predicate
       val headPositions = Array.fill(words.length)(pred)
       val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
-      val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
+      val argLabels = srlaBackend.predict(0, annotatedSentence, embeddingsAttachment)
 
       argLabels.zipWithIndex
           .filter { case (argLabel, _) => argLabel != "O" }
@@ -363,14 +369,14 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     new DirectedGraph[String](edges.toList, Some(words.length))
   }
 
-  private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
-    doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
+  private def getEmbeddingsAttachment(doc: Document): EmbeddingsAttachment =
+    doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
   override def tagPartsOfSpeech(doc:Document) {
     basicSanityCheck(doc)
 
-    val embeddings = getEmbeddings(doc)
+    val embeddings = getEmbeddingsAttachment(doc)
     val predsForAllSents = new ArrayBuffer[IndexedSeq[Int]]()
 
     for(sent <- doc.sentences) {
@@ -434,7 +440,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     //
     // names entities from CoNLL
     //
-    val embeddings = getEmbeddings(doc)
+    val embeddingsAttachment = getEmbeddingsAttachment(doc)
     val docDate = doc.getDCT
     for(sent <- doc.sentences) {
       val (labels, norms) = nerSentence(
@@ -444,7 +450,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
         sent.startOffsets,
         sent.endOffsets,
         docDate,
-        embeddings)
+        embeddingsAttachment)
 
       sent.entities = Some(labels.toArray)
       if(norms.nonEmpty) {
@@ -473,7 +479,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
 
     if(sentence.universalBasicDependencies.isEmpty) return origPreds
     if(sentence.tags.isEmpty) return origPreds
-    
+
     val preds = origPreds.toSet
     val newPreds = new mutable.HashSet[Int]()
     newPreds ++= preds
@@ -499,7 +505,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     val predicatesAttachment = doc.getAttachment(PREDICATE_ATTACHMENT_NAME)
     assert(predicatesAttachment.nonEmpty)
     assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
-    val embeddings = getEmbeddings(doc)
+    val embeddingsAttachment = getEmbeddingsAttachment(doc)
 
     if(doc.sentences.length > 0) {
       assert(doc.sentences(0).tags.nonEmpty)
@@ -515,14 +521,14 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     // until later, possibly in a parallel processing situation which will result sooner or later and
     // under the right conditions in DyNet crashing.  Therefore, make preemptive reference to mtlSrla
     // here so that it is sure to be initialized, regardless of the priming sentence.
-    assert(mtlSrla != null)
+    assert(srlaBackend != null)
 
     // generate SRL frames for each predicate in each sentence
     for(si <- predicates.indices) {
       val sentence = doc.sentences(si)
       val predicateIndexes = 
       	predicateCorrections(predicates(si), sentence)
-      val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
+      val semanticRoles = srlSentence(sentence, predicateIndexes, embeddingsAttachment)
 
       sentence.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles
 
@@ -554,7 +560,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
       assert(doc.sentences(0).entities.nonEmpty)
     }
     assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
-    val embeddings = getEmbeddings(doc)
+    val embeddings = getEmbeddingsAttachment(doc)
 
     for(sent <- doc.sentences) {
       val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get, embeddings)
@@ -741,9 +747,6 @@ object CluProcessor {
   }
 }
 
-case class EmbeddingsAttachment(embeddings: ConstEmbeddingParameters)
-    extends IntermediateDocumentAttachment
-
 class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
 
   def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
@@ -751,12 +754,7 @@ class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
   def after(): Unit = {
     val attachment = doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
     doc.removeAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME)
-
-    // This is a memory management optimization.
-    val embeddings = attachment.embeddings
-    // FatDynet needs to be updated before these can be used.
-    embeddings.lookupParameters.close()
-    embeddings.collection.close()
+    attachment.close()
   }
 }
 
@@ -766,8 +764,8 @@ object GivenConstEmbeddingsAttachment {
   // This is static so that it can be called without an object.
   def mkConstEmbeddings(doc: Document): Unit = {
     // Fetch the const embeddings from GloVe. All our models need them.
-    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
-    val attachment = EmbeddingsAttachment(embeddings)
+    val embeddings = MetalBackend.mkEmbeddings(doc)
+    val attachment = new EmbeddingsAttachment(embeddings)
 
     // Now set them as an attachment, so they are available to all downstream methods wo/ changing the API.
     doc.addAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME, attachment)

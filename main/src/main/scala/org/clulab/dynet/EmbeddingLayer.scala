@@ -1,15 +1,14 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-
 import edu.cmu.dynet.Expression.concatenate
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
 import org.clulab.utils.{Configured, Serializer}
-
 import EmbeddingLayer._
+import org.clulab.processors.clu.AnnotatedSentence
 
 import scala.util.Random
 

@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
 import java.io.{FileWriter, PrintWriter}
-
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
@@ -14,8 +13,8 @@ import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
-
 import Metal._
+import org.clulab.processors.clu.AnnotatedSentence
 
 /**
  * Multi-task learning (MeTaL) for sequence modeling

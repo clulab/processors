@@ -1,5 +1,6 @@
 package org.clulab.dynet
 
+import org.clulab.processors.clu.AnnotatedSentence
 import org.clulab.utils.Shell
 
 class MetalShell(val mtl: Metal) extends Shell {
