@@ -20,7 +20,7 @@ import org.clulab.utils.Closer._
 
 
 
-class RuleReader(val actions: Actions, val charset: Charset, val rulepath: Option[File] = None) {
+class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option[File] = None) {
 
   import RuleReader._
 
@@ -246,7 +246,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val rulepath: Optio
     * @return
     */
   def readFileOrResource(s: String): String = {
-    rulepath match {
+    ruleDir match {
       case Some(path) =>
         val filepath = if (s.startsWith("/")) s.drop(1) else s
         val f = new File(path, filepath)

@@ -2,48 +2,57 @@ package org.clulab.numeric
 
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.ReloadableShell
 
-class ReloadableNer(protected var ner: NumericEntityRecognizer) {
+import java.io.File
 
-  def get: NumericEntityRecognizer = ner
+class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableProcessor(() => new CluProcessor(), true) {
 
-  def reload(path: String): Unit = ner = ner.reloaded(path)
+  override def get: CluProcessor = super.get.asInstanceOf[CluProcessor]
+
+  override def reload(): Unit = {
+    val cluProcessor = this.get
+    val numericEntityRecognizer = cluProcessor
+        .numericEntityRecognizer
+        .reloaded(new File(ruleDirOpt.get))
+
+    processorOpt = Some(cluProcessor.reloaded(numericEntityRecognizer))
+  }
 }
 
-class NumericEntityRecognizerShell(pathOpt: Option[String]) extends ReloadableShell {
+class NumericEntityRecognizerShell(ruleDirOpt: Option[String]) extends ReloadableShell {
   Utils.initializeDyNet()
 
-  val proc = new CluProcessor()
-  var ner = new ReloadableNer(NumericEntityRecognizer())
+  val proc = new ReloadableNumericProcessor(ruleDirOpt)
 
   /** The actual work, including printing out the output */
   def work(text: String): Unit = {
-    val doc = proc.annotate(text)
-    val mentions = ner.get.extractFrom(doc)
+    val doc = proc.get.annotate(text)
+    val mentions = proc.get.numericEntityRecognizer.extractFrom(doc)
 
     setLabelsAndNorms(doc, mentions)
     displayMentions(mentions, doc)
   }
 
   def reload(): Unit = {
-    if (pathOpt.isDefined) {
+    if (ruleDirOpt.isDefined) {
       println("The numeric entity recognizer is reloading...")
       try {
-        ner.reload(pathOpt.get)
+        proc.reload()
       }
       catch {
         case throwable: Throwable =>
-          println(s"Rules could not be reloaded from ${pathOpt.get}!")
+          println(s"Rules could not be reloaded from ${ruleDirOpt.get}!")
           throwable.printStackTrace
       }
     }
     else
-      println("No file was specified, possibly on the command line, from which to read rules!")
+      println("No directory was specified, possibly on the command line, from which to read rules!")
   }
 }
 
 object NumericEntityRecognizerShell extends App {
-  // args(0) can optionally be a path from which to reload rules.
+  // args(0) can optionally be a directory from which to reload rules.
   new NumericEntityRecognizerShell(args.lift(0)).shell()
 }
