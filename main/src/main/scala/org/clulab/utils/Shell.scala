@@ -34,8 +34,8 @@ abstract class ReloadableShell extends Shell {
 
   override def mkMenu(): Menu = {
     // This IdeReader needed for debugging in IntelliJ for Windows.
-     val lineReader = new IdeReader("(shell)>>> ")
-//    val lineReader = new CliReader("(shell)>>> ", "user.home", ".shellhistory")
+    // val lineReader = new IdeReader("(shell)>>> ")
+    val lineReader = new CliReader("(shell)>>> ", "user.home", ".shellhistory")
     val mainMenuItems = Seq(
       new HelpMenuItem(":help", "show commands"),
       new SafeMainMenuItem(":reload", "reload rules from filesystem", reload),
