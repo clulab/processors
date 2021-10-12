@@ -48,7 +48,7 @@ class NumericEntityRecognizerShell(ruleDirOpt: Option[String]) extends Reloadabl
       }
     }
     else
-      println("No directory was specified, possibly on the command line, from which to read rules!")
+      println("No directory was specified, possibly on the command line, from which to reload rules!")
   }
 }
 
