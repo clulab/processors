@@ -17,7 +17,7 @@ class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableP
         .numericEntityRecognizer
         .reloaded(new File(ruleDirOpt.get))
 
-    processorOpt = Some(cluProcessor.reloaded(numericEntityRecognizer))
+    processorOpt = Some(cluProcessor.copy(numericEntityRecognizerOptOpt = Some(Some(numericEntityRecognizer))))
   }
 }
 

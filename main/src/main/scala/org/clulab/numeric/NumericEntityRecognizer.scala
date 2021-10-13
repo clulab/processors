@@ -1,6 +1,5 @@
 package org.clulab.numeric
 
-import org.apache.commons.io.FileUtils.readFileToString
 import org.clulab.numeric.actions.NumericActions
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
@@ -9,7 +8,6 @@ import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.FileUtils
 
 import java.io.File
-import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ArrayBuffer
 
 class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions: NumericActions,
@@ -61,6 +59,7 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
 }
 
 object NumericEntityRecognizer {
+  val rulesPath = "/org/clulab/numeric/master.yml"
 
   // this matches essential dictionaries such as month names
   def mkLexiconNer: LexiconNER = LexiconNER(
@@ -78,15 +77,13 @@ object NumericEntityRecognizer {
 
   // this matches the grammars for both atomic and compositional entities
   def mkExtractor(actions: NumericActions): ExtractorEngine = {
-    val rules = FileUtils.getTextFromResource("/org/clulab/numeric/master.yml")
+    val rules = FileUtils.getTextFromResource(rulesPath)
     ExtractorEngine(rules, actions, actions.cleanupAction)
   }
 
   def mkExtractor(actions: NumericActions, ruleDir: File): ExtractorEngine = {
-    // Some code here is copied from RuleReader.scala.
-    val filepath = "org/clulab/numeric/master.yml"
-    val f = new File(ruleDir, filepath)
-    val rules = FileUtils.getTextFromFile(f)
+    val ruleFile = new File(ruleDir, rulesPath.drop(1)) // copied from RuleReader.scala
+    val rules = FileUtils.getTextFromFile(ruleFile)
 
     ExtractorEngine(rules, actions, actions.cleanupAction, ruleDir = Some(ruleDir))
   }

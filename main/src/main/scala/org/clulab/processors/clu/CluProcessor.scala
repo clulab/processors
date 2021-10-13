@@ -42,22 +42,37 @@ class CluProcessor protected (
     optionalNER: Option[LexiconNER] = None
   ) = this(config, optionalNER, None, None, None, None, None, None, None, None)
 
-  override def getConf: Config = config
-
-  def reloaded(numericEntityRecognier: NumericEntityRecognizer): CluProcessor = {
+  // The strategy here is to use Some(value) to indicate that the copied CluProcessor
+  // should use the provided value when the copy is made.  Use None to reuse the value
+  // in the current CluProcessor.  Since everything defaults to None, default behavior
+  // results in a copy of the original with nothing replaced.
+  def copy(
+    configOpt: Option[Config] = None,
+    optionalNEROpt: Option[Option[LexiconNER]] = None,
+    numericEntityRecognizerOptOpt: Option[Option[NumericEntityRecognizer]] = None,
+    internStringsOptOpt: Option[Option[Boolean]] = None,
+    localTokenizerOptOpt: Option[Option[Tokenizer]] = None,
+    lemmatizerOptOpt: Option[Option[Lemmatizer]] = None,
+    mtlPosChunkSrlpOptOpt: Option[Option[Metal]] = None,
+    mtlNerOptOpt: Option[Option[Metal]] = None,
+    mtlSrlaOptOpt: Option[Option[Metal]] = None,
+    mtlDepsOptOpt: Option[Option[Metal]] = None
+  ): CluProcessor = {
     new CluProcessor(
-      config,
-      optionalNER,
-      Some(numericEntityRecognizer), // This is the only one that is really reloaded then.
-      Some(internStrings),
-      Some(localTokenizer),
-      Some(lemmatizer),
-      Some(mtlPosChunkSrlp),
-      Some(mtlNer),
-      Some(mtlSrla),
-      Some(mtlDeps)
+      configOpt.getOrElse(this.config),
+      optionalNEROpt.getOrElse(this.optionalNER),
+      numericEntityRecognizerOptOpt.getOrElse(this.numericEntityRecognizerOpt),
+      internStringsOptOpt.getOrElse(this.internStringsOpt),
+      localTokenizerOptOpt.getOrElse(this.localTokenizerOpt),
+      lemmatizerOptOpt.getOrElse(this.lemmatizerOpt),
+      mtlPosChunkSrlpOptOpt.getOrElse(this.mtlPosChunkSrlpOpt),
+      mtlNerOptOpt.getOrElse(this.mtlNerOpt),
+      mtlSrlaOptOpt.getOrElse(this.mtlSrlaOpt),
+      mtlDepsOptOpt.getOrElse(this.mtlDepsOpt)
     )
   }
+
+  override def getConf: Config = config
 
   // should we intern strings or not?
   val internStrings:Boolean = internStringsOpt.getOrElse(
