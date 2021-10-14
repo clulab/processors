@@ -76,16 +76,16 @@ object ExtractorEngine {
    *  @param globalAction an action that will be applied to the extracted
    *                      mentions at the end of each iteration
    *  @param charset encoding to use for reading files
-   *  @param path path to use if rules should be loaded from filesystem
+   *  @param ruleDir base directory to use if rules should be loaded from filesystem
    */
   def apply(
       rules: String,
       actions: Actions = new Actions,
       globalAction: odin.Action = identityAction,
       charset: Charset = UTF_8,
-      path: Option[File] = None
+      ruleDir: Option[File] = None
   ): ExtractorEngine = {
-    val reader = new RuleReader(actions, charset, path)
+    val reader = new RuleReader(actions, charset, ruleDir)
     val extractors = reader.read(rules)
     new ExtractorEngine(extractors, globalAction)
   }

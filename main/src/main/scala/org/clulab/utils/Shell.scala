@@ -28,3 +28,21 @@ abstract class Shell {
     mkMenu().run()
   }
 }
+
+abstract class ReloadableShell extends Shell {
+  def reload(): Unit
+
+  override def mkMenu(): Menu = {
+    // This IdeReader needed for debugging in IntelliJ for Windows.
+    // val lineReader = new IdeReader("(shell)>>> ")
+    val lineReader = new CliReader("(shell)>>> ", "user.home", ".shellhistory")
+    val mainMenuItems = Seq(
+      new HelpMenuItem(":help", "show commands"),
+      new SafeMainMenuItem(":reload", "reload rules from filesystem", reload),
+      new ExitMenuItem(":exit", "exit system")
+    )
+    val defaultMenuItem = new SafeDefaultMenuItem(work)
+
+    new Menu("Welcome to the shell!", lineReader, mainMenuItems, defaultMenuItem)
+  }
+}

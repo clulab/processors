@@ -65,6 +65,8 @@ class Menu(greeting: String, lineReader: LineReader, mainMenuItems: Seq[MainMenu
   val maxKeyLength: Int = mainMenuItems.foldLeft(0) { (maxKeyLength: Int, mainMenuItem: MainMenuItem) => Math.max(maxKeyLength, mainMenuItem.key.length) }
   val indent: String = "    "
 
+  def withGreeting(greeting: String): Menu = new Menu(greeting, lineReader, mainMenuItems, defaultMenuItem)
+
   def printCommands(): Unit = {
     println("COMMANDS:")
     mainMenuItems.foreach { mainMenuItem =>
@@ -73,14 +75,25 @@ class Menu(greeting: String, lineReader: LineReader, mainMenuItems: Seq[MainMenu
     }
   }
 
+  def printEmpty(): Unit = {
+    println("Enter a command or some text to process.")
+    println()
+    printCommands()
+  }
+
   def processMenu: Boolean = {
     println()
     lineReader.readLineOpt().map { line =>
       println()
-      mainMenuItems
-          .find(_.key == line)
-          .map(_.command(this, line))
-          .getOrElse(defaultMenuItem.command(this, line))
+      if (line.trim.isEmpty) {
+        printEmpty()
+        true
+      }
+      else
+        mainMenuItems
+            .find(_.key == line)
+            .map(_.command(this, line))
+            .getOrElse(defaultMenuItem.command(this, line))
     }.getOrElse(MenuItem.eofCommand(this, ""))
   }
 
