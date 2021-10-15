@@ -175,4 +175,6 @@ object StringUtils {
 
   def afterFirst(string: String, char: Char, all: Boolean = true, keep: Boolean = false): String =
     after(string, string.indexOf(char), all, keep)
+
+  def med(source: String, target: String): Int = MED(source, target).getDistance
 }
