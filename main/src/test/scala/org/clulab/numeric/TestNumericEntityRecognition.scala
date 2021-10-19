@@ -153,6 +153,23 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "19:02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX19-02-XX")
   }
 
+  it should "recognize numeric dates of form month of year" in {
+    ensure(sentence= "sowing date is best in May of 2020", Interval(5, 8), goldEntity= "DATE", goldNorm= "2020-05-XX")
+    ensure(sentence= "sowing date in July of 2020", Interval(3, 6), goldEntity= "DATE", goldNorm= "2020-07-XX")
+    ensure(sentence= "It is not desirable to sow in January of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-01-XX")
+    ensure(sentence= "It is not desirable to sow in Jan of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-01-XX")
+    ensure(sentence= "It is not desirable to sow in Jul of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-07-XX")
+    ensure(sentence= "It is not desirable to sow in Aug of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-08-XX")
+    ensure(sentence= "It is not desirable to sow in Dec of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-12-XX")
+  }
+
+  it should "recognize numeric dates of form month date of year" in {
+    ensure(sentence= "sowing date is best on October 8 of 2020", Interval(5, 9), goldEntity= "DATE", goldNorm= "2020-10-08")
+    ensure(sentence= "Rain will be on April 8 of 2020", Interval(4, 8), goldEntity= "DATE", goldNorm= "2020-04-08")
+    ensure(sentence= "December 18 of 2002", Interval(0, 4), goldEntity= "DATE", goldNorm= "2002-12-18")
+    ensure(sentence= "February 21 of 1002", Interval(0, 4), goldEntity= "DATE", goldNorm= "1002-02-21")
+  }
+
   it should "recognize dates with ordinal days" in {
     ensure(sentence = "Planting dates are between July 1st and August 2nd.", Interval(3, 9), goldEntity = "DATE-RANGE", "XXXX-07-01 -- XXXX-08-02")
   }
@@ -161,6 +178,8 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 -- 2020-11-11")
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
+    ensure("between October 31 and December 31 of 2020", Interval(0, 8), "DATE-RANGE", "2020-10-31 -- 2020-12-31")
+    ensure("Sowing between October 31 and December 30 , 2020 is optimal", Interval(1, 9), "DATE-RANGE", "2020-10-31 -- 2020-12-30")
   }
 
   it should "recognize measurement units" in {
