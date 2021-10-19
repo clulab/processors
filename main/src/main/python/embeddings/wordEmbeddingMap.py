@@ -21,15 +21,13 @@ def load(config):
             else:
                 delimiter = " "
             word, *rest = line.rstrip().split(delimiter)
+            word = "<UNK>" if word == "" else word
             w2i[word] = i
             i += 1
             x = np.array(list(map(float, rest)))
             vector = x #(x /np.linalg.norm(x)) #normalized
             embedding_size = vector.shape[0]
-            if word == "":
-                emb_dict["<UNK>"] = vector
-            else:
-                emb_dict[word] = vector    
+            emb_dict[word] = vector    
 
     weights = np.zeros((len(emb_dict), embedding_size))
     for w, i in w2i.items():
