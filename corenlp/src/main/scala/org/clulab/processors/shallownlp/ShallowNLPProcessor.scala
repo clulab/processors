@@ -123,7 +123,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document = {
     // create the CLU document
-    val doc = CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText = true, charactersBetweenSentences, charactersBetweenTokens)
+    val doc = CluProcessor.mkDocumentFromTokens(sentences, keepText = true, charactersBetweenSentences, charactersBetweenTokens)
 
     // now create the CoreNLP document Annotation
     cluDocToCoreDoc(doc, keepText)

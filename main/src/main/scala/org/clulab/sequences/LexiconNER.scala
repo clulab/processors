@@ -3,6 +3,7 @@ package org.clulab.sequences
 import org.clulab.processors.Sentence
 import org.clulab.struct.{EntityValidator, TrueEntityValidator}
 
+import java.io.File
 import scala.collection.mutable
 
 /**
@@ -185,14 +186,27 @@ object LexiconNER {
     * @param lexicalVariationEngine Generates alternative spellings of an entity name (necessary for the bio domain)
     * @param useLemmasForMatching If true, we use Sentence.lemmas instead of Sentence.words during matching
     * @param defaultCaseInsensitive If true, tokens are matched case insensitively
+    * @param baseDirOpt An optional directory to force kbs to be loaded from files rather than resources
     * @return The new LexiconNER
     */
   def apply(kbs: Seq[String], overrideKBs: Option[Seq[String]], caseInsensitiveMatchings: Seq[Boolean],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
-      defaultCaseInsensitive: Boolean
+      defaultCaseInsensitive: Boolean, baseDirOpt: Option[File]
   ): LexiconNER = this(
-    kbs.zip(caseInsensitiveMatchings).map { case (kb,caseInsensitiveMatchings) => new ResourceStandardKbSource(kb, caseInsensitiveMatchings) },
-    overrideKBs.map { overrideKBs => overrideKBs.map { overrideKB => new ResourceOverrideKbSource(overrideKB) } },
+    kbs.zip(caseInsensitiveMatchings).map { case (kb,caseInsensitiveMatchings) =>
+      if (baseDirOpt.isEmpty)
+        new ResourceStandardKbSource(kb, caseInsensitiveMatchings)
+      else
+        new FileStandardKbSource(kb, caseInsensitiveMatchings, baseDirOpt.get)
+    },
+    overrideKBs.map { overrideKBs =>
+      overrideKBs.map { overrideKB =>
+        if (baseDirOpt.isEmpty)
+          new ResourceOverrideKbSource(overrideKB)
+        else
+          new FileOverrideKbSource(overrideKB, baseDirOpt.get)
+      }
+    },
     lexicalVariationEngine, entityValidator, useLemmasForMatching, defaultCaseInsensitive
   )
 
@@ -204,7 +218,8 @@ object LexiconNER {
     apply(
       kbs, None, caseInsensitiveMatchings,
       entityValidator, new NoLexicalVariations, useLemmasForMatching,
-      defaultCaseInsensitive = false
+      defaultCaseInsensitive = false,
+      baseDirOpt = None
     )
   }
 
@@ -215,7 +230,8 @@ object LexiconNER {
     apply(
       kbs, None, caseInsensitiveMatchings,
       new TrueEntityValidator, new NoLexicalVariations, useLemmasForMatching,
-      defaultCaseInsensitive = false
+      defaultCaseInsensitive = false,
+      baseDirOpt = None
     )
   }
 
@@ -225,7 +241,19 @@ object LexiconNER {
       kbs, None, caseInsensitiveMatchings,
       new TrueEntityValidator, new NoLexicalVariations,
       useLemmasForMatching = false,
-      defaultCaseInsensitive = false
+      defaultCaseInsensitive = false,
+      baseDirOpt = None
+    )
+  }
+
+  /** This is just like the above but with the addition of the baseDirOpt. */
+  def apply(kbs: Seq[String], caseInsensitiveMatchings: Seq[Boolean], baseDirOpt: Option[File]): LexiconNER = {
+    apply(
+      kbs, None, caseInsensitiveMatchings,
+      new TrueEntityValidator, new NoLexicalVariations,
+      useLemmasForMatching = false,
+      defaultCaseInsensitive = false,
+      baseDirOpt = baseDirOpt
     )
   }
 
@@ -254,7 +282,7 @@ object LexiconNER {
       caseInsensitiveMatching: Boolean): LexiconNER = {
     val caseInsensitiveMatchings = Array.fill(kbs.length)(caseInsensitiveMatching)
     this(kbs, overrideKBs, caseInsensitiveMatchings, entityValidator, lexicalVariationEngine,
-        useLemmasForMatching, caseInsensitiveMatching)
+        useLemmasForMatching, caseInsensitiveMatching, None)
   }
 
   /**

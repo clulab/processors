@@ -22,57 +22,117 @@ import org.clulab.utils.BeforeAndAfter
   *   lemmatization (Morpha, copied in our repo to minimize dependencies),
   *   POS tagging, NER, chunking, dependency parsing - using our MTL architecture (dep parsing coming soon)
   */
-class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
-                    val optionalNER: Option[LexiconNER] = None) extends Processor with Configured {
+// This protected constructor is used especially for reloading.
+class CluProcessor protected (
+  val config: Config,
+  val optionalNER: Option[LexiconNER],
+  numericEntityRecognizerOpt: Option[NumericEntityRecognizer],
+  internStringsOpt: Option[Boolean],
+  localTokenizerOpt: Option[Tokenizer],
+  lemmatizerOpt: Option[Lemmatizer],
+  mtlPosChunkSrlpOpt: Option[Metal],
+  mtlNerOpt: Option[Metal],
+  mtlSrlaOpt: Option[Metal],
+  mtlDepsOpt: Option[Metal]
+) extends Processor with Configured {
+
+  // standard, abbreviated constructor
+  def this(
+    config: Config = ConfigFactory.load("cluprocessor"),
+    optionalNER: Option[LexiconNER] = None
+  ) = this(config, optionalNER, None, None, None, None, None, None, None, None)
+
+  // The strategy here is to use Some(value) to indicate that the copied CluProcessor
+  // should use the provided value when the copy is made.  Use None to reuse the value
+  // in the current CluProcessor.  Since everything defaults to None, default behavior
+  // results in a copy of the original with nothing replaced.
+  def copy(
+    configOpt: Option[Config] = None,
+    optionalNEROpt: Option[Option[LexiconNER]] = None,
+    numericEntityRecognizerOptOpt: Option[Option[NumericEntityRecognizer]] = None,
+    internStringsOptOpt: Option[Option[Boolean]] = None,
+    localTokenizerOptOpt: Option[Option[Tokenizer]] = None,
+    lemmatizerOptOpt: Option[Option[Lemmatizer]] = None,
+    mtlPosChunkSrlpOptOpt: Option[Option[Metal]] = None,
+    mtlNerOptOpt: Option[Option[Metal]] = None,
+    mtlSrlaOptOpt: Option[Option[Metal]] = None,
+    mtlDepsOptOpt: Option[Option[Metal]] = None
+  ): CluProcessor = {
+    new CluProcessor(
+      configOpt.getOrElse(this.config),
+      optionalNEROpt.getOrElse(this.optionalNER),
+      numericEntityRecognizerOptOpt.getOrElse(this.numericEntityRecognizerOpt),
+      internStringsOptOpt.getOrElse(this.internStringsOpt),
+      localTokenizerOptOpt.getOrElse(this.localTokenizerOpt),
+      lemmatizerOptOpt.getOrElse(this.lemmatizerOpt),
+      mtlPosChunkSrlpOptOpt.getOrElse(this.mtlPosChunkSrlpOpt),
+      mtlNerOptOpt.getOrElse(this.mtlNerOpt),
+      mtlSrlaOptOpt.getOrElse(this.mtlSrlaOpt),
+      mtlDepsOptOpt.getOrElse(this.mtlDepsOpt)
+    )
+  }
 
   override def getConf: Config = config
 
   // should we intern strings or not?
-  val internStrings:Boolean = getArgBoolean(s"$prefix.internStrings", Some(false))
+  val internStrings:Boolean = internStringsOpt.getOrElse(
+    getArgBoolean(s"$prefix.internStrings", Some(false))
+  )
 
   // This strange construction is designed to allow subclasses access to the value of the tokenizer while
   // at the same time allowing them to override the value.
   // val tokenizer: Tokenizer = new ModifiedTokenizer(super.tokenizer)
   // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
   // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
-  protected lazy val localTokenizer: Tokenizer = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => new OpenDomainPortugueseTokenizer
-    case "ES" => new OpenDomainSpanishTokenizer
-    case _ => new OpenDomainEnglishTokenizer
+  protected lazy val localTokenizer: Tokenizer = localTokenizerOpt.getOrElse {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => new OpenDomainPortugueseTokenizer
+      case "ES" => new OpenDomainSpanishTokenizer
+      case _ => new OpenDomainEnglishTokenizer
+    }
   }
 
   // the actual tokenizer
   lazy val tokenizer: Tokenizer = localTokenizer
 
   // the lemmatizer
-  lazy val lemmatizer: Lemmatizer = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => new PortugueseLemmatizer
-    case "ES" => new SpanishLemmatizer
-    case _ => new EnglishLemmatizer
+  lazy val lemmatizer: Lemmatizer = lemmatizerOpt.getOrElse {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => new PortugueseLemmatizer
+      case "ES" => new SpanishLemmatizer
+      case _ => new EnglishLemmatizer
+    }
   }
 
   // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
-  lazy val mtlPosChunkSrlp: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+  lazy val mtlPosChunkSrlp: Metal = mtlPosChunkSrlpOpt.getOrElse {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+    }
   }
 
   // one of the multi-task learning (MTL) models, which covers: NER
-  lazy val mtlNer: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+  lazy val mtlNer: Metal = mtlNerOpt.getOrElse {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+    }
   }
 
   // recognizes numeric entities using Odin rules
-  lazy val numericEntityRecognizer = new NumericEntityRecognizer
+  lazy val numericEntityRecognizer: NumericEntityRecognizer =
+      numericEntityRecognizerOpt.getOrElse(NumericEntityRecognizer())
 
   // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
-  lazy val mtlSrla: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+  lazy val mtlSrla: Metal = mtlSrlaOpt.getOrElse {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+    }
   }
 
   /*
@@ -88,10 +148,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
   }
   */
-  lazy val mtlDeps: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
+  lazy val mtlDeps: Metal = mtlDepsOpt.getOrElse {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
+    }
   }
 
   // Although this uses no class members, the method is sometimes called from tests
@@ -143,7 +205,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
                            keepText:Boolean = false,
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document = {
-    CluProcessor.mkDocumentFromTokens(tokenizer, sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
+    CluProcessor.mkDocumentFromTokens(sentences, keepText, charactersBetweenSentences, charactersBetweenTokens)
   }
 
   class PredicateAttachment(val predicates: IndexedSeq[IndexedSeq[Int]]) extends IntermediateDocumentAttachment
@@ -172,27 +234,23 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     val allLabels = mtlNer.predictJointly(AnnotatedSentence(words), embeddings)
 
     // NER labels from the custom NER
-    val optionalNERLabels: Option[Array[String]] = {
-      if(optionalNER.isEmpty) {
-        None
-      } else {
-        val sentence = Sentence(
-          words,
-          startCharOffsets,
-          endCharOffsets,
-          words,
-          Some(tags),
-          lemmas = lemmas,
-          entities = None,
-          norms = None,
-          chunks = None,
-          tree = None,
-          deps = EMPTY_GRAPH,
-          relations = None
-        )
+    val optionalNERLabels: Option[Array[String]] = optionalNER.map { ner =>
+      val sentence = Sentence(
+        words,
+        startCharOffsets,
+        endCharOffsets,
+        words,
+        Some(tags),
+        lemmas = lemmas,
+        entities = None,
+        norms = None,
+        chunks = None,
+        tree = None,
+        deps = EMPTY_GRAPH,
+        relations = None
+      )
 
-        Some(optionalNER.get.find(sentence))
-      }
+      ner.find(sentence)
     }
 
     if(optionalNERLabels.isEmpty) {
@@ -367,7 +425,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
     doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
-  override def tagPartsOfSpeech(doc:Document) {
+  override def tagPartsOfSpeech(doc:Document): Unit = {
     basicSanityCheck(doc)
 
     val embeddings = getEmbeddings(doc)
@@ -400,7 +458,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
   }
 
   /** Lematization; modifies the document in place */
-  override def lemmatize(doc:Document) {
+  override def lemmatize(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       //println(s"Lemmatize sentence: ${sent.words.mkString(", ")}")
@@ -419,7 +477,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
   }
 
   /** Generates cheap lemmas with the word in lower case, for languages where a lemmatizer is not available */
-  def cheapLemmatize(doc:Document) {
+  def cheapLemmatize(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       val lemmas = sent.words.map(_.toLowerCase())
@@ -571,12 +629,12 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
   }
 
   /** Coreference resolution; modifies the document in place */
-  def resolveCoreference(doc:Document) {
+  def resolveCoreference(doc:Document): Unit = {
     // TODO. Implement me
   }
 
   /** Discourse parsing; modifies the document in place */
-  def discourse(doc:Document) {
+  def discourse(doc:Document): Unit = {
     // TODO. Implement me
   }
 
@@ -597,7 +655,7 @@ class CluProcessor (val config: Config = ConfigFactory.load("cluprocessor"),
 }
 
 trait SentencePostProcessor {
-  def process(sentence: Sentence)
+  def process(sentence: Sentence): Unit
 }
 
 /** CluProcessor for Spanish */
@@ -618,7 +676,7 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
   }
 
   /** Lematization; modifies the document in place */
-  override def lemmatize(doc:Document) {
+  override def lemmatize(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
       // check if sentence tags were defined
@@ -704,8 +762,7 @@ object CluProcessor {
   }
 
   /** Constructs a document of tokens from an array of tokenized sentences */
-  def mkDocumentFromTokens(tokenizer:Tokenizer,
-                           sentences:Iterable[Iterable[String]],
+  def mkDocumentFromTokens(sentences:Iterable[Iterable[String]],
                            keepText:Boolean,
                            charactersBetweenSentences:Int,
                            charactersBetweenTokens:Int): Document = {

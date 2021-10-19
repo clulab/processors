@@ -6,22 +6,17 @@
 package org.clulab.sequences
 
 import java.util.function.Consumer
-
 import org.clulab.struct.BooleanHashTrie
 import org.clulab.struct.DebugBooleanHashTrie
 import org.clulab.struct.EntityValidator
 import org.clulab.struct.IntHashTrie
-import org.clulab.utils.Files.loadStreamFromClasspath
+import org.clulab.utils.Files
 import org.clulab.utils.Serializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.{
-  HashMap => MutableHashMap,
-  HashSet => MutableHashSet,
-  Map => MutableMap,
-  Set => MutableSet
-}
+import java.io.File
+import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHashSet, Map => MutableMap, Set => MutableSet}
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -77,13 +72,21 @@ trait KbSource {
 
 abstract class StandardKbSource(caseInsensitiveMatching: Boolean) extends KbSource {
   def getLabel: String
-  def getCaseInsensitiveMatching: Boolean
   def withTokens(f: Array[String] => Unit): Unit
+
+  def getLabel(resourceName: String): String = {
+    val slash = resourceName.lastIndexOf("/")
+    val dot = resourceName.indexOf('.')
+    val label = resourceName.substring(slash + 1, dot)
+    label
+  }
+
+  def getCaseInsensitiveMatching: Boolean = caseInsensitiveMatching
 
   protected def processLine(line: String, f: Array[String] => Unit): Unit = {
     val trimmedLine = removeCommentsAndTrim(line)
     if (trimmedLine.nonEmpty && !trimmedLine.startsWith("#")) {
-      val tokens = trimmedLine.split("\\s+")
+      val tokens = trimmedLine.split("\\s+") // this means entries in the KBs must be pre-tokenized!!
       f(tokens)
     }
   }
@@ -100,7 +103,7 @@ trait ResourceKbSource {
   }
 
   def consume(resourceName: String, consumer: Consumer[String]): Unit = {
-    Serializer.using(loadStreamFromClasspath(resourceName)) { bufferedReader =>
+    Serializer.using(Files.loadStreamFromClasspath(resourceName)) { bufferedReader =>
       bufferedReader.lines.forEach(consumer)
     }
   }
@@ -117,14 +120,7 @@ trait ResourceKbSource {
 class ResourceStandardKbSource(resourceName: String, caseInsensitiveMatching: Boolean)
     extends StandardKbSource(caseInsensitiveMatching) with ResourceKbSource {
 
-  def getLabel: String = {
-    val slash = resourceName.lastIndexOf("/")
-    val dot = resourceName.indexOf('.')
-    val label = resourceName.substring(slash + 1, dot)
-    label
-  }
-
-  def getCaseInsensitiveMatching: Boolean = caseInsensitiveMatching
+  def getLabel: String = getLabel(resourceName)
 
   def withTokens(f: Array[String] => Unit): Unit = {
     consume(resourceName, mkConsumer { line: String => processLine(line, f) })
@@ -133,12 +129,49 @@ class ResourceStandardKbSource(resourceName: String, caseInsensitiveMatching: Bo
   def getLines: Iterable[String] = getLines(resourceName)
 }
 
+trait FileKbSource {
+
+  def mkConsumer(f: String => Unit): Consumer[String] = {
+    new Consumer[String]() {
+      def accept(line: String): Unit = {
+        f(line)
+      }
+    }
+  }
+
+  def consume(resourceName: String, baseDir: File, consumer: Consumer[String]): Unit = {
+    val file = new File(baseDir, if (resourceName.startsWith("/")) resourceName.drop(1) else resourceName)
+
+    Serializer.using(Files.loadFile(file)) { bufferedReader =>
+      bufferedReader.lines.forEach(consumer)
+    }
+  }
+
+  // This is for testing and only for short files.
+  def getLines(resourceName: String, baseDir: File): Iterable[String] = {
+    var lines: List[String] = Nil
+
+    consume(resourceName, baseDir, mkConsumer { line: String => lines = line :: lines } )
+    lines.reverse
+  }
+}
+
+class FileStandardKbSource(resourceName: String, caseInsensitiveMatching: Boolean, baseDir: File)
+    extends StandardKbSource(caseInsensitiveMatching) with FileKbSource {
+
+  def getLabel: String = getLabel(resourceName)
+
+  def withTokens(f: Array[String] => Unit): Unit = {
+    consume(resourceName, baseDir, mkConsumer { line: String => processLine(line, f) })
+  }
+
+  def getLines: Iterable[String] = getLines(resourceName, baseDir)
+}
+
 class MemoryStandardKbSource(label: String, lines: Iterable[String], caseInsensitiveMatching: Boolean) extends
     StandardKbSource(caseInsensitiveMatching) {
 
   def getLabel: String = label
-
-  def getCaseInsensitiveMatching: Boolean = caseInsensitiveMatching
 
   def withTokens(f: Array[String] => Unit): Unit = {
     lines.foreach { line =>
@@ -174,6 +207,15 @@ class ResourceOverrideKbSource(resourceName: String) extends OverrideKbSource() 
   }
 
   def getLines: Iterable[String] = getLines(resourceName)
+}
+
+class FileOverrideKbSource(resourceName: String, baseDir: File) extends OverrideKbSource() with FileKbSource {
+
+  def withLabelAndTokens(f: (String, Array[String]) => Unit): Unit = {
+    consume(resourceName, baseDir, mkConsumer { line: String => processLine(line, f) })
+  }
+
+  def getLines: Iterable[String] = getLines(resourceName, baseDir)
 }
 
 class MemoryOverrideKbSource(lines: Iterable[String]) extends OverrideKbSource() {

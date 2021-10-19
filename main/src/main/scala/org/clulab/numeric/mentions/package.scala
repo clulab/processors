@@ -5,6 +5,8 @@ import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
 import java.util.regex.Pattern
 
 package object mentions {
+  val RANGE_SEP = " -- "
+
   implicit class MentionOps(mention: Mention) {
 
     def toMeasurementMention: MeasurementMention =  mention match {
@@ -20,11 +22,60 @@ package object mentions {
           m.foundBy,
           m.attachments,
           getArgWords("number", m),
-          getArgWords("unit", m)
+          getArgWords("unit", m),
+          false
         )
 
       case m =>
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to MeasurementMention!")
+    }
+
+    def toMeasurementWithRangeMention: MeasurementMention =  mention match {
+      case m:  MeasurementMention => m
+
+      case m: RelationMention =>
+        new MeasurementMention(
+          m.labels,
+          m.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          Some(Seq(getArgNorm("number", m).get)), // this has already been normalized in NumberRangeMention
+          getArgWords("unit", m),
+          true
+        )
+
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to MeasurementMention!")
+    }
+
+    def toNumberRangeMention: NumberRangeMention =  mention match {
+      case m: NumberRangeMention => m
+
+      case m: RelationMention =>
+        val number1Norm = getArgNorm("number1", m)
+        if(number1Norm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument number1 in mention ${m.raw.mkString(" ")}!")
+        val number2Norm = getArgNorm("number2", m)
+        if(number2Norm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument number2 in mention ${m.raw.mkString(" ")}!")
+
+        new NumberRangeMention(
+          m.labels,
+          m.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          number1Norm.get,
+          number2Norm.get
+        )
+
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to NumberRangeMention!")
     }
 
     def toDateRangeMention: DateRangeMention =  mention match {
@@ -325,6 +376,9 @@ package object mentions {
       val arg = m.arguments(argName).head
       if(arg.isInstanceOf[Norm]) {
         Some(arg.asInstanceOf[Norm].neNorm)
+      } else if(arg.isInstanceOf[TextBoundMention] && arg.labels.contains("Number")) {
+        // Numbers are normalized on demand, for efficiency (so we do not create too many custom Mentions)
+        NumberParser.parse(arg.words).map(_.toString)
       } else {
         None
       }

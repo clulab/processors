@@ -675,6 +675,7 @@ object Utils {
       val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
 
       addLines(mutableMap, lines, fieldName, defaultValue)
+
       mutableMap.toMap
     }
 

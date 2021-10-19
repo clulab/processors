@@ -28,6 +28,7 @@ class DateRangeMention ( labels: Seq[String],
 
   override def neNorm: String = {
     d1 + " -- " + date2Norm
+    date1Norm + RANGE_SEP + date2Norm
   }
 
   override def neLabel: String = {
