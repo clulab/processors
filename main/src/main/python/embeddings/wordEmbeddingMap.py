@@ -12,8 +12,8 @@ class WordEmbeddingMap:
 
 def load(config):
     emb_dict = dict()
-    w2i = {"<UNK>":0}
-    i = 1
+    w2i = {}
+    i = 0
     for line in open(config.get_string("glove.matrixResourceName")):
         if not len(line.split()) == 2:
             if "\t" in line:
