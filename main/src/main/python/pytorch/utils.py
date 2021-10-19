@@ -14,14 +14,12 @@ UNK_EMBEDDING = 0
 START_TAG = "<START>"
 STOP_TAG = "<STOP>"
 
-RANDOM_SEED = 2522620396 # used for both DyNet, and the JVM seed for shuffling data
-WEIGHT_DECAY = 1e-5
+RANDOM_SEED = 2522620396
+WEIGHT_DECAY = 0.01
 
 LOG_MIN_VALUE = -10000.0
 
-DEFAULT_DROPOUT_PROBABILITY = 0.0 # no dropout by  default
-
-IS_DYNET_INITIALIZED = False
+DEFAULT_DROPOUT_PROBABILITY = 0.1 # no dropout by  default
 
 TYPE_VITERBI = 1
 TYPE_GREEDY = 2
@@ -46,7 +44,7 @@ def save(file, values, comment):
 def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
     hidden_dim = charRnnBuilder.hidden_size
     charEmbeddings = charLookupParameters(torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word]))
-    output, _ = transduce(charEmbeddings, charRnnBuilder)
+    output = transduce(charEmbeddings, charRnnBuilder)
     result = output.squeeze(1)[-1]
     # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
     return result
@@ -79,20 +77,21 @@ def transduce(embeddings, builder):
 
     if mode == 'LSTM':
         if bi_direct:
+            # change 1 to the layers we need
             (h, c) =  (torch.rand(2, 1, hidden_dim), torch.rand(2, 1, hidden_dim)) 
-            output, (result, c) = builder(embeddings.unsqueeze(1), (h, c))
+            output, (h, c) = builder(embeddings.unsqueeze(1), (h, c))
         else:
             (h, c) =  (torch.rand(1, 1, hidden_dim), torch.rand(1, 1, hidden_dim)) 
-            output, (result, c) = builder(embeddings.unsqueeze(1), (h, c))
+            output, (h, c) = builder(embeddings.unsqueeze(1), (h, c))
     elif mode == 'GRU':
         if bi_direct:
             h =  torch.rand(2, 1, hidden_dim) 
-            output, result = builder(embeddings.unsqueeze(1), h)
+            output, h = builder(embeddings.unsqueeze(1), h)
         else:
             h =  torch.rand(1, 1, hidden_dim)
-            output, result = builder(embeddings.unsqueeze(1), h)
+            output, h = builder(embeddings.unsqueeze(1), h)
 
-    return output, result
+    return output
 
 def expressionDropout(expression, dropoutProb, doDropout):
     if doDropout and dropoutProb > 0:

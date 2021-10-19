@@ -91,6 +91,19 @@ class ScoreCountsByLabel:
 
         return round(a, decimals) if decimals>0 else a
 
+def round(d, decimals):
+    if(decimals < 0):
+      return d # do not round when decimals is set to a negative value
+
+    zeros = 1
+    i = 0
+    while (i < decimals + 2):
+      zeros *= 10
+      i += 1
+
+    v = (d * zeros) / 100
+    return v
+
 
 
 

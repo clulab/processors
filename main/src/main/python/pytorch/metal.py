@@ -74,6 +74,8 @@ class Metal(object):
         for layers in self.model:
             parameters += layers.get_parameters()
 
+        torch.nn.utils.clip_grad_norm_(parameters, 1e-2)
+
         if trainerType == "adam":
             trainer = Adam(parameters, lr=learningRate, weight_decay=WEIGHT_DECAY)
         elif trainerType == "rmsprop":

@@ -28,7 +28,7 @@ class RnnLayer(IntermediateLayer):
 
         assert(inputExpressions is not None)
 
-        States, _ = transduce(inputExpressions, self.wordRnnBuilder)
+        States = transduce(inputExpressions, self.wordRnnBuilder)
         if self.useHighwayConnections:
             States = torch.cat([States.squeeze(1), inputExpressions], dim=1)
 

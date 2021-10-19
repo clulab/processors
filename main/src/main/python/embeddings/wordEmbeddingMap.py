@@ -24,11 +24,12 @@ def load(config):
             w2i[word] = i
             i += 1
             x = np.array(list(map(float, rest)))
-            vector = (x /np.linalg.norm(x))
+            vector = x #(x /np.linalg.norm(x)) #normalized
             embedding_size = vector.shape[0]
-            emb_dict[word] = vector
-    base = math.sqrt(6/embedding_size)
-    emb_dict["<UNK>"] = np.random.uniform(-base,base,(embedding_size))
+            if word == "":
+                emb_dict["<UNK>"] = vector
+            else:
+                emb_dict[word] = vector    
 
     weights = np.zeros((len(emb_dict), embedding_size))
     for w, i in w2i.items():
