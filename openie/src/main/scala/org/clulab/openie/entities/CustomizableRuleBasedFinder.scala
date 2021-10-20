@@ -73,7 +73,7 @@ class CustomizableRuleBasedFinder(
    * @param tag the POS tag to consider
    */
   def isValidTag(tag: String): Boolean = {
-    if (ensureBaseTagNounVerb) tagSet.isAnyNoun(tag) || tagSet.isAnyVerb(tag) else true
+    !ensureBaseTagNounVerb || tagSet.isAnyNoun(tag) || tagSet.isAnyVerb(tag)
   }
 
 
