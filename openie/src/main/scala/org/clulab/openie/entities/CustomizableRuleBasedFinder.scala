@@ -16,12 +16,16 @@ class CustomizableRuleBasedFinder(
   avoidEngine: ExtractorEngine,
   override val tagSet: TagSet,
   stopNER: Set[String],
+  ensureBaseTagNounVerb: Boolean,
   maxHops: Int,
   maxLength: Int,
   override val INVALID_OUTGOING: Set[scala.util.matching.Regex],
   override val INVALID_INCOMING: Set[scala.util.matching.Regex],
   override val VALID_OUTGOING: Set[scala.util.matching.Regex]
   ) extends RuleBasedEntityFinder(entityEngine, avoidEngine, maxHops, maxLength) {
+
+  private var _avoidState = new State()
+
   /**
    * Performs rule-based entity extraction with selective expansion along syntactic dependencies.
    * For filtering, see filterEntities.
@@ -30,8 +34,8 @@ class CustomizableRuleBasedFinder(
   override def extract(doc: Document): Seq[Mention] = {
     // avoid refs, etc.
     val avoid = avoidEngine.extractFrom(doc)
-    val stateFromAvoid = State(avoid)
-    val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filterNot(stateFromAvoid.contains)
+    _avoidState = State(avoid)
+    val baseEntities = entityEngine.extractFrom(doc, _avoidState).filterNot(_avoidState.contains)
     // make sure that all are valid (i.e., contain a noun or would have contained a noun except for trigger avoidance)
     val validBaseEntities = baseEntities.filter(isValidBaseEntity)
     // Expand
@@ -48,33 +52,32 @@ class CustomizableRuleBasedFinder(
     } else {
       // check that our expanded entities haven't swallowed any avoid mentions
       val avoidLabel = avoid.head.labels.last
-      trimmedEntities.filterNot { m => stateFromAvoid.hasMentionsFor(m.sentence, m.tokenInterval, avoidLabel) }
+      trimmedEntities.filterNot { m => _avoidState.hasMentionsFor(m.sentence, m.tokenInterval, avoidLabel) }
     }
     res
   }
 
   /**
-   * Determines whether or not an entity is a valid base entity. We want to disallow JJ-only entities except
-   * when they are a result of the head noun being a trigger (i.e. being avoided)
+   * Determines whether or not an entity is a valid base entity.
    */
   def isValidBaseEntity(entity: Mention): Boolean = {
-    containsValidNounVerb(entity)
-  }
-
-  /**
-   * Determines if the entity has at least one noun/verb that is not a stopNER
-   * @param entity the candidate entity Mention
-   */
-  def containsValidNounVerb(entity: Mention): Boolean = {
-    //val lemmas = entity.lemmas.get
     val tags = entity.tags.get
     val entities = entity.entities.get
 
     // Make sure there is a noun that isn't a specifically excluded  named entity.
     tags.indices.exists { i =>
-      (tagSet.isAnyNoun(tags(i)) || tagSet.isAnyVerb(tags(i))) && !stopNER.contains(entities(i))
+      isValidTag(tags(i)) && !stopNER.contains(entities(i))
     }
   }
+
+  /**
+   * Determines if the tag is a noun/verb
+   * @param tag the POS tag to consider
+   */
+  def isValidTag(tag: String): Boolean = {
+    if (ensureBaseTagNounVerb) tagSet.isAnyNoun(tag) || tagSet.isAnyVerb(tag) else true
+  }
+
 
   /**
    * Trims found entities of leading or trailing unwanted tokens.  Currently, we define "unwanted" as being POS tagged
@@ -124,6 +127,10 @@ class CustomizableRuleBasedFinder(
 
   def validEdgeTag(tag: String, tagSet: TagSet): Boolean = !tagSet.isInvalidEdge(tag)
 
+  def addToAvoidState(mentions: Seq[Mention]): Unit = {
+    _avoidState = _avoidState.updated(mentions)
+  }
+
 }
 
 object CustomizableRuleBasedFinder {
@@ -139,6 +146,7 @@ object CustomizableRuleBasedFinder {
 
     val tagSet: TagSet = TagSet(config.getString("CustomRuleBasedEntityFinder.language"))
     val stopNER: Set[String] = config.getStringList("CustomRuleBasedEntityFinder.stopNER").asScala.toSet
+    val ensureBaseTagNounVerb: Boolean = config.getBoolean("CustomRuleBasedEntityFinder.ensureBaseTagNounVerb")
     val maxHops: Int = config.getInt("CustomRuleBasedEntityFinder.maxHops")
     val maxLength: Int = config.getInt("CustomRuleBasedEntityFinder.maxLength")
     val invalidOutgoing: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.invalidOutgoing").asScala.toSet)
@@ -150,6 +158,7 @@ object CustomizableRuleBasedFinder {
       avoidEngine,
       tagSet,
       stopNER,
+      ensureBaseTagNounVerb,
       maxHops,
       maxLength,
       invalidOutgoing,
