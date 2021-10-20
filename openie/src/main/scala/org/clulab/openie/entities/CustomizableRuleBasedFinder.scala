@@ -37,7 +37,7 @@ class CustomizableRuleBasedFinder(
     // make sure that all are valid (i.e., contain a noun or would have contained a noun except for trigger avoidance)
     val validBaseEntities = baseEntities.filter(isValidBaseEntity)
     // Expand
-    val expandedEntities = validBaseEntities.map(entity => expand(entity, maxHops))
+    val expandedEntities = validBaseEntities.map(entity => expand(entity, maxHops, stateFromAvoid))
     // split entities on likely coordinations
     val splitEntities = (validBaseEntities ++ expandedEntities).flatMap(splitCoordinatedEntities)
     // remove entity duplicates introduced by splitting expanded
