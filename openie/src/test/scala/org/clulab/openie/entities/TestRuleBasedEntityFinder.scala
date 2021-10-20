@@ -1,9 +1,10 @@
 package org.clulab.openie.entities
 
-import org.clulab.odin.TextBoundMention
+import org.clulab.odin.{ExtractorEngine, TextBoundMention}
 import org.clulab.struct.Interval
 import org.clulab.openie.IETestUtils._
-import org.scalatest.{ FlatSpec, Matchers }
+import org.clulab.openie.ResourceUtils
+import org.scalatest.{FlatSpec, Matchers}
 
 
 class TestRuleBasedEntityFinder extends FlatSpec with Matchers {
@@ -50,6 +51,48 @@ class TestRuleBasedEntityFinder extends FlatSpec with Matchers {
     val doc1 = jsonStringToDocument(""" {"text":"The government promotes improved cultivar and climate-smart technologies but the policy to cut down the use of inorganic fertilizer and phase out the fertilizer subsidy results in deteriorating biophysical conditions, low use of inorganic fertilizer, less water, reduced farm sizes which lead to low benefit from the improved cultivar.","sentences":[{ "raw":["The","government","promotes","improved","cultivar","and","climate-smart","technologies","but","the","policy","to","cut","down","the","use","of","inorganic","fertilizer","and","phase","out","the","fertilizer","subsidy","results","in","deteriorating","biophysical","conditions",",","low","use","of","inorganic","fertilizer",",","less","water",",","reduced","farm","sizes","which","lead","to","low","benefit","from","the","improved","cultivar","."], "words":["The","government","promotes","improved","cultivar","and","climate-smart","technologies","but","the","policy","to","cut","down","the","use","of","inorganic","fertilizer","and","phase","out","the","fertilizer","subsidy","results","in","deteriorating","biophysical","conditions",",","low","use","of","inorganic","fertilizer",",","less","water",",","reduced","farm","sizes","which","lead","to","low","benefit","from","the","improved","cultivar","."],"startOffsets":[0,4,15,24,33,42,46,60,73,77,81,88,91,95,100,104,108,111,121,132,136,142,146,150,161,169,177,180,194,206,216,218,222,226,229,239,249,251,256,261,263,271,276,282,288,293,296,300,308,313,317,326,334],"endOffsets":[3,14,23,32,41,45,59,72,76,80,87,90,94,99,103,107,110,120,131,135,141,145,149,160,168,176,179,193,205,216,217,221,225,228,238,249,250,255,261,262,270,275,281,287,292,295,299,307,312,316,325,334,335],"tags":["DT","NN","VBZ","VBN","NN","CC","JJ","NNS","CC","DT","NN","TO","VB","RP","DT","NN","IN","JJ","NN","CC","NN","IN","DT","NN","NN","VBZ","IN","VBG","JJ","NNS",",","JJ","NN","IN","JJ","NN",",","JJR","NN",",","VBD","NN","NNS","WDT","VBP","TO","JJ","NN","IN","DT","JJ","NN","."],"lemmas":["the","government","promote","improve","cultivar","and","climate-smart","technology","but","the","policy","to","cut","down","the","use","of","inorganic","fertilizer","and","phase","out","the","fertilizer","subsidy","result","in","deteriorate","biophysical","condition",",","low","use","of","inorganic","fertilizer",",","less","water",",","reduce","farm","size","which","lead","to","low","benefit","from","the","improved","cultivar","."],"entities":["O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","O","B-Simple_chemical","O","O","O","O","O","O","O","O","O","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-VP","B-NP","I-NP","I-NP","I-NP","I-NP","O","B-NP","I-NP","B-VP","I-VP","B-PRT","B-NP","I-NP","B-PP","B-NP","I-NP","O","B-NP","B-PP","B-NP","I-NP","I-NP","B-VP","B-PP","B-VP","B-NP","I-NP","O","B-NP","I-NP","B-PP","B-NP","I-NP","O","B-NP","I-NP","O","B-VP","B-NP","I-NP","B-NP","B-VP","B-PP","B-NP","I-NP","B-PP","B-NP","I-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":2,"destination":1,"relation":"nsubj"},{"source":2,"destination":25,"relation":"ccomp"},{"source":4,"destination":3,"relation":"amod"},{"source":4,"destination":5,"relation":"cc"},{"source":4,"destination":7,"relation":"conj"},{"source":4,"destination":8,"relation":"prep"},{"source":7,"destination":6,"relation":"amod"},{"source":8,"destination":10,"relation":"pobj"},{"source":10,"destination":9,"relation":"det"},{"source":10,"destination":12,"relation":"vmod"},{"source":12,"destination":15,"relation":"dobj"},{"source":12,"destination":21,"relation":"prep"},{"source":12,"destination":11,"relation":"aux"},{"source":12,"destination":13,"relation":"prt"},{"source":15,"destination":16,"relation":"prep"},{"source":15,"destination":14,"relation":"det"},{"source":16,"destination":18,"relation":"pobj"},{"source":18,"destination":17,"relation":"amod"},{"source":18,"destination":19,"relation":"cc"},{"source":18,"destination":20,"relation":"conj"},{"source":21,"destination":24,"relation":"pobj"},{"source":24,"destination":22,"relation":"det"},{"source":24,"destination":23,"relation":"nn"},{"source":25,"destination":4,"relation":"nsubj"},{"source":25,"destination":26,"relation":"prep"},{"source":26,"destination":29,"relation":"pobj"},{"source":29,"destination":27,"relation":"amod"},{"source":29,"destination":28,"relation":"amod"},{"source":32,"destination":31,"relation":"amod"},{"source":32,"destination":33,"relation":"prep"},{"source":33,"destination":35,"relation":"pobj"},{"source":35,"destination":34,"relation":"amod"},{"source":35,"destination":38,"relation":"appos"},{"source":38,"destination":37,"relation":"amod"},{"source":40,"destination":32,"relation":"nsubj"},{"source":40,"destination":2,"relation":"ccomp"},{"source":40,"destination":42,"relation":"dobj"},{"source":42,"destination":41,"relation":"nn"},{"source":42,"destination":44,"relation":"rcmod"},{"source":44,"destination":48,"relation":"prep"},{"source":44,"destination":43,"relation":"nsubj"},{"source":44,"destination":45,"relation":"prep"},{"source":45,"destination":47,"relation":"pobj"},{"source":47,"destination":46,"relation":"amod"},{"source":48,"destination":51,"relation":"pobj"},{"source":51,"destination":49,"relation":"det"},{"source":51,"destination":50,"relation":"amod"}],"roots":[40]},"universal-enhanced":{"edges":[{"source":1,"destination":0,"relation":"det"},{"source":2,"destination":1,"relation":"nsubj"},{"source":2,"destination":25,"relation":"ccomp"},{"source":4,"destination":3,"relation":"amod"},{"source":4,"destination":7,"relation":"conj_and"},{"source":4,"destination":8,"relation":"prep"},{"source":7,"destination":6,"relation":"amod"},{"source":8,"destination":10,"relation":"pobj"},{"source":10,"destination":9,"relation":"det"},{"source":10,"destination":12,"relation":"vmod"},{"source":12,"destination":15,"relation":"dobj"},{"source":12,"destination":24,"relation":"prep_out"},{"source":12,"destination":11,"relation":"aux"},{"source":12,"destination":13,"relation":"prt"},{"source":15,"destination":18,"relation":"prep_of"},{"source":15,"destination":20,"relation":"prep_of"},{"source":15,"destination":14,"relation":"det"},{"source":18,"destination":17,"relation":"amod"},{"source":18,"destination":20,"relation":"conj_and"},{"source":24,"destination":22,"relation":"det"},{"source":24,"destination":23,"relation":"nn"},{"source":25,"destination":4,"relation":"nsubj"},{"source":25,"destination":7,"relation":"nsubj"},{"source":25,"destination":29,"relation":"prep_in"},{"source":29,"destination":27,"relation":"amod"},{"source":29,"destination":28,"relation":"amod"},{"source":32,"destination":31,"relation":"amod"},{"source":32,"destination":35,"relation":"prep_of"},{"source":35,"destination":34,"relation":"amod"},{"source":35,"destination":38,"relation":"appos"},{"source":38,"destination":37,"relation":"amod"},{"source":40,"destination":32,"relation":"nsubj"},{"source":40,"destination":2,"relation":"ccomp"},{"source":40,"destination":42,"relation":"dobj"},{"source":42,"destination":41,"relation":"nn"},{"source":42,"destination":44,"relation":"rcmod"},{"source":44,"destination":47,"relation":"prep_to"},{"source":44,"destination":51,"relation":"prep_from"},{"source":44,"destination":43,"relation":"nsubj"},{"source":47,"destination":46,"relation":"amod"},{"source":51,"destination":49,"relation":"det"},{"source":51,"destination":50,"relation":"amod"}],"roots":[40]}}}]} """)
     val entities = entityFinder.extractAndFilter(doc1)
     entities.forall(_.text != "significant") should be (true)
+
+  }
+
+  "expansion" should "not consume avoided content" in {
+
+    val doc2 = jsonStringToDocument(""" { "sentences":[{ "raw":["This","list","contains","apples",",","unripe","bananas",",","carrots",",","and","reduced","prices","."], "words":["This","list","contains","apples",",","unripe","bananas",",","carrots",",","and","reduced","prices","."], "startOffsets":[0,5,10,19,25,27,34,41,43,50,52,56,64,70], "endOffsets":[4,9,18,25,26,33,41,42,50,51,55,63,70,71], "tags":["DT","NN","VBZ","NNS",",","JJ","NNS",",","NNS",",","CC","VBD","NNS","."], "lemmas":["this","list","contain","apple",",","unripe","banana",",","carrot",",","and","reduce","price","."], "entities":["O","O","O","O","O","O","O","O","O","O","O","O","O","O"], "norms":["O","O","O","O","O","O","O","O","O","O","O","O","O","O"], "chunks":["B-NP","I-NP","B-VP","B-NP","O","B-NP","I-NP","O","B-NP","O","O","B-VP","B-NP","O"], "graphs":{ "stanford-basic":{ "edges":[{ "source":1, "destination":0, "relation":"det" },{ "source":2, "destination":1, "relation":"nsubj" },{ "source":2, "destination":3, "relation":"dobj" },{ "source":2, "destination":13, "relation":"punct" },{ "source":3, "destination":4, "relation":"punct" },{ "source":3, "destination":6, "relation":"conj" },{ "source":3, "destination":7, "relation":"punct" },{ "source":3, "destination":8, "relation":"conj" },{ "source":3, "destination":9, "relation":"punct" },{ "source":3, "destination":10, "relation":"cc" },{ "source":3, "destination":11, "relation":"conj" },{ "source":6, "destination":5, "relation":"amod" },{ "source":11, "destination":12, "relation":"dobj" }], "roots":[2] }, "universal-enhanced":{ "edges":[{ "source":1, "destination":0, "relation":"det" },{ "source":2, "destination":1, "relation":"nsubj" },{ "source":2, "destination":3, "relation":"dobj" },{ "source":2, "destination":6, "relation":"dobj" },{ "source":2, "destination":8, "relation":"dobj" },{ "source":2, "destination":11, "relation":"dobj" },{ "source":2, "destination":13, "relation":"punct" },{ "source":3, "destination":4, "relation":"punct" },{ "source":3, "destination":6, "relation":"conj_and" },{ "source":3, "destination":7, "relation":"punct" },{ "source":3, "destination":8, "relation":"conj_and" },{ "source":3, "destination":9, "relation":"punct" },{ "source":3, "destination":11, "relation":"conj_and" },{ "source":6, "destination":5, "relation":"amod" },{ "source":11, "destination":12, "relation":"dobj" }], "roots":[2] } } }] } """)
+
+    val entityRules = ResourceUtils.readResource("org/clulab/openie/entities/grammar/entities.yml")
+    var avoidRules =
+      """
+        |rules:
+        | - name: avoid_unripe
+        |   label: Avoid
+        |   priority: 1
+        |   type: token
+        |   pattern: |
+        |     [word=NOT_A_WORD]
+        |""".stripMargin
+
+    var avoidEngine = ExtractorEngine(avoidRules)
+    val entityEngine = ExtractorEngine(entityRules)
+    var finder = new RuleBasedEntityFinder(avoidEngine = avoidEngine, entityEngine = entityEngine, maxHops = 2)
+
+    var mentions = finder.extractAndFilter(doc2)
+    mentions.map(_.text) should contain("unripe bananas")
+
+    avoidRules =
+      """
+        |rules:
+        | - name: avoid_unripe
+        |   label: Avoid
+        |   priority: 1
+        |   type: token
+        |   pattern: |
+        |     [word=unripe]
+        |""".stripMargin
+
+    avoidEngine = ExtractorEngine(avoidRules)
+    finder = new RuleBasedEntityFinder(avoidEngine = avoidEngine, entityEngine = entityEngine, maxHops = 2)
+
+    mentions = finder.extractAndFilter(doc2)
+    mentions.map(_.text) shouldNot contain("unripe bananas")
 
   }
 

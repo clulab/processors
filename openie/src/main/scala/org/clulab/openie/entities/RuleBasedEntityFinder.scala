@@ -158,6 +158,7 @@ class RuleBasedEntityFinder(
   /** Used by expand to selectively traverse the provided syntactic dependency graph **/
   @tailrec
   private def traverseOutgoing(
+    sent: Int = 0,
     tokens: Set[Int],
     newTokens: Set[Int],
     outgoingRelations: Array[Array[(Int, String)]],
@@ -174,14 +175,15 @@ class RuleBasedEntityFinder(
         (nextTok, dep) <- outgoingRelations(tok)
         if isValidOutgoingDependency(dep)
         if hasValidIncomingDependencies(nextTok, incomingRelations)
+//        if State().mentionsFor(sent, )
       } yield nextTok
-      traverseOutgoing(tokens ++ newTokens, newNewTokens, outgoingRelations, incomingRelations, remainingHops - 1)
+      traverseOutgoing(sent, tokens ++ newTokens, newNewTokens, outgoingRelations, incomingRelations, remainingHops - 1)
     }
   }
   private def traverseOutgoing(m: Mention, numHops: Int): Interval = {
     val outgoing = outgoingEdges(m.sentenceObj)
     val incoming = incomingEdges(m.sentenceObj)
-    traverseOutgoing(Set.empty, m.tokenInterval.toSet, outgoingRelations = outgoing, incomingRelations = incoming, numHops)
+    traverseOutgoing(0, Set.empty, m.tokenInterval.toSet, outgoingRelations = outgoing, incomingRelations = incoming, numHops)
   }
 
   def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.dependencies match {

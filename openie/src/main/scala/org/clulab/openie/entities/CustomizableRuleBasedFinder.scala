@@ -24,8 +24,6 @@ class CustomizableRuleBasedFinder(
   override val VALID_OUTGOING: Set[scala.util.matching.Regex]
   ) extends RuleBasedEntityFinder(entityEngine, avoidEngine, maxHops, maxLength) {
 
-  private var _avoidState = new State()
-
   /**
    * Performs rule-based entity extraction with selective expansion along syntactic dependencies.
    * For filtering, see filterEntities.
@@ -34,8 +32,8 @@ class CustomizableRuleBasedFinder(
   override def extract(doc: Document): Seq[Mention] = {
     // avoid refs, etc.
     val avoid = avoidEngine.extractFrom(doc)
-    _avoidState = State(avoid)
-    val baseEntities = entityEngine.extractFrom(doc, _avoidState).filterNot(_avoidState.contains)
+    val stateFromAvoid = State(avoid)
+    val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filterNot(stateFromAvoid.contains)
     // make sure that all are valid (i.e., contain a noun or would have contained a noun except for trigger avoidance)
     val validBaseEntities = baseEntities.filter(isValidBaseEntity)
     // Expand
@@ -52,7 +50,7 @@ class CustomizableRuleBasedFinder(
     } else {
       // check that our expanded entities haven't swallowed any avoid mentions
       val avoidLabel = avoid.head.labels.last
-      trimmedEntities.filterNot { m => _avoidState.hasMentionsFor(m.sentence, m.tokenInterval, avoidLabel) }
+      trimmedEntities.filterNot { m => stateFromAvoid.hasMentionsFor(m.sentence, m.tokenInterval, avoidLabel) }
     }
     res
   }
@@ -126,10 +124,6 @@ class CustomizableRuleBasedFinder(
   }
 
   def validEdgeTag(tag: String, tagSet: TagSet): Boolean = !tagSet.isInvalidEdge(tag)
-
-  def addToAvoidState(mentions: Seq[Mention]): Unit = {
-    _avoidState = _avoidState.updated(mentions)
-  }
 
 }
 
