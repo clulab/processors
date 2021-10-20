@@ -101,7 +101,7 @@ def round(d, decimals):
       zeros *= 10
       i += 1
 
-    v = (d * zeros) / 100
+    v = int(d * zeros) / 100.0
     return v
 
 
