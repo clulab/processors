@@ -68,7 +68,7 @@ class ScoreCountsByLabel:
 
         prec = c/p if p!=0 else 0
 
-        return round(prec, decimals) if decimals>0 else prec
+        return round(prec*100, decimals) if decimals>0 else prec
 
     def recall(self, label="*", decimals=2):
         c = self.map[label].correct
@@ -76,7 +76,7 @@ class ScoreCountsByLabel:
 
         reca = c/g if g!=0 else 0
 
-        return round(reca, decimals) if decimals>0 else reca
+        return round(reca*100, decimals) if decimals>0 else reca
 
     def f1(self, label="*", decimals=2):
         p = self.precision(label, decimals=-1)
@@ -84,25 +84,14 @@ class ScoreCountsByLabel:
 
         f1 = 2.0 * p * r / (p + r) if (p!=0 and r!=0) else 0
 
-        return round(f1, decimals) if decimals>0 else f1
+        return round(f1*100, decimals) if decimals>0 else f1
 
     def accuracy(self, decimals=2):
         a = self.correct / self.total
 
-        return round(a, decimals) if decimals>0 else a
+        return round(a*100, decimals) if decimals>0 else a
 
-def round(d, decimals):
-    if(decimals < 0):
-      return d # do not round when decimals is set to a negative value
 
-    zeros = 1
-    i = 0
-    while (i < decimals + 2):
-      zeros *= 10
-      i += 1
-
-    v = int(d * zeros) / 100.0
-    return v
 
 
 
