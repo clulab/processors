@@ -18,11 +18,15 @@ if __name__ == '__main__':
         config = ConfigFactory.parse_file(f'../resources/org/clulab/{args.config}.conf')
         taskManager = TaskManager(config, args.seed)
         modelName = args.model_file
-        print (taskManager.debugTraversal())
 
         mtl = Metal(taskManager, None)
         mtl.train(modelName)
     elif args.test:
-        pass
+        config = ConfigFactory.parse_file(f'../resources/org/clulab/{args.config}.conf')
+        taskManager = TaskManager(config, args.seed)
+        modelName = args.model_file
+        model = Metal.load(modelName)
+        mtl = Metal(taskManager, model)
+        mtl.test()
     elif args.shell:
         pass

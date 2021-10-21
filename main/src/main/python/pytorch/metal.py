@@ -74,7 +74,7 @@ class Metal(object):
         for layers in self.model:
             parameters += layers.get_parameters()
 
-        torch.nn.utils.clip_grad_norm_(parameters, 1e-2)
+        torch.nn.utils.clip_grad_norm_(parameters, 5)
 
         if trainerType == "adam":
             trainer = Adam(parameters, lr=learningRate, weight_decay=WEIGHT_DECAY)
@@ -216,7 +216,7 @@ class Metal(object):
                 goldLabels = asent[1]
 
                 constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
-                preds = Layers.predict(self.model, taskId, sentence, constEmbeddings)
+                preds = self.predict(taskId, sentence, constEmbeddings)
 
                 sc = SeqScorer.f1(goldLabels, preds)
                 scoreCountsByLabel.incAll(sc)
@@ -257,10 +257,11 @@ class Metal(object):
         Layers.parse(self.model, sentence, constEmbeddings)
 
     def test(self):
-        taskName = taskManager.tasks[taskId].taskName
-        testSentences = taskManager.tasks[taskId].testSentences
-        if testSentences:
-            self.evaluate(taskId, taskName, devSentences, "testing")
+        for taskId in range(0, self.taskManager.taskCount):
+            taskName = self.taskManager.tasks[taskId].taskName
+            testSentences = self.taskManager.tasks[taskId].devSentences
+            if testSentences:
+                self.evaluate(taskId, taskName, testSentences, "testing")
 
     def save(self, baseFilename):
 
@@ -270,7 +271,7 @@ class Metal(object):
             sd, j_sd = layers.get_state_dict()
             x2i = layers.saveX2i()
             params.append({"model": sd, "x2i": x2i})
-            j_params.append({"model": j_sd, "x2i": x2i})
+            j_params.append({"x2i": x2i})
 
         # torch pickle save
         try:
@@ -290,7 +291,7 @@ class Metal(object):
         layersSeq = list()
         checkpoint = torch.load(modelFilenamePrefix+".torch")
         for param in checkpoint:
-            layers = loadX2i(param['x2i'])
+            layers = Layers.loadX2i(param['x2i'])
             layers.load_state_dict(param['model'])
             layersSeq.append(layers)
 

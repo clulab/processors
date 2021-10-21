@@ -127,7 +127,7 @@ class Layers(object):
             x2i['hasFinal'] = 1
             x2i['finalLayer'] = self.finalLayer.saveX2i()
         else:
-            x2i['finalLayer'] = 0
+            x2i['hasFinal'] = 0
 
         return x2i
 
@@ -182,7 +182,7 @@ class Layers(object):
             intermediateLayers.append(il)
 
         hasFinal = x2i['hasFinal']
-        finalLayer = ForwardLayer.load(x2i['finalLayer']) if hasFinal == 1 else none
+        finalLayer = ForwardLayer.load(x2i['finalLayer']) if hasFinal == 1 else None
 
         return cls(initialLayer, intermediateLayers, finalLayer)
 
