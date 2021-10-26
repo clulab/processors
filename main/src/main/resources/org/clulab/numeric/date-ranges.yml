@@ -3,6 +3,36 @@
 # recognizes date ranges
 #
 
+#- name: date-range-1
+#  priority: ${rulepriority}
+#  label: DateRange
+#  type: token
+#  example: "It took place between 12 May 2000 and 12 June 2020"
+#  action: mkDateRangeMention
+#  pattern: |
+#    /(?i)(from|between)/? @date1:Date /(?i)(to|and|\-)/ @date2:Date
+#
+#- name: date-range-2
+#  priority: ${rulepriority}
+#  label: DateRange
+#  type: token
+#  example: "It took place between 10 and 12 June 2020"
+#  action: mkDateRangeMentionWithNumber
+#  pattern: |
+#    /(?i)(from|between)/? @number:Number /(?i)(to|and|\-)/ @date2:Date
+#
+#- name: date-range-3
+#  priority: ${rulepriority}
+#  label: DateRange
+#  type: token
+#  example: "It took place between May and June 2020"
+#  action: mkDateRangeMentionWithMonth
+#  pattern: |
+#    @month1:PossibleMonth "-" @month2:PossibleMonth @year:PossibleYear
+
+
+
+#/(?i)(from|between)/? @month1:PossibleMonth /(?i)(to|and|\"-")/ @month2:PossibleMonth @year:PossibleYear
 - name: date-range-1
   priority: ${rulepriority}
   label: DateRange
@@ -10,14 +40,67 @@
   example: "It took place between 12 May 2000 and 12 June 2020"
   action: mkDateRangeMention
   pattern: |
-    /(?i)(from|between)/? @date1:Date /(?i)(to|and|\-)/ @date2:Date
+    /(?i)between/ @date1:Date /(?i)(and|to)/ @date2:Date
 
 - name: date-range-2
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place from 12 May 2000 to 12 June 2020"
+  action: mkDateRangeMention
+  pattern: |
+    /(?i)from/? @date1:Date /(?i)(to|\-)/ @date2:Date
+
+- name: date-range-3
   priority: ${rulepriority}
   label: DateRange
   type: token
   example: "It took place between 10 and 12 June 2020"
   action: mkDateRangeMentionWithNumber
   pattern: |
-    /(?i)(from|between)/? @number:Number /(?i)(to|and)/ @date2:Date
+    /(?i)between/ @number:Number /(?i)(and|to)/ @date2:Date
 
+- name: date-range-4
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place from 10 to 12 June 2020"
+  action: mkDateRangeMentionWithNumber
+  pattern: |
+    /(?i)from/? @number:Number /(?i)(to|\-)/ @date2:Date
+
+- name: date-range-5
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place between May and June 2020"
+  action: mkDateRangeMentionWithMonth
+  pattern: |
+    /(?i)between/ @month1:PossibleMonth /(?i)(and|to)/ @month2:PossibleMonth @year:PossibleYear
+
+- name: date-range-6
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place from May to June 2020"
+  action: mkDateRangeMentionWithMonth
+  pattern: |
+    /(?i)from/? @month1:PossibleMonth /(?i)(to|\-)/ @month2:PossibleMonth @year:PossibleYear
+
+- name: date-range-7
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "Since June 2020"
+  action: mkDateRangeMentionWithSinceRef
+  pattern: |
+    /(?i)(since|from)/ @date1:Date
+
+- name: date-range-8
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "Until June 2020"
+  action: mkDateRangeMentionWithUntilRef
+  pattern: |
+    /(?i)until|through/ @date1:Date
