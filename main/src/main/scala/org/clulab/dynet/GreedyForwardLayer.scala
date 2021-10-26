@@ -28,8 +28,8 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   override def saveX2i(printWriter: PrintWriter): Unit = {
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
-    save(printWriter, if(isDual) 1 else 0, "isDual")
-    save(printWriter, if(span.nonEmpty) spanToString(span.get) else "", "span")
+    save(printWriter, if (isDual) 1 else 0, "isDual")
+    save(printWriter, span.map(spanToString).getOrElse("none"), "span")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")

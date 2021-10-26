@@ -16,12 +16,14 @@ class CustomizableRuleBasedFinder(
   avoidEngine: ExtractorEngine,
   override val tagSet: TagSet,
   stopNER: Set[String],
+  ensureBaseTagNounVerb: Boolean,
   maxHops: Int,
   maxLength: Int,
   override val INVALID_OUTGOING: Set[scala.util.matching.Regex],
   override val INVALID_INCOMING: Set[scala.util.matching.Regex],
   override val VALID_OUTGOING: Set[scala.util.matching.Regex]
   ) extends RuleBasedEntityFinder(entityEngine, avoidEngine, maxHops, maxLength) {
+
   /**
    * Performs rule-based entity extraction with selective expansion along syntactic dependencies.
    * For filtering, see filterEntities.
@@ -35,7 +37,7 @@ class CustomizableRuleBasedFinder(
     // make sure that all are valid (i.e., contain a noun or would have contained a noun except for trigger avoidance)
     val validBaseEntities = baseEntities.filter(isValidBaseEntity)
     // Expand
-    val expandedEntities = validBaseEntities.map(entity => expand(entity, maxHops))
+    val expandedEntities = validBaseEntities.map(entity => expand(entity, maxHops, stateFromAvoid))
     // split entities on likely coordinations
     val splitEntities = (validBaseEntities ++ expandedEntities).flatMap(splitCoordinatedEntities)
     // remove entity duplicates introduced by splitting expanded
@@ -54,27 +56,26 @@ class CustomizableRuleBasedFinder(
   }
 
   /**
-   * Determines whether or not an entity is a valid base entity. We want to disallow JJ-only entities except
-   * when they are a result of the head noun being a trigger (i.e. being avoided)
+   * Determines whether or not an entity is a valid base entity.
    */
   def isValidBaseEntity(entity: Mention): Boolean = {
-    containsValidNounVerb(entity)
-  }
-
-  /**
-   * Determines if the entity has at least one noun/verb that is not a stopNER
-   * @param entity the candidate entity Mention
-   */
-  def containsValidNounVerb(entity: Mention): Boolean = {
-    //val lemmas = entity.lemmas.get
     val tags = entity.tags.get
     val entities = entity.entities.get
 
     // Make sure there is a noun that isn't a specifically excluded  named entity.
     tags.indices.exists { i =>
-      (tagSet.isAnyNoun(tags(i)) || tagSet.isAnyVerb(tags(i))) && !stopNER.contains(entities(i))
+      isValidTag(tags(i)) && !stopNER.contains(entities(i))
     }
   }
+
+  /**
+   * Determines if the tag is a noun/verb
+   * @param tag the POS tag to consider
+   */
+  def isValidTag(tag: String): Boolean = {
+    !ensureBaseTagNounVerb || tagSet.isAnyNoun(tag) || tagSet.isAnyVerb(tag)
+  }
+
 
   /**
    * Trims found entities of leading or trailing unwanted tokens.  Currently, we define "unwanted" as being POS tagged
@@ -139,6 +140,7 @@ object CustomizableRuleBasedFinder {
 
     val tagSet: TagSet = TagSet(config.getString("CustomRuleBasedEntityFinder.language"))
     val stopNER: Set[String] = config.getStringList("CustomRuleBasedEntityFinder.stopNER").asScala.toSet
+    val ensureBaseTagNounVerb: Boolean = config.getBoolean("CustomRuleBasedEntityFinder.ensureBaseTagNounVerb")
     val maxHops: Int = config.getInt("CustomRuleBasedEntityFinder.maxHops")
     val maxLength: Int = config.getInt("CustomRuleBasedEntityFinder.maxLength")
     val invalidOutgoing: Set[Regex] = asRegexSet(config.getStringList("CustomRuleBasedEntityFinder.invalidOutgoing").asScala.toSet)
@@ -150,6 +152,7 @@ object CustomizableRuleBasedFinder {
       avoidEngine,
       tagSet,
       stopNER,
+      ensureBaseTagNounVerb,
       maxHops,
       maxLength,
       invalidOutgoing,

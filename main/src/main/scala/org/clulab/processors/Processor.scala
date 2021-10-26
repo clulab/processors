@@ -102,7 +102,6 @@ trait Processor {
   }
 }
 
-
 object Processor {
   /**
    * Used to (optionally) intern all the strings generated during annotation.
