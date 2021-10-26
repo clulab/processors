@@ -185,7 +185,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   it should "recognize date month ranges" in {
     ensure("between January and June 2017", Interval(0, 5), "DATE-RANGE", "2017-01-XX -- 2017-06-XX")
     ensure("March to May 2017", Interval(0, 4), "DATE-RANGE", "2017-03-XX -- 2017-05-XX")
-    ensure("May-October 2016", Interval(0, 4), "DATE-RANGE", "2016-05-XX -- 2016-10-XX")
+    ensure("May - October 2016", Interval(0, 4), "DATE-RANGE", "2016-05-XX -- 2016-10-XX")
   }
 
   it should "recognize different dates" in {
