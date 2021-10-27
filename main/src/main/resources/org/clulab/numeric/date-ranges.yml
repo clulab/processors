@@ -104,3 +104,14 @@
   action: mkDateRangeMentionWithUntilRef
   pattern: |
     /(?i)until|through/ @date1:Date
+
+
+# Date range derived from a season, with mandatory year
+- name: season-1
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "It was summer 2000"
+  action: mkDateRangeMentionWithSeason
+  pattern: |
+    @season:PossibleSeasson @year:PossibleYear

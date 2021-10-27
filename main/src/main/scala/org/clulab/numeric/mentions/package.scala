@@ -236,6 +236,35 @@ package object mentions {
         throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
     }
 
+    def toDateRangeMentionWithSeason: DateRangeMention =  mention match {
+      case m: DateRangeMention => m
+
+      case m: RelationMention =>
+        val seasonNorm = getArgWords("season", m)
+        if(seasonNorm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument number in mention ${m.raw.mkString(" ")}!")
+
+        val yearNorm = getArgWords("year", m)
+        if(yearNorm.isEmpty)
+          throw new RuntimeException(s"ERROR: could not find argument number in mention ${m.raw.mkString(" ")}!")
+
+
+        new DateRangeMention(
+          m.labels,
+          m.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          "ref-date",
+          date1Norm.get
+        )
+
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+    }
+
     def toDateMention: DateMention =  mention match {
       case m: DateMention => m
 

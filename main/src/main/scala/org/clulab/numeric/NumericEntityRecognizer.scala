@@ -65,7 +65,8 @@ object NumericEntityRecognizer {
   def mkLexiconNer: LexiconNER = LexiconNER(
     Seq(
       "org/clulab/numeric/MONTH.tsv",
-      "org/clulab/numeric/MEASUREMENT-UNIT.tsv"
+      "org/clulab/numeric/MEASUREMENT-UNIT.tsv",
+      "org/clulab/numeric/SEASON.tsv"
     ),
     Seq(
       false, // false = case sensitive matching
