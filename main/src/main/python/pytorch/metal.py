@@ -65,16 +65,21 @@ class Metal(object):
         return words, labels
 
     def train(self, modelNamePrefix):
+
         learningRate = self.taskManager.get_float("mtl.learningRate", 1e-5)
         trainerType = self.taskManager.get_string("mtl.trainer", "adam")
         batchSize = self.taskManager.get_int("mtl.batchSize", 1)
+
+        torch.manual_seed(self.taskManager.random)
+        random.seed(self.taskManager.random)
+
         assert(batchSize>0)
 
         parameters = list()
         for layers in self.model:
             parameters += layers.get_parameters()
 
-        torch.nn.utils.clip_grad_norm_(parameters, 5)
+        # torch.nn.utils.clip_grad_norm_(parameters, 5)
 
         if trainerType == "adam":
             trainer = Adam(parameters, lr=learningRate, weight_decay=WEIGHT_DECAY)
@@ -259,7 +264,7 @@ class Metal(object):
     def test(self):
         for taskId in range(0, self.taskManager.taskCount):
             taskName = self.taskManager.tasks[taskId].taskName
-            testSentences = self.taskManager.tasks[taskId].devSentences
+            testSentences = self.taskManager.tasks[taskId].testSentences
             if testSentences:
                 self.evaluate(taskId, taskName, testSentences, "testing")
 
