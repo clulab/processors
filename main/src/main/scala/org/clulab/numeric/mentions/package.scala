@@ -151,27 +151,6 @@ package object mentions {
         if(month2Norm.isEmpty)
           throw new RuntimeException(s"ERROR: could not find argument number in mention ${m.raw.mkString(" ")}!")
 
-        val date1 = new DateMention(
-          m.labels,
-          m.tokenInterval,
-          m.sentence,
-          m.document,
-          m.keep,
-          m.foundBy,
-          m.attachments,
-          None, Some(month1Norm.get), Some(yearNorm.get)
-        )
-        val date2 = new DateMention(
-          m.labels,
-          m.tokenInterval,
-          m.sentence,
-          m.document,
-          m.keep,
-          m.foundBy,
-          m.attachments,
-          None, Some(month2Norm.get), Some(yearNorm.get)
-        )
-
         new DateRangeMention(
           m.labels,
           m.tokenInterval,
@@ -180,8 +159,8 @@ package object mentions {
           m.keep,
           m.foundBy,
           m.attachments,
-          date1.neNorm,
-          date2.neNorm
+          TempEvalFormatter.mkDate(None, month1Norm, yearNorm),
+          TempEvalFormatter.mkDate(None, month2Norm, yearNorm)
         )
 
       case m =>
