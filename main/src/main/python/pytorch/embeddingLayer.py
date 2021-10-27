@@ -66,9 +66,8 @@ class EmbeddingLayer(InitialLayer):
         posTagDim = posTagEmbeddingSize if posTagLookupParameters else 0
         neTagDim = neTagEmbeddingSize if neTagLookupParameters else 0
         distanceDim = distanceWindowSize if distanceLookupParameters else 0
-        positionDim = 1 if distanceLookupParameters and useIsPredicate else 0
-        predicateDim = positionEmbeddingSize if positionLookupParameters else 0
-
+        positionDim = 1 if distanceLookupParameters else 0
+        predicateDim = positionEmbeddingSize if positionLookupParameters and useIsPredicate else 0
         self.outDim =    ConstEmbeddingsGlove.dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
         random.seed(RANDOM_SEED)
     
@@ -119,14 +118,14 @@ class EmbeddingLayer(InitialLayer):
         #
         # POS tag embedding
         #
-        if tags:
+        if tags and self.posTagLookupParameters:
             posTagEmbed = self.posTagLookupParameters(torch.LongTensor([self.tag2i.get(tag, 0) for tag in tags]))
         else:
             posTagEmbed = None
         #
         # NE tag embedding
         #
-        if nes:
+        if nes and self.neTagLookupParameters:
             neTagEmbed = self.neTagLookupParameters(torch.LongTensor([self.ne2i.get(ne, 0) for ne in nes]))
         else:
             neTagEmbed = None

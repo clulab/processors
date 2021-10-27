@@ -68,6 +68,10 @@ class MetalRowReader(RowReader):
         assert(rows[0].length >= 5)
         numSent = (rows[0].length - 3) / 2
         assert(numSent >= 1)
+        assert(numSent==int(numSent))
+        numSent = int(numSent)
+
+
 
         words = list()
         posTags = list()
@@ -85,7 +89,7 @@ class MetalRowReader(RowReader):
                 try:
                     headPositions[j] += [int(row.get(self.LABEL_START_OFFSET + (j * 2) + 1))]
                 except:
-                    raise RuntimeError # not sure about this part
+                    raise RuntimeError 
 
         sentences = list()
         for i in range(numSent):

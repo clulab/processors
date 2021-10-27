@@ -32,9 +32,9 @@ class ForwardLayer(FinalLayer):
             # Zheng: Will spans overlap?
             vs = list()
             for span in self.spans:
-                e = torch.index_select(v, 1, torch.tensor([span[0], span[1]]))
+                e = torch.index_select(v, 1, torch.tensor(range(span[0], span[1])))
                 vs.append(e)
-            return torch.cat(vs)
+            return torch.cat(vs, dim=1)
 
     def forward(self, inputExpressions, doDropout, headPositionsOpt = None):
         if not self.isDual:
@@ -65,7 +65,6 @@ class ForwardLayer(FinalLayer):
                     predExp = expressionDropout(pickSpan(inputExpressions[headPosition]), self.dropout, doDropout)
                 else:
                     # the head is root. we used a dedicated Parameter for root
-                    # Zheng: Why not add root node to the input sequence at the beginning?
                     predExp = expressionDropout(pickSpan(self.pRoot), self.dropout, doDropout)
                 ss = torch.cat([argExp, predExp])
                 l1 = expressionDropout(self.pH(ss), self.dropoutProb, doDropout)
@@ -129,12 +128,18 @@ class ForwardLayer(FinalLayer):
             raise RuntimeError(f"ERROR: unknown inference type {inferenceType}!")
     
 def spanLength(spans):
-    sum(end - start for start, end in spans)
+    return sum(end - start for start, end in spans)
 
-def parseSpan(spanParam, inputSize):
+def parseSpan(spanParam, inputSize=None):
     # Zheng: Why do we need inputSize here?
-    token1, token2 = map(int, spanParamToken.split('-'))
-    spans.append((token1, token2))
+    spans = list()
+    spanParamTokens = spanParam.split(",")
+    for spanParamToken in spanParamTokens:
+        # spanTokens = spanParamToken.split('-')
+        # assert(len(spanTokens) == 2)
+        # spans.append((int(spanTokens[0]), int(spanTokens[1])))
+        token1, token2 = map(int, spanParamToken.split('-'))
+        spans.append((token1, token2))
     return spans
 
 def spanToString(spans):

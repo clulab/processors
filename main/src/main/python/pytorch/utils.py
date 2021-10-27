@@ -53,7 +53,7 @@ def readString2Ids(s2iFilename):
     s2i = dict()
     with open(s2iFilename) as f:
         for line in f:
-            if not line.startswith("#"):
+            if not line.startswith("# ") and line.rstrip():
                 k, v = line.strip().split('\t')
                 s2i[k] = int(v)
     return s2i
@@ -62,7 +62,7 @@ def readChar2Ids(s2iFilename):
     s2i = dict()
     with open(s2iFilename) as f:
         for line in f:
-            if not line.startswith("#") and line.rstrip():
+            if not line.startswith("# ") and line.rstrip():
                 k, v = line.strip().split('\t')
                 s2i[chr(int(k))] = int(v)
     return s2i
