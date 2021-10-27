@@ -35,6 +35,21 @@ class NumericActions extends Actions {
     mentions.map(_.toDateRangeMentionWithNumber)
   }
 
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithMonth(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateRangeMentionWithMonth)
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSinceRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateRangeMentionWithSinceRef)
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    mentions.map(_.toDateRangeMentionWithUntilRef)
+  }
+
   /** Constructs a DateMention from a token pattern */
   def mkDateMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     mentions.map(_.toDateMention)
