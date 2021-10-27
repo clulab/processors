@@ -8,6 +8,7 @@ from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 from torch.optim import SGD, Adam, RMSprop
 
 import json
+import random
 
 class Metal(object):
     """docstring for Metal"""
