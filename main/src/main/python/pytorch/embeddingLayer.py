@@ -15,6 +15,7 @@ DEFAULT_DISTANCE_EMBEDDING_SIZE: int = -1 # no distance embeddings by default
 DEFAULT_POSITION_EMBEDDING_SIZE: int = -1 # no position embeddings by default
 DEFAULT_DISTANCE_WINDOW_SIZE: int = -1
 DEFAULT_USE_IS_PREDICATE: int = -1
+random.seed(RANDOM_SEED)
 
 class EmbeddingLayer(InitialLayer):
     def __init__(self, w2i, # word to index
@@ -66,10 +67,10 @@ class EmbeddingLayer(InitialLayer):
         posTagDim = posTagEmbeddingSize if posTagLookupParameters else 0
         neTagDim = neTagEmbeddingSize if neTagLookupParameters else 0
         distanceDim = distanceWindowSize if distanceLookupParameters else 0
-        positionDim = 1 if distanceLookupParameters else 0
-        predicateDim = positionEmbeddingSize if positionLookupParameters and useIsPredicate else 0
-        self.outDim =    ConstEmbeddingsGlove.dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
-        random.seed(RANDOM_SEED)
+        predicateDim = 1 if distanceLookupParameters and useIsPredicate else 0
+        positionDim = positionEmbeddingSize if positionLookupParameters else 0
+        self.outDim = ConstEmbeddingsGlove.dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
+        
     
     def forward(self, sentence, constEmbeddings, doDropout):
 
@@ -276,7 +277,6 @@ class EmbeddingLayer(InitialLayer):
         charRnnBuilder = nn.LSTM(charEmbeddingSize, charRnnStateSize, 1, bidirectional=True, dropout=dropoutProb)
 
         if(posTagEmbeddingSize > 0):
-
             tag2i = readString2Ids(config.get_string(paramPrefix + ".tag2i", "../resources/org/clulab/tag2i-en.txt"))
             posTagLookupParameters = nn.Embedding(len(tag2i), posTagEmbeddingSize)
         else:

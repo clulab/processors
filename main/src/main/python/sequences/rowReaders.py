@@ -61,7 +61,7 @@ class MetalRowReader(RowReader):
             neLabels += [row.get(self.NE_LABEL_POSITION)]
             labels += [row.get(self.LABEL_START_OFFSET)]
 
-        return [(AnnotatedSentence(words), posTags, neLabels, labels)]
+        return [(AnnotatedSentence(words, posTags, neLabels), labels)]
 
     # Parser for the full format: word, POS tag, NE label, (label head)+ 
     def parseFull(self, rows):

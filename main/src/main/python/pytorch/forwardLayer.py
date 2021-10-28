@@ -59,13 +59,13 @@ class ForwardLayer(FinalLayer):
                 raise RuntimeError("ERROR: dual task without information about head positions!")
             for i, e in enumerate(inputExpressions):
                 headPosition = headPositionsOpt[i]
-                argExp = expressionDropout(pickSpan(e), self.dropoutProb, doDropout)
+                argExp = expressionDropout(self.pickSpan(e), self.dropoutProb, doDropout)
                 if headPosition >= 0:
                     # there is an explicit head in the sentence
-                    predExp = expressionDropout(pickSpan(inputExpressions[headPosition]), self.dropout, doDropout)
+                    predExp = expressionDropout(self.pickSpan(inputExpressions[headPosition]), self.dropout, doDropout)
                 else:
                     # the head is root. we used a dedicated Parameter for root
-                    predExp = expressionDropout(pickSpan(self.pRoot), self.dropout, doDropout)
+                    predExp = expressionDropout(self.pickSpan(self.pRoot), self.dropout, doDropout)
                 ss = torch.cat([argExp, predExp])
                 l1 = expressionDropout(self.pH(ss), self.dropoutProb, doDropout)
                 if nonlinearity == NONLIN_TANH:
