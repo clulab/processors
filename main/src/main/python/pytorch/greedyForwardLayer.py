@@ -15,7 +15,7 @@ class GreedyForwardLayer(ForwardLayer):
         x2i["inferenceType"] = TYPE_GREEDY
         x2i["inputSize"] = self.inputSize
         x2i["isDual"] = 1 if self.isDual else 0
-        x2i["span"] = spanToString(span) if self.spans else ""
+        x2i["span"] = spanToString(self.spans) if self.spans else ""
         x2i["nonlinearity"] = self.nonlinearity
         x2i["t2i"] = self.t2i
         x2i["dropoutProb"] = self.dropoutProb
