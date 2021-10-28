@@ -70,6 +70,7 @@ object NumericEntityRecognizer {
     ),
     Seq(
       false, // false = case sensitive matching
+      true,
       true
     ),
     new TrueEntityValidator,

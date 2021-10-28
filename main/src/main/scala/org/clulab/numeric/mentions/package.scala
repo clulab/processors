@@ -219,14 +219,15 @@ package object mentions {
       case m: DateRangeMention => m
 
       case m: RelationMention =>
-        val seasonNorm = getArgWords("season", m)
+        val seasonNorm = getSeasonMonthRange(m)
         if(seasonNorm.isEmpty)
-          throw new RuntimeException(s"ERROR: could not find argument number in mention ${m.raw.mkString(" ")}!")
+          throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
         val yearNorm = getArgWords("year", m)
         if(yearNorm.isEmpty)
-          throw new RuntimeException(s"ERROR: could not find argument number in mention ${m.raw.mkString(" ")}!")
+          throw new RuntimeException(s"ERROR: could not find argument year in mention ${m.raw.mkString(" ")}!")
 
+        val (yearStart, yearEnd) = SeasonNormalizer.adjustYearRange(seasonNorm.get, yearNorm.get)
 
         new DateRangeMention(
           m.labels,
@@ -236,8 +237,8 @@ package object mentions {
           m.keep,
           m.foundBy,
           m.attachments,
-          "ref-date",
-          date1Norm.get
+          TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, Some(yearStart)),
+          TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, Some(yearEnd))
         )
 
       case m =>
@@ -466,6 +467,15 @@ package object mentions {
       Tuple2(year, month)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
+    }
+  }
+
+  private def getSeasonMonthRange(m: Mention): Option[SeasonRange] = {
+    if(! m.arguments.contains("season"))
+      None
+    else {
+      val season = m.arguments("season").head.words
+      SeasonNormalizer.norm(season)
     }
   }
 

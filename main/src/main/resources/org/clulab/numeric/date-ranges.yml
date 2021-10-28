@@ -114,4 +114,4 @@
   example: "It was summer 2000"
   action: mkDateRangeMentionWithSeason
   pattern: |
-    @season:PossibleSeasson @year:PossibleYear
+    @season:PossibleSeason @year:PossibleYear
