@@ -41,12 +41,20 @@ class Layers(object):
     def get_parameters(self):
         parameters = list()
         if self.initialLayer is not None:
-            parameters += [p for p in self.initialLayer.parameters() if p.requires_grad]
+            parameters += [p for p in self.initialLayer.named_parameters() if p.requires_grad]
         for il in self.intermediateLayers:
-            parameters += [p for p in il.parameters() if p.requires_grad]
+            parameters += [p for p in il.named_parameters() if p.requires_grad]
         if self.finalLayer is not None:
-            parameters += [p for p in self.finalLayer.parameters() if p.requires_grad]
-        return parameters
+            parameters += [p for p in self.finalLayer.named_parameters() if p.requires_grad]
+        
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in parameters
+                        if not any(nd in n for nd in no_decay)], 'weight_decay': WEIGHT_DECAY},
+            {'params': [p for n, p in parameters
+                        if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        ]
+        return optimizer_grouped_parameters
 
     def start_train(self):
         if self.initialLayer is not None:

@@ -25,21 +25,21 @@ class ForwardLayer(FinalLayer):
         self.outDim = len(t2i)
 
 
-    def pickSpan(self, v):
+    def pickSpan(self, v, i):
         if self.spans is None:
             return v
         else:
             # Zheng: Will spans overlap?
             vs = list()
             for span in self.spans:
-                e = torch.index_select(v, 1, torch.tensor(range(span[0], span[1])))
+                e = torch.index_select(v, i, torch.tensor(range(span[0], span[1])))
                 vs.append(e)
-            return torch.cat(vs, dim=1)
+            return torch.cat(vs, dim=i)
 
     def forward(self, inputExpressions, doDropout, headPositionsOpt = None):
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
-            argExp = expressionDropout(self.pickSpan(inputExpressions), self.dropoutProb, doDropout)
+            argExp = expressionDropout(self.pickSpan(inputExpressions, 1), self.dropoutProb, doDropout)
             emissionScores = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
             if self.nonlinearity == NONLIN_TANH:
                 emissionScores = F.tanh(emissionScores)
@@ -59,18 +59,18 @@ class ForwardLayer(FinalLayer):
                 raise RuntimeError("ERROR: dual task without information about head positions!")
             for i, e in enumerate(inputExpressions):
                 headPosition = headPositionsOpt[i]
-                argExp = expressionDropout(self.pickSpan(e), self.dropoutProb, doDropout)
+                argExp = expressionDropout(self.pickSpan(e, 0), self.dropoutProb, doDropout)
                 if headPosition >= 0:
                     # there is an explicit head in the sentence
-                    predExp = expressionDropout(self.pickSpan(inputExpressions[headPosition]), self.dropout, doDropout)
+                    predExp = expressionDropout(self.pickSpan(inputExpressions[headPosition], 0), self.dropoutProb, doDropout)
                 else:
                     # the head is root. we used a dedicated Parameter for root
-                    predExp = expressionDropout(self.pickSpan(self.pRoot), self.dropout, doDropout)
+                    predExp = expressionDropout(self.pickSpan(self.pRoot, 0), self.dropoutProb, doDropout)
                 ss = torch.cat([argExp, predExp])
                 l1 = expressionDropout(self.pH(ss), self.dropoutProb, doDropout)
-                if nonlinearity == NONLIN_TANH:
+                if self.nonlinearity == NONLIN_TANH:
                     l1 = F.tanh(l1)
-                elif nonlinearity == NONLIN_RELU:
+                elif self.nonlinearity == NONLIN_RELU:
                     l1 = F.relu(l1)
                 emissionScores.append(l1)
             emissionScores = torch.stack(emissionScores)
