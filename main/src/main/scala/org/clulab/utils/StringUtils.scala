@@ -72,6 +72,9 @@ object StringUtils {
     normedProps
   }
 
+  def argsToMap(args: Array[String], verbose: Boolean = true): Map[String, String] =
+      argsToProperties(args, verbose).asScala.toMap
+
   private def instantiateVariables(props:Properties):Properties = {
     val newProps = new Properties()
 
