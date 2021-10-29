@@ -1,0 +1,1661 @@
+Accepted Manuscript
+
+Optically stimulated luminescence dating of Ocean Drilling Program Core 658B: Complications arising from authigenic uranium uptake and lateral sediment movement
+S.J. Armitage
+
+PII: DOI: Reference:
+
+S1871-1014(15)00051-5 10.1016/j.quageo.2015.03.002 QUAGEO 656
+
+To appear in: Quaternary Geochronology
+
+Received Date: 30 October 2014 Revised Date: 6 March 2015 Accepted Date: 7 March 2015
+
+Please cite this article as: Armitage, S.J., Optically stimulated luminescence dating of Ocean Drilling Program Core 658B: Complications arising from authigenic uranium uptake and lateral sediment movement, Quaternary Geochronology (2015), doi: 10.1016/j.quageo.2015.03.002.
+This is a PDF file of an unedited manuscript that has been accepted for publication. As a service to our customers we are providing this early version of the manuscript. The manuscript will undergo copyediting, typesetting, and review of the resulting proof before it is published in its final form. Please note that during the production process errors may be discovered which could affect the content, and all legal disclaimers that apply to the journal pertain.
+
+ACCEPTED MANUSCRIPT
+
+1 Optically stimulated luminescenAceCdCaEtiPnTg EofDOMceAanNDUrSillCinRgIPPrTogram Core 658B:
+2 Complications arising from authigenic uranium uptake and lateral sediment movement. 3 4 S.J. Armitage* 5 6 Centre for Quaternary Research, Department of Geography, Royal Holloway, University of 7 London, Egham, Surrey, TW20 0EX. 8 9 Abstract 10 Ocean Drilling Program Site 658 lies under the North African summer dust plume, and ought to be 11 an ideal target for optically stimulated luminescence (OSL) dating, since the main clastic input is 12 far-travelled Saharan dust. However, OSL ages for coarse silt-sized quartz (40-63 µm) are 13 systematically lower than independent age estimates when dose rates are calculated using a model 14 which assumes detrital 238U, 232Th and 40K and excess 230Th and 231Pa. Ages which are in good 15 agreement with independent age control are obtained from the coarse silt samples when a correction 16 for authigenic uranium uptake is incorporated into the dose rate model. Authigenic uranium uptake 17 occurs under reducing conditions, which are common at the sediment-water interface, and some 18 degree of authigenic uranium correction may be required for most marine sediments. Using this 19 revised dose rate model, ages produced using fine silt-sized quartz (4-11 µm) are up to 100% older 20 than both independent and coarse silt ages. In addition, the fine silt ages show a consistent pattern 21 of age decrease with depth over 1.5 m of core. 230Th data from Site 658 indicate that this site 22 receives 3 times more sediment laterally than vertically. It is concluded that the fine silt at Site 658 23 contains a substantial reworked component, making it unsuitable for dating. Conversely the coarse 24 silt fraction, which settles through water at ~40 times the rate of fine silt, appears to be derived from 25 dust input over the site at the time of deposition. Since prominent nepheloid (cloudy) layers occur in
+* e-mail: simon.armitage@rhul.ac.uk
+
+ACCEPTED MANUSCRIPT
+
+26 various deep ocean basins, and theAmCaCteEriPalTsEuDspeMndAedNiUn SthCesReIlPayTers often consists of reworked
+27 fine silt-sized sediments, coarser material should be dated where possible. 28 29 Keywords: Optically stimulated luminescence; Geochronology; Marine sediments; North Africa. 30 31 1. Introduction 32 Marine sediments are one of the most widely exploited archives of palaeoenvironmental 33 information. At present, most chronologies are constructed by tuning marine proxies for global ice 34 volume (δ18O) to the well understood variations in the Earth’s orbit (Lisiecki and Raymo, 2005), by 35 the identification of event horizons (e.g. Sikes et al., 2000) and/or by radiocarbon dating. However, 36 dating deep-sea sediments remains problematic. Chronologies based on δ18O records are dependent 37 upon the accuracy of the climate change model assumed and necessarily obscure information 38 regarding phasing of the events observed. Event horizons are only useful where their occurrence is 39 reasonably frequent in the time period of interest. In addition, both techniques require 40 approximately continuous sedimentation, and the absence of sediment reworking. Whilst a 41 tremendously powerful geochronological tool, Accelerator Mass Spectrometry (AMS) radiocarbon 42 dating is limited to the last 50-60,000 years and is subject to uncertainties due to variation in the 43 atmospheric 14C concentrations and the marine carbon reservoir. The latter effect may introduce a 44 substantial and temporally variable systematic error to a chronology (Sikes et al., 2000). In addition, 45 chronologies can only be constructed using radiocarbon or the δ18O record where organic 46 carbonates are preserved, which is not the case in areas with high clastic sedimentation rates 47 (Sugisaki et al., 2010), or at sites below the carbonate compensation depth. These limitations to well 48 established dating techniques have led several authors (Berger, 2006; Jakobsson et al., 2003; Stokes 49 et al., 2003) to advocate the use of optically stimulated luminescence (OSL) methods to provide age 50 control for deep-sea sediments. 51
+
+ACCEPTED MANUSCRIPT
+
+52 Although marine sediments wereAfiCrsCt dEaPteTdEuDsinMg AtheNrmUoSlCumRiInPeTscence techniques in 1979 (Wintle
+53 and Huntley, 1979) and using OSL techniques in 2003 (Jakobsson et al., 2003; Stokes et al., 2003), 54 there are relatively few published luminescence chronologies for open ocean sediments. This 55 absence is possibly explained by the complex dose rate measurements and calculations required, 56 due to the presence of uranium-series disequilibrium in many deep sea sediments (Wintle and 57 Huntley, 1979). For many terrestrial sediments it is valid to assume that the 238U, 235U and 232Th 58 decay series are in secular equilibrium. Consequently, dose rates due to these decay series are 59 effectively invariant over Quaternary timescales. This remains true for 232Th in marine sediments 60 since thorium is highly insoluble and is incorporated into marine sediments, in equilibrium with its 61 daughters, within the detrital component. Conversely, the geochemistry of both uranium decay 62 series makes it likely that they will be in disequilibrium in late Quaternary ocean sediments. In the 63 oxidising conditions found in most seawater, uranium is highly soluble. However, long-lived 64 isotopes in both uranium decay series (230Th in the 238U series and 231Pa in the 235U series) are 65 insoluble and are removed from the water column by sorbtion to the surface of settling particles 66 (Henderson and Anderson, 2003) meaning that they are initially found in excess (relative to 67 isotopes earlier in the relevant decay series) in many marine sediments. These isotopes have half68 lives which are similar to the timescales over which OSL dating is applicable (75 and 32.8 ka for 69 230Th and 231Pa respectively) causing the dose rate due to these isotopes and their decay products to 70 evolve as the sediment ages. Consequently, OSL dating of marine sediments is complicated by the 71 need to demonstrate the absence of excess activity in the uranium decay series (Jakobsson et al., 72 2003; Sugisaki et al., 2010; Sugisaki et al., 2012) or to quantify excess activity and incorporate the 73 resulting time-dependant dose rate changes into age calculations (Stokes et al., 2003; Wintle and 74 Huntley, 1979). This study compares AMS 14C and quartz OSL chronologies produced for a core 75 from Ocean Drilling Program (ODP) Site 658. 76 77 2 Materials and methods
+
+ACCEPTED MANUSCRIPT
+
+78 Core 658B was the second of threAe CcoCreEsPreTcEovDerMedAfrNomUaSCwRatIePr Tdepth of 2,263 m off Cap Blanc,
+79 Mauritania (20°45’N, 18°35’W) during ODP Leg 108 (Ruddiman et al., 1988). Trade winds cause 80 strong upwelling over the site, leading to high surface productivity and high biogenic particle fluxes 81 to the seafloor. Biogenic carbonate comprises 40-60% by mass of the sediment, with the remainder 82 being terrigenous dust (deMenocal et al., 2000). The high terrigenous dust flux is due to the site’s 83 location beneath the axis of the summer African dust plume (Figure 1). Core 658B is an ideal target 84 for testing OSL dating in the marine realm since: (1) It has a high accumulation rate (c.18 cm/ka, 85 deMenocal et al., 2000); (2) Terrigenous dust input should provide a substantial well-bleached 86 quartz component; (3) Neighbouring core 658C has a well dated dust flux record covering the last 87 22 ka (deMenocal et al., 2000) and (4) the excess 230Th (230Thxs) record for core Core 658C (Adkins 88 et al., 2006) may be used to calculate excess activity in Core 658B. 89 90 Independent chronological data for Core 658B were obtained from two sources. Firstly, 18 samples 91 from core depths ranging from ~2.3-10.9 m (effectively the upper ~8.5 m of core since the 92 uppermost 2.3 m appears to replicate underlying material) were dated by AMS 14C on 150-250 µm 93 Globigerinoides bulloides tests. Fifteen of these AMS 14C measurements yielded finite ages (Table 94 S1). Secondly, dated stratigraphic markers in Core 658C (deMenocal et al., 2000) and the LR04 95 benthic δ18O stack (Lisiecki and Raymo, 2005) were identified in Core 658B (Table S2). Both 96 approaches yield a similar age-depth relationship, though the Core 658B AMS 14C ages show age 97 inversions especially below 7 m, towards the upper limit of the technique (Figure 2). There is no 98 apparent lithological change at 7 m, and it is possible that the age inversions are due to reworking of 99 foraminiferal tests or variable reservoir effects. 100 101 2.1 Equivalent dose determination 102 Samples were obtained from a 66 mm diameter split core at the ODP East Coast Repository, 103 Lamont-Doherty Earth Observatory, USA. Since collection in 1986, the core had been refrigerated
+
+ACCEPTED MANUSCRIPT
+
+104 and kept moist via damp sponges AinCseCrtEedPaTtEthDe eMndAs NofUeSacChRcoIPreTsection, but no attempt had been
+105 made to shield the core from light. Paired samples were taken every ~25 cm through the uppermost 106 11 m of the core by inserting short sections of 20 mm diameter opaque tubing. Under subdued 107 orange lighting the sediment was extruded and the outer ~8 mm was discarded to avoid core barrel 108 smearing. The light exposed upper ~8 mm was removed and used for carbonate content and dose 109 rate analysis. The middle ~8 mm of the sample was dispersed in deionised water and sieved at 150 110 µm, with the >150 fraction consisting of foraminiferal tests, and the <150 µm fraction being used 111 for dating. The dating fraction was sequentially treated with HCl, H2O2 and H2SiF6 to remove 112 carbonate, organic matter and feldspars respectively. The resulting mixture was separated into fine 113 silt (4-11 µm) and coarse silt (40-63 µm where present) fractions via Stokes settling and wet sieving 114 respectively. 115 116 All OSL measurements presented in this study were carried out using a Risø TL/OSL-DA-15 117 automated dating system (Bøtter-Jensen et al., 2000). Optical stimulation of single aliquots was 118 carried out using a blue (470 ± 30 nm) light emitting diode (LED) array with a nominal power 119 density of 18 mW/cm2. Infra-red (IR) stimulation was carried out using an IR (870 nm) laser diode 120 array. OSL was measured using an Electron Tubes Ltd 9235QB photomultiplier tube with 7.5 mm 121 of Hoya U-340 filter interposed between the sample and photomultiplier. Irradiation was carried out 122 using a 40 mCi 90Sr/90Y beta source, calibrated relative to the National Physical Laboratory, 123 Teddington Hotspot 800 60Co γ-source (Armitage and Bailey, 2005). Single-aliquot equivalent 124 doses (De) were determined using the single-aliquot regenerative-dose (SAR) method (Galbraith et 125 al., 1999; Murray and Wintle, 2000). OSL signals were measured at 125 °C and growth curves were 126 fitted using a saturating exponential function. No dependence of De upon preheating regime was 127 found (Figure S1) and a preheating regime of 260 °C, 10 s for PH1 (the pre-heat prior to 128 measurement of Ln or Lx) and 220 °C, 10 s for PH2 (the pre-heat prior to measurement of Tn or Tx) 129 was adopted for subsequent measurements. Dose recovery experiments (Roberts et al., 1999;
+
+ACCEPTED MANUSCRIPT
+
+130 Wallinga et al., 2000) were perforAmCedCoEnPtTheEcDoaMrseAsNiltUfrSaCctRioInPsTof samples 11B, 19A and 27A (De
+131 = 23, 44 and 77 Gy respectively) using this preheating regime, yielding dose recovery ratios of 0.99 132 ± 0.01, 0.98 ± 0.01 and 0.98 ± 0.01 respectively. When calculating De, aliquots were rejected where 133 the recycling ratio (Murray and Wintle, 2000) or IR depletion ratio (Duller, 2003) differed from 134 unity by more than two standard deviations, or where the sensitivity corrected luminescence 135 intensity in response to a 0 Gy regeneration dose exceeded 5% of the sensitivity corrected natural 136 luminescence intensity (Table S3). 137 138 2.2 Dose rate detremination 139 The environmental dose rate for samples from core 658B consists of alpha, beta and gamma 140 components, since the overlying water completely shields the ocean floor sediments from cosmic 141 rays. 238U and 232Th and bulk K concentrations were measured using ICP-MS (Table S4). Burial 142 230Thxs for all samples was assumed to be the mean value (36.6±9.3 Bq/kg) measured by Adkins et 143 al. (2006) for Core 658C over the time period 2-18.5 ka. Adkins et al. (2006) determined 230Thxs 144 using a VG Plasma Quad 2 ICP-MS, reporting <1% counting statistics errors and 0.17 Bq/kg 145 procedural blanks. Initial 231Paxs (3.38±0.87 Bq/kg) was calculated using the 0.093 production 146 activity ratio of 231Pa/230Th (Henderson and Anderson, 2003). Time independent dose rates were 147 calculated from 238U and 232Th and K concentrations, assuming equilibrium in both decay series, 148 using the standard conversion factors (Adamiec and Aitken, 1998). The additional time dependant 149 dose contribution due to 230Thxs and 231Paxs, and the final age calculation, were performed using the 150 method outlined by Stokes et al. (2003). Both coarse and fine silt dose rates were corrected for 151 alpha efficiency (0.04±0.02), alpha and beta attenuation and water content (Aitken, 1985). Water 152 contents were taken from the relevant ODP initial report (Ruddiman et al., 1988). The above dose 153 rate calculation is referred to as the “Marinexs” dose rate model hereafter. Dose rates and ages 154 calculated using the Marinexs model are presented in Table S5. 155
+
+156 3 Results and discussion
+
+ACCEPTED MANUSCRIPT
+
+157 Coarse silt OSL ages calculated using the Marinexs model are shown alongside the independent 158 chronological data in Figure 2. It is clear that the coarse silt OSL ages underestimate the
+
+159 independent ages by a considerable amount.
+
+160
+
+ACCEPTED MANUSCRIPT
+
+161 Whilst uranium forms soluble species in oxidising conditions, under suboxic or anoxic conditions it
+
+162 is reduced to its insoluble tetravalent state (Henderson and Anderson, 2003). This situation
+
+163 frequently occurs at or near the sediment-water interface, resulting in the incorporation of
+
+164 authigenic uranium in marine sediments. Especially high authigenic uranium concentrations occur
+
+165 where high surface productivity leads to a high organic matter flux to the sea bed, since this
+
+166 material consumes oxygen during its decay (Henderson and Anderson, 2003). Consequently it
+
+167 might be expected that sediments from ODP site 658 will have a high authigenic uranium content. 168 Authigenic uranium isotopes (238Uauth and 234Uauth) are incorporated into marine sediment at the 169 seawater activity ratio of 234U/238U = 1.146 (Robinson et al., 2004), and without any supported 170 decay products. For dating purposes, 238Uauth instantly attains equilibrium with the next two decay 171 products (234Th and 234Pa) since neither is long-lived. Conversely, 234U has a half-life of 245 ka and 172 hence will not approach equilibrium with its parent (234Pa) over the applicable age range of quartz
+
+173 OSL dating. However, since authigenic uranium is incorporated into the sediment at an activity 174 ratio of 234U/238U of 1.146, 234Uauth may be treated as being in equilibrium with 238Uauth for the 175 purposes of estimating dose rates. The slight excess activity of 234Uauth over 238Uauth has a negligible 176 impact upon dose rates since the decay of 234U contributes a small proportion of the dose rate due to 177 the 238U decay series (11% of alpha, 0.5% of beta and 0.1% of gamma). Since both 234U and its 178 decay product 230Th are long-lived (half-lives of 245 and 75 ka respectively), the ingrowth of 179 234Uauth decay products is negligible over the 0-50 ka timeframe covered by this study.
+
+180 Consequently, in this study the dose rate due to authigenic uranium may be approximated by 181 assuming secular equilibrium from 238Uauth-234Uauth, and no dose from the decay products of 234Uauth.
+
+182 Since most of the alpha, beta and AgaCmCmEaPeTneErgDy Min AthNe 2U38SUCdRecIPayTseries is emitted at or below 234U
+
+183 (Stokes et al., 2003), the dose rate must be corrected to account for authigenic uranium uptake
+
+184 where it occurs.
+
+185 186 The authigenic uranium content of a marine sediment may be calculated from the measured 238U 187 and 232Th activities (or the activities calculated from the measured concentrations), since the 232Th 188 is entirely detrital, and the 238U/232Th activity ratio of crustal rocks and pelagic marine sediments is
+
+ACCEPTED MANUSCRIPT
+
+189 0.8±0.2 (Anderson et al., 1989). Equation 1 was used to calculate authigenic uranium contents of
+
+190 Core 658B samples
+
+191
+
+192 Uauth = 238Um-0.8*232Thm
+
+(Eq. 1)
+
+193
+
+194 where 238Um and 232Thm are the measured activities of 238U and 232Th respectively (Yu et al., 1999).
+
+195 This calculation was performed for all samples in this study (n=29), adding a 20% uncertainty to the
+
+196 Uauth activity, and the mean 238Uauth/238Um ratio was 0.77±0.18. In the Marinexs dose rate model, the 197 entire detrital 238U decay series is assumed to be in equilibrium, which will result in an overestimate
+
+198 of the true dose rate due to uranium where authigenic uranium uptake has occurred. Ages were 199 recalculated using the revised “Marinexs+auth” dose rate model, in which the dose rate due to 238Uauth 200 is calculated assuming equilibrium to 234U, with no dose from the decay products of 234Uauth, and the 201 detrital 238U (238Um - 238Uauth) decay series is assumed to be in equilibrium throughout. In the 202 Marinexs+auth dose rate model, all other components are calculated as in the Marinexs dose rate
+
+203 model. Coarse silt OSL ages calculated using the Marinexs+auth dose rate model (Table S6) are in 204 good agreement with the independent chronological data (Figure 3a), indicating that the age
+
+205 underestimation observed when using the Marinexs dose rate model is caused by the failure of this
+
+206 model to account for authigenic uranium uptake. The mean ratio of Marinexs/ Marinexs+auth dose rate 207 ages is 0.73±0.05.
+
+ACCEPTED MANUSCRIPT
+
+208 ACCEPTED MANUSCRIPT
+209 Ages were calculated, using the Marinexs+auth dose rate model, for the 16 samples for which 210 equivalent doses had been measured on fine quartz silt (Table S7, Figure 3b). The fine silt ages do 211 not increase monotonically with depth, nor do they agree with the independent chronological data 212 or the paired coarse silt ages where available (~4-6.5 m). All fine silt OSL ages are older than 213 corresponding coarse silt OSL ages and independent age control. Together these discrepancies are 214 taken to indicate that the dose rate model is correct, but that the fine silt equivalent doses do not 215 represent the dose experienced since the deposition of these particles at ODP Site 658. It has been 216 suggested that in many marine contexts coarse silt might be preferential to fine silt for dating since 217 90% of grains within the nepheloid (cloudy) layer in non-polar deep oceans, which results from 218 sediment reworking, consist of grains with a diameter of 0.5-8.5 µm (Berger, 2006). Also, the 219 230Thxs record from ODP core 658C indicates that over the last 20 ka, this site has received 3 times 220 more sediment laterally than vertically, though this ratio is quite variable (Adkins et al., 2006). 221 Since 50 µm grains settle through water at ~40 times the rate of 8 µm grains, the coarse silt fraction 222 is more likely to be incorporated via sea surface aeolian input immediately prior to deposition than 223 is the fine silt fraction. Consequently, the discrepancy between coarse silt and fine silt OSL ages at 224 site 658B is attributed to ocean floor reworking, without exposure to sunlight, of the latter. 225 226 4 Conclusions 227 Disequilibrium in the 238U and 235U decay series due to precipitation of insoluble isotopes from the 228 water column is a well-known phenomenon in marine sediments (Wintle and Huntley, 1979). With 229 appropriate 230Thxs measurements, the effect of this disequilibrium on dose rates can be accounted 230 for (Stokes et al., 2003). At ODP Site 658, authigenic uranium uptake represents an important 231 additional source of disequilibrium. A simple dose rate correction is proposed, which appears 232 suitable for sediments which are much younger than the half-life of 234U. However, more complex 233 dose rate corrections will be required in older samples where significant ingrowth of 234Uauth decay
+
+ACCEPTED MANUSCRIPT
+
+234 products has occurred. It is probabAleCtChaEt PauTtEhiDgenMicAuNraUniSumCRupIPtaTke in marine sediments could
+235 disguise quite large 230Thxs activities where secular equilibrium is diagnosed on the basis of 236 226Ra/238U activity ratios determined using high-resolution gamma spectrometry (e.g. Jakobsson et 237 al., 2003). Consequently, it is prudent to calculate authigenic uranium uptake for all samples when 238 dating open ocean sediments. 239 240 Coarse silt (40-63 µm) OSL ages from site 658B are internally consistent and in good agreement 241 with independent age control. Conversely, fine silt (4-11 µm) yielded older ages for all samples, 242 and dates did not increase monotonically with depth. It appears likely that seafloor reworking of 243 fine silt caused these ages to be unrepresentative of the timing of sediment formation at the sampled 244 position. This result potentially limits the applicability of OSL dating to marine sediments, since the 245 coarse silt component at site 658B results from its location under the North African summer dust 246 plume. However, since the deep ocean nepheloid layer contains little material >10 µm, it is possible 247 that accurate ages for sediment formation could be obtained from silts only slightly coarser than the 248 4-11 µm fraction measured here. 249 250 5 Acknowledgements 251 The measurements presented in the paper were funded by NERC grant NER/T/S/2001/01236 and 252 NERC Radiocarbon Analysis Allocation No. 1036.0403, both awarded to Stephen Stokes. Calcium 253 carbonate analysis and foraminifera picking for 14C and δ18O measurements was carried out by 254 Chris Beer and Abigail Stone. Jenny Kynaston drew Figure 1. Andreas Lang is thanked for 255 providing a constructive review. This work was initiated by Stephen Stokes, to whom the paper is 256 dedicated.
+
+257 Figure captions
+
+ACCEPTED MANUSCRIPT
+
+258
+
+259 Figure 1: Location of ODP Site 658 under the summer African dust plume (grey). Redrawn from
+
+260 deMenocal et al. (2000).
+
+261
+
+262 Figure 2: Chronological models for Core 658B. Filled circles represent independent age estimates 263 determined using AMS 14C on foraminifera from Core 658B and the solid line represents an age-
+
+ACCEPTED MANUSCRIPT
+
+264 depth relationship determined by matching stratigraphic events to external dated stratigraphies,
+
+265 assuming constant sedimentation between these tie points. The dashed line represents the age-depth
+
+266 relationship beyond 18 ka, assuming that the 22 cm/ka sedimentation rate observed between 2.37
+
+267 and 5.15 m core depth continues. Open circles represent coarse silt OSL ages calculated using the
+
+268 Marinexs dose rate model.
+
+269
+
+270 Figure 3: Independent age estimates and OSL ages for Core 658B. a) Independent age estimates and
+
+271 coarse silt OSL ages calculated using the Marinexs+auth dose rate model. b) Coarse silt and fine silt
+
+272 OSL ages calculated using the Marinexs+auth dose rate model, plotted alongside the independent age273 depth model. Core 658B AMS 14C ages have been removed from panel b for clarity.
+
+274
+
+275 References
+
+ACCEPTED MANUSCRIPT
+
+276
+
+277 Adamiec, G., Aitken, M., 1998. Dose-rate conversion factors: update. Ancient TL 16, 37-50.
+
+278 Adkins, J., deMenocal, P., Eshel, G., 2006. The "African humid period" and the record of marine
+
+279 upwelling from excess 230Th in Ocean Drilling Program Hole 658C. Paleoceanography 21.
+
+280 Aitken, M.J., 1985. Thermoluminescence dating. Academic press.
+
+281 Anderson, R.F., Lehuray, A.P., Fleisher, M.Q., Murray, J.W., 1989. Uranium deposition in saanich
+
+282 inlet sediments, vancouver island. Geochimica et Cosmochimica Acta 53, 2205-2213.
+
+283 Armitage, S.J., Bailey, R.M., 2005. The measured dependence of laboratory beta dose rates on
+
+284 sample grain size. Radiat Meas 39, 123-127.
+
+ACCEPTED MANUSCRIPT
+
+285 Berger, G.W., 2006. Trans-arctic-ocean tests of fine-silt luminescence sediment dating provide a
+
+286 basis for an additional geochronometer for this region. Quaternary Science Reviews 25, 2529-2551.
+
+287 Bøtter-Jensen, L., Bulur, E., Duller, G.A.T., Murray, A.S., 2000. Advances in luminescence
+
+288 instrument systems. Radiat Meas 32, 523-528.
+
+289 deMenocal, P., Ortiz, J., Guilderson, T., Adkins, J., Sarnthein, M., Baker, L., Yarusinsky, M., 2000.
+
+290 Abrupt onset and termination of the African Humid Period: Rapid climate responses to gradual
+
+291 insolation forcing. Quaternary Science Reviews 19, 347-361.
+
+292 Duller, G.A.T., 2003. Distinguishing quartz and feldspar in single grain luminescence
+
+293 measurements. Radiat Meas 37, 161-165.
+
+294 Galbraith, R.F., Roberts, R.G., Laslett, G.M., Yoshida, H., Olley, J.M., 1999. Optical dating of
+
+295 single and multiple grains of quartz from Jinmium rock shelter, northern Australia: Part I,
+
+296 experimental design and statistical models. Archaeometry 41, 339-364.
+
+297 Henderson, G.M., Anderson, R.F., 2003. The U-series toolbox for palaeoceanography, in: Bourdon,
+
+298 B., Henderson, G.M., Lundstrom, C.C., Turner, S.P. (Eds.), Uranium-series geochemistry.
+
+299 Geochemical Society and Mineralogical Society of America, Washington, p. 656.
+
+300 Jakobsson, M., Backman, J., Murray, A., Løvlie, R., 2003. Optically stimulated luminescence
+
+301 dating supports central arctic ocean cm-scale sedimentation rates. Geochemistry, Geophysics,
+
+302 Geosystems 4.
+
+303 Lisiecki, L.E., Raymo, M.E., 2005. A Pliocene-Pleistocene stack of 57 globally distributed benthic
+
+304 δ 18O records. Paleoceanography 20, 1-17.
+
+305 Murray, A.S., Wintle, A.G., 2000. Luminescence dating of quartz using an improved single-aliquot
+
+306 regenerative-dose protocol. Radiat Meas 32, 57-73.
+
+307 Roberts, R.G., Galbraith, R.F., Olley, J.M., Yoshida, H., Laslett, G.M., 1999. Optical dating of
+
+308 single and multiple grains of quartz from Jinmium rock shelter, northern Australia: Part II, results
+
+309 and implications. Archaeometry 41, 365-395.
+
+310 Robinson, L.F., Belshaw, N.S., Henderson, G.M., 2004. U and Th concentrations and isotope ratios
+
+311 in modern carbonates and waters from the Bahamas. Geochimica et Cosmochimica Acta 68, 1777-
+
+312 1789.
+
+313 Ruddiman, W., Sarnthein, M., Baldauf, J., al., e., 1988. Proceedings of the Ocean Drilling Program
+
+314 Part A - Initial Reports.
+
+315 Sikes, E.L., Samson, C.R., Guilderson, T.P., Howard, W.R., 2000. Old radiocarbon ages in the
+
+316 southwest Pacific Ocean during the last glacial period and deglaciation. Nature 405, 555-559.
+
+317 Stokes, S., Ingram, S., Aitken, M.J., Sirocko, F., Anderson, R., Leuschner, D., 2003. Alternative
+
+318 chronologies for Late Quaternary (Last Interglacial-Holocene) deep sea sediments via optical dating
+
+319 of silt-sized quartz. Quaternary Science Reviews 22, 925-941.
+
+320 Sugisaki, S., Buylaert, J.P., Murray, A., Tsukamoto, S., Nogi, Y., Miura, H., Sakai, S., Iijima, K.,
+
+321 Sakamoto, T., 2010. High resolution OSL dating back to MIS 5e in the central Sea of Okhotsk.
+
+322 Quat Geochronol 5, 293-298.
+
+323 Sugisaki, S., Buylaert, J.P., Murray, A.S., Harada, N., Kimoto, K., Okazaki, Y., Sakamoto, T.,
+
+324 Iijima, K., Tsukamoto, S., Miura, H., Nogi, Y., 2012. High resolution optically stimulated
+
+325 luminescence dating of a sediment core from the southwestern Sea of Okhotsk. Geochemistry,
+
+326 Geophysics, Geosystems 13.
+
+327 Wallinga, J., Murray, A., Duller, GA.C, 2C0E00P.TUEnDderMesAtimNaUtioSnCoRfIePqTuivalent dose in single-aliquot
+328 optical dating of feldspars caused by preheating. Radiat Meas 32, 691-695. 329 Wintle, A.G., Huntley, D.J., 1979. Thermoluminescence dating of a deep-sea sediment core. Nature 330 279, 710-712. 331 Yu, E.F., Liang, C.H., Chen, M.T., 1999. Authigenic uranium in marine sediments of the Benguela 332 current upwelling region during the last glacial period. Terrestrial, Atmospheric and Oceanic 333 Sciences 10, 201-214. 334
+
+ACCEPTED MANUSCRIPT
+
+ACCEPTED MANUSCRIPT
+
+ACCEP TED MANUS CRIP T Latitude
+
+Med
+
+20°N 0°
+
+Site 658 20°W
+
+Sahara
+
+Sahel - Grass savannah Tree savannah
+
+0° Longitude
+
+Rain forest 20°E
+
+ACCEPTED MANUSCRIPT
+
+Core depth (m)
+ACCEPTED MANUSCRIPT
+
+0
+Tie point ages
+658B 14C
+2
+
+Coarse silt ages
+
+4
+
+6
+
+8
+
+10
+
+12 0
+
+20 40 Age (ka)
+
+60
+
+ACCEPTED MANUSCRIPT
+
+T
+
+CRIP
+
+MANUS
+
+TED
+
+ACCEP
+Core depth (m)
+
+Core depth (m)
+
+0
+Tie point ages
+658B 14C
+2
+
+Coarse silt ages
+
+0 2
+
+Tie point ages Fine silt ages
+
+Coarse silt ages
+
+44
+
+66
+
+88
+
+10
+a)
+12 0
+
+20 40 Age (ka)
+
+10
+b)
+12 60 0
+
+20 40 Age (ka)
+
+60
+
+ACCEPTED MANUSCRIPT
+
+ACCEPTED MANUSCRIPT
+Supplemental information for: Optically stimulated luminescence dating of Ocean Drilling Program Core 658B: Complications arising from authigenic uranium uptake and lateral sediment movement.
+Simon J. Armitage
+Figure
+Figure S1: Equivalent dose (De) versus PH1 temperature measured using coarse silt samples. Each point is the mean of two aliquots. Solid markers indicate data where a 160 °C cut-heat was used for PH2. The open markers represent the preheat conditions chosen for equivalent dose determination i.e. where PH1 was 260 °C and PH2 was 220 °C, both held for 10 s. These data have been offset by 5 °C on the x-axis for clarity. Dashed lines represent a PH1 specific De/Mean De ratio of 1. Y-axis tick marks are spaced at 0.1 (10%) intervals. Insufficient coarse silt-sized quartz was available to measure aliquots of 11B or 27A at a PH1 temperature of 280 °C.
+
+ACCEPTED MANUSCRIPT
+
+Tables
+
+Table S1: AMS 14C ages for ODP Core 658B. All ages were calibrated in Calib 7.02 using the MARINE13
+
+radiocarbon age calibration curve (Reimer et al., 2013) with a ∆R value of 131±10 years. The upper calibrated
+
+age range for sample 29B lies beyond the calibration curve and is therefore inaccurate.
+
+658B sample
+
+Depth (m)
+
+Lab. code
+
+Uncalibrated age (a)
+
+2σ range (cal. BP)
+
+1A
+
+2.37
+
+OxA-14323
+
+3165±50
+
+2714-2928
+
+3A
+
+2.93
+
+OxA-14324
+
+12415±75
+
+13575-13911
+
+5B
+
+3.42
+
+OxA-14325
+
+9650±120
+
+10136-10678
+
+7A
+
+3.90
+
+OxA-14326
+
+11310±150
+
+12334-13039
+
+9A
+
+4.42
+
+OxA-14327
+
+7990±55
+
+8183-8421
+
+11A
+
+4.89
+
+OxA-14328
+
+13810±110
+
+15624-16277
+
+13B
+
+5.42
+
+OxA-14329
+
+17020±110
+
+19582-20166
+
+15A
+
+5.92
+
+OxA-14330
+
+20220±130
+
+23357-24055
+
+17A
+
+6.43
+
+OxA-14331
+
+22930±170
+
+26208-27151
+
+19A
+
+6.92
+
+OxA-14332
+
+22260±180
+
+25655-26354
+
+21A
+
+7.42
+
+OxA-14333
+
+32250±450
+
+35205-36016
+
+23B
+
+7.93
+
+OxA-14334
+
+37850±800
+
+40235-42840
+
+25A
+
+8.41
+
+OxA-14335
+
+41300±1100
+
+42578-46112
+
+29B
+
+9.42
+
+OxA-14338
+
+46300±2200
+
+45196-50000
+
+31A
+
+9.90
+
+OxA-14339
+
+37000±800
+
+39383-42282
+
+ACCEPTED MANUSCRIPT
+
+Table S2: Stratigraphic markers used to construct an age model for core 658B. “AHP” is the African Humid
+
+Period and “YD” is the early AHP decrease in CaCO3 content in Site 658C which deMenocal et al. (2000) equate to the Younger Dryas.
+
+Event
+
+Record in which visible Age (ka)
+
+Reference
+
+Depth in
+
+659B (m)
+
+AHP end YD AHP start Maximum ice volume
+
+CaCO3 CaCO3 CaCO3 δ18O
+
+5.43 12.34 14.8 18.0
+
+(deMenocal et al., 2000) (deMenocal et al., 2000) (deMenocal et al., 2000) (Lisiecki and Raymo, 2005)
+
+2.37 3.90 4.89 5.15
+
+ACCEPTED MANUSCRIPT
+
+ACCEPTED MANUSCRIPT
+
+Table S3: Numbers of aliquots measured and accepted or rejected. Grain size is given in parentheses after the
+
+sample code, with “FS” indicating fine silt and “CS” indicating coarse silt. Aliquots were rejected where the
+
+recycling ratio (“Recycling”) or IR depletion ratio (“IR depletion”) differed from unity by more than two
+
+standard deviations, or where the sensitivity corrected luminescence intensity in response to a 0 Gy
+
+regeneration dose exceeded 5% of the sensitivity corrected natural luminescence intensity (“Recuperation”).
+
+Sample (grain size) 1A (FS) 2A (FS) 3A (FS) 4A (FS) 5B (FS) 6A (FS) 7A (CS) 7A (FS) 8A (CS) 8A (FS) 9A (CS) 9A (FS) 11A (CS) 11A (FS) 12A (CS) 12A (FS) 13B (CS) 14A (CS) 14A (FS) 15A (CS) 15A (FS) 16A (CS) 16A (FS) 17A (CS) 17A (FS) 18A (CS) 19A (CS) 21A (CS) 22A (CS) 23B (CS) 24A (CS) 25A (CS) 27A (CS) 28A (CS) 29B (CS) 32A (CS) 34A (CS) 35A (CS)
+
+Measured/Accepted 20/20 9/6 11/11 12/11 12/12 9/9 20/20 9/8 9/9 9/9 12/12 9/9 20/19 16/15 10/10 23/22 10/10 16/16 17/17 10/10 9/9 22/20 10/10 20/20 13/13 15/15 25/24 9/9 9/9 9/9 9/9 9/8 9/9 9/9 9/9 9/9 9/9 9/9
+
+Recycling 3 1 1 1 1 1 1 -
+
+IR depletion 1 1 -
+
+Recuperation 1 -
+
+ACCEPTED MANUSCRIPT
+
+ACCEPTED MANUSCRIPT
+
+Table S4: Water and radioisotope concentrations for Core 658B samples. In addition, all samples were
+
+assumed to have 230Thxs and 231Paxs activities of 36.6±9.3 Bq/kg and 3.38±0.87 Bq/kg at burial. These data are
+
+used to generate the dose rates presented in Tables S5-7.
+
+Sample
+
+Core depth (m)
+
+Water (%)
+
+238U (ppm)
+
+232Th (ppm)
+
+K (%)
+
+1A
+
+2.37
+
+57.7±5.0
+
+6.33±0.39
+
+5.81±0.26
+
+1.10±0.08
+
+2A
+
+2.65
+
+57.1±5.0
+
+5.88±0.36
+
+4.34±0.24
+
+0.72±0.05
+
+3A
+
+2.93
+
+56.4±5.0
+
+5.14±0.29
+
+3.71±0.17
+
+0.57±0.04
+
+4A
+
+3.15
+
+55.7±5.0
+
+5.71±0.34
+
+3.38±0.14
+
+0.46±0.03
+
+5B
+
+3.42
+
+54.9±5.0
+
+5.69±0.33
+
+4.04±0.21
+
+0.42±0.03
+
+6A
+
+3.65
+
+54.1±5.0
+
+5.74±0.31
+
+3.93±0.21
+
+0.40±0.02
+
+7A
+
+3.90
+
+53.2±5.0
+
+5.60±0.29
+
+4.07±0.20
+
+0.68±0.05
+
+8A
+
+4.15
+
+52.3±5.0
+
+6.82±0.40
+
+4.59±0.23
+
+0.52±0.03
+
+9A
+
+4.42
+
+51.4±5.0
+
+6.07±0.35
+
+3.75±0.18
+
+0.45±0.04
+
+11B
+
+4.89
+
+49.7±5.0
+
+4.38±0.24
+
+3.52±0.17
+
+1.00±0.06
+
+12A
+
+5.15
+
+48.9±5.0
+
+4.15±0.21
+
+4.62±0.23
+
+1.10±0.06
+
+13B
+
+5.42
+
+48.0±5.0
+
+5.13±0.30
+
+4.98±0.24
+
+1.11±0.06
+
+14A
+
+5.65
+
+47.3±5.0
+
+4.78±0.30
+
+4.41±0.19
+
+1.09±0.06
+
+15A
+
+5.92
+
+46.5±5.0
+
+5.20±0.28
+
+5.15±0.24
+
+1.18±0.07
+
+16A
+
+6.15
+
+45.9±5.0
+
+5.09±0.29
+
+4.89±0.23
+
+1.19±0.08
+
+17A
+
+6.43
+
+45.2±5.0
+
+5.08±0.30
+
+5.14±0.26
+
+1.25±0.07
+
+18A
+
+6.65
+
+44.7±5.0
+
+6.12±0.32
+
+6.51±0.33
+
+1.19±0.07
+
+19A
+
+6.92
+
+44.2±5.0
+
+5.89±0.35
+
+5.59±0.25
+
+1.28±0.08
+
+21A
+
+7.42
+
+43.4±5.0
+
+5.28±0.30
+
+4.82±0.22
+
+1.10±0.06
+
+22A
+
+7.65
+
+43.1±5.0
+
+4.27±0.20
+
+5.55±0.30
+
+1.16±0.07
+
+23B
+
+7.93
+
+42.9±5.0
+
+6.03±0.35
+
+4.71±0.24
+
+1.11±0.07
+
+24A
+
+8.15
+
+42.7±5.0
+
+4.76±0.25
+
+4.72±0.23
+
+1.14±0.06
+
+25A
+
+8.41
+
+42.6±5.0
+
+6.47±0.36
+
+5.12±0.32
+
+0.83±0.05
+
+27A
+
+8.93
+
+42.5±5.0
+
+4.86±0.27
+
+5.86±0.32
+
+1.14±0.07
+
+28A
+
+9.15
+
+42.5±5.0
+
+6.02±0.32
+
+4.46±0.29
+
+0.80±0.05
+
+29B
+
+9.42
+
+42.6±5.0
+
+5.27±0.28
+
+4.18±0.22
+
+0.75±0.05
+
+32A
+
+10.19
+
+43.0±5.0
+
+3.72±0.23
+
+5.08±0.27
+
+1.03±0.07
+
+34A
+
+10.65
+
+43.5±5.0
+
+4.76±0.27
+
+5.04±0.26
+
+0.92±0.06
+
+35A
+
+10.92
+
+43.7±5.0
+
+4.92±0.16
+
+5.70±0.21
+
+1.02±0.06
+
+ACCEPTED MANUSCRIPT
+
+ACCEPTED MANUSCRIPT
+
+Table S5: Equivalent dose, dose rate and age data for coarse silt samples using the Marinexs dose rate model.
+
+Uncertainties are based on the propagation, in quadrature, of errors associated with individual errors for all
+
+measured quantities. In addition to uncertainties calculated from counting statistics, errors due to 1) beta
+
+source calibration (3%) (Armitage and Bailey, 2005), 2) ICP-MS/Gamma spectrometer calibration (3%), 3) dose
+
+rate conversion factors (3%) and 4) attenuation factors (3%) have been included (Murray and Olley, 2002). Dr(supported) is the dose rate due to the 238U and 232Th decay series in equilibrium plus the 40K dose rate. Dtot(xs) is the total dose due to 230Thxs and 231Paxs since burial.
+
+Sample
+
+De (Gy)
+
+Dr(supported) (Gy/ka)
+
+Dtot(xs) (Gy, total)
+
+Age (ka)
+
+7A
+
+18.4±0.8
+
+1.61±0.09
+
+3.7±0.6
+
+9.2±0.7
+
+8A
+
+19.1±0.9
+
+1.76±0.11
+
+3.6±0.6
+
+8.8±0.7
+
+9A
+
+22.1±1.3
+
+1.55±0.10
+
+4.6±0.8
+
+11.3±1.0
+
+11B
+
+22.6±0.7
+
+1.60±0.08
+
+4.6±0.8
+
+11.2±0.7
+
+12A
+
+27.1±1.1
+
+1.68±0.08
+
+5.3±0.9
+
+12.9±0.8
+
+13B
+
+30.4±1.1
+
+1.90±0.10
+
+5.4±0.9
+
+13.1±0.8
+
+14A
+
+31.1±1.1
+
+1.80±0.09
+
+5.8±1.0
+
+14.0±0.9
+
+15A
+
+34.6±1.3
+
+1.99±0.10
+
+6.0±1.0
+
+14.4±0.9
+
+16A
+
+37.4±1.2
+
+1.97±0.10
+
+6.5±1.1
+
+15.7±1.0
+
+17A
+
+39.8±1.3
+
+2.03±0.10
+
+6.8±1.2
+
+16.3±1.0
+
+18A
+
+44.0±1.4
+
+2.26±0.12
+
+6.9±1.2
+
+16.4±1.0
+
+19A
+
+44.1±1.6
+
+2.24±0.12
+
+6.9±1.2
+
+16.6±1.0
+
+21A
+
+55.0±1.9
+
+1.98±0.10
+
+9.4±1.6
+
+23.0±1.4
+
+22A
+
+56.5±1.9
+
+1.87±0.09
+
+10.1±1.7
+
+24.9±1.5
+
+23B
+
+56.3±1.9
+
+2.14±0.12
+
+9.1±1.6
+
+22.0±1.4
+
+24A
+
+60.5±2.0
+
+1.91±0.09
+
+10.6±1.8
+
+26.1±1.6
+
+25A
+
+54.9±1.9
+
+2.06±0.12
+
+9.2±1.6
+
+22.2±1.4
+
+27A
+
+74.7±4.9
+
+2.00±0.10
+
+12.4±2.1
+
+31.2±2.6
+
+28A
+
+65.9±2.3
+
+1.92±0.11
+
+11.4±2.0
+
+28.3±1.9
+
+29B
+
+60.0±2.7
+
+1.73±0.10
+
+11.3±2.0
+
+28.2±2.0
+
+32A
+
+71.8±2.6
+
+1.65±0.08
+
+13.7±2.4
+
+35.2±2.2
+
+34A
+
+76.4±3.3
+
+1.77±0.09
+
+13.7±2.4
+
+35.4±2.4
+
+35A
+
+89.0±2.8
+
+1.90±0.09
+
+14.8±2.6
+
+39.1±2.3
+
+ACCEPTED MANUSCRIPT
+
+ACCEPTED MANUSCRIPT
+
+Table S6: Equivalent dose, dose rate and age data for coarse silt samples using the Marinexs+auth dose rate
+
+model. Uncertainties are based on the propagation, in quadrature, of errors associated with individual errors
+
+for all measured quantities. In addition to uncertainties calculated from counting statistics, errors due to 1)
+
+beta source calibration (3%) (Armitage and Bailey, 2005), 2) ICP-MS/Gamma spectrometer calibration (3%), 3)
+
+dose rate conversion factors (3%) and 4) attenuation factors (3%) have been included (Murray and Olley, 2002). Dr(sup-auth) is the dose rate due to 238Uauth in equilibrium to 234U and the 238Udetrital and 232Th decay series in equilibrium plus the 40K dose rate. Dtot(xs) is the total dose due to 230Thxs and 231Paxs since burial.
+
+Sample
+
+De (Gy)
+
+Dr(sup-auth) (Gy/ka)
+
+Dtot(xs) (Gy, total)
+
+Age (ka)
+
+7A
+
+18.4±0.8
+
+0.98±0.10
+
+5.3±0.9
+
+13.4±1.3
+
+8A
+
+19.1±0.9
+
+0.98±0.12
+
+5.5±0.9
+
+13.8±1.5
+
+9A
+
+22.1±1.3
+
+0.84±0.11
+
+7.0±1.2
+
+17.9±2.1
+
+11B
+
+22.6±0.7
+
+1.11±0.08
+
+6.0±1.0
+
+14.9±1.2
+
+12A
+
+27.1±1.1
+
+1.26±0.08
+
+6.6±1.1
+
+16.3±1.2
+
+13B
+
+30.4±1.1
+
+1.35±0.10
+
+7.0±1.2
+
+17.3±1.3
+
+14A
+
+31.1±1.1
+
+1.28±0.09
+
+7.5±1.3
+
+18.4±1.4
+
+15A
+
+34.6±1.3
+
+1.43±0.10
+
+7.7±1.3
+
+18.9±1.4
+
+16A
+
+37.4±1.2
+
+1.41±0.10
+
+8.4±1.4
+
+20.6±1.6
+
+17A
+
+39.8±1.3
+
+1.48±0.10
+
+8.6±1.5
+
+21.1±1.5
+
+18A
+
+44.0±1.4
+
+1.61±0.12
+
+8.9±1.5
+
+21.8±1.6
+
+19A
+
+44.1±1.6
+
+1.59±0.12
+
+9.0±1.6
+
+22.1±1.7
+
+21A
+
+55.0±1.9
+
+1.38±0.10
+
+12.2±2.1
+
+30.9±2.4
+
+22A
+
+56.5±1.9
+
+1.44±0.09
+
+12.1±2.1
+
+30.7±2.1
+
+23B
+
+56.3±1.9
+
+1.42±0.12
+
+12.2±2.1
+
+30.9±2.6
+
+24A
+
+60.5±2.0
+
+1.38±0.10
+
+13.3±2.3
+
+34.1±2.5
+
+25A
+
+54.9±1.9
+
+1.30±0.12
+
+12.8±2.2
+
+32.5±2.9
+
+27A
+
+74.7±4.9
+
+1.50±0.10
+
+15.2±2.6
+
+39.8±3.6
+
+28A
+
+65.9±2.3
+
+1.20±0.12
+
+15.8±2.7
+
+41.9±3.8
+
+29B
+
+60.0±2.7
+
+1.10±0.10
+
+15.4±2.7
+
+40.5±3.8
+
+32A
+
+71.8±2.6
+
+1.29±0.08
+
+16.1±2.8
+
+43.0±3.1
+
+34A
+
+76.4±3.3
+
+1.26±0.09
+
+17.2±3.0
+
+47.0±3.8
+
+35A
+
+89.0±2.8
+
+1.39±0.09
+
+18.3±3.2
+
+51.0±3.6
+
+Table S7: Equivalent dose, dose rate and age data for fine silt samples using the Marinexs+auth dose rate model.
+
+Uncertainties are based on the propagation, in quadrature, of errors associated with individual errors for all
+
+measured quantities. In addition to uncertainties calculated from counting statistics, errors due to 1) beta
+
+source calibration (3%) (Armitage and Bailey, 2005), 2) ICP-MS/Gamma spectrometer calibration (3%), 3) dose
+
+rate conversion factors (3%) and 4) attenuation factors (3%) have been included (Murray and Olley, 2002). Dr(sup-auth) is the dose rate due to 238Uauth in equilibrium to 234U and the 238Udetrital and 232Th decay series in equilibrium plus the 40K dose rate. Dtot(xs) is the total dose due to 230Thxs and 231Paxs since burial.
+
+Sample
+
+De (Gy)
+
+Dr(sup-auth) (Gy/ka)
+
+Dtot(xs) (Gy, total)
+
+Age (ka)
+
+1A
+
+8.65±0.29
+
+1.48±0.14
+
+2.1±0.4
+
+4.4±0.4
+
+2A
+
+14.90±0.92
+
+1.10±0.13
+
+4.5±0.9
+
+9.5±1.1
+
+3A
+
+18.51±1.26
+
+0.92±0.11
+
+6.2±1.2
+
+13.3±1.6
+
+4A
+
+22.56±0.72
+
+0.86±0.12
+
+7.8±1.5
+
+17.1±2.0
+
+5B
+
+22.32±1.10
+
+0.90±0.12
+
+7.6±1.5
+
+16.4±2.0
+
+6A
+
+28.99±1.07
+
+0.88±0.12
+
+9.8±1.9
+
+21.7±2.5
+
+7A
+
+29.08±1.07
+
+1.07±0.12
+
+8.8±1.7
+
+18.9±2.0
+
+8A
+
+25.68±0.99
+
+1.09±0.15
+
+7.8±1.5
+
+16.5±1.9
+
+9A
+
+38.81±1.47
+
+0.94±0.13
+
+12.6±2.5
+
+28.0±3.4
+
+11B
+
+48.56±1.83
+
+1.29±0.15
+
+12.6±2.5
+
+27.8±2.9
+
+12A
+
+62.53±2.58
+
+1.19±0.10
+
+16.7±3.3
+
+38.5±3.5
+
+13B
+
+62.91±2.53
+
+1.35±0.10
+
+15.6±3.0
+
+35.1±2.9
+
+14A
+
+66.57±2.23
+
+1.37±0.12
+
+16.3±3.2
+
+36.6±3.2
+
+15A
+
+65.89±2.39
+
+1.54±0.12
+
+15.1±2.9
+
+33.1±2.8
+
+16A
+
+52.49±2.01
+
+1.52±0.13
+
+12.5±2.4
+
+26.4±2.3
+
+17A
+
+58.51±2.00
+
+1.59±0.13
+
+13.4±2.6
+
+28.5±2.4
+
+ACCEPTED MANUSCRIPT
+
+ACCEPTED MANUSCRIPT
+References
+Armitage, S.J., Bailey, R.M., 2005. The measured dependence of laboratory beta dose rates on sample grain size. Radiat Meas 39, 123-127.
+deMenocal, P., Ortiz, J., Guilderson, T., Adkins, J., Sarnthein, M., Baker, L., Yarusinsky, M., 2000. Abrupt onset and termination of the African Humid Period: Rapid climate responses to gradual insolation forcing. Quaternary Science Reviews 19, 347-361.
+Lisiecki, L.E., Raymo, M.E., 2005. A Pliocene-Pleistocene stack of 57 globally distributed benthic δ 18O records. Paleoceanography 20, 1-17.
+Murray, A.S., Olley, J.M., 2002. Precision and accuracy in the optically stimulated luminescence dating of sedimentary quartz: a status review. Geochronometria 21, 1-16.
+Reimer, P.J., Bard, E., Bayliss, A., Beck, J.W., Blackwell, P.G., Bronk Ramsey, C., Buck, C.E., Cheng, H., Edwards, R.L., Friedrich, M., Grootes, P.M., Guilderson, T.P., Haflidason, H., Hajdas, I., Hatté, C., Heaton, T.J., Hoffmann, D.L., Hogg, A.G., Hughen, K.A., Kaiser, K.F., Kromer, B., Manning, S.W., Niu, M., Reimer, R.W., Richards, D.A., Scott, E.M., Southon, J.R., Staff, R.A., Turney, C.S.M., van der Plicht, J., 2013. IntCal13 and Marine13 radiocarbon age calibration curves 0-50,000 years cal BP. Radiocarbon 55, 1869-1887.
+
+
