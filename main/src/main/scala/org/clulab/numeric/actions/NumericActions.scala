@@ -110,32 +110,39 @@ class NumericActions extends Actions {
     cleanupAction(mentions)
 
   def cleanupAction(mentions: Seq[Mention]): Seq[Mention] = {
-    val r1 = keepLongestDates(mentions)
+    val r1 = keepLongestMentions(mentions)
     r1
   }
 
-  /** Keeps a date (or date range) mention only if it is not contained in another */
-  def keepLongestDates(mentions: Seq[Mention]): Seq[Mention] = {
-    val dates = mentions.filter(m => m.isInstanceOf[DateMention] || m.isInstanceOf[DateRangeMention])
+  private def isNumeric(m: Mention): Boolean = {
+    m.isInstanceOf[DateMention] ||
+    m.isInstanceOf[DateRangeMention] ||
+    m.isInstanceOf[MeasurementMention] ||
+    m.isInstanceOf[NumberRangeMention]
+  }
 
-    val filteredDates = new ArrayBuffer[Mention]()
-    for(date <- dates) {
+  /** Keeps a date (or date range) mention only if it is not contained in another */
+  def keepLongestMentions(mentions: Seq[Mention]): Seq[Mention] = {
+    val numerics = mentions.filter(m => isNumeric(m))
+
+    val filteredNumerics = new ArrayBuffer[Mention]()
+    for(numeric <- numerics) {
       var foundContainer = false
-      for(m <- dates if m != date && ! foundContainer) {
-        if(m.sentence == date.sentence && m.tokenInterval.contains(date.tokenInterval)) {
+      for(m <- numerics if m != numeric && ! foundContainer) {
+        if(m.sentence == numeric.sentence && m.tokenInterval.contains(numeric.tokenInterval)) {
           foundContainer = true
         }
       }
       if(! foundContainer) {
-        filteredDates += date
+        filteredNumerics += numeric
       } else {
         //println(s"REMOVED MENTION: ${date.raw.mkString(" ")}")
       }
     }
 
     val filteredMentions = new ArrayBuffer[Mention]()
-    filteredMentions ++= filteredDates
-    filteredMentions ++= mentions.filterNot(m => m.isInstanceOf[DateMention] || m.isInstanceOf[DateRangeMention])
+    filteredMentions ++= filteredNumerics
+    filteredMentions ++= mentions.filterNot(m => isNumeric(m))
 
     filteredMentions
   }
