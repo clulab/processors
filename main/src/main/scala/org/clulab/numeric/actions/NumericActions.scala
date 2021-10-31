@@ -123,27 +123,15 @@ class NumericActions extends Actions {
 
   /** Keeps a date (or date range) mention only if it is not contained in another */
   def keepLongestMentions(mentions: Seq[Mention]): Seq[Mention] = {
-    val numerics = mentions.filter(m => isNumeric(m))
-
-    val filteredNumerics = new ArrayBuffer[Mention]()
-    for(numeric <- numerics) {
-      var foundContainer = false
-      for(m <- numerics if m != numeric && ! foundContainer) {
-        if(m.sentence == numeric.sentence && m.tokenInterval.contains(numeric.tokenInterval)) {
-          foundContainer = true
-        }
-      }
-      if(! foundContainer) {
-        filteredNumerics += numeric
-      } else {
-        //println(s"REMOVED MENTION: ${date.raw.mkString(" ")}")
+    val (numerics, nonNumerics) = mentions.partition(isNumeric)
+    val filteredNumerics = numerics.filterNot { outerNumeric =>
+      numerics.exists { innerNumeric =>
+        innerNumeric != outerNumeric &&
+        innerNumeric.sentence == outerNumeric.sentence &&
+        innerNumeric.tokenInterval.contains(outerNumeric.tokenInterval)
       }
     }
 
-    val filteredMentions = new ArrayBuffer[Mention]()
-    filteredMentions ++= filteredNumerics
-    filteredMentions ++= mentions.filterNot(m => isNumeric(m))
-
-    filteredMentions
+    filteredNumerics ++ nonNumerics
   }
 }
