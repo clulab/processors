@@ -43,19 +43,9 @@ object NumberParser {
     }
   }
 
-  /** Remove the part of the number following +/-, e.g., in "45 +/- 13", we remove "+/- 13" */
-  def removePlusMinus(words: Seq[String]): Seq[String] = {
-    val withoutPlusMinus = new ArrayBuffer[String]()
-    var seenPlusMinus = false
-    for(word <- words if ! seenPlusMinus) {
-      if(word.equals("+/-")) { // TODO: add the Unicode for +/- as well
-        seenPlusMinus = true
-      } else {
-        withoutPlusMinus += word
-      }
-    }
-    withoutPlusMinus
-  }
+  /** Remove the part of the number including and following +/-, e.g., in "45 +/- 13", we remove "+/- 13" */
+  // Unicode \u00b1 seems to be already converted to the trigraph +/-.
+  def removePlusMinus(words: Seq[String]): Seq[String] = words.takeWhile(_ != "+/-")
 
   def parseNumeric(words: Seq[String]): Option[Double] = {
     try {
