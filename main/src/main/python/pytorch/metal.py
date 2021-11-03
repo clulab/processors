@@ -6,6 +6,7 @@ from pytorch.seqScorer import *
 from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 
 from torch.optim import SGD, Adam, RMSprop
+from torch.optim.lr_scheduler import *
 
 import json
 import random
@@ -89,6 +90,8 @@ class Metal(object):
         else:
             raise RuntimeError(f"ERROR: unknown trainer {trainerType}!")
 
+        scheduler = ExponentialLR(trainer, gamma=0.9)
+
         reader = MetalRowReader()
 
         cummulativeLoss = 0.0
@@ -154,6 +157,7 @@ class Metal(object):
                 trainer.step()
                 batchLoss = 0
                 i = 0
+            scheduler.step()
 
             # check dev performance in this epoch, for all tasks
             totalAcc = 0.0
