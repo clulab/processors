@@ -5,22 +5,21 @@ import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable
+import scala.io.Source
 
 object UnitNormalizer {
-  private val normMapper = readNorms()
+  private val normMapper = readNormsFromResource("/org/clulab/numeric/MEASUREMENT-UNIT.tsv")
 
-  protected def readNorms(): Map[String, String] = {
-    val path = "/org/clulab/numeric/MEASUREMENT-UNIT.tsv"
-    val norms = Sourcer.sourceFromResource(path).autoClose { source =>
-      val norms = new mutable.HashMap[String, String]()
-      
-      CommentedStandardKbSource.read(source) { (unit, normOpt) =>
-        assert(normOpt.isDefined) // We're insisting on this.
-        norms += unit -> normOpt.get
-      }
-      norms
+  def readNormsFromResource(path: String): Map[String, String] =
+      Sourcer.sourceFromResource(path).autoClose(readNormsFromSource)
+
+  def readNormsFromSource(source: Source): Map[String, String] = {
+    val norms = new mutable.HashMap[String, String]()
+
+    CommentedStandardKbSource.read(source) { (unit, normOpt) =>
+      assert(normOpt.isDefined) // We're insisting on this.
+      norms += unit -> normOpt.get
     }
-
     norms.toMap
   }
 
