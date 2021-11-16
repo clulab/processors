@@ -265,6 +265,10 @@ class Metal(object):
         Layers.parse(self.model, sentence, constEmbeddings)
 
     def test(self):
+
+        torch.manual_seed(self.taskManager.random)
+        random.seed(self.taskManager.random)
+
         for taskId in range(0, self.taskManager.taskCount):
             taskName = self.taskManager.tasks[taskId].taskName
             testSentences = self.taskManager.tasks[taskId].testSentences
