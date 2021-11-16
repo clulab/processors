@@ -269,16 +269,19 @@ class EmbeddingLayer(InitialLayer):
         w2i = {w:i for i, w in enumerate(wordList)}
 
         wordLookupParameters = nn.Embedding(len(w2i), learnedWordEmbeddingSize)
+        nn.init.xavier_uniform_(wordLookupParameters.weight)
 
         c2iFilename = config.get_string(paramPrefix + ".c2i", "org/clulab/c2i-en.txt")
         c2i = readChar2Ids(c2iFilename)
 
         charLookupParameters = nn.Embedding(len(c2i), charEmbeddingSize)
+        nn.init.xavier_uniform_(charLookupParameters.weight)
         charRnnBuilder = nn.LSTM(charEmbeddingSize, charRnnStateSize, 1, bidirectional=True, dropout=dropoutProb)
 
         if(posTagEmbeddingSize > 0):
             tag2i = readString2Ids(config.get_string(paramPrefix + ".tag2i", "../resources/org/clulab/tag2i-en.txt"))
             posTagLookupParameters = nn.Embedding(len(tag2i), posTagEmbeddingSize)
+            nn.init.xavier_uniform_(posTagLookupParameters.weight)
         else:
             tag2i = None
             posTagLookupParameters = None
@@ -290,8 +293,17 @@ class EmbeddingLayer(InitialLayer):
             ne2i = None
             neTagLookupParameters = None
 
-        distanceLookupParameters = nn.Embedding(distanceWindowSize * 2 + 3, distanceEmbeddingSize) if distanceEmbeddingSize > 0 else None
-        positionLookupParameters = nn.Embedding(101, positionEmbeddingSize) if positionEmbeddingSize > 0 else None
+        if distanceEmbeddingSize > 0:
+          distanceLookupParameters = nn.Embedding(distanceWindowSize * 2 + 3, distanceEmbeddingSize)
+          nn.init.xavier_uniform_(distanceLookupParameters.weight)
+        else:
+          distanceLookupParameters = None
+
+        if positionEmbeddingSize > 0:
+          positionLookupParameters = nn.Embedding(101, positionEmbeddingSize)
+          nn.init.xavier_uniform_(positionLookupParameters.weight)
+        else:
+          positionLookupParameters = None
 
         return cls(w2i, wordCounter, c2i, tag2i, ne2i,
                   learnedWordEmbeddingSize,

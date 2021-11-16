@@ -1,5 +1,5 @@
 import torch
-import torch.nn
+import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
@@ -18,6 +18,7 @@ class ForwardLayer(FinalLayer):
         self.nonlinearity = nonlinearity
 
         self.pH = nn.Linear(actualInputSize, len(t2i))
+        nn.init.xavier_uniform_(self.pH.weight)
         self.pRoot = Variable(torch.rand(inputSize)) #TODO: Not sure about the shape here
         self.dropoutProb = dropoutProb
 
