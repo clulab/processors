@@ -4,10 +4,10 @@
 # the format for the date ranges must be MM-dd:MM-dd or MM:MM
 # note: multi-word phrases must be tokenized in the same way as our tokenizer. If not sure, try the phrases in ./shell first!
 #
-winter  // 12-21:03-20
-spring  // 03-20:06-21
-summer  // 06-21:09-22
-autumn  // 09-22:12-21
+winter  // XXXX-12-21 -- XXXX-03-20
+spring  // XXXX-03-20 -- XXXX-06-21
+summer  // XXXX-06-21 -- XXXX-09-22
+autumn  // XXXX-09-22 -- XXXX-12-21
 
 
 

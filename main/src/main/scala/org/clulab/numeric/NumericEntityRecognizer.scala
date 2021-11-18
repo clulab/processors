@@ -59,23 +59,30 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
 }
 
 object NumericEntityRecognizer {
-  val rulesPath = "/org/clulab/numeric/master.yml"
+  private val resourceDir = {
+    val cwd = new File(System.getProperty("user.dir"))
+    new File(cwd, "src/main/resources")
+  }
+  private val rulesPath = "/org/clulab/numeric/master.yml"
 
   // this matches essential dictionaries such as month names
-  def mkLexiconNer: LexiconNER = LexiconNER(
-    Seq(
+  def mkLexiconNer: LexiconNER = {
+    val kbs = Seq(
       "org/clulab/numeric/MONTH.tsv",
       "org/clulab/numeric/MEASUREMENT-UNIT.tsv",
       "org/clulab/numeric/SEASON.tsv"
-    ),
-    Seq(
-      false, // false = case sensitive matching
-      true,
-      true
-    ),
-    new TrueEntityValidator,
-    useLemmasForMatching = false
-  )
+    )
+    val isLocal = kbs.forall(new File(resourceDir, _).exists)
+    LexiconNER(
+      kbs,
+      Seq(
+        false, // false = case sensitive matching
+        true,
+        true
+      ),
+      baseDirOpt = if (isLocal) Some(resourceDir) else None
+    )
+  }
 
   // this matches the grammars for both atomic and compositional entities
   def mkExtractor(actions: NumericActions): ExtractorEngine = {
