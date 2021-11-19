@@ -105,7 +105,6 @@
   pattern: |
     /(?i)until|through/ @date1:Date
 
-
 # Date range derived from a season, with mandatory year
 - name: season-1
   priority: ${ rulepriority }

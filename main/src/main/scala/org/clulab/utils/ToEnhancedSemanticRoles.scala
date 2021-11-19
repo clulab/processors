@@ -15,14 +15,15 @@ object ToEnhancedSemanticRoles {
   def generateEnhancedSemanticRoles(sentence:Sentence,
                                     basicDependencies:DirectedGraph[String],
                                     semanticRoles:DirectedGraph[String]): DirectedGraph[String] = {
-    val rolesIndex = semanticRoles.toDirectedGraphIndex(basicDependencies.size)
-    val depsIndex = basicDependencies.toDirectedGraphIndex(basicDependencies.size)
+    //println(s"BASIC GRAPH: ${basicDependencies}")
+    val rolesIndex = semanticRoles.toDirectedGraphIndex(sentence.size)
+    val depsIndex = basicDependencies.toDirectedGraphIndex(sentence.size)
 
     collapsePrepositions(sentence, depsIndex, rolesIndex)
     propagateArgsInConjPredicates(sentence, depsIndex, rolesIndex)
     propagateConjArgs(sentence, depsIndex, rolesIndex)
 
-    rolesIndex.toDirectedGraph(Some(basicDependencies.size))
+    rolesIndex.toDirectedGraph(Some(sentence.size))
   }
 
   /**

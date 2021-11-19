@@ -230,6 +230,7 @@ g / m3                     // g/m3
 cmol / l                   // cmol/l
 cmol l−1                   // cmol/l
 cmol kg-1                  // cmol/kg
+cmol kg                    // cmol/kg
 cubic meter per hour       // m3/h
 m3 h−1                     // m3/h
 m3 / h                     // m3/h

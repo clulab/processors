@@ -578,6 +578,8 @@ class CluProcessor protected (
     // generate SRL frames for each predicate in each sentence
     for(si <- predicates.indices) {
       val sentence = doc.sentences(si)
+      //println(s"SENTENCE WORDS: [${sentence.words.mkString("] [")}]")
+
       val predicateIndexes = 
       	predicateCorrections(predicates(si), sentence)
       val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
