@@ -56,12 +56,6 @@ object FileUtils {
     }
 
   // Add FromResource as necessary.  See getText below,
-  def getCommentedTextSetFromFile(file: File): Set[String] =
-    Sourcer.sourceFromFile(file).autoClose { source =>
-      getCommentedLinesFromSource(source).map(_.trim).toSet
-    }
-
-  // Add FromResource as necessary.  See getText below,
   def getCommentedTextFromFile(file: File, sep: String = " "): String =
     Sourcer.sourceFromFile(file).autoClose { source =>
       // These haven't been trimmed in case esp. trailing spaces are important.
