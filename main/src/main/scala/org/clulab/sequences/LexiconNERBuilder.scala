@@ -10,6 +10,7 @@ import org.clulab.struct.BooleanHashTrie
 import org.clulab.struct.DebugBooleanHashTrie
 import org.clulab.struct.EntityValidator
 import org.clulab.struct.IntHashTrie
+import org.clulab.utils.FileUtils
 import org.clulab.utils.Files
 import org.clulab.utils.Serializer
 import org.slf4j.Logger
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHashSet, Map => MutableMap, Set => MutableSet}
 import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 
 /**
   * Concrete subclasses are responsible for building various NERs.  The mapping is as follows:
@@ -463,6 +465,30 @@ class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder()
 
         var afterCount = caseInsensitiveBuildState.getCount + caseSensitiveBuildState.getCount
         logger.info(s"Loaded OVERRIDE matchers for all labels.  The number of entries added to the first layer was ${afterCount - beforeCount}.")
+      }
+    }
+  }
+}
+
+// This is presently not related to any other classes, but as the name suggests, might
+// eventually extend the StandardKbSource to add processing of the comments.
+object CommentedStandardKbSource {
+  val COMMENT = "//"
+  val COMMENT_LENGTH = COMMENT.length
+
+  def read(source: Source)(f: (String, Option[String]) => Unit): Unit = {
+    val lines = FileUtils.getCommentedLinesFromSource(source)
+
+    lines.foreach { line =>
+      val commentStart = line.indexOf(COMMENT)
+
+      if (commentStart < 0)
+        f(line.trim, None)
+      else {
+        val code = line.substring(0, commentStart).trim
+        val comment = line.substring(commentStart + COMMENT_LENGTH).trim
+
+        f(code, Some(comment))
       }
     }
   }
