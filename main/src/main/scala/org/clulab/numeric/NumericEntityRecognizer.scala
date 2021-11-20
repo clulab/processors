@@ -59,18 +59,21 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
 }
 
 object NumericEntityRecognizer {
-  private val resourceDir = {
+  private val rulesPath = "/org/clulab/numeric/master.yml"
+  val resourceDir = {
     val cwd = new File(System.getProperty("user.dir"))
     new File(cwd, "src/main/resources")
   }
-  private val rulesPath = "/org/clulab/numeric/master.yml"
+  // For the sake of SeasonNormalizer, this does have a leading /.
+  val seasonsPath = "/org/clulab/numeric/SEASON.tsv"
 
   // this matches essential dictionaries such as month names
-  def mkLexiconNer: LexiconNER = {
+  def mkLexiconNer(seasonsPath: String): LexiconNER = {
     val kbs = Seq(
+      // These shouldn't start with a leading /.
       "org/clulab/numeric/MONTH.tsv",
       "org/clulab/numeric/MEASUREMENT-UNIT.tsv",
-      "org/clulab/numeric/SEASON.tsv"
+      seasonsPath.drop(1) // Remove leading slash.
     )
     val isLocal = kbs.forall(new File(resourceDir, _).exists)
     LexiconNER(
@@ -78,7 +81,7 @@ object NumericEntityRecognizer {
       Seq(
         false, // false = case sensitive matching
         true,
-        true
+        true // This should be the case for any seasonsPath.
       ),
       baseDirOpt = if (isLocal) Some(resourceDir) else None
     )
@@ -97,9 +100,9 @@ object NumericEntityRecognizer {
     ExtractorEngine(rules, actions, actions.cleanupAction, ruleDir = Some(ruleDir))
   }
 
-  def apply(): NumericEntityRecognizer = {
-    val ner = NumericEntityRecognizer.mkLexiconNer
-    val actions = new NumericActions
+  def apply(seasonsPath: String = seasonsPath): NumericEntityRecognizer = {
+    val ner = NumericEntityRecognizer.mkLexiconNer(seasonsPath)
+    val actions = new NumericActions(new SeasonNormalizer(seasonsPath))
     val extractor = NumericEntityRecognizer.mkExtractor(actions)
 
     new NumericEntityRecognizer(ner, actions, extractor)

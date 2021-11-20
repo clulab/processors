@@ -1,11 +1,12 @@
 package org.clulab.numeric.actions
 
+import org.clulab.numeric.SeasonNormalizer
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 
 import scala.collection.mutable.ArrayBuffer
 
-class NumericActions extends Actions {
+class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   //
   // local actions
   //
@@ -68,7 +69,7 @@ class NumericActions extends Actions {
 
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    convert(mentions, toDateRangeMentionWithSeason, "toDateRangeMentionWithSeason")
+    convert(mentions, toDateRangeMentionWithSeason(seasonNormalizer), "toDateRangeMentionWithSeason")
   }
 
   /** Constructs a DateMention from a token pattern */

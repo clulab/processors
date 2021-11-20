@@ -213,11 +213,11 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
   }
 
-  def toDateRangeMentionWithSeason(mention: Mention): DateRangeMention =  mention match {
+  def toDateRangeMentionWithSeason(seasonNormalizer: SeasonNormalizer)(mention: Mention): DateRangeMention =  mention match {
     case m: DateRangeMention => m
 
     case m: RelationMention =>
-      val seasonNorm = getSeasonMonthRange(m)
+      val seasonNorm = getSeasonMonthRange(seasonNormalizer)(m)
       if(seasonNorm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
@@ -225,7 +225,7 @@ package object mentions {
       if(yearNorm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument year in mention ${m.raw.mkString(" ")}!")
 
-      val (yearStart, yearEnd) = SeasonNormalizer.adjustYearRange(seasonNorm.get, yearNorm.get)
+      val (yearStart, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, yearNorm.get)
 
       new DateRangeMention(
         m.labels,
@@ -467,12 +467,12 @@ package object mentions {
     }
   }
 
-  private def getSeasonMonthRange(m: Mention): Option[SeasonRange] = {
+  private def getSeasonMonthRange(seasonNormalizer: SeasonNormalizer)(m: Mention): Option[SeasonRange] = {
     if(! m.arguments.contains("season"))
       None
     else {
       val season = m.arguments("season").head.words
-      SeasonNormalizer.norm(season)
+      seasonNormalizer.norm(season)
     }
   }
 
