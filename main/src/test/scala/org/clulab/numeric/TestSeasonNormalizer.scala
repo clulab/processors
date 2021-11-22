@@ -13,7 +13,8 @@ class TestSeasonNormalizer extends Test {
   val bDateRange = "B-DATE-RANGE"
   val iDateRange = "I-DATE-RANGE"
 
-  val dateRange = "2017-09-22 -- 2017-12-21"
+  val fallDateRange = "2017-09-22 -- 2017-12-21"
+  val seasonDateRange = "2017-09-22 -- 2017-12-22"
 
   def mkEntitiesAndNorms(processor: CluProcessor, text: String): (Array[String], Array[String]) = {
     val document = processor.annotate(text)
@@ -31,27 +32,32 @@ class TestSeasonNormalizer extends Test {
     val (autumnEntities, autumnNorms) = mkEntitiesAndNorms(processor, autumnText)
     autumnEntities should contain (bDateRange)
     autumnEntities should contain (iDateRange)
-    autumnNorms should contain (dateRange)
+    autumnNorms should contain (fallDateRange)
+    autumnNorms shouldNot contain (seasonDateRange)
 
     val (seasonEntities, seasonNorms) = mkEntitiesAndNorms(processor, seasonText)
     seasonEntities shouldNot contain (bDateRange)
     seasonEntities shouldNot contain (iDateRange)
-    seasonNorms shouldNot contain (dateRange)
+    seasonNorms shouldNot contain (fallDateRange)
+    seasonNorms shouldNot contain (seasonDateRange)
   }
 
   behavior of "Custom SeasonalCluProcessor"
 
   it should "find season but not autumn" in {
-    val processor = new CluProcessor(seasonPathOpt = Some("/org/clulab/numeric/CUSTOM_SEASON.tsv"))
+    // The file name should remain SEASONS, but it can be put in a different location.
+    val processor = new CluProcessor(seasonPathOpt = Some("/org/clulab/numeric/custom/SEASON.tsv"))
 
     val (autumnEntities, autumnNorms) = mkEntitiesAndNorms(processor, autumnText)
     autumnEntities shouldNot contain (bDateRange)
     autumnEntities shouldNot contain (iDateRange)
-    autumnNorms shouldNot contain (dateRange)
+    autumnNorms shouldNot contain (fallDateRange)
+    autumnNorms shouldNot contain (seasonDateRange)
 
     val (seasonEntities, seasonNorms) = mkEntitiesAndNorms(processor, seasonText)
     seasonEntities should contain (bDateRange)
     seasonEntities should contain (iDateRange)
-    seasonNorms should contain (dateRange)
+    seasonNorms shouldNot contain (fallDateRange)
+    seasonNorms should contain (seasonDateRange)
   }
 }
