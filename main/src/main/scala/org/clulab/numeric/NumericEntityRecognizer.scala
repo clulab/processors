@@ -65,7 +65,7 @@ object NumericEntityRecognizer {
     new File(cwd, "src/main/resources")
   }
   // For the sake of SeasonNormalizer, this does have a leading /.
-  val seasonsPath = "/org/clulab/numeric/SEASON.tsv"
+  val seasonPath = "/org/clulab/numeric/SEASON.tsv"
 
   // this matches essential dictionaries such as month names
   def mkLexiconNer(seasonsPath: String): LexiconNER = {
@@ -100,11 +100,11 @@ object NumericEntityRecognizer {
     ExtractorEngine(rules, actions, actions.cleanupAction, ruleDir = Some(ruleDir))
   }
 
-  def apply(seasonsPath: String = seasonsPath): NumericEntityRecognizer = {
-    val ner = NumericEntityRecognizer.mkLexiconNer(seasonsPath)
-    val actions = new NumericActions(new SeasonNormalizer(seasonsPath))
-    val extractor = NumericEntityRecognizer.mkExtractor(actions)
+  def apply(seasonPath: String = seasonPath): NumericEntityRecognizer = {
+    val lexiconNer = mkLexiconNer(seasonPath)
+    val numericActions = new NumericActions(new SeasonNormalizer(seasonPath))
+    val extractorEngine = mkExtractor(numericActions)
 
-    new NumericEntityRecognizer(ner, actions, extractor)
+    new NumericEntityRecognizer(lexiconNer, numericActions, extractorEngine)
   }
 }
