@@ -73,7 +73,7 @@ object NumericEntityRecognizer {
       // These shouldn't start with a leading /.
       "org/clulab/numeric/MONTH.tsv",
       "org/clulab/numeric/MEASUREMENT-UNIT.tsv",
-      seasonsPath.drop(1) // Remove leading slash.
+      if (seasonsPath.startsWith("/")) seasonsPath.drop(1) else seasonsPath
     )
     val isLocal = kbs.forall(new File(resourceDir, _).exists)
     LexiconNER(
