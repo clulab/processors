@@ -206,6 +206,14 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("autumn 2017", Interval(0, 2), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
   }
 
+  it should "recognize date ranges with seasons" in {
+    ensure("from spring to autumn 2017", Interval(0, 4), "DATE-RANGE", "2017-06-21 -- 2017-09-22")
+    ensure("between spring and autumn 2017", Interval(0, 4), "DATE-RANGE", "2017-06-21 -- 2017-09-22")
+    ensure("between autumn 2017 and spring 2018", Interval(0, 5), "DATE-RANGE", "2017-12-21 -- 2018-03-20")
+    ensure("Since winter 2017", Interval(0, 3), "DATE-RANGE", "2017-03-20 -- ref-date")
+    ensure("Until summer 2017", Interval(0, 3), "DATE-RANGE", "ref-date -- 2017-06-21")
+  }
+
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")
 

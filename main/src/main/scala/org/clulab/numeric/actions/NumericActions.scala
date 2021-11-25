@@ -72,6 +72,21 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     convert(mentions, toDateRangeMentionWithSeason(seasonNormalizer), "toDateRangeMentionWithSeason")
   }
 
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasons(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasons(seasonNormalizer), "toDateRangeMentionWithSeasons")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasonSinceRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasonSinceRef(seasonNormalizer), "toDateRangeMentionWithSeasonSinceRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasonUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasonUntilRef(seasonNormalizer), "toDateRangeMentionWithSeasonUntilRef")
+  }
+
   /** Constructs a DateMention from a token pattern */
   def mkDateMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateMention, "toDateMention")

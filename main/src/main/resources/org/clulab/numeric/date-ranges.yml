@@ -114,3 +114,39 @@
   action: mkDateRangeMentionWithSeason
   pattern: |
     @season:PossibleSeason @year:PossibleYear
+
+- name: season-2
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "From spring to autumn 2017"
+  action: mkDateRangeMentionWithSeasons
+  pattern: |
+    /(?i)from/? @season1:PossibleSeason @year1:PossibleYear? /(?i)(to|\-)/ @season2:PossibleSeason @year2:PossibleYear
+
+- name: season-3
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Between spring and autumn 2017"
+  action: mkDateRangeMentionWithSeasons
+  pattern: |
+    /(?i)between/ @season1:PossibleSeason @year1:PossibleYear? /(?i)(and|to)/ @season2:PossibleSeason @year2:PossibleYear
+
+- name: season-4
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Since summer 2000"
+  action: mkDateRangeMentionWithSeasonSinceRef
+  pattern: |
+    /(?i)(since|from)/ @season:PossibleSeason @year:PossibleYear
+
+- name: season-5
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Until summer 2000"
+  action: mkDateRangeMentionWithSeasonUntilRef
+  pattern: |
+    /(?i)until|through/ @season:PossibleSeason @year:PossibleYear
