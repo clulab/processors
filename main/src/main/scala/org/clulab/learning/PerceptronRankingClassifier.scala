@@ -41,7 +41,7 @@ class PerceptronRankingClassifier[F] (
   var updatesPerEpoch:Int = 0
   var margin:Double = 0.0
 
-  override def train(dataset:RankingDataset[F], spans:Option[Iterable[(Int, Int)]] = None) {
+  override def train(dataset:RankingDataset[F], spans:Option[Iterable[(Int, Int)]] = None): Unit = {
     val indices = mkTrainIndices(dataset.size, spans)
     totalQueries = indices.length
     featureLexicon = Lexicon(dataset.featureLexicon)
@@ -96,7 +96,7 @@ class PerceptronRankingClassifier[F] (
     sum / count.toDouble
   }
 
-  def update(better:Counter[Int], worse:Counter[Int]) {
+  def update(better:Counter[Int], worse:Counter[Int]): Unit = {
     if(dotProduct(weights, better) - dotProduct(weights, worse) <= margin) {
       addToAvg()
 
@@ -109,7 +109,7 @@ class PerceptronRankingClassifier[F] (
     }
   }
 
-  def addToAvg() {
+  def addToAvg(): Unit = {
     if(survivedIterations > 0 && totalUpdates + updatesPerEpoch > burnInIterations) {
       var i = 0
       val mult = survivedIterations.toDouble * totalQueries.toDouble
@@ -120,7 +120,7 @@ class PerceptronRankingClassifier[F] (
     }
   }
 
-  def updateWeights(v:Counter[Int], w:Double) {
+  def updateWeights(v:Counter[Int], w:Double): Unit = {
     for(i <- v.keySet) {
       if(i < weights.length) weights(i) += (v.getCount(i) * w)
     }
@@ -147,11 +147,11 @@ class PerceptronRankingClassifier[F] (
     sum
   }
 
-  override def saveTo(fileName:String) {
+  override def saveTo(fileName:String): Unit = {
     Serializer.save(this, fileName)
   }
 
-  override def displayModel(pw:PrintWriter) {
+  override def displayModel(pw:PrintWriter): Unit = {
     pw.println("Perceptron weights:")
     for(i <- 0 until avgWeights.length) {
       pw.println(s"\t#$i: ${featureLexicon.get(i)} => ${avgWeights(i)}")

@@ -23,7 +23,7 @@ class DirectedGraphIndex[E](
     )
   }
 
-  def addEdge(head:Int, modifier:Int, label:E) {
+  def addEdge(head:Int, modifier:Int, label:E): Unit = {
     outgoingEdges(head) += Tuple2(modifier, label)
     incomingEdges(modifier) += Tuple2(head, label)
     val byLabel = edgesByName.getOrElseUpdate(label, new mutable.HashSet[(Int, Int)]())

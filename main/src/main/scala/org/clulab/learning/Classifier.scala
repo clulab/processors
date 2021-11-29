@@ -16,7 +16,7 @@ trait Classifier[L, F] {
    * Trains the classifier on the given dataset
    * spans is useful during cross validation
    */
-  def train(dataset:Dataset[L, F], spans:Option[Iterable[(Int, Int)]] = None) {
+  def train(dataset:Dataset[L, F], spans:Option[Iterable[(Int, Int)]] = None): Unit = {
     val indices = mkTrainIndices(dataset.size, spans)
     train(dataset, indices)
   }
@@ -25,7 +25,7 @@ trait Classifier[L, F] {
    * Trains a classifier, using only the datums specified in indices
    * indices is useful for bagging
    */
-  def train(dataset:Dataset[L, F], indices:Array[Int])
+  def train(dataset:Dataset[L, F], indices:Array[Int]): Unit
 
   /** Returns the argmax for this datum */
   def classOf(d:Datum[L, F]): L
@@ -37,13 +37,13 @@ trait Classifier[L, F] {
   def scoresOf(d:Datum[L, F]): Counter[L]
 
   /** Saves the current model to a file */
-  def saveTo(fileName:String) {
+  def saveTo(fileName:String): Unit = {
     val bw = new BufferedWriter(new FileWriter(fileName))
     saveTo(bw)
     bw.close()
   }
 
   /** Saves to writer. Does NOT close the writer */
-  def saveTo(writer:Writer)
+  def saveTo(writer:Writer): Unit
 }
 

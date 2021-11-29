@@ -33,7 +33,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   protected var documentCreationTime:Option[String] = None
 
   /** Clears any internal state potentially constructed by the annotators */
-  def clear() { }
+  def clear(): Unit = { }
 
   /**
     * Used to compare Documents.

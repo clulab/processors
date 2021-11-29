@@ -39,7 +39,7 @@ class Counter[T] (
     total += inc // keep total up to date!
     v
   }
-  def setCount(key:T, value:Double) {
+  def setCount(key:T, value:Double): Unit = {
     val prev = getCount(key)
     Counter.setCount(counts, key, value)
     total += value - prev // keep total up to date!
@@ -66,7 +66,7 @@ class Counter[T] (
   /** Equivalent to decrementCount */
   def -= (key:T) = decrementCount(key, 1)
 
-  def += (toAdd:Counter[T]) {
+  def += (toAdd:Counter[T]): Unit = {
     for(key <- toAdd.keySet)
       incrementCount(key, toAdd.getCount(key))
   }
@@ -210,7 +210,7 @@ class Counter[T] (
 
   def argMin: (T, Double) = keySet.map(key => (key, getCount(key))).minBy(_._2)
 
-  def saveTo(w:Writer) {
+  def saveTo(w:Writer): Unit = {
     val writer = Files.toPrintWriter(w)
     writer.println(s"$defaultReturnValue ${counts.size}")
     if(counts.nonEmpty) {
@@ -238,7 +238,7 @@ object Counter {
     incVal
   }
 
-  private def setCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, value:Double) {
+  private def setCount[T](map:mutable.HashMap[T, MutableNumber[Double]], key:T, value:Double): Unit = {
     map.get(key) match {
       case Some(c) =>
         c.value = value

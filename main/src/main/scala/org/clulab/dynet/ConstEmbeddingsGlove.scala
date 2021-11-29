@@ -85,15 +85,15 @@ object ConstEmbeddingsGlove {
     mkConstLookupParams(words, embeddings)
   }
 
-  def load(configName: String = "org/clulab/glove.conf") {
+  def load(configName: String = "org/clulab/glove.conf"): Unit = {
     load(ConfigWithDefaults(configName))
   }
 
-  def load(conf: Config) {
+  def load(conf: Config): Unit = {
     load(ConfigWithDefaults(conf))
   }
 
-  def load(config: ConfigWithDefaults) {
+  def load(config: ConfigWithDefaults): Unit = {
     this.synchronized { // synchronized so we don't create multiple SINGLETON objects
       if (SINGLETON_WORD_EMBEDDING_MAP.isEmpty) {
         val matrixResourceName = config.getArgString("glove.matrixResourceName", None)

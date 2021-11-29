@@ -21,7 +21,7 @@ class BaggingClassifier[L, F] (val baseClassifierFactory: () => Classifier[L,F],
   val classifiers = new Array[Classifier[L, F]](N)
 
   /** Trains the classifier on the given dataset */
-  override def train(dataset:Dataset[L, F], indices:Array[Int]) {
+  override def train(dataset:Dataset[L, F], indices:Array[Int]): Unit = {
     for(i <- 0 until N) {
       logger.debug(s"Training classifier #$i...")
       val sampleIndices = sampleWithReplacement(indices, 1.0)
@@ -66,9 +66,9 @@ class BaggingClassifier[L, F] (val baseClassifierFactory: () => Classifier[L,F],
   }
 
   /** Saves the current model to a file */
-  override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
+  override def saveTo(writer:Writer): Unit = { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
 
-  override def saveTo(fn:String) {
+  override def saveTo(fn:String): Unit = {
     Serializer.save(this, fn)
   }
 }

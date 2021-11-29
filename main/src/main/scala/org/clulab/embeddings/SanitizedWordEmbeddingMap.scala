@@ -42,7 +42,7 @@ class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]
   // laziness here causes problems with InputStream-based alternate constructor
   val matrix : Map[String, Array[Double]] = matrixConstructor
 
-  def saveMatrix(mf: String) {
+  def saveMatrix(mf: String): Unit = {
     val pw = new PrintWriter(mf)
     pw.println(s"${matrix.size}, $dimensions")
     for ((word, vec) <- matrix) {
@@ -77,7 +77,7 @@ class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]
   }
 
   /** Adds the content of src to dest, in place */
-  private def add(dest:Array[Double], src:Array[Double]) {
+  private def add(dest:Array[Double], src:Array[Double]): Unit = {
     var i = 0
     while(i < dimensions) {
       dest(i) += src(i)
@@ -377,7 +377,7 @@ object SanitizedWordEmbeddingMap {
   def isNumber(w:String):Boolean = EmbeddingUtils.isNumber(w)
 
   /** Normalizes this vector to length 1, in place */
-  def norm(weights:Array[Double]) {
+  def norm(weights:Array[Double]): Unit = {
     var i = 0
     var len = 0.0
     while (i < weights.length) {
@@ -547,7 +547,7 @@ object SanitizedWordEmbeddingMap {
     m.toMap
   }
 
-  def main(args:Array[String]) {
+  def main(args:Array[String]): Unit = {
     val w2v = new SanitizedWordEmbeddingMap(args(0), None)
 
     println("Words most similar to \"house\":")

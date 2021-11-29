@@ -12,7 +12,7 @@ trait Tree {
   protected var _parent: Option[NonTerminal] = None
   def parent = _parent
 
-  def setParent(p:Option[NonTerminal]) { _parent = p }
+  def setParent(p:Option[NonTerminal]): Unit = { _parent = p }
 
   /** A syntactic label, POS tag, or word for terminal nodes */
   def value:String
@@ -132,12 +132,12 @@ trait Tree {
     else Some(node._children(i + 1))
   }
 
-  private def assignIndicesToTerminals() {
+  private def assignIndicesToTerminals(): Unit = {
     for ((t, i) <- terminals.zipWithIndex)
       t.setIndex(i)
   }
 
-  private def assignIndicesToNonTerminals() {
+  private def assignIndicesToNonTerminals(): Unit = {
     this match {
       case Terminal(token) =>
       case n @ NonTerminal(label, children) =>
@@ -165,7 +165,7 @@ case class Terminal(token: String) extends Tree with Serializable {
   def headOffset:Int = index
   def isLeaf:Boolean = true
 
-  def setIndex(i:Int) { _index = i }
+  def setIndex(i:Int): Unit = { _index = i }
 }
 
 case class NonTerminal(label: String, _children: Array[Tree]) extends Tree with Serializable {
@@ -191,12 +191,12 @@ case class NonTerminal(label: String, _children: Array[Tree]) extends Tree with 
   def headOffset:Int = _headIndex
   def isLeaf:Boolean = false
 
-  def setStartEndIndices(s:Int, e:Int) {
+  def setStartEndIndices(s:Int, e:Int): Unit = {
     _startIndex = s
     _endIndex = e
   }
 
-  def setHead(h:Int) {
+  def setHead(h:Int): Unit = {
     _head = h
     if(_head != -1) {
       _headIndex = findHeadPosition

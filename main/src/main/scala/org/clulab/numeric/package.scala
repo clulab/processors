@@ -23,7 +23,7 @@ package object numeric {
     }
   }
 
-  def displayMention(mention: Mention) {
+  def displayMention(mention: Mention): Unit = {
     val boundary = s"\t${"-" * 30}"
     println(s"${mention.labels} => ${mention.text}")
     println(boundary)

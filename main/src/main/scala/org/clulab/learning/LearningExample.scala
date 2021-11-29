@@ -8,7 +8,7 @@ import org.clulab.struct.Counter
   * Date: 11/18/15
   */
 object LearningExample {
-  def main(args:Array[String]) {
+  def main(args:Array[String]): Unit = {
     //
     // Create training dataset
     //

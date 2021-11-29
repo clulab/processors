@@ -572,7 +572,7 @@ object Utils {
   abstract class ByLineBuilder[IntermediateValueType, FinalValueType, DefaultValueType] {
 
     protected def setDefaultValue(intermediateValue: IntermediateValueType,
-                                  defaultValue: DefaultValueType)
+                                  defaultValue: DefaultValueType): Unit
 
     protected def getComment(line: String): String = {
       assert(line.startsWith("#"))

@@ -266,7 +266,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     w.close()
   }
 
-  override def load(reader:BufferedReader) {
+  override def load(reader:BufferedReader): Unit = {
     // load meta data
     order = reader.readLine().toInt
     leftToRight = reader.readLine().toBoolean
