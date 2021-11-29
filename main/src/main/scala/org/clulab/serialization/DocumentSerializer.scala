@@ -221,7 +221,7 @@ class DocumentSerializer extends LazyLogging {
     assert(normBuffer.isEmpty || normBuffer.size == tokenCount)
     assert(chunkBuffer.isEmpty || chunkBuffer.size == tokenCount)
 
-    var deps = new GraphMap
+    var deps = GraphMap()
     var tree:Option[Tree] = None
     var relations:Option[Array[RelationTriple]] = None
     do {

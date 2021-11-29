@@ -2,6 +2,7 @@ package org.clulab.serialization
 
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.struct.GraphMap._
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson._
