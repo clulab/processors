@@ -40,7 +40,7 @@ class Sentence(
   /** Constituent tree of this sentence; includes head words */
   var syntacticTree: Option[Tree] = None
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  var graphs: GraphMap = new GraphMap
+  var graphs: GraphMap = GraphMap()
   /** Relation triples from OpenIE */
   var relations:Option[Array[RelationTriple]] = None
 

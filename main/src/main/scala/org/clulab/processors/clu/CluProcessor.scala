@@ -711,7 +711,7 @@ object CluProcessor {
 
   val OUTSIDE = "O"
 
-  val EMPTY_GRAPH = new GraphMap
+  val EMPTY_GRAPH = GraphMap()
 
   // These are the NE labels used to train the SRL model
   val NAMED_LABELS_FOR_SRL = Set(

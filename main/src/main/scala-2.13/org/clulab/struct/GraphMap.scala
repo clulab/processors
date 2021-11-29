@@ -2,12 +2,11 @@ package org.clulab.struct
 
 import scala.collection.mutable
 
-
-class GraphMap extends mutable.HashMap[String, DirectedGraph[String]] {
-  override def initialSize:Int = 2 // we have very few dependency types, so let's create a small hash to save memory
-}
-
 object GraphMap {
+  // This was previously a class inheriting from HashMap.  However,
+  // [warn] ...: inheritance from class HashMap in package mutable is deprecated (since 2.13.0): HashMap will be made final; use .withDefault for the common use case of computing a default value
+  type GraphMap = mutable.HashMap[String, DirectedGraph[String]]
+
   val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
   val UNIVERSAL_ENHANCED = "universal-enhanced" // collapsed (or enhanced) Universal dependencies
   val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies
@@ -16,8 +15,13 @@ object GraphMap {
   val ENHANCED_SEMANTIC_ROLES = "enhanced-semantic-roles" // enhanced semantic roles
   val HYBRID_DEPENDENCIES = "hybrid" // graph that merges ENHANCED_SEMANTIC_ROLES and UNIVERSAL_ENHANCED
 
-  def apply(existing: Map[String, DirectedGraph[String]]): GraphMap = {
-    val gm = new GraphMap
+  def apply(): GraphMap = {
+    // we have very few dependency types, so let's create a small hash to save memory.
+    new GraphMap(2, mutable.HashMap.defaultLoadFactor)
+  }
+
+  def apply(existing: mutable.HashMap[String, DirectedGraph[String]]): GraphMap = {
+    val gm = GraphMap()
     gm ++= existing
   }
 }
