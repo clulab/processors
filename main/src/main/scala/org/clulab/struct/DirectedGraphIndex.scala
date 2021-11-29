@@ -15,7 +15,7 @@ class DirectedGraphIndex[E](
   val incomingEdges:Array[mutable.HashSet[(Int, E)]], // from modifier to head
   val edgesByName:mutable.HashMap[E, mutable.HashSet[(Int, Int)]]) { // indexes edges by label
 
-  def this(sentenceLength:Int) {
+  def this(sentenceLength:Int) = {
     this(sentenceLength,
       DirectedGraphIndex.mkOutgoing[E](sentenceLength),
       DirectedGraphIndex.mkIncoming[E](sentenceLength),

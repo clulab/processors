@@ -22,7 +22,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
   var leftToRight:Boolean) extends SequenceTagger[L, F] {
 
   /** C'tor for a single-layer. left-to-right MEMM of order 2 */
-  def this(order:Int = 2, leftToRight:Boolean = true) {
+  def this(order:Int = 2, leftToRight:Boolean = true) = {
     this(order, -1, leftToRight)
   }
 
