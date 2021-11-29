@@ -199,7 +199,7 @@ class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]
 
   def logMultiplicativeTextSimilarity(t1: Iterable[String],
                                       t2: Iterable[String],
-                                      method: Symbol = 'linear,
+                                      method: Symbol = Symbol("linear"),
                                       normalize: Boolean = false): Double = {
     val st1 = t1.map(SanitizedWordEmbeddingMap.sanitizeWord(_))
     val st2 = t2.map(SanitizedWordEmbeddingMap.sanitizeWord(_))
@@ -208,7 +208,7 @@ class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]
 
   def logMultiplicativeSanitizedTextSimilarity(t1:Iterable[String],
                                                t2:Iterable[String],
-                                               method: Symbol = 'linear,
+                                               method: Symbol = Symbol("linear"),
                                                normalize: Boolean = false):Double = {
     val t1Vecs = t1.flatMap(getEmbedding) // this will drop any words that don't have vectors
     val t2Vecs = t2.flatMap(getEmbedding)
@@ -217,9 +217,9 @@ class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]
       v2 <- t2Vecs
       cosSim = SanitizedWordEmbeddingMap.dotProduct(v1, v2)
       toYield = method match {
-        case 'linear => math.log(cosSim + 1)
-        case 'linear_scaled => math.log((cosSim + 1) / 2)
-        case 'angular => math.log(1 - (math.acos(math.min(1, math.max(-1, cosSim))) / math.Pi))
+        case Symbol("linear") => math.log(cosSim + 1)
+        case Symbol("linear_scaled") => math.log((cosSim + 1) / 2)
+        case Symbol("angular") => math.log(1 - (math.acos(math.min(1, math.max(-1, cosSim))) / math.Pi))
         case _ => throw new Exception(s"invalid method $method")
       }
     } yield toYield
