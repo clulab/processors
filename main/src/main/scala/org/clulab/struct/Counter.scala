@@ -55,7 +55,7 @@ class Counter[T] (
   override def hashCode = counts.hashCode()
   override def equals(other:Any):Boolean = {
     other match {
-      case that:Counter[T] => counts.size == that.counts.size && counts == that.counts
+      case that:Counter[_] => counts.size == that.counts.size && counts == that.counts
       case _ => false
     }
   }
