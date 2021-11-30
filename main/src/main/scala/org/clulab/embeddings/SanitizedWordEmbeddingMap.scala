@@ -422,7 +422,7 @@ object SanitizedWordEmbeddingMap {
                                    caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load embedding matrix from stream ...")
     val src: Source = Source.fromInputStream(is, "iso-8859-1")
-    val lines: Iterator[String] = src.getLines
+    val lines: Iterator[String] = src.getLines()
     val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
     src.close()
     logger.debug("Completed matrix loading.")

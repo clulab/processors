@@ -303,7 +303,7 @@ object DirectedGraph {
 
     val nodes = {
       val iterator = Range(0, size).iterator
-      Array.fill(size)(new Node(iterator.next))
+      Array.fill(size)(new Node(iterator.next()))
     }
 
     def visit(node: Node): Unit = {

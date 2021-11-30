@@ -227,7 +227,7 @@ object MathUtils {
 
   /** sample howMany elements uniformly from xs. Doesn't retain order of xs */
   def sampleStream[T: Manifest](xs: Iterable[T], howMany: Int) =
-    nBest((x:T) => scala.util.Random.nextDouble)(xs, howMany).map(_._1)
+    nBest((x:T) => scala.util.Random.nextDouble())(xs, howMany).map(_._1)
 
   def histogram(xs: Traversable[Double], boundaries: Seq[Double]): Map[(Double, Double), Int] = {
     // make sure divisions is monotonically increasing

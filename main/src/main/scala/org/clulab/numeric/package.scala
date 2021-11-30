@@ -15,11 +15,11 @@ package object numeric {
       s.tags foreach (x => println("Tags: " + x.mkString(", ")))
       s.entities foreach (x => println("Entities: " + x.mkString(", ")))
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))
-      println
+      println()
 
       val sortedMentions = mentionsBySentence(i).sortBy(_.label)
       sortedMentions foreach displayMention
-      println
+      println()
     }
   }
 

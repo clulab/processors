@@ -128,7 +128,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
         pw.println("Basic syntactic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while(iterator.hasNext) {
-          val dep = iterator.next
+          val dep = iterator.next()
           // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
           pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
         }
@@ -137,7 +137,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
         pw.println("Enhanced syntactic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while(iterator.hasNext) {
-          val dep = iterator.next
+          val dep = iterator.next()
           // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
           pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
         }
@@ -146,7 +146,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
         pw.println("Semantic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while(iterator.hasNext) {
-          val dep = iterator.next
+          val dep = iterator.next()
           // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
           pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
         }
@@ -155,7 +155,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
         pw.println("Enhanced semantic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
         while(iterator.hasNext) {
-          val dep = iterator.next
+          val dep = iterator.next()
           // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
           pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
         }
