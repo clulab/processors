@@ -8,13 +8,13 @@ class TestSeasonNormalizer extends Test {
   Utils.initializeDyNet()
 
   val autumnText = "When the leaves changed color in autumn 2017 they were the prettiest ever."
-  val seasonText = "When the leaves changed color in season 2017 they were the prettiest ever."
+  val seasonText = "When the leaves changed color in rainy season 2017 they were the prettiest ever."
 
   val bDateRange = "B-DATE-RANGE"
   val iDateRange = "I-DATE-RANGE"
 
   val fallDateRange = "2017-09-22 -- 2017-12-21"
-  val seasonDateRange = "2017-09-22 -- 2017-12-22"
+  val seasonDateRange = "2017-06-XX -- 2017-10-XX"
 
   def mkEntitiesAndNorms(processor: CluProcessor, text: String): (Array[String], Array[String]) = {
     val document = processor.annotate(text)
@@ -26,7 +26,7 @@ class TestSeasonNormalizer extends Test {
 
   behavior of "Default SeasonalCluProcessor"
 
-  it should "find autumn but not season" in {
+  it should "find autumn but not rainy season" in {
     val processor = new CluProcessor()
 
     val (autumnEntities, autumnNorms) = mkEntitiesAndNorms(processor, autumnText)
@@ -44,7 +44,7 @@ class TestSeasonNormalizer extends Test {
 
   behavior of "Custom SeasonalCluProcessor"
 
-  it should "find season but not autumn" in {
+  it should "find rainy season but not autumn" in {
     // The file name should remain SEASONS, but it can be put in a different location.
     val processor = new CluProcessor(seasonPathOpt = Some("/org/clulab/numeric/custom/SEASON.tsv"))
 
