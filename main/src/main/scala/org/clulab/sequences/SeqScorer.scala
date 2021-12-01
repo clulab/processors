@@ -18,7 +18,7 @@ class SeqScorer {
 
   case class Mention(start:Int, end:Int, label:String)
 
-  def score(outputs:List[List[(String, String)]]) {
+  def score(outputs:List[List[(String, String)]]): Unit = {
     val counts = new mutable.HashMap[String, Counts]()
     for(sentence <- outputs) {
       scoreSentence(sentence, counts)

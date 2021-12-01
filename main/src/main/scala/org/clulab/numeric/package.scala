@@ -15,15 +15,15 @@ package object numeric {
       s.tags foreach (x => println("Tags: " + x.mkString(", ")))
       s.entities foreach (x => println("Entities: " + x.mkString(", ")))
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))
-      println
+      println()
 
       val sortedMentions = mentionsBySentence(i).sortBy(_.label)
       sortedMentions foreach displayMention
-      println
+      println()
     }
   }
 
-  def displayMention(mention: Mention) {
+  def displayMention(mention: Mention): Unit = {
     val boundary = s"\t${"-" * 30}"
     println(s"${mention.labels} => ${mention.text}")
     println(boundary)

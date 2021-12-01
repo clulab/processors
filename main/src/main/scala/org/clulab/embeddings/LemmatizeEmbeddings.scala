@@ -99,7 +99,7 @@ class LemmatizeEmbeddings(val frequencyFile:String,
     }
   }
 
-  def add(e: mutable.HashMap[String, Array[Double]], lemma:String, v:Array[Double]) {
+  def add(e: mutable.HashMap[String, Array[Double]], lemma:String, v:Array[Double]): Unit = {
     if(e.contains(lemma)) {
       val ev = e(lemma)
       assert(ev.length == v.length)

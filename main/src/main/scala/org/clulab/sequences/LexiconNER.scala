@@ -334,7 +334,7 @@ object LexiconNER {
   }
 
   /** Merges labels from src into dst without overlapping any existing labels in dst. */
-  def mergeLabels(dst: Array[String], src: Array[String]) {
+  def mergeLabels(dst: Array[String], src: Array[String]): Unit = {
     assert(dst.length == src.length)
     // Pick one or take the average of both.
     val length = dst.length

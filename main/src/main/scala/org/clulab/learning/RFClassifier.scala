@@ -256,7 +256,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     }
   }
 
-  def printContingencyTables(tables:Array[Array[(Counter[Int], Counter[Int])]], thresholds:Array[Array[Double]]) {
+  def printContingencyTables(tables:Array[Array[(Counter[Int], Counter[Int])]], thresholds:Array[Array[Double]]): Unit = {
     println(s"Tables for ${tables.length} features.")
     for(f <- tables.indices) {
       if(tables(f) != null) {

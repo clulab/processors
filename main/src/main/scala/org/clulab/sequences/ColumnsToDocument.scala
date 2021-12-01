@@ -158,7 +158,7 @@ object ColumnsToDocument {
     s.entities = Some(entities)
   }
 
-  def annotateLemmas(doc:Document) {
+  def annotateLemmas(doc:Document): Unit = {
     proc.lemmatize(doc) // some features use lemmas, which are not available in the CoNLL data
   }
 

@@ -37,7 +37,7 @@ object SequenceTaggerShell {
     reader.shutdown()
   }
 
-  def parse[L, F](text:String, tagger:SequenceTagger[L, F]) {
+  def parse[L, F](text:String, tagger:SequenceTagger[L, F]): Unit = {
     val sent = mkSent(text)
     println("Tokens: " + sent.words.mkString(", "))
     val labels = tagger.classesOf(sent)

@@ -44,7 +44,7 @@ class PerceptronClassifier[L, F] (
   private var totalUpdates:Array[Int] = null
   private var updatesPerEpoch:Array[Int] = null
 
-  def train(dataset:Dataset[L, F], indices:Array[Int]) {
+  def train(dataset:Dataset[L, F], indices:Array[Int]): Unit = {
     featureLexicon = Lexicon(dataset.featureLexicon)
     labelLexicon = Lexicon(dataset.labelLexicon)
     logger.debug(s"Training a model for ${labelLexicon.size} labels and ${featureLexicon.size} features.")
@@ -97,7 +97,7 @@ class PerceptronClassifier[L, F] (
     */
   }
 
-  private def update(goldLabel:Int, datum:Counter[Int]) {
+  private def update(goldLabel:Int, datum:Counter[Int]): Unit = {
     // compute the scores for all class labels
     val predictions = new ArrayBuffer[(Int, Double)](labelLexicon.size)
     for(i <- 0 until labelLexicon.size) {
@@ -169,7 +169,7 @@ class PerceptronClassifier[L, F] (
     }
   }
 
-  private def addToAvg(label:Int) {
+  private def addToAvg(label:Int): Unit = {
     if(survivedIterations(label) > 0 && totalUpdates(label) + updatesPerEpoch(label) > burnInIterations) {
       var i = 0
       val mult = survivedIterations(label).toDouble / totalDatums.toDouble
@@ -180,7 +180,7 @@ class PerceptronClassifier[L, F] (
     }
   }
 
-  private def updateWeights(label:Int, datum:Counter[Int], weight:Double) {
+  private def updateWeights(label:Int, datum:Counter[Int], weight:Double): Unit = {
     val lw = weights(label)
     for(i <- datum.keySet) {
       if(i < lw.length) lw(i) += (datum.getCount(i) * weight)
@@ -238,7 +238,7 @@ class PerceptronClassifier[L, F] (
     sum
   }
 
-  def saveTo(w:Writer) {
+  def saveTo(w:Writer): Unit = {
     // only need to save avgWeights and lexicons here!
     val writer = Files.toPrintWriter(w)
     featureLexicon.saveTo(writer)
@@ -249,7 +249,7 @@ class PerceptronClassifier[L, F] (
     }
   }
 
-  def displayWeights(pw:PrintWriter) {
+  def displayWeights(pw:PrintWriter): Unit = {
     println ("displayWeights")
 
     pw.println ("Perceptron Classifier Average Weights")

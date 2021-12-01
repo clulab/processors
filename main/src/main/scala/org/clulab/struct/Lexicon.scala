@@ -81,18 +81,18 @@ class Lexicon[T] extends Serializable {
 
   def keySet = lexicon.keySet
 
-  def stats() {
+  def stats(): Unit = {
     logger.info("Stored objects: " + index.size)
     logger.info(" Saved objects: " + savedMemory + " (" + (100.0 * savedMemory / (savedMemory + lexicon.size)) + "%)")
   }
 
-  def saveTo(fileName:String) {
+  def saveTo(fileName:String): Unit = {
     val w = new BufferedWriter(new FileWriter(fileName))
     saveTo(w)
     w.close()
   }
 
-  def saveTo(w:Writer) {
+  def saveTo(w:Writer): Unit = {
     val p = Files.toPrintWriter(w)
     p.println(index.size)
     if(index.size > 0) {
