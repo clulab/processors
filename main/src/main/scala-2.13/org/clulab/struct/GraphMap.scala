@@ -20,7 +20,7 @@ object GraphMap {
     new GraphMap(2, mutable.HashMap.defaultLoadFactor)
   }
 
-  def apply(existing: mutable.HashMap[String, DirectedGraph[String]]): GraphMap = {
+  def apply(existing: scala.collection.Map[String, DirectedGraph[String]]): GraphMap = {
     val gm = GraphMap()
     gm ++= existing
   }
