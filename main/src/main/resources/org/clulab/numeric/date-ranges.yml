@@ -3,36 +3,7 @@
 # recognizes date ranges
 #
 
-#- name: date-range-1
-#  priority: ${rulepriority}
-#  label: DateRange
-#  type: token
-#  example: "It took place between 12 May 2000 and 12 June 2020"
-#  action: mkDateRangeMention
-#  pattern: |
-#    /(?i)(from|between)/? @date1:Date /(?i)(to|and|\-)/ @date2:Date
-#
-#- name: date-range-2
-#  priority: ${rulepriority}
-#  label: DateRange
-#  type: token
-#  example: "It took place between 10 and 12 June 2020"
-#  action: mkDateRangeMentionWithNumber
-#  pattern: |
-#    /(?i)(from|between)/? @number:Number /(?i)(to|and|\-)/ @date2:Date
-#
-#- name: date-range-3
-#  priority: ${rulepriority}
-#  label: DateRange
-#  type: token
-#  example: "It took place between May and June 2020"
-#  action: mkDateRangeMentionWithMonth
-#  pattern: |
-#    @month1:PossibleMonth "-" @month2:PossibleMonth @year:PossibleYear
 
-
-
-#/(?i)(from|between)/? @month1:PossibleMonth /(?i)(to|and|\"-")/ @month2:PossibleMonth @year:PossibleYear
 - name: date-range-1
   priority: ${rulepriority}
   label: DateRange
@@ -106,7 +77,7 @@
     /(?i)until|through/ @date1:Date
 
 # Date range derived from a season, with mandatory year
-- name: season-1
+- name: date-range-season-1
   priority: ${ rulepriority }
   label: DateRange
   type: token
@@ -115,7 +86,7 @@
   pattern: |
     @season:PossibleSeason /(?i)(in|of)/? @year:PossibleYear
 
-- name: season-1b
+- name: date-range-season-2
   priority: ${ rulepriority }
   label: DateRange
   type: token
@@ -124,7 +95,7 @@
   pattern: |
     @year:PossibleYear @season:PossibleSeason
 
-- name: season-2
+- name: date-range-season-3
   priority: ${rulepriority}
   label: DateRange
   type: token
@@ -133,7 +104,7 @@
   pattern: |
     /(?i)from/? @season1:PossibleSeason @year1:PossibleYear? /(?i)(to|\-)/ @season2:PossibleSeason @year2:PossibleYear
 
-- name: season-3
+- name: date-range-season-4
   priority: ${ rulepriority }
   label: DateRange
   type: token
@@ -142,7 +113,7 @@
   pattern: |
     /(?i)between/ @season1:PossibleSeason @year1:PossibleYear? /(?i)(and|to)/ @season2:PossibleSeason @year2:PossibleYear
 
-- name: season-4
+- name: date-range-season-5
   priority: ${ rulepriority }
   label: DateRange
   type: token
@@ -151,7 +122,7 @@
   pattern: |
     /(?i)(since|from)/ @season:PossibleSeason @year:PossibleYear
 
-- name: season-5
+- name: date-range-season-6
   priority: ${ rulepriority }
   label: DateRange
   type: token
