@@ -8,7 +8,7 @@ class TestEvalTimeNorm extends FlatSpec with Matchers{
 
   it should "not degrade in performance" in {
     val expectedFscore = 0.81
-    val proc = new CluProcessor(seasonPathOpt = Some("/org/clulab/numeric/custom/SEASON.tsv")) // there are lots of options for this
+    val proc = new CluProcessor(seasonPathOpt = Some("/org/clulab/numeric/custom/SEASON.tsv"))
     val ner = NumericEntityRecognizer(seasonPath = "/org/clulab/numeric/custom/SEASON.tsv")
     val actualFscore = EvalTimeNorm.test(proc, ner)
     actualFscore should be >= expectedFscore

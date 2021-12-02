@@ -36,18 +36,6 @@ object EvalTimeNorm {
           (m.startOffset.toString, m.endOffset.toString, m.neNorm)
       }.toSet
       val intersection = prediction.intersect(gold)
-      val diff_prediction2gold = prediction.diff(gold)
-      val diff_gold2prediction = gold.diff(prediction)
-      println("docID: ")
-      println(docId)
-      println("prediction: ")
-      println(prediction)
-      println("gold: ")
-      println(gold)
-      println("diff_prediction2gold: ")
-      println(diff_prediction2gold)
-      println("diff_gold2prediction: ")
-      println(diff_gold2prediction)
       (prediction.size, gold.size, intersection.size)
     }
     // Calculate the overall performance
@@ -61,13 +49,15 @@ object EvalTimeNorm {
     fscore
   }
 
-  protected def run(proc:CluProcessor, ner: NumericEntityRecognizer): Double = {
-    //val proc = new CluProcessor(seasonPathOpt = Some(file_path)) // there are lots of options for this
-    //val ner = NumericEntityRecognizer()
+  protected def run(): Double = {
+    val proc = new CluProcessor() // there are lots of options for this
+    val ner = NumericEntityRecognizer()
     runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
   }
 
-  def test(proc:CluProcessor, ner: NumericEntityRecognizer): Double = run(proc, ner)
+  def test(proc: CluProcessor, ner: NumericEntityRecognizer): Double = {
+    runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
+  }
 
-  def main(args: Array[String], proc:CluProcessor, ner: NumericEntityRecognizer): Unit = run(proc, ner)
+  def main(args: Array[String]): Unit = run()
 }
