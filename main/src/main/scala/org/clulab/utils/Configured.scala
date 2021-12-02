@@ -34,7 +34,7 @@ trait Configured {
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
   def getArgStrings (argPath: String, defaultValue: Option[Seq[String]]): Seq[String] =
-    if (getConf.hasPath(argPath)) getConf.getStringList(argPath).asScala
+    if (getConf.hasPath(argPath)) getConf.getStringList(argPath).asScala.toSeq
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 

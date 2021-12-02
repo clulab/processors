@@ -48,7 +48,7 @@ class MetalRowReader extends RowReader {
       labels += row.get(WORD_POSITION + 1)
     }
 
-    IndexedSeq(Tuple2(AnnotatedSentence(words), labels))
+    IndexedSeq(Tuple2(AnnotatedSentence(words.toIndexedSeq), labels.toIndexedSeq))
   }
 
   /** Parser for the simple extended format: word, POS tag, NE label, label */
@@ -66,7 +66,7 @@ class MetalRowReader extends RowReader {
       labels += row.get(LABEL_START_OFFSET)
     }
 
-    IndexedSeq(Tuple2(AnnotatedSentence(words, Some(posTags), Some(neLabels)), labels))
+    IndexedSeq(Tuple2(AnnotatedSentence(words.toIndexedSeq, Some(posTags.toIndexedSeq), Some(neLabels.toIndexedSeq)), labels.toIndexedSeq))
   }
 
   /** Parser for the full format: word, POS tag, NE label, (label head)+ */
@@ -102,15 +102,15 @@ class MetalRowReader extends RowReader {
 
     val sentences = new ArrayBuffer[(AnnotatedSentence, IndexedSeq[String])]()
     for(i <- 0 until numSent) {
-      val annotatedSent = AnnotatedSentence(words,
-        Some(posTags),
-        Some(neLabels),
-        Some(headPositions(i)))
+      val annotatedSent = AnnotatedSentence(words.toIndexedSeq,
+        Some(posTags.toIndexedSeq),
+        Some(neLabels.toIndexedSeq),
+        Some(headPositions(i).toIndexedSeq))
       val sentLabels = labels(i)
-      sentences += Tuple2(annotatedSent, sentLabels)
+      sentences += Tuple2(annotatedSent, sentLabels.toIndexedSeq)
     }
 
-    sentences
+    sentences.toIndexedSeq
   }
 }
 

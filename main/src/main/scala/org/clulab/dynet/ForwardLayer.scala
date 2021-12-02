@@ -148,7 +148,7 @@ object ForwardLayer {
       val end = spanTokens(1).toInt
       spans += Tuple2(start, end)
     }
-    spans
+    spans.toSeq
   }
 
   /** Produces a string representation of spans, which can be parsed by parseSpan */

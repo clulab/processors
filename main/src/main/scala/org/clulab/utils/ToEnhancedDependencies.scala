@@ -111,7 +111,7 @@ object ToEnhancedDependencies {
         toRemove += conj
       }
     }
-    remove(toRemove, dgi)
+    remove(toRemove.toSeq, dgi)
   }
 
   /**
@@ -131,7 +131,7 @@ object ToEnhancedDependencies {
         toRemove += pobj
       }
     }
-    remove(toRemove, dgi)
+    remove(toRemove.toSeq, dgi)
   }
 
   /**
@@ -157,8 +157,8 @@ object ToEnhancedDependencies {
         collapsedNmods += Tuple3(prep.source, prep.destination, s"nmod_$mwe")
       }
     }
-    remove(toRemove, dgi)
-    collapsedNmods
+    remove(toRemove.toSeq, dgi)
+    collapsedNmods.toSeq
   }
 
   def findMultiWord(first: String, firstPos: Int, sentence: Sentence, dgi:DirectedGraphIndex[String]): String = {

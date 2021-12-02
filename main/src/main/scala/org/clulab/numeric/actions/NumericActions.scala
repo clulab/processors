@@ -24,7 +24,7 @@ class NumericActions extends Actions {
           e.printStackTrace()
       }
     }
-    convertedMentions
+    convertedMentions.toSeq
   }
 
   /** Constructs a NumberRange mention from a token pattern */

@@ -162,7 +162,7 @@ object Layers {
         None
       }
 
-    new Layers(initialLayer, intermediateLayers, finalLayer)
+    new Layers(initialLayer, intermediateLayers.toIndexedSeq, finalLayer)
   }
 
   val MAX_INTERMEDIATE_LAYERS = 10
@@ -198,7 +198,7 @@ object Layers {
         None
       }
 
-    new Layers(initialLayer, intermediateLayers, finalLayer)
+    new Layers(initialLayer, intermediateLayers.toIndexedSeq, finalLayer)
   }
 
   def predictJointly(layers: IndexedSeq[Layers],
@@ -230,7 +230,7 @@ object Layers {
       }
     }
 
-    labelsPerTask
+    labelsPerTask.toIndexedSeq
   }
 
   private def forwardForTask(layers: IndexedSeq[Layers],
@@ -348,7 +348,7 @@ object Layers {
         //
         // next, predict the labels using the predicted heads
         //
-        val labelStates = layers(2).forwardFrom(sharedStates, Some(heads), doDropout = false)
+        val labelStates = layers(2).forwardFrom(sharedStates, Some(heads.toIndexedSeq), doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)
         val labels = layers(2).finalLayer.get.inference(emissionScores)
         assert(labels.size == heads.size)
@@ -356,7 +356,7 @@ object Layers {
         heads.zip(labels)
       }
 
-    headsAndLabels
+    headsAndLabels.toIndexedSeq
   }
 
   def loss(layers: IndexedSeq[Layers],

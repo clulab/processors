@@ -365,7 +365,7 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
       matchersArray.foreach { matcher =>
         logger.info(s"Loaded OVERRIDE matcher for label ${matcher.label}.  The size of the first layer is ${matcher.entriesSize}.")
       }
-      matchersArray
+      matchersArray.toSeq
     }.getOrElse(Seq.empty[BooleanHashTrie])
   }
 }

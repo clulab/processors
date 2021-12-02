@@ -290,7 +290,7 @@ class CluProcessor protected (
       }
     }
 
-    predsInSent
+    predsInSent.toIndexedSeq
   }
 
   /** Dependency parsing */
@@ -439,7 +439,7 @@ class CluProcessor protected (
     }
 
     // store the index of all predicates as a doc attachment
-    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predsForAllSents))
+    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predsForAllSents.toIndexedSeq))
   }
 
   /** POS tag corrections, in place */

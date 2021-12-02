@@ -232,7 +232,7 @@ object Utils {
     for (tag <- tags) {
       ids += t2i(tag)
     }
-    ids
+    ids.toIndexedSeq
   }
 
   def printCoNLLOutput(pw: PrintWriter,

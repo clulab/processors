@@ -259,7 +259,7 @@ package object json {
           edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
         } yield (m.id, edgeAST)
         pairs.toMap
-      }
+      }.toMap
       simplePathMap
     }
   }
