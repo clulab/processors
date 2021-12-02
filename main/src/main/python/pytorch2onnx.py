@@ -78,7 +78,7 @@ if __name__ == '__main__':
             words = sentence.words
 
             word_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
-            char_ids_list = [torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in w]) for word in words]
+            char_ids_list = [torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word]) for word in words]
 
             dummy_input = [word_ids, char_ids_list]
 
