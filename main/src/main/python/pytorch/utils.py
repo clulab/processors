@@ -49,6 +49,14 @@ def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
     # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
     return result
 
+def mkCharacterEmbedding2(char_ids, charLookupParameters, charRnnBuilder):
+    hidden_dim = charRnnBuilder.hidden_size
+    charEmbeddings = charLookupParameters(char_ids)
+    output = transduce(charEmbeddings, charRnnBuilder)
+    result = output.squeeze(1)[-1]
+    # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
+    return result
+
 def readString2Ids(s2iFilename):
     s2i = dict()
     with open(s2iFilename) as f:

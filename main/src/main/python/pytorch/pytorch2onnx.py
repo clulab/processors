@@ -1,6 +1,39 @@
 import torch
 
 from pytorch.metal import Metal
+from pytorch.utils import mkCharacterEmbedding2
+
+class Saving_Model(nn.Module):
+    """docstring for Saving_Model"""
+    def __init__(self, model, constEmbeddings):
+        super().__init__()
+        self.model = model
+        for layers in model:
+            layers.start_eval()
+        self.constEmbeddings = constEmbeddings
+        self.initialLayers = [None for _ in range(len(model))]
+        for i, layers in enumerate(model):
+            if layers.initialLayer is not None:
+                self.initialLayers[i] = {"wordLookupParameters":layers.initialLayer.wordLookupParameters,
+                                         "charLookupParameters":layers.initialLayer.charLookupParameters,
+                                         "charRnnBuilder":layers.initialLayer.charRnnBuilder}
+        
+    def forward(self, word_ids, char_ids_list):
+
+        #In current setting, each layer is a nn.Moudle and we need to export each of them. This is not very elegant...
+        for i, layers in enumerate(self.model):
+            if self.initialLayers[i]:
+                embeddings = constEmbeddings.emb(idxs)
+                learnedWordEmbeddings = self.initialLayers[i].wordLookupParameters(word_ids)
+                charEmbedding = torch.stack([mkCharacterEmbedding2(char_ids, self.initialLayers[i].charLookupParameters, self.initialLayers[i].charRnnBuilder) for char_ids in char_ids_list])
+                embedParts = [embeddings, learnedWordEmbeddings, charEmbedding]#, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
+                embedParts = [ep for ep in embedParts if ep is not None]
+                embed = torch.cat(embedParts, dim=1)
+            for j, il in enumerate(layers.intermediateLayers):
+                dummy_input = il(dummy_input)
+            if layers.finalLayer is not None:
+                output = layers.finalLayer(dummy_input)
+        return output
 
 if __name__ == '__main__':
 
@@ -10,21 +43,8 @@ if __name__ == '__main__':
     modelName = args.model_file
     model = Metal.load(modelName)
 
-    #In current setting, each layer is a nn.Moudle and we need to export each of them. This is not very elegant...
-    for i, layers in enumerate(model):
-        if layers.initialLayer is not None:
-            #export the initial layer
-            input_names_1 = ["sentence", "const embeddings"]
-            output_names_1 = [ "embeddings" ]
-            dummy_input = (sentence, embeddings)# we need some toy sentence and embeddings here, not sure if onnx is happy with this input though...
-            torch.onnx.export(layers.initialLayer, dummy_input_1, "initialLayer_inTask%d.onnx"%i, verbose=True, input_names=input_names_1, output_names=output_names_1)
-            dummy_input = layers.initialLayer(sentence, embeddings)
-        for j, il in enumerate(layers.intermediateLayers):
-            #export the intermediate layer layer
-            input_names_2 = ["input", "dropout"]
-            output_names_2 = [ "output" ]
-            torch.onnx.export(il, dummy_input_2, "intermediateLayer_%d_inTask%d.onnx"%(i,j), verbose=True, input_names=input_names_2, output_names=output_names_2)
-            dummy_input = il(dummy_input)
-        if layers.finalLayer is not None:
-            #export the final layer
-            torch.onnx.export(layers.finalLayer, dummy_input, "finalLayer_inTask%d.onnx"%i, verbose=True, input_names=input_names_2, output_names=output_names_2)
+    export_model = Saving_Model(model)
+
+    torch.onnx.export(export_model, dummy_input, "model.onnx", verbose=True, input_names=input_names_2, output_names=output_names_2)
+
+    
