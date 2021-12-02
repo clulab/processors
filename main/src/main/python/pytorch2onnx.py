@@ -22,21 +22,21 @@ class Saving_Model(nn.Module):
                                          "charLookupParameters":layers.initialLayer.charLookupParameters,
                                          "charRnnBuilder":layers.initialLayer.charRnnBuilder}
         
-    def forward(self, word_ids, char_ids_list):
-
+    def forward(self, input_list):
+        word_ids, char_ids_list = input_list
         #In current setting, each layer is a nn.Moudle and we need to export each of them. This is not very elegant...
         for i, layers in enumerate(self.model):
             if self.initialLayers[i]:
-                embeddings = constEmbeddings.emb(idxs)
-                learnedWordEmbeddings = self.initialLayers[i].wordLookupParameters(word_ids)
-                charEmbedding = torch.stack([mkCharacterEmbedding2(char_ids, self.initialLayers[i].charLookupParameters, self.initialLayers[i].charRnnBuilder) for char_ids in char_ids_list])
+                embeddings = constEmbeddings.emb(word_ids)
+                learnedWordEmbeddings = self.initialLayers[i]["wordLookupParameters"](word_ids)
+                charEmbedding = torch.stack([mkCharacterEmbedding2(char_ids, self.initialLayers[i]["charLookupParameters"], self.initialLayers[i]["charRnnBuilder"]) for char_ids in char_ids_list])
                 embedParts = [embeddings, learnedWordEmbeddings, charEmbedding]#, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
                 embedParts = [ep for ep in embedParts if ep is not None]
                 embed = torch.cat(embedParts, dim=1)
             for j, il in enumerate(layers.intermediateLayers):
-                dummy_input = il(dummy_input)
+                output = il(embed, False)
             if layers.finalLayer is not None:
-                output = layers.finalLayer(dummy_input)
+                output = layers.finalLayer(output, False, None)#headPositions set to be None for now, we can add it in input list later
         return output
 
 if __name__ == '__main__':
@@ -54,6 +54,7 @@ if __name__ == '__main__':
     for layers in model:
         layers.start_eval()
     constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
+
     export_model = Saving_Model(model, constEmbeddings)
     export_model.eval()
 
@@ -82,9 +83,20 @@ if __name__ == '__main__':
 
             dummy_input = [word_ids, char_ids_list]
 
-            input_names = [ "input1", "input2" ]
+            output = export_model(dummy_input)
+
+            input_names = [ "input_list"]
             output_names = [ "output" ]
 
-    torch.onnx.export(export_model, dummy_input, "model.onnx", verbose=True, input_names=input_names, output_names=output_names)
+    torch.onnx.export(export_model,               # model being run
+                  dummy_input,                         # model input (or a tuple for multiple inputs)
+                  "model.onnx",   # where to save the model (can be a file or file-like object)
+                  export_params=True,        # store the trained parameter weights inside the model file
+                  opset_version=10,          # the ONNX version to export the model to
+                  do_constant_folding=True,  # whether to execute constant folding for optimization
+                  input_names = ['input'],   # the model's input names
+                  output_names = ['output'], # the model's output names
+                  dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
+                                'output' : {0 : 'batch_size'}})
 
     
