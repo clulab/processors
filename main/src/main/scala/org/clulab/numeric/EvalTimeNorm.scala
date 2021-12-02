@@ -55,7 +55,9 @@ object EvalTimeNorm {
     runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
   }
 
-  def test(): Double = run()
+  def test(proc: CluProcessor, ner: NumericEntityRecognizer): Double = {
+    runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
+  }
 
   def main(args: Array[String]): Unit = run()
 }
