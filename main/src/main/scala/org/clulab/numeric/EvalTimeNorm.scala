@@ -13,7 +13,7 @@ object EvalTimeNorm {
               testFile: String): Double = {
     val timeNormEvalDir = "/org/clulab/numeric/TimeNormEvalSet"
     val goldStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$testFile")
-    val goldLines = Source.fromInputStream(goldStream).getLines
+    val goldLines = Source.fromInputStream(goldStream).getLines()
     // Build a Map with the gold time expressions.
     // The key is the document name. The value is a Seq with the time expressions in the document
     val goldTimex = (for ((goldLine, goldIdx) <- goldLines.toSeq.zipWithIndex) yield {

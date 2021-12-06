@@ -345,7 +345,7 @@ class DocumentSerializer extends LazyLogging {
     byteOutput.toString(encoding)
   }
 
-  private def saveSentence(sent:Sentence, os:PrintWriter) {
+  private def saveSentence(sent:Sentence, os:PrintWriter): Unit = {
     os.println(START_TOKENS + SEP + sent.size)
     var offset = 0
     while(offset < sent.size) {
@@ -369,7 +369,7 @@ class DocumentSerializer extends LazyLogging {
     os.println(END_OF_SENTENCE)
   }
 
-  private def saveTree(tree:Tree, os:PrintWriter) {
+  private def saveTree(tree:Tree, os:PrintWriter): Unit = {
     os.print(tree.value + SEP + tree.head + SEP + tree.startOffset + SEP + tree.endOffset + SEP)
     if (tree.children.isEmpty) os.print(0)
     else os.print(tree.children.get.length)
@@ -420,7 +420,7 @@ class DocumentSerializer extends LazyLogging {
     os.println(s"$SEP${t.objectInterval.start}-${t.objectInterval.end}")
   }
 
-  private def saveToken(sent:Sentence, offset:Int, os:PrintWriter) {
+  private def saveToken(sent:Sentence, offset:Int, os:PrintWriter): Unit = {
     os.print(sent.raw(offset) + SEP +
       sent.startOffsets(offset) + SEP +
       sent.endOffsets(offset) + SEP +
@@ -449,7 +449,7 @@ class DocumentSerializer extends LazyLogging {
     os.println()
   }
 
-  private def saveDependencies(dg: DirectedGraph[String], dependencyType: String, os: PrintWriter) {
+  private def saveDependencies(dg: DirectedGraph[String], dependencyType: String, os: PrintWriter): Unit = {
     os.println(START_DEPENDENCIES + SEP + dependencyType + SEP + dg.size)
     // For consistent output, contents of sets must be sorted.
     os.println(dg.roots.toSeq.sorted.mkString(sep = SEP))
@@ -461,7 +461,7 @@ class DocumentSerializer extends LazyLogging {
     os.println(END_OF_DEPENDENCIES)
   }
 
-  private def saveCoref(cg:CorefChains, os:PrintWriter) {
+  private def saveCoref(cg:CorefChains, os:PrintWriter): Unit = {
     val mentions = cg.getMentions
     for (m <- mentions) {
       os.println(

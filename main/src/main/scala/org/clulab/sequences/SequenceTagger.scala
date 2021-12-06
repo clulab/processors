@@ -12,31 +12,31 @@ import org.clulab.utils.Files
   * Date: 8/25/17
   */
 trait SequenceTagger[L, F] extends Tagger[L] {
-  def train(docs:Iterator[Document])
+  def train(docs:Iterator[Document]): Unit
 
   def classesOf(sentence: Sentence):Array[L]
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
-  def featureExtractor(features:Counter[F], sentence: Sentence, offset:Int)
+  def featureExtractor(features:Counter[F], sentence: Sentence, offset:Int): Unit
 
   /** Abstract method that extracts the training labels for a given sentence */
   def labelExtractor(sentence:Sentence): Array[L]
 
   override def find(sentence: Sentence): Array[L] = classesOf(sentence)
 
-  def save(fn:File)
+  def save(fn:File): Unit
 
-  def loadFromFile(fn:File) {
+  def loadFromFile(fn:File): Unit = {
     val is = Files.loadFile(fn)
     load(is)
   }
 
-  def loadFromResource(rn:String) {
+  def loadFromResource(rn:String): Unit = {
     val is = Files.loadStreamFromClasspath(rn)
     load(is)
   }
 
-  def load(is:BufferedReader)
+  def load(is:BufferedReader): Unit
 
   def addHistoryFeatures(features:Counter[F], order:Int, labels:Seq[L], offset:Int):Unit = {
     addLeftFeatures(features, order, "", labels, offset)

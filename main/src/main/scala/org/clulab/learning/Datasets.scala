@@ -460,7 +460,7 @@ class ScaleRange[F] extends Serializable {
   var mins = new Counter[F]()
   var maxs = new Counter[F]()
 
-  def update(key:F, v:Double) {
+  def update(key:F, v:Double): Unit = {
     if(! mins.contains(key) || v < mins.getCount(key))
       mins.setCount(key, v)
     if(! maxs.contains(key) || v > maxs.getCount(key))
@@ -471,7 +471,7 @@ class ScaleRange[F] extends Serializable {
   def min(key:F): Double = mins.getCount(key)
   def max(key:F): Double = maxs.getCount(key)
 
-  def saveTo(w:Writer) {
+  def saveTo(w:Writer): Unit = {
     mins.saveTo(w)
     maxs.saveTo(w)
   }

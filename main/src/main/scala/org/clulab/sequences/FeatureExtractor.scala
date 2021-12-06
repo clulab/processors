@@ -14,7 +14,7 @@ class FeatureExtractor(
   val position:Int,
   val features:Counter[String]) {
 
-  def word(offset:Int) {
+  def word(offset:Int): Unit = {
     val i = position + offset
     if(i == -1)
       features += s"w[$offset]:-BOS-"
@@ -24,7 +24,7 @@ class FeatureExtractor(
       features += s"w[$offset]:${FeatureExtractor.norm(sentence.words(i))}"
   }
 
-  def wordBigrams(offset:Int, threshold:Int) {
+  def wordBigrams(offset:Int, threshold:Int): Unit = {
     val i = position + offset
     if(validPosition(i) && validPosition(i - 1)) {
       val bg = FeatureExtractor.mkBigram(sentence, i - 1)
@@ -41,7 +41,7 @@ class FeatureExtractor(
       features += s"l[$offset]:${FeatureExtractor.normAndLowerCase(sentence.words(i))}"
   }
 
-  def lemma(offset:Int) {
+  def lemma(offset:Int): Unit = {
     // using lemmas only when they exist
     // this was introduced because in english the lemmatizer works independently of the POS tag, whereas in portuguese POS is needed by the lemmatizer
     if (sentence.lemmas.isDefined) {
@@ -51,13 +51,13 @@ class FeatureExtractor(
     }
   }
 
-  def tag(offset:Int) {
+  def tag(offset:Int): Unit = {
     val i = position + offset
     if(validPosition(i))
       features += s"l[$offset]:${sentence.tags.get(i)}"
   }
 
-  def casing(offset:Int) {
+  def casing(offset:Int): Unit = {
     val i = position + offset
     if(validPosition(i)) {
       var uppers = 0
@@ -77,7 +77,7 @@ class FeatureExtractor(
     }
   }
 
-  def features(offset:Int) {
+  def features(offset:Int): Unit = {
     val i = position + offset
     if(validPosition(i)) {
       val w = sentence.words(i)
@@ -110,7 +110,7 @@ class FeatureExtractor(
     }
   }
 
-  def wordLen(offset:Int) {
+  def wordLen(offset:Int): Unit = {
     val i = position + offset
     if(validPosition(i)) {
       val w = sentence.words(i)
@@ -118,7 +118,7 @@ class FeatureExtractor(
     }
   }
 
-  def suffixes(offset:Int, minLen:Int, maxLen:Int) {
+  def suffixes(offset:Int, minLen:Int, maxLen:Int): Unit = {
     val i = position + offset
     if(validPosition(i)) {
       val w = sentence.words(i).toLowerCase()
@@ -131,7 +131,7 @@ class FeatureExtractor(
     }
   }
 
-  def prefixes(offset:Int, minLen:Int, maxLen:Int) {
+  def prefixes(offset:Int, minLen:Int, maxLen:Int): Unit = {
     val i = position + offset
     if(validPosition(i)) {
       val w = sentence.words(i).toLowerCase()
@@ -144,7 +144,7 @@ class FeatureExtractor(
     }
   }
 
-  def sentenceInfo() {
+  def sentenceInfo(): Unit = {
     val last = sentence.words.last
     features += s"eos:$last"
   }

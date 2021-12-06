@@ -61,7 +61,7 @@ class LiblinearClassifier[L, F](
     probabilities
   }
 
-  override def train(dataset:Dataset[L, F], indices:Array[Int]) {
+  override def train(dataset:Dataset[L, F], indices:Array[Int]): Unit = {
     val problem = new Problem()
     problem.l = indices.length
     logger.debug(s"Using ${problem.l} datums.")
@@ -277,7 +277,7 @@ class LiblinearClassifier[L, F](
   }
 
   /** Saves the current model to a file */
-  override def saveTo(w:Writer) {
+  override def saveTo(w:Writer): Unit = {
     val writer = Files.toPrintWriter(w)
     featureLexicon.get.saveTo(writer)
     labelLexicon.get.saveTo(writer)
