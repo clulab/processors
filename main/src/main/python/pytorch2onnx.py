@@ -31,8 +31,7 @@ class Saving_Model(torch.nn.Module):
         self.initialLayers = nn.ModuleList(self.initialLayers)
         self.intermediateLayerss = nn.ModuleList(self.intermediateLayerss)
         self.finalLayers = nn.ModuleList(self.finalLayers)
-    def forward(self, input_list):
-        word_ids, char_ids_list = input_list
+    def forward(self, word_ids, char_ids_list):
         #In current setting, each layer is a nn.Moudle and we need to export each of them. This is not very elegant...
         for i in range(self.model_length):
             if self.initialLayers[i]:
@@ -90,14 +89,11 @@ if __name__ == '__main__':
             words = sentence.words
 
             word_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words]).detach()
-            char_ids_list = [torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word]).detach() for word in words]
+            char_ids_list = torch.LongTensor([[c2i.get(c, UNK_EMBEDDING) for c in word] for word in words]).detach()
 
-            dummy_input = [word_ids, char_ids_list]
+            dummy_input = (word_ids, char_ids_list)
 
-            output = export_model(dummy_input)
-
-            input_names = ["input_list"]
-            output_names = [ "output" ]
+            output = export_model(word_ids, char_ids_list)
 
     torch.onnx.export(export_model,               # model being run
                   dummy_input,                         # model input (or a tuple for multiple inputs)
@@ -105,7 +101,7 @@ if __name__ == '__main__':
                   export_params=True,        # store the trained parameter weights inside the model file
                   opset_version=10,          # the ONNX version to export the model to
                   do_constant_folding=True,  # whether to execute constant folding for optimization
-                  input_names  = ['input'],   # the model's input names
+                  input_names  = ['words', 'chars'],   # the model's input names
                   output_names = ['output'], # the model's output names
                   dynamic_axes = {'input' : {0 : 'batch_size'},    # variable length axes
                                 'output' : {0 : 'batch_size'}})
@@ -116,10 +112,11 @@ if __name__ == '__main__':
     ort_session = onnxruntime.InferenceSession("model.onnx")
 
     def to_numpy(tensor):
-        return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+        return tensor.cpu().numpy()
 
     # compute ONNX Runtime output prediction
-    ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(dummy_input)}
+    print ([i.name for i in ort_session.get_inputs()])
+    ort_inputs = {ort_session.get_inputs()[i].name: to_numpy(x) for i, x in enumerate(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
 
     # compare ONNX Runtime and PyTorch results
