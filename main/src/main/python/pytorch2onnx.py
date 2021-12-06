@@ -119,7 +119,7 @@ if __name__ == '__main__':
         return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
     # compute ONNX Runtime output prediction
-    ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
+    ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
 
     # compare ONNX Runtime and PyTorch results
