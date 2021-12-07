@@ -88,8 +88,8 @@ if __name__ == '__main__':
 
             words = sentence.words
 
-            word_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words]).detach()
-            char_ids_list = torch.LongTensor([[c2i.get(c, UNK_EMBEDDING) for c in word] for word in words]).detach()
+            word_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
+            char_ids_list = torch.LongTensor([[c2i.get(c, UNK_EMBEDDING) for c in word] for word in words])
 
             dummy_input = (word_ids, char_ids_list)
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     ort_session = onnxruntime.InferenceSession("model.onnx")
 
     def to_numpy(tensor):
-        return tensor.cpu().numpy()
+        return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
     # compute ONNX Runtime output prediction
     print ([i.name for i in ort_session.get_inputs()])
