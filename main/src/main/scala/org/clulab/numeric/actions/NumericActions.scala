@@ -1,11 +1,12 @@
 package org.clulab.numeric.actions
 
+import org.clulab.numeric.SeasonNormalizer
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 
 import scala.collection.mutable.ArrayBuffer
 
-class NumericActions extends Actions {
+class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   //
   // local actions
   //
@@ -64,6 +65,26 @@ class NumericActions extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithUntilRef, "toDateRangeMentionWithUntilRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeason(seasonNormalizer), "toDateRangeMentionWithSeason")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasons(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasons(seasonNormalizer), "toDateRangeMentionWithSeasons")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasonSinceRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasonSinceRef(seasonNormalizer), "toDateRangeMentionWithSeasonSinceRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasonUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasonUntilRef(seasonNormalizer), "toDateRangeMentionWithSeasonUntilRef")
   }
 
   /** Constructs a DateMention from a token pattern */

@@ -119,3 +119,4 @@ rules:
     action: mkDateMentionYyyyMm
     pattern: |
       [word=/^(1\d\d\d|2\d\d\d)(:|\/|\-)(0?[1-9]|1[012])$/]
+
