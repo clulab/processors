@@ -568,36 +568,25 @@ package object mentions {
   }
 
   private def getSeasonMonthRange(seasonNormalizer: SeasonNormalizer)(argName: String, m: Mention): Option[SeasonRange] = {
-    if(! m.arguments.contains(argName))
-      None
-    else {
-      val season = m.arguments(argName).head.words
-      seasonNormalizer.norm(season)
-    }
+    val wordsOpt = getArgWords(argName, m)
+
+    if (wordsOpt.isEmpty) None
+    else seasonNormalizer.norm(wordsOpt.get)
   }
 
-  private def getArgWords(argName: String, m:Mention): Option[Seq[String]] = {
-    if(! m.arguments.contains(argName)){
-      None
-    } else {
-      val arg = m.arguments(argName).head
-      Some(arg.words)
-    }
-  }
+  private def getArgWords(argName: String, m:Mention): Option[Seq[String]] =
+      m.arguments.get(argName).map(_.head.words)
 
   private def getArgNorm(argName: String, m:Mention): Option[String] = {
-    if(! m.arguments.contains(argName)){
-      None
-    } else {
-      val arg = m.arguments(argName).head
-      if(arg.isInstanceOf[Norm]) {
-        Some(arg.asInstanceOf[Norm].neNorm)
-      } else if(arg.isInstanceOf[TextBoundMention] && arg.labels.contains("Number")) {
+    val argOpt = m.arguments.get(argName).map(_.head)
+
+    argOpt match {
+      case None => None
+      case Some(norm: Norm) => Some(norm.neNorm)
+      case Some(tbm: TextBoundMention) if tbm.labels.contains("Number") =>
         // Numbers are normalized on demand, for efficiency (so we do not create too many custom Mentions)
-        NumberParser.parse(arg.words).map(_.toString)
-      } else {
-        None
-      }
+        NumberParser.parse(tbm.words).map(_.toString)
+      case _ => None
     }
-}
+  }
 }
