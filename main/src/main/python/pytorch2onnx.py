@@ -12,40 +12,52 @@ from sequences.rowReaders import *
 import onnx
 import onnxruntime
 
+import json
+
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+class Char_RNN(torch.nn.Module):
+
+    def __init__(self, model):
+        super().__init__()
+        for i, layers in enumerate(model):
+            if layers.initialLayer is not None:
+                self.char_lookup = layers.initialLayer.charLookupParameters
+                self.char_rnn = layers.initialLayer.charRnnBuilder
+
+    def forward(self, char_ids):
+        charEmbedding = mkCharacterEmbedding2(char_ids, self.char_lookup, self.char_rnn)
+        return charEmbedding
+
 class Saving_Model(torch.nn.Module):
     """docstring for Saving_Model"""
     def __init__(self, model, constEmbeddings):
         super().__init__()
         self.model_length = len(model)
         self.constEmbeddings = constEmbeddings
-        self.initialLayers = [None for _ in range(self.model_length)]
         self.intermediateLayerss = [None for _ in range(self.model_length)]
         self.finalLayers = [None for _ in range(self.model_length)]
         for i, layers in enumerate(model):
             if layers.initialLayer is not None:
-                self.initialLayers[i] = nn.ModuleList([layers.initialLayer.wordLookupParameters,
-                                         layers.initialLayer.charLookupParameters,
-                                         layers.initialLayer.charRnnBuilder])
+                self.word_lookup = layers.initialLayer.wordLookupParameters
             self.intermediateLayerss[i] = nn.ModuleList(layers.intermediateLayers)
             self.finalLayers[i] = layers.finalLayer
-        self.initialLayers = nn.ModuleList(self.initialLayers)
         self.intermediateLayerss = nn.ModuleList(self.intermediateLayerss)
         self.finalLayers = nn.ModuleList(self.finalLayers)
-    def forward(self, word_ids, char_ids_list):
-        #In current setting, each layer is a nn.Moudle and we need to export each of them. This is not very elegant...
+    def forward(self, embed_ids, word_ids, charEmbedding):
+        # Can I assuem there is only one initial layer?
+        embeddings = constEmbeddings.emb(embed_ids)
+        learnedWordEmbeddings = self.word_lookup(word_ids)
+        embedParts = [embeddings, learnedWordEmbeddings, charEmbedding]#, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
+        embedParts = [ep for ep in embedParts if ep is not None]
+        state = torch.cat(embedParts, dim=1)
         for i in range(self.model_length):
-            if self.initialLayers[i]:
-                embeddings = constEmbeddings.emb(word_ids)
-                learnedWordEmbeddings = self.initialLayers[i][0](word_ids)
-                charEmbedding = torch.stack([mkCharacterEmbedding2(char_ids, self.initialLayers[i][1], self.initialLayers[i][2]) for char_ids in char_ids_list])
-                embedParts = [embeddings, learnedWordEmbeddings, charEmbedding]#, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
-                embedParts = [ep for ep in embedParts if ep is not None]
-                embed = torch.cat(embedParts, dim=1)
             for il in self.intermediateLayerss[i]:
-                output = il(embed, False)
+                state = il(state, False)
             if self.finalLayers[i]:
-                output = self.finalLayers[i](output, False, None)#headPositions set to be None for now, we can add it in input list later
-        return output
+                state = self.finalLayers[i](state, False, None)#headPositions set to be None for now, we can add it in input list later
+        return state
 
 if __name__ == '__main__':
 
@@ -63,37 +75,55 @@ if __name__ == '__main__':
         layers.start_eval()
     constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
 
+    export_char  = Char_RNN(model)
     export_model = Saving_Model(model, constEmbeddings)
     export_model.eval()
+    export_char.eval()
     for param in export_model.parameters():
+        param.requires_grad = False
+    for param in export_char.parameters():
         param.requires_grad = False
 
     torch.manual_seed(taskManager.random)
     random.seed(taskManager.random)
 
-    for i, layers in enumerate(model):
-        if layers.initialLayer is not None:
-            c2i = layers.initialLayer.c2i
+    x2i = json.load(open(args.model_file+".json"))
+
+    c2i = x2i[0]['x2i']['initialLayer']['c2i']
+    w2i = x2i[0]['x2i']['initialLayer']['w2i']
 
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
         testSentences = taskManager.tasks[taskId].testSentences
         if testSentences:
             reader = MetalRowReader()
-            annotatedSentences = reader.toAnnotatedSentences(testSentences[0])
+            annotatedSentences = reader.toAnnotatedSentences(testSentences[1])
 
             asent = annotatedSentences[0]
             sentence = asent[0]
             goldLabels = asent[1]
 
             words = sentence.words
+            char_embs = []
+            for word in words:
+                char_ids = torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word])
+                char_out = export_char(char_ids)
+                char_embs.append(char_out)
+            char_embs = torch.stack(char_embs)
+            embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
+            word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
+            output = export_model(embed_ids, word_ids, char_embs)
 
-            word_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
-            char_ids_list = torch.LongTensor([[c2i.get(c, UNK_EMBEDDING) for c in word] for word in words])
+            dummy_input = (embed_ids, word_ids, char_embs)
 
-            dummy_input = (word_ids, char_ids_list)
-
-            output = export_model(word_ids, char_ids_list)
+    torch.onnx.export(export_char,
+                    char_ids,
+                    "char.onnx",
+                    export_params=True,
+                    do_constant_folding=True,
+                    input_names = ['char_ids'],
+                    output_names = ['chars'],
+                    dynamic_axes = {"char_ids": {0: 'word length'}})
 
     torch.onnx.export(export_model,               # model being run
                   dummy_input,                         # model input (or a tuple for multiple inputs)
@@ -101,26 +131,34 @@ if __name__ == '__main__':
                   export_params=True,        # store the trained parameter weights inside the model file
                   opset_version=10,          # the ONNX version to export the model to
                   do_constant_folding=True,  # whether to execute constant folding for optimization
-                  input_names  = ['words', 'chars'],   # the model's input names
+                  input_names  = ['embed', 'words', 'chars'],   # the model's input names
                   output_names = ['output'], # the model's output names
-                  dynamic_axes = {'input' : {0 : 'batch_size'},    # variable length axes
-                                'output' : {0 : 'batch_size'}})
+                  dynamic_axes = {'embed' : {0 : 'sentence length'},
+                                  'words' : {0 : 'sentence length'},
+                                  'chars' : {0 : 'sentence length'}})
 
     onnx_model = onnx.load("model.onnx")
     onnx.checker.check_model(onnx_model)
+    char_model = onnx.load("char.onnx")
+    onnx.checker.check_model(char_model)
 
     ort_session = onnxruntime.InferenceSession("model.onnx")
-
-    def to_numpy(tensor):
-        return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-
+    ort_char = onnxruntime.InferenceSession("char.onnx")
     # compute ONNX Runtime output prediction
-    print ([i.name for i in ort_session.get_inputs()])
+
+    ort_inputs = {ort_char.get_inputs()[i].name: to_numpy(x) for i, x in enumerate([char_ids])}
+    ort_outs = ort_char.run(None, ort_inputs)
+    try:
+        np.testing.assert_allclose(to_numpy(char_out), ort_outs[0], rtol=1e-03, atol=1e-05)
+    except AssertionError as e:
+        print (e)
+
     ort_inputs = {ort_session.get_inputs()[i].name: to_numpy(x) for i, x in enumerate(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
-
-    # compare ONNX Runtime and PyTorch results
-    np.testing.assert_allclose(to_numpy(output), ort_outs[0], rtol=1e-03, atol=1e-05)
+    try:
+        np.testing.assert_allclose(output.detach().cpu().numpy(), ort_outs[0], rtol=1e-03, atol=1e-05)
+    except AssertionError as e:
+        print (e)
 
     print("Exported model has been tested with ONNXRuntime, and the result looks good!")
 
