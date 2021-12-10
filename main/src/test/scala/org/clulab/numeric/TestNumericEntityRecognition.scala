@@ -193,18 +193,18 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("January 2016 and June 2017", Interval(3, 5), "DATE", "2017-06-XX")
   }
 
-  it should "recognize unbounded dates" in {
+  it should "recognize relative dates" in {
+    ensure("Since January 2016", Interval(0, 3), "DATE-RANGE", "2016-01-XX -- ref-date")
+    ensure("Until January 2016", Interval(0, 3), "DATE-RANGE", "ref-date -- 2016-01-XX")
+    ensure("from January 2016", Interval(0, 3), "DATE-RANGE", "2016-01-XX -- ref-date")
+  }
+
+  it should "recognize unbounded date ranges" in {
     ensure("before July 2016", Interval(0, 3), "DATE-RANGE", "XXXX-XX-XX -- 2016-07-XX")
     ensure("prior to July 2016", Interval(0, 4), "DATE-RANGE", "XXXX-XX-XX -- 2016-07-XX")
     ensure("after July 2016", Interval(0, 3), "DATE-RANGE", "2016-07-XX -- XXXX-XX-XX")
     ensure("before July 15", Interval(0, 3), "DATE-RANGE", "XXXX-XX-XX -- XXXX-07-15")
     ensure("after July 15", Interval(0, 3), "DATE-RANGE", "XXXX-07-15 -- XXXX-XX-XX")
-  }
-
-  it should "recognize relative dates" in {
-    ensure("Since January 2016", Interval(0, 3), "DATE-RANGE", "2016-01-XX -- ref-date")
-    ensure("Until January 2016", Interval(0, 3), "DATE-RANGE", "ref-date -- 2016-01-XX")
-    ensure("from January 2016", Interval(0, 3), "DATE-RANGE", "2016-01-XX -- ref-date")
   }
 
   it should "recognize date ranges from seasons" in {
@@ -214,15 +214,30 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("autumn 2017", Interval(0, 2), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
     ensure("autumn in 2017", Interval(0, 3), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
     ensure("2017 autumn", Interval(0, 2), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
+    ensure("winter", Interval(0, 1), "DATE-RANGE", "XXXX-12-21 -- XXXX-03-20")
+    ensure("spring", Interval(0, 1), "DATE-RANGE", "XXXX-03-20 -- XXXX-06-21")
+
   }
 
   it should "recognize date ranges with seasons" in {
     ensure("from spring to autumn 2017", Interval(0, 4), "DATE-RANGE", "2017-06-21 -- 2017-09-22")
     ensure("between spring and autumn 2017", Interval(0, 4), "DATE-RANGE", "2017-06-21 -- 2017-09-22")
     ensure("between autumn 2017 and spring 2018", Interval(0, 5), "DATE-RANGE", "2017-12-21 -- 2018-03-20")
+    ensure("between autumn and spring", Interval(0, 4), "DATE-RANGE", "XXXX-12-21 -- XXXX-03-20")
     ensure("Since winter 2017", Interval(0, 3), "DATE-RANGE", "2017-03-20 -- ref-date")
+    ensure("Since winter", Interval(0, 2), "DATE-RANGE", "XXXX-03-20 -- ref-date")
     ensure("Until summer 2017", Interval(0, 3), "DATE-RANGE", "ref-date -- 2017-06-21")
+    ensure("Until summer", Interval(0, 2), "DATE-RANGE", "ref-date -- XXXX-06-21")
   }
+
+  it should "recognize unbounded date ranges with seasons" in {
+    ensure("before summer 2016", Interval(0, 3), "DATE-RANGE", "XXXX-XX-XX -- 2016-06-21")
+    ensure("prior to summer 2016", Interval(0, 4), "DATE-RANGE", "XXXX-XX-XX -- 2016-06-21")
+    ensure("after summer 2016", Interval(0, 3), "DATE-RANGE", "2016-09-22 -- XXXX-XX-XX")
+    ensure("before summer", Interval(0, 2), "DATE-RANGE", "XXXX-XX-XX -- XXXX-06-21")
+    ensure("after summer", Interval(0, 2), "DATE-RANGE", "XXXX-09-22 -- XXXX-XX-XX")
+  }
+
 
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")

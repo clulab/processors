@@ -270,10 +270,13 @@ package object mentions {
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
       val yearNorm = getArgWords("year", m)
-      if(yearNorm.isEmpty)
-        throw new RuntimeException(s"ERROR: could not find argument year in mention ${m.raw.mkString(" ")}!")
 
-      val (yearStart, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, yearNorm.get)
+      val (yearStart, yearEnd) = yearNorm match {
+        case Some(year) =>
+          val adjustedRange = seasonNormalizer.adjustYearRange(seasonNorm.get, year)
+          (Some(adjustedRange._1), Some(adjustedRange._2))
+        case _ => (None, None)
+      }
 
       new DateRangeMention(
         m.labels,
@@ -283,8 +286,8 @@ package object mentions {
         m.keep,
         m.foundBy,
         m.attachments,
-        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, Some(yearStart)),
-        TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, Some(yearEnd))
+        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth,yearStart),
+        TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearEnd)
       )
 
     case m =>
@@ -304,16 +307,26 @@ package object mentions {
         throw new RuntimeException(s"ERROR: could not find argument season2 in mention ${m.raw.mkString(" ")}!")
 
       val yearNorm2 = getArgWords("year2", m)
-      if(yearNorm2.isEmpty)
-        throw new RuntimeException(s"ERROR: could not find argument year2 in mention ${m.raw.mkString(" ")}!")
 
       val yearNorm1 = getArgWords("year1", m) match {
-        case year if year.isDefined => year
-        case _ => yearNorm2
+        case Some(year) => Some(year)
+        case _ if yearNorm2.isDefined => yearNorm2
+        case _ => None
       }
 
-      val (_, yearEnd1) = seasonNormalizer.adjustYearRange(seasonNorm1.get, yearNorm1.get)
-      val (yearStart2, _) = seasonNormalizer.adjustYearRange(seasonNorm2.get, yearNorm2.get)
+      val yearEnd1 = yearNorm1 match {
+        case Some(year) =>
+          val adjustedRange = seasonNormalizer.adjustYearRange(seasonNorm1.get, year)
+          Some(adjustedRange._2)
+        case _ => None
+      }
+
+      val yearStart2 = yearNorm2 match {
+        case Some(year) =>
+          val adjustedRange = seasonNormalizer.adjustYearRange(seasonNorm2.get, year)
+          Some(adjustedRange._1)
+        case _ => None
+      }
 
       new DateRangeMention(
         m.labels,
@@ -323,8 +336,8 @@ package object mentions {
         m.keep,
         m.foundBy,
         m.attachments,
-        TempEvalFormatter.mkDate(seasonNorm1.get.endDay, seasonNorm1.get.endMonth, Some(yearEnd1)),
-        TempEvalFormatter.mkDate(seasonNorm2.get.startDay, seasonNorm2.get.startMonth, Some(yearStart2))
+        TempEvalFormatter.mkDate(seasonNorm1.get.endDay, seasonNorm1.get.endMonth, yearEnd1),
+        TempEvalFormatter.mkDate(seasonNorm2.get.startDay, seasonNorm2.get.startMonth, yearStart2)
       )
 
     case m =>
@@ -339,11 +352,12 @@ package object mentions {
       if(seasonNorm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
-      val yearNorm = getArgWords("year", m)
-      if(yearNorm.isEmpty)
-        throw new RuntimeException(s"ERROR: could not find argument year in mention ${m.raw.mkString(" ")}!")
-
-      val (_, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, yearNorm.get)
+      val yearNorm = getArgWords("year", m) match {
+        case year if year.isDefined =>
+          val (_, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+          Some(yearEnd)
+        case _ => None
+      }
 
       new DateRangeMention(
         m.labels,
@@ -353,7 +367,7 @@ package object mentions {
         m.keep,
         m.foundBy,
         m.attachments,
-        TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, Some(yearEnd)),
+        TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearNorm),
         "ref-date"
       )
 
@@ -369,11 +383,12 @@ package object mentions {
       if(seasonNorm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
-      val yearNorm = getArgWords("year", m)
-      if(yearNorm.isEmpty)
-        throw new RuntimeException(s"ERROR: could not find argument year in mention ${m.raw.mkString(" ")}!")
-
-      val (yearStart, _) = seasonNormalizer.adjustYearRange(seasonNorm.get, yearNorm.get)
+      val yearNorm = getArgWords("year", m) match {
+        case year if year.isDefined =>
+          val (yearStart, _) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+          Some(yearStart)
+        case _ => None
+      }
 
       new DateRangeMention(
         m.labels,
@@ -384,7 +399,69 @@ package object mentions {
         m.foundBy,
         m.attachments,
         "ref-date",
-        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, Some(yearStart))
+        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearNorm)
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
+  def toDateUnboundRangeMentionWithSeasonBefore(seasonNormalizer: SeasonNormalizer)(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: RelationMention =>
+      val seasonNorm = getSeasonMonthRange(seasonNormalizer)("season", m)
+      if(seasonNorm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
+
+      val yearNorm = getArgWords("year", m) match {
+        case year if year.isDefined =>
+          val (yearStart, _) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+          Some(yearStart)
+        case _ => None
+      }
+
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        "XXXX-XX-XX",
+        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearNorm),
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
+  def toDateUnboundRangeMentionWithSeasonAfter(seasonNormalizer: SeasonNormalizer)(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: RelationMention =>
+      val seasonNorm = getSeasonMonthRange(seasonNormalizer)("season", m)
+      if(seasonNorm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
+
+      val yearNorm = getArgWords("year", m) match {
+        case year if year.isDefined =>
+          val (_, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+          Some(yearEnd)
+        case _ => None
+      }
+
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearNorm),
+        "XXXX-XX-XX"
       )
 
     case m =>

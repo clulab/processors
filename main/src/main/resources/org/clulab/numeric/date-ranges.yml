@@ -102,7 +102,7 @@
   example: "It was summer 2000"
   action: mkDateRangeMentionWithSeason
   pattern: |
-    @season:PossibleSeason /(?i)(in|of)/? @year:PossibleYear
+    @season:PossibleSeason /(?i)(in|of)/? @year:PossibleYear?
 
 - name: date-range-season-2
   priority: ${ rulepriority }
@@ -129,7 +129,7 @@
   example: "Between spring and autumn 2017"
   action: mkDateRangeMentionWithSeasons
   pattern: |
-    /(?i)between/ @season1:PossibleSeason @year1:PossibleYear? /(?i)(and|to)/ @season2:PossibleSeason @year2:PossibleYear
+    /(?i)between/ @season1:PossibleSeason @year1:PossibleYear? /(?i)(and|to)/ @season2:PossibleSeason @year2:PossibleYear?
 
 - name: date-range-season-5
   priority: ${ rulepriority }
@@ -138,7 +138,7 @@
   example: "Since summer 2000"
   action: mkDateRangeMentionWithSeasonSinceRef
   pattern: |
-    /(?i)(since|from)/ @season:PossibleSeason @year:PossibleYear
+    /(?i)(since|from)/ @season:PossibleSeason @year:PossibleYear?
 
 - name: date-range-season-6
   priority: ${ rulepriority }
@@ -147,4 +147,22 @@
   example: "Until summer 2000"
   action: mkDateRangeMentionWithSeasonUntilRef
   pattern: |
-    /(?i)until|through/ @season:PossibleSeason @year:PossibleYear
+    /(?i)until|through/ @season:PossibleSeason @year:PossibleYear?
+
+- name: date-range-season-7
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Before summer 2000"
+  action: mkDateUnboundRangeMentionWithSeasonBefore
+  pattern: |
+    /(?i)(before|prior|previous)/ /(?i)to/? @season:PossibleSeason @year:PossibleYear?
+
+- name: date-range-season-8
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "After summer 2000"
+  action: mkDateUnboundRangeMentionWithSeasonAfter
+  pattern: |
+    /(?i)(after|beyond|following)/ @season:PossibleSeason @year:PossibleYear?
