@@ -430,7 +430,7 @@ package object mentions {
         m.foundBy,
         m.attachments,
         "XXXX-XX-XX",
-        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearNorm),
+        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearNorm)
       )
 
     case m =>
