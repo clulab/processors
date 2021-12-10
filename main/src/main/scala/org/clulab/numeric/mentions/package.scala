@@ -213,6 +213,54 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
   }
 
+  def toDateUnboundRangeMentionBefore(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: RelationMention =>
+      val date1Norm = getArgNorm("date1", m)
+      if(date1Norm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
+
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        "XXXX-XX-XX",
+        date1Norm.get
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
+  def toDateUnboundRangeMentionAfter(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: RelationMention =>
+      val date1Norm = getArgNorm("date1", m)
+      if(date1Norm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
+
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        date1Norm.get,
+        "XXXX-XX-XX"
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
   def toDateRangeMentionWithSeason(seasonNormalizer: SeasonNormalizer)(mention: Mention): DateRangeMention =  mention match {
     case m: DateRangeMention => m
 
