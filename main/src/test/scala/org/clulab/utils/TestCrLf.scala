@@ -9,7 +9,7 @@ import org.clulab.utils.Closer.AutoCloser
 
 import org.scalatest._
 
-class TestCrLf extends FlatSpec with Matchers {
+class TestCrLf extends Test {
 
   behavior of "resources"
 

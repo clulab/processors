@@ -2,7 +2,7 @@ package org.clulab.utils
 
 import org.scalatest._
 
-class TestTimer extends FlatSpec with Matchers {
+class TestTimer extends Test {
 
   behavior of "timer"
 
