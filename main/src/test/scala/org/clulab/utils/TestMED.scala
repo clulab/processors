@@ -2,7 +2,7 @@ package org.clulab.utils
 
 import org.scalatest.{FlatSpec, Matchers}
 
-class TestMED extends FlatSpec with Matchers {
+class TestMED extends Test {
   behavior of "MED"
 
   it should "work, substitute = false, transpose = false, capitalize = false" in {
