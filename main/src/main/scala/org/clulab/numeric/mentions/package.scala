@@ -353,8 +353,8 @@ package object mentions {
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
       val yearNorm = getArgWords("year", m) match {
-        case year if year.isDefined =>
-          val (_, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+        case Some(year) =>
+          val (_, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, year)
           Some(yearEnd)
         case _ => None
       }
@@ -384,8 +384,8 @@ package object mentions {
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
       val yearNorm = getArgWords("year", m) match {
-        case year if year.isDefined =>
-          val (yearStart, _) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+        case Some(year) =>
+          val (yearStart, _) = seasonNormalizer.adjustYearRange(seasonNorm.get, year)
           Some(yearStart)
         case _ => None
       }
@@ -415,8 +415,8 @@ package object mentions {
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
       val yearNorm = getArgWords("year", m) match {
-        case year if year.isDefined =>
-          val (yearStart, _) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+        case Some(year) =>
+          val (yearStart, _) = seasonNormalizer.adjustYearRange(seasonNorm.get, year)
           Some(yearStart)
         case _ => None
       }
@@ -446,8 +446,8 @@ package object mentions {
         throw new RuntimeException(s"ERROR: could not find argument season in mention ${m.raw.mkString(" ")}!")
 
       val yearNorm = getArgWords("year", m) match {
-        case year if year.isDefined =>
-          val (_, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, year.get)
+        case Some(year) =>
+          val (_, yearEnd) = seasonNormalizer.adjustYearRange(seasonNorm.get, year)
           Some(yearEnd)
         case _ => None
       }
