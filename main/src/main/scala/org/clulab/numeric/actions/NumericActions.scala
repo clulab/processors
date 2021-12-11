@@ -68,6 +68,16 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   }
 
   /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionBefore(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionBefore, "toDateUnboundRangeMentionBefore")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionAfter(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionAfter, "toDateUnboundRangeMentionAfter")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithSeason(seasonNormalizer), "toDateRangeMentionWithSeason")
   }
@@ -85,6 +95,16 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithSeasonUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithSeasonUntilRef(seasonNormalizer), "toDateRangeMentionWithSeasonUntilRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionWithSeasonBefore(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionWithSeasonBefore(seasonNormalizer), "toDateUnboundRangeMentionBefore")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionWithSeasonAfter(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionWithSeasonAfter(seasonNormalizer), "toDateUnboundRangeMentionAfter")
   }
 
   /** Constructs a DateMention from a token pattern */
