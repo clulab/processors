@@ -32,10 +32,9 @@ class Char_RNN(torch.nn.Module):
 
 class Saving_Model(torch.nn.Module):
     """docstring for Saving_Model"""
-    def __init__(self, model, constEmbeddings):
+    def __init__(self, model):
         super().__init__()
         self.model_length = len(model)
-        self.constEmbeddings = constEmbeddings
         self.intermediateLayerss = [None for _ in range(self.model_length)]
         self.finalLayers = [None for _ in range(self.model_length)]
         for i, layers in enumerate(model):
@@ -45,9 +44,8 @@ class Saving_Model(torch.nn.Module):
             self.finalLayers[i] = layers.finalLayer
         self.intermediateLayerss = nn.ModuleList(self.intermediateLayerss)
         self.finalLayers = nn.ModuleList(self.finalLayers)
-    def forward(self, embed_ids, word_ids, charEmbedding):
+    def forward(self, embeddings, word_ids, charEmbedding):
         # Can I assuem there is only one initial layer?
-        embeddings = constEmbeddings.emb(embed_ids)
         learnedWordEmbeddings = self.word_lookup(word_ids)
         embedParts = [embeddings, learnedWordEmbeddings, charEmbedding]#, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
         embedParts = [ep for ep in embedParts if ep is not None]
@@ -76,7 +74,7 @@ if __name__ == '__main__':
     constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
 
     export_char  = Char_RNN(model)
-    export_model = Saving_Model(model, constEmbeddings)
+    export_model = Saving_Model(model)
     export_model.eval()
     export_char.eval()
     for param in export_model.parameters():
@@ -111,10 +109,11 @@ if __name__ == '__main__':
                 char_embs.append(char_out)
             char_embs = torch.stack(char_embs)
             embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
+            embeddings = constEmbeddings.emb(embed_ids)
             word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
-            output = export_model(embed_ids, word_ids, char_embs)
+            output = export_model(embeddings, word_ids, char_embs)
 
-            dummy_input = (embed_ids, word_ids, char_embs)
+            dummy_input = (embeddings, word_ids, char_embs)
 
     torch.onnx.export(export_char,
                     char_ids,

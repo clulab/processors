@@ -57,9 +57,10 @@ if __name__ == '__main__':
                         char_embs.append(ort_outs[0])
                     char_embs = np.stack(char_embs)
                     embed_ids = np.array([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
+                    embeddings = constEmbeddings.emb(embed_ids)
                     word_ids = np.array([w2i[word] if word in w2i else 0 for word in words])
 
-                    dummy_input = (embed_ids, word_ids, char_embs)
+                    dummy_input = (embeddings, word_ids, char_embs)
 
                     ort_inputs = {ort_session.get_inputs()[i].name: x for i, x in enumerate(dummy_input)}
                     ort_outs = ort_session.run(None, ort_inputs)
