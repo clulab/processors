@@ -516,7 +516,11 @@ object Utils {
   }
 
   // This <% seems to be called an "implicit conversion declaration".
-  def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+  // def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+  // [warn] ... view bounds are deprecated; use an implicit parameter instead.
+  // [warn]   example: instead of `def f[A <% Int](a: A)` use `def f[A](a: A)(implicit ev: A => Int)`
+  // [warn]   def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+  def save[T](printWriter: PrintWriter, values: Map[T, Int], comment: String)(implicit ev: T => Ordered[T]): Unit = {
     printWriter.println("# " + comment)
     // Sort these so that the same file always results, even it this is slow.
     values.toSeq.sorted.foreach { case (key, value) =>
@@ -525,7 +529,7 @@ object Utils {
     printWriter.println() // Separator
   }
 
-  def save[T <% Ordered[T]](printWriter: PrintWriter, values: Counter[T], comment: String): Unit = {
+  def save[T](printWriter: PrintWriter, values: Counter[T], comment: String)(implicit ev: T => Ordered[T]): Unit = {
     printWriter.println("# " + comment)
     // Sort these so that the same file always results, even it this is slow.
     val keys = values.keySet.toList.sorted
@@ -572,7 +576,7 @@ object Utils {
   abstract class ByLineBuilder[IntermediateValueType, FinalValueType, DefaultValueType] {
 
     protected def setDefaultValue(intermediateValue: IntermediateValueType,
-                                  defaultValue: DefaultValueType)
+                                  defaultValue: DefaultValueType): Unit
 
     protected def getComment(line: String): String = {
       assert(line.startsWith("#"))

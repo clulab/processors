@@ -26,7 +26,7 @@ abstract class Dataset[L, F](
 
   def this() = this(new Lexicon[L], new Lexicon[F], new ArrayBuffer[Int])
 
-  def += (datum:Datum[L, F])
+  def += (datum:Datum[L, F]): Unit
 
   def numFeatures = featureLexicon.size
   def numLabels = labelLexicon.size
@@ -70,7 +70,7 @@ class BVFDataset[L, F] (
     new Lexicon[L], new Lexicon[F], new ArrayBuffer[Int],
     new ArrayBuffer[Array[Int]])
 
-  def += (datum:Datum[L, F]) {
+  def += (datum:Datum[L, F]): Unit = {
     datum match {
       case bd:BVFDatum[L, F] =>
         labels += labelLexicon.add(bd.label)
@@ -234,7 +234,7 @@ class RVFDataset[L, F] (
     new ArrayBuffer[Array[Int]],
     new ArrayBuffer[Array[Double]])
 
-  override def += (datum:Datum[L, F]) {
+  override def += (datum:Datum[L, F]): Unit = {
     datum match {
       case d:RVFDatum[L, F] =>
         labels += labelLexicon.add(d.label)
@@ -440,7 +440,7 @@ object RVFDataset {
   def saveToSvmLightFormat(
     datums:Iterable[Datum[Int, String]],
     featureLexicon:Lexicon[String],
-    fn:String) {
+    fn:String): Unit = {
 
     val os = new PrintWriter(new FileWriter(fn))
     for(datum <- datums) {

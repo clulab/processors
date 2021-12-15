@@ -39,8 +39,9 @@ class CluProcessor protected (
   // standard, abbreviated constructor
   def this(
     config: Config = ConfigFactory.load("cluprocessor"),
-    optionalNER: Option[LexiconNER] = None
-  ) = this(config, optionalNER, None, None, None, None, None, None, None, None)
+    optionalNER: Option[LexiconNER] = None,
+    seasonPathOpt: Option[String] = None
+  ) = this(config, optionalNER, CluProcessor.newNumericEntityRecognizerOpt(seasonPathOpt), None, None, None, None, None, None, None)
 
   // The strategy here is to use Some(value) to indicate that the copied CluProcessor
   // should use the provided value when the copy is made.  Use None to reuse the value
@@ -798,6 +799,10 @@ object CluProcessor {
     val os = new mutable.StringBuilder
     for (_ <- 0 until size) os.append(" ")
     os.toString()
+  }
+
+  def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] = {
+    seasonPathOpt.map(NumericEntityRecognizer(_))
   }
 }
 

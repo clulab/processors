@@ -243,7 +243,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val batchLoss = Expression.sum(batchLosses)
 
     // forward pass and stats
-    val batchLossAsFloat = batchLoss.value().toFloat
+    val batchLossAsFloat = batchLoss.value().toFloat()
 
     // backprop
     ComputationGraph.backward(batchLoss)

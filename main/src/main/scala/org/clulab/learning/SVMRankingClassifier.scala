@@ -49,7 +49,7 @@ class SVMRankingClassifier[F] (
   /** Keeps track of qids for the dump to evalFile */
   var qid:Int = 0
 
-  def train(dataset:RankingDataset[F], spans:Option[Iterable[(Int, Int)]] = None) {
+  def train(dataset:RankingDataset[F], spans:Option[Iterable[(Int, Int)]] = None): Unit = {
     val trainPath = workingDir + File.separator + trainFile
     val trainWriter = new PrintWriter(trainPath)
     val n = mkTrainFile(trainWriter, dataset, spans)
@@ -87,7 +87,7 @@ class SVMRankingClassifier[F] (
   }
 
 
-  def trainWithBagging(dataset:RankingDataset[F], numBags:Int, pw:PrintWriter) {
+  def trainWithBagging(dataset:RankingDataset[F], numBags:Int, pw:PrintWriter): Unit = {
     val avgWeights = Array.fill[Double](dataset.numFeatures+1)(0.0)
 
     for (i <- 0 until numBags) {
@@ -118,7 +118,7 @@ class SVMRankingClassifier[F] (
 
   }
 
-  def displayModel(pw:PrintWriter) {
+  def displayModel(pw:PrintWriter): Unit = {
     val weightSet = weights.get
     val lexicon = featureLexicon.get
     pw.println ("SVM Weights: ")
@@ -135,7 +135,7 @@ class SVMRankingClassifier[F] (
 
   }
 
-  def clipWeights(thresh:Double) {
+  def clipWeights(thresh:Double): Unit = {
     val weightsOrig = weightsOriginal.get
     val weightsClipped = new Array[Double](weightsOrig.size)
 
@@ -152,7 +152,7 @@ class SVMRankingClassifier[F] (
   }
 
   /** Removes features whose weight is lower than the weight of the reference feature * threshold */
-  def clipWeightsRelativeToOneFeature(thresh:Double, feature:F) {
+  def clipWeightsRelativeToOneFeature(thresh:Double, feature:F): Unit = {
     // To keep weights that are at least 0.10 of the IR score, for example.
     val weightsOrig = weightsOriginal.get
     val weightsClipped = new Array[Double](weightsOrig.size)
@@ -285,17 +285,17 @@ class SVMRankingClassifier[F] (
   }
 
   /** Opens the evaluation file, which contains datums in svm_rank format, for offline testing */
-  def openEvalFile() {
+  def openEvalFile(): Unit = {
     if(testFile == "") throw new RuntimeException("ERROR: testFile unspecified!")
     evalFile = Some(new PrintWriter(testFile))
   }
   /** Closes the evaluation file; evaluation is complete */
-  def closeEvalFile() {
+  def closeEvalFile(): Unit = {
     evalFile.foreach(_.close())
     logger.info("TESTING file saved as: " + testFile)
   }
   /** Increments the qid; for the offline evaluation */
-  def setQid(qid:Int) {
+  def setQid(qid:Int): Unit = {
     this.qid = qid
   }
 
@@ -329,12 +329,12 @@ class SVMRankingClassifier[F] (
     scores.toArray
   }
 
-  def saveTo(fileName:String) {
+  def saveTo(fileName:String): Unit = {
     Serializer.save(this, fileName)
   }
 
   /** Saves important info to this file for debug purposes */
-  def debug() {
+  def debug(): Unit = {
     if(debugFile.length == 0) return
     var features = new ArrayBuffer[(String, Int, Double)]
 

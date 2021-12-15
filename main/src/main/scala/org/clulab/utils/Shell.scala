@@ -23,7 +23,7 @@ abstract class Shell {
     new Menu("Welcome to the shell!", lineReader, mainMenuItems, defaultMenuItem)
   }
 
-  def shell() {
+  def shell(): Unit = {
     initialize()
     mkMenu().run()
   }

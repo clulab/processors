@@ -31,31 +31,31 @@ trait Processor {
   //   (2) It is more efficient during annotate() where all the possible operations are chained.
 
   /** Part of speech tagging; modifies the document in place. */
-  def tagPartsOfSpeech (doc:Document)
+  def tagPartsOfSpeech (doc:Document): Unit
 
   /** Lematization; modifies the document in place. */
-  def lemmatize (doc:Document)
+  def lemmatize (doc:Document): Unit
 
   /** Named Entity Recognition; modifies the document in place. */
-  def recognizeNamedEntities (doc:Document)
+  def recognizeNamedEntities (doc:Document): Unit
 
   /** Syntactic parsing; modifies the document in place. */
-  def parse (doc:Document)
+  def parse (doc:Document): Unit
 
   /** Semantic role labeling */
-  def srl (doc: Document)
+  def srl (doc: Document): Unit
 
   /** Shallow parsing; modifies the document in place. */
-  def chunking (doc:Document)
+  def chunking (doc:Document): Unit
 
   /** Coreference resolution; modifies the document in place. */
-  def resolveCoreference (doc:Document)
+  def resolveCoreference (doc:Document): Unit
 
   /** Discourse parsing; modifies the document in place. */
-  def discourse (doc:Document)
+  def discourse (doc:Document): Unit
 
   /** Relation extraction; modifies the document in place. */
-  def relationExtraction(doc:Document)
+  def relationExtraction(doc:Document): Unit
 
 
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */

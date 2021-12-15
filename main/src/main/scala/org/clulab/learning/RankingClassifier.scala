@@ -12,10 +12,10 @@ import java.io.PrintWriter
  * Date: 4/23/13
  */
 trait RankingClassifier[F] {
-  def train(dataset:RankingDataset[F], spans:Option[Iterable[(Int, Int)]] = None)
+  def train(dataset:RankingDataset[F], spans:Option[Iterable[(Int, Int)]] = None): Unit
 
   /** Displays the learned model in a human-readable format, for debug purposes */
-  def displayModel(pw:PrintWriter)
+  def displayModel(pw:PrintWriter): Unit
 
   /**
    * Returns scores that can be used for ranking for a group of datums, from the same query
@@ -37,7 +37,7 @@ trait RankingClassifier[F] {
   }
 
   /** Saves the current model to a file */
-  def saveTo(fileName:String)
+  def saveTo(fileName:String): Unit
 }
 
 object RankingClassifier {

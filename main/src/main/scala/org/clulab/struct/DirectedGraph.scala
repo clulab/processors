@@ -218,7 +218,7 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
 
   def hasNext:Boolean = node < graph.size
 
-  def next:(Int, Int, E) = {
+  def next(): (Int, Int, E) = {
     val edge = graph.getOutgoingEdges(node)(nodeEdgeOffset)
     val from = node
     if (nodeEdgeOffset < graph.getOutgoingEdges(node).length - 1) {
@@ -303,7 +303,7 @@ object DirectedGraph {
 
     val nodes = {
       val iterator = Range(0, size).iterator
-      Array.fill(size)(new Node(iterator.next))
+      Array.fill(size)(new Node(iterator.next()))
     }
 
     def visit(node: Node): Unit = {
