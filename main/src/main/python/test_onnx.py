@@ -56,8 +56,8 @@ if __name__ == '__main__':
                         ort_outs = ort_char.run(None, ort_inputs)
                         char_embs.append(ort_outs[0])
                     char_embs = np.stack(char_embs)
-                    embed_ids = np.array([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
-                    embeddings = constEmbeddings.emb(embed_ids)
+                    embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
+                    embeddings = constEmbeddings.emb(embed_ids).detach().cpu().numpy()
                     word_ids = np.array([w2i[word] if word in w2i else 0 for word in words])
 
                     dummy_input = (embeddings, word_ids, char_embs)
