@@ -1,4 +1,5 @@
-# Changes
+# 
++ **8.4.7** - Improved recognition of relative dates
 + **8.4.6** - Made the parsing of numeric entities more robust to broken texts (from PDF conversion)
 + **8.4.6** - Bug fix in the generation of enhanced semantic roles, again on broken texts
 + **8.4.5** - Odin can now operate over hybrid dependencies that combine semantic roles and syntax.
