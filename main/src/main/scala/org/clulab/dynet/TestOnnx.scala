@@ -15,6 +15,9 @@ import scala.util.parsing.json._
 import ai.onnxruntime.{OnnxTensor, OrtEnvironment, OrtSession}
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.time.LocalDateTime
+import java.time.Duration
+
 
 object TestOnnx extends App {
     val props = StringUtils.argsToProperties(args)
@@ -41,7 +44,7 @@ object TestOnnx extends App {
 
     println(session1.getOutputInfo)
     println(session2.getOutputInfo)
-
+    val start_time = LocalDateTime.now()
     for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val testSentences = taskManager.tasks(taskId).testSentences.get
@@ -91,5 +94,6 @@ object TestOnnx extends App {
             }
         }
     }
+    println(Duration.between(start_time, LocalDateTime.now()).getSeconds)
 
 }
