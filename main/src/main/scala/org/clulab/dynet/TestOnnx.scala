@@ -51,7 +51,7 @@ object TestOnnx extends App {
                     val goldLabels = as._2
 
                     val words = sentence.words
-                    var embeddings:Array[Array[Float]] = new Array[Long](words.length)
+                    var embeddings:Array[Array[Float]] = new Array[Array[Float]](words.length)
                     var wordIds:Array[Long] = new Array[Long](words.length)
                     var char_embs:Array[Array[Float]] = new Array[Array[Float]](words.length)
                     for(i <- words.indices){
@@ -69,20 +69,20 @@ object TestOnnx extends App {
                     input.put("words", word_tensor)
                     val char_tensor =  OnnxTensor.createTensor(ortEnvironment, char_embs)
                     input.put("chars", char_tensor)
-                    val emissionScores = session2.run(input)
+                    val emissionScores = session2.run(input).get(0).getValue.asInstanceOf[Array[Float]]
                     val labelIds = Utils.greedyPredict(emissionScores)
                     val preds = labelIds.map(i2t(_))
                     val sc = SeqScorer.f1(goldLabels, preds)
                     scoreCountsByLabel.incAll(sc)
                 }
             }
-        }
-        logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
-        logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
-        logger.info(s"Recall on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
-        logger.info(s"Micro F1 on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
-        for(label <- scoreCountsByLabel.labels) {
-            logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
+            logger.info(s"Accuracy on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
+            logger.info(s"Precision on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
+            logger.info(s"Recall on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
+            logger.info(s"Micro F1 on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
+            for(label <- scoreCountsByLabel.labels) {
+                logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
+            }
         }
     }
 
