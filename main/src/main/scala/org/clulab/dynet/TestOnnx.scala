@@ -75,8 +75,11 @@ object TestOnnx extends App {
                     if (p<=2){
                         println(words)
                         print(embeddings.map(_.mkString(" ")).mkString("\n"))
+                        println(" ")
                         println(wordIds.mkString(" "))
                         print(char_embs.map(_.mkString(" ")).mkString("\n"))
+                        println(" ")
+                        println(" ")
                         p += 1
                     }
                     
