@@ -29,7 +29,9 @@ object TestOnnx extends App {
     val jsonString = Source.fromFile("ner.json").getLines.mkString
     val parsed = JSON.parseFull(jsonString)
     val w2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("w2i").asInstanceOf[Map[String, Double]]
-    val c2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("c2i").asInstanceOf[Map[Char, Double]]
+    val c2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("c2i").asInstanceOf[Map[String, Double]]
+    val t2i = parsed.get.asInstanceOf[List[Any]](1).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("finalLayer").asInstanceOf[Map[String, Any]]("t2i").asInstanceOf[Map[String, Double]]
+    val i2t = for ((k,v) <- t2i) yield (v, k)
 
     val ortEnvironment = OrtEnvironment.getEnvironment
     val modelpath1 = "char.onnx"
@@ -77,12 +79,12 @@ object TestOnnx extends App {
                     scoreCountsByLabel.incAll(sc)
                 }
             }
-            logger.info(s"Accuracy on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
-            logger.info(s"Precision on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
-            logger.info(s"Recall on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
-            logger.info(s"Micro F1 on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
+            println(s"Accuracy on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
+            println(s"Precision on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
+            println(s"Recall on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
+            println(s"Micro F1 on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
             for(label <- scoreCountsByLabel.labels) {
-                logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
+                println(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
             }
         }
     }
