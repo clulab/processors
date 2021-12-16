@@ -74,9 +74,9 @@ object TestOnnx extends App {
                     }
                     if (p){
                         println(words)
-                        println(embeddings.mkString(" "))
+                        print(embeddings.map(_.mkString).mkString("\n"))
                         println(wordIds.mkString(" "))
-                        println(char_embs.mkString(" "))
+                        print(char_embs.map(_.mkString).mkString("\n"))
                         p = false
                     }
                     
