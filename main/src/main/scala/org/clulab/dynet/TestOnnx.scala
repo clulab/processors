@@ -39,6 +39,9 @@ object TestOnnx extends App {
     val modelpath2 = "model.onnx"
     val session2 = ortEnvironment.createSession(modelpath2, new OrtSession.SessionOptions)
 
+    println(session1.getOutputInfo)
+    println(session2.getOutputInfo)
+
     for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val testSentences = taskManager.tasks(taskId).testSentences.get
