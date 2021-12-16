@@ -134,7 +134,8 @@ if __name__ == '__main__':
                   output_names = ['output'], # the model's output names
                   dynamic_axes = {'embed' : {0 : 'sentence length'},
                                   'words' : {0 : 'sentence length'},
-                                  'chars' : {0 : 'sentence length'}})
+                                  'chars' : {0 : 'sentence length'},
+                                  'output': {0 : 'sentence length'}})
 
     onnx_model = onnx.load("model.onnx")
     onnx.checker.check_model(onnx_model)
