@@ -20,8 +20,7 @@ object GetWordEmbeddings extends App {
     val wordEmbeddingMap = WordEmbeddingMapPool.get("glove.840B.300d.10f", compact = true).get
     for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
-        val testSentences = taskManager.tasks(taskId).testSentences
-        val testSentences = taskManager.tasks(taskId).testSentences
+        val testSentences = taskManager.tasks(taskId).testSentences.get
         val taskNumber = taskId + 1
 
         if(testSentences.nonEmpty){
