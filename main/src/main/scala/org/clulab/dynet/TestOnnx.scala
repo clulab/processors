@@ -31,17 +31,17 @@ object GetWordEmbeddings extends App {
                 val sentence = as._1
                 val goldLabels = as._2
 
-                val sc = SeqScorer.f1(goldLabels, preds)
-                scoreCountsByLabel.incAll(sc)
+                // val sc = SeqScorer.f1(goldLabels, preds)
+                // scoreCountsByLabel.incAll(sc)
             }
         }
     }
-    logger.info(s"Accuracy on ${sentences.length} $name sentences: ${scoreCountsByLabel.accuracy()}")
-    logger.info(s"Precision on ${sentences.length} $name sentences: ${scoreCountsByLabel.precision()}")
-    logger.info(s"Recall on ${sentences.length} $name sentences: ${scoreCountsByLabel.recall()}")
-    logger.info(s"Micro F1 on ${sentences.length} $name sentences: ${scoreCountsByLabel.f1()}")
-    for(label <- scoreCountsByLabel.labels) {
-        logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
-    }
+    // logger.info(s"Accuracy on ${sentences.length} $name sentences: ${scoreCountsByLabel.accuracy()}")
+    // logger.info(s"Precision on ${sentences.length} $name sentences: ${scoreCountsByLabel.precision()}")
+    // logger.info(s"Recall on ${sentences.length} $name sentences: ${scoreCountsByLabel.recall()}")
+    // logger.info(s"Micro F1 on ${sentences.length} $name sentences: ${scoreCountsByLabel.f1()}")
+    // for(label <- scoreCountsByLabel.labels) {
+    //     logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
+    // }
 
 }
