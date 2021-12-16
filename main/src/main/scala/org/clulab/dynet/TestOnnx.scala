@@ -13,6 +13,7 @@ import scala.io.Source
 import scala.util.parsing.json._
 
 import ai.onnxruntime.{OnnxTensor, OrtEnvironment, OrtSession}
+import org.slf4j.{Logger, LoggerFactory}
 
 
 object TestOnnx extends App {
@@ -69,17 +70,17 @@ object TestOnnx extends App {
                     input.put("words", word_tensor)
                     val char_tensor =  OnnxTensor.createTensor(ortEnvironment, char_embs)
                     input.put("chars", char_tensor)
-                    val emissionScores = session2.run(input).get(0).getValue.asInstanceOf[Array[Float]]
+                    val emissionScores = session2.run(input).get(0).getValue.asInstanceOf[Array[Array[Float]]]
                     val labelIds = Utils.greedyPredict(emissionScores)
                     val preds = labelIds.map(i2t(_))
                     val sc = SeqScorer.f1(goldLabels, preds)
                     scoreCountsByLabel.incAll(sc)
                 }
             }
-            logger.info(s"Accuracy on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
-            logger.info(s"Precision on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
-            logger.info(s"Recall on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
-            logger.info(s"Micro F1 on ${sentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
+            logger.info(s"Accuracy on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
+            logger.info(s"Precision on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")
+            logger.info(s"Recall on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.recall()}")
+            logger.info(s"Micro F1 on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.f1()}")
             for(label <- scoreCountsByLabel.labels) {
                 logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
             }
