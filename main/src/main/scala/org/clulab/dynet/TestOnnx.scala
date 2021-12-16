@@ -45,6 +45,7 @@ object TestOnnx extends App {
     println(session1.getOutputInfo)
     println(session2.getOutputInfo)
     val start_time = LocalDateTime.now()
+    val p = true
     for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val testSentences = taskManager.tasks(taskId).testSentences.get
@@ -71,6 +72,14 @@ object TestOnnx extends App {
                         char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i.getOrElse(c.toString, 0).asInstanceOf[Number].longValue).toArray))
                         char_embs(i) = session1.run(char_input).get(0).getValue.asInstanceOf[Array[Float]]
                     }
+                    if p{
+                        println(words)
+                        println(embeddings)
+                        println(wordIds)
+                        println(char_embs)
+                        p = false
+                    }
+                    
                     val input = new java.util.HashMap[String, OnnxTensor]()
                     val emb_tensor =  OnnxTensor.createTensor(ortEnvironment, embeddings)
                     input.put("embed", emb_tensor)
