@@ -2,6 +2,7 @@ from pytorch2onnx import *
 import json
 import numpy as np
 from pytorch.seqScorer import *
+import time
 
 if __name__ == '__main__':
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     ort_char = onnxruntime.InferenceSession("char.onnx")
 
     scoreCountsByLabel = ScoreCountsByLabel()
-
+    start_time = time.time()
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
         sentences = taskManager.tasks[taskId].testSentences
@@ -78,5 +79,6 @@ if __name__ == '__main__':
     print (f"Micro F1 : {scoreCountsByLabel.f1()}")
     for label in scoreCountsByLabel.labels():
         print (f"\tP/R/F1 for label {label} ({scoreCountsByLabel.map[label].gold}): {scoreCountsByLabel.precision(label)} / {scoreCountsByLabel.recall(label)} / {scoreCountsByLabel.f1(label)}")
-
+    duration = time.time() - start_time
+    print (duration)
             
