@@ -45,7 +45,7 @@ object TestOnnx extends App {
     println(session1.getOutputInfo)
     println(session2.getOutputInfo)
     val start_time = LocalDateTime.now()
-    val p = true
+    var p = true
     for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val testSentences = taskManager.tasks(taskId).testSentences.get
