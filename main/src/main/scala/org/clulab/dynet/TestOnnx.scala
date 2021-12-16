@@ -60,9 +60,9 @@ object TestOnnx extends App {
                     for(i <- words.indices){
                         val word = words(i)
                         embeddings(i) = wordEmbeddingMap.getOrElseUnknown(word).toArray
-                        wordIds(i) = w2i.getOrElse(word, 0).get.toLong
+                        wordIds(i) = w2i(word).toLong
                         val char_input = new java.util.HashMap[String, OnnxTensor]()
-                        char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i.getOrElse(c.toString, 0).get.toLong).toArray))
+                        char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i(c.toString).toLong).toArray))
                         char_embs(i) = session1.run(char_input).get(0).getValue.asInstanceOf[Array[Float]]
                     }
                     val input = new java.util.HashMap[String, OnnxTensor]()
