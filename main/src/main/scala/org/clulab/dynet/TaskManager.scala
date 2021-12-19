@@ -93,12 +93,16 @@ class TaskManager(config:Config) extends Configured {
     val weight:Float =
       getArgFloat(s"mtl.task$taskNumber.weight", Some(1.0f))
 
-    new Task(taskNumber - 1, taskName, train, dev, test, taskType, shardsPerEpoch, weight)
+    val negativesFactor = 
+      getArgFloat(s"mtl.task$taskNumber.negativesFactor", Some(0f))  
+
+    new Task(taskNumber - 1, taskName, train, dev, test, taskType, shardsPerEpoch, weight, negativesFactor)
   }
 
   def parseType(inf: String): Int = inf match {
     case "basic" => TaskManager.TYPE_BASIC
     case "dual" => TaskManager.TYPE_DUAL
+    case "graph" => TaskManager.TYPE_GRAPH
     case _ => throw new RuntimeException(s"ERROR: unknown task type $inf!")
   }
 
@@ -177,7 +181,8 @@ class Task(
   val testFileName:Option[String],
   val taskType:Int,
   val shardsPerEpoch:Int,
-  val taskWeight:Float) {
+  val taskWeight:Float,
+  val negativesFactor:Float) {
   logger.debug(s"Reading task $taskNumber ($taskName)...")
   val trainSentences:Array[Array[Row]] = ColumnReader.readColumns(trainFileName)
   val devSentences:Option[Array[Array[Row]]] =
@@ -189,11 +194,13 @@ class Task(
 
   val isBasic:Boolean = taskType == TaskManager.TYPE_BASIC
   val isDual:Boolean = taskType == TaskManager.TYPE_DUAL
+  val isGraph:Boolean = taskType == TaskManager.TYPE_GRAPH
 
   def prettyType: String =
     taskType match {
       case TaskManager.TYPE_BASIC => "basic"
       case TaskManager.TYPE_DUAL => "dual"
+      case TaskManager.TYPE_GRAPH => "graph"
       case _ => "unknown"
     }
 
@@ -233,5 +240,6 @@ object TaskManager {
 
   val TYPE_BASIC = 0
   val TYPE_DUAL = 1
+  val TYPE_GRAPH = 2
 
 }

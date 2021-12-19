@@ -364,7 +364,6 @@ object Layers {
            sentence: AnnotatedSentence,
            goldLabels: IndexedSeq[String]): Expression = {
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-
     val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
