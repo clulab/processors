@@ -150,7 +150,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             val sentenceLabels = as._2
             val sentenceLoss = 
               if(isGraphTask) {
-                TODO: make gold DG here
+                val goldGraph = annotatedSentence.mkGoldGraph(sentenceLabels)
                 Layers.graphLoss(model, taskId, annotatedSentence, goldGraph)
               } else {
                 Layers.loss(model, taskId, annotatedSentence, sentenceLabels)

@@ -10,6 +10,9 @@ import org.clulab.sequences.Row
 import scala.collection.mutable.ArrayBuffer
 
 import MetalRowReader._
+import org.clulab.struct.DirectedGraph
+import scala.collection.mutable.ListBuffer
+import org.clulab.struct.Edge
 
 case class AnnotatedSentence(words: IndexedSeq[String],
                              posTags: Option[IndexedSeq[String]] = None,
@@ -17,6 +20,33 @@ case class AnnotatedSentence(words: IndexedSeq[String],
                              headPositions: Option[IndexedSeq[Int]] = None) {
   def indices: Range = words.indices
   def size: Int = words.size
+
+  /** Constructs a graph with edges connecting modifiers with their heads using the given labels */
+  def mkGoldGraph(labels: IndexedSeq[String]): DirectedGraph[String] = {
+    assert(headPositions.isDefined)
+    val edges = new ListBuffer[Edge[String]]
+    for(i <- indices) {
+      val modifier = i
+      val head = headPositions.get(i)
+      val label = labels(i)
+
+      // head could be root  (marked as -1); skip them in that case
+      if(head >= 0) {
+        edges += Edge(head, modifier, label)
+      }
+    }
+
+    val dg = new DirectedGraph(edges.toList)
+
+    if(false){
+      println("Annotated sentence:")
+      println(words.mkString(" "))
+      println(headPositions.get.zipWithIndex.zip(labels).mkString(" "))
+      println("Gold graph:")
+      println(dg)
+    }
+    dg
+  }
 }
 
 trait RowReader {

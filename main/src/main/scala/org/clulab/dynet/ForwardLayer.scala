@@ -8,6 +8,7 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 
 import scala.collection.mutable.ArrayBuffer
+import org.clulab.struct.DirectedGraph
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
@@ -108,6 +109,16 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
   override def inDim: Int = if(spans.nonEmpty) spanLength(spans.get) else inputSize
 
   override def outDim: Int = t2i.size
+
+  override def graphLoss(predictedGraph: DirectedGraph[Expression], goldGraph: DirectedGraph[String]): Expression = {
+    throw new RuntimeException("ERROR: graphLoss not supported for this final layer!")
+  }
+
+  override def graphForward(inputExpressions: ExpressionVector,                   
+                            doDropout: Boolean): DirectedGraph[Expression] = {
+    throw new RuntimeException("ERROR: graphForward not supported for this final layer!")
+  }
+
 }
 
 object ForwardLayer {

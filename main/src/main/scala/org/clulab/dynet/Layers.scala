@@ -8,6 +8,7 @@ import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
+import org.clulab.struct.DirectedGraph
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -74,6 +75,25 @@ class Layers (val initialLayer: Option[InitialLayer],
     states
   }
 
+  protected def graphForward(sentence: AnnotatedSentence,
+                             constEmbeddings: ConstEmbeddingParameters,
+                            doDropout: Boolean): DirectedGraph[Expression] = {
+    if(initialLayer.isEmpty) {
+      throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
+    }
+
+    var states = initialLayer.get.forward(sentence, constEmbeddings, doDropout)
+
+    for (i <- intermediateLayers.indices) {
+      states = intermediateLayers(i).forward(states, doDropout)
+    }
+
+    assert(finalLayer.nonEmpty)
+    
+    val predGraph = finalLayer.get.graphForward(states, doDropout)
+    predGraph
+  }
+
   protected def forwardFrom(inStates: ExpressionVector,
                             headPositions: Option[IndexedSeq[Int]],
                             doDropout: Boolean): ExpressionVector = {
@@ -92,6 +112,24 @@ class Layers (val initialLayer: Option[InitialLayer],
     }
 
     states
+  }
+
+  protected def graphForwardFrom(inStates: ExpressionVector,
+                                 headPositions: Option[IndexedSeq[Int]],
+                                 doDropout: Boolean): DirectedGraph[Expression] = {
+    if(initialLayer.nonEmpty) {
+      throw new RuntimeException(s"ERROR: you can't call graphForwardFrom() on a Layers object that has an initial layer: $toString!")
+    }
+
+    var states = inStates
+
+    for (i <- intermediateLayers.indices) {
+      states = intermediateLayers(i).forward(states, doDropout)
+    }
+
+    assert(finalLayer.nonEmpty)
+    val predGraph = finalLayer.get.graphForward(states, doDropout)
+    predGraph
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
@@ -260,6 +298,33 @@ object Layers {
     states
   }
 
+  private def graphForwardForTask(layers: IndexedSeq[Layers],
+                                  taskId: Int,
+                                  sentence: AnnotatedSentence,
+                                  constEmbeddings: ConstEmbeddingParameters,
+                                  doDropout: Boolean): DirectedGraph[Expression] = {
+    //
+    // make sure this code is:
+    //   (a) called inside a synchronized block, and
+    //   (b) called after the computational graph is renewed (see predict below for correct usage)
+    //
+
+    val states = {
+      // layers(0) contains the shared layers
+      if (layers(0).nonEmpty) {
+        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout)
+        layers(taskId + 1).graphForwardFrom(sharedStates, sentence.headPositions, doDropout)
+      }
+
+      // no shared layer
+      else {
+        layers(taskId + 1).graphForward(sentence, constEmbeddings, doDropout)
+      }
+    }
+
+    states
+  }
+
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
               sentence: AnnotatedSentence,
@@ -366,5 +431,15 @@ object Layers {
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
     val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
+  }
+
+  def graphLoss(layers: IndexedSeq[Layers],
+                taskId: Int,
+                sentence: AnnotatedSentence,
+                goldGraph: DirectedGraph[String]): Expression = {
+    val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+    val predictedGraph = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
+    layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph)
+    null
   }
 }

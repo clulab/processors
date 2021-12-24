@@ -7,6 +7,7 @@ import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStrin
 import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
+import org.clulab.struct.DirectedGraph
 
 class GreedyForwardLayer (parameters:ParameterCollection,
                           inputSize: Int,
@@ -58,6 +59,15 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     }
 
     labelsWithScores
+  }
+
+  override def graphLoss(predictedGraph: DirectedGraph[Expression], goldGraph: DirectedGraph[String]): Expression = {
+    throw new RuntimeException("ERROR: graphLoss not supported here!")
+  }
+
+  override def graphForward(inputExpressions: ExpressionVector,                   
+                            doDropout: Boolean): DirectedGraph[Expression] = {
+    throw new RuntimeException("ERROR: graphForward not supported here!")
   }
 }
 
