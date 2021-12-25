@@ -162,7 +162,7 @@ object Layers {
             parameters: ParameterCollection,
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
-            isDual: Boolean,
+            taskType: Int,
             providedInputSize: Option[Int]): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
@@ -197,7 +197,7 @@ object Layers {
         }
 
         ForwardLayer.initialize(config, paramPrefix + ".final", parameters,
-          labelCounterOpt.get, isDual, inputSize.get)
+          labelCounterOpt.get, taskType, inputSize.get)
       } else {
         None
       }

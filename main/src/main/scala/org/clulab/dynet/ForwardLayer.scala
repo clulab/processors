@@ -13,7 +13,7 @@ import scala.util.Random
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
-                             val isDual: Boolean,
+                             val taskType: Int,
                              val t2i: Map[String, Int],
                              val i2t: Array[String],
                              val H: Parameter,
@@ -45,7 +45,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     val pRoot = Expression.parameter(rootParam)
     val emissionScores = new ExpressionVector()
 
-    if(! isDual) {
+    if(TaskManager.isBasic(taskType)) {
       //
       // basic task
       //
@@ -102,7 +102,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     }
 
     val ss = Expression.concatenate(argExp, predExp)
-    
+
     var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
     applyNonlinearity(l1)
@@ -148,7 +148,7 @@ object ForwardLayer {
   val TYPE_GREEDY_STRING = "greedy"
   val TYPE_VITERBI_STRING = "viterbi"
 
-  val DEFAULT_IS_DUAL = 0
+  val DEFAULT_BASIC = 0
 
   def load(parameters: ParameterCollection,
            x2iIterator: BufferedIterator[String]): ForwardLayer = {
@@ -200,7 +200,7 @@ object ForwardLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
-                 isDual: Boolean,
+                 taskType: Int,
                  inputSize: Int): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
@@ -231,12 +231,13 @@ object ForwardLayer {
         Some(spans)
       }
 
+    val needsDoubleLength = ! TaskManager.isBasic(taskType)
     val actualInputSize =
       if(span.nonEmpty) {
         val len = spanLength(span.get)
-        if(isDual) 2 * len else len
+        if(needsDoubleLength) 2 * len else len
       } else {
-        if(isDual) 2 * inputSize else inputSize
+        if(needsDoubleLength) 2 * inputSize else inputSize
       }
     // println(s"ACTUAL INPUT SIZE: $actualInputSize")
 
@@ -246,13 +247,13 @@ object ForwardLayer {
     inferenceType match {
       case TYPE_GREEDY_STRING =>
         Some(new GreedyForwardLayer(parameters,
-          inputSize, isDual,
+          inputSize, taskType,
           t2i, i2t, H, rootParam,
           span, nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
-          inputSize, isDual,
+          inputSize, taskType,
           t2i, i2t, H, T, rootParam,
           span, nonlin, dropoutProb)
         layer.initializeTransitions()

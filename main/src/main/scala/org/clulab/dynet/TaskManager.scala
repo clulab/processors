@@ -192,9 +192,9 @@ class Task(
     if(testFileName.isDefined) Some(ColumnReader.readColumns(testFileName.get))
     else None
 
-  val isBasic:Boolean = taskType == TaskManager.TYPE_BASIC
-  val isDual:Boolean = taskType == TaskManager.TYPE_DUAL
-  val isGraph:Boolean = taskType == TaskManager.TYPE_GRAPH
+  val isBasic:Boolean = TaskManager.isBasic(taskType)
+  val isDual:Boolean = TaskManager.isDual(taskType)
+  val isGraph:Boolean = TaskManager.isGraph(taskType)
 
   def prettyType: String =
     taskType match {
@@ -241,5 +241,9 @@ object TaskManager {
   val TYPE_BASIC = 0
   val TYPE_DUAL = 1
   val TYPE_GRAPH = 2
+
+  def isBasic(taskType: Int):Boolean = taskType == TaskManager.TYPE_BASIC
+  def isDual(taskType: Int):Boolean = taskType == TaskManager.TYPE_DUAL
+  def isGraph(taskType: Int):Boolean = taskType == TaskManager.TYPE_GRAPH
 
 }

@@ -45,7 +45,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val layersPerTask: Array[Layers] = new Array[Layers](taskManager.taskCount + 1)
     layersPerTask(0) =
       Layers(taskManager, "mtl.layers", parameters, taskWords(0),
-        None, isDual = false, providedInputSize = None)
+        None, TaskManager.TYPE_BASIC, providedInputSize = None)
 
     val inputSize = layersPerTask(0).outDim
 
@@ -53,7 +53,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       layersPerTask(i + 1) =
         Layers(taskManager, s"mtl.task${i + 1}.layers",
           parameters, taskWords(i + 1), Some(taskLabels(i + 1)),
-          isDual = taskManager.tasks(i).isDual, inputSize)
+          taskManager.tasks(i).taskType, inputSize)
     }
     for(i <- layersPerTask.indices) {
       logger.debug(s"Summary of layersPerTask($i):")
