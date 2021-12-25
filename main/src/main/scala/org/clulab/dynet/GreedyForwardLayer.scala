@@ -87,19 +87,16 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     for(modifier <- inputExpressions.indices) {
       // the positive example
       val head = headPositions(modifier)
-      edgeMap += (head, modifier, runForward(modifier, head, inputExpressions))
+      edgeMap += (head, modifier, runForwardDual(modifier, head, inputExpressions, true))
 
       // up to negFactor negative examples
-      val negs = mkRandomRange(-1, inputExpressions.size, negativesFactor.toInt, Set(head), graphRand) // need to include -1 for root
+      // need to include -1 in the range, for root
+      val negs = mkRandomRange(-1, inputExpressions.size, negativesFactor.toInt, Set(head), graphRand) 
       for(neg <- negs) {
-        edgeMap += (neg, modifier, runForward(modifier, neg, inputExpressions))
+        edgeMap += (neg, modifier, runForwardDual(modifier, neg, inputExpressions, true))
       }
     }                                  
     edgeMap                                      
-  }
-
-  private def runForward(modifier: Int, head: Int, inputExpressions: ExpressionVector): Expression = {
-    null
   }
 
   private def graphForwardTest(inputExpressions: ExpressionVector): EdgeMap[Expression] = {

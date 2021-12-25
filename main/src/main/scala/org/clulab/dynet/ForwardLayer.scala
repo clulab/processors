@@ -61,11 +61,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         var l1 = Utils.expressionDropout(pH * argExp, dropoutProb, doDropout)
 
         // the last nonlinearity
-        l1 = nonlinearity match {
-          case NONLIN_TANH => Expression.tanh(l1)
-          case NONLIN_RELU => Expression.rectify(l1)
-          case _ => l1
-        }
+        l1 = applyNonlinearity(l1)
 
         emissionScores.add(l1)
       }
@@ -82,31 +78,42 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
       for(i <- inputExpressions.indices) {
         val headPosition = headPositionsOpt.get(i)
-
-        val argExp = Utils.expressionDropout(pickSpan(inputExpressions(i)), dropoutProb, doDropout)
-        val predExp = if(headPosition >= 0) {
-          // there is an explicit head in the sentence
-          Utils.expressionDropout(pickSpan(inputExpressions(headPosition)), dropoutProb, doDropout)
-        } else {
-          // the head is root. we used a dedicated Parameter for root
-          Utils.expressionDropout(pickSpan(pRoot), dropoutProb, doDropout)
-        }
-
-        val ss = Expression.concatenate(argExp, predExp)
-
-        var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
-
-        l1 = nonlinearity match {
-          case NONLIN_TANH => Expression.tanh(l1)
-          case NONLIN_RELU => Expression.rectify(l1)
-          case _ => l1 // nothing to do otherwise
-        }
-
-        emissionScores.add(l1)
+        emissionScores.add(runForwardDual(i, headPosition, inputExpressions, doDropout))        
       }
     }
 
     emissionScores
+  }
+
+  protected def runForwardDual(modifier: Int, 
+                               head: Int, 
+                               inputExpressions: ExpressionVector,
+                               doDropout: Boolean): Expression = {
+    val pH = Expression.parameter(H)
+    val pRoot = Expression.parameter(rootParam)
+
+    val argExp = Utils.expressionDropout(pickSpan(inputExpressions(modifier)), dropoutProb, doDropout)
+    val predExp = if(head >= 0) {
+      // there is an explicit head in the sentence
+      Utils.expressionDropout(pickSpan(inputExpressions(head)), dropoutProb, doDropout)
+    } else {
+      // the head is root. we used a dedicated Parameter for root
+      Utils.expressionDropout(pickSpan(pRoot), dropoutProb, doDropout)
+    }
+
+    val ss = Expression.concatenate(argExp, predExp)
+    
+    var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+
+    applyNonlinearity(l1)
+  }
+
+  protected def applyNonlinearity(e: Expression): Expression = {
+    nonlinearity match {
+      case NONLIN_TANH => Expression.tanh(e)
+      case NONLIN_RELU => Expression.rectify(e)
+      case _ => e // nothing to do otherwise
+    }
   }
 
   override def inDim: Int = if(spans.nonEmpty) spanLength(spans.get) else inputSize
