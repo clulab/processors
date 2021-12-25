@@ -8,7 +8,7 @@ import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 
 import scala.collection.mutable.ArrayBuffer
-import org.clulab.struct.DirectedGraph
+import org.clulab.struct.EdgeMap
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
@@ -110,12 +110,14 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
   override def outDim: Int = t2i.size
 
-  override def graphLoss(predictedGraph: DirectedGraph[Expression], goldGraph: DirectedGraph[String]): Expression = {
+  override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression = {
     throw new RuntimeException("ERROR: graphLoss not supported for this final layer!")
   }
 
-  override def graphForward(inputExpressions: ExpressionVector,                   
-                            doDropout: Boolean): DirectedGraph[Expression] = {
+  override def graphForward(inputExpressions: ExpressionVector, 
+                            headPositionsOpt: Option[IndexedSeq[Int]],  
+                            negativesFactor: Float,                 
+                            doDropout: Boolean): EdgeMap[Expression] = {
     throw new RuntimeException("ERROR: graphForward not supported for this final layer!")
   }
 

@@ -7,7 +7,7 @@ import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStrin
 import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
-import org.clulab.struct.DirectedGraph
+import org.clulab.struct.EdgeMap
 
 class GreedyForwardLayer (parameters:ParameterCollection,
                           inputSize: Int,
@@ -61,13 +61,33 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     labelsWithScores
   }
 
-  override def graphLoss(predictedGraph: DirectedGraph[Expression], goldGraph: DirectedGraph[String]): Expression = {
+  override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression = {
     throw new RuntimeException("ERROR: graphLoss not supported here!")
   }
 
-  override def graphForward(inputExpressions: ExpressionVector,                   
-                            doDropout: Boolean): DirectedGraph[Expression] = {
-    throw new RuntimeException("ERROR: graphForward not supported here!")
+  override def graphForward(inputExpressions: ExpressionVector, 
+                            headPositionsOpt: Option[IndexedSeq[Int]], 
+                            negativesFactor: Float,                  
+                            doDropout: Boolean): EdgeMap[Expression] = {
+    if(doDropout) {
+      assert(headPositionsOpt.nonEmpty)
+      graphForwardTrain(inputExpressions, headPositionsOpt.get, negativesFactor)
+    } else {
+      graphForwardTest(inputExpressions)
+    }                              
+  }
+
+  private def graphForwardTrain(inputExpressions: ExpressionVector, 
+                                headPositions: IndexedSeq[Int], 
+                                negativesFactor: Float): EdgeMap[Expression] = {
+    assert(inputExpressions.size == headPositions.size)
+
+    null                                      
+  }
+
+  private def graphForwardTest(inputExpressions: ExpressionVector): EdgeMap[Expression] = {
+    assert(false) // TODO
+    null
   }
 }
 

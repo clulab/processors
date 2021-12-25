@@ -8,7 +8,7 @@ import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
-import org.clulab.struct.DirectedGraph
+import org.clulab.struct.EdgeMap
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -77,7 +77,8 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForward(sentence: AnnotatedSentence,
                              constEmbeddings: ConstEmbeddingParameters,
-                            doDropout: Boolean): DirectedGraph[Expression] = {
+                             negativesFactor: Float, 
+                             doDropout: Boolean): EdgeMap[Expression] = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
@@ -90,7 +91,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
     assert(finalLayer.nonEmpty)
     
-    val predGraph = finalLayer.get.graphForward(states, doDropout)
+    val predGraph = finalLayer.get.graphForward(states, sentence.headPositions, negativesFactor, doDropout)
     predGraph
   }
 
@@ -116,7 +117,8 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForwardFrom(inStates: ExpressionVector,
                                  headPositions: Option[IndexedSeq[Int]],
-                                 doDropout: Boolean): DirectedGraph[Expression] = {
+                                 negativesFactor: Float, 
+                                 doDropout: Boolean): EdgeMap[Expression] = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call graphForwardFrom() on a Layers object that has an initial layer: $toString!")
     }
@@ -128,7 +130,7 @@ class Layers (val initialLayer: Option[InitialLayer],
     }
 
     assert(finalLayer.nonEmpty)
-    val predGraph = finalLayer.get.graphForward(states, doDropout)
+    val predGraph = finalLayer.get.graphForward(states, headPositions, negativesFactor, doDropout)
     predGraph
   }
 
@@ -300,9 +302,10 @@ object Layers {
 
   private def graphForwardForTask(layers: IndexedSeq[Layers],
                                   taskId: Int,
+                                  negativesFactor: Float, 
                                   sentence: AnnotatedSentence,
                                   constEmbeddings: ConstEmbeddingParameters,
-                                  doDropout: Boolean): DirectedGraph[Expression] = {
+                                  doDropout: Boolean): EdgeMap[Expression] = {
     //
     // make sure this code is:
     //   (a) called inside a synchronized block, and
@@ -313,12 +316,12 @@ object Layers {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
         val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout)
-        layers(taskId + 1).graphForwardFrom(sharedStates, sentence.headPositions, doDropout)
+        layers(taskId + 1).graphForwardFrom(sharedStates, sentence.headPositions, negativesFactor, doDropout)
       }
 
       // no shared layer
       else {
-        layers(taskId + 1).graphForward(sentence, constEmbeddings, doDropout)
+        layers(taskId + 1).graphForward(sentence, constEmbeddings, negativesFactor, doDropout)
       }
     }
 
@@ -435,10 +438,11 @@ object Layers {
 
   def graphLoss(layers: IndexedSeq[Layers],
                 taskId: Int,
+                negativesFactor: Float, 
                 sentence: AnnotatedSentence,
-                goldGraph: DirectedGraph[String]): Expression = {
+                goldGraph: EdgeMap[String]): Expression = {
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-    val predictedGraph = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
+    val predictedGraph = graphForwardForTask(layers, taskId, negativesFactor, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph)
     null
   }

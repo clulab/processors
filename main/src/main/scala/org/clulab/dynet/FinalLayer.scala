@@ -1,22 +1,24 @@
 package org.clulab.dynet
 
 import edu.cmu.dynet.{Expression, ExpressionVector}
-import org.clulab.struct.DirectedGraph
+import org.clulab.struct.EdgeMap
 
 trait FinalLayer extends Saveable {
   def forward(inputExpressions: ExpressionVector,
               headPositionsOpt: Option[IndexedSeq[Int]],
               doDropout: Boolean): ExpressionVector
 
-  def graphForward(inputExpressions: ExpressionVector,                   
-                   doDropout: Boolean): DirectedGraph[Expression]
+  def graphForward(inputExpressions: ExpressionVector, 
+                   headPositionsOpt: Option[IndexedSeq[Int]],  
+                   negativesFactor: Float,                 
+                   doDropout: Boolean): EdgeMap[Expression]
 
   def inDim: Int
   def outDim: Int
 
   def loss(emissionScoresAsExpression: ExpressionVector, goldLabels: IndexedSeq[String]): Expression
 
-  def graphLoss(predictedGraph: DirectedGraph[Expression], goldGraph: DirectedGraph[String]): Expression
+  def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression
 
   def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
 

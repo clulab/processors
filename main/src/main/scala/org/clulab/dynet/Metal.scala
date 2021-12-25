@@ -136,7 +136,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
+
         val isGraphTask = taskManager.tasks(taskId).isGraph
+        val negativesFactor = taskManager.tasks(taskId).negativesFactor
 
         sentCount += 1
 
@@ -151,7 +153,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             val sentenceLoss = 
               if(isGraphTask) {
                 val goldGraph = annotatedSentence.mkGoldGraph(sentenceLabels)
-                Layers.graphLoss(model, taskId, annotatedSentence, goldGraph)
+                Layers.graphLoss(model, taskId, negativesFactor, annotatedSentence, goldGraph)
               } else {
                 Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
               }
