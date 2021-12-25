@@ -209,6 +209,7 @@ object ForwardLayer {
 
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
+    // println("t2i: " + t2i.toString())
 
     val spanConfig = config.getArgString(paramPrefix + ".span", Some(""))
     val span =

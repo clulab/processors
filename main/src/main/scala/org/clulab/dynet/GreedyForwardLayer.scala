@@ -81,8 +81,12 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                                 headPositions: IndexedSeq[Int], 
                                 negativesFactor: Float): EdgeMap[Expression] = {
     assert(inputExpressions.size == headPositions.size)
-
-    null                                      
+    val edgeMap = new EdgeMap[Expression]
+    for(modifier <- inputExpressions.indices) {
+      val head = headPositions(modifier)
+      
+    }                                  
+    edgeMap                                      
   }
 
   private def graphForwardTest(inputExpressions: ExpressionVector): EdgeMap[Expression] = {
