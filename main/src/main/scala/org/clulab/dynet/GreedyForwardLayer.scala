@@ -9,6 +9,8 @@ import ForwardLayer._
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.EdgeMap
 
+import org.clulab.utils.MathUtils._
+
 class GreedyForwardLayer (parameters:ParameterCollection,
                           inputSize: Int,
                           isDual: Boolean,
@@ -83,10 +85,21 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     assert(inputExpressions.size == headPositions.size)
     val edgeMap = new EdgeMap[Expression]
     for(modifier <- inputExpressions.indices) {
+      // the positive example
       val head = headPositions(modifier)
-      
+      edgeMap += (head, modifier, runForward(modifier, head, inputExpressions))
+
+      // up to negFactor negative examples
+      val negs = mkRandomRange(-1, inputExpressions.size, negativesFactor.toInt, Set(head), graphRand) // need to include -1 for root
+      for(neg <- negs) {
+        edgeMap += (neg, modifier, runForward(modifier, neg, inputExpressions))
+      }
     }                                  
     edgeMap                                      
+  }
+
+  private def runForward(modifier: Int, head: Int, inputExpressions: ExpressionVector): Expression = {
+    null
   }
 
   private def graphForwardTest(inputExpressions: ExpressionVector): EdgeMap[Expression] = {

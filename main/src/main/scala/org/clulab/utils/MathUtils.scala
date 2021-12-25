@@ -190,6 +190,16 @@ object MathUtils {
     l
   }
 
+  def mkRandomRange(start: Int, 
+                    end: Int, 
+                    howMany: Int, 
+                    exclude: Set[Int], 
+                    rand:util.Random): Array[Int] = {
+    val origRange = (start until end).toArray
+    val randRange = randomize(origRange, rand).filterNot(e => exclude.contains(e))
+    randRange.slice(0, math.min(randRange.length, howMany))
+  }
+
   // Manifest: http://stackoverflow.com/questions/6085085/why-cant-i-create-an-array-of-generic-type
   def nBest[T: Manifest](scoringFunction: T=>Double)(xs: Iterable[T], howMany:Int): List[
     (T, Double)] = {

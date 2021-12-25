@@ -9,6 +9,7 @@ import org.clulab.utils.Configured
 
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.EdgeMap
+import scala.util.Random
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
@@ -34,6 +35,8 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       Expression.concatenate(vs)
     }
   }
+
+  val graphRand = new Random(Utils.RANDOM_SEED)
 
   def forward(inputExpressions: ExpressionVector,
               headPositionsOpt: Option[IndexedSeq[Int]],
