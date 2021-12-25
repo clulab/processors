@@ -15,7 +15,14 @@ class EdgeMap[E] (private val edgeMap: mutable.HashMap[(Int, Int), E] = new muta
     add(source, destination, value)
   }
 
-  def apply(source: Int, destination: Int): E = {
-    edgeMap((source, destination))
+  def apply(sourceDest: (Int, Int)): E = {
+    edgeMap(sourceDest)
   }
+
+  def contains(sourceDest: (Int, Int)): Boolean = {
+    edgeMap.contains(sourceDest)
+  }
+
+  def keySet:scala.collection.Set[(Int, Int)] = edgeMap.keySet
+  def keys: Iterable[(Int, Int)] = edgeMap.keys
 }

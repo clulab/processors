@@ -1,8 +1,9 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import edu.cmu.dynet._
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
+import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
@@ -63,8 +64,32 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     labelsWithScores
   }
 
+  /**
+   * Cross entropy loss for all edges in the predicted graph
+   * @param predictedGraph Graph predicted through inference
+   * @param goldGraph The correct graph, containing only positive edges
+   * @return Sum of all cross-entropy losses, for all edges in the predicted graph
+   */
   override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression = {
-    throw new RuntimeException("ERROR: graphLoss not supported here!")
+    val goldLosses = new ExpressionVector()
+
+    // one cross-entropy loss for each edge in the predicted graph
+    for(key <- predictedGraph.keys) {
+      val head = key._1
+      val modifier = key._2
+      val predScores = predictedGraph(key)
+
+      val goldLabel: String = if(goldGraph.contains(key)) {
+        goldGraph(key)
+      } else {
+        Utils.STOP_TAG // we use STOP_TAG to indicate that an edge should *not* exist between this head and modifier
+      }
+      val goldLabelId = t2i(goldLabel)
+
+      goldLosses.add(pickNegLogSoftmax(predScores, goldLabelId))
+    }
+
+    sum(goldLosses)
   }
 
   override def graphForward(inputExpressions: ExpressionVector, 

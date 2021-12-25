@@ -19,7 +19,7 @@ import Metal._
 
 /**
  * Multi-task learning (MeTaL) for sequence modeling
- * Designed to model any sequence task (e.g., POS tagging, NER), and SRL
+ * Designed to model any sequence task (e.g., POS tagging, NER), parsing, and SRL
  * @author Mihai
  */
 class Metal(val taskManagerOpt: Option[TaskManager],

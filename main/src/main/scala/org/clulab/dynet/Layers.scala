@@ -444,6 +444,5 @@ object Layers {
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
     val predictedGraph = graphForwardForTask(layers, taskId, negativesFactor, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph)
-    null
   }
 }
