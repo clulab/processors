@@ -131,6 +131,10 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     throw new RuntimeException("ERROR: graphForward not supported for this final layer!")
   }
 
+  override def graphInference(emissionScores: EdgeMap[Array[Float]], sentenceSize: Int): EdgeMap[String] = {
+    throw new RuntimeException("ERROR: graphInference not supported for this final layer!")
+  }
+
 }
 
 object ForwardLayer {

@@ -11,8 +11,8 @@ class EdgeMap[E] (private val edgeMap: mutable.HashMap[(Int, Int), E] = new muta
     edgeMap += (source, destination) -> value
   }
 
-  def += (source: Int, destination: Int, value: E): Unit = {
-    add(source, destination, value)
+  def += (sourceDest: (Int, Int), value: E): Unit = {
+    add(sourceDest._1, sourceDest._2, value)
   }
 
   def apply(sourceDest: (Int, Int)): E = {

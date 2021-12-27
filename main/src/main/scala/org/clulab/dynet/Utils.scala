@@ -16,6 +16,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
+import org.clulab.struct.EdgeMap
 
 /**
  * Utility methods used by DyNet applications
@@ -490,6 +491,15 @@ object Utils {
       lattice += probs
     }
     lattice.toArray
+  }
+
+  def graphEmissionScoresToArrays(expressions: EdgeMap[Expression]): EdgeMap[Array[Float]] = {
+    val graph = new EdgeMap[Array[Float]]()
+    for (key <- expressions.keys) {
+      val probs = expressions(key).value().toVector().toArray
+      graph += (key, probs)
+    }
+    graph
   }
 
   def emissionScoresToArraysAllTasks(expressions: Array[ExpressionVector]): Array[Array[Array[Float]]] = {

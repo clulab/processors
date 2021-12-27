@@ -22,5 +22,7 @@ trait FinalLayer extends Saveable {
 
   def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
 
+  def graphInference(emissionScores: EdgeMap[Array[Float]], sentenceSize: Int): EdgeMap[String]
+
   def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]]
 }

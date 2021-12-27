@@ -332,7 +332,17 @@ object Layers {
                    taskId: Int,
                    sentence: AnnotatedSentence,
                    constEmbeddings: ConstEmbeddingParameters): EdgeMap[String] = {
-    null // TODO                    
+    val predGraph = {
+      // DyNet's computation graph is a static variable, so this block must be synchronized.
+      Synchronizer.withComputationGraph("Layers.graphPredict()") {
+        val states = graphForwardForTask(layers, taskId, -1, sentence, constEmbeddings, doDropout = false)
+        val emissionScores = Utils.graphEmissionScoresToArrays(states)
+        val predGraph = layers(taskId + 1).finalLayer.get.graphInference(emissionScores, sentence.size)
+        predGraph
+      }
+    }    
+
+    predGraph                 
   }
 
   def predict(layers: IndexedSeq[Layers],
