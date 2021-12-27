@@ -328,6 +328,13 @@ object Layers {
     states
   }
 
+  def graphPredict(layers: IndexedSeq[Layers],
+                   taskId: Int,
+                   sentence: AnnotatedSentence,
+                   constEmbeddings: ConstEmbeddingParameters): EdgeMap[String] = {
+    null // TODO                    
+  }
+
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
               sentence: AnnotatedSentence,

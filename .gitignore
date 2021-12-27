@@ -31,5 +31,4 @@ model.ser
 test.dat
 train.dat
 predictions
-dynet
 

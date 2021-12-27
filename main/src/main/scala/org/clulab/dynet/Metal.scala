@@ -207,8 +207,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
         val devSentences = taskManager.tasks(taskId).devSentences
+        val taskType = taskManager.tasks(taskId).taskType
         if(devSentences.nonEmpty) {
-          val (acc, prec, rec, f1) = evaluate(taskId, taskName, devSentences.get, epoch)
+          val (acc, prec, rec, f1) = evaluate(taskId, taskName, taskType, devSentences.get, epoch)
           totalAcc += acc
           totalPrec += prec
           totalRec += rec
@@ -261,12 +262,19 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     batchLossAsFloat
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]], epoch:Int): (Double, Double, Double, Double) = {
-    evaluate(taskId, taskName, sentences, "development", epoch)
+  def evaluate(taskId:Int, 
+               taskName:String, 
+               taskType:Int, 
+               sentences:Array[Array[Row]], 
+               epoch:Int): (Double, Double, Double, Double) = {
+    evaluate(taskId, taskName, taskType, sentences, "development", epoch)
   }
 
-  def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): (Double, Double, Double, Double) = {
-    evaluate(taskId, taskName, sentences, "testing", -1)
+  def evaluate(taskId:Int, 
+               taskName:String, 
+               taskType:Int,
+               sentences:Array[Array[Row]]): (Double, Double, Double, Double) = {
+    evaluate(taskId, taskName, taskType, sentences, "testing", -1)
   }
 
   /**
@@ -275,12 +283,14 @@ class Metal(val taskManagerOpt: Option[TaskManager],
    */
   def evaluate(taskId:Int,
                taskName:String,
+               taskType:Int, 
                sentences:Array[Array[Row]],
                name:String, epoch:Int): (Double, Double, Double, Double) = {
 
     val scoreCountsByLabel = new ScoreCountsByLabel
     val taskNumber = taskId + 1
     var sentCount = 0
+    val isGraphTask = TaskManager.isGraph(taskType)
 
     logger.debug(s"Started evaluation on the $name dataset for task $taskNumber ($taskName)...")
 
@@ -300,12 +310,21 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val goldLabels = as._2
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
 
-        val sc = SeqScorer.f1(goldLabels, preds)
-        scoreCountsByLabel.incAll(sc)
+        val score = 
+          if(! isGraphTask) {
+            val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+            val sc = SeqScorer.f1(goldLabels, preds)
+            printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+            sc
+          } else {
+            val goldGraph = sentence.mkGoldGraph(goldLabels)
+            val predGraph = Layers.graphPredict(model, taskId, sentence, constEmbeddings)
+            val sc = GraphScorer.f1(goldGraph, predGraph)
+            sc
+          }
 
-        printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        scoreCountsByLabel.incAll(score)
       }
     }
 
@@ -360,9 +379,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     // check final performance on the test dataset
     for(taskId <- 0 until taskManager.taskCount) {
       val taskName = taskManager.tasks(taskId).taskName
+      val taskType = taskManager.tasks(taskId).taskType
       val testSentences = taskManager.tasks(taskId).testSentences
       if(testSentences.nonEmpty) {
-        evaluate(taskId, taskName, testSentences.get)
+        evaluate(taskId, taskName, taskType, testSentences.get)
       }
     }
   }

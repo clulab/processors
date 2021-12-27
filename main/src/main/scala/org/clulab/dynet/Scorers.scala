@@ -3,6 +3,7 @@ package org.clulab.dynet
 import org.clulab.utils.MathUtils.round
 
 import scala.collection.mutable
+import org.clulab.struct.EdgeMap
 
 /**
  * Scores the labels assigned to a sequence of words
@@ -35,6 +36,52 @@ object SeqScorer {
           scoreCountsByLabel.incCorrect()
           scoreCountsByLabel.incCorrect(e._1)
         }
+      }
+    }
+
+    scoreCountsByLabel
+  }
+}
+
+object GraphScorer {
+  def f1(golds: EdgeMap[String], preds: EdgeMap[String]): ScoreCountsByLabel = {
+    val scoreCountsByLabel = new ScoreCountsByLabel
+    for(key <- preds.keys) {
+      val predLabel = preds(key)
+
+      // for accuracy
+      scoreCountsByLabel.total += 1
+      // for precision
+      scoreCountsByLabel.incPredicted()
+      scoreCountsByLabel.incPredicted(predLabel)
+
+      if(golds.contains(key)) {
+        val goldLabel = golds(key)
+
+        // for accuracy
+        if(predLabel == goldLabel) {
+          scoreCountsByLabel.correct += 1
+        }
+
+        // for precision and recall
+        if(predLabel == goldLabel) {
+          scoreCountsByLabel.incCorrect()
+          scoreCountsByLabel.incCorrect(predLabel)
+        } else {
+          scoreCountsByLabel.incGold()
+          scoreCountsByLabel.incGold(goldLabel)
+        }        
+      }
+    }
+
+    // we need to count gold dependencies that don't exist in the predicted graph (for recall)
+    for(key <- golds.keys) {
+      if(! preds.contains(key)) { // the edges that exist in preds are counted above
+        val goldLabel = golds(key)
+
+        // for recall
+        scoreCountsByLabel.incGold()
+        scoreCountsByLabel.incGold(goldLabel)
       }
     }
 
