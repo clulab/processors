@@ -120,3 +120,15 @@ rules:
     pattern: |
       [word=/^(1\d\d\d|2\d\d\d)(:|\/|\-)(0?[1-9]|1[012])$/]
 
+# Rule for "month of X"
+  - name: date-month-of
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was the month of January"
+    action: mkDateMention
+    pattern: |
+      /(?i)^month$/ /(?i)^of$/ @month:PossibleMonth (","? @year:PossibleYear)?
+
+
+
