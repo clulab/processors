@@ -16,7 +16,7 @@ import java.util.Properties
 import FastNLPProcessor._
 import org.clulab.processors.clu.tokenizer.TokenizerStep
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Fast NLP tools
@@ -38,14 +38,14 @@ class FastNLPProcessor(
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
            withRelationExtraction:Boolean = false,
-           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) {
+           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) = {
     this(None, internStrings, withChunks, withRelationExtraction, withDiscourse)
   }
 
   /** Stanford's NN dependency parser */
   lazy val stanfordDepParser: DependencyParser = fetchStanfordParser()
 
-  override def parse(doc:Document) {
+  override def parse(doc:Document): Unit = {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
     if (doc.sentences.head.tags.isEmpty)
@@ -56,7 +56,7 @@ class FastNLPProcessor(
     parseWithStanford(doc, annotation.get)
   }
 
-  private def parseWithStanford(doc:Document, annotation:Annotation) {
+  private def parseWithStanford(doc:Document, annotation:Annotation): Unit = {
     val sas = annotation.get(classOf[SentencesAnnotation]).asScala
     var offset = 0
     for (sa <- sas) {

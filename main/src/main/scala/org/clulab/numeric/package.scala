@@ -7,11 +7,11 @@ import org.clulab.struct.Interval
 
 package object numeric {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
-    val mentionsBySentence = mentions.groupBy(_.sentence).mapValues(_.sortBy(_.start)).toMap.withDefaultValue(Nil)
+    val mentionsBySentence = mentions.groupBy(_.sentence).map { case (k, v) => k -> v.sortBy(_.start) }.withDefaultValue(Nil)
     for ((s, i) <- doc.sentences.zipWithIndex) {
       println(s"sentence #$i")
       println(s.getSentenceText)
-      println("Tokens: " + (s.words.indices, s.words, s.tags.get).zipped.mkString(", "))
+      println("Tokens: " + s.words.indices.zip(s.words).zip(s.tags.get).mkString(", "))
       s.tags foreach (x => println("Tags: " + x.mkString(", ")))
       s.entities foreach (x => println("Entities: " + x.mkString(", ")))
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))

@@ -140,7 +140,7 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
   def makeCompositeVectorWeighted(text: Iterable[String], weights:Iterable[Float]): OldCompactWordEmbeddingMap.ArrayType = {
     val total = new OldCompactWordEmbeddingMap.ArrayType(columns)
 
-    (text, weights).zipped.foreach { (word, weight) =>
+    text.zip(weights).foreach { case (word, weight) =>
       map.get(word).foreach { index => addWeighted(total, index, weight) }
     }
 

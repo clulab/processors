@@ -1,7 +1,8 @@
 package org.clulab.odin.impl
 
+import org.clulab.scala.LazyList
 import java.util.{ Collection, Map => JMap }
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class Taxonomy(parents: Map[String, String]) {
 
@@ -16,8 +17,8 @@ class Taxonomy(parents: Map[String, String]) {
     lazyHypernymsFor(hyponym) contains hypernym
 
   // builds a sequence of hypernyms lazily
-  def lazyHypernymsFor(term: String): Stream[String] = term match {
-    case ROOT => Stream.empty
+  def lazyHypernymsFor(term: String): LazyList[String] = term match {
+    case ROOT => LazyList.empty
     case node if this.contains(node) => node #:: lazyHypernymsFor(parents(node))
     case node => throw new OdinException(s"term '$node' not in taxonomy")
   }

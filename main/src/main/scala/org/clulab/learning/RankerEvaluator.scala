@@ -69,7 +69,7 @@ object RankerEvaluator {
 
     for(qid <- qids) {
       for(a <- qid.answers) {
-        println(a.gold + " " + a.score)
+        println(a.gold.toString + " " + a.score)
       }
       println()
     }

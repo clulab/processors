@@ -14,7 +14,7 @@ import org.clulab.struct.DirectedGraphEdgeIterator
  * Date: 3/28/13
  */
 object ProcessorExample {
-  def main(args:Array[String]) {
+  def main(args:Array[String]): Unit = {
     // create the processor
     val proc:Processor = new CoreNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
@@ -40,6 +40,6 @@ object ProcessorExample {
     println("SERIALIZED DOC:\n" + out)
   }
 
-  def printDoc(doc:Document) { doc.prettyPrint(new PrintWriter(System.out)) }
+  def printDoc(doc:Document): Unit = { doc.prettyPrint(new PrintWriter(System.out)) }
 
 }

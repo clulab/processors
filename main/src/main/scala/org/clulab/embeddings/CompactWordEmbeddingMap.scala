@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 
+import org.clulab.scala.BufferedIterator
 import org.clulab.utils.ArrayView
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
@@ -130,7 +131,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Array[Float] = {
     val total = new Array[Float](columns) // automatically initialized to zero
 
-    (text, weights).zipped.foreach { (word, weight) =>
+    text.zip(weights).foreach { case (word, weight) =>
       // This therefore skips the unknown words, which may not be the right strategy.
       map.get(word).foreach { index => addWeighted(total, index, weight) }
     }

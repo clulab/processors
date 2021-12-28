@@ -23,7 +23,7 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
       logger.debug(s"Parsing file $f...")
       try {
         val doc = parseFile(f)
-        val ofn = outDir + "/" + f.getName.substring(0, f.getName.length - 4) + ".conllu"
+        val ofn = outDir.toString + "/" + f.getName.substring(0, f.getName.length - 4) + ".conllu"
         val pw = new PrintWriter(ofn)
         toCoNLLU(doc, pw)
         pw.close()
@@ -37,7 +37,7 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
     }
   }
 
-  def toCoNLLU(doc:Document, pw:PrintWriter) {
+  def toCoNLLU(doc:Document, pw:PrintWriter): Unit = {
     var sentenceCount = 0
     for(sent <- doc.sentences) {
       sentenceCount += 1

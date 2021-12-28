@@ -16,7 +16,7 @@ class State(val lookUpTable: MentionLUT) {
 
   /** Returns all mentions contained in the state for which keep == true */
   def allMentions: Vector[Mention] =
-    lookUpTable.values.toStream.flatten.distinct.filter(_.keep).toVector
+    lookUpTable.values.view.flatten.filter(_.keep).toVector.distinct
 
   /** Checks if a mention is already contained in the state */
   def contains(m: Mention): Boolean =

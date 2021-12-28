@@ -14,7 +14,7 @@ class CoreNLPDocument(sentences: Array[Sentence]) extends Document(sentences) {
 
   var annotation:Option[Annotation] = None
 
-  override def clear() {
+  override def clear(): Unit = {
     //println("Clearing state from document.")
     annotation = None
   }

@@ -125,7 +125,7 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
         parameters.weight_label = weight_labels.toArray
         parameters.weight = weight_values.toArray
       }
-      case None => Unit
+      case None => ()
     }
 
     // ... and train

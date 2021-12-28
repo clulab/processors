@@ -27,6 +27,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
         // if anchorName is not "trigger" then return a RelationMention
         new RelationGraphPattern(anchorName, anchorLabel, arguments, config)
+      case _ => ???
     }
 
   def argPattern: Parser[ArgumentPattern] =
@@ -70,6 +71,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
       // better errors
       case name ~ ":" ~ label ~ Some( _ ~ "}?" ) ~ "=" ~ pat =>
         throw OdinCompileException("? used to modify a ranged quantifier for a graph pattern argument.  Use an exact value (ex. {3} for 3)")
+      case _ => ???
     }
 
   def disjunctiveGraphPattern: Parser[GraphPatternNode] =

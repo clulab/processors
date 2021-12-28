@@ -12,7 +12,7 @@ class ProcessorJsonShell extends ProcessorShell {
     printWriter.flush()
   }
 
-  override def mkMenu(): Menu = super.mkMenu.withGreeting("Welcome to the ProcessorJsonShell!")
+  override def mkMenu(): Menu = super.mkMenu().withGreeting("Welcome to the ProcessorJsonShell!")
 }
 
 object ProcessorJsonShell extends App {
