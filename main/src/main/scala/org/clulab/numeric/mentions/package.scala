@@ -1,6 +1,8 @@
 package org.clulab.numeric
 
 import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
+import de.jollyday.{Holiday, HolidayManager}
+import collection.JavaConverters._
 
 import java.util.regex.Pattern
 
@@ -609,6 +611,41 @@ package object mentions {
       throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
   }
 
+  def toDateMentionHoliday(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val holiday = getArgWords("holiday", m)
+      if(holiday.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument holiday in mention ${m.raw.mkString(" ")}!")
+
+      val year = getArgWords("year", m) match {
+        case Some(y) => Some(y)
+        case _ => None
+      }
+
+      val dayMonthOpt = getHolidayNorm(holiday.get, year)
+      val (day, month) = dayMonthOpt match {
+        case Some((dayString, monthString)) =>
+          (Some(Seq(dayString)), Some(Seq(monthString)))
+        case _ => throw new RuntimeException(s"ERROR: mention ${m.raw.mkString(" ")} is not a holiday!")
+      }
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        day, month, year
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
   // this can be more relaxed since the correct date format was previously checked by the Odin grammar
   private val DATE_DD_DD_DD: Pattern = Pattern.compile("(\\d+)\\D(\\d+)\\D(\\d+)")
 
@@ -697,6 +734,25 @@ package object mentions {
 
     if (wordsOpt.isEmpty) None
     else seasonNormalizer.norm(wordsOpt.get)
+  }
+
+  private def getHolidayNorm(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
+    val holidayManager = HolidayManager.getInstance()
+
+    val holiday = holidaySeq.mkString("_").toLowerCase()
+    val year = yearOpt match {
+      case Some(yearSeq) => yearSeq.mkString.toInt
+      case _ => java.time.LocalDate.now.getYear
+    }
+    val holidays: Array[Holiday] = holidayManager.getHolidays(year).asScala.toArray
+    val dayMonthOpt = holidays.filter(_.getPropertiesKey.toLowerCase == holiday) match {
+      case Array(h) =>
+        val date = h.getDate
+        Some((date.getDayOfMonth.toString, date.getMonthValue.toString))
+      case _ => None
+
+    }
+    dayMonthOpt
   }
 
   private def getArgWords(argName: String, m:Mention): Option[Seq[String]] =

@@ -47,3 +47,11 @@ rules:
     type: token
     pattern: |
       [entity=/B-SEASON/] [entity=/I-SEASON/]*
+
+  # possible holiday
+  - name: holiday-name
+    label: PossibleHoliday
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [entity=/B-HOLIDAY/] [entity=/I-HOLIDAY/]*
