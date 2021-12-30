@@ -29,7 +29,7 @@ case class AnnotatedSentence(words: IndexedSeq[String],
     for(i <- indices) {
       val modifier = i
       val head = headPositions.get(i)
-      val label = labels(i)
+      val label = Utils.START_TAG // labels(i)
       edges.add(head, modifier, label)
     }
     edges
