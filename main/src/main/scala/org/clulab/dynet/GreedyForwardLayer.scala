@@ -74,6 +74,17 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression = {
     val goldLosses = new ExpressionVector()
 
+    /*
+    println("Gold graph:")
+    for(key <- goldGraph.keys.toList.sortBy(_._2)) {
+      println("\t" + key + " " + goldGraph(key))
+    }
+    println("Pred graph:")
+    for(key <- predictedGraph.keys.toList.sortBy(_._2)) {
+      println("\t" + key)
+    }
+    */
+
     // one cross-entropy loss for each edge in the predicted graph
     for(key <- predictedGraph.keys) {
       val head = key._1
@@ -89,6 +100,9 @@ class GreedyForwardLayer (parameters:ParameterCollection,
 
       goldLosses.add(pickNegLogSoftmax(predScores, goldLabelId))
     }
+
+    //println("Press any key to continue: ")
+    //scala.io.StdIn.readChar()
 
     sum(goldLosses)
   }
@@ -117,7 +131,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
 
       // up to negFactor negative examples
       // need to include -1 in the range, for root
-      val negs = mkRandomRange(-1, inputExpressions.size, negativesFactor.toInt, Set(head), graphRand) 
+      val negs = mkRandomRange(-1, inputExpressions.size, negativesFactor.toInt, Set(head, modifier), graphRand)
       for(neg <- negs) {
         edgeMap += ((neg, modifier), runForwardDual(modifier, neg, inputExpressions, true))
       }
