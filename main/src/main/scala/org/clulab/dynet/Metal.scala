@@ -321,6 +321,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             val goldGraph = sentence.mkGoldGraph(goldLabels)
             val predGraph = Layers.graphPredict(model, taskId, sentence, constEmbeddings)
             val sc = GraphScorer.f1(goldGraph, predGraph)
+            printCoNLLGraphOutput(pw, sentence.words, goldGraph, predGraph)
             sc
           }
 

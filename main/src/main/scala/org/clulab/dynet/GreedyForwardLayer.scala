@@ -164,7 +164,15 @@ class GreedyForwardLayer (parameters:ParameterCollection,
           predictions += Tuple3(head, labelId, scores(labelId))
         }
       }
-      val topPrediction = predictions.sortBy(- _._3).head
+      val sortedPredictions = predictions.sortBy(- _._3)
+      /*
+      println(s"Prediction for word #$modifier:")
+      for(p <- sortedPredictions) 
+        if(p._2 == t2i(Utils.START_TAG)) 
+          println(s"\t${p._1} ${p._2} ${p._3}")
+      */
+      
+      val topPrediction = sortedPredictions.head
       val predHead = topPrediction._1
       val predLabel = i2t(topPrediction._2)
       predGraph += ((predHead, modifier), predLabel)

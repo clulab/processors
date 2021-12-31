@@ -46,43 +46,33 @@ object SeqScorer {
 object GraphScorer {
   def f1(golds: EdgeMap[String], preds: EdgeMap[String]): ScoreCountsByLabel = {
     val scoreCountsByLabel = new ScoreCountsByLabel
+
     for(key <- preds.keys) {
       val predLabel = preds(key)
 
-      // for accuracy
-      scoreCountsByLabel.total += 1
-      // for precision
-      scoreCountsByLabel.incPredicted()
-      scoreCountsByLabel.incPredicted(predLabel)
-
-      if(golds.contains(key)) {
-        val goldLabel = golds(key)
-
+      if(predLabel != Utils.STOP_TAG) {
         // for accuracy
-        if(predLabel == goldLabel) {
-          scoreCountsByLabel.correct += 1
-        }
+        scoreCountsByLabel.total += 1
+        // for precision
+        scoreCountsByLabel.incPredicted()
+        scoreCountsByLabel.incPredicted(predLabel)
 
-        // for precision and recall
-        if(predLabel == goldLabel) {
+        if(golds.contains(key) && golds(key) == predLabel) {          
+          // for accuracy
+          scoreCountsByLabel.correct += 1
+        
+          // for precision and recall
           scoreCountsByLabel.incCorrect()
           scoreCountsByLabel.incCorrect(predLabel)
-        } else {
-          scoreCountsByLabel.incGold()
-          scoreCountsByLabel.incGold(goldLabel)
-        }        
+        } 
       }
     }
 
-    // we need to count gold dependencies that don't exist in the predicted graph (for recall)
+    // for recall
     for(key <- golds.keys) {
-      if(! preds.contains(key)) { // the edges that exist in preds are counted above
-        val goldLabel = golds(key)
-
-        // for recall
-        scoreCountsByLabel.incGold()
-        scoreCountsByLabel.incGold(goldLabel)
-      }
+      val goldLabel = golds(key)
+      scoreCountsByLabel.incGold()
+      scoreCountsByLabel.incGold(goldLabel)
     }
 
     scoreCountsByLabel

@@ -236,6 +236,31 @@ object Utils {
     ids
   }
 
+  def printCoNLLGraphOutput(pw: PrintWriter,
+                            words: IndexedSeq[String],
+                            goldGraph: EdgeMap[String],
+                            predGraph: EdgeMap[String]): Unit = {
+    val predEdges = new Array[(Int, String)](words.size)
+    val goldEdges = new Array[(Int, String)](words.size)
+
+    for(i <- words.indices) {
+      for(head <- -1 until words.size) {
+        val key = Tuple2(head, i)
+        if(predGraph.contains(key)) {
+          predEdges(i) = Tuple2(head, predGraph(key))
+        }
+        if(goldGraph.contains(key)) {
+          goldEdges(i) = Tuple2(head, goldGraph(key))
+        }
+      }
+    }    
+
+    for(i <- words.indices) {
+      pw.println(i + " " + words(i) + " " + goldEdges(i) + " " + predEdges(i))
+    }  
+    pw.println()                       
+  }
+
   def printCoNLLOutput(pw: PrintWriter,
                        words: IndexedSeq[String],
                        golds: IndexedSeq[String],
