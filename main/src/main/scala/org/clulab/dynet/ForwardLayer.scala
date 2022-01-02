@@ -10,6 +10,7 @@ import org.clulab.utils.Configured
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.struct.EdgeMap
 import scala.util.Random
+import edu.cmu.dynet.LookupParameter
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
@@ -18,6 +19,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val i2t: Array[String],
                              val H: Parameter,
                              val rootParam: Parameter,
+                             val positionLookupParameters: LookupParameter, 
                              val spans: Option[Seq[(Int, Int)]],
                              val nonlinearity: Int,
                              val dropoutProb: Float)
@@ -85,6 +87,21 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     emissionScores
   }
 
+  protected def mkRelativePositionEmbedding(modifier: Int, head: Int): Expression = {
+    val dist = 
+      if(head == -1) { // root
+        0
+      } else { // head is an actual token
+        //println(s" head $head modifier $modifier")
+        val fullDist = head - modifier
+        if(fullDist < -50) -50 
+        else if(fullDist > 50) 50
+        else fullDist
+      } + 50
+    //println(s"Finding embedding for position $dist")
+    Expression.lookup(positionLookupParameters, dist)
+  }
+
   protected def runForwardDual(modifier: Int, 
                                head: Int, 
                                inputExpressions: ExpressionVector,
@@ -101,7 +118,9 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       Utils.expressionDropout(pickSpan(pRoot), dropoutProb, doDropout)
     }
 
-    val ss = Expression.concatenate(argExp, predExp)
+    val posEmbed = mkRelativePositionEmbedding(modifier, head)
+
+    val ss = Expression.concatenate(argExp, predExp, posEmbed)
 
     var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
@@ -241,24 +260,25 @@ object ForwardLayer {
         val len = spanLength(span.get)
         if(needsDoubleLength) 2 * len else len
       } else {
-        if(needsDoubleLength) 2 * inputSize else inputSize
+        if(needsDoubleLength) (2 * inputSize + 32) else inputSize // TODO: implement properly
       }
     // println(s"ACTUAL INPUT SIZE: $actualInputSize")
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
+    val positionLookupParameters = parameters.addLookupParameters(101, Dim(32))
 
     inferenceType match {
       case TYPE_GREEDY_STRING =>
         Some(new GreedyForwardLayer(parameters,
           inputSize, taskType,
-          t2i, i2t, H, rootParam,
+          t2i, i2t, H, rootParam, positionLookupParameters, 
           span, nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
           inputSize, taskType,
-          t2i, i2t, H, T, rootParam,
+          t2i, i2t, H, T, rootParam, positionLookupParameters, 
           span, nonlin, dropoutProb)
         layer.initializeTransitions()
         Some(layer)

@@ -20,10 +20,11 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           i2t: Array[String],
                           H: Parameter,
                           rootParam: Parameter,
+                          positionLookupParameters: LookupParameter, 
                           span: Option[Seq[(Int, Int)]],
                           nonlinearity: Int,
                           dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, taskType, t2i, i2t, H, rootParam, span, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, taskType, t2i, i2t, H, rootParam, positionLookupParameters, span, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -155,7 +156,29 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   override def graphInference(emissionScores: EdgeMap[Array[Float]], sentenceSize: Int): EdgeMap[String] = {
     val predGraph = new EdgeMap[String]
     val noEdgeId = t2i(Utils.STOP_TAG)
+    var rootNode = -1
+
+    //
+    // gotta make sure we have 1 root
+    //
+    val rootPredictions = new ArrayBuffer[(Int, Int, Int, Float)] // modifier, head, label, score
     for(modifier <- 0 until sentenceSize) {
+      val scores = emissionScores((-1, modifier))
+      for(labelId <- scores.indices if labelId != noEdgeId) {
+        rootPredictions += Tuple4(modifier, -1, labelId, scores(labelId))
+      }
+    }
+    val sortedRootPredictions = rootPredictions.sortBy(- _._4)
+    val topPrediction = sortedRootPredictions.head
+    rootNode = topPrediction._1
+    val predLabel = i2t(topPrediction._3)
+    predGraph += ((-1, rootNode), predLabel)
+    assert(rootNode != -1)
+
+    //
+    // assign a head for all tokens that are not linked to root
+    //
+    for(modifier <- 0 until sentenceSize if modifier != rootNode) {
       val predictions = new ArrayBuffer[(Int, Int, Float)] // head, label, score
       // head could be root, i.e., -1
       for(head <- -1 until sentenceSize if head != modifier && emissionScores.contains((head, modifier))) { 
@@ -169,7 +192,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
       println(s"Prediction for word #$modifier:")
       for(p <- sortedPredictions) 
         if(p._2 == t2i(Utils.START_TAG)) 
-          println(s"\t${p._1} ${p._2} ${p._3}")
+          println(s"\thead ${p._1} label ${p._2} score ${p._3}")
       */
       
       val topPrediction = sortedPredictions.head
@@ -177,6 +200,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
       val predLabel = i2t(topPrediction._2)
       predGraph += ((predHead, modifier), predLabel)
     }
+
     predGraph
   }
 }
@@ -211,14 +235,15 @@ object GreedyForwardLayer {
         val len = ForwardLayer.spanLength(span.get)
         if(needsDoubleLength) 2 * len else len
       } else {
-        if(needsDoubleLength) 2 * inputSize else inputSize
+        if(needsDoubleLength) (2 * inputSize + 32) else inputSize
       }
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
+    val positionLookupParameters = parameters.addLookupParameters(101, Dim(32))
 
     new GreedyForwardLayer(parameters,
-      inputSize, taskType, t2i, i2t, H, rootParam,
+      inputSize, taskType, t2i, i2t, H, rootParam, positionLookupParameters, 
       span, nonlinearity, dropoutProb)
   }
 }
