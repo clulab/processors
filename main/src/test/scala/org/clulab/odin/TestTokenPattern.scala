@@ -78,8 +78,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (0),
-      'end (3)
+      Symbol("start")(0),
+      Symbol("end")(3)
     )
   }
 
@@ -88,8 +88,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (0),
-      'end (10)
+      Symbol("start")(0),
+      Symbol("end")(10)
     )
   }
 
@@ -98,8 +98,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (0),
-      'end (3)
+      Symbol("start")(0),
+      Symbol("end")(3)
     )
   }
 
@@ -108,8 +108,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (0),
-      'end (10)
+      Symbol("start")(0),
+      Symbol("end")(10)
     )
   }
 
@@ -118,8 +118,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (1),
-      'end (2)
+      Symbol("start")(1),
+      Symbol("end")(2)
     )
   }
 
@@ -128,12 +128,12 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (2)
     results(0).interval should have (
-      'start (1),
-      'end (2)
+      Symbol("start")(1),
+      Symbol("end")(2)
     )
     results(1).interval should have (
-      'start (2),
-      'end (3)
+      Symbol("start")(2),
+      Symbol("end")(3)
     )
   }
 
@@ -146,13 +146,13 @@ class TestTokenPattern extends FlatSpec with Matchers {
   it should "not match with positive lookbehind that goes beyond sentence start" in {
     val p = TokenPattern.compile("(?<=x) a b c")
     val results = p.findAllIn(0, doc)
-    results should be ('empty)
+    results should be (Symbol("empty"))
   }
 
   it should "not match with negative lookbehind" in {
     val p = TokenPattern.compile("(?<!a) b")
     val results = p.findAllIn(0, doc)
-    results should be ('empty)
+    results should be (Symbol("empty"))
   }
 
   it should "match with positive lookahead" in {
@@ -160,15 +160,15 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (1),
-      'end (2)
+      Symbol("start")(1),
+      Symbol("end")(2)
     )
   }
 
   it should "not match with negative lookahead" in {
     val p = TokenPattern.compile("b (?!c)")
     val results = p.findAllIn(0, doc)
-    results should be ('empty)
+    results shouldBe empty
   }
 
   // a b c d e f g h i c
@@ -191,16 +191,16 @@ class TestTokenPattern extends FlatSpec with Matchers {
     r.arguments("args") should have size (2)
     val Seq(a1, a2) = r.arguments("args").sorted
     a1.tokenInterval should have (
-      'start (3),
-      'end (5)
+      Symbol("start")(3),
+      Symbol("end")(5)
     )
     a2.tokenInterval should have (
-      'start (6),
-      'end (8)
+      Symbol("start") (6),
+      Symbol("end")(8)
     )
     r.tokenInterval should have (
-      'start (1),
-      'end (9)
+      Symbol("start")(1),
+      Symbol("end")(9)
     )
   }
 
@@ -222,20 +222,20 @@ class TestTokenPattern extends FlatSpec with Matchers {
     r.arguments("args") should have size (2)
     val Seq(a1, a2) = r.arguments("args").sorted
     r.asInstanceOf[EventMention].trigger.tokenInterval should have (
-      'start (5),
-      'end (6)
+      Symbol("start")(5),
+      Symbol("end")(6)
     )
     a1.tokenInterval should have (
-      'start (3),
-      'end (5)
+      Symbol("start")(3),
+      Symbol("end")(5)
     )
     a2.tokenInterval should have (
-      'start (6),
-      'end (8)
+      Symbol("start")(6),
+      Symbol("end")(8)
     )
     r.tokenInterval should have (
-      'start (1),
-      'end (9)
+      Symbol("start")(1),
+      Symbol("end")(9)
     )
   }
 
@@ -244,8 +244,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (4),
-      'end (5)
+      Symbol("start")(4),
+      Symbol("end")(5)
     )
   }
 
@@ -254,8 +254,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (5),
-      'end (6)
+      Symbol("start")(5),
+      Symbol("end")(6)
     )
   }
 
@@ -264,8 +264,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (2),
-      'end (3)
+      Symbol("start")(2),
+      Symbol("end")(3)
     )
   }
 
@@ -305,8 +305,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc5, state)
     results should have size (1)
     results.head.interval should have (
-      'start (0),
-      'end (11)
+      Symbol("start")(0),
+      Symbol("end")(11)
     )
   }
 
@@ -321,16 +321,16 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc5, state)
     results should have size (3)
     results(0).interval should have (
-      'start (0),
-      'end (7)
+      Symbol("start")(0),
+      Symbol("end")(7)
     )
     results(1).interval should have (
-      'start (7),
-      'end (9)
+      Symbol("start")(7),
+      Symbol("end")(9)
     )
     results(2).interval should have (
-      'start (9),
-      'end (11)
+      Symbol("start")(9),
+      Symbol("end")(11)
     )
 
   }
@@ -628,8 +628,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc8)
     results should have size (1)
     results.head.interval should have (
-      'start (9),
-      'end (10)
+      Symbol("start")(9),
+      Symbol("end")(10)
     )
   }
 
@@ -732,8 +732,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results1 should have size (0)
     results2 should have size (1)
     results2.head.interval should have (
-      'start (6),
-      'end (7)
+      Symbol("start")(6),
+      Symbol("end")(7)
     )
   }
 
@@ -761,14 +761,14 @@ class TestTokenPattern extends FlatSpec with Matchers {
     // matches b/c neg lookbehind req. contained pattern to be false
     results1 should have size (1)
     results1.head.interval should have (
-      'start (4),
-      'end (6)
+      Symbol("start")(4),
+      Symbol("end")(6)
     )
     results2 should have size (1)
     // matches b/c neg lookbehind req. contained pattern to be false
     results2.head.interval should have (
-      'start (4),
-      'end (6)
+      Symbol("start")(4),
+      Symbol("end")(6)
     )
   }
 
@@ -803,8 +803,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val results = p.findAllIn(0, doc)
     results should have size (1)
     results.head.interval should have (
-      'start (4),
-      'end (6)
+      Symbol("start")(4),
+      Symbol("end")(6)
     )
   }
 
@@ -817,8 +817,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     results1 should have size (1)
     // matches b/c neg lookbehind req. contained pattern to be false
     results1.head.interval should have (
-      'start (4),
-      'end (6)
+      Symbol("start")(4),
+      Symbol("end")(6)
     )
   }
 
@@ -871,8 +871,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
     results should have size (1)
     results.head.interval should have (
-      'start (0),
-      'end (4)
+      Symbol("start")(0),
+      Symbol("end")(4)
     )
 
   }
@@ -923,8 +923,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
 
     results should have size (1)
     results.head.interval should have (
-      'start (0),
-      'end (4)
+      Symbol("start")(0),
+      Symbol("end")(4)
     )
 
   }
@@ -975,13 +975,13 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val Seq(p1, p2) = results
 
     p1.interval should have (
-      'start (0),
-      'end (9)
+      Symbol("start")(0),
+      Symbol("end")(9)
     )
 
     p2.interval should have (
-      'start (2),
-      'end (9)
+      Symbol("start")(2),
+      Symbol("end")(9)
     )
 
   }
@@ -1043,18 +1043,18 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val Seq(p1, p2, p3) = results
 
     p1.interval should have (
-      'start (0),
-      'end (10)
+      Symbol("start")(0),
+      Symbol("end")(10)
     )
 
     p2.interval should have (
-      'start (0),
-      'end (10)
+      Symbol("start")(0),
+      Symbol("end")(10)
     )
 
     p3.interval should have (
-      'start (2),
-      'end (10)
+      Symbol("start")(2),
+      Symbol("end")(10)
     )
 
   }
@@ -1076,8 +1076,8 @@ class TestTokenPattern extends FlatSpec with Matchers {
     val Seq(p1) = results
 
     p1.interval should have (
-      'start (0),
-      'end (6)
+      Symbol("start")(0),
+      Symbol("end")(6)
     )
   }
 

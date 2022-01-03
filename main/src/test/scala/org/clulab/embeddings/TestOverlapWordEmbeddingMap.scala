@@ -1,5 +1,6 @@
 package org.clulab.embeddings
 
+import org.clulab.utils.ThreadUtils
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
@@ -13,7 +14,7 @@ class TestOverlapWordEmbeddingMap extends FlatSpec with Matchers {
       WordEmbeddingMapPool.getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", compact)
     }
 
-    compact.par.reverse.foreach { compact =>
+    ThreadUtils.parallelize(compact.reverse, compact.length).foreach { compact =>
       WordEmbeddingMapPool.getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", compact)
     }
   }

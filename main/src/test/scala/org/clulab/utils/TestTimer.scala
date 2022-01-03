@@ -1,7 +1,5 @@
 package org.clulab.utils
 
-import org.scalatest._
-
 class TestTimer extends Test {
 
   behavior of "timer"
