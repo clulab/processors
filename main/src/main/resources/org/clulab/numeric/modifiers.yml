@@ -1,0 +1,9 @@
+rules:
+  - name: modifier-1
+    label: Modifier
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifier
+    pattern: |
+        @modifier:PossibleModifier /(?i)(of|-)/? @date:Date
+

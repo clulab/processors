@@ -1,7 +1,6 @@
 package org.clulab.numeric
 
 import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
-
 import java.util.regex.Pattern
 
 package object mentions {
@@ -603,6 +602,34 @@ package object mentions {
         m.foundBy,
         m.attachments,
         None, Some(Seq(month)), Some(Seq(year))
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifier(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val modifier = getArgWords("modifier", m)
+      if(modifier.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument part in mention [${m.raw.mkString(" ")}]!")
+      val date = getArgNorm("date", m)
+      if(date.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val modifiedDate = ModifierNormalizer.norm(date.get, modifier.get.mkString(" "))
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.year, modifiedDate.month, modifiedDate.day, modifiedDate.modifer
       )
 
     case m =>

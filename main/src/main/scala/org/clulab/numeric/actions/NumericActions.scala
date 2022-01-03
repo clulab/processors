@@ -142,6 +142,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     convert(mentions, toDateMentionYyMmDd, "toDateMentionYyMmDd")
   }
 
+  /** Constructs a DateMention from a Date and a Modifier */
+  def mkDateMentionWithModifier(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifier, "toDateMentionWithModifier")
+  }
+
   //
   // global actions below this points
   //

@@ -1,0 +1,15 @@
+#
+# list of temporal modifiers with their corresponding types
+# the comments after // are required by ModifierNormalizer
+# valid types: approx,start,mid,end
+#
+beginning   // start
+start       // start
+middle      // mid
+mid         // mid
+end         // end
+around      // approx
+
+
+
+

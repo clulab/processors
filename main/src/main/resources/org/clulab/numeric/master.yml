@@ -6,6 +6,7 @@ taxonomy:
               - PossibleMonth
               - PossibleSeason
               - PossibleYear
+              - PossibleModifier
               - Number
           - Subatomic:
               - NumberWord
@@ -27,6 +28,7 @@ taxonomy:
           - Month
           - MeasurementUnit
           - Season
+          - Modifier
 
 rules:
   - import: org/clulab/numeric/atomic.yml
@@ -48,14 +50,19 @@ rules:
     vars:
       rulepriority: "14"
 
+  - import: org/clulab/numeric/modifiers.yml
+    # Compositional rules for date modifiers
+    vars:
+      rulepriority: "15"
+
   - import: org/clulab/numeric/date-ranges.yml
     # Compositional rules for date ranges such as "between Date1 to Date2"
     vars:
-      rulepriority: "15"
+      rulepriority: "16"
 
   - import: org/clulab/numeric/measurements.yml
     # Compositional rules for measurements such as NUMBER UNIT
     vars:
-      rulepriority: "16"
+      rulepriority: "17"
 
 

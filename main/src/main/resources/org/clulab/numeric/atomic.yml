@@ -47,3 +47,11 @@ rules:
     type: token
     pattern: |
       [entity=/B-SEASON/] [entity=/I-SEASON/]*
+
+  # possible modifier
+  - name: modifier
+    label: PossibleModifier
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [entity=/B-MODIFIER/] [entity=/I-MODIFIER/]*
