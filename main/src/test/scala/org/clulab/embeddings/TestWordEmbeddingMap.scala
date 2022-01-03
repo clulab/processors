@@ -17,7 +17,7 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     wordEmbeddingMap.getClass.getSimpleName should be ("ExplicitWordEmbeddingMap")
 
     val timeOpt = wordEmbeddingMap.get("time")
-    timeOpt should be ('defined)
+    timeOpt shouldBe defined
 
     val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = false)
     cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
@@ -27,11 +27,11 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = false)
     val map = wordEmbeddingMap.asInstanceOf[ExplicitWordEmbeddingMap]
 
-    map.unkEmbeddingOpt should be ('defined)
+    map.unkEmbeddingOpt shouldBe defined
     val unknown = map.unkEmbeddingOpt.get
 
     val timeoutOpt = map.get("timeout")
-    timeoutOpt should be ('empty)
+    timeoutOpt shouldBe empty
     map.getOrElseUnknown("timeout") should be (unknown)
     // TODO, see if this cached one can be returned or does it need to be copied?
     map.getOrElseUnknown("timeout").eq(unknown) should be (true)
@@ -60,7 +60,7 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     wordEmbeddingMap.getClass.getSimpleName should be ("CompactWordEmbeddingMap")
 
     val timeOpt = wordEmbeddingMap.get("time")
-    timeOpt should be ('defined)
+    timeOpt shouldBe defined
 
     val cachedWordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
     cachedWordEmbeddingMap.eq(wordEmbeddingMap) should be (true)
@@ -70,11 +70,11 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     val wordEmbeddingMap = WordEmbeddingMapPool.getOrElseCreate(name, compact = true)
     val map = wordEmbeddingMap.asInstanceOf[CompactWordEmbeddingMap]
 
-    map.unkEmbeddingOpt should be ('defined)
+    map.unkEmbeddingOpt shouldBe defined
     val unknown = map.unkEmbeddingOpt.get
 
     val timeoutOpt = map.get("timeout")
-    timeoutOpt should be ('empty)
+    timeoutOpt shouldBe empty
     map.getOrElseUnknown("timeout") should be (unknown)
     map.getOrElseUnknown("timeout").eq(unknown) should be (true)
   }
@@ -107,8 +107,8 @@ class TestWordEmbeddingMap extends FlatSpec with Matchers {
     val wordEmbeddingMaps = keysAndCompacts.map { case (key, compact) => WordEmbeddingMapPool.getOrElseCreate(key, compact) }
 
     wordEmbeddingMaps.foreach { wordEmbeddingMap =>
-      wordEmbeddingMap.get("time") should be ('defined)
-      wordEmbeddingMap.get("timeout") should not be ('defined)
+      wordEmbeddingMap.get("time") shouldBe defined
+      wordEmbeddingMap.get("timeout") should not be defined
 
       wordEmbeddingMap.isOutOfVocabulary("time") should be (false)
       wordEmbeddingMap.isOutOfVocabulary("timeout") should be (true)

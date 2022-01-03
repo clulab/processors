@@ -12,6 +12,7 @@ import org.scalatest.Matchers
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
+import scala.collection.mutable
 
 class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   val unused = false
@@ -84,7 +85,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     override def hasNext: Boolean = odometer.hasNext
 
     override def next(): WordEmbeddingConfig = {
-      val Seq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) = odometer.next()
+      val mutable.ArraySeq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) = odometer.next()
 
       WordEmbeddingConfig(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew)
     }

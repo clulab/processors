@@ -5,7 +5,7 @@ import java.io.File
 import org.clulab.learning.RVFDatum
 import org.clulab.struct.Counter
 
-import scala.io.Source
+import _root_.scala.io.Source
 
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer

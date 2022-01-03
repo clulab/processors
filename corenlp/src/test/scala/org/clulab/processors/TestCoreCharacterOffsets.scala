@@ -8,6 +8,7 @@ import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
 class TestCoreCharacterOffsets extends FlatSpec with Matchers {
@@ -17,10 +18,10 @@ class TestCoreCharacterOffsets extends FlatSpec with Matchers {
     val doc = proc.mkDocument("John Doe went to China on January 15th, 2001.", keepText = true)
 
     val docAnnotation = doc.asInstanceOf[CoreNLPDocument].annotation.get
-    val sents:Seq[CoreMap] = docAnnotation.get(classOf[SentencesAnnotation]).asScala
+    val sents = docAnnotation.get(classOf[SentencesAnnotation]).asScala
     val text = docAnnotation.get(classOf[TextAnnotation])
     for(s <- sents) {
-      val tokens:Seq[CoreLabel] = s.get(classOf[TokensAnnotation]).asScala
+      val tokens = s.get(classOf[TokensAnnotation]).asScala
       for(token <- tokens) {
         val word = token.word()
         val wordFromOffsets = text.substring(token.beginPosition(), token.endPosition())

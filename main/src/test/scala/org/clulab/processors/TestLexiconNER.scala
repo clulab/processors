@@ -20,6 +20,7 @@ import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.SeqOdometer
 
 import java.io.File
+import scala.collection.mutable
 
 class TestLexiconNER extends FatdynetTest {
 
@@ -174,9 +175,11 @@ class TestLexiconNER extends FatdynetTest {
     val caseInsensitives = Seq(false, true)
     val odometer = new SeqOdometer(Array(entityValidators, useLemmas, caseInsensitives))
 
-    odometer.foreach { case Seq(entityValidator: EntityValidator, useLemmas: Boolean, caseInsensitive: Boolean) =>
-      testKBsAndNers(kbs, overrideKBs, "a a b b a",   Seq("B-A", "I-A", "B-B", "I-B", "O"),        entityValidator, useLemmas, caseInsensitive)
-      testKBsAndNers(kbs, overrideKBs, "a a a b b a", Seq("B-B", "I-B", "I-B", "B-B", "I-B", "O"), entityValidator, useLemmas, caseInsensitive)
+    odometer.foreach {
+      case mutable.ArraySeq(entityValidator: EntityValidator, useLemmas: Boolean, caseInsensitive: Boolean) =>
+        testKBsAndNers(kbs, overrideKBs, "a a b b a",   Seq("B-A", "I-A", "B-B", "I-B", "O"),        entityValidator, useLemmas, caseInsensitive)
+        testKBsAndNers(kbs, overrideKBs, "a a a b b a", Seq("B-B", "I-B", "I-B", "B-B", "I-B", "O"), entityValidator, useLemmas, caseInsensitive)
+      case _ => throw new RuntimeException("Odometer didn't work!")
     }
   }
 
@@ -327,7 +330,7 @@ class TestLexiconNER extends FatdynetTest {
 class LowerEntityValidator() extends EntityValidator {
 
   override def validMatch(sentence: Sentence, start: Int, end: Int): Boolean = {
-    !sentence.words.view(start, end).exists { word =>
+    !sentence.words.slice(start, end).exists { word =>
       word.exists(_.isUpper) // Make sure there is none of this.
     }
   }
@@ -338,7 +341,7 @@ class LowerEntityValidator() extends EntityValidator {
 class NoAEntityValidator() extends EntityValidator {
 
   override def validMatch(sentence: Sentence, start: Int, end: Int): Boolean = {
-    !sentence.words.view(start, end).contains("a")
+    !sentence.words.slice(start, end).contains("a")
   }
 }
 

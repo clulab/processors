@@ -6,7 +6,7 @@ class TestArrayView extends Test {
 
   it should "work with no offset" in {
     val array = Array(1, 2, 3)
-    val arrayView = ArrayView(array)
+    val arrayView = MutableArrayView(array)
 
     array.length should be (arrayView.length)
 
@@ -22,7 +22,7 @@ class TestArrayView extends Test {
   it should "work with an offset" in {
     val offset = 1
     val array = Array(1, 2, 3)
-    val arrayView = ArrayView(array, offset)
+    val arrayView = MutableArrayView(array, offset)
 
     array.length should be (arrayView.length + offset)
 
@@ -39,7 +39,7 @@ class TestArrayView extends Test {
     val offset = 1
     val clip = 1
     val array = Array(1, 2, 3)
-    val arrayView = ArrayView(array, offset, array.length - clip)
+    val arrayView = MutableArrayView(array, offset, array.length - clip)
 
     array.length should be (arrayView.length + offset + clip)
 
