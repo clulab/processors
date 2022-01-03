@@ -7,7 +7,7 @@ import scala.collection.mutable.ArrayBuffer
  *   For example: "mid-July" is separated into "mid" and "July", which is better for date recognition
  */
 class TokenizerStepHyphens extends TokenizerStep {
-  private val prefixes = """^(mid)\-\w+$""".r // TODO: what other prefixes should we add?
+  private val prefixes = """^(mid|bi|semi|non|all)\-\w+$""".r // TODO: what other prefixes should we add?
 
   override def process(inputs: Array[RawToken]): Array[RawToken] = {
     val tokens = new ArrayBuffer[RawToken]()
