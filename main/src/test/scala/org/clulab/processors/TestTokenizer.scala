@@ -191,6 +191,12 @@ class TestTokenizer extends FlatSpec with Matchers {
     badRawOpt should be (empty)
   }
 
+  it should "split some hyphenated words" in {
+    val orig = "Weather is nice in mid-July"
+    val sents = tok(orig)
+    sents(0).size should be (6)
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
