@@ -58,6 +58,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("It is 12 May, 2000", Interval(2, 6), "DATE", "2000-05-12")
     ensure("It was May 2000", Interval(2, 4), "DATE", "2000-05-XX")
     ensure("It was 25 May", Interval(2, 4), "DATE", "XXXX-05-25")
+    ensure("It was May", Interval(2, 3), "DATE", "XXXX-05-XX")
   }
 
   // these should be captured by rules date-3 and date-4
@@ -179,11 +180,13 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "It was the month of January, 2020", Interval(3, 8), goldEntity= "DATE", goldNorm= "2020-01-XX")
   }
 
-  it should "recognize part of a date" in {
+  it should "recognize date with modifier" in {
     ensure(sentence= "It was the start of 2020", Interval(3, 6), goldEntity= "DATE", goldNorm= "2020-01-XX")
-    ensure(sentence= "It was the mid of 2020", Interval(3, 6), goldEntity= "DATE", goldNorm= "2020-06-XX")
+    ensure(sentence= "It was mid-2020", Interval(2, 4), goldEntity= "DATE", goldNorm= "2020-06-XX")
     ensure(sentence= "It was the end of 2020", Interval(3, 6), goldEntity= "DATE", goldNorm= "2020-12-XX")
-    ensure(sentence= "It was the middle of January", Interval(3, 6), goldEntity= "DATE", goldNorm= "XXXX-01-15")
+    ensure(sentence= "It was mid-January", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15")
+    ensure(sentence= "It was around January 15", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15 [APPROX]")
+
   }
 
   it should "recognize date ranges" in {
