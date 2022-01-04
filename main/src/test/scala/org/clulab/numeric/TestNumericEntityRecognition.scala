@@ -174,6 +174,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence = "Planting dates are between July 1st and August 2nd.", Interval(3, 9), goldEntity = "DATE-RANGE", "XXXX-07-01 -- XXXX-08-02")
   }
 
+  it should "recognize \"month of X\" patterns" in {
+    ensure(sentence = "It was the month of January", Interval(3, 6), goldEntity = "DATE", goldNorm = "XXXX-01-XX")
+    ensure(sentence = "It was the month of January, 2020", Interval(3, 8), goldEntity = "DATE", goldNorm = "2020-01-XX")
+  }
+
   it should "recognize date from holiday" in {
     ensure(sentence= "Christmas 2016", Interval(0, 2), goldEntity= "DATE", goldNorm= "2016-12-25")
     ensure(sentence= "Independence day", Interval(0, 2), goldEntity= "DATE", goldNorm= "XXXX-07-04")

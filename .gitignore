@@ -8,6 +8,12 @@ core/*.iml
 .DS_Store
 Makefile
 
+# VS code
+.bloop/
+.metals/
+.vscode/
+project/
+
 # sbt specific
 dist/*
 target/
