@@ -1,8 +1,6 @@
 package org.clulab.numeric
 
 import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
-import de.jollyday.{Holiday, HolidayManager}
-import collection.JavaConverters._
 
 import java.util.regex.Pattern
 
@@ -624,12 +622,7 @@ package object mentions {
         case _ => None
       }
 
-      val dayMonthOpt = getHolidayNorm(holiday.get, year)
-      val (day, month) = dayMonthOpt match {
-        case Some((dayString, monthString)) =>
-          (Some(Seq(dayString)), Some(Seq(monthString)))
-        case _ => throw new RuntimeException(s"ERROR: mention ${m.raw.mkString(" ")} is not a holiday!")
-      }
+      val (day, month) = getHoliday(holiday.get, year)
 
       new DateMention(
         m.labels,
@@ -736,23 +729,13 @@ package object mentions {
     else seasonNormalizer.norm(wordsOpt.get)
   }
 
-  private def getHolidayNorm(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
-    val holidayManager = HolidayManager.getInstance()
-
-    val holiday = holidaySeq.mkString("_").toLowerCase()
-    val year = yearOpt match {
-      case Some(yearSeq) => yearSeq.mkString.toInt
-      case _ => java.time.LocalDate.now.getYear
+  private def getHoliday(holiday: Seq[String], year: Option[Seq[String]]): (Option[Seq[String]], Option[Seq[String]]) = {
+    val dayMonthOpt = HolidayNormalizer.run(holiday, year)
+    dayMonthOpt match {
+      case Some((dayString, monthString)) =>
+        (Some(Seq(dayString)), Some(Seq(monthString)))
+      case _ => throw new RuntimeException(s"ERROR: ${holiday.mkString(" ")} is not a holiday!")
     }
-    val holidays: Array[Holiday] = holidayManager.getHolidays(year).asScala.toArray
-    val dayMonthOpt = holidays.filter(_.getPropertiesKey.toLowerCase == holiday) match {
-      case Array(h) =>
-        val date = h.getDate
-        Some((date.getDayOfMonth.toString, date.getMonthValue.toString))
-      case _ => None
-
-    }
-    dayMonthOpt
   }
 
   private def getArgWords(argName: String, m:Mention): Option[Seq[String]] =

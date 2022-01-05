@@ -50,7 +50,7 @@ rules:
 
   # possible holiday
   - name: holiday-name
-    label: PossibleHoliday
+    label: Holiday
     priority: ${ rulepriority }
     type: token
     pattern: |
