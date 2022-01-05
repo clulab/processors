@@ -93,8 +93,10 @@ class GreedyForwardLayer (parameters:ParameterCollection,
       val predScores = predictedGraph(key)
 
       val goldLabel: String = if(goldGraph.contains(key)) {
+        //println(s"\t\t+\t$key")
         goldGraph(key)
       } else {
+        //println(s"\t\t-\t$key")
         Utils.STOP_TAG // we use STOP_TAG to indicate that an edge should *not* exist between this head and modifier
       }
       val goldLabelId = t2i(goldLabel)
@@ -105,6 +107,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     //println("Press any key to continue: ")
     //scala.io.StdIn.readChar()
 
+    //System.exit(1)
     sum(goldLosses)
   }
 
@@ -129,14 +132,16 @@ class GreedyForwardLayer (parameters:ParameterCollection,
       // the positive example
       val head = headPositions(modifier)
       edgeMap += ((head, modifier), runForwardDual(modifier, head, inputExpressions, true))
+      //println(s"+\t($head, $modifier)")
 
       // up to negFactor negative examples
       // need to include -1 in the range, for root
       val negs = mkRandomRange(-1, inputExpressions.size, negativesFactor.toInt, Set(head, modifier), graphRand)
       for(neg <- negs) {
         edgeMap += ((neg, modifier), runForwardDual(modifier, neg, inputExpressions, true))
+        //println(s"-\t($neg, $modifier)")
       }
-    }                                  
+    } 
     edgeMap                                      
   }
 

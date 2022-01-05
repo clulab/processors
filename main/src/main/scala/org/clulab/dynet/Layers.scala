@@ -458,6 +458,12 @@ object Layers {
                 negativesFactor: Float, 
                 sentence: AnnotatedSentence,
                 goldGraph: EdgeMap[String]): Expression = {
+    /*                  
+    for(i <- sentence.indices) {
+      println(s"$i\t${sentence.words(i)}\t${sentence.headPositions.get(i)}")
+    }
+    */
+
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
     val predictedGraph = graphForwardForTask(layers, taskId, negativesFactor, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph)
