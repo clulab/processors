@@ -101,7 +101,7 @@ class Sentence(
     * @return A directed graph of dependencies if any exist, otherwise None
     */
   def dependencies:Option[DirectedGraph[String]] = graphs match {
-    case collapsed if collapsed.contains(UNIVERSAL_ENHANCED) => collapsed.get(UNIVERSAL_ENHANCED)
+    case collapsed if collapsed.contains(HYBRID_DEPENDENCIES) => collapsed.get(HYBRID_DEPENDENCIES)
     case basic if basic.contains(UNIVERSAL_BASIC) => basic.get(UNIVERSAL_BASIC)
     case _ => None
   }
