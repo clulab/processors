@@ -17,8 +17,24 @@ import org.slf4j.{Logger, LoggerFactory}
 import java.time.LocalDateTime
 import java.time.Duration
 
+import scala.io.Source
+
 
 object TestOnnx extends App {
+
+    def get_embeddings(embed_file_path: String): Map[String,Array[Float]]={
+        val emb = Source.fromFile(embed_file_path)
+        var emb_map:Map[String,Array[Float]] = Map()
+        for (s<-emb.getLines){
+            if (s.split(" ")(0) == ""){
+                emb_map += ("<UNK>"-> s.split(" ").slice(1, s.split(" ").size).map(_.toFloat))
+            }else{
+                emb_map += (s.split(" ")(0) -> s.split(" ").slice(1, s.split(" ").size).map(_.toFloat))
+            }
+        }
+        emb_map
+    }
+
     val props = StringUtils.argsToProperties(args)
 
     val configName = props.getProperty("conf")
@@ -26,10 +42,8 @@ object TestOnnx extends App {
     val taskManager = new TaskManager(config)
     
     val embed_file_path: String = "/data1/home/zheng/processors/main/src/main/python/glove.840B.300d.10f.txt"
-    val wordEmbeddingMap = WordEmbeddingMapPool
-      .getOrElseCreate(embed_file_path, compact = true)
-      .asInstanceOf[CompactWordEmbeddingMap]
-    
+    val wordEmbeddingMap = get_embeddings(embed_file_path)
+
     val jsonString = Source.fromFile("ner.json").getLines.mkString
     val parsed = JSON.parseFull(jsonString)
     val w2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("w2i").asInstanceOf[Map[String, Double]]
@@ -67,7 +81,7 @@ object TestOnnx extends App {
                     var char_embs:Array[Array[Float]] = new Array[Array[Float]](words.length)
                     for(i <- words.indices){
                         val word = words(i)
-                        embeddings(i) = wordEmbeddingMap.getOrElseUnknown(word).toArray
+                        embeddings(i) = wordEmbeddingMap.getOrElse(word, "<UNK>").get.toArray
                         wordIds(i) = w2i.getOrElse(word, 0).asInstanceOf[Number].longValue
                         val char_input = new java.util.HashMap[String, OnnxTensor]()
                         char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i.getOrElse(c.toString, 0).asInstanceOf[Number].longValue).toArray))
