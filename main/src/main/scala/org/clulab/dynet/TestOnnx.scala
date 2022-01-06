@@ -44,7 +44,7 @@ object TestOnnx extends App {
     val embed_file_path: String = "/data1/home/zheng/processors/main/src/main/python/glove.840B.300d.10f.txt"
     val wordEmbeddingMap = get_embeddings(embed_file_path)
 
-    val jsonString = Source.fromFile("ner.json").getLines.mkString
+    val jsonString = Source.fromFile("/data1/home/zheng/processors/ner.json").getLines.mkString
     val parsed = JSON.parseFull(jsonString)
     val w2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("w2i").asInstanceOf[Map[String, Double]]
     val c2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("c2i").asInstanceOf[Map[String, Double]]
@@ -52,9 +52,9 @@ object TestOnnx extends App {
     val i2t = for ((k,v) <- t2i) yield (v, k)
 
     val ortEnvironment = OrtEnvironment.getEnvironment
-    val modelpath1 = "char.onnx"
+    val modelpath1 = "/data1/home/zheng/processors/char.onnx"
     val session1 = ortEnvironment.createSession(modelpath1, new OrtSession.SessionOptions)
-    val modelpath2 = "model.onnx"
+    val modelpath2 = "/data1/home/zheng/processors/model.onnx"
     val session2 = ortEnvironment.createSession(modelpath2, new OrtSession.SessionOptions)
 
     println(session1.getOutputInfo)
