@@ -1,14 +1,16 @@
 package org.clulab.numeric
 
-import de.jollyday.{Holiday, HolidayManager}
+import de.jollyday.{Holiday, HolidayCalendar, HolidayManager, ManagerParameters}
 
 import collection.JavaConverters._
 
 object HolidayNormalizer {
 
-  /** Retrieves date for holiday */
+  /** Retrieves date (day and month) for holiday */
   def norm(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
-    val holidayManager = HolidayManager.getInstance()
+    val holidayManager = HolidayManager.getInstance(
+      ManagerParameters.create(HolidayCalendar.UNITED_STATES)
+    )
     val holiday = holidaySeq.mkString("_").toLowerCase()
     val year = yearOpt match {
       case Some(yearSeq) => yearSeq.mkString.toInt

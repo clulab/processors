@@ -2,9 +2,9 @@
 # List of holidays in the United States extracted from the Jollyday api.
 # This list can be obtained with the following snippet:
 #
-#   import de.jollyday.{HolidayManager, HolidayCalendar}
+#   import de.jollyday.{HolidayManager, HolidayCalendar, ManagerParameters}
 #   import collection.JavaConverters._
-#   val holidayManager = HolidayManager.getInstance(HolidayCalendar.UNITED_STATES)
+#   val holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.UNITED_STATES))
 #   holidayManager.getCalendarHierarchy.getChildren.keySet.asScala.
 #                   map(holidayManager.getHolidays(2021, _).asScala).flatten.map(_.getDescription)
 #

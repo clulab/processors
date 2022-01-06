@@ -732,9 +732,9 @@ package object mentions {
   private def getHoliday(holiday: Seq[String], year: Option[Seq[String]]): (Option[Seq[String]], Option[Seq[String]]) = {
     val dayMonthOpt = HolidayNormalizer.norm(holiday, year)
     dayMonthOpt match {
-      case Some((dayString, monthString)) =>
-        (Some(Seq(dayString)), Some(Seq(monthString)))
-      case _ => throw new RuntimeException(s"ERROR: ${holiday.mkString(" ")} is not a holiday!")
+      case Some((day, month)) =>
+        (Some(Seq(day)), Some(Seq(month)))
+      case _ => throw new RuntimeException(s"ERROR: ${holiday.mkString(" ")} not found in holiday taxonomy!")
     }
   }
 
