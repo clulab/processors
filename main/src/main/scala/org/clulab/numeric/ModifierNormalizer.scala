@@ -90,4 +90,4 @@ object ModifierNormalizer {
 case class ModifiedDate(day: Option[Seq[String]],
                         month: Option[Seq[String]],
                         year: Option[Seq[String]],
-                        modifer: Option[String])
+                        modifier: Option[String])

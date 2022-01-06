@@ -629,7 +629,7 @@ package object mentions {
         m.keep,
         m.foundBy,
         m.attachments,
-        modifiedDate.year, modifiedDate.month, modifiedDate.day, modifiedDate.modifer
+        modifiedDate.year, modifiedDate.month, modifiedDate.day, modifiedDate.modifier
       )
 
     case m =>
