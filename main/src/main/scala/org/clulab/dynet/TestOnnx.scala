@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
-import org.clulab.dynet.ConstEmbeddingsGlove
-import org.clulab.embeddings.WordEmbeddingMapPool
+import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMapPool}
 
 import java.io.{FileWriter, PrintWriter}
 
@@ -26,8 +25,10 @@ object TestOnnx extends App {
     val config = ConfigFactory.load(configName)
     val taskManager = new TaskManager(config)
     
-    val constEmbeddingsGlove = ConstEmbeddingsGlove // Make sure that the embeddings have been loaded.
-    val wordEmbeddingMap = WordEmbeddingMapPool.get("glove.840B.300d.10f", compact = true).get
+    val embed_file_path: String = "glove.840B.300d.10f.txt"
+    val wordEmbeddings = WordEmbeddingMapPool
+      .getOrElseCreate(embed_file_path, compact = true)
+      .asInstanceOf[CompactWordEmbeddingMap]
     
     val jsonString = Source.fromFile("ner.json").getLines.mkString
     val parsed = JSON.parseFull(jsonString)
