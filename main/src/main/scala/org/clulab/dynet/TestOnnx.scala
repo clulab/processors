@@ -25,7 +25,7 @@ object TestOnnx extends App {
     val config = ConfigFactory.load(configName)
     val taskManager = new TaskManager(config)
     
-    val embed_file_path: String = "glove.840B.300d.10f.txt"
+    val embed_file_path: String = "/data1/home/zheng/processors/main/src/main/pythonglove.840B.300d.10f.txt"
     val wordEmbeddings = WordEmbeddingMapPool
       .getOrElseCreate(embed_file_path, compact = true)
       .asInstanceOf[CompactWordEmbeddingMap]
