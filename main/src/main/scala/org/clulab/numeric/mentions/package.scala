@@ -730,7 +730,7 @@ package object mentions {
   }
 
   private def getHoliday(holiday: Seq[String], year: Option[Seq[String]]): (Option[Seq[String]], Option[Seq[String]]) = {
-    val dayMonthOpt = HolidayNormalizer.run(holiday, year)
+    val dayMonthOpt = HolidayNormalizer.norm(holiday, year)
     dayMonthOpt match {
       case Some((dayString, monthString)) =>
         (Some(Seq(dayString)), Some(Seq(monthString)))

@@ -7,7 +7,7 @@ import collection.JavaConverters._
 object HolidayNormalizer {
 
   /** Retrieves date for holiday */
-  def run(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
+  def norm(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
     val holidayManager = HolidayManager.getInstance()
     val holiday = holidaySeq.mkString("_").toLowerCase()
     val year = yearOpt match {
