@@ -87,16 +87,6 @@ object TestOnnx extends App {
                         char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i.getOrElse(c.toString, 0).asInstanceOf[Number].longValue).toArray))
                         char_embs(i) = session1.run(char_input).get(0).getValue.asInstanceOf[Array[Float]]
                     }
-                    if (p<=2){
-                        println(words)
-                        print(embeddings.map(_.mkString(" ")).mkString("\n"))
-                        println(" ")
-                        println(wordIds.mkString(" "))
-                        print(char_embs.map(_.mkString(" ")).mkString("\n"))
-                        println(" ")
-                        println(" ")
-                        p += 1
-                    }
                     
                     val input = new java.util.HashMap[String, OnnxTensor]()
                     val emb_tensor =  OnnxTensor.createTensor(ortEnvironment, embeddings)
