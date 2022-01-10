@@ -181,7 +181,13 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
 
   it should "recognize date from holiday" in {
     ensure(sentence= "Christmas 2016", Interval(0, 2), goldEntity= "DATE", goldNorm= "2016-12-25")
-    ensure(sentence= "Independence day", Interval(0, 2), goldEntity= "DATE", goldNorm= "XXXX-07-04")
+    ensure(sentence= "Independence Day", Interval(0, 2), goldEntity= "DATE", goldNorm= "XXXX-07-04")
+    ensure(sentence= "independence day", Interval(0, 2), goldEntity= "DATE", goldNorm= "XXXX-07-04")
+    ensure(sentence= "New Years Eve", Interval(0, 2), goldEntity= "DATE", goldNorm= "XXXX-12-31")
+    ensure(sentence= "new year's eve", Interval(0, 2), goldEntity= "DATE", goldNorm= "XXXX-12-31")
+    ensure(sentence= "Martin Luther King Jr. Day 2022", Interval(0, 4), goldEntity= "DATE", goldNorm= "2022-01-17")
+    ensure(sentence= "MLK day 2022", Interval(0, 1), goldEntity= "DATE", goldNorm= "2022-01-17")
+    ensure(sentence= "before Patriots' day 2021", Interval(0, 2), goldEntity= "DATE-RANGE", goldNorm= "XXXX-XX-XX -- 2021-04-19")
     ensure(sentence= "between Christmas and New Year", Interval(0, 4), goldEntity= "DATE-RANGE", goldNorm= "XXXX-12-25 -- XXXX-01-01")
   }
 

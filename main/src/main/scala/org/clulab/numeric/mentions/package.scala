@@ -617,10 +617,7 @@ package object mentions {
       if(holiday.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument holiday in mention ${m.raw.mkString(" ")}!")
 
-      val year = getArgWords("year", m) match {
-        case Some(y) => Some(y)
-        case _ => None
-      }
+      val year = getArgWords("year", m)
 
       val (day, month) = getHoliday(holiday.get, year)
 
@@ -734,7 +731,7 @@ package object mentions {
     dayMonthOpt match {
       case Some((day, month)) =>
         (Some(Seq(day)), Some(Seq(month)))
-      case _ => throw new RuntimeException(s"ERROR: ${holiday.mkString(" ")} not found in holiday taxonomy!")
+      case _ => throw new RuntimeException(s"ERROR: cannot get date for ${holiday.mkString(" ")}!")
     }
   }
 
