@@ -39,10 +39,10 @@ class CluProcessor protected (
   internStringsOpt: Option[Boolean],
   localTokenizerOpt: Option[Tokenizer],
   lemmatizerOpt: Option[Lemmatizer],
-  mtlPosChunkSrlpOpt: Option[Metal],
-  mtlNerOpt: Option[Metal],
-  mtlSrlaOpt: Option[Metal],
-  mtlDepsOpt: Option[Metal]
+  posBackendOpt: Option[PosBackend],
+  newBackendOpt: Option[NerBackend],
+  srlaBackendOpt: Option[SrlaBackend],
+  depsBackendOpt: Option[DepsBackend]
 ) extends Processor with Configured {
 
   // standard, abbreviated constructor
@@ -63,10 +63,10 @@ class CluProcessor protected (
     internStringsOptOpt: Option[Option[Boolean]] = None,
     localTokenizerOptOpt: Option[Option[Tokenizer]] = None,
     lemmatizerOptOpt: Option[Option[Lemmatizer]] = None,
-    mtlPosChunkSrlpOptOpt: Option[Option[Metal]] = None,
-    mtlNerOptOpt: Option[Option[Metal]] = None,
-    mtlSrlaOptOpt: Option[Option[Metal]] = None,
-    mtlDepsOptOpt: Option[Option[Metal]] = None
+    posBackendOptOpt: Option[Option[PosBackend]] = None,
+    newBackendOptOpt: Option[Option[NerBackend]] = None,
+    srlaBackendOptOpt: Option[Option[SrlaBackend]] = None,
+    depsBackendOptOpt: Option[Option[DepsBackend]] = None
   ): CluProcessor = {
     new CluProcessor(
       configOpt.getOrElse(this.config),
@@ -75,10 +75,10 @@ class CluProcessor protected (
       internStringsOptOpt.getOrElse(this.internStringsOpt),
       localTokenizerOptOpt.getOrElse(this.localTokenizerOpt),
       lemmatizerOptOpt.getOrElse(this.lemmatizerOpt),
-      mtlPosChunkSrlpOptOpt.getOrElse(this.mtlPosChunkSrlpOpt),
-      mtlNerOptOpt.getOrElse(this.mtlNerOpt),
-      mtlSrlaOptOpt.getOrElse(this.mtlSrlaOpt),
-      mtlDepsOptOpt.getOrElse(this.mtlDepsOpt)
+      posBackendOptOpt.getOrElse(this.posBackendOpt),
+      newBackendOptOpt.getOrElse(this.newBackendOpt),
+      srlaBackendOptOpt.getOrElse(this.srlaBackendOpt),
+      depsBackendOptOpt.getOrElse(this.depsBackendOpt)
     )
   }
 
@@ -115,20 +115,20 @@ class CluProcessor protected (
   }
 
   // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
-  lazy val mtlPosChunkSrlp: Metal = mtlPosChunkSrlpOpt.getOrElse {
+  lazy val posBackend: PosBackend = posBackendOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
       case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+      case _ => new MetalPosBackend(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
     }
   }
 
   // one of the multi-task learning (MTL) models, which covers: NER
-  lazy val mtlNer: Metal = mtlNerOpt.getOrElse {
+  lazy val nerBackend: NerBackend = newBackendOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
       case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+      case _ => new MetalNerBackend(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
     }
   }
 
@@ -137,11 +137,11 @@ class CluProcessor protected (
       numericEntityRecognizerOpt.getOrElse(NumericEntityRecognizer())
 
   // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
-  lazy val mtlSrla: Metal = mtlSrlaOpt.getOrElse {
+  lazy val srlaBackend: SrlaBackend = srlaBackendOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
       case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+      case _ => new MetalSrlaBackend(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
     }
   }
 
@@ -158,11 +158,11 @@ class CluProcessor protected (
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
   }
   */
-  lazy val mtlDeps: Metal = mtlDepsOpt.getOrElse {
+  lazy val depsBackend: DepsBackend = depsBackendOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
       case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
+      case _ => new MetalDepsBackend(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
     }
   }
 
