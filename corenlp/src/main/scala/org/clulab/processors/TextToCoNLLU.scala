@@ -113,32 +113,28 @@ object TextToCoNLLU {
       System.exit(0)
     }
 
-    val props = StringUtils.argsToProperties(args)
+    val props = StringUtils.argsToMap(args)
 
     val proc =
-      if(props.containsKey("proc") && props.getProperty("proc") == "corenlp") new FastNLPProcessor()
+      if (props.get("proc").exists(_ == "corenlp")) new FastNLPProcessor()
       else new CluProcessor()
-    val isCoreNLP =
-      if(props.containsKey("proc") && props.getProperty("proc") == "corenlp") true
-      else false
+    val isCoreNLP = props.get("proc").exists(_ == "corenlp")
     val converter = new TextToCoNLLU(proc, isCoreNLP)
 
-    val inDirName = props.getProperty("indir", "")
-    if(inDirName == "") {
+    val inDirName = props.getOrElse("indir", {
       usage()
       throw new RuntimeException("""Missing argument "indir"!""")
-    }
+    })
     val inDir = new File(inDirName)
     if(! inDir.isDirectory) {
       usage()
       throw new RuntimeException("""Argument "indir" must point to a valid directory!""")
     }
 
-    val outDirName = props.getProperty("outdir", "")
-    if(outDirName == "") {
+    val outDirName = props.getOrElse("outdir", {
       usage()
       throw new RuntimeException("""Missing argument "outdir"!""")
-    }
+    })
     val outDir = new File(outDirName)
     if(! outDir.isDirectory) {
       usage()

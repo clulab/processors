@@ -46,7 +46,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   }
 
   Utils.initializeDyNet()
-  val ner = new NumericEntityRecognizer
+  val ner = NumericEntityRecognizer()
   val proc = new HabitusProcessor()
 
   //
@@ -153,6 +153,23 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "19:02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX19-02-XX")
   }
 
+  it should "recognize numeric dates of form month of year" in {
+    ensure(sentence= "sowing date is best in May of 2020", Interval(5, 8), goldEntity= "DATE", goldNorm= "2020-05-XX")
+    ensure(sentence= "sowing date in July of 2020", Interval(3, 6), goldEntity= "DATE", goldNorm= "2020-07-XX")
+    ensure(sentence= "It is not desirable to sow in January of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-01-XX")
+    ensure(sentence= "It is not desirable to sow in Jan of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-01-XX")
+    ensure(sentence= "It is not desirable to sow in Jul of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-07-XX")
+    ensure(sentence= "It is not desirable to sow in Aug of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-08-XX")
+    ensure(sentence= "It is not desirable to sow in Dec of 2001", Interval(7, 10), goldEntity= "DATE", goldNorm= "2001-12-XX")
+  }
+
+  it should "recognize numeric dates of form month date of year" in {
+    ensure(sentence= "sowing date is best on October 8 of 2020", Interval(5, 9), goldEntity= "DATE", goldNorm= "2020-10-08")
+    ensure(sentence= "Rain will be on April 8 of 2020", Interval(4, 8), goldEntity= "DATE", goldNorm= "2020-04-08")
+    ensure(sentence= "December 18 of 2002", Interval(0, 4), goldEntity= "DATE", goldNorm= "2002-12-18")
+    ensure(sentence= "February 21 of 1002", Interval(0, 4), goldEntity= "DATE", goldNorm= "1002-02-21")
+  }
+
   it should "recognize dates with ordinal days" in {
     ensure(sentence = "Planting dates are between July 1st and August 2nd.", Interval(3, 9), goldEntity = "DATE-RANGE", "XXXX-07-01 -- XXXX-08-02")
   }
@@ -161,7 +178,66 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 -- 2020-11-11")
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
     ensure("from 20 to July 31", Interval(0, 5), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
+    ensure("between October 31 and December 31 of 2020", Interval(0, 8), "DATE-RANGE", "2020-10-31 -- 2020-12-31")
+    ensure("Sowing between October 31 and December 30 , 2020 is optimal", Interval(1, 9), "DATE-RANGE", "2020-10-31 -- 2020-12-30")
   }
+
+  it should "recognize date month ranges" in {
+    ensure("between January and June 2017", Interval(0, 5), "DATE-RANGE", "2017-01-XX -- 2017-06-XX")
+    ensure("March to May 2017", Interval(0, 4), "DATE-RANGE", "2017-03-XX -- 2017-05-XX")
+    ensure("May - October 2016", Interval(0, 4), "DATE-RANGE", "2016-05-XX -- 2016-10-XX")
+  }
+
+  it should "recognize different dates" in {
+    ensure("January 2016 and June 2017", Interval(0, 2), "DATE", "2016-01-XX")
+    ensure("January 2016 and June 2017", Interval(3, 5), "DATE", "2017-06-XX")
+  }
+
+  it should "recognize relative dates" in {
+    ensure("Since January 2016", Interval(0, 3), "DATE-RANGE", "2016-01-XX -- ref-date")
+    ensure("Until January 2016", Interval(0, 3), "DATE-RANGE", "ref-date -- 2016-01-XX")
+    ensure("from January 2016", Interval(0, 3), "DATE-RANGE", "2016-01-XX -- ref-date")
+  }
+
+  it should "recognize unbounded date ranges" in {
+    ensure("before July 2016", Interval(0, 3), "DATE-RANGE", "XXXX-XX-XX -- 2016-07-XX")
+    ensure("prior to July 2016", Interval(0, 4), "DATE-RANGE", "XXXX-XX-XX -- 2016-07-XX")
+    ensure("after July 2016", Interval(0, 3), "DATE-RANGE", "2016-07-XX -- XXXX-XX-XX")
+    ensure("before July 15", Interval(0, 3), "DATE-RANGE", "XXXX-XX-XX -- XXXX-07-15")
+    ensure("after July 15", Interval(0, 3), "DATE-RANGE", "XXXX-07-15 -- XXXX-XX-XX")
+  }
+
+  it should "recognize date ranges from seasons" in {
+    ensure("winter 2017", Interval(0, 2), "DATE-RANGE", "2016-12-21 -- 2017-03-20")
+    ensure("spring 2017", Interval(0, 2), "DATE-RANGE", "2017-03-20 -- 2017-06-21")
+    ensure("summer 2017", Interval(0, 2), "DATE-RANGE", "2017-06-21 -- 2017-09-22")
+    ensure("autumn 2017", Interval(0, 2), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
+    ensure("autumn in 2017", Interval(0, 3), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
+    ensure("2017 autumn", Interval(0, 2), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
+    ensure("winter", Interval(0, 1), "DATE-RANGE", "XXXX-12-21 -- XXXX-03-20")
+    ensure("spring", Interval(0, 1), "DATE-RANGE", "XXXX-03-20 -- XXXX-06-21")
+
+  }
+
+  it should "recognize date ranges with seasons" in {
+    ensure("from spring to autumn 2017", Interval(0, 4), "DATE-RANGE", "2017-06-21 -- 2017-09-22")
+    ensure("between spring and autumn 2017", Interval(0, 4), "DATE-RANGE", "2017-06-21 -- 2017-09-22")
+    ensure("between autumn 2017 and spring 2018", Interval(0, 5), "DATE-RANGE", "2017-12-21 -- 2018-03-20")
+    ensure("between autumn and spring", Interval(0, 4), "DATE-RANGE", "XXXX-12-21 -- XXXX-03-20")
+    ensure("Since winter 2017", Interval(0, 3), "DATE-RANGE", "2017-03-20 -- ref-date")
+    ensure("Since winter", Interval(0, 2), "DATE-RANGE", "XXXX-03-20 -- ref-date")
+    ensure("Until summer 2017", Interval(0, 3), "DATE-RANGE", "ref-date -- 2017-06-21")
+    ensure("Until summer", Interval(0, 2), "DATE-RANGE", "ref-date -- XXXX-06-21")
+  }
+
+  it should "recognize unbounded date ranges with seasons" in {
+    ensure("before summer 2016", Interval(0, 3), "DATE-RANGE", "XXXX-XX-XX -- 2016-06-21")
+    ensure("prior to summer 2016", Interval(0, 4), "DATE-RANGE", "XXXX-XX-XX -- 2016-06-21")
+    ensure("after summer 2016", Interval(0, 3), "DATE-RANGE", "2016-09-22 -- XXXX-XX-XX")
+    ensure("before summer", Interval(0, 2), "DATE-RANGE", "XXXX-XX-XX -- XXXX-06-21")
+    ensure("after summer", Interval(0, 2), "DATE-RANGE", "XXXX-09-22 -- XXXX-XX-XX")
+  }
+
 
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")

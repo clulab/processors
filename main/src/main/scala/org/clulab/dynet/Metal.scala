@@ -242,7 +242,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val batchLoss = Expression.sum(batchLosses)
 
     // forward pass and stats
-    val batchLossAsFloat = batchLoss.value().toFloat
+    val batchLossAsFloat = batchLoss.value().toFloat()
 
     // backprop
     ComputationGraph.backward(batchLoss)
@@ -427,34 +427,32 @@ object Metal {
   }
 
   def main(args: Array[String]): Unit = {
-    val props = StringUtils.argsToProperties(args)
+    val props = StringUtils.argsToMap(args)
     initializeDyNet() // autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
 
-    if(props.containsKey("train")) {
-      assert(props.containsKey("conf"))
-      val configName = props.getProperty("conf")
+    if (props.contains("train")) {
+      val configName = props("conf")
       val config = ConfigFactory.load(configName)
       val parameters = new ParameterCollection()
       val taskManager = new TaskManager(config)
-      val modelName = props.getProperty("train")
+      val modelName = props("train")
 
       val mtl = new Metal(Some(taskManager), parameters, None)
       mtl.train(modelName)
     }
 
-    else if(props.containsKey("test")) {
-      assert(props.containsKey("conf"))
-      val configName = props.getProperty("conf")
+    else if(props.contains("test")) {
+      val configName = props("conf")
       val config = ConfigFactory.load(configName)
       val taskManager = new TaskManager(config)
-      val modelName = props.getProperty("test")
+      val modelName = props("test")
 
       val mtl = Metal(modelName, taskManager)
       mtl.test()
     }
 
-    else if(props.containsKey("shell")) {
-      val modelName = props.getProperty("shell")
+    else if(props.contains("shell")) {
+      val modelName = props("shell")
       val mtl = Metal(modelName)
       val shell = new MetalShell(mtl)
       shell.shell()

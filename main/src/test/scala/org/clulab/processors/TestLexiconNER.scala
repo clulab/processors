@@ -1,5 +1,7 @@
 package org.clulab.processors
 
+import org.clulab.sequences.FileOverrideKbSource
+import org.clulab.sequences.FileStandardKbSource
 import org.clulab.sequences.LexicalVariations
 
 import java.io.ByteArrayInputStream
@@ -16,6 +18,8 @@ import org.clulab.struct.EntityValidator
 import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.SeqOdometer
+
+import java.io.File
 
 class TestLexiconNER extends FatdynetTest {
 
@@ -99,7 +103,7 @@ class TestLexiconNER extends FatdynetTest {
         if (caseInsensitivesOpt.isEmpty)
           LexiconNER(kbs, Some(overrideKBs), entityValidator, lexicalVariations, useLemmas, caseInsensitive)
         else
-          LexiconNER(kbs, Some(overrideKBs), caseInsensitivesOpt.get, entityValidator, lexicalVariations, useLemmas, caseInsensitive)
+          LexiconNER(kbs, Some(overrideKBs), caseInsensitivesOpt.get, entityValidator, lexicalVariations, useLemmas, caseInsensitive, None)
 
       testNer(ner1)
 
@@ -115,8 +119,8 @@ class TestLexiconNER extends FatdynetTest {
           new MemoryStandardKbSource(label, lines, caseInsensitive)
         }
         val overrideKbSources = overrideKBs.map { overrideKB =>
-          val resourceOverriceKbSource = new ResourceOverrideKbSource(overrideKB)
-          val lines = resourceOverriceKbSource.getLines
+          val resourceOverrideKbSource = new ResourceOverrideKbSource(overrideKB)
+          val lines = resourceOverrideKbSource.getLines
 
           new MemoryOverrideKbSource(lines)
         }
@@ -125,6 +129,31 @@ class TestLexiconNER extends FatdynetTest {
       }
 
       testNer(ner2)
+
+      val ner3 = {
+        val baseDir = new File("./main/src/test/resources")
+        assert(baseDir.exists)
+        val caseInsensitives = caseInsensitivesOpt.getOrElse {
+          kbs.map(_ => caseInsensitive)
+        }
+        val standardKbSources = kbs.zip(caseInsensitives).map { case (kb, caseInsensitive) =>
+          val fileStandardKbSource = new FileStandardKbSource(kb, caseInsensitive, baseDir)
+          val label = fileStandardKbSource.getLabel
+          val lines = fileStandardKbSource.getLines
+
+          new MemoryStandardKbSource(label, lines, caseInsensitive)
+        }
+        val overrideKbSources = overrideKBs.map { overrideKB =>
+          val fileOverrideKbSource = new FileOverrideKbSource(overrideKB, baseDir)
+          val lines = fileOverrideKbSource.getLines
+
+          new MemoryOverrideKbSource(lines)
+        }
+
+        LexiconNER(standardKbSources, Some(overrideKbSources), lexicalVariations, entityValidator, useLemmas, caseInsensitive)
+      }
+
+      testNer(ner3)
     }
   }
 

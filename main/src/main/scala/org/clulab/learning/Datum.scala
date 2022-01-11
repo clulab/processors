@@ -53,7 +53,7 @@ class BVFDatum[L, F](
 
   override def equals(other:Any):Boolean = {
     other match {
-      case that:BVFDatum[L, F] => label == that.label && features == that.features
+      case that:BVFDatum[_, _] => label == that.label && features == that.features
       case _ => false
     }
   }
@@ -78,7 +78,7 @@ class RVFDatum[L, F](
 
   override def equals(other:Any):Boolean = {
     other match {
-      case that:RVFDatum[L, F] => label == that.label && featuresCounter == that.featuresCounter
+      case that:RVFDatum[_, _] => label == that.label && featuresCounter == that.featuresCounter
       case _ => false
     }
   }
@@ -99,7 +99,7 @@ class RVFKDatum[L, F](
 
   override def equals(other:Any):Boolean = {
     other match {
-      case that:RVFKDatum[L, F] => label == that.label && featuresCounter == that.featuresCounter && kernel == that.kernel
+      case that:RVFKDatum[_, _] => label == that.label && featuresCounter == that.featuresCounter && kernel == that.kernel
       case _ => false
     }
   }

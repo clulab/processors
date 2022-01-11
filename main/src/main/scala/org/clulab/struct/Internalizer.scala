@@ -30,11 +30,11 @@ class Internalizer[T] {
     }
   }
 
-  def stats() {
+  def stats(): Unit = {
     val formatter = new DecimalFormat("#.##")
     println("Stored objects: " + records.size)
     println(" Saved objects: " + formatter.format((100.0 * savedObjects) / (savedObjects + records.size)) + "%")
   }
 
-  def clear(showStats:Boolean = false) { if(showStats) stats(); records.clear() }
+  def clear(showStats:Boolean = false): Unit = { if(showStats) stats(); records.clear() }
 }

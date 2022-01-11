@@ -4,6 +4,7 @@ taxonomy:
           - Atomic:
               - PossibleDay
               - PossibleMonth
+              - PossibleSeason
               - PossibleYear
               - Number
           - Subatomic:
@@ -25,6 +26,7 @@ taxonomy:
       - NamedEntity:
           - Month
           - MeasurementUnit
+          - Season
 
 rules:
   - import: org/clulab/numeric/atomic.yml

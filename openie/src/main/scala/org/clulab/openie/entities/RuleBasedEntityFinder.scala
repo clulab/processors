@@ -61,20 +61,11 @@ class RuleBasedEntityFinder(
     val avoid = avoidEngine.extractFrom(doc)
     val stateFromAvoid = State(avoid)
     val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filterNot(stateFromAvoid.contains)
-    val expandedEntities: Seq[Mention] = baseEntities.map(entity => expand(entity, maxHops))
+    val expandedEntities: Seq[Mention] = baseEntities.map(entity => expand(entity, maxHops, stateFromAvoid))
     // split entities on likely coordinations
     val splitEntities = (baseEntities ++ expandedEntities).flatMap(splitCoordinatedEntities)
     // remove entity duplicates introduced by splitting expanded
-    val distinctEntities = splitEntities.distinct
-    // if there are no avoid mentions, no need to filter
-    val res = if (avoid.isEmpty) {
-      distinctEntities
-    } else {
-      // check that our expanded entities haven't swallowed any avoid mentions
-      val avoidLabel = avoid.head.labels.last
-      distinctEntities.filterNot { m => stateFromAvoid.hasMentionsFor(m.sentence, m.tokenInterval, avoidLabel) }
-    }
-    res
+    splitEntities.distinct
   }
 
   def extractAndFilter(doc: Document): Seq[Mention] = {
@@ -148,21 +139,23 @@ class RuleBasedEntityFinder(
   /**
     * Expands an entity up to the specified number of hops along valid grammatical relations.
     */
-  def expand(entity: Mention, maxHops: Int): Mention = {
+  def expand(entity: Mention, maxHops: Int, avoid: State): Mention = {
     // if you're not expanding, just return the mention
     if (maxHops == 0) return entity
-    val interval = traverseOutgoing(entity, maxHops)
+    val interval = traverseOutgoing(entity, maxHops, avoid)
     new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
   }
 
   /** Used by expand to selectively traverse the provided syntactic dependency graph **/
   @tailrec
   private def traverseOutgoing(
+    sent: Int,
     tokens: Set[Int],
     newTokens: Set[Int],
     outgoingRelations: Array[Array[(Int, String)]],
     incomingRelations: Array[Array[(Int, String)]],
-    remainingHops: Int
+    remainingHops: Int,
+    avoid: State
   ): Interval = {
     if (remainingHops == 0) {
       val allTokens = tokens ++ newTokens
@@ -174,14 +167,16 @@ class RuleBasedEntityFinder(
         (nextTok, dep) <- outgoingRelations(tok)
         if isValidOutgoingDependency(dep)
         if hasValidIncomingDependencies(nextTok, incomingRelations)
+        (start, end) = if (tok <= nextTok) (tok, nextTok) else (nextTok, tok)
+        if avoid.mentionsFor(sent, Interval(start, end)).isEmpty
       } yield nextTok
-      traverseOutgoing(tokens ++ newTokens, newNewTokens, outgoingRelations, incomingRelations, remainingHops - 1)
+      traverseOutgoing(sent, tokens ++ newTokens, newNewTokens, outgoingRelations, incomingRelations, remainingHops - 1, avoid)
     }
   }
-  private def traverseOutgoing(m: Mention, numHops: Int): Interval = {
+  private def traverseOutgoing(m: Mention, numHops: Int, avoid: State): Interval = {
     val outgoing = outgoingEdges(m.sentenceObj)
     val incoming = incomingEdges(m.sentenceObj)
-    traverseOutgoing(Set.empty, m.tokenInterval.toSet, outgoingRelations = outgoing, incomingRelations = incoming, numHops)
+    traverseOutgoing(m.sentence, Set.empty, m.tokenInterval.toSet, outgoingRelations = outgoing, incomingRelations = incoming, numHops, avoid)
   }
 
   def outgoingEdges(s: Sentence): Array[Array[(Int, String)]] = s.dependencies match {

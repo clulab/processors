@@ -4,8 +4,10 @@ import java.io.File
 import java.net.URL
 import java.util.{Collection, Map => JMap}
 import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 import org.apache.commons.text.StrSubstitutor
+import org.apache.commons.io.FileUtils.readFileToString
 
 import scala.collection.JavaConverters._
 import scala.io.{Codec, Source}
@@ -18,7 +20,7 @@ import org.clulab.utils.Closer._
 
 
 
-class RuleReader(val actions: Actions, val charset: Charset) {
+class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option[File] = None) {
 
   import RuleReader._
 
@@ -230,23 +232,39 @@ class RuleReader(val actions: Actions, val charset: Charset) {
   def readOrImportVars(data: Any): Map[String, String] = data match {
     case vars: JMap[_, _] => vars.asScala.map{ case (k,v) => k.toString -> processVar(v) }.toMap
     case path: String =>
-      val url = mkURL(path)
-      val source = Source.fromURL(url)
-      val input = source.mkString
-      source.close()
+      val input = readFileOrResource(path)
       val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
       val vars = yaml.load(input).asInstanceOf[JMap[String, Any]]
       vars.asScala.mapValues(v => processVar(v)).toMap
+  }
+
+  /**
+    * Tries to read the path as a file first. If it fails, then it tries
+    * to read from the jar resources.
+    *
+    * @param s
+    * @return
+    */
+  def readFileOrResource(s: String): String = {
+    ruleDir match {
+      case Some(path) =>
+        val filepath = if (s.startsWith("/")) s.drop(1) else s
+        val f = new File(path, filepath)
+        readFileToString(f, StandardCharsets.UTF_8)
+      case None =>
+        val url = mkURL(s)
+        val source = Source.fromURL(url)
+        val data = source.mkString
+        source.close()
+        data
+    }
   }
 
   // reads a taxonomy from data, where data may be either a forest or a file path
   private def readTaxonomy(data: Any): Taxonomy = data match {
     case t: Collection[_] => Taxonomy(t.asInstanceOf[Collection[Any]])
     case path: String =>
-      val url = mkURL(path)
-      val source = Source.fromURL(url)
-      val input = source.mkString
-      source.close()
+      val input = readFileOrResource(path)
       val yaml = new Yaml(new Constructor(classOf[Collection[Any]]))
       val data = yaml.load(input).asInstanceOf[Collection[Any]]
       Taxonomy(data)
@@ -273,10 +291,7 @@ class RuleReader(val actions: Actions, val charset: Charset) {
       val res = replaceVars(p, config.variables)
       res
     }
-    val url = mkURL(path)
-    val source = Source.fromURL(url)
-    val input = source.mkString // slurp
-    source.close()
+    val input = readFileOrResource(path)
     // read rules and vars from file
     val (jRules: Collection[JMap[String, Any]], localVars: Map[String, String]) = try {
       // try to read file with rules and optional vars by trying to read a JMap
