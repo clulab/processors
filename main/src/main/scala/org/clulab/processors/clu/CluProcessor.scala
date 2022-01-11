@@ -20,6 +20,7 @@ import org.clulab.processors.clu.backend.SrlaBackend
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.processors.clu.backend.EmbeddingsAttachment
 import org.clulab.processors.clu.backend.MetalBackend
+import org.clulab.processors.clu.backend.OnnxNerBackend
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
@@ -128,7 +129,7 @@ class CluProcessor protected (
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
       case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => new MetalNerBackend(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+      case _ => new OnnxNerBackend(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
     }
   }
 
