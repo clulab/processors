@@ -18,6 +18,18 @@ import org.json4s.jackson.JsonMethods.parse
 import java.io.BufferedInputStream
 import java.util.{HashMap => JHashMap}
 
+class OnnxBackend {
+  protected val wordEmbeddingMap: WordEmbeddingMap = ConstEmbeddingsGlove.SINGLETON_WORD_EMBEDDING_MAP.get
+  protected val ortEnvironment: OrtEnvironment = OrtEnvironment.getEnvironment
+  protected val sessionCreator = new SessionCreator(ortEnvironment)
+
+  def toMap(jValue: JValue): Map[String, Long] = {
+    jValue.asInstanceOf[JObject].obj.map { case (key: Any, value) =>
+      key -> value.asInstanceOf[JInt].num.longValue()
+    }.toMap
+  }
+}
+
 object OnnxBackend extends CluBackend
 
 class OnnxPosBackend(modelFilenamePrefix: String) extends PosBackend {
@@ -26,31 +38,18 @@ class OnnxPosBackend(modelFilenamePrefix: String) extends PosBackend {
       (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = ???  // tags, chunks, and preds
 }
 
-class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends NerBackend {
-  protected val wordEmbeddingMap: WordEmbeddingMap = ConstEmbeddingsGlove.SINGLETON_WORD_EMBEDDING_MAP.get
-
+class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends OnnxBackend with NerBackend {
+  protected val wordSession: OrtSession = sessionCreator.create(wordModel)
+  protected val charSession: OrtSession = sessionCreator.create(charModel)
   val (w2i, c2i, i2t) = {
-
-    def toMap(jValue: JValue): Map[String, Long] = {
-      jValue.asInstanceOf[JObject].obj.map { case (key: Any, value) =>
-        key -> value.asInstanceOf[JInt].num.longValue()
-      }.toMap
-    }
-
     val json = FileUtils.getTextFromResource(x2i)
     val jArray = parse(json).asInstanceOf[JArray].arr
     val w2i = toMap(jArray(0) \ "x2i" \ "initialLayer" \ "w2i")
     val c2i = toMap(jArray(0) \ "x2i" \ "initialLayer" \ "c2i").map { case (key, value) => key.head -> value }
-    val t2i = toMap(jArray(1) \ "x2i" \ "finalLayer"   \ "t2i")
-    val i2t = t2i.toArray.sortBy(_._2).map(_._1)
+    val i2t = toMap(jArray(1) \ "x2i" \ "finalLayer"   \ "t2i").toArray.sortBy(_._2).map(_._1)
 
     (w2i, c2i, i2t)
   }
-
-  protected val ortEnvironment: OrtEnvironment = OrtEnvironment.getEnvironment
-  protected val sessionCreator = new SessionCreator(ortEnvironment)
-  protected val wordSession: OrtSession = sessionCreator.create(wordModel)
-  protected val charSession: OrtSession = sessionCreator.create(charModel)
 
   def predict(annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       IndexedSeq[String] = {
@@ -64,7 +63,7 @@ class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends 
       wordEmbeddings(index) = wordEmbeddingMap.getOrElseUnknown(word).toArray
       wordIds(index) = w2i.getOrElse(word, 0L)
 
-      val charIds = word.map { c => c2i.getOrElse(c, 0L) }.toArray
+      val charIds = word.map(c2i.getOrElse(_, 0L)).toArray
       val charInput = new JHashMap[String, OnnxTensor]()
       charInput.put("char_ids", OnnxTensor.createTensor(ortEnvironment, charIds))
       charEmbeddings(index) = charSession.run(charInput).get(0).getValue.asInstanceOf[Array[Float]]
@@ -77,7 +76,7 @@ class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends 
 
     val emissionScores = wordSession.run(wordInput).get(0).getValue.asInstanceOf[Array[Array[Float]]]
     val labelIds = Utils.greedyPredict(emissionScores)
-    val preds = labelIds.map(i2t(_))
+    val preds = labelIds.map(i2t)
 
     preds
   }

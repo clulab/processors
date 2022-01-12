@@ -9,7 +9,7 @@ import java.io.Closeable
 
 object MetalBackend extends CluBackend {
 
-  override def mkEmbeddings(doc: Document): Closeable = {
+  def mkEmbeddings(doc: Document): Closeable = {
     // Fetch the const embeddings from GloVe. All our models need them.
     ConstEmbeddingsGlove.mkConstLookupParams(doc)
   }

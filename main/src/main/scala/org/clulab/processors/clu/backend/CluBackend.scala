@@ -10,9 +10,7 @@ case class CloseableNone() extends Closeable {
   def close(): Unit = ()
 }
 
-trait CluBackend {
-  def mkEmbeddings(doc: Document): Closeable = CloseableNone()
-}
+trait CluBackend
 
 class EmbeddingsAttachment(protected val value: Closeable) extends IntermediateDocumentAttachment with Closeable {
   // TODO: This would need to change if multiple values were to be stored.
