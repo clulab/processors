@@ -3,11 +3,12 @@ package org.clulab.processors.clu.backend
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
-import com.typesafe.config.ConfigFactory
-import org.clulab.dynet.TaskManager
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.AnnotatedSentence
+import org.clulab.utils.Closer.AutoCloser
+import org.clulab.utils.FileUtils
 
+import java.io.BufferedInputStream
 import _root_.scala.io.Source
 import _root_.scala.util.parsing.json._
 
@@ -19,7 +20,7 @@ class OnnxPosBackend(modelFilenamePrefix: String) extends PosBackend {
       (IndexedSeq[String], IndexedSeq[String], IndexedSeq[String]) = ???  // tags, chunks, and preds
 }
 
-class OnnxNerBackend(modelFilenamePrefix: String) extends NerBackend {
+class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends NerBackend {
 
   def get_embeddings(embed_file_path: String): Map[String,Array[Float]]={
     val emb = Source.fromFile(embed_file_path)
@@ -34,15 +35,7 @@ class OnnxNerBackend(modelFilenamePrefix: String) extends NerBackend {
     emb_map
   }
 
-  val configName = "org/clulab/mtl-en-ner.conf"
-
-  val config = ConfigFactory.load(configName)
-  val taskManager = new TaskManager(config)
-
-  val embed_file_path: String = "../glove/glove.840B.300d.10f.txt"
-  val wordEmbeddingMap = get_embeddings(embed_file_path)
-
-  val jsonString = Source.fromFile("../onnx/ner.json").getLines.mkString
+  val jsonString = FileUtils.getTextFromResource(x2i)
   val parsed = JSON.parseFull(jsonString)
   val w2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("w2i").asInstanceOf[Map[String, Double]]
   val c2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("c2i").asInstanceOf[Map[String, Double]]
@@ -50,14 +43,15 @@ class OnnxNerBackend(modelFilenamePrefix: String) extends NerBackend {
   val i2t = for ((k,v) <- t2i) yield (v, k)
 
   val ortEnvironment = OrtEnvironment.getEnvironment
-  val modelpath1 = "../onnx/char.onnx"
-  val session1 = ortEnvironment.createSession(modelpath1, new OrtSession.SessionOptions)
-  val modelpath2 = "../onnx/model.onnx"
-  val session2 = ortEnvironment.createSession(modelpath2, new OrtSession.SessionOptions)
+  val sessionCreator = new SessionCreator(ortEnvironment)
+  val wordSession = sessionCreator.create(wordModel)
+  val charSession = sessionCreator.create(charModel)
+
+  val embed_file_path: String = "../glove/glove.840B.300d.10f.txt"
+  val wordEmbeddingMap = get_embeddings(embed_file_path)
 
   def predict(annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       IndexedSeq[String] = {
-
     val words = annotatedSentence.words
     val embeddings: Array[Array[Float]] = new Array[Array[Float]](words.length)
     val wordIds: Array[Long] = new Array[Long](words.length)
@@ -69,7 +63,7 @@ class OnnxNerBackend(modelFilenamePrefix: String) extends NerBackend {
       wordIds(i) = w2i.getOrElse(word, 0).asInstanceOf[Number].longValue
       val char_input = new java.util.HashMap[String, OnnxTensor]()
       char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i.getOrElse(c.toString, 0).asInstanceOf[Number].longValue).toArray))
-      char_embs(i) = session1.run(char_input).get(0).getValue.asInstanceOf[Array[Float]]
+      char_embs(i) = charSession.run(char_input).get(0).getValue.asInstanceOf[Array[Float]]
     }
 
     val input = new java.util.HashMap[String, OnnxTensor]()
@@ -79,7 +73,7 @@ class OnnxNerBackend(modelFilenamePrefix: String) extends NerBackend {
     input.put("words", word_tensor)
     val char_tensor = OnnxTensor.createTensor(ortEnvironment, char_embs)
     input.put("chars", char_tensor)
-    val emissionScores = session2.run(input).get(0).getValue.asInstanceOf[Array[Array[Float]]]
+    val emissionScores = wordSession.run(input).get(0).getValue.asInstanceOf[Array[Array[Float]]]
     val labelIds = Utils.greedyPredict(emissionScores)
     val preds = labelIds.map(i2t(_))
 
@@ -97,4 +91,21 @@ class OnnxDepsBackend(modelFilenamePrefix: String) extends DepsBackend {
 
   def predict(annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       IndexedSeq[(Int, String)] = ??? // heads and labels
+}
+
+class SessionCreator(ortEnvironment: OrtEnvironment) {
+
+  // See https://stackoverflow.com/questions/33755415/how-to-read-a-resource-file-to-a-byte-array-in-scala
+  def getBytesFromResource(resourceName: String): Array[Byte] = {
+    new BufferedInputStream(getClass.getResourceAsStream(resourceName)).autoClose { inputStream =>
+      Stream.continually(inputStream.read).takeWhile(-1 !=).map(_.toByte).toArray
+    }
+  }
+
+  def create(resourceName: String): OrtSession = {
+    val model = getBytesFromResource(resourceName)
+    val session = ortEnvironment.createSession(model, new OrtSession.SessionOptions)
+
+    session
+  }
 }

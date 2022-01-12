@@ -129,7 +129,11 @@ class CluProcessor protected (
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
       case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => new OnnxNerBackend(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+      case _ => new OnnxNerBackend(
+        getArgString(s"$prefix.onnx.ner.wordModel", Some("/org/clulab/processors/clu/onnx/ner/word.onnx")),
+        getArgString(s"$prefix.onnx.ner.charModel", Some("/org/clulab/processors/clu/onnx/ner/char.onnx")),
+        getArgString(s"$prefix.onnx.ner.x2iMapper", Some("/org/clulab/processors/clu/onnx/ner/x2i.json"))
+      )
     }
   }
 
