@@ -7,10 +7,14 @@ import org.clulab.dynet.Utils
 import org.clulab.processors.clu.AnnotatedSentence
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
+import org.json4s.JArray
+import org.json4s.JInt
+import org.json4s.JObject
+import org.json4s.JValue
+import org.json4s.jackson.JsonMethods.parse
 
 import java.io.BufferedInputStream
 import _root_.scala.io.Source
-import _root_.scala.util.parsing.json._
 
 object OnnxBackend extends CluBackend
 
@@ -35,12 +39,24 @@ class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends 
     emb_map
   }
 
-  val jsonString = FileUtils.getTextFromResource(x2i)
-  val parsed = JSON.parseFull(jsonString)
-  val w2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("w2i").asInstanceOf[Map[String, Double]]
-  val c2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("c2i").asInstanceOf[Map[String, Double]]
-  val t2i = parsed.get.asInstanceOf[List[Any]](1).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("finalLayer").asInstanceOf[Map[String, Any]]("t2i").asInstanceOf[Map[String, Double]]
-  val i2t = for ((k,v) <- t2i) yield (v, k)
+  val (w2i, c2i, i2t) = {
+
+    def toMap(jValue: JValue): Map[String, Long] = {
+      jValue.asInstanceOf[JObject].obj.map { case (key: Any, value) =>
+        key -> value.asInstanceOf[JInt].num.longValue()
+      }.toMap
+    }
+
+    val json = FileUtils.getTextFromResource(x2i)
+    val jArray = parse(json).asInstanceOf[JArray].arr
+    val w2i = toMap((jArray(0) \ "x2i" \ "initialLayer" \ "w2i"))
+    val c2i = toMap((jArray(0) \ "x2i" \ "initialLayer" \ "c2i"))
+    val t2i = toMap((jArray(1) \ "x2i" \ "finalLayer"   \ "t2i"))
+    val i2t = t2i.map { case (key, value) => value -> key }
+    // TODO: Turn this into an indexedseq and just get at the right index
+
+    (w2i, c2i, i2t)
+  }
 
   val ortEnvironment = OrtEnvironment.getEnvironment
   val sessionCreator = new SessionCreator(ortEnvironment)
