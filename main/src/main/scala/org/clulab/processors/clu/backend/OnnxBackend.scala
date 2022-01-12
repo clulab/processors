@@ -3,7 +3,9 @@ package org.clulab.processors.clu.backend
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
+import org.clulab.embeddings.WordEmbeddingMap
 import org.clulab.processors.clu.AnnotatedSentence
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
@@ -14,7 +16,7 @@ import org.json4s.JValue
 import org.json4s.jackson.JsonMethods.parse
 
 import java.io.BufferedInputStream
-import _root_.scala.io.Source
+import java.util.{HashMap => JHashMap}
 
 object OnnxBackend extends CluBackend
 
@@ -25,19 +27,7 @@ class OnnxPosBackend(modelFilenamePrefix: String) extends PosBackend {
 }
 
 class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends NerBackend {
-
-  def get_embeddings(embed_file_path: String): Map[String,Array[Float]]={
-    val emb = Source.fromFile(embed_file_path)
-    var emb_map: Map[String,Array[Float]] = Map()
-    for (s <- emb.getLines) {
-      if (s.split(" ")(0) == ""){
-        emb_map += ("<UNK>"-> s.split(" ").slice(1, s.split(" ").size).map(_.toFloat))
-      }else{
-        emb_map += (s.split(" ")(0) -> s.split(" ").slice(1, s.split(" ").size).map(_.toFloat))
-      }
-    }
-    emb_map
-  }
+  protected val wordEmbeddingMap: WordEmbeddingMap = ConstEmbeddingsGlove.SINGLETON_WORD_EMBEDDING_MAP.get
 
   val (w2i, c2i, i2t) = {
 
@@ -49,47 +39,44 @@ class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends 
 
     val json = FileUtils.getTextFromResource(x2i)
     val jArray = parse(json).asInstanceOf[JArray].arr
-    val w2i = toMap((jArray(0) \ "x2i" \ "initialLayer" \ "w2i"))
-    val c2i = toMap((jArray(0) \ "x2i" \ "initialLayer" \ "c2i"))
-    val t2i = toMap((jArray(1) \ "x2i" \ "finalLayer"   \ "t2i"))
+    val w2i = toMap(jArray(0) \ "x2i" \ "initialLayer" \ "w2i")
+    val c2i = toMap(jArray(0) \ "x2i" \ "initialLayer" \ "c2i").map { case (key, value) => key.head -> value }
+    val t2i = toMap(jArray(1) \ "x2i" \ "finalLayer"   \ "t2i")
     val i2t = t2i.map { case (key, value) => value -> key }
     // TODO: Turn this into an indexedseq and just get at the right index
 
     (w2i, c2i, i2t)
   }
 
-  val ortEnvironment = OrtEnvironment.getEnvironment
-  val sessionCreator = new SessionCreator(ortEnvironment)
-  val wordSession = sessionCreator.create(wordModel)
-  val charSession = sessionCreator.create(charModel)
-
-  val embed_file_path: String = "../glove/glove.840B.300d.10f.txt"
-  val wordEmbeddingMap = get_embeddings(embed_file_path)
+  protected val ortEnvironment: OrtEnvironment = OrtEnvironment.getEnvironment
+  protected val sessionCreator = new SessionCreator(ortEnvironment)
+  protected val wordSession: OrtSession = sessionCreator.create(wordModel)
+  protected val charSession: OrtSession = sessionCreator.create(charModel)
 
   def predict(annotatedSentence: AnnotatedSentence, embeddingsAttachment: EmbeddingsAttachment):
       IndexedSeq[String] = {
     val words = annotatedSentence.words
-    val embeddings: Array[Array[Float]] = new Array[Array[Float]](words.length)
+    val wordEmbeddings: Array[Array[Float]] = new Array[Array[Float]](words.length)
     val wordIds: Array[Long] = new Array[Long](words.length)
-    val char_embs: Array[Array[Float]] = new Array[Array[Float]](words.length)
+    val charEmbeddings: Array[Array[Float]] = new Array[Array[Float]](words.length)
 
-    for (i <- words.indices){
-      val word = words(i)
-      embeddings(i) = wordEmbeddingMap.getOrElse(word,wordEmbeddingMap.get( "<UNK>").get)
-      wordIds(i) = w2i.getOrElse(word, 0).asInstanceOf[Number].longValue
-      val char_input = new java.util.HashMap[String, OnnxTensor]()
-      char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i.getOrElse(c.toString, 0).asInstanceOf[Number].longValue).toArray))
-      char_embs(i) = charSession.run(char_input).get(0).getValue.asInstanceOf[Array[Float]]
+    words.indices.foreach { index =>
+      val word = words(index)
+      wordEmbeddings(index) = wordEmbeddingMap.getOrElseUnknown(word).toArray
+      wordIds(index) = w2i.getOrElse(word, 0L)
+
+      val charIds = word.map { c => c2i.getOrElse(c, 0L) }.toArray
+      val charInput = new JHashMap[String, OnnxTensor]()
+      charInput.put("char_ids", OnnxTensor.createTensor(ortEnvironment, charIds))
+      charEmbeddings(index) = charSession.run(charInput).get(0).getValue.asInstanceOf[Array[Float]]
     }
 
-    val input = new java.util.HashMap[String, OnnxTensor]()
-    val emb_tensor = OnnxTensor.createTensor(ortEnvironment, embeddings)
-    input.put("embed", emb_tensor)
-    val word_tensor = OnnxTensor.createTensor(ortEnvironment, wordIds)
-    input.put("words", word_tensor)
-    val char_tensor = OnnxTensor.createTensor(ortEnvironment, char_embs)
-    input.put("chars", char_tensor)
-    val emissionScores = wordSession.run(input).get(0).getValue.asInstanceOf[Array[Array[Float]]]
+    val wordInput = new JHashMap[String, OnnxTensor]()
+    wordInput.put("embed", OnnxTensor.createTensor(ortEnvironment, wordEmbeddings))
+    wordInput.put("words", OnnxTensor.createTensor(ortEnvironment, wordIds))
+    wordInput.put("chars", OnnxTensor.createTensor(ortEnvironment, charEmbeddings))
+
+    val emissionScores = wordSession.run(wordInput).get(0).getValue.asInstanceOf[Array[Array[Float]]]
     val labelIds = Utils.greedyPredict(emissionScores)
     val preds = labelIds.map(i2t(_))
 
@@ -114,7 +101,7 @@ class SessionCreator(ortEnvironment: OrtEnvironment) {
   // See https://stackoverflow.com/questions/33755415/how-to-read-a-resource-file-to-a-byte-array-in-scala
   def getBytesFromResource(resourceName: String): Array[Byte] = {
     new BufferedInputStream(getClass.getResourceAsStream(resourceName)).autoClose { inputStream =>
-      Stream.continually(inputStream.read).takeWhile(-1 !=).map(_.toByte).toArray
+      Stream.continually(inputStream.read).takeWhile(_ != -1).map(_.toByte).toArray
     }
   }
 
