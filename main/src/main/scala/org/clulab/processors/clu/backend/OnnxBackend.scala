@@ -42,8 +42,7 @@ class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends 
     val w2i = toMap(jArray(0) \ "x2i" \ "initialLayer" \ "w2i")
     val c2i = toMap(jArray(0) \ "x2i" \ "initialLayer" \ "c2i").map { case (key, value) => key.head -> value }
     val t2i = toMap(jArray(1) \ "x2i" \ "finalLayer"   \ "t2i")
-    val i2t = t2i.map { case (key, value) => value -> key }
-    // TODO: Turn this into an indexedseq and just get at the right index
+    val i2t = t2i.toArray.sortBy(_._2).map(_._1)
 
     (w2i, c2i, i2t)
   }
