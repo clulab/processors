@@ -19,15 +19,15 @@ class JActionMirror(actions: Actions) {
     val returnType = method.getReturnType.getTypeName
 
     returnType match {
-      case JActionMirror.actionReturnType =>
+      case JActionMirror.plainReturnType =>
         // val action: Action
         method.invoke(actions).asInstanceOf[Action]
-      case JActionMirror.seqMentionReturnType =>
+      case JActionMirror.scalaReturnType =>
         // def action(mentions: Seq[Mention], state: State): Seq[Mention]
         (mentions: Seq[Mention], state: State) => {
           method.invoke(actions, mentions, state).asInstanceOf[Seq[Mention]]
         }
-      case JActionMirror.jListMentionReturnType =>
+      case JActionMirror.javaReturnType =>
         // java.util.List<Mention> action(java.util.List<Mention> mentions, State state)
         (mentions: Seq[Mention], state: State) => {
           method.invoke(actions, mentions.asJava, state).asInstanceOf[JList[Mention]].asScala
@@ -39,8 +39,7 @@ class JActionMirror(actions: Actions) {
 }
 
 object JActionMirror {
-  // Turn this into a map with converters which take the method.
-  val actionReturnType: String = classOf[Action].getTypeName
-  val seqMentionReturnType: String = classOf[Seq[Mention]].getTypeName
-  val jListMentionReturnType: String = classOf[JList[Mention]].getTypeName
+  val plainReturnType: String = classOf[Action].getTypeName
+  val scalaReturnType: String = classOf[Seq[Mention]].getTypeName
+  val javaReturnType: String = classOf[JList[Mention]].getTypeName
 }
