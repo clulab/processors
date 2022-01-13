@@ -21,9 +21,7 @@ class JActionMirror(actions: Actions) {
     returnType match {
       case JActionMirror.actionReturnType =>
         // val action: Action
-        (mentions: Seq[Mention], state: State) => {
-          method.invoke(actions).asInstanceOf[Action](mentions, state).asInstanceOf[Seq[Mention]]
-        }
+        method.invoke(actions).asInstanceOf[Action]
       case JActionMirror.seqMentionReturnType =>
         // def action(mentions: Seq[Mention], state: State): Seq[Mention]
         (mentions: Seq[Mention], state: State) => {
