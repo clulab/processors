@@ -48,6 +48,14 @@ rules:
     pattern: |
       [entity=/B-SEASON/] [entity=/I-SEASON/]*
 
+  # possible holiday
+  - name: holiday-name
+    label: Holiday
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [entity=/B-HOLIDAY/] [entity=/I-HOLIDAY/]*
+
   # possible modifier
   - name: modifier
     label: PossibleModifier
