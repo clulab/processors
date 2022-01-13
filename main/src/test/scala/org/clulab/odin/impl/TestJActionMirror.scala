@@ -76,6 +76,14 @@ class TestJActionMirror extends Test {
     outMentions should not be theSameInstanceAs (inMentions)
   }
 
+  it should "mirror the defaultAction" in {
+    val inMentions = Vector[Mention]()
+    val action = actionMirror.reflect("default")
+    val outMentions = action(inMentions, state)
+
+    outMentions should be theSameInstanceAs inMentions
+  }
+
   it should "not mirror an otherAction" in {
     actions.otherActionCalled should be (0)
     a [RuntimeException] should be thrownBy {
