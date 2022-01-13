@@ -11,10 +11,16 @@ import java.util.{List => JList}
 class TestActionMirror extends Test {
 
   class TestActions extends Actions {
+    var rawActionCalled = 0
     var plainActionCalled = 0
     var scalaActionCalled = 0
     var javaActionCalled = 0
     var otherActionCalled = 0
+
+    val rawAction: Action = (mentions: Seq[Mention], state: State) => {
+      rawActionCalled += 1
+      mentions
+    }
 
     def plainAction: Action = (mentions: Seq[Mention], state: State) => {
       plainActionCalled += 1
@@ -42,6 +48,17 @@ class TestActionMirror extends Test {
   val state = new State()
 
   behavior of "ActionMirror"
+
+  it should "mirror a rawAction" in {
+    actions.rawActionCalled should be (0)
+
+    val inMentions = Vector[Mention]()
+    val action = actionMirror.reflect("rawAction")
+    val outMentions = action(inMentions, state)
+
+    actions.rawActionCalled should be (1)
+    outMentions should be theSameInstanceAs inMentions
+  }
 
   it should "mirror a plainAction" in {
     actions.plainActionCalled should be (0)
