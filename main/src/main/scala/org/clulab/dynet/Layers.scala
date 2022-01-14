@@ -77,7 +77,6 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForward(sentence: AnnotatedSentence,
                              constEmbeddings: ConstEmbeddingParameters,
-                             negativesFactor: Float, 
                              doDropout: Boolean): EdgeMap[Expression] = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
@@ -91,7 +90,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
     assert(finalLayer.nonEmpty)
     
-    val predGraph = finalLayer.get.graphForward(states, sentence.headPositions, negativesFactor, doDropout)
+    val predGraph = finalLayer.get.graphForward(states, doDropout)
     predGraph
   }
 
@@ -117,7 +116,6 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForwardFrom(inStates: ExpressionVector,
                                  headPositions: Option[IndexedSeq[Int]],
-                                 negativesFactor: Float, 
                                  doDropout: Boolean): EdgeMap[Expression] = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call graphForwardFrom() on a Layers object that has an initial layer: $toString!")
@@ -130,7 +128,7 @@ class Layers (val initialLayer: Option[InitialLayer],
     }
 
     assert(finalLayer.nonEmpty)
-    val predGraph = finalLayer.get.graphForward(states, headPositions, negativesFactor, doDropout)
+    val predGraph = finalLayer.get.graphForward(states, doDropout)
     predGraph
   }
 
@@ -302,7 +300,6 @@ object Layers {
 
   private def graphForwardForTask(layers: IndexedSeq[Layers],
                                   taskId: Int,
-                                  negativesFactor: Float, 
                                   sentence: AnnotatedSentence,
                                   constEmbeddings: ConstEmbeddingParameters,
                                   doDropout: Boolean): EdgeMap[Expression] = {
@@ -316,12 +313,12 @@ object Layers {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
         val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout)
-        layers(taskId + 1).graphForwardFrom(sharedStates, sentence.headPositions, negativesFactor, doDropout)
+        layers(taskId + 1).graphForwardFrom(sharedStates, sentence.headPositions, doDropout)
       }
 
       // no shared layer
       else {
-        layers(taskId + 1).graphForward(sentence, constEmbeddings, negativesFactor, doDropout)
+        layers(taskId + 1).graphForward(sentence, constEmbeddings, doDropout)
       }
     }
 
@@ -335,9 +332,9 @@ object Layers {
     val predGraph = {
       // DyNet's computation graph is a static variable, so this block must be synchronized.
       Synchronizer.withComputationGraph("Layers.graphPredict()") {
-        val states = graphForwardForTask(layers, taskId, -1, sentence, constEmbeddings, doDropout = false)
-        val emissionScores = Utils.graphEmissionScoresToArrays(states)
-        val predGraph = layers(taskId + 1).finalLayer.get.graphInference(emissionScores, sentence.size)
+        val states = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
+        // val emissionScores = Utils.graphEmissionScoresToArrays(states)
+        val predGraph = layers(taskId + 1).finalLayer.get.graphInference(states)
         predGraph
       }
     }    
@@ -455,7 +452,6 @@ object Layers {
 
   def graphLoss(layers: IndexedSeq[Layers],
                 taskId: Int,
-                negativesFactor: Float, 
                 sentence: AnnotatedSentence,
                 goldGraph: EdgeMap[String]): Expression = {
     /*                  
@@ -465,7 +461,7 @@ object Layers {
     */
 
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-    val predictedGraph = graphForwardForTask(layers, taskId, negativesFactor, sentence, constEmbeddings, doDropout = true) // use dropout during training!
+    val predictedGraph = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph)
   }
 }

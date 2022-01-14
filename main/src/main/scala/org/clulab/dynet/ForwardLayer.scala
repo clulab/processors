@@ -144,13 +144,11 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
   }
 
   override def graphForward(inputExpressions: ExpressionVector, 
-                            headPositionsOpt: Option[IndexedSeq[Int]],  
-                            negativesFactor: Float,                 
                             doDropout: Boolean): EdgeMap[Expression] = {
     throw new RuntimeException("ERROR: graphForward not supported for this final layer!")
   }
 
-  override def graphInference(emissionScores: EdgeMap[Array[Float]], sentenceSize: Int): EdgeMap[String] = {
+  override def graphInference(emissionScores: EdgeMap[Expression]): EdgeMap[String] = {
     throw new RuntimeException("ERROR: graphInference not supported for this final layer!")
   }
 

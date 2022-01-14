@@ -9,8 +9,6 @@ trait FinalLayer extends Saveable {
               doDropout: Boolean): ExpressionVector
 
   def graphForward(inputExpressions: ExpressionVector, 
-                   headPositionsOpt: Option[IndexedSeq[Int]],  
-                   negativesFactor: Float,                 
                    doDropout: Boolean): EdgeMap[Expression]
 
   def inDim: Int
@@ -22,7 +20,7 @@ trait FinalLayer extends Saveable {
 
   def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
 
-  def graphInference(emissionScores: EdgeMap[Array[Float]], sentenceSize: Int): EdgeMap[String]
+  def graphInference(emissionScores: EdgeMap[Expression]): EdgeMap[String]
 
   def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]]
 }

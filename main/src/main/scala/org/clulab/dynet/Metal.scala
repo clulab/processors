@@ -77,6 +77,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val reader = new MetalRowReader
 
     for (tid <- taskManager.indices) {
+      val taskType = taskManager.tasks(tid).taskType
       for (sentence <- taskManager.tasks(tid).trainSentences) {
         val annotatedSentences = reader.toAnnotatedSentences(sentence)
 
@@ -86,7 +87,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           for (i <- annotatedSentence.indices) {
             words(tid + 1) += annotatedSentence.words(i)
             words(0) += annotatedSentence.words(i)
-            labels(tid + 1) += sentenceLabels(i)
+            // The graph task is unlabeled, so no labels added here
+            if(taskType != TaskManager.TYPE_GRAPH) {
+              labels(tid + 1) += sentenceLabels(i)
+            }
           }
         }
       }

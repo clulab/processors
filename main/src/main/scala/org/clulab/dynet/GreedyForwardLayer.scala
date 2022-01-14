@@ -66,6 +66,8 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     labelsWithScores
   }
 
+  val YES_EDGE_ID = t2i(Utils.START_TAG)
+
   /**
    * Cross entropy loss for all edges in the predicted graph
    * @param predictedGraph Graph predicted through inference
@@ -111,101 +113,38 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     sum(goldLosses)
   }
 
+  /** Greedy method: for each modifier pick the head with the highest score */
   override def graphForward(inputExpressions: ExpressionVector, 
-                            headPositionsOpt: Option[IndexedSeq[Int]], 
-                            negativesFactor: Float,                  
                             doDropout: Boolean): EdgeMap[Expression] = {
-    if(doDropout) {
-      assert(headPositionsOpt.nonEmpty)
-      graphForwardTrain(inputExpressions, headPositionsOpt.get, negativesFactor)
-    } else {
-      graphForwardTest(inputExpressions)
-    }                              
-  }
+    val edgeMap = new EdgeMap[Expression]  
 
-  private def graphForwardTrain(inputExpressions: ExpressionVector, 
-                                headPositions: IndexedSeq[Int], 
-                                negativesFactor: Float): EdgeMap[Expression] = {
-    assert(inputExpressions.size == headPositions.size)
-    val edgeMap = new EdgeMap[Expression]
     for(modifier <- inputExpressions.indices) {
-      // the positive example
-      val head = headPositions(modifier)
-      edgeMap += ((head, modifier), runForwardDual(modifier, head, inputExpressions, true))
-      //println(s"+\t($head, $modifier)")
+      var bestHead = -100
+      var bestScore = scala.Float.MinValue
+      var bestExpression:Option[Expression] = None
 
-      // up to negFactor negative examples
-      // need to include -1 in the range, for root
-      val negs = mkRandomRange(-1, inputExpressions.size, negativesFactor.toInt, Set(head, modifier), graphRand)
-      for(neg <- negs) {
-        edgeMap += ((neg, modifier), runForwardDual(modifier, neg, inputExpressions, true))
-        //println(s"-\t($neg, $modifier)")
-      }
-    } 
-    edgeMap                                      
-  }
-
-  private def graphForwardTest(inputExpressions: ExpressionVector): EdgeMap[Expression] = {
-    // we try all possible heads at this stage (including root, i.e., -1)
-    val edgeMap = new EdgeMap[Expression]
-    for(modifier <- inputExpressions.indices) {
       for(head <- -1 until inputExpressions.size if head != modifier) {
-        // no dropout during testing
-        edgeMap += ((head, modifier), runForwardDual(modifier, head, inputExpressions, false)) 
+        val scores = runForwardDual(modifier, head, inputExpressions, doDropout)
+        val score = Expression.pick(scores, YES_EDGE_ID).value().toFloat()
+        if(score > bestScore || bestHead < -1) {
+          bestHead = head
+          bestScore = score
+          bestExpression = Some(scores)
+        }
       }
+
+      edgeMap += ((bestHead, modifier), bestExpression.get)
     }
+
     edgeMap
   }
 
-  /** Greedy inference: for each node pick the head with the highest score */
-  override def graphInference(emissionScores: EdgeMap[Array[Float]], sentenceSize: Int): EdgeMap[String] = {
+  /** Create the graph with Strings for labels */
+  override def graphInference(emissionScores: EdgeMap[Expression]): EdgeMap[String] = {
     val predGraph = new EdgeMap[String]
-    val noEdgeId = t2i(Utils.STOP_TAG)
-    var rootNode = -1
-
-    //
-    // gotta make sure we have 1 root
-    //
-    val rootPredictions = new ArrayBuffer[(Int, Int, Int, Float)] // modifier, head, label, score
-    for(modifier <- 0 until sentenceSize) {
-      val scores = emissionScores((-1, modifier))
-      for(labelId <- scores.indices if labelId != noEdgeId) {
-        rootPredictions += Tuple4(modifier, -1, labelId, scores(labelId))
-      }
+    for(edge <- emissionScores.keys) {
+      predGraph += (edge, Utils.START_TAG) // START_TAG indicates the presence of an (unlabeled) edge
     }
-    val sortedRootPredictions = rootPredictions.sortBy(- _._4)
-    val topPrediction = sortedRootPredictions.head
-    rootNode = topPrediction._1
-    val predLabel = i2t(topPrediction._3)
-    predGraph += ((-1, rootNode), predLabel)
-    assert(rootNode != -1)
-
-    //
-    // assign a head for all tokens that are not linked to root
-    //
-    for(modifier <- 0 until sentenceSize if modifier != rootNode) {
-      val predictions = new ArrayBuffer[(Int, Int, Float)] // head, label, score
-      // head could be root, i.e., -1
-      for(head <- -1 until sentenceSize if head != modifier && emissionScores.contains((head, modifier))) { 
-        val scores = emissionScores((head, modifier))
-        for(labelId <- scores.indices if labelId != noEdgeId) {
-          predictions += Tuple3(head, labelId, scores(labelId))
-        }
-      }
-      val sortedPredictions = predictions.sortBy(- _._3)
-      /*
-      println(s"Prediction for word #$modifier:")
-      for(p <- sortedPredictions) 
-        if(p._2 == t2i(Utils.START_TAG)) 
-          println(s"\thead ${p._1} label ${p._2} score ${p._3}")
-      */
-      
-      val topPrediction = sortedPredictions.head
-      val predHead = topPrediction._1
-      val predLabel = i2t(topPrediction._2)
-      predGraph += ((predHead, modifier), predLabel)
-    }
-
     predGraph
   }
 }
