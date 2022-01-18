@@ -55,11 +55,3 @@ rules:
     type: token
     pattern: |
       [entity=/B-HOLIDAY/] [entity=/I-HOLIDAY/]*
-
-  # possible modifier
-  - name: modifier
-    label: PossibleModifier
-    priority: ${ rulepriority }
-    type: token
-    pattern: |
-      [entity=/B-MODIFIER/] [entity=/I-MODIFIER/]*

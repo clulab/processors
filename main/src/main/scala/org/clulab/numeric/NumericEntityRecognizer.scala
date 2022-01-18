@@ -74,7 +74,6 @@ object NumericEntityRecognizer {
       "org/clulab/numeric/MONTH.tsv",
       "org/clulab/numeric/MEASUREMENT-UNIT.tsv",
       "org/clulab/numeric/HOLIDAY.tsv",
-      "org/clulab/numeric/MODIFIER.tsv",
       if (seasonsPath.startsWith("/")) seasonsPath.drop(1) else seasonsPath
     )
     val isLocal = kbs.forall(new File(resourceDir, _).exists)
@@ -82,7 +81,6 @@ object NumericEntityRecognizer {
       kbs,
       Seq(
         false, // false = case sensitive matching
-        true,
         true,
         true,
         true // This should be the case for any seasonsPath.

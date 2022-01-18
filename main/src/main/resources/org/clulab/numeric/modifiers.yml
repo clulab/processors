@@ -1,9 +1,32 @@
 rules:
-  - name: modifier-1
+  - name: modifier-approx
     label: Modifier
     priority: ${ rulepriority }
     type: token
-    action: mkDateMentionWithModifier
+    action: mkDateMentionWithModifierApprox
     pattern: |
-        @modifier:PossibleModifier /(?i)(of|-)/? @date:Date
+      /(?i)(around|about)/ @date:Date
 
+  - name: modifier-start
+    label: Modifier
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifierStart
+    pattern: |
+        /(?i)(around|about)/? /(?i)the/? /(?i)(beginning|start)/ /(?i)of/? @date:Date
+
+  - name: modifier-mid
+    label: Modifier
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifierMid
+    pattern: |
+      /(?i)(around|about)/? /(?i)(the)/? /(?i)(middle|mid)/ /(?i)(of|-)/? @date:Date
+
+  - name: modifier-end
+    label: Modifier
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifierEnd
+    pattern: |
+      /(?i)(around|about)/? /(?i)(the)/? /(?i)(end|start)/ /(?i)of/? @date:Date

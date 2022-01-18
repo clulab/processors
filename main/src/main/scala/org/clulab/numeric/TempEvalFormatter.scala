@@ -7,7 +7,7 @@ object TempEvalFormatter {
   def mkDate(day: Option[Seq[String]],
              month: Option[Seq[String]],
              year: Option[Seq[String]],
-             modifier: Option[String] = None): String = {
+             modifierSymbol: Option[String] = None): String = {
     val dayValue =
       if(day.isEmpty) {
         0
@@ -28,8 +28,8 @@ object TempEvalFormatter {
     val monthAsString = formatNumber(monthValue, 2)
     val yearAsString = formatNumber(yearValue, 4, "X")
 
-    if (modifier.isDefined)
-      s"$yearAsString-$monthAsString-$dayAsString ${modifier.get}"
+    if (modifierSymbol.isDefined)
+      s"$yearAsString-$monthAsString-$dayAsString ${modifierSymbol.get}"
     else
       s"$yearAsString-$monthAsString-$dayAsString"
   }

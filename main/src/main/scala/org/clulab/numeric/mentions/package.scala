@@ -635,18 +635,16 @@ package object mentions {
       throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
   }
 
-  def toDateMentionWithModifier(mention: Mention): DateMention = mention match {
+  def toDateMentionWithModifierApprox(mention: Mention): DateMention = mention match {
     case m: DateMention => m
 
     case m: RelationMention =>
-      val modifier = getArgWords("modifier", m)
-      if(modifier.isEmpty)
-        throw new RuntimeException(s"ERROR: could not find argument part in mention [${m.raw.mkString(" ")}]!")
       val date = getArgNorm("date", m)
       if(date.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
 
-      val modifiedDate = ModifierNormalizer.norm(date.get, modifier.get.mkString(" "))
+      val approxSymbol = Some(ModifierNormalizer.APPROX_SYMBOL)
+      val modifiedDate = ModifierNormalizer.splitDate(date.get)
 
       new DateMention(
         m.labels,
@@ -656,7 +654,94 @@ package object mentions {
         m.keep,
         m.foundBy,
         m.attachments,
-        modifiedDate.year, modifiedDate.month, modifiedDate.day, modifiedDate.modifier
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifierStart(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val date = getArgNorm("date", m)
+      if(date.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val approxSymbol = if (ModifierNormalizer.isApprox(m.words.head))
+        Some(ModifierNormalizer.APPROX_SYMBOL)
+      else
+        None
+      val modifiedDate = ModifierNormalizer.startOf(date.get)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifierMid(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val date = getArgNorm("date", m)
+      if(date.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val approxSymbol = if (ModifierNormalizer.isApprox(m.words.head))
+        Some(ModifierNormalizer.APPROX_SYMBOL)
+      else
+        None
+      val modifiedDate = ModifierNormalizer.midOf(date.get)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifierEnd(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val date = getArgNorm("date", m)
+      if(date.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val approxSymbol = if (ModifierNormalizer.isApprox(m.words.head))
+        Some(ModifierNormalizer.APPROX_SYMBOL)
+      else
+        None
+      val modifiedDate = ModifierNormalizer.endOf(date.get)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
       )
 
     case m =>

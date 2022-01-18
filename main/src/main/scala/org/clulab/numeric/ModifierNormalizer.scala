@@ -10,14 +10,15 @@ import scala.collection.mutable
 import scala.io.Source
 
 object ModifierNormalizer {
-  private val normMapper = readNormsFromResource("/org/clulab/numeric/MODIFIER.tsv")
+
+  val APPROX_SYMBOL = "[APPROX]"
 
   private def partOfYear(month: String, modifierType: String): String = {
     modifierType match {
       case "start" => "01"
       case "mid" => "06"
       case "end" => "12"
-      case _ => throw new RuntimeException(s"ERROR: invalidy modifier type $modifierType")
+      case _ => throw new RuntimeException(s"ERROR: invalid modifier type $modifierType")
     }
   }
 
@@ -37,23 +38,23 @@ object ModifierNormalizer {
       case "start" => "01"
       case "mid" => (daysInMonth(month, yearOpt) / 2).toString
       case "end" => daysInMonth(month, yearOpt).toString
-      case _ => throw new RuntimeException(s"ERROR: invalidy modifier type $modifierType")
+      case _ => throw new RuntimeException(s"ERROR: invalid modifier type $modifierType")
     }
   }
 
-  private def modifyDate(dateComponents: Array[Option[Seq[String]]], modifierType: String): ModifiedDate =
-    dateComponents match {
-      case Array(Some(year), Some(month), None) =>
+  private def modifyDate(date: ModifiedDate, modifierType: String): ModifiedDate =
+    date match {
+      case ModifiedDate(Some(year), Some(month), None) =>
         val day = partOfMonth(month.mkString, Some(year.mkString), modifierType)
-        ModifiedDate(Some(year), Some(month), Some(Seq(day)), None)
-      case Array(None, Some(month), None) =>
+        ModifiedDate(Some(year), Some(month), Some(Seq(day)))
+      case ModifiedDate(None, Some(month), None) =>
         val day = partOfMonth(month.mkString, None, modifierType)
-        ModifiedDate(None, Some(month), Some(Seq(day)), None)
-      case Array(Some(year), None, None) =>
+        ModifiedDate(None, Some(month), Some(Seq(day)))
+      case ModifiedDate(Some(year), None, None) =>
         val month = partOfYear(year.mkString, modifierType)
-        ModifiedDate(Some(year), Some(Seq(month)), None, None)
+        ModifiedDate(Some(year), Some(Seq(month)), None)
       case _ =>
-        ModifiedDate(dateComponents(0), dateComponents(1), dateComponents(2), None)
+        date
     }
 
   def readNormsFromResource(path: String): Map[String, String] =
@@ -69,25 +70,34 @@ object ModifierNormalizer {
     norms.toMap
   }
 
-  /** Normalizes dates with modifiers */
-  def norm(date: String, modifier: String): ModifiedDate = {
-    val dateComponents = date.split("-").map{ m =>
+  private def partOf(date: String, modifierType: String): ModifiedDate = {
+    val initialDate = splitDate(date)
+    modifyDate(initialDate, modifierType)
+  }
+
+  /** Gets the start of a date */
+  def startOf(date: String): ModifiedDate = partOf(date, "start")
+
+  /** Gets the middle of a date */
+  def midOf(date: String): ModifiedDate = partOf(date, "mid")
+
+  /** Gets the end of a date */
+  def endOf(date: String): ModifiedDate = partOf(date, "end")
+
+  /** Returns an APPROX tag if possibleApproxModifier is an approx modifier*/
+  def isApprox(possibleModifier: String): Boolean = possibleModifier == "around"
+
+  def splitDate(date: String): ModifiedDate = {
+    val splitDate = date.split("-").map { m =>
       if (m.contains("X"))
         None
       else
         Some(Seq(m))
     }
-    normMapper.get(modifier) match {
-      case Some(modifierType) if modifierType == "approx" =>
-        ModifiedDate(dateComponents(0), dateComponents(1), dateComponents(2), Some("[APPROX]"))
-      case Some(modifierType) =>
-        modifyDate(dateComponents, modifierType)
-      case None => throw new RuntimeException(s"ERROR: $modifier not found in modifier file")
-    }
+    ModifiedDate(splitDate(0), splitDate(1), splitDate(2))
   }
 }
 
-case class ModifiedDate(day: Option[Seq[String]],
+case class ModifiedDate(year: Option[Seq[String]],
                         month: Option[Seq[String]],
-                        year: Option[Seq[String]],
-                        modifier: Option[String])
+                        day: Option[Seq[String]])
