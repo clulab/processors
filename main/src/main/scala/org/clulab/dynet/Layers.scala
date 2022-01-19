@@ -77,7 +77,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForward(sentence: AnnotatedSentence,
                              constEmbeddings: ConstEmbeddingParameters,
-                             doDropout: Boolean): EdgeMap[Expression] = {
+                             doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
@@ -90,8 +90,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
     assert(finalLayer.nonEmpty)
     
-    val predGraph = finalLayer.get.graphForward(states, doDropout)
-    predGraph
+    finalLayer.get.graphForward(states, sentence.headPositions, doDropout)
   }
 
   protected def forwardFrom(inStates: ExpressionVector,
@@ -116,7 +115,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForwardFrom(inStates: ExpressionVector,
                                  headPositions: Option[IndexedSeq[Int]],
-                                 doDropout: Boolean): EdgeMap[Expression] = {
+                                 doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call graphForwardFrom() on a Layers object that has an initial layer: $toString!")
     }
@@ -128,8 +127,7 @@ class Layers (val initialLayer: Option[InitialLayer],
     }
 
     assert(finalLayer.nonEmpty)
-    val predGraph = finalLayer.get.graphForward(states, doDropout)
-    predGraph
+    finalLayer.get.graphForward(states, headPositions, doDropout)
   }
 
   override def saveX2i(printWriter: PrintWriter): Unit = {
@@ -302,7 +300,7 @@ object Layers {
                                   taskId: Int,
                                   sentence: AnnotatedSentence,
                                   constEmbeddings: ConstEmbeddingParameters,
-                                  doDropout: Boolean): EdgeMap[Expression] = {
+                                  doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
     //
     // make sure this code is:
     //   (a) called inside a synchronized block, and
@@ -334,7 +332,7 @@ object Layers {
       Synchronizer.withComputationGraph("Layers.graphPredict()") {
         val states = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
         // val emissionScores = Utils.graphEmissionScoresToArrays(states)
-        val predGraph = layers(taskId + 1).finalLayer.get.graphInference(states)
+        val predGraph = layers(taskId + 1).finalLayer.get.graphInference(states._1)
         predGraph
       }
     }    
@@ -452,16 +450,12 @@ object Layers {
 
   def graphLoss(layers: IndexedSeq[Layers],
                 taskId: Int,
-                sentence: AnnotatedSentence,
-                goldGraph: EdgeMap[String]): Expression = {
-    /*                  
-    for(i <- sentence.indices) {
-      println(s"$i\t${sentence.words(i)}\t${sentence.headPositions.get(i)}")
-    }
-    */
+                sentence: AnnotatedSentence): Expression = {
+    //for(i <- sentence.indices) println(s"$i\t${sentence.words(i)}\t${sentence.headPositions.get(i)}")
 
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-    val predictedGraph = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
-    layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph)
+    val (predictedGraph, goldGraph) = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
+    assert(goldGraph.nonEmpty)
+    layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph.get)
   }
 }

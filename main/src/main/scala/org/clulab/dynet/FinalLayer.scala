@@ -9,14 +9,15 @@ trait FinalLayer extends Saveable {
               doDropout: Boolean): ExpressionVector
 
   def graphForward(inputExpressions: ExpressionVector, 
-                   doDropout: Boolean): EdgeMap[Expression]
+                   headPositionsOpt: Option[IndexedSeq[Int]],
+                   doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]])
 
   def inDim: Int
   def outDim: Int
 
   def loss(emissionScoresAsExpression: ExpressionVector, goldLabels: IndexedSeq[String]): Expression
 
-  def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression
+  def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[Expression]): Expression
 
   def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
 

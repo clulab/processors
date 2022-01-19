@@ -180,4 +180,9 @@ object StringUtils {
     after(string, string.indexOf(char), all, keep)
 
   def med(source: String, target: String): Int = MED(source, target).getDistance
+
+  def pressEnterKey(): Unit = {
+    print("Press ENTER to continue: ")
+    scala.io.StdIn.readLine()
+  }
 }

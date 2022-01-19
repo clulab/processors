@@ -156,8 +156,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             val sentenceLabels = as._2
             val sentenceLoss = 
               if(isGraphTask) {
-                val goldGraph = annotatedSentence.mkGoldGraph(sentenceLabels)
-                Layers.graphLoss(model, taskId, negativesFactor, annotatedSentence, goldGraph)
+                // val goldGraph = annotatedSentence.mkGoldGraph(sentenceLabels)
+                Layers.graphLoss(model, taskId, annotatedSentence) //, goldGraph)
               } else {
                 Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
               }

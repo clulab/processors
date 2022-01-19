@@ -139,12 +139,13 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
   override def outDim: Int = t2i.size
 
-  override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression = {
+  override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[Expression]): Expression = {
     throw new RuntimeException("ERROR: graphLoss not supported for this final layer!")
   }
 
   override def graphForward(inputExpressions: ExpressionVector, 
-                            doDropout: Boolean): EdgeMap[Expression] = {
+                            headPositionsOpt: Option[IndexedSeq[Int]],
+                            doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
     throw new RuntimeException("ERROR: graphForward not supported for this final layer!")
   }
 

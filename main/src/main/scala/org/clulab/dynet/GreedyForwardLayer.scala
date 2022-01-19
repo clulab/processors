@@ -12,6 +12,7 @@ import org.clulab.struct.EdgeMap
 
 import org.clulab.utils.MathUtils._
 import org.clulab.struct.Edge
+import org.clulab.utils
 
 class GreedyForwardLayer (parameters:ParameterCollection,
                           inputSize: Int,
@@ -67,62 +68,76 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   }
 
   val YES_EDGE_ID = t2i(Utils.START_TAG)
+  val NO_EDGE_ID = t2i(Utils.STOP_TAG)
 
   /**
-   * Cross entropy loss for all edges in the predicted graph
+   * Loss for the predicted graph
    * @param predictedGraph Graph predicted through inference
    * @param goldGraph The correct graph, containing only positive edges
-   * @return Sum of all cross-entropy losses, for all edges in the predicted graph
+   * @return Overall loss
    */
-  override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[String]): Expression = {
-    val goldLosses = new ExpressionVector()
+  override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[Expression]): Expression = {
+    //
+    // loss = max(0, 1 + score(predictedGraph not in gold) - score(goldGraph not in pred) )
+    //   where the score of a predicted edge not in gold is 1 + actual score in Expression
+    //
 
-    /*
-    println("Gold graph:")
-    for(key <- goldGraph.keys.toList.sortBy(_._2)) {
-      println("\t" + key + " " + goldGraph(key))
-    }
-    println("Pred graph:")
-    for(key <- predictedGraph.keys.toList.sortBy(_._2)) {
-      println("\t" + key)
-    }
-    */
+    val lossParts = new ExpressionVector()
+    lossParts.add(Expression.input(1.0f))
 
-    // one cross-entropy loss for each edge in the predicted graph
-    for(key <- predictedGraph.keys) {
-      val head = key._1
-      val modifier = key._2
-      val predScores = predictedGraph(key)
-
-      val goldLabel: String = if(goldGraph.contains(key)) {
-        //println(s"\t\t+\t$key")
-        goldGraph(key)
-      } else {
-        //println(s"\t\t-\t$key")
-        Utils.STOP_TAG // we use STOP_TAG to indicate that an edge should *not* exist between this head and modifier
+    val debug = false
+    if(debug){
+      println("Gold graph:")
+      for(key <- goldGraph.keys.toList.sortBy(_._2)) {
+        println("\t" + key)
       }
-      val goldLabelId = t2i(goldLabel)
-
-      goldLosses.add(pickNegLogSoftmax(predScores, goldLabelId))
+      println("Pred graph:")
+      for(key <- predictedGraph.keys.toList.sortBy(_._2)) {
+        println("\t" + key)
+      }
     }
 
-    //println("Press any key to continue: ")
-    //scala.io.StdIn.readChar()
+    // add the score of the predicted edges not in gold
+    if(debug) println("predicted edges in the loss:")
+    for(key <- predictedGraph.keys if ! goldGraph.contains(key)) {
+      if(debug) println("\t" + key)
+      val scores = predictedGraph(key)
+      val scorePos = Expression.exprPlus(Expression.pick(scores, YES_EDGE_ID), 1f)
+      //val scoreNeg = Expression.exprMinus(0f, Expression.pick(scores, NO_EDGE_ID))
+      lossParts.add(scorePos)
+      //lossParts.add(scoreNeg)
+    }
 
-    //System.exit(1)
-    sum(goldLosses)
+    // subtract the score of gold edges not in pred
+    if(debug) println("gold edges in the loss:")
+    for(key <- goldGraph.keySet if ! predictedGraph.contains(key)) {
+      if(debug) println("\t" + key)
+      val scores = goldGraph(key)
+      val scorePos = Expression.exprMinus(0f, Expression.pick(scores, YES_EDGE_ID))
+      //val scoreNeg = Expression.pick(scores, NO_EDGE_ID)
+      lossParts.add(scorePos)
+      //lossParts.add(scoreNeg)
+    }
+
+    if(debug) utils.StringUtils.pressEnterKey()
+    Expression.max(Expression.input(0f), Expression.sum(lossParts))
   }
 
   /** Greedy method: for each modifier pick the head with the highest score */
   override def graphForward(inputExpressions: ExpressionVector, 
-                            doDropout: Boolean): EdgeMap[Expression] = {
-    val edgeMap = new EdgeMap[Expression]  
+                            headPositionsOpt: Option[IndexedSeq[Int]],
+                            doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
+    //
+    // the predicted graph
+    //
+    val predGraph = new EdgeMap[Expression]  
 
     for(modifier <- inputExpressions.indices) {
       var bestHead = -100
       var bestScore = scala.Float.MinValue
       var bestExpression:Option[Expression] = None
 
+      // greedy algo: keep the head with the highest score
       for(head <- -1 until inputExpressions.size if head != modifier) {
         val scores = runForwardDual(modifier, head, inputExpressions, doDropout)
         val score = Expression.pick(scores, YES_EDGE_ID).value().toFloat()
@@ -133,10 +148,31 @@ class GreedyForwardLayer (parameters:ParameterCollection,
         }
       }
 
-      edgeMap += ((bestHead, modifier), bestExpression.get)
+      predGraph += ((bestHead, modifier), bestExpression.get)
     }
 
-    edgeMap
+    //
+    // the gold graph, using the heads from headPositionsOpt
+    //
+    val goldGraph = if (headPositionsOpt.nonEmpty) {
+      val goldEdges = new EdgeMap[Expression]
+      for(modifier <- inputExpressions.indices) {
+        val head = headPositionsOpt.get(modifier)        
+        val scores = 
+          if(predGraph.contains((head, modifier))) {
+            // reuse the same Expression from the predicted graph if shared edge
+            predGraph(head, modifier)
+          } else {
+            runForwardDual(modifier, head, inputExpressions, doDropout)
+          }
+        goldEdges += ((head, modifier), scores)
+      }
+      Some(goldEdges)
+    } else {
+      None
+    }
+
+    (predGraph, goldGraph)
   }
 
   /** Create the graph with Strings for labels */
