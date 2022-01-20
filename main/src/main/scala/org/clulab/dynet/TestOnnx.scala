@@ -34,7 +34,7 @@ object TestOnnx extends App {
         }
         emb_map
     }
-
+    val start_time = LocalDateTime.now()
     val props = StringUtils.argsToProperties(args)
 
     val configName = props.getProperty("conf")
@@ -59,7 +59,7 @@ object TestOnnx extends App {
 
     println(session1.getOutputInfo)
     println(session2.getOutputInfo)
-    val start_time = LocalDateTime.now()
+    
     var p = 0
     for(taskId <- 0 until taskManager.taskCount) {
         val taskName = taskManager.tasks(taskId).taskName
