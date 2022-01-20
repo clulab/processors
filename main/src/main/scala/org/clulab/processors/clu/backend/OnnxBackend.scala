@@ -75,6 +75,11 @@ class OnnxNerBackend(wordModel: String, charModel: String, x2i: String) extends 
     wordInput.put("chars", OnnxTensor.createTensor(ortEnvironment, charEmbeddings))
 
     val emissionScores = wordSession.run(wordInput).get(0).getValue.asInstanceOf[Array[Array[Float]]]
+    emissionScores.foreach { scores =>
+      println(scores.mkString(", "))
+    }
+    println()
+
     val labelIds = Utils.greedyPredict(emissionScores)
     val preds = labelIds.map(i2t)
 
