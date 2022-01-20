@@ -17,6 +17,9 @@ import scala.util.Random
 
 import Metal._
 
+import java.time.LocalDateTime
+import java.time.Duration
+
 /**
  * Multi-task learning (MeTaL) for sequence modeling
  * Designed to model any sequence task (e.g., POS tagging, NER), and SRL
@@ -449,7 +452,9 @@ object Metal {
       val modelName = props("test")
 
       val mtl = Metal(modelName, taskManager)
+      val start_time = LocalDateTime.now()
       mtl.test()
+      println(Duration.between(start_time, LocalDateTime.now()).getSeconds)
     }
 
     else if(props.contains("shell")) {
