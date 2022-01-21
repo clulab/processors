@@ -13,14 +13,8 @@ object ModifierNormalizer {
 
   val APPROX_SYMBOL = "[APPROX]"
 
-  private def partOfYear(month: String, modifierType: String): String = {
-    modifierType match {
-      case "start" => "01"
-      case "mid" => "06"
-      case "end" => "12"
-      case _ => throw new RuntimeException(s"ERROR: invalid modifier type $modifierType")
-    }
-  }
+  private def partOfTotal(total: Int, modifierPart: Double): String =
+      "%02d".format(1.max((total * modifierPart).toInt))
 
   private def daysInMonth(month: String, yearOpt: Option[String]): Int = {
     yearOpt match {
@@ -33,58 +27,43 @@ object ModifierNormalizer {
     }
   }
 
-  private def partOfMonth(month: String, yearOpt: Option[String], modifierType: String): String = {
-    modifierType match {
-      case "start" => "01"
-      case "mid" => (daysInMonth(month, yearOpt) / 2).toString
-      case "end" => daysInMonth(month, yearOpt).toString
-      case _ => throw new RuntimeException(s"ERROR: invalid modifier type $modifierType")
-    }
-  }
-
-  private def modifyDate(date: ModifiedDate, modifierType: String): ModifiedDate =
+  private def modifyDate(date: ModifiedDate, modifierPart: Double): ModifiedDate =
     date match {
+      // matches dates of the type YYYY-MM-XX
       case ModifiedDate(Some(year), Some(month), None) =>
-        val day = partOfMonth(month.mkString, Some(year.mkString), modifierType)
+        val totalOfMonth = daysInMonth(month.mkString, Some(year.mkString))
+        val day = partOfTotal(totalOfMonth, modifierPart)
         ModifiedDate(Some(year), Some(month), Some(Seq(day)))
+      // matches dates of the type XXXX-MM-XX
       case ModifiedDate(None, Some(month), None) =>
-        val day = partOfMonth(month.mkString, None, modifierType)
+        val totalOfMonth = daysInMonth(month.mkString, None)
+        val day = partOfTotal(totalOfMonth, modifierPart)
         ModifiedDate(None, Some(month), Some(Seq(day)))
+      // matches dates of the type YYYY-XX-XX
       case ModifiedDate(Some(year), None, None) =>
-        val month = partOfYear(year.mkString, modifierType)
+        val totalOfYear = 12
+        val month = partOfTotal(totalOfYear, modifierPart)
         ModifiedDate(Some(year), Some(Seq(month)), None)
+      // matches any other date, e.g. YYYY-MM-DD
       case _ =>
         date
     }
 
-  def readNormsFromResource(path: String): Map[String, String] =
-      Sourcer.sourceFromResource(path).autoClose(readNormsFromSource)
-
-  def readNormsFromSource(source: Source): Map[String, String] = {
-    val norms = new mutable.HashMap[String, String]()
-
-    CommentedStandardKbSource.read(source) { (unit, normOpt) =>
-      assert(normOpt.isDefined) // We're insisting on this.
-      norms += unit -> normOpt.get
-    }
-    norms.toMap
-  }
-
-  private def partOf(date: String, modifierType: String): ModifiedDate = {
+  private def partOf(date: String, modifierPart: Double): ModifiedDate = {
     val initialDate = splitDate(date)
-    modifyDate(initialDate, modifierType)
+    modifyDate(initialDate, modifierPart)
   }
 
   /** Gets the start of a date */
-  def startOf(date: String): ModifiedDate = partOf(date, "start")
+  def startOf(date: String): ModifiedDate = partOf(date, 0)
 
   /** Gets the middle of a date */
-  def midOf(date: String): ModifiedDate = partOf(date, "mid")
+  def midOf(date: String): ModifiedDate = partOf(date, 0.5)
 
   /** Gets the end of a date */
-  def endOf(date: String): ModifiedDate = partOf(date, "end")
+  def endOf(date: String): ModifiedDate = partOf(date, 1)
 
-  /** Returns an APPROX tag if possibleApproxModifier is an approx modifier*/
+  /** Returns true if possibleApproxModifier is an approx modifier */
   def isApprox(possibleModifier: String): Boolean = possibleModifier == "around"
 
   def splitDate(date: String): ModifiedDate = {

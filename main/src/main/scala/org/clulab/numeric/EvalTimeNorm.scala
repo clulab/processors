@@ -36,6 +36,7 @@ object EvalTimeNorm {
           (m.startOffset.toString, m.endOffset.toString, m.neNorm)
       }.toSet
       val intersection = prediction.intersect(gold)
+      prediction.diff(gold).foreach(d => println(docId, d._1, d._2, docText.substring(d._1.toInt, d._2.toInt), d._3))
       (prediction.size, gold.size, intersection.size)
     }
     // Calculate the overall performance
