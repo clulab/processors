@@ -24,7 +24,7 @@ object ConstEmbeddingsGlove {
   val logger:Logger = LoggerFactory.getLogger(classOf[ConstEmbeddingsGlove])
 
   // This is not marked private for debugging purposes
-  private var SINGLETON_WORD_EMBEDDING_MAP: Option[WordEmbeddingMap] = None
+  var SINGLETON_WORD_EMBEDDING_MAP: Option[WordEmbeddingMap] = None
 
   // make sure the singleton is loaded
   load()
