@@ -27,6 +27,7 @@ libraryDependencies ++= {
     // NLP tools used by CluProcessor
     "org.antlr"                   % "antlr4-runtime"           % "4.9.2",   // for tokenization
     "org.clulab"                  % "lemport"                  % "0.9.10", // Portuguese lemmatizer
+    "de.jollyday"                 % "jollyday"                 % "0.5.10", // for holidays normalization
     // logging
     "ch.qos.logback"              % "logback-classic"          % "1.2.8", // up to 1.2.8; less than 1.2 is vulnerable
     "com.typesafe.scala-logging" %% "scala-logging"            % "3.7.2",

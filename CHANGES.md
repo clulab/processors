@@ -1,5 +1,5 @@
 # 
-+ **8.4.8** - Improved recognition of dates
++ **8.4.8** - Improved tokenization and recognition of dates
 + **8.4.7** - Improved recognition of relative dates
 + **8.4.6** - Made the parsing of numeric entities more robust to broken texts (from PDF conversion)
 + **8.4.6** - Bug fix in the generation of enhanced semantic roles, again on broken texts
