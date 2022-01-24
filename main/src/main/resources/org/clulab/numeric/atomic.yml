@@ -8,14 +8,6 @@ rules:
     pattern: |
       [entity=/B-MONTH/] [entity=/I-MONTH/]*
 
-  # month values, 1 to 12
-  - name: month-values
-    label: PossibleMonth
-    priority: ${ rulepriority }
-    type: token
-    pattern: |
-      [word=/^([1-9]|1[012])$/]
-
   # measurement units, from the MEASUREMENT-UNIT lexicon
   - name: measurement-unit
     label: MeasurementUnit
