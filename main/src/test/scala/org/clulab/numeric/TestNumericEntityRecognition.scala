@@ -379,12 +379,17 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
 
     ensure(sentence= "the irrigation water supply was above 700 mm", Interval(6, 8), goldEntity="MEASUREMENT", goldNorm="700.0 mm")
     
-    // TODO: Fix for measurements units with Grek letters
+    // TODO: Fix for measurements units with Greek letters
     // ensure(sentence= "sugar 6976 µg/g", Interval(1, 5), goldEntity="MEASUREMENT", goldNorm="6976.0 µg/g")
     // ensure(sentence= "1.1 mg/g uronic acid", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="1.1 mg/g")
     // ensure(sentence= "731.5 µg/g protein", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="731.5 µg/g")
     // ensure(sentence= "Saturated water content 4.54 m3 m-3", Interval(3, 7), goldEntity="MEASUREMENT", goldNorm="4.54 m3/m3")
     // ensure(sentence= "Soil organic carbon (SOC) under fallow varied from 7.1 g kg-1", Interval(8, 13), goldEntity="MEASUREMENT", goldNorm="7.1 g/kg")
+  }
+
+  it should "recognize percentages" in {
+    ensure("20% of the area is planted", Interval(0, 2), goldEntity = "PERCENTAGE", goldNorm = "20.0 %")
+    ensure("20 pct of the area is planted", Interval(0, 2), goldEntity = "PERCENTAGE", goldNorm = "20.0 %")
   }
 
   it should "work correctly with en dashes" in {

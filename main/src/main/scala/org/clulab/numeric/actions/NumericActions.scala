@@ -38,6 +38,10 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     convert(mentions, toMeasurementMention, "toMeasurementMention")
   }
 
+  def mkPercentage(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toPercentageMention, "toPercentageMention")
+  }
+
   def mkMeasurementWithRangeMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toMeasurementWithRangeMention, "toMeasurementWithRangeMention")
   }
@@ -156,20 +160,28 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     cleanupAction(mentions)
 
   def cleanupAction(mentions: Seq[Mention]): Seq[Mention] = {
-    val r1 = keepLongestMentions(mentions)
-    r1
-  }
+    if(false) {
+      println("mentions before cleanup:")
+      for (m <- mentions) {
+        println("\t" + m.text)
+      }
+    }
 
-  private def isNumeric(m: Mention): Boolean = {
-    m.isInstanceOf[DateMention] ||
-    m.isInstanceOf[DateRangeMention] ||
-    m.isInstanceOf[MeasurementMention] ||
-    m.isInstanceOf[NumberRangeMention]
+    val r1 = keepLongestMentions(mentions)
+
+    if(false) {
+      println("mentions after cleanup:")
+      for (m <- r1) {
+        println("\t" + m.text)
+      }
+      println()
+    }
+    r1
   }
 
   /** Keeps a date (or date range) mention only if it is not contained in another */
   def keepLongestMentions(mentions: Seq[Mention]): Seq[Mention] = {
-    val (numerics, nonNumerics) = mentions.partition(isNumeric)
+    val (numerics, nonNumerics) = mentions.partition(NumericActions.isNumeric)
     val filteredNumerics = numerics.filterNot { outerNumeric =>
       numerics.exists { innerNumeric =>
         innerNumeric != outerNumeric &&
@@ -179,5 +191,15 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     }
 
     filteredNumerics ++ nonNumerics
+  }
+}
+
+object NumericActions {
+  def isNumeric(m: Mention): Boolean = {
+    m.isInstanceOf[DateMention] ||
+      m.isInstanceOf[DateRangeMention] ||
+      m.isInstanceOf[MeasurementMention] ||
+      m.isInstanceOf[NumberRangeMention] ||
+      m.isInstanceOf[PercentageMention]
   }
 }
