@@ -59,6 +59,16 @@ rules:
     pattern: |
       @year:PossibleYear ( ","? @month:PossibleMonth )?
 
+  # Date with just a single month name
+  - name: date-5
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May"
+    action: mkDateMention
+    pattern: |
+        @month:PossibleMonth
+
   # Rule for YYYY-MM-DD (accepts -, :, / as separators)
   - name: date-yyyy-mm-dd
     label: Date

@@ -255,6 +255,13 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("after summer", Interval(0, 2), "DATE-RANGE", "XXXX-09-22 -- XXXX-XX-XX")
   }
 
+  it should "recognize dates and date-ranges with single months" in {
+    ensure("It was January", Interval(2, 3), "DATE", "XXXX-01-XX")
+    ensure("It was Jan", Interval(2, 3), "DATE", "XXXX-01-XX")
+    ensure("It was between January and March", Interval(2, 3), "DATE-RANGE", "XXXX-01-XX -- XXXX-03-XX")
+    ensure("until January", Interval(0, 2), "DATE-RANGE", "ref-date -- XXXX-01-XX")
+    ensure("after January", Interval(0, 2), "DATE-RANGE", "XXXX-01-XX -- XXXX-XX-XX")
+  }
 
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")
