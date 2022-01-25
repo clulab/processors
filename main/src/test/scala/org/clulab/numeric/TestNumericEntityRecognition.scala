@@ -270,6 +270,13 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("after summer", Interval(0, 2), "DATE-RANGE", "XXXX-09-22 -- XXXX-XX-XX")
   }
 
+  it should "recognize dates and date-ranges with single months" in {
+    ensure("It was January", Interval(2, 3), "DATE", "XXXX-01-XX")
+    ensure("It was Jan", Interval(2, 3), "DATE", "XXXX-01-XX")
+    ensure("It was between January and March", Interval(2, 3), "DATE-RANGE", "XXXX-01-XX -- XXXX-03-XX")
+    ensure("until January", Interval(0, 2), "DATE-RANGE", "ref-date -- XXXX-01-XX")
+    ensure("after January", Interval(0, 2), "DATE-RANGE", "XXXX-01-XX -- XXXX-XX-XX")
+  }
 
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")
@@ -394,12 +401,17 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
 
     ensure(sentence= "the irrigation water supply was above 700 mm", Interval(6, 8), goldEntity="MEASUREMENT", goldNorm="700.0 mm")
     
-    // TODO: Fix for measurements units with Grek letters
+    // TODO: Fix for measurements units with Greek letters
     // ensure(sentence= "sugar 6976 µg/g", Interval(1, 5), goldEntity="MEASUREMENT", goldNorm="6976.0 µg/g")
     // ensure(sentence= "1.1 mg/g uronic acid", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="1.1 mg/g")
     // ensure(sentence= "731.5 µg/g protein", Interval(0, 4), goldEntity="MEASUREMENT", goldNorm="731.5 µg/g")
     // ensure(sentence= "Saturated water content 4.54 m3 m-3", Interval(3, 7), goldEntity="MEASUREMENT", goldNorm="4.54 m3/m3")
     // ensure(sentence= "Soil organic carbon (SOC) under fallow varied from 7.1 g kg-1", Interval(8, 13), goldEntity="MEASUREMENT", goldNorm="7.1 g/kg")
+  }
+
+  it should "recognize percentages" in {
+    ensure("20% of the area is planted", Interval(0, 2), goldEntity = "PERCENTAGE", goldNorm = "20.0 %")
+    ensure("20 pct of the area is planted", Interval(0, 2), goldEntity = "PERCENTAGE", goldNorm = "20.0 %")
   }
 
   it should "work correctly with en dashes" in {

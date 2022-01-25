@@ -25,6 +25,7 @@ taxonomy:
               - DateRange
               - NumberRange
               - Measurement
+              - Percentage
       - NamedEntity:
           - Holiday
           - Month
