@@ -55,6 +55,25 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
   }
 
+  def toPercentageMention(mention: Mention): PercentageMention =  mention match {
+    case m:  PercentageMention => m
+
+    case m: RelationMention =>
+      new PercentageMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        getArgWords("number", m)
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to PercentageMention!")
+  }
+
   def toMeasurementWithRangeMention(mention: Mention): MeasurementMention =  mention match {
     case m:  MeasurementMention => m
 

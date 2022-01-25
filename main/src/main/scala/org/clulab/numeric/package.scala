@@ -1,6 +1,7 @@
 package org.clulab
 
-import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMention, Norm}
+import org.clulab.numeric.actions.NumericActions
+import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMention, Norm, PercentageMention}
 import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
@@ -87,18 +88,8 @@ package object numeric {
     // convert numeric entities to entity labels and norms
     //
     for(mention <- mentions) {
-      mention match {
-        case m: DateMention =>
-          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
-
-        case m: MeasurementMention =>
-          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
-
-        case m: DateRangeMention =>
-          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
-
-        case _ =>
-          // nothing to do for other mention types
+      if(NumericActions.isNumeric(mention) && mention.isInstanceOf[Norm]) {
+        addLabelsAndNorms(mention.asInstanceOf[Norm], mention.sentenceObj, mention.tokenInterval)
       }
     }
   }
