@@ -45,7 +45,7 @@ class ForwardLayer(FinalLayer):
             emissionScores = self.dropout(temp)
 
             try:
-                np.testing.assert_allclose(temp.cpu().numpy(), emissionScores.cpu().numpy(), rtol=1e-03, atol=1e-05)
+                np.testing.assert_allclose(temp.detach().cpu().numpy(), emissionScores.detach().cpu().numpy(), rtol=1e-03, atol=1e-05)
             except AssertionError as e:
                 print (e)
             if self.nonlinearity == NONLIN_TANH:
