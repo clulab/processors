@@ -37,7 +37,7 @@ class ForwardLayer(FinalLayer):
                 vs.append(e)
             return torch.cat(vs, dim=i)
 
-    def forward(self, inputExpressions, , doDropout, headPositionsOpt = None):
+    def forward(self, inputExpressions, doDropout, headPositionsOpt = None):
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
             if doDropout:
