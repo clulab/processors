@@ -267,7 +267,7 @@ class Metal(object):
     def test(self):
 
         torch.manual_seed(self.taskManager.random)
-        # random.seed(self.taskManager.random)
+        random.seed(self.taskManager.random)
 
         for taskId in range(0, self.taskManager.taskCount):
             taskName = self.taskManager.tasks[taskId].taskName
