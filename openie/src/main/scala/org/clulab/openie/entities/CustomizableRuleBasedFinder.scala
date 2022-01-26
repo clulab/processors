@@ -1,15 +1,19 @@
 package org.clulab.openie.entities
 
 import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.dynet.Utils
 import org.clulab.openie.ResourceUtils
 import org.clulab.odin.{ExtractorEngine, Mention, State, TextBoundMention}
 import org.clulab.openie.utils.TagSet
 import org.clulab.processors.Document
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.struct.Interval
 
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex
 
+import org.json4s.jackson.JsonMethods._
+import org.clulab.serialization.json.JSONSerializer
 
 class CustomizableRuleBasedFinder(
   entityEngine: ExtractorEngine,
@@ -34,16 +38,28 @@ class CustomizableRuleBasedFinder(
     val avoid = avoidEngine.extractFrom(doc)
     val stateFromAvoid = State(avoid)
     val baseEntities = entityEngine.extractFrom(doc, stateFromAvoid).filterNot(stateFromAvoid.contains)
+    println("Base entities:")
+    for(m <- baseEntities) {
+      println("\t" + m.text)
+    }
     // make sure that all are valid (i.e., contain a noun or would have contained a noun except for trigger avoidance)
     val validBaseEntities = baseEntities.filter(isValidBaseEntity)
     // Expand
     val expandedEntities = validBaseEntities.map(entity => expand(entity, maxHops, stateFromAvoid))
+    println("Expanded entities:")
+    for(m <- expandedEntities) {
+      println("\t" + m.text)
+    }
     // split entities on likely coordinations
     val splitEntities = (validBaseEntities ++ expandedEntities).flatMap(splitCoordinatedEntities)
     // remove entity duplicates introduced by splitting expanded
     val distinctEntities = splitEntities.distinct
     // trim unwanted POS from entity edges
     val trimmedEntities = distinctEntities.map(trimEntityEdges(_, tagSet))
+    println("Trimmed entities:")
+    for(m <- trimmedEntities) {
+      println("\t" + m.text)
+    }
     // if there are no avoid mentions or if we didn't expand, no need to filter
     val res = if (avoid.isEmpty || maxHops == 0) {
       trimmedEntities
@@ -163,5 +179,19 @@ object CustomizableRuleBasedFinder {
 
   def asRegexSet(ss: Set[String]): Set[Regex] = {
     ss.map{ case s: String => s.r }
+  }
+
+  def main(args: Array[String]): Unit = {
+    val finder = fromConfig()
+    val doc = JSONSerializer.toDocument(parse(""" {"sentences":[{"words":["The","doctor","used","1983","to","trim","his","beard","."],"startOffsets":[0,4,11,16,21,24,29,33,38],"endOffsets":[3,10,15,20,23,28,32,38,39],"raw":["The","doctor","used","1983","to","trim","his","beard","."],"tags":["DT","NN","VBN","CD","TO","VB","PRP$","NN","."],"lemmas":["the","doctor","use","1983","to","trim","he","beard","."],"entities":["O","TITLE","O","DATE","O","O","O","O","O"],"norms":["O","O","O","1983","O","O","O","O","O"],"chunks":["B-NP","I-NP","B-VP","B-NP","B-VP","I-VP","B-NP","I-NP","O"],"graphs":{"universal-enhanced":{"edges":[{"source":7,"destination":6,"relation":"nmod:poss"},{"source":2,"destination":5,"relation":"advcl_to"},{"source":5,"destination":7,"relation":"dobj"},{"source":2,"destination":3,"relation":"dobj"},{"source":1,"destination":0,"relation":"det"},{"source":2,"destination":1,"relation":"nsubj"},{"source":2,"destination":8,"relation":"punct"},{"source":5,"destination":4,"relation":"mark"}],"roots":[2]},"universal-basic":{"edges":[{"source":7,"destination":6,"relation":"nmod:poss"},{"source":5,"destination":7,"relation":"dobj"},{"source":2,"destination":5,"relation":"advcl"},{"source":2,"destination":3,"relation":"dobj"},{"source":1,"destination":0,"relation":"det"},{"source":2,"destination":1,"relation":"nsubj"},{"source":2,"destination":8,"relation":"punct"},{"source":5,"destination":4,"relation":"mark"}],"roots":[2]}}}]} """, useBigDecimalForDouble = true))
+    println("Dependencies:")
+    for(s <- doc.sentences) {
+      println(s.universalEnhancedDependencies.get)
+    }
+    val mentions = finder.extractAndFilter(doc)
+    println("Mentions found:")
+    for(m <- mentions) {
+      println(m.text)
+    }
   }
 }

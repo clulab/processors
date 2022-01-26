@@ -96,7 +96,7 @@ class EnglishTagSet extends TagSet {
   def isValidFinal(tag: String): Boolean = validFinal.exists(tag.startsWith)
 
   // Set of tags that we don't want to begin or end an entity
-  val invalidEdge: Array[String] = Array("PRP", "IN", "TO", "DT", ",", ".")
+  val invalidEdge: Array[String] = Array("IN", "TO", ",", ".")
   def isInvalidEdge(tag: String): Boolean = invalidEdge.exists(tag.startsWith)
 }
 
