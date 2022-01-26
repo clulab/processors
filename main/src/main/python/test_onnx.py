@@ -3,11 +3,8 @@ import json
 import numpy as np
 from pytorch.seqScorer import *
 import time
-import random
 
 if __name__ == '__main__':
-
-    random.seed(100)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_file', type=str, help='Filename of the model.')
