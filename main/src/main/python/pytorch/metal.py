@@ -243,18 +243,18 @@ class Metal(object):
         return ( scoreCountsByLabel.accuracy(), scoreCountsByLabel.precision(), scoreCountsByLabel.recall(), scoreCountsByLabel.f1() )
 
     def predictJointly(self, sentence, constEmbeddings):
-        for layers in self.model:
-            layers.start_eval()
+        # for layers in self.model:
+        #     layers.start_eval()
         return Layers.predictJointly(self.model, sentence, constEmbeddings)
 
     def predict(self, taskId, sentence, constEmbeddings):
-        for layers in self.model:
-            layers.start_eval()
+        # for layers in self.model:
+        #     layers.start_eval()
         return Layers.predict(self.model, taskId, sentence, constEmbeddings)
 
     def predictWithScores(self, taskId, sentence, constEmbeddings):
-        for layers in self.model:
-            layers.start_eval()
+        # for layers in self.model:
+        #     layers.start_eval()
         return Layers.predictWithScores(self.model, taskId, sentence, constEmbeddings)
 
     # Custom method for the parsing algorithm
@@ -268,7 +268,8 @@ class Metal(object):
 
         torch.manual_seed(self.taskManager.random)
         random.seed(self.taskManager.random)
-
+        for layers in self.model:
+            layers.start_eval()
         for taskId in range(0, self.taskManager.taskCount):
             taskName = self.taskManager.tasks[taskId].taskName
             testSentences = self.taskManager.tasks[taskId].testSentences
