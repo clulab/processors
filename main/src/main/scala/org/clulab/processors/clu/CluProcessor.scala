@@ -725,6 +725,10 @@ object CluProcessor {
 
   val CONST_EMBEDDINGS_ATTACHMENT_NAME = "ce"
 
+  def apply(): CluProcessor = {
+    new CluProcessor()
+  }
+
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
                  text:String,
