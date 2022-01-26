@@ -57,7 +57,7 @@ class EmbeddingLayer(InitialLayer):
         self.useIsPredicate = useIsPredicate
         self.wordLookupParameters = wordLookupParameters
         self.charLookupParameters = charLookupParameters
-        self.charRnnBuilder = nn.LSTM(*charRnnBuilder)
+        self.charRnnBuilder = mkBuilder(*charRnnBuilder)
         self.posTagLookupParameters = posTagLookupParameters
         self.neTagLookupParameters = neTagLookupParameters
         self.distanceLookupParameters = distanceLookupParameters
@@ -222,7 +222,7 @@ class EmbeddingLayer(InitialLayer):
         wordLookupParameters = nn.Embedding(len(w2i), learnedWordEmbeddingSize)
         charLookupParameters = nn.Embedding(len(c2i), charEmbeddingSize)
         
-        charRnnBuilder = (charEmbeddingSize, charRnnStateSize, 1, bidirectional=True, dropout=dropoutProb)
+        charRnnBuilder = (charEmbeddingSize, charRnnStateSize, 1, True, dropoutProb)
 
         posTagLookupParameters   = nn.Embedding(len(tag2i), posTagEmbeddingSize) if x2i['hasTag2i'] == 1 else None
         neTagLookupParameters    = nn.Embedding(len(ne2i), neTagEmbeddingSize) if x2i['hasNe2i'] == 1 else None
@@ -276,7 +276,7 @@ class EmbeddingLayer(InitialLayer):
 
         charLookupParameters = nn.Embedding(len(c2i), charEmbeddingSize)
         nn.init.xavier_uniform_(charLookupParameters.weight)
-        charRnnBuilder = (charEmbeddingSize, charRnnStateSize, 1, bidirectional=True, dropout=dropoutProb)
+        charRnnBuilder = (charEmbeddingSize, charRnnStateSize, 1, True, dropoutProb)
 
         if(posTagEmbeddingSize > 0):
             tag2i = readString2Ids(config.get_string(paramPrefix + ".tag2i", "../resources/org/clulab/tag2i-en.txt"))
@@ -324,11 +324,9 @@ class EmbeddingLayer(InitialLayer):
                   positionLookupParameters,
                   dropoutProb)
 
-
-
-
-
-
+def mkBuilder(inputSize, rnnStateSize, numLayers, bi, dropoutProb):
+    return nn.LSTM(inputSize, rnnStateSize, numLayers, bidirectional=bi, dropout=dropoutProb)
+    
 
 
 
