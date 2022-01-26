@@ -105,7 +105,7 @@ class Layers(object):
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states, doDropout)
         if self.finalLayer is not None:
-            states = self.finalLayer(states, doDropout, sentence.headPositions)
+            states = self.finalLayer(states, sentence.headPositions)
 
         return states
 
@@ -116,7 +116,7 @@ class Layers(object):
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states, doDropout)
         if self.finalLayer is not None:
-            states = self.finalLayer(states, doDropout, headPositions)
+            states = self.finalLayer(states, headPositions)
 
         return states
 
