@@ -20,7 +20,7 @@ class ForwardLayer(FinalLayer):
         self.pH = nn.Linear(actualInputSize, len(t2i))
         nn.init.xavier_uniform_(self.pH.weight)
         self.pRoot = Variable(torch.rand(inputSize)) #TODO: Not sure about the shape here
-        self.dropoutProb = dropoutProb
+        self.dropout = nn.Dropout(dropoutProb)
 
         self.inDim = spanLength(spans) if spans is not None else inputSize
         self.outDim = len(t2i)
@@ -37,18 +37,18 @@ class ForwardLayer(FinalLayer):
                 vs.append(e)
             return torch.cat(vs, dim=i)
 
-    def forward(self, inputExpressions, doDropout, headPositionsOpt = None):
+    def forward(self, inputExpressions, headPositionsOpt = None):
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
-            argExp = expressionDropout(self.pickSpan(inputExpressions, 1), self.dropoutProb, doDropout)
-            emissionScores = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
+            argExp = self.dropout(self.pickSpan(inputExpressions, 1))
+            emissionScores = self.dropout(self.pH(argExp))
             if self.nonlinearity == NONLIN_TANH:
                 emissionScores = F.tanh(emissionScores)
             elif self.nonlinearity == NONLIN_RELU:
                 emissionScores = F.relu(emissionScores)
             # for i, e in enumerate(inputExpressions):
-            #     argExp = expressionDropout(self.pickSpan(e), self.dropoutProb, doDropout)
-            #     l1 = expressionDropout(self.pH(argExp), self.dropoutProb, doDropout)
+            #     argExp = self.dropout(self.pickSpan(e))
+            #     l1 = self.dropout(self.pH(argExp))
             #     if self.nonlinearity == NONLIN_TANH:
             #         l1 = F.tanh(l1)
             #     elif self.nonlinearity == NONLIN_RELU:
@@ -60,15 +60,15 @@ class ForwardLayer(FinalLayer):
                 raise RuntimeError("ERROR: dual task without information about head positions!")
             for i, e in enumerate(inputExpressions):
                 headPosition = headPositionsOpt[i]
-                argExp = expressionDropout(self.pickSpan(e, 0), self.dropoutProb, doDropout)
+                argExp = self.dropout(self.pickSpan(e, 0))
                 if headPosition >= 0:
                     # there is an explicit head in the sentence
-                    predExp = expressionDropout(self.pickSpan(inputExpressions[headPosition], 0), self.dropoutProb, doDropout)
+                    predExp = self.dropout(self.pickSpan(inputExpressions[headPosition], 0))
                 else:
                     # the head is root. we used a dedicated Parameter for root
-                    predExp = expressionDropout(self.pickSpan(self.pRoot, 0), self.dropoutProb, doDropout)
+                    predExp = self.dropout(self.pickSpan(self.pRoot, 0))
                 ss = torch.cat([argExp, predExp])
-                l1 = expressionDropout(self.pH(ss), self.dropoutProb, doDropout)
+                l1 = self.dropout(self.pH(ss))
                 if self.nonlinearity == NONLIN_TANH:
                     l1 = F.tanh(l1)
                 elif self.nonlinearity == NONLIN_RELU:

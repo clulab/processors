@@ -101,13 +101,6 @@ def transduce(embeddings, builder):
 
     return output
 
-def expressionDropout(expression, dropoutProb, doDropout):
-    if doDropout and dropoutProb > 0:
-        dropout = nn.Dropout(dropoutProb)
-        return dropout(expression)
-    else:
-        return expression
-
 def sentenceLossGreedy(emissionScoresForSeq, golds):
     assert(emissionScoresForSeq.size(0) == len(golds))
     criterion = nn.CrossEntropyLoss()
