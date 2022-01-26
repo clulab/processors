@@ -18,7 +18,7 @@ class RnnLayer(IntermediateLayer):
         self.rnnStateSize = rnnStateSize 
         self.useHighwayConnections = useHighwayConnections
         self.rnnType = rnnType
-        self.wordRnnBuilder = wordRnnBuilder
+        self.wordRnnBuilder = mkBuilder(*wordRnnBuilder)
         self.dropoutProb = dropoutProb
 
         highwaySize = inputSize if useHighwayConnections else 0
@@ -57,7 +57,7 @@ class RnnLayer(IntermediateLayer):
         useHighwayConnections = x2i['useHighwayConnections'] == 1
         dropoutProb = x2i['dropoutProb']
 
-        builder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, dropoutProb)
+        builder = (rnnType, numLayers, inputSize, rnnStateSize, dropoutProb)
 
         return cls(inputSize, numLayers, rnnStateSize, useHighwayConnections, rnnType, builder, dropoutProb)
 
@@ -73,7 +73,7 @@ class RnnLayer(IntermediateLayer):
         rnnType = config.get_string(paramPrefix + ".type", "lstm")
         dropoutProb = config.get_float(paramPrefix + ".dropoutProb", DEFAULT_DROPOUT_PROBABILITY)
 
-        builder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, dropoutProb)
+        builder = (rnnType, numLayers, inputSize, rnnStateSize, dropoutProb)
 
         return cls(inputSize, numLayers, rnnStateSize, useHighwayConnections, rnnType, builder, dropoutProb)
 
