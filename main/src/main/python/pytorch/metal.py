@@ -328,7 +328,7 @@ class Metal(object):
                     layersSeq[i].add_state_dict(layers)
         for layers in layersSeq:
             layers.avg_state_dict(len(models))
-        rint (f"Loading MTL models from {models} complete.")
+        print (f"Loading MTL models from {models} complete.")
         return layersSeq
 
     @classmethod

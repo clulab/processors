@@ -25,7 +25,6 @@ if __name__ == '__main__':
         config = ConfigFactory.parse_file(f'../resources/org/clulab/{args.config}.conf')
         taskManager = TaskManager(config, args.seed)
         modelName = args.model_file
-        print (modelName)
         if len(modelName)==1:
             model = Metal.load(modelName[0])
         else:
