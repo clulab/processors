@@ -81,7 +81,6 @@ class EmbeddingLayer(InitialLayer):
 
         # const word embeddings such as GloVe
         constEmbeddingsExpressions = self.mkConstEmbeddings(words, constEmbeddings)
-        print (constEmbeddingsExpressions)
         assert(constEmbeddingsExpressions.size(0) == len(words))
         if(tags): assert(len(tags) == len(words))
         if(nes): assert(len(nes) == len(words))
