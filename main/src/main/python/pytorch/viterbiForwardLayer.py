@@ -114,7 +114,6 @@ class ViterbiForwardLayer(ForwardLayer):
         x2i["span"] = spanToString(self.spans) if self.spans else ""
         x2i["nonlinearity"] = self.nonlinearity
         x2i["t2i"] = self.t2i
-        x2i["dropoutProb"] = self.dropoutProb
 
         return x2i
 
