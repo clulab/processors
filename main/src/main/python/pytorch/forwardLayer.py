@@ -41,12 +41,7 @@ class ForwardLayer(FinalLayer):
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
             argExp = self.dropout(self.pickSpan(inputExpressions, 1))
-            temp = self.pH(argExp)
-            emissionScores = self.dropout(temp)
-            try:
-                np.testing.assert_allclose(temp.detach().cpu().numpy(), emissionScores.detach().cpu().numpy(), rtol=1e-03, atol=1e-05)
-            except AssertionError as e:
-                print (e)
+            emissionScores = self.dropout(self.pH(argExp))
             if self.nonlinearity == NONLIN_TANH:
                 emissionScores = F.tanh(emissionScores)
             elif self.nonlinearity == NONLIN_RELU:
