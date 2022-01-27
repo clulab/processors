@@ -44,7 +44,6 @@ def save(file, values, comment):
 def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
     hidden_dim = charRnnBuilder.hidden_size
     charEmbeddings = charLookupParameters(torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word]))
-    print ("charEmbeddings",charEmbeddings)
     output = transduce(charEmbeddings, charRnnBuilder)
     result = output.squeeze(1)[-1]
     # Zheng: Not sure if this is the right way to concatenate the two direction hidden states

@@ -111,12 +111,10 @@ class EmbeddingLayer(InitialLayer):
             if(doDropout and id > 0 and self.w2f[word] == 1 and random.random() < 0.5): id = 0
             ids.append(id) 
         learnedWordEmbeddings = self.wordLookupParameters(torch.LongTensor(ids))
-        print ("learnedWordEmbeddings", learnedWordEmbeddings)
         #
         # biLSTM over character embeddings
         #
         charEmbedding = torch.stack([mkCharacterEmbedding(word, self.c2i, self.charLookupParameters, self.charRnnBuilder) for word in words])
-        print ("charEmbedding", charEmbedding)
         #
         # POS tag embedding
         #
