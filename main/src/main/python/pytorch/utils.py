@@ -87,17 +87,17 @@ def transduce(embeddings, builder):
     if mode == 'LSTM':
         if bi_direct:
             # change 1 to the layers we need
-            (h, c) =  (torch.rand(2, 1, hidden_dim), torch.rand(2, 1, hidden_dim)) 
+            (h, c) =  (torch.zeros(2, 1, hidden_dim), torch.zeros(2, 1, hidden_dim)) 
             output, (h, c) = builder(embeddings.unsqueeze(1), (h, c))
         else:
-            (h, c) =  (torch.rand(1, 1, hidden_dim), torch.rand(1, 1, hidden_dim)) 
+            (h, c) =  (torch.zeros(1, 1, hidden_dim), torch.zeros(1, 1, hidden_dim)) 
             output, (h, c) = builder(embeddings.unsqueeze(1), (h, c))
     elif mode == 'GRU':
         if bi_direct:
-            h =  torch.rand(2, 1, hidden_dim) 
+            h =  torch.zeros(2, 1, hidden_dim) 
             output, h = builder(embeddings.unsqueeze(1), h)
         else:
-            h =  torch.rand(1, 1, hidden_dim)
+            h =  torch.zeros(1, 1, hidden_dim)
             output, h = builder(embeddings.unsqueeze(1), h)
 
     return output
