@@ -17,7 +17,7 @@ if __name__ == '__main__':
     if args.train:
         config = ConfigFactory.parse_file(f'../resources/org/clulab/{args.config}.conf')
         taskManager = TaskManager(config, args.seed)
-        modelName = args.model_file
+        modelName = args.model_file[0]
 
         mtl = Metal(taskManager, None)
         mtl.train(modelName)
