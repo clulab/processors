@@ -87,8 +87,8 @@ class ForwardLayer(FinalLayer):
         #     return ViterbiForwardLayer.load(x2i)
         # elif inferenceType == TYPE_GREEDY:
         #     return GreedyForwardLayer.load(x2i)
-        else:
-            raise RuntimeError(f"ERROR: unknown forward layer type {inferenceType}!")
+        # else:
+        #     raise RuntimeError(f"ERROR: unknown forward layer type {inferenceType}!")
 
     @staticmethod
     def initialize(config, paramPrefix, labelCounter, isDual, inputSize):
