@@ -6,7 +6,7 @@ from pytorch.metal import Metal
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_file', type=str, help='Filename of the model.')
+    parser.add_argument('--model_file', type=str, help='Filename of the model.', nargs='+')
     parser.add_argument('--train', action='store_true', help='Set the code to training purpose.')
     parser.add_argument('--test', action='store_true', help='Set the code to testing purpose.')
     parser.add_argument('--shell', action='store_true', help='Set the code to shell mode.')
