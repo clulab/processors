@@ -313,6 +313,25 @@ class Metal(object):
         return layersSeq
 
     @classmethod
+    def load_multi(cls, models):
+        print (f"Loading MTL models from {models}...")
+
+        layersSeq = list()
+        for model in models:
+            checkpoint = torch.load(model+".torch")
+            for i, param in enumerate(checkpoint):
+                layers = Layers.loadX2i(param['x2i'])
+                layers.load_state_dict(param['model'])
+                if len(layersSeq)<len(checkpoint):
+                    layersSeq.append(layers)
+                else:
+                    layersSeq[i].add_state_dict(layers)
+        for layers in layersSeq:
+            layers.avg_state_dict(len(models))
+        rint (f"Loading MTL models from {models} complete.")
+        return layersSeq
+
+    @classmethod
     def apply(cls, modelFilenamePrefix, taskManager=None):
         model = Metal.load(modelFilenamePrefix)
         return cls(taskManager, model)

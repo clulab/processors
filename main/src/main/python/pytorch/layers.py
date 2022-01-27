@@ -97,6 +97,34 @@ class Layers(object):
         if self.finalLayer is not None:
             self.finalLayer.load_state_dict(params['finalLayer'])
 
+    def add_state_dict(self, layers):
+        if self.initialLayer is not None:
+            for key in self.initialLayer.state_dict():
+                if self.initialLayer.state_dict()[key].data.dtype == torch.float32:
+                    self.initialLayer.state_dict()[key].data += layers.initialLayer.state_dict()[key].data.clone()
+        for i, il in enumerate(self.intermediateLayers):
+            for key in il.state_dict():
+                if il.state_dict()[key].data.dtype == torch.float32:
+                    il.state_dict()[key].data += layers.intermediateLayers[i].state_dict()[key].data.clone()
+        if self.finalLayer is not None:
+            for key in self.finalLayer.state_dict():
+                if self.finalLayer.state_dict()[key].data.dtype == torch.float32:
+                    self.finalLayer.state_dict()[key].data += layers.finalLayer.state_dict()[key].data.clone()
+
+    def avg_state_dict(self, num_models):
+        if self.initialLayer is not None:
+            for key in self.initialLayer.state_dict():
+                if self.initialLayer.state_dict()[key].data.dtype == torch.float32:
+                    self.initialLayer.state_dict()[key].data /= num_models
+        for i, il in enumerate(self.intermediateLayers):
+            for key in il.state_dict():
+                if il.state_dict()[key].data.dtype == torch.float32:
+                    il.state_dict()[key].data /= num_models
+        if self.finalLayer is not None:
+            for key in self.finalLayer.state_dict():
+                if self.finalLayer.state_dict()[key].data.dtype == torch.float32:
+                    self.finalLayer.state_dict()[key].data /= num_models
+
 
     def forward(self, sentence, constEmbeddings, doDropout):
         if self.initialLayer is None:
