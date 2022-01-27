@@ -266,8 +266,8 @@ class Metal(object):
 
     def test(self):
 
-        # torch.manual_seed(self.taskManager.random)
-        # random.seed(self.taskManager.random)
+        torch.manual_seed(self.taskManager.random)
+        random.seed(self.taskManager.random)
         for layers in self.model:
             layers.start_eval()
         for taskId in range(0, self.taskManager.taskCount):
