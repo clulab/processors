@@ -82,13 +82,12 @@ class ForwardLayer(FinalLayer):
         from pytorch.greedyForwardLayer import GreedyForwardLayer
         from pytorch.viterbiForwardLayer import ViterbiForwardLayer
         inferenceType = x2i["inferenceType"]
-        return ViterbiForwardLayer.load(x2i)
-        # if inferenceType == TYPE_VITERBI:
-        #     return ViterbiForwardLayer.load(x2i)
-        # elif inferenceType == TYPE_GREEDY:
-        #     return GreedyForwardLayer.load(x2i)
-        # else:
-        #     raise RuntimeError(f"ERROR: unknown forward layer type {inferenceType}!")
+        if inferenceType == TYPE_VITERBI:
+            return ViterbiForwardLayer.load(x2i)
+        elif inferenceType == TYPE_GREEDY:
+            return GreedyForwardLayer.load(x2i)
+        else:
+            raise RuntimeError(f"ERROR: unknown forward layer type {inferenceType}!")
 
     @staticmethod
     def initialize(config, paramPrefix, labelCounter, isDual, inputSize):
