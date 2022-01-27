@@ -25,10 +25,11 @@ if __name__ == '__main__':
         config = ConfigFactory.parse_file(f'../resources/org/clulab/{args.config}.conf')
         taskManager = TaskManager(config, args.seed)
         modelName = args.model_file
-        if len(modelName.split())==1:
-            model = Metal.load(modelName)
+        print (modelName)
+        if len(modelName)==1:
+            model = Metal.load(modelName[0])
         else:
-            model = Metal.load_multi(modelName.split())
+            model = Metal.load_multi(modelName)
         mtl = Metal(taskManager, model)
         mtl.test()
     elif args.shell:
