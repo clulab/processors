@@ -219,7 +219,7 @@ class Metal(object):
 
             annotatedSentences = reader.toAnnotatedSentences(sent)
 
-            for asent in annotatedSentences:
+            for asent in annotatedSentences[:1]:
                 sentence = asent[0]
                 goldLabels = asent[1]
 
@@ -266,7 +266,7 @@ class Metal(object):
 
     def test(self):
 
-        torch.manual_seed(self.taskManager.random)
+        # torch.manual_seed(self.taskManager.random)
         random.seed(self.taskManager.random)
         for layers in self.model:
             layers.start_eval()

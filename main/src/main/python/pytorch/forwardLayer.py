@@ -43,7 +43,8 @@ class ForwardLayer(FinalLayer):
             argExp = self.dropout(self.pickSpan(inputExpressions, 1))
             temp = self.pH(argExp)
             emissionScores = self.dropout(temp)
-
+            print ("final, argExp",argExp)
+            print ("final, emissionScores",emissionScores)
             try:
                 np.testing.assert_allclose(temp.detach().cpu().numpy(), emissionScores.detach().cpu().numpy(), rtol=1e-03, atol=1e-05)
             except AssertionError as e:
