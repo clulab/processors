@@ -192,20 +192,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "between Christmas and New Year", Interval(0, 4), goldEntity= "DATE-RANGE", goldNorm= "XXXX-12-25 -- XXXX-01-01")
   }
 
-  it should "recognize date with modifier" in {
-    ensure(sentence= "It was the start of 2020", Interval(2, 6), goldEntity= "DATE", goldNorm= "2020-01-XX")
-    ensure(sentence= "It was mid-2020", Interval(2, 4), goldEntity= "DATE", goldNorm= "2020-06-XX")
-    ensure(sentence= "It was the end of 2020", Interval(2, 6), goldEntity= "DATE", goldNorm= "2020-12-XX")
-    ensure(sentence= "It was the start of January", Interval(2, 6), goldEntity= "DATE", goldNorm= "XXXX-01-01")
-    ensure(sentence= "It was mid-January", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15")
-    ensure(sentence= "It was the end of January", Interval(2, 6), goldEntity= "DATE", goldNorm= "XXXX-01-31")
-    ensure(sentence= "It was the end of February 2020", Interval(2, 7), goldEntity= "DATE", goldNorm= "2020-02-29")
-    ensure(sentence= "It was around January 15", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15 [APPROX]")
-    ensure(sentence= "It was around New Years Eve", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-12-31 [APPROX]")
-    ensure(sentence= "It was around mid-January", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15 [APPROX]")
-    ensure(sentence= "It was around the start of 2020", Interval(2, 7), goldEntity= "DATE", goldNorm= "2020-01-XX [APPROX]")
-  }
-
   it should "recognize date ranges" in {
     ensure("between 2020/10/10 and 2020/11/11", Interval(0, 4), "DATE-RANGE", "2020-10-10 -- 2020-11-11")
     ensure("from July 20 to July 31", Interval(0, 6), "DATE-RANGE", "XXXX-07-20 -- XXXX-07-31")
@@ -277,6 +263,24 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("until January", Interval(0, 2), "DATE-RANGE", "ref-date -- XXXX-01-XX")
     ensure("after January", Interval(0, 2), "DATE-RANGE", "XXXX-01-XX -- XXXX-XX-XX")
   }
+
+  it should "recognize dates and date-ranges with modifier" in {
+    ensure(sentence= "It was the start of 2020", Interval(2, 6), goldEntity= "DATE", goldNorm= "2020-01-XX")
+    ensure(sentence= "It was mid-2020", Interval(2, 4), goldEntity= "DATE", goldNorm= "2020-06-XX")
+    ensure(sentence= "It was the end of 2020", Interval(2, 6), goldEntity= "DATE", goldNorm= "2020-12-XX")
+    ensure(sentence= "It was the start of January", Interval(2, 6), goldEntity= "DATE", goldNorm= "XXXX-01-01")
+    ensure(sentence= "It was mid-January", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15")
+    ensure(sentence= "It was the end of January", Interval(2, 6), goldEntity= "DATE", goldNorm= "XXXX-01-31")
+    ensure(sentence= "It was the end of February 2020", Interval(2, 7), goldEntity= "DATE", goldNorm= "2020-02-29")
+    ensure(sentence= "It was around January 15", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15 [APPROX]")
+    ensure(sentence= "It was around New Years Eve", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-12-31 [APPROX]")
+    ensure(sentence= "It was around mid-January", Interval(2, 4), goldEntity= "DATE", goldNorm= "XXXX-01-15 [APPROX]")
+    ensure(sentence= "It was around the start of 2020", Interval(2, 7), goldEntity= "DATE", goldNorm= "2020-01-XX [APPROX]")
+    ensure(sentence= "before the end of 2020", Interval(0, 5), goldEntity= "DATE-RANGE", goldNorm= "XXXX-XX-XX -- 2020-12-XX")
+    ensure(sentence= "from early June to mid-September", Interval(0, 6), goldEntity= "DATE-RANGE", goldNorm= "XXXX-06-01 -- XXXX-09-15")
+    ensure(sentence= "since around the end of 2020", Interval(0, 6), goldEntity= "DATE-RANGE", goldNorm= "2020-12-XX [APPROX] -- ref-date")
+  }
+
 
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT", "12.0 ha")

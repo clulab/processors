@@ -1,7 +1,7 @@
 rules:
   # Date with approx modifier, e.g. "around July"
   - name: modifier-approx
-    label: Modifier
+    label: Date
     priority: ${ rulepriority }
     type: token
     action: mkDateMentionWithModifierApprox
@@ -10,7 +10,7 @@ rules:
 
   # Date with start modifier, e.g. "beginning of July", "around beginning of July"
   - name: modifier-start
-    label: Modifier
+    label: Date
     priority: ${ rulepriority }
     type: token
     action: mkDateMentionWithModifierStart
@@ -19,7 +19,7 @@ rules:
 
   # Date with mid modifier, e.g. "mid-July", "around mid-July"
   - name: modifier-mid
-    label: Modifier
+    label: Date
     priority: ${ rulepriority }
     type: token
     action: mkDateMentionWithModifierMid
@@ -28,7 +28,7 @@ rules:
 
   # Date with end modifier, e.g. "end of July", "around end of July"
   - name: modifier-end
-    label: Modifier
+    label: Date
     priority: ${ rulepriority }
     type: token
     action: mkDateMentionWithModifierEnd
