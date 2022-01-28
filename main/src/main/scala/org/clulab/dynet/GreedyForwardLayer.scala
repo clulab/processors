@@ -76,7 +76,11 @@ class GreedyForwardLayer (parameters:ParameterCollection,
    * @param goldGraph The correct graph, containing only positive edges
    * @return Overall loss
    */
-  override def graphLoss(predictedGraph: EdgeMap[Expression], goldGraph: EdgeMap[Expression]): Expression = {
+  override def graphLoss(emissionScoresAsExpression: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
+    val goldLabels = Utils.toIds(goldLabelStrings, t2i)
+    Utils.sentenceLossGreedy(emissionScoresAsExpression, goldLabels)
+
+    /*
     //
     // loss = max(0, 1 + score(predictedGraph not in gold) - score(goldGraph not in pred) )
     //   where the score of a predicted edge not in gold is 1 + actual score in Expression
@@ -121,12 +125,34 @@ class GreedyForwardLayer (parameters:ParameterCollection,
 
     if(debug) utils.StringUtils.pressEnterKey()
     Expression.max(Expression.input(0f), Expression.sum(lossParts))
+    */
   }
 
   /** Greedy method: for each modifier pick the head with the highest score */
   override def graphForward(inputExpressions: ExpressionVector, 
                             headPositionsOpt: Option[IndexedSeq[Int]],
-                            doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
+                            doDropout: Boolean): ExpressionVector = {
+    val emissionScores = new ExpressionVector()
+    val pH = Expression.parameter(H)
+
+    for (i <- inputExpressions.indices) {
+        // fetch the relevant span from the RNN's hidden state
+        var argExp = pickSpan(inputExpressions(i))
+
+        // dropout on the hidden state
+        argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
+
+        // forward layer + dropout on that
+        var l1 = Utils.expressionDropout(pH * argExp, dropoutProb, doDropout)
+
+        // the last nonlinearity
+        l1 = applyNonlinearity(l1)
+
+        emissionScores.add(l1)
+      }
+    emissionScores
+                              
+    /*                              
     //
     // the predicted graph
     //
@@ -173,6 +199,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     }
 
     (predGraph, goldGraph)
+    */
   }
 
   /** Create the graph with Strings for labels */

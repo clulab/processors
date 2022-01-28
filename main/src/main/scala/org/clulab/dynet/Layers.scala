@@ -77,7 +77,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForward(sentence: AnnotatedSentence,
                              constEmbeddings: ConstEmbeddingParameters,
-                             doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
+                             doDropout: Boolean): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
@@ -115,7 +115,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForwardFrom(inStates: ExpressionVector,
                                  headPositions: Option[IndexedSeq[Int]],
-                                 doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
+                                 doDropout: Boolean): ExpressionVector = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call graphForwardFrom() on a Layers object that has an initial layer: $toString!")
     }
@@ -300,7 +300,7 @@ object Layers {
                                   taskId: Int,
                                   sentence: AnnotatedSentence,
                                   constEmbeddings: ConstEmbeddingParameters,
-                                  doDropout: Boolean): (EdgeMap[Expression], Option[EdgeMap[Expression]]) = {
+                                  doDropout: Boolean): ExpressionVector = {
     //
     // make sure this code is:
     //   (a) called inside a synchronized block, and
@@ -326,14 +326,17 @@ object Layers {
   def graphPredict(layers: IndexedSeq[Layers],
                    taskId: Int,
                    sentence: AnnotatedSentence,
-                   constEmbeddings: ConstEmbeddingParameters): EdgeMap[String] = {
+                   constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
     val predGraph = {
       // DyNet's computation graph is a static variable, so this block must be synchronized.
       Synchronizer.withComputationGraph("Layers.graphPredict()") {
         val states = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
         // val emissionScores = Utils.graphEmissionScoresToArrays(states)
-        val predGraph = layers(taskId + 1).finalLayer.get.graphInference(states._1)
-        predGraph
+        //val predGraph = layers(taskId + 1).finalLayer.get.graphInference(states._1)
+        //predGraph
+        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
+        out
       }
     }    
 
@@ -450,12 +453,13 @@ object Layers {
 
   def graphLoss(layers: IndexedSeq[Layers],
                 taskId: Int,
-                sentence: AnnotatedSentence): Expression = {
+                sentence: AnnotatedSentence,
+                goldLabels: IndexedSeq[String]): Expression = {
     //for(i <- sentence.indices) println(s"$i\t${sentence.words(i)}\t${sentence.headPositions.get(i)}")
 
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-    val (predictedGraph, goldGraph) = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
-    assert(goldGraph.nonEmpty)
-    layers(taskId + 1).finalLayer.get.graphLoss(predictedGraph, goldGraph.get)
+    val states = graphForwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
+    //assert(goldGraph.nonEmpty)
+    layers(taskId + 1).finalLayer.get.graphLoss(states, goldLabels)
   }
 }

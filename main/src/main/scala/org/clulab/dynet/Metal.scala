@@ -88,7 +88,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             words(tid + 1) += annotatedSentence.words(i)
             words(0) += annotatedSentence.words(i)
             // The graph task is unlabeled, so no labels added here
-            if(taskType != TaskManager.TYPE_GRAPH) {
+            if(true) { // taskType != TaskManager.TYPE_GRAPH) {
               labels(tid + 1) += sentenceLabels(i)
             }
           }
@@ -157,7 +157,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             val sentenceLoss = 
               if(isGraphTask) {
                 // val goldGraph = annotatedSentence.mkGoldGraph(sentenceLabels)
-                Layers.graphLoss(model, taskId, annotatedSentence) //, goldGraph)
+                Layers.graphLoss(model, taskId, annotatedSentence, sentenceLabels) //, goldGraph)
               } else {
                 Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
               }
@@ -322,10 +322,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             printCoNLLOutput(pw, sentence.words, goldLabels, preds)
             sc
           } else {
-            val goldGraph = sentence.mkGoldGraph(goldLabels)
-            val predGraph = Layers.graphPredict(model, taskId, sentence, constEmbeddings)
-            val sc = GraphScorer.f1(goldGraph, predGraph)
-            printCoNLLGraphOutput(pw, sentence.words, goldGraph, predGraph)
+            //val goldGraph = sentence.mkGoldGraph(goldLabels)
+            //val predGraph = Layers.graphPredict(model, taskId, sentence, constEmbeddings)
+            //val sc = GraphScorer.f1(goldGraph, predGraph)
+            //printCoNLLGraphOutput(pw, sentence.words, goldGraph, predGraph)
+            val preds = Layers.graphPredict(model, taskId, sentence, constEmbeddings)
+            val sc = SeqScorer.f1(goldLabels, preds)
+            printCoNLLOutput(pw, sentence.words, goldLabels, preds)
             sc
           }
 
