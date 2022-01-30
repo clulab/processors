@@ -3,6 +3,7 @@ taxonomy:
       - NumericEntity:
           - Atomic:
               - PossibleDay
+              - PossibleHoliday
               - PossibleMonth
               - PossibleSeason
               - PossibleYear
@@ -23,7 +24,9 @@ taxonomy:
               - DateRange
               - NumberRange
               - Measurement
+              - Percentage
       - NamedEntity:
+          - Holiday
           - Month
           - MeasurementUnit
           - Season

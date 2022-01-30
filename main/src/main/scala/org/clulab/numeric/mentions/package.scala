@@ -55,6 +55,25 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
   }
 
+  def toPercentageMention(mention: Mention): PercentageMention =  mention match {
+    case m:  PercentageMention => m
+
+    case m: RelationMention =>
+      new PercentageMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        getArgWords("number", m)
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to PercentageMention!")
+  }
+
   def toMeasurementWithRangeMention(mention: Mention): MeasurementMention =  mention match {
     case m:  MeasurementMention => m
 
@@ -609,6 +628,33 @@ package object mentions {
       throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
   }
 
+  def toDateMentionHoliday(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val holiday = getArgWords("holiday", m)
+      if(holiday.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument holiday in mention ${m.raw.mkString(" ")}!")
+
+      val year = getArgWords("year", m)
+
+      val (day, month) = getHoliday(holiday.get, year)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        day, month, year
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
   // this can be more relaxed since the correct date format was previously checked by the Odin grammar
   private val DATE_DD_DD_DD: Pattern = Pattern.compile("(\\d+)\\D(\\d+)\\D(\\d+)")
 
@@ -697,6 +743,15 @@ package object mentions {
 
     if (wordsOpt.isEmpty) None
     else seasonNormalizer.norm(wordsOpt.get)
+  }
+
+  private def getHoliday(holiday: Seq[String], year: Option[Seq[String]]): (Option[Seq[String]], Option[Seq[String]]) = {
+    val dayMonthOpt = HolidayNormalizer.norm(holiday, year)
+    dayMonthOpt match {
+      case Some((day, month)) =>
+        (Some(Seq(day)), Some(Seq(month)))
+      case _ => throw new RuntimeException(s"ERROR: cannot get date for ${holiday.mkString(" ")}!")
+    }
   }
 
   private def getArgWords(argName: String, m:Mention): Option[Seq[String]] =

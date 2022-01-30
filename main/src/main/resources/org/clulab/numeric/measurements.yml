@@ -15,3 +15,10 @@ rules:
     pattern: |
       @number:NumberRange @unit:MeasurementUnit
 
+  - name: measurement-percentage
+    label: Percentage
+    priority: ${ rulepriority }
+    type: token
+    action: mkPercentage
+    pattern: |
+      @number:Number [word=/(?i)pct|percent|%/]
