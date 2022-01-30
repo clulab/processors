@@ -134,16 +134,21 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                             doDropout: Boolean): ExpressionVector = {
     val emissionScores = new ExpressionVector()
     val pH = Expression.parameter(H)
+    val pRoot = Expression.parameter(rootParam)
 
     for (i <- inputExpressions.indices) {
         // fetch the relevant span from the RNN's hidden state
         var argExp = pickSpan(inputExpressions(i))
-
         // dropout on the hidden state
         argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
 
+        val predExp = Utils.expressionDropout(pRoot, dropoutProb, doDropout)
+        val posEmbed = mkRelativePositionEmbedding(i, -1)
+
+        val ss = Expression.concatenate(argExp, predExp, posEmbed)
+
         // forward layer + dropout on that
-        var l1 = Utils.expressionDropout(pH * argExp, dropoutProb, doDropout)
+        var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
         // the last nonlinearity
         l1 = applyNonlinearity(l1)

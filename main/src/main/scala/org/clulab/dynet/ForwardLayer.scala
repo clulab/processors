@@ -259,7 +259,7 @@ object ForwardLayer {
         val len = spanLength(span.get)
         if(needsDoubleLength) 2 * len else len
       } else {
-        if(needsDoubleLength) (2 * inputSize + 32) else inputSize // TODO: implement properly
+        if(needsDoubleLength) 2 * inputSize + 32 else inputSize // (2 * inputSize + 32) else inputSize // TODO: implement properly
       }
     // println(s"ACTUAL INPUT SIZE: $actualInputSize")
 
