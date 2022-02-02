@@ -23,9 +23,26 @@ For M1 processors, you want to only list ARM64-compatible versions. To this end,
 ```
 sdkman_rosetta2_compatible=false
 ```
+
 Open a new terminal and try listing ARM64-compatible versions of java:
 
 ```
 sdk list java
+```
+
+To install an ARM64-compatible distribution of Java 11 via `sdkman`, run the following:
+
+```
+sdk install java 11.0.14-zulu
+```
+This version should also work with Intel machines.
+
+To install `sbt` and `scala`, run the following commands:
+
+```
+# sbt 1.6
+sdk install sbt 1.6.1
+# scala 2.12
+sdk install scala 2.12.15
 ```
 
