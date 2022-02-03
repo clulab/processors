@@ -66,8 +66,7 @@ if __name__ == '__main__':
                     ort_inputs = {ort_session.get_inputs()[i].name: x for i, x in enumerate(dummy_input)}
                     ort_outs = ort_session.run(None, ort_inputs)
 
-                    emissionScores = ort_outs[0]
-                    preds = [i2t[np.argmax(es)] for es in emissionScores]
+                    preds = [i2t[i] for i in ort_outs[0]]
 
                     sc = SeqScorer.f1(goldLabels, preds)
                     scoreCountsByLabel.incAll(sc)

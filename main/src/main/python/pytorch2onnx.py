@@ -56,8 +56,8 @@ class Saving_Model(torch.nn.Module):
                 state = il(state, False)
             if self.finalLayers[i]:
                 state = self.finalLayers[i](state, None)#headPositions set to be None for now, we can add it in input list later
-        ids = self.finalLayers[i].inference2(state)
-        return torch.LongTensor(ids)
+        ids = self.finalLayers[-1].inference2(state)
+        return ids
 
 if __name__ == '__main__':
 
@@ -74,9 +74,6 @@ if __name__ == '__main__':
         model = Metal.load(modelName[0])
     else:
         model = Metal.load_multi(modelName)
-
-    mtl = Metal(taskManager, model)
-    mtl.test()
 
     for layers in model:
         layers.start_eval()

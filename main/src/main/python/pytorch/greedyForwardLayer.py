@@ -28,6 +28,10 @@ class GreedyForwardLayer(ForwardLayer):
         emissionScores = emissionScoresToArrays(emissionScores)
         return [self.i2t[np.argmax(es)] for es in emissionScores]
 
+    def inference2(self, emissionScores):
+        emissionScores = emissionScoresToArrays(emissionScores)
+        return torch.LongTensor([np.argmax(es) for es in emissionScores])
+
     def inferenceWithScores(self, emissionScores):
         emissionScores = emissionScoresToArrays(emissionScores)
         return [sorted([(i, s) for i, s in enumerate(scoresForPosition)], key=lambda x: x[1]) for scoresForPosition in emissionScores]

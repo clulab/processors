@@ -126,7 +126,7 @@ class ViterbiForwardLayer(ForwardLayer):
 
     def inference2(self, emissionScores):
         score, labelsIds = self._viterbi_decode(emissionScores)
-        return labelsIds
+        return torch.LongTensor(labelsIds)
 
     def inferenceWithScores(emissionScores):
         raise RuntimeError("ERROR: inferenceWithScores not supported for ViterbiLayer!")
