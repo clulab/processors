@@ -99,6 +99,45 @@ if __name__ == '__main__':
 
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
+        sentences = taskManager.tasks[taskId].testSentences
+        if sentences:
+            reader = MetalRowReader()
+            for sent in sentences:
+                annotatedSentences = reader.toAnnotatedSentences(sent)
+
+                for asent in annotatedSentences:
+                    sentence = asent[0]
+                    goldLabels = asent[1]
+
+                    words = sentence.words
+
+                    char_embs = []
+                    for word in words:
+                        char_ids = np.array([c2i.get(c, UNK_EMBEDDING) for c in word])
+                        char_out = export_char(char_ids)
+                        char_embs.append(char_out)
+                    char_embs = np.stack(char_embs)
+                    embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
+                    embeddings = constEmbeddings.emb(embed_ids).detach().cpu().numpy()
+                    word_ids = np.array([w2i[word] if word in w2i else 0 for word in words])
+
+                    emissionScores = export_model(embeddings, word_ids, char_embs)
+
+                    preds = [i2t[np.argmax(es)] for es in emissionScores]
+
+                    sc = SeqScorer.f1(goldLabels, preds)
+                    scoreCountsByLabel.incAll(sc)
+
+
+    print (f"Accuracy : {scoreCountsByLabel.accuracy()}")
+    print (f"Precision : {scoreCountsByLabel.precision()}")
+    print (f"Recall on : {scoreCountsByLabel.recall()}")
+    print (f"Micro F1 : {scoreCountsByLabel.f1()}")
+    for label in scoreCountsByLabel.labels():
+        print (f"\tP/R/F1 for label {label} ({scoreCountsByLabel.map[label].gold}): {scoreCountsByLabel.precision(label)} / {scoreCountsByLabel.recall(label)} / {scoreCountsByLabel.f1(label)}")
+
+    for taskId in range(0, taskManager.taskCount):
+        taskName = taskManager.tasks[taskId].taskName
         testSentences = taskManager.tasks[taskId].testSentences
         if testSentences:
             reader = MetalRowReader()
