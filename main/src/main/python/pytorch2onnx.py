@@ -60,7 +60,7 @@ class Saving_Model(torch.nn.Module):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_file', type=str, help='Filename of the model.')
+    parser.add_argument('--model_file', type=str, help='Filename of the model.', nargs='+')
     parser.add_argument('--config', type=str, help='Filename of the configuration.')
     parser.add_argument('--seed', type=int, default=1234)
     args = parser.parse_args()
@@ -68,7 +68,10 @@ if __name__ == '__main__':
     config = ConfigFactory.parse_file(f'../resources/org/clulab/{args.config}.conf')
     taskManager = TaskManager(config, args.seed)
     modelName = args.model_file
-    model = Metal.load(modelName)
+    if len(modelName)==1:
+        model = Metal.load(modelName[0])
+    else:
+        model = Metal.load_multi(modelName)
     for layers in model:
         layers.start_eval()
     constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
