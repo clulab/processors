@@ -125,6 +125,7 @@ class ViterbiForwardLayer(ForwardLayer):
         return [self.i2t[i] for i in labelsIds]
 
     def inference2(self, emissionScores):
+        print (self.transitions)
         score, labelsIds = self._viterbi_decode(emissionScores)
         return labelsIds
 
