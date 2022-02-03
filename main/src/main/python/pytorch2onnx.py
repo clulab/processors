@@ -54,7 +54,7 @@ class Saving_Model(torch.nn.Module):
             for il in self.intermediateLayerss[i]:
                 state = il(state, False)
             if self.finalLayers[i]:
-                state = self.finalLayers[i](state, False, None)#headPositions set to be None for now, we can add it in input list later
+                state = self.finalLayers[i](state, None)#headPositions set to be None for now, we can add it in input list later
         return state
 
 if __name__ == '__main__':
