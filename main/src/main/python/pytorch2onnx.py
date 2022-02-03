@@ -99,50 +99,6 @@ if __name__ == '__main__':
     c2i = x2i[0]['x2i']['initialLayer']['c2i']
     w2i = x2i[0]['x2i']['initialLayer']['w2i']
 
-    t2i = x2i[1]['x2i']['finalLayer']["t2i"]
-    i2t = {i:t for t, i in t2i.items()}
-
-    scoreCountsByLabel = ScoreCountsByLabel()
-    for taskId in range(0, taskManager.taskCount):
-        taskName = taskManager.tasks[taskId].taskName
-        sentences = taskManager.tasks[taskId].testSentences
-        if sentences:
-            reader = MetalRowReader()
-            for sent in sentences:
-                annotatedSentences = reader.toAnnotatedSentences(sent)
-
-                for asent in annotatedSentences:
-                    sentence = asent[0]
-                    goldLabels = asent[1]
-
-                    words = sentence.words
-
-                    char_embs = []
-                    for word in words:
-                        char_ids = torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word])
-                        char_out = export_char(char_ids)
-                        char_embs.append(char_out)
-                    char_embs = torch.stack(char_embs)
-                    embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
-                    embeddings = constEmbeddings.emb(embed_ids)
-                    word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
-
-                    ids = export_model(embeddings, word_ids, char_embs).detach().cpu().numpy()
-
-                    preds = [i2t[i] for i in ids]
-
-                    sc = SeqScorer.f1(goldLabels, preds)
-                    scoreCountsByLabel.incAll(sc)
-
-
-    print (f"Accuracy : {scoreCountsByLabel.accuracy()}")
-    print (f"Precision : {scoreCountsByLabel.precision()}")
-    print (f"Recall on : {scoreCountsByLabel.recall()}")
-    print (f"Micro F1 : {scoreCountsByLabel.f1()}")
-    for label in scoreCountsByLabel.labels():
-        print (f"\tP/R/F1 for label {label} ({scoreCountsByLabel.map[label].gold}): {scoreCountsByLabel.precision(label)} / {scoreCountsByLabel.recall(label)} / {scoreCountsByLabel.f1(label)}")
-
-    scoreCountsByLabel = ScoreCountsByLabel()
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
         testSentences = taskManager.tasks[taskId].testSentences
