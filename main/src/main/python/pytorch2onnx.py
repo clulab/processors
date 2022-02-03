@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     t2i = x2i[1]['x2i']['finalLayer']["t2i"]
     i2t = {i:t for t, i in t2i.items()}
-
+    scoreCountsByLabel = ScoreCountsByLabel()
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
         sentences = taskManager.tasks[taskId].testSentences
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     print (f"Micro F1 : {scoreCountsByLabel.f1()}")
     for label in scoreCountsByLabel.labels():
         print (f"\tP/R/F1 for label {label} ({scoreCountsByLabel.map[label].gold}): {scoreCountsByLabel.precision(label)} / {scoreCountsByLabel.recall(label)} / {scoreCountsByLabel.f1(label)}")
-
+    scoreCountsByLabel = ScoreCountsByLabel()
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
         testSentences = taskManager.tasks[taskId].testSentences
