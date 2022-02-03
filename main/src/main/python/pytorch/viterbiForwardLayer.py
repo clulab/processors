@@ -124,6 +124,10 @@ class ViterbiForwardLayer(ForwardLayer):
         score, labelsIds = self._viterbi_decode(emissionScores)
         return [self.i2t[i] for i in labelsIds]
 
+    def inference2(self, emissionScores):
+        score, labelsIds = self._viterbi_decode(emissionScores)
+        return labelsIds
+
     def inferenceWithScores(emissionScores):
         raise RuntimeError("ERROR: inferenceWithScores not supported for ViterbiLayer!")
 

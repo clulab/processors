@@ -56,8 +56,8 @@ class Saving_Model(torch.nn.Module):
                 state = il(state, False)
             if self.finalLayers[i]:
                 state = self.finalLayers[i](state, None)#headPositions set to be None for now, we can add it in input list later
-        state = self.finalLayers[i].inference(state)
-        return state
+        ids = self.finalLayers[i].inference2(state)
+        return ids
 
 if __name__ == '__main__':
 
@@ -101,6 +101,7 @@ if __name__ == '__main__':
 
     t2i = x2i[1]['x2i']['finalLayer']["t2i"]
     i2t = {i:t for t, i in t2i.items()}
+
     scoreCountsByLabel = ScoreCountsByLabel()
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
@@ -126,9 +127,9 @@ if __name__ == '__main__':
                     embeddings = constEmbeddings.emb(embed_ids)
                     word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
 
-                    emissionScores = export_model(embeddings, word_ids, char_embs).detach().cpu().numpy()
+                    ids = export_model(embeddings, word_ids, char_embs).detach().cpu().numpy()
 
-                    preds = [i2t[np.argmax(es)] for es in emissionScores]
+                    preds = [i2t[i] for i in ids]
 
                     sc = SeqScorer.f1(goldLabels, preds)
                     scoreCountsByLabel.incAll(sc)
@@ -140,6 +141,7 @@ if __name__ == '__main__':
     print (f"Micro F1 : {scoreCountsByLabel.f1()}")
     for label in scoreCountsByLabel.labels():
         print (f"\tP/R/F1 for label {label} ({scoreCountsByLabel.map[label].gold}): {scoreCountsByLabel.precision(label)} / {scoreCountsByLabel.recall(label)} / {scoreCountsByLabel.f1(label)}")
+
     scoreCountsByLabel = ScoreCountsByLabel()
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
@@ -207,7 +209,7 @@ if __name__ == '__main__':
     ort_inputs = {ort_session.get_inputs()[i].name: to_numpy(x) for i, x in enumerate(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
     try:
-        np.testing.assert_allclose(output.detach().cpu().numpy(), ort_outs[0], rtol=1e-03, atol=1e-05)
+        np.testing.assert_allclose(np.array(output), ort_outs[0], rtol=1e-03, atol=1e-05)
     except AssertionError as e:
         print (e)
 
