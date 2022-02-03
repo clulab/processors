@@ -8,6 +8,7 @@ from pytorch.metal import Metal
 from pytorch.utils import *
 from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 from sequences.rowReaders import *
+from pytorch.seqScorer import *
 
 import onnx
 import onnxruntime
