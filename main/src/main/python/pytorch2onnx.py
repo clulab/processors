@@ -118,8 +118,8 @@ if __name__ == '__main__':
                         char_embs.append(char_out)
                     char_embs = np.stack(char_embs)
                     embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
-                    embeddings = constEmbeddings.emb(embed_ids).detach().cpu().numpy()
-                    word_ids = np.array([w2i[word] if word in w2i else 0 for word in words])
+                    embeddings = constEmbeddings.emb(embed_ids)
+                    word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
 
                     emissionScores = export_model(embeddings, word_ids, char_embs)
 
