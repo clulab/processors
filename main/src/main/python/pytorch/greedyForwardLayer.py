@@ -30,7 +30,7 @@ class GreedyForwardLayer(ForwardLayer):
 
     def inference2(self, emissionScores):
         emissionScores = emissionScoresToArrays(emissionScores)
-        return torch.LongTensor([np.argmax(es) for es in emissionScores])
+        return [np.argmax(es) for es in emissionScores]
 
     def inferenceWithScores(self, emissionScores):
         emissionScores = emissionScoresToArrays(emissionScores)
