@@ -108,7 +108,7 @@ class ViterbiForwardLayer(ForwardLayer):
     
     def saveX2i(self):
         x2i = dict()
-        x2i["inferenceType"] = TYPE_VITERBI_STRING
+        x2i["inferenceType"] = TYPE_VITERBI
         x2i["inputSize"] = self.inputSize
         x2i["isDual"] = 1 if self.isDual else 0
         x2i["span"] = spanToString(self.spans) if self.spans else ""
