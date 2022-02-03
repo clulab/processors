@@ -88,7 +88,7 @@ if __name__ == '__main__':
     torch.manual_seed(taskManager.random)
     random.seed(taskManager.random)
 
-    x2i = json.load(open(args.model_file+".json"))
+    x2i = json.load(open(args.model_file[0]+".json"))
 
     c2i = x2i[0]['x2i']['initialLayer']['c2i']
     w2i = x2i[0]['x2i']['initialLayer']['w2i']
