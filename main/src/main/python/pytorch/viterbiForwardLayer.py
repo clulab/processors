@@ -125,7 +125,6 @@ class ViterbiForwardLayer(ForwardLayer):
         return [self.i2t[i] for i in labelsIds]
 
     def inference2(self, emissionScores):
-        def inference2(self, emissionScores):
         return torch.argmax(emissionScores, dim=1)
 
     def inferenceWithScores(emissionScores):
