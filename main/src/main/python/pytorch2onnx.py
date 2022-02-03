@@ -116,7 +116,7 @@ if __name__ == '__main__':
                         char_ids = torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word])
                         char_out = export_char(char_ids)
                         char_embs.append(char_out)
-                    char_embs = np.stack(char_embs)
+                    char_embs = torch.stack(char_embs)
                     embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
                     embeddings = constEmbeddings.emb(embed_ids)
                     word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
