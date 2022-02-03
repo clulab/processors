@@ -125,9 +125,8 @@ class ViterbiForwardLayer(ForwardLayer):
         return [self.i2t[i] for i in labelsIds]
 
     def inference2(self, emissionScores):
-        print (self.transitions)
-        score, labelsIds = self._viterbi_decode(emissionScores)
-        return labelsIds
+        def inference2(self, emissionScores):
+        return torch.argmax(emissionScores, dim=1)
 
     def inferenceWithScores(emissionScores):
         raise RuntimeError("ERROR: inferenceWithScores not supported for ViterbiLayer!")

@@ -29,8 +29,7 @@ class GreedyForwardLayer(ForwardLayer):
         return [self.i2t[np.argmax(es)] for es in emissionScores]
 
     def inference2(self, emissionScores):
-        emissionScores = emissionScoresToArrays(emissionScores)
-        return [np.argmax(es) for es in emissionScores]
+        return torch.argmax(emissionScores, dim=1)
 
     def inferenceWithScores(self, emissionScores):
         emissionScores = emissionScoresToArrays(emissionScores)
