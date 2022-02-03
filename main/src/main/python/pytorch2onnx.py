@@ -205,11 +205,11 @@ if __name__ == '__main__':
         np.testing.assert_allclose(to_numpy(char_out), ort_outs[0], rtol=1e-03, atol=1e-05)
     except AssertionError as e:
         print (e)
-
+    print (ort_session.get_inputs())
     ort_inputs = {ort_session.get_inputs()[i].name: to_numpy(x) for i, x in enumerate(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
     try:
-        np.testing.assert_allclose(np.array(output), ort_outs[0], rtol=1e-03, atol=1e-05)
+        np.testing.assert_allclose(output.detach().cpu().numpy(), ort_outs[0], rtol=1e-03, atol=1e-05)
     except AssertionError as e:
         print (e)
 
