@@ -124,7 +124,7 @@ if __name__ == '__main__':
                     embeddings = constEmbeddings.emb(embed_ids)
                     word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
 
-                    emissionScores = export_model(embeddings, word_ids, char_embs)
+                    emissionScores = export_model(embeddings, word_ids, char_embs).detach().cpu().numpy()
 
                     preds = [i2t[np.argmax(es)] for es in emissionScores]
 
