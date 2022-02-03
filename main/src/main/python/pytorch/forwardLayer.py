@@ -82,6 +82,7 @@ class ForwardLayer(FinalLayer):
         from pytorch.greedyForwardLayer import GreedyForwardLayer
         from pytorch.viterbiForwardLayer import ViterbiForwardLayer
         inferenceType = x2i["inferenceType"]
+        print (inferenceType)
         if inferenceType == TYPE_VITERBI:
             return ViterbiForwardLayer.load(x2i)
         elif inferenceType == TYPE_GREEDY:
