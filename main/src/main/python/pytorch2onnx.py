@@ -72,6 +72,10 @@ if __name__ == '__main__':
         model = Metal.load(modelName[0])
     else:
         model = Metal.load_multi(modelName)
+
+    mtl = Metal(taskManager, model)
+    mtl.test()
+
     for layers in model:
         layers.start_eval()
     constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
