@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
                     char_embs = []
                     for word in words:
-                        char_ids = np.array([c2i.get(c, UNK_EMBEDDING) for c in word])
+                        char_ids = torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word])
                         char_out = export_char(char_ids)
                         char_embs.append(char_out)
                     char_embs = np.stack(char_embs)
