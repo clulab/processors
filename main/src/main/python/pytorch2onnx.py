@@ -97,6 +97,9 @@ if __name__ == '__main__':
     c2i = x2i[0]['x2i']['initialLayer']['c2i']
     w2i = x2i[0]['x2i']['initialLayer']['w2i']
 
+    t2i = x2i[1]['x2i']['finalLayer']["t2i"]
+    i2t = {i:t for t, i in t2i.items()}
+
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
         sentences = taskManager.tasks[taskId].testSentences
