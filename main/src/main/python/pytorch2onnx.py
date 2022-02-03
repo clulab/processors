@@ -57,7 +57,7 @@ class Saving_Model(torch.nn.Module):
             if self.finalLayers[i]:
                 state = self.finalLayers[i](state, None)#headPositions set to be None for now, we can add it in input list later
         ids = self.finalLayers[i].inference2(state)
-        return ids
+        return torch.LongTensor(ids)
 
 if __name__ == '__main__':
 
@@ -127,7 +127,7 @@ if __name__ == '__main__':
                     embeddings = constEmbeddings.emb(embed_ids)
                     word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
 
-                    ids = export_model(embeddings, word_ids, char_embs)
+                    ids = export_model(embeddings, word_ids, char_embs).detach().cpu().numpy()
 
                     preds = [i2t[i] for i in ids]
 
