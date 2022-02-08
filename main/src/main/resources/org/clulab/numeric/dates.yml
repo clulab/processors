@@ -7,7 +7,7 @@ rules:
     example: "It was 12 May 2000"
     action: mkDateMention
     pattern: |
-      ( @day:PossibleDay )? @month:PossibleMonth ( ","? @year:PossibleYear )
+      @day:PossibleDay @month:PossibleMonth ( ","? @year:PossibleYear )?
 
   # European date format, with mandatory year
   - name: date-2
