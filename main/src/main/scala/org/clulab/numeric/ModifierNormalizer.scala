@@ -63,8 +63,8 @@ object ModifierNormalizer {
   /** Gets the end of a date */
   def endOf(date: String): ModifiedDate = partOf(date, 1)
 
-  /** Returns true if possibleApproxModifier is an approx modifier */
-  def isApprox(possibleModifier: String): Boolean = possibleModifier == "around"
+  /** Returns true if possibleApprox is an approx modifier */
+  def isApprox(possibleApprox: String): Boolean = Set("around", "about").contains(possibleApprox)
 
   def splitDate(date: String): ModifiedDate = {
     val splitDate = date.split("-").map { m =>
