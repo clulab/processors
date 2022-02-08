@@ -7,7 +7,6 @@ taxonomy:
               - PossibleMonth
               - PossibleSeason
               - PossibleYear
-              - PossibleModifier
               - Number
           - Subatomic:
               - NumberWord
@@ -31,7 +30,6 @@ taxonomy:
           - Month
           - MeasurementUnit
           - Season
-          - Modifier
 
 rules:
   - import: org/clulab/numeric/atomic.yml
