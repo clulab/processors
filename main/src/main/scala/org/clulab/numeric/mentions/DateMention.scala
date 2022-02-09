@@ -14,11 +14,12 @@ class DateMention ( labels: Seq[String],
                     attachments: Set[Attachment],
                     val day: Option[Seq[String]],
                     val month: Option[Seq[String]],
-                    val year: Option[Seq[String]] )
+                    val year: Option[Seq[String]],
+                    val modifierSymbol: Option[String] = None)
   extends TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments) with Norm {
 
   override def neNorm: String = {
-    TempEvalFormatter.mkDate(day, month, year)
+      TempEvalFormatter.mkDate(day, month, year, modifierSymbol)
   }
 
   override def neLabel: String = {
