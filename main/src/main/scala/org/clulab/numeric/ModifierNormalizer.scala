@@ -12,6 +12,7 @@ import scala.io.Source
 object ModifierNormalizer {
 
   val APPROX_SYMBOL = "[APPROX]"
+  private val APPROX_TOKENS = Array("around", "about")
 
   private def partOfTotal(total: Int, modifierPart: Double): String =
       "%02d".format(1.max((total * modifierPart).toInt))
@@ -64,7 +65,7 @@ object ModifierNormalizer {
   def endOf(date: String): ModifiedDate = partOf(date, 1)
 
   /** Returns true if possibleApprox is an approx modifier */
-  def isApprox(possibleApprox: String): Boolean = Set("around", "about").contains(possibleApprox)
+  def isApprox(possibleApprox: String): Boolean = APPROX_TOKENS.contains(possibleApprox)
 
   def splitDate(date: String): ModifiedDate = {
     val splitDate = date.split("-").map { m =>

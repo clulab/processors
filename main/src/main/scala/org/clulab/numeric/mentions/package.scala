@@ -713,15 +713,15 @@ package object mentions {
     case m: DateMention => m
 
     case m: RelationMention =>
-      val date = getArgNorm("date", m)
-      if(date.isEmpty)
+      val dateOpt = getArgNorm("date", m)
+      if(dateOpt.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
 
       val approxSymbol = if (ModifierNormalizer.isApprox(m.words.head))
         Some(ModifierNormalizer.APPROX_SYMBOL)
       else
         None
-      val modifiedDate = ModifierNormalizer.midOf(date.get)
+      val modifiedDate = ModifierNormalizer.midOf(dateOpt.get)
 
       new DateMention(
         m.labels,
