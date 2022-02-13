@@ -260,15 +260,15 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     evaluate(taskId, taskName, sentences, "testing", -1)
   }
 
-  def chooseOptimalPreds(predsWithScores: IndexedSeq[IndexedSeq[(String, Float)]], goldLabels: IndexedSeq[String]): IndexedSeq[String] = {
+  /** Ceiling method that chooses the gold dependency for each modifier from the top K predictions */
+  def chooseOptimalPreds(predsWithScores: IndexedSeq[IndexedSeq[(String, Float)]], goldLabels: IndexedSeq[String], topK:Int): IndexedSeq[String] = {
     assert(predsWithScores.length == goldLabels.length)
     val preds = new ArrayBuffer[String]()
-    val k = 2
     for(i <- predsWithScores.indices) {
       val sortedPreds = predsWithScores(i).sortBy(- _._2)
       val gold = goldLabels(i)
       var bestPred = sortedPreds.head._1
-      for(j <- 1 until k) {
+      for(j <- 1 until topK) {
         if(sortedPreds(j)._1 == gold) {
           bestPred = sortedPreds(j)._1
         }
@@ -309,9 +309,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val goldLabels = as._2
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-        val predsTopK = Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
-
-        val preds = chooseOptimalPreds(predsTopK, goldLabels)
+        
+        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+        //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
+        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
