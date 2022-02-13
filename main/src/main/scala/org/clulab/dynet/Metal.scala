@@ -260,6 +260,24 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     evaluate(taskId, taskName, sentences, "testing", -1)
   }
 
+  def chooseOptimalPreds(predsWithScores: IndexedSeq[IndexedSeq[(String, Float)]], goldLabels: IndexedSeq[String]): IndexedSeq[String] = {
+    assert(predsWithScores.length == goldLabels.length)
+    val preds = new ArrayBuffer[String]()
+    val k = 2
+    for(i <- predsWithScores.indices) {
+      val sortedPreds = predsWithScores(i).sortBy(- _._2)
+      val gold = goldLabels(i)
+      var bestPred = sortedPreds.head._1
+      for(j <- 1 until k) {
+        if(sortedPreds(j)._1 == gold) {
+          bestPred = sortedPreds(j)._1
+        }
+      }
+      preds += bestPred
+    }
+    preds
+  }
+
   /**
    * Computes accuracy/P/R/F1 for the evaluation dataset of the given task
    * Where possible, it also saves CoNLL-2003 compatible files of the output
@@ -291,7 +309,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val goldLabels = as._2
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+        val predsTopK = Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+
+        val preds = chooseOptimalPreds(predsTopK, goldLabels)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
