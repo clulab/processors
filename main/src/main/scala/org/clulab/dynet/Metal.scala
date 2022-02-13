@@ -88,7 +88,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             words(tid + 1) += annotatedSentence.words(i)
             words(0) += annotatedSentence.words(i)
             // The graph task is unlabeled, so no labels added here
-            if(true) { // taskType != TaskManager.TYPE_GRAPH) {
+            if(taskType != TaskManager.TYPE_GRAPH) {
               labels(tid + 1) += sentenceLabels(i)
             }
           }

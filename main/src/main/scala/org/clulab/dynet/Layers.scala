@@ -77,7 +77,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForward(sentence: AnnotatedSentence,
                              constEmbeddings: ConstEmbeddingParameters,
-                             doDropout: Boolean): ExpressionVector = {
+                             doDropout: Boolean): Array[ExpressionVector] = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
@@ -115,7 +115,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def graphForwardFrom(inStates: ExpressionVector,
                                  headPositions: Option[IndexedSeq[Int]],
-                                 doDropout: Boolean): ExpressionVector = {
+                                 doDropout: Boolean): Array[ExpressionVector] = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call graphForwardFrom() on a Layers object that has an initial layer: $toString!")
     }
@@ -300,7 +300,7 @@ object Layers {
                                   taskId: Int,
                                   sentence: AnnotatedSentence,
                                   constEmbeddings: ConstEmbeddingParameters,
-                                  doDropout: Boolean): ExpressionVector = {
+                                  doDropout: Boolean): Array[ExpressionVector] = {
     //
     // make sure this code is:
     //   (a) called inside a synchronized block, and
@@ -334,8 +334,8 @@ object Layers {
         // val emissionScores = Utils.graphEmissionScoresToArrays(states)
         //val predGraph = layers(taskId + 1).finalLayer.get.graphInference(states._1)
         //predGraph
-        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
+        // val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+        val out = layers(taskId + 1).finalLayer.get.graphInference(states)
         out
       }
     }    

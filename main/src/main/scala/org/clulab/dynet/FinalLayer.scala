@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
 import edu.cmu.dynet.{Expression, ExpressionVector}
-import org.clulab.struct.EdgeMap
 
 trait FinalLayer extends Saveable {
   def forward(inputExpressions: ExpressionVector,
@@ -10,18 +9,18 @@ trait FinalLayer extends Saveable {
 
   def graphForward(inputExpressions: ExpressionVector, 
                    headPositionsOpt: Option[IndexedSeq[Int]],
-                   doDropout: Boolean): ExpressionVector
+                   doDropout: Boolean): Array[ExpressionVector]
 
   def inDim: Int
   def outDim: Int
 
   def loss(emissionScoresAsExpression: ExpressionVector, goldLabels: IndexedSeq[String]): Expression
 
-  def graphLoss(emissionScoresAsExpression: ExpressionVector, goldLabels: IndexedSeq[String]): Expression
+  def graphLoss(emissionScoresAsExpression: Array[ExpressionVector], goldLabels: IndexedSeq[String]): Expression
 
   def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String]
 
-  def graphInference(emissionScores: EdgeMap[Expression]): EdgeMap[String]
+  def graphInference(emissionScores: Array[ExpressionVector]): IndexedSeq[String]
 
   def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]]
 }

@@ -139,17 +139,17 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
   override def outDim: Int = t2i.size
 
-  override def graphLoss(emissionScoresAsExpression: ExpressionVector, goldLabels: IndexedSeq[String]): Expression = {
+  override def graphLoss(emissionScoresAsExpression: Array[ExpressionVector], goldLabels: IndexedSeq[String]): Expression = {
     throw new RuntimeException("ERROR: graphLoss not supported for this final layer!")
   }
 
   override def graphForward(inputExpressions: ExpressionVector, 
                             headPositionsOpt: Option[IndexedSeq[Int]],
-                            doDropout: Boolean): ExpressionVector = {
+                            doDropout: Boolean): Array[ExpressionVector] = {
     throw new RuntimeException("ERROR: graphForward not supported for this final layer!")
   }
 
-  override def graphInference(emissionScores: EdgeMap[Expression]): EdgeMap[String] = {
+  override def graphInference(emissionScores: Array[ExpressionVector]): IndexedSeq[String] = {
     throw new RuntimeException("ERROR: graphInference not supported for this final layer!")
   }
 
@@ -259,13 +259,13 @@ object ForwardLayer {
         val len = spanLength(span.get)
         if(needsDoubleLength) 2 * len else len
       } else {
-        if(needsDoubleLength) 2 * inputSize + 32 else inputSize // (2 * inputSize + 32) else inputSize // TODO: implement properly
+        if(needsDoubleLength) 2 * inputSize + 64 else inputSize // (2 * inputSize + 32) else inputSize // TODO: implement properly
       }
     // println(s"ACTUAL INPUT SIZE: $actualInputSize")
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
-    val positionLookupParameters = parameters.addLookupParameters(101, Dim(32))
+    val positionLookupParameters = parameters.addLookupParameters(101, Dim(64))
 
     inferenceType match {
       case TYPE_GREEDY_STRING =>

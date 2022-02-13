@@ -13,6 +13,7 @@ import org.clulab.struct.EdgeMap
 import org.clulab.utils.MathUtils._
 import org.clulab.struct.Edge
 import org.clulab.utils
+import java.util.Arrays
 
 class GreedyForwardLayer (parameters:ParameterCollection,
                           inputSize: Int,
@@ -76,9 +77,22 @@ class GreedyForwardLayer (parameters:ParameterCollection,
    * @param goldGraph The correct graph, containing only positive edges
    * @return Overall loss
    */
-  override def graphLoss(emissionScoresAsExpression: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
-    val goldLabels = Utils.toIds(goldLabelStrings, t2i)
-    Utils.sentenceLossGreedy(emissionScoresAsExpression, goldLabels)
+  override def graphLoss(emissionScoresAsExpression: Array[ExpressionVector], 
+                         goldLabelStrings: IndexedSeq[String]): Expression = {
+    assert(emissionScoresAsExpression.length == goldLabelStrings.length)
+    val sum = new ExpressionVector()
+    for(modifier <- emissionScoresAsExpression.indices) {
+      val headRelativePosition = goldLabelStrings(modifier).toInt
+      //val goldLabels = Utils.toIds(goldLabelStrings, t2i)
+      //Utils.sentenceLossGreedy(emissionScoresAsExpression, goldLabels)
+
+      // each array indicates with YES_EDGE_ID the position of the head word for the given modifier
+      // we use the position of the modifier itself if its head is root; this allows the leantgh of goldLabels to be equal to that of the sentence
+      val goldLabels = Array.fill[Int](emissionScoresAsExpression.length)(NO_EDGE_ID)
+      goldLabels(modifier + headRelativePosition) = YES_EDGE_ID
+      sum.add(Utils.sentenceLossGreedy(emissionScoresAsExpression(modifier), goldLabels))
+    }
+    Expression.sum(sum)
 
     /*
     //
@@ -131,11 +145,43 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   /** Greedy method: for each modifier pick the head with the highest score */
   override def graphForward(inputExpressions: ExpressionVector, 
                             headPositionsOpt: Option[IndexedSeq[Int]],
-                            doDropout: Boolean): ExpressionVector = {
-    val emissionScores = new ExpressionVector()
+                            doDropout: Boolean): Array[ExpressionVector] = {
+    val emissionScores = new ArrayBuffer[ExpressionVector]
     val pH = Expression.parameter(H)
     val pRoot = Expression.parameter(rootParam)
 
+    for(modifier <- inputExpressions.indices) {
+      // these stores the scores for this modifier and each head in the sentence
+      val scoresForModifier = new ExpressionVector()
+
+      // fetch the relevant span from the RNN's hidden state
+      var argExp = pickSpan(inputExpressions(modifier))
+      // dropout on the hidden state
+      val argExpAfterDropout = Utils.expressionDropout(argExp, dropoutProb, doDropout)
+
+      for(head <- inputExpressions.indices) {
+        val headExp = if(head == modifier) {
+          // the setting head == modifier if reserved for root
+          pRoot
+        } else {
+          pickSpan(inputExpressions(head))
+        }
+        val headExpAfterDropout = Utils.expressionDropout(headExp, dropoutProb, doDropout)
+
+        val posEmbed = mkRelativePositionEmbedding(modifier, head)
+        val ss = Expression.concatenate(argExpAfterDropout, headExpAfterDropout, posEmbed)
+        var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
+        l1 = applyNonlinearity(l1)
+
+        scoresForModifier.add(l1)
+      }
+
+      emissionScores += scoresForModifier
+    }
+
+    emissionScores.toArray
+
+    /*
     for (i <- inputExpressions.indices) {
         // fetch the relevant span from the RNN's hidden state
         var argExp = pickSpan(inputExpressions(i))
@@ -156,6 +202,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
         emissionScores.add(l1)
       }
     emissionScores
+    */
                               
     /*                              
     //
@@ -208,12 +255,33 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   }
 
   /** Create the graph with Strings for labels */
-  override def graphInference(emissionScores: EdgeMap[Expression]): EdgeMap[String] = {
+  override def graphInference(emissionScores: Array[ExpressionVector]): IndexedSeq[String] = {
+    // the prediction for each token is the relative position of the head; 0 means root
+    val predictions = new ArrayBuffer[String]
+    for(modifier <- emissionScores.indices) {
+      val scoresForModifier = emissionScores(modifier)
+      var bestHead = -1
+      var bestScore = Float.MinValue
+      for(head <- scoresForModifier.indices) {
+        val scores =  scoresForModifier(head).value().toVector().toArray
+        if(scores(YES_EDGE_ID) > bestScore) {
+          bestScore = scores(YES_EDGE_ID)
+          bestHead = head
+        }
+      }
+      assert(bestHead >= 0)
+      val relPos = bestHead - modifier
+      predictions += relPos.toString()
+    }
+    predictions
+    /*
     val predGraph = new EdgeMap[String]
     for(edge <- emissionScores.keys) {
       predGraph += (edge, Utils.START_TAG) // START_TAG indicates the presence of an (unlabeled) edge
     }
     predGraph
+    */
+
   }
 }
 
