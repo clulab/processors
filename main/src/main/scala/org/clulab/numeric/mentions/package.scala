@@ -1,7 +1,6 @@
 package org.clulab.numeric
 
 import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
-
 import java.util.regex.Pattern
 
 package object mentions {
@@ -649,6 +648,119 @@ package object mentions {
         m.foundBy,
         m.attachments,
         day, month, year
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifierApprox(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val date = getArgNorm("date", m)
+      if(date.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val approxSymbol = Some(ModifierNormalizer.APPROX_SYMBOL)
+      val modifiedDate = ModifierNormalizer.splitDate(date.get)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifierStart(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val date = getArgNorm("date", m)
+      if(date.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val approxSymbol = if (ModifierNormalizer.isApprox(m.words.head))
+        Some(ModifierNormalizer.APPROX_SYMBOL)
+      else
+        None
+      val modifiedDate = ModifierNormalizer.startOf(date.get)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifierMid(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val dateOpt = getArgNorm("date", m)
+      if(dateOpt.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val approxSymbol = if (ModifierNormalizer.isApprox(m.words.head))
+        Some(ModifierNormalizer.APPROX_SYMBOL)
+      else
+        None
+      val modifiedDate = ModifierNormalizer.midOf(dateOpt.get)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
+      )
+
+    case m =>
+      throw new RuntimeException(s"Error: cannot convert mention of type [${m.getClass.toString}] to DateMention!")
+  }
+
+  def toDateMentionWithModifierEnd(mention: Mention): DateMention = mention match {
+    case m: DateMention => m
+
+    case m: RelationMention =>
+      val date = getArgNorm("date", m)
+      if(date.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date in mention [${m.raw.mkString(" ")}]!")
+
+      val approxSymbol = if (ModifierNormalizer.isApprox(m.words.head))
+        Some(ModifierNormalizer.APPROX_SYMBOL)
+      else
+        None
+      val modifiedDate = ModifierNormalizer.endOf(date.get)
+
+      new DateMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        modifiedDate.day, modifiedDate.month, modifiedDate.year, approxSymbol
       )
 
     case m =>
