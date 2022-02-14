@@ -10,6 +10,9 @@ import org.clulab.fatdynet.utils.Synchronizer
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.utils.MathUtils
 
+import org.clulab.dynet.Layers.Chart._
+import scala.concurrent.duration.span
+
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
  */
@@ -345,9 +348,56 @@ object Layers {
     val scores = predictWithScores(layers, taskId, sentence, constEmbeddings)
     val startingDependencies = toDependencyTable(scores, topK)
     printDependencyTable(startingDependencies)
+    val length = startingDependencies.length
 
-    // TODO
+    for(spanLen <- 2 to length) {
+      for(start <- 0 to length - spanLen) {
+        val end = start + spanLen - 1 // inclusive
+        println(s"Span: [$start, $end]")
+        for(split <- start until end) {
+
+        }
+      }
+    }
+
+    // TODO: convert chart.get(0, length - 1, HEAD_LEFT) to output
     null                      
+  }
+
+  class Span(val dependencies: Seq[Dependency], val score: Float) {
+    def this() {
+      this(List[Dependency](), 0f)
+    }
+  }
+
+  class Chart(val dimension: Int) {
+    val chart: Array[Array[Array[Span]]] = mkChart()
+
+    private def mkChart(): Array[Array[Array[Span]]] = {
+      val c = Array.fill(dimension)(new Array[Array[Span]](dimension))
+      for(i <- 0 until dimension) {
+        c(i)(i)(HEAD_LEFT) = new Span()
+        c(i)(i)(HEAD_RIGHT) = new Span()
+      }
+      c
+    }
+
+    def get(start: Int, end: Int, spanType: Int): Span = {
+      chart(start)(end)(spanType)
+    }
+
+    def set(start: Int, end: Int, spanType: Int, span: Span) {
+      if(chart(start)(end)(spanType) == null) {
+        chart(start)(end)(spanType) = span
+      } else if(chart(start)(end)(spanType).score < span.score) {
+        chart(start)(end)(spanType) = span
+      }
+    }
+  }
+
+  object Chart {
+    val HEAD_LEFT = 0
+    val HEAD_RIGHT = 1
   }
 
   def parse(layers: IndexedSeq[Layers],
