@@ -310,9 +310,15 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
         
+        // vanilla inference
+        //val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+
+        // ceiling strategy: choose the gold label if it shows up in the top K predictions
         //val predsTopK = Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
         //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
-        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+
+        // Eisner parsing algorithm using the top K predictions
+        val preds = Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, 2).map(_.toString)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)

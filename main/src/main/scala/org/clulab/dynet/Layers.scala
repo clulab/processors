@@ -8,6 +8,7 @@ import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
+import org.clulab.utils.MathUtils
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -292,6 +293,61 @@ object Layers {
       }
 
     labelsForTask
+  }
+
+  /** 
+    * Stores one dependency for the Eisner algorithm 
+    * Indexes for head and mod start at 1 for the first word in the sentence; 0 is reserved for root
+    */
+  case class Dependency(head:Int, mod:Int, score:Float)
+
+  /** Converts the top K predictions into a matrix of Dependency (rows are mods; columns are heads) */
+  private def toDependencyTable(scores: IndexedSeq[IndexedSeq[(String, Float)]], topK: Int): Array[Array[Dependency]] = {
+    val length = scores.length + 1 // plus 1 to accomodate for root
+    val dependencies = Array.fill(length)(new Array[Dependency](length))
+
+    for(i <- scores.indices) {
+      val mod = i + 1 // offsets start at 1 in Dependency
+      val sortedPreds = scores(i).sortBy(- _._2)
+      val sortedProbs = MathUtils.softmaxFloat(sortedPreds.map(_._2))
+      val sortedLabels = sortedPreds.map(_._1)
+      for(j <- 0 until math.min(topK, sortedPreds.size)) {
+        val relHead = sortedLabels(j).toInt
+        val score = sortedProbs(j)
+        //println(s"Converting mod $mod and relHead $relHead")
+        val head = if(relHead == 0) 0 else mod + relHead // +1 offset from mod propagates in the head here
+        if(head >= 0 && head < length) { // we may predict a headoutside of sentence boundaries
+          dependencies(mod)(head) = Dependency(mod, head, score.toFloat)
+        }
+      }
+    }
+
+    dependencies
+  }
+
+  private def printDependencyTable(deps: Array[Array[Dependency]]) {
+    for(i <- deps.indices) {
+      for(j <- deps(i).indices) {
+        val dep = deps(i)(j)
+        if(dep != null) print(dep.score)
+        else print("-")
+        print("\t")
+      }
+      println()
+    }
+  }
+
+  def parseFromTopK(layers: IndexedSeq[Layers],
+                    taskId: Int,
+                    sentence: AnnotatedSentence,
+                    constEmbeddings: ConstEmbeddingParameters,
+                    topK: Int): IndexedSeq[Int] = {
+    val scores = predictWithScores(layers, taskId, sentence, constEmbeddings)
+    val startingDependencies = toDependencyTable(scores, topK)
+    printDependencyTable(startingDependencies)
+
+    // TODO
+    null                      
   }
 
   def parse(layers: IndexedSeq[Layers],
