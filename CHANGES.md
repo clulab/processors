@@ -1,4 +1,5 @@
 #
++ **8.4.8** - We now extract and normalize approximate dates
 + **8.4.8** - We now extract percentages as part of numeric entities 
 + **8.4.8** - Improved tokenization and recognition of dates
 + **8.4.7** - Improved recognition of relative dates
