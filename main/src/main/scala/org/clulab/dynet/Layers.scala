@@ -12,6 +12,7 @@ import org.clulab.utils.MathUtils
 
 import org.clulab.dynet.Layers.Chart._
 import scala.concurrent.duration.span
+import scala.collection.mutable.ListBuffer
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -349,6 +350,7 @@ object Layers {
     val startingDependencies = toDependencyTable(scores, topK)
     printDependencyTable(startingDependencies)
     val length = startingDependencies.length
+    val chart = new Chart(length)
 
     for(spanLen <- 2 to length) {
       for(start <- 0 to length - spanLen) {
@@ -356,17 +358,94 @@ object Layers {
         println(s"Span: [$start, $end]")
         for(split <- start until end) {
 
+          val ll = chart.get(start, split, HEAD_LEFT)
+          val rr = chart.get(split + 1, end, HEAD_RIGHT)
+          if(ll != null && rr != null) {
+            // merge [start(m), split] and [split + 1, end(h)]
+            var d = startingDependencies(start)(end)
+            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(ll, rr, d))  
+
+            // merge [start(m), split] and [split + 1(h), end]
+            d = startingDependencies(start)(split + 1)
+            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(ll, rr, d))
+
+            // merge [start(h), split] and [split + 1, end(m)]
+            d = startingDependencies(end)(start)
+            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rr, d))
+
+            // merge [start, split(h)] and [split + 1, end(m)]
+            d = startingDependencies(end)(split)
+            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rr, d))
+          }
+
+          val lr = chart.get(start, split, HEAD_RIGHT)
+          if(lr != null && rr != null) {
+            // merge [start, split(m)] and [split + 1(h), end]
+            var d = startingDependencies(split)(split + 1)
+            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(lr, rr, d))
+
+            // merge [start, split(m)] and [split + 1, end(h)]
+            d = startingDependencies(split)(end)
+            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(lr, rr, d))
+          }
+
+          val rl = chart.get(split + 1, end, HEAD_LEFT)
+          if(ll != null && rl != null) {
+            // merge [start, split(h)] and [split + 1(m), end]
+            var d = startingDependencies(split + 1)(split)
+            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rl, d))
+
+            // merge [start(h), split] and [split + 1(m), end]
+            d = startingDependencies(split + 1)(start)
+            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rl, d))
+          }
+
+          // merge [start, split] and [split, end] in both directions
+          val rl2 = chart.get(split, end, HEAD_LEFT)
+          if(ll != null && rl2 != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rl2, null))
+          val rr2 = chart.get(split, end, HEAD_RIGHT)
+          if(ll != null && rr2 != null) chart.set(start, end, HEAD_RIGHT, new Span(ll, rr2, null))
+
         }
       }
     }
 
-    // TODO: convert chart.get(0, length - 1, HEAD_LEFT) to output
-    null                      
+    val top = chart.get(0, length - 1, HEAD_LEFT)
+    assert(top != null)
+
+    val heads = new Array[Int](sentence.size)
+    for(dep <- top.dependencies) {
+      val label = if(dep.head == 0) 0 else (dep.head - dep.mod)
+      heads(dep.mod) = label
+    }
+
+    heads                      
   }
 
   class Span(val dependencies: Seq[Dependency], val score: Float) {
     def this() {
       this(List[Dependency](), 0f)
+    }
+
+    def this(left: Span, right: Span, dep: Dependency) {
+      this(
+        Span.concatenateDeps(left, right, dep), 
+        Span.concatenateScores(left, right, dep)
+      )
+    }
+  }
+
+  object Span {
+    private def concatenateScores(left: Span, right: Span, dep: Dependency): Float = {
+      left.score + right.score + (if(dep != null) dep.score else 0f)
+    }
+
+    private def concatenateDeps(left: Span, right: Span, dep: Dependency): Seq[Dependency] = {
+      val deps = new ListBuffer[Dependency]
+      if(dep != null) deps += dep
+      deps ++= left.dependencies
+      deps ++= right.dependencies
+      deps.toList
     }
   }
 
@@ -375,7 +454,12 @@ object Layers {
 
     private def mkChart(): Array[Array[Array[Span]]] = {
       val c = Array.fill(dimension)(new Array[Array[Span]](dimension))
-      for(i <- 0 until dimension) {
+      for(i <- c.indices) {
+        for(j <- c(0).indices) {
+          c(i)(j) = new Array[Span](2)
+        }
+      }
+      for(i <- c.indices) {
         c(i)(i)(HEAD_LEFT) = new Span()
         c(i)(i)(HEAD_RIGHT) = new Span()
       }
