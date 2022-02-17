@@ -318,7 +318,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
 
         // Eisner parsing algorithm using the top K predictions
-        val preds = Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, 1).map(_.toString)
+        val preds = Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, 2).map(_.toString)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
@@ -336,6 +336,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     for(label <- scoreCountsByLabel.labels) {
       logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
     }
+
+    println(s"TOTAL = ${Layers.TOTAL}; EISNER = ${Layers.EISNER}")
 
     ( scoreCountsByLabel.accuracy(),
       scoreCountsByLabel.precision(),

@@ -303,7 +303,7 @@ object Layers {
     * Stores one dependency for the Eisner algorithm 
     * Indexes for head and mod start at 1 for the first word in the sentence; 0 is reserved for root
     */
-  case class Dependency(head:Int, mod:Int, score:Float)
+  case class Dependency(mod:Int, head:Int, score:Float)
 
   /** Converts the top K predictions into a matrix of Dependency (rows are mods; columns are heads) */
   private def toDependencyTable(scores: IndexedSeq[IndexedSeq[(String, Float)]], topK: Int): Array[Array[Dependency]] = {
@@ -313,7 +313,7 @@ object Layers {
     for(i <- scores.indices) {
       val mod = i + 1 // offsets start at 1 in Dependency
       val sortedPreds = scores(i).sortBy(- _._2)
-      val sortedProbs = MathUtils.softmaxFloat(sortedPreds.map(_._2))
+      val sortedProbs = MathUtils.softmaxFloat(sortedPreds.map(_._2), 0.5f)
       val sortedLabels = sortedPreds.map(_._1)
       for(j <- 0 until math.min(topK, sortedPreds.size)) {
         val relHead = sortedLabels(j).toInt
@@ -351,6 +351,8 @@ object Layers {
     printDependencyTable(startingDependencies)
     val length = startingDependencies.length
     val chart = new Chart(length)
+
+    TOTAL += 1
 
     for(spanLen <- 2 to length) {
       for(start <- 0 to length - spanLen) {
@@ -408,18 +410,34 @@ object Layers {
 
         }
       }
+
+      println(s"Chart after spanLen = $spanLen")
+      println(chart)
     }
 
     val top = chart.get(0, length - 1, HEAD_LEFT)
-    assert(top != null)
+    if(top != null) {
+      EISNER += 1
+      println("Final span:")
+      println(top)
 
-    val heads = new Array[Int](sentence.size)
-    for(dep <- top.dependencies) {
-      val label = if(dep.head == 0) 0 else (dep.head - dep.mod)
-      heads(dep.mod) = label
+      val heads = new Array[Int](sentence.size)
+      for(dep <- top.dependencies) {
+        println(s"Converting dependency: $dep")
+        val label = if(dep.head == 0) 0 else (dep.head - dep.mod)
+        println(s"\tlabel = $label")
+        heads(dep.mod - 1) = label
+      }
+
+      heads                      
+    } else {
+      val heads = new Array[Int](sentence.size)
+      for(i <- scores.indices) {
+        val topPred = scores(i).sortBy(- _._2).head._1
+        heads(i) = topPred.toInt
+      }
+      heads
     }
-
-    heads                      
   }
 
   class Span(val dependencies: Seq[Dependency], val score: Float) {
@@ -433,6 +451,16 @@ object Layers {
         Span.concatenateScores(left, right, dep)
       )
     }
+
+    override def toString(): String = {
+      val sb = new StringBuilder()
+      for(dep <- dependencies) {
+        sb.append(s"\t$dep\n")
+      }
+      sb.toString()
+    }
+
+    def isEmpty: Boolean = dependencies.size == 0
   }
 
   object Span {
@@ -476,6 +504,26 @@ object Layers {
       } else if(chart(start)(end)(spanType).score < span.score) {
         chart(start)(end)(spanType) = span
       }
+    }
+
+    override def toString(): String = {
+      val sb = new StringBuilder();
+      for(mod <- 0 until dimension) {
+        for(head <- 0 until dimension) {
+          var span = chart(mod)(head)(HEAD_LEFT)
+          if(span != null && ! span.isEmpty) {
+            sb.append(s"[$mod -- $head] (head left)\n")
+            sb.append(span)
+          }
+          span = chart(mod)(head)(HEAD_RIGHT)
+          if(span != null && ! span.isEmpty) {
+            sb.append(s"[$mod -- $head] (head right)\n")
+            sb.append(span)
+          }
+        }
+      }
+
+      sb.toString()
     }
   }
 
@@ -558,4 +606,8 @@ object Layers {
     val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
+
+  var TOTAL = 0
+  var EISNER = 0
 }
+
