@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use one of our discourse parsers, please cite this paper as below."
+authors:
+- family-names: "Surdeanu"
+  given-names: "Mihai"
+- family-names: "Hicks"
+  given-names: "Thomas"
+- family-names: "Valenzuela-Esc\'{a}rcega"
+  given-names: "Marco A."
+title: "Two Practical Rhetorical Structure Theory Parsers"
+date-released: 2015
+preferred-citation:
+  type: conference-paper
+  authors:
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  - family-names: "Hicks"
+    given-names: "Thomas"
+  - family-names: "Valenzuela-Esc\'{a}rcega"
+    given-names: "Marco A."
+  journal: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
+  booktitle: "Two Practical Rhetorical Structure Theory Parsers"
+  year: 2015
