@@ -99,3 +99,19 @@ references:
   - family-names: "Alcock"
     given-names: "Keith"
   url: "https://clulab.github.io/processors/"
+# GitHub apparently can't process variables.
+# preferred-citation: *ref1
+preferred-citation:
+  type: conference-paper
+  notes: "If you use one of our discourse parsers, please cite this paper:"
+  authors:
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  - family-names: "Hicks"
+    given-names: "Thomas"
+  - family-names: "Valenzuela-Esc\\'{a}rcega"
+    given-names: "Marco A."
+  title: "Two Practical Rhetorical Structure Theory Parsers"
+  booktitle: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
+  year: 2015
+  url: "http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf"
