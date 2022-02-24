@@ -107,7 +107,7 @@ references:
 # preferred-citation: *ref1
 preferred-citation:
   type: conference-paper
-  notes: "If you use one of our discourse parsers, please cite this paper:"
+  notes: "If you use one of our discourse parsers, please cite this paper.  For other uses, please see the notes in the CITATION.cff file."
   authors:
   - family-names: "Surdeanu"
     given-names: "Mihai"
