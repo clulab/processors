@@ -27,8 +27,8 @@ references:
       given-names: "Thomas"
     - family-names: "Valenzuela-Esc\'{a}rcega"
       given-names: "Marco A."
-    booktitle: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
     title: "Two Practical Rhetorical Structure Theory Parsers"
+    booktitle: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
     year: 2015
     url: "http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf"
 - reference:
@@ -43,13 +43,14 @@ references:
       given-names: "Thomas"
     - family-names: "Surdeanu"
       given-names: "Mihai"
-    booktitle: "Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Assian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)"
     title: "A Domain-independent Rule-based Framework for Event Extraction"
+    booktitle: "Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Assian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)"
     year: 2015
     url: "http://surdeanu.info/mihai/papers/acl2015.pdf"
 - reference:
     notes: "If you use CoreNLPProcessor, please cite Stanford’s paper:"
     type: conference-paper
+    year: 2014
     authors:
     - family-names: "Manning"
       given-names: "Christopher D."
@@ -65,7 +66,6 @@ references:
       given-names: "David"
     booktitle: "Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL)"
     title: "The Stanford CoreNLP Natural Language Processing Toolkit"
-    year: 2014
     url: "http://surdeanu.info/mihai/papers/acl2014-corenlp.pdf"
 - reference:
     notes: "If you use CluProcessor, please cite this paper:"
@@ -75,8 +75,8 @@ references:
       given-names: "Mihai"
     - family-names: "Manning"
       given-names: "Christopher D."
-    booktitle: "Proceedings of the North American Chapter of the Association for Computational Linguistics Conference (NAACL-2010)"
     title: "Ensemble Models for Dependency Parsing: Cheap and Good?"
+    booktitle: "Proceedings of the North American Chapter of the Association for Computational Linguistics Conference (NAACL-2010)"
     month: 6
     year: 2010
     url: "http://surdeanu.info/mihai/papers/naacl10-parsing.pdf"
