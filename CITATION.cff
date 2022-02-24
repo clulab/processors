@@ -78,6 +78,7 @@ references:
   url: "http://surdeanu.info/mihai/papers/naacl10-parsing.pdf"
 - type: website
   notes: "If you use anything else in this package, please link to this page."
+  authors:
   - family-names: "Surdeanu"
     given-names: "Mihai"
   - family-names: "Valenzuela-Esc\\'{a}rcega"
