@@ -3,7 +3,7 @@ message: "If you use this software, please cite one of the papers among the refe
 authors:
 - family-names: "Surdeanu"
   given-names: "Mihai"
-- family-names: "Valenzuela-Esc\'{a}rcega"
+- family-names: "Valenzuela-Esc\\'{a}rcega"
   given-names: "Marco A."
 - family-names: "Hahn-Powell"
   given-names: "Gustave"
@@ -25,7 +25,7 @@ references:
       given-names: "Mihai"
     - family-names: "Hicks"
       given-names: "Thomas"
-    - family-names: "Valenzuela-Esc\'{a}rcega"
+    - family-names: "Valenzuela-Esc\\'{a}rcega"
       given-names: "Marco A."
     title: "Two Practical Rhetorical Structure Theory Parsers"
     booktitle: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
@@ -35,7 +35,7 @@ references:
     notes: "If you use Odin, our event extraction framework, please cite this paper:"
     type: conference-paper
     authors:
-    - family-names: "Valenzuela-Esc\'{a}rcega"
+    - family-names: "Valenzuela-Esc\\'{a}rcega"
       given-names: "Marco A."
     - family-names: "Hahn-Powell"
       given-names: "Gustave"
@@ -85,7 +85,7 @@ references:
     type: website
     - family-names: "Surdeanu"
       given-names: "Mihai"
-    - family-names: "Valenzuela-Esc\'{a}rcega"
+    - family-names: "Valenzuela-Esc\\'{a}rcega"
       given-names: "Marco A."
     - family-names: "Hahn-Powell"
       given-names: "Gustave"
