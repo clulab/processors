@@ -13,6 +13,7 @@ import org.clulab.utils.MathUtils
 import org.clulab.dynet.Layers.Chart._
 import scala.concurrent.duration.span
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.HashSet
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -313,14 +314,14 @@ object Layers {
     for(i <- scores.indices) {
       val mod = i + 1 // offsets start at 1 in Dependency
       val sortedPreds = scores(i).sortBy(- _._2)
-      val sortedProbs = MathUtils.softmaxFloat(sortedPreds.map(_._2), 0.5f)
+      val sortedProbs = MathUtils.softmaxFloat(sortedPreds.map(_._2), 1f)
       val sortedLabels = sortedPreds.map(_._1)
       for(j <- 0 until math.min(topK, sortedPreds.size)) {
         val relHead = sortedLabels(j).toInt
         val score = sortedProbs(j)
         //println(s"Converting mod $mod and relHead $relHead")
         val head = if(relHead == 0) 0 else mod + relHead // +1 offset from mod propagates in the head here
-        if(head >= 0 && head < length) { // we may predict a headoutside of sentence boundaries
+        if(head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
           dependencies(mod)(head) = Dependency(mod, head, score.toFloat)
         }
       }
@@ -329,16 +330,66 @@ object Layers {
     dependencies
   }
 
+  val DEBUG = true
+
+  private def p(s: String) { if(DEBUG) print(s) }
+  private def pl(s: String = "") { if(DEBUG) println(s) }
+
   private def printDependencyTable(deps: Array[Array[Dependency]]) {
     for(i <- deps.indices) {
+      p(s"$i:")
       for(j <- deps(i).indices) {
         val dep = deps(i)(j)
-        if(dep != null) print(dep.score)
-        else print("-")
-        print("\t")
+        p("\t")
+        if(dep != null) p(dep.score.toString())
+        else p("-")
       }
-      println()
+      pl()
     }
+  }
+
+  def canMerge(left: Span, right: Span, dep: Dependency, headType: Int): Boolean = {
+    // dep is null if we merge adjacent spans
+    // in this case, the only constraint is that the span containing the head can't be empty
+    if(dep == null) {
+      if(headType == HEAD_LEFT) {
+        return ! left.isEmpty
+      } else if(headType == HEAD_RIGHT) {
+        return ! right.isEmpty
+      } else {
+        return false
+      }
+    }
+
+    //
+    // if headType is LEFT, it means the head of the merged span will be in the left span, 
+    //   which means the head of the right span must be the modifier of the dependency
+    //
+    if(headType == HEAD_LEFT) {
+      if(right.isEmpty) {
+        return true
+      } else if(right.head == dep.mod) {
+        return true
+      } else {
+        return false
+      }
+    }
+
+    //
+    // if headType is RIGHT, it means the head of the merged span will be in the right span, 
+    //   which means the head of the left span must be the modifier of the dependency
+    //
+    else if(headType == HEAD_RIGHT) {
+      if(left.isEmpty) {
+        return true
+      } else if(left.head == dep.mod) {
+        return true
+      } else {
+        return false
+      }
+    }
+
+    false
   }
 
   def parseFromTopK(layers: IndexedSeq[Layers],
@@ -354,10 +405,14 @@ object Layers {
 
     TOTAL += 1
 
+    val START_CHECK = 2
+    val END_CHECK = 25
+    val TYPE_CHECK = HEAD_RIGHT
+
     for(spanLen <- 2 to length) {
       for(start <- 0 to length - spanLen) {
         val end = start + spanLen - 1 // inclusive
-        println(s"Span: [$start, $end]")
+        pl(s"Span: [$start, $end]")
         for(split <- start until end) {
 
           val ll = chart.get(start, split, HEAD_LEFT)
@@ -365,67 +420,174 @@ object Layers {
           if(ll != null && rr != null) {
             // merge [start(m), split] and [split + 1, end(h)]
             var d = startingDependencies(start)(end)
-            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(ll, rr, d))  
+            if(d != null && canMerge(ll, rr, d, HEAD_RIGHT)) {
+              val r = chart.set(start, end, HEAD_RIGHT, Span(ll, rr, d, rr.head))  
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
+                println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: ${split + 1}, $end, RIGHT")
+                println(rr)
+                println("\t" + d)
+              }
+            }
 
             // merge [start(m), split] and [split + 1(h), end]
             d = startingDependencies(start)(split + 1)
-            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(ll, rr, d))
+            if(d != null && canMerge(ll, rr, d, HEAD_RIGHT)) {
+              val r = chart.set(start, end, HEAD_RIGHT, Span(ll, rr, d, rr.head))
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
+                println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: ${split + 1}, $end, RIGHT")
+                println(rr)
+                println("\t" + d)
+              }
+            }
 
             // merge [start(h), split] and [split + 1, end(m)]
             d = startingDependencies(end)(start)
-            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rr, d))
+            if(d != null && canMerge(ll, rr, d, HEAD_LEFT)) {
+              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rr, d, ll.head))
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
+                println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: ${split + 1}, $end, RIGHT")
+                println(rr)
+                println("\t" + d)
+              }
+              
+            }
 
             // merge [start, split(h)] and [split + 1, end(m)]
             d = startingDependencies(end)(split)
-            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rr, d))
+            if(d != null && canMerge(ll, rr, d, HEAD_LEFT)) {
+              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rr, d, ll.head))
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
+                println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: ${split + 1}, $end, RIGHT")
+                println(rr)
+                println("\t" + d)
+              }
+              
+            }
           }
 
           val lr = chart.get(start, split, HEAD_RIGHT)
           if(lr != null && rr != null) {
             // merge [start, split(m)] and [split + 1(h), end]
             var d = startingDependencies(split)(split + 1)
-            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(lr, rr, d))
+            if(d != null && canMerge(lr, rr, d, HEAD_RIGHT)) {
+              val r = chart.set(start, end, HEAD_RIGHT, Span(lr, rr, d, rr.head))
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
+                println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, RIGHT")
+                println(lr)
+                println(s"\tRight: ${split + 1}, $end, RIGHT")
+                println(rr)
+                println("\t" + d)
+              }
+              
+            }
 
             // merge [start, split(m)] and [split + 1, end(h)]
             d = startingDependencies(split)(end)
-            if(d != null) chart.set(start, end, HEAD_RIGHT, new Span(lr, rr, d))
+            if(d != null && canMerge(lr, rr, d, HEAD_RIGHT)) {
+              val r = chart.set(start, end, HEAD_RIGHT, Span(lr, rr, d, rr.head))
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
+                println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, RIGHT")
+                println(lr)
+                println(s"\tRight: ${split + 1}, $end, RIGHT")
+                println(rr)
+                println("\t" + d)
+              }
+              
+            }
           }
 
           val rl = chart.get(split + 1, end, HEAD_LEFT)
           if(ll != null && rl != null) {
             // merge [start, split(h)] and [split + 1(m), end]
             var d = startingDependencies(split + 1)(split)
-            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rl, d))
+            if(d != null && canMerge(ll, rl, d, HEAD_LEFT)) {
+              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rl, d, ll.head))
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
+                println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: ${split + 1}, $end, LEFT")
+                println(rl)
+                println("\t" + d)
+              }
+              
+            }
 
             // merge [start(h), split] and [split + 1(m), end]
             d = startingDependencies(split + 1)(start)
-            if(d != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rl, d))
+            if(d != null && canMerge(ll, rl, d, HEAD_LEFT)) {
+              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rl, d, ll.head))
+              if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
+                println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: ${split + 1}, $end, LEFT")
+                println(rl)
+                println("\t" + d)
+              }
+              
+            }
           }
 
           // merge [start, split] and [split, end] in both directions
           val rl2 = chart.get(split, end, HEAD_LEFT)
-          if(ll != null && rl2 != null) chart.set(start, end, HEAD_LEFT, new Span(ll, rl2, null))
+          if(ll != null && rl2 != null && canMerge(ll, rl2, null, HEAD_LEFT)) {
+            val r = chart.set(start, end, HEAD_LEFT, Span(ll, rl2, null, ll.head))
+            if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
+                println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: $split, $end, LEFT")
+                println(rl2)
+              }
+            
+          }
           val rr2 = chart.get(split, end, HEAD_RIGHT)
-          if(ll != null && rr2 != null) chart.set(start, end, HEAD_RIGHT, new Span(ll, rr2, null))
+          if(ll != null && rr2 != null && canMerge(ll, rr2, null, HEAD_RIGHT)) {
+            val r = chart.set(start, end, HEAD_RIGHT, Span(ll, rr2, null, rr2.head))
+            if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
+                println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
+                println(s"\tLeft: $start, $split, LEFT")
+                println(ll)
+                println(s"\tRight: $split, $end, RIGHT")
+                println(rr2)
+              }
+            
+          }
 
         }
       }
 
-      println(s"Chart after spanLen = $spanLen")
-      println(chart)
+      pl(s"Chart after spanLen = $spanLen")
+      pl(chart.toString(spanLen))
+      chart.sanityCheck(spanLen)
     }
 
     val top = chart.get(0, length - 1, HEAD_LEFT)
     if(top != null) {
       EISNER += 1
-      println("Final span:")
-      println(top)
+      pl("Final span:")
+      pl(top.toString())
 
       val heads = new Array[Int](sentence.size)
       for(dep <- top.dependencies) {
-        println(s"Converting dependency: $dep")
+        pl(s"Converting dependency: $dep")
         val label = if(dep.head == 0) 0 else (dep.head - dep.mod)
-        println(s"\tlabel = $label")
+        pl(s"\tlabel = $label")
         heads(dep.mod - 1) = label
       }
 
@@ -440,16 +602,9 @@ object Layers {
     }
   }
 
-  class Span(val dependencies: Seq[Dependency], val score: Float) {
+  class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
     def this() {
-      this(List[Dependency](), 0f)
-    }
-
-    def this(left: Span, right: Span, dep: Dependency) {
-      this(
-        Span.concatenateDeps(left, right, dep), 
-        Span.concatenateScores(left, right, dep)
-      )
+      this(List[Dependency](), -1, 0f)
     }
 
     override def toString(): String = {
@@ -460,20 +615,51 @@ object Layers {
       sb.toString()
     }
 
+    def contains(mod: Int, head: Int): Boolean = {
+      for(dep <- dependencies) {
+        if(dep.mod == mod && dep.head == head) {
+          return true
+        }
+      }
+      false
+    }
+
     def isEmpty: Boolean = dependencies.size == 0
   }
 
   object Span {
-    private def concatenateScores(left: Span, right: Span, dep: Dependency): Float = {
-      left.score + right.score + (if(dep != null) dep.score else 0f)
+    def apply(left: Span, right: Span, dep: Dependency, head: Int): Span = {
+      // product of probabilities, in log space
+      val score = left.score + right.score + (if(dep != null) math.log(dep.score).toFloat else 0f)
+
+      // aggregate all dependencies for this span
+      val deps = new ListBuffer[Dependency]
+      val allNodes = new HashSet[Int]
+      val modNodes = new HashSet[Int]
+      if(dep != null) {
+        addDep(dep, deps, allNodes, modNodes)
+      }
+      for(dep <- left.dependencies) {
+        addDep(dep, deps, allNodes, modNodes)
+      }
+      for(dep <- right.dependencies) {
+        addDep(dep, deps, allNodes, modNodes)
+      }
+      
+      // position of the head word in the sentence
+      /*
+      assert(allNodes.size == modNodes.size + 1)
+      val head = (allNodes -- modNodes).head
+      */
+
+      new Span(deps, head, score)
     }
 
-    private def concatenateDeps(left: Span, right: Span, dep: Dependency): Seq[Dependency] = {
-      val deps = new ListBuffer[Dependency]
-      if(dep != null) deps += dep
-      deps ++= left.dependencies
-      deps ++= right.dependencies
-      deps.toList
+    private def addDep(dep: Dependency, deps: ListBuffer[Dependency], allNodes: HashSet[Int], modNodes: HashSet[Int]) {
+      deps += dep
+      allNodes += dep.head
+      allNodes += dep.mod
+      modNodes += dep.mod
     }
   }
 
@@ -498,18 +684,22 @@ object Layers {
       chart(start)(end)(spanType)
     }
 
-    def set(start: Int, end: Int, spanType: Int, span: Span) {
+    def set(start: Int, end: Int, spanType: Int, span: Span): (Int, Float) = {
       if(chart(start)(end)(spanType) == null) {
         chart(start)(end)(spanType) = span
+        return (1, span.score)
       } else if(chart(start)(end)(spanType).score < span.score) {
         chart(start)(end)(spanType) = span
+        return (2, span.score)
+      } else {
+        return (0, span.score)
       }
     }
 
-    override def toString(): String = {
+    def toString(length: Int): String = {
       val sb = new StringBuilder();
       for(mod <- 0 until dimension) {
-        for(head <- 0 until dimension) {
+        for(head <- 0 until dimension) { // if head - mod == length) {
           var span = chart(mod)(head)(HEAD_LEFT)
           if(span != null && ! span.isEmpty) {
             sb.append(s"[$mod -- $head] (head left)\n")
@@ -524,6 +714,34 @@ object Layers {
       }
 
       sb.toString()
+    }
+
+    def sanityCheck(spanLen: Int) {
+      println(s"SANITY CHECK AFTER len = $spanLen")
+      for(mod <- 0 until dimension) {
+        if(mod == 0 || mod == 1) {
+          var found = false
+          for(head <- dimension - 1 until 0 by -1 if ! found) {
+            if(chart(mod)(head)(HEAD_LEFT) != null) {
+              found = true
+              if(chart(mod)(head)(HEAD_LEFT).contains(7, 5)) {
+                println(s"\tSpan $mod to $head contains dependency from 7 to 5")
+              } else {
+                println(s"\tSpan $mod to $head does NOT contain dependency from 7 to 5")
+              }
+            }
+          }
+        }
+
+        for(head <- dimension - 1 until 0 by -1) {
+          if(chart(mod)(head)(HEAD_LEFT) != null && chart(mod)(head)(HEAD_LEFT).contains(7, 5)) {
+            println(s"The above chart contains dependency from 7 to 5 in Span($mod, $head, LEFT)")
+          }
+          if(chart(mod)(head)(HEAD_RIGHT) != null && chart(mod)(head)(HEAD_RIGHT).contains(7, 5)) {
+            println(s"The above chart contains dependency from 7 to 5 in Span($mod, $head, RIGHT)")
+          }
+        }
+      }
     }
   }
 
