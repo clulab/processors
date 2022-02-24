@@ -17,7 +17,8 @@ authors:
   given-names: "Keith"
 title: "https://clulab.github.io/processors/"
 references:
-- type: conference-paper
+- &ref1
+  type: conference-paper
   notes: "If you use one of our discourse parsers, please cite this paper:"
   authors:
   - family-names: "Surdeanu"
@@ -30,7 +31,8 @@ references:
   booktitle: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
   year: 2015
   url: "http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf"
-- type: conference-paper
+- &ref2
+  type: conference-paper
   notes: "If you use Odin, our event extraction framework, please cite this paper:"
   authors:
   - family-names: "Valenzuela-Esc\\'{a}rcega"
@@ -45,7 +47,8 @@ references:
   booktitle: "Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Assian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)"
   year: 2015
   url: "http://surdeanu.info/mihai/papers/acl2015.pdf"
-- type: conference-paper
+- &ref3
+  type: conference-paper
   notes: "If you use CoreNLPProcessor, please cite Stanford’s paper:"
   year: 2014
   authors:
@@ -64,7 +67,8 @@ references:
   booktitle: "Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL)"
   title: "The Stanford CoreNLP Natural Language Processing Toolkit"
   url: "http://surdeanu.info/mihai/papers/acl2014-corenlp.pdf"
-- type: conference-paper
+- &ref4
+  type: conference-paper
   notes: "If you use CluProcessor, please cite this paper:"
   authors:
   - family-names: "Surdeanu"
@@ -76,7 +80,8 @@ references:
   month: 6
   year: 2010
   url: "http://surdeanu.info/mihai/papers/naacl10-parsing.pdf"
-- type: website
+- &ref5
+  type: website
   notes: "If you use anything else in this package, please link to this page."
   authors:
   - family-names: "Surdeanu"
@@ -94,3 +99,4 @@ references:
   - family-names: "Alcock"
     given-names: "Keith"
   url: "https://clulab.github.io/processors/"
+preferred-citation: *ref1
