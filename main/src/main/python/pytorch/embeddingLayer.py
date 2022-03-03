@@ -141,12 +141,7 @@ class EmbeddingLayer(InitialLayer):
         # We cut the distance down to values inside the window [-distanceWindowSize, +distanceWindowSize]
         #
         if headPositions and self.distanceLookupParameters:
-            dists = [i-predicatePosition+51 for i, predicatePosition in enumerate(headPositions)]
-            for i in range(len(dists)):
-                if dists[i] < 1:
-                    dists[i] = 0
-                if dists[i] > self.distanceWindowSize + 51:
-                    dists[i] = self.distanceWindowSize + 52
+            dists = [max(i-predicatePosition+self.distanceWindowSize+1, 0) if i-predicatePosition <= self.distanceWindowSize else 2 * self.distanceWindowSize + 2 for i, predicatePosition in enumerate(headPositions)]
             distanceEmbedding = self.distanceLookupParameters(torch.LongTensor(dists))
         else:
             distanceEmbedding = None
