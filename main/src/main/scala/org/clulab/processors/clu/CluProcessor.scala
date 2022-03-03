@@ -453,6 +453,10 @@ class CluProcessor protected (
         words(i + 1).equalsIgnoreCase("to")) {
         tags(i) = "IN"
       }
+
+      else if(VERSUS_PATTERN.findFirstIn(words(i)).nonEmpty) {
+        tags(i) = "CC" // "versus" seems like a CC to me. but maybe not...
+      }
     }
 
     tags
@@ -724,6 +728,11 @@ object CluProcessor {
   val PREDICATE_ATTACHMENT_NAME = "predicates"
 
   val CONST_EMBEDDINGS_ATTACHMENT_NAME = "ce"
+
+  //
+  // Patterns for post-processing corrections
+  //
+  val VERSUS_PATTERN = """(?i)^vs\.?$""".r
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
