@@ -66,7 +66,7 @@ class EmbeddingLayer(InitialLayer):
 
         posTagDim = posTagEmbeddingSize if posTagLookupParameters else 0
         neTagDim = neTagEmbeddingSize if neTagLookupParameters else 0
-        distanceDim = distanceWindowSize if distanceLookupParameters else 0
+        distanceDim = distanceEmbeddingSize if distanceLookupParameters else 0
         predicateDim = 1 if distanceLookupParameters and useIsPredicate else 0
         positionDim = positionEmbeddingSize if positionLookupParameters else 0
         self.outDim = ConstEmbeddingsGlove.dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
@@ -132,7 +132,7 @@ class EmbeddingLayer(InitialLayer):
         # 1 if this word is the predicate
         #
         if headPositions and self.useIsPredicate:
-            predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)])
+            predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)]).unsqueeze(1)
         else:
             predEmbed = None
 
