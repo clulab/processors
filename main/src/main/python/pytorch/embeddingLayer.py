@@ -142,7 +142,7 @@ class EmbeddingLayer(InitialLayer):
         #
         if headPositions and self.distanceLookupParameters:
             dists = [i-predicatePosition for i, predicatePosition in enumerate(headPositions)]
-            for i in range(dists):
+            for i in range(len(dists)):
                 if dists[i] < -self.distanceWindowSize:
                     dists[i] = self.distanceWindowSize-1
                 if dists[i] > self.distanceWindowSize:
