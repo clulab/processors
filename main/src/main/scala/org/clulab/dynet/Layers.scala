@@ -349,7 +349,7 @@ object Layers {
   }
 
   def canMerge(left: Span, right: Span, dep: Dependency, headType: Int): Boolean = {
-    // dep is null if we merge adjacent spans
+    // dep is null only when we merge adjacent spans
     // in this case, the only constraint is that the span containing the head can't be empty
     if(dep == null) {
       if(headType == HEAD_LEFT) {
@@ -543,8 +543,13 @@ object Layers {
             }
           }
 
+          //
           // merge [start, split] and [split, end] in both directions
+          //
           val rl2 = chart.get(split, end, HEAD_LEFT)
+          val rr2 = chart.get(split, end, HEAD_RIGHT)
+
+          // merge [start(h), split] and [split(h), end]
           if(ll != null && rl2 != null && canMerge(ll, rl2, null, HEAD_LEFT)) {
             val r = chart.set(start, end, HEAD_LEFT, Span(ll, rl2, null, ll.head))
             if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
@@ -556,18 +561,24 @@ object Layers {
               }
             
           }
-          val rr2 = chart.get(split, end, HEAD_RIGHT)
-          if(ll != null && rr2 != null && canMerge(ll, rr2, null, HEAD_RIGHT)) {
-            val r = chart.set(start, end, HEAD_RIGHT, Span(ll, rr2, null, rr2.head))
+          // merge [start, split(h)] and [split, end(h)]
+          if(lr != null && rr2 != null && canMerge(lr, rr2, null, HEAD_RIGHT)) {
+            val r = chart.set(start, end, HEAD_RIGHT, Span(lr, rr2, null, rr2.head))
             if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
                 println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
-                println(s"\tLeft: $start, $split, LEFT")
+                println(s"\tLeft: $start, $split, RIGHT")
                 println(ll)
                 println(s"\tRight: $split, $end, RIGHT")
                 println(rr2)
-              }
-            
+              }            
           }
+          // this is illegal, the head must be L or R: merge [start, split(h)] and [split(h), end]
+          /*
+          if(lr != null && rl2 != null && canMerge(lr, rl2, null, HEAD_LEFT)) {
+            val r = chart.set(start, end, HEAD_LEFT, Span(lr, rl2, null, lr.head))
+          }
+          */
+          // this is illegal due to two heads: merge [start(h), split] and [split, end(h)]
 
         }
       }
