@@ -41,14 +41,37 @@ class Saving_Model(torch.nn.Module):
         for i, layers in enumerate(model):
             if layers.initialLayer is not None:
                 self.word_lookup = layers.initialLayer.wordLookupParameters
+                self.postag_lookup = layers.initialLayer.posTagLookupParameters
+                self.netag_lookup = layers.initialLayer.neTagLookupParameters
+                self.dist_lookup = layers.initialLayer.distanceLookupParameters
+                self.pos_lookup = layers.initialLayer.positionLookupParameters
+                self.useIsPredicate = layers.initialLayer.useIsPredicate
             self.intermediateLayerss[i] = nn.ModuleList(layers.intermediateLayers)
             self.finalLayers[i] = layers.finalLayer
         self.intermediateLayerss = nn.ModuleList(self.intermediateLayerss)
         self.finalLayers = nn.ModuleList(self.finalLayers)
-    def forward(self, embeddings, word_ids, charEmbedding):
+    def forward(self, embeddings, word_ids, charEmbedding, tags=None, nes=None, headPositions=None):
         # Can I assuem there is only one initial layer?
         learnedWordEmbeddings = self.word_lookup(word_ids)
-        embedParts = [embeddings, learnedWordEmbeddings, charEmbedding]#, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
+        posTagEmbed = self.postag_lookup(tags) if tags and self.postag_lookup else None
+        neTagEmbed = self.netag_lookup(nes) if nes and self.netag_lookup else None
+        predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)]) if headPositions and self.useIsPredicate else None
+        if headPositions and self.dist_lookup:
+            dists = [i-predicatePosition for i, predicatePosition in enumerate(headPositions)]
+            for i in range(dists):
+                if dists[i] < -self.distanceWindowSize:
+                    dists[i] = self.distanceWindowSize-1
+                if dists[i] > self.distanceWindowSize:
+                    dist[i] = self.distanceWindowSize+1
+            distanceEmbedding = self.dist_lookup(torch.LongTensor(dists))
+        else:
+            distanceEmbedding = None
+        if self.pos_lookup:
+            values = [i if i<100 else 100 for i, wid in enumerate(word_ids)]
+            positionEmbedding = self.pos_lookup(torch.LongTensor(values))
+        else:
+            positionEmbedding = None
+        embedParts = [embeddings, learnedWordEmbeddings, charEmbedding, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
         embedParts = [ep for ep in embedParts if ep is not None]
         state = torch.cat(embedParts, dim=1)
         for i in range(self.model_length):
