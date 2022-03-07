@@ -349,6 +349,8 @@ object Layers {
   }
 
   def canMerge(left: Span, right: Span, dep: Dependency, headType: Int): Boolean = {
+    return true
+
     // dep is null only when we merge adjacent spans
     // in this case, the only constraint is that the span containing the head can't be empty
     if(dep == null) {
@@ -415,13 +417,15 @@ object Layers {
         pl(s"Span: [$start, $end]")
         for(split <- start until end) {
 
-          val ll = chart.get(start, split, HEAD_LEFT)
-          val rr = chart.get(split + 1, end, HEAD_RIGHT)
+          val ll = chart.get(start, split, HEAD_LEFT, INCOMPLETE)
+          val rr = chart.get(split + 1, end, HEAD_RIGHT, INCOMPLETE)
           if(ll != null && rr != null) {
             // merge [start(m), split] and [split + 1, end(h)]
             var d = startingDependencies(start)(end)
             if(d != null && canMerge(ll, rr, d, HEAD_RIGHT)) {
-              val r = chart.set(start, end, HEAD_RIGHT, Span(ll, rr, d, rr.head))  
+              val r = chart.set(start, end, HEAD_RIGHT, COMPLETE, Span(ll, rr, d, rr.head))  
+              chart.set(start, end, HEAD_RIGHT, INCOMPLETE, Span(ll, rr, d, rr.head))  
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
                 println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, LEFT")
@@ -430,12 +434,15 @@ object Layers {
                 println(rr)
                 println("\t" + d)
               }
+              */
             }
 
             // merge [start(m), split] and [split + 1(h), end]
             d = startingDependencies(start)(split + 1)
             if(d != null && canMerge(ll, rr, d, HEAD_RIGHT)) {
-              val r = chart.set(start, end, HEAD_RIGHT, Span(ll, rr, d, rr.head))
+              val r = chart.set(start, end, HEAD_RIGHT, COMPLETE, Span(ll, rr, d, rr.head))
+              chart.set(start, end, HEAD_RIGHT, INCOMPLETE, Span(ll, rr, d, rr.head))
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
                 println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, LEFT")
@@ -444,12 +451,15 @@ object Layers {
                 println(rr)
                 println("\t" + d)
               }
+              */
             }
 
             // merge [start(h), split] and [split + 1, end(m)]
             d = startingDependencies(end)(start)
-            if(d != null && canMerge(ll, rr, d, HEAD_LEFT)) {
-              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rr, d, ll.head))
+            if(d != null) { // } && canMerge(ll, rr, d, HEAD_LEFT)) {
+              val r = chart.set(start, end, HEAD_LEFT, COMPLETE, Span(ll, rr, d, ll.head))
+              chart.set(start, end, HEAD_LEFT, INCOMPLETE, Span(ll, rr, d, ll.head))
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
                 println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, LEFT")
@@ -458,13 +468,15 @@ object Layers {
                 println(rr)
                 println("\t" + d)
               }
-              
+              */
             }
 
             // merge [start, split(h)] and [split + 1, end(m)]
             d = startingDependencies(end)(split)
             if(d != null && canMerge(ll, rr, d, HEAD_LEFT)) {
-              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rr, d, ll.head))
+              val r = chart.set(start, end, HEAD_LEFT, COMPLETE, Span(ll, rr, d, ll.head))
+              chart.set(start, end, HEAD_LEFT, INCOMPLETE, Span(ll, rr, d, ll.head))
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
                 println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, LEFT")
@@ -473,16 +485,18 @@ object Layers {
                 println(rr)
                 println("\t" + d)
               }
-              
+              */
             }
           }
 
-          val lr = chart.get(start, split, HEAD_RIGHT)
+          val lr = chart.get(start, split, HEAD_RIGHT, INCOMPLETE)
           if(lr != null && rr != null) {
             // merge [start, split(m)] and [split + 1(h), end]
             var d = startingDependencies(split)(split + 1)
             if(d != null && canMerge(lr, rr, d, HEAD_RIGHT)) {
-              val r = chart.set(start, end, HEAD_RIGHT, Span(lr, rr, d, rr.head))
+              val r = chart.set(start, end, HEAD_RIGHT, COMPLETE, Span(lr, rr, d, rr.head))
+              chart.set(start, end, HEAD_RIGHT, INCOMPLETE, Span(lr, rr, d, rr.head))
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
                 println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, RIGHT")
@@ -491,13 +505,15 @@ object Layers {
                 println(rr)
                 println("\t" + d)
               }
-              
+              */
             }
 
             // merge [start, split(m)] and [split + 1, end(h)]
             d = startingDependencies(split)(end)
             if(d != null && canMerge(lr, rr, d, HEAD_RIGHT)) {
-              val r = chart.set(start, end, HEAD_RIGHT, Span(lr, rr, d, rr.head))
+              val r = chart.set(start, end, HEAD_RIGHT, COMPLETE, Span(lr, rr, d, rr.head))
+              chart.set(start, end, HEAD_RIGHT, INCOMPLETE, Span(lr, rr, d, rr.head))
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
                 println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, RIGHT")
@@ -506,16 +522,18 @@ object Layers {
                 println(rr)
                 println("\t" + d)
               }
-              
+              */
             }
           }
 
-          val rl = chart.get(split + 1, end, HEAD_LEFT)
+          val rl = chart.get(split + 1, end, HEAD_LEFT, INCOMPLETE)
           if(ll != null && rl != null) {
             // merge [start, split(h)] and [split + 1(m), end]
             var d = startingDependencies(split + 1)(split)
             if(d != null && canMerge(ll, rl, d, HEAD_LEFT)) {
-              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rl, d, ll.head))
+              val r = chart.set(start, end, HEAD_LEFT, COMPLETE, Span(ll, rl, d, ll.head))
+              chart.set(start, end, HEAD_LEFT, INCOMPLETE, Span(ll, rl, d, ll.head))
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
                 println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, LEFT")
@@ -524,13 +542,15 @@ object Layers {
                 println(rl)
                 println("\t" + d)
               }
-              
+              */
             }
 
             // merge [start(h), split] and [split + 1(m), end]
             d = startingDependencies(split + 1)(start)
             if(d != null && canMerge(ll, rl, d, HEAD_LEFT)) {
-              val r = chart.set(start, end, HEAD_LEFT, Span(ll, rl, d, ll.head))
+              val r = chart.set(start, end, HEAD_LEFT, COMPLETE, Span(ll, rl, d, ll.head))
+              chart.set(start, end, HEAD_LEFT, INCOMPLETE, Span(ll, rl, d, ll.head))
+              /*
               if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
                 println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, LEFT")
@@ -539,19 +559,26 @@ object Layers {
                 println(rl)
                 println("\t" + d)
               }
-              
+              */
             }
           }
 
           //
           // merge [start, split] and [split, end] in both directions
           //
-          val rl2 = chart.get(split, end, HEAD_LEFT)
-          val rr2 = chart.get(split, end, HEAD_RIGHT)
+          val leftRightComplete = chart.get(start, split, HEAD_RIGHT, COMPLETE)
+          val leftLeftIncomplete = chart.get(start, split, HEAD_LEFT, INCOMPLETE)
+          val rightRightIncomplete = chart.get(split, end, HEAD_RIGHT, INCOMPLETE)
+          val rightLeftComplete = chart.get(split, end, HEAD_LEFT, COMPLETE)
 
           // merge [start(h), split] and [split(h), end]
-          if(ll != null && rl2 != null && canMerge(ll, rl2, null, HEAD_LEFT)) {
-            val r = chart.set(start, end, HEAD_LEFT, Span(ll, rl2, null, ll.head))
+          if(leftLeftIncomplete != null && rightLeftComplete != null && 
+             canMerge(leftLeftIncomplete, rightLeftComplete, null, HEAD_LEFT)) {
+            val r = chart.set(start, end, HEAD_LEFT, INCOMPLETE, 
+              Span(leftLeftIncomplete, rightLeftComplete, null, leftLeftIncomplete.head))
+            chart.set(start, end, HEAD_LEFT, COMPLETE, 
+              Span(leftLeftIncomplete, rightLeftComplete, null, leftLeftIncomplete.head))
+            /*  
             if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_LEFT && r._1 != 0) {
                 println(s"Creating LEFT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, LEFT")
@@ -559,36 +586,35 @@ object Layers {
                 println(s"\tRight: $split, $end, LEFT")
                 println(rl2)
               }
-            
+            */
           }
           // merge [start, split(h)] and [split, end(h)]
-          if(lr != null && rr2 != null && canMerge(lr, rr2, null, HEAD_RIGHT)) {
-            val r = chart.set(start, end, HEAD_RIGHT, Span(lr, rr2, null, rr2.head))
+          if(leftRightComplete != null && rightRightIncomplete != null && 
+             canMerge(leftRightComplete, rightRightIncomplete, null, HEAD_RIGHT)) {
+            val r = chart.set(start, end, HEAD_RIGHT, INCOMPLETE, 
+              Span(leftRightComplete, rightRightIncomplete, null, rightRightIncomplete.head))
+            chart.set(start, end, HEAD_RIGHT, COMPLETE, 
+              Span(leftRightComplete, rightRightIncomplete, null, rightRightIncomplete.head))              
+            /*  
             if(start == START_CHECK && end == END_CHECK && TYPE_CHECK == HEAD_RIGHT && r._1 != 0) {
                 println(s"Creating RIGHT span from $start to $end with score ${r._2} using:")
                 println(s"\tLeft: $start, $split, RIGHT")
                 println(ll)
                 println(s"\tRight: $split, $end, RIGHT")
                 println(rr2)
-              }            
+              }   
+            */           
           }
-          // this is illegal, the head must be L or R: merge [start, split(h)] and [split(h), end]
-          /*
-          if(lr != null && rl2 != null && canMerge(lr, rl2, null, HEAD_LEFT)) {
-            val r = chart.set(start, end, HEAD_LEFT, Span(lr, rl2, null, lr.head))
-          }
-          */
-          // this is illegal due to two heads: merge [start(h), split] and [split, end(h)]
 
         }
       }
 
       pl(s"Chart after spanLen = $spanLen")
       pl(chart.toString(spanLen))
-      chart.sanityCheck(spanLen)
+      //chart.sanityCheck(spanLen)
     }
 
-    val top = chart.get(0, length - 1, HEAD_LEFT)
+    val top = chart.get(0, length - 1, HEAD_LEFT, INCOMPLETE)
     if(top != null) {
       EISNER += 1
       pl("Final span:")
@@ -675,32 +701,34 @@ object Layers {
   }
 
   class Chart(val dimension: Int) {
-    val chart: Array[Array[Array[Span]]] = mkChart()
+    val chart: Array[Array[Array[Array[Span]]]] = mkChart()
 
-    private def mkChart(): Array[Array[Array[Span]]] = {
-      val c = Array.fill(dimension)(new Array[Array[Span]](dimension))
+    private def mkChart(): Array[Array[Array[Array[Span]]]] = {
+      val c = Array.fill(dimension)(new Array[Array[Array[Span]]](dimension))
       for(i <- c.indices) {
         for(j <- c(0).indices) {
-          c(i)(j) = new Array[Span](2)
+          c(i)(j) = Array.fill(2)(new Array[Span](2))
         }
       }
       for(i <- c.indices) {
-        c(i)(i)(HEAD_LEFT) = new Span()
-        c(i)(i)(HEAD_RIGHT) = new Span()
+        c(i)(i)(HEAD_LEFT)(INCOMPLETE) = new Span()
+        c(i)(i)(HEAD_LEFT)(COMPLETE) = new Span()
+        c(i)(i)(HEAD_RIGHT)(INCOMPLETE) = new Span()
+        c(i)(i)(HEAD_RIGHT)(COMPLETE) = new Span()
       }
       c
     }
 
-    def get(start: Int, end: Int, spanType: Int): Span = {
-      chart(start)(end)(spanType)
+    def get(start: Int, end: Int, spanType: Int, complete: Int): Span = {
+      chart(start)(end)(spanType)(complete)
     }
 
-    def set(start: Int, end: Int, spanType: Int, span: Span): (Int, Float) = {
-      if(chart(start)(end)(spanType) == null) {
-        chart(start)(end)(spanType) = span
+    def set(start: Int, end: Int, spanType: Int, complete: Int, span: Span): (Int, Float) = {
+      if(chart(start)(end)(spanType)(complete) == null) {
+        chart(start)(end)(spanType)(complete) = span
         return (1, span.score)
-      } else if(chart(start)(end)(spanType).score < span.score) {
-        chart(start)(end)(spanType) = span
+      } else if(chart(start)(end)(spanType)(complete).score < span.score) {
+        chart(start)(end)(spanType)(complete) = span
         return (2, span.score)
       } else {
         return (0, span.score)
@@ -711,15 +739,16 @@ object Layers {
       val sb = new StringBuilder();
       for(mod <- 0 until dimension) {
         for(head <- 0 until dimension) { // if head - mod == length) {
-          var span = chart(mod)(head)(HEAD_LEFT)
-          if(span != null && ! span.isEmpty) {
-            sb.append(s"[$mod -- $head] (head left)\n")
-            sb.append(span)
-          }
-          span = chart(mod)(head)(HEAD_RIGHT)
-          if(span != null && ! span.isEmpty) {
-            sb.append(s"[$mod -- $head] (head right)\n")
-            sb.append(span)
+          for(spanType <- 0 until 2) {
+            val spanTypeAsString = if(spanType == HEAD_LEFT) "left" else "right"
+            for(completeType <- 0 until 2) {
+              val completeTypeAsString = if(completeType == INCOMPLETE) "incomplete" else "complete"
+              val span = chart(mod)(head)(spanType)(completeType)
+              if(span != null && ! span.isEmpty) {
+                sb.append(s"[$mod -- $head] (head $spanTypeAsString; $completeTypeAsString)\n")
+                sb.append(span)
+              }
+            }
           }
         }
       }
@@ -727,6 +756,7 @@ object Layers {
       sb.toString()
     }
 
+    /*
     def sanityCheck(spanLen: Int) {
       println(s"SANITY CHECK AFTER len = $spanLen")
       for(mod <- 0 until dimension) {
@@ -754,11 +784,15 @@ object Layers {
         }
       }
     }
+    */
   }
 
   object Chart {
     val HEAD_LEFT = 0
     val HEAD_RIGHT = 1
+
+    val INCOMPLETE = 0
+    val COMPLETE = 1
   }
 
   def parse(layers: IndexedSeq[Layers],
