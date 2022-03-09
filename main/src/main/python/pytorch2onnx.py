@@ -57,12 +57,7 @@ class Saving_Model(torch.nn.Module):
         neTagEmbed = self.netag_lookup(nes) if nes and self.netag_lookup else None
         predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)]) if headPositions and self.useIsPredicate else None
         if headPositions and self.dist_lookup:
-            dists = [i-predicatePosition for i, predicatePosition in enumerate(headPositions)]
-            for i in range(dists):
-                if dists[i] < -self.distanceWindowSize:
-                    dists[i] = self.distanceWindowSize-1
-                if dists[i] > self.distanceWindowSize:
-                    dist[i] = self.distanceWindowSize+1
+            dists = [max(i-predicatePosition+self.distanceWindowSize+1, 0) if i-predicatePosition <= self.distanceWindowSize else 2 * self.distanceWindowSize + 2 for i, predicatePosition in enumerate(headPositions)]
             distanceEmbedding = self.dist_lookup(torch.LongTensor(dists))
         else:
             distanceEmbedding = None
@@ -118,6 +113,8 @@ if __name__ == '__main__':
 
     c2i = x2i[0]['x2i']['initialLayer']['c2i']
     w2i = x2i[0]['x2i']['initialLayer']['w2i']
+    t2i = x2i[0]['x2i']['initialLayer']['tag2i']
+    n2i = x2i[0]['x2i']['initialLayer']['ne2i']
 
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
@@ -131,6 +128,9 @@ if __name__ == '__main__':
             goldLabels = asent[1]
 
             words = sentence.words
+            tags = sentence.posTags
+            nes = sentence.neTags
+            headPositions = sentence.headPositions
             char_embs = []
             for word in words:
                 char_ids = torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word])
@@ -140,9 +140,11 @@ if __name__ == '__main__':
             embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
             embeddings = constEmbeddings.emb(embed_ids)
             word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
-            output = export_model(embeddings, word_ids, char_embs)
+            tags_ids = torch.LongTensor([t2i[tag] if tag in t2i else 0 for tag in tags])
+            nes_ids = torch.LongTensor([n2i[ne] if ne in n2i else 0 for ne in nes])
+            output = export_model(embeddings, word_ids, char_embs, tags_ids, nes_ids, headPositions)
 
-            dummy_input = (embeddings, word_ids, char_embs)
+            dummy_input = (embeddings, word_ids, char_embs, tags_ids, nes_ids, headPositions)
 
     torch.onnx.export(export_char,
                     char_ids,
@@ -159,11 +161,14 @@ if __name__ == '__main__':
                   export_params=True,        # store the trained parameter weights inside the model file
                   opset_version=10,          # the ONNX version to export the model to
                   do_constant_folding=True,  # whether to execute constant folding for optimization
-                  input_names  = ['embed', 'words', 'chars'],   # the model's input names
+                  input_names  = ['embed', 'words', 'chars', 'tags_ids', 'nes_ids', 'headPositions'],   # the model's input names
                   output_names = ['output'], # the model's output names
                   dynamic_axes = {'embed' : {0 : 'sentence length'},
                                   'words' : {0 : 'sentence length'},
                                   'chars' : {0 : 'sentence length'},
+                                  'tags_ids' : {0 : 'sentence length'},
+                                  'nes_ids' : {0 : 'sentence length'},
+                                  'headPositions' : {0 : 'sentence length'},
                                   'output': {0 : 'sentence length'}})
 
     onnx_model = onnx.load("model.onnx")
