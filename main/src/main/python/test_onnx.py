@@ -20,6 +20,12 @@ if __name__ == '__main__':
 
     c2i = x2i[0]['x2i']['initialLayer']['c2i']
     w2i = x2i[0]['x2i']['initialLayer']['w2i']
+    tag2i = x2i[0]['x2i']['initialLayer']['tag2i']
+    n2i = x2i[0]['x2i']['initialLayer']['ne2i']
+    useIsPredicate = x2i[0]['x2i']['initialLayer']['useIsPredicate']
+    distanceWindowSize = x2i[0]['x2i']['initialLayer']['distanceWindowSize']
+    positionEmbeddingSize = x2i[0]['x2i']['initialLayer']['positionEmbeddingSize']
+
     t2i = x2i[1]['x2i']['finalLayer']["t2i"]
     i2t = {i:t for t, i in t2i.items()}
 
@@ -42,6 +48,7 @@ if __name__ == '__main__':
         if sentences:
             reader = MetalRowReader()
             for sent in sentences:
+                print (sent)
                 annotatedSentences = reader.toAnnotatedSentences(sent)
 
                 for asent in annotatedSentences:
@@ -49,7 +56,10 @@ if __name__ == '__main__':
                     goldLabels = asent[1]
 
                     words = sentence.words
-
+                    tags = sentence.posTags
+                    nes = sentence.neTags
+                    headPositions = np.array(sentence.headPositions)
+                    
                     char_embs = []
                     for word in words:
                         char_ids = np.array([c2i.get(c, UNK_EMBEDDING) for c in word])
@@ -60,9 +70,12 @@ if __name__ == '__main__':
                     embed_ids = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
                     embeddings = constEmbeddings.emb(embed_ids).detach().cpu().numpy()
                     word_ids = np.array([w2i[word] if word in w2i else 0 for word in words])
-
-                    dummy_input = (embeddings, word_ids, char_embs)
-
+                    tags_ids = np.array([tag2i[tag] if tag in tag2i else 0 for tag in tags])
+                    nes_ids = np.array([n2i[ne] if ne in n2i else 0 for ne in nes])
+                    pred_embs = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)]).unsqueeze(1).numpy()
+                    dists = [max(i-predicatePosition+distanceWindowSize+1, 0) if i-predicatePosition <= distanceWindowSize else 2 * distanceWindowSize + 2 for i, predicatePosition in enumerate(headPositions)]
+                    dists = np.array(dists)
+                    dummy_input = (embeddings, word_ids, char_embs, tags_ids, nes_ids, pred_embs, dists, headPositions)
                     ort_inputs = {ort_session.get_inputs()[i].name: x for i, x in enumerate(dummy_input)}
                     ort_outs = ort_session.run(None, ort_inputs)
 

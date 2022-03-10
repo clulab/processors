@@ -46,34 +46,25 @@ class Saving_Model(torch.nn.Module):
                 self.dist_lookup = layers.initialLayer.distanceLookupParameters
                 self.pos_lookup = layers.initialLayer.positionLookupParameters
                 self.useIsPredicate = layers.initialLayer.useIsPredicate
+                self.distanceWindowSize = layers.initialLayer.distanceWindowSize
             self.intermediateLayerss[i] = nn.ModuleList(layers.intermediateLayers)
             self.finalLayers[i] = layers.finalLayer
         self.intermediateLayerss = nn.ModuleList(self.intermediateLayerss)
         self.finalLayers = nn.ModuleList(self.finalLayers)
-    def forward(self, embeddings, word_ids, charEmbedding, tags=None, nes=None, headPositions=None):
+    def forward(self, embeddings, word_ids, charEmbedding, tags, nes, predEmbed, dists, headPositions):
         # Can I assuem there is only one initial layer?
         learnedWordEmbeddings = self.word_lookup(word_ids)
-        posTagEmbed = self.postag_lookup(tags) if tags and self.postag_lookup else None
-        neTagEmbed = self.netag_lookup(nes) if nes and self.netag_lookup else None
-        predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)]) if headPositions and self.useIsPredicate else None
-        if headPositions and self.dist_lookup:
-            dists = [max(i-predicatePosition+self.distanceWindowSize+1, 0) if i-predicatePosition <= self.distanceWindowSize else 2 * self.distanceWindowSize + 2 for i, predicatePosition in enumerate(headPositions)]
-            distanceEmbedding = self.dist_lookup(torch.LongTensor(dists))
-        else:
-            distanceEmbedding = None
-        if self.pos_lookup:
-            values = [i if i<100 else 100 for i, wid in enumerate(word_ids)]
-            positionEmbedding = self.pos_lookup(torch.LongTensor(values))
-        else:
-            positionEmbedding = None
-        embedParts = [embeddings, learnedWordEmbeddings, charEmbedding, posTagEmbed, neTagEmbed, distanceEmbedding, positionEmbedding, predEmbed]
-        embedParts = [ep for ep in embedParts if ep is not None]
+        posTagEmbed = self.postag_lookup(tags)
+        neTagEmbed = self.netag_lookup(nes)
+        distanceEmbedding = self.dist_lookup(dists)
+        embedParts = [embeddings, learnedWordEmbeddings, charEmbedding, posTagEmbed, neTagEmbed, distanceEmbedding, predEmbed]
+        
         state = torch.cat(embedParts, dim=1)
         for i in range(self.model_length):
             for il in self.intermediateLayerss[i]:
                 state = il(state, False)
             if self.finalLayers[i]:
-                state = self.finalLayers[i](state, None)#headPositions set to be None for now, we can add it in input list later
+                state = self.finalLayers[i](state, headPositions)#headPositions set to be None for now, we can add it in input list later
         ids = self.finalLayers[-1].inference2(state)
         return ids
 
@@ -116,12 +107,16 @@ if __name__ == '__main__':
     t2i = x2i[0]['x2i']['initialLayer']['tag2i']
     n2i = x2i[0]['x2i']['initialLayer']['ne2i']
 
+    useIsPredicate = x2i[0]['x2i']['initialLayer']['useIsPredicate']
+    distanceWindowSize = x2i[0]['x2i']['initialLayer']['distanceWindowSize']
+    positionEmbeddingSize = x2i[0]['x2i']['initialLayer']['positionEmbeddingSize']
+
     for taskId in range(0, taskManager.taskCount):
         taskName = taskManager.tasks[taskId].taskName
         testSentences = taskManager.tasks[taskId].testSentences
         if testSentences:
             reader = MetalRowReader()
-            annotatedSentences = reader.toAnnotatedSentences(testSentences[1])
+            annotatedSentences = reader.toAnnotatedSentences(testSentences[0])
 
             asent = annotatedSentences[0]
             sentence = asent[0]
@@ -130,7 +125,7 @@ if __name__ == '__main__':
             words = sentence.words
             tags = sentence.posTags
             nes = sentence.neTags
-            headPositions = sentence.headPositions
+            headPositions = torch.LongTensor(sentence.headPositions)
             char_embs = []
             for word in words:
                 char_ids = torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word])
@@ -142,10 +137,14 @@ if __name__ == '__main__':
             word_ids = torch.LongTensor([w2i[word] if word in w2i else 0 for word in words])
             tags_ids = torch.LongTensor([t2i[tag] if tag in t2i else 0 for tag in tags])
             nes_ids = torch.LongTensor([n2i[ne] if ne in n2i else 0 for ne in nes])
-            output = export_model(embeddings, word_ids, char_embs, tags_ids, nes_ids, headPositions)
+            pred_embs = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)]).unsqueeze(1)
+            dists = [max(i-predicatePosition+distanceWindowSize+1, 0) if i-predicatePosition <= distanceWindowSize else 2 * distanceWindowSize + 2 for i, predicatePosition in enumerate(headPositions)]
+            dists = torch.LongTensor(dists)
+            
+            output = export_model(embeddings, word_ids, char_embs, tags_ids, nes_ids, pred_embs, dists, headPositions)
 
-            dummy_input = (embeddings, word_ids, char_embs, tags_ids, nes_ids, headPositions)
-
+            dummy_input = (embeddings, word_ids, char_embs, tags_ids, nes_ids, pred_embs, dists, headPositions)
+            
     torch.onnx.export(export_char,
                     char_ids,
                     "char.onnx",
@@ -155,19 +154,21 @@ if __name__ == '__main__':
                     output_names = ['chars'],
                     dynamic_axes = {"char_ids": {0: 'word length'}})
 
-    torch.onnx.export(export_model,               # model being run
+    torch.onnx.export(torch.jit.script(export_model),               # model being run
                   dummy_input,                         # model input (or a tuple for multiple inputs)
                   "model.onnx",   # where to save the model (can be a file or file-like object)
                   export_params=True,        # store the trained parameter weights inside the model file
                   opset_version=10,          # the ONNX version to export the model to
                   do_constant_folding=True,  # whether to execute constant folding for optimization
-                  input_names  = ['embed', 'words', 'chars', 'tags_ids', 'nes_ids', 'headPositions'],   # the model's input names
+                  input_names  = ['embed', 'words', 'chars', 'tags', 'nes', 'pred_embs', 'dists', 'headPositions'],   # the model's input names
                   output_names = ['output'], # the model's output names
                   dynamic_axes = {'embed' : {0 : 'sentence length'},
                                   'words' : {0 : 'sentence length'},
                                   'chars' : {0 : 'sentence length'},
-                                  'tags_ids' : {0 : 'sentence length'},
-                                  'nes_ids' : {0 : 'sentence length'},
+                                  'tags' : {0 : 'sentence length'},
+                                  'nes' : {0 : 'sentence length'},
+                                  'pred_embs' : {0 : 'sentence length'},
+                                  'dists' : {0 : 'sentence length'},
                                   'headPositions' : {0 : 'sentence length'},
                                   'output': {0 : 'sentence length'}})
 
@@ -186,7 +187,7 @@ if __name__ == '__main__':
         np.testing.assert_allclose(to_numpy(char_out), ort_outs[0], rtol=1e-03, atol=1e-05)
     except AssertionError as e:
         print (e)
-    print (ort_session.get_inputs())
+    print ([i.name for i in ort_session.get_inputs()])
     ort_inputs = {ort_session.get_inputs()[i].name: to_numpy(x) for i, x in enumerate(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
     try:
