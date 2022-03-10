@@ -42,19 +42,15 @@ def save(file, values, comment):
     file.write("\n")
 
 def mkCharacterEmbedding(word, c2i, charLookupParameters, charRnnBuilder):
-    hidden_dim = charRnnBuilder.hidden_size
     charEmbeddings = charLookupParameters(torch.LongTensor([c2i.get(c, UNK_EMBEDDING) for c in word]))
-    output = transduce(charEmbeddings, charRnnBuilder)
+    output, _ = charRnnBuilder(charEmbeddings.unsqueeze(1))
     result = output.squeeze(1)[-1]
-    # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
     return result
 
 def mkCharacterEmbedding2(char_ids, charLookupParameters, charRnnBuilder):
-    hidden_dim = charRnnBuilder.hidden_size
     charEmbeddings = charLookupParameters(char_ids)
-    output = transduce(charEmbeddings, charRnnBuilder)
+    output, _ = charRnnBuilder(charEmbeddings.unsqueeze(1))
     result = output.squeeze(1)[-1]
-    # Zheng: Not sure if this is the right way to concatenate the two direction hidden states
     return result
 
 def readString2Ids(s2iFilename):
@@ -74,28 +70,6 @@ def readChar2Ids(s2iFilename):
                 k, v = line.strip().split('\t')
                 s2i[chr(int(k))] = int(v)
     return s2i
-
-def transduce(embeddings, builder):
-
-    builder = builder.float()
-
-    hidden_dim = builder.hidden_size
-    bi_direct = builder.bidirectional
-    mode = builder.mode
-
-    if mode == 'LSTM':
-        if bi_direct:
-            # change 1 to the layers we need
-            output, (h, c) = builder(embeddings.unsqueeze(1))
-        else:
-            output, (h, c) = builder(embeddings.unsqueeze(1))
-    elif mode == 'GRU':
-        if bi_direct:
-            output, h = builder(embeddings.unsqueeze(1))
-        else:
-            output, h = builder(embeddings.unsqueeze(1))
-
-    return output
 
 def sentenceLossGreedy(emissionScoresForSeq, golds):
     assert(emissionScoresForSeq.size(0) == len(golds))

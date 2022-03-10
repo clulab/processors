@@ -25,48 +25,40 @@ class ForwardLayer(FinalLayer):
         self.inDim = spanLength(spans) if spans is not None else inputSize
         self.outDim = len(t2i)
 
-
-    def pickSpan(self, v, i):
-        if self.spans is None:
-            return v
-        else:
-            # Zheng: Will spans overlap?
-            vs = list()
-            for span in self.spans:
-                e = torch.index_select(v, i, torch.tensor(range(span[0], span[1])))
-                vs.append(e)
-            return torch.cat(vs, dim=i)
+    # remove pick span part to simplify the ONNX converting
+    # def pickSpan(self, v, i):
+    #     if self.spans is None:
+    #         return v
+    #     else:
+    #         # Zheng: Will spans overlap?
+    #         vs = list()
+    #         for span in self.spans:
+    #             e = torch.index_select(v, i, torch.tensor(range(span[0], span[1])))
+    #             vs.append(e)
+    #         return torch.cat(vs, dim=i)
 
     def forward(self, inputExpressions, headPositionsOpt = None):
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
-            argExp = self.dropout(self.pickSpan(inputExpressions, 1))
+            argExp = self.dropout(inputExpressions)
             emissionScores = self.dropout(self.pH(argExp))
             if self.nonlinearity == NONLIN_TANH:
                 emissionScores = F.tanh(emissionScores)
             elif self.nonlinearity == NONLIN_RELU:
                 emissionScores = F.relu(emissionScores)
-            # for i, e in enumerate(inputExpressions):
-            #     argExp = self.dropout(self.pickSpan(e))
-            #     l1 = self.dropout(self.pH(argExp))
-            #     if self.nonlinearity == NONLIN_TANH:
-            #         l1 = F.tanh(l1)
-            #     elif self.nonlinearity == NONLIN_RELU:
-            #         l1 = F.relu(l1)
-            #     emissionScores.append(l1)
         else:
             emissionScores = list()
             if headPositionsOpt is None:
                 raise RuntimeError("ERROR: dual task without information about head positions!")
             for i, e in enumerate(inputExpressions):
                 headPosition = headPositionsOpt[i]
-                argExp = self.dropout(self.pickSpan(e, 0))
+                argExp = self.dropout(e)
                 if headPosition >= 0:
                     # there is an explicit head in the sentence
-                    predExp = self.dropout(self.pickSpan(inputExpressions[headPosition], 0))
+                    predExp = self.dropout(inputExpressions[headPosition])
                 else:
                     # the head is root. we used a dedicated Parameter for root
-                    predExp = self.dropout(self.pickSpan(self.pRoot, 0))
+                    predExp = self.dropout(self.pRoot)
                 ss = torch.cat([argExp, predExp])
                 l1 = self.dropout(self.pH(ss))
                 if self.nonlinearity == NONLIN_TANH:
