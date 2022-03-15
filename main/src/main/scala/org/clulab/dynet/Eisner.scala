@@ -34,7 +34,7 @@ object Dependency {
       }
     }
 
-    printDependencyTable(dependencies)
+    //printDependencyTable(dependencies)
     dependencies
   }
 
@@ -249,8 +249,8 @@ class Eisner {
         }
       }
 
-      pl(s"Chart after spanLen = $spanLen")
-      pl(chart.toString())
+      //pl(s"Chart after spanLen = $spanLen")
+      //pl(chart.toString())
     }
 
     val top = chart.get(0, length - 1, HEAD_LEFT)
