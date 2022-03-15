@@ -15,10 +15,9 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           i2t: Array[String],
                           H: Parameter,
                           rootParam: Parameter,
-                          span: Option[Seq[(Int, Int)]],
                           nonlinearity: Int,
                           dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, span, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -29,7 +28,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if (isDual) 1 else 0, "isDual")
-    save(printWriter, span.map(spanToString).getOrElse("none"), "span")
+    // TODO: save dist here
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -75,8 +74,7 @@ object GreedyForwardLayer {
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
-    val spanValue = byLineStringBuilder.build(x2iIterator, "span", "")
-    val span = if(spanValue.isEmpty || spanValue == "none") None else Some(parseSpan(spanValue, inputSize))
+    // TODO: load dist here
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
@@ -85,22 +83,14 @@ object GreedyForwardLayer {
     //
     // make the loadable parameters
     //
-    //println(s"making FF ${t2i.size} x ${2 * inputSize}")
-    //val actualInputSize = if(isDual) 2 * inputSize else inputSize
-    val actualInputSize =
-      if(span.nonEmpty) {
-        val len = ForwardLayer.spanLength(span.get)
-        if(isDual) 2 * len else len
-      } else {
-        if(isDual) 2 * inputSize else inputSize
-      }
+    val actualInputSize = if(isDual) 2 * inputSize else inputSize
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
 
     new GreedyForwardLayer(parameters,
       inputSize, isDual, t2i, i2t, H, rootParam,
-      span, nonlinearity, dropoutProb)
+      nonlinearity, dropoutProb)
   }
 }
 

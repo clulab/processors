@@ -13,10 +13,9 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
                           H: Parameter,
                           val T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
                           rootParam: Parameter,
-                          span: Option[Seq[(Int, Int)]],
                           nonlinearity: Int,
                           dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, span, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model
   def initializeTransitions(): Unit = {
@@ -74,7 +73,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if (isDual) 1 else 0, "isDual")
-    save(printWriter, span.map(spanToString).getOrElse("none"), "span")
+    // TODO: save dist here
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -110,8 +109,7 @@ object ViterbiForwardLayer {
     val inputSize = byLineIntBuilder.build(x2iIterator)
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
-    val spanValue = byLineStringBuilder.build(x2iIterator, "span", "")
-    val span = if(spanValue.isEmpty || spanValue == "none") None else Some(parseSpan(spanValue, inputSize))
+    // TODO: load dist here
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator)
     val i2t = fromIndexToString(t2i)
@@ -120,21 +118,14 @@ object ViterbiForwardLayer {
     //
     // make the loadable parameters
     //
-    //val actualInputSize = if(isDual) 2 * inputSize else inputSize
-    val actualInputSize =
-    if(span.nonEmpty) {
-      val len = ForwardLayer.spanLength(span.get)
-      if(isDual) 2 * len else len
-    } else {
-      if(isDual) 2 * inputSize else inputSize
-    }
+    val actualInputSize = if(isDual) 2 * inputSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
     val T = mkTransitionMatrix(parameters, t2i)
 
     new ViterbiForwardLayer(parameters,
       inputSize, isDual, t2i, i2t, H, T, rootParam,
-      span, nonlinearity, dropoutProb)
+      nonlinearity, dropoutProb)
   }
 }
 
