@@ -336,8 +336,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     for(label <- scoreCountsByLabel.labels) {
       logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
     }
-
-    println(s"TOTAL = ${Layers.TOTAL_PARSED}; EISNER = ${Layers.EISNER_SUCCEEDED}")
+    // println(s"TOTAL = ${Layers.TOTAL_PARSED}; EISNER = ${Layers.EISNER_SUCCEEDED}")
 
     ( scoreCountsByLabel.accuracy(),
       scoreCountsByLabel.precision(),

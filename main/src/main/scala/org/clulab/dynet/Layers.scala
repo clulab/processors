@@ -300,8 +300,8 @@ object Layers {
   }
 
   // counts how many sentences were successfully parsed by Eisner
-  var TOTAL_PARSED = 0
-  var EISNER_SUCCEEDED = 0
+  //var TOTAL_PARSED = 0
+  //var EISNER_SUCCEEDED = 0
 
   def parseFromTopK(layers: IndexedSeq[Layers],
                     taskId: Int,
@@ -313,10 +313,10 @@ object Layers {
     val eisnerParser = new Eisner()
     val top = eisnerParser.parse(startingDependencies)
 
-    TOTAL_PARSED += 1
+    //TOTAL_PARSED += 1
     val heads = new Array[Int](sentence.size)
     if(top.nonEmpty) {
-      EISNER_SUCCEEDED += 1      
+      //EISNER_SUCCEEDED += 1
       for(dep <- top.get.dependencies) {
         val label = if(dep.head == 0) 0 else (dep.head - dep.mod)
         heads(dep.mod - 1) = label
