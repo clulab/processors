@@ -42,7 +42,7 @@ class CluProcessor protected (
     config: Config = ConfigFactory.load("cluprocessor"),
     optionalNER: Option[LexiconNER] = None,
     seasonPathOpt: Option[String] = None
-  ) = this(config, optionalNER, CluProcessor.newNumericEntityRecognizerOpt(seasonPathOpt), None, None, None, None, None, None, None)
+  ) = this(config, optionalNER, CluProcessor.newNumericEntityRecognizerOpt(seasonPathOpt), None, None, None, None, None, None, None, None)
 
   // The strategy here is to use Some(value) to indicate that the copied CluProcessor
   // should use the provided value when the copy is made.  Use None to reuse the value
