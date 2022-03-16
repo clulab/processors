@@ -33,7 +33,8 @@ class CluProcessor protected (
   mtlPosChunkSrlpOpt: Option[Metal],
   mtlNerOpt: Option[Metal],
   mtlSrlaOpt: Option[Metal],
-  mtlDepsOpt: Option[Metal]
+  mtlDepsHeadOpt: Option[Metal],
+  mtlDepsLabelOpt: Option[Metal]
 ) extends Processor with Configured {
 
   // standard, abbreviated constructor
@@ -57,7 +58,8 @@ class CluProcessor protected (
     mtlPosChunkSrlpOptOpt: Option[Option[Metal]] = None,
     mtlNerOptOpt: Option[Option[Metal]] = None,
     mtlSrlaOptOpt: Option[Option[Metal]] = None,
-    mtlDepsOptOpt: Option[Option[Metal]] = None
+    mtlDepsHeadOptOpt: Option[Option[Metal]] = None,
+    mtlDepsLabelOptOpt: Option[Option[Metal]] = None
   ): CluProcessor = {
     new CluProcessor(
       configOpt.getOrElse(this.config),
@@ -69,7 +71,8 @@ class CluProcessor protected (
       mtlPosChunkSrlpOptOpt.getOrElse(this.mtlPosChunkSrlpOpt),
       mtlNerOptOpt.getOrElse(this.mtlNerOpt),
       mtlSrlaOptOpt.getOrElse(this.mtlSrlaOpt),
-      mtlDepsOptOpt.getOrElse(this.mtlDepsOpt)
+      mtlDepsHeadOptOpt.getOrElse(this.mtlDepsHeadOpt),
+      mtlDepsLabelOptOpt.getOrElse(this.mtlDepsLabelOpt),
     )
   }
 
@@ -136,7 +139,6 @@ class CluProcessor protected (
     }
   }
 
-  /*
   lazy val mtlDepsHead: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
@@ -148,7 +150,7 @@ class CluProcessor protected (
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
   }
-  */
+  /*
   lazy val mtlDeps: Metal = mtlDepsOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
@@ -156,6 +158,7 @@ class CluProcessor protected (
       case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
     }
   }
+  */
 
   // Although this uses no class members, the method is sometimes called from tests
   // and can't easily be moved to a separate class without changing client code.
@@ -294,11 +297,12 @@ class CluProcessor protected (
     predsInSent
   }
 
-  /** Dependency parsing */
-  def parseSentence(words: IndexedSeq[String],
-                    posTags: IndexedSeq[String],
-                    nerLabels: IndexedSeq[String],
-                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+  /** Dependency parsing: old MTL model. Faster but performs worse */
+  /*
+  def parseSentenceMTL(words: IndexedSeq[String],
+                       posTags: IndexedSeq[String],
+                       nerLabels: IndexedSeq[String],
+                       embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
 
     //println(s"Words: ${words.mkString(", ")}")
     //println(s"Tags: ${posTags.mkString(", ")}")
@@ -321,11 +325,24 @@ class CluProcessor protected (
       }
     }
 
-    //
-    // Old algorithm, with separate models for heads and labels
-    //
-    /*
-    val headsAsStringsWithScores = mtlDeps.predictWithScores(0, annotatedSentence, embeddings)
+    new DirectedGraph[String](edges.toList)
+  }
+  */
+
+  /** Dependency parsing */
+  def parseSentence(words: IndexedSeq[String],
+                    posTags: IndexedSeq[String],
+                    nerLabels: IndexedSeq[String],
+                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+
+    //println(s"Words: ${words.mkString(", ")}")
+    //println(s"Tags: ${posTags.mkString(", ")}")
+    //println(s"NEs: ${nerLabels.mkString(", ")}")
+
+    val annotatedSentence =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+
+    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence, embeddings)
     val heads = new ArrayBuffer[Int]()
     for(wi <- headsAsStringsWithScores.indices) {
       val predictionsForThisWord = headsAsStringsWithScores(wi)
@@ -375,7 +392,6 @@ class CluProcessor protected (
         edges.append(edge)
       }
     }
-    */
 
     new DirectedGraph[String](edges.toList)
   }
