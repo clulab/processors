@@ -1,9 +1,9 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, fromIndexToString, save}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
@@ -15,9 +15,12 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           i2t: Array[String],
                           H: Parameter,
                           rootParam: Parameter,
+                          distanceEmbeddingSize: Int,
+                          distanceLookupParameters: Option[LookupParameter],
                           nonlinearity: Int,
                           dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam,
+    distanceEmbeddingSize, distanceLookupParameters, nonlinearity, dropoutProb) {
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings, t2i)
@@ -28,7 +31,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if (isDual) 1 else 0, "isDual")
-    // TODO: save dist here
+    save(printWriter, distanceEmbeddingSize, "distanceEmbeddingSize")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -69,12 +72,11 @@ object GreedyForwardLayer {
     val byLineIntBuilder = new ByLineIntBuilder()
     val byLineFloatBuilder = new ByLineFloatBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
-    val byLineStringBuilder = new ByLineStringBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
-    // TODO: load dist here
+    val distanceEmbeddingSize = byLineIntBuilder.build(x2iIterator, "distanceEmbeddingSize", 0)
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
@@ -83,13 +85,18 @@ object GreedyForwardLayer {
     //
     // make the loadable parameters
     //
-    val actualInputSize = if(isDual) 2 * inputSize else inputSize
+    val actualInputSize = if(isDual) 2 * inputSize + distanceEmbeddingSize else inputSize
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
 
+    val distanceLookupParameters =
+      if(distanceEmbeddingSize > 0) Some(parameters.addLookupParameters(101, Dim(distanceEmbeddingSize)))
+      else None
+
     new GreedyForwardLayer(parameters,
       inputSize, isDual, t2i, i2t, H, rootParam,
+      distanceEmbeddingSize, distanceLookupParameters,
       nonlinearity, dropoutProb)
   }
 }

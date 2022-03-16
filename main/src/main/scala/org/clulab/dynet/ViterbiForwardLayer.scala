@@ -2,7 +2,7 @@ package org.clulab.dynet
 import java.io.PrintWriter
 import edu.cmu.dynet.Expression.{lookup, randomNormal}
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
 class ViterbiForwardLayer(parameters:ParameterCollection,
@@ -13,9 +13,12 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
                           H: Parameter,
                           val T: LookupParameter, // transition matrix for Viterbi; T[i][j] = transition *to* i *from* j, one per task
                           rootParam: Parameter,
+                          distanceEmbeddingSize: Int,
+                          distanceLookupParameters: Option[LookupParameter],
                           nonlinearity: Int,
                           dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam,
+    distanceEmbeddingSize, distanceLookupParameters, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model
   def initializeTransitions(): Unit = {
@@ -73,7 +76,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     save(printWriter, TYPE_VITERBI, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if (isDual) 1 else 0, "isDual")
-    // TODO: save dist here
+    save(printWriter, distanceEmbeddingSize, "distanceEmbeddingSize")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -104,12 +107,11 @@ object ViterbiForwardLayer {
     val byLineIntBuilder = new ByLineIntBuilder()
     val byLineFloatBuilder = new ByLineFloatBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
-    val byLineStringBuilder = new ByLineStringBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator)
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
-    // TODO: load dist here
+    val distanceEmbeddingSize = byLineIntBuilder.build(x2iIterator, "distanceEmbeddingSize", 0)
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator)
     val i2t = fromIndexToString(t2i)
@@ -118,13 +120,18 @@ object ViterbiForwardLayer {
     //
     // make the loadable parameters
     //
-    val actualInputSize = if(isDual) 2 * inputSize else inputSize
+    val actualInputSize = if(isDual) 2 * inputSize + distanceEmbeddingSize else inputSize
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
     val T = mkTransitionMatrix(parameters, t2i)
 
+    val distanceLookupParameters =
+      if(distanceEmbeddingSize > 0) Some(parameters.addLookupParameters(101, Dim(distanceEmbeddingSize)))
+      else None
+
     new ViterbiForwardLayer(parameters,
       inputSize, isDual, t2i, i2t, H, T, rootParam,
+      distanceEmbeddingSize, distanceLookupParameters,
       nonlinearity, dropoutProb)
   }
 }
