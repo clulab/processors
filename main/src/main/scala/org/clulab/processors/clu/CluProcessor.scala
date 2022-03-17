@@ -350,8 +350,8 @@ class CluProcessor protected (
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
     val relativeHeads = mtlDepsHead.parseWithEisner(0, annotatedSentence, embeddings, 3)
-    println("Words: " + words.zipWithIndex)
-    println("Relative heads: " + relativeHeads)
+    //println("Words: " + words.zipWithIndex)
+    //println("Relative heads: " + relativeHeads)
     val heads = convertToAbsoluteHeads(relativeHeads)
 
     val annotatedSentenceWithHeads =
