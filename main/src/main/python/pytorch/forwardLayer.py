@@ -40,7 +40,7 @@ class ForwardLayer(FinalLayer):
     def forward(self, inputExpressions, headPositionsOpt = None):
         if not self.isDual:
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
-            argExp = self.dropout(self.pickSpan(inputExpressions, 1))
+            argExp = self.dropout(inputExpressions)
             emissionScores = self.dropout(self.pH(argExp))
             if self.nonlinearity == NONLIN_TANH:
                 emissionScores = F.tanh(emissionScores)
@@ -60,13 +60,13 @@ class ForwardLayer(FinalLayer):
                 raise RuntimeError("ERROR: dual task without information about head positions!")
             for i, e in enumerate(inputExpressions):
                 headPosition = headPositionsOpt[i]
-                argExp = self.dropout(self.pickSpan(e, 0))
+                argExp = self.dropout(e)
                 if headPosition >= 0:
                     # there is an explicit head in the sentence
-                    predExp = self.dropout(self.pickSpan(inputExpressions[headPosition], 0))
+                    predExp = self.dropout(inputExpressions[headPosition])
                 else:
                     # the head is root. we used a dedicated Parameter for root
-                    predExp = self.dropout(self.pickSpan(self.pRoot, 0))
+                    predExp = self.dropout(self.pRoot)
                 ss = torch.cat([argExp, predExp])
                 l1 = self.dropout(self.pH(ss))
                 if self.nonlinearity == NONLIN_TANH:
