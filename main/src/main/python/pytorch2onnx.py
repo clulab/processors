@@ -60,8 +60,8 @@ class Saving_Model(torch.nn.Module):
         embedParts = [embeddings, learnedWordEmbeddings, charEmbedding, posTagEmbed, neTagEmbed, distanceEmbedding, predEmbed]
         
         state = torch.cat(embedParts, dim=1)
-        for i in range(self.model_length):
-            for il in self.intermediateLayerss[i]:
+        for i, ils in enumerate(self.intermediateLayerss):
+            for il in ils:
                 state = il(state, False)
             if self.finalLayers[i]:
                 state = self.finalLayers[i](state, headPositions)#headPositions set to be None for now, we can add it in input list later
