@@ -69,10 +69,10 @@ class ForwardLayer(FinalLayer):
                     predExp = self.dropout(self.pRoot)
                 ss = torch.cat([argExp, predExp])
                 l1 = self.dropout(self.pH(ss))
-                if self.nonlinearity == NONLIN_TANH:
-                    l1 = F.tanh(l1)
-                elif self.nonlinearity == NONLIN_RELU:
-                    l1 = F.relu(l1)
+                # if self.nonlinearity == NONLIN_TANH:
+                #     l1 = F.tanh(l1)
+                # elif self.nonlinearity == NONLIN_RELU:
+                #     l1 = F.relu(l1)
                 emissionScores.append(l1)
             emissionScores = torch.stack(emissionScores)
         return emissionScores
