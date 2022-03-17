@@ -47,26 +47,26 @@ class ForwardLayer(FinalLayer):
             elif self.nonlinearity == NONLIN_RELU:
                 emissionScores = F.relu(emissionScores)
         else:
-        emissionScores = []
-        if headPositionsOpt is None:
-            raise RuntimeError("ERROR: dual task without information about head positions!")
-        for i, e in enumerate(inputExpressions):
-            headPosition = headPositionsOpt[i]
-            argExp = self.dropout(e)
-            if headPosition >= 0:
-                # there is an explicit head in the sentence
-                predExp = self.dropout(inputExpressions[headPosition])
-            else:
-                # the head is root. we used a dedicated Parameter for root
-                predExp = self.dropout(self.pRoot)
-            ss = torch.cat([argExp, predExp])
-            l1 = self.dropout(self.pH(ss))
-            if self.nonlinearity == NONLIN_TANH:
-                l1 = F.tanh(l1)
-            elif self.nonlinearity == NONLIN_RELU:
-                l1 = F.relu(l1)
-            emissionScores.append(l1)
-        emissionScores = torch.stack(emissionScores)
+            emissionScores = []
+            if headPositionsOpt is None:
+                raise RuntimeError("ERROR: dual task without information about head positions!")
+            for i, e in enumerate(inputExpressions):
+                headPosition = headPositionsOpt[i]
+                argExp = self.dropout(e)
+                if headPosition >= 0:
+                    # there is an explicit head in the sentence
+                    predExp = self.dropout(inputExpressions[headPosition])
+                else:
+                    # the head is root. we used a dedicated Parameter for root
+                    predExp = self.dropout(self.pRoot)
+                ss = torch.cat([argExp, predExp])
+                l1 = self.dropout(self.pH(ss))
+                if self.nonlinearity == NONLIN_TANH:
+                    l1 = F.tanh(l1)
+                elif self.nonlinearity == NONLIN_RELU:
+                    l1 = F.relu(l1)
+                emissionScores.append(l1)
+            emissionScores = torch.stack(emissionScores)
         return emissionScores
 
     @staticmethod
