@@ -42,10 +42,10 @@ class ForwardLayer(FinalLayer):
             # Zheng: Why the for loop here? Can we just use matrix manipulation?
             argExp = self.dropout(inputExpressions)
             emissionScores = self.dropout(self.pH(argExp))
-            if self.nonlinearity == NONLIN_TANH:
-                emissionScores = F.tanh(emissionScores)
-            elif self.nonlinearity == NONLIN_RELU:
-                emissionScores = F.relu(emissionScores)
+            # if self.nonlinearity == NONLIN_TANH:
+            #     emissionScores = F.tanh(emissionScores)
+            # elif self.nonlinearity == NONLIN_RELU:
+            #     emissionScores = F.relu(emissionScores)
             # for i, e in enumerate(inputExpressions):
             #     argExp = self.dropout(self.pickSpan(e))
             #     l1 = self.dropout(self.pH(argExp))
