@@ -54,9 +54,9 @@ object TestOnnx extends App {
     val inferenceType = parsed.get.asInstanceOf[List[Any]](1).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("finalLayer").asInstanceOf[Map[String, Any]]("inferenceType").asInstanceOf[String]
     println(inferenceType)
     val ortEnvironment = OrtEnvironment.getEnvironment
-    val modelpath1 = "/data1/home/zheng/processors/char.onnx"
+    val modelpath1 = "/data1/home/zheng/processors/main/src/main/python/char.onnx"
     val session1 = ortEnvironment.createSession(modelpath1, new OrtSession.SessionOptions)
-    val modelpath2 = "/data1/home/zheng/processors/model.onnx"
+    val modelpath2 = "/data1/home/zheng/processors/main/src/main/python/model.onnx"
     val session2 = ortEnvironment.createSession(modelpath2, new OrtSession.SessionOptions)
 
     println(session1.getOutputInfo)
