@@ -100,7 +100,7 @@ object TestOnnx extends App {
                     val emissionScores = session2.run(input).get(0).getValue.asInstanceOf[Array[Array[Float]]]
                     if (inferenceType == "viterbi") {
                         val transitionMatrix = session2.run(input).get(1).getValue.asInstanceOf[Array[Array[Float]]]
-                        val labelIds = Utils.viterbi(emissionScores, transitionMatrix, i2t.size, t2i(START_TAG), t2i(STOP_TAG))
+                        val labelIds = Utils.viterbi(emissionScores, transitionMatrix, i2t.size, t2i(START_TAG).toInt, t2i(STOP_TAG).toInt)
                         }else{
                         val labelIds = Utils.greedyPredict(emissionScores)
                     }
