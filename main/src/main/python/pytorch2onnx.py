@@ -66,7 +66,7 @@ class Saving_Model(torch.nn.Module):
                 state = il(state)
             if self.finalLayers[i]:
                 state = self.finalLayers[i](state, headPositions)#headPositions set to be None for now, we can add it in input list later
-        ids = self.finalLayers[-1].inference2(state)
+        ids = self.finalLayers[str(self.model_length-1)].inference2(state)
         return ids
 
 if __name__ == '__main__':
