@@ -24,7 +24,7 @@ class RnnLayer(IntermediateLayer):
         highwaySize = inputSize if useHighwayConnections else 0
         self.outDim = 2 * rnnStateSize + highwaySize
 
-    def forward(self, inputExpressions, dropout):
+    def forward(self, inputExpressions):
 
         assert(inputExpressions is not None)
 

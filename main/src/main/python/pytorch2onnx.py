@@ -62,7 +62,7 @@ class Saving_Model(torch.nn.Module):
         state = torch.cat(embedParts, dim=1)
         for i, ils in enumerate(self.intermediateLayerss):
             for il in ils:
-                state = il(state, False)
+                state = il(state)
             if self.finalLayers[i]:
                 state = self.finalLayers[i](state, headPositions)#headPositions set to be None for now, we can add it in input list later
         ids = self.finalLayers[-1].inference2(state)
