@@ -329,6 +329,53 @@ class CluProcessor protected (
   }
   */
 
+  private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {
+    val heads = new ArrayBuffer[Int]()
+    for(i <- relativeHeads.indices) {
+      if(relativeHeads(i) == 0) {
+        heads += -1
+      } else {
+        heads += i + relativeHeads(i)
+      }
+    }
+    heads
+  }
+
+  /** Dependency parsing with the Eisner algorithm */
+  def parseSentenceWithEisner(words: IndexedSeq[String],
+                              posTags: IndexedSeq[String],
+                              nerLabels: IndexedSeq[String],
+                              embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+    val annotatedSentence =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+
+    val relativeHeads = mtlDepsHead.parseWithEisner(0, annotatedSentence, embeddings, 3)
+    println("Words: " + words.zipWithIndex)
+    println("Relative heads: " + relativeHeads)
+    val heads = convertToAbsoluteHeads(relativeHeads)
+
+    val annotatedSentenceWithHeads =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
+
+    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
+    assert(labels.size == heads.size)
+    //println(s"Labels: ${labels.mkString(", ")}")
+
+    val edges = new ListBuffer[Edge[String]]()
+    val roots = new mutable.HashSet[Int]()
+
+    for(i <- heads.indices) {
+      if(heads(i) == -1) {
+        roots += i
+      } else {
+        val edge = Edge[String](heads(i), i, labels(i))
+        edges.append(edge)
+      }
+    }
+
+    new DirectedGraph[String](edges.toList)
+  }
+
   /** Dependency parsing */
   def parseSentence(words: IndexedSeq[String],
                     posTags: IndexedSeq[String],
@@ -634,7 +681,7 @@ class CluProcessor protected (
     val embeddings = getEmbeddings(doc)
 
     for(sent <- doc.sentences) {
-      val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      val depGraph = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)

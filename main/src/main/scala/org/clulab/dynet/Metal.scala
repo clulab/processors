@@ -362,6 +362,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
   }
 
+  def parseWithEisner(taskId: Int,
+                      sentence: AnnotatedSentence,
+                      constEmbeddings: ConstEmbeddingParameters,
+                      topK: Int): IndexedSeq[Int] = {
+    Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, topK)
+  }
+
   /**
     * Custom method for the parsing algorithm
     * @param sentence Input sentence

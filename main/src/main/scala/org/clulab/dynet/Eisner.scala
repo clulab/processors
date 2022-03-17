@@ -29,7 +29,7 @@ object Dependency {
         //println(s"Converting mod $mod and relHead $relHead")
         val head = if(relHead == 0) 0 else mod + relHead // +1 offset from mod propagates in the head here
         if(head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
-          dependencies(mod)(head) = Dependency(mod, head, score.toFloat)
+          dependencies(mod)(head) = Dependency(mod, head, score)
         }
       }
     }
