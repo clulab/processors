@@ -44,7 +44,7 @@ object TestOnnx extends App {
     val embed_file_path: String = "/data1/home/zheng/processors/main/src/main/python/glove.840B.300d.10f.txt"
     val wordEmbeddingMap = get_embeddings(embed_file_path)
 
-    val jsonString = Source.fromFile("/data1/home/zheng/processors/ner.json").getLines.mkString
+    val jsonString = Source.fromFile("/data1/home/zheng/processors/main/src/main/python/ner2-epoch6.json").getLines.mkString
     val parsed = JSON.parseFull(jsonString)
     val w2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("w2i").asInstanceOf[Map[String, Double]]
     val c2i = parsed.get.asInstanceOf[List[Any]](0).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("initialLayer").asInstanceOf[Map[String, Any]]("c2i").asInstanceOf[Map[String, Double]]
