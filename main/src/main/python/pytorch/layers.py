@@ -131,7 +131,7 @@ class Layers(object):
             raise RuntimeError(f"ERROR: you can't call forward() on a Layers object that does not have an initial layer: {self}!")
         states = self.initialLayer(sentence, constEmbeddings, doDropout)
         for intermediateLayer in self.intermediateLayers:
-            states = intermediateLayer(states, doDropout)
+            states = intermediateLayer(states)
         if self.finalLayer is not None:
             states = self.finalLayer(states, sentence.headPositions)
 
@@ -142,7 +142,7 @@ class Layers(object):
             raise RuntimeError(f"ERROR: you can't call forwardFrom() on a Layers object that has an initial layer: {self}")
         states = inStates
         for intermediateLayer in self.intermediateLayers:
-            states = intermediateLayer(states, doDropout)
+            states = intermediateLayer(states)
         if self.finalLayer is not None:
             states = self.finalLayer(states, headPositions)
 
