@@ -51,6 +51,8 @@ object TestOnnx extends App {
     val t2i = parsed.get.asInstanceOf[List[Any]](1).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("finalLayer").asInstanceOf[Map[String, Any]]("t2i").asInstanceOf[Map[String, Double]]
     val i2t = for ((k,v) <- t2i) yield (v, k)
 
+    val inferenceType = parsed.get.asInstanceOf[List[Any]](1).asInstanceOf[Map[String, Any]]("x2i").asInstanceOf[Map[String, Any]]("finalLayer").asInstanceOf[Map[String, Any]]("inferenceType").asInstanceOf[String]
+    println(inferenceType)
     val ortEnvironment = OrtEnvironment.getEnvironment
     val modelpath1 = "/data1/home/zheng/processors/char.onnx"
     val session1 = ortEnvironment.createSession(modelpath1, new OrtSession.SessionOptions)
@@ -96,7 +98,13 @@ object TestOnnx extends App {
                     val char_tensor =  OnnxTensor.createTensor(ortEnvironment, char_embs)
                     input.put("chars", char_tensor)
                     val emissionScores = session2.run(input).get(0).getValue.asInstanceOf[Array[Array[Float]]]
-                    val labelIds = Utils.greedyPredict(emissionScores)
+                    if (inferenceType == "viterbi") {
+                        val transitionMatrix = session2.run(input).get(1).getValue.asInstanceOf[Array[Array[Float]]]
+                        val labelIds = Utils.viterbi(emissionScores, transitionMatrix, i2t.size, t2i(START_TAG), t2i(STOP_TAG))
+                        }else{
+                        val labelIds = Utils.greedyPredict(emissionScores)
+                    }
+                    
                     val preds = labelIds.map(i2t(_))
                     val sc = SeqScorer.f1(goldLabels, preds)
                     scoreCountsByLabel.incAll(sc)
