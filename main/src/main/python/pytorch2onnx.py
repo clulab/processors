@@ -47,10 +47,10 @@ class Saving_Model(torch.nn.Module):
                 self.pos_lookup = layers.initialLayer.positionLookupParameters
                 self.useIsPredicate = layers.initialLayer.useIsPredicate
                 self.distanceWindowSize = layers.initialLayer.distanceWindowSize
-            self.intermediateLayerss[i] = nn.ModuleDict({i:t for i, t in enumerate(layers.intermediateLayers)})
+            self.intermediateLayerss[i] = nn.ModuleDict({str(i):t for i, t in enumerate(layers.intermediateLayers)})
             self.finalLayers[i] = layers.finalLayer
-        self.intermediateLayerss = nn.ModuleDict({i:t for i, t in enumerate(self.intermediateLayerss)})
-        self.finalLayers = nn.ModuleDict({i:t for i, t in enumerate(self.finalLayers)})
+        self.intermediateLayerss = nn.ModuleDict({str(i):t for i, t in enumerate(self.intermediateLayerss)})
+        self.finalLayers = nn.ModuleDict({str(i):t for i, t in enumerate(self.finalLayers)})
     def forward(self, embeddings, word_ids, charEmbedding, tags, nes, predEmbed, dists, headPositions):
         # Can I assuem there is only one initial layer?
         learnedWordEmbeddings = self.word_lookup(word_ids)
@@ -61,6 +61,7 @@ class Saving_Model(torch.nn.Module):
         
         state = torch.cat(embedParts, dim=1)
         for i in range(self.model_length):
+            i = str(i)
             for il in self.intermediateLayerss[i]:
                 state = il(state)
             if self.finalLayers[i]:
