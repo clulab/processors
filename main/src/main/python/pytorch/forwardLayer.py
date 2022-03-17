@@ -55,9 +55,9 @@ class ForwardLayer(FinalLayer):
             #         l1 = F.relu(l1)
             #     emissionScores.append(l1)
         else:
-            emissionScores = list()
-            if headPositionsOpt is None:
-                raise RuntimeError("ERROR: dual task without information about head positions!")
+            emissionScores = []
+            # if headPositionsOpt is None:
+            #     raise RuntimeError("ERROR: dual task without information about head positions!")
             for i, e in enumerate(inputExpressions):
                 headPosition = headPositionsOpt[i]
                 argExp = self.dropout(e)
