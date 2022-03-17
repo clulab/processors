@@ -47,7 +47,7 @@ class Saving_Model(torch.nn.Module):
                 self.pos_lookup = layers.initialLayer.positionLookupParameters
                 self.useIsPredicate = layers.initialLayer.useIsPredicate
                 self.distanceWindowSize = layers.initialLayer.distanceWindowSize
-            self.intermediateLayerss[i] = nn.ModuleDict({str(i):t for i, t in enumerate(layers.intermediateLayers)})
+            self.intermediateLayerss[i] = nn.ModuleList(layers.intermediateLayers)
             self.finalLayers[i] = layers.finalLayer
         self.intermediateLayerss = nn.ModuleDict({str(i):t for i, t in enumerate(self.intermediateLayerss)})
         self.finalLayers = nn.ModuleDict({str(i):t for i, t in enumerate(self.finalLayers)})
