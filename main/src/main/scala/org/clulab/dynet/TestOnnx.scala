@@ -101,13 +101,15 @@ object TestOnnx extends App {
                     if (inferenceType == "viterbi") {
                         val transitionMatrix = session2.run(input).get(1).getValue.asInstanceOf[Array[Array[Float]]]
                         val labelIds = Utils.viterbi(emissionScores, transitionMatrix, i2t.size, t2i(START_TAG).toInt, t2i(STOP_TAG).toInt)
-                        }else{
+                        val preds = labelIds.map(i2t(_))
+                        val sc = SeqScorer.f1(goldLabels, preds)
+                        scoreCountsByLabel.incAll(sc)
+                    }else{
                         val labelIds = Utils.greedyPredict(emissionScores)
+                        val preds = labelIds.map(i2t(_))
+                        val sc = SeqScorer.f1(goldLabels, preds)
+                        scoreCountsByLabel.incAll(sc)
                     }
-                    
-                    val preds = labelIds.map(i2t(_))
-                    val sc = SeqScorer.f1(goldLabels, preds)
-                    scoreCountsByLabel.incAll(sc)
                 }
             }
             println(s"Accuracy on ${testSentences.length} sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
