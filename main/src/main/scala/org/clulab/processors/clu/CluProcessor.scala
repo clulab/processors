@@ -345,7 +345,7 @@ class CluProcessor protected (
   def parseSentenceWithEisner(words: IndexedSeq[String],
                               posTags: IndexedSeq[String],
                               nerLabels: IndexedSeq[String],
-                              embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+                              embeddings: ConstEmbeddingParameters): Array[(Int, String)] = {
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
@@ -361,19 +361,11 @@ class CluProcessor protected (
     assert(labels.size == heads.size)
     //println(s"Labels: ${labels.mkString(", ")}")
 
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new mutable.HashSet[Int]()
-
+    val headsWithLabels = new Array[(Int, String)](heads.size)
     for(i <- heads.indices) {
-      if(heads(i) == -1) {
-        roots += i
-      } else {
-        val edge = Edge[String](heads(i), i, labels(i))
-        edges.append(edge)
-      }
+      headsWithLabels(i) = Tuple2(heads(i), labels(i))
     }
-
-    new DirectedGraph[String](edges.toList)
+    headsWithLabels
   }
 
   /** Dependency parsing */
@@ -681,11 +673,37 @@ class CluProcessor protected (
     val embeddings = getEmbeddings(doc)
 
     for(sent <- doc.sentences) {
-      val depGraph = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      parserPostProcessing(sent, headsWithLabels)
+
+      val edges = new ListBuffer[Edge[String]]()
+      for(i <- headsWithLabels.indices) {
+        if(headsWithLabels(i)._1 != -1) {
+          val edge = Edge[String](headsWithLabels(i)._1, i, headsWithLabels(i)._2)
+          edges.append(edge)
+        }
+      }
+      val depGraph = new DirectedGraph[String](edges.toList)
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
       sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+    }
+  }
+
+  /** Deterministic corrections for dependency parsing */
+  def parserPostProcessing(sentence: Sentence, headsWithLabels: Array[(Int, String)]): Unit = {
+    for(i <- sentence.indices) {
+      // "due to" must be a MWE
+      if(i < sentence.size - 1 && sentence.tags.isDefined &&
+        sentence.words(i).compareToIgnoreCase("due") == 0 &&
+        sentence.tags.get(i) == "IN" &&
+        sentence.words(i + 1).compareToIgnoreCase("to") == 0 &&
+        sentence.tags.get(i + 1) == "TO" &&
+        headsWithLabels(i + 1)._1 != i &&
+        headsWithLabels(i + 1)._2 != "mwe") {
+        headsWithLabels(i + 1) = Tuple2(i, "mwe")
+      }
     }
   }
 

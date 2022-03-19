@@ -153,8 +153,16 @@ class TestCluProcessor extends FatdynetTest {
 
     proc.annotate(doc)
 
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod_due_to") should be (true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod") should be (false)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
+
+    doc = proc.mkDocument("They ate cake due to hunger.")
+    println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
+
+    proc.annotate(doc)
+
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
   }
 
   it should "recognize dates" in {
