@@ -72,7 +72,7 @@ class CluProcessor protected (
       mtlNerOptOpt.getOrElse(this.mtlNerOpt),
       mtlSrlaOptOpt.getOrElse(this.mtlSrlaOpt),
       mtlDepsHeadOptOpt.getOrElse(this.mtlDepsHeadOpt),
-      mtlDepsLabelOptOpt.getOrElse(this.mtlDepsLabelOpt),
+      mtlDepsLabelOptOpt.getOrElse(this.mtlDepsLabelOpt)
     )
   }
 
