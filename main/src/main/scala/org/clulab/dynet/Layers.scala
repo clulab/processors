@@ -8,6 +8,11 @@ import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
+import org.clulab.utils.MathUtils
+
+import scala.concurrent.duration.span
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.HashSet
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -294,6 +299,37 @@ object Layers {
     labelsForTask
   }
 
+  // counts how many sentences were successfully parsed by Eisner
+  //var TOTAL_PARSED = 0
+  //var EISNER_SUCCEEDED = 0
+
+  def parseFromTopK(layers: IndexedSeq[Layers],
+                    taskId: Int,
+                    sentence: AnnotatedSentence,
+                    constEmbeddings: ConstEmbeddingParameters,
+                    topK: Int): IndexedSeq[Int] = {
+    val scores = predictWithScores(layers, taskId, sentence, constEmbeddings)
+    val startingDependencies = Dependency.toDependencyTable(scores, topK)
+    val eisnerParser = new Eisner()
+    val top = eisnerParser.parse(startingDependencies)
+
+    //TOTAL_PARSED += 1
+    val heads = new Array[Int](sentence.size)
+    if(top.nonEmpty) {
+      //EISNER_SUCCEEDED += 1
+      for(dep <- top.get.dependencies) {
+        val label = if(dep.head == 0) 0 else (dep.head - dep.mod)
+        heads(dep.mod - 1) = label
+      }      
+    } else {
+      for(i <- scores.indices) {
+        val topPred = scores(i).sortBy(- _._2).head._1
+        heads(i) = topPred.toInt
+      }
+    }
+    heads
+  }
+
   def parse(layers: IndexedSeq[Layers],
             sentence: AnnotatedSentence,
             constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
@@ -368,4 +404,6 @@ object Layers {
     val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
+
 }
+

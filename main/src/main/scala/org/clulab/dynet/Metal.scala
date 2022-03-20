@@ -260,6 +260,24 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     evaluate(taskId, taskName, sentences, "testing", -1)
   }
 
+  /** Ceiling method that chooses the gold dependency for each modifier from the top K predictions */
+  def chooseOptimalPreds(predsWithScores: IndexedSeq[IndexedSeq[(String, Float)]], goldLabels: IndexedSeq[String], topK:Int): IndexedSeq[String] = {
+    assert(predsWithScores.length == goldLabels.length)
+    val preds = new ArrayBuffer[String]()
+    for(i <- predsWithScores.indices) {
+      val sortedPreds = predsWithScores(i).sortBy(- _._2)
+      val gold = goldLabels(i)
+      var bestPred = sortedPreds.head._1
+      for(j <- 1 until topK) {
+        if(sortedPreds(j)._1 == gold) {
+          bestPred = sortedPreds(j)._1
+        }
+      }
+      preds += bestPred
+    }
+    preds
+  }
+
   /**
    * Computes accuracy/P/R/F1 for the evaluation dataset of the given task
    * Where possible, it also saves CoNLL-2003 compatible files of the output
@@ -291,7 +309,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val goldLabels = as._2
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
+        
+        // vanilla inference
         val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+
+        // ceiling strategy: choose the gold label if it shows up in the top K predictions
+        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+        //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
+
+        // Eisner parsing algorithm using the top K predictions
+        //val preds = Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, 3).map(_.toString)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
@@ -309,6 +336,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     for(label <- scoreCountsByLabel.labels) {
       logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
     }
+    // println(s"TOTAL = ${Layers.TOTAL_PARSED}; EISNER = ${Layers.EISNER_SUCCEEDED}")
 
     ( scoreCountsByLabel.accuracy(),
       scoreCountsByLabel.precision(),
@@ -332,6 +360,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
                         sentence: AnnotatedSentence,
                         constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
     Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+  }
+
+  def parseWithEisner(taskId: Int,
+                      sentence: AnnotatedSentence,
+                      constEmbeddings: ConstEmbeddingParameters,
+                      topK: Int): IndexedSeq[Int] = {
+    Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, topK)
   }
 
   /**

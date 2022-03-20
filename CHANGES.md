@@ -1,4 +1,5 @@
-#
++ **8.4.8** - Parser improvements: slimmer models; parsing using the Eisner algorithm
++ **8.4.8** - Removed support for embedding spans in Metal
 + **8.4.8** - We now extract and normalize approximate dates
 + **8.4.8** - We now extract percentages as part of numeric entities 
 + **8.4.8** - Improved tokenization and recognition of dates
