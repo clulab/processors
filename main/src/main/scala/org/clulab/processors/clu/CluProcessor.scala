@@ -361,10 +361,7 @@ class CluProcessor protected (
     assert(labels.size == heads.size)
     //println(s"Labels: ${labels.mkString(", ")}")
 
-    val headsWithLabels = new Array[(Int, String)](heads.size)
-    for(i <- heads.indices) {
-      headsWithLabels(i) = Tuple2(heads(i), labels(i))
-    }
+    val headsWithLabels = heads.zip(labels).toArray
     headsWithLabels
   }
 
@@ -675,15 +672,19 @@ class CluProcessor protected (
     for(sent <- doc.sentences) {
       val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
       parserPostProcessing(sent, headsWithLabels)
+      //println("headsWithLabels: " + headsWithLabels.mkString(" "))
 
       val edges = new ListBuffer[Edge[String]]()
+      val roots = new mutable.HashSet[Int]()
       for(i <- headsWithLabels.indices) {
         if(headsWithLabels(i)._1 != -1) {
           val edge = Edge[String](headsWithLabels(i)._1, i, headsWithLabels(i)._2)
           edges.append(edge)
+        } else {
+          roots += i
         }
       }
-      val depGraph = new DirectedGraph[String](edges.toList)
+      val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)

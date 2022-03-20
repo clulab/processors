@@ -23,13 +23,21 @@ object Dependency {
       val sortedPreds = scores(i).sortBy(- _._2)
       val sortedProbs = MathUtils.softmaxFloat(sortedPreds.map(_._2), 1f)
       val sortedLabels = sortedPreds.map(_._1)
-      for(j <- 0 until math.min(topK, sortedPreds.size)) {
-        val relHead = sortedLabels(j).toInt
-        val score = sortedProbs(j)
-        //println(s"Converting mod $mod and relHead $relHead")
-        val head = if(relHead == 0) 0 else mod + relHead // +1 offset from mod propagates in the head here
-        if(head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
-          dependencies(mod)(head) = Dependency(mod, head, score)
+      //println(s"SORTED LABELS for ${i}: $sortedLabels")
+      var headCount = 0
+      for(j <- sortedLabels.indices if headCount < topK) {
+        try {
+          val relHead = sortedLabels(j).toInt
+          val score = sortedProbs(j)
+          //println(s"Converting mod $mod and relHead $relHead")
+          val head = if (relHead == 0) 0 else mod + relHead // +1 offset from mod propagates in the head here
+          if (head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
+            //println(s"Added dependency: $mod $head $score")
+            dependencies(mod)(head) = Dependency(mod, head, score)
+            headCount += 1
+          }
+        } catch {
+          case _: NumberFormatException => // Ok to skip these, since the parser may predict <START> and <STOP> labels
         }
       }
     }

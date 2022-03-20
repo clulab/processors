@@ -165,6 +165,10 @@ class TestCluProcessor extends FatdynetTest {
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
   }
 
+  it should "parse incomplete sentence without crashing" in {
+    val doc = proc.annotate("and lasted 3 or 4 days in both wet seasons")
+  }
+
   it should "recognize dates" in {
     var sent = proc.annotate("It was 12 January, 2021.").sentences.head
     sent.entities.get(2) should be ("B-DATE")

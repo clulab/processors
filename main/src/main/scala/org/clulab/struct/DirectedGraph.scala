@@ -15,7 +15,8 @@ import scala.util.hashing.MurmurHash3._
  */
 case class DirectedGraph[E](
   edges: List[Edge[E]],
-  preferredSizeOpt: Option[Int] = None
+  preferredSizeOpt: Option[Int] = None,
+  rootsOpt: Option[Set[Int]] = None
 ) extends Serializable {
   val size: Int = {
     val minimumSize = computeSize(edges)
@@ -31,7 +32,7 @@ case class DirectedGraph[E](
   val outgoingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkOutgoing(edges, size)
   val incomingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkIncoming(edges, size)
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
-  lazy val roots: Set[Int] = DirectedGraph.calculateRoots(size, outgoingEdges, incomingEdges)
+  lazy val roots: Set[Int] = rootsOpt.getOrElse(DirectedGraph.calculateRoots(size, outgoingEdges, incomingEdges))
 
   /**
     * Used to compare DirectedGraphs.
