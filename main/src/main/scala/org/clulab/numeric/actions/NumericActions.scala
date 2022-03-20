@@ -151,6 +151,27 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     convert(mentions, toDateMentionHoliday, "toDateMentionHoliday")
   }
 
+
+  /** Constructs a DateMention from a Date and an Approx Modifier */
+  def mkDateMentionWithModifierApprox(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierApprox, "toDateMentionWithModifierApprox")
+  }
+
+  /** Constructs a DateMention from a Date and a Start Modifier */
+  def mkDateMentionWithModifierStart(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierStart, "toDateMentionWithModifierStart")
+  }
+
+  /** Constructs a DateMention from a Date and a Mid Modifier */
+  def mkDateMentionWithModifierMid(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierMid, "toDateMentionWithModifierMid")
+  }
+
+  /** Constructs a DateMention from a Date and an End Modifier */
+  def mkDateMentionWithModifierEnd(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierEnd, "toDateMentionWithModifierEnd")
+  }
+
   //
   // global actions below this points
   //
