@@ -141,6 +141,7 @@ class Metal(object):
 
                 if i >= batchSize:
                     cummulativeLoss += batchLoss.item()
+                    print ("================================back prop!================================")
                     batchLoss.backward()
                     trainer.step()
                     batchLoss = 0
