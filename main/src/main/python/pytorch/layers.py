@@ -138,8 +138,10 @@ class Layers(object):
         states = inStates
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states)
+            print("intermediate layer:", torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated())
         if self.finalLayer is not None:
             states = self.finalLayer(states, headPositions)
+            print("final layer:", torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated())
 
         return states
 
@@ -240,6 +242,7 @@ class Layers(object):
     def forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout):
         if layers[0]:
             sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout)
+            print("init layer:", torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated())
             states = layers[taskId+1].forwardFrom(sharedStates, sentence.headPositions, doDropout)
         else:
             states = layers[taskId+1].forward(sentence, constEmbeddings, doDropout)
@@ -306,8 +309,10 @@ class Layers(object):
     def loss(layers, taskId, sentence, goldLabels):
         # Zheng: I am not sure this is the suitable way to load embeddings or not, need help...
         constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
+        print("embeddings:", torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated())
         states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=True) # use dropout during training!
         loss = layers[taskId+1].finalLayer.loss(states, goldLabels)
+        print("loss:", torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated())
         return loss
 
 
