@@ -12,6 +12,7 @@ import json
 import random
 
 import tracemalloc
+import gc
 
 class Metal(object):
     """docstring for Metal"""
@@ -146,6 +147,7 @@ class Metal(object):
                     trainer.step()
                     batchLoss = 0
                     i = 0
+                    gc.collect()
 
                 numTagged += len(sentence)
 
