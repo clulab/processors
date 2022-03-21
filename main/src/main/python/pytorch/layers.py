@@ -74,20 +74,15 @@ class Layers(object):
 
     def get_state_dict(self):
         params = dict()
-        j_params = dict()
         if self.initialLayer is not None:
             params['initialLayer'] = self.initialLayer.state_dict()
-            j_params['initialLayer'] = {k:v.data.tolist() for k, v in params['initialLayer'].items()}
         if self.intermediateLayers:
             params['intermediateLayers'] = list()
-            j_params['intermediateLayers'] = list()
         for il in self.intermediateLayers:
             params['intermediateLayers'].append(il.state_dict())
-            j_params['intermediateLayers'].append({k:v.data.tolist() for k, v in params['intermediateLayers'][-1].items()})
         if self.finalLayer is not None:
             params['finalLayer'] = self.finalLayer.state_dict()
-            j_params['finalLayer'] = {k:v.data.tolist() for k, v in params['finalLayer'].items()}
-        return params, j_params
+        return params
 
     def load_state_dict(self, params):
         if self.initialLayer is not None:
