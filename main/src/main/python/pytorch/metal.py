@@ -277,12 +277,14 @@ class Metal(object):
     def save(self, baseFilename):
 
         params = list()
-        j_params = list()
+        if "-epoch0" in baseFilename:
+            j_params = list()
         for layers in self.model:
-            sd, j_sd = layers.get_state_dict()
-            x2i = layers.saveX2i()
-            params.append({"model": sd, "x2i": x2i})
-            j_params.append({"x2i": x2i})
+            sd = layers.get_state_dict()
+            params.append(sd)
+            if "-epoch0" in baseFilename:
+                x2i = layers.saveX2i()
+                j_params.append({"x2i": x2i})
 
         # torch pickle save
         try:
@@ -292,8 +294,9 @@ class Metal(object):
             print("[Warning: Saving failed... continuing anyway.]")
 
         # We can also save as text json file:
-        with open(baseFilename+".json", "w") as f:
-            f.write(json.dumps(j_params))
+        if "-epoch0" in baseFilename:
+            with open(baseFilename.replace("-epoch0", "")+".json", "w") as f:
+                f.write(json.dumps(j_params))
 
 
     @classmethod
@@ -301,9 +304,11 @@ class Metal(object):
         print (f"Loading MTL model from {modelFilenamePrefix}...")
         layersSeq = list()
         checkpoint = torch.load(modelFilenamePrefix+".torch")
-        for param in checkpoint:
-            layers = Layers.loadX2i(param['x2i'])
-            layers.load_state_dict(param['model'])
+        with open(modelFilenamePrefix+".json") as f:
+            x2i = josn.load(f)
+        for i, param in enumerate(checkpoint):
+            layers = Layers.loadX2i(x2i[i])
+            layers.load_state_dict(param)
             layersSeq.append(layers)
 
         print (f"Loading MTL model from {modelFilenamePrefix} complete.")
@@ -317,9 +322,11 @@ class Metal(object):
         layersSeq = list()
         for model in models:
             checkpoint = torch.load(model+".torch")
+            with open(model+".json") as f:
+                x2i = josn.load(f)
             for i, param in enumerate(checkpoint):
-                layers = Layers.loadX2i(param['x2i'])
-                layers.load_state_dict(param['model'])
+                layers = Layers.loadX2i(x2i[i])
+                layers.load_state_dict(param)
                 if len(layersSeq)<len(checkpoint):
                     layersSeq.append(layers)
                 else:
