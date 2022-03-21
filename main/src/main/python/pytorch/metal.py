@@ -11,6 +11,8 @@ from torch.optim.lr_scheduler import *
 import json
 import random
 
+import tracemalloc
+
 class Metal(object):
     """docstring for Metal"""
     def __init__(self, taskManager, modelOpt):
@@ -103,7 +105,7 @@ class Metal(object):
 
         allEpochScores = list()
         epochPatience = self.taskManager.epochPatience
-
+        tracemalloc.start()
         for epoch in range(0, self.taskManager.maxEpochs):
             if epochPatience <= 0:
                 break
@@ -194,7 +196,7 @@ class Metal(object):
                 epochPatience -= 1
 
             self.save(f"{modelNamePrefix}-epoch{epoch}")
-
+        tracemalloc.stop()
         allEpochScores.sort(key=lambda x: x[1])
         print ("Epochs in descending order of scores:")
         for t in allEpochScores:
