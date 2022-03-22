@@ -264,7 +264,24 @@ class Eisner {
     val top = chart.get(0, length - 1, HEAD_LEFT)
     if(top != null) Some(top) else None
   }
-    
+
+  def generateOutput(top: Option[Span], scores: IndexedSeq[IndexedSeq[(String, Float)]]): IndexedSeq[Int] = {
+    val heads = new Array[Int](scores.size)
+    if(top.nonEmpty) {
+      // Eisner correctly produced a full tree
+      for(dep <- top.get.dependencies) {
+        val label = if(dep.head == 0) 0 else (dep.head - dep.mod) // we are storing *relative* head positions here
+        heads(dep.mod - 1) = label
+      }
+    } else {
+      // Eisner failed to produce a complete tree; revert to the greedy inference
+      for(i <- scores.indices) {
+        val topPred = scores(i).sortBy(- _._2).head._1
+        heads(i) = topPred.toInt
+      }
+    }
+    heads
+  }
 }
 
 object Eisner {
