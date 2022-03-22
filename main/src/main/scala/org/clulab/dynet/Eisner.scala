@@ -296,9 +296,13 @@ class Eisner {
     val scores = mtlHeads.predictWithScores(0, sentence, constEmbeddings)
     val (startingDependencies, dependenciesAsArray) = toDependencyTable(scores, topK) // currently the score of a dependency is just the head score
 
-    // TODO: add label scores to all dependencies
-    // val labelScores = mtlLabels.predictWithScores(0, sentence, constEmbeddings, dependenciesAsArray)
-    // assert(labelScores.size == dependenciesAsArray.size)
+    // add label scores to all dependencies
+    if(mtlLabels.nonEmpty) {
+      val labelScores = mtlLabels.predictDualWithScores(0, sentence, constEmbeddings, dependenciesAsArray)
+      assert(labelScores.size == dependenciesAsArray.size)
+
+      // TODO
+    }
 
     val top = parse(startingDependencies)
     val heads = generateOutput(top, scores)
