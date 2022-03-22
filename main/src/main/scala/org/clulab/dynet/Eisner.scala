@@ -289,7 +289,7 @@ class Eisner {
   }
 
   /** Eisner algorithm using as dependency score the head score + label score */
-  def ensembleParser(mtlHeads: Metal, mtlLabels: Metal, sentence: AnnotatedSentence,
+  def ensembleParser(mtlHeads: Metal, mtlLabels: Option[Metal], sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters,
                      topK: Int): IndexedSeq[Int] = {
     val scores = mtlHeads.predictWithScores(0, sentence, constEmbeddings)

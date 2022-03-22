@@ -299,18 +299,6 @@ object Layers {
     labelsForTask
   }
 
-  def parseFromTopK(layers: IndexedSeq[Layers],
-                    taskId: Int,
-                    sentence: AnnotatedSentence,
-                    constEmbeddings: ConstEmbeddingParameters,
-                    topK: Int): IndexedSeq[Int] = {
-    val eisnerParser = new Eisner()
-    val scores = predictWithScores(layers, taskId, sentence, constEmbeddings)
-    val (startingDependencies, _) = eisnerParser.toDependencyTable(scores, topK)
-    val top = eisnerParser.parse(startingDependencies)
-    eisnerParser.generateOutput(top, scores)
-  }
-
   def parse(layers: IndexedSeq[Layers],
             sentence: AnnotatedSentence,
             constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
