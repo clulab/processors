@@ -33,7 +33,8 @@ class CluProcessor protected (
   mtlPosChunkSrlpOpt: Option[Metal],
   mtlNerOpt: Option[Metal],
   mtlSrlaOpt: Option[Metal],
-  mtlDepsOpt: Option[Metal]
+  mtlDepsHeadOpt: Option[Metal],
+  mtlDepsLabelOpt: Option[Metal]
 ) extends Processor with Configured {
 
   // standard, abbreviated constructor
@@ -41,7 +42,7 @@ class CluProcessor protected (
     config: Config = ConfigFactory.load("cluprocessor"),
     optionalNER: Option[LexiconNER] = None,
     seasonPathOpt: Option[String] = None
-  ) = this(config, optionalNER, CluProcessor.newNumericEntityRecognizerOpt(seasonPathOpt), None, None, None, None, None, None, None)
+  ) = this(config, optionalNER, CluProcessor.newNumericEntityRecognizerOpt(seasonPathOpt), None, None, None, None, None, None, None, None)
 
   // The strategy here is to use Some(value) to indicate that the copied CluProcessor
   // should use the provided value when the copy is made.  Use None to reuse the value
@@ -57,7 +58,8 @@ class CluProcessor protected (
     mtlPosChunkSrlpOptOpt: Option[Option[Metal]] = None,
     mtlNerOptOpt: Option[Option[Metal]] = None,
     mtlSrlaOptOpt: Option[Option[Metal]] = None,
-    mtlDepsOptOpt: Option[Option[Metal]] = None
+    mtlDepsHeadOptOpt: Option[Option[Metal]] = None,
+    mtlDepsLabelOptOpt: Option[Option[Metal]] = None
   ): CluProcessor = {
     new CluProcessor(
       configOpt.getOrElse(this.config),
@@ -69,7 +71,8 @@ class CluProcessor protected (
       mtlPosChunkSrlpOptOpt.getOrElse(this.mtlPosChunkSrlpOpt),
       mtlNerOptOpt.getOrElse(this.mtlNerOpt),
       mtlSrlaOptOpt.getOrElse(this.mtlSrlaOpt),
-      mtlDepsOptOpt.getOrElse(this.mtlDepsOpt)
+      mtlDepsHeadOptOpt.getOrElse(this.mtlDepsHeadOpt),
+      mtlDepsLabelOptOpt.getOrElse(this.mtlDepsLabelOpt)
     )
   }
 
@@ -136,7 +139,6 @@ class CluProcessor protected (
     }
   }
 
-  /*
   lazy val mtlDepsHead: Metal = getArgString(s"$prefix.language", Some("EN")) match {
     case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
@@ -148,7 +150,7 @@ class CluProcessor protected (
     case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
     case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
   }
-  */
+  /*
   lazy val mtlDeps: Metal = mtlDepsOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
@@ -156,6 +158,7 @@ class CluProcessor protected (
       case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
     }
   }
+  */
 
   // Although this uses no class members, the method is sometimes called from tests
   // and can't easily be moved to a separate class without changing client code.
@@ -294,11 +297,12 @@ class CluProcessor protected (
     predsInSent
   }
 
-  /** Dependency parsing */
-  def parseSentence(words: IndexedSeq[String],
-                    posTags: IndexedSeq[String],
-                    nerLabels: IndexedSeq[String],
-                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+  /** Dependency parsing: old MTL model. Faster but performs worse */
+  /*
+  def parseSentenceMTL(words: IndexedSeq[String],
+                       posTags: IndexedSeq[String],
+                       nerLabels: IndexedSeq[String],
+                       embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
 
     //println(s"Words: ${words.mkString(", ")}")
     //println(s"Tags: ${posTags.mkString(", ")}")
@@ -321,11 +325,60 @@ class CluProcessor protected (
       }
     }
 
-    //
-    // Old algorithm, with separate models for heads and labels
-    //
-    /*
-    val headsAsStringsWithScores = mtlDeps.predictWithScores(0, annotatedSentence, embeddings)
+    new DirectedGraph[String](edges.toList)
+  }
+  */
+
+  private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {
+    val heads = new ArrayBuffer[Int]()
+    for(i <- relativeHeads.indices) {
+      if(relativeHeads(i) == 0) {
+        heads += -1
+      } else {
+        heads += i + relativeHeads(i)
+      }
+    }
+    heads
+  }
+
+  /** Dependency parsing with the Eisner algorithm */
+  def parseSentenceWithEisner(words: IndexedSeq[String],
+                              posTags: IndexedSeq[String],
+                              nerLabels: IndexedSeq[String],
+                              embeddings: ConstEmbeddingParameters): Array[(Int, String)] = {
+    val annotatedSentence =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+
+    val relativeHeads = mtlDepsHead.parseWithEisner(0, annotatedSentence, embeddings, 3)
+    //println("Words: " + words.zipWithIndex)
+    //println("Relative heads: " + relativeHeads)
+    val heads = convertToAbsoluteHeads(relativeHeads)
+
+    val annotatedSentenceWithHeads =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
+
+    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
+    assert(labels.size == heads.size)
+    //println(s"Labels: ${labels.mkString(", ")}")
+
+    val headsWithLabels = heads.zip(labels).toArray
+    headsWithLabels
+  }
+
+  /** Dependency parsing */
+  def parseSentence(words: IndexedSeq[String],
+                    posTags: IndexedSeq[String],
+                    nerLabels: IndexedSeq[String],
+                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+
+    //println(s"Words: ${words.mkString(", ")}")
+    //println(s"Tags: ${posTags.mkString(", ")}")
+    //println(s"NEs: ${nerLabels.mkString(", ")}")
+
+    val annotatedSentence =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+
+    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence, embeddings)
     val heads = new ArrayBuffer[Int]()
     for(wi <- headsAsStringsWithScores.indices) {
       val predictionsForThisWord = headsAsStringsWithScores(wi)
@@ -375,7 +428,6 @@ class CluProcessor protected (
         edges.append(edge)
       }
     }
-    */
 
     new DirectedGraph[String](edges.toList)
   }
@@ -452,6 +504,10 @@ class CluProcessor protected (
         words(i).equalsIgnoreCase("due") &&
         words(i + 1).equalsIgnoreCase("to")) {
         tags(i) = "IN"
+      }
+
+      else if(VERSUS_PATTERN.findFirstIn(words(i)).nonEmpty) {
+        tags(i) = "CC" // "versus" seems like a CC to me. but maybe not...
       }
     }
 
@@ -618,11 +674,41 @@ class CluProcessor protected (
     val embeddings = getEmbeddings(doc)
 
     for(sent <- doc.sentences) {
-      val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      parserPostProcessing(sent, headsWithLabels)
+      //println("headsWithLabels: " + headsWithLabels.mkString(" "))
+
+      val edges = new ListBuffer[Edge[String]]()
+      val roots = new mutable.HashSet[Int]()
+      for(i <- headsWithLabels.indices) {
+        if(headsWithLabels(i)._1 != -1) {
+          val edge = Edge[String](headsWithLabels(i)._1, i, headsWithLabels(i)._2)
+          edges.append(edge)
+        } else {
+          roots += i
+        }
+      }
+      val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
       sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+    }
+  }
+
+  /** Deterministic corrections for dependency parsing */
+  def parserPostProcessing(sentence: Sentence, headsWithLabels: Array[(Int, String)]): Unit = {
+    for(i <- sentence.indices) {
+      // "due to" must be a MWE
+      if(i < sentence.size - 1 && sentence.tags.isDefined &&
+        sentence.words(i).compareToIgnoreCase("due") == 0 &&
+        sentence.tags.get(i) == "IN" &&
+        sentence.words(i + 1).compareToIgnoreCase("to") == 0 &&
+        sentence.tags.get(i + 1) == "TO" &&
+        headsWithLabels(i + 1)._1 != i &&
+        headsWithLabels(i + 1)._2 != "mwe") {
+        headsWithLabels(i + 1) = Tuple2(i, "mwe")
+      }
     }
   }
 
@@ -724,6 +810,11 @@ object CluProcessor {
   val PREDICATE_ATTACHMENT_NAME = "predicates"
 
   val CONST_EMBEDDINGS_ATTACHMENT_NAME = "ce"
+
+  //
+  // Patterns for post-processing corrections
+  //
+  val VERSUS_PATTERN = """(?i)^vs\.?$""".r
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,

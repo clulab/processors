@@ -152,7 +152,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       }
 
     //
-    // Embedding that captures the absolute position of the token in the sentence
+    // Embedding that captures the **absolute position** of the token in the sentence
     //
     val positionEmbedding =
       if(positionLookupParameters.nonEmpty) {
