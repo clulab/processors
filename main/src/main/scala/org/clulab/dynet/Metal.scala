@@ -362,6 +362,13 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
   }
 
+  def predictDualWithScores(taskId: Int,
+                            sentence: AnnotatedSentence,
+                            constEmbeddings: ConstEmbeddingParameters,
+                            modHeadPairs: IndexedSeq[(Int, Int)]): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    Layers.predictDualWithScores(model, taskId, sentence, constEmbeddings, modHeadPairs)
+  }
+
   def parseWithEisner(sentence: AnnotatedSentence,
                       constEmbeddings: ConstEmbeddingParameters,
                       topK: Int): IndexedSeq[(Int, String)] = {
