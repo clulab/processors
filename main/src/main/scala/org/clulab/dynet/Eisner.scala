@@ -6,6 +6,7 @@ import scala.collection.mutable.{ArrayBuffer, HashSet, ListBuffer}
 import Eisner._
 
 import scala.collection.mutable
+import java.util.Arrays
 
 /** 
   * Stores one dependency for the Eisner algorithm 
@@ -291,7 +292,7 @@ class Eisner {
   /** Eisner algorithm using as dependency score the head score + label score */
   def ensembleParser(mtlHeads: Metal, mtlLabels: Option[Metal], sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters,
-                     topK: Int): IndexedSeq[Int] = {
+                     topK: Int): IndexedSeq[(Int, String)] = {
     val scores = mtlHeads.predictWithScores(0, sentence, constEmbeddings)
     val (startingDependencies, dependenciesAsArray) = toDependencyTable(scores, topK) // currently the score of a dependency is just the head score
 
@@ -300,7 +301,8 @@ class Eisner {
     // assert(labelScores.size == dependenciesAsArray.size)
 
     val top = parse(startingDependencies)
-    generateOutput(top, scores)
+    val heads = generateOutput(top, scores)
+    heads.zip(Array.fill(scores.length)(""))
   }
 
   }

@@ -14,6 +14,7 @@ import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
+import org.clulab.dynet.Eisner
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -349,10 +350,14 @@ class CluProcessor protected (
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
-    val relativeHeads = mtlDepsHead.parseWithEisner(annotatedSentence, embeddings, 3)
+    val eisner = new Eisner  
+    val relativeHeads = eisner.ensembleParser(
+      mtlDepsHead, Some(mtlDepsLabel),
+      annotatedSentence, embeddings, 3
+    )
     //println("Words: " + words.zipWithIndex)
     //println("Relative heads: " + relativeHeads)
-    val heads = convertToAbsoluteHeads(relativeHeads)
+    val heads = convertToAbsoluteHeads(relativeHeads.map(_._1)) // TODO: revisit once Eisner done
 
     val annotatedSentenceWithHeads =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
