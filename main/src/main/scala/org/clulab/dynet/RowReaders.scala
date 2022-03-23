@@ -13,8 +13,7 @@ import MetalRowReader._
 
 case class AnnotatedSentence(words: IndexedSeq[String],
                              posTags: Option[IndexedSeq[String]] = None,
-                             neTags: Option[IndexedSeq[String]] = None,
-                             headPositions: Option[IndexedSeq[Int]] = None) {
+                             neTags: Option[IndexedSeq[String]] = None) {
   def indices: Range = words.indices
   def size: Int = words.size
 }
@@ -25,7 +24,9 @@ trait RowReader {
 }
 
 class MetalRowReader extends RowReader {
-  override def toAnnotatedSentences(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  override def toAnnotatedSentences(rows: IndexedSeq[Row]): 
+    IndexedSeq[(AnnotatedSentence, Option[IndexedSeq[Int]], IndexedSeq[String])] = {
+
     if (rows.head.length == 2) {
       parseSimple(rows)
     } else if (rows.head.length == 4) {
@@ -38,7 +39,9 @@ class MetalRowReader extends RowReader {
   }
 
   /** Parser for the simple format: word, label */
-  def parseSimple(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  def parseSimple(rows: IndexedSeq[Row]): 
+    IndexedSeq[(AnnotatedSentence, Option[IndexedSeq[Int]], IndexedSeq[String])] = {
+
     assert(rows.head.length == 2)
     val words = new ArrayBuffer[String]()
     val labels = new ArrayBuffer[String]()
@@ -48,11 +51,13 @@ class MetalRowReader extends RowReader {
       labels += row.get(WORD_POSITION + 1)
     }
 
-    IndexedSeq(Tuple2(AnnotatedSentence(words), labels))
+    IndexedSeq(Tuple3(AnnotatedSentence(words), None, labels))
   }
 
   /** Parser for the simple extended format: word, POS tag, NE label, label */
-  def parseSimpleExtended(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  def parseSimpleExtended(rows: IndexedSeq[Row]): 
+    IndexedSeq[(AnnotatedSentence, Option[IndexedSeq[Int]], IndexedSeq[String])] = {
+
     assert(rows.head.length == 4)
     val words = new ArrayBuffer[String]()
     val posTags = new ArrayBuffer[String]()
@@ -66,11 +71,13 @@ class MetalRowReader extends RowReader {
       labels += row.get(LABEL_START_OFFSET)
     }
 
-    IndexedSeq(Tuple2(AnnotatedSentence(words, Some(posTags), Some(neLabels)), labels))
+    IndexedSeq(Tuple3(AnnotatedSentence(words, Some(posTags), Some(neLabels)), None, labels))
   }
 
   /** Parser for the full format: word, POS tag, NE label, (label head)+ */
-  def parseFull(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  def parseFull(rows: IndexedSeq[Row]): 
+    IndexedSeq[(AnnotatedSentence, Option[IndexedSeq[Int]], IndexedSeq[String])] = {
+
     assert(rows.head.length >= 5)
     val numSent = (rows.head.length - 3) / 2
     assert(numSent >= 1)
@@ -100,14 +107,15 @@ class MetalRowReader extends RowReader {
       }
     }
 
-    val sentences = new ArrayBuffer[(AnnotatedSentence, IndexedSeq[String])]()
+    val sentences = new ArrayBuffer[(AnnotatedSentence, Option[IndexedSeq[Int]], IndexedSeq[String])]()
     for(i <- 0 until numSent) {
-      val annotatedSent = AnnotatedSentence(words,
+      val annotatedSent = AnnotatedSentence(
+        words,
         Some(posTags),
-        Some(neLabels),
-        Some(headPositions(i)))
+        Some(neLabels)
+      )
       val sentLabels = labels(i)
-      sentences += Tuple2(annotatedSent, sentLabels)
+      sentences += Tuple3(annotatedSent, Some(headPositions(i)), sentLabels)
     }
 
     sentences
