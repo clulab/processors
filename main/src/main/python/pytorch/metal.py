@@ -141,7 +141,7 @@ class Metal(object):
                 i += 1
 
                 if i >= batchSize:
-                    cummulativeLoss += batchLoss.item()
+                    cummulativeLoss += batchLoss.detach().item()
                     print ("================================back prop!================================")
                     batchLoss.backward()
                     trainer.step()
@@ -157,7 +157,7 @@ class Metal(object):
                     numTagged = 0
             # we may have an incomplete batch here
             if batchLoss:
-                cummulativeLoss = batchLoss.item()
+                cummulativeLoss = batchLoss.detach().item()
                 batchLoss.backward()
                 trainer.step()
                 batchLoss = 0
@@ -198,7 +198,8 @@ class Metal(object):
             else:
                 epochPatience -= 1
 
-            # self.save(f"{modelNamePrefix}-epoch{epoch}")
+            self.save(f"{modelNamePrefix}-epoch{epoch}")
+            gc.collect()
         tracemalloc.stop()
         allEpochScores.sort(key=lambda x: x[1])
         print ("Epochs in descending order of scores:")
