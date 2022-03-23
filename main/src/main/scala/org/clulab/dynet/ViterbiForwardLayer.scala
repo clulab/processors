@@ -61,14 +61,14 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     new FloatVector(transScores)
   }
 
-  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
+  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label]): Expression = {
     // fetch the transition probabilities from the lookup storage
     val transitionMatrix = new ExpressionVector
     for(i <- 0 until t2i.size) {
       transitionMatrix.add(lookup(T, i))
     }
 
-    val goldLabels = Utils.toIds(goldLabelStrings, t2i)
+    val goldLabels = Utils.toIds(goldLabelStrings.map(_.label), t2i)
     Utils.sentenceLossCrf(finalStates, transitionMatrix, goldLabels, t2i)
   }
 

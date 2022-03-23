@@ -8,11 +8,6 @@ import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
-import org.clulab.utils.MathUtils
-
-import scala.concurrent.duration.span
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.HashSet
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -60,27 +55,28 @@ class Layers (val initialLayer: Option[InitialLayer],
   def nonEmpty: Boolean = ! isEmpty
 
   protected def forward(sentence: AnnotatedSentence,
+                        modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                         constEmbeddings: ConstEmbeddingParameters,
                         doDropout: Boolean): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
 
-    var states = initialLayer.get.forward(sentence, constEmbeddings, doDropout)
+    var states = initialLayer.get.forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout)
 
     for (i <- intermediateLayers.indices) {
       states = intermediateLayers(i).forward(states, doDropout)
     }
 
     if(finalLayer.nonEmpty) {
-      states = finalLayer.get.forward(states, sentence.headPositions, doDropout)
+      states = finalLayer.get.forward(states, modHeadPairsOpt, doDropout)
     }
 
     states
   }
 
   protected def forwardFrom(inStates: ExpressionVector,
-                            headPositions: Option[IndexedSeq[Int]],
+                            modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                             doDropout: Boolean): ExpressionVector = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forwardFrom() on a Layers object that has an initial layer: $toString!")
@@ -93,7 +89,7 @@ class Layers (val initialLayer: Option[InitialLayer],
     }
 
     if(finalLayer.nonEmpty) {
-      states = finalLayer.get.forward(states, headPositions, doDropout)
+      states = finalLayer.get.forward(states, modHeadPairsOpt, doDropout)
     }
 
     states
@@ -208,6 +204,7 @@ object Layers {
 
   def predictJointly(layers: IndexedSeq[Layers],
                      sentence: AnnotatedSentence,
+                     modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
@@ -215,10 +212,10 @@ object Layers {
     Synchronizer.withComputationGraph("Layers.predictJointly()") {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
+        val sharedStates = layers(0).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
 
         for (i <- 1 until layers.length) {
-          val states = layers(i).forwardFrom(sharedStates, sentence.headPositions, doDropout = false)
+          val states = layers(i).forwardFrom(sharedStates, modHeadPairsOpt, doDropout = false)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
@@ -227,7 +224,7 @@ object Layers {
       // no shared layer
       else {
         for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence, constEmbeddings, doDropout = false)
+          val states = layers(i).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
           val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
           val labels = layers(i).finalLayer.get.inference(emissionScores)
           labelsPerTask += labels
@@ -241,6 +238,7 @@ object Layers {
   private def forwardForTask(layers: IndexedSeq[Layers],
                              taskId: Int,
                              sentence: AnnotatedSentence,
+                             modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                              constEmbeddings: ConstEmbeddingParameters,
                              doDropout: Boolean): ExpressionVector = {
     //
@@ -252,13 +250,13 @@ object Layers {
     val states = {
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout)
-        layers(taskId + 1).forwardFrom(sharedStates, sentence.headPositions, doDropout)
+        val sharedStates = layers(0).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout)
+        layers(taskId + 1).forwardFrom(sharedStates, modHeadPairsOpt, doDropout)
       }
 
       // no shared layer
       else {
-        layers(taskId + 1).forward(sentence, constEmbeddings, doDropout)
+        layers(taskId + 1).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout)
       }
     }
 
@@ -268,11 +266,12 @@ object Layers {
   def predict(layers: IndexedSeq[Layers],
               taskId: Int,
               sentence: AnnotatedSentence,
+              modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]], // head, modifier pairs for dual prediction
               constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized.
       Synchronizer.withComputationGraph("Layers.predict()") {
-        val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
+        val states = forwardForTask(layers, taskId, sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
 
@@ -285,11 +284,12 @@ object Layers {
   def predictWithScores(layers: IndexedSeq[Layers],
                         taskId: Int,
                         sentence: AnnotatedSentence,
+                        modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]], // head, modifier pairs for dual prediction
                         constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized
       Synchronizer.withComputationGraph("Layers.predictWithScores()") {
-        val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
+        val states = forwardForTask(layers, taskId, sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
 
@@ -299,25 +299,7 @@ object Layers {
     labelsForTask
   }
 
-  def predictDualWithScores(layers: IndexedSeq[Layers],
-                            taskId: Int,
-                            sentence: AnnotatedSentence,
-                            constEmbeddings: ConstEmbeddingParameters,
-                            modHeadPairs: IndexedSeq[(Int, Int)]): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    val labelsForTask =
-      // DyNet's computation graph is a static variable, so this block must be synchronized
-      Synchronizer.withComputationGraph("Layers.predictDualWithScores()") {
-        AICI
-        val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = false)
-        val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-        val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
-
-        out
-      }
-
-    labelsForTask
-  }
-
+  /** Greedy parsing for a MTL model that contains both head and label classifier */
   def parse(layers: IndexedSeq[Layers],
             sentence: AnnotatedSentence,
             constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
@@ -328,7 +310,7 @@ object Layers {
         // first get the output of the layers that are shared between the two tasks
         //
         assert(layers(0).nonEmpty)
-        val sharedStates = layers(0).forward(sentence, constEmbeddings, doDropout = false)
+        val sharedStates = layers(0).forward(sentence, None, constEmbeddings, doDropout = false)
 
         //
         // now predict the heads (first task)
@@ -372,7 +354,11 @@ object Layers {
         //
         // next, predict the labels using the predicted heads
         //
-        val labelStates = layers(2).forwardFrom(sharedStates, Some(heads), doDropout = false)
+        val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
+        for(i <- heads.indices) {
+          modHeadPairs += ModifierHeadPair(i, heads(i))
+        }
+        val labelStates = layers(2).forwardFrom(sharedStates, Some(modHeadPairs), doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)
         val labels = layers(2).finalLayer.get.inference(emissionScores)
         assert(labels.size == heads.size)
@@ -386,10 +372,10 @@ object Layers {
   def loss(layers: IndexedSeq[Layers],
            taskId: Int,
            sentence: AnnotatedSentence,
-           goldLabels: IndexedSeq[String]): Expression = {
+           goldLabels: IndexedSeq[Label]): Expression = {
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-
-    val states = forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout = true) // use dropout during training!
+    val modHeadPairsOpt = getModHeadPairs(goldLabels)
+    val states = forwardForTask(layers, taskId, sentence, modHeadPairsOpt, constEmbeddings, doDropout = true) // use dropout during training!
     layers(taskId + 1).finalLayer.get.loss(states, goldLabels)
   }
 

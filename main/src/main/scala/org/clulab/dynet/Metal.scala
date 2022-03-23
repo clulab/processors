@@ -86,7 +86,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           for (i <- annotatedSentence.indices) {
             words(tid + 1) += annotatedSentence.words(i)
             words(0) += annotatedSentence.words(i)
-            labels(tid + 1) += sentenceLabels(i)
+            labels(tid + 1) += sentenceLabels(i).label
           }
         }
       }
@@ -306,19 +306,20 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
       for(as <- annotatedSentences) {
         val sentence = as._1
-        val goldLabels = as._2
+        val goldLabels = as._2.map(_.label)
+        val modHeadPairsOpt = getModHeadPairs(as._2)
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
         
         // vanilla inference
-        //val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+        val preds = Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
 
         // ceiling strategy: choose the gold label if it shows up in the top K predictions
-        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
         //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
 
         // Eisner parsing algorithm using the top K predictions
-        val preds = parseWithEisner(sentence, constEmbeddings, 3).map(_._1.toString)
+        //val preds = parseWithEisner(sentence, constEmbeddings, 3).map(_._1.toString)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
@@ -347,26 +348,21 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   // this only supports basic tasks for now
   def predictJointly(sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, sentence, constEmbeddings)
+    Layers.predictJointly(model, sentence, None, constEmbeddings)
   }
 
   def predict(taskId: Int,
               sentence: AnnotatedSentence,
+              modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
               constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence, constEmbeddings)
+    Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
   }
 
   def predictWithScores(taskId: Int,
                         sentence: AnnotatedSentence,
+                        modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                         constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
-  }
-
-  def predictDualWithScores(taskId: Int,
-                            sentence: AnnotatedSentence,
-                            constEmbeddings: ConstEmbeddingParameters,
-                            modHeadPairs: IndexedSeq[(Int, Int)]): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictDualWithScores(model, taskId, sentence, constEmbeddings, modHeadPairs)
+    Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
   }
 
   def parseWithEisner(sentence: AnnotatedSentence,

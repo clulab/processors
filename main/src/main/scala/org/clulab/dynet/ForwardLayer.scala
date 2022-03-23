@@ -21,7 +21,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
   extends FinalLayer {
 
   def forward(inputExpressions: ExpressionVector,
-              headPositionsOpt: Option[IndexedSeq[Int]],
+              modifierHeadPairs: Option[IndexedSeq[ModifierHeadPair]],
               doDropout: Boolean): ExpressionVector = {
     val pH = Expression.parameter(H)
     val pRoot = Expression.parameter(rootParam)
@@ -58,15 +58,16 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       // dual task
       //
 
-      if(headPositionsOpt.isEmpty) {
+      if (modifierHeadPairs.isEmpty) {
         throw new RuntimeException("ERROR: dual task without information about head positions!")
       }
 
-      for(i <- inputExpressions.indices) {
-        val headPosition = headPositionsOpt.get(i)
+      for (pair <- modifierHeadPairs.get) {
+        val modPosition = pair.modifier
+        val headPosition = pair.head
 
-        val argExp = Utils.expressionDropout(inputExpressions(i), dropoutProb, doDropout)
-        val predExp = if(headPosition >= 0) {
+        val argExp = Utils.expressionDropout(inputExpressions(modPosition), dropoutProb, doDropout)
+        val predExp = if (headPosition >= 0) {
           // there is an explicit head in the sentence
           Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
         } else {
@@ -75,8 +76,8 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
         }
 
         val ss =
-          if(distanceLookupParameters.nonEmpty) {
-            val distEmbedding = mkRelativePositionEmbedding(i, headPosition)
+          if (distanceLookupParameters.nonEmpty) {
+            val distEmbedding = mkRelativePositionEmbedding(modPosition, headPosition)
             Expression.concatenate(argExp, predExp, distEmbedding)
           } else {
             Expression.concatenate(argExp, predExp)

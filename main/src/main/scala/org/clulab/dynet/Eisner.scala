@@ -6,7 +6,6 @@ import scala.collection.mutable.{ArrayBuffer, HashSet, ListBuffer}
 import Eisner._
 
 import scala.collection.mutable
-import java.util.Arrays
 
 /** 
   * Stores one dependency for the Eisner algorithm 
@@ -242,10 +241,9 @@ class Eisner {
 
   /** Converts the top K predictions from an unlabeled parserinto a matrix of Dependency (rows are mods; columns are heads) */
   def toDependencyTable(scores: IndexedSeq[IndexedSeq[(String, Float)]],
-                        topK: Int): (Array[Array[Dependency]], IndexedSeq[(Int, Int)]) = {
+                        topK: Int): Array[Array[Dependency]] = {
     val length = scores.length + 1 // plus 1 to accomodate for root
     val dependencies = Array.fill(length)(new Array[Dependency](length))
-    val dependenciesAsArray = new ArrayBuffer[(Int, Int)]()
 
     for(i <- scores.indices) {
       val mod = i + 1 // offsets start at 1 in the Dependency class
@@ -263,7 +261,6 @@ class Eisner {
           if (head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
             //println(s"Added dependency: $mod $head $score")
             dependencies(mod)(head) = Dependency(mod, head, score)
-            dependenciesAsArray += Tuple2(mod - 1, head - 1) // these are in our format, with root == -1
             headCount += 1
           }
         } catch {
@@ -273,7 +270,7 @@ class Eisner {
     }
 
     //printDependencyTable(dependencies)
-    (dependencies, dependenciesAsArray)
+    dependencies
   }
 
   def printDependencyTable(deps: Array[Array[Dependency]]) {
@@ -293,13 +290,23 @@ class Eisner {
   def ensembleParser(mtlHeads: Metal, mtlLabels: Option[Metal], sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters,
                      topK: Int): IndexedSeq[(Int, String)] = {
-    val scores = mtlHeads.predictWithScores(0, sentence, constEmbeddings)
-    val (startingDependencies, dependenciesAsArray) = toDependencyTable(scores, topK) // currently the score of a dependency is just the head score
+    val scores = mtlHeads.predictWithScores(0, sentence, None, constEmbeddings)
+    val startingDependencies = toDependencyTable(scores, topK) // currently the score of a dependency is just the head score
 
     // add label scores to all dependencies
     if(mtlLabels.nonEmpty) {
-      val labelScores = mtlLabels.predictDualWithScores(0, sentence, constEmbeddings, dependenciesAsArray)
-      assert(labelScores.size == dependenciesAsArray.size)
+      val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
+      for(i <- startingDependencies.indices) {
+        for(j <- startingDependencies(i).indices) {
+          val dep = startingDependencies(i)(j)
+          if(dep != null) {
+            modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1)
+          }
+        }
+      }
+
+      val labelScores = mtlLabels.get.predictWithScores(0, sentence, Some(modHeadPairs), constEmbeddings)
+      assert(labelScores.size == modHeadPairs.size)
 
       // TODO
     }
@@ -309,7 +316,7 @@ class Eisner {
     heads.zip(Array.fill(scores.length)(""))
   }
 
-  }
+}
 
 object Eisner {
   // prints for debugging
