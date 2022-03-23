@@ -198,7 +198,7 @@ class Metal(object):
             else:
                 epochPatience -= 1
 
-            self.save(f"{modelNamePrefix}-epoch{epoch}")
+            # self.save(f"{modelNamePrefix}-epoch{epoch}")
         tracemalloc.stop()
         allEpochScores.sort(key=lambda x: x[1])
         print ("Epochs in descending order of scores:")
