@@ -290,25 +290,35 @@ class Eisner {
   def ensembleParser(mtlHeads: Metal, mtlLabels: Option[Metal], sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters,
                      topK: Int): IndexedSeq[(Int, String)] = {
+
+    // construct the dependency table using just the head prediction scores
     val scores = mtlHeads.predictWithScores(0, sentence, None, constEmbeddings)
     val startingDependencies = toDependencyTable(scores, topK) // currently the score of a dependency is just the head score
 
+    //
     // add label scores to all dependencies
+    //
     if(mtlLabels.nonEmpty) {
       val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
       for(i <- startingDependencies.indices) {
         for(j <- startingDependencies(i).indices) {
           val dep = startingDependencies(i)(j)
           if(dep != null) {
-            modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1)
+            modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1) // out offsets start at 0 not at 1 as in Dependency
           }
         }
       }
 
+      // generate label scores using the label classifier
       val labelScores = mtlLabels.get.predictWithScores(0, sentence, Some(modHeadPairs), constEmbeddings)
       assert(labelScores.size == modHeadPairs.size)
 
-      // TODO
+      // convert label scores to probabilities
+      val scores = new mutable.HashMap[Int, IndexedSeq[(Int, Float)]]()
+      MathUtils.softmaxFloat()
+
+      // linear interpolation of head and label scores
+
     }
 
     val top = parse(startingDependencies)
