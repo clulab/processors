@@ -368,9 +368,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
   def parseWithEisner(sentence: AnnotatedSentence,
                       constEmbeddings: ConstEmbeddingParameters,
-                      topK: Int): IndexedSeq[(Int, String)] = {
+                      topK: Int, lambda: Float): IndexedSeq[(Int, String)] = {
     val eisner = new Eisner
-    eisner.ensembleParser(this, None, sentence, constEmbeddings, topK)                        
+    eisner.ensembleParser(this, None, sentence, constEmbeddings, topK, lambda, true)
   }
 
   /**

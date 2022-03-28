@@ -350,26 +350,13 @@ class CluProcessor protected (
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
     val eisner = new Eisner  
-    val relativeHeads = eisner.ensembleParser(
+    val headsWithLabels = eisner.ensembleParser(
       mtlDepsHead, Some(mtlDepsLabel),
-      annotatedSentence, embeddings, 3
+      annotatedSentence, embeddings,
+      3, 1.0f, false
     )
-    //println("Words: " + words.zipWithIndex)
-    //println("Relative heads: " + relativeHeads)
 
-    // TODO: remove once Eisner done
-    val heads = convertToAbsoluteHeads(relativeHeads.map(_._1)) // offsets start at 0; root = -1
-    val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
-    for(i <- heads.indices) {
-      modHeadPairs += ModifierHeadPair(i, heads(i))
-    }
-
-    val labels = mtlDepsLabel.predict(0, annotatedSentence, Some(modHeadPairs), embeddings)
-    assert(labels.size == heads.size)
-    //println(s"Labels: ${labels.mkString(", ")}")
-
-    val headsWithLabels = heads.zip(labels).toArray
-    headsWithLabels
+    headsWithLabels.toArray
   }
 
   /** Dependency parsing - OLD greedy algorithm */

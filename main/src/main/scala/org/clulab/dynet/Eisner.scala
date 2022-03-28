@@ -223,15 +223,23 @@ class Eisner {
 
   def generateOutput(top: Option[Span],
                      scores: IndexedSeq[IndexedSeq[(String, Float)]],
-                     dependencies: Array[Array[Dependency]]): IndexedSeq[(Int, String)] = {
+                     dependencies: Array[Array[Dependency]],
+                     generateRelativeHeads: Boolean): IndexedSeq[(Int, String)] = {
 
     val heads = new Array[(Int, String)](scores.size)
     if(top.nonEmpty) {
       // Eisner correctly produced a full tree
       for(dep <- top.get.dependencies) {
-        val relativeHead = if(dep.head == 0) 0 else dep.head - dep.mod // we are storing *relative* head positions here
+        val head =
+          if(generateRelativeHeads) {
+            // we are storing *relative* head positions here
+            if (dep.head == 0) 0 else dep.head - dep.mod
+          } else {
+            // we are storing absolute heads, starting at offset 0
+            dep.head - 1
+          }
         val label = dep.label
-        heads(dep.mod - 1) = Tuple2(relativeHead, label)
+        heads(dep.mod - 1) = Tuple2(head, label)
       }
     } else {
       // Eisner failed to produce a complete tree; revert to the greedy inference
@@ -240,7 +248,15 @@ class Eisner {
         val depMod = i + 1
         val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
         val label = dependencies(depMod)(depHead).label
-        heads(i) = Tuple2(relativeHead, label)
+        val head =
+          if(generateRelativeHeads) {
+            // we are storing *relative* head positions here
+            relativeHead
+          } else {
+            // we are storing absolute heads, starting at offset 0
+            depHead - 1
+          }
+        heads(i) = Tuple2(head, label)
       }
     }
     heads
@@ -296,7 +312,9 @@ class Eisner {
   /** Eisner algorithm using as dependency score the head score + label score */
   def ensembleParser(mtlHeads: Metal, mtlLabels: Option[Metal], sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters,
-                     topK: Int): IndexedSeq[(Int, String)] = {
+                     topK: Int,
+                     lambda: Float,
+                     generateRelativeHeads: Boolean): IndexedSeq[(Int, String)] = {
 
     // construct the dependency table using just the head prediction scores
     val scores = mtlHeads.predictWithScores(0, sentence, None, constEmbeddings)
@@ -325,7 +343,6 @@ class Eisner {
       assert(labelTopScores.size == modHeadPairs.size)
 
       // linearly interpolate the head and label scores in the dependency table
-      val lambda = 0.95f
       for(i <- labelTopScores.indices) {
         val topLabelAndScore = labelTopScores(i)
         val modHeadPair = modHeadPairs(i)
@@ -341,8 +358,8 @@ class Eisner {
     // the actual Eisner parsing algorithm
     val top = parse(startingDependencies)
 
-    // convert back to relative heads
-    generateOutput(top, scores, startingDependencies)
+    // convert back to relative (or absolute) heads
+    generateOutput(top, scores, startingDependencies, generateRelativeHeads)
   }
 
 }
