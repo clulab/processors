@@ -22,8 +22,8 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam,
     distanceEmbeddingSize, distanceLookupParameters, nonlinearity, dropoutProb) {
 
-  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
-    val goldLabels = Utils.toIds(goldLabelStrings, t2i)
+  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label]): Expression = {
+    val goldLabels = Utils.toIds(goldLabelStrings.map(_.label), t2i)
     Utils.sentenceLossGreedy(finalStates, goldLabels)
   }
 

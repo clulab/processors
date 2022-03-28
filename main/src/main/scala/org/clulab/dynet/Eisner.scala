@@ -2,17 +2,16 @@ package org.clulab.dynet
 
 import org.clulab.utils.MathUtils
 
-import scala.collection.mutable.{ArrayBuffer, HashSet, ListBuffer}
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import Eisner._
 
 import scala.collection.mutable
-import java.util.Arrays
 
 /** 
   * Stores one dependency for the Eisner algorithm 
   * Indexes for head and mod start at 1 for the first word in the sentence; 0 is reserved for root
   */
-case class Dependency(mod:Int, head:Int, var score:Float)
+case class Dependency(mod:Int, head:Int, var score:Float, var label:String = "")
 
 class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
   def this() {
@@ -222,19 +221,42 @@ class Eisner {
     Option(top)
   }
 
-  def generateOutput(top: Option[Span], scores: IndexedSeq[IndexedSeq[(String, Float)]]): IndexedSeq[Int] = {
-    val heads = new Array[Int](scores.size)
+  def generateOutput(top: Option[Span],
+                     scores: IndexedSeq[IndexedSeq[(String, Float)]],
+                     dependencies: Array[Array[Dependency]],
+                     generateRelativeHeads: Boolean): IndexedSeq[(Int, String)] = {
+
+    val heads = new Array[(Int, String)](scores.size)
     if(top.nonEmpty) {
       // Eisner correctly produced a full tree
       for(dep <- top.get.dependencies) {
-        val label = if(dep.head == 0) 0 else dep.head - dep.mod // we are storing *relative* head positions here
-        heads(dep.mod - 1) = label
+        val head =
+          if(generateRelativeHeads) {
+            // we are storing *relative* head positions here
+            if (dep.head == 0) 0 else dep.head - dep.mod
+          } else {
+            // we are storing absolute heads, starting at offset 0
+            dep.head - 1
+          }
+        val label = dep.label
+        heads(dep.mod - 1) = Tuple2(head, label)
       }
     } else {
       // Eisner failed to produce a complete tree; revert to the greedy inference
       for(i <- scores.indices) {
-        val topPred = scores(i).sortBy(- _._2).head._1
-        heads(i) = topPred.toInt
+        val relativeHead = scores(i).minBy(- _._2)._1.toInt
+        val depMod = i + 1
+        val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
+        val label = dependencies(depMod)(depHead).label
+        val head =
+          if(generateRelativeHeads) {
+            // we are storing *relative* head positions here
+            relativeHead
+          } else {
+            // we are storing absolute heads, starting at offset 0
+            depHead - 1
+          }
+        heads(i) = Tuple2(head, label)
       }
     }
     heads
@@ -242,10 +264,9 @@ class Eisner {
 
   /** Converts the top K predictions from an unlabeled parserinto a matrix of Dependency (rows are mods; columns are heads) */
   def toDependencyTable(scores: IndexedSeq[IndexedSeq[(String, Float)]],
-                        topK: Int): (Array[Array[Dependency]], IndexedSeq[(Int, Int)]) = {
+                        topK: Int): Array[Array[Dependency]] = {
     val length = scores.length + 1 // plus 1 to accomodate for root
     val dependencies = Array.fill(length)(new Array[Dependency](length))
-    val dependenciesAsArray = new ArrayBuffer[(Int, Int)]()
 
     for(i <- scores.indices) {
       val mod = i + 1 // offsets start at 1 in the Dependency class
@@ -263,7 +284,6 @@ class Eisner {
           if (head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
             //println(s"Added dependency: $mod $head $score")
             dependencies(mod)(head) = Dependency(mod, head, score)
-            dependenciesAsArray += Tuple2(mod - 1, head - 1) // these are in our format, with root == -1
             headCount += 1
           }
         } catch {
@@ -273,10 +293,10 @@ class Eisner {
     }
 
     //printDependencyTable(dependencies)
-    (dependencies, dependenciesAsArray)
+    dependencies
   }
 
-  def printDependencyTable(deps: Array[Array[Dependency]]) {
+  def printDependencyTable(deps: Array[Array[Dependency]]): Unit = {
     for(i <- deps.indices) {
       p(s"$i:")
       for(j <- deps(i).indices) {
@@ -292,24 +312,57 @@ class Eisner {
   /** Eisner algorithm using as dependency score the head score + label score */
   def ensembleParser(mtlHeads: Metal, mtlLabels: Option[Metal], sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters,
-                     topK: Int): IndexedSeq[(Int, String)] = {
-    val scores = mtlHeads.predictWithScores(0, sentence, constEmbeddings)
-    val (startingDependencies, dependenciesAsArray) = toDependencyTable(scores, topK) // currently the score of a dependency is just the head score
+                     topK: Int,
+                     lambda: Float,
+                     generateRelativeHeads: Boolean): IndexedSeq[(Int, String)] = {
 
+    // construct the dependency table using just the head prediction scores
+    val scores = mtlHeads.predictWithScores(0, sentence, None, constEmbeddings)
+    val startingDependencies = toDependencyTable(scores, topK) // currently the score of a dependency is just the head score
+
+    //
     // add label scores to all dependencies
+    //
     if(mtlLabels.nonEmpty) {
-      val labelScores = mtlLabels.predictDualWithScores(0, sentence, constEmbeddings, dependenciesAsArray)
-      assert(labelScores.size == dependenciesAsArray.size)
+      // prepare the (modifier, head) pairs for which we will get label scores
+      val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
+      for(i <- startingDependencies.indices) {
+        for(j <- startingDependencies(i).indices) {
+          val dep = startingDependencies(i)(j)
+          if(dep != null) {
+            modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1) // out offsets start at 0 not at 1 as in Dependency
+          }
+        }
+      }
 
-      // TODO
+      // generate label probabilities using the label classifier
+      val labelScores =
+        mtlLabels.get.predictWithScores(0, sentence, Some(modHeadPairs), constEmbeddings) // these are probs
+      val labelTopScores =
+        labelScores.map(x => x.minBy(-_._2)) // keep just the top score for each label
+      assert(labelTopScores.size == modHeadPairs.size)
+
+      // linearly interpolate the head and label scores in the dependency table
+      for(i <- labelTopScores.indices) {
+        val topLabelAndScore = labelTopScores(i)
+        val modHeadPair = modHeadPairs(i)
+        val mod = modHeadPair.modifier
+        val head = modHeadPair.head
+        startingDependencies(mod + 1)(head + 1).score =
+          lambda * startingDependencies(mod + 1)(head + 1).score + (1 - lambda) * topLabelAndScore._2
+        startingDependencies(mod + 1)(head + 1).label =
+          topLabelAndScore._1
+      }
     }
 
+    // the actual Eisner parsing algorithm
     val top = parse(startingDependencies)
-    val heads = generateOutput(top, scores)
-    heads.zip(Array.fill(scores.length)(""))
+
+    // convert back to relative (or absolute) heads
+    generateOutput(top, scores, startingDependencies, generateRelativeHeads)
   }
 
-  }
+}
 
 object Eisner {
   // prints for debugging

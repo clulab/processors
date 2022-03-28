@@ -9,12 +9,11 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
-import org.clulab.dynet.Eisner
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -351,26 +350,17 @@ class CluProcessor protected (
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
     val eisner = new Eisner  
-    val relativeHeads = eisner.ensembleParser(
+    val headsWithLabels = eisner.ensembleParser(
       mtlDepsHead, Some(mtlDepsLabel),
-      annotatedSentence, embeddings, 3
+      annotatedSentence, embeddings,
+      3, 1.0f, false
     )
-    //println("Words: " + words.zipWithIndex)
-    //println("Relative heads: " + relativeHeads)
-    val heads = convertToAbsoluteHeads(relativeHeads.map(_._1)) // TODO: revisit once Eisner done
 
-    val annotatedSentenceWithHeads =
-      AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
-
-    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
-    assert(labels.size == heads.size)
-    //println(s"Labels: ${labels.mkString(", ")}")
-
-    val headsWithLabels = heads.zip(labels).toArray
-    headsWithLabels
+    headsWithLabels.toArray
   }
 
-  /** Dependency parsing */
+  /** Dependency parsing - OLD greedy algorithm */
+  /*
   def parseSentence(words: IndexedSeq[String],
                     posTags: IndexedSeq[String],
                     nerLabels: IndexedSeq[String],
@@ -383,8 +373,8 @@ class CluProcessor protected (
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
-    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence, embeddings)
-    val heads = new ArrayBuffer[Int]()
+    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence, None, embeddings)
+    val heads = new ArrayBuffer[ModifierHeadPair]()
     for(wi <- headsAsStringsWithScores.indices) {
       val predictionsForThisWord = headsAsStringsWithScores(wi)
 
@@ -394,12 +384,12 @@ class CluProcessor protected (
         try {
           val relativeHead = predictionsForThisWord(hi)._1.toInt
           if (relativeHead == 0) { // this is the root
-            heads += -1
+            heads += ModifierHeadPair(wi, -1)
             done = true
           } else {
             val headPosition = wi + relativeHead
             if (headPosition >= 0 && headPosition < words.size) {
-              heads += headPosition
+              heads += ModifierHeadPair(wi, headPosition)
               done = true
             }
           }
@@ -411,14 +401,11 @@ class CluProcessor protected (
       if(! done) {
         // we should not be here, but let's be safe
         // if nothing good was found, assume root
-        heads += -1
+        heads += ModifierHeadPair(wi, -1)
       }
     }
 
-    val annotatedSentenceWithHeads =
-      AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
-
-    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
+    val labels = mtlDepsLabel.predict(0, annotatedSentence, Some(heads), embeddings)
     assert(labels.size == heads.size)
     //println(s"Labels: ${labels.mkString(", ")}")
 
@@ -429,13 +416,14 @@ class CluProcessor protected (
       if(heads(i) == -1) {
         roots += i
       } else {
-        val edge = Edge[String](heads(i), i, labels(i))
+        val edge = Edge[String](heads(i).head, heads(i).modifier, labels(i))
         edges.append(edge)
       }
     }
 
     new DirectedGraph[String](edges.toList)
   }
+  */
 
   def srlSentence(sent: Sentence,
                   predicateIndexes: IndexedSeq[Int],
@@ -468,9 +456,10 @@ class CluProcessor protected (
                   embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
     val edges = predicateIndexes.flatMap { pred =>
       // SRL needs POS tags and NEs, as well as the position of the predicate
-      val headPositions = Array.fill(words.length)(pred)
-      val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
-      val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
+      val headPositions = new ArrayBuffer[ModifierHeadPair]()
+      for(i <- words.indices) headPositions += ModifierHeadPair(i, pred)
+      val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+      val argLabels = mtlSrla.predict(0, annotatedSentence, Some(headPositions), embeddings)
 
       argLabels.zipWithIndex
           .filter { case (argLabel, _) => argLabel != "O" }
