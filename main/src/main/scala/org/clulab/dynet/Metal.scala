@@ -361,8 +361,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   def predictWithScores(taskId: Int,
                         sentence: AnnotatedSentence,
                         modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
-                        constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
+                        constEmbeddings: ConstEmbeddingParameters,
+                        applySoftmax: Boolean = true): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings, applySoftmax)
   }
 
   def parseWithEisner(sentence: AnnotatedSentence,

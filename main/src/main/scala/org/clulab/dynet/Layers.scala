@@ -3,7 +3,7 @@ package org.clulab.dynet
 import java.io.PrintWriter
 import edu.cmu.dynet.{Expression, ExpressionVector, ParameterCollection}
 import org.clulab.struct.Counter
-import org.clulab.utils.Configured
+import org.clulab.utils.{Configured, MathUtils}
 import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 
@@ -285,7 +285,8 @@ object Layers {
                         taskId: Int,
                         sentence: AnnotatedSentence,
                         modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]], // head, modifier pairs for dual prediction
-                        constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
+                        constEmbeddings: ConstEmbeddingParameters,
+                        applySoftmax: Boolean = true): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized
       Synchronizer.withComputationGraph("Layers.predictWithScores()") {
@@ -293,10 +294,23 @@ object Layers {
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
 
-        out
+        if(applySoftmax) softmax(out) else out
       }
 
     labelsForTask
+  }
+
+  def softmax(rawScores: IndexedSeq[IndexedSeq[(String, Float)]]): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    val probScores = new ArrayBuffer[IndexedSeq[(String, Float)]]()
+
+    for(predictions <- rawScores) {
+      val justScores = predictions.map(_._2)
+      val probs = MathUtils.softmaxFloat(justScores)
+      val justLabels = predictions.map(_._1)
+      probScores += justLabels.zip(probs)
+    }
+
+    probScores
   }
 
   /** Greedy parsing for a MTL model that contains both head and label classifier */
