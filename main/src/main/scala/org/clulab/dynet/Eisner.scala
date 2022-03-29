@@ -271,7 +271,7 @@ class Eisner {
     for(i <- scores.indices) {
       val mod = i + 1 // offsets start at 1 in the Dependency class
       val sortedPreds = scores(i).sortBy(- _._2)
-      val sortedProbs = MathUtils.softmaxFloat(sortedPreds.map(_._2))
+      val sortedProbs = sortedPreds.map(_._2) // MathUtils.softmaxFloat(sortedPreds.map(_._2))
       val sortedLabels = sortedPreds.map(_._1)
       //println(s"SORTED LABELS for ${i}: $sortedLabels")
       var headCount = 0
@@ -348,6 +348,9 @@ class Eisner {
         val modHeadPair = modHeadPairs(i)
         val mod = modHeadPair.modifier
         val head = modHeadPair.head
+        //println(s"lambda = $lambda")
+        //println(s"head score = ${startingDependencies(mod + 1)(head + 1).score}")
+        //println(s"label score = ${topLabelAndScore._2}\n")
         startingDependencies(mod + 1)(head + 1).score =
           lambda * startingDependencies(mod + 1)(head + 1).score + (1 - lambda) * topLabelAndScore._2
         startingDependencies(mod + 1)(head + 1).label =

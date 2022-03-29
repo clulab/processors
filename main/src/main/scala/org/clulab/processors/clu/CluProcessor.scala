@@ -353,7 +353,7 @@ class CluProcessor protected (
     val headsWithLabels = eisner.ensembleParser(
       mtlDepsHead, Some(mtlDepsLabel),
       annotatedSentence, embeddings,
-      3, 1.0f, false
+      3, 0.6f, false
     )
 
     headsWithLabels.toArray
