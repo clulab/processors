@@ -221,7 +221,7 @@ val doc = annotateFromTokens(List(
 ## Using individual annotators
 
 You can use the annotators provided by CoreNLP separately by calling them individually. To illustrate,
-the `annotate()` method is implemented as followsi for the two CoreNLP processors:
+the `annotate()` method is implemented as follows for the two CoreNLP processors:
 
 ```scala
 def annotate(doc:Document): Document = {
