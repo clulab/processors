@@ -8,7 +8,7 @@ nav_order: 2
 
 This software requires Java 1.8 and Scala 2.11 or higher.
 
-The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.3.5`).  
+The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.4.8`).  
 
 Please note that one of the transitive dependencies for this project, [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), is not available at Maven Central because of size limitations there. However, Maven seems to fetch this transitive dependency automatically, so no additional configuration is needed. All you need are these dependencies:
 
@@ -44,7 +44,7 @@ libraryDependencies ++= {
 
 Most of the `processors` dependencies are captured in the build file. However, a few `processors` unit tests depend also on the `svm-rank` binary, which should be installed separately. Simply installing the `svm-rank` binaries to `/usr/local/bin` (or another generic location in your path) solves the problem:
 
-https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html
+[https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html](https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html)
 
 ### Installing external dependencies on Mac OS X via `homebrew`
 
