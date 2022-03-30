@@ -12,7 +12,7 @@ We include a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/c
 
 * `CoreNLPProcessor` - a wrapper for Stanford's CoreNLP, using its constituent parser;
 * `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
-* `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), and shallow syntactic parsing or chunking, and semantic role labeling. The last four components are implemented using `Metal`, our multi-task learning framework. 
+* `CluProcessor` - an in-house processor (licensed under the Apache license) that contains: tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), shallow syntactic parsing or chunking, dependency parsing, and semantic role labeling. The last five components are implemented using `Metal`, our multi-task learning framework. 
 
 ## Common usage scenarios
 
@@ -144,7 +144,8 @@ val proc:Processor = new FastNLPProcessor()
 // everything else stays the same
 ```
 
-`FastNLPProcessor` uses the Stanford tokenizer, POS tagger, and NER, but replaces its parser with maltparser, trained to generated Stanford "basic" (rather than "collapsed") dependencies. This means that this annotator does not produce constituent trees and coreference chains. However, because of the faster parser, you should see a speedup increase of at least one order of magnitude. The output of the above code with `FastNLPProcessor` is:
+`FastNLPProcessor` is similar to `CoreNLPProcessor` but uses Stanford's dependency parser instead of the constituent parser, and does not cinclude coreference resolution. Because the dependency parser is faster, you should see a considerable speedup increase. 
+The output of the above code with `FastNLPProcessor` is:
 
     Sentence #0:
     Tokens: John Smith went to China .
@@ -191,7 +192,7 @@ val proc:Processor = new CluProcessor()
 // everything else stays the same
 ```
 
-Note that our processor has slightly different components. For example, our named entity recognizer currently includes only named entities, e.g., LOCATION, PERSON, and ORGANIZATION, and does not include numeric ones. On the other hand, `CluProcessor` includes a semantic role labeling component, which is missing from the CoreNLP processors.
+Note that our processor has slightly different components. `CluProcessor` does not include coreference resolution, but it includes a semantic role labeling component, which is missing from the CoreNLP processors.
 
 Also note that because `CluProcessor` relies on DyNet, you will have to initialize DyNet first, as shown in the code. The default initialization parameters should work in most cases, but, if you want to increase the memory that is initially allocated to DyNet, you can pass these values to the `initializeDyNet` method, e.g.:
 
@@ -220,7 +221,7 @@ val doc = annotateFromTokens(List(
 ## Using individual annotators
 
 You can use the annotators provided by CoreNLP separately by calling them individually. To illustrate,
-the `Processor.annotate()` method is implemented as follows:
+the `annotate()` method is implemented as followsi for the two CoreNLP processors:
 
 ```scala
 def annotate(doc:Document): Document = {
@@ -229,7 +230,6 @@ def annotate(doc:Document): Document = {
   recognizeNamedEntities(doc)
   parse(doc)
   chunking(doc)
-  labelSemanticRoles(doc)
   resolveCoreference(doc)
   doc.clear()
   doc

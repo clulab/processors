@@ -6,7 +6,7 @@ nav_order: 1
 
 # What is it?
 
-This is the main public code repository of the [Computational Language Understanding (CLU) Lab](http://clulab.org) at [University of Arizona](http://www.arizona.edu). 
+[processors](https://github.com/clulab/processors) is the main public code repository of the [Computational Language Understanding (CLU) Lab](http://clulab.org) at [University of Arizona](http://www.arizona.edu). 
 
 This repository contains:
 
