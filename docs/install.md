@@ -6,7 +6,7 @@ nav_order: 2
 
 # Installation
 
-This software requires Java 1.8 and Scala 2.11 or higher.
+This software requires Java 8 or 11 and Scala 2.11 or higher.
 
 The bulk of this software is available on Maven Central. To use, simply add the dependencies below to your `pom.xml` (please replace `x.x.x` with an actual version number; the latest stable version is `8.3.5`).  
 
