@@ -347,7 +347,7 @@ public class ProcessorsJavaExample {
             System.out.println("End character offsets: " + mkString(sentence.endOffsets()));
 
             // These annotations are optional, so they are stored using Option objects,
-            // hence the foreach statement.
+            // hence the isDefined() and get() calls.
             if (sentence.lemmas().isDefined())
                 System.out.println("Lemmas: " + mkString(sentence.lemmas().get()));
             if (sentence.tags().isDefined())
