@@ -25,8 +25,8 @@ public class ProcessorsJavaExample {
         // You are basically done.  The rest of this code simply prints out the annotations.
 
         // Let's print the sentence-level annotations.
-        int sentenceIndex = 0;
-        for (Sentence sentence: doc.sentences()) {
+        for (int sentenceIndex = 0; sentenceIndex < doc.sentences().length; sentenceIndex++) {
+            Sentence sentence = doc.sentences()[sentenceIndex];
             System.out.println("Sentence #" + sentenceIndex + ":");
             System.out.println("Tokens: " + mkString(sentence.words(), " "));
             System.out.println("Start character offsets: " + mkString(sentence.startOffsets(), " "));
@@ -58,7 +58,6 @@ public class ProcessorsJavaExample {
                 // on syntactic trees, including access to head phrases/words.
                 System.out.println("Constituent tree: " + sentence.syntacticTree().get());
             }
-            sentenceIndex += 1;
             System.out.println();
             System.out.println();
         }
