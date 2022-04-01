@@ -26,9 +26,9 @@ public class ProcessorsJavaExample {
         for (int sentenceIndex = 0; sentenceIndex < doc.sentences().length; sentenceIndex++) {
             Sentence sentence = doc.sentences()[sentenceIndex];
             System.out.println("Sentence #" + sentenceIndex + ":");
-            System.out.println("Tokens: " + mkString(sentence.words(), " "));
-            System.out.println("Start character offsets: " + mkString(sentence.startOffsets(), " "));
-            System.out.println("End character offsets: " + mkString(sentence.endOffsets(), " "));
+            System.out.println("Tokens: " + mkString(sentence.words()));
+            System.out.println("Start character offsets: " + mkString(sentence.startOffsets()));
+            System.out.println("End character offsets: " + mkString(sentence.endOffsets()));
 
             // These annotations are optional, so they are stored using Option objects,
             // hence the foreach statement.
