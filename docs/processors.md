@@ -290,7 +290,7 @@ Note that space required for these serialized annotations is considerably smalle
 
 ### Serialization to/from `json`
 
-As of v5.9.6, `Document` and `Mention` instances can be serialized to/from `json`.  See the complete [working example](https://gist.github.com/myedibleenso/87a3191c73938840b8ed768ec305db38)).  
+As of v5.9.6, `Document` and `Mention` instances can be serialized to/from `json`.  See the complete [working example](https://gist.github.com/myedibleenso/87a3191c73938840b8ed768ec305db38).
 
 ## Cleaning up the interned strings
 
