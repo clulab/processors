@@ -1,6 +1,8 @@
 package org.clulab.processors.examples
 
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.DirectedGraphEdgeIterator
 
@@ -9,8 +11,63 @@ object DocumentationExample extends App {
   // Try FastNLPProcessor or our own CluProcessor.
   val proc: Processor = new CoreNLPProcessor()
 
+  // val proc: Processor = new FastNLPProcessor()
+
+  // org.clulab.dynet.Utils.initializeDyNet()
+  // val proc: Processor = new CluProcessor()
+
+  // org.clulab.dynet.Utils.initializeDyNet(mem = "1024,1024,1024,1024")
+  // val proc: Processor = new CluProcessor()
+
+  // val proc = new CoreNLPProcessor(internStrings = false)
+
   // The actual work is done here.
   val doc: Document = proc.annotate("John Smith went to China. He visited Beijing on January 10th, 2013.")
+
+  // val doc = proc.annotateFromSentences(List("John Smith went to China.", "He visited Beijing."))
+
+  // val doc = proc.annotateFromTokens(List(
+  //   List("John", "Smith", "went", "to", "China", "."),
+  //   List("There", ",", "he", "visited", "Beijing", ".")
+  // ))
+
+  // val doc = proc.mkDocument("John Smith went to China. He visited Beijing on January 10th, 2013.")
+  // proc.tagPartsOfSpeech(doc)
+  // proc.lemmatize(doc)
+  // proc.recognizeNamedEntities(doc)
+  // doc.clear()
+
+  /*
+  {
+    import java.io.BufferedReader
+    import java.io.FileReader
+    val someText = "This is some text."
+    val printWriter = new java.io.PrintWriter(System.out)
+    val bufferedReader = new BufferedReader(new FileReader("./file"))
+    // saving to a PrintWriter
+    val someAnnotation = proc.annotate(someText)
+    val serializer = new org.clulab.serialization.DocumentSerializer
+    serializer.save(someAnnotation, printWriter)
+
+    // loading from a BufferedReader
+    val someAnnotation2 = serializer.load(bufferedReader)
+  }
+  */
+
+  /*
+  {
+    val someText = "This is some text."
+    // saving to a String
+    val someAnnotation = proc.annotate(someText)
+    val serializer = new org.clulab.serialization.DocumentSerializer
+    val string = serializer.save(someAnnotation)
+
+    // loading from a String
+    val someAnnotation2 = serializer.load(string)
+  }
+  */
+
+  // Processor.clearStrings()
 
   // You are basically done.  The rest of this code simply prints out the annotations.
 

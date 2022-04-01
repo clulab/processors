@@ -102,4 +102,6 @@ object Processor {
       in.set(new Internalizer[String])
     in.get.intern(s)
   }
+
+  def clearStrings(): Unit = in.get.clear()
 }
