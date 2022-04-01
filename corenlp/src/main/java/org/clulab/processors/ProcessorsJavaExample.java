@@ -82,12 +82,12 @@ public class ProcessorsJavaExample {
     }
 
     public static String mkString(String[] strings, String sep) {
-        StringBuilder os = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < strings.length; i ++) {
-            if (i > 0) os.append(sep);
-            os.append(strings[i]);
+            if (i > 0) stringBuilder.append(sep);
+            stringBuilder.append(strings[i]);
         }
-        return os.toString();
+        return stringBuilder.toString();
     }
 
     public static String mkString(String[] strings) {
@@ -95,12 +95,12 @@ public class ProcessorsJavaExample {
     }
 
     public static String mkString(int[] ints, String sep) {
-        StringBuilder os = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < ints.length; i ++) {
-            if (i > 0) os.append(sep);
-            os.append(ints[i]);
+            if (i > 0) stringBuilder.append(sep);
+            stringBuilder.append(ints[i]);
         }
-        return os.toString();
+        return stringBuilder.toString();
     }
 
     public static String mkString(int[] ints) {
