@@ -74,17 +74,17 @@ object DocumentationExample extends App {
   // Let's print the sentence-level annotations.
   for ((sentence, sentenceIndex) <- doc.sentences.zipWithIndex) {
     println("Sentence #" + sentenceIndex + ":")
-    println("Tokens: " + sentence.words.mkString(" "))
-    println("Start character offsets: " + sentence.startOffsets.mkString(" "))
-    println("End character offsets: " + sentence.endOffsets.mkString(" "))
+    println("Tokens: " + mkString(sentence.words))
+    println("Start character offsets: " + mkString(sentence.startOffsets))
+    println("End character offsets: " + mkString(sentence.endOffsets))
 
     // These annotations are optional, so they are stored using Option objects,
     // hence the foreach statement.
-    sentence.lemmas.foreach(lemmas => println("Lemmas: " + lemmas.mkString(" ")))
-    sentence.tags.foreach(tags => println("POS tags: " + tags.mkString(" ")))
-    sentence.chunks.foreach(chunks => println("Chunks: " + chunks.mkString(" ")))
-    sentence.entities.foreach(entities => println("Named entities: " + entities.mkString(" ")))
-    sentence.norms.foreach(norms => println("Normalized entities: " + norms.mkString(" ")))
+    sentence.lemmas.foreach(lemmas => println("Lemmas: " + mkString(lemmas)))
+    sentence.tags.foreach(tags => println("POS tags: " + mkString(tags)))
+    sentence.chunks.foreach(chunks => println("Chunks: " + mkString(chunks)))
+    sentence.entities.foreach(entities => println("Named entities: " + mkString(entities)))
+    sentence.norms.foreach(norms => println("Normalized entities: " + mkString(norms)))
     sentence.dependencies.foreach { dependencies =>
       println("Syntactic dependencies:")
       val iterator = new DirectedGraphEdgeIterator[String](dependencies)
@@ -118,4 +118,6 @@ object DocumentationExample extends App {
       }
     }
   }
+
+  def mkString[T](elems: Array[T]): String = elems.mkString(" ")
 }

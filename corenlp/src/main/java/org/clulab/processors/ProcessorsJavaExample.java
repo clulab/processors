@@ -19,8 +19,6 @@ public class ProcessorsJavaExample {
         // The actual work is done here.
         Document doc = proc.annotate("John Smith went to China. He visited Beijing on January 10th, 2013.", false);
 
-        // you are basically done. the rest of this code simply prints out the annotations
-
         // You are basically done.  The rest of this code simply prints out the annotations.
 
         // Let's print the sentence-level annotations.
@@ -64,7 +62,7 @@ public class ProcessorsJavaExample {
         }
 
         // Let's print the coreference chains.
-        if(doc.coreferenceChains().isDefined()) {
+        if (doc.coreferenceChains().isDefined()) {
             scala.collection.Iterator<scala.collection.Iterable<CorefMention>> chains = doc.coreferenceChains().get().getChains().iterator();
             while (chains.hasNext()) {
                 scala.collection.Iterator<CorefMention> chain = chains.next().iterator();
@@ -84,29 +82,29 @@ public class ProcessorsJavaExample {
         }
     }
 
-    public static String mkString(String[] sa, String sep) {
+    public static String mkString(String[] strings, String sep) {
         StringBuilder os = new StringBuilder();
-        for (int i = 0; i < sa.length; i ++) {
+        for (int i = 0; i < strings.length; i ++) {
             if (i > 0) os.append(sep);
-            os.append(sa[i]);
+            os.append(strings[i]);
         }
         return os.toString();
     }
 
-    public static String mkString(String[] sa) {
-        return mkString(sa, " ");
+    public static String mkString(String[] strings) {
+        return mkString(strings, " ");
     }
 
-    public static String mkString(int[] sa, String sep) {
+    public static String mkString(int[] ints, String sep) {
         StringBuilder os = new StringBuilder();
-        for (int i = 0; i < sa.length; i ++) {
+        for (int i = 0; i < ints.length; i ++) {
             if (i > 0) os.append(sep);
-            os.append(sa[i]);
+            os.append(ints[i]);
         }
         return os.toString();
     }
 
-    public static String mkString(int[] sa) {
-        return mkString(sa, " ");
+    public static String mkString(int[] ints) {
+        return mkString(ints, " ");
     }
 }
