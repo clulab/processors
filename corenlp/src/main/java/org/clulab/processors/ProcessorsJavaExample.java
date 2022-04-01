@@ -65,12 +65,10 @@ public class ProcessorsJavaExample {
 
         // Let's print the coreference chains.
         if (doc.coreferenceChains().isDefined()) {
-            scala.collection.Iterator<scala.collection.Iterable<CorefMention>> chains = doc.coreferenceChains().get().getChains().iterator();
-            while (chains.hasNext()) {
-                scala.collection.Iterator<CorefMention> chain = chains.next().iterator();
+            Iterable<scala.collection.Iterable<CorefMention>> chains = iteratorToIterable(doc.coreferenceChains().get().getChains().iterator());
+            for (scala.collection.Iterable<CorefMention> chain: chains) {
                 System.out.println("Found one coreference chain containing the following mentions:");
-                while (chain.hasNext()) {
-                    CorefMention mention = chain.next();
+                for (CorefMention mention: JavaConverters.asJavaIterable(chain)) {
                     String text = "[" + mkString(Arrays.copyOfRange(doc.sentences()[mention.sentenceIndex()].words(),
                             mention.startOffset(), mention.endOffset())) + "]";
                     // Note that all these offsets start at 0, too.
