@@ -8,11 +8,11 @@ nav_order: 3
 
 This library contains a suite of natural language processors that include tokenization, part-of-speech tagging, named entity recognition, syntactic parsing, and semantic role labeling.
 
-We include a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) as well as a toolkit built in house. We currently provide the following APIs: 
+We include a wrapper for [Stanford's CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml) as well as a toolkit built in house. We currently provide the following APIs:
 
 * `CoreNLPProcessor` - a wrapper for Stanford's CoreNLP, using its constituent parser;
 * `FastNLPProcessor` - a wrapper for Stanford's CoreNLP, but using its neural-network dependency parser;
-* `CluProcessor` - an in-house processor (licensed under the Apache license) that contains tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), shallow syntactic parsing or chunking, dependency parsing, and semantic role labeling. The last five components are implemented using `Metal`, our multi-task learning framework. 
+* `CluProcessor` - an in-house processor (licensed under the Apache license) that contains tokenization (using [Antlr](http://www.antlr.org)), lemmatization (using [MorphaStemmer](https://search.maven.org/#artifactdetails%7Cedu.washington.cs.knowitall.nlptools%7Cnlptools-stem-morpha_2.10%7C2.4.5%7Cjar)), POS tagging, named entity recognition (NER), shallow syntactic parsing or chunking, dependency parsing, and semantic role labeling. The last five components are implemented using `Metal`, our multi-task learning framework.
 
 ## Common usage scenarios
 
@@ -342,9 +342,9 @@ public class ProcessorsJavaExample {
         for (int sentenceIndex = 0; sentenceIndex < doc.sentences().length; sentenceIndex++) {
             Sentence sentence = doc.sentences()[sentenceIndex];
             System.out.println("Sentence #" + sentenceIndex + ":");
-            System.out.println("Tokens: " + mkString(sentence.words(), " "));
-            System.out.println("Start character offsets: " + mkString(sentence.startOffsets(), " "));
-            System.out.println("End character offsets: " + mkString(sentence.endOffsets(), " "));
+            System.out.println("Tokens: " + mkString(sentence.words()));
+            System.out.println("Start character offsets: " + mkString(sentence.startOffsets()));
+            System.out.println("End character offsets: " + mkString(sentence.endOffsets()));
 
             // These annotations are optional, so they are stored using Option objects,
             // hence the foreach statement.
@@ -398,34 +398,28 @@ public class ProcessorsJavaExample {
     }
 
     public static String mkString(String[] strings, String sep) {
-        StringBuilder os = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < strings.length; i ++) {
-            if (i > 0) os.append(sep);
-            os.append(strings[i]);
+            if (i > 0) stringBuilder.append(sep);
+            stringBuilder.append(strings[i]);
         }
-        return os.toString();
+        return stringBuilder.toString();
     }
 
-    public static String mkString(String[] strings) {
-        return mkString(strings, " ");
-    }
+    public static String mkString(String[] strings) { return mkString(strings, " "); }
 
     public static String mkString(int[] ints, String sep) {
-        StringBuilder os = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < ints.length; i ++) {
-            if (i > 0) os.append(sep);
-            os.append(ints[i]);
+            if (i > 0) stringBuilder.append(sep);
+            stringBuilder.append(ints[i]);
         }
-        return os.toString();
+        return stringBuilder.toString();
     }
 
-    public static String mkString(int[] ints) {
-        return mkString(ints, " ");
-    }
+    public static String mkString(int[] ints) { return mkString(ints, " "); }
 
-    public static<T> Iterable<T> iteratorToIterable(Iterator<T> iterator) {
-        return () -> iterator;
-    }
+    public static<T> Iterable<T> iteratorToIterable(Iterator<T> iterator) { return () -> iterator; }
 }
 ```
 

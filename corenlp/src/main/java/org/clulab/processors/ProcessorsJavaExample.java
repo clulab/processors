@@ -90,9 +90,7 @@ public class ProcessorsJavaExample {
         return stringBuilder.toString();
     }
 
-    public static String mkString(String[] strings) {
-        return mkString(strings, " ");
-    }
+    public static String mkString(String[] strings) { return mkString(strings, " "); }
 
     public static String mkString(int[] ints, String sep) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -103,11 +101,7 @@ public class ProcessorsJavaExample {
         return stringBuilder.toString();
     }
 
-    public static String mkString(int[] ints) {
-        return mkString(ints, " ");
-    }
+    public static String mkString(int[] ints) { return mkString(ints, " "); }
 
-    public static<T> Iterable<T> iteratorToIterable(Iterator<T> iterator) {
-        return () -> iterator;
-    }
+    public static<T> Iterable<T> iteratorToIterable(Iterator<T> iterator) { return () -> iterator; }
 }
