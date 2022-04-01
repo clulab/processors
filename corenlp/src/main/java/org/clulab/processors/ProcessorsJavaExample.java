@@ -5,7 +5,10 @@ import org.clulab.processors.fastnlp.FastNLPProcessor;
 import org.clulab.struct.CorefMention;
 import org.clulab.struct.DirectedGraphEdgeIterator;
 
+import scala.collection.JavaConverters;
+
 import java.util.Arrays;
+import java.util.Iterator;
 
 public class ProcessorsJavaExample {
 
@@ -43,10 +46,9 @@ public class ProcessorsJavaExample {
                 System.out.println("Normalized entities: " + mkString(sentence.norms().get()));
             if (sentence.dependencies().isDefined()) {
                 System.out.println("Syntactic dependencies:");
-                DirectedGraphEdgeIterator<String> iterator = new
-                        DirectedGraphEdgeIterator<String>(sentence.dependencies().get());
-                while (iterator.hasNext()) {
-                    scala.Tuple3<Object, Object, String> dep = iterator.next();
+                scala.collection.Iterator<scala.Tuple3<Object, Object, String>> iterator =
+                        new DirectedGraphEdgeIterator<>(sentence.dependencies().get());
+                for (scala.Tuple3<Object, Object, String> dep: iteratorToIterable(iterator)) {
                     // Note that we use offsets starting at 0 unlike CoreNLP, which uses offsets starting at 1.
                     System.out.println(" head: " + dep._1() + " modifier: " + dep._2() + " label: " + dep._3());
                 }
@@ -106,5 +108,10 @@ public class ProcessorsJavaExample {
 
     public static String mkString(int[] ints) {
         return mkString(ints, " ");
+    }
+
+    public static<T> Iterable<T> iteratorToIterable(scala.collection.Iterator<T> scalaIterator) {
+        Iterator<T> javaIterator = JavaConverters.asJavaIterator(scalaIterator);
+        return () -> javaIterator;
     }
 }
