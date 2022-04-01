@@ -69,7 +69,8 @@ public class ProcessorsJavaExample {
             for (scala.collection.Iterable<CorefMention> chain: chains) {
                 System.out.println("Found one coreference chain containing the following mentions:");
                 for (CorefMention mention: JavaConverters.asJavaIterable(chain)) {
-                    String text = "[" + mkString(Arrays.copyOfRange(doc.sentences()[mention.sentenceIndex()].words(),
+                    String text = "[" + mkString(Arrays.copyOfRange(
+                            doc.sentences()[mention.sentenceIndex()].words(),
                             mention.startOffset(), mention.endOffset())) + "]";
                     // Note that all these offsets start at 0, too.
                     System.out.println("\tsentenceIndex: " + mention.sentenceIndex() +
