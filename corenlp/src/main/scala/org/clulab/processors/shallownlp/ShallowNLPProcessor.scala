@@ -169,6 +169,20 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   val LEFT_PARENS: Regex = """^(\-LRB\-)|(\-LSB\-)|(-LCB-)|\(|\[|\{$""".r
   val RIGHT_PARENS: Regex = """^(\-RRB\-)|(\-RSB\-)|(-RCB-)|\)|\]|\}$""".r
 
+  def annotate(doc: Document): Document = {
+    tagPartsOfSpeech(doc)
+    lemmatize(doc)
+    recognizeNamedEntities(doc)
+    parse(doc)
+    chunking(doc)
+    relationExtraction(doc)
+    srl(doc)
+    resolveCoreference(doc)
+    discourse(doc)
+    doc.clear()
+    doc
+  }
+
   def tagPartsOfSpeech(doc:Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return

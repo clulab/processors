@@ -164,7 +164,7 @@ class CluProcessor protected (
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
-  override def annotate(doc:Document): Document = {
+  override def annotate(doc: Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
       tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
       //println("After POS")
