@@ -7,6 +7,7 @@ import edu.cmu.dynet.{ExpressionVector, LookupParameter}
  */
 trait InitialLayer extends Saveable {
   def forward(sentence: AnnotatedSentence,
+              modifierHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
               constEmbeddings: ConstEmbeddingParameters,
               doDropout: Boolean): ExpressionVector
 

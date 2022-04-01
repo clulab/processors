@@ -903,6 +903,17 @@ object Utils {
       expression
     }
   }
+
+  def getModHeadPairs(labels: IndexedSeq[Label]): Option[IndexedSeq[ModifierHeadPair]] = {
+    if(labels.nonEmpty && labels.head.isInstanceOf[DualLabel]) {
+      Some(labels.map(x => {
+        val dl = x.asInstanceOf[DualLabel]
+        ModifierHeadPair(dl.modifier, dl.head)
+      }))
+    } else {
+      None
+    }
+  }
 }
 
 class Utils
