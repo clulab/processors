@@ -380,7 +380,8 @@ public class ProcessorsJavaExample {
 
         // Let's print the coreference chains.
         if (doc.coreferenceChains().isDefined()) {
-            Iterable<scala.collection.Iterable<CorefMention>> chains = iteratorToIterable(doc.coreferenceChains().get().getChains().iterator());
+            Iterable<scala.collection.Iterable<CorefMention>> chains =
+                    iteratorToIterable(doc.coreferenceChains().get().getChains().iterator());
             for (scala.collection.Iterable<CorefMention> chain: chains) {
                 System.out.println("Found one coreference chain containing the following mentions:");
                 for (CorefMention mention: JavaConverters.asJavaIterable(chain)) {
