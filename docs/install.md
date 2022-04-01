@@ -14,7 +14,7 @@ Beyond that, the bulk of this software is available in compiled jars on [Maven C
 
 To use `processors` with [Maven](https://maven.apache.org/index.html), typically to build a Java project, simply add the dependencies below to your `pom.xml` file.  Replace `x.x.x` with an actual version number; the latest stable version is `8.4.8`.
 
-Please note that one of the transitive dependencies for this project, [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), is not available at Maven Central because of size limitations there. However, all but quite recent versions of Maven fetch this transitive dependency automatically, so no additional configuration is usually needed. All you need are these dependencies:
+Please note that some of the transitive dependencies for this project, including [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), are not available at Maven Central because of size limitations there. However, all but quite recent versions of Maven fetch these transitive dependencies automatically, so no additional configuration is usually needed. All you need are these:
 
 ```xml
 <dependency>
@@ -29,7 +29,7 @@ Please note that one of the transitive dependencies for this project, [processor
 </dependency>
 ```
 
-Some versions of Maven will not fetch dependencies over HTTP connections.  They must be coaxed into doing so by editing [settings.xml](https://maven.apache.org/settings.html).  Specifically, this mirror needs to be added:
+However, some versions of Maven will not fetch dependencies over HTTP connections.  They must be coaxed into doing so by editing [settings.xml](https://maven.apache.org/settings.html).  Specifically, this mirror needs to be added:
 
 ```xml
 <mirror>
@@ -63,7 +63,7 @@ resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifacto
 
 ## External Binaries
 
-Most of the `processors` dependencies are captured in the `build.sbt` files. However, a few `processors` unit tests depend also on the [svm-rank binaries](https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html), which should be installed separately. Simply installing the `svm-rank` binaries to `/usr/local/bin` (or another generic location in your path) solves the problem.
+Most `processors` dependencies are captured in the `build.sbt` files. However, a few unit tests also depend on the [svm-rank binaries](https://www.cs.cornell.edu/people/tj/svm_light/svm_rank.html), which should be installed separately. Simply installing the `svm-rank` binaries to `/usr/local/bin` (or another generic location in your path) solves the problem.
 
 ### Installing on Mac OS X via `homebrew`
 
