@@ -71,7 +71,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       labels(i) += START_TAG
       labels(i) += STOP_TAG
 
-      // TODO: fix this
+      // FIXME
       labels(i) += "list" // this does not occur in training
     }
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
@@ -81,7 +81,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, false)
 
         for(as <- annotatedSentences) {
           val annotatedSentence = as._1
@@ -142,7 +142,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, true)
         assert(annotatedSentences.nonEmpty)
 
         val unweightedLoss = {
@@ -305,7 +305,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     for (sent <- sentences) {
       sentCount += 1
 
-      val annotatedSentences = reader.toAnnotatedSentences(sent)
+      val annotatedSentences = reader.toAnnotatedSentences(sent, true)
 
       for(as <- annotatedSentences) {
         val sentence = as._1
@@ -327,7 +327,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        // printCoNLLOutput(pw, sentence.words, goldLabels, preds) // FIXME
       }
     }
 

@@ -1,7 +1,5 @@
 package org.clulab.dynet
 
-import org.clulab.utils.MathUtils
-
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import Eisner._
 
@@ -11,7 +9,7 @@ import scala.collection.mutable
   * Stores one dependency for the Eisner algorithm 
   * Indexes for head and mod start at 1 for the first word in the sentence; 0 is reserved for root
   */
-case class Dependency(mod:Int, head:Int, var score:Float, var label:String = "")
+case class Dependency(mod:Int, head:Int, var score:Float, rank: Int, var label:String = "")
 
 class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
   def this() {
@@ -244,7 +242,7 @@ class Eisner {
     } else {
       // Eisner failed to produce a complete tree; revert to the greedy inference
       for(i <- scores.indices) {
-        val relativeHead = scores(i).minBy(- _._2)._1.toInt
+        val relativeHead = scores(i).maxBy(_._2)._1.toInt
         val depMod = i + 1
         val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
         val label = dependencies(depMod)(depHead).label
@@ -283,7 +281,7 @@ class Eisner {
           val head = if (relHead == 0) 0 else mod + relHead // +1 offset from mod propagates in the head here
           if (head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
             //println(s"Added dependency: $mod $head $score")
-            dependencies(mod)(head) = Dependency(mod, head, score)
+            dependencies(mod)(head) = Dependency(mod, head, score, j)
             headCount += 1
           }
         } catch {
@@ -339,7 +337,7 @@ class Eisner {
       val labelScores =
         mtlLabels.get.predictWithScores(0, sentence, Some(modHeadPairs), constEmbeddings) // these are probs
       val labelTopScores =
-        labelScores.map(x => x.minBy(-_._2)) // keep just the top score for each label
+        labelScores.map(x => x.filterNot{case (v, _) => v == Utils.STOP_TAG}.maxBy(_._2)) // keep just the top score for each label that is not STOP
       assert(labelTopScores.size == modHeadPairs.size)
 
       // linearly interpolate the head and label scores in the dependency table
@@ -348,14 +346,46 @@ class Eisner {
         val modHeadPair = modHeadPairs(i)
         val mod = modHeadPair.modifier
         val head = modHeadPair.head
+
         //println(s"lambda = $lambda")
         //println(s"head score = ${startingDependencies(mod + 1)(head + 1).score}")
         //println(s"label score = ${topLabelAndScore._2}\n")
+
         startingDependencies(mod + 1)(head + 1).score =
           lambda * startingDependencies(mod + 1)(head + 1).score + (1 - lambda) * topLabelAndScore._2
         startingDependencies(mod + 1)(head + 1).label =
           topLabelAndScore._1
       }
+
+      // another heuristic: more complicated, works worse
+      /*
+      // linearly interpolate the head and label scores in the dependency table
+      for(i <- labelScores.indices) {
+        val sortedLabels = labelScores(i).sortBy(- _._2)
+        val modHeadPair = modHeadPairs(i)
+        val mod = modHeadPair.modifier + 1
+        val head = modHeadPair.head + 1
+
+        // if (rank != 0 && STOP) discard
+        // else if(STOP) pick second
+        // else pick first
+        if(startingDependencies(mod)(head).rank != 0 && sortedLabels.head._1 == Utils.STOP_TAG) {
+          startingDependencies(mod)(head) == null
+        } else if(sortedLabels.head._1 == Utils.STOP_TAG) {
+          val secondLabel = sortedLabels(1)
+          startingDependencies(mod)(head).score =
+            lambda * startingDependencies(mod)(head).score + (1 - lambda) * secondLabel._2
+          startingDependencies(mod)(head).label =
+            secondLabel._1
+        } else {
+          val firstLabel = sortedLabels.head
+          startingDependencies(mod)(head).score =
+            lambda * startingDependencies(mod)(head).score + (1 - lambda) * firstLabel._2
+          startingDependencies(mod)(head).label =
+            firstLabel._1
+        }
+      }
+      */
     }
 
     // the actual Eisner parsing algorithm
