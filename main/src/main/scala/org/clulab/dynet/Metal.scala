@@ -70,10 +70,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       labels(i) = new Counter[String]()
       labels(i) += START_TAG
       labels(i) += STOP_TAG
-
-      // FIXME
-      labels(i) += "list" // this does not occur in training
     }
+
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
