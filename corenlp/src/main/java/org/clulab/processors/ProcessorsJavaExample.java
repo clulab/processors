@@ -1,7 +1,6 @@
 package org.clulab.processors;
 
 import com.typesafe.config.ConfigFactory;
-import org.clulab.fatdynet.utils.Initializer;
 import org.clulab.processors.clu.CluProcessor;
 import org.clulab.processors.corenlp.CoreNLPProcessor;
 import org.clulab.processors.fastnlp.FastNLPProcessor;
@@ -30,7 +29,7 @@ public class ProcessorsJavaExample {
 
         // Processor proc = new FastNLPProcessor(true, true, false, 0);
 
-        // Initializer.initialize(emptyMap);
+        // org.clulab.fatdynet.utils.Initializer.initialize(emptyMap);
         // Processor proc = new CluProcessor(ConfigFactory.load("cluprocessor"), noLexiconNER, noString);
 
         // The actual work is done here.
