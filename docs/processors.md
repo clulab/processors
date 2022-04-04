@@ -316,15 +316,28 @@ Scala is (largely) compatible with Java, so this library can be directly used fr
 ```java
 package org.clulab.processors;
 
+import com.typesafe.config.ConfigFactory;
+import org.clulab.fatdynet.utils.Initializer;
+import org.clulab.processors.clu.CluProcessor;
 import org.clulab.processors.corenlp.CoreNLPProcessor;
+import org.clulab.processors.fastnlp.FastNLPProcessor;
+import org.clulab.sequences.LexiconNER;
 import org.clulab.struct.CorefMention;
 import org.clulab.struct.DirectedGraphEdgeIterator;
 import org.clulab.utils.JavaUtils;
+
+import scala.Option;
+import scala.collection.immutable.HashMap;
+import scala.collection.immutable.Map;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
 public class ProcessorsJavaExample {
+    // These are for the CluProcessor.
+    // final static Option<LexiconNER> noLexiconNER = Option.empty();
+    // final static Option<String> noString = Option.empty();
+    // final static Map<String, Object> emptyMap = new HashMap();
 
     public static void main(String [] args) throws Exception {
         // Create the processor.  Any processor works here!
@@ -332,6 +345,9 @@ public class ProcessorsJavaExample {
         Processor proc = new CoreNLPProcessor(true, true, false, 0, 100);
 
         // Processor proc = new FastNLPProcessor(true, true, false, 0);
+
+        // Initializer.initialize(emptyMap);
+        // Processor proc = new CluProcessor(ConfigFactory.load("cluprocessor"), noLexiconNER, noString);
 
         // The actual work is done here.
         Document doc = proc.annotate("John Smith went to China. He visited Beijing on January 10th, 2013.", false);
