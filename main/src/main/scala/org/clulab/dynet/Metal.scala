@@ -71,9 +71,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       labels(i) += START_TAG
       labels(i) += STOP_TAG
 
-      // labels(i) += "list" // TODO: why isn't this picked up for the depls model?
+      // labels(i) += "list" // TODO: why isn't this picked up for the depsl model?
     }
-    
+
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
@@ -139,10 +139,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
+        val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
         sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence, true)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
         assert(annotatedSentences.nonEmpty)
 
         val unweightedLoss = {
@@ -304,8 +305,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (sent <- sentences) {
       sentCount += 1
+      val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
-      val annotatedSentences = reader.toAnnotatedSentences(sent, true)
+      val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
 
       for(as <- annotatedSentences) {
         val sentence = as._1
