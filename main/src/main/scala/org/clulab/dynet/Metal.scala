@@ -70,8 +70,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       labels(i) = new Counter[String]()
       labels(i) += START_TAG
       labels(i) += STOP_TAG
-    }
 
+      // labels(i) += "list" // TODO: why isn't this picked up for the depls model?
+    }
+    
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
