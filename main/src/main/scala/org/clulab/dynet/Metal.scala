@@ -70,7 +70,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       labels(i) = new Counter[String]()
       labels(i) += START_TAG
       labels(i) += STOP_TAG
+
+      // labels(i) += "list" // TODO: why isn't this picked up for the depsl model?
     }
+
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
@@ -78,7 +81,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, false)
 
         for(as <- annotatedSentences) {
           val annotatedSentence = as._1
@@ -136,10 +139,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
+        val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
         sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
         assert(annotatedSentences.nonEmpty)
 
         val unweightedLoss = {
@@ -298,11 +302,16 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
 
     val reader = new MetalRowReader
+    val insertNegatives = taskManager.tasks(taskId).insertNegatives
+
+    if(insertNegatives) {
+      pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
+    }
 
     for (sent <- sentences) {
       sentCount += 1
 
-      val annotatedSentences = reader.toAnnotatedSentences(sent)
+      val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
 
       for(as <- annotatedSentences) {
         val sentence = as._1
@@ -324,7 +333,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        if(! insertNegatives) {
+          // we can only print in the CoNLL format if we did not insert artificial negatives
+          // these negatives break the one label per token assumption
+          printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        }
       }
     }
 

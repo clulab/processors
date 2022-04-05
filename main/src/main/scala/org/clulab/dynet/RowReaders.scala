@@ -10,6 +10,8 @@ import org.clulab.sequences.Row
 import scala.collection.mutable.ArrayBuffer
 
 import MetalRowReader._
+import scala.util.Random
+import org.clulab.utils.MathUtils
 
 case class AnnotatedSentence(words: IndexedSeq[String],
                              posTags: Option[IndexedSeq[String]] = None,
@@ -20,18 +22,18 @@ case class AnnotatedSentence(words: IndexedSeq[String],
 
 trait RowReader {
   /** Converts the tabular format into one or more (AnnotatedSentence, sequence of gold heads (optional), sequence of gold labels) pairs */
-  def toAnnotatedSentences(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])]
+  def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Boolean): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])]
 }
 
 class MetalRowReader extends RowReader {
-  override def toAnnotatedSentences(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+  override def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Boolean): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
 
     if (rows.head.length == 2) {
       parseSimple(rows)
     } else if (rows.head.length == 4) {
       parseSimpleExtended(rows)
     } else if (rows.head.length >= 5) {
-      parseFull(rows)
+      parseFull(rows, insertNegatives)
     } else {
       throw new RuntimeException("ERROR: the Metal format expects 2, 4, or 5+ columns!")
     }
@@ -72,7 +74,7 @@ class MetalRowReader extends RowReader {
   }
 
   /** Parser for the full format: word, POS tag, NE label, (label head)+ */
-  def parseFull(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+  def parseFull(rows: IndexedSeq[Row], insertNegatives: Boolean): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
 
     assert(rows.head.length >= 5)
     val numSent = (rows.head.length - 3) / 2
@@ -115,6 +117,13 @@ class MetalRowReader extends RowReader {
       val sentLabels = new ArrayBuffer[Label]()
       for(j <- labelsForThisSentence.indices) {
         sentLabels += DualLabel(j, headsForThisSentence(j), labelsForThisSentence(j))
+
+        if(insertNegatives) {
+          // add one negative example for each positive one
+          sentLabels += DualLabel(j,
+            mkRandom(-1 until annotatedSent.size, Set(headsForThisSentence(j))),
+            Utils.STOP_TAG)
+        }
       }
       sentences += Tuple2(annotatedSent, sentLabels)
     }
@@ -128,4 +137,16 @@ object MetalRowReader {
   val POS_TAG_POSITION = 1
   val NE_LABEL_POSITION = 2
   val LABEL_START_OFFSET = 3
+
+  val rand = new Random(1)
+
+  private def mkRandom(range: Range, exclude: Set[Int]): Int = {
+    val numbers = MathUtils.randomize(range.toArray, rand)
+    for(n <- numbers) {
+      if(! exclude.contains(n)) {
+        return n
+      }
+    }
+    throw new RuntimeException(s"ERROR: could not select a random integer from range ${range} excluding ${exclude}!")
+  }
 }
