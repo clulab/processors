@@ -5,7 +5,6 @@ from pytorch.rnnLayer import RnnLayer
 from pytorch.forwardLayer import ForwardLayer
 from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
 
-import tracemalloc
 
 class Layers(object):
     def __init__(self, initialLayer, intermediateLayers, finalLayer):
@@ -140,10 +139,8 @@ class Layers(object):
         states = inStates
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states)
-            print("intermediate layer:", tracemalloc.get_traced_memory())
         if self.finalLayer is not None:
             states = self.finalLayer(states, headPositions)
-            print("final layer:", tracemalloc.get_traced_memory())
 
         return states
 
@@ -244,7 +241,6 @@ class Layers(object):
     def forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout):
         if layers[0]:
             sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout)
-            print("init layer:", tracemalloc.get_traced_memory())
             states = layers[taskId+1].forwardFrom(sharedStates, sentence.headPositions, doDropout)
         else:
             states = layers[taskId+1].forward(sentence, constEmbeddings, doDropout)
@@ -311,10 +307,8 @@ class Layers(object):
     def loss(layers, taskId, sentence, goldLabels):
         # Zheng: I am not sure this is the suitable way to load embeddings or not, need help...
         constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
-        print("embeddings:", tracemalloc.get_traced_memory())
         states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=True) # use dropout during training!
         loss = layers[taskId+1].finalLayer.loss(states, goldLabels)
-        print("loss:", tracemalloc.get_traced_memory())
         return loss
 
 

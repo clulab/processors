@@ -11,8 +11,9 @@ from torch.optim.lr_scheduler import *
 import json
 import random
 
-import tracemalloc
 import gc
+
+from torch.profiler import profile, record_function, ProfilerActivity
 
 class Metal(object):
     """docstring for Metal"""
@@ -106,101 +107,100 @@ class Metal(object):
 
         allEpochScores = list()
         epochPatience = self.taskManager.epochPatience
-        tracemalloc.start()
-        for epoch in range(0, self.taskManager.maxEpochs):
-            if epochPatience <= 0:
-                break
-            # this fetches randomized training sentences from all tasks
-            sentenceIterator = self.taskManager.getSentences()
-            sentCount = 0
+        with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True) as prof:
+            for epoch in range(0, self.taskManager.maxEpochs):
+                if epochPatience <= 0:
+                    break
+                # this fetches randomized training sentences from all tasks
+                sentenceIterator = self.taskManager.getSentences()
+                sentCount = 0
 
-            for layers in self.model:
-                layers.start_train()
-            trainer.zero_grad()
+                for layers in self.model:
+                    layers.start_train()
+                trainer.zero_grad()
 
-            batchLoss = 0
-            i = 0
+                batchLoss = 0
+                i = 0
 
-            # traverse all training sentences
-            for metaSentence in sentenceIterator:
-                taskId = metaSentence[0]
-                sentence = metaSentence[1]
+                # traverse all training sentences
+                for metaSentence in sentenceIterator:
+                    taskId = metaSentence[0]
+                    sentence = metaSentence[1]
 
-                sentCount += 1
+                    sentCount += 1
 
-                annotatedSentences = reader.toAnnotatedSentences(sentence)
-                assert(annotatedSentences is not None)
+                    annotatedSentences = reader.toAnnotatedSentences(sentence)
+                    assert(annotatedSentences is not None)
 
-                unweightedLoss = 0
-                for a_sent in annotatedSentences:
-                    unweightedLoss += Layers.loss(self.model, taskId, a_sent[0], a_sent[1])
+                    unweightedLoss = 0
+                    for a_sent in annotatedSentences:
+                        unweightedLoss += Layers.loss(self.model, taskId, a_sent[0], a_sent[1])
 
-                loss = unweightedLoss * self.taskManager.tasks[taskId].taskWeight # Zheng: I don't think this is necessary: if self.taskManager.tasks[taskId].taskWeight!=1.0 else unweightedLoss
+                    loss = unweightedLoss * self.taskManager.tasks[taskId].taskWeight # Zheng: I don't think this is necessary: if self.taskManager.tasks[taskId].taskWeight!=1.0 else unweightedLoss
 
-                batchLoss += loss
-                i += 1
+                    batchLoss += loss
+                    i += 1
 
-                if i >= batchSize:
-                    cummulativeLoss += batchLoss.detach().item()
-                    print ("================================back prop!================================")
+                    if i >= batchSize:
+                        cummulativeLoss += batchLoss.detach().item()
+                        batchLoss.backward()
+                        trainer.step()
+                        batchLoss = 0
+                        i = 0
+                        gc.collect()
+
+                    numTagged += len(sentence)
+
+                    if(sentCount % 1000 == 0):
+                        print (f"Cumulative loss: {cummulativeLoss/numTagged} ({sentCount} sentences)")
+                        cummulativeLoss = 0.0
+                        numTagged = 0
+                # we may have an incomplete batch here
+                if batchLoss:
+                    cummulativeLoss = batchLoss.detach().item()
                     batchLoss.backward()
                     trainer.step()
                     batchLoss = 0
                     i = 0
-                    gc.collect()
+                scheduler.step()
 
-                numTagged += len(sentence)
+                # check dev performance in this epoch, for all tasks
+                totalAcc = 0.0
+                totalPrec = 0.0
+                totalRec = 0.0
+                totalF1 = 0.0
+                for taskId in range(0, self.taskManager.taskCount):
+                    taskName = self.taskManager.tasks[taskId].taskName
+                    devSentences = self.taskManager.tasks[taskId].devSentences
 
-                if(sentCount % 1000 == 0):
-                    print (f"Cumulative loss: {cummulativeLoss/numTagged} ({sentCount} sentences)")
-                    cummulativeLoss = 0.0
-                    numTagged = 0
-            # we may have an incomplete batch here
-            if batchLoss:
-                cummulativeLoss = batchLoss.detach().item()
-                batchLoss.backward()
-                trainer.step()
-                batchLoss = 0
-                i = 0
-            scheduler.step()
+                    if devSentences:
+                        acc, prec, rec, f1 = self.evaluate(taskId, taskName, devSentences, "development", epoch)
+                        totalAcc += acc
+                        totalPrec += prec
+                        totalRec += rec
+                        totalF1 += f1
 
-            # check dev performance in this epoch, for all tasks
-            totalAcc = 0.0
-            totalPrec = 0.0
-            totalRec = 0.0
-            totalF1 = 0.0
-            for taskId in range(0, self.taskManager.taskCount):
-                taskName = self.taskManager.tasks[taskId].taskName
-                devSentences = self.taskManager.tasks[taskId].devSentences
+                avgAcc = totalAcc / self.taskManager.taskCount
+                avgPrec = totalPrec / self.taskManager.taskCount
+                avgRec = totalRec / self.taskManager.taskCount
+                avgF1 = totalF1 / self.taskManager.taskCount
 
-                if devSentences:
-                    acc, prec, rec, f1 = self.evaluate(taskId, taskName, devSentences, "development", epoch)
-                    totalAcc += acc
-                    totalPrec += prec
-                    totalRec += rec
-                    totalF1 += f1
+                print (f"Average accuracy across {self.taskManager.taskCount} tasks in epoch {epoch}: {avgAcc}")
+                print (f"Average P/R/F1 across {self.taskManager.taskCount} tasks in epoch $epoch: {avgPrec} / {avgRec} / {avgF1}")
 
-            avgAcc = totalAcc / self.taskManager.taskCount
-            avgPrec = totalPrec / self.taskManager.taskCount
-            avgRec = totalRec / self.taskManager.taskCount
-            avgF1 = totalF1 / self.taskManager.taskCount
+                allEpochScores.append((epoch, avgF1))
 
-            print (f"Average accuracy across {self.taskManager.taskCount} tasks in epoch {epoch}: {avgAcc}")
-            print (f"Average P/R/F1 across {self.taskManager.taskCount} tasks in epoch $epoch: {avgPrec} / {avgRec} / {avgF1}")
+                if avgF1 > maxAvgF1:
+                    maxAvgF1 = avgF1
+                    maxAvgAcc = avgAcc
+                    bestEpoch = epoch
+                    epochPatience = self.taskManager.epochPatience
+                else:
+                    epochPatience -= 1
 
-            allEpochScores.append((epoch, avgF1))
-
-            if avgF1 > maxAvgF1:
-                maxAvgF1 = avgF1
-                maxAvgAcc = avgAcc
-                bestEpoch = epoch
-                epochPatience = self.taskManager.epochPatience
-            else:
-                epochPatience -= 1
-
-            self.save(f"{modelNamePrefix}-epoch{epoch}")
-            gc.collect()
-        tracemalloc.stop()
+                self.save(f"{modelNamePrefix}-epoch{epoch}")
+                gc.collect()
+                print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=10))
         allEpochScores.sort(key=lambda x: x[1])
         print ("Epochs in descending order of scores:")
         for t in allEpochScores:
