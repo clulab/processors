@@ -138,6 +138,8 @@ class Metal(object):
 
                     loss = unweightedLoss * self.taskManager.tasks[taskId].taskWeight # Zheng: I don't think this is necessary: if self.taskManager.tasks[taskId].taskWeight!=1.0 else unweightedLoss
 
+                    print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=10))
+                    
                     batchLoss += loss
                     i += 1
 
@@ -200,7 +202,7 @@ class Metal(object):
 
                 self.save(f"{modelNamePrefix}-epoch{epoch}")
                 gc.collect()
-                print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=10))
+
         allEpochScores.sort(key=lambda x: x[1])
         print ("Epochs in descending order of scores:")
         for t in allEpochScores:
