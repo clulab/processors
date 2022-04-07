@@ -107,6 +107,9 @@ class Metal(object):
 
         allEpochScores = list()
         epochPatience = self.taskManager.epochPatience
+        with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True) as prof:
+            self.save(f"{modelNamePrefix}-epoch{epoch}")
+        print(prof.key_averages().table(sort_by="self_cpu_memory_usage"))
         for epoch in range(0, self.taskManager.maxEpochs):
             if epochPatience <= 0:
                 break
