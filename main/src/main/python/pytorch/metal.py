@@ -14,6 +14,7 @@ import random
 import gc
 
 from torch.profiler import profile, record_function, ProfilerActivity
+import tracemalloc
 
 class Metal(object):
     """docstring for Metal"""
@@ -107,9 +108,14 @@ class Metal(object):
 
         allEpochScores = list()
         epochPatience = self.taskManager.epochPatience
-        with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True) as prof:
-            self.save(f"{modelNamePrefix}-epoch")
-        print(prof.key_averages().table(sort_by="self_cpu_memory_usage"))
+        tracemalloc.start()
+        snapshot1 = tracemalloc.take_snapshot()
+        self.save(f"{modelNamePrefix}-epoch")
+        snapshot2 = tracemalloc.take_snapshot()
+        top_stats = snapshot2.compare_to(snapshot1, 'lineno')
+        print("[ Top 10 differences ]")
+        for stat in top_stats[:10]:
+            print(stat)
         for epoch in range(0, self.taskManager.maxEpochs):
             if epochPatience <= 0:
                 break
@@ -133,14 +139,12 @@ class Metal(object):
 
                 annotatedSentences = reader.toAnnotatedSentences(sentence)
                 assert(annotatedSentences is not None)
-                with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True) as prof:
-                    unweightedLoss = 0
-                    for a_sent in annotatedSentences:
-                        unweightedLoss += Layers.loss(self.model, taskId, a_sent[0], a_sent[1])
+                unweightedLoss = 0
+                for a_sent in annotatedSentences:
+                    unweightedLoss += Layers.loss(self.model, taskId, a_sent[0], a_sent[1])
 
-                    loss = unweightedLoss * self.taskManager.tasks[taskId].taskWeight # Zheng: I don't think this is necessary: if self.taskManager.tasks[taskId].taskWeight!=1.0 else unweightedLoss
+                loss = unweightedLoss * self.taskManager.tasks[taskId].taskWeight # Zheng: I don't think this is necessary: if self.taskManager.tasks[taskId].taskWeight!=1.0 else unweightedLoss
 
-                print(prof.key_averages().table(sort_by="self_cpu_memory_usage"))
 
                 batchLoss += loss
                 i += 1
@@ -209,7 +213,7 @@ class Metal(object):
         print ("Epochs in descending order of scores:")
         for t in allEpochScores:
             print (f"Epoch #{t[0]}: {t[1]}")
-
+        tracemalloc.stop()
     def evaluate(self, taskId, taskName, sentences, name, epoch=-1):
         scoreCountsByLabel = ScoreCountsByLabel()
         taskNumber = taskId + 1
