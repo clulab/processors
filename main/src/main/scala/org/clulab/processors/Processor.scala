@@ -87,19 +87,7 @@ trait Processor {
     * Annotate the given document, returning an annotated document. The default implementation
     * is an NLP pipeline of side-effecting calls.
     */
-  def annotate (doc:Document): Document = {
-    tagPartsOfSpeech(doc)
-    lemmatize(doc)
-    recognizeNamedEntities(doc)
-    parse(doc)
-    chunking(doc)
-    relationExtraction(doc)
-    srl(doc)
-    resolveCoreference(doc)
-    discourse(doc)
-    doc.clear()
-    doc
-  }
+  def annotate(doc: Document): Document
 }
 
 object Processor {
@@ -114,4 +102,6 @@ object Processor {
       in.set(new Internalizer[String])
     in.get.intern(s)
   }
+
+  def clearStrings(): Unit = in.get.clear()
 }

@@ -70,7 +70,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       labels(i) = new Counter[String]()
       labels(i) += START_TAG
       labels(i) += STOP_TAG
+
+      // labels(i) += "list" // TODO: why isn't this picked up for the depsl model?
     }
+
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
@@ -78,7 +81,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, false)
 
         for(as <- annotatedSentences) {
           val annotatedSentence = as._1
@@ -86,7 +89,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           for (i <- annotatedSentence.indices) {
             words(tid + 1) += annotatedSentence.words(i)
             words(0) += annotatedSentence.words(i)
-            labels(tid + 1) += sentenceLabels(i)
+            labels(tid + 1) += sentenceLabels(i).label
           }
         }
       }
@@ -136,10 +139,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
+        val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
         sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
         assert(annotatedSentences.nonEmpty)
 
         val unweightedLoss = {
@@ -298,32 +302,42 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
 
     val reader = new MetalRowReader
+    val insertNegatives = taskManager.tasks(taskId).insertNegatives
+
+    if(insertNegatives) {
+      pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
+    }
 
     for (sent <- sentences) {
       sentCount += 1
 
-      val annotatedSentences = reader.toAnnotatedSentences(sent)
+      val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
 
       for(as <- annotatedSentences) {
         val sentence = as._1
-        val goldLabels = as._2
+        val goldLabels = as._2.map(_.label)
+        val modHeadPairsOpt = getModHeadPairs(as._2)
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
         
         // vanilla inference
-        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+        val preds = Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
 
         // ceiling strategy: choose the gold label if it shows up in the top K predictions
-        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
         //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
 
         // Eisner parsing algorithm using the top K predictions
-        //val preds = Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, 3).map(_.toString)
+        //val preds = parseWithEisner(sentence, constEmbeddings, 3).map(_._1.toString)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        if(! insertNegatives) {
+          // we can only print in the CoNLL format if we did not insert artificial negatives
+          // these negatives break the one label per token assumption
+          printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        }
       }
     }
 
@@ -347,26 +361,29 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   // this only supports basic tasks for now
   def predictJointly(sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, sentence, constEmbeddings)
+    Layers.predictJointly(model, sentence, None, constEmbeddings)
   }
 
   def predict(taskId: Int,
               sentence: AnnotatedSentence,
+              modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
               constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence, constEmbeddings)
+    Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
   }
 
   def predictWithScores(taskId: Int,
                         sentence: AnnotatedSentence,
-                        constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+                        modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
+                        constEmbeddings: ConstEmbeddingParameters,
+                        applySoftmax: Boolean = true): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings, applySoftmax)
   }
 
-  def parseWithEisner(taskId: Int,
-                      sentence: AnnotatedSentence,
+  def parseWithEisner(sentence: AnnotatedSentence,
                       constEmbeddings: ConstEmbeddingParameters,
-                      topK: Int): IndexedSeq[Int] = {
-    Layers.parseFromTopK(model, taskId, sentence, constEmbeddings, topK)
+                      topK: Int, lambda: Float): IndexedSeq[(Int, String)] = {
+    val eisner = new Eisner
+    eisner.ensembleParser(this, None, sentence, constEmbeddings, topK, lambda, true)
   }
 
   /**
