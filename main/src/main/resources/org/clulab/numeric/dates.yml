@@ -1,0 +1,151 @@
+rules:
+  # European date format, with mandatory day
+  - name: date-1
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 12 May 2000"
+    action: mkDateMention
+    pattern: |
+      @day:PossibleDay @month:PossibleMonth ( ","? @year:PossibleYear )?
+
+  # European date format, with mandatory year
+  - name: date-2
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May 2000"
+    action: mkDateMention
+    pattern: |
+      ( @month:PossibleMonth ","? )? @year:PossibleYear
+
+  # American dates format, with mandatory day:
+  - name: date-3
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2000, May 12"
+    action: mkDateMention
+    pattern: |
+      ( @year:PossibleYear  ","? )? @month:PossibleMonth @day:PossibleDay
+
+  # American dates format, with mandatory day:
+  - name: date-3b
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May 12, 2000"
+    action: mkDateMention
+    pattern: |
+      @month:PossibleMonth @day:PossibleDay ","? @year:PossibleYear
+
+  # American dates format, with mandatory day:
+  - name: date-3c
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May 12 of 2000"
+    action: mkDateMention
+    pattern: |
+      @month:PossibleMonth ( @day:PossibleDay )? "of"? @year:PossibleYear
+
+  # American date format, with mandatory year
+  - name: date-4
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2000"
+    action: mkDateMention
+    pattern: |
+      @year:PossibleYear ( ","? @month:PossibleMonth )?
+
+  # Date with just a single month name
+  - name: date-5
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May"
+    action: mkDateMention
+    pattern: |
+        @month:PossibleMonth
+
+  # Rule for YYYY-MM-DD (accepts -, :, / as separators)
+  - name: date-yyyy-mm-dd
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2021-06-15"
+    action: mkDateMentionYyyyMmDd
+    pattern: |
+      [word=/^(1\d\d\d|20\d\d)(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(0?[1-9]|[12]\d|3[01])$/]
+
+  # Rule for DD-MM-YYYY (accepts -, :, /, as separators)
+  - name: date-dd-mm-yyyy
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 16-06-2021"
+    action: mkDateMentionDdMmYyyy
+    pattern: |
+      [word=/^(0?[1-9]|[12]\d|3[01])(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(1\d\d\d|20\d\d)$/]
+
+  # Rule for YY-MM-DD (accepts -, :, /, as separators)
+  - name: date-yy-mm-dd
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 21-06-16"
+    action: mkDateMentionYyMmDd
+    pattern: |
+      [word=/^(\d\d)(:|\/|\-)(0?[1-9]|1[012])(:|\/|\-)(0?[1-9]|[12]\d|3[01])$/]
+
+  # Rule for YY-MM (accepts -, :, as separators)
+  # ms: Let's not accept "/" as separator here, as this makes it too similar to a regular fraction!
+  - name: date-yy-mm
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 21.06."
+    action: mkDateMentionYyMm
+    pattern: |
+       [word=/^(\d\d)(:|\-)(0?[1-9]|1[012])$/]
+
+  # Rule for MM-YYYY (accepts -, :, /, as separators)
+  - name: date-mm-yyyy
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 06.2021. "
+    action: mkDateMentionMmYyyy
+    pattern: |
+      [word=/^(0?[1-9]|1[012])(:|\/|\-)(1\d\d\d|2\d\d\d)$/]
+
+  # Rule for YYYY-MM (accepts -, :, /, as separators)
+  - name: date-yyyy-mm
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was 2021/06. "
+    action: mkDateMentionYyyyMm
+    pattern: |
+      [word=/^(1\d\d\d|2\d\d\d)(:|\/|\-)(0?[1-9]|1[012])$/]
+
+  # Rule for "month of X"
+  - name: date-month-of
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was the month of January"
+    action: mkDateMention
+    pattern: |
+      /(?i)^month$/ /(?i)^of$/ @month:PossibleMonth (","? @year:PossibleYear)?
+
+  # Rule for holidays
+  - name: date-holiday
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was Christmas 2021."
+    action: mkDateMentionHoliday
+    pattern: |
+      @holiday:Holiday @year:PossibleYear?

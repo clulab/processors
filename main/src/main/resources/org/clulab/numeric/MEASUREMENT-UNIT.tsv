@@ -1,0 +1,243 @@
+#
+# measurement units, case insensitive so everything is lower case for simplicity
+# the comments after // are required by UnitNormalizer for unit normalization! Do not remove
+# note: multi-word phrases must be tokenized in the same way as our tokenizer. If not sure, try the phrases in ./shell first!
+#
+kilometer           // km
+kilometers          // km
+km                  // km
+meter               // m
+meters              // m
+m                   // m
+centimeter          // cm
+centimeters         // cm
+cm                  // cm
+millimeter          // mm
+millimeters         // mm
+mm                  // mm
+micrometer          // μm
+micrometers         // μm
+μm                  // μm
+mile                // mi
+miles               // mi
+mi                  // mi
+yard                // yd
+yards               // yd
+yd                  // yd
+foot                // ft
+feet                // ft
+ft                  // ft
+inch                // in
+inches              // in
+in                  // in
+square kilometer    // km2
+square kilometers   // km2
+km2                 // km2
+square meter        // m2
+square meters       // m2
+m2                  // m2
+acre                // acre
+acres               // acre
+hectare             // ha
+hectares            // ha
+ha                  // ha
+square foot         // ft2
+square feet         // ft2
+ft2                 // ft2
+square inch         // in2
+square inches       // in2
+in2                 // in2
+square yard         // yd2
+square yards        // yd2
+yd2                 // yd2
+kilogram            // kg
+kilograms           // kg
+kg                  // kg
+gram                // g
+g                   // g
+milligram           // mg
+mg                  // mg
+grain               // gr
+gr                  // gr
+ton                 // t
+t                   // t
+carat               // carat
+pound               // lb
+lb                  // lb
+ounce               // oz
+oz                  // oz
+fl oz               // oz
+pennyweight         // pw
+dwt                 // dwt
+year                // y
+yr                  // y
+years               // y
+nanosecond          // ns
+nanoseconds         // ns
+ns                  // ns
+week                // w
+weeks               // w
+wk                  // w
+day                 // d
+days                // d
+d                   // d
+ds                  // d
+month               // month
+months              // month
+minutes             // min
+minute              // min
+min                 // min
+mins                // min
+second              // s
+seconds             // s
+s                   // s
+hour                // h
+hours               // h
+h                   // h
+hs                  // h
+cubic meter         // m3
+cubic meters        // m3
+m3                  // m3
+liter               // l
+liters              // l
+liters ha-1         // l/ha
+l                   // l
+milliliter          // ml
+milliliters         // ml
+ml                  // ml
+teaspoon            // tspn
+teaspoons           // tspn
+tablespoon          // tbspn
+tablespoons         // tbspn
+pint                // pt
+pints               // pt
+liq pt              // pt
+dry pt              // pt
+quart               // qt
+quarts              // qt
+qt                  // qt
+dry qt              // qt
+gallon              // gl
+gallons             // gl
+gl                  // gl
+cup                 // cup
+cups                // cup
+barrel              // bbl
+barrels             // bbl
+bbl                 // bbl
+acre-foot           // acreft
+acre-feet           // acreft
+cubic foot          // ft3
+cubic feet          // ft3
+ft3                 // ft3
+cubic inch          // in3
+cubic inches        // in3
+in3                 // in3
+cubic mile          // mi3
+cubic miles         // mi3
+mi3                 // mi3
+cubic yard          // yd3
+cubic yards         // yd3
+yd3                 // yd3
+tonnes              // t
+tons                // t
+tons per hectare    // t/ha
+ton per hectare     // t/ha
+ton for one hectare  // t/ha
+metric ton per hectare     // t/ha
+metric tons per hectare    // t/ha
+metric tons                // t
+mt                         // t
+kilograms per hectare      // kg/ha
+kilogram per hectare       // kg/ha
+kg / ha                    // kg/ha
+t per ha                   // t/ha
+t ha-1                     // t/ha
+t / ha                     // t/ha
+kg N / ha                  // kg/ha
+tonnes / ha                // t/ha
+tons / ha                  // t/ha
+ton / ha                   // t/ha
+mt / ha                    // t/ha
+kg ha-1                    // kg/ha
+g m−2                      // g/m2
+g / m2                     // g/m2
+mt per hectare             // t/ha
+mt / hectare               // t/ha
+kg urea ha-1               // kg/ha
+kg N ha-1                  // kg/ha
+kg P ha-1                  // kg/ha
+kg DAP ha-1                // kg/ha
+kg TSP ha-1                // kg/ha
+kg P2O5 /ha                // kg/ha
+kgP2O5/ha                  // kg/ha
+Mg ha-1                    // Mg/ha
+mg / l                     // mg/l
+mg.l-1                     // mg/l
+mg / kg                    // mg/kg
+mg.kg-1                    // mg/kg
+mg kg-1                    // mg/kg
+g / kg                     // g/kg
+g.kg-1                     // g/kg
+g kg-1                     // g/kg
+mg / g                     // mg/g
+mg g-1                     // mg/g
+mg.g-1                     // mg/g
+g / l                      // g/l
+g.l-1                      // g/l
+mg / ml                    // mg/ml
+mg.ml-1                    // mg/ml
+μg / μl                    // μg/μl
+μg.μl-1                    // μg/μl
+μg / g                     // μg/g
+μg.g-1                     // μg/g
+ng / μl                    // ng/μl
+ng.μl-1                    // ng/μl
+μg / kg                    // μg/kg
+μg.kg-1                    // μg/kg
+ng / g                     // ng/g
+ng.g-1                     // ng/g
+ng / kg                    // ng/kg
+ng.kg-1                    // ng/kg
+ng / ml                    // ng/ml
+ng.ml-1                    // ng/ml
+pg / μl                    // pg/μl
+pg.μl-1                    // pg/μl
+pg / g                     // pg/g
+pg.g-1                     // pg/g
+ng / ml                    // ng/ml
+pg.ml-1                    // pg/ml
+fg / μl                    // fg/μl
+m3 / ha                    // m3/ha
+m3/ ha                     // m3/ha
+ml acre-1                  // ml/acre
+cm2                        // cm2
+m2 kg−1                    // m2/kg
+m2 / kg                    // m2/kg
+m3 / m3                    // m3/m3
+m3 m-3                     // m3/m3
+Mg m−3                     // Mg/m3
+Mg / m3                    // Mg/m3
+g / cm3                    // g/cm3
+g cm−3                     // g/cm3
+mole per cubic meter       // mol/m3
+gram per cubic meter       // g/m3
+centimole per liter        // cmol/l
+mol / m3                   // mol/m3
+mol m−3                    // mol/m3
+g m−3                      // g/m3
+g / m3                     // g/m3
+cmol / l                   // cmol/l
+cmol l−1                   // cmol/l
+cmol kg-1                  // cmol/kg
+cmol kg                    // cmol/kg
+cubic meter per hour       // m3/h
+m3 h−1                     // m3/h
+m3 / h                     // m3/h
+C                          // ˚C
+˚C                         // ˚C
+Celecius                   // ˚C
+t m-3                      // t/m3
+t / m3                     // t/m3
+Mg / m3                    // Mg/m3
+Mg m-3                     // Mg/m3

@@ -1,0 +1,33 @@
+resources:
+  # use sample of w2v embeddings generated from gigaword
+  embeddings: org/clulab/odin/embeddings/w2v-gigaword-sample.txt
+
+taxonomy:
+  - Plant:
+    - Fruit:
+      - Citrus
+      - NonCitrus
+  - Animal:
+    - Mammal:
+      - Canine
+      - Feline
+    - Reptile
+
+
+# note that these rules are not truly modeling hypo/hypernymy
+# simScore() measures distributional similarity
+rules:
+  # this rule finds words similar to "cat" and "dog"
+  # with a sim score >= .5
+  - name: "mammals"
+    label: Mammal
+    type: token
+    pattern: |
+      [simScore("cat") >= 0.4 & simScore("dog") >= 0.4]
+
+  - name: "sim-to-cats-but-diff-from-dogs"
+    label: Feline
+    type: token
+    pattern: |
+      # similar to "cat", but dissimilar to "dog"
+      [(simScore("cat") >= 0.4) & (simScore("cat") >= simScore("dog"))]

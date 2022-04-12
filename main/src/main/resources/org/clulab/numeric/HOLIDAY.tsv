@@ -1,0 +1,132 @@
+#
+# List of holidays in the United States extracted from the Jollyday api.
+# Each phrase before // is an alternative name of a holiday and must be in lower case.
+# The comment after // is the canonical form given by Jollyday.
+# This list of canonical forms can be obtained with the following snippet:
+#
+#   import de.jollyday.{HolidayManager, HolidayCalendar, ManagerParameters}
+#   import collection.JavaConverters._
+#   val holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.UNITED_STATES))
+#   holidayManager.getCalendarHierarchy.getChildren.keySet.asScala.
+#                   flatMap(holidayManager.getHolidays(2021, _).asScala).map(_.getDescription)
+#
+#
+lincoln 's birthday						//	Lincoln's Birthday
+lincoln birthday						//	Lincoln's Birthday
+lincoln 's day  						//	Lincoln's Birthday
+lincoln day     						//	Lincoln's Birthday
+easter monday							//	Easter Monday
+bright monday							//	Easter Monday
+renewal monday							//	Easter Monday
+washington 's birthday                  //	Washington's Birthday
+washington birthday 					//	Washington's Birthday
+washington 's day   					//	Washington's Birthday
+washington day      					//	Washington's Birthday
+presidents day							//	Presidents Day
+presidents ' day						//	Presidents Day
+labour day								//	Labour day
+labor day								//	Labour day
+césar chávez 's birthday				//	César Chávez's Birthday
+césar chávez birthday				    //	César Chávez's Birthday
+cesar chavez 's birthday				//	César Chávez's Birthday
+cesar chavez birthday				    //	César Chávez's Birthday
+césar chávez 's day				        //	César Chávez's Birthday
+césar chávez day				        //	César Chávez's Birthday
+cesar chavez 's day				        //	César Chávez's Birthday
+cesar chavez day				        //	César Chávez's Birthday
+seward 's day							//	Seward's Day
+seward day  							//	Seward's Day
+christmas eve							//	Christmas Eve
+christmas evening					    //	Christmas Eve
+christmas vigil							//	Christmas Eve
+day before christmas					//	Christmas Eve
+night before christmas					//	Christmas Eve
+mardi gras								//	Mardi Gras
+fat tuesday								//	Mardi Gras
+shrove tuesday							//	Mardi Gras
+pancake tuesday							//	Mardi Gras
+battle of bennington					//	Battle of Bennington
+battle of bennington day				//	Battle of Bennington
+bennington battle day					//	Battle of Bennington
+arbor day								//	Arbor Day
+arbour day								//	Arbor Day
+west virginia day						//	West Virginia Day
+election day							//	Election day
+polling day 							//	Election day
+confederate memorial day				//	Confederate Memorial Day
+confederate heroes day				    //	Confederate Memorial Day
+confederate decoration day				//	Confederate Memorial Day
+statehood day							//	Statehood day
+admission day							//	Statehood day
+truman day								//	Truman Day
+truman 's day							//	Truman Day
+truman birthday							//	Truman Day
+truman 's birthday						//	Truman Day
+christmas								//	Christmas
+christmas day   						//	Christmas
+prince jonah kuhio kalanianaole day		//	Prince Jonah Kuhio Kalanianaole Day
+prince jonah kuhio kalanianaole 's day	//	Prince Jonah Kuhio Kalanianaole Day
+prince jonah kūhiō kalanianaole day		//	Prince Jonah Kuhio Kalanianaole Day
+prince jonah kūhiō kalanianaole 's day	//	Prince Jonah Kuhio Kalanianaole Day
+prince kuhio day                        //	Prince Jonah Kuhio Kalanianaole Day
+prince kuhio 's day                     //	Prince Jonah Kuhio Kalanianaole Day
+prince kūhiō day                        //	Prince Jonah Kuhio Kalanianaole Day
+prince kūhiō 's day                     //	Prince Jonah Kuhio Kalanianaole Day
+kuhio day                       		//	Prince Jonah Kuhio Kalanianaole Day
+kuhio 's day                       		//	Prince Jonah Kuhio Kalanianaole Day
+kūhiō day                       		//	Prince Jonah Kuhio Kalanianaole Day
+kūhiō 's day                       		//	Prince Jonah Kuhio Kalanianaole Day
+independence day						//	Independence Day
+fourth of july						    //	Independence Day
+new years eve							//	New Years Eve
+new year 's eve							//	New Years Eve
+new year eve							//	New Years Eve
+jefferson davis day						//	Jefferson Davis Day
+jefferson davis ' day					//	Jefferson Davis Day
+jefferson davis birthday      			//	Jefferson Davis Day
+jefferson davis ' birthday				//	Jefferson Davis Day
+lee-jackson day							//	Lee-Jackson Day
+patriots ' day							//	Patriots' Day
+patriot 's day							//	Patriots' Day
+patriots day							//	Patriots' Day
+alaska day								//	Alaska Day
+victory day								//	Victory Day
+victory over japan day				    //	Victory Day
+vj day				                    //	Victory Day
+world war ii memorial day				//	Victory Day
+new year								//	New Year
+new year day							//	New Year
+new years day							//	New Year
+new year 's day							//	New Year
+veterans day							//	Veterans Day
+veterans ' day							//	Veterans Day
+armistice day							//	Veterans Day
+columbus day							//	Columbus Day
+columbus ' day							//	Columbus Day
+indigenous peoples day				    //	Columbus Day
+indigenous peoples ' day			    //	Columbus Day
+thanksgiving day						//	Thanksgiving Day
+thanksgiving    						//	Thanksgiving Day
+martin luther king, jr. day				//	Martin Luther King, Jr. Day
+martin luther king jr. day				//	Martin Luther King, Jr. Day
+mlk day                                 //	Martin Luther King, Jr. Day
+king day                                //	Martin Luther King, Jr. Day
+reverend dr. martin luther king jr. day //	Martin Luther King, Jr. Day
+good friday								//	Good Friday
+holy friday								//	Good Friday
+great friday							//	Good Friday
+great and holy friday					//	Good Friday
+holy and great friday					//	Good Friday
+casimir pulaski day						//	Casimir Pulaski Day
+casimir pulaski 's day					//	Casimir Pulaski Day
+memorial day							//	Memorial Day
+decoration day							//	Memorial Day
+service reduction day					//	Service Reduction Day
+kamehameha day							//	Kamehameha Day
+kamehameha 's day						//	Kamehameha Day
+king kamehameha day						//	Kamehameha Day
+king kamehameha 's day					//	Kamehameha Day
+king kamehameha i day                   //	Kamehameha Day
+pioneer day								//	Pioneer Day
+nevada day								//	Nevada Day
+

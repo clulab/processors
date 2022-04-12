@@ -1,0 +1,168 @@
+
+#
+# recognizes date ranges
+#
+
+
+- name: date-range-1
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place between 12 May 2000 and 12 June 2020"
+  action: mkDateRangeMention
+  pattern: |
+    /(?i)between/ @date1:Date /(?i)(and|to)/ @date2:Date
+
+- name: date-range-2
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place from 12 May 2000 to 12 June 2020"
+  action: mkDateRangeMention
+  pattern: |
+    /(?i)from/? @date1:Date /(?i)(to|\-)/ @date2:Date
+
+- name: date-range-3
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place between 10 and 12 June 2020"
+  action: mkDateRangeMentionWithNumber
+  pattern: |
+    /(?i)between/ @number:Number /(?i)(and|to)/ @date2:Date
+
+- name: date-range-4
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place from 10 to 12 June 2020"
+  action: mkDateRangeMentionWithNumber
+  pattern: |
+    /(?i)from/? @number:Number /(?i)(to|\-)/ @date2:Date
+
+- name: date-range-5
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place between May and June 2020"
+  action: mkDateRangeMentionWithMonth
+  pattern: |
+    /(?i)between/ @month1:PossibleMonth /(?i)(and|to)/ @month2:PossibleMonth @year:PossibleYear
+
+- name: date-range-6
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place from May to June 2020"
+  action: mkDateRangeMentionWithMonth
+  pattern: |
+    /(?i)from/? @month1:PossibleMonth /(?i)(to|\-)/ @month2:PossibleMonth @year:PossibleYear
+
+- name: date-range-7
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "Since June 2020"
+  action: mkDateRangeMentionWithSinceRef
+  pattern: |
+    /(?i)(since|from)/ @date1:Date
+
+- name: date-range-8
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "Until June 2020"
+  action: mkDateRangeMentionWithUntilRef
+  pattern: |
+    /(?i)until|through/ @date1:Date
+
+- name: date-unbound-range-1
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "Before June 2020"
+  action: mkDateUnboundRangeMentionBefore
+  pattern: |
+    /(?i)(before|prior|previous)/ /(?i)to/? @date1:Date
+
+- name: date-unbound-range-2
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "After June 2020"
+  action: mkDateUnboundRangeMentionAfter
+  pattern: |
+    /(?i)(after|beyond|following)/ @date1:Date
+
+# Date range derived from a season, with mandatory year
+- name: date-range-season-1
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "It was summer 2000"
+  action: mkDateRangeMentionWithSeason
+  pattern: |
+    @season:PossibleSeason /(?i)(in|of)/? @year:PossibleYear?
+
+- name: date-range-season-2
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "It was 2000 winter"
+  action: mkDateRangeMentionWithSeason
+  pattern: |
+    @year:PossibleYear @season:PossibleSeason
+
+- name: date-range-season-3
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "From spring to autumn 2017"
+  action: mkDateRangeMentionWithSeasons
+  pattern: |
+    /(?i)from/? @season1:PossibleSeason @year1:PossibleYear? /(?i)(to|\-)/ @season2:PossibleSeason @year2:PossibleYear
+
+- name: date-range-season-4
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Between spring and autumn 2017"
+  action: mkDateRangeMentionWithSeasons
+  pattern: |
+    /(?i)between/ @season1:PossibleSeason @year1:PossibleYear? /(?i)(and|to)/ @season2:PossibleSeason @year2:PossibleYear?
+
+- name: date-range-season-5
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Since summer 2000"
+  action: mkDateRangeMentionWithSeasonSinceRef
+  pattern: |
+    /(?i)(since|from)/ @season:PossibleSeason @year:PossibleYear?
+
+- name: date-range-season-6
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Until summer 2000"
+  action: mkDateRangeMentionWithSeasonUntilRef
+  pattern: |
+    /(?i)until|through/ @season:PossibleSeason @year:PossibleYear?
+
+- name: date-range-season-7
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "Before summer 2000"
+  action: mkDateUnboundRangeMentionWithSeasonBefore
+  pattern: |
+    /(?i)(before|prior|previous)/ /(?i)to/? @season:PossibleSeason @year:PossibleYear?
+
+- name: date-range-season-8
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "After summer 2000"
+  action: mkDateUnboundRangeMentionWithSeasonAfter
+  pattern: |
+    /(?i)(after|beyond|following)/ @season:PossibleSeason @year:PossibleYear?

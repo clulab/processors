@@ -1,0 +1,110 @@
+rules:
+
+  - name: number
+    label: Number
+    priority: 10
+    type: token
+    pattern: |
+      @NumberWord | @WordNumberSpecial | @WordQuadrillions
+
+  - name: number_word_combo
+    label: NumberWord
+    priority: 1
+    type: token
+    pattern: |
+      /^[+-]$/?
+      /^[+-]?(\d+\.\d*|\.\d+|\d+|\d+\/\d+|\d+(\,\d+)+)$/
+      (/\// /^[+-]$/? /^([+-]?\d+)$/)?
+      /^(hundred|thousand|million|billion|trillion|quadrillion)s?$/?
+
+  # special case for number like "twelve hundred thirty four"
+  # result must be >1000
+  - name: word_thousands_special
+    label: WordNumberSpecial
+    priority: 4
+    type: token
+    pattern: |
+      # numbers 10-19
+      (ten | eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
+      # or numbers 20-99
+      twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
+      sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit? |
+      "twenty-one" | "twenty-two" | "twenty-three" | "twenty-four" | "twenty-five" | "twenty-six" | "twenty-seven" | "twenty-eight" | "twenty-nine" |
+      "thirty-one" | "thirty-two" | "thirty-three" | "thirty-four" | "thirty-five" | "thirty-six" | "thirty-seven" | "thirty-eight" | "thirty-nine" |
+      "forty-one" | "forty-two" | "forty-three" | "forty-four" | "forty-five" | "forty-six" | "forty-seven" | "forty-eight" | "forty-nine" |
+      "fifty-one" | "fifty-two" | "fifty-three" | "fifty-four" | "fifty-five" | "fifty-six" | "fifty-seven" | "fifty-eight" | "fifty-nine" |
+      "sixty-one" | "sixty-two" | "sixty-three" | "sixty-four" | "sixty-five" | "sixty-six" | "sixty-seven" | "sixty-eight" | "sixty-nine" |
+      "seventy-one" | "seventy-two" | "seventy-three" | "seventy-four" | "seventy-five" | "seventy-six" | "seventy-seven" | "seventy-eight" | "seventy-nine" |
+      "eighty-one" | "eighty-two" | "eighty-three" | "eighty-four" | "eighty-five" | "eighty-six" | "eighty-seven" | "eighty-eight" | "eighty-nine" |
+      "ninety-one" | "ninety-two" | "ninety-three" | "ninety-four" | "ninety-five" | "ninety-six" | "ninety-seven" | "ninety-eight" | "ninety-nine")
+      /^hundreds?$/ @WordTens?
+
+  - name: word_quadrillions
+    label: WordQuadrillions
+    priority: 8
+    type: token
+    pattern: |
+      @WordHundreds /^quadrillions?$/ | (@WordHundreds /^quadrillions?$/)? @WordTrillions
+
+  - name: word_trillions
+    label: WordTrillions
+    priority: 7
+    type: token
+    pattern: |
+      @WordHundreds /^trillions?$/ | (@WordHundreds /^trillions?$/)? @WordBillions
+
+  - name: word_billions
+    label: WordBillions
+    priority: 6
+    type: token
+    pattern: |
+      @WordHundreds /^billions?$/ | (@WordHundreds /^billions?$/)? @WordMillions
+
+  - name: word_millions
+    label: WordMillions
+    priority: 5
+    type: token
+    pattern: |
+      @WordHundreds /^millions?$/ | (@WordHundreds /^millions?$/)? @WordThousands
+
+  - name: word_thousands
+    label: WordThousands
+    priority: 4
+    type: token
+    pattern: |
+      @WordHundreds /^thousands?$/ | (@WordHundreds /^thousands?$/)? @WordHundreds
+
+  - name: word_hundreds
+    label: WordHundreds
+    priority: 3
+    type: token
+    pattern: |
+      @WordDigit /^hundreds?$/ | (@WordDigit /^hundreds?$/)? @WordTens
+
+  - name: word_tens
+    label: WordTens
+    priority: 2
+    type: token
+    pattern: |
+      # could be a single digit
+      @WordDigit |
+      # numbers 10-19
+      ten | eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
+      # or numbers 20-99
+      twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
+      sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit? |
+      "twenty-one" | "twenty-two" | "twenty-three" | "twenty-four" | "twenty-five" | "twenty-six" | "twenty-seven" | "twenty-eight" | "twenty-nine" |
+      "thirty-one" | "thirty-two" | "thirty-three" | "thirty-four" | "thirty-five" | "thirty-six" | "thirty-seven" | "thirty-eight" | "thirty-nine" |
+      "forty-one" | "forty-two" | "forty-three" | "forty-four" | "forty-five" | "forty-six" | "forty-seven" | "forty-eight" | "forty-nine" |
+      "fifty-one" | "fifty-two" | "fifty-three" | "fifty-four" | "fifty-five" | "fifty-six" | "fifty-seven" | "fifty-eight" | "fifty-nine" |
+      "sixty-one" | "sixty-two" | "sixty-three" | "sixty-four" | "sixty-five" | "sixty-six" | "sixty-seven" | "sixty-eight" | "sixty-nine" |
+      "seventy-one" | "seventy-two" | "seventy-three" | "seventy-four" | "seventy-five" | "seventy-six" | "seventy-seven" | "seventy-eight" | "seventy-nine" |
+      "eighty-one" | "eighty-two" | "eighty-three" | "eighty-four" | "eighty-five" | "eighty-six" | "eighty-seven" | "eighty-eight" | "eighty-nine" |
+      "ninety-one" | "ninety-two" | "ninety-three" | "ninety-four" | "ninety-five" | "ninety-six" | "ninety-seven" | "ninety-eight" | "ninety-nine"
+
+  - name: word_digits
+    label: WordDigit
+    priority: 1
+    type: token
+    pattern: |
+      zero | one | two | three | four | five | six | seven | eight | nine

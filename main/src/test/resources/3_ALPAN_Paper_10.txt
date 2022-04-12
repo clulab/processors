@@ -1,0 +1,869 @@
+Drought and the farming sector: Loss of farm animals and
+post-drought rehabilitation
+
+Table of Contents
+by
+Camilla Toulmin
+42, Lavender Grove
+London, E8 3LS
+U.K.
+ALPAN - AFRICAN LIVESTOCK POLICY ANALYSIS NETWORK
+Network Paper No. 10
+September 1986
+A slightly different version was presented at the SAFGRAD International Drought Symposium,
+Nairobi, 19-23 May 1986. This paper has benefitted from suggestions and comments by Frank
+Anderson and Addis Anteneh, both of ILCA.
+INTERNATIONAL LIVESTOCK CENTRE FOR AFRICA (ILCA)
+P.O. Box 5689, Addis Ababa, Ethiopia - Tel: 18 32 15 - Telex: ADDIS 21207
+This electronic document has been scanned using optical character recognition (OCR)
+software and careful manual recorrection. Even if the quality of digitalisation is high, the FAO
+declines all responsibility for any discrepancies that may exist between the present document
+and its original printed version.
+
+Table of Contents
+Introduction
+Effects of drought on farm production and livestock holdings
+The interaction between livestock and arable droughts
+Farmers' own methods of rehabilitation
+
+Speed of farm rehabilitation
+Ways in which farmers can achieve crop recovery
+The speed of post-drought recovery
+Policy measures to aid recovery of the farm sector
+Government policy measures
+Direct help to the farm sector
+A comparison of alternative policy measures
+The cost of doing nothing
+Conclusions
+References
+
+Introduction
+1. This paper examines the effects of drought-induced livestock losses on crop production and
+considers a range of policy measures aimed at rehabilitation of the farm sector in the postdrought period. Farm animals play an important role in crop production in a number of farming
+systems. Draft animals are used for ploughing and weeding fields and for transporting goods
+and people. Female stock provide the household with supplies of milk while animal dung is a
+source of fertiliser and fuel. Livestock also represent a valuable asset for the farm household,
+the loss of which makes it poorer and more vulnerable to adversity.
+2. The paper focusses on policies which can be carried out in the short-to medium-term to
+reduce the length of time taken for the farm sector to recover its productive capacity after
+drought. It assumes that losses of a certain magnitude have already taken place and thus
+does not consider the role of pre-drought or emergency measures, such as early warning
+systems or provision of famine relief. Rehabilitation is taken here to mean the reestablishment of productive farm capacity in drought-affected regions. This may not always
+imply the restoration of the production system as it was before the drought. For example, very
+heavy grazing pressure from oxen and other stock may mean that alternative sources of draft
+power should be found or fodder crop production be increased.
+3. Since the main focus of this paper is on live-stock-related aspects of farm production, it will
+not consider explicitly the need to provide seed and other inputs in order to help farm
+recovery. However, it is recognised that seed distribution may be a precondition for successful
+post-drought recovery where crop losses have been high. There are also important
+interactions between the farm and livestock sectors which need to be examined. Drought
+losses in the pastoral sector affect farmers through changes in the supply and prices of stock.
+In addition, policy measures taken to aid recovery in the pastoral sector may have spillover
+effects on the farm sector and vice versa. An example of this is where farmers are given credit
+to buy young oxen to replace those they have lost, a programme which is likely to have an
+inflationary effect on the price of such animals leading to a rise in prices received by pastoral
+herd-owners.
+4. The paper starts by outlining the main effects of drought on crop producers in order to show
+the various processes through which impoverishment of farmers and losses of stock take
+place. It goes on to consider the interaction between droughts in the arable and livestock
+sectors before looking at indigenous strategies for rehabilitation pursued by producers
+themselves, following drought losses. It then examines the various policy options open to
+governments and development agencies wishing to speed recovery in the crop sector and
+discusses the relative costs and problems associated with each. It will be seen that the most
+effective form of intervention will depend on the special circumstances found in the region
+concerned. The paper ends by recommending that priority be given to examining the different
+options available in a given case and to funding a programme that can be put rapidly into
+effect.
+Figure 1. Effects of drought on farming areas
+
+Effects of drought on farm production and livestock holdings
+5. The main direct effects of drought on the farming sector are summarised in Figure 1. The
+most immediate consequence of drought is a fall in crop production, due to inadequate and
+poorly distributed rainfall. Farmers are faced with harvests that are too small to both feed their
+families and fulfill their other commitments. Livestock sales act as a buffer in times of
+hardship, farmers disinvesting in these assets to buy food. The first animals to be sold are
+usually those which make the least contribution to farm production, such as sheep and goats.
+However, as the period of drought-induced food deficit lengthens, farmers will have to start
+selling transport and draft animals, such as oxen and donkeys, as well as breeding stock,
+which constitute the basis of the household's wealth. In the Ethiopian highlands, stock are
+usually disposed of in the following order: sheep and goats, then younger cattle, with horses,
+donkeys and work oxen being sold as a last resort (Wood, 1976), since the latter are essential
+for land preparation.
+6. Where crops have been badly affected by drought, pasture production is also likely to be
+reduced although output from natural pastures tends to be less vulnerable to drought than
+crop production. Low rainfall causes poor pasture growth and may also lead to a decline in
+fodder supplies from crop residues. Insufficient levels of fodder around the village lead to
+weight less and increased deaths among stock, especially where immigrant herds put further
+pressure on limited local pastures. While the response of most pastoral groups to fodder
+shortage is to move themselves and their herds elsewhere, this is not an option so easily
+followed by livestock-owning farmers. Typically, farmers own fewer animals and have less
+familiarity with regular transhumance than pastoralists, both of which act as constraints on
+migration. In addition, few farm households will have sufficient labour to both take their
+animals to other grazing areas and continue with necessary farming operations. Thus,
+sedentary herds can be particularly badly hit in times of drought. A recent survey of deaths
+among draft animals in the Niono area of north-west Mali found losses of between 50 and
+70% over the period 1983-84 (FAO, 1984). These high losses were caused by pasture
+shortages exacerbated by herds from further north on their way to southern pastures, by the
+sedentary character of livestock holdings amongst farmers in this area and by the normal
+dependence of horses (and to some extent donkeys) on a daily grain ration to supplement
+natural grazing, a supplement which is no longer given because of poor harvests.
+7. The overall effect of a fall in fodder and crop production is to reduce the draft capacity of
+the farming sector, leading to lower crop output in the subsequent farming season. Loss of
+livestock around the farming settlement also reduces the household's access to dung, a
+product of considerable importance both as a fuel where firewood is scarce and as a means
+to retain fertility on regularly cropped soils.
+8. The role and importance of dung varies between farming systems according to a number of
+factors. Shortage of fuelwood makes dung a highly valued commodity in many parts of the
+Ethiopian highlands where other sources of fuel are scarce. Dung is estimated to be the
+second most important product gained from livestock after draft power in such areas, providing
+up to 80% of the household's fuel needs in many areas (Gryseels and Anderson, 1983). In
+addition, sales of dung cakes make a contribution to cash incomes. In many parts of West
+Africa, dung is a major element in the exchanges established between pastoral and farming
+communities. Transhumant herders agree to station their animals overnight on farmers' plots
+in return for grain, cash or water. This manuring of fields produces a considerable increase in
+
+crop yields and is of especial value in marginal farming zones in the Sahel as it enables a
+larger area to be sown with rapid maturing crop varieties. Drought affects the availability of
+dung to the farm household in two ways. First, the number of animals owned by the farming
+population falls with death and sales among stock. Second, drought both reduces the size and
+changes the pattern of movement among pastoral herds. In the Sahelian context, drought
+conditions will force many herd-owners further South than normal in their search for fodder
+and water. Farmers in the southern Sahel, who regularly rely on visiting herds for supplies of
+dung will find their access to this commodity greatly reduced in a drought year. By contrast,
+yet further south, dung supplies will increase for those farming communities in savannah
+areas which are host to immigrant pastoral herds in a drought year.
+9. Although they could not be considered as a loss to the national economy, to the individual
+farmer drought-induced distress sales of work oxen are as much of a loss as are animal
+deaths. In addition, since distress sales are associated with reduced prices offered, farmers
+also incur a substantial financial loss compared to sales under more normal circumstances.
+The distribution of work oxen losses between deaths and distress sales will vary according to
+the circumstances in which drought has taken place and the constraints faced by different
+producers. A report by the Relief and Rehabilitation Commission of Ethiopia for the province of
+Wollo in 1974 presents data showing almost all losses to have been due to deaths rather than
+sales: 71% dead from starvation, as opposed to 19% sold, leaving 2% disposed of by other
+means and 8% remaining (Wolde Mariam, 1984). By contrast, Wood's survey of farmers in the
+northern highlands of Ethiopia in 1974 found that most livestock losses were the result of
+distress sales in order to raise cash rather than deaths due to inadequate fodder (Wood,
+1976). As will be discussed later, the circumstances in which oxen are lost have differing
+implications for the action that governments or agencies should take in moderating the effects
+of drought.
+10. One means by which farm households try to make ends meet in times of crop failure is to
+release labour to earn income elsewhere; at the same time, this reduces the burden on
+household food reserves. The net effect on farm productivity depends on whether this
+migration continues into the next farming season, thereby reducing the household's labour
+supply. This will be the case where shortage of food is so acute that the household must
+depend on the earnings of some of its members to feed the rest of the family until the next
+harvest.
+11. Changes in the distribution of wealth usually accompany drought. The experience of farm
+households will differ according to their ownership of assets, their access to incomes from
+other sources and the extent to which these assets and incomes are less affected by drought
+than are harvests. The most vulnerable amongst those hit by drought will be those with few
+assets to sell, those who most need to purchase grain due to an absence of their own
+household reserves and those who cannot gain access to food through other means, such as
+borrowing, coercion or theft. The richest members of the community may even be in a position
+to benefit during drought, as they can acquire land and other assets at low prices from
+distress sales by poorer neighbours. The differential impact of drought on the incomes and
+assets of rich and poor is formalised by Sen in his essay on "Poverty and Famines" (1981).
+He showed an individual's entitlement to food depends not only on direct output of crops, etc.
+but also on his access to food through the market, by the sale of labour or other commodities
+and through non-market mechanisms, such as redistributive systems within society. In times
+of drought, not only is there a direct shortfall of food production but also relative price
+movements of grain versus other commodities may drastically reduce the purchasing power of
+groups. This is seen in the case of pastoralists who face rising grain prices but failing livestock
+prices as drought intensifies. Pastoralists face a major decision problem related to the timing
+of sales which minimize unfavourable grain/livestock ratios. Many farmers may be in a similar
+situation, needing to sell livestock, labour or land in markets where an excess supply of these
+
+commodities has reduced their value.
+
+The interaction between livestock and arable droughts
+12. Where crop farming and livestock production take place in the same ecological zone, the
+former is likely to be the activity to be more severely affected by drought in the shorter term herds can be moved to areas where pasture production has not been affected to the same
+extent. Thus droughts occurring in areas occupied by crops and animals in Botswana have
+affected crop production more frequently (Jones, 1979). In the case of the Sahel, however, the
+crop farming areas occupy the higher rainfall zones to the south of the main pastoral areas
+which are subject to low levels and erratic distributions of rainfall within and between years.
+Since rainfall variability becomes more marked as one moves north and as rainfall totals
+decline, the pastoral sector has particularly been more prone to drought. Thus in the drought
+years of 1968 to 1973, it was pastoral zones of the northern Sahel which were especially badly
+hit, while many southern farming areas experienced very few drought-induced losses.
+13. Account must be taken of the interaction between drought losses in the crop and livestock
+sectors for two reasons.
+(i) Grain forms an important part of the pastoral diet even in normal times. In
+periods of drought, as herd productivity falls, herders come to rely even more
+heavily on grain for their food needs. Where both the livestock and farm sectors
+have been hit by drought, rising demand for grain by pastoralists is confronted by
+a drop in locally available supplies. Given the low elasticity of demand for grains,
+the increase in market demand from farmers and herders will result in a rapid
+escalation in prices. If drought has only hit the livestock sector, grain prices will be
+subject to much less upward pressure.
+(ii) Farmers often own a number of livestock, which provide them with draft power
+and represent capital to be liquidated in times of need. Where drought has hit both
+the livestock and farming sectors, livestock prices will fall further and farmers will
+be faced with a greater fall in the value of their livestock assets. A few farmers
+may however benefit during a period of widespread drought if they are fortunate
+enough to have sufficient stocks of grain from previous harvests to invest in
+livestock purchases while relative grain to livestock prices are in their favour.
+
+Farmers' own methods of rehabilitation
+Speed of farm rehabilitation
+Ways in which farmers can achieve crop recovery
+14. Policy makers should assess the capacity of crop and livestock production systems to
+rehabilitate themselves in the absence of outside intervention for two reasons.
+15. First, one must have some measure of expected rates of rehabilitation against which to
+evaluate the impact and cost of various forms of intervention aimed at boosting recovery.
+Second, indigenous strategies in the post-drought period provide policy-makers with
+guidelines as to processes of local adaptation which may be given support. Communities often
+display considerable resilience in the face of drought, enabling them to survive severe crises
+and to regain their capacity to produce in the subsequent period. The policies of government
+and development agencies can either re-inforce the effectiveness of these strategies or render
+them less viable. For example, temporary migration of labour from rural areas is pursued on a
+regular basis in many countries and provides households with an off-farm cash income. In
+times of drought, this migration flow becomes especially important, as it both reduces the
+number of people to be fed from village granaries and provides a supplementary income for
+buying food. Government policy can either aid or hamper this flow of labour from poor to
+better-off regions, by minimising the bureaucratic obstacles to and cost of movement or,
+conversely, it can make it difficult for people to travel across regional and national frontiers
+and obtain temporary employment.
+
+Speed of farm rehabilitation
+16. The main concern of this paper has been to investigate the effects of drought-induced
+livestock losses on the farm sector. The significance of a given level of draft animal losses on
+farm production will depend on the nature of the farming system and the effectiveness of
+different strategies pursued by farmers in order to maintain crop output. To assess the likely
+fall in crop output due to draft animal losses, questions such as the following must be
+answered:
+(i) what proportion of land is normally prepared and weeded by the plough?
+(ii) how much time is available for land preparation before sowing?
+(iii) what is the effect on yields from late sowing, from sowing on unploughed land
+or from weeding by hand rather than by plough?
+(iv) can land be prepared by hand and, if so, what is the area that can be dealt
+with?
+(v) what proportion of households have the necessary animals and equipment for
+their own plough team and what are the possibilities for sharing of oxen between
+households?
+17. This paper focusses attention on three countries: Ethiopia, Botswana and Mali, where draft
+
+animal power plays an important role in farm production. The significance of work oxen losses
+will vary between these countries because of differences in soils and in the volume and timing
+of rainfall within the cultivation season. For example, the heavy soils found in highland
+Ethiopia must be worked 4 to 6 times in order to obtain a fine enough seedbed for the
+traditional teff crop. This is in marked contrast to the very rapid ridging of light sandy soils
+done by many farmers in Mali prior to sowing millet and groundnuts. For highland areas of
+Ethiopia, the short rains of February to April usually provide the opportunity for much land
+preparation to take place before fields are sown in June when the main rains begin. In arable
+areas of Botswana and the Sahel, time available for land preparation before sowing is much
+more limited and part of the Sahelian millet crop is consequently sown on unploughed land,
+despite the severe weeding problems associated with this technique.
+
+Ways in which farmers can achieve crop recovery
+18. There are a number of options that farmers can pursue in order to restore levels of crop
+production and their holdings of draft animals. These include the sharing of animals between
+households, use of other stock for pulling the plough, hand cultivation of soils, hire of tractor
+services, changes in crop composition, purchase of fertiliser, supplementation of remaining
+stock, turning to income earned elsewhere or waiting for livestock holdings to re-grow. Each of
+these is discussed below.
+19. Sharing of animals between households may be possible where overall losses have been
+slight. Such animal loans are common in many farming systems in normal years, the loan of a
+ploughteam often being repaid with so many days of weeding labour. Alternatively, two
+households with a single ox each can arrange to take turns in using the oxen pair, as
+described by Gryseels and Anderson (1983) for Ethiopia. However, where oxen losses have
+been heavy, loans will be less easy to arrange for those who have lost their draft animals and
+the cost of such loans are likely to increase.
+20. The use of other animals for draft may be possible where, for example, losses among
+horses and donkeys have been less severe than work oxen. The former will have a lower
+productivity but their availability will partially compensate for the loss of trained oxen. In
+extreme cases, even human labour has been used for pulling the plough, as in the period
+following the great rinderpest epidemic in Ethiopia in the 1890s when an estimated 90% of the
+country's draft oxen were lost (Wolde Mariam, 1984). However, if work oxen holdings have
+been badly affected by drought it is likely that other stock will also have suffered high mortality
+or will have been sold to purchase food grains.
+21. Hand cultivation of part of the farmer's land may be possible in the absence of draft
+animals. However, this will be at the cost of lower crop output due both to the smaller area
+cultivated and the lower effectiveness of hand cultivation as opposed to plough techniques.
+Estimates of the land area which can be cultivated by hand vary from 10% to 50% of that
+which can be managed by a plough team, depending on the nature of soils and the time
+available for land preparation. Although uncommon where weeding is also done by plough,
+resort to hand techniques will lead to lower yields from the less optimal timing of this
+operation.
+22. The hire of tractor services is only open to a limited number of farmers with access to this
+service at reasonable cost. Hire of a tractor is usually more expensive than hire of a plough
+team for the same work and, in the case of Botswana, will normally require a cash outlay
+rather than repayment in labour or other services (Vierich and Sheppard, 1979). For this
+reason, farmers who find themselves without work oxen will often also be without the funds to
+hire a tractor.
+23. A change in the composition of crops grown can reduce the farmer's tillage requirements.
+
+For example, in the case of Ethiopia, while teff needs a finely prepared seed bed, pulses can
+be sown on land that has received a more rudimentary tillage. Similarly, in Mali, millets can be
+sown on unploughed land whereas groundnuts require a prepared seedbed. The possibility of
+farmers moderating the impact of draft animal losses by switching to less tillage-intensive
+crops depends on their access to seed, their family's consumption needs and the prospects
+for marketing different crops.
+24. Fertiliser purchases can moderate the fall in crop output arising from a decline in area
+cultivated by raising yields on the area actually farmed. The effectiveness of this option
+depends on crop response to fertiliser use and the relative costs of purchase, transport and
+application of fertiliser. Lack of cash at the farm level in the post-drought period prevents this
+option being widely pursued, in the absence of extensive government subsidies for the
+purchase and distribution of this input. Even then, farmers may still consider the use of
+fertiliser in poor seasons as involving too high a risk.
+25. Surviving draft animal may be given supplementary feed in order to increase their working
+capacity. This fodder could come from crop by-products or natural pasture and browse, both
+of which are likely to be in short supply following drought. Additional feed may be available
+from agro-industrial by-products, such as cotton seed, molasses and bran. Supplies of these
+products will be limited and their prices high where these are normally exported, (as in the
+case of many Sahelian countries) unless the government gives special priority to their local
+use.
+26. Incomes earned elsewhere can be used to buy replacement oxen. For example, migration
+earnings are a major source of cash incomes for many farming areas in southern Africa and
+the Sahel. Migration may be seasonal or involve the absence of a male household member for
+a number of years, during which time cash remittances are sent back to the farm sector for the
+purchase both of food and farm inputs. The ease with which these earnings can be used to
+finance the purchase of new work animals depends on the relative value of the remittance, the
+price of work oxen and the urgency of other calls upon cash income. In times of drought,
+urban labour markets are usually flooded with job-seekers leading to low real wage levels. For
+this reason, the size of migration earnings is likely to be low in the post-drought period and
+possibilities for acquiring the funds to purchase work oxen more limited than in normal times. It
+will also be harder for farmers to rebuild work oxen holdings where both the arable and the
+farm sector have been hit by drought. In this case there will be heavy demand in the postdrought period from both the farming sector and the meat market for the limited supply of
+young male animals and prices will rise accordingly.
+27. Waiting for the herd to re-grow is an option for those farm households with sufficient
+breeding animals. The speed of recovery in work oxen numbers will depend in this case on the
+number of oxen required for ploughing, the size of the breeding herd and its rate of increase.
+However, some arrangement must be made in the intervening years either to obtain food or to
+borrow draft power from elsewhere.
+28. The speed with which harvests recover and holdings of draft animals are reconstituted
+depends on the factors discussed above. This process of reconstitution will be more rapid
+where:
+- sharing of animals provides a temporary means by which those without draft
+animals can continue to cultivate all of their land,
+- the agricultural sector is sufficiently productive for farmers to have access to a
+regular surplus for investment and where the relative price of crops to oxen is in
+favour of the former, so that a good harvest can enable the farmer to replace lost
+animals in a single year,
+
+- there are external sources of income which can be used to buy new animals and
+equipment and to provide for the household's food needs in the intervening period.
+29. Conversely, rehabilitation will be slower the heavier are oxen losses, the greater the area
+affected by crop and livestock losses and the higher the price of oxen relative to crop output
+and migrants' earnings.
+
+The speed of post-drought recovery
+30. Post-drought surveys provide some data on the evolution of harvests over subsequent
+years and on the time taken for crop production to get back to normal levels. However, there
+are often a number of other factors affecting total harvest size in the post-drought period which
+make it hard to assess the relative importance of work-oxen losses as compared with
+variables such as lack of seed, rainfall levels, social and political dislocation, etc..
+31. The drought year of 1978/79 in Botswana saw an estimated 60% fall in area cultivated in
+the region surveyed, caused by the poor condition of work oxen and the poor timing of rainfall
+at the start of the farming season. However, the following season appears to have seen an
+increase in area cultivated above normal levels, farmers having an incentive to increase their
+field size, given shortages in food supplies (Jones, 1980). This increase in area following the
+drought was made possible by the relatively low losses (of 10-15%) suffered among draft
+animal holdings and the extensive systems for loaning draft power between households. The
+latter implies that there was slack capacity in the system in Botswana.
+32. In the case of the Sahel, no material is available on the speed with which area cultivated
+returned to normal after the drought of 1968-73. However, grain production figures would
+suggest that harvests were back to pre-drought levels in 1974, which would imply no
+significant adverse impact on farm productive capacity as a result of the drought. This may be
+explained by the relatively low losses of harvests and oxen in most farming areas, so that area
+farmed and output could return rapidly to normal once rainfall conditions improved. By
+contrast, recent material from north-west Mali would suggest a fall in area cultivated of
+between 30 and 50% in 1984, due to heavy losses of draft animals the previous year. Even
+with the return to better rainfall in 1985, such farming areas cannot hope to obtain a
+reasonable harvest.
+33. For Ethiopia, data on crop output and area cultivated is scarce for the periods surrounding
+the droughts of the early 70s and those of 1982-84. Wolde Mariam (1984) cites a report for
+Wollo and Tigre in which previous losses of work oxen are held to account for between 44 and
+87% of the cases in which land was not cultivated in 1973, with seed shortages mentioned as
+being of only secondary importance. Crop production figures suggest that 1974 saw a return
+to more normal levels of output at the national level but these figures should be treated with
+care as they refer to national output rather than to that from the most drought-affected
+provinces. In subsequent years, additional factors, such as land reform, and political instability
+have themselves contributed further to difficulties in assessing changes in farm output for the
+drought-prone areas of Wollo and Tigre. Data for crop production in 1985 is patchy and it is
+difficult to separate the effects of work oxen losses from the other major influences on the level
+of farming activity in different regions of the country.
+
+Policy measures to aid recovery of the farm sector
+Government policy measures
+Direct help to the farm sector
+34. This section will consider the alternative policy options open to governments and development
+agencies aimed at speeding the recovery of farm production after drought. As in the rest of this
+paper, it focusses on livestock-related aspects of crop production. Thus, it does not consider explicitly
+the need for seed provision, although access to seed is evidently a precondition for restoring
+production levels.
+35. Policy options can be divided into three categories: those that enable the farm sector to help
+itself, such as lowering rates of taxation; those that aid the farm sector by the direct provision of
+inputs, such as credit to buy oxen and fertiliser; and those which, though directed at the livestock
+sector, nevertheless have a beneficial effect on farmers' ability to reconstitute their draft animal
+holdings. Within each category, there are certain actions which are properly the domain of the
+national government, such as pricing and taxation policy, while others are open to both governments
+and agencies to undertake, such as the funding of a credit programme.
+36. Policies differ with respect to their cost, their impact on different producer and consumer groups,
+their effect on the external trade balance, their spillover effects into other sectors of the economy and
+the speed with which they can be implemented. These different impacts should be taken into account
+by decision-makers before deciding which options to pursue. In addition, governments will find that
+the probability of receiving external funding differs between policy measures, donors being more
+willing to fund direct interventions in farm production than to provide general financial support for the
+government budget.
+37. Several policy options considered below involve government intervention in controlling prices,
+trade flows or providing subsidised inputs to the farm sector. These policies presuppose a structure
+through which governments are able to act effectively at little extra cost. In practice, the absence of
+the necessary degree of government control limits the likely effectiveness of certain measures. For
+example, where the government has little control of livestock exports, due to long frontiers which are
+costly to police, measures to ban exports of certain classes of stock are unlikely to be very effective.
+Finally, all policy options need to be compared with the cost of not taking any action and the
+consequent need for famine relief provision.
+
+Government policy measures
+38. Several policy instruments are considered here: changes in taxation of the farm and livestock
+sectors, increases in crop and livestock prices, minimization of constraints on labour migration from
+rural areas and controls on animal exports. The main aim of these measures is to reduce the
+pressure on farm incomes and thereby allow a more rapid return to pre-drought levels of production.
+(a) A reduction in poll or land tax helps recovery as it leaves the farmer with more
+disposable income for investment in new animals and farm equipment. Changes in the
+level of taxation on cattle will have a less clear-cut effect. To the extent that the farmer
+owns livestock, a tax reduction per animal head will be of benefit. However, such a
+reduction will also reduce the pressure on herders' incomes and their need to sell stock,
+leading to lower supply of and higher prices for livestock. This will be to the disadvantage
+of farmers wishing to purchase animals to restore their work oxen holdings. Tax cuts
+have the advantage of being speedy to implement. However, they do cut government
+income and, in the case of a simple tax cut for all producers, do not differentiate between
+
+the better-off and those truly in need. A tax system able to direct benefits to a more
+specific target group would be more complex and costly to implement.
+(b) Where the government controls the price and marketing of major crops, resources
+can be channelled to the farm sector by raising farm prices for crops. However, the scope
+for this policy measure is probably fairly limited, first because farmers who have lost their
+draft animals are unlikely to have a significant crop surplus for sale and second, because
+the government will be very reluctant to increase the cost of food to urban consumers.
+Government attempts to manipulate livestock prices, in order to help farmers purchase
+new work oxen (i.e. at lower prices), may also be of limited value given the large
+proportion of domestic and external trade which passes through unofficial channels in
+many countries. Even where this is not the case, controlled prices are likely to confront
+enforcement problems. Oxen price subsidy schemes may be an apparent alternative but
+these usually entail costs over and above the face value of the financial burden on the
+government. Credit programmes with various options discussed a little later, would seem
+to be a better alternative.
+(c) Minimising the constraints on rural migration was noted earlier as a way that
+governments can help indigenous efforts at rehabilitation at little or no cost. The degree
+to which migrants' earnings can contribute to rebuilding farm assets will depend on the
+relative supply of and demand for labour in areas receiving immigrants, which will in turn
+depend on how extensive the drought has been.
+(d) Several countries have imposed controls over the export of livestock following
+drought, in order to retain some animals within the national herd and to moderate upward
+pressure on domestic livestock and meat Prices. The effectiveness of these controls will
+vary, given differing capacities to direct animals through official channels. However, even
+where it is relatively easy to evade border controls, the imposition of an export ban on
+stock is likely to depress prices to a certain extent. The greater the downward effect on
+prices, the more farmers will benefit from being able to buy cheap draft animals.
+
+Direct help to the farm sector.
+39. There are several ways in which governments and agencies can mitigate the impact of work oxen
+losses on farm production. Some of these policies have been pursued in the past in Ethiopia and
+Botswana while others are currently being undertaken. Here, the options will be compared in terms of
+their relative costs and the particular problems associated with the implementation of each. Details of
+each option are presented in Table 1. Data on costs are taken from a number of different sources,
+referring to interventions at different dates and for differing localities. They should thus be treated
+with caution as they indicate rough orders of magnitude rather than precise costings. Their utility lies
+in presenting the kind of rapid calculation of returns from alternative policy options which
+governments and agencies need to do in order to identify the best course of action in a given
+situation.
+(a) Work oxen credit to farmers involves the issue of loans to farmers, in cash or in the
+form of animals, for repayment over a period of years. A number of work oxen credit
+schemes have been carried out in different countries within general programmes of
+agricultural development, but few have had the restoration of drought-induced oxen
+losses as their explicit objective. One of the few examples of the latter was that pursued
+by the Ethiopian government over the first 6 months of 1974, during which an estimated
+40,000 loans were given out to farmers in drought-affected regions (EPID, 1974).
+Following the 1982-84 drought in Ethiopia, a number of agencies have also been
+involved in distributing oxen to farmers, either on credit or as gifts. A number of questions
+are raised by work oxen credit schemes.
+40. First, what are the possibilities for distributing one ox per farmer rather than a full team, with a
+view either to farmers sharing their animals or to the introduction of single ox cultivation techniques?
+(See Gryseels et al, 1984 and ILCA, 1986).
+
+41. Second, what are the number of oxen available for purchase, either within the region or in
+neighbouring rangeland areas and what are their relative prices in each case, including transport
+costs?
+42. Third, how satisfactory are the grazing resources in the region which is to receive the oxen? In
+the absence of natural pastures, the cost of providing alternative supplies of fodder for example by
+keeping oxen in neighbouring areas where pasture conditions are better or by transporting fodder to
+animals in pasture deficit areas must be considered. The latter is likely to be considerably more
+expensive than other options. The long-term availability of fodder must also be considered. Where
+the pressure of human and livestock populations is already very great, decision-makers should
+consider the possibility either of increasing fodder production, through increased cultivation of forage
+crops, or of replacing oxen as the main source of draft power with mechanised techniques.
+43. Fourth, should farmers be given a cash loan with which to purchase oxen or should oxen be
+distributed directly? There are many advantages to the farmer being the purchaser of his own ox. He
+makes the choice among available animals and thus is not forced to take an animal which he feels to
+be unsuitable for any reason. In addition, farmers will have a good knowledge of local opportunities
+for the purchase of oxen not readily available to project staff. The overall effect on oxen prices of a
+large number of purchases by individual farmers spread over a period of several weeks or months, is
+likely to be lower than that of a large scale operation by a project agency. On the other hand,
+agencies may have access to sources of animals at lower prices from more distant areas which
+cannot easily be reached by individual farmers. However, transport costs will be higher when oxen
+must be brought in from far away. In addition oxen taken from a different rainfall and ecological zone
+may find it difficult to adapt to grazing conditions and diseases in the farming region to which they
+have been brought.
+44. The granting of loans directly to farmers does increase the risk of fraud, as it will be hard to
+monitor whether the ox presented by the farmer as having been bought with the loan was in fact
+bought, or whether it has been borrowed from a neighbour or was already owned etc. A certain level
+of fraud is probably acceptable if it keeps down administrative costs and allows a large number of
+individuals to be reached quickly. Also, fraud involving the use of funds by needy recipients for
+purposes other than those intended is of much less importance than fraud involving the diversion of
+cash to those not truly in need.
+45. Fifth, should oxen be distributed on credit or as an outright gift and, if the former, what should be
+the terms of loan repayment? There may be circumstances in which the option of making a gift of the
+stock should be seriously considered, as where the cost of collecting loan repayments is going to be
+high and will absorb scarce administrative capacity. Where there are considerable risks to stock
+there is also an argument in favour of gifts rather than loans as, in the case of future drought, farmers
+will be faced with great difficulty in repaying loans. On the other hand, repayments can be used to
+form a revolving fund providing further credit to farmers, thus widening the spread of benefits from the
+original provision of funds.
+Table 1. Draft Power Policy Measures: A Comparison of Alternatives
+Project
+
+Initial Cost
+
+(1) Work oxen credit Loan for oxen purchase of
+US$140-180 per ox
+to farmers a
+
+Associated Cost to
+government/agency
+
+Area cultivated
+US$100 spent
+
+Issues Arising
+
+Administration,
+1.00-1.50 ha.
+vaccination, insurance,
+fodder
+
+Oxen available locally? fodder
+supplies adequate?
+Soils and terrain suitable?
+
+tractor pool a
+
+Purchase of tractor at US$1520,000
+
+Fuel, spare parts,
+skilled labour and
+administration
+
+(3) Loans for local
+tractor hire
+
+Loans to farmers at US$2040/ha
+
+Administration. Other 2.00 - 4.00 ha.
+costs borne by tractorowner
+
+Tractors available locally? Soil and
+terrain suited?
+
+(4) Hand tool
+distribution
+
+Purchase of tools at US$5 per
+unit
+
+Distribution, high
+labour cost
+
+2.00-10.00 ha.
+
+Variability in soils means wide
+range in possible area farmed
+
+(5) Fertiliser
+
+Purchase at US$60 per 100
+
+Transport and
+
+Raise fertility on
+
+Expected crop response known?
+
+(2) Government
+
+2.00 - 3.00 ha.
+
+distributiona
+
+kgs.
+
+Purchase feed at US4-8c/kg.
+(6) Supplement a
+surviving work oxen feed2-3 kgs over90 days/per
+ox
+
+distribution
+
+1.00-2.00 ha.
+
+Transport and
+distribution
+
+2.00 - 5.00 ha.
+
+High return depends on selecting
+oxen most in need. Extra land
+available?
+
+Notes to Table 1
+(1) Assumes oxen pair can work 3.00-5.00 ha of land. This is high for the Ethiopian
+context but relatively low for conditions in the Sahel and southern Africa.
+(2) Assumes a minimum of 250 ha. ploughed per year per tractor and annual running
+costs of around US$I 0,000, including depreciation.
+(5) With assumed increase in output of 200-400 kgs/ha., return on fertiliser purchase is
+from US$60-120 (grain valued at US$300-400 per ton, as noted earlier).
+(6) Total cost of supplementation is US$20-45 per oxen pair. Assumes that following this
+supplementation, oxen pair performance raised from I ha. to 3 ha.
+46. In the case of loans, the project must decide on the terms of repayment. If loan repayments are
+set too high, farmers may be unable to save sufficient surplus to invest in the new draft animals
+essential to the long-term rehabilitation of the farm's productive capital. The various schemes
+involving work oxen credit programmes which have been carried out in East and West Africa have
+had repayment periods of between 3 and 5 years, an upper limit on the length of the repayment
+period being set by the increasing risk of death as animals age. Repayments on the credit scheme
+run by EPID in Ethiopia following the 1972-73 drought were to be made over a 4 year period.
+However, very few of these loans seem to have been subsequently repaid, given continuing drought
+in some areas and the political uncertainty following land reform.
+(b) Government-run tractor pools are based on the government purchasing a fleet of
+tractors which are then made available to farmers for a fee. Benefits from such a scheme
+will be greatest where the terrain is suited for tractor cultivation, that is, not too hilly and
+with few rocks and tree stumps, and where oxen and pasture shortages are so acute that
+no alternative sources of draft power can be considered. The costs of such schemes are
+likely to be substantial, given the high foreign exchange cost of purchasing the tractors,
+and of the spare parts and fuel which will be needed for their operation. The cost of
+providing skilled labour, necessary for the operation and repair of equipment, will make
+yet further demands on government funds. Shortages of any of the inputs required to
+keep the tractors in working order will increase the risk and the cost per hectare of
+pursuing this option. At the time of the EPID programme in Ethiopia in 1974, the cost of
+setting up a tractor pool was estimated at E$20,000 per tractor, in comparison with a cost
+to the farmer of E$60-70 per hectare if tractors were rented from large farmers. The
+establishment of a government-run tractor pool would only be cost-effective:
+- if each government tractor could plough a sufficient number of hectares to
+bring the per hectare cost close to that of the private sector.
+- if the value of dry season work by the tractor pool, such as the transport of
+goods, is sufficiently great to compensate for a lower level of ploughing
+capacity in the farming season;
+- and if the available draft capacity from other sources is so low, whether
+from oxen or from locally-owned tractors, that the relevant comparison which
+should be made is not that of the relative costs of preparing land by
+alternative techniques but rather the cost of ploughing using governmentowned tractors versus the cost in foregone output of the land not being
+cultivated at all.
+47. While schemes for providing draft power to farmers after drought have focussed on the use of
+tractors, there may also be alternative mechanical options worth considering, such as small rotary
+cultivators which can be used on steep plots of land.
+
+(c) Loans for the hire of local tractor services are an alternative in some circumstances.
+For example, in Botswana, even in normal years, farmers regularly hire tractors
+belonging to others in order to prepare their land. The governments of both Botswana
+and Ethiopia have in the past granted loans to farmers for hiring tractor power to
+compensate for drought losses among oxen. The cost of these has varied from US$20-40
+a hectare, which the farmer is supposed to repay after the harvest. Evidently, the
+feasibility of this scheme depends on the number of tractors available within a reasonable
+distance, their spare working capacity and the suitability of farmers' plots to this
+ploughing technique. There will be costs in the form of fuel, spare parts and skilled labour
+requirements but these will be borne by the tractor-owners rather than the government.
+The main disadvantage of this scheme is that it does not provide farmers with a renewal
+of their productive capacity and they will need to find help from this or another draft
+source in the years to come.
+(d) Provision of hand tools is a low cost way to provide households with the means to
+farm their land. The viability of this option depends on how much land can be cultivated
+by hand in comparison with the plough and on the associated decline in yield per hectare.
+The extent to which yields will be lower for hand- as opposed to plough team-prepared
+and weeded land will be determined by the importance of timely sowing and weeding, by
+the area of land cultivated per worker and the consequent tightness of land preparation
+and weeding constraints. Where each worker farms a large area and where seed must
+be planted early to ensure a reasonable yield, preparation of land by plough team may
+be the only effective way of sowing and weeding. For example, under the extensive
+farming practices of central Mali, where the area per worker can be as high as 3-5 ha.,
+plough teams play a major role in achieving high yields of millet per worker, as they
+permit a very large area of land to be sown and weeded within a rainy season lasting
+only 6 to 8 weeks (Toulmin, 1983). Farm households without their own plough team must
+borrow equipment from others, often only available rather late in the season and they
+suffer lower yields as a result, due to sowing much of their grain on unploughed land and
+to the slowness of hand weeding.
+48. In Ethiopia, land holdings are often smaller than in the Sahel, with each household farming on
+average between 2.0 and 2.5 ha in the highland region.
+49. While this would lead one to expect a greater potential role for hand preparation techniques, soils
+are so heavy that hand preparation of land is actually extremely rare, being limited to the steepest
+hillside plots. Given these soil conditions, farmers resorting to hand tools would probably face a
+significant fall in the area they could cultivate.
+50. Besides the fall in area cultivated when hand techniques are used, there are two additional costs
+from the use of hand tools. First, soil preparation is likely to be less effective using hand tools, leading
+to less successful seed germination, more competition from weeds and hence lower yields per
+hectare. Second, the work involved in hand preparation is very considerable and would make
+demands on household workers at a time when energy and food reserves were already very low.
+(e) The provision of fertiliser by donors as a complement to hand tool distribution could
+be considered. The increase in fertility would partially compensate for the fall in area
+cultivated and the lower yields per hectare associated with use of hand tools.
+Disadvantages to this option include the foreign exchange cost, if funded from
+government resources, of fertiliser imports and the high costs of transport and
+distribution to areas of need. To assess the likely effectiveness of this option one needs
+to know the expected crop response from the application of a given quantity of fertiliser
+per hectare. With fertiliser prices of around US$60 per 100 kgs, a price of US$300 - 400
+per ton of grain and application rates of 100 kg/ha, crop output would have to rise by at
+least 150 - 200 kgs/ha to make the scheme financially profitable. However, economic or
+social profitability would demand a lower percentage increase in yields, taking account of
+the cost of alternative food supplies for farming populations and the value placed on reestablishing viable farming communities.
+
+(f) Supplementation of work oxen aims to improve draft performance by moderating
+weight loss. The increase in draft power gained from supplementation depends on the
+relative weight loss of supplemented and unsupplemented stock and on the demands
+made upon draft animals, in terms of the length of a working day and the tractive power
+required. Any improvement in performance is translated into higher crop production either
+through an increase in area or through more timely sowing and weeding. The relative
+size of each of these benefits is determined by the availability of land with which to
+increase cultivated area and by the significance of timeliness for final yield. These factors
+are likely to vary between different regions according to population densities and the
+pattern and volume of rainfall. Within the Ethiopian context, for example, supplementation
+of work oxen is likely to lead to improved tillage and more timely sowing of fields, rather
+than a significant expansion in area cultivated, given the shortage of unoccupied arable
+land in most farming regions. Benefits from supplementation will be greatest where it is
+restricted to those animals which have lost a substantial amount of their body-weight and
+whose subsequent ability to work is much impaired.
+
+A comparison of alternative policy measures
+The cost of doing nothin
+51. The fourth column in Table 1 gives the estimated areas which could be cultivated for every
+US$100 spent on each measure. Based on the data used for the table (summarised in the
+notes below), there is remarkable similarity between the alternatives in terms of their cost.
+Given the imprecision of these data, it would suggest that there is little to choose between the
+options as far as their financial cost is concerned. Policy-makers should consider how the
+relative cost of each option is likely to compare under the particular circumstances they face.
+In order to do this, they need information on the following: (i) the prices and availability of
+grain, oxen, fodder, tractors and fuel in the region concerned; (ii) the suitability of soils for
+cultivation by tractor or some other machine; (iii) the shadow price of foreign exchange and
+skilled labour to the economy; and (iv) the expected response of crop output to differing levels
+of input use.
+
+The cost of doing nothing
+52. The cost of taking action to rehabilitate the farm sector after drought should be compared
+with the cost of doing nothing, which includes the short-term cost of continuing to provide
+famine relief to the affected population and the longer term consequence for the government
+and national economy of low levels of agricultural production. The provision of food relief at a
+basic 0.5 kgs of grain per adult per day implies a total of 900 to 1,000 kgs per annum for a
+household containing 7 people, or 5 adult equivalents. The cost attributable to providing this
+grain ration depends on the price of grain, the size of transport costs and on who pays the bill.
+For example, grain provided free to a particular government for distribution as food aid will
+cost the government little or nothing, depending on who is responsible for its transport and
+distribution within the country. By contrast, grain which must be bought on the open market will
+cost the government dear in foreign exchange and transport costs. Here, the price of grain is
+assumed to be US$300-400 per ton, based on the cost of either buying local food grains or
+buying grain on the world market plus transport costs to local markets, the latter probably
+being as high as US$150-200 per ton for land locked states with poor road networks. Given
+an average expected yield of 400 kgs per hectare following the interventions described above,
+it can be seen that all of the policy options give a benefit cost ratio far in excess of unity in a
+single year, even if no account is taken of the wider social benefits associated with reestablishing production in rural areas. There are consequently very strong arguments in favour
+of pursuing the rehabilitation of farm production as an urgent priority.
+
+Conclusions
+53. This paper has discussed a range of policy measures aimed at rehabilitation of livestockrelated aspects of farm production after drought. It can be seen that there are a variety of
+policies open to governments and agencies, each with particular cost and welfare implications.
+Policies also differ in their spillover effects on the rest of the economy, some being precisely
+targetted, such as a subsidy to a specific producer group, while others cause widespread
+changes in the structure of prices and incentives within the economy. Choice between these
+alternatives will be partially determined by the conditions faced in the post-drought period, in
+terms of the resources domestically available - such as pastures, livestock, grain and seed local administrative capacity and the country's marketing and transport infrastructure. External
+finance from aid agencies can help loosen some of these constraints by, for example,
+supplementing local food supplies by relief grain.
+54. It would be wise to consider as many policy options as possible, since conditions faced by
+producers in different regions will vary greatly. For example, where local tractor power is
+available, government credit or subsidies for tractor hire is an obvious option to pursue,
+especially where local draft oxen supplies are limited and prices high. In areas where fodder
+supplies are scarce and highly vulnerable to drought, alternatives to oxen as the main source
+of draft should be considered. Similarly, while most oxen distribution schemes have involved
+the provision of credit, the option of given stock should be considered under certain
+circumstances, where repayment is subject to high risks and high costs of collection.
+55. An assessment of policy options should include the consequences for the affected
+community and national economy of taking no action. Governments can either continue to
+provide food relief to drought-affected groups or leave them to help themselves. In either case,
+there is a cost associated with taking no action, in terms of foregone output, the cost of
+purchase, transport and distribution of food relief and the longer term social costs from the
+dislocation of rural communities from self-sufficient production. The rehabilitation options
+looked at in this paper compare very favourably with the cost of food relief provision and
+should provide a fast return on invested resources. In this regard, returns are likely to be much
+higher on projects of farm rehabilitation, involving the re-establishment of production using
+traditional methods, than those aiming to introduce new crops and technologies to farmers.
+Where the social cost to affected populations of foregone farm production is also taken into
+account, the returns from funding rehabilitation, as opposed to relief measures, will be even
+higher.
+56. Policies for rehabilitation should be linked in future with more effective short-term relief
+measures and long-term policies for establishing less drought-vulnerable systems. The
+speedy provision of relief food supplies at an early stage of a drought, to farmers in greatest
+distress, would reduce the subsequent need for more costly rehabilitation measures. For
+example, if farmers in areas with sufficient pasture could get access to food relief, they would
+be under less pressure to liquidate their livestock holdings. There would consequently be
+more draft stock available and less need for oxen reconstitution programmes in the postdrought period. Rehabilitation policy should also be formulated in co-ordination with longer
+term measures, since the post-drought period can offer a breathing space within which to
+initiate changes in patterns of production and resource management. This will be particularly
+important, for example, in areas where pre-drought levels of livestock had surpassed the
+capacity of grazing normally available.
+
+57. In the post-drought period, the shortage of livestock will constrain levels of production in
+both the cropping and the pastoral sector. Given the importance of these two sectors for many
+countries in sub-Saharan Africa, careful choices need to be made about the priority to be
+given to helping one or the other sector. The high degree of interaction between the two
+sectors, through animal and grain markets and competition for scarce fodder resources,
+means that the effect on pastoral production from intervention in the farming sector should be
+analysed and vice versa. For example, some competition will exist between the use of male
+cattle for meat - by their fattening and early slaughter - and their being used for draft purposes.
+The relative strength of demand for young oxen will depend on the incomes and purchasing
+power of domestic and foreign consumers of meat and on the investment funds available to
+farmers. Where drought losses of work oxen have been high, farmers' ability to reconstitute
+their work oxen holdings will be reduced if they face strong competition for male animals from
+meat markets. In such cases, some intervention may be necessary to achieve the desired
+balance between satisfying immediate demands for meat and the requirements for
+rehabilitating productive farm capital. The provision of credit to farmers to purchase work oxen
+would have the dual effect of increasing farmers' purchasing power relative to meat
+consumers while benefitting livestock-sellers by the upward effect on animal prices. In other
+areas, the two sectors may be in competition for scarce resources as, for example, where a
+limited supply of feedstuff or veterinary inputs is available for distribution.
+58. A strong case can be made for priority to be given to crop production, given the
+importance of grain in the diets of all consumers and of the poorest groups in particular. Reestablishing grain production will also benefit livestock producers by bringing down the relative
+price of cereals to livestock. This will reduce both pressure on herders' incomes and the
+number of animals needed for a viable livestock holding. However, some resources should
+also be made directly available to the pastoral sector, given that extensive livestock production
+is usually the only way to effectively utilise the sparse resources found in many semi-arid
+regions. Grazing animals convert these resources into valuable products for the rest of the
+economy as well as providing support to a given human population. The supply of young oxen
+to the farm sector in future will also depend on the speed with which animal numbers and
+levels of livestock productivity recover in the pastoral sector following drought.
+
+References
+EPID (Extension and Project Implementation Department). 1974. Short-term recovery
+programme for the drought -stricken provinces of Ethiopia. Ministry of Agriculture, EPID
+Publication no. 16. Addis Ababa.
+FAO. 1984. Rapport de la mission FAO/PAM Multi-donateurs. Republique du Mali. Evaluation
+de la situation de l'alimentation de l'agriculture et de l'elevage. OSRO Rapport no 15/84/F.
+Rome.
+Gryseels G. and Anderson F. 1983. Research on farm and livestock production in the central
+Ethiopian Highlands: Initial results 1977-80. ILCA Research Report No. 4, ILCA, Addis Ababa.
+Gryseels G., Abiye Astatke, Anderson, M F and Getachew Assamenew. 1984. The use of
+single oxen cultivation in Ethiopia ILCA Bulletin, 18, ILCA, Addis Ababa.
+ILCA. 1986. Regenerating farming systems after drought: ILCA's ox/seed project. ILCA
+Newsletter Vol. 5(1). Addis Ababa.
+Jones D. 1979. Drought and arable farming. In: Hinchey M. T (ed) Proceedings of Symposium
+on Drought in Botswana.
+Jones D. 1980. Ploughing survey. In: Vierich H and Sheppard C. Drought in rural Botswana:
+Socio-economic impact and government policy. Rural Sociology Unit, Gaborone.
+Sen A K. 1981. Poverty and famines. An essay on entitlement and deprivation. Oxford.
+Toulmin C. 1983. Herders and farmers or farmer-herders and herder-farmers? Pastoral
+Network Paper no. 15d, ODI, London.
+Vierich H and Sheppard C. 1980. Drought in rural Botswana: Socioeconomic impact and
+government policy. Rural Sociology Unit. Gaborone.
+Wolde Mariam M. 1984. Rural vulnerability to famine in Ethiopia: 1958-1977. Vikas Publishing
+House, India.
+Wood A. 1976. Farmers' responses to drought in Ethiopia. In: Hussein A M, Rehabilitation:
+Drought and famine in Ethiopia. African Environment Special Report no. 2. London.
+
+

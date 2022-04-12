@@ -1,0 +1,3151 @@
+#
+# this file is taken from nxml2txt (MIT license): https://github.com/spyysalo/nxml2txt
+#
+# 0080-00FF: Latin-1 Supplement
+# 0080	<control> (remove)
+0080	
+# 0081	<control>
+# 0082	<BREAK PERMITTED HERE>
+# 0083	<NO BREAK HERE>
+# 0084	<control>
+# 0085	<NEXT LINE (NEL)>
+0085	\n
+# 0086	<START OF SELECTED AREA>
+# 0087	<END OF SELECTED AREA>
+# 0088	<CHARACTER TABULATION SET>
+# 0089	<CHARACTER TABULATION WITH JUSTIFICATION>
+# 008A	<LINE TABULATION SET>
+# 008B	<PARTIAL LINE FORWARD>
+# 008C	<PARTIAL LINE BACKWARD>
+# 008D	<REVERSE LINE FEED>
+# 008E	<SINGLE SHIFT TWO>
+# 008F	<SINGLE SHIFT THREE>
+# 0090	<DEVICE CONTROL STRING> (remove)
+0090	
+# 0091	<PRIVATE USE ONE> (misuse as single quote)
+0091	'
+# 0092	<PRIVATE USE TWO> (misuse as single quote)
+0092	'
+# 0093	<SET TRANSMIT STATE> (misuse as double quote)
+0093	"
+# 0094	<CANCEL CHARACTER> (misuse as double quote)
+0094	"
+# 0095	<MESSAGE WAITING>
+# 0096	<START OF GUARDED AREA> (misuse as dash)
+0096	-
+# 0097	<END OF GUARDED AREA> (misuse as dash)
+0097	-
+# 0098	<START OF STRING>
+# 0099	<control>
+# 009A	<SINGLE CHARACTER INTRODUCER>
+# 009B	<CONTROL SEQUENCE INTRODUCER>
+# 009C	<STRING TERMINATOR>
+# 009D	<OPERATING SYSTEM COMMAND>
+# 009E	<PRIVACY MESSAGE>
+# 009F	<APPLICATION PROGRAM COMMAND>
+# 00A0	<NO-BREAK SPACE>
+00A0	 
+# 00A1	<INVERTED EXCLAMATION MARK>
+00A1	!
+00A2	cent
+00A3	pound
+00A4	currency
+00A5	yen
+# 00A6	<BROKEN BAR>
+00A6	|
+# 00A7	<SECTION SIGN> ("double S")
+00A7	S
+# 00A8	<DIARESIS> (two dots above)
+00A8	 
+# 00A9	<COPYRIGHT SIGN>
+00A9	(c)
+# 00AA	<FEMININE ORDINAL INDICATOR> (superscript "a")
+00AA	(a)
+# 00AB	<LEFT-POINTING DOUBLE ANGLE QUOTATION MARK>
+00AB	<<
+# 00AC	<NOT SIGN>
+00AC	not
+# 00AD	<SOFT HYPHEN>
+00AD	-
+# 00AE	<REGISTERED SIGN>
+00AE	(R)
+# 00AF	<MACRON> (overline)
+00AF	 
+00B0	degrees
+00B1	+/-
+# 00B2, 00B3: superscript "2", "3"
+00B2	(2)
+00B3	(3)
+# 00B4	<ACUTE ACCENT> (some occurrences as "prime" in e.g. "3'")
+00B4	'
+00B5	micro
+# 00B6	<PILCROW SIGN> (paragraph sign)
+00B6	$
+00B7	.
+# 00B8	<CEDILLA> (combining mark, remove)
+00B8	
+# 00B9	<SUPERSCRIPT ONE>
+00B9	(1)
+# 00AA	<MASCULINE ORDINAL INDICATOR> (superscript "o", some misuse as "degrees")
+00BA	(o)
+# 00AB	<RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK>
+00BB	>>
+# 00BC-00BE: vulgar fractions
+00BC	(1/4)
+00BD	(1/2)
+00BE	(3/4)
+# 00BF	<INVERTED QUESTION MARK>
+00BF	?
+# 00C0-00FF: Latin-1 Supplement, accented letters (mostly)
+00C0	A
+00C1	A
+00C2	A
+00C3	A
+00C4	A
+00C5	A
+00C6	AE
+00C7	C
+00C8	E
+00C9	E
+00CA	E
+00CB	E
+00CC	I
+00CD	I
+00CE	I
+00CF	I
+# 00D0	<LATIN CAPITAL LETTER ETH> (approximation)
+00D0	D
+00D1	N
+00D2	O
+00D3	O
+00D4	O
+00D5	O
+00D6	O
+# 00D7	<MULTIPLICATION SIGN>
+00D7	x
+00D8	O
+00D9	U
+00DA	U
+00DB	U
+00DC	U
+00DD	Y
+# 00DE	<LATIN CAPITAL LETTER THORN>
+00DE	Th
+# 00DF	<LATIN SMALL LETTER SHARP S>
+# NOTE: 00DF ("ss") misused as "beta" in cases; judged matching these primary
+#00DF	ss
+00DF	beta
+00E0	a
+00E1	a
+00E2	a
+00E3	a
+00E4	a
+00E5	a
+00E6	ae
+00E7	c
+00E8	e
+00E9	e
+00EA	e
+00EB	e
+00EC	i
+00ED	i
+00EE	i
+00EF	i
+# 00F0	<LATIN SMALL LETTER ETH> (approximation)
+00F0	d
+00F1	n
+00F2	o
+00F3	o
+00F4	o
+00F5	o
+00F6	o
+# 00F7	<DIVISION SIGN>
+00F7	/
+00F8	o
+00F9	u
+00FA	u
+00FB	u
+00FC	u
+00FD	y
+# 00FE	<LATIN SMALL LETTER THORN>
+00FE	th
+00FF	y
+# 0100-017F: Latin Extended-A, accented letters (mostly)
+0100	A
+0101	a
+0102	A
+0103	a
+0104	A
+0105	a
+0106	C
+0107	c
+0108	C
+0109	c
+010A	C
+010B	c
+010C	C
+010D	c
+010E	D
+010F	d
+0110	D
+0111	d
+0112	E
+0113	e
+0114	E
+0115	e
+0116	E
+0117	e
+0118	E
+0119	e
+011A	E
+011B	e
+011C	G
+011D	g
+011E	G
+011F	g
+0120	G
+0121	g
+0122	G
+0123	g
+0124	H
+0125	h
+0126	H
+0127	h
+0128	I
+0129	i
+012A	I
+012B	i
+012C	I
+012D	i
+012E	I
+012F	i
+0130	I
+0131	i
+0132	IJ
+0133	ij
+0134	J
+0135	j
+0136	K
+0137	k
+# 0138	<LATIN SMALL LETTER KRA> (very rough approx.)
+0138	k
+0139	L
+013A	l
+013B	L
+013C	l
+013D	L
+013E	l
+013F	L
+0140	l
+0141	L
+0142	l
+0143	N
+0144	n
+0145	N
+0146	n
+0147	N
+0148	n
+0149	n
+014A	M
+014B	n
+014C	O
+014D	o
+014E	O
+014F	o
+0150	O
+0151	o
+0152	OE
+0153	oe
+0154	R
+0155	r
+0156	R
+0157	r
+0158	R
+0159	r
+015A	S
+015B	s
+015C	S
+015D	s
+015E	S
+015F	s
+0160	S
+0161	s
+0162	T
+0163	t
+0164	T
+0165	t
+0166	T
+0167	t
+0168	U
+0169	u
+016A	U
+016B	u
+016C	U
+016D	u
+016E	U
+016F	u
+0170	U
+0171	u
+0172	U
+0173	u
+0174	W
+0175	w
+0176	Y
+0177	y
+0178	Y
+0179	Z
+017A	z
+017B	Z
+017C	z
+017D	Z
+017E	z
+# 017F	<LATIN SMALL LETTER LONG S> (TODO)
+#017F	s
+# 0180-024F: Latin Extended-B, accented letters (mostly)
+0180	b
+0181	B
+0182	B
+0183	b
+# 0184	<LATIN CAPITAL LETTER TONE SIX>
+# 0185	<LATIN SMALL LETTER TONE SIX>
+0186	O
+0187	C
+0188	c
+0189	D
+018A	D
+018B	D
+018C	d
+# 018D	<LATIN SMALL LETTER TURNED DELTA>
+# 018E	<LATIN SMALL LETTER REVERSED E>
+# 018F	<LATIN CAPITAL LETTER SCHWA>
+# 0190	<LATIN CAPITAL LETTER OPEN E>
+0190	E
+0191	F
+0192	f
+0193	G
+# 0194	<LATIN CAPITAL LETTER GAMMA>
+# 0195	<LATIN SMALL LETTER HV>
+0195	hv
+# 0196	<LATIN SMALL LETTER IOTA>
+0197	I
+0198	K
+0199	k
+019A	l
+# 019B	<LATIN SMALL LETTER LAMBDA WITH STROKE>
+# 019C	<LATIN CAPITAL LETTER TURNED M>
+019D	N
+019E	n
+019F	O
+01A0	O
+01A1	o
+01A2	OI
+01A3	oi
+01A4	P
+01A5	p
+01A6	YR
+# 01A7	<LATIN CAPITAL LETTER TONE TWO>
+# 01A8	<LATIN SMALL LETTER TONE TWO>
+# 01A9	<LATIN CAPITAL LETTER ESH>
+# 01AA	<LATIN LETTER REVERSED ESH LOOP>
+01AB	t
+01AC	T
+01AD	t
+01AE	T
+01AF	U
+01B0	u
+# 01B1	<LATIN CAPITAL LETTER UPSILON>
+01B2	V
+01B3	Y
+01B4	y
+01B5	Z
+01B6	z
+# 01B7	<LATIN CAPITAL LETTER EZH>
+# 01B8	<LATIN CAPITAL LETTER EZH REVERSED>
+# 01B9	<LATIN SMALL LETTER EZH REVERSED>
+# 01BA	<LATIN SMALL LETTER EZH WITH TAIL>
+01BB	2
+01BC	5
+01BD	5
+# 01BE	<LATIN LETTER INVERTED GLOTTAL STOP WITH STROKE>
+# 01BF	<LATIN LETTER WYNN>
+# 01C0	<LATIN LETTER DENTAL CLICK>
+# 01C1	<LATIN LETTER LATERAL CLICK> (very rough approx.)
+01C1	||
+# 01C2	<LATIN LETTER ALVEOLAR CLICK> (very rough approx.)
+01C2	*
+# 01C3	<LATIN LETTER RETROFLEX CLICK>
+01C4	DZ
+01C5	Dz
+01C6	dz
+01C7	LJ
+01C8	Lj
+01C9	lj
+01CA	NJ
+01CB	Nj
+01CC	nj
+01CD	A
+01CE	a
+01CF	I
+01D0	i
+01D1	O
+01D2	o
+01D3	U
+01D4	u
+01D5	U
+01D6	u
+01D7	U
+01D8	u
+01D9	U
+01DA	u
+01DB	U
+01DC	u
+# 01DD	<LATIN SMALL LETTER TURNED E>
+01DE	A
+01DF	a
+01E0	A
+01E1	a
+01E2	AE
+01E3	ae
+01E4	G
+01E5	g
+01E6	G
+01E7	g
+01E8	K
+01E9	k
+01EA	O
+01EB	o
+01EC	O
+01ED	o
+# 01EE	<LATIN CAPITAL LETTER EZH WITH CARON> (TODO)
+# 01EF	<LATIN SMALL LETTER EZH WITH CARON> (TODO)
+01F0	j
+01F1	DZ
+01F2	Dz
+01F3	dz
+01F4	G
+01F5	g
+# 01F6	<LATIN CAPITAL LETTER HWAIR> (TODO)
+# 01F7	<LATIN CAPITAL LETTER WYNN> (TODO)
+01F8	N
+01F9	n
+01FA	A
+01FB	a
+01FC	AE
+01FD	ae
+01FE	O
+01FF	o
+0200	A
+0201	a
+0202	A
+0203	a
+0204	E
+0205	e
+0206	E
+0207	e
+0208	I
+0209	i
+020A	I
+020B	i
+020C	O
+020D	o
+020E	O
+020F	o
+0210	R
+0211	r
+0212	R
+0213	r
+0214	U
+0215	u
+0216	U
+0217	u
+0218	S
+0219	s
+021A	T
+021B	t
+# 021C	<LATIN CAPITAL LETTER YOGH> (TODO)
+# 021D	<LATIN SMALL LETTER YOGH> (TODO)
+021E	H
+021F	h
+0220	N
+0221	d
+0222	OU
+0223	ou
+0224	Z
+0225	z
+0226	A
+0227	a
+0228	E
+0229	e
+022A	O
+022B	o
+022C	O
+022D	o
+022E	O
+022F	o
+0230	O
+0231	o
+0232	Y
+0233	y
+0234	l
+0235	n
+0236	t
+0237	j
+0238	db
+0239	qp
+023A	A
+023B	C
+023C	c
+023D	L
+023E	T
+023F	s
+0240	z
+# 0241	<LATIN CAPITAL LETTER GLOTTAL STOP>
+# 0242	<LATIN SMALL LETTER GLOTTAL STOP>
+0243	B
+0244	U
+# 0245	<LATIN CAPITAL LETTER TURNED V>
+0246	E
+0247	e
+0248	J
+0249	j
+024A	Q
+024B	q
+024C	R
+024D	r
+024E	Y
+024F	y
+# 0250-02AF: IPA Extensions (partial)
+# 0250	<LATIN SMALL LETTER TURNED A>
+0251	a
+# 0252	<LATIN SMALL LETTER TURNED ALPHA>
+0253	b
+0254	o
+0255	c
+0256	d
+0257	d
+# 0258	<LATIN SMALL LETTER REVERSED E>
+# 0259	<LATIN SMALL LETTER SCHWA> (rough approx.)
+0259	e
+# 025A	<LATIN SMALL LETTER SCHWA WITH HOOK>
+# 025B	<LATIN SMALL LETTER OPEN E> (approx.; misused)
+025B	epsilon
+# 025C	<LATIN SMALL LETTER REVERSED OPEN E>
+# 025D	<LATIN SMALL LETTER REVERSED OPEN E WITH HOOK>
+# 025E	<LATIN SMALL LETTER CLOSED REVERSED OPEN E>
+025F	j
+0260	g
+0261	g
+0262	G
+0263	gamma
+# 0264	<LATIN SMALL LETTER RAMS HORN>
+# 0265	<LATIN SMALL LETTER TURNED H>
+0266	h
+0267	h
+0268	i
+0269	iota
+026A	I
+026B	l
+026C	l
+026D	l
+# 026E	<LATIN SMALL LETTER LEZH>
+# 026F	<LATIN SMALL LETTER TURNED M>
+# 0270	<LATIN SMALL LETTER TURNED M WITH LONG LEG>
+0271	m
+0272	n
+0273	n
+0274	N
+0275	o
+0276	OE
+0277	omega
+0278	phi
+# 0279	<LATIN SMALL LETTER TURNED R>
+# 027A	<LATIN SMALL LETTER TURNED R WITH LONG LEG>
+# 027B	<LATIN SMALL LETTER TURNED R WITH HOOK>
+027C	r
+027D	r
+027E	r
+# 027F	<LATIN SMALL LETTER REVERSED R WITH FISHHOOK>
+# ...
+# 0283	<LATIN SMALL LETTER ESH>
+0283	esh
+# ...
+028A	upsilon
+# ...
+# 02B0-02FF: Spacing Modifier Letters
+02B0	h
+02B1	h
+02B2	j
+02B3	r
+02B4	r
+02B5	r
+02B6	R
+02B7	w
+02B8	y
+02B9	'
+02BA	"
+02BB	'
+02BC	'
+02BD	'
+02BE	'
+# 02BF	<MODIFIER LETTER LEFT HALF RING>
+# 02C0	<MODIFIER LETTER GLOTTAL STOP>
+# 02C1	<MODIFIER LETTER REVERSED GLOTTAL STOP>
+02C2	<
+02C3	>
+02C4	^
+02C5	v
+02C6	^
+# 02C7	<CARON>
+02C7	v
+# 02C8	<MODIFIER LETTER VERTICAL LINE>
+02C8	'
+# 02C9	<MODIFIER LETTER MACRON>
+02C9	-
+02CA	'
+02CB	`
+02CC	|
+02CD	_
+02CE	,
+02CF	,
+02D0	:
+02D1	:
+#02D2	<MODIFIER LETTER CENTRED RIGHT HALF RING>
+#02D3	<MODIFIER LETTER CENTRED LEFT HALF RING>
+#02D4	<MODIFIER LETTER UP TACK>
+#02D5	<MODIFIER LETTER DOWN TACK>
+02D6	+
+02D7	-
+#02D8	<BREVE>
+#02D9	<DOT ABOVE>
+02D9	.
+#02DA	<RING ABOVE>
+02DA	(o)
+#02DB	<OGONEK>
+#02DB	 
+02DC	~
+02DD	"
+#02DE	<MODIFIER LETTER RHOTIC HOOK>
+02DF	x
+02E0	gamma
+02E1	l
+02E2	s
+02E3	x
+# 02E4-02ED: (glottal stops, tone bars and voicing marks; excluded)
+02EE	"
+02EF	v
+02F0	^
+02F1	<
+02F2	>
+02F3	.
+02F4	`
+02F5	"
+02F6	"
+02F7	~
+02F8	:
+# 02F9-02FC: (tone marks; excluded)
+# 0300-036F: Combining Diacritical Marks
+# These are nonspacing marks that should be combined with the
+# preceding character, placing e.g. a "hat" (^) on a letter. As this
+# cannot be reasonably approximated in ASCII, these characters are
+# marked for removal.
+0300	
+0301	
+0302	
+0303	
+0304	
+0305	
+0306	
+0307	
+0308	
+0309	
+030A	
+030B	
+030C	
+030D	
+030E	
+030F	
+0310	
+0311	
+0312	
+0313	
+0314	
+0315	
+0316	
+0317	
+0318	
+0319	
+031A	
+031B	
+031C	
+031D	
+031E	
+031F	
+0320	
+0321	
+0322	
+0323	
+0324	
+0325	
+0326	
+0327	
+0328	
+0329	
+032A	
+032B	
+032C	
+032D	
+032E	
+032F	
+0330	
+0331	
+0332	
+0333	
+0334	
+0335	
+0336	
+0337	
+0338	
+0339	
+033A	
+033B	
+033C	
+033D	
+033E	
+033F	
+0340	
+0341	
+0342	
+0343	
+0344	
+0345	
+0346	
+0347	
+0348	
+0349	
+034A	
+034B	
+034C	
+034D	
+034E	
+034F	
+0350	
+0351	
+0352	
+0353	
+0354	
+0355	
+0356	
+0357	
+0358	
+0359	
+035A	
+035B	
+035C	
+035D	
+035E	
+035F	
+0360	
+0361	
+0362	
+0363	
+0364	
+0365	
+0366	
+0367	
+0368	
+0369	
+036A	
+036B	
+036C	
+036D	
+036E	
+036F	
+# 0370-03FF: Greek and Coptic
+# ...
+0370	Heta
+0371	heta
+0372	Sampi
+0373	sampi
+# 0374	<GREEK NUMERAL SIGN>
+# 0375	<GREEK LOWER NUMERAL SIGN>
+0376	Digamma
+0377	digamma
+# 0378	<not a valid unicode character>
+# 0379	<not a valid unicode character>
+# 037A	<GREEK YPOGEGRAMMENI>
+# 037B	<GREEK SMALL REVERSED LUNATE SIGMA SYMBOL>
+# 037C	<GREEK SMALL DOTTED LUNATE SIGMA SYMBOL>
+# 037D	<GREEK SMALL REVERSED DOTTED LUNATE SIGMA SYMBOL>
+037E	;
+# 037F	<not a valid unicode character>
+# 0380	<not a valid unicode character>
+# 0381	<not a valid unicode character>
+# 0382	<not a valid unicode character>
+# 0383	<not a valid unicode character>
+0384	'
+# 0385	<GREEK DIALYTIKA TONOS>
+0386	Alpha
+0387	.
+0388	Epsilon
+0389	Eta
+038A	Iota
+# 038B	<not a valid unicode character>
+038C	Omicron
+# 038D	<not a valid unicode character>
+038E	Upsilon
+038F	Omega
+0390	iota
+0391	Alpha
+0392	Beta
+0393	Gamma
+0394	Delta
+0395	Epsilon
+0396	Zeta
+0397	Eta
+0398	Theta
+0399	Iota
+039A	Kappa
+039B	Lambda
+039C	Mu
+039D	Nu
+039E	Xi
+039F	Omicron
+03A0	Pi
+03A1	Rho
+#03A2	<not a valid unicode character>
+03A3	Sigma
+03A4	Tau
+03A5	Upsilon
+03A6	Phi
+03A7	Chi
+03A8	Psi
+03A9	Omega
+03AA	Iota
+03AB	Upsilon
+03AC	alpha
+03AD	epsilon
+03AE	eta
+03AF	iota
+03B0	upsilon
+03B1	alpha
+03B2	beta
+03B3	gamma
+03B4	delta
+03B5	epsilon
+03B6	zeta
+03B7	eta
+03B8	theta
+03B9	iota
+03BA	kappa
+03BB	lambda
+03BC	mu
+03BD	nu
+03BE	xi
+03BF	omicron
+03C0	pi
+03C1	rho
+03C2	sigma
+03C3	sigma
+03C4	tau
+03C5	upsilon
+03C6	phi
+03C7	chi
+03C8	psi
+03C9	omega
+03CA	iota
+03CB	upsilon
+03CC	omicron
+03CD	upsilon
+03CE	omega
+03CF	Kai
+03D0	beta
+03D1	theta
+03D2	Upsilon
+03D3	Upsilon
+03D4	Upsilon
+03D5	phi
+03D6	pi
+03D7	kai
+03D8	Koppa
+03D9	koppa
+03DA	Stigma
+03DB	stigma
+03DC	Digamma
+03DD	digamma
+03DE	Koppa
+03DF	koppa
+03E0	Sampi
+03E1	sampi
+03E2	Shei
+03E3	shei
+03E4	Fei
+03E5	fei
+03E6	Khei
+03E7	khei
+03E8	Hori
+03E9	hori
+03EA	Gangia
+03EB	gangia
+03EC	Shima
+03ED	shima
+03EE	Dei
+03EF	dei
+03F0	kappa
+03F1	rho
+03F2	sigma
+03F3	yot
+03F4	Theta
+03F5	epsilon
+# 03F6	<GREEK REVERSED LUNATE EPSILON SYMBOL>
+03F7	Sho
+03F8	sho
+03F9	Sigma
+03FA	San
+03FB	san
+03FC	rho
+# 03FD	<GREEK CAPITAL REVERSED LUNATE SIGMA SYMBOL>
+# 03FE	<GREEK CAPITAL DOTTED LUNATE SIGMA SYMBOL>
+# 03FF	<GREEK CAPITAL REVERSED DOTTED LUNATE SIGMA SYMBOL>
+# 0400-04FF: Cyrillic
+# Mapping for this block primarily by visual similarity to latin letters as
+# use of cyrillic letters in PMC appears to be largely limited to misuse
+# such as <0440> (cyrillic small 'er') as 'p' due to similar appearance.
+0400	E
+0401	E
+# 0402	<CYRILLIC CAPITAL LETTER DJE>
+# 0403	<CYRILLIC CAPITAL LETTER GJE>
+0404	E
+0405	S
+0406	I
+0407	I
+0408	J
+# 0409	<CYRILLIC CAPITAL LETTER LJE>
+# 040A	<CYRILLIC CAPITAL LETTER NJE>
+# 040B	<CYRILLIC CAPITAL LETTER TSHE>
+040C	K
+# 040D	<CYRILLIC CAPITAL LETTER I WITH GRAVE>
+040E	Y
+# 040F	<CYRILLIC CAPITAL LETTER DZHE>
+0410	A
+# 0411	<CYRILLIC CAPITAL LETTER BE>
+0412	B
+# 0413	<CYRILLIC CAPITAL LETTER GHE> (appars to be misused as "Gamma")
+0413	Gamma
+# 0414	<CYRILLIC CAPITAL LETTER DE>
+0415	E
+# 0416	<CYRILLIC CAPITAL LETTER ZHE> (very rough approx.)
+0416	X
+0417	3
+# 0418	<CYRILLIC CAPITAL LETTER I> (very rough approx.)
+0418	N
+# 0419	<CYRILLIC CAPITAL LETTER SHORT I>
+041A	K
+# 041B	<CYRILLIC CAPITAL LETTER EL> (very rough approx.)
+041B	N
+041C	M
+041D	H
+041E	O
+# 041F	<CYRILLIC CAPITAL LETTER PE> (very rough approx.)
+041F	N
+0420	P
+0421	C
+0422	T
+0423	Y
+# 0424	<CYRILLIC CAPITAL LETTER EF> (appars to be misused as "Phi")
+0424	Phi
+0425	X
+# 0426	<CYRILLIC CAPITAL LETTER TSE>
+# 0427	<CYRILLIC CAPITAL LETTER CHE>
+# 0428	<CYRILLIC CAPITAL LETTER SHA> (very rough approximation)
+0428	W
+# 0429	<CYRILLIC CAPITAL LETTER SHCHA>
+042A	b
+# 042B	<CYRILLIC CAPITAL LETTER YERU>
+042C	b
+# 042D	<CYRILLIC CAPITAL LETTER E>
+# 042E	<CYRILLIC CAPITAL LETTER YU>
+# 042F	<CYRILLIC CAPITAL LETTER YA>
+0430	a
+0431	b
+0432	B
+# 0433	<CYRILLIC SMALL LETTER GHE>
+# 0434	<CYRILLIC SMALL LETTER DE>
+0435	e
+# 0436	<CYRILLIC SMALL LETTER ZHE> (very rough approx.)
+0436	x
+0437	3
+# 0438	<CYRILLIC SMALL LETTER I> (very rough approx.)
+0438	N
+# 0439	<CYRILLIC SMALL LETTER SHORT I> (very rough approx.)
+0439	N
+043A	k
+# 043B	<CYRILLIC SMALL LETTER EL> (very rough approx.)
+043B	n
+043C	M
+043D	H
+043E	o
+# 043F	<CYRILLIC SMALL LETTER PE> (very rough approx.)
+043F	n
+0440	p
+0441	c
+0442	T
+0443	y
+# 0444	<CYRILLIC SMALL LETTER EF> (misused as "phi"?)
+0444	phi
+0445	x
+# 0446	<CYRILLIC SMALL LETTER TSE>
+# 0447	<CYRILLIC SMALL LETTER CHE>
+# 0448	<CYRILLIC SMALL LETTER SHA>
+# 0449	<CYRILLIC SMALL LETTER SHCHA>
+044A	b
+# 044B	<CYRILLIC SMALL LETTER YERU> (rough approx.)
+044B	bl
+044C	b
+# 044D	<CYRILLIC SMALL LETTER e>
+# 044E	<CYRILLIC SMALL LETTER YU>
+# 044F	<CYRILLIC SMALL LETTER YA> (rough approx.)
+044F	R
+0450	e
+0451	e
+# 0452	<CYRILLIC SMALL LETTER DJE>
+# 0453	<CYRILLIC SMALL LETTER GJE>
+0454	e
+0455	s
+0456	i
+0457	i
+0458	j
+# 0459	<CYRILLIC SMALL LETTER LJE>
+# 045A	<CYRILLIC SMALL LETTER NJE>
+045B	h
+045C	k
+# 045D	<CYRILLIC SMALL LETTER I WITH GRAVE>
+045E	y
+# 045F	<CYRILLIC SMALL LETTER DZHE>
+0460	Omega
+0461	omega
+0462	b
+0463	b
+# 0464	<CYRILLIC CAPITAL LETTER IOTIFIED E>
+# 0465	<CYRILLIC SMALL LETTER IOTIFIED E>
+# 0466	<CYRILLIC CAPITAL LETTER LITTLE YUS>
+# 0467	<CYRILLIC SMALL LETTER LITTLE YUS>
+# 0468	<CYRILLIC CAPITAL LETTER IOTIFIED LITTLE YUS>
+# 0469	<CYRILLIC SMALL LETTER IOTIFIED LITTLE YUS>
+# 046A	<CYRILLIC CAPITAL LETTER BIG YUS>
+# 046B	<CYRILLIC SMALL LETTER BIG YUS>
+# 046C	<CYRILLIC CAPITAL LETTER IOTIFIED BIG YUS>
+# 046D	<CYRILLIC SMALL LETTER IOTIFIED BIG YUS>
+# 046E	<CYRILLIC CAPITAL LETTER KSI>
+# 046F	<CYRILLIC SMALL LETTER KSI>
+# 0470-04FF TODO
+0472	fita
+# ...
+04D3	a
+04E7	o
+# ...
+049B	k
+# ...
+# 04B0	<CYRILLIC CAPITAL LETTER STRAIGHT U WITH STROKE> (rough approx.)
+04B0	Y
+# ...
+# 04D9	<CYRILLIC SMALL LETTER SCHWA> (rough approx.)
+04D9	e
+# ...
+# 05F3 <HEBREW PUNCTUATION GERESH> (use as single quote)
+05F3	'
+# 05F3 <HEBREW PUNCTUATION GERSHAYIM>
+05F4	"
+# ...
+066B	,
+066C	,
+066D	*
+# ...
+# 115F <HANGUL CHOSEONG FILLER>
+115F	 
+1D27	lamda
+# ...
+# 1D52 <MODIFIER LETTER SMALL O>
+1D52	o
+# ...
+# 1E00-1EFF: Latin Extended Additional
+1E00	A
+1E01	a
+1E02	B
+1E03	b
+1E04	B
+1E05	b
+1E06	B
+1E07	b
+1E08	C
+1E09	c
+1E0A	D
+1E0B	d
+1E0C	D
+1E0D	d
+1E0E	D
+1E0F	d
+1E10	D
+1E11	d
+1E12	D
+1E13	d
+1E14	E
+1E15	e
+1E16	E
+1E17	e
+1E18	E
+1E19	e
+1E1A	E
+1E1B	e
+1E1C	E
+1E1D	e
+1E1E	F
+1E1F	f
+1E20	G
+1E21	g
+1E22	H
+1E23	h
+1E24	H
+1E25	h
+1E26	H
+1E27	h
+1E28	H
+1E29	h
+1E2A	H
+1E2B	h
+1E2C	I
+1E2D	i
+1E2E	I
+1E2F	i
+1E30	K
+1E31	k
+1E32	K
+1E33	k
+1E34	K
+1E35	k
+1E36	L
+1E37	l
+1E38	L
+1E39	l
+1E3A	L
+1E3B	l
+1E3C	L
+1E3D	l
+1E3E	M
+1E3F	m
+1E40	M
+1E41	m
+1E42	M
+1E43	m
+1E44	N
+1E45	n
+1E46	N
+1E47	n
+1E48	N
+1E49	n
+1E4A	N
+1E4B	n
+1E4C	O
+1E4D	o
+1E4E	O
+1E4F	o
+1E50	O
+1E51	o
+1E52	O
+1E53	o
+1E54	P
+1E55	p
+1E56	P
+1E57	p
+1E58	R
+1E59	r
+1E5A	R
+1E5B	r
+1E5C	R
+1E5D	r
+1E5E	R
+1E5F	r
+1E60	S
+1E61	s
+1E62	S
+1E63	s
+1E64	S
+1E65	s
+1E66	S
+1E67	s
+1E68	S
+1E69	s
+1E6A	T
+1E6B	t
+1E6C	T
+1E6D	t
+1E6E	T
+1E6F	t
+1E70	T
+1E71	t
+1E72	U
+1E73	u
+1E74	U
+1E75	u
+1E76	U
+1E77	u
+1E78	U
+1E79	u
+1E7A	U
+1E7B	u
+1E7C	V
+1E7D	v
+1E7E	V
+1E7F	v
+1E80	W
+1E81	w
+1E82	W
+1E83	w
+1E84	W
+1E85	w
+1E86	W
+1E87	w
+1E88	W
+1E89	w
+1E8A	X
+1E8B	x
+1E8C	X
+1E8D	x
+1E8E	Y
+1E8F	y
+1E90	Z
+1E91	z
+1E92	Z
+1E93	z
+1E94	Z
+1E95	z
+1E96	h
+1E97	t
+1E98	w
+1E99	y
+1E9A	a
+# 1E9B	<LATIN SMALL LETTER LONG S WITH DOT ABOVE>
+# 1E9C	<LATIN SMALL LETTER LONG S WITH DIAGONAL STROKE>
+# 1E9D	<LATIN SMALL LETTER LONG S WITH HIGH STROKE>
+# 1E9E	<LATIN CAPITAL LETTER SHARP S>
+1E9F	delta
+1EA0	A
+1EA1	a
+1EA2	A
+1EA3	a
+1EA4	A
+1EA5	a
+1EA6	A
+1EA7	a
+1EA8	A
+1EA9	a
+1EAA	A
+1EAB	a
+1EAC	A
+1EAD	a
+1EAE	A
+1EAF	a
+1EB0	A
+1EB1	a
+1EB2	A
+1EB3	a
+1EB4	A
+1EB5	a
+1EB6	A
+1EB7	a
+1EB8	E
+1EB9	e
+1EBA	E
+1EBB	e
+1EBC	E
+1EBD	e
+1EBE	E
+1EBF	e
+1EC0	E
+1EC1	e
+1EC2	E
+1EC3	e
+1EC4	E
+1EC5	e
+1EC6	E
+1EC7	e
+1EC8	I
+1EC9	i
+1ECA	I
+1ECB	i
+1ECC	O
+1ECD	o
+1ECE	O
+1ECF	o
+1ED0	O
+1ED1	o
+1ED2	O
+1ED3	o
+1ED4	O
+1ED5	o
+1ED6	O
+1ED7	o
+1ED8	O
+1ED9	o
+1EDA	O
+1EDB	o
+1EDC	O
+1EDD	o
+1EDE	O
+1EDF	o
+1EE0	O
+1EE1	o
+1EE2	O
+1EE3	o
+1EE4	U
+1EE5	u
+1EE6	U
+1EE7	u
+1EE8	U
+1EE9	u
+1EEA	U
+1EEB	u
+1EEC	U
+1EED	u
+1EEE	U
+1EEF	u
+1EF0	U
+1EF1	u
+1EF2	Y
+1EF3	y
+1EF4	Y
+1EF5	y
+1EF6	Y
+1EF7	y
+1EF8	Y
+1EF9	y
+1EFA	LL
+1EFB	ll
+# 1EFC	<LATIN CAPITAL LETTER MIDLLE-WELSH V>
+# 1EFD	<LATIN SMALL LETTER MIDLLE-WELSH V>
+1EFE	Y
+1EFF	y
+# ...
+1F44	o
+# 2000-206F: General Punctuation (partial)
+2000	 
+2001	 
+2002	 
+2003	 
+2004	 
+2005	 
+2006	 
+2007	 
+2008	 
+2009	 
+200A	 
+# 200B-200F: various zero-width spaces and control chars
+200B	
+200C	
+200D	
+200E	
+200F	
+2010	-
+2011	-
+2012	-
+2013	-
+2014	--
+2015	-
+2016	||
+2017	_
+2018	'
+2019	'
+201A	'
+201B	'
+201C	"
+201D	"
+201E	"
+201F	"
+# 2020, 2021: dagger and double dagger; approximations
+2020	+
+2021	++
+2022	*
+2023	*
+2024	.
+2025	..
+2026	...
+2027	.
+# 2028	<LINE SEPARATOR>
+2028	\n
+# 2029	<PARAGRAPH SEPARATOR>
+2029	\n
+# 202A-202F: various space
+202A	 
+202B	 
+202C	 
+202D	 
+202E	 
+202F	 
+2030	/1000
+2031	/10000
+2032	'
+2033	''
+2034	'''
+2035	'
+2036	''
+2037	'''
+2038	^
+2039	<
+203A	>
+# 203B	<REFERENCE MARK>
+203B	*
+203C	!!
+203D	!?
+203E	-
+203F	_
+# 2040	<CHARACTER TIE>
+# 2041	<CARET INSERTION POINT>
+2041	^
+2042	***
+2043	-
+2044	/
+2045	[
+2046	]
+2047	??
+2048	?!
+2049	!?
+# 204A	<TIRONIAN SIGN ET>
+# 204B	<REVERSED PILCROW SIGN>
+204C	-
+204D	-
+204E	*
+204F	;
+# ...
+# 2150-218F: Number Forms
+# Mapping for range originally generated in part using NLM LVG toAscii.
+# Difference: toAscii doesn't wrap fractions in parens.
+2150	(1/7)
+2151	(1/9)
+2152	(1/10)
+2153	(1/3)
+2154	(2/3)
+2155	(1/5)
+2156	(2/5)
+2157	(3/5)
+2158	(4/5)
+2159	(1/6)
+215A	(5/6)
+215B	(1/8)
+215C	(3/8)
+215D	(5/8)
+215E	(7/8)
+215F	1/
+2160	I
+2161	II
+2162	III
+2163	IV
+2164	V
+2165	VI
+2166	VII
+2167	VIII
+2168	IX
+2169	X
+216A	XI
+216B	XII
+216C	L
+216D	C
+216E	D
+216F	M
+2170	i
+2171	ii
+2172	iii
+2173	iv
+2174	v
+2175	vi
+2176	vii
+2177	viii
+2178	ix
+2179	x
+217A	xi
+217B	xii
+217C	l
+217D	c
+217E	d
+217F	m
+2180	CD
+# 2181-2188 (large or variant roman numerals; excluded)
+2189	(0/3)
+#218A	<not a valid unicode character>
+#218B	<not a valid unicode character>
+#218C	<not a valid unicode character>
+#218D	<not a valid unicode character>
+#218E	<not a valid unicode character>
+# ...
+# 2300-23FF: Miscellaneous Technical (partial)
+# 2308-230B: left/right ceiling and floor
+2308	[
+2309	]
+230A	[
+230B	]
+# 230C  <BOTTOM RIGHT CROP> (remove)
+230C	
+# ...
+# 2313	<SEGMENT> (appears to be misused as "range" dash)
+2313	-
+# ...
+# 2322	<FROWN> (appears primarily as combining mark; remove)
+2322	
+# 2323	<SMILE> (appears primarily as combining mark; remove)
+2323	
+# ...
+# 23B4	<TOP SQUARE BRACKET> (combining mark[?]; remove)
+23B4	
+# ...
+239B	(
+239C	|
+239D	(
+239E	)
+239F	|
+23A0	)
+23A1	[
+23A2	|
+23A3	[
+23A4	]
+23A5	|
+23A6	]
+23A7	{
+23A8	{
+23A9	{
+23AA	|
+23AB	}
+23AC	}
+23AD	}
+23AE	|
+23AF	_
+# 2200-22FF: Mathematical Operators
+# Mapping for range originally generated in part using NLM LVG toAscii.
+2200	for-all
+2201	complement
+2202	d
+2203	exists
+2204	not-exists
+2205	empty
+2206	increment
+2207	nabla
+2208	in
+2209	not-in
+220A	in
+220B	contains
+220C	not-contains
+220D	contains
+220E	end-of-proof
+220F	product
+2210	coproduct
+2211	sum
+2212	-
+2213	-/+
+2214	+
+2215	/
+2216	\
+2217	*
+#2218	<RING OPERATOR>
+2218	o
+#2219	<BULLET OPERATOR>
+2219	.
+221A	sqrt
+221B	cube-root
+221C	fourth-root
+#221D	proportional
+221D	~
+221E	infinity
+#221F	<RIGHT ANGLE>
+221F	|_
+#2220	<ANGLE>
+2220	/_
+#2221	<MEASURED ANGLE>
+2221	/_
+#2222	<SPHERICAL ANGLE>
+2222	<
+2223	|
+2224	!|
+2225	||
+2226	!||
+2227	^
+2228	or
+2229	intersection
+222A	union
+222B	integral
+# 222C-22FF (complex operators etc.; many roughly approximated)
+# 222E	<CONTOUR INTEGRAL>
+222C	double-integral
+222D	triple-integral
+222E	contour-integral
+222F	surface-integral
+2230	volume-integral
+2231	integral
+2232	integral
+2233	integral
+2234	therefore
+2235	because
+2236	:
+2237	::
+2238	-
+2239	-:
+223A	::
+223B	~
+223C	~
+223D	~
+# 223E	<INVERTED LAZY S>
+223E	~
+# 223F	<SINE WAVE>
+223F	~
+# 2240	<WREATH PRODUCT>
+# 2241	<NOT TILDE>
+2241	!~
+# 2242	<MINUS TILDE>
+2242	-~
+2243	~
+2244	!~
+2245	=~
+2246	~!=
+2247	!=~
+2248	=~
+2249	!=~
+224A	=~
+224B	~~~
+224C	=
+224D	=
+224E	=
+224F	=
+2250	=
+2251	=
+2252	=
+2253	=
+2254	:=
+2255	=:
+2256	=
+2257	=
+2258	=
+2259	=
+225A	=
+225B	=
+# 225C	<DELTA EQUAL TO>
+225C	=
+225D	=
+225E	=
+225F	=
+2260	!=
+2261	=
+2262	!=
+# 2263	<STRICTLY EQUIVALENT TO>
+2263	==
+2264	<=
+2265	>=
+2266	<=
+2267	>=
+2268	<!=
+2269	>!=
+226A	<<
+226B	>>
+226C	()
+226D	!=
+226E	!<
+226F	!>
+2270	!<=
+2271	!>=
+2272	<=
+2273	>=
+2274	!<=
+2275	!>=
+2276	<>
+2277	><
+2278	!<>
+2279	!><
+227A	<
+227B	>
+227C	<=
+227D	>=
+227E	<=
+227F	>=
+2280	!<
+2281	!>
+2282	subset
+2283	superset
+2284	not-subset
+2285	not-superset
+2286	subset/equal
+2287	superset/equal
+2288	not-subset/equal
+2289	not-superset/equal
+# ...
+2291	[=
+2292	=]
+# ...
+2295	(+)
+2296	(-)
+2297	(*)
+2298	(/)
+2299	(.)
+229A	(o)
+229B	(*)
+229C	(=)
+229D	(-)
+229E	[+]
+229F	[-]
+22A0	[x]
+22A1	[.]
+# 22A2	<RIGHT TACK>
+22A2	|-
+# 22A3	<LEFT TACK>
+22A3	-|
+# 22A4	<DOWN TACK>
+22A4	T
+# 22A5	<UP TACK>
+22A5	_|_
+# ...
+3000	 
+3001	,
+3002	.
+# ...
+3007	0
+3008	<
+3009	>
+300A	<<
+300B	>>
+# ...
+3010	[
+3011	]
+301A	[
+301B	]
+30FB	.
+# ...
+338D	ug
+338E	mg
+3395	ul
+3396	Ml
+339B	um
+# 2100-214F: Letterlike Symbols
+# Mapping for range originally generated in part using NLM LVG toAscii.
+2100	a/c
+2101	a/s
+2102	C
+# 2103	degrees C
+2103	C
+#2104	<CENTRE LINE SYMBOL>
+2105	c/o
+2106	c/u
+2107	E
+#2108	<SCRUPLE>
+#2109	degrees F
+2109	F
+210A	g
+210B	H
+210C	H
+210D	H
+210E	h
+210F	h
+2110	I
+#2111	imaginary
+2111	I
+#2112	Lgrangian
+2112	L
+2113	l
+2114	lb
+2115	N
+#2116	numero sign
+2116	No
+2117	(P)
+#2118	Weierstrass p
+2118	P
+2119	P
+211A	Q
+211B	R
+#211C	Re
+211C	R
+211D	R
+#211E	Rx
+211E	Px
+211F	R
+2120	(SM)
+2121	TEL
+2122	(TM)
+2123	V
+2124	Z
+2125	ounce
+#2126	ohm
+2126	Omega
+#2127	<INVERTED OHM SIGN>
+2128	Z
+2129	iota
+212A	K
+212B	A
+212C	B
+212D	C
+212E	e
+212F	e
+2130	E
+2131	F
+2132	F
+2133	M
+2134	o
+2135	aleph
+#2136	bet
+2136	beth
+2137	gimel
+#2138	dalet
+2138	daleth
+2139	i
+213A	Q
+213B	FAX
+213C	pi
+213D	gamma
+213E	Gamma
+213F	Pi
+2140	sum
+2141	G
+2142	L
+2143	L
+2144	Y
+2145	D
+2146	d
+2147	e
+2148	i
+2149	j
+214A	(PL)
+214B	&
+214C	per
+214D	A/S
+214E	F
+# 20A0-20CF: Currency Symbols (partial)
+20A0	euro
+20A1	colon
+20A2	cruzeiro
+20A3	franc
+20A4	lira
+20A5	mill
+20A6	naira
+20A7	peseta
+20A8	rupee
+20A9	won
+20AA	sheqel
+20AB	dong
+20AC	euro
+20AD	kip
+20AE	tugrik
+20AF	drachma
+# ...
+2190	<--
+# 2191	<UPWARDS ARROW>
+2191	^
+2192	-->
+# 2193	<DOWNWARDS ARROW>
+2193	v
+2194	<-->
+2195	^v
+2196	<\
+2197	/>
+2198	\>
+2199	</
+219A	</-
+219B	-/>
+219C	<~
+219D	~>
+219E	<<-
+219F	^
+21A0	->>
+21A1	v
+# ...
+21A4	<-|
+21A6	|->
+21A9	<-
+21AA	->
+# ...
+#21B0	Lsh
+21B0	<-
+#21B1	Rsh
+21B1	->
+21B2	<-
+21B3	->
+21B4	-v
+21B5	<-
+#21B6	left curved arrow
+21B6	<-
+#21B7	right curved arrow
+21B7	->
+21B8	<-
+21B9	<->
+21BA	(->)
+21BB	(<-)
+21BC	<-
+21BD	<-
+#21BE	up harp-right
+21BE	^
+#21BF	up harpoon-left
+21BF	^
+#21C0	right harpoon-up
+21C0	->
+#21C1	right harpoon-down
+21C1	->
+#21C2	down harpoon-right
+21C2	v
+#21C3	down harpoon-left
+21C3	v
+21C4	<->
+21C5	^v
+21C6	<->
+#21C7	two left arrows
+21C7	<<-
+#21C8	two up arrows
+21C8	^^
+#21C9	two right arrows
+21C9	->>
+#21CA	two down arrows
+21CA	vv
+21CB	<->
+21CC	<->
+#21CD	not implied by
+21CD	</=
+#21CE	not l&r dbl arr
+21CE	</=>
+#21CF	not implies
+21CF	=/>
+21D0	<=
+21D1	^
+21D2	=>
+21D3	v
+21D4	<=>
+# ...
+21DA	<=
+21DB	=>
+21DC	<~
+21DD	~>
+# ...
+21E2	->
+21E6	<=
+21E7	^
+21E8	=>
+21E9	v
+# ...
+2500	-
+2501	-
+2502	|
+2503	|
+# ...
+2524	-|
+2534	_|_
+253C	+
+# ...
+2550	=
+2551	||
+256B	#
+# 2580-259F: Block Elements (rough approximations)
+2580	"
+2581	_
+2582	_
+2583	_
+2584	_
+2585	#
+2586	#
+2587	#
+2588	#
+2589	#
+258A	#
+258B	#
+258C	]
+258D	]
+258E	]
+258F	]
+2590	[
+2591	@
+2592	#
+2593	#
+2594	"
+2595	[
+2596	.
+2597	.
+2598	'
+2599	L
+259A	\
+259B	P
+259C	7
+259D	'
+259E	/
+259F	J
+# 25A0-25FF: Geometric Shapes (partial, rough approximations)
+25EF	O
+25FB	[]
+25FC	*
+25FD	[]
+25FE	*
+# ...
+25A0	*
+25A1	*
+25A2	*
+25A3	*
+25A4	*
+25A5	*
+25A6	*
+25A7	*
+25A8	*
+25A9	*
+25AA	*
+25AB	*
+# 25AC-25B1: Geometric Shapes, small rectangles and parallellograms
+25AC	-
+25AD	-
+25AE	'
+25AF	'
+25B0	-
+25B1	-
+# 25B2-25C5: various empty and filled triangles; use approximate shapes
+25B2	^
+25B3	^
+25B4	^
+25B5	^
+25B6	>
+25B7	>
+25B8	>
+25B9	>
+25BA	>
+25BB	>
+25BC	v
+25BD	v
+25BE	v
+25BF	v
+25C0	<
+25C1	<
+25C2	<
+25C3	<
+25C4	<
+25C5	<
+# 25C6-25C8: Geometric shapes, diamonds
+25C6	*
+25C7	*
+25C8	*
+# 25C9-: Geometric shapes, misc.
+25C9	o
+25CA	*
+25CB	o
+25CC	o
+25CD	o
+25CE	o
+25CF	*
+# 2A00-2AFF: Supplemental Mathematical Operators
+2A00	.
+2A01	+
+2A02	*
+2A03	union
+2A04	union
+2A05	intersection
+2A06	union
+2A07	^
+2A08	or
+2A09	x
+2A0A	sum
+#2A0B	<SUMMATION WITH INTEGRAL>
+#2A0C	<QUADRUPLE INTEGRAL OPERATOR>
+#2A0D	<FINITE PART INTEGRAL>
+2A0E	integral
+# 2A0F-2A1C (complex integral operators; excluded)
+2A1D	join
+2A1E	<|
+#2A1F-2A21 (x notation marks; excluded)
+2A22	+
+2A23	+
+2A24	+
+2A25	+
+2A26	+
+2A27	+
+2A28	+
+2A29	-
+2A2A	-
+2A2B	-
+2A2C	-
+2A2D	(+
+2A2E	+)
+2A2F	x
+2A30	x
+2A31	x
+2A32	x
+#2A33	<SMASH PRODUCT>
+2A34	(*
+2A35	*)
+2A36	*
+2A37	(*)
+2A38	(%)
+2A39	+
+2A3A	-
+2A3B	*
+# 2A3C-2AFE (misc. complex operators; largely excluded)
+2A66	=
+2A67	=
+2A6A	~
+2A6B	~
+# ...
+2A70	=~
+2A71	=+
+2A72	=+
+2A73	=~
+2A74	::=
+2A75	==
+2A76	===
+2A7B	<?
+2A7C	>?
+2A7D	>=
+2A7E	<=
+# ...
+2AAF	<=
+2AB0	>=
+# ...
+22B8	multimap
+# ...
+22BF	|>
+# 22C0	<N-ARY LOGICAL AND>
+22C0	and
+# 22C1	<N-ARY LOGICAL OR>
+22C1	or
+# 22C3	<N-ARY INTERSECTION>
+22C2	intersection
+# 22C3	<N-ARY UNION>
+22C3	union
+# 22C4	<DIAMOND OPERATOR>
+22C4	<>
+22C5	.
+22C6	*
+22C7	*
+# 22C8	<BOWTIE>
+# 22CB	<LEFT SEMIDIRECT PRODUCT>
+# 22CC	<RIGHT SEMIDIRECT PRODUCT>
+22CD	=~
+# 22CE	<CURLY LOGICAL OR>
+# 22CF	<CURLY LOGICAL AND>
+22BA	intercal
+2293	intersection
+2294	union
+2329	<
+232A	>
+22D4	pitchfork
+22D5	#
+22D6	<
+22D7	>
+22D8	<<<
+22D9	>>>
+22DA	<=>
+22DB	<=>
+22DC	<=
+22DD	>=
+22DE	<=
+22DF	>=
+# ...
+2922	</>
+2944	<-->
+29E7	|=
+29EB	<>
+# 20D0-20FF: Combining Diacritical Marks for Symbols. 
+# These are removed; see comment regarding block 0300-036F for more.
+20D0	
+20D1	
+20D2	
+20D3	
+20D4	
+20D5	
+20D6	
+20D7	
+20D8	
+20D9	
+20DA	
+20DB	
+20DC	
+20DD	
+20DE	
+20DF	
+20E0	
+20E1	
+20E2	
+20E3	
+20E4	
+20E5	
+20E6	
+20E7	
+20E8	
+20E9	
+20EA	
+20EB	
+20EC	
+20ED	
+20EE	
+20EF	
+20F0	
+20F1	
+20F2	
+20F3	
+20F4	
+20F5	
+20F6	
+20F7	
+20F8	
+20F9	
+20FA	
+20FB	
+20FC	
+20FD	
+20FE	
+20FF	
+# 2700-27BF: Dingbats (partial)
+# 2705	<WHITE HEAVY CHECK MARK>
+2705	v
+# 2709	<ENVELOPE>
+2709	 
+# 2713	<CHECK MARK>
+2713	v
+# 2714	<HEAVY CHECK MARK>
+2714	v
+2715	x
+2716	x
+2717	x
+2718	x
+2719	+
+271A	+
+271B	+
+271C	+
+271D	+
+271E	+
+271F	+
+2720	*
+2721	*
+2722	*
+2723	*
+2724	*
+2725	*
+2726	*
+2727	*
+2728	*
+2729	*
+272A	*
+272B	*
+272C	*
+272D	*
+272E	*
+272F	*
+2730	*
+2731	*
+2732	*
+2733	*
+2734	*
+2735	*
+2736	*
+2737	*
+2738	*
+2739	*
+# ...
+274F	[]
+2750	[]
+2751	[]
+2752	[]
+2753	?
+2754	?
+2755	!
+2756	*
+2757	!
+2780	(1)
+2781	(2)
+2782	(3)
+2783	(4)
+2784	(5)
+2785	(6)
+2786	(7)
+2787	(8)
+2788	(9)
+2789	(10)
+278A	(1)
+278B	(2)
+278C	(3)
+278D	(4)
+278E	(5)
+278F	(6)
+2790	(7)
+2791	(8)
+2792	(9)
+2793	(10)
+2794	->
+2795	+
+2796	-
+# 2797	<HEAVY DIVISION SIGN>
+2798	->
+2799	->
+279A	->
+279B	->
+279C	->
+279D	->
+279E	->
+279F	->
+27A0	->
+27A1	->
+# 27A2	<THREE-D TOP-LIGHTED RIGHTWARDS ARROWHEAD>
+27A2	->
+27A3	->
+27A4	->
+27A5	->
+27A6	->
+27A7	->
+27A8	->
+27A9	->
+27AA	->
+27AB	->
+27AC	->
+27AD	->
+27AE	->
+27AF	->
+# 27C0-27EF: Miscellaneous Mathematical Symbols-A (partial)
+27C2	_|_
+27C3	subset
+27C4	superset
+27C7	or
+27D0	<.>
+27D1	and
+27E6	[
+27E7	]
+27E8	<
+27E9	>
+# ...
+27F5	<---
+27F6	--->
+27F7	<--->
+27F8	<===
+27F9	===>
+27FA	<===>
+27FB	<---|
+27FC	|--->
+27FD	<===|
+27FE	|===>
+27FF	~~~>
+# ...
+# 205F-2064: various space characters (2060 zero-width)
+205F	 
+2060	
+2061	 
+2062	 
+2063	 
+2064	 
+# ...
+# 2070-209F: Superscripts and Subscripts (partial)
+2070	0
+2071	i
+# 2072	<not a valid unicode character>
+# 2073	<not a valid unicode character>
+2074	4
+2075	5
+2076	6
+2077	7
+2078	8
+2079	9
+207A	+
+207B	-
+207C	=
+207D	(
+207E	)
+207F	n
+# ...
+# 2080-2089: Superscripts and Subscripts, subscript numbers
+2080	0
+2081	1
+2082	2
+2083	3
+2084	4
+2085	5
+2086	6
+2087	7
+2088	8
+2089	9
+208A	+
+208B	-
+208C	=
+208D	(
+208E	)
+# ...
+22EE	...
+22EF	...
+22F0	...
+22F1	...
+25E6	o
+# 2423	<OPEN BOX> (appears as space)
+2423	 
+2460	(1)
+2461	(2)
+2462	(3)
+2463	(4)
+2464	(5)
+2465	(6)
+2466	(7)
+2467	(8)
+2468	(9)
+2469	(10)
+# ...
+24C7	(R)
+# 2600-26FF: Miscellaneous Symbols (very partial coverage)
+2600	*
+2605	*
+2606	*
+2607	<
+2609	(.)
+# ...
+260D	*
+# ...
+2610	[]
+2611	[v]
+2612	[x]
+# ...
+2640	female
+2642	male
+# 2660-2667: black and white playing card suits
+2660	*
+2661	()
+2662	<>
+2663	*
+2664	*
+2665	()
+2666	<>
+2667	*
+# ...
+266F	#
+# ...
+# E2F6	<not a valid unicode character> (used as equal or greater than)
+E2F6	>=
+F020	 
+FB00	ff
+FB01	fi
+FB02	fl
+FB03	ffi
+FB04	ffl
+# FE37	<PRESENTATION FORM FOR VERTICAL LEFT CURLY BRACKET>
+FE37	{
+# FE38	<PRESENTATION FORM FOR VERTICAL RIGHT CURLY BRACKET>
+FE38	}
+# ...
+FE5F	#
+# ...
+FE61	*
+# ...
+FEFF	 
+# ...
+# FF00-FFEF: Halfwidth and Fullwidth Forms
+# ...
+FF01	!
+FF02	"
+FF03	#
+FF04	$
+FF05	%
+FF06	&
+FF07	'
+FF08	(
+FF09	)
+FF0A	*
+FF0B	+
+FF0C	,
+FF0D	-
+FF0E	.
+FF10	0
+FF11	1
+FF12	2
+FF13	3
+FF14	4
+FF15	5
+FF16	6
+FF17	7
+FF18	8
+FF19	9
+FF1A	:
+FF1B	;
+FF1C	<
+FF1D	=
+FF1E	>
+FF1F	?
+# ...
+FF5E	~
+# F8FE <Private Use, Last> (appears to be used for double chemical bond)
+F8FE	=
+# F8FF <Private Use, Last> (appears to be used for single chemical bond)
+F8FF	-
+# 1D400-1D7FF: Mathematical Alphanumeric Symbols
+# Mapping for range originally generated using uni2ascii.
+# 1D6A6- cut due to lack of uni2ascii mapping.
+1D400	A
+1D401	B
+1D402	C
+1D403	D
+1D404	E
+1D405	F
+1D406	G
+1D407	H
+1D408	I
+1D409	J
+1D40A	K
+1D40B	L
+1D40C	M
+1D40D	N
+1D40E	O
+1D40F	P
+1D410	Q
+1D411	R
+1D412	S
+1D413	T
+1D414	U
+1D415	V
+1D416	W
+1D417	X
+1D418	Y
+1D419	Z
+1D41A	a
+1D41B	b
+1D41C	c
+1D41D	d
+1D41E	e
+1D41F	f
+1D420	g
+1D421	h
+1D422	i
+1D423	j
+1D424	k
+1D425	l
+1D426	m
+1D427	n
+1D428	o
+1D429	p
+1D42A	q
+1D42B	r
+1D42C	s
+1D42D	t
+1D42E	u
+1D42F	v
+1D430	w
+1D431	x
+1D432	y
+1D433	z
+1D434	A
+1D435	B
+1D436	C
+1D437	D
+1D438	E
+1D439	F
+1D43A	G
+1D43B	H
+1D43C	I
+1D43D	J
+1D43E	K
+1D43F	L
+1D440	M
+1D441	N
+1D442	O
+1D443	P
+1D444	Q
+1D445	R
+1D446	S
+1D447	T
+1D448	U
+1D449	V
+1D44A	W
+1D44B	X
+1D44C	Y
+1D44D	Z
+1D44E	a
+1D44F	b
+1D450	c
+1D451	d
+1D452	e
+1D453	f
+1D454	g
+#1D455	<not a valid unicode character>
+1D456	i
+1D457	j
+1D458	k
+1D459	l
+1D45A	m
+1D45B	n
+1D45C	o
+1D45D	p
+1D45E	q
+1D45F	r
+1D460	s
+1D461	t
+1D462	u
+1D463	v
+1D464	w
+1D465	x
+1D466	y
+1D467	z
+1D468	A
+1D469	B
+1D46A	C
+1D46B	D
+1D46C	E
+1D46D	F
+1D46E	G
+1D46F	H
+1D470	I
+1D471	J
+1D472	K
+1D473	L
+1D474	M
+1D475	N
+1D476	O
+1D477	P
+1D478	Q
+1D479	R
+1D47A	S
+1D47B	T
+1D47C	U
+1D47D	V
+1D47E	W
+1D47F	X
+1D480	Y
+1D481	A
+1D482	a
+1D483	b
+1D484	c
+1D485	d
+1D486	e
+1D487	f
+1D488	g
+1D489	h
+1D48A	i
+1D48B	j
+1D48C	k
+1D48D	l
+1D48E	m
+1D48F	n
+1D490	o
+1D491	p
+1D492	q
+1D493	r
+1D494	s
+1D495	t
+1D496	u
+1D497	v
+1D498	w
+1D499	x
+1D49A	y
+1D49B	z
+1D49C	A
+#1D49D	<not a valid unicode character>
+1D49E	C
+1D49F	D
+#1D4A0	<not a valid unicode character>
+#1D4A1	<not a valid unicode character>
+1D4A2	G
+#1D4A3	<not a valid unicode character>
+#1D4A4	<not a valid unicode character>
+1D4A5	K
+1D4A6	L
+#1D4A7	<not a valid unicode character>
+#1D4A8	<not a valid unicode character>
+1D4A9	N
+1D4AA	O
+1D4AB	P
+1D4AC	Q
+#1D4AD	<not a valid unicode character>
+1D4AE	S
+1D4AF	T
+1D4B0	U
+1D4B1	V
+1D4B2	W
+1D4B3	X
+1D4B4	Y
+1D4B5	Z
+1D4B6	a
+1D4B7	b
+1D4B8	c
+1D4B9	d
+#1D4BA	
+1D4BB	f
+#1D4BC	<not a valid unicode character>
+1D4BD	h
+1D4BE	i
+1D4BF	j
+1D4C0	k
+1D4C1	l
+1D4C2	m
+1D4C3	n
+#1D4C4	<not a valid unicode character>
+1D4C5	p
+1D4C6	q
+1D4C7	r
+1D4C8	s
+1D4C9	t
+1D4CA	u
+1D4CB	v
+1D4CC	w
+1D4CD	x
+1D4CE	y
+1D4CF	z
+1D4D0	A
+1D4D1	B
+1D4D2	C
+1D4D3	D
+1D4D4	E
+1D4D5	F
+1D4D6	G
+1D4D7	H
+1D4D8	I
+1D4D9	J
+1D4DA	K
+1D4DB	L
+1D4DC	M
+1D4DD	N
+1D4DE	O
+1D4DF	P
+1D4E0	Q
+1D4E1	R
+1D4E2	S
+1D4E3	T
+1D4E4	U
+1D4E5	V
+1D4E6	W
+1D4E7	X
+1D4E8	Y
+1D4E9	Z
+1D4EA	a
+1D4EB	b
+1D4EC	c
+1D4ED	d
+1D4EE	e
+1D4EF	f
+1D4F0	g
+1D4F1	h
+1D4F2	i
+1D4F3	j
+1D4F4	k
+1D4F5	l
+1D4F6	m
+1D4F7	n
+1D4F8	o
+1D4F9	p
+1D4FA	q
+1D4FB	r
+1D4FC	s
+1D4FD	t
+1D4FE	u
+1D4FF	v
+1D500	w
+1D501	x
+1D502	y
+1D503	z
+1D504	A
+1D505	B
+#1D506	<not a valid unicode character>
+1D507	D
+1D508	E
+1D509	F
+1D50A	G
+#1D50B	<not a valid unicode character>
+#1D50C	<not a valid unicode character>
+1D50D	J
+1D50E	K
+1D50F	L
+1D510	M
+1D511	N
+1D512	O
+1D513	P
+1D514	Q
+#1D515	<not a valid unicode character>
+1D516	S
+1D517	T
+1D518	U
+1D519	V
+1D51A	W
+1D51B	X
+1D51C	Y
+#1D51D	<not a valid unicode character>
+1D51E	a
+1D51F	b
+1D520	c
+1D521	d
+1D522	e
+1D523	f
+1D524	g
+1D525	h
+1D526	i
+1D527	j
+1D528	k
+1D529	l
+1D52A	m
+1D52B	n
+1D52C	o
+1D52D	p
+1D52E	q
+1D52F	r
+1D530	s
+1D531	t
+1D532	u
+1D533	v
+1D534	w
+1D535	x
+1D536	y
+1D537	z
+1D538	A
+1D539	B
+#1D53A	<not a valid unicode character>
+1D53B	D
+1D53C	E
+1D53D	F
+1D53E	G
+#1D53F	<not a valid unicode character>
+1D540	I
+1D541	J
+1D542	K
+1D543	L
+1D544	M
+#1D545	<not a valid unicode character>
+1D546	O
+#1D547	<not a valid unicode character>
+#1D548	<not a valid unicode character>
+#1D549	<not a valid unicode character>
+1D54A	S
+1D54B	T
+1D54C	U
+1D54D	V
+1D54E	W
+1D54F	X
+1D550	Y
+#1D551	<not a valid unicode character>
+1D552	a
+1D553	b
+1D554	c
+1D555	d
+1D556	e
+1D557	f
+1D558	g
+1D559	h
+1D55A	i
+1D55B	j
+1D55C	k
+1D55D	l
+1D55E	m
+1D55F	n
+1D560	o
+1D561	p
+1D562	q
+1D563	r
+1D564	s
+1D565	t
+1D566	u
+1D567	v
+1D568	w
+1D569	x
+1D56A	y
+1D56B	z
+1D56C	A
+1D56D	B
+1D56E	C
+1D56F	D
+1D570	E
+1D571	F
+1D572	G
+1D573	H
+1D574	I
+1D575	J
+1D576	K
+1D577	L
+1D578	M
+1D579	N
+1D57A	O
+1D57B	P
+1D57C	Q
+1D57D	R
+1D57E	S
+1D57F	T
+1D580	U
+1D581	V
+1D582	W
+1D583	X
+1D584	Y
+1D585	Z
+1D586	a
+1D587	b
+1D588	c
+1D589	d
+1D58A	e
+1D58B	f
+1D58C	g
+1D58D	h
+1D58E	i
+1D58F	j
+1D590	k
+1D591	l
+1D592	m
+1D593	n
+1D594	o
+1D595	p
+1D596	q
+1D597	r
+1D598	s
+1D599	t
+1D59A	u
+1D59B	v
+1D59C	w
+1D59D	x
+1D59E	y
+1D59F	z
+1D5A0	A
+1D5A1	B
+1D5A2	C
+1D5A3	D
+1D5A4	E
+1D5A5	F
+1D5A6	G
+1D5A7	H
+1D5A8	I
+1D5A9	J
+1D5AA	K
+1D5AB	L
+1D5AC	M
+1D5AD	N
+1D5AE	O
+1D5AF	P
+1D5B0	Q
+1D5B1	R
+1D5B2	S
+1D5B3	T
+1D5B4	U
+1D5B5	V
+1D5B6	W
+1D5B7	X
+1D5B8	Y
+1D5B9	Z
+1D5BA	a
+1D5BB	b
+1D5BC	c
+1D5BD	d
+1D5BE	e
+1D5BF	f
+1D5C0	g
+1D5C1	h
+1D5C2	i
+1D5C3	j
+1D5C4	k
+1D5C5	l
+1D5C6	m
+1D5C7	n
+1D5C8	o
+1D5C9	p
+1D5CA	q
+1D5CB	r
+1D5CC	s
+1D5CD	t
+1D5CE	u
+1D5CF	v
+1D5D0	w
+1D5D1	x
+1D5D2	y
+1D5D3	z
+1D5D4	A
+1D5D5	B
+1D5D6	C
+1D5D7	D
+1D5D8	E
+1D5D9	F
+1D5DA	G
+1D5DB	H
+1D5DC	I
+1D5DD	J
+1D5DE	K
+1D5DF	L
+1D5E0	M
+1D5E1	N
+1D5E2	O
+1D5E3	P
+1D5E4	Q
+1D5E5	R
+1D5E6	S
+1D5E7	T
+1D5E8	U
+1D5E9	V
+1D5EA	W
+1D5EB	X
+1D5EC	Y
+1D5ED	Z
+1D5EE	a
+1D5EF	b
+1D5F0	c
+1D5F1	d
+1D5F2	e
+1D5F3	f
+1D5F4	g
+1D5F5	h
+1D5F6	i
+1D5F7	j
+1D5F8	k
+1D5F9	l
+1D5FA	m
+1D5FB	n
+1D5FC	o
+1D5FD	p
+1D5FE	q
+1D5FF	r
+1D600	s
+1D601	t
+1D602	u
+1D603	v
+1D604	w
+1D605	x
+1D606	y
+1D607	z
+1D608	A
+1D609	B
+1D60A	C
+1D60B	D
+1D60C	E
+1D60D	F
+1D60E	G
+1D60F	H
+1D610	I
+1D611	J
+1D612	K
+1D613	L
+1D614	M
+1D615	N
+1D616	O
+1D617	P
+1D618	Q
+1D619	R
+1D61A	S
+1D61B	T
+1D61C	U
+1D61D	V
+1D61E	W
+1D61F	X
+1D620	Y
+1D621	Z
+1D622	a
+1D623	b
+1D624	c
+1D625	d
+1D626	e
+1D627	f
+1D628	g
+1D629	h
+1D62A	i
+1D62B	j
+1D62C	k
+1D62D	l
+1D62E	m
+1D62F	n
+1D630	o
+1D631	p
+1D632	q
+1D633	r
+1D634	s
+1D635	t
+1D636	u
+1D637	v
+1D638	w
+1D639	x
+1D63A	y
+1D63B	z
+1D63C	A
+1D63D	B
+1D63E	C
+1D63F	D
+1D640	E
+1D641	F
+1D642	G
+1D643	H
+1D644	I
+1D645	J
+1D646	K
+1D647	L
+1D648	M
+1D649	N
+1D64A	O
+1D64B	P
+1D64C	Q
+1D64D	R
+1D64E	S
+1D64F	T
+1D650	U
+1D651	V
+1D652	W
+1D653	X
+1D654	Y
+1D655	Z
+1D656	a
+1D657	b
+1D658	c
+1D659	d
+1D65A	e
+1D65B	f
+1D65C	g
+1D65D	h
+1D65E	i
+1D65F	j
+1D660	k
+1D661	l
+1D662	m
+1D663	n
+1D664	o
+1D665	p
+1D666	q
+1D667	r
+1D668	s
+1D669	t
+1D66A	u
+1D66B	v
+1D66C	w
+1D66D	x
+1D66E	y
+1D66F	z
+1D670	A
+1D671	B
+1D672	C
+1D673	D
+1D674	E
+1D675	F
+1D676	G
+1D677	H
+1D678	I
+1D679	J
+1D67A	K
+1D67B	L
+1D67C	M
+1D67D	N
+1D67E	O
+1D67F	P
+1D680	Q
+1D681	R
+1D682	S
+1D683	T
+1D684	U
+1D685	V
+1D686	W
+1D687	X
+1D688	Y
+1D689	Z
+1D68A	a
+1D68B	b
+1D68C	c
+1D68D	d
+1D68E	e
+1D68F	f
+1D690	g
+1D691	h
+1D692	i
+1D693	j
+1D694	k
+1D695	l
+1D696	m
+1D697	n
+1D698	o
+1D699	p
+1D69A	q
+1D69B	r
+1D69C	s
+1D69D	t
+1D69E	u
+1D69F	v
+1D6A0	w
+1D6A1	x
+1D6A2	y
+1D6A3	z
+1D6A4	i
+1D6A5	j
+# Some non-Unicode characters arise from catdvi use in pipelines. The
+# following are here to clean up some common cases.
+10FF0C	
+10FF74	
+10FF75	
+10FF76	
+10FF0D
+FE39

@@ -1,0 +1,24 @@
+rules:
+  - name: measurement-1
+    label: Measurement
+    priority: ${ rulepriority }
+    type: token
+    action: mkMeasurementMention
+    pattern: |
+      @number:Number @unit:MeasurementUnit
+
+  - name: measurement-2
+    label: Measurement
+    priority: ${ rulepriority }
+    type: token
+    action: mkMeasurementWithRangeMention
+    pattern: |
+      @number:NumberRange @unit:MeasurementUnit
+
+  - name: measurement-percentage
+    label: Percentage
+    priority: ${ rulepriority }
+    type: token
+    action: mkPercentage
+    pattern: |
+      @number:Number [word=/(?i)pct|percent|%/]

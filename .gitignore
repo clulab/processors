@@ -1,0 +1,33 @@
+*.class
+*.log
+.idea
+.idea/*
+*.iml
+core/*.iml
+.#*
+.DS_Store
+Makefile
+
+# VS code
+.bloop/
+.metals/
+.vscode/
+project/
+
+# sbt specific
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+
+# testing
+model.dat
+model.ser
+test.dat
+train.dat
+predictions
