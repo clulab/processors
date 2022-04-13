@@ -1,12 +1,12 @@
 package org.clulab.processors
 
 import java.io.{File, FileFilter, PrintWriter}
-
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
 import TextLabelToCoNLLU._
+import org.clulab.dynet.Utils
 import org.clulab.struct.GraphMap
 
 /**
@@ -97,8 +97,10 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
       proc.tagPartsOfSpeech(doc)
       proc.lemmatize(doc)
     } else {
-      proc.lemmatize(doc)
-      proc.tagPartsOfSpeech(doc)
+      GivenConstEmbeddingsAttachment(doc).perform {
+        proc.lemmatize(doc)
+        proc.tagPartsOfSpeech(doc)
+      }
     }
     proc.parse(doc)
     doc.clear()
@@ -131,7 +133,10 @@ object TextLabelToCoNLLU {
 
     val proc =
       if (props.get("proc").exists(_ == "corenlp")) new FastNLPProcessor()
-      else new CluProcessor()
+      else {
+        Utils.initializeDyNet()
+        new CluProcessor()
+      }
     val isCoreNLP = props.get("proc").exists(_ == "corenlp")
     val converter = new TextLabelToCoNLLU(proc, isCoreNLP)
 

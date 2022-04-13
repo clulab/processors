@@ -82,7 +82,7 @@ class TestTokenizers extends FlatSpec with Matchers {
     // clutime really should be smaller than coretime
     // but let's be conservative here; sometimes on Travis/Jenkins they come up about the same...
     (2 * coreTime > cluTime) should be (true)
-  }CluProcessor
+  }
 
   def printSents(sents:Array[Sentence]): Unit = {
     for(i <- sents.indices) {
