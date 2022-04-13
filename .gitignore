@@ -12,7 +12,6 @@ Makefile
 .bloop/
 .metals/
 .vscode/
-project/
 
 # sbt specific
 dist/*
