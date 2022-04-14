@@ -93,8 +93,8 @@ class TaskManager(config:Config) extends Configured {
     val weight:Float =
       getArgFloat(s"mtl.task$taskNumber.weight", Some(1.0f))
 
-    val insertNegatives: Boolean =
-      getArgBoolean(s"mtl.task$taskNumber.insertNegatives", Some(false))
+    val insertNegatives: Int =
+      getArgInt(s"mtl.task$taskNumber.insertNegatives", Some(0))
 
     new Task(taskNumber - 1, taskName, train, dev, test, taskType, shardsPerEpoch, weight, insertNegatives)
   }
@@ -181,7 +181,7 @@ class Task(
   val taskType:Int,
   val shardsPerEpoch:Int,
   val taskWeight:Float,
-  val insertNegatives: Boolean) {
+  val insertNegatives: Int) {
   logger.debug(s"Reading task $taskNumber ($taskName)...")
   val trainSentences:Array[Array[Row]] = ColumnReader.readColumns(trainFileName)
   val devSentences:Option[Array[Array[Row]]] =

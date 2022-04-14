@@ -24,11 +24,11 @@ case class AnnotatedSentence(words: IndexedSeq[String],
 
 trait RowReader {
   /** Converts the tabular format into one or more (AnnotatedSentence, sequence of gold heads (optional), sequence of gold labels) pairs */
-  def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Boolean): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])]
+  def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])]
 }
 
 class MetalRowReader extends RowReader {
-  override def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Boolean): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+  override def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
 
     if (rows.head.length == 2) {
       parseSimple(rows)
@@ -76,7 +76,7 @@ class MetalRowReader extends RowReader {
   }
 
   /** Parser for the full format: word, POS tag, NE label, (label head)+ */
-  def parseFull(rows: IndexedSeq[Row], insertNegatives: Boolean): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+  def parseFull(rows: IndexedSeq[Row], insertNegatives: Int): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
 
     assert(rows.head.length >= 5)
     val numSent = (rows.head.length - 3) / 2
@@ -120,14 +120,8 @@ class MetalRowReader extends RowReader {
       for(j <- labelsForThisSentence.indices) {
         sentLabels += DualLabel(j, headsForThisSentence(j), labelsForThisSentence(j))
 
-        if(insertNegatives) {
-          /*
-          // add one negative example for each positive one
-          sentLabels += DualLabel(j,
-            mkRandom(-1 until annotatedSent.size, Set(headsForThisSentence(j))),
-            Utils.STOP_TAG)
-          */
-          val negHeads = mkRandoms(-1 until annotatedSent.size, Set(headsForThisSentence(j)), 4)
+        if(insertNegatives > 0) {
+          val negHeads = mkRandoms(-1 until annotatedSent.size, Set(headsForThisSentence(j)), insertNegatives)
           for(negHead <- negHeads) {
             sentLabels += DualLabel(j, negHead, Utils.STOP_TAG)
           }
@@ -147,16 +141,6 @@ object MetalRowReader {
   val LABEL_START_OFFSET = 3
 
   val rand = new Random(1)
-
-  private def mkRandom(range: Range, exclude: Set[Int]): Int = {
-    val numbers = MathUtils.randomize(range.toArray, rand)
-    for(n <- numbers) {
-      if(! exclude.contains(n)) {
-        return n
-      }
-    }
-    throw new RuntimeException(s"ERROR: could not select a random integer from range ${range} excluding ${exclude}!")
-  }
 
   private def mkRandoms(range: Range, exclude: Set[Int], howMany:Int): Set[Int] = {
     val numbers = MathUtils.randomize(range.toArray, rand)
