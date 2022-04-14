@@ -21,7 +21,7 @@ libraryDependencies ++= {
     "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4",
     "com.io7m.xom"                % "xom"                      % "1.2.10",
     // for machine learning
-    "org.clulab"                 %% "fatdynet"                 % "0.4.4",
+    "org.clulab"                 %% "fatdynet"                 % "0.4.5-SNAPSHOT",
     "de.bwaldvogel"               % "liblinear"                % "2.30",
     "tw.edu.ntu.csie"             % "libsvm"                   % "3.23",
     // NLP tools used by CluProcessor

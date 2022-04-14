@@ -1,7 +1,7 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
@@ -22,7 +22,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam,
     distanceEmbeddingSize, distanceLookupParameters, nonlinearity, dropoutProb) {
 
-  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label]): Expression = {
+  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label])(implicit cg: ComputationGraph): Expression = {
     val goldLabels = Utils.toIds(goldLabelStrings.map(_.label), t2i)
     Utils.sentenceLossGreedy(finalStates, goldLabels)
   }

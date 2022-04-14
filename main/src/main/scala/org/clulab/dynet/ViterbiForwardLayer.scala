@@ -1,7 +1,7 @@
 package org.clulab.dynet
 import java.io.PrintWriter
 import edu.cmu.dynet.Expression.{lookup, randomNormal}
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
@@ -21,7 +21,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     distanceEmbeddingSize, distanceLookupParameters, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model
-  def initializeTransitions(): Unit = {
+  def initializeTransitions()(implicit cg: ComputationGraph): Unit = {
     val startTag = t2i(START_TAG)
     val stopTag = t2i(STOP_TAG)
 
@@ -30,7 +30,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     }
   }
 
-  private def initTransitionsTo(dst: Int, size:Int, startTag: Int, stopTag: Int): FloatVector = {
+  private def initTransitionsTo(dst: Int, size:Int, startTag: Int, stopTag: Int)(implicit cg: ComputationGraph): FloatVector = {
     val transScores = new Array[Float](size)
 
     for(i <- 0 until size) {
@@ -61,7 +61,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     new FloatVector(transScores)
   }
 
-  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label]): Expression = {
+  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label])(implicit cg: ComputationGraph): Expression = {
     // fetch the transition probabilities from the lookup storage
     val transitionMatrix = new ExpressionVector
     for(i <- 0 until t2i.size) {
@@ -86,7 +86,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     s"ViterbiForwardLayer($inDim, $outDim)"
   }
 
-  override def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String] = {
+  override def inference(emissionScores: Array[Array[Float]])(implicit cg: ComputationGraph): IndexedSeq[String] = {
     val transitionMatrix: Array[Array[Float]] =
       Utils.transitionMatrixToArrays(T, t2i.size)
     val labelsIds = Utils.viterbi(emissionScores,

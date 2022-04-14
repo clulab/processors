@@ -1,7 +1,6 @@
 package org.clulab.dynet
 import java.io.PrintWriter
-
-import edu.cmu.dynet.{Expression, ExpressionVector, GruBuilder, LstmBuilder, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, GruBuilder, LstmBuilder, ParameterCollection, RnnBuilder}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ArrayBuffer
@@ -22,7 +21,7 @@ class RnnLayer (val parameters:ParameterCollection,
                 val wordBwRnnBuilder:RnnBuilder,
                 val dropoutProb: Float) extends IntermediateLayer {
 
-  override def forward(inputExpressions: ExpressionVector, doDropout: Boolean): ExpressionVector = {
+  override def forward(inputExpressions: ExpressionVector, doDropout: Boolean)(implicit cg: ComputationGraph): ExpressionVector = {
     setRnnDropout(wordFwRnnBuilder, dropoutProb, doDropout)
     setRnnDropout(wordBwRnnBuilder, dropoutProb, doDropout)
     setRnnDropout(wordBwRnnBuilder, dropoutProb, doDropout)

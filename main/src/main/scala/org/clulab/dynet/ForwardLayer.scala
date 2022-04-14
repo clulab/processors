@@ -1,6 +1,6 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
 import ForwardLayer._
 import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}
@@ -22,7 +22,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
 
   def forward(inputExpressions: ExpressionVector,
               modifierHeadPairs: Option[IndexedSeq[ModifierHeadPair]],
-              doDropout: Boolean): ExpressionVector = {
+              doDropout: Boolean)(implicit cg: ComputationGraph): ExpressionVector = {
     val pH = Expression.parameter(H)
     val pRoot = Expression.parameter(rootParam)
     val emissionScores = new ExpressionVector()
@@ -98,7 +98,7 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     emissionScores
   }
 
-  protected def mkRelativePositionEmbedding(modifier: Int, head: Int): Expression = {
+  protected def mkRelativePositionEmbedding(modifier: Int, head: Int)(implicit cg: ComputationGraph): Expression = {
     val dist =
       if(head == -1) { // root
         0
@@ -151,7 +151,7 @@ object ForwardLayer {
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
                  isDual: Boolean,
-                 inputSize: Int): Option[ForwardLayer] = {
+                 inputSize: Int)(implicit cg: ComputationGraph): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
     }

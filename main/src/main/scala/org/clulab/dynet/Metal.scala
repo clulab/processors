@@ -1,7 +1,6 @@
 package org.clulab.dynet
 
 import java.io.{FileWriter, PrintWriter}
-
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
@@ -9,12 +8,11 @@ import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.{Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
-import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.fatdynet.utils.{CloseableModelSaver, Synchronizer}
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
-
 import Metal._
 
 /**
@@ -24,7 +22,7 @@ import Metal._
  */
 class Metal(val taskManagerOpt: Option[TaskManager],
             val parameters: ParameterCollection,
-            modelOpt: Option[IndexedSeq[Layers]]) {
+            modelOpt: Option[IndexedSeq[Layers]])(implicit cg: ComputationGraph) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
 
@@ -34,7 +32,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     taskManagerOpt.get
   }
 
-  protected def initialize(): Array[Layers] = {
+  protected def initialize()(implicit cg: ComputationGraph): Array[Layers] = {
     // this should only be called during training, when the task manager should be defined
     require(taskManagerOpt.isDefined)
 
@@ -98,7 +96,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     (words, labels)
   }
 
-  def train(modelNamePrefix: String): Unit = {
+  def train(modelNamePrefix: String)(implicit cg: ComputationGraph): Unit = {
     require(taskManagerOpt.isDefined)
 
     val learningRate = taskManager.getArgFloat("mtl.learningRate", Some(0.001f))
@@ -242,7 +240,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     }
   }
 
-  def batchBackprop(batchLosses: ExpressionVector, trainer: SafeTrainer): Float = {
+  def batchBackprop(batchLosses: ExpressionVector, trainer: SafeTrainer)(implicit cg: ComputationGraph): Float = {
     // this is were the auto batch magic happens
     val batchLoss = Expression.sum(batchLosses)
 
@@ -465,14 +463,14 @@ object Metal {
     layersSeq
   }
 
-  def apply(modelFilenamePrefix: String, taskManager: TaskManager): Metal = {
+  def apply(modelFilenamePrefix: String, taskManager: TaskManager)(implicit cg: ComputationGraph): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
     val mtl = new Metal(Some(taskManager), parameters, Some(model))
     mtl
   }
 
-  def apply(modelFilenamePrefix: String): Metal = {
+  def apply(modelFilenamePrefix: String)(implicit cg: ComputationGraph): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
     val mtl = new Metal(None, parameters, Some(model))
@@ -490,8 +488,11 @@ object Metal {
       val taskManager = new TaskManager(config)
       val modelName = props("train")
 
-      val mtl = new Metal(Some(taskManager), parameters, None)
-      mtl.train(modelName)
+      // TODO: Or create w/o Synchronizer
+      Synchronizer.withComputationGraph("train") { implicit cg =>
+        val mtl = new Metal(Some(taskManager), parameters, None)
+        mtl.train(modelName)
+      }
     }
 
     else if(props.contains("test")) {
@@ -500,15 +501,21 @@ object Metal {
       val taskManager = new TaskManager(config)
       val modelName = props("test")
 
-      val mtl = Metal(modelName, taskManager)
-      mtl.test()
+      // TODO: Or create w/o Synchronizer
+      // This could use the global value.
+      Synchronizer.withComputationGraph("test") { implicit cg =>
+        val mtl = Metal(modelName, taskManager)
+        mtl.test()
+      }
     }
 
     else if(props.contains("shell")) {
-      val modelName = props("shell")
-      val mtl = Metal(modelName)
-      val shell = new MetalShell(mtl)
-      shell.shell()
+      Synchronizer.withComputationGraph("shell") { implicit cg =>
+        val modelName = props("shell")
+        val mtl = Metal(modelName)
+        val shell = new MetalShell(mtl)
+        shell.shell()
+      }
     }
   }
 }

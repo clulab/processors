@@ -1,7 +1,7 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-import edu.cmu.dynet.{Expression, ExpressionVector, ParameterCollection}
+import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterCollection}
 import org.clulab.struct.Counter
 import org.clulab.utils.{Configured, MathUtils}
 import org.clulab.dynet.Utils._
@@ -124,7 +124,7 @@ object Layers {
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
             isDual: Boolean,
-            providedInputSize: Option[Int]): Layers = {
+            providedInputSize: Option[Int])(implicit cg: ComputationGraph): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
     var inputSize =
@@ -209,7 +209,7 @@ object Layers {
     val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
 
     // DyNet's computation graph is a static variable, so this block must be synchronized
-    Synchronizer.withComputationGraph("Layers.predictJointly()") {
+    Synchronizer.withComputationGraph("Layers.predictJointly()") { implicit cg =>
       // layers(0) contains the shared layers
       if (layers(0).nonEmpty) {
         val sharedStates = layers(0).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
@@ -270,7 +270,7 @@ object Layers {
               constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized.
-      Synchronizer.withComputationGraph("Layers.predict()") {
+      Synchronizer.withComputationGraph("Layers.predict()") { implicit cg =>
         val states = forwardForTask(layers, taskId, sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inference(emissionScores)
@@ -289,7 +289,7 @@ object Layers {
                         applySoftmax: Boolean = true): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsForTask =
       // DyNet's computation graph is a static variable, so this block must be synchronized
-      Synchronizer.withComputationGraph("Layers.predictWithScores()") {
+      Synchronizer.withComputationGraph("Layers.predictWithScores()") { implicit cg =>
         val states = forwardForTask(layers, taskId, sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
         val out = layers(taskId + 1).finalLayer.get.inferenceWithScores(emissionScores)
@@ -319,7 +319,7 @@ object Layers {
             constEmbeddings: ConstEmbeddingParameters): IndexedSeq[(Int, String)] = {
     val headsAndLabels =
       // DyNet's computation graph is a static variable, so this block must be synchronized
-      Synchronizer.withComputationGraph("Layers.parse()") {
+      Synchronizer.withComputationGraph("Layers.parse()") { implicit cg =>
         //
         // first get the output of the layers that are shared between the two tasks
         //

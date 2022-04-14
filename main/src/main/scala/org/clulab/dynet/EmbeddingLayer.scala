@@ -1,14 +1,12 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-
 import edu.cmu.dynet.Expression.concatenate
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ExpressionVector, LookupParameter, LstmBuilder, ParameterCollection, RnnBuilder}
 import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
 import org.clulab.utils.{Configured, Serializer}
-
 import EmbeddingLayer._
 
 import scala.util.Random
@@ -45,7 +43,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   override def forward(sentence: AnnotatedSentence,
                        modifierHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                        constEmbeddings: ConstEmbeddingParameters,
-                       doDropout: Boolean): ExpressionVector = {
+                       doDropout: Boolean)(implicit cg: ComputationGraph): ExpressionVector = {
     setCharRnnDropout(doDropout)
 
     val words = sentence.words
@@ -91,7 +89,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
   }
 
   private def mkConstEmbeddings(words: IndexedSeq[String],
-                                constEmbeddings: ConstEmbeddingParameters): ExpressionVector = {
+                                constEmbeddings: ConstEmbeddingParameters)(implicit cg: ComputationGraph): ExpressionVector = {
     val embeddings = new ExpressionVector()
     // the position in the sentence serves as index in the constLookupParams
     for(word <- words) {
@@ -107,7 +105,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                           ne: Option[String],
                           predicatePosition: Option[Int],
                           constEmbedding: Expression,
-                          doDropout: Boolean): Expression = {
+                          doDropout: Boolean)(implicit cg: ComputationGraph): Expression = {
     //
     // Learned word embeddings
     // These are initialized randomly, and updated during backprop

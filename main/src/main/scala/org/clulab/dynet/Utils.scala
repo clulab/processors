@@ -180,7 +180,7 @@ object Utils {
    */
   def mkPartitionScore(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
                        transitionMatrix: ExpressionVector,
-                       startTag: Int, stopTag: Int): Expression = { // Dim: tagCount x tagCount
+                       startTag: Int, stopTag: Int)(implicit cg: ComputationGraph): Expression = { // Dim: tagCount x tagCount
     val tagCount = transitionMatrix.size
 
     // sum of scores of reaching each tag at this time step
@@ -324,7 +324,7 @@ object Utils {
   }
 
   /** Picks the scalar element from an expression that is a matrix */
-  def pick2D(matrix: ExpressionVector, row: Int, column: Int): Expression = {
+  def pick2D(matrix: ExpressionVector, row: Int, column: Int)(implicit cg: ComputationGraph): Expression = {
     pick(matrix(row), column)
   }
 
@@ -334,7 +334,7 @@ object Utils {
                     tagCount: Int,
                     tagSeq: IndexedSeq[Int],
                     startTag: Int,
-                    stopTag: Int): Expression = {
+                    stopTag: Int)(implicit cg: ComputationGraph): Expression = {
     // start with the transition score to first tag from START
     var score = pick2D(transitionMatrix, tagSeq.head, startTag)
 
@@ -354,7 +354,7 @@ object Utils {
     score
   }
 
-  def concatenateStates(l1: Iterable[Expression], l2: Iterable[Expression]): Iterable[Expression] = {
+  def concatenateStates(l1: Iterable[Expression], l2: Iterable[Expression])(implicit cg: ComputationGraph): Iterable[Expression] = {
     l1.zip(l2).map { case (left, right) => concatenate(left, right) }
   }
 
@@ -362,10 +362,10 @@ object Utils {
       c2i: Map[Char, Int],
       charLookupParameters: LookupParameter,
       charFwRnnBuilder: RnnBuilder,
-      charBwRnnBuilder: RnnBuilder): Expression = {
+      charBwRnnBuilder: RnnBuilder)(implicit cg: ComputationGraph): Expression = {
 
     // Do not use an ExpressionVector, but instead just take the last element.
-    def safelyTransduceLast1(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder): Expression = {
+    def safelyTransduceLast1(charEmbeddings: Seq[Expression], rnnBuilder: RnnBuilder)(implicit cg: ComputationGraph): Expression = {
       val outsOpt = transduceLastOpt(charEmbeddings, rnnBuilder)
       val nonEmptyOuts = outsOpt.getOrElse {
         // Some embeddings may be empty in some weird Unicode encodings.
@@ -404,7 +404,7 @@ object Utils {
     result
   }
 
-  def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder): Option[Expression] = {
+  def transduceLastOpt(embeddings: Iterable[Expression], builder: RnnBuilder)(implicit cg: ComputationGraph): Option[Expression] = {
 
     if (embeddings.isEmpty)
       None
@@ -416,7 +416,7 @@ object Utils {
     }
   }
 
-  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
+  def transduce(embeddings: Iterable[Expression], builder: RnnBuilder)(implicit cg: ComputationGraph): ExpressionVector = {
 
     // Build up an ExpressionVector one Expression at a time.
     def transduceEV(embeddings: Iterable[Expression], builder: RnnBuilder): ExpressionVector = {
@@ -444,7 +444,7 @@ object Utils {
 
   /** Greedy loss function, ignoring transition scores */
   def sentenceLossGreedy(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
-                         golds: IndexedSeq[Int]): Expression = { // Dim: sentenceSize
+                         golds: IndexedSeq[Int])(implicit cg: ComputationGraph): Expression = { // Dim: sentenceSize
 
     val goldLosses = new ExpressionVector()
     assert(emissionScoresForSeq.length == golds.length)
@@ -470,7 +470,7 @@ object Utils {
   def sentenceLossCrf(emissionScoresForSeq: ExpressionVector, // Dim: sentenceSize x tagCount
                       transitionMatrix: ExpressionVector, // Dim: tagCount x tagCount
                       golds: IndexedSeq[Int],
-                      t2i: Map[String, Int]): Expression = { // Dim: sentenceSize
+                      t2i: Map[String, Int])(implicit cg: ComputationGraph): Expression = { // Dim: sentenceSize
     val startTag = t2i(START_TAG)
     val stopTag = t2i(STOP_TAG)
 
@@ -507,7 +507,7 @@ object Utils {
     latticesAllTasks
   }
 
-  def transitionMatrixToArrays(trans: LookupParameter, size: Int): Array[Array[Float]] = {
+  def transitionMatrixToArrays(trans: LookupParameter, size: Int)(implicit cg: ComputationGraph): Array[Array[Float]] = {
     val transitionMatrix = new ArrayBuffer[Array[Float]]()
     for (i <- 0 until size) {
       transitionMatrix += lookup(trans, i).value().toVector().toArray
@@ -896,7 +896,7 @@ object Utils {
     }
   }
 
-  def expressionDropout(expression: Expression, dropoutProb: Float, doDropout: Boolean): Expression = {
+  def expressionDropout(expression: Expression, dropoutProb: Float, doDropout: Boolean)(implicit cg: ComputationGraph): Expression = {
     if(doDropout && dropoutProb > 0) {
       Expression.dropout(expression, dropoutProb)
     } else {

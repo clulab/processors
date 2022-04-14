@@ -1,6 +1,7 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Dim, Expression, ParameterCollection, UnsignedVector}
+import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ParameterCollection, UnsignedVector}
+import org.clulab.fatdynet.utils.Synchronizer
 
 //
 // See also:
@@ -8,7 +9,7 @@ import edu.cmu.dynet.{Dim, Expression, ParameterCollection, UnsignedVector}
 // https://github.com/neubig/nn4nlp-code/blob/970d91a51664b3d91a9822b61cd76abea20218cb/05-cnn/cnn-class.py#L45
 //
 object CnnExample extends App {
-  Utils.initializeDyNet()
+  Utils.initializeDyNet() // TODO.  This needs to be cluInitialize
   val pc = new ParameterCollection()
 
   val embSize = 3
@@ -19,18 +20,20 @@ object CnnExample extends App {
   val cnnParams = pc.addParameters(Dim(1, winSize, embSize, filterSize))
   val cnnBias = pc.addParameters(Dim(filterSize))
 
-  val w1 = Expression.lookup(embeddings, 1)
-  val w2 = Expression.lookup(embeddings, 2)
-  val w3 = Expression.lookup(embeddings, 3)
-  val w4 = Expression.lookup(embeddings, 4)
-  val cnnIn = Expression.concatenateCols(w1, w2, w3, w4)
-  println(cnnIn.dim())
-  println(cnnIn.value().toVector().mkString(" "))
+  Synchronizer.withComputationGraph("CnnExample") { implicit cg =>
+    val w1 = Expression.lookup(embeddings, 1)
+    val w2 = Expression.lookup(embeddings, 2)
+    val w3 = Expression.lookup(embeddings, 3)
+    val w4 = Expression.lookup(embeddings, 4)
+    val cnnIn = Expression.concatenateCols(w1, w2, w3, w4)
+    println(cnnIn.dim())
+    println(cnnIn.value().toVector().mkString(" "))
 
-  val stride = new UnsignedVector(Seq(1L, 1L))
+    val stride = new UnsignedVector(Seq(1L, 1L))
 
-  val cnnOut = Expression.conv2d(cnnIn, Expression.parameter(cnnParams), Expression.parameter(cnnBias), stride)
+    val cnnOut = Expression.conv2d(cnnIn, Expression.parameter(cnnParams), Expression.parameter(cnnBias), stride)
 
-  println(cnnOut.dim())
-  println(cnnOut.value().toVector().mkString(" "))
+    println(cnnOut.dim())
+    println(cnnOut.value().toVector().mkString(" "))
+  }
 }
