@@ -8,10 +8,12 @@ package org.clulab.dynet
 import org.clulab.sequences.Row
 
 import scala.collection.mutable.ArrayBuffer
-
 import MetalRowReader._
+
 import scala.util.Random
 import org.clulab.utils.MathUtils
+
+import scala.collection.mutable
 
 case class AnnotatedSentence(words: IndexedSeq[String],
                              posTags: Option[IndexedSeq[String]] = None,
@@ -119,10 +121,16 @@ class MetalRowReader extends RowReader {
         sentLabels += DualLabel(j, headsForThisSentence(j), labelsForThisSentence(j))
 
         if(insertNegatives) {
+          /*
           // add one negative example for each positive one
           sentLabels += DualLabel(j,
             mkRandom(-1 until annotatedSent.size, Set(headsForThisSentence(j))),
             Utils.STOP_TAG)
+          */
+          val negHeads = mkRandoms(-1 until annotatedSent.size, Set(headsForThisSentence(j)), 4)
+          for(negHead <- negHeads) {
+            sentLabels += DualLabel(j, negHead, Utils.STOP_TAG)
+          }
         }
       }
       sentences += Tuple2(annotatedSent, sentLabels)
@@ -148,5 +156,16 @@ object MetalRowReader {
       }
     }
     throw new RuntimeException(s"ERROR: could not select a random integer from range ${range} excluding ${exclude}!")
+  }
+
+  private def mkRandoms(range: Range, exclude: Set[Int], howMany:Int): Set[Int] = {
+    val numbers = MathUtils.randomize(range.toArray, rand)
+    val randoms = new mutable.HashSet[Int]()
+    for(n <- numbers if randoms.size < howMany) {
+      if(! exclude.contains(n)) {
+        randoms += n
+      }
+    }
+    randoms.toSet
   }
 }

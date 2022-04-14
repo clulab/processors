@@ -29,7 +29,7 @@ object EvalEisner extends App {
       val annotatedSentence = as._1
       val goldLabels = as._2.map(_.label)
       val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(annotatedSentence.words)
-      val preds = eisner.ensembleParser(heads, Some(labels), annotatedSentence, constEmbeddings, 5, 0.5f, true)
+      val preds = eisner.ensembleParser(heads, Some(labels), annotatedSentence, constEmbeddings, 5, 0.6f, true)
       val predLabels = preds.map(_._1.toString)
 
       val sc = SeqScorer.f1(goldLabels, predLabels)
