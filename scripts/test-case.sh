@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Script to test a NER model 
+# Script to test a case restoration model 
 #
 
 if [ "$#" -ne 1 ]; then
@@ -11,5 +11,5 @@ fi
 
 MODEL=$1
 
-sbt 'runMain org.clulab.dynet.Metal -test '"$MODEL"' -conf org/clulab/mtl-en-ner.conf'
+sbt 'runMain org.clulab.dynet.Metal -test '"$MODEL"' -conf org/clulab/mtl-en-case.conf'
 

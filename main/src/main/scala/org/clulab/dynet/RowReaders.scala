@@ -24,11 +24,11 @@ case class AnnotatedSentence(words: IndexedSeq[String],
 
 trait RowReader {
   /** Converts the tabular format into one or more (AnnotatedSentence, sequence of gold heads (optional), sequence of gold labels) pairs */
-  def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])]
+  def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int = 0): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])]
 }
 
 class MetalRowReader extends RowReader {
-  override def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+  override def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int = 0): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
 
     if (rows.head.length == 2) {
       parseSimple(rows)

@@ -23,7 +23,7 @@ object EvalEisner extends App {
   val scoreCountsByLabel = new ScoreCountsByLabel
 
   for(sentence <- sentences) {
-    val annotatedSentences = reader.toAnnotatedSentences(sentence, false)
+    val annotatedSentences = reader.toAnnotatedSentences(sentence, 0)
 
     for(as <- annotatedSentences) {
       val annotatedSentence = as._1
