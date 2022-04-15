@@ -1,3 +1,4 @@
++ **8.5.0** - Small parser improvements; added model for case restoration
 + **8.4.9** - Parser improvements: slimmer models; parsing using the Eisner algorithm
 + **8.4.9** - Removed support for embedding spans in Metal
 + **8.4.8** - We now extract and normalize approximate dates

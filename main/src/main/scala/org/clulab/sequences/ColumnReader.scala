@@ -25,7 +25,7 @@ object ColumnReader {
         }
       } else {
         // within the same sentence
-        val bits = l.split("\\s")
+        val bits = l.split("\\s+")
         if (bits.length < 2)
           throw new RuntimeException(s"ERROR: invalid line [$l]!")
         sentence += Row(bits)

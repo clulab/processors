@@ -81,7 +81,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        val annotatedSentences = reader.toAnnotatedSentences(sentence, false)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, 0)
 
         for(as <- annotatedSentences) {
           val annotatedSentence = as._1
@@ -304,7 +304,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val reader = new MetalRowReader
     val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
-    if(insertNegatives) {
+    if(insertNegatives > 0) {
       pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
     }
 
@@ -333,7 +333,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
 
-        if(! insertNegatives) {
+        if(insertNegatives == 0) {
           // we can only print in the CoNLL format if we did not insert artificial negatives
           // these negatives break the one label per token assumption
           printCoNLLOutput(pw, sentence.words, goldLabels, preds)
