@@ -9,6 +9,7 @@ import scala.io.Source
 object ColumnReader {
   def readColumns(fn: String): Array[Array[Row]] = {
     val source = Source.fromFile(fn)
+    //println(s"Reading file $fn")
     readColumns(source: Source)
   }
 
