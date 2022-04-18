@@ -57,7 +57,7 @@ case class Row(tokens:Array[String]) {
   }
 
   def length = tokens.length
-
+  def indices: Range = 0 until length
 
 }
 

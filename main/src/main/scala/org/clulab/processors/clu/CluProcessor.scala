@@ -14,6 +14,7 @@ import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
+import scala.collection.script.Index
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -160,6 +161,12 @@ class CluProcessor protected (
   }
   */
 
+  lazy val mtlCase: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-case", Some("mtl-en-case")))
+  }
+
   // Although this uses no class members, the method is sometimes called from tests
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
@@ -223,6 +230,39 @@ class CluProcessor protected (
     val chunks = allLabels(1)
     val preds = allLabels(2)
     (tags, chunks, preds)
+  }
+
+  /** Restores the correct case for words in a given sentence */
+  def restoreCase(doc: Document, 
+                  embeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
+
+    val restoredSentences = new ArrayBuffer[IndexedSeq[String]]  
+
+    for(sent <- doc.sentences) {
+      // the case restoration model expects lower-case words as input                    
+      val loweredWords = sent.words.map(_.toLowerCase())
+      val labels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, embeddings)
+      //println(s"LABELS: ${labels}")
+      //println(s"LOWERED WORDS: ${loweredWords.mkString(" ")}")
+      assert(labels.size == loweredWords.size)
+      val wordsAndLabels = loweredWords.zip(labels)
+      val restoredWords = wordsAndLabels.map(x => restoreCaseWord(x._1, x._2))
+      restoredSentences += restoredWords
+    }                    
+
+    restoredSentences
+  }
+
+  private def restoreCaseWord(loweredWord: String, label: String): String = {
+    // we handle three possible labels: L (lower), UI (upper initial), UA (all upper)
+
+    if(label == "UI") {
+      Character.toUpperCase(loweredWord(0)) + loweredWord.substring(1)
+    } else if(label == "UA") {
+      loweredWord.toUpperCase()
+    } else {
+      loweredWord
+    }
   }
 
   /** Produces NE labels for one sentence */
@@ -468,7 +508,7 @@ class CluProcessor protected (
     new DirectedGraph[String](edges.toList, Some(words.length))
   }
 
-  private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
+  def getEmbeddings(doc: Document): ConstEmbeddingParameters =
     doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
@@ -894,9 +934,9 @@ object CluProcessor {
 case class EmbeddingsAttachment(embeddings: ConstEmbeddingParameters)
     extends IntermediateDocumentAttachment
 
-class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
+class GivenConstEmbeddingsAttachment(doc: Document, lowerCase: Boolean) extends BeforeAndAfter {
 
-  def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
+  def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc, lowerCase)
 
   def after(): Unit = {
     val attachment = doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
@@ -911,12 +951,12 @@ class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
 }
 
 object GivenConstEmbeddingsAttachment {
-  def apply(doc: Document) = new GivenConstEmbeddingsAttachment(doc)
+  def apply(doc: Document, lowerCase: Boolean = false) = new GivenConstEmbeddingsAttachment(doc, lowerCase)
 
   // This is static so that it can be called without an object.
-  def mkConstEmbeddings(doc: Document): Unit = {
+  def mkConstEmbeddings(doc: Document, lowerCase: Boolean = false): Unit = {
     // Fetch the const embeddings from GloVe. All our models need them.
-    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
+    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc, lowerCase)
     val attachment = EmbeddingsAttachment(embeddings)
 
     // Now set them as an attachment, so they are available to all downstream methods wo/ changing the API.
