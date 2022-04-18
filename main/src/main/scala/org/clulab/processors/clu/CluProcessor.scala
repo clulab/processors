@@ -232,25 +232,20 @@ class CluProcessor protected (
     (tags, chunks, preds)
   }
 
-  /** Restores the correct case for words in a given sentence */
-  def restoreCase(doc: Document, 
-                  embeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
-
-    val restoredSentences = new ArrayBuffer[IndexedSeq[String]]  
-
-    for(sent <- doc.sentences) {
-      // the case restoration model expects lower-case words as input                    
-      val loweredWords = sent.words.map(_.toLowerCase())
-      val labels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, embeddings)
-      //println(s"LABELS: ${labels}")
-      //println(s"LOWERED WORDS: ${loweredWords.mkString(" ")}")
-      assert(labels.size == loweredWords.size)
-      val wordsAndLabels = loweredWords.zip(labels)
-      val restoredWords = wordsAndLabels.map(x => restoreCaseWord(x._1, x._2))
-      restoredSentences += restoredWords
+  /** Restores the correct case for all words in a given document */
+  def restoreCase(doc: Document): Unit = {
+    GivenConstEmbeddingsAttachment(doc, true).perform {
+      for(sent <- doc.sentences) {
+        // the case restoration model expects lower-case words as input                    
+        val loweredWords = sent.words.map(_.toLowerCase())
+        val labels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
+        assert(labels.size == loweredWords.size)
+        val restoredWords = loweredWords.zip(labels).map(x => restoreCaseWord(x._1, x._2))
+        for(i <- sent.indices) {
+          sent.words(i) = restoredWords(i)
+        }
+      }
     }                    
-
-    restoredSentences
   }
 
   private def restoreCaseWord(loweredWord: String, label: String): String = {
