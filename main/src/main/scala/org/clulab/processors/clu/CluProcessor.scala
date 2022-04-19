@@ -238,7 +238,8 @@ class CluProcessor protected (
       for(sent <- doc.sentences) {
         // the case restoration model expects lower-case words as input                    
         val loweredWords = sent.words.map(_.toLowerCase())
-        val labels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
+        val preLabels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
+        val labels = casePostProcessing(loweredWords, preLabels)
         assert(labels.size == loweredWords.size)
         val restoredWords = loweredWords.zip(labels).map(x => restoreCaseWord(x._1, x._2))
         for(i <- sent.indices) {
@@ -246,6 +247,23 @@ class CluProcessor protected (
         }
       }
     }                    
+  }
+
+  private def casePostProcessing(loweredWords: IndexedSeq[String], preLabels: IndexedSeq[String]): IndexedSeq[String] = {
+    val labels = new ArrayBuffer[String]
+    for(i <- loweredWords.indices) {
+      val w = loweredWords(i)
+      for(pl <- CASE_PATTERNS) {
+        val p = pl._1
+        val l = pl._2
+        if(p.findFirstMatchIn(w).nonEmpty) {
+          labels += l
+        } else {
+          labels += preLabels(i)
+        }
+      }
+    }
+    labels
   }
 
   private def restoreCaseWord(loweredWord: String, label: String): String = {
@@ -844,6 +862,13 @@ object CluProcessor {
   // Patterns for post-processing corrections
   //
   val VERSUS_PATTERN = """(?i)^vs\.?$""".r
+
+  //
+  // Patterns to correct case information
+  //
+  val CASE_PATTERNS = Seq(
+      ("""^([ivx\d]+[\.\)\]]?)+$""".r, "L") // list item indices are often unnecessarily capitalized
+  )
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
