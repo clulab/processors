@@ -122,25 +122,25 @@ class Layers(object):
                     self.finalLayer.state_dict()[key].data /= num_models
 
 
-    def forward(self, sentence, constEmbeddings, doDropout):
+    def forward(self, sentence, modHeadPairs, constEmbeddings, doDropout):
         if self.initialLayer is None:
             raise RuntimeError(f"ERROR: you can't call forward() on a Layers object that does not have an initial layer: {self}!")
-        states = self.initialLayer(sentence, constEmbeddings, doDropout)
+        states = self.initialLayer(sentence, modHeadPairs, constEmbeddings, doDropout)
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states)
         if self.finalLayer is not None:
-            states = self.finalLayer(states, sentence.headPositions)
+            states = self.finalLayer(states, modHeadPairs)
 
         return states
 
-    def forwardFrom(self, inStates, headPositions, doDropout):
+    def forwardFrom(self, inStates, modHeadPairs, doDropout):
         if self.initialLayer is not None:
             raise RuntimeError(f"ERROR: you can't call forwardFrom() on a Layers object that has an initial layer: {self}")
         states = inStates
         for intermediateLayer in self.intermediateLayers:
             states = intermediateLayer(states)
         if self.finalLayer is not None:
-            states = self.finalLayer(states, headPositions)
+            states = self.finalLayer(states, modHeadPairs)
 
         return states
 
@@ -219,41 +219,41 @@ class Layers(object):
         return cls(initialLayer, intermediateLayers, finalLayer)
 
     @staticmethod
-    def predictJointly(layers, sentence, constEmbeddings):
+    def predictJointly(layers, sentence, modHeadPairs, constEmbeddings):
         labelsPerTask = list()
         # layers(0) contains the shared layers
         if layers[0]:
-            sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout=False)
+            sharedStates = layers[0].forward(sentence, modHeadPairs, constEmbeddings, doDropout=False)
             for i in range(1, len(layers)):
-                states = layers[i].forwardFrom(sharedStates, sentence.headPositions, doDropout=False)
+                states = layers[i].forwardFrom(sharedStates, modHeadPairs, doDropout=False)
                 labels = layers[i].finalLayer.inference(states)
                 labelsPerTask += [labels]
         # no shared layer
         else:
             for i in range(1, len(layers)):
-                states = layers[i].forward(sentence, sentence.headPositions, doDropout=False)
+                states = layers[i].forward(sentence, modHeadPairs, doDropout=False)
                 labels = layers[i].finalLayer.inference(states)
                 labelsPerTask += [labels]
 
         return labelsPerTask
 
     @staticmethod
-    def forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout):
+    def forwardForTask(layers, taskId, sentence, modHeadPairs, constEmbeddings, doDropout):
         if layers[0]:
-            sharedStates = layers[0].forward(sentence, constEmbeddings, doDropout)
-            states = layers[taskId+1].forwardFrom(sharedStates, sentence.headPositions, doDropout)
+            sharedStates = layers[0].forward(sentence, modHeadPairs, constEmbeddings, doDropout)
+            states = layers[taskId+1].forwardFrom(sharedStates, modHeadPairs, doDropout)
         else:
-            states = layers[taskId+1].forward(sentence, constEmbeddings, doDropout)
+            states = layers[taskId+1].forward(sentence, modHeadPairs, constEmbeddings, doDropout)
         return states
 
     @staticmethod
-    def predict(layers, taskId, sentence, constEmbeddings):
-        states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=False)
+    def predict(layers, taskId, sentence, modHeadPairs, constEmbeddings):
+        states = Layers.forwardForTask(layers, taskId, sentence, modHeadPairs, constEmbeddings, doDropout=False)
         return layers[taskId+1].finalLayer.inference(states)
 
     @staticmethod
-    def predictWithScores(layers, taskId, sentence, constEmbeddings):
-        states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=False)
+    def predictWithScores(layers, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax):
+        states = Layers.forwardForTask(layers, taskId, sentence, modHeadPairs, constEmbeddings, doDropout=False)
         return layers[taskId+1].finalLayer.inferenceWithScores(states)
 
     @staticmethod
@@ -307,7 +307,8 @@ class Layers(object):
     def loss(layers, taskId, sentence, goldLabels):
         # Zheng: I am not sure this is the suitable way to load embeddings or not, need help...
         constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
-        states = Layers.forwardForTask(layers, taskId, sentence, constEmbeddings, doDropout=True) # use dropout during training!
+        modHeadPairsOpt = getModHeadPairs(goldLabels)
+        states = Layers.forwardForTask(layers, taskId, sentence, modHeadPairs, constEmbeddings, doDropout=True) # use dropout during training!
         loss = layers[taskId+1].finalLayer.loss(states, goldLabels)
         return loss
 

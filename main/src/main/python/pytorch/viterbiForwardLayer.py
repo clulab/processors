@@ -2,8 +2,8 @@ from pytorch.forwardLayer import *
 from pytorch.utils import *
 
 class ViterbiForwardLayer(ForwardLayer):
-    def __init__(self, inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans = None):
-        super().__init__(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans)
+    def __init__(self, inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, distanceEmbeddingSize = 0):
+        super().__init__(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, distanceEmbeddingSize)
 
         # Matrix of transition parameters.  Entry i,j is the score of
         # transitioning *to* i *from* j.
@@ -114,7 +114,8 @@ class ViterbiForwardLayer(ForwardLayer):
         x2i["span"] = spanToString(self.spans) if self.spans else ""
         x2i["nonlinearity"] = self.nonlinearity
         x2i["t2i"] = self.t2i
-
+        x2i["distanceEmbeddingSize"] = self.distanceEmbeddingSize
+        
         return x2i
 
     def __str__(self):

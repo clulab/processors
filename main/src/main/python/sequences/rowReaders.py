@@ -1,11 +1,13 @@
+from pytorch.labels import DualLabel, PrimalLabel
+from pytorch.utils import *
+import random
 
 class AnnotatedSentence:
 
-    def __init__(self, words, posTags = None, neTags = None, headPositions = None):
+    def __init__(self, words, posTags = None, neTags = None):
         self.words = words
         self.posTags = posTags
         self.neTags = neTags
-        self.headPositions = headPositions
         self.size = len(words)
         self.indicies = range(self.size)
 
@@ -43,7 +45,7 @@ class MetalRowReader(RowReader):
 
         for row in rows:
             words += [row.get(self.WORD_POSITION)]
-            labels += [row.get(self.WORD_POSITION + 1)]
+            labels += [PrimalLabel(row.get(self.WORD_POSITION + 1))]
 
         return [(AnnotatedSentence(words), labels)]
 
@@ -59,12 +61,12 @@ class MetalRowReader(RowReader):
             words += [row.get(self.WORD_POSITION)]
             posTags += [row.get(self.POS_TAG_POSITION)]
             neLabels += [row.get(self.NE_LABEL_POSITION)]
-            labels += [row.get(self.LABEL_START_OFFSET)]
+            labels += [PrimalLabel(row.get(self.LABEL_START_OFFSET))]
 
         return [(AnnotatedSentence(words, posTags, neLabels), labels)]
 
     # Parser for the full format: word, POS tag, NE label, (label head)+ 
-    def parseFull(self, rows):
+    def parseFull(self, rows, insertNegatives):
         assert(rows[0].length >= 5)
         numSent = (rows[0].length - 3) / 2
         assert(numSent >= 1)
@@ -85,16 +87,34 @@ class MetalRowReader(RowReader):
             neLabels += [row.get(self.NE_LABEL_POSITION)]
 
             for j in range(numSent):
-                labels[j]+= [row.get(self.LABEL_START_OFFSET + (j * 2))]
+                labels[j] += [row.get(self.LABEL_START_OFFSET + (j * 2))]
                 try:
                     headPositions[j] += [int(row.get(self.LABEL_START_OFFSET + (j * 2) + 1))]
-                except:
-                    raise RuntimeError 
+                except ValueError:
+                    headPositions[j] += [-1]
 
         sentences = list()
         for i in range(numSent):
-            annotatedSent = AnnotatedSentence(words, posTags, neLabels, headPositions[i])
-            sentLabels = labels[i]
-            sentences += [(annotatedSent, sentLabels)]
+            annotatedSent = AnnotatedSentence(words, posTags, neLabels)
+            labelsForThisSentence = labels[i]
+            headsForThisSentence = headPositions[i]
+            sentLabels = list()
+            for j in range(labelsForThisSentence):
+                sentLabels += [DualLabel(j, headsForThisSentence[j], labelsForThisSentence[j])]
+                if(insertNegatives > 0):
+                    negHeads = mkRandoms(range(-1, annotatedSent.size), Set(headsForThisSentence[j]), insertNegatives)
+                    for negHead in negHeads:
+                        sentLabels += [DualLabel(j, negHead, STOP_TAG)]
 
+            sentences += [(annotatedSent, sentLabels)]
         return sentences
+
+    def mkRandoms(rg, exclude, howMany):
+        numbers = random.shuffle(list(rg))
+        randoms = set()
+        for n in numbers:
+            if len(randoms) >= howMany:
+                break
+            if n not in exclude:
+                randoms.add(n)
+        return randoms

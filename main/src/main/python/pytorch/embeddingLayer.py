@@ -72,12 +72,12 @@ class EmbeddingLayer(InitialLayer):
         self.outDim = ConstEmbeddingsGlove.dim + learnedWordEmbeddingSize + charRnnStateSize * 2 + posTagDim + neTagDim + distanceDim + positionDim + predicateDim
         
     
-    def forward(self, sentence, constEmbeddings, doDropout):
+    def forward(self, sentence, modHeadPairs, constEmbeddings, doDropout):
 
         words = sentence.words
         tags = sentence.posTags
         nes = sentence.neTags
-        headPositions = sentence.headPositions
+        headPositions = getHeadPositions(modHeadPairs, sentence.size)
 
         # const word embeddings such as GloVe
         constEmbeddingsExpressions = self.mkConstEmbeddings(words, constEmbeddings)
@@ -91,12 +91,25 @@ class EmbeddingLayer(InitialLayer):
 
         return embeddings
 
+    # Finds a single head/predicate for each modifier/argument
+    def getHeadPositions(modifierHeadPairs, size):
+        if modifierHeadPairs:
+          heads = [-1 for _ in range(size)]
+          for pair in modifierHeadPairs:
+            mod = pair.modifier
+            head = pair.head
+            if(heads[mod] == -1):
+              heads[mod] = head
+          return heads
+        else:
+          return None
+
     def mkConstEmbeddings(self, words, constEmbeddings):
         idxs = torch.LongTensor([constEmbeddings.w2i[word] if word in constEmbeddings.w2i else 0 for word in words])
         embeddings = constEmbeddings.emb(idxs)
         return embeddings
 
-    def mkEmbeddings(self, words, constEmbeddings, doDropout, tags=None, nes=None, headPositions=None):
+    def mkEmbeddings(self, words, constEmbeddings, doDropout, tags=None, nes=None, predicatePositions=None):
         #
         # Learned word embeddings
         # These are initialized randomly, and updated during backprop
@@ -131,17 +144,17 @@ class EmbeddingLayer(InitialLayer):
         #
         # 1 if this word is the predicate
         #
-        if headPositions and self.useIsPredicate:
-            predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(headPositions)]).unsqueeze(1)
+        if predicatePositions and self.useIsPredicate:
+            predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(predicatePositions)]).unsqueeze(1)
         else:
-            predEmbed = None
+            predicatePositions = None
 
         #
         # Distance embedding, relative to the distance to the predicate
         # We cut the distance down to values inside the window [-distanceWindowSize, +distanceWindowSize]
         #
-        if headPositions and self.distanceLookupParameters:
-            dists = [max(i-predicatePosition+self.distanceWindowSize+1, 0) if i-predicatePosition <= self.distanceWindowSize else 2 * self.distanceWindowSize + 2 for i, predicatePosition in enumerate(headPositions)]
+        if predicatePositions and self.distanceLookupParameters:
+            dists = [max(i-predicatePosition+self.distanceWindowSize+1, 0) if i-predicatePosition <= self.distanceWindowSize else 2 * self.distanceWindowSize + 2 for i, predicatePosition in enumerate(predicatePositions)]
             distanceEmbedding = self.distanceLookupParameters(torch.LongTensor(dists))
         else:
             distanceEmbedding = None

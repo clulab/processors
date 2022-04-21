@@ -238,7 +238,7 @@ def printDependencyTable(deps):
 
 def ensembleParser(mtlHeads, mtlLabels, sentence, constEmbeddings, topK, lmd, generateRelativeHeads):
     # construct the dependency table using just the head prediction scores
-    scores = mtlHeads.predictWithScores(0, sentence, constEmbeddings)
+    scores = mtlHeads.predictWithScores(0, sentence, modHeadPairs, constEmbeddings)
     startingDependencies = toDependencyTable(scores, topK) # currently the score of a dependency is just the head score
 
     # add label scores to all dependencies
@@ -252,7 +252,7 @@ def ensembleParser(mtlHeads, mtlLabels, sentence, constEmbeddings, topK, lmd, ge
                     modHeadPairs.append(ModifierHeadPair(dep.mod - 1, dep.head - 1))
         # generate label probabilities using the label classifier
         # zheng: We have serious issue for the modHeadPairs here, it is not in the python implementation.
-        labelScores = mtlLabels.predictWithScores(0, sentence, Some(modHeadPairs), constEmbeddings) # these are probs
+        labelScores = mtlLabels.predictWithScores(0, sentence, modHeadPairs, constEmbeddings) # these are probs
         labelTopScores = [max((l, s) for l, s in enumerate(labelScores) if l != STOP_TAG, key=lambda kv: kv[1])]  # keep just the top score for each label that is not STOP
         assert len(labelTopScores) == len(modHeadPairs)
 

@@ -7,5 +7,5 @@ class InitialLayer(nn.Module):
         super().__init__()
         self.outDim = None
 
-    def forward(self, sentence, constEmbeddings, doDropout):
+    def forward(self, sentence, modHeadPairs, constEmbeddings, doDropout):
         raise NotImplementedError

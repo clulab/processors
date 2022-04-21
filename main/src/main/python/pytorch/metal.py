@@ -244,10 +244,11 @@ class Metal(object):
 
             for asent in annotatedSentences[:1]:
                 sentence = asent[0]
-                goldLabels = asent[1]
+                goldLabels = [lbl.label for lbl in asent[1]]
+                modHeadPairs = getModHeadPairs(asent[1])
 
                 constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
-                preds = self.predict(taskId, sentence, constEmbeddings)
+                preds = self.predict(taskId, sentence, modHeadPairs, constEmbeddings)
 
                 sc = SeqScorer.f1(goldLabels, preds)
                 scoreCountsByLabel.incAll(sc)
@@ -268,17 +269,20 @@ class Metal(object):
     def predictJointly(self, sentence, constEmbeddings):
         # for layers in self.model:
         #     layers.start_eval()
-        return Layers.predictJointly(self.model, sentence, constEmbeddings)
+        return Layers.predictJointly(self.model, sentence, None, constEmbeddings)
 
-    def predict(self, taskId, sentence, constEmbeddings):
+    def predict(self, taskId, sentence, modHeadPairs, constEmbeddings):
         # for layers in self.model:
         #     layers.start_eval()
-        return Layers.predict(self.model, taskId, sentence, constEmbeddings)
+        return Layers.predict(self.model, taskId, sentence, modHeadPairs, constEmbeddings)
 
-    def predictWithScores(self, taskId, sentence, constEmbeddings):
+    def predictWithScores(self, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax):
         # for layers in self.model:
         #     layers.start_eval()
-        return Layers.predictWithScores(self.model, taskId, sentence, constEmbeddings)
+        return Layers.predictWithScores(self.model, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax)
+
+    def parseWithEisner(self, sentence, constEmbeddings, topK, lmd):
+        ensembleParser(self, None, sentence, constEmbeddings, topK, lmd, true)
 
     # Custom method for the parsing algorithm
     # @param sentence Input sentence

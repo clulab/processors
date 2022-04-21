@@ -3,8 +3,8 @@ from pytorch.utils import *
 import numpy as np
 
 class GreedyForwardLayer(ForwardLayer):
-    def __init__(self, inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans = None):
-        super().__init__(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans)
+    def __init__(self, inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, distanceEmbeddingSize = 0):
+        super().__init__(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, distanceEmbeddingSize)
 
     def loss(self, finalStates, goldLabelStrings):
         goldLabels = [self.t2i[gs] for gs in goldLabelStrings]
@@ -18,6 +18,7 @@ class GreedyForwardLayer(ForwardLayer):
         x2i["span"] = spanToString(self.spans) if self.spans else ""
         x2i["nonlinearity"] = self.nonlinearity
         x2i["t2i"] = self.t2i
+        x2i["distanceEmbeddingSize"] = self.distanceEmbeddingSize
 
         return x2i
 
@@ -33,7 +34,7 @@ class GreedyForwardLayer(ForwardLayer):
 
     def inferenceWithScores(self, emissionScores):
         emissionScores = emissionScoresToArrays(emissionScores)
-        return [sorted([(i, s) for i, s in enumerate(scoresForPosition)], key=lambda x: x[1]) for scoresForPosition in emissionScores]
+        return [sorted([(self.i2t[i], s) for i, s in enumerate(scoresForPosition)], key=lambda x: x[1]) for scoresForPosition in emissionScores]
 
     @classmethod
     def load(cls, x2i):

@@ -4,6 +4,8 @@ from torch.autograd import Variable
 
 import numpy as np
 
+from pytorch.labels import *
+
 concatenateCount = 0
 
 UNK_WORD = "<UNK>"
@@ -98,6 +100,12 @@ def log_sum_exp(vec):
     max_score_broadcast = max_score.view(1, -1).expand(1, vec.size()[1])
     return max_score + \
         torch.log(torch.sum(torch.exp(vec - max_score_broadcast)))
+
+def getModHeadPairs(labels):
+    if(labels and isinstance(labels[0], DualLabel)):
+        return [ModifierHeadPair(dl.modifier, dl.head) for dl in labels]
+    else:
+        return None
     
 
 
