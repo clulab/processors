@@ -59,6 +59,7 @@ class TaskManager():
     # construct the shards for each task
     for i in self.indices:
       shardsByTasks += [self.tasks[i].mkShards()]
+      print (len(shardsByTasks[i]), self.shardsByTasks, )
       assert(len(shardsByTasks[i]) == self.shardsPerEpoch)
 
     # now interleave the tasks
@@ -143,7 +144,7 @@ class Task:
     self.taskId = taskId
     taskNumber = taskId + 1
     print (f"Reading task {taskNumber} ({taskName})...")
-    self.trainSentences = ColumnReader.readColumns(trainFileName)
+    self.trainSentences = ColumnReader.readColumns(trainFileName)[:1]
     self.devSentences = ColumnReader.readColumns(devFileName) if devFileName else None
     self.testSentences = ColumnReader.readColumns(testFileName) if testFileName else None
 
@@ -159,6 +160,7 @@ class Task:
 
     # The size of the training shard for this task
     self.shardSize = math.ceil(len(self.trainSentences) / shardsPerEpoch)
+    print (self.shardSize, shardsPerEpoch)
 
     # Current position in the training sentences when we iterate during training
     currentTrainingSentencePosition = 0
