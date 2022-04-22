@@ -236,11 +236,12 @@ class CluProcessor protected (
     GivenConstEmbeddingsAttachment(doc, true).perform {
       for (sent <- doc.sentences) {
         // The case restoration model expects lower-case words as input.
-        val loweredWords = sent.words.map(_.toLowerCase())
+        val originalWords = sent.words
+        val loweredWords = originalWords.map(_.toLowerCase)
         val preLabels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
         val labels = casePostProcessing(loweredWords, preLabels)
-        val restoredWords = (loweredWords, labels, sent.words).zipped.map(x => restoreCaseWord(x._1, x._2, x._3))
-        restoredWords.copyToArray(sent.words)
+        val restoredWords = originalWords.indices.map { index => restoreCaseWord(loweredWords(index), labels(index), originalWords(index)) }
+        restoredWords.copyToArray(originalWords)
       }
     }                    
   }
@@ -257,10 +258,11 @@ class CluProcessor protected (
   }
 
   private def restoreCaseWord(loweredWord: String, label: String, originalWord: String): String = {
+    val alphaCount = originalWord.count(_.isLetter)
     val upperCount = originalWord.count(_.isUpper)
     val isStandard =
         upperCount == 0 || // lower
-        upperCount == originalWord.length || // all upper
+        upperCount == alphaCount || // all upper
         upperCount == 1 && originalWord.head.isUpper // upper initial
     // We handle three possible labels: L (lower), UI (upper initial), UA (all upper).
     if (!isStandard)
