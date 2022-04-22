@@ -14,7 +14,6 @@ import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
-import scala.collection.script.Index
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -235,47 +234,43 @@ class CluProcessor protected (
   /** Restores the correct case for all words in a given document */
   def restoreCase(doc: Document): Unit = {
     GivenConstEmbeddingsAttachment(doc, true).perform {
-      for(sent <- doc.sentences) {
-        // the case restoration model expects lower-case words as input                    
+      for (sent <- doc.sentences) {
+        // The case restoration model expects lower-case words as input.
         val loweredWords = sent.words.map(_.toLowerCase())
         val preLabels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
         val labels = casePostProcessing(loweredWords, preLabels)
-        assert(labels.size == loweredWords.size)
-        val restoredWords = loweredWords.zip(labels).map(x => restoreCaseWord(x._1, x._2))
-        for(i <- sent.indices) {
-          sent.words(i) = restoredWords(i)
-        }
+        val restoredWords = (loweredWords, labels, sent.words).zipped.map(x => restoreCaseWord(x._1, x._2, x._3))
+        restoredWords.copyToArray(sent.words)
       }
     }                    
   }
 
   private def casePostProcessing(loweredWords: IndexedSeq[String], preLabels: IndexedSeq[String]): IndexedSeq[String] = {
-    val labels = new ArrayBuffer[String]
-    for(i <- loweredWords.indices) {
-      val w = loweredWords(i)
-      for(pl <- CASE_PATTERNS) {
-        val p = pl._1
-        val l = pl._2
-        if(p.findFirstMatchIn(w).nonEmpty) {
-          labels += l
-        } else {
-          labels += preLabels(i)
-        }
+    loweredWords.zip(preLabels).map { case (loweredWord, preLabel) =>
+      // There could be multiple patterns that match, but use only the first.
+      val index = CASE_PATTERNS.indexWhere { case (pattern, _) =>
+        pattern.matcher(loweredWord).matches
       }
+      if (index >= 0) CASE_PATTERNS(index)._2
+      else preLabel
     }
-    labels
   }
 
-  private def restoreCaseWord(loweredWord: String, label: String): String = {
-    // we handle three possible labels: L (lower), UI (upper initial), UA (all upper)
-
-    if(label == "UI") {
+  private def restoreCaseWord(loweredWord: String, label: String, originalWord: String): String = {
+    val upperCount = originalWord.count(_.isUpper)
+    val isStandard =
+        upperCount == 0 || // lower
+        upperCount == originalWord.length || // all upper
+        upperCount == 1 && originalWord.head.isUpper // upper initial
+    // We handle three possible labels: L (lower), UI (upper initial), UA (all upper).
+    if (!isStandard)
+      originalWord
+    else if (label == "UI")
       Character.toUpperCase(loweredWord(0)) + loweredWord.substring(1)
-    } else if(label == "UA") {
+    else if (label == "UA")
       loweredWord.toUpperCase()
-    } else {
+    else
       loweredWord
-    }
   }
 
   /** Produces NE labels for one sentence */
@@ -867,7 +862,10 @@ object CluProcessor {
   // Patterns to correct case information
   //
   val CASE_PATTERNS = Seq(
-      ("""^([ivx\d]+[\.\)\]]?)+$""".r, "L") // list item indices are often unnecessarily capitalized
+    // The tuple encodes the pattern and then the label.
+    // At start of sentence some Roman or Arabic numbers possibly followed by separating
+    // period, ), or ] all possibly repeated until the end of the sentence.
+    ("""^([ivx\d]+[\.\)\]]?)+$""".r.pattern, "L") // list item indices are often unnecessarily capitalized
   )
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
