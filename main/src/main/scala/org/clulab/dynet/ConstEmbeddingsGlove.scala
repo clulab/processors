@@ -42,11 +42,11 @@ object ConstEmbeddingsGlove {
     mkConstLookupParams(sentence.words.toSet)
 
   def mkConstLookupParams(doc: Document, lowerCase: Boolean = false): ConstEmbeddingParameters = {
-    val words = new mutable.HashSet[String]()
-    for(s <- doc.sentences) {
-      words ++= s.words.map(_.toLowerCase())
+    val mutableWordSet = doc.sentences.foldLeft(new mutable.HashSet[String]()) { case (set, sentence) =>
+      val words = sentence.words
+      set ++ (if (lowerCase) words.map(_.toLowerCase) else words)
     }
-    mkConstLookupParams(words.toSet)
+    mkConstLookupParams(mutableWordSet.toSet)
   }
 
   def mkConstLookupParams(words: Set[String], embeddings: WordEmbeddingMap): ConstEmbeddingParameters = {
