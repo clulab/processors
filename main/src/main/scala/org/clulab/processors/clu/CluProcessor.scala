@@ -15,6 +15,8 @@ import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter
 
+import java.util.regex.Pattern
+
 /**
   * Processor that uses only tools that are under Apache License
   * Currently supports:
@@ -863,7 +865,7 @@ object CluProcessor {
   //
   // Patterns to correct case information
   //
-  val CASE_PATTERNS = Seq(
+  val CASE_PATTERNS: Seq[(Pattern, String)] = Seq(
     // The tuple encodes the pattern and then the label.
     // At start of sentence some Roman or Arabic numbers possibly followed by separating
     // period, ), or ] all possibly repeated until the end of the sentence.
