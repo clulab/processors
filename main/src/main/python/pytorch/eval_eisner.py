@@ -12,6 +12,9 @@ if __name__ == '__main__':
     parser.add_argument('--test', type=str, help='Filename of the test set.')
     args = parser.parse_args()
 
+    heads = Metal.load(args.heads)
+    labels = Metal.load(args.labels)
+
     sentences = ColumnReader.readColumns(args.test)
     print(f"Read {len(sentences)} sentences.")
 
