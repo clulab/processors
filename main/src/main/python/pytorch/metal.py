@@ -281,8 +281,8 @@ class Metal(object):
         #     layers.start_eval()
         return Layers.predictWithScores(self.model, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax)
 
-    def parseWithEisner(self, sentence, constEmbeddings, topK, lmd):
-        ensembleParser(self, None, sentence, constEmbeddings, topK, lmd, true)
+    # def parseWithEisner(self, sentence, constEmbeddings, topK, lmd):
+    #     ensembleParser(self, None, sentence, constEmbeddings, topK, lmd, true)
 
     # Custom method for the parsing algorithm
     # @param sentence Input sentence
