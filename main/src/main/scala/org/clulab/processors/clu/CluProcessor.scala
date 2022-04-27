@@ -399,7 +399,7 @@ class CluProcessor protected (
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
-    val eisner = new Eisner  
+    val eisner = new Eisner
     val headsWithLabels = eisner.ensembleParser(
       mtlDepsHead, Some(mtlDepsLabel),
       annotatedSentence, embeddings,
@@ -632,7 +632,7 @@ class CluProcessor protected (
 
     if(sentence.universalBasicDependencies.isEmpty) return origPreds
     if(sentence.tags.isEmpty) return origPreds
-    
+
     val preds = origPreds.toSet
     val newPreds = new mutable.HashSet[Int]()
     newPreds ++= preds
@@ -681,7 +681,7 @@ class CluProcessor protected (
       val sentence = doc.sentences(si)
       //println(s"SENTENCE WORDS: [${sentence.words.mkString("] [")}]")
 
-      val predicateIndexes = 
+      val predicateIndexes =
       	predicateCorrections(predicates(si), sentence)
       val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
 

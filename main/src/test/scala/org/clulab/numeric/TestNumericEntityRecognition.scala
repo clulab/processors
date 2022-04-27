@@ -41,8 +41,8 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   }
 
   class HabitusProcessor() extends CluProcessor {
-    lazy val habitusTokenizer: HabitusTokenizer = new HabitusTokenizer(localTokenizer)
-    override lazy val tokenizer: Tokenizer = habitusTokenizer
+    lazy val habitusTokenizer: HabitusTokenizer = new HabitusTokenizer(super.tokenizer)
+    override def tokenizer: Tokenizer = habitusTokenizer
   }
 
   Utils.initializeDyNet()
