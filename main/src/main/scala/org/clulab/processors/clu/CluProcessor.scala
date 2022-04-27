@@ -201,7 +201,7 @@ class CluProcessor protected (
       lazyMtlDepsHead,             // parse
       lazyMtlDepsLabel,            // parse
       lazyLemmatizer,              // lemmatize
-      lazyMtlSrla,                 // srl
+      lazyMtlSrla                  // srl
     ).par.foreach(_.value)
     true
   }
