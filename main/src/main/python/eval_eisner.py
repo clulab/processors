@@ -1,5 +1,6 @@
 import argparse
 from pytorch.metal import Metal
+from pytorch.taskManager import TaskManager
 import pytorch.eisner as eisner
 from pytorch.seqScorer import *
 from sequences.rowReaders import MetalRowReader
@@ -15,8 +16,12 @@ if __name__ == '__main__':
     parser.add_argument('--test', type=str, help='Filename of the test set.')
     args = parser.parse_args()
 
+    config = ConfigFactory.parse_file(f'../resources/org/clulab/mtl-en-depsh.conf')
+    taskManager = TaskManager(config, 0)
     heads = Metal.load(args.heads)
+    heads_mtl = Metal(taskManager, heads)
     labels = Metal.load(args.labels)
+    labels_mtl = Metal(taskManager, labels)
 
     sentences = ColumnReader.readColumns(args.test)
     print(f"Read {len(sentences)} sentences.")
@@ -33,7 +38,7 @@ if __name__ == '__main__':
 
             constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
 
-            preds = eisner.ensembleParser(heads, labels, asent, constEmbeddings, 5, 0.6, True)
+            preds = eisner.ensembleParser(heads_mtl, labels_mtl, asent, constEmbeddings, 5, 0.6, True)
             predLabels = [p[0] for p in preds]
 
             sc = SeqScorer.f1(goldLabels, preds)
