@@ -20,8 +20,8 @@ class TokenizerStepHyphens extends TokenizerStep {
       else {
         if (prefixes.findFirstIn(input.raw).isDefined) {
           val dashPosition = input.raw.indexOf('-')
-          tokens += RawToken(input.raw.substring(0, dashPosition), 0, dashPosition)
-          tokens += RawToken(input.raw.substring(dashPosition + 1), dashPosition + 1)
+          tokens += RawToken(input.raw.substring(0, dashPosition), input.beginPosition)
+          tokens += RawToken(input.raw.substring(dashPosition + 1), input.beginPosition + dashPosition + 1)
         }
 
         // any other token
