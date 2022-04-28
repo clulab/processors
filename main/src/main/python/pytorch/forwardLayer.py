@@ -24,7 +24,7 @@ class ForwardLayer(FinalLayer):
         self.inDim = inputSize
         self.outDim = len(t2i)
 
-        self.distanceLookupParameters = nn.Embedding(101, distanceEmbeddingSize) if distanceEmbeddingSize > 0 else None
+        self.distanceLookupParameters = None#nn.Embedding(101, distanceEmbeddingSize) if distanceEmbeddingSize > 0 else None
 
 
     def forward(self, inputExpressions, modHeadPairs):
