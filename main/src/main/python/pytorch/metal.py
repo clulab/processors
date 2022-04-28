@@ -334,7 +334,7 @@ class Metal(object):
         x = modelFilenamePrefix.find("-epoch")
         jf = modelFilenamePrefix[:x]
         with open(jf+".json") as f:
-            x2i = josn.load(f)
+            x2i = json.load(f)
         for i, param in enumerate(checkpoint):
             layers = Layers.loadX2i(x2i[i])
             layers.load_state_dict(param)
