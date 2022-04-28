@@ -195,6 +195,17 @@ class TestTokenizer extends FlatSpec with Matchers {
     val orig = "Weather is nice in mid-July"
     val sents = tok(orig)
     sents(0).size should be (6)
+
+    val sent = sents.head
+    val startOffsets = sent.startOffsets
+    val endOffsets = sent.endOffsets
+
+    startOffsets.indices.foreach { index =>
+      endOffsets(index) should be >= startOffsets(index)
+      if (index > 0)
+        // Everything is separated by a space or -, and the final period is not included.
+        startOffsets(index) should be (endOffsets(index - 1) + 1)
+    }
   }
 
   def tok(s:String):Array[Sentence] = {
