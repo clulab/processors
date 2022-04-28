@@ -193,10 +193,10 @@ def generateOutput(top, scores, dependencies, generateRelativeHeads):
     else:
         # Eisner failed to produce a complete tree; revert to the greedy inference
         for i in range(len(scores)):
-            relativeHead = int(max([(l,s) for l,s in scores[i] if l!=STOP_TAG], key=lambda kv: kv[1])[0])
+            depHead = int(max([(l,s) for l,s in scores[i] if l!=STOP_TAG], key=lambda kv: kv[1])[0]) # I do not understand why this is relative head, I change to head so that the code can continue without reporting errors
             depMod = i + 1
-            depHead = 0 if (relativeHead == 0) else depMod + relativeHead
-            print (depMod, relativeHead, depHead, len(scores))
+            # depHead = 0 if (relativeHead == 0) else depMod + relativeHead
+            # print (depMod, relativeHead, depHead, len(scores))
             label = dependencies[depMod][depHead].label
             '''
              if(generateRelativeHeads): we are storing *relative* head positions here
