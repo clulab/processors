@@ -50,7 +50,6 @@ class Span:
     def apply(cls, left, right, dep, head):
         # product of probabilities, in log space
         if(dep is not None and dep.score != 0):
-            print (dep.score)
             score = left.score + right.score + float(math.log(dep.score))
         else:
             score = left.score + right.score
@@ -177,7 +176,6 @@ def parse(startingDependencies):
 
 def generateOutput(top, scores, dependencies, generateRelativeHeads):
     heads = [None for _ in range(len(scores))]
-    print (top)
     if top:
         # Eisner correctly produced a full tree
         for dep in top.dependencies:
@@ -191,7 +189,7 @@ def generateOutput(top, scores, dependencies, generateRelativeHeads):
     else:
         # Eisner failed to produce a complete tree; revert to the greedy inference
         for i in range(len(scores)):
-            relativeHead = int(max(scores[i], key=lambda kv: kv[1])[0])
+            relativeHead = int(max([(l,s) for l,s in scores[i] if l!=STOP_TAG], key=lambda kv: kv[1])[0])
             depMod = i + 1
             depHead = 0 if (relativeHead == 0) else depMod + relativeHead
             label = dependencies[depMod][depHead].label
