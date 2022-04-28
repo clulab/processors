@@ -331,7 +331,9 @@ class Metal(object):
         print (f"Loading MTL model from {modelFilenamePrefix}...")
         layersSeq = list()
         checkpoint = torch.load(modelFilenamePrefix+".torch")
-        with open(modelFilenamePrefix+".json") as f:
+        x = modelFilenamePrefix.find("-epoch")
+        jf = modelFilenamePrefix[:x]
+        with open(jf+".json") as f:
             x2i = josn.load(f)
         for i, param in enumerate(checkpoint):
             layers = Layers.loadX2i(x2i[i])
