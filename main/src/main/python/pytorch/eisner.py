@@ -56,8 +56,8 @@ class Span:
 
         # aggregate all dependencies for this span
         deps = []
-        allNodes = {}
-        modNodes = {}
+        allNodes = set()
+        modNodes = set()
 
         if(dep is not None):
             cls.addDep(dep, deps, allNodes, modNodes)
