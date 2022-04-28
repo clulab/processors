@@ -112,7 +112,7 @@ class Chart:
                     span = self.chart[mod][head][spanType]
                     if span:
                         sb += f"[{mod} -- {head}] (head {spanTypeAsString})\n"
-                        sb += span
+                        sb += str(span)
         return sb
 
 
