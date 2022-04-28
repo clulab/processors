@@ -174,6 +174,7 @@ def parse(startingDependencies):
 
 def generateOutput(top, scores, dependencies, generateRelativeHeads):
     heads = [None for _ in range(len(scores))]
+    print (top)
     if top:
         # Eisner correctly produced a full tree
         for dep in top.dependencies:
