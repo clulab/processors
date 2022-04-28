@@ -50,6 +50,7 @@ class Span:
     def apply(cls, left, right, dep, head):
         # product of probabilities, in log space
         if(dep is not None):
+            print (dep.score)
             score = left.score + right.score + float(math.log(dep.score))
         else:
             score = left.score + right.score
