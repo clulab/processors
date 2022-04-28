@@ -61,15 +61,15 @@ class Span:
         modNodes = {}
 
         if(dep is not None):
-            addDep(dep, deps, allNodes, modNodes)
+            cls.addDep(dep, deps, allNodes, modNodes)
         for dep in left.dependencies:
-            addDep(dep, deps, allNodes, modNodes)
+            cls.addDep(dep, deps, allNodes, modNodes)
         for dep in right.dependencies:
-            addDep(dep, deps, allNodes, modNodes)
+            cls.addDep(dep, deps, allNodes, modNodes)
 
         return cls(deps, head, score)
 
-    def addDep(dep, deps, allNodes, modNodes):
+    def addDep(self, dep, deps, allNodes, modNodes):
         deps.append(dep)
         allNodes.add(dep.head)
         allNodes.add(dep.mod)
@@ -242,6 +242,7 @@ def printDependencyTable(deps):
 def ensembleParser(mtlHeads, mtlLabels, sentence, constEmbeddings, topK, lmd, generateRelativeHeads):
     # construct the dependency table using just the head prediction scores
     scores = mtlHeads.predictWithScores(0, sentence, None, constEmbeddings)
+    print (scores)
     startingDependencies = toDependencyTable(scores, topK) # currently the score of a dependency is just the head score
 
     # add label scores to all dependencies
