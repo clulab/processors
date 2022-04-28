@@ -2,7 +2,7 @@ class Label:
   def __init__(label):
         self.label = label
 
-class PrimalLabel(Lbale):
+class PrimalLabel(Label):
     def __init__(label):
         self.label = label
 
