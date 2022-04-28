@@ -180,6 +180,7 @@ def parse(startingDependencies):
 def generateOutput(top, scores, dependencies, generateRelativeHeads):
     heads = [None for _ in range(len(scores))]
     print (top)
+    print (dependencies)
     if top:
         # Eisner correctly produced a full tree
         for dep in top.dependencies:
@@ -197,6 +198,7 @@ def generateOutput(top, scores, dependencies, generateRelativeHeads):
             relativeHead = int(max(scores[i], key=lambda kv: kv[1])[0])
             depMod = i + 1
             depHead = 0 if (relativeHead == 0) else depMod + relativeHead
+            print (depMod, depHead)
             label = dependencies[depMod][depHead].label
             '''
              if(generateRelativeHeads): we are storing *relative* head positions here
