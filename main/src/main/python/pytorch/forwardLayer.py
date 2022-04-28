@@ -39,7 +39,7 @@ class ForwardLayer(FinalLayer):
             emissionScores = []
             if modHeadPairs is None:
                 raise RuntimeError("ERROR: dual task without information about head positions!")
-            for pair in modifierHeadPairs:
+            for pair in modHeadPairs:
                 modPosition = pair.modifier
                 headPosition = pair.head
 
