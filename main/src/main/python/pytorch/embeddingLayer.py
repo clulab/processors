@@ -77,7 +77,7 @@ class EmbeddingLayer(InitialLayer):
         words = sentence.words
         tags = sentence.posTags
         nes = sentence.neTags
-        headPositions = getHeadPositions(modHeadPairs, sentence.size)
+        headPositions = self.getHeadPositions(modHeadPairs, sentence.size)
 
         # const word embeddings such as GloVe
         constEmbeddingsExpressions = self.mkConstEmbeddings(words, constEmbeddings)
@@ -92,7 +92,7 @@ class EmbeddingLayer(InitialLayer):
         return embeddings
 
     # Finds a single head/predicate for each modifier/argument
-    def getHeadPositions(modifierHeadPairs, size):
+    def getHeadPositions(self, modifierHeadPairs, size):
         if modifierHeadPairs:
           heads = [-1 for _ in range(size)]
           for pair in modifierHeadPairs:
