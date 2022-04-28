@@ -254,7 +254,16 @@ class Layers(object):
     @staticmethod
     def predictWithScores(layers, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax):
         states = Layers.forwardForTask(layers, taskId, sentence, modHeadPairs, constEmbeddings, doDropout=False)
-        return layers[taskId+1].finalLayer.inferenceWithScores(states)
+        scores = layers[taskId+1].finalLayer.inferenceWithScores(states)
+        if applySoftmax:
+            probs = []
+            for ls in scores:
+                ls ,ss = zip(*ls)
+                ss = softmax(ss)
+                probs.append(list(zip(ls, ss)))
+            return probs
+        else:
+            return scores
 
     @staticmethod
     def parse(layers, sentence, constEmbeddings):

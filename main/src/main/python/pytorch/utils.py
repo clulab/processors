@@ -106,7 +106,10 @@ def getModHeadPairs(labels):
         return [ModifierHeadPair(dl.modifier, dl.head) for dl in labels]
     else:
         return None
-    
+
+def softmax(x):
+    probs = np.exp(x) / np.sum(np.exp(x), axis=0)
+    return probs.tolist()
 
 
 

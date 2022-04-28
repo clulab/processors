@@ -276,7 +276,7 @@ class Metal(object):
         #     layers.start_eval()
         return Layers.predict(self.model, taskId, sentence, modHeadPairs, constEmbeddings)
 
-    def predictWithScores(self, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax=False):
+    def predictWithScores(self, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax=True):
         # for layers in self.model:
         #     layers.start_eval()
         return Layers.predictWithScores(self.model, taskId, sentence, modHeadPairs, constEmbeddings, applySoftmax)
