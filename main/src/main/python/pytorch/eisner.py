@@ -25,6 +25,9 @@ class Dependency:
         self.rank = rank
         self.label = label
 
+    def __str__(self):
+        return f"mod:{self.mod}, head:{self.head}, score:{self.score}, rank:{self.rank}, label:{self.label},"
+
 class Span:
     def __init__(self, dependencies = [], head = -1, score = 0.0):
         self.dependencies = dependencies
@@ -193,7 +196,7 @@ def generateOutput(top, scores, dependencies, generateRelativeHeads):
             relativeHead = int(max([(l,s) for l,s in scores[i] if l!=STOP_TAG], key=lambda kv: kv[1])[0])
             depMod = i + 1
             depHead = 0 if (relativeHead == 0) else depMod + relativeHead
-            print (depHead, len(scores))
+            print (depMod, relativeHead, depHead, len(scores))
             label = dependencies[depMod][depHead].label
             '''
              if(generateRelativeHeads): we are storing *relative* head positions here
