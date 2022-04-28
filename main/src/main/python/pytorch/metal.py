@@ -336,7 +336,7 @@ class Metal(object):
         with open(jf+".json") as f:
             x2i = json.load(f)
         for i, param in enumerate(checkpoint):
-            layers = Layers.loadX2i(x2i[i])
+            layers = Layers.loadX2i(x2i[i]["x2i"])
             layers.load_state_dict(param)
             layersSeq.append(layers)
 
