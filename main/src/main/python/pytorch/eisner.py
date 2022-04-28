@@ -238,7 +238,7 @@ def printDependencyTable(deps):
 
 def ensembleParser(mtlHeads, mtlLabels, sentence, constEmbeddings, topK, lmd, generateRelativeHeads):
     # construct the dependency table using just the head prediction scores
-    scores = mtlHeads.predictWithScores(0, sentence, modHeadPairs, constEmbeddings)
+    scores = mtlHeads.predictWithScores(0, sentence, None, constEmbeddings)
     startingDependencies = toDependencyTable(scores, topK) # currently the score of a dependency is just the head score
 
     # add label scores to all dependencies
