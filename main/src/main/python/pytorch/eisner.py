@@ -170,8 +170,8 @@ def parse(startingDependencies):
                 # merge [start, split(h)] and [split, end(h)]
                 if(leftRightComplete is not None and rightRightIncomplete is not None):
                     chart.set(start, end, HEAD_RIGHT, Span.apply(leftRightComplete, rightRightIncomplete, None, rightRightIncomplete.head))
-    print (chart)
-    print (length - 1, HEAD_LEFT)
+    print(chart)
+    print(length - 1, HEAD_LEFT)
     top = chart.get(0, length - 1, HEAD_LEFT)
     return top
 
@@ -193,6 +193,7 @@ def generateOutput(top, scores, dependencies, generateRelativeHeads):
             relativeHead = int(max([(l,s) for l,s in scores[i] if l!=STOP_TAG], key=lambda kv: kv[1])[0])
             depMod = i + 1
             depHead = 0 if (relativeHead == 0) else depMod + relativeHead
+            print (depHead, len(scores))
             label = dependencies[depMod][depHead].label
             '''
              if(generateRelativeHeads): we are storing *relative* head positions here
