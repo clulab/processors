@@ -147,7 +147,7 @@ class EmbeddingLayer(InitialLayer):
         if predicatePositions and self.useIsPredicate:
             predEmbed = torch.FloatTensor([1 if i==predicatePosition else 0 for i, predicatePosition in enumerate(predicatePositions)]).unsqueeze(1)
         else:
-            predicatePositions = None
+            predEmbed = None
 
         #
         # Distance embedding, relative to the distance to the predicate
