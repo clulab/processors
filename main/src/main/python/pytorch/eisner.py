@@ -170,7 +170,8 @@ def parse(startingDependencies):
                 # merge [start, split(h)] and [split, end(h)]
                 if(leftRightComplete is not None and rightRightIncomplete is not None):
                     chart.set(start, end, HEAD_RIGHT, Span.apply(leftRightComplete, rightRightIncomplete, None, rightRightIncomplete.head))
-    
+    print (chart)
+    print (length - 1, HEAD_LEFT)
     top = chart.get(0, length - 1, HEAD_LEFT)
     return top
 
