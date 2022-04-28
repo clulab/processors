@@ -38,7 +38,7 @@ class Span:
 
     def contains(self, mod, head):
         for dep in self.dependencies:
-            if dep.mod == mod and dep.head = head:
+            if dep.mod == mod and dep.head == head:
                 return True
         return False
 
