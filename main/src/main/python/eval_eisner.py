@@ -40,6 +40,7 @@ if __name__ == '__main__':
             constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
 
             preds = eisner.ensembleParser(heads_mtl, labels_mtl, sentence, constEmbeddings, 5, 0.6, True)
+            print (preds)
             predLabels = [p[0] for p in preds]
 
             sc = SeqScorer.f1(goldLabels, preds)
