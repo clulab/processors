@@ -84,8 +84,8 @@ class Chart:
         for i in range(len(c)):
             for j in range(len(c[i])):
                 c[i][j] = [None, None]
-            c[i][j][HEAD_LEFT] = Span()
-            c[i][j][HEAD_RIGHT] = Span()
+            c[i][i][HEAD_LEFT] = Span()
+            c[i][i][HEAD_RIGHT] = Span()
 
         return c
 
