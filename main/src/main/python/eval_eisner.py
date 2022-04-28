@@ -1,4 +1,5 @@
 import argparse
+from pytorch.metal import Metal
 import pytorch.eisner as eisner
 from pytorch.seqScorer import *
 from sequences.rowReaders import MetalRowReader
