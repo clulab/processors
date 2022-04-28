@@ -5,6 +5,7 @@ from pytorch.seqScorer import *
 from sequences.rowReaders import MetalRowReader
 from sequences.columnReader import ColumnReader
 from pytorch.constEmbeddingsGlove import ConstEmbeddingsGlove
+from pytorch.utils import *
 
 if __name__ == '__main__':
 
