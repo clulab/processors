@@ -92,7 +92,7 @@ class Chart:
     def get(self, start, end, spanType):
         return self.chart[start][end][spanType]
 
-    def set(self, start, end, spanType. span):
+    def set(self, start, end, spanType, span):
         if self.chart[start][end][spanType] is None:
             self.chart[start][end][spanType] = span
         elif self.chart[start][end][spanType].score < span.score:
