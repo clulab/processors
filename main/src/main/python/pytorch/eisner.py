@@ -253,7 +253,7 @@ def ensembleParser(mtlHeads, mtlLabels, sentence, constEmbeddings, topK, lmd, ge
         # generate label probabilities using the label classifier
         # zheng: We have serious issue for the modHeadPairs here, it is not in the python implementation.
         labelScores = mtlLabels.predictWithScores(0, sentence, modHeadPairs, constEmbeddings) # these are probs
-        labelTopScores = [max((l, s) for l, s in enumerate(labelScores) if l != STOP_TAG, key=lambda kv: kv[1])]  # keep just the top score for each label that is not STOP
+        labelTopScores = [max([(l, s) for l,s in scores if l != STOP_TAG], key=lambda kv: kv[1]) for scores in labelScores]# keep just the top score for each label that is not STOP
         assert len(labelTopScores) == len(modHeadPairs)
 
         for i, topLabelAndScore in enumerate(labelTopScores):
