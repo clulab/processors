@@ -1,5 +1,6 @@
 import argparse
 from pytorch.metal import Metal
+from pyhocon import ConfigFactory
 from pytorch.taskManager import TaskManager
 import pytorch.eisner as eisner
 from pytorch.seqScorer import *
