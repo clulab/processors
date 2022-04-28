@@ -204,6 +204,7 @@ class Layers(object):
 
     @classmethod
     def loadX2i(cls, x2i):
+        print (x2i.keys())
         hasInitial = x2i['hasInitial']
         initialLayer = EmbeddingLayer.load(x2i['initialLayer']) if hasInitial == 1 else None
 
