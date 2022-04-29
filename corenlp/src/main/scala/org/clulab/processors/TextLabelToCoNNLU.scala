@@ -1,13 +1,14 @@
 package org.clulab.processors
 
 import java.io.{File, FileFilter, PrintWriter}
-
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.utils.StringUtils
+import org.clulab.utils.{FileUtils, Sourcer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import TextLabelToCoNLLU._
+import org.clulab.dynet.Utils
 import org.clulab.struct.GraphMap
+import org.clulab.utils.Closer.AutoCloser
 
 /**
   * Processes raw text and saves the output in the CoNLL-U format
@@ -69,7 +70,6 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
         // Lower case the text
         val lowerCasedWord = word.toLowerCase
         pw.println(s"${i + 1}\t$lowerCasedWord\t$textLabel")
-        // pw.println(s"${i + 1}\t$word\t$lemma\t$upos\t$xpos\t$feats\t$head\t$deprel")
 
       }
       pw.println()
@@ -77,30 +77,38 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
   }
 
   def parseFile(f:File):Document = {
-    val s = scala.io.Source.fromFile(f)
-    val buffer = new StringBuilder
-    for(line <- s.getLines()) {
-      buffer.append(line)
-      buffer.append("\n")
+    def option1(): Document = {
+      val tokens = Sourcer.sourceFromFile(f).autoClose { source =>
+        for (line <- source.getLines())
+          yield line.split(' ').toSeq
+      }.toSeq
+      println(tokens)
+      proc.mkDocumentFromTokens(tokens)
     }
-    println(buffer.toString)
-    s.close()
 
-    val doc = proc.mkDocument(buffer.toString())
+    def option2(): Document = {
+      val text = FileUtils.getTextFromFile(f)
+      proc.mkDocument(text)
+    }
+
+    val doc = option2()
     annotate(doc)
     doc
-
   }
 
   def annotate(doc:Document): Unit = {
     if(isCoreNLP) {
       proc.tagPartsOfSpeech(doc)
       proc.lemmatize(doc)
+      proc.parse(doc)
     } else {
-      proc.lemmatize(doc)
-      proc.tagPartsOfSpeech(doc)
+      GivenConstEmbeddingsAttachment(doc).perform {
+        proc.lemmatize(doc)
+        proc.tagPartsOfSpeech(doc)
+        proc.recognizeNamedEntities(doc)
+        proc.parse(doc)
+      }
     }
-    proc.parse(doc)
     doc.clear()
   }
 }
@@ -131,7 +139,10 @@ object TextLabelToCoNLLU {
 
     val proc =
       if (props.get("proc").exists(_ == "corenlp")) new FastNLPProcessor()
-      else new CluProcessor()
+      else {
+        Utils.initializeDyNet()
+        new CluProcessor()
+      }
     val isCoreNLP = props.get("proc").exists(_ == "corenlp")
     val converter = new TextLabelToCoNLLU(proc, isCoreNLP)
 
@@ -158,5 +169,4 @@ object TextLabelToCoNLLU {
     converter.convert(inDir, outDir)
   }
 }
-
 
