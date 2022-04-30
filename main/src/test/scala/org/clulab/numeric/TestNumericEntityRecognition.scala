@@ -91,7 +91,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "ISO date is 1988-02-03.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-03")
     ensure(sentence= "ISO date is 1988/02/03.", Interval(3, 4), goldEntity= "DATE", goldNorm= "1988-02-03")
     ensure(sentence= "1988/02/03.", Interval(0, 1), goldEntity= "DATE", goldNorm= "1988-02-03")
-
   }
 
   it should "recognize numeric dates of form yy-mm-dd" in  {
@@ -243,7 +242,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("2017 autumn", Interval(0, 2), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
     ensure("winter", Interval(0, 1), "DATE-RANGE", "XXXX-12-21 -- XXXX-03-20")
     ensure("spring", Interval(0, 1), "DATE-RANGE", "XXXX-03-20 -- XXXX-06-21")
-
   }
 
   it should "recognize date ranges with seasons" in {
@@ -290,7 +288,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "since around the end of 2020", Interval(0, 6), goldEntity= "DATE-RANGE", goldNorm= "2020-12-XX [APPROX] -- ref-date")
   }
 
-
   // TODO: Happenings in the middle of months
 
   it should "recognize dates as the middle part of months" in {
@@ -298,8 +295,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     // ensure("planting from mid-March", Interval(2, 5), "DATE", "XXXX-03-15")
     // ensure("As a function of the onset of rains, rice was sown mid-July in 2016 and early July in 2017", Interval(2, 5), "DATE", "XXXX-03-15")
     // ensure("sowing normally occurs in summer mid-June", Interval(5, 8), "DATE-RANGE",  "XXXX-10-25 -- XXXX-12-10")
-
-    }
+  }
 
   //TODO: Additional mixed dates ranges 
 
@@ -314,9 +310,8 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     // ensure("flooding are expected to occur in July to August 2021", Interval(5, 10), "DATE-RANGE",  "2021-07-XX -- 2021-08-XX")
     ensure("farmers sowed Jaya between 20 June and 1 July", Interval(3, 8), "DATE-RANGE",  "XXXX-06-20 -- XXXX-07-01")
 
-  // TODO: It would be interesting to handle such dates ranges 1st week of July: "XXXX-07-01 -- XXXX-07-07
+    // TODO: It would be interesting to handle such dates ranges 1st week of July: "XXXX-07-01 -- XXXX-07-07
     // ensure(sentence= "transplanted during the 1st week of July", Interval(3, 7), goldEntity= "DATE", goldNorm= "XXXX-07-01")
-
   }
 
   // TODO: Other dates that should be recognized
@@ -326,7 +321,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     // ensure(sentence= "harvested the following August", Interval(3, 4), goldEntity= "DATE", goldNorm= "XXXX-08-XX")
     // ensure(sentence= "wheat is mostly sown in late September", Interval(6, 7), goldEntity= "DATE", goldNorm= "XXXX-09-XX")
     // ensure(sentence= "Rains are expected to start in July", Interval(6, 7), goldEntity= "DATE", goldNorm= "XXXX-07-XX")
-  
   }
 
   it should "recognize numeric dates of form dd-mm" in {
@@ -343,7 +337,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "before Aug. 15th", Interval(0, 3), goldEntity= "DATE-RANGE", goldNorm= "XXXX-XX-XX -- XXXX-08-15")
     ensure(sentence= "after March 5th", Interval(0, 3), goldEntity= "DATE-RANGE", goldNorm= "XXXX-03-05 -- XXXX-XX-XX")
     ensure(sentence= "Farmers planted on July 11", Interval(3, 5), goldEntity= "DATE", goldNorm= "XXXX-07-11")
-
   }
 
   it should "recognize numeric dates of form mm-yy" in {
@@ -358,7 +351,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "on 6th Jan, 2009", Interval(1, 5), goldEntity= "DATE", goldNorm= "2009-01-06")
     // ensure(sentence= "on 18th of Oct 2019", Interval(1, 5), goldEntity= "DATE", goldNorm= "2019-10-18")
     // ensure(sentence= "old seedlings transplanted on 14 July in 1999/00", Interval(4, 8), goldEntity= "DATE", goldNorm= "2000-07-14")
-
   }
   
   it should "recognize measurement units" in {
@@ -410,7 +402,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     
     // TODO: not sure what should be the output of such measurement '3 or 4 days'
     ensure(sentence= "and lasted 3 or 4 days in both wet seasons", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="4.0 d")
-
   }
 
   // TODO: this requires non trivial changes to the tokenizer
@@ -420,16 +411,13 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "Single cropping rice area is 4561.9km2", Interval(5, 7), goldEntity="MEASUREMENT", goldNorm="4561.9 km2")
     ensure(sentence= "Application dosage is 200kg/ha for compound fertilizer and 180kg/ha for urea", Interval(3, 6), goldEntity="MEASUREMENT", goldNorm="200.0 kg/ha")
     ensure(sentence= "The maximum seed yield was (3.43ton ha-1) gained", Interval(6, 12), goldEntity="MEASUREMENT", goldNorm="3.43 t/ha")
-
   }
   */
 
   // tests for recognizing units which change their meaning after normalization
   it should "recognize measurement units which should not be normalized" in {
-    
     // TODO: Mihai ==> How do we handle cases like (Mg/ha or Mg/m3) which shouldn't be normalized as this is one of the preferred unit for yield or application rate
     // ensure(sentence= "Genetically improved rice varieties have grain yield potential of 10 Mg ha-1", Interval(9, 12), goldEntity="MEASUREMENT", goldNorm="10.0 Mg/ha")
-
   }
 
   // tests for recognizing complex measurement units
@@ -468,7 +456,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     // TODO: not handling values hyphen separated with theit units
     // ensure(sentence= "Grain yield was determined from a 5-m2 area in each plot", Interval(6, 9), goldEntity="MEASUREMENT", goldNorm="5.0 m2")
     // ensure(sentence= "Punjab has 3.5 million ha under wheat cultivation with productivity of 5.2-ton ha-1 respectively.", Interval(11, 13), goldEntity="MEASUREMENT", goldNorm="5.2 t/ha")
-
   }
 
   // tests for mass and concentation units (Soil bulk density, volume basis etc)
