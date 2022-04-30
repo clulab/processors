@@ -8,6 +8,12 @@ core/*.iml
 .DS_Store
 Makefile
 
+# VS code
+.bloop/
+.metals/
+.vscode/
+project/
+
 # sbt specific
 dist/*
 target/
@@ -19,7 +25,9 @@ project/plugins/project/
 # Scala-IDE specific
 .scala_dependencies
 
-
-# Vstudio-IDE specific
-.metals/
-.vscode/
+# testing
+model.dat
+model.ser
+test.dat
+train.dat
+predictions

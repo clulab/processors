@@ -11,7 +11,7 @@ import org.clulab.learning.Datasets._
   * Date: 11/15/17
   */
 trait Regression[F] {
-  def train(dataset: RegDataset[F]) {
+  def train(dataset: RegDataset[F]): Unit = {
     train(dataset, dataset.indices.toArray)
   }
 
@@ -19,7 +19,7 @@ trait Regression[F] {
     * Trains the classifier on the given dataset
     * spans is useful during cross validation
     */
-  def train(dataset: RegDataset[F], spans: Option[Iterable[(Int, Int)]]) {
+  def train(dataset: RegDataset[F], spans: Option[Iterable[(Int, Int)]]): Unit = {
     val indices = mkTrainIndices(dataset.size, spans)
     train(dataset, indices)
   }
@@ -28,7 +28,7 @@ trait Regression[F] {
     * Trains a classifier, using only the datums specified in indices
     * indices is useful for bagging
     */
-  def train(dataset: RegDataset[F], indices:Array[Int])
+  def train(dataset: RegDataset[F], indices:Array[Int]): Unit
 
   /**
     * Returns the score for this datum
@@ -37,13 +37,13 @@ trait Regression[F] {
   def scoreOf(d:Datum[Double, F]): Double
 
   /** Saves the current model to a file */
-  def saveTo(fileName:String) {
+  def saveTo(fileName:String): Unit = {
     val bw = new BufferedWriter(new FileWriter(fileName))
     saveTo(bw)
     bw.close()
   }
 
   /** Saves to writer. Does NOT close the writer */
-  def saveTo(writer:Writer)
+  def saveTo(writer:Writer): Unit
 }
 

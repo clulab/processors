@@ -51,6 +51,7 @@ object StringUtils {
         i = i + 1
       } else {
         otherArgs += key
+        i += 1
       }
     }
 
@@ -71,6 +72,9 @@ object StringUtils {
 
     normedProps
   }
+
+  def argsToMap(args: Array[String], verbose: Boolean = true): Map[String, String] =
+      argsToProperties(args, verbose).asScala.toMap
 
   private def instantiateVariables(props:Properties):Properties = {
     val newProps = new Properties()
@@ -175,4 +179,6 @@ object StringUtils {
 
   def afterFirst(string: String, char: Char, all: Boolean = true, keep: Boolean = false): String =
     after(string, string.indexOf(char), all, keep)
+
+  def med(source: String, target: String): Int = MED(source, target).getDistance
 }

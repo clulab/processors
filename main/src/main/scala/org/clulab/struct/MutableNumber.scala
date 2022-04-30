@@ -10,7 +10,7 @@ class MutableNumber[T](var value:T) extends Serializable {
 
   override def equals(other:Any):Boolean = {
     other match {
-      case that:MutableNumber[T] => value == that.value
+      case that:MutableNumber[_] => value == that.value
       case _ => false
     }
   }

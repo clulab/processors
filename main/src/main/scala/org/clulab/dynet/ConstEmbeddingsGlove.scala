@@ -41,12 +41,12 @@ object ConstEmbeddingsGlove {
   def mkConstLookupParams(sentence: Sentence): ConstEmbeddingParameters =
     mkConstLookupParams(sentence.words.toSet)
 
-  def mkConstLookupParams(doc: Document): ConstEmbeddingParameters = {
-    val words = new mutable.HashSet[String]()
-    for(s <- doc.sentences) {
-      words ++= s.words
+  def mkConstLookupParams(doc: Document, lowerCase: Boolean = false): ConstEmbeddingParameters = {
+    val mutableWordSet = doc.sentences.foldLeft(new mutable.HashSet[String]()) { case (set, sentence) =>
+      val words = sentence.words
+      set ++ (if (lowerCase) words.map(_.toLowerCase) else words)
     }
-    mkConstLookupParams(words.toSet)
+    mkConstLookupParams(mutableWordSet.toSet)
   }
 
   def mkConstLookupParams(words: Set[String], embeddings: WordEmbeddingMap): ConstEmbeddingParameters = {
@@ -85,15 +85,15 @@ object ConstEmbeddingsGlove {
     mkConstLookupParams(words, embeddings)
   }
 
-  def load(configName: String = "org/clulab/glove.conf") {
+  def load(configName: String = "org/clulab/glove.conf"): Unit = {
     load(ConfigWithDefaults(configName))
   }
 
-  def load(conf: Config) {
+  def load(conf: Config): Unit = {
     load(ConfigWithDefaults(conf))
   }
 
-  def load(config: ConfigWithDefaults) {
+  def load(config: ConfigWithDefaults): Unit = {
     this.synchronized { // synchronized so we don't create multiple SINGLETON objects
       if (SINGLETON_WORD_EMBEDDING_MAP.isEmpty) {
         val matrixResourceName = config.getArgString("glove.matrixResourceName", None)

@@ -424,7 +424,7 @@ object CompactWordEmbeddingMap extends Logging {
 
     def append(value: Float): Unit = arrayBuilder += value
 
-    def normed(): Array[Float] = norm(arrayBuilder.result)
+    def normed(): Array[Float] = norm(arrayBuilder.result())
   }
 
   protected def buildMatrix(lines: Iterator[String]): BuildType = {

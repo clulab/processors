@@ -10,13 +10,16 @@ object NumberParser {
 
   def parse(words: Seq[String]): Option[Double] = {
     words match {
-      case Seq() => None
+      case Seq() =>
+        None
       case words =>
-        val cleanWords = words.flatMap { w =>
+        val cleanWords = removePlusMinus(words).flatMap { w =>
           // lowercase
           var word = w.toLowerCase()
           // remove commas from numbers like 100,000
           word = word.replace(",", "")
+          // remove "+"
+          word = word.replace("+", "")
           // remove 's' from words like "thousands"
           if (word.endsWith("s")) {
             word = word.dropRight(1)
@@ -31,10 +34,18 @@ object NumberParser {
           } else {
               Array(word)
           }
+        }.filterNot(_.isEmpty)
+        if(cleanWords.nonEmpty) {
+          parseWords(cleanWords) orElse parseNumeric(cleanWords)
+        } else {
+          None
         }
-        parseWords(cleanWords) orElse parseNumeric(cleanWords)
     }
   }
+
+  /** Remove the part of the number including and following +/-, e.g., in "45 +/- 13", we remove "+/- 13" */
+  // Unicode \u00b1 seems to be already converted to the trigraph +/-.
+  def removePlusMinus(words: Seq[String]): Seq[String] = words.takeWhile(_ != "+/-")
 
   def parseNumeric(words: Seq[String]): Option[Double] = {
     try {

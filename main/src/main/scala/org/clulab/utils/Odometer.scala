@@ -13,7 +13,7 @@ class SeqOdometer[T <: Any](val sequences: Array[Seq[T]]) extends Iterator[mutab
   val values: mutable.ArraySeq[T] = iterators.zipWithIndex.map { case (iterator: Iterator[T], index: Int) =>
     // Leave room for the very first next().
     if (index == 0) null.asInstanceOf[T]
-    else iterator.next
+    else iterator.next()
   }
 
   override def hasNext: Boolean = iterators.exists(_.hasNext)
@@ -30,7 +30,7 @@ class SeqOdometer[T <: Any](val sequences: Array[Seq[T]]) extends Iterator[mutab
           iterators(index) = newIterator
           newIterator
         }
-      values(index) = newIterator.next
+      values(index) = newIterator.next()
       hasNext
     }
     values
@@ -46,7 +46,7 @@ class RangeOdometer(val ranges: Array[Range]) extends Iterator[mutable.ArraySeq[
   val values: mutable.ArraySeq[Int] = iterators.zipWithIndex.map { case (iterator: Iterator[Int], index: Int) =>
     // Leave room for the very first next().
     if (index == 0) -1
-    else iterator.next
+    else iterator.next()
   }
 
   override def hasNext: Boolean = iterators.exists(_.hasNext)
@@ -63,7 +63,7 @@ class RangeOdometer(val ranges: Array[Range]) extends Iterator[mutable.ArraySeq[
           iterators(index) = newIterator
           newIterator
         }
-      values(index) = newIterator.next
+      values(index) = newIterator.next()
       hasNext
     }
     values

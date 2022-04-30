@@ -15,7 +15,8 @@ import scala.util.hashing.MurmurHash3._
  */
 case class DirectedGraph[E](
   edges: List[Edge[E]],
-  preferredSizeOpt: Option[Int] = None
+  preferredSizeOpt: Option[Int] = None,
+  rootsOpt: Option[Set[Int]] = None
 ) extends Serializable {
   val size: Int = {
     val minimumSize = computeSize(edges)
@@ -31,7 +32,7 @@ case class DirectedGraph[E](
   val outgoingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkOutgoing(edges, size)
   val incomingEdges: Array[Array[(Int, E)]] = DirectedGraph.mkIncoming(edges, size)
   val allEdges: List[(Int, Int, E)] = edges.map(e => (e.source, e.destination, e.relation))
-  lazy val roots: Set[Int] = DirectedGraph.calculateRoots(size, outgoingEdges, incomingEdges)
+  lazy val roots: Set[Int] = rootsOpt.getOrElse(DirectedGraph.calculateRoots(size, outgoingEdges, incomingEdges))
 
   /**
     * Used to compare DirectedGraphs.
@@ -218,7 +219,7 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
 
   def hasNext:Boolean = node < graph.size
 
-  def next:(Int, Int, E) = {
+  def next(): (Int, Int, E) = {
     val edge = graph.getOutgoingEdges(node)(nodeEdgeOffset)
     val from = node
     if (nodeEdgeOffset < graph.getOutgoingEdges(node).length - 1) {
@@ -303,7 +304,7 @@ object DirectedGraph {
 
     val nodes = {
       val iterator = Range(0, size).iterator
-      Array.fill(size)(new Node(iterator.next))
+      Array.fill(size)(new Node(iterator.next()))
     }
 
     def visit(node: Node): Unit = {

@@ -120,7 +120,7 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def collapsePrepositionsStanford(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+  def collapsePrepositionsStanford(sentence:Sentence, dgi:DirectedGraphIndex[String]): Unit = {
     val toRemove = new ListBuffer[Edge[String]]
     val preps = dgi.findByName("prep")
     for(prep <- preps) {
@@ -187,7 +187,7 @@ object ToEnhancedDependencies {
     * Mary wants to buy a book => nsubj from 3 to 0
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def raiseSubjects(dgi:DirectedGraphIndex[String]) {
+  def raiseSubjects(dgi:DirectedGraphIndex[String]): Unit = {
     val subjects = dgi.findByName("nsubj")
     for(se <- subjects) {
       for(xcomp <- dgi.findByName("xcomp").filter(_.source == se.source)) {
@@ -202,7 +202,7 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean) {
+  def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
     val conjs = dgi.findByName("conj").sortBy(_.source)
     val tags = sentence.tags.get
     for(conj <- conjs) {
@@ -286,7 +286,7 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def propagateConjSubjectsAndObjects(sentence:Sentence, dgi:DirectedGraphIndex[String]) {
+  def propagateConjSubjectsAndObjects(sentence:Sentence, dgi:DirectedGraphIndex[String]): Unit = {
     val conjs = dgi.findByName("conj").sortBy(_.source)
     val tags = sentence.tags.get
     for(conj <- conjs) {
@@ -323,7 +323,7 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def pushSubjectsObjectsInsideRelativeClauses(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean) {
+  def pushSubjectsObjectsInsideRelativeClauses(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
     val rels =
       if(universal) dgi.findByName("acl:relcl")
       else dgi.findByName("rcmod")

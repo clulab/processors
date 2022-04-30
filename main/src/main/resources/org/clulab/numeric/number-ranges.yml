@@ -1,0 +1,22 @@
+#
+# recognizes date ranges
+#
+
+- name: number-range-1
+  priority: ${rulepriority}
+  label: NumberRange
+  type: token
+  example: "Weeding timing ranged from 2 to 17 days"
+  action: mkNumberRangeMention
+  pattern: |
+    /(?i)(from|between)/ @number1:Number /(?i)(to|and|\-)/ @number2:Number
+
+- name: number-range-2
+  priority: ${rulepriority}
+  label: NumberRange
+  type: token
+  example: "Weeding timing ranged 2 to 17 days"
+  action: mkNumberRangeMention
+  pattern: |
+    @number1:Number /(?i)(to|\-)/ @number2:Number
+

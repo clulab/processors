@@ -70,7 +70,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       labels(i) = new Counter[String]()
       labels(i) += START_TAG
       labels(i) += STOP_TAG
+
+      // labels(i) += "list" // TODO: why isn't this picked up for the depsl model?
     }
+
     val words = new Array[Counter[String]](taskManager.taskCount + 1)
     for (i <- words.indices) words(i) = new Counter[String]()
 
@@ -78,7 +81,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, 0)
 
         for(as <- annotatedSentences) {
           val annotatedSentence = as._1
@@ -86,7 +89,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
           for (i <- annotatedSentence.indices) {
             words(tid + 1) += annotatedSentence.words(i)
             words(0) += annotatedSentence.words(i)
-            labels(tid + 1) += sentenceLabels(i)
+            labels(tid + 1) += sentenceLabels(i).label
           }
         }
       }
@@ -136,10 +139,11 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       for(metaSentence <- sentenceIterator) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
+        val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
         sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
         assert(annotatedSentences.nonEmpty)
 
         val unweightedLoss = {
@@ -243,7 +247,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val batchLoss = Expression.sum(batchLosses)
 
     // forward pass and stats
-    val batchLossAsFloat = batchLoss.value().toFloat
+    val batchLossAsFloat = batchLoss.value().toFloat()
 
     // backprop
     ComputationGraph.backward(batchLoss)
@@ -258,6 +262,24 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
   def evaluate(taskId:Int, taskName:String, sentences:Array[Array[Row]]): (Double, Double, Double, Double) = {
     evaluate(taskId, taskName, sentences, "testing", -1)
+  }
+
+  /** Ceiling method that chooses the gold dependency for each modifier from the top K predictions */
+  def chooseOptimalPreds(predsWithScores: IndexedSeq[IndexedSeq[(String, Float)]], goldLabels: IndexedSeq[String], topK:Int): IndexedSeq[String] = {
+    assert(predsWithScores.length == goldLabels.length)
+    val preds = new ArrayBuffer[String]()
+    for(i <- predsWithScores.indices) {
+      val sortedPreds = predsWithScores(i).sortBy(- _._2)
+      val gold = goldLabels(i)
+      var bestPred = sortedPreds.head._1
+      for(j <- 1 until topK) {
+        if(sortedPreds(j)._1 == gold) {
+          bestPred = sortedPreds(j)._1
+        }
+      }
+      preds += bestPred
+    }
+    preds
   }
 
   /**
@@ -280,23 +302,42 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
 
     val reader = new MetalRowReader
+    val insertNegatives = taskManager.tasks(taskId).insertNegatives
+
+    if(insertNegatives > 0) {
+      pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
+    }
 
     for (sent <- sentences) {
       sentCount += 1
 
-      val annotatedSentences = reader.toAnnotatedSentences(sent)
+      val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
 
       for(as <- annotatedSentences) {
         val sentence = as._1
-        val goldLabels = as._2
+        val goldLabels = as._2.map(_.label)
+        val modHeadPairsOpt = getModHeadPairs(as._2)
 
         val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-        val preds = Layers.predict(model, taskId, sentence, constEmbeddings)
+        
+        // vanilla inference
+        val preds = Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
+
+        // ceiling strategy: choose the gold label if it shows up in the top K predictions
+        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
+        //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
+
+        // Eisner parsing algorithm using the top K predictions
+        //val preds = parseWithEisner(sentence, constEmbeddings, 3).map(_._1.toString)
 
         val sc = SeqScorer.f1(goldLabels, preds)
         scoreCountsByLabel.incAll(sc)
 
-        printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        if(insertNegatives == 0) {
+          // we can only print in the CoNLL format if we did not insert artificial negatives
+          // these negatives break the one label per token assumption
+          printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+        }
       }
     }
 
@@ -309,6 +350,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     for(label <- scoreCountsByLabel.labels) {
       logger.info(s"\tP/R/F1 for label $label (${scoreCountsByLabel.map(label).gold}): ${scoreCountsByLabel.precision(label)} / ${scoreCountsByLabel.recall(label)} / ${scoreCountsByLabel.f1(label)}")
     }
+    // println(s"TOTAL = ${Layers.TOTAL_PARSED}; EISNER = ${Layers.EISNER_SUCCEEDED}")
 
     ( scoreCountsByLabel.accuracy(),
       scoreCountsByLabel.precision(),
@@ -319,19 +361,29 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   // this only supports basic tasks for now
   def predictJointly(sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
-    Layers.predictJointly(model, sentence, constEmbeddings)
+    Layers.predictJointly(model, sentence, None, constEmbeddings)
   }
 
   def predict(taskId: Int,
               sentence: AnnotatedSentence,
+              modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
               constEmbeddings: ConstEmbeddingParameters): IndexedSeq[String] = {
-    Layers.predict(model, taskId, sentence, constEmbeddings)
+    Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
   }
 
   def predictWithScores(taskId: Int,
                         sentence: AnnotatedSentence,
-                        constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    Layers.predictWithScores(model, taskId, sentence, constEmbeddings)
+                        modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
+                        constEmbeddings: ConstEmbeddingParameters,
+                        applySoftmax: Boolean = true): IndexedSeq[IndexedSeq[(String, Float)]] = {
+    Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings, applySoftmax)
+  }
+
+  def parseWithEisner(sentence: AnnotatedSentence,
+                      constEmbeddings: ConstEmbeddingParameters,
+                      topK: Int, lambda: Float): IndexedSeq[(Int, String)] = {
+    val eisner = new Eisner
+    eisner.ensembleParser(this, None, sentence, constEmbeddings, topK, lambda, true)
   }
 
   /**
@@ -428,34 +480,32 @@ object Metal {
   }
 
   def main(args: Array[String]): Unit = {
-    val props = StringUtils.argsToProperties(args)
+    val props = StringUtils.argsToMap(args)
     initializeDyNet() // autoBatch = true, mem = "2048,2048,2048,2048") // mem = "1660,1664,2496,1400")
 
-    if(props.containsKey("train")) {
-      assert(props.containsKey("conf"))
-      val configName = props.getProperty("conf")
+    if (props.contains("train")) {
+      val configName = props("conf")
       val config = ConfigFactory.load(configName)
       val parameters = new ParameterCollection()
       val taskManager = new TaskManager(config)
-      val modelName = props.getProperty("train")
+      val modelName = props("train")
 
       val mtl = new Metal(Some(taskManager), parameters, None)
       mtl.train(modelName)
     }
 
-    else if(props.containsKey("test")) {
-      assert(props.containsKey("conf"))
-      val configName = props.getProperty("conf")
+    else if(props.contains("test")) {
+      val configName = props("conf")
       val config = ConfigFactory.load(configName)
       val taskManager = new TaskManager(config)
-      val modelName = props.getProperty("test")
+      val modelName = props("test")
 
       val mtl = Metal(modelName, taskManager)
       mtl.test()
     }
 
-    else if(props.containsKey("shell")) {
-      val modelName = props.getProperty("shell")
+    else if(props.contains("shell")) {
+      val modelName = props("shell")
       val mtl = Metal(modelName)
       val shell = new MetalShell(mtl)
       shell.shell()

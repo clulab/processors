@@ -1,6 +1,7 @@
 package org.clulab
 
-import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMention, Norm}
+import org.clulab.numeric.actions.NumericActions
+import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMention, Norm, PercentageMention}
 import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
@@ -15,15 +16,15 @@ package object numeric {
       s.tags foreach (x => println("Tags: " + x.mkString(", ")))
       s.entities foreach (x => println("Entities: " + x.mkString(", ")))
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))
-      println
+      println()
 
       val sortedMentions = mentionsBySentence(i).sortBy(_.label)
       sortedMentions foreach displayMention
-      println
+      println()
     }
   }
 
-  def displayMention(mention: Mention) {
+  def displayMention(mention: Mention): Unit = {
     val boundary = s"\t${"-" * 30}"
     println(s"${mention.labels} => ${mention.text}")
     println(boundary)
@@ -87,18 +88,8 @@ package object numeric {
     // convert numeric entities to entity labels and norms
     //
     for(mention <- mentions) {
-      mention match {
-        case m: DateMention =>
-          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
-
-        case m: MeasurementMention =>
-          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
-
-        case m: DateRangeMention =>
-          addLabelsAndNorms(m, m.sentenceObj, m.tokenInterval)
-
-        case _ =>
-          // nothing to do for other mention types
+      if(NumericActions.isNumeric(mention) && mention.isInstanceOf[Norm]) {
+        addLabelsAndNorms(mention.asInstanceOf[Norm], mention.sentenceObj, mention.tokenInterval)
       }
     }
   }

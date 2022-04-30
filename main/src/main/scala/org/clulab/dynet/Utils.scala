@@ -516,7 +516,11 @@ object Utils {
   }
 
   // This <% seems to be called an "implicit conversion declaration".
-  def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+  // def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+  // [warn] ... view bounds are deprecated; use an implicit parameter instead.
+  // [warn]   example: instead of `def f[A <% Int](a: A)` use `def f[A](a: A)(implicit ev: A => Int)`
+  // [warn]   def save[T <% Ordered[T]](printWriter: PrintWriter, values: Map[T, Int], comment: String): Unit = {
+  def save[T](printWriter: PrintWriter, values: Map[T, Int], comment: String)(implicit ev: T => Ordered[T]): Unit = {
     printWriter.println("# " + comment)
     // Sort these so that the same file always results, even it this is slow.
     values.toSeq.sorted.foreach { case (key, value) =>
@@ -525,7 +529,7 @@ object Utils {
     printWriter.println() // Separator
   }
 
-  def save[T <% Ordered[T]](printWriter: PrintWriter, values: Counter[T], comment: String): Unit = {
+  def save[T](printWriter: PrintWriter, values: Counter[T], comment: String)(implicit ev: T => Ordered[T]): Unit = {
     printWriter.println("# " + comment)
     // Sort these so that the same file always results, even it this is slow.
     val keys = values.keySet.toList.sorted
@@ -572,7 +576,7 @@ object Utils {
   abstract class ByLineBuilder[IntermediateValueType, FinalValueType, DefaultValueType] {
 
     protected def setDefaultValue(intermediateValue: IntermediateValueType,
-                                  defaultValue: DefaultValueType)
+                                  defaultValue: DefaultValueType): Unit
 
     protected def getComment(line: String): String = {
       assert(line.startsWith("#"))
@@ -675,6 +679,7 @@ object Utils {
       val mutableMap: mutable.Map[KeyType, Int] = new mutable.HashMap
 
       addLines(mutableMap, lines, fieldName, defaultValue)
+
       mutableMap.toMap
     }
 
@@ -830,14 +835,17 @@ object Utils {
   def newSource(filename: String): Source = {
     val f = new File(filename)
     if (f.exists()) {
-      // this file exists on disk
+      // This file exists on disk.
       Source.fromFile(filename, "UTF-8")
     } else {
-      // the file does not exist on disk. let's hope it's in the classpath
-      // this should work for both scala 2.11 and 2.12
-      Source.fromInputStream(getClass.getResourceAsStream("/" + filename))
-      // this only works for scala 2.12, so we can't cross compile with 2.11
+      // The file does not exist on disk.  Let's hope it's in the classpath.
+      // This should work for both scala 2.11 and 2.12.
+      // The resource will be null if it isn't found, so use an Option!
+      val inputStreamOpt = Option(getClass.getResourceAsStream("/" + filename))
+      val sourceOpt = inputStreamOpt.map(Source.fromInputStream)
+      // This only works for scala 2.12, so we can't cross compile with 2.11.
       // Source.fromResource(filename)
+      sourceOpt.getOrElse(throw new FileNotFoundException(s"""Could not find resource "$filename"."""))
     }
   }
 
@@ -893,6 +901,17 @@ object Utils {
       Expression.dropout(expression, dropoutProb)
     } else {
       expression
+    }
+  }
+
+  def getModHeadPairs(labels: IndexedSeq[Label]): Option[IndexedSeq[ModifierHeadPair]] = {
+    if(labels.nonEmpty && labels.head.isInstanceOf[DualLabel]) {
+      Some(labels.map(x => {
+        val dl = x.asInstanceOf[DualLabel]
+        ModifierHeadPair(dl.modifier, dl.head)
+      }))
+    } else {
+      None
     }
   }
 }

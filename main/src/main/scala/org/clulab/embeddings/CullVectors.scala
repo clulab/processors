@@ -87,7 +87,7 @@ object CullVectors extends App {
   val wordFrequencies: Map[String, (Int, Int)] = Sourcer.sourceFromFile(inFrequencyFile).autoClose { source =>
     val counter = Counter(-1)
     val frequentWords = source
-        .getLines
+        .getLines()
         .map { line =>
           val Array(rawWord, freq) = line.split('\t')
           val cookedWord = substitutions.foldLeft(rawWord) { case (word, (remove, insert)) =>
@@ -100,7 +100,7 @@ object CullVectors extends App {
     frequentWords
   }
   val (columns, badFloats, goodLines) = Sourcer.sourceFromFile(inVectorFile).autoClose { source =>
-    val bufferedLines = source.getLines.buffered
+    val bufferedLines = source.getLines().buffered
     val line = bufferedLines.head
     val columns = {
       val Array(_, columns) = line.split(' ')

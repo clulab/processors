@@ -29,7 +29,7 @@ trait RankingDataset[F] {
    */
   val labels = new ArrayBuffer[Array[Int]]
 
-  def += (queryDatums:Iterable[Datum[Int, F]])
+  def += (queryDatums:Iterable[Datum[Int, F]]): Unit
 
   def numFeatures = featureLexicon.size
   def size = labels.size
@@ -52,7 +52,7 @@ trait RankingDataset[F] {
 class BVFRankingDataset[F] extends RankingDataset[F] {
   val features = new ArrayBuffer[Array[Array[Int]]]
 
-  def += (queryDatums:Iterable[Datum[Int, F]]) {
+  def += (queryDatums:Iterable[Datum[Int, F]]): Unit = {
     val fvs = queryToArray(queryDatums)
     labels += fvs.map(fv => fv._1)
     features += fvs.map(fv => fv._2)
@@ -142,7 +142,7 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
 class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[F, Double] {
   val values = new ArrayBuffer[Array[Array[Double]]]
 
-  override def += (queryDatums:Iterable[Datum[Int, F]]) {
+  override def += (queryDatums:Iterable[Datum[Int, F]]): Unit = {
     val fvs = queryToArray(queryDatums)
     labels += fvs.map(fv => fv._1)
     features += fvs.map(fv => fv._2)
@@ -246,7 +246,7 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
     datasetBootstrapped
   }
 
-  def saveTo[F](fileName:String) {
+  def saveTo[F](fileName:String): Unit = {
     Serializer.save(this, fileName)
   }
 
@@ -438,7 +438,7 @@ object RVFRankingDataset {
 
   def saveToSvmRankFormat( queries:Iterable[Iterable[Datum[Int, String]]],
                            featureLexicon:Lexicon[String],
-                           fn:String) {
+                           fn:String): Unit = {
     var qid = 0
     val os = new PrintWriter(new FileWriter(fn))
     for(query <- queries) {
@@ -474,7 +474,7 @@ class RVFKRankingDataset[F] extends RVFRankingDataset[F] {
   /** Contains the String representation for each datum, on which the kernel is built */
   val kernels = new ArrayBuffer[Array[String]]
 
-  override def += (queryDatums:Iterable[Datum[Int, F]]) {
+  override def += (queryDatums:Iterable[Datum[Int, F]]): Unit = {
     val fvsk = queryToArray(queryDatums)
     labels += fvsk.map(fv => fv._1)
     features += fvsk.map(fv => fv._2)

@@ -158,9 +158,9 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
   }
 
   /** Saves the current model to a file */
-  override def saveTo(writer:Writer) { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
+  override def saveTo(writer:Writer): Unit = { throw new RuntimeException("ERROR: saving to Writer not supported yet!") }
 
-  override def saveTo(fn:String) {
+  override def saveTo(fn:String): Unit = {
     Serializer.save(this, fn)
   }
 

@@ -1,4 +1,12 @@
-# Changes
++ **8.5.0** - Small parser improvements; added model for case restoration
++ **8.4.9** - Parser improvements: slimmer models; parsing using the Eisner algorithm
++ **8.4.9** - Removed support for embedding spans in Metal
++ **8.4.8** - We now extract and normalize approximate dates
++ **8.4.8** - We now extract percentages as part of numeric entities 
++ **8.4.8** - Improved tokenization and recognition of dates
++ **8.4.7** - Improved recognition of relative dates
++ **8.4.6** - Made the parsing of numeric entities more robust to broken texts (from PDF conversion)
++ **8.4.6** - Bug fix in the generation of enhanced semantic roles, again on broken texts
 + **8.4.5** - Odin can now operate over hybrid dependencies that combine semantic roles and syntax.
 + **8.4.5** - Added support for custom NERs to CluProcessor.
 + **8.4.4** - Added support for number, date, and measurement recognition to CluProcessor.

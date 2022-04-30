@@ -3,7 +3,9 @@ taxonomy:
       - NumericEntity:
           - Atomic:
               - PossibleDay
+              - PossibleHoliday
               - PossibleMonth
+              - PossibleSeason
               - PossibleYear
               - Number
           - Subatomic:
@@ -20,10 +22,14 @@ taxonomy:
           - Compositional:
               - Date
               - DateRange
+              - NumberRange
               - Measurement
+              - Percentage
       - NamedEntity:
+          - Holiday
           - Month
           - MeasurementUnit
+          - Season
 
 rules:
   - import: org/clulab/numeric/atomic.yml
@@ -34,8 +40,9 @@ rules:
   - import: org/clulab/numeric/number.yml
     # numbers written with words or digits
 
-  - import: org/clulab/numeric/measurements.yml
-    # Compositional rules for measurements such as NUMBER UNIT
+  - import: org/clulab/numeric/number-ranges.yml
+    # compositional rules for number ranges such as "from 2 to 4"
+    # this grammar must be called before measurements
     vars:
       rulepriority: "13"
 
@@ -44,8 +51,19 @@ rules:
     vars:
       rulepriority: "14"
 
+  - import: org/clulab/numeric/modifiers.yml
+    # Compositional rules for date modifiers
+    vars:
+      rulepriority: "15"
+
   - import: org/clulab/numeric/date-ranges.yml
     # Compositional rules for date ranges such as "between Date1 to Date2"
     vars:
-      rulepriority: "15"
+      rulepriority: "16"
+
+  - import: org/clulab/numeric/measurements.yml
+    # Compositional rules for measurements such as NUMBER UNIT
+    vars:
+      rulepriority: "17"
+
 

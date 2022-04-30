@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Script to train a NER model 
+# Script to test a NER model 
 #
 
 if [ "$#" -ne 1 ]; then

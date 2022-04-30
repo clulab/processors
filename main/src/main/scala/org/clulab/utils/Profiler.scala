@@ -31,12 +31,12 @@ object Profiler {
     }
   }
 
-  def start(id:String) {
+  def start(id:String): Unit = {
     val idx = findIdxFromID(id, true)
     startTimes(idx) = System.nanoTime()
   }
 
-  def end(id:String) {
+  def end(id:String): Unit = {
     val idx = findIdxFromID(id, false)
     if (idx >= 0) {
       val endTime = System.nanoTime()
@@ -46,7 +46,7 @@ object Profiler {
     }
   }
 
-  def report() {
+  def report(): Unit = {
     println (" ------------------------------ ")
     println (" * Profiler report: ")
     for (i <- 0 until ids.size) {

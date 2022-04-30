@@ -1,0 +1,23 @@
+#
+# list of seasons and their date ranges, case insensitive so everything is lower case for simplicity
+# the comments after // are required by SeasonNormalizer to get the season date ranges! Do not remove
+# the format for the date ranges must be MM-dd:MM-dd or MM:MM
+# note: multi-word phrases must be tokenized in the same way as our tokenizer. If not sure, try the phrases in ./shell first!
+#
+winter          // XXXX-12-21 -- XXXX-03-20
+spring          // XXXX-03-20 -- XXXX-06-21
+summer          // XXXX-06-21 -- XXXX-09-22
+rainy season    // XXXX-06-XX -- XXXX-10-XX
+rainy seasons   // XXXX-06-XX -- XXXX-10-XX
+lean season     // XXXX-02-XX -- XXXX-06-XX
+lean seasons    // XXXX-02-XX -- XXXX-06-XX
+meher           // XXXX-09-XX -- XXXX-02-XX
+deyr            // XXXX-10-XX -- XXXX-11-XX
+hageya          // XXXX-10-XX -- XXXX-11-XX
+gu              // XXXX-04-XX -- XXXX-05-XX
+kiremt          // XXXX-06-XX -- XXXX-09-XX
+belg            // XXXX-04-XX -- XXXX-05-XX
+sugum           // XXXX-04-XX -- XXXX-05-XX
+karma           // XXXX-06-XX -- XXXX-09-XX
+
+

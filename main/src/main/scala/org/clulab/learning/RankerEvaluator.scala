@@ -15,7 +15,7 @@ class Qid(val answers:Array[Answer])
 
 object RankerEvaluator {
 
-  def main(args:Array[String]) {
+  def main(args:Array[String]): Unit = {
     if(args.length != 2) {
       println("Usage: org.clulab.qa.EvalSVMRank <gold> <predictions>")
       System.exit(1)

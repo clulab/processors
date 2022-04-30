@@ -28,4 +28,25 @@ class TestArgsToProperties extends FlatSpec with Matchers {
     p4 should fullyMatch regex """shell is /bin/bash|shell is /bin/sh|shell is /bin/csh|shell is /bin/tcsh|shell is /bin/zsh"""
   }
   */
+
+  val propertiesMap = StringUtils.argsToMap(List("-props", "main/src/test/resources/org/clulab/utils/test.properties").toArray)
+
+  "properties as a map" should "contain p1 with value /some/path" in {
+    val p1 = propertiesMap("p1")
+    p1 should be ("/some/path")
+  }
+
+  it should "contain p2 with the value /some/path/subdir/123" in {
+    val p2 = propertiesMap("p2")
+    p2 should be ("/some/path/subdir/123")
+  }
+
+  behavior of "argsToMap"
+
+  it should "deal with plain values" in {
+    val args = Array("in", "inDirectory", "out", "outDirectory")
+    val map = StringUtils.argsToMap(args)
+
+    map should not be (empty)
+  }
 }
