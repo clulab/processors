@@ -340,8 +340,8 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   }
 
   it should "recognize numeric dates of form mm-dd" in {
-    ensure(sentence= "before Aug. 15th", Interval(1, 3), goldEntity= "DATE", goldNorm= "XXXX-08-15")
-    ensure(sentence= "after March 5th", Interval(1, 3), goldEntity= "DATE", goldNorm= "XXXX-03-05")
+    ensure(sentence= "before Aug. 15th", Interval(0, 3), goldEntity= "DATE-RANGE", goldNorm= "XXXX-XX-XX -- XXXX-08-15")
+    ensure(sentence= "after March 5th", Interval(0, 3), goldEntity= "DATE-RANGE", goldNorm= "XXXX-03-05 -- XXXX-XX-XX")
     ensure(sentence= "Farmers planted on July 11", Interval(3, 5), goldEntity= "DATE", goldNorm= "XXXX-07-11")
 
   }
