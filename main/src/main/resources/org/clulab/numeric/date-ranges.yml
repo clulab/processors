@@ -166,3 +166,14 @@
   action: mkDateUnboundRangeMentionWithSeasonAfter
   pattern: |
     /(?i)(after|beyond|following)/ @season:PossibleSeason @year:PossibleYear?
+
+- name: date-range-approx-month
+  priority: ${ higherpriority }
+  label: DateRange
+  type: token
+  example: "from February/March to June/July"
+  action: mkDateRangeMentionWithApproximateMonth
+#  action: mkDateRangeMentionWithMonth
+  pattern: |
+    /(?i)from/ @month1:PossibleMonth [word = /\//] [entity = "B-DATE-RANGE"] [entity = "I-DATE-RANGE"]+  [word = /\//] @month2:PossibleMonth 
+    

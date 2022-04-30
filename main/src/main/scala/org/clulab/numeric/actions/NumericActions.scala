@@ -14,6 +14,8 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Converts a sequence of mentions to new types given the converter function */
   private def convert(mentions: Seq[Mention], converter: Mention => Mention, converterName: String): Seq[Mention] = {
     val convertedMentions = new ArrayBuffer[Mention]()
+    println("LEN MEN: " + mentions.length)
+    for (m <- mentions) println("MEN: " + m.text + " " + m.label + " " + m.foundBy)
     for(m <- mentions) {
       try {
         convertedMentions += converter(m)
@@ -59,6 +61,15 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithMonth(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithMonth, "toDateRangeMentionWithMonth")
+  }
+
+  def mkDateRangeMentionWithApproximateMonth(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    println("HERE")
+    val mens = convert(mentions, toDateRangeMentionWithApproximateMonth, "toDateRangeMentionWithApproximateMonth")
+    for (men <- mens) {
+      println("MEN: " + men.text + " " + men.norms.get.mkString("||"))
+    }
+    mens
   }
 
   /** Constructs a DateRangeMention from a token pattern */

@@ -1,20 +1,21 @@
 package org.clulab.numeric
 
-import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
+import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
+
 import java.util.regex.Pattern
 
 package object mentions {
   val RANGE_SEP = " -- "
 
-  def toNumberRangeMention(mention: Mention): NumberRangeMention =  mention match {
+  def toNumberRangeMention(mention: Mention): NumberRangeMention = mention match {
     case m: NumberRangeMention => m
 
     case m: RelationMention =>
       val number1Norm = getArgNorm("number1", m)
-      if(number1Norm.isEmpty)
+      if (number1Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument number1 in mention [${m.raw.mkString(" ")}]!")
       val number2Norm = getArgNorm("number2", m)
-      if(number2Norm.isEmpty)
+      if (number2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument number2 in mention [${m.raw.mkString(" ")}] where number1Norm is [${number1Norm.get}]!")
 
       new NumberRangeMention(
@@ -33,8 +34,8 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to NumberRangeMention!")
   }
 
-  def toMeasurementMention(mention: Mention): MeasurementMention =  mention match {
-    case m:  MeasurementMention => m
+  def toMeasurementMention(mention: Mention): MeasurementMention = mention match {
+    case m: MeasurementMention => m
 
     case m: RelationMention =>
       new MeasurementMention(
@@ -54,8 +55,8 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
   }
 
-  def toPercentageMention(mention: Mention): PercentageMention =  mention match {
-    case m:  PercentageMention => m
+  def toPercentageMention(mention: Mention): PercentageMention = mention match {
+    case m: PercentageMention => m
 
     case m: RelationMention =>
       new PercentageMention(
@@ -73,8 +74,8 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to PercentageMention!")
   }
 
-  def toMeasurementWithRangeMention(mention: Mention): MeasurementMention =  mention match {
-    case m:  MeasurementMention => m
+  def toMeasurementWithRangeMention(mention: Mention): MeasurementMention = mention match {
+    case m: MeasurementMention => m
 
     case m: RelationMention =>
       new MeasurementMention(
@@ -94,15 +95,15 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
   }
 
-  def toDateRangeMention(mention: Mention): DateRangeMention =  mention match {
+  def toDateRangeMention(mention: Mention): DateRangeMention = mention match {
     case m: DateRangeMention => m
 
     case m: RelationMention =>
       val date1Norm = getArgNorm("date1", m)
-      if(date1Norm.isEmpty)
+      if (date1Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
       val date2Norm = getArgNorm("date2", m)
-      if(date2Norm.isEmpty)
+      if (date2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date2 in mention [${m.raw.mkString(" ")}]!")
 
       new DateRangeMention(
@@ -121,18 +122,18 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
   }
 
-  def toDateRangeMentionWithNumber(mention: Mention): DateRangeMention =  mention match {
+  def toDateRangeMentionWithNumber(mention: Mention): DateRangeMention = mention match {
     case m: DateRangeMention => m
 
     case m: RelationMention =>
       val numberNorm = getArgWords("number", m)
-      if(numberNorm.isEmpty)
+      if (numberNorm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
       val numberVal = NumberParser.parse(numberNorm.get)
-      if(numberVal.isEmpty)
+      if (numberVal.isEmpty)
         throw new RuntimeException(s"ERROR: could not parse number [${numberNorm.get.mkString(" ")}] in mention [${m.raw.mkString(" ")}]!")
       val date2Norm = getArgNorm("date2", m)
-      if(date2Norm.isEmpty)
+      if (date2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date2 in mention [${m.raw.mkString(" ")}]!")
 
       new DateRangeMention(
@@ -151,20 +152,20 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
   }
 
-  def toDateRangeMentionWithMonth(mention: Mention): DateRangeMention =  mention match {
+  def toDateRangeMentionWithMonth(mention: Mention): DateRangeMention = mention match {
     case m: DateRangeMention => m
 
     case m: RelationMention =>
       val yearNorm = getArgWords("year", m)
-      if(yearNorm.isEmpty)
+      if (yearNorm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
 
       val month1Norm = getArgWords("month1", m)
-      if(month1Norm.isEmpty)
+      if (month1Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
 
       val month2Norm = getArgWords("month2", m)
-      if(month2Norm.isEmpty)
+      if (month2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
 
       new DateRangeMention(
@@ -182,6 +183,44 @@ package object mentions {
     case m =>
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
   }
+
+  def toDateRangeMentionWithApproximateMonth(mention: Mention): DateRangeMention = {
+    println("mention: " + mention.text + " " + mention.label + " " + mention.foundBy)
+    mention match {
+    //    case m: DateRangeMention => m
+
+
+
+    case m: RelationMention =>
+      //      val yearNorm = getArgWords("year", m)
+      //      if(yearNorm.isEmpty)
+      //        throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
+
+      val month1Norm = getArgWords("month1", m)
+      if (month1Norm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
+
+      val month2Norm = getArgWords("month2", m)
+      if (month2Norm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
+
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        TempEvalFormatter.mkDate(None, month1Norm, None),
+        TempEvalFormatter.mkDate(None, month2Norm, None)
+      )
+
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
+  }
+}
 
   def toDateRangeMentionWithSinceRef(mention: Mention): DateRangeMention =  mention match {
     case m: DateRangeMention => m

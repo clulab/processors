@@ -60,10 +60,11 @@ rules:
     # Compositional rules for date ranges such as "between Date1 to Date2"
     vars:
       rulepriority: "16"
+      higherpriority: "17"
 
   - import: org/clulab/numeric/measurements.yml
     # Compositional rules for measurements such as NUMBER UNIT
     vars:
-      rulepriority: "17"
+      rulepriority: "18"
 
 
