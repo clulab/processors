@@ -7,7 +7,7 @@ class GreedyForwardLayer(ForwardLayer):
         super().__init__(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, distanceEmbeddingSize)
 
     def loss(self, finalStates, goldLabelStrings):
-        goldLabels = [self.t2i[gs] for gs in goldLabelStrings]
+        goldLabels = [self.t2i[gs.label] for gs in goldLabelStrings]
         return sentenceLossGreedy(finalStates, goldLabels)
 
     def saveX2i(self):
