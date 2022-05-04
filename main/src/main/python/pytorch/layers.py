@@ -316,7 +316,7 @@ class Layers(object):
     def loss(layers, taskId, sentence, goldLabels):
         # Zheng: I am not sure this is the suitable way to load embeddings or not, need help...
         constEmbeddings = ConstEmbeddingsGlove.get_ConstLookupParams()
-        modHeadPairsOpt = getModHeadPairs(goldLabels)
+        modHeadPairs = getModHeadPairs(goldLabels)
         states = Layers.forwardForTask(layers, taskId, sentence, modHeadPairs, constEmbeddings, doDropout=True) # use dropout during training!
         loss = layers[taskId+1].finalLayer.loss(states, goldLabels)
         return loss
