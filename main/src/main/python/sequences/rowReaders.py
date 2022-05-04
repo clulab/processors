@@ -33,7 +33,7 @@ class MetalRowReader(RowReader):
         elif (rows[0].length == 4):
             return self.parseSimpleExtended(rows)
         elif (rows[0].length >= 5):
-            return self.parseFull(rows)
+            return self.parseFull(rows, insertNegatives)
         else:
             raise RuntimeError("ERROR: the Metal format expects 2, 4, or 5+ columns!")
 
