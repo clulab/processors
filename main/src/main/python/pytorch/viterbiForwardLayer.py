@@ -135,18 +135,13 @@ class ViterbiForwardLayer(ForwardLayer):
     def load(cls, x2i):
         inputSize = x2i["inputSize"]
         isDual = x2i.get("isDual", DEFAULT_IS_DUAL) == 1
-        sapnValue = x2i.get("span", "")
-        spans = None if sapnValue == "" else parseSpan(sapnValue, inputSize)
+        distanceEmbeddingSize = x2i.get('distanceEmbeddingSize', 0)
         nonlinearity = x2i.get("nonlinearity", NONLIN_NONE)
         t2i = x2i["t2i"]
         i2t = {i:t for t, i in t2i.items()}
         dropoutProb = x2i.get("dropoutProb", DEFAULT_DROPOUT_PROBABILITY)
 
-        if spans:
-            l = spanLength(spans)
-            actualInputSize = 2*l if isDual else l
-        else:
-            actualInputSize = 2*inputSize if isDual else inputSize
+        actualInputSize = 2*inputSize if isDual else inputSize
 
-        return cls(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, spans)
+        return cls(inputSize, isDual, t2i, i2t, actualInputSize, nonlinearity, dropoutProb, distanceEmbeddingSize)
 
