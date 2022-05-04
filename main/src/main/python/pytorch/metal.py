@@ -113,10 +113,10 @@ class Metal(object):
         self.save(f"{modelNamePrefix}-epoch")
         snapshot2 = tracemalloc.take_snapshot()
         top_stats = snapshot2.compare_to(snapshot1, 'lineno')
-        print("[ Top 10 differences ]")
-        for stat in top_stats[:10]:
-            print(stat)
-        print ()
+        # print("[ Top 10 differences ]")
+        # for stat in top_stats[:10]:
+        #     print(stat)
+        # print ()
         snapshot1 = tracemalloc.take_snapshot()
         for epoch in range(0, self.taskManager.maxEpochs):
             if epochPatience <= 0:
@@ -149,10 +149,10 @@ class Metal(object):
 
                 snapshot2 = tracemalloc.take_snapshot()
                 top_stats = snapshot2.compare_to(snapshot1, 'lineno')
-                print("[ Top 10 differences ]")
-                for stat in top_stats[:10]:
-                    print(stat)
-                print ()
+                # print("[ Top 10 differences ]")
+                # for stat in top_stats[:10]:
+                #     print(stat)
+                # print ()
                 snapshot1 = tracemalloc.take_snapshot()
 
                 batchLoss += loss
