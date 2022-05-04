@@ -67,7 +67,7 @@ class Metal(object):
               for i, word in enumerate(annotatedSentence.words):
                 words[tid + 1][word] += 1
                 words[0][word] += 1
-                labels[tid + 1][sentenceLabels[i]] += 1
+                labels[tid + 1][sentenceLabels[i].label] += 1
 
         return words, labels
 
