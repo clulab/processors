@@ -99,7 +99,7 @@ class MetalRowReader(RowReader):
             labelsForThisSentence = labels[i]
             headsForThisSentence = headPositions[i]
             sentLabels = list()
-            for j in range(labelsForThisSentence):
+            for j in range(len(labelsForThisSentence)):
                 sentLabels += [DualLabel(j, headsForThisSentence[j], labelsForThisSentence[j])]
                 if(insertNegatives > 0):
                     negHeads = mkRandoms(range(-1, annotatedSent.size), Set(headsForThisSentence[j]), insertNegatives)
