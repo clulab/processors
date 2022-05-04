@@ -59,7 +59,7 @@ class Metal(object):
 
         for tid in self.taskManager.indices:
           for sentence in self.taskManager.tasks[tid].trainSentences:
-            annotatedSentences = reader.toAnnotatedSentences(sentence)
+            annotatedSentences = reader.toAnnotatedSentences(sentence, 0)
 
             for asent in annotatedSentences:
               annotatedSentence = asent[0]

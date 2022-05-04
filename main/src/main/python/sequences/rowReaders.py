@@ -16,7 +16,7 @@ class RowReader(object):
     def __init__(self):
         raise NotImplementedError
 
-    def toAnnotatedSentences(self, rows):
+    def toAnnotatedSentences(self, rows, insertNegatives = 0):
         raise NotImplementedError
 
 class MetalRowReader(RowReader):
@@ -27,7 +27,7 @@ class MetalRowReader(RowReader):
         self.NE_LABEL_POSITION = 2
         self.LABEL_START_OFFSET = 3
 
-    def toAnnotatedSentences(self, rows):
+    def toAnnotatedSentences(self, rows, insertNegatives = 0):
         if (rows[0].length == 2):
             return self.parseSimple(rows)
         elif (rows[0].length == 4):
