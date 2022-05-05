@@ -307,6 +307,104 @@ class Eisner {
     }
   }
 
+  def getONNXModelScore(sentence: AnnotatedSentence, 
+                        session1: OrtSession, session2: OrtSession,
+                        wordEmbeddingMap: Map[String,Array[Float]],
+                        i2t:  Map[Double, String]):IndexedSeq[IndexedSeq[(String, Float)]] = {
+    val words = sentence.words
+    var embeddings:Array[Array[Float]] = new Array[Array[Float]](words.length)
+    var wordIds:Array[Long] = new Array[Long](words.length)
+    var char_embs:Array[Array[Float]] = new Array[Array[Float]](words.length)
+    for(i <- words.indices){
+        val word = words(i)
+        embeddings(i) = wordEmbeddingMap.getOrElse(word,wordEmbeddingMap.get( "<UNK>").get)
+        wordIds(i) = w2i.getOrElse(word, 0).asInstanceOf[Number].longValue
+        val char_input = new java.util.HashMap[String, OnnxTensor]()
+        char_input.put("char_ids",  OnnxTensor.createTensor(ortEnvironment, word.map(c => c2i.getOrElse(c.toString, 0).asInstanceOf[Number].longValue).toArray))
+        char_embs(i) = session1.run(char_input).get(0).getValue.asInstanceOf[Array[Float]]
+    }
+    val input = new java.util.HashMap[String, OnnxTensor]()
+    val emb_tensor =  OnnxTensor.createTensor(ortEnvironment, embeddings)
+    input.put("embed", emb_tensor)
+    val word_tensor =  OnnxTensor.createTensor(ortEnvironment, wordIds)
+    input.put("words", word_tensor)
+    val char_tensor =  OnnxTensor.createTensor(ortEnvironment, char_embs)
+    input.put("chars", char_tensor)
+    val emissionScores = session2.run(input).get(0).getValue.asInstanceOf[Array[Array[Float]]]
+    val labelsWithScores = new ArrayBuffer[IndexedSeq[(String, Float)]]
+
+    for(scoresForPosition <- emissionScores) {
+      val labelsAndScores = new ArrayBuffer[(String, Float)]()
+      for(lid <- scoresForPosition.indices) {
+        val label = i2t(lid)
+        val score = scoresForPosition(lid)
+        labelsAndScores += Tuple2(label, score)
+      }
+      labelsWithScores += labelsAndScores.sortBy(- _._2)
+    }
+
+    labelsWithScores
+  }
+
+  /** Eisner algorithm using as dependency score the head score + label score */
+  def ensembleParserOnONNX(mtlHeads_session1: OrtSession,
+                     mtlHeads_session2: OrtSession, 
+                     mtlLabels_session1: Option[OrtSession], 
+                     mtlLabels_session2: Option[OrtSession],
+                     i2t:  Map[Double, String],
+                     sentence: AnnotatedSentence,
+                     wordEmbeddingMap: Map[String,Array[Float]],
+                     topK: Int,
+                     lambda: Float,
+                     generateRelativeHeads: Boolean): IndexedSeq[(Int, String)] = {
+    val scores = getONNXModelScore(sentence, mtlHeads_session1, mtlHeads_session2, wordEmbeddingMap, i2t)
+    val startingDependencies = toDependencyTable(scores, topK)
+
+    if(mtlLabels_session1.nonEmpty) {
+      // prepare the (modifier, head) pairs for which we will get label scores
+      val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
+      for(i <- startingDependencies.indices) {
+        for(j <- startingDependencies(i).indices) {
+          val dep = startingDependencies(i)(j)
+          if(dep != null) {
+            modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1) // out offsets start at 0 not at 1 as in Dependency
+          }
+        }
+      }
+
+      // generate label probabilities using the label classifier
+      val labelScores =
+        getONNXModelScore(sentence, mtlLabels_session1.get, mtlLabels_session2.get, wordEmbeddingMap, i2t) // these are probs
+      val labelTopScores =
+        labelScores.map(x => x.filterNot{case (v, _) => v == Utils.STOP_TAG}.maxBy(_._2)) // keep just the top score for each label that is not STOP
+      assert(labelTopScores.size == modHeadPairs.size)
+
+      // linearly interpolate the head and label scores in the dependency table
+      for(i <- labelTopScores.indices) {
+        val topLabelAndScore = labelTopScores(i)
+        val modHeadPair = modHeadPairs(i)
+        val mod = modHeadPair.modifier
+        val head = modHeadPair.head
+
+        //println(s"lambda = $lambda")
+        //println(s"head score = ${startingDependencies(mod + 1)(head + 1).score}")
+        //println(s"label score = ${topLabelAndScore._2}\n")
+
+        startingDependencies(mod + 1)(head + 1).score =
+          lambda * startingDependencies(mod + 1)(head + 1).score + (1 - lambda) * topLabelAndScore._2
+        startingDependencies(mod + 1)(head + 1).label =
+          topLabelAndScore._1
+      }
+    }
+
+    // the actual Eisner parsing algorithm
+    val top = parse(startingDependencies)
+
+    // convert back to relative (or absolute) heads
+    generateOutput(top, scores, startingDependencies, generateRelativeHeads)
+
+  }
+
   /** Eisner algorithm using as dependency score the head score + label score */
   def ensembleParser(mtlHeads: Metal, mtlLabels: Option[Metal], sentence: AnnotatedSentence,
                      constEmbeddings: ConstEmbeddingParameters,
