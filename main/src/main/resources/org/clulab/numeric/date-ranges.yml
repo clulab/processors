@@ -13,6 +13,15 @@
   pattern: |
     /(?i)between/ @date1:Date /(?i)(and|to)/ @date2:Date
 
+- name: ambiguous-date-range
+  priority: ${higherpriority}
+  label: DateRange
+  type: token
+  example: "These correspond to the dry season (from February/March to June/July)"
+  action: mkDateRangeMention
+  pattern: |
+    /(?i)from/? @date1:Date /\// @date1b:Date /(?i)(to|\-)/ @date2b:Date /\// @date2:Date
+
 - name: date-range-2
   priority: ${rulepriority}
   label: DateRange

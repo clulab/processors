@@ -314,6 +314,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     // ensure(sentence= "transplanted during the 1st week of July", Interval(3, 7), goldEntity= "DATE", goldNorm= "XXXX-07-01")
   }
 
+  it should "recognize weird date ranges" in {
+    ensure("These correspond to the dry season (from February/March to June/July)",
+      Interval(7, 15), "DATE-RANGE", "XXXX-02-XX -- XXXX-07-XX")
+  }
+
   // TODO: Other dates that should be recognized
 
   it should "recognize numeric dates of form mm" in {
