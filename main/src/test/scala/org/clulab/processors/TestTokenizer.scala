@@ -208,6 +208,16 @@ class TestTokenizer extends FlatSpec with Matchers {
     }
   }
 
+  it should "not create empty words" in {
+    val orig = "This is \u200b\u200ba test."
+    val sents = tok(orig)
+    val words = sents.head.words
+
+    words.foreach { word =>
+      word should not be empty
+    }
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
