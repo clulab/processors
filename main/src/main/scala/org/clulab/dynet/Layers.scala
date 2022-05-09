@@ -57,7 +57,7 @@ class Layers (val initialLayer: Option[InitialLayer],
   protected def forward(sentence: AnnotatedSentence,
                         modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                         constEmbeddings: ConstEmbeddingParameters,
-                        doDropout: Boolean): ExpressionVector = {
+                        doDropout: Boolean)(implicit cg: ComputationGraph): ExpressionVector = {
     if(initialLayer.isEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forward() on a Layers object that does not have an initial layer: $toString!")
     }
@@ -77,7 +77,7 @@ class Layers (val initialLayer: Option[InitialLayer],
 
   protected def forwardFrom(inStates: ExpressionVector,
                             modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
-                            doDropout: Boolean): ExpressionVector = {
+                            doDropout: Boolean)(implicit cg: ComputationGraph): ExpressionVector = {
     if(initialLayer.nonEmpty) {
       throw new RuntimeException(s"ERROR: you can't call forwardFrom() on a Layers object that has an initial layer: $toString!")
     }
@@ -124,7 +124,8 @@ object Layers {
             wordCounter: Counter[String],
             labelCounterOpt: Option[Counter[String]],
             isDual: Boolean,
-            providedInputSize: Option[Int])(implicit cg: ComputationGraph): Layers = {
+            providedInputSize: Option[Int],
+            cgOpt: Option[ComputationGraph]): Layers = {
     val initialLayer = EmbeddingLayer.initialize(config, paramPrefix + ".initial", parameters, wordCounter)
 
     var inputSize =
@@ -158,7 +159,7 @@ object Layers {
         }
 
         ForwardLayer.initialize(config, paramPrefix + ".final", parameters,
-          labelCounterOpt.get, isDual, inputSize.get)
+          labelCounterOpt.get, isDual, inputSize.get, cgOpt)
       } else {
         None
       }
@@ -240,7 +241,7 @@ object Layers {
                              sentence: AnnotatedSentence,
                              modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                              constEmbeddings: ConstEmbeddingParameters,
-                             doDropout: Boolean): ExpressionVector = {
+                             doDropout: Boolean)(implicit cg: ComputationGraph): ExpressionVector = {
     //
     // make sure this code is:
     //   (a) called inside a synchronized block, and
@@ -386,7 +387,7 @@ object Layers {
   def loss(layers: IndexedSeq[Layers],
            taskId: Int,
            sentence: AnnotatedSentence,
-           goldLabels: IndexedSeq[Label]): Expression = {
+           goldLabels: IndexedSeq[Label])(implicit cg: ComputationGraph): Expression = {
     val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
     val modHeadPairsOpt = getModHeadPairs(goldLabels)
     val states = forwardForTask(layers, taskId, sentence, modHeadPairsOpt, constEmbeddings, doDropout = true) // use dropout during training!

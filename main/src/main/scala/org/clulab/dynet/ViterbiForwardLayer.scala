@@ -21,20 +21,20 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     distanceEmbeddingSize, distanceLookupParameters, nonlinearity, dropoutProb) {
 
   // call this *before* training a model, but not on a saved model
-  def initializeTransitions()(implicit cg: ComputationGraph): Unit = {
+  def initializeTransitions(cg: ComputationGraph): Unit = {
     val startTag = t2i(START_TAG)
     val stopTag = t2i(STOP_TAG)
 
     for (i <- 0 until t2i.size) {
-      T.initialize(i, initTransitionsTo(i, t2i.size, startTag, stopTag))
+      T.initialize(i, initTransitionsTo(i, t2i.size, startTag, stopTag, cg))
     }
   }
 
-  private def initTransitionsTo(dst: Int, size:Int, startTag: Int, stopTag: Int)(implicit cg: ComputationGraph): FloatVector = {
+  private def initTransitionsTo(dst: Int, size:Int, startTag: Int, stopTag: Int, cg: ComputationGraph): FloatVector = {
     val transScores = new Array[Float](size)
 
     for(i <- 0 until size) {
-      transScores(i) = randomNormal(Dim(1)).value().toFloat() / size // pseudo Glorot
+      transScores(i) = randomNormal(Dim(1))(cg).value().toFloat() / size // pseudo Glorot
     }
 
     // discourage transitions to START from anything
@@ -94,7 +94,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
     labelsIds.map(i2t(_))
   }
 
-  override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] =
+  override def inferenceWithScores(emissionScores: Array[Array[Float]])(implicit cg: ComputationGraph): IndexedSeq[IndexedSeq[(String, Float)]] =
     throw new RuntimeException("ERROR: inferenceWithScores not supported for ViterbiLayer!")
 }
 

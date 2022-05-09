@@ -41,12 +41,12 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     s"GreedyForwardLayer($inDim, $outDim)"
   }
 
-  override def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String] = {
+  override def inference(emissionScores: Array[Array[Float]])(implicit cg: ComputationGraph): IndexedSeq[String] = {
     val labelIds = Utils.greedyPredict(emissionScores)
     labelIds.map(i2t(_))
   }
 
-  override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] = {
+  override def inferenceWithScores(emissionScores: Array[Array[Float]])(implicit cg: ComputationGraph): IndexedSeq[IndexedSeq[(String, Float)]] = {
     val labelsWithScores = new ArrayBuffer[IndexedSeq[(String, Float)]]
 
     for(scoresForPosition <- emissionScores) {

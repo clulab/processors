@@ -55,7 +55,7 @@ object Utils {
           params += "dynet-mem" -> mem
         }
 
-        Initializer.initialize(params.toMap)
+        Initializer.cluInitialize(params.toMap)
         logger.debug("DyNet initialization complete.")
         IS_DYNET_INITIALIZED = true
       }

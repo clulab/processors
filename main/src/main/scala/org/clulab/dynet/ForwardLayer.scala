@@ -151,7 +151,8 @@ object ForwardLayer {
                  parameters: ParameterCollection,
                  labelCounter: Counter[String],
                  isDual: Boolean,
-                 inputSize: Int)(implicit cg: ComputationGraph): Option[ForwardLayer] = {
+                 inputSize: Int,
+                 cgOpt: Option[ComputationGraph]): Option[ForwardLayer] = {
     if (!config.contains(paramPrefix)) {
       return None
     }
@@ -194,7 +195,8 @@ object ForwardLayer {
           t2i, i2t, H, T, rootParam,
           distanceEmbeddingSize, distanceLookupParameters,
           nonlin, dropoutProb)
-        layer.initializeTransitions()
+        cgOpt.foreach { cg => layer.initializeTransitions(cg) }
+        // layer.initializeTransitions()
         Some(layer)
       case _ =>
         new RuntimeException(s"ERROR: unknown inference type $inferenceType!")

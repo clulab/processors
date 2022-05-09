@@ -13,21 +13,21 @@ object EvalTimeNorm {
               testFile: String): Double = {
     val timeNormEvalDir = "/org/clulab/numeric/TimeNormEvalSet"
     val goldStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$testFile")
-    val goldLines = Source.fromInputStream(goldStream).getLines()
+    val goldLines = Source.fromInputStream(goldStream).getLines().toVector
     // Build a Map with the gold time expressions.
     // The key is the document name. The value is a Seq with the time expressions in the document
-    val goldTimex = (for ((goldLine, goldIdx) <- goldLines.toSeq.zipWithIndex) yield {
-      goldLine.split(",").map(_.trim) match {
-        case Array(docId, startSpan, endSpan, startIntervalStr) =>
-          (docId, (startSpan, endSpan, startIntervalStr))
-      }
-    }).groupBy(t => t._1).mapValues(_.map(_._2))
+    val goldTimex = goldLines.map { goldLine =>
+      val Array(docId, startSpan, endSpan, startIntervalStr) = goldLine.split(",").map(_.trim)
+      (docId, (startSpan, endSpan, startIntervalStr))
+    }.groupBy(t => t._1).mapValues(_.map(_._2))
     // For each docId in goldTimex keys get parse the document and get the number of
     // gold time expressions, predicted time expressions and the intersection
-    val valuesPerDocument = for (docId <- goldTimex.keys.toSeq.sorted) yield {
+    val docIds = goldTimex.keys.toSeq.sorted
+    val valuesPerDocument = docIds.map { docId =>
       val gold = goldTimex(docId).toSet
       val docStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$docId/$docId")
       val docText = Source.fromInputStream(docStream).getLines().mkString("\n")
+      println(s"Annotating '$docText`.")
       val doc = proc.annotate(docText)
       val mentions = ner.extractFrom(doc)
       setLabelsAndNorms(doc, mentions)

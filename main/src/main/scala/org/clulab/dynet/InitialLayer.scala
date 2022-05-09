@@ -1,6 +1,6 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{ExpressionVector, LookupParameter}
+import edu.cmu.dynet.{ComputationGraph, ExpressionVector, LookupParameter}
 
 /**
  * First layer that occurs in a sequence modeling architecture: goes from words to Expressions
@@ -9,7 +9,7 @@ trait InitialLayer extends Saveable {
   def forward(sentence: AnnotatedSentence,
               modifierHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
               constEmbeddings: ConstEmbeddingParameters,
-              doDropout: Boolean): ExpressionVector
+              doDropout: Boolean)(implicit cg: ComputationGraph): ExpressionVector
 
   def outDim:Int // output dimension
 }

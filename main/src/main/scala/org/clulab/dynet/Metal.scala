@@ -22,7 +22,8 @@ import Metal._
  */
 class Metal(val taskManagerOpt: Option[TaskManager],
             val parameters: ParameterCollection,
-            modelOpt: Option[IndexedSeq[Layers]])(implicit cg: ComputationGraph) {
+            modelOpt: Option[IndexedSeq[Layers]],
+            cgOpt: Option[ComputationGraph] = None) { // Some here indicates training mode
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
 
@@ -32,7 +33,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     taskManagerOpt.get
   }
 
-  protected def initialize()(implicit cg: ComputationGraph): Array[Layers] = {
+  protected def initialize(): Array[Layers] = {
     // this should only be called during training, when the task manager should be defined
     require(taskManagerOpt.isDefined)
 
@@ -43,7 +44,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val layersPerTask: Array[Layers] = new Array[Layers](taskManager.taskCount + 1)
     layersPerTask(0) =
       Layers(taskManager, "mtl.layers", parameters, taskWords(0),
-        None, isDual = false, providedInputSize = None)
+        None, isDual = false, providedInputSize = None, cgOpt)
 
     val inputSize = layersPerTask(0).outDim
 
@@ -51,7 +52,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       layersPerTask(i + 1) =
         Layers(taskManager, s"mtl.task${i + 1}.layers",
           parameters, taskWords(i + 1), Some(taskLabels(i + 1)),
-          isDual = taskManager.tasks(i).isDual, inputSize)
+          isDual = taskManager.tasks(i).isDual, inputSize, cgOpt)
     }
     for(i <- layersPerTask.indices) {
       logger.debug(s"Summary of layersPerTask($i):")
@@ -470,7 +471,7 @@ object Metal {
     mtl
   }
 
-  def apply(modelFilenamePrefix: String)(implicit cg: ComputationGraph): Metal = {
+  def apply(modelFilenamePrefix: String): Metal = {
     val parameters = new ParameterCollection()
     val model = Metal.load(parameters, modelFilenamePrefix)
     val mtl = new Metal(None, parameters, Some(model))
@@ -490,7 +491,7 @@ object Metal {
 
       // TODO: Or create w/o Synchronizer
       Synchronizer.withComputationGraph("train") { implicit cg =>
-        val mtl = new Metal(Some(taskManager), parameters, None)
+        val mtl = new Metal(Some(taskManager), parameters, None, Some(cg))
         mtl.train(modelName)
       }
     }
