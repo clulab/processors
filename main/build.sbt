@@ -44,6 +44,11 @@ libraryDependencies ++= {
     "org.apache.commons"      % "commons-text"             % "1.1",
     "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
     "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
-    "org.yaml"                % "snakeyaml"                % "1.14"
+    "org.yaml"                % "snakeyaml"                % "1.14",
+
+    // for THULAC
+    "junit"                    % "junit"                   % "4.13.2" % Test,
+    "net.sf.jopt-simple"       % "jopt-simple"             % "5.0.4"  % Test
+
   )
 }
