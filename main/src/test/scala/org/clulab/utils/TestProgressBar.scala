@@ -9,4 +9,13 @@ class TestProgressBar extends Test {
       Thread.sleep(1000)
     }
   }
+
+  it should "show extra messages" in {
+    val progressBar = ProgressBar(s"Progress", Range(0, 11))
+
+    progressBar.foreach { index =>
+      Thread.sleep(1000)
+      progressBar.setExtraMessage(s"at $index")
+    }
+  }
 }

@@ -2,13 +2,17 @@ package org.clulab.utils
 
 import me.tongfei.progressbar.{ProgressBar => JProgressBar}
 
-class ProgressBar[T](text: String, innerIterator: Iterator[T]) extends Iterable[T] {
+class ProgressBar[T](text: String, outerIterator: Iterator[T]) extends Iterable[T] {
+  val (jProgressBar, innerIterator) = {
+    val (leftIterator, rightIterator) = outerIterator.duplicate
+    val jProgressBar = new JProgressBar(text, leftIterator.length)
 
-  override def iterator: Iterator[T] = {
-    val jProgressBar = new JProgressBar(text, innerIterator.length)
-
-    new ProgressBarIterator(innerIterator, jProgressBar)
+    (jProgressBar, new ProgressBarIterator(jProgressBar, rightIterator))
   }
+
+  override def iterator: Iterator[T] = innerIterator
+
+  def setExtraMessage(msg: String): Unit = jProgressBar.setExtraMessage(msg)
 }
 
 object ProgressBar {
@@ -20,7 +24,7 @@ object ProgressBar {
       apply(text, iterable.iterator)
 }
 
-class ProgressBarIterator[T](iterator: Iterator[T], jProgressBar: JProgressBar) extends Iterator[T] {
+class ProgressBarIterator[T](jProgressBar: JProgressBar, iterator: Iterator[T]) extends Iterator[T] {
 
   override def hasNext: Boolean = {
     val result = iterator.hasNext
