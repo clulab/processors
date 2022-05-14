@@ -12,7 +12,8 @@ class ProgressBar[T](text: String, outerIterator: Iterator[T]) extends Iterable[
 
   override def iterator: Iterator[T] = innerIterator
 
-  def setExtraMessage(msg: String): Unit = jProgressBar.setExtraMessage(msg)
+  // This convenience method unfortunately limits the progress bar to one traversal.
+  def setExtraMessage(message: String): Unit = jProgressBar.setExtraMessage(message)
 }
 
 object ProgressBar {

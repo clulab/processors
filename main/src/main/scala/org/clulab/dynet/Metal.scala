@@ -135,7 +135,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       // traverse all training sentences
       //
 
-      for(metaSentence <- ProgressBar(s"Epoch #$epoch", sentenceIterator)) {
+      val progressBar = ProgressBar(s"Epoch #$epoch", sentenceIterator)
+      for(metaSentence <- progressBar) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
         val insertNegatives = taskManager.tasks(taskId).insertNegatives
@@ -179,7 +180,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         numTagged += sentence.length
 
         if(sentCount % 1000 == 0) {
-          logger.info("Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)")
+          val message = "Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)"
+          progressBar.setExtraMessage(message)
+          // logger.info(message) // This would likely mess up the progressBar.
           cummulativeLoss = 0.0
           numTagged = 0
         }
