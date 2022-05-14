@@ -1,20 +1,18 @@
 package org.clulab.dynet
 
 import java.io.{FileWriter, PrintWriter}
-
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
-import org.clulab.utils.{Serializer, StringUtils}
+import org.clulab.utils.{ProgressBar, Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
-
 import Metal._
 
 /**
@@ -136,7 +134,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       //
       // traverse all training sentences
       //
-      for(metaSentence <- sentenceIterator) {
+
+      for(metaSentence <- ProgressBar(s"Epoch #$epoch", sentenceIterator)) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
         val insertNegatives = taskManager.tasks(taskId).insertNegatives
