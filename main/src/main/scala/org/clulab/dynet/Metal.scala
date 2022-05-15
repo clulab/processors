@@ -123,7 +123,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val allEpochScores = new ArrayBuffer[(Int, Double)]() // tuples of epoch number and overall score per epoch
     var epochPatience = taskManager.epochPatience
     for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
-      logger.info(s"Started epoch $epoch.")
+      // This logger info is in the title of the next ProgressBar.
+      // logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
       val sentenceIterator = taskManager.getSentences(rand)
       var sentCount = 0
