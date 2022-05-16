@@ -136,7 +136,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       // traverse all training sentences
       //
 
-      val progressBar = ProgressBar(s"Epoch #$epoch", sentenceIterator)
+      val progressBar = ProgressBar(s"Epoch ${epoch + 1}/${taskManager.maxEpochs}", sentenceIterator)
       for(metaSentence <- progressBar) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
