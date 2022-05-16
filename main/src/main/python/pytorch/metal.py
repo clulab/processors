@@ -110,14 +110,14 @@ class Metal(object):
         epochPatience = self.taskManager.epochPatience
         tracemalloc.start()
         snapshot1 = tracemalloc.take_snapshot()
-        self.save(f"{modelNamePrefix}-epoch")
-        snapshot2 = tracemalloc.take_snapshot()
-        top_stats = snapshot2.compare_to(snapshot1, 'lineno')
-        print("[ Top 10 differences ]")
-        for stat in top_stats[:10]:
-            print(stat)
-        print ()
-        snapshot1 = tracemalloc.take_snapshot()
+        # self.save(f"{modelNamePrefix}-epoch")
+        # snapshot2 = tracemalloc.take_snapshot()
+        # top_stats = snapshot2.compare_to(snapshot1, 'lineno')
+        # print("[ Top 10 differences ]")
+        # for stat in top_stats[:10]:
+        #     print(stat)
+        # print ()
+        # snapshot1 = tracemalloc.take_snapshot()
         for epoch in range(0, self.taskManager.maxEpochs):
             if epochPatience <= 0:
                 break
@@ -147,13 +147,13 @@ class Metal(object):
 
                 loss = unweightedLoss * self.taskManager.tasks[taskId].taskWeight # Zheng: I don't think this is necessary: if self.taskManager.tasks[taskId].taskWeight!=1.0 else unweightedLoss
 
-                snapshot2 = tracemalloc.take_snapshot()
-                top_stats = snapshot2.compare_to(snapshot1, 'lineno')
-                print("[ Top 10 differences ]")
-                for stat in top_stats[:10]:
-                    print(stat)
-                print ()
-                snapshot1 = tracemalloc.take_snapshot()
+                # snapshot2 = tracemalloc.take_snapshot()
+                # top_stats = snapshot2.compare_to(snapshot1, 'lineno')
+                # print("[ Top 10 differences ]")
+                # for stat in top_stats[:10]:
+                #     print(stat)
+                # print ()
+                # snapshot1 = tracemalloc.take_snapshot()
 
                 batchLoss += loss
                 i += 1
@@ -215,7 +215,7 @@ class Metal(object):
             else:
                 epochPatience -= 1
 
-            self.save(f"{modelNamePrefix}-epoch{epoch}")
+            # self.save(f"{modelNamePrefix}-epoch{epoch}")
             gc.collect()
 
         allEpochScores.sort(key=lambda x: x[1])
