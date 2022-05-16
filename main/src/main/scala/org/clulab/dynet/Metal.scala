@@ -311,7 +311,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
     }
 
-    for (sent <- sentences) {
+    for (sent <- ProgressBar(taskName, sentences)) {
       sentCount += 1
 
       val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
