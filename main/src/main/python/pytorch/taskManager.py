@@ -145,7 +145,7 @@ class Task:
     print (f"Reading task {taskNumber} ({taskName})...")
     self.trainSentences = ColumnReader.readColumns(trainFileName)
     l = len(self.trainSentences)
-    self.trainSentences = self.trainSentences[:l//8]
+    self.trainSentences = self.trainSentences
     self.devSentences = ColumnReader.readColumns(devFileName) if devFileName else None
     self.testSentences = ColumnReader.readColumns(testFileName) if testFileName else None
 
