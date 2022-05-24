@@ -172,6 +172,7 @@ class Metal(object):
                     print (f"Cumulative loss: {cummulativeLoss/numTagged} ({sentCount} sentences)")
                     cummulativeLoss = 0.0
                     numTagged = 0
+                    print (gc.get_objects())
             # we may have an incomplete batch here
             if batchLoss:
                 cummulativeLoss = batchLoss.detach().item()
@@ -180,6 +181,8 @@ class Metal(object):
                 batchLoss = 0
                 i = 0
             scheduler.step()
+
+            gc.collect()
 
             # check dev performance in this epoch, for all tasks
             totalAcc = 0.0
@@ -216,8 +219,6 @@ class Metal(object):
                 epochPatience -= 1
 
             # self.save(f"{modelNamePrefix}-epoch{epoch}")
-            print (gc.get_objects())
-            gc.collect()
 
         allEpochScores.sort(key=lambda x: x[1])
         print ("Epochs in descending order of scores:")
