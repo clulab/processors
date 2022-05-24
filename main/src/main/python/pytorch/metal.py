@@ -216,6 +216,7 @@ class Metal(object):
                 epochPatience -= 1
 
             # self.save(f"{modelNamePrefix}-epoch{epoch}")
+            print (gc.get_objects())
             gc.collect()
 
         allEpochScores.sort(key=lambda x: x[1])
