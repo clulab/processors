@@ -14,7 +14,7 @@ class TestComputationGraph extends Test {
     val documentSerializer = new DocumentSerializer()
 
     case class NamedStage(name: String, stage: Stage) {
-      val expectedOutput = FileUtils.getTextFromFile(s"$expectedOutputDir/$name.txt")
+      val expectedOutput = FileUtils.getTextFromFile(s"$expectedOutputDir/$name.txt").replaceAll("\r\n", "\n")
 
       def execute(document: Document): Unit = {
         println(s"Starting $name...")
