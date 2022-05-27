@@ -1,0 +1,257 @@
+S	3
+T	24
+Livestock	0	9	Livestock	NN	livestock	O		B-NP
+market	10	16	market	NN	market	O		I-NP
+prices	17	23	prices	NNS	price	O		I-NP
+are	24	27	are	VBP	be	O		B-VP
+likely	28	34	likely	JJ	likely	O		B-ADJP
+to	35	37	to	TO	to	O		B-VP
+decline	38	45	decline	VB	decline	O		I-VP
+further	46	53	further	RB	further	O		B-ADVP
+from	54	58	from	IN	from	O		B-PP
+now	59	62	now	RB	now	O		B-ADVP
+as	63	65	as	IN	as	O		B-SBAR
+their	66	71	their	PRP$	their	O		B-NP
+body	72	76	body	NN	body	O		I-NP
+condition	77	86	condition	NN	condition	O		I-NP
+is	87	89	is	VBZ	be	O		B-VP
+getting	90	97	getting	VBG	get	O		I-VP
+worse	98	103	worse	JJR	worse	O		B-ADJP
+until	104	109	until	IN	until	O		B-PP
+the	110	113	the	DT	the	O		B-NP
+next	114	118	next	JJ	next	O		I-NP
+rainy	119	124	rainy	JJ	rainy	O		I-NP
+season	125	131	season	NN	season	O		I-NP
+starts	132	138	starts	VBZ	start	O		B-VP
+.	138	139	.	.	.	O		O
+D	universal-enhanced	24
+4
+2	0	compound
+2	1	compound
+2	6	nsubj:xsubj
+4	2	nsubj
+4	3	cop
+4	6	xcomp
+4	23	punct
+6	2	nsubj
+6	5	mark
+6	7	advmod
+6	9	nmod_from
+6	15	advcl
+9	8	case
+13	11	nmod:poss
+13	12	compound
+13	16	nsubj:xsubj
+15	10	mark
+15	13	nsubj
+15	14	aux
+15	16	xcomp
+15	22	advcl
+16	13	nsubj
+21	18	det
+21	19	amod
+21	20	amod
+22	17	mark
+22	21	nsubj
+EOX
+D	universal-basic	24
+4
+2	0	compound
+2	1	compound
+4	2	nsubj
+4	3	cop
+4	6	xcomp
+4	23	punct
+6	5	mark
+6	7	advmod
+6	9	nmod
+6	15	advcl
+9	8	case
+13	11	nmod:poss
+13	12	compound
+15	10	mark
+15	13	nsubj
+15	14	aux
+15	16	xcomp
+15	22	advcl
+21	18	det
+21	19	amod
+21	20	amod
+22	17	mark
+22	21	nsubj
+EOX
+EOS
+T	29
+If	140	142	If	IN	if	O		B-SBAR
+the	143	146	the	DT	the	O		B-NP
+start	147	152	start	NN	start	O		I-NP
+of	153	155	of	IN	of	O		B-PP
+the	156	159	the	DT	the	O		B-NP
+next	160	164	next	JJ	next	O		I-NP
+rainy	165	170	rainy	JJ	rainy	O		I-NP
+season	171	177	season	NN	season	O		I-NP
+is	178	180	is	VBZ	be	O		B-VP
+late	181	185	late	JJ	late	O		B-ADJP
+,	185	186	,	,	,	O		O
+further	187	194	further	JJ	further	O		B-NP
+deterioration	195	208	deterioration	NN	deterioration	O		I-NP
+and	209	212	and	CC	and	O		O
+death	213	218	death	NN	death	O		B-NP
+of	219	221	of	IN	of	O		B-PP
+livestock	222	231	livestock	NN	livestock	O		B-NP
+will	232	236	will	MD	will	O		B-VP
+occur	237	242	occur	VB	occur	O		I-VP
+so	243	245	so	IN	so	O		B-SBAR
+that	246	250	that	DT	that	O		B-NP
+demand	251	257	demand	NN	demand	O		I-NP
+in	258	260	in	IN	in	O		B-PP
+the	261	264	the	DT	the	O		B-NP
+market	265	271	market	NN	market	O		I-NP
+will	272	276	will	MD	will	O		B-VP
+sharply	277	284	sharply	RB	sharply	O		I-VP
+decline	285	292	decline	VB	decline	O		I-VP
+.	292	293	.	.	.	O		O
+D	universal-enhanced	29
+18
+2	1	det
+2	7	nmod_of
+7	3	case
+7	4	det
+7	5	amod
+7	6	amod
+9	0	mark
+9	2	nsubj
+9	8	cop
+12	11	amod
+12	13	cc
+12	14	conj_and
+12	16	nmod_of
+16	15	case
+18	9	advcl
+18	10	punct
+18	12	nsubj
+18	14	nsubj
+18	17	aux
+18	27	advcl
+18	28	punct
+21	24	nmod_in
+24	22	case
+24	23	det
+27	19	mark
+27	20	mark
+27	21	nsubj
+27	25	aux
+27	26	advmod
+EOX
+D	universal-basic	29
+18
+2	1	det
+2	7	nmod
+7	3	case
+7	4	det
+7	5	amod
+7	6	amod
+9	0	mark
+9	2	nsubj
+9	8	cop
+12	11	amod
+12	13	cc
+12	14	conj
+12	16	nmod
+16	15	case
+18	9	advcl
+18	10	punct
+18	12	nsubj
+18	17	aux
+18	27	advcl
+18	28	punct
+21	24	nmod
+24	22	case
+24	23	det
+27	19	mark
+27	20	mark
+27	21	nsubj
+27	25	aux
+27	26	advmod
+EOX
+EOS
+T	22
+On	294	296	On	IN	on	O		B-PP
+the	297	300	the	DT	the	O		B-NP
+other	301	306	other	JJ	other	O		I-NP
+hand	307	311	hand	NN	hand	O		I-NP
+,	311	312	,	,	,	O		O
+the	313	316	the	DT	the	O		B-NP
+staple	317	323	staple	NN	staple	O		I-NP
+food	324	328	food	NN	food	O		I-NP
+price	329	334	price	NN	price	O		I-NP
+through	335	342	through	IN	through	B-DATE-RANGE	ref-date -- 2017-09-XX	B-PP
+September	343	352	September	NNP	september	I-DATE-RANGE	ref-date -- 2017-09-XX	B-NP
+2017	353	357	2017	CD	2017	I-DATE-RANGE	ref-date -- 2017-09-XX	I-NP
+will	358	362	will	MD	will	O		B-VP
+to	363	365	to	TO	to	O		I-VP
+rise	366	370	rise	VB	rise	O		I-VP
+seasonally	371	381	seasonally	RB	seasonally	O		B-ADVP
+and	382	385	and	CC	and	O		O
+remain	386	392	remain	VB	remain	O		B-VP
+somewhat	393	401	somewhat	RB	somewhat	O		B-ADJP
+above	402	407	above	JJ	above	O		I-ADJP
+average	408	415	average	NN	average	O		I-ADJP
+.	415	416	.	.	.	O		O
+D	universal-enhanced	22
+12
+3	0	case
+3	1	det
+3	2	amod
+8	5	det
+8	6	compound
+8	7	compound
+8	10	nmod_through
+8	14	nsubj:xsubj
+8	20	nsubj:xsubj
+10	9	case
+10	11	nummod
+12	3	nmod_on
+12	4	punct
+12	8	nsubj
+12	14	xcomp
+12	21	punct
+14	8	nsubj
+14	13	mark
+14	15	advmod
+14	16	cc
+14	17	conj_and
+17	8	nsubj
+17	20	xcomp
+19	18	advmod
+20	19	amod
+EOX
+D	universal-basic	22
+12
+3	0	case
+3	1	det
+3	2	amod
+8	5	det
+8	6	compound
+8	7	compound
+8	10	nmod
+10	9	case
+10	11	nummod
+12	3	nmod
+12	4	punct
+12	8	nsubj
+12	14	xcomp
+12	21	punct
+14	13	mark
+14	15	advmod
+14	16	cc
+14	17	conj
+17	20	xcomp
+19	18	advmod
+20	19	amod
+EOX
+EOS
+A	2
+ce	org.clulab.processors.ObjectDocumentAttachmentBuilderFromText	
+predicates	org.clulab.processors.ObjectDocumentAttachmentBuilderFromText	
+EOD

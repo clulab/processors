@@ -1,0 +1,86 @@
+S	3
+T	24
+Livestock	0	9	Livestock	NN	_	_	_	B-NP
+market	10	16	market	NN	_	_	_	I-NP
+prices	17	23	prices	NNS	_	_	_	I-NP
+are	24	27	are	VBP	_	_	_	B-VP
+likely	28	34	likely	JJ	_	_	_	B-ADJP
+to	35	37	to	TO	_	_	_	B-VP
+decline	38	45	decline	VB	_	_	_	I-VP
+further	46	53	further	RB	_	_	_	B-ADVP
+from	54	58	from	IN	_	_	_	B-PP
+now	59	62	now	RB	_	_	_	B-ADVP
+as	63	65	as	IN	_	_	_	B-SBAR
+their	66	71	their	PRP$	_	_	_	B-NP
+body	72	76	body	NN	_	_	_	I-NP
+condition	77	86	condition	NN	_	_	_	I-NP
+is	87	89	is	VBZ	_	_	_	B-VP
+getting	90	97	getting	VBG	_	_	_	I-VP
+worse	98	103	worse	JJR	_	_	_	B-ADJP
+until	104	109	until	IN	_	_	_	B-PP
+the	110	113	the	DT	_	_	_	B-NP
+next	114	118	next	JJ	_	_	_	I-NP
+rainy	119	124	rainy	JJ	_	_	_	I-NP
+season	125	131	season	NN	_	_	_	I-NP
+starts	132	138	starts	VBZ	_	_	_	B-VP
+.	138	139	.	.	_	_	_	O
+EOS
+T	29
+If	140	142	If	IN	_	_	_	B-SBAR
+the	143	146	the	DT	_	_	_	B-NP
+start	147	152	start	NN	_	_	_	I-NP
+of	153	155	of	IN	_	_	_	B-PP
+the	156	159	the	DT	_	_	_	B-NP
+next	160	164	next	JJ	_	_	_	I-NP
+rainy	165	170	rainy	JJ	_	_	_	I-NP
+season	171	177	season	NN	_	_	_	I-NP
+is	178	180	is	VBZ	_	_	_	B-VP
+late	181	185	late	JJ	_	_	_	B-ADJP
+,	185	186	,	,	_	_	_	O
+further	187	194	further	JJ	_	_	_	B-NP
+deterioration	195	208	deterioration	NN	_	_	_	I-NP
+and	209	212	and	CC	_	_	_	O
+death	213	218	death	NN	_	_	_	B-NP
+of	219	221	of	IN	_	_	_	B-PP
+livestock	222	231	livestock	NN	_	_	_	B-NP
+will	232	236	will	MD	_	_	_	B-VP
+occur	237	242	occur	VB	_	_	_	I-VP
+so	243	245	so	IN	_	_	_	B-SBAR
+that	246	250	that	DT	_	_	_	B-NP
+demand	251	257	demand	NN	_	_	_	I-NP
+in	258	260	in	IN	_	_	_	B-PP
+the	261	264	the	DT	_	_	_	B-NP
+market	265	271	market	NN	_	_	_	I-NP
+will	272	276	will	MD	_	_	_	B-VP
+sharply	277	284	sharply	RB	_	_	_	I-VP
+decline	285	292	decline	VB	_	_	_	I-VP
+.	292	293	.	.	_	_	_	O
+EOS
+T	22
+On	294	296	On	IN	_	_	_	B-PP
+the	297	300	the	DT	_	_	_	B-NP
+other	301	306	other	JJ	_	_	_	I-NP
+hand	307	311	hand	NN	_	_	_	I-NP
+,	311	312	,	,	_	_	_	O
+the	313	316	the	DT	_	_	_	B-NP
+staple	317	323	staple	NN	_	_	_	I-NP
+food	324	328	food	NN	_	_	_	I-NP
+price	329	334	price	NN	_	_	_	I-NP
+through	335	342	through	IN	_	_	_	B-PP
+September	343	352	September	NNP	_	_	_	B-NP
+2017	353	357	2017	CD	_	_	_	I-NP
+will	358	362	will	MD	_	_	_	B-VP
+to	363	365	to	TO	_	_	_	I-VP
+rise	366	370	rise	VB	_	_	_	I-VP
+seasonally	371	381	seasonally	RB	_	_	_	B-ADVP
+and	382	385	and	CC	_	_	_	O
+remain	386	392	remain	VB	_	_	_	B-VP
+somewhat	393	401	somewhat	RB	_	_	_	B-ADJP
+above	402	407	above	JJ	_	_	_	I-ADJP
+average	408	415	average	NN	_	_	_	I-ADJP
+.	415	416	.	.	_	_	_	O
+EOS
+A	2
+ce	org.clulab.processors.ObjectDocumentAttachmentBuilderFromText	
+predicates	org.clulab.processors.ObjectDocumentAttachmentBuilderFromText	
+EOD

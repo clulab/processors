@@ -1,0 +1,86 @@
+S	3
+T	24
+Livestock	0	9	Livestock	NN	_	O		B-NP
+market	10	16	market	NN	_	O		I-NP
+prices	17	23	prices	NNS	_	O		I-NP
+are	24	27	are	VBP	_	O		B-VP
+likely	28	34	likely	JJ	_	O		B-ADJP
+to	35	37	to	TO	_	O		B-VP
+decline	38	45	decline	VB	_	O		I-VP
+further	46	53	further	RB	_	O		B-ADVP
+from	54	58	from	IN	_	O		B-PP
+now	59	62	now	RB	_	O		B-ADVP
+as	63	65	as	IN	_	O		B-SBAR
+their	66	71	their	PRP$	_	O		B-NP
+body	72	76	body	NN	_	O		I-NP
+condition	77	86	condition	NN	_	O		I-NP
+is	87	89	is	VBZ	_	O		B-VP
+getting	90	97	getting	VBG	_	O		I-VP
+worse	98	103	worse	JJR	_	O		B-ADJP
+until	104	109	until	IN	_	O		B-PP
+the	110	113	the	DT	_	O		B-NP
+next	114	118	next	JJ	_	O		I-NP
+rainy	119	124	rainy	JJ	_	O		I-NP
+season	125	131	season	NN	_	O		I-NP
+starts	132	138	starts	VBZ	_	O		B-VP
+.	138	139	.	.	_	O		O
+EOS
+T	29
+If	140	142	If	IN	_	O		B-SBAR
+the	143	146	the	DT	_	O		B-NP
+start	147	152	start	NN	_	O		I-NP
+of	153	155	of	IN	_	O		B-PP
+the	156	159	the	DT	_	O		B-NP
+next	160	164	next	JJ	_	O		I-NP
+rainy	165	170	rainy	JJ	_	O		I-NP
+season	171	177	season	NN	_	O		I-NP
+is	178	180	is	VBZ	_	O		B-VP
+late	181	185	late	JJ	_	O		B-ADJP
+,	185	186	,	,	_	O		O
+further	187	194	further	JJ	_	O		B-NP
+deterioration	195	208	deterioration	NN	_	O		I-NP
+and	209	212	and	CC	_	O		O
+death	213	218	death	NN	_	O		B-NP
+of	219	221	of	IN	_	O		B-PP
+livestock	222	231	livestock	NN	_	O		B-NP
+will	232	236	will	MD	_	O		B-VP
+occur	237	242	occur	VB	_	O		I-VP
+so	243	245	so	IN	_	O		B-SBAR
+that	246	250	that	DT	_	O		B-NP
+demand	251	257	demand	NN	_	O		I-NP
+in	258	260	in	IN	_	O		B-PP
+the	261	264	the	DT	_	O		B-NP
+market	265	271	market	NN	_	O		I-NP
+will	272	276	will	MD	_	O		B-VP
+sharply	277	284	sharply	RB	_	O		I-VP
+decline	285	292	decline	VB	_	O		I-VP
+.	292	293	.	.	_	O		O
+EOS
+T	22
+On	294	296	On	IN	_	O		B-PP
+the	297	300	the	DT	_	O		B-NP
+other	301	306	other	JJ	_	O		I-NP
+hand	307	311	hand	NN	_	O		I-NP
+,	311	312	,	,	_	O		O
+the	313	316	the	DT	_	O		B-NP
+staple	317	323	staple	NN	_	O		I-NP
+food	324	328	food	NN	_	O		I-NP
+price	329	334	price	NN	_	O		I-NP
+through	335	342	through	IN	_	B-DATE-RANGE	ref-date -- 2017-09-XX	B-PP
+September	343	352	September	NNP	_	I-DATE-RANGE	ref-date -- 2017-09-XX	B-NP
+2017	353	357	2017	CD	_	I-DATE-RANGE	ref-date -- 2017-09-XX	I-NP
+will	358	362	will	MD	_	O		B-VP
+to	363	365	to	TO	_	O		I-VP
+rise	366	370	rise	VB	_	O		I-VP
+seasonally	371	381	seasonally	RB	_	O		B-ADVP
+and	382	385	and	CC	_	O		O
+remain	386	392	remain	VB	_	O		B-VP
+somewhat	393	401	somewhat	RB	_	O		B-ADJP
+above	402	407	above	JJ	_	O		I-ADJP
+average	408	415	average	NN	_	O		I-ADJP
+.	415	416	.	.	_	O		O
+EOS
+A	2
+ce	org.clulab.processors.ObjectDocumentAttachmentBuilderFromText	
+predicates	org.clulab.processors.ObjectDocumentAttachmentBuilderFromText	
+EOD
