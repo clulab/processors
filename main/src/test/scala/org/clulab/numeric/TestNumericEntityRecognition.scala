@@ -324,6 +324,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
       Interval(3, 11), "DATE-RANGE", "2011-08-22 -- 2011-09-26")
   }
 
+  it should "recognize date ranges (month/day) with vague seasons" in {
+    ensure("from August 23 to October 11 in 2017WS.",
+      Interval(0, 8), "DATE-RANGE", "2017-08-23 -- 2017-10-11")
+  }
+
   it should "recognize years with vague seasons within same token as date ranges" in {
     ensure("Timing of basal fertilizer application was on average 26 days after sowing in 2011WS",
       Interval(13, 14), "DATE-RANGE", "2011-XX-XX -- 2011-XX-XX")
@@ -433,7 +438,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     
     // TODO: not sure what should be the output of such measurement '3 or 4 days'
     ensure(sentence= "and lasted 3 or 4 days in both wet seasons", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="4.0 d")
-
   }
 
   // TODO: this requires non trivial changes to the tokenizer

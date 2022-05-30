@@ -180,7 +180,7 @@
   label: Date
   priority: ${ rulepriority }
   type: token
-  example: "Seeding dates ranged from 22 August to 26 September in 2011WS, from 29 February to 1 April in the 2012DS, and from 5 to 23 March in the 2013DS."
+  example: "Seeding dates ranged from 22 August to 26 September in 2011WS."
   action: mkDateRangeMentionVagueSeason
   pattern: |
     /^(1\d\d\d|2\d\d\d)(WS|DS)$/ | @year:PossibleYear (?<season> [word = /^(WS|DS)$/])

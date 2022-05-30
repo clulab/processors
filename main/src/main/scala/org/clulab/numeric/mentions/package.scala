@@ -135,6 +135,7 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
   }
 
+  /** Makes a specific date range when the year is combined with season, e.g., from August 23 to October 10 in 2017WS */
   def toDateRangeMentionWithVagueSeason(mention: Mention): DateRangeMention =  mention match {
     case m: DateRangeMention => m
 
@@ -527,8 +528,8 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
   }
 
+  /** handles years with dry/wet season attributes as ranges with undefined dates, e.g., 2011WS */
   def toDateRangeMentionFromVagueSeason(mention: Mention): DateRangeMention =  mention match {
-    // handles years with dry/wet season attributes as ranges with undefined dates, e.g., 2011WS
     case m: DateRangeMention => m
 
     case m: TextBoundMention =>
