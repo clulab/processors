@@ -119,14 +119,8 @@ package object mentions {
       if(date2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date2 in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         date1Norm.get,
         date2Norm.get
       )
@@ -147,14 +141,8 @@ package object mentions {
       if(date2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date2 in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         date1Norm.get,
         date2Norm.get
       )
@@ -177,14 +165,8 @@ package object mentions {
       if(date2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date2 in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate1Norm(numberVal.get, date2Norm.get),
         date2Norm.get
       )
@@ -209,14 +191,8 @@ package object mentions {
       if(month2Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument number in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate(None, month1Norm, yearNorm),
         TempEvalFormatter.mkDate(None, month2Norm, yearNorm)
       )
@@ -233,14 +209,8 @@ package object mentions {
       if(date1Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         date1Norm.get,
         "ref-date"
       )
@@ -257,14 +227,8 @@ package object mentions {
       if(date1Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         "ref-date",
         date1Norm.get
       )
@@ -281,14 +245,8 @@ package object mentions {
       if(date1Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         "XXXX-XX-XX",
         date1Norm.get
       )
@@ -305,14 +263,8 @@ package object mentions {
       if(date1Norm.isEmpty)
         throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         date1Norm.get,
         "XXXX-XX-XX"
       )
@@ -338,14 +290,8 @@ package object mentions {
         case _ => (None, None)
       }
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth,yearStart),
         TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearEnd)
       )
@@ -388,14 +334,8 @@ package object mentions {
         case _ => None
       }
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate(seasonNorm1.get.endDay, seasonNorm1.get.endMonth, yearEnd1),
         TempEvalFormatter.mkDate(seasonNorm2.get.startDay, seasonNorm2.get.startMonth, yearStart2)
       )
@@ -419,14 +359,8 @@ package object mentions {
         case _ => None
       }
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearNorm),
         "ref-date"
       )
@@ -450,14 +384,8 @@ package object mentions {
         case _ => None
       }
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         "ref-date",
         TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearNorm)
       )
@@ -481,14 +409,8 @@ package object mentions {
         case _ => None
       }
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         "XXXX-XX-XX",
         TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearNorm)
       )
@@ -512,14 +434,8 @@ package object mentions {
         case _ => None
       }
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearNorm),
         "XXXX-XX-XX"
       )
@@ -535,14 +451,8 @@ package object mentions {
     case m: TextBoundMention =>
       // remove season (i.e., remove non-digit characters from the year-season token, e.g., 2011WS -> 2011)
       val year = m.text.replaceAll("\\D\\D", "")
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate(None, None, Some(Seq(year))),
         TempEvalFormatter.mkDate(None, None, Some(Seq(year)))
       )
@@ -550,14 +460,8 @@ package object mentions {
     case m: RelationMention =>
       val year = m.arguments("year").map(_.text)
 
-      new DateRangeMention(
-        m.labels,
-        m.tokenInterval,
-        m.sentence,
-        m.document,
-        m.keep,
-        m.foundBy,
-        m.attachments,
+      DateRangeMention(
+        m,
         TempEvalFormatter.mkDate(None, None, Some(year)),
         TempEvalFormatter.mkDate(None, None, Some(year))
       )

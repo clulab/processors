@@ -17,7 +17,7 @@ object NumberParser {
           var word = w
           // this is to take care of years with season, e.g., 2011DS, when used in dates with days specified
           if (word.endsWith("WS") || word.endsWith("DS")) {
-            word = word.replace("WS", "").replace("DS","")
+            word = word.dropRight(2)
           }
           // lowercase
           word = word.toLowerCase()
