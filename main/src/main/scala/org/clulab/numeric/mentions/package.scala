@@ -8,6 +8,20 @@ package object mentions {
 
   def toNumberRangeMention(mention: Mention): NumberRangeMention =  mention match {
     case m: NumberRangeMention => m
+    // the tbm check takes care of ranges that got tokenized as one token, e.g., 2-5 in "with a 2-5 cm depth sheet of water"
+    case m: TextBoundMention =>
+      val splitToken = m.text.split("-")
+      new NumberRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        splitToken.head.toFloat.toString,
+        splitToken.last.toFloat.toString
+      )
 
     case m: RelationMention =>
       val number1Norm = getArgNorm("number1", m)
@@ -95,6 +109,33 @@ package object mentions {
   }
 
   def toDateRangeMention(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: RelationMention =>
+      val date1Norm = getArgNorm("date1", m)
+      if(date1Norm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date1 in mention [${m.raw.mkString(" ")}]!")
+      val date2Norm = getArgNorm("date2", m)
+      if(date2Norm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument date2 in mention [${m.raw.mkString(" ")}]!")
+
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        date1Norm.get,
+        date2Norm.get
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
+  def toDateRangeMentionWithVagueSeason(mention: Mention): DateRangeMention =  mention match {
     case m: DateRangeMention => m
 
     case m: RelationMention =>
@@ -480,6 +521,44 @@ package object mentions {
         m.attachments,
         TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearNorm),
         "XXXX-XX-XX"
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
+  def toDateRangeMentionFromVagueSeason(mention: Mention): DateRangeMention =  mention match {
+    // handles years with dry/wet season attributes as ranges with undefined dates, e.g., 2011WS
+    case m: DateRangeMention => m
+
+    case m: TextBoundMention =>
+      // remove season (i.e., remove non-digit characters from the year-season token, e.g., 2011WS -> 2011)
+      val year = m.text.replaceAll("\\D\\D", "")
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        TempEvalFormatter.mkDate(None, None, Some(Seq(year))),
+        TempEvalFormatter.mkDate(None, None, Some(Seq(year)))
+      )
+
+    case m: RelationMention =>
+      val year = m.arguments("year").map(_.text)
+
+      new DateRangeMention(
+        m.labels,
+        m.tokenInterval,
+        m.sentence,
+        m.document,
+        m.keep,
+        m.foundBy,
+        m.attachments,
+        TempEvalFormatter.mkDate(None, None, Some(year)),
+        TempEvalFormatter.mkDate(None, None, Some(year))
       )
 
     case m =>

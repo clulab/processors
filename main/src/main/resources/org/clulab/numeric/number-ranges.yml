@@ -20,3 +20,12 @@
   pattern: |
     @number1:Number /(?i)(to|\-)/ @number2:Number
 
+- name: one-token-number-range
+  priority: ${rulepriority}
+  label: NumberRange
+  type: token
+  example: "irrigated plots with a 2-5 cm depth sheet of water"
+  action: mkNumberRangeMention
+  pattern: |
+    /^\d+\-\d+$/ (?= [entity = /B-MEASUREMENT-UNIT/])
+
