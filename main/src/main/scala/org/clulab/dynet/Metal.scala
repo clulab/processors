@@ -1,20 +1,18 @@
 package org.clulab.dynet
 
 import java.io.{FileWriter, PrintWriter}
-
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
-import org.clulab.utils.{Serializer, StringUtils}
+import org.clulab.utils.{ProgressBar, Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
-
 import Metal._
 
 /**
@@ -125,7 +123,8 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val allEpochScores = new ArrayBuffer[(Int, Double)]() // tuples of epoch number and overall score per epoch
     var epochPatience = taskManager.epochPatience
     for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
-      logger.info(s"Started epoch $epoch.")
+      // This logger info is in the title of the next ProgressBar.
+      // logger.info(s"Started epoch $epoch.")
       // this fetches randomized training sentences from all tasks
       val sentenceIterator = taskManager.getSentences(rand)
       var sentCount = 0
@@ -136,7 +135,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       //
       // traverse all training sentences
       //
-      for(metaSentence <- sentenceIterator) {
+
+      val progressBar = ProgressBar(s"Epoch ${epoch + 1}/${taskManager.maxEpochs}", sentenceIterator)
+      for(metaSentence <- progressBar) {
         val taskId = metaSentence._1
         val sentence = metaSentence._2
         val insertNegatives = taskManager.tasks(taskId).insertNegatives
@@ -180,7 +181,9 @@ class Metal(val taskManagerOpt: Option[TaskManager],
         numTagged += sentence.length
 
         if(sentCount % 1000 == 0) {
-          logger.info("Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)")
+          val message = "Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)"
+          progressBar.setExtraMessage(message)
+          // logger.info(message) // This would likely mess up the progressBar.
           cummulativeLoss = 0.0
           numTagged = 0
         }
@@ -308,7 +311,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
     }
 
-    for (sent <- sentences) {
+    for (sent <- ProgressBar(taskName, sentences)) {
       sentCount += 1
 
       val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
