@@ -14,8 +14,13 @@ object NumberParser {
         None
       case words =>
         val cleanWords = removePlusMinus(words).flatMap { w =>
+          var word = w
+          // this is to take care of years with season, e.g., 2011DS, when used in dates with days specified
+          if (word.endsWith("WS") || word.endsWith("DS")) {
+            word = word.dropRight(2)
+          }
           // lowercase
-          var word = w.toLowerCase()
+          word = word.toLowerCase()
           // remove commas from numbers like 100,000
           word = word.replace(",", "")
           // remove "+"

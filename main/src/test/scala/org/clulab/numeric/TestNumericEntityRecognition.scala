@@ -319,6 +319,36 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
       Interval(7, 15), "DATE-RANGE", "XXXX-02-XX -- XXXX-07-XX")
   }
 
+  it should "recognize date ranges with vague seasons" in {
+    ensure("Seeding dates ranged from 22 August to 26 September in 2011WS.",
+      Interval(3, 11), "DATE-RANGE", "2011-08-22 -- 2011-09-26")
+  }
+
+  it should "recognize date ranges (month/day) with vague seasons" in {
+    ensure("from August 23 to October 11 in 2017WS.",
+      Interval(0, 8), "DATE-RANGE", "2017-08-23 -- 2017-10-11")
+  }
+
+  it should "recognize years with vague seasons within same token as date ranges" in {
+    ensure("Timing of basal fertilizer application was on average 26 days after sowing in 2011WS",
+      Interval(13, 14), "DATE-RANGE", "2011-XX-XX -- 2011-XX-XX")
+  }
+
+  it should "recognize years with vague seasons (DS) within same token as date ranges" in {
+    ensure("Timing of basal fertilizer application was on average 26 days after sowing in 2015DS",
+      Interval(13, 14), "DATE-RANGE", "2015-XX-XX -- 2015-XX-XX")
+  }
+
+  it should "recognize years with vague seasons in separate tokens as date ranges" in {
+    ensure("Timing of basal fertilizer application was on average 26 days after sowing in 2011 WS",
+      Interval(13, 15), "DATE-RANGE", "2011-XX-XX -- 2011-XX-XX")
+  }
+
+  it should "recognize years with vague seasons (DS) in separate tokens as date ranges" in {
+    ensure("Timing of basal fertilizer application was on average 26 days after sowing in 2019 DS",
+      Interval(13, 15), "DATE-RANGE", "2019-XX-XX -- 2019-XX-XX")
+  }
+
   // TODO: Other dates that should be recognized
 
   it should "recognize numeric dates of form mm" in {
@@ -365,6 +395,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("It was 12 hectares", Interval(2, 4), "MEASUREMENT", "12.0 ha")
     ensure(sentence= "It was 12 meters long.", Interval(2, 4), goldEntity="MEASUREMENT", goldNorm= "12.0 m")
     ensure(sentence= "It was 12 kilograms.", Interval(2,4), goldEntity="MEASUREMENT", goldNorm= "12.0 kg")
+    ensure(sentence= "irrigated plots with a 2-5 cm depth sheet of water", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="2.0 -- 5.0 cm")
 
     // test for parsing literal numbers
     ensure("It was twelve hundred ha", Interval(2, 5), "MEASUREMENT", "1200.0 ha")
