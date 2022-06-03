@@ -1,7 +1,7 @@
 package org.clulab.dynet
 
 import edu.cmu.dynet.{ComputationGraph, Dim, Expression, ParameterCollection, UnsignedVector}
-import org.clulab.fatdynet.utils.Synchronizer
+import org.clulab.fatdynet.synchronizers.Synchronizer
 
 //
 // See also:

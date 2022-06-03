@@ -8,7 +8,8 @@ import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.{Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
-import org.clulab.fatdynet.utils.{CloseableModelSaver, Synchronizer}
+import org.clulab.fatdynet.synchronizers.Synchronizer
+import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
 import scala.collection.mutable.ArrayBuffer

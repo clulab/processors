@@ -5,7 +5,7 @@ import edu.cmu.dynet.{ComputationGraph, Expression, ExpressionVector, ParameterC
 import org.clulab.struct.Counter
 import org.clulab.utils.{Configured, MathUtils}
 import org.clulab.dynet.Utils._
-import org.clulab.fatdynet.utils.Synchronizer
+import org.clulab.fatdynet.synchronizers.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
 

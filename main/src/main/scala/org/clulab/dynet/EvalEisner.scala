@@ -1,7 +1,7 @@
 package org.clulab.dynet
 
 import org.clulab.dynet.Utils.initializeDyNet
-import org.clulab.fatdynet.utils.Synchronizer
+import org.clulab.fatdynet.synchronizers.Synchronizer
 import org.clulab.sequences.ColumnReader
 import org.clulab.utils.StringUtils
 
