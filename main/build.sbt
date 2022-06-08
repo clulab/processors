@@ -6,7 +6,7 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 }
 
 // for processors-models
-resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
+resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 
 libraryDependencies ++= {
   val json4sVersion = "3.5.2"
