@@ -354,15 +354,15 @@ object ShallowNLPProcessor {
       // character offsets and actual text
       val sentStartOffset = sentence.startOffsets.head
       val sentEndOffset = sentence.endOffsets.last
-      crtSent.set(classOf[CharacterOffsetBeginAnnotation], new Integer(sentStartOffset))
-      crtSent.set(classOf[CharacterOffsetEndAnnotation], new Integer(sentEndOffset))
+      crtSent.set(classOf[CharacterOffsetBeginAnnotation], Integer.valueOf(sentStartOffset))
+      crtSent.set(classOf[CharacterOffsetEndAnnotation], Integer.valueOf(sentEndOffset))
       crtSent.set(classOf[TextAnnotation], doc.text.get.substring(sentStartOffset, sentEndOffset))
 
       // token and sentence offsets
-      crtSent.set(classOf[TokenBeginAnnotation], new Integer(tokenOffset))
+      crtSent.set(classOf[TokenBeginAnnotation], Integer.valueOf(tokenOffset))
       tokenOffset += crtTokens.size()
-      crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
-      crtSent.set(classOf[SentenceIndexAnnotation], new Integer(sentOffset)) // Stanford counts sentences starting from 0
+      crtSent.set(classOf[TokenEndAnnotation], Integer.valueOf(tokenOffset))
+      crtSent.set(classOf[SentenceIndexAnnotation], Integer.valueOf(sentOffset)) // Stanford counts sentences starting from 0
 
       sentencesAnnotation.add(crtSent)
       sentOffset += 1
