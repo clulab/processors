@@ -15,6 +15,7 @@ Makefile
 project/
 
 # sbt specific
+.bsp
 dist/*
 target/
 lib_managed/
