@@ -8,6 +8,7 @@ import scala.util.Failure
 import scala.util.Try
 
 class PublicCloseInputStream(inputStream: InputStream) extends InputStream {
+
   override def read(): Int = inputStream.read()
 
   // This can be reflected upon.
@@ -35,7 +36,9 @@ class InputStreamer(val provider: AnyRef = InputStreamer, direct: Boolean = true
     // sun.net.www.protocol.jar.JarURLConnection$JarURLInputStream.close() throws
     // java.io.IOException accessible: module java.base does not "opens sun.net.www.protocol.jar"
     // to unnamed module @5ffead27.
-    new PublicCloseInputStream(inputStream)
+    // Update: Use of PublicCloseInputStream was found the be incredibly slow, so the use of
+    // autoClose in WordEmbeddingMapPool was replaced by a try and finally on the raw inputStream.
+    // new PublicCloseInputStream(inputStream)
   }
 
   protected def getInputStream(name: String, fileLocation: String, resourceLocation: String,
