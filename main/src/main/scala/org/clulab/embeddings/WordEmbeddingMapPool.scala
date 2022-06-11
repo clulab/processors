@@ -3,6 +3,7 @@ package org.clulab.embeddings
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.InputStreamer.StreamResult
+import org.clulab.utils.ThreadUtils.NamedFuture
 
 import scala.collection.mutable
 import scala.concurrent.Await
@@ -11,7 +12,6 @@ import scala.concurrent.duration.Duration
 
 /** Manages a pool of word embedding maps, so we do not load them more than once */
 object WordEmbeddingMapPool {
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Key(name: String, compact: Boolean)
 
@@ -34,19 +34,24 @@ object WordEmbeddingMapPool {
 
   /** Fetches an embedding from the pool if it exists, or creates it otherwise */
   def getOrElseCreate(name: String, compact: Boolean = false, fileLocation: String = "", resourceLocation: String = ""): WordEmbeddingMap = {
+    // We should not use the global execution context, because something else may already
+    // be using it and be running on all available threads so that when we arrive here,
+    // there are no threads left to run these Futures.
+    import scala.concurrent.ExecutionContext.Implicits.global
+
     val wordEmbeddingMapFuture =
       if (enabled)
         this.synchronized {
           // Access the shared pool inside the synchronized section.
           pool.getOrElseUpdate(
             Key(name, compact),
-            Future {
+            NamedFuture("enabled WordEmbeddingMapPool.loadEmbedding") {
               loadEmbedding(name, fileLocation, resourceLocation, compact = compact)
             }
           )
         }
       else
-        Future {
+        NamedFuture("disabled WordEmbeddingMapPool.loadEmbedding") {
           loadEmbedding(name, fileLocation, resourceLocation, compact = compact)
         }
     // Wait for the result outside the synchronized section.
