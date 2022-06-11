@@ -34,9 +34,7 @@ object WordEmbeddingMapPool {
 
   /** Fetches an embedding from the pool if it exists, or creates it otherwise */
   def getOrElseCreate(name: String, compact: Boolean = false, fileLocation: String = "", resourceLocation: String = ""): WordEmbeddingMap = {
-    // We should not use the global execution context, because something else may already
-    // be using it and be running on all available threads so that when we arrive here,
-    // there are no threads left to run these Futures.
+    // Using the global execution context may be a bad strategy.
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val wordEmbeddingMapFuture =
