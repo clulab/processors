@@ -14,7 +14,7 @@ rules:
     priority: ${ rulepriority }
     type: token
     pattern: |
-      [entity=/B-MEASUREMENT-UNIT/] [entity=/I-MEASUREMENT-UNIT/]*
+      [entity=/B-MEASUREMENT-UNIT/ & !word = "DS"] [entity=/I-MEASUREMENT-UNIT/]*
 
   # possible years, from 1ddd to 20dd
   - name: year

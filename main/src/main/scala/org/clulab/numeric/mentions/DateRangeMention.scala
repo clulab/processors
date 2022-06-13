@@ -1,6 +1,6 @@
 package org.clulab.numeric.mentions
 
-import org.clulab.odin.{Attachment, TextBoundMention}
+import org.clulab.odin.{Attachment, Mention, TextBoundMention}
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 
@@ -34,4 +34,21 @@ class DateRangeMention ( labels: Seq[String],
     "DATE-RANGE"
   }
 
+}
+
+object DateRangeMention {
+
+  def apply(m: Mention, date1Norm: String, date2Norm: String):  DateRangeMention = {
+    new DateRangeMention(
+      m.labels,
+      m.tokenInterval,
+      m.sentence,
+      m.document,
+      m.keep,
+      m.foundBy,
+      m.attachments,
+      date1Norm,
+      date2Norm
+    )
+  }
 }

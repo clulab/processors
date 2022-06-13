@@ -51,6 +51,10 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     convert(mentions, toDateRangeMention, "toDateRangeMention")
   }
 
+  def mkDateRangeMentionWithVagueSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithVagueSeason, "toDateRangeMentionWithVagueSeason")
+  }
+
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithNumber(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithNumber, "toDateRangeMentionWithNumber")
@@ -109,6 +113,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateUnboundRangeMentionWithSeasonAfter(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateUnboundRangeMentionWithSeasonAfter(seasonNormalizer), "toDateUnboundRangeMentionAfter")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionVagueSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionFromVagueSeason, "mkDateRangeMentionVagueSeason")
   }
 
   /** Constructs a DateMention from a token pattern */

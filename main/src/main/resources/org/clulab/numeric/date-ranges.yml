@@ -13,6 +13,15 @@
   pattern: |
     /(?i)between/ @date1:Date /(?i)(and|to)/ @date2:Date
 
+- name: ambiguous-date-range
+  priority: ${higherpriority}
+  label: DateRange
+  type: token
+  example: "These correspond to the dry season (from February/March to June/July)"
+  action: mkDateRangeMention
+  pattern: |
+    /(?i)from/? @date1:Date /\// @date1b:Date /(?i)(to|\-)/ @date2b:Date /\// @date2:Date
+
 - name: date-range-2
   priority: ${rulepriority}
   label: DateRange
@@ -166,3 +175,12 @@
   action: mkDateUnboundRangeMentionWithSeasonAfter
   pattern: |
     /(?i)(after|beyond|following)/ @season:PossibleSeason @year:PossibleYear?
+
+- name: date-yyyy-vague-season
+  label: Date
+  priority: ${ rulepriority }
+  type: token
+  example: "Seeding dates ranged from 22 August to 26 September in 2011WS."
+  action: mkDateRangeMentionVagueSeason
+  pattern: |
+    /^(1\d\d\d|2\d\d\d)(WS|DS)$/ | @year:PossibleYear (?<season> [word = /^(WS|DS)$/])

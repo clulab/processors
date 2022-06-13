@@ -6,7 +6,7 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 }
 
 // for processors-models
-resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
+resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 
 libraryDependencies ++= {
   val json4sVersion = "3.5.2"
@@ -37,13 +37,16 @@ libraryDependencies ++= {
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
-    "org.clulab"                  % "processors-models"        % "0.2.2",
+    "org.clulab"                  % "processors-models"        % "0.2.4",
     "com.esotericsoftware"        % "kryo"                     % "5.1.1",
 
     // for odin
     "org.apache.commons"      % "commons-text"             % "1.1",
     "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
     "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
-    "org.yaml"                % "snakeyaml"                % "1.14"
+    "org.yaml"                % "snakeyaml"                % "1.14",
+
+    // progress bar for training
+    "me.tongfei"              % "progressbar"              % "0.9.3"
   )
 }

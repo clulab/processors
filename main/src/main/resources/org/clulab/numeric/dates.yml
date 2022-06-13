@@ -69,6 +69,15 @@ rules:
     pattern: |
         @month:PossibleMonth
 
+  - name: date-with-vague-season
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "26 September in 2011WS"
+    action: mkDateMention
+    pattern: |
+      ( @day:PossibleDay @month:PossibleMonth | @month:PossibleMonth @day:PossibleDay) /^in$/ (?<year> [word = /^(\d\d\d\d)(WS|DS)$/])
+
   # Rule for YYYY-MM-DD (accepts -, :, / as separators)
   - name: date-yyyy-mm-dd
     label: Date

@@ -14,6 +14,8 @@ import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 
+import java.util.regex.Pattern
+
 /**
   * Processor that uses only tools that are under Apache License
   * Currently supports:
@@ -188,6 +190,12 @@ class CluProcessor protected (
   }
   */
 
+  lazy val mtlCase: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-case", Some("mtl-en-case")))
+  }
+
   // Although this uses no class members, the method is sometimes called from tests
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
@@ -273,6 +281,50 @@ class CluProcessor protected (
     val chunks = allLabels(1)
     val preds = allLabels(2)
     (tags, chunks, preds)
+  }
+
+  /** Restores the correct case for all words in a given document */
+  def restoreCase(doc: Document): Unit = {
+    GivenConstEmbeddingsAttachment(doc, true).perform {
+      for (sent <- doc.sentences) {
+        // The case restoration model expects lower-case words as input.
+        val originalWords = sent.words
+        val loweredWords = originalWords.map(_.toLowerCase)
+        val preLabels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
+        val labels = casePostProcessing(loweredWords, preLabels)
+        val restoredWords = originalWords.indices.map { index => restoreCaseWord(loweredWords(index), labels(index), originalWords(index)) }
+        restoredWords.copyToArray(originalWords)
+      }
+    }                    
+  }
+
+  private def casePostProcessing(loweredWords: IndexedSeq[String], preLabels: IndexedSeq[String]): IndexedSeq[String] = {
+    loweredWords.zip(preLabels).map { case (loweredWord, preLabel) =>
+      // There could be multiple patterns that match, but use only the first.
+      val index = CASE_PATTERNS.indexWhere { case (pattern, _) =>
+        pattern.matcher(loweredWord).matches
+      }
+      if (index >= 0) CASE_PATTERNS(index)._2
+      else preLabel
+    }
+  }
+
+  private def restoreCaseWord(loweredWord: String, label: String, originalWord: String): String = {
+    val alphaCount = originalWord.count(_.isLetter)
+    val upperCount = originalWord.count(_.isUpper)
+    val isStandard =
+        upperCount == 0 || // lower
+        upperCount == alphaCount || // all upper
+        upperCount == 1 && originalWord.head.isUpper // upper initial
+    // We handle three possible labels: L (lower), UI (upper initial), UA (all upper).
+    if (!isStandard)
+      originalWord
+    else if (label == "UI")
+      Character.toUpperCase(loweredWord(0)) + loweredWord.substring(1)
+    else if (label == "UA")
+      loweredWord.toUpperCase()
+    else
+      loweredWord
   }
 
   /** Produces NE labels for one sentence */
@@ -518,7 +570,7 @@ class CluProcessor protected (
     new DirectedGraph[String](edges.toList, Some(words.length))
   }
 
-  private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
+  def getEmbeddings(doc: Document): ConstEmbeddingParameters =
     doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
@@ -860,6 +912,16 @@ object CluProcessor {
   //
   val VERSUS_PATTERN = """(?i)^vs\.?$""".r
 
+  //
+  // Patterns to correct case information
+  //
+  val CASE_PATTERNS: Seq[(Pattern, String)] = Seq(
+    // The tuple encodes the pattern and then the label.
+    // At start of sentence some Roman or Arabic numbers possibly followed by separating
+    // period, ), or ] all possibly repeated until the end of the sentence.
+    ("""^([ivx\d]+[\.\)\]]?)+$""".r.pattern, "L") // list item indices are often unnecessarily capitalized
+  )
+
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
                  text:String,
@@ -944,9 +1006,9 @@ object CluProcessor {
 case class EmbeddingsAttachment(embeddings: ConstEmbeddingParameters)
     extends IntermediateDocumentAttachment
 
-class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
+class GivenConstEmbeddingsAttachment(doc: Document, lowerCase: Boolean) extends BeforeAndAfter {
 
-  def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
+  def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc, lowerCase)
 
   def after(): Unit = {
     val attachment = doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
@@ -961,12 +1023,12 @@ class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
 }
 
 object GivenConstEmbeddingsAttachment {
-  def apply(doc: Document) = new GivenConstEmbeddingsAttachment(doc)
+  def apply(doc: Document, lowerCase: Boolean = false) = new GivenConstEmbeddingsAttachment(doc, lowerCase)
 
   // This is static so that it can be called without an object.
-  def mkConstEmbeddings(doc: Document): Unit = {
+  def mkConstEmbeddings(doc: Document, lowerCase: Boolean = false): Unit = {
     // Fetch the const embeddings from GloVe. All our models need them.
-    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
+    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc, lowerCase)
     val attachment = EmbeddingsAttachment(embeddings)
 
     // Now set them as an attachment, so they are available to all downstream methods wo/ changing the API.
