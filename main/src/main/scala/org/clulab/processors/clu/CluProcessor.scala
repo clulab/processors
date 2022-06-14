@@ -3,7 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -13,7 +13,6 @@ import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbed
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
-import org.clulab.utils.BeforeAndAfter
 
 import java.util.regex.Pattern
 
@@ -90,68 +89,97 @@ class CluProcessor protected (
   // val tokenizer: Tokenizer = new ModifiedTokenizer(super.tokenizer)
   // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
   // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
-  protected lazy val localTokenizer: Tokenizer = localTokenizerOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => new OpenDomainPortugueseTokenizer
-      case "ES" => new OpenDomainSpanishTokenizer
-      case _ => new OpenDomainEnglishTokenizer
+  protected val lazyTokenizer: Lazy[Tokenizer] = Lazy {
+    localTokenizerOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => new OpenDomainPortugueseTokenizer
+        case "ES" => new OpenDomainSpanishTokenizer
+        case _ => new OpenDomainEnglishTokenizer
+      }
     }
   }
 
   // the actual tokenizer
-  lazy val tokenizer: Tokenizer = localTokenizer
+  def tokenizer: Tokenizer = lazyTokenizer.value
 
   // the lemmatizer
-  lazy val lemmatizer: Lemmatizer = lemmatizerOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => new PortugueseLemmatizer
-      case "ES" => new SpanishLemmatizer
-      case _ => new EnglishLemmatizer
+  protected val lazyLemmatizer: Lazy[Lemmatizer] = Lazy {
+    lemmatizerOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => new PortugueseLemmatizer
+        case "ES" => new SpanishLemmatizer
+        case _ => new EnglishLemmatizer
+      }
     }
   }
+
+  def lemmatizer: Lemmatizer = lazyLemmatizer.value
 
   // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
-  lazy val mtlPosChunkSrlp: Metal = mtlPosChunkSrlpOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+  protected val lazyMtlPosChunkSrlp: Lazy[Metal] = Lazy {
+    mtlPosChunkSrlpOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+      }
     }
   }
+
+  def mtlPosChunkSrlp: Metal = lazyMtlPosChunkSrlp.value
 
   // one of the multi-task learning (MTL) models, which covers: NER
-  lazy val mtlNer: Metal = mtlNerOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+  protected val lazyMtlNer: Lazy[Metal] = Lazy {
+    mtlNerOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+      }
     }
   }
+
+  def mtlNer: Metal = lazyMtlNer.value
 
   // recognizes numeric entities using Odin rules
-  lazy val numericEntityRecognizer: NumericEntityRecognizer =
-      numericEntityRecognizerOpt.getOrElse(NumericEntityRecognizer())
+  protected  val lazyNumericEntityRecognizer: Lazy[NumericEntityRecognizer] =
+      Lazy(numericEntityRecognizerOpt.getOrElse(NumericEntityRecognizer()))
+
+  def numericEntityRecognizer: NumericEntityRecognizer = lazyNumericEntityRecognizer.value
 
   // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
-  lazy val mtlSrla: Metal = mtlSrlaOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+  protected val lazyMtlSrla: Lazy[Metal] = Lazy {
+    mtlSrlaOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+      }
     }
   }
 
-  lazy val mtlDepsHead: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+  def mtlSrla: Metal = lazyMtlSrla.value
+
+  protected val lazyMtlDepsHead: Lazy[Metal] = Lazy {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+    }
   }
 
-  lazy val mtlDepsLabel: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+  def mtlDepsHead: Metal = lazyMtlDepsHead.value
+
+  protected val lazyMtlDepsLabel: Lazy[Metal] = Lazy {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+    }
   }
+
+  def mtlDepsLabel: Metal = lazyMtlDepsLabel.value
+
   /*
   lazy val mtlDeps: Metal = mtlDepsOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
@@ -171,6 +199,28 @@ class CluProcessor protected (
   // Although this uses no class members, the method is sometimes called from tests
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
+
+  protected lazy val isPreparedToAnnotate: Boolean = {
+    Array(
+      lazyTokenizer,               // tokenize
+      lazyMtlPosChunkSrlp,         // tagPartsOfSpeech
+      lazyMtlNer,                  // recognizeNamedEntities
+      lazyNumericEntityRecognizer, // ditto
+      lazyMtlDepsHead,             // parse
+      lazyMtlDepsLabel,            // parse
+      lazyLemmatizer,              // lemmatize
+      lazyMtlSrla                  // srl
+    ).par.foreach(_.value)
+    true
+  }
+
+  override def annotate(text: String, keepText: Boolean = false): Document = {
+    // This is the most popular entrypoint.  It will force initialization of the lazy
+    // variables above that create components.  By default that would happen serially.
+    // This assertion makes it happen in parallel so that annotation can begin sooner.
+    assert(isPreparedToAnnotate)
+    super.annotate(text, keepText)
+  }
 
   override def annotate(doc: Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
@@ -401,7 +451,7 @@ class CluProcessor protected (
     val annotatedSentence =
       AnnotatedSentence(words, Some(posTags), Some(nerLabels))
 
-    val eisner = new Eisner  
+    val eisner = new Eisner
     val headsWithLabels = eisner.ensembleParser(
       mtlDepsHead, Some(mtlDepsLabel),
       annotatedSentence, embeddings,
@@ -634,7 +684,7 @@ class CluProcessor protected (
 
     if(sentence.universalBasicDependencies.isEmpty) return origPreds
     if(sentence.tags.isEmpty) return origPreds
-    
+
     val preds = origPreds.toSet
     val newPreds = new mutable.HashSet[Int]()
     newPreds ++= preds
@@ -683,7 +733,7 @@ class CluProcessor protected (
       val sentence = doc.sentences(si)
       //println(s"SENTENCE WORDS: [${sentence.words.mkString("] [")}]")
 
-      val predicateIndexes = 
+      val predicateIndexes =
       	predicateCorrections(predicates(si), sentence)
       val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
 
