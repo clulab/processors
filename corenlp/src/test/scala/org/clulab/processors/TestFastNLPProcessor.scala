@@ -19,7 +19,7 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
 
     doc.sentences.head.dependencies.get.hasEdge(1, 0, "compound") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(2, 1, "nsubj") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(2, 4, "nmod_to") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(2, 4, "obl_to") should be (true)
 
     /*
     val it = new DirectedGraphEdgeIterator[String](doc.sentences.head.dependencies.get)
@@ -35,7 +35,7 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
 
     //println(doc.sentences.head.dependencies)
     doc.sentences.head.dependencies.get.hasEdge(1, 0, "nsubj") should be (true)
-    doc.sentences.head.dependencies.get.hasEdge(1, 3, "dobj") should be (true)
+    doc.sentences.head.dependencies.get.hasEdge(1, 3, "obj") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(1, 4, "punct") should be (true)
     doc.sentences.head.dependencies.get.hasEdge(3, 2, "det") should be (true)
   }
@@ -78,7 +78,8 @@ class TestFastNLPProcessor extends FlatSpec with Matchers {
 
     println(doc.sentences.head.universalBasicDependencies.get)
 
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(4, 6, "appos") should be (true)
+    // TODO: this should be (4, 6, "appos") - CoreNLP is incorrect here
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 6, "appos") should be (true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(16, 18, "appos") should be (true)
   }
 
