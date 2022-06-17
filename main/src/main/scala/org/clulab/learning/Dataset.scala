@@ -7,9 +7,8 @@ import org.clulab.struct.Lexicon
 
 import scala.io.{BufferedSource, Source}
 import java.util.zip.GZIPInputStream
-import java.io.{BufferedInputStream, FileInputStream, FileWriter, PrintWriter}
-
-import org.slf4j.LoggerFactory
+import java.io.{FileWriter, PrintWriter}
+import org.slf4j.{Logger, LoggerFactory}
 import RVFDataset._
 import org.clulab.utils.Files
 
@@ -22,19 +21,19 @@ import org.clulab.utils.Files
 abstract class Dataset[L, F](
   val labelLexicon:Lexicon[L],
   val featureLexicon:Lexicon[F],
-  val labels:ArrayBuffer[Int]) extends Serializable {
+  val labels:ArrayBuffer[Int]) extends IndexedSeq[Datum[L, F]] with Serializable {
 
   def this() = this(new Lexicon[L], new Lexicon[F], new ArrayBuffer[Int])
 
   def += (datum:Datum[L, F]): Unit
 
-  def numFeatures = featureLexicon.size
-  def numLabels = labelLexicon.size
+  def numFeatures: Int = featureLexicon.size
+  def numLabels: Int = labelLexicon.size
 
   /** number of training examples */
-  def size = labels.size
+  override def size: Int = labels.size
 
-  def indices = 0 until size
+  override def indices: Range = labels.indices
 
   def featuresCounter(datumOffset:Int):Counter[Int]
 
@@ -52,6 +51,10 @@ abstract class Dataset[L, F](
 
   /** Convert this dataset to a CounterDataset */
   def toCounterDataset:CounterDataset[L, F]
+
+  override def length: Int = size
+
+  override def apply(idx: Int): Datum[L, F] = mkDatum(idx)
 }
 
 /**
@@ -124,7 +127,7 @@ class BVFDataset[L, F] (
 
     // sort all features in descending order of their IG
     val fb = new ListBuffer[(Int, Double)]
-    for(f <- igs.keySet) fb += new Tuple2(f, igs.get(f).get.ig(total))
+    for(f <- igs.keySet) fb += (f, igs(f).ig(total))
     val sortedFeats = fb.sortBy(- _._2).toArray
 
     // keep the top pctToKeep
@@ -197,7 +200,7 @@ class BVFDataset[L, F] (
     for(i <- feats.indices) {
       val f = feats(i)
       if(featureIndexMap.contains(f)) {
-        newFeats += featureIndexMap.get(f).get
+        newFeats += featureIndexMap(f)
       }
     }
 
@@ -248,7 +251,7 @@ class RVFDataset[L, F] (
   private def featuresCounterToArray(fs:Counter[F]):Array[(Int, Double)] = {
     val fb = new ListBuffer[(Int, Double)]
     for(f <- fs.keySet) {
-      fb += new Tuple2[Int, Double](featureLexicon.add(f), fs.getCount(f))
+      fb += (featureLexicon.add(f), fs.getCount(f))
     }
     fb.sortBy(_._1).toArray
   }
@@ -327,7 +330,7 @@ class RVFDataset[L, F] (
       val f = feats(i)
       val v = vals(i)
       if(featureIndexMap.contains(f)) {
-        newFeats += featureIndexMap.get(f).get
+        newFeats += featureIndexMap(f)
         newVals += v
       }
     }
@@ -370,12 +373,12 @@ class InformationGain( var datumCount:Int = 0,
     pos + neg
   }
 
-  def pWith(total:InformationGain) = datumCount.toDouble / total.datumCount.toDouble
-  def pWithout(total:InformationGain) = (total.datumCount - datumCount).toDouble / total.datumCount.toDouble
+  def pWith(total:InformationGain): Double = datumCount.toDouble / total.datumCount.toDouble
+  def pWithout(total:InformationGain): Double = (total.datumCount - datumCount).toDouble / total.datumCount.toDouble
 }
 
 object RVFDataset {
-  val logger = LoggerFactory.getLogger(classOf[RVFDataset[String, String]])
+  val logger: Logger = LoggerFactory.getLogger(classOf[RVFDataset[String, String]])
 
   def mkDatasetFromSvmLightResource(path: String): RVFDataset[Int, String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
@@ -413,7 +416,7 @@ object RVFDataset {
       content = content.trim
       // logger.debug("Parsing line: [" + content + "]")
 
-      if(content.length > 0) {
+      if(content.nonEmpty) {
         val bits = content.split("\\s+")
 
         var label = bits(0)
@@ -451,7 +454,7 @@ object RVFDataset {
         val fi = featureLexicon.get(k)
         if(fi.isDefined) {
           // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
-          fs += new Tuple2(fi.get + 1, c.getCount(k))
+          fs += (fi.get + 1, c.getCount(k))
         }
       }
       val fss = fs.toList.sortBy(_._1)
@@ -498,7 +501,7 @@ object RVFDataset {
       content = content.trim
       //logger.debug("Parsing line: " + content)
 
-      if(content.length > 0) {
+      if(content.nonEmpty) {
         val bits = content.split("\\s+")
 
         var label = bits(0)
