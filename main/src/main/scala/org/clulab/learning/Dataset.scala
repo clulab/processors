@@ -127,7 +127,8 @@ class BVFDataset[L, F] (
 
     // sort all features in descending order of their IG
     val fb = new ListBuffer[(Int, Double)]
-    for(f <- igs.keySet) fb += (f, igs(f).ig(total))
+    // The (( here and elsewhere in this file is for Scala 2.11.
+    for(f <- igs.keySet) fb += ((f, igs(f).ig(total)))
     val sortedFeats = fb.sortBy(- _._2).toArray
 
     // keep the top pctToKeep
@@ -251,7 +252,7 @@ class RVFDataset[L, F] (
   private def featuresCounterToArray(fs:Counter[F]):Array[(Int, Double)] = {
     val fb = new ListBuffer[(Int, Double)]
     for(f <- fs.keySet) {
-      fb += (featureLexicon.add(f), fs.getCount(f))
+      fb += ((featureLexicon.add(f), fs.getCount(f)))
     }
     fb.sortBy(_._1).toArray
   }
@@ -454,7 +455,7 @@ object RVFDataset {
         val fi = featureLexicon.get(k)
         if(fi.isDefined) {
           // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
-          fs += (fi.get + 1, c.getCount(k))
+          fs += ((fi.get + 1, c.getCount(k)))
         }
       }
       val fss = fs.toList.sortBy(_._1)
