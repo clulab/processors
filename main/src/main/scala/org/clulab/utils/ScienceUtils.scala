@@ -1,9 +1,10 @@
 package org.clulab.utils
 
 import java.io.{BufferedReader, InputStreamReader}
+import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 import java.text.Normalizer
-
+import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.ScienceUtils._
 
 import scala.collection.mutable
@@ -138,48 +139,51 @@ object ScienceUtils {
   val UNICODE_TO_ASCII: String = "org/clulab/processors/bionlp/unicode_to_ascii.tsv"
   val ACCENTED_CHARACTERS: String = "org/clulab/processors/bionlp/accented_characters.tsv"
 
+  val charset = StandardCharsets.UTF_8
+
   private def loadAccents:Set[Char] = {
     val acf = getClass.getClassLoader.getResourceAsStream(ACCENTED_CHARACTERS)
     assert(acf != null, s"Failed to find resource file $ACCENTED_CHARACTERS in the classpath!")
-    val reader = new BufferedReader(new InputStreamReader(acf))
-    val accents = new mutable.ArrayBuffer[Char]()
-    var done = false
-    while(! done) {
-      val line = normalizeUnicode(reader.readLine())
-      if(line == null) {
-        done = true
-      } else if (line.trim().nonEmpty) {
-        accents.append(line.charAt(0))
+    new BufferedReader(new InputStreamReader(acf, charset)).autoClose { reader =>
+      val accents = new mutable.ArrayBuffer[Char]()
+      var done = false
+      while(! done) {
+        val line = normalizeUnicode(reader.readLine())
+        if(line == null) {
+          done = true
+        } else if (line.trim().nonEmpty) {
+          accents.append(line.charAt(0))
+        }
       }
+      accents.toSet
     }
-    accents.toSet
   }
 
   private def loadUnicodes:Map[Char, String] = {
     val map = new mutable.HashMap[Char, String]()
     val is = getClass.getClassLoader.getResourceAsStream(UNICODE_TO_ASCII)
     assert(is != null, s"Failed to find resource file $UNICODE_TO_ASCII in the classpath!")
-    val reader = new BufferedReader(new InputStreamReader(is))
-    var done = false
-    while(! done) {
-      var line = normalizeUnicode(reader.readLine())
+    new BufferedReader(new InputStreamReader(is, charset)).autoClose { reader =>
+      var done = false
+      while(! done) {
+        var line = normalizeUnicode(reader.readLine())
       if(line == null) {
-        done = true
-      } else {
-        line = line.trim
+          done = true
+        } else {
+          line = line.trim
         if(! line.startsWith("#")) {
-          val tokens = line.split("\\t")
+            val tokens = line.split("\\t")
           if(tokens.length > 2)
-            throw new RuntimeException(s"ERROR: invalid line [$line] in resource file $UNICODE_TO_ASCII")
+              throw new RuntimeException(s"ERROR: invalid line [$line] in resource file $UNICODE_TO_ASCII")
           if(tokens.length == 1) {
-            map += (toUnicodeChar(tokens(0)) -> "")
-          } else {
-            map += (toUnicodeChar(tokens(0)) -> tokens(1))
+              map += (toUnicodeChar(tokens(0)) -> "")
+            } else {
+              map += (toUnicodeChar(tokens(0)) -> tokens(1))
+            }
           }
         }
       }
     }
-    reader.close()
     map.toMap
   }
 
