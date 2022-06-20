@@ -506,6 +506,22 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
   }
 
+  /** handles one token year ranges, e.g., 2020/2021 and 2020-2021 */
+  def toDateRangeMentionFromOneTokenYearRange(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: TextBoundMention =>
+      val years = m.text.split("[-\\/]")
+      DateRangeMention(
+        m,
+        TempEvalFormatter.mkDate(None, None, Some(Seq(years.head))),
+        TempEvalFormatter.mkDate(None, None, Some(Seq(years.last)))
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
   def toDateMention(mention: Mention): DateMention =  mention match {
     case m: DateMention => m
 

@@ -57,9 +57,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
 
   /** Constructs a MeasurementMention from a token pattern */
   def mkSharedMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    val mens = convertOneToMany(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
-    mens.foreach(m => println("MEN: " + m.text))
-    mens
+    convertOneToMany(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
   }
 
   def mkPercentage(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -142,6 +140,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionVagueSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionFromVagueSeason, "mkDateRangeMentionVagueSeason")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionOneTokenYearRange(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionFromOneTokenYearRange, "mkDateRangeMentionOneTokenYearRange")
   }
 
   /** Constructs a DateMention from a token pattern */
