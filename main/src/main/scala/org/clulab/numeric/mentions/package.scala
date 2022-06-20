@@ -1,6 +1,8 @@
 package org.clulab.numeric
 
-import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
+import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
+import org.clulab.struct.Interval
+
 import java.util.regex.Pattern
 
 package object mentions {
@@ -67,6 +69,40 @@ package object mentions {
     case m =>
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
   }
+
+  def toSharedMeasurementMention(mention: Mention): Seq[Mention] =  mention match {
+    case m:  MeasurementMention => Seq(m)
+
+    case m: RelationMention =>
+//      if (mention.arguments("number").length > 1)
+//      println("M: " + mention.text + " " + mention.label)
+      mention.arguments("number").sortBy(_.tokenInterval).map { a =>
+//        println("num: " + a.words.mkString("|"))
+//        println("unit: " + m.arguments("unit").head.text)
+//        println("unit: " + getArgWords("unit", m))
+        val newArgs = Seq(m.arguments("unit").head, a).sortBy(_.tokenInterval)
+        val newTokInt = Interval(newArgs.head.tokenInterval.start, newArgs.last.tokenInterval.end)
+//        println(">>" + newArgs.map(_.text).mkString("::"))
+//        println(">>>" + newTokInt + "\n")
+        new MeasurementMention(
+          m.labels,
+          a.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          Some(a.words),
+          getArgWords("unit", m),
+          false
+        )
+      }
+
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
+  }
+
 
   def toPercentageMention(mention: Mention): PercentageMention =  mention match {
     case m:  PercentageMention => m

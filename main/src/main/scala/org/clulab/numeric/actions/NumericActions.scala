@@ -16,7 +16,24 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     val convertedMentions = new ArrayBuffer[Mention]()
     for(m <- mentions) {
       try {
-        convertedMentions += converter(m)
+        convertedMentions += converter(m )
+      } catch {
+        case e: Exception =>
+          // sometimes these conversions fail, mainly on broken texts
+          // let's be robust here: report the error and move on
+          System.err.println(s"WARNING: $converterName conversion failed! Recovering and continuing...")
+          e.printStackTrace()
+      }
+    }
+    convertedMentions
+  }
+
+  /** Converts a sequence of mentions to new types given the converter function */
+  private def convertOneToMany(mentions: Seq[Mention], converter: Mention => Seq[Mention], converterName: String): Seq[Mention] = {
+    val convertedMentions = new ArrayBuffer[Mention]()
+    for(m <- mentions) {
+      try {
+        convertedMentions ++= converter(m )
       } catch {
         case e: Exception =>
           // sometimes these conversions fail, mainly on broken texts
@@ -36,6 +53,13 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Constructs a MeasurementMention from a token pattern */
   def mkMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toMeasurementMention, "toMeasurementMention")
+  }
+
+  /** Constructs a MeasurementMention from a token pattern */
+  def mkSharedMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    val mens = convertOneToMany(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
+    mens.foreach(m => println("MEN: " + m.text))
+    mens
   }
 
   def mkPercentage(mentions: Seq[Mention], state: State): Seq[Mention] = {

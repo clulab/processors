@@ -440,6 +440,12 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "and lasted 3 or 4 days in both wet seasons", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="4.0 d")
   }
 
+  it should "recognize shared units" in {
+    ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(7,8), goldEntity="MEASUREMENT", goldNorm="6.4 t/ha")
+    ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(9,10), goldEntity="MEASUREMENT", goldNorm="7.9 t/ha")
+    ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(12,13), goldEntity="MEASUREMENT", goldNorm="7.1 t/ha")
+  }
+
   // TODO: this requires non trivial changes to the tokenizer
   /*
   // tests for recognizing units which are sticked to values
