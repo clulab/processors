@@ -72,19 +72,11 @@ object WordEmbeddingMapPool {
   def loadEmbedding(name: String, fileLocation: String, resourceLocation: String, compact: Boolean): WordEmbeddingMap = {
     val StreamResult(inputStream, _, format) = inputStreamer.stream(name, fileLocation, resourceLocation)
         .getOrElse(throw new RuntimeException(s"WordEmbeddingMap $name could not be opened."))
-    val wordEmbeddingMap = {
-        // This is intentionally not using autoClose because the inputStream might be a
-        // JarURLConnection#JarURLInputStream which can't be autoClosed in newer (> 1.8)
-        // versions of Java.  See further explanation in InputStreamer.
-        try {
-          val binary = format == InputStreamer.Format.Bin
+    val wordEmbeddingMap = inputStream.autoClose { inputStream =>
+      val binary = format == InputStreamer.Format.Bin
 
-          if (compact) CompactWordEmbeddingMap(inputStream, binary)
-          else ExplicitWordEmbeddingMap(inputStream, binary)
-        }
-        finally {
-          inputStream.close()
-        }
+      if (compact) CompactWordEmbeddingMap(inputStream, binary)
+      else ExplicitWordEmbeddingMap(inputStream, binary)
     }
 
     wordEmbeddingMap
