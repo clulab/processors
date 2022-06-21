@@ -4,9 +4,11 @@ import org.clulab.utils.Closer.AutoCloser
 
 import org.scalatest._
 
+import java.io.Closeable
+
 class TestAutoClosing extends FlatSpec with Matchers {
 
-  class Closing(exception: Option[Throwable] = None) {
+  class Closing(exception: Option[Throwable] = None) extends Closeable {
     var closed: Boolean = false // test
 
     def close(): Unit = {

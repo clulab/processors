@@ -2,9 +2,11 @@ package org.clulab.utils
 
 import org.scalatest._
 
+import java.io.Closeable
+
 class TestClosing extends FlatSpec with Matchers {
 
-  class Closing(exception: Option[Throwable] = None) {
+  class Closing(exception: Option[Throwable] = None) extends Closeable {
     var closed: Boolean = false // test
 
     def close(): Unit = {
