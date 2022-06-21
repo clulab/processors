@@ -328,10 +328,10 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure("Seeding dates ranged from 22 August to 26 September in 2011WS.",
       Interval(3, 11), "DATE-RANGE", "2011-08-22 -- 2011-09-26")
     ensure("The planned timing for the first split was 23 days after sowing (from 3 to 13 August in the 1999WS and from 14 to 25 August in the 2000WS",
-      Interval(13, 21), "DATE-RANGE", "1999-08-03 -- 1999-08-13",
+      Interval(13, 21), "DATE-RANGE", "1999-08-03 -- 1999-08-13"
     )
     ensure("The planned timing for the first split was 23 days after sowing (from 3 to 13 August in the 1999WS and from 14 to 25 August in the 2000WS",
-      Interval(22, 29), "DATE-RANGE", "2000-08-14 -- 2000-08-25",
+      Interval(22, 29), "DATE-RANGE", "2000-08-14 -- 2000-08-25"
     )
   }
 
@@ -589,7 +589,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     println("Entities: " + entities.mkString(", "))
     println("Norms:    " + norms.mkString(", "))
 
-    if(goldEntity.nonEmpty) {
+    if (goldEntity.nonEmpty) {
       var first = true
       for (i <- span.indices) {
         if (goldEntity == "O") {
