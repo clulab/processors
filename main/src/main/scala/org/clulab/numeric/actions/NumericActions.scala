@@ -29,7 +29,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   }
 
   /** Converts a sequence of mentions to new types given the converter function */
-  private def convertOneToMany(mentions: Seq[Mention], converter: Mention => Seq[Mention], converterName: String): Seq[Mention] = {
+  private def convertWithOneToManyConverter(mentions: Seq[Mention], converter: Mention => Seq[Mention], converterName: String): Seq[Mention] = {
     val convertedMentions = new ArrayBuffer[Mention]()
     for(m <- mentions) {
       try {
@@ -57,7 +57,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
 
   /** Constructs a MeasurementMention from a token pattern */
   def mkSharedMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    convertOneToMany(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
+    convertWithOneToManyConverter(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
   }
 
   def mkPercentage(mentions: Seq[Mention], state: State): Seq[Mention] = {

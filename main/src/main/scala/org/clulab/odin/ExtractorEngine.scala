@@ -49,7 +49,6 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
         mention <- globalAction(extractedMentions, state)
         if mention.isValid && !state.contains(mention)
       } yield mention
-//      for (m <- finalMentions) println("men: " + m.label + " " + m.text + " " + m.foundBy + " " + m.arguments.flatMap(_._2).toList.length)
       // return the final mentions
       finalMentions
     }

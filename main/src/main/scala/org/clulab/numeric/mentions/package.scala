@@ -74,16 +74,12 @@ package object mentions {
     case m:  MeasurementMention => Seq(m)
 
     case m: RelationMention =>
-//      if (mention.arguments("number").length > 1)
-//      println("M: " + mention.text + " " + mention.label)
       mention.arguments("number").sortBy(_.tokenInterval).map { a =>
-//        println("num: " + a.words.mkString("|"))
-//        println("unit: " + m.arguments("unit").head.text)
-//        println("unit: " + getArgWords("unit", m))
         val newArgs = Seq(m.arguments("unit").head, a).sortBy(_.tokenInterval)
-        val newTokInt = Interval(newArgs.head.tokenInterval.start, newArgs.last.tokenInterval.end)
-//        println(">>" + newArgs.map(_.text).mkString("::"))
-//        println(">>>" + newTokInt + "\n")
+        // if num and unit are adjacent, include both in new token int, else use the token int of the number arg
+        val newTokInt = if (newArgs.last.start - newArgs.head.end == 1) {
+          Interval(newArgs.head.tokenInterval.start, newArgs.last.tokenInterval.end)
+        } else a.tokenInterval
         new MeasurementMention(
           m.labels,
           a.tokenInterval,

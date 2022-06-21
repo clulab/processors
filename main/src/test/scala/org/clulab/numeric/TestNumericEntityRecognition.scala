@@ -592,13 +592,18 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     if(goldEntity.nonEmpty) {
       var first = true
       for (i <- span.indices) {
-        val prefix = if (first) "B-" else "I-"
-        val label = prefix + goldEntity
+        if (goldEntity == "O") {
+          norms(i) should be(goldNorm)
+        } else {
+          val prefix = if (first) "B-" else "I-"
+          val label = prefix + goldEntity
 
-        entities(i) should be(label)
-        norms(i) should be(goldNorm)
+          entities(i) should be(label)
+          norms(i) should be(goldNorm)
 
-        first = false
+          first = false
+        }
+
       }
     }
   }
