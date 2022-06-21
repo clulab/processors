@@ -1,13 +1,12 @@
 package org.clulab.utils
 
-import scala.language.reflectiveCalls
+import java.io.Closeable
+
 import scala.util.control.NonFatal
 
 object Closer {
 
-  protected type Closeable = {def close() : Unit}
-
-  def close[Resource <: Closeable](resource: => Resource): Unit = resource.close()
+  def close(resource: => Closeable): Unit = resource.close()
 
   // This is so that exceptions caused during close are caught, but don't
   // prevent the registration of any previous exception.
@@ -55,7 +54,7 @@ object Closer {
   }
 
   // Allow for alternative syntax closeable.autoClose { closeable => ... }
-  implicit class AutoCloser[Resource <: Closer.Closeable](resource: Resource) {
+  implicit class AutoCloser[Resource <: Closeable](resource: Resource) {
 
     def autoClose[Result](function: Resource => Result): Result = Closer.autoClose(resource)(function)
   }
