@@ -4,7 +4,7 @@ import java.io.File
 
 import org.clulab.sequences.CommentedStandardKbSource
 import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.Closer.AutoBufferedSource
+import org.clulab.utils.Closer.AutoSource
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable

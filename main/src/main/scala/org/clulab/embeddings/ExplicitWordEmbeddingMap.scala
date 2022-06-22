@@ -3,7 +3,7 @@ package org.clulab.embeddings
 import java.io._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.Closer.AutoBufferedSource
+import org.clulab.utils.Closer.AutoSource
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 

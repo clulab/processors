@@ -1,8 +1,7 @@
 package org.clulab.sequences
 
+import org.clulab.utils.Closer.AutoSource
 import org.clulab.utils.Sourcer
-
-import org.clulab.utils.Closer.AutoBufferedSource
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source

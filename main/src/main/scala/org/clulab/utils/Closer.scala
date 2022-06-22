@@ -1,10 +1,11 @@
 package org.clulab.utils
 
-import scala.io.{BufferedSource, Source}
+import scala.io.Source
 import scala.util.control.NonFatal
 
 object Closer {
 
+  // Keep in mind that Closeable is a subclass of AutoCloseable.
   def close(resource: => AutoCloseable): Unit = resource.close()
 
   // This is so that exceptions caused during close are caught, but don't
@@ -12,7 +13,8 @@ object Closer {
   // See also https://medium.com/@dkomanov/scala-try-with-resources-735baad0fd7d.
   // Others have resource: => Closeable, but I want the resource evaluated beforehand
   // so that it doesn't throw an exception before there is anything to close.
-  def autoClose2[Resource, Result](resource: Resource)(closer: () => Unit)(function: Resource => Result): Result = {
+  // 3 here is for the number of arguments.  Operator overloading doesn't handle it.
+  def autoClose3[Resource, Result](resource: Resource)(closer: () => Unit)(function: Resource => Result): Result = {
 
     val (result: Option[Result], exception: Option[Throwable]) = try {
       (Some(function(resource)), None)
@@ -54,26 +56,19 @@ object Closer {
 
   // Two arguments can be used generically if the Resource has inherited from Closeable.
   def autoClose[Resource <: AutoCloseable, Result](resource: Resource)(function: Resource => Result): Result =
-      Closer.autoClose2(resource)(() => resource.close())(function)
-
-  // In Scala 2.11, Source does not inherit from Closeable, so one has to tell Closer how to close() it.
-  implicit class AutoSource(resource: Source) {
-
-    def autoClose[Result](function: Source => Result) =
-        Closer.autoClose2(resource)(() => resource.close())(function)
-  }
-
-  // In Scala 2.11, Source does not inherit from Closeable, so one has to tell Closer how to close() it.
-  implicit class AutoBufferedSource(resource: BufferedSource) {
-
-    def autoClose[Result](function: Source => Result) =
-      Closer.autoClose2(resource)(() => resource.close())(function)
-  }
+      Closer.autoClose3(resource)(() => resource.close())(function)
 
   // Allow for alternative syntax closeable.autoClose { closeable => ... }
   implicit class AutoCloser[Resource <: AutoCloseable](resource: Resource) {
 
     def autoClose[Result](function: Resource => Result): Result =
         Closer.autoClose(resource)(function)
+  }
+
+  // In Scala 2.11, Source does not inherit from Closeable, so one has to tell Closer how to close() it.
+  implicit class AutoSource[Resource <: Source](resource: Resource) {
+
+    def autoClose[Result](function: Resource => Result) =
+        Closer.autoClose3(resource)(() => resource.close())(function)
   }
 }
