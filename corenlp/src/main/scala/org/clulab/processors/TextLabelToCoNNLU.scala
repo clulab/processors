@@ -8,7 +8,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import TextLabelToCoNLLU._
 import org.clulab.dynet.Utils
 import org.clulab.struct.GraphMap
-import org.clulab.utils.Closer.AutoCloser
+import org.clulab.utils.Closer.AutoBufferedSource
 
 /**
   * Processes raw text and saves the output in the CoNLL-U format

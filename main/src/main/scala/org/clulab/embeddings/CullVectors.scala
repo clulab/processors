@@ -3,6 +3,7 @@ package org.clulab.embeddings
 import java.io.File
 
 import org.clulab.utils.Closer.AutoCloser
+import org.clulab.utils.Closer.AutoSource
 import org.clulab.utils.Sinker
 import org.clulab.utils.Sourcer
 

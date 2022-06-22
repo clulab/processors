@@ -7,7 +7,7 @@ import java.nio.file.{Files => JFiles, Path, Paths}
 import java.util.zip.ZipFile
 
 import org.clulab.utils.Closer.AutoCloser
-
+import org.clulab.utils.Closer.AutoBufferedSource
 
 import scala.collection.JavaConverters._
 import scala.io.Source

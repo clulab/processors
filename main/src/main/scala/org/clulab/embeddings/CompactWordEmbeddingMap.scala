@@ -7,6 +7,7 @@ import com.esotericsoftware.kryo.io.Output
 import java.io._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
+import org.clulab.utils.Closer.AutoSource
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 import org.clulab.utils.Timers
