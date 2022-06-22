@@ -1,6 +1,7 @@
 package org.clulab.utils
 
 import scala.io.Source
+import scala.language.implicitConversions
 import scala.util.control.NonFatal
 
 object Closer {
@@ -56,7 +57,11 @@ object Closer {
 
   // Two arguments can be used generically if the Resource has inherited from Closeable.
   def autoClose[Resource <: AutoCloseable, Result](resource: Resource)(function: Resource => Result): Result =
-      Closer.autoClose3(resource)(() => resource.close())(function)
+      autoClose3(resource)(() => resource.close())(function)
+
+//  def autoClose[Resource <: AutoCloseable](resource: Resource): AutoCloser[Resource] = new AutoCloser(resource)
+//
+//  implicit def autoClose[Resource <: Source](resource: Resource): AutoSource[Resource] = new AutoSource(resource)
 
   // Allow for alternative syntax closeable.autoClose { closeable => ... }
   implicit class AutoCloser[Resource <: AutoCloseable](resource: Resource) {
