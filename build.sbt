@@ -4,7 +4,7 @@ val scala13 = "2.13.8"  // up to 2.13.8
 // scala13 is waiting on ai.lum %% common.
 
 ThisBuild / crossScalaVersions := Seq(scala12, scala11)
-ThisBuild / scalaVersion := crossScalaVersions.value(1)
+ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
   .aggregate(main, corenlp, openie)
