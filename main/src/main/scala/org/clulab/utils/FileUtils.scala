@@ -8,7 +8,6 @@ import java.util.zip.ZipFile
 
 import org.clulab.utils.Closer.AutoCloser
 
-
 import scala.collection.JavaConverters._
 import scala.io.Source
 

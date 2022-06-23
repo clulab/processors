@@ -1,12 +1,14 @@
 package org.clulab.utils
 
 import org.clulab.utils.Closer.AutoCloser
-
 import org.scalatest._
+
+import java.io.Closeable
+import scala.io.Source
 
 class TestAutoClosing extends FlatSpec with Matchers {
 
-  class Closing(exception: Option[Throwable] = None) {
+  class Closing(exception: Option[Throwable] = None) extends Closeable {
     var closed: Boolean = false // test
 
     def close(): Unit = {
@@ -138,5 +140,11 @@ class TestAutoClosing extends FlatSpec with Matchers {
       getClosing.autoClose( _ => 5)
     }
     closing.closed should be (false)
+  }
+
+  it should "work with a plain Source, even in Scala 2.11" in {
+    Source.fromString("foo\nbar\n").autoClose { source =>
+      source.getLines.toList
+    }
   }
 }

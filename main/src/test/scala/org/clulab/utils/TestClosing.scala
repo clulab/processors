@@ -2,9 +2,12 @@ package org.clulab.utils
 
 import org.scalatest._
 
+import java.io.Closeable
+import scala.io.Source
+
 class TestClosing extends FlatSpec with Matchers {
 
-  class Closing(exception: Option[Throwable] = None) {
+  class Closing(exception: Option[Throwable] = None) extends Closeable {
     var closed: Boolean = false // test
 
     def close(): Unit = {
@@ -137,5 +140,9 @@ class TestClosing extends FlatSpec with Matchers {
     }
     closing.closed should be (false)
   }
-}
 
+  it should "work with a plain Source, even in Scala 2.11" in {
+    val source = Source.fromString("foo\nbar\n")
+    Closer.close(source)
+  }
+}
