@@ -1,20 +1,41 @@
 package org.clulab.utils
 
-import scala.language.reflectiveCalls
+import scala.io.Source
+import scala.language.implicitConversions
 import scala.util.control.NonFatal
 
 object Closer {
 
-  protected type Closeable = {def close() : Unit}
+  trait Releasable[Resource] {
+    def release(resource: Resource): Unit
+  }
 
-  def close[Resource <: Closeable](resource: => Resource): Unit = resource.close()
+  object Releasable {
+
+    implicit def releasableAutoCloseable[Resource <: AutoCloseable]: Releasable[Resource] = {
+      new Releasable[Resource] {
+        def release(resource: Resource): Unit = resource.close()
+      }
+    }
+
+    // In Scala 2.11, Source does not inherit from Closeable, so one has to tell Closer how to close() it.
+    implicit def releasableSource[Resource <: Source]: Releasable[Resource] = {
+      new Releasable[Resource] {
+        def release(resource: Resource): Unit = resource.close()
+      }
+    }
+  }
+
+  def close[Resource: Releasable](resource: => Resource): Unit =
+      implicitly[Releasable[Resource]].release(resource)
 
   // This is so that exceptions caused during close are caught, but don't
   // prevent the registration of any previous exception.
   // See also https://medium.com/@dkomanov/scala-try-with-resources-735baad0fd7d.
   // Others have resource: => Closeable, but I want the resource evaluated beforehand
   // so that it doesn't throw an exception before there is anything to close.
-  def autoClose[Resource <: Closeable, Result](resource: Resource)(function: Resource => Result): Result = {
+  // 3 here is for the number of arguments.  Operator overloading doesn't handle it.
+  protected def autoClose3[Resource, Result](resource: Resource)(closer: () => Unit)(function: Resource => Result): Result = {
 
     val (result: Option[Result], exception: Option[Throwable]) = try {
       (Some(function(resource)), None)
@@ -23,9 +44,9 @@ object Closer {
       case exception: Throwable => (None, Some(exception))
     }
 
-    val closeException: Option[Throwable] = Option(resource).flatMap { resource =>
+    val closeException: Option[Throwable] = Option(resource).flatMap { _ =>
       try {
-        resource.close()
+        closer()
         None
       }
       catch {
@@ -54,9 +75,12 @@ object Closer {
     }
   }
 
-  // Allow for alternative syntax closeable.autoClose { closeable => ... }
-  implicit class AutoCloser[Resource <: Closer.Closeable](resource: Resource) {
+  def autoClose[Resource: Releasable, Result](resource: Resource)(function: Resource => Result): Result =
+      autoClose3(resource)(() => implicitly[Releasable[Resource]].release(resource))(function)
 
-    def autoClose[Result](function: Resource => Result): Result = Closer.autoClose(resource)(function)
+  implicit class AutoCloser[Resource: Releasable](resource: Resource) {
+
+    def autoClose[Result](function: Resource => Result): Result =
+        Closer.autoClose(resource)(function)
   }
 }

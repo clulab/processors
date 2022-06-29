@@ -1,19 +1,9 @@
 package org.clulab.utils
 
-import sun.net.www.protocol.jar.JarURLConnection
-
 import java.io.FileInputStream
 import java.io.InputStream
 import scala.util.Failure
 import scala.util.Try
-
-class PublicCloseInputStream(inputStream: InputStream) extends InputStream {
-
-  override def read(): Int = inputStream.read()
-
-  // This can be reflected upon.
-  override def close(): Unit = inputStream.close()
-}
 
 class InputStreamer(val provider: AnyRef = InputStreamer, direct: Boolean = true) {
   import InputStreamer.Format
@@ -28,17 +18,6 @@ class InputStreamer(val provider: AnyRef = InputStreamer, direct: Boolean = true
       else provider.getClass.getClassLoader.getResourceAsStream(name)
 
     Option(inputStream).getOrElse(throw new RuntimeException(s"Resource $name not found."))
-    // The inputStream may be a JarURLConnection#JarURLInputStream which is Closeable but
-    // whose close method is not discoverable using reflection at runtime so that an AutoClose
-    // cannot be constructed without JVM options like --add-opens which we want to avoid.
-    // The exception is this:
-    // Cause: java.lang.reflect.InaccessibleObjectException: Unable to make public void
-    // sun.net.www.protocol.jar.JarURLConnection$JarURLInputStream.close() throws
-    // java.io.IOException accessible: module java.base does not "opens sun.net.www.protocol.jar"
-    // to unnamed module @5ffead27.
-    // Update: Use of PublicCloseInputStream was found the be incredibly slow, so the use of
-    // autoClose in WordEmbeddingMapPool was replaced by a try and finally on the raw inputStream.
-    // new PublicCloseInputStream(inputStream)
   }
 
   protected def getInputStream(name: String, fileLocation: String, resourceLocation: String,
