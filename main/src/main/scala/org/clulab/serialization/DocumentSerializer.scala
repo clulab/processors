@@ -1,15 +1,14 @@
 package org.clulab.serialization
 
 import java.io._
-
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
-import com.typesafe.scalalogging.LazyLogging
 import org.clulab.processors.DocumentAttachment
 import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
+import org.clulab.utils.Logging
 
 /**
   * Saves/loads a Document to/from a stream
@@ -20,7 +19,7 @@ import org.clulab.struct._
   * Last Modified: Don't save zero-length text.
   * Last Modified 06/10/18: Add .raw in sentence serialization
   */
-class DocumentSerializer extends LazyLogging {
+class DocumentSerializer extends Logging {
 
   import DocumentSerializer._
 

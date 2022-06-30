@@ -29,9 +29,12 @@ libraryDependencies ++= {
     "org.clulab"                  % "lemport"                  % "0.9.10", // Portuguese lemmatizer
     "de.jollyday"                 % "jollyday"                 % "0.5.10", // for holidays normalization
     // logging
-    "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // up to 1.2.8; less than 1.2 is vulnerable
-    "com.typesafe.scala-logging" %% "scala-logging"            % "3.7.2",
-    "org.slf4j"                   % "slf4j-api"                % "1.7.10",
+    // The Scala interface is not used in processors.
+    // "com.typesafe.scala-logging" %% "scala-logging"            % "3.7.2",  // front end, never used
+    // Instead, all code makes use of the Java interface.
+    "org.slf4j"                   % "slf4j-api"                % "1.7.10", // API
+    // Local logging is provided here.
+    "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // back end, up to 1.2.8; less than 1.2 is vulnerable
     // testing
     "org.scalatest"              %% "scalatest"                % "3.0.1"  % Test,
     // trained models for local ML models used in both main and corenlp
