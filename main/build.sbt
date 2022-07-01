@@ -30,13 +30,13 @@ libraryDependencies ++= {
     "de.jollyday"                 % "jollyday"                 % "0.5.10", // for holidays normalization
     // logging
     // The Scala interface is not used in processors.
-    // "com.typesafe.scala-logging" %% "scala-logging"            % "3.7.2",  // front end, never used
+    // "com.typesafe.scala-logging" %% "scala-logging"            % "3.7.2",
     // Instead, all code makes use of the Java interface.
-    "org.slf4j"                   % "slf4j-api"                % "1.7.10", // API
-    // Local logging is provided here.
-    "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // back end, up to 1.2.8; less than 1.2 is vulnerable
+    "org.slf4j"                   % "slf4j-api"                % "1.7.10",
+    // Local logging is provided here and not published.
+    "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // up to 1.2.8; less than 1.2 is vulnerable
     // testing
-    "org.scalatest"              %% "scalatest"                % "3.0.1"  % Test,
+    "org.scalatest"              %% "scalatest"                % "3.0.1" % Test,
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
