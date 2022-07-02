@@ -1,3 +1,8 @@
+import org.clulab.sbt.ExclusiveDependencyFilter
+
+import scala.xml.Node
+import scala.xml.transform.RuleTransformer
+
 val publication = "processors"
 
 ThisBuild / developers := List(
@@ -18,6 +23,12 @@ ThisBuild / organizationHomepage := Some(url("http://clulab.org/"))
 ThisBuild / organizationName := "Computational Language Understanding (CLU) Lab"
 // The sonatype plugin seems to overwrite these two values.
 ThisBuild / pomIncludeRepository := { _ => false }
+ThisBuild / pomPostProcess := {
+  println("Working on it...")
+  val rule = ExclusiveDependencyFilter("ch.qos.logback", "logback-classic")
+
+  (node: Node) => new RuleTransformer(rule).transform(node).head
+}
 ThisBuild / publishMavenStyle := true
 ThisBuild / publishTo := {
   val nexus = "https://oss.sonatype.org/"
