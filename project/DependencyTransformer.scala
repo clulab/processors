@@ -24,22 +24,14 @@ abstract class DependencyTransformer extends RewriteRule {
   def transform(node: Node, dependencyId: DependencyId): NodeSeq
 }
 
-abstract class DependencyFilter extends DependencyTransformer {
+class DependencyFilter(filter: DependencyId => Boolean) extends DependencyTransformer {
 
   def transform(node: Node, dependencyId: DependencyId): NodeSeq =
       if (filter(dependencyId)) node
       else Nil
-
-  def filter(dependencyId: DependencyId): Boolean
 }
 
-class ExclusiveDependencyFilter(dependencyId: DependencyId) extends DependencyFilter {
+object DependencyFilter {
 
-  def filter(dependencyId: DependencyId): Boolean = this.dependencyId != dependencyId
-}
-
-object ExclusiveDependencyFilter {
-
-  def apply(dependencyId: DependencyId): ExclusiveDependencyFilter =
-      new ExclusiveDependencyFilter(dependencyId)
+  def apply(filter: DependencyId => Boolean): DependencyFilter = new DependencyFilter(filter)
 }

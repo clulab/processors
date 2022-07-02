@@ -1,4 +1,4 @@
-import org.clulab.sbt.ExclusiveDependencyFilter
+import org.clulab.sbt.DependencyFilter
 import org.clulab.sbt.DependencyId
 
 import scala.xml.Node
@@ -26,7 +26,9 @@ ThisBuild / organizationName := "Computational Language Understanding (CLU) Lab"
 ThisBuild / pomIncludeRepository := { _ => false }
 ThisBuild / pomPostProcess := {
   val logback = DependencyId("ch.qos.logback", "logback-classic")
-  val rule = ExclusiveDependencyFilter(logback)
+  val rule = DependencyFilter { dependencyId =>
+    dependencyId != logback
+  }
 
   (node: Node) => new RuleTransformer(rule).transform(node).head
 }
