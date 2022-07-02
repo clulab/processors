@@ -1,4 +1,5 @@
 import org.clulab.sbt.ExclusiveDependencyFilter
+import org.clulab.sbt.DependencyId
 
 import scala.xml.Node
 import scala.xml.transform.RuleTransformer
@@ -24,8 +25,8 @@ ThisBuild / organizationName := "Computational Language Understanding (CLU) Lab"
 // The sonatype plugin seems to overwrite these two values.
 ThisBuild / pomIncludeRepository := { _ => false }
 ThisBuild / pomPostProcess := {
-  println("Working on it...")
-  val rule = ExclusiveDependencyFilter("ch.qos.logback", "logback-classic")
+  val logback = DependencyId("ch.qos.logback", "logback-classic")
+  val rule = ExclusiveDependencyFilter(logback)
 
   (node: Node) => new RuleTransformer(rule).transform(node).head
 }

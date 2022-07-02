@@ -4,8 +4,9 @@ import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.transform.RewriteRule
 
+case class DependencyId(groupId: String, artifactId: String)
+
 abstract class DependencyTransformer extends RewriteRule {
-  println("DependencyTransformer is being created!")
 
   override def transform(node: Node): NodeSeq = {
     val name = node.nameToString(new StringBuilder()).toString()
@@ -15,34 +16,30 @@ abstract class DependencyTransformer extends RewriteRule {
         val groupId = (node \ "groupId").text.trim
         val artifactId = (node \ "artifactId").text.trim
 
-        println(s"Transforming $groupId % artifactId")
-        transform(node, groupId, artifactId)
+        transform(node, DependencyId(groupId, artifactId))
       case _ => node
     }
   }
 
-  def transform(node: Node, groupId: String, artifactId: String): NodeSeq
+  def transform(node: Node, dependencyId: DependencyId): NodeSeq
 }
 
 abstract class DependencyFilter extends DependencyTransformer {
 
-  def transform(node: Node, groupId: String, artifactId: String): NodeSeq =
-      if (filter(groupId, artifactId)) node
+  def transform(node: Node, dependencyId: DependencyId): NodeSeq =
+      if (filter(dependencyId)) node
       else Nil
 
-  def filter(groupId: String, artifactId: String): Boolean
+  def filter(dependencyId: DependencyId): Boolean
 }
 
-class ExclusiveDependencyFilter(groupId: String, artifactId: String) extends DependencyFilter {
+class ExclusiveDependencyFilter(dependencyId: DependencyId) extends DependencyFilter {
 
-  def filter(groupId: String, artifactId: String): Boolean = {
-      // These will be excluded.
-      !(this.groupId == groupId && this.artifactId == artifactId)
-  }
+  def filter(dependencyId: DependencyId): Boolean = this.dependencyId != dependencyId
 }
 
 object ExclusiveDependencyFilter {
 
-  def apply(groupId: String, artifactId: String): ExclusiveDependencyFilter =
-      new ExclusiveDependencyFilter(groupId, artifactId)
+  def apply(dependencyId: DependencyId): ExclusiveDependencyFilter =
+      new ExclusiveDependencyFilter(dependencyId)
 }
