@@ -52,9 +52,7 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
     }
 
     // global actions *after* all grammars are done
-    mentions = actions.cleanupAction(mentions)
-
-    mentions
+    actions.cleanupAction(mentions)
   }
 }
 

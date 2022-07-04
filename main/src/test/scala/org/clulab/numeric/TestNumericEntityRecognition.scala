@@ -175,6 +175,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "February 21 of 1002", Interval(0, 4), goldEntity= "DATE", goldNorm= "1002-02-21")
   }
 
+  it should "recognize numeric dates of form month date in year" in {
+    ensure("The first sowing dates started on July 1st in 2010 and on July 8th in 2011", Interval(6, 10), "DATE", "2010-07-01")
+    ensure("The first sowing dates started on July 1st in 2010 and on July 8th in 2011", Interval(12, 16), "DATE", "2011-07-08")
+  }
+
   it should "recognize dates with ordinal days" in {
     ensure(sentence = "Planting dates are between July 1st and August 2nd.", Interval(3, 9), goldEntity = "DATE-RANGE", "XXXX-07-01 -- XXXX-08-02")
   }
@@ -459,6 +464,7 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(12,13), goldEntity="MEASUREMENT", goldNorm="7.1 t/ha")
     ensure(sentence = "was estimated at 9 and 10 t / ha", Interval(3, 4), goldEntity="MEASUREMENT", goldNorm="9.0 t/ha")
     ensure(sentence = "was estimated at 9 and 10 t / ha", Interval(5, 9), goldEntity="MEASUREMENT", goldNorm="10.0 t/ha")
+    ensure(sentence = "+ 100 kg ha-1 urea at 20 das + 50 kg ha-1 urea at 50 das", Interval(6, 8), goldEntity="O", goldNorm="")
     ensure(sentence = "yield will increase from 3600 in 2000-2009 to 4500 kg ha-1 in 2090-2099", Interval(4, 5), goldEntity="MEASUREMENT", goldNorm="3600.0 kg/ha")
   }
 

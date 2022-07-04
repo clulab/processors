@@ -47,7 +47,7 @@ rules:
     example: "It was May 12 of 2000"
     action: mkDateMention
     pattern: |
-      @month:PossibleMonth ( @day:PossibleDay )? "of"? @year:PossibleYear
+      @month:PossibleMonth ( @day:PossibleDay )? /^(of|in)$/? @year:PossibleYear
 
   # American date format, with mandatory year
   - name: date-4

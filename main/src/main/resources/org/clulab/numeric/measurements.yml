@@ -22,7 +22,7 @@ rules:
     type: token
     action: mkSharedMeasurementMention
     pattern: |
-      (@number:Number []{0,2} [word = /,|and|to/]*)+ @number:Number @unit:MeasurementUnit
+      (@number:Number [!tag = /^NN|LRB/]{0,2} [word = /,|and|to/]*)+ @number:Number @unit:MeasurementUnit
 
   - name: measurement-percentage
     label: Percentage
