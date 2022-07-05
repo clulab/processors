@@ -1,8 +1,8 @@
 package org.clulab.openie.entities
 
-import com.typesafe.scalalogging.LazyLogging
 import org.clulab.odin.Mention
 import org.clulab.openie.utils.TagSet
+import org.clulab.utils.Logging
 
 import scala.annotation.tailrec
 
@@ -10,7 +10,7 @@ import scala.annotation.tailrec
 /**
   * Utilities for validating entities
   */
-object EntityConstraints extends LazyLogging {
+object EntityConstraints extends Logging {
   val pairs = Seq(("(", ")"), ("{", "}"), ("[", "]"))
 
   // POS tags for splitting conjunctions
