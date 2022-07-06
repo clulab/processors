@@ -1,11 +1,11 @@
 package org.clulab.openie.entities
 
-import com.typesafe.scalalogging.LazyLogging
 import org.clulab.openie.ResourceUtils
 import org.clulab.odin.{ExtractorEngine, Mention, State, TextBoundMention}
 import org.clulab.openie.utils.{EnglishTagSet, TagSet}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
+import org.clulab.utils.Logging
 
 import scala.annotation.tailrec
 
@@ -23,7 +23,7 @@ class RuleBasedEntityFinder(
   val avoidEngine: ExtractorEngine,
   val maxHops: Int,
   val maxLength: Int = RuleBasedEntityFinder.DEFAULT_MAX_LENGTH
-) extends EntityFinder with LazyLogging {
+) extends EntityFinder with Logging {
 
   val tagSet: TagSet = new EnglishTagSet
 
@@ -205,7 +205,7 @@ class RuleBasedEntityFinder(
 }
 
 
-object RuleBasedEntityFinder extends LazyLogging {
+object RuleBasedEntityFinder extends Logging {
 
   val DEFAULT_MAX_LENGTH = 10 // maximum length (in tokens) for an entity
   def apply(maxHops: Int, maxLength: Int = DEFAULT_MAX_LENGTH): RuleBasedEntityFinder = {

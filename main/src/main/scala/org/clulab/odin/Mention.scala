@@ -45,10 +45,22 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     case m: EventMention => m.newWithAttachment(mod)
   }
 
+  def withAttachments(mods: Seq[Attachment]): Mention = this match {
+    case m: TextBoundMention => m.newWithAttachments(mods)
+    case m: RelationMention => m.newWithAttachments(mods)
+    case m: EventMention => m.newWithAttachments(mods)
+  }
+
   def withoutAttachment(mod: Attachment): Mention = this match {
     case m: TextBoundMention => m.newWithoutAttachment(mod)
     case m: RelationMention => m.newWithoutAttachment(mod)
     case m: EventMention => m.newWithoutAttachment(mod)
+  }
+
+  def withoutAttachments(mods: Seq[Attachment]): Mention = this match {
+    case m: TextBoundMention => m.newWithoutAttachments(mods)
+    case m: RelationMention => m.newWithoutAttachments(mods)
+    case m: EventMention => m.newWithoutAttachments(mods)
   }
 
   val paths: Map[String, Map[Mention, SynPath]]
@@ -236,10 +248,17 @@ class TextBoundMention(
     copy(attachments = this.attachments + mod)
   }
 
+  def newWithAttachments(mods: Seq[Attachment]): TextBoundMention = {
+    copy(attachments = this.attachments ++ mods)
+  }
+
   def newWithoutAttachment(mod: Attachment): TextBoundMention = {
     copy(attachments = this.attachments - mod)
   }
 
+  def newWithoutAttachments(mods: Seq[Attachment]): TextBoundMention = {
+    copy(attachments = this.attachments -- mods)
+  }
 }
 
 // NOTE that event mentions *may* have no arguments
@@ -324,8 +343,16 @@ class EventMention(
     copy(attachments = this.attachments + mod)
   }
 
+  def newWithAttachments(mods: Seq[Attachment]): EventMention = {
+    copy(attachments = this.attachments ++ mods)
+  }
+
   def newWithoutAttachment(mod: Attachment): EventMention = {
     copy(attachments = this.attachments - mod)
+  }
+
+  def newWithoutAttachments(mods: Seq[Attachment]): EventMention = {
+    copy(attachments = this.attachments -- mods)
   }
 
   // Convert an EventMention to a RelationMention by deleting the trigger
@@ -426,8 +453,16 @@ class RelationMention(
     copy(attachments = this.attachments + mod)
   }
 
+  def newWithAttachments(mods: Seq[Attachment]): RelationMention = {
+    copy(attachments = this.attachments ++ mods)
+  }
+
   def newWithoutAttachment(mod: Attachment): RelationMention = {
     copy(attachments = this.attachments - mod)
+  }
+
+  def newWithoutAttachments(mods: Seq[Attachment]): RelationMention = {
+    copy(attachments = this.attachments -- mods)
   }
 
   // Convert a RelationMention to an EventMention by specifying a trigger
