@@ -245,7 +245,8 @@ class Eisner {
         val relativeHead = scores(i).maxBy(_._2)._1.toInt
         val depMod = i + 1
         val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
-        val valid = dependencies(depMod).indices.contains(depHead) && dependencies(depMod)(depHead) != null
+        // lift() checks the index, and Option(_) checks for nulls.
+        val valid = dependencies(depMod).lift(depHead).flatMap(Option(_)).isDefined
         val label = if (valid) dependencies(depMod)(depHead).label else "root"
         val head =
           if(generateRelativeHeads) {
