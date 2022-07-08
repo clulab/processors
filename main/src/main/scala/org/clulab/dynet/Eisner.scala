@@ -237,7 +237,7 @@ class Eisner {
             dep.head - 1
           }
         val label = dep.label
-        heads(dep.mod - 1) = Tuple2(head, label)
+        heads(dep.mod - 1) = (head, label)
       }
     } else {
       // Eisner failed to produce a complete tree; revert to the greedy inference
@@ -245,16 +245,18 @@ class Eisner {
         val relativeHead = scores(i).maxBy(_._2)._1.toInt
         val depMod = i + 1
         val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
-        val label = dependencies(depMod)(depHead).label
+        // lift() checks the index, and Option(_) checks for nulls.
+        val valid = dependencies(depMod).lift(depHead).flatMap(Option(_)).isDefined
+        val label = if (valid) dependencies(depMod)(depHead).label else "root"
         val head =
           if(generateRelativeHeads) {
             // we are storing *relative* head positions here
-            relativeHead
+            if (valid) relativeHead else 0
           } else {
             // we are storing absolute heads, starting at offset 0
-            depHead - 1
+            if (valid) depHead - 1 else -1
           }
-        heads(i) = Tuple2(head, label)
+        heads(i) = (head, label)
       }
     }
     heads
