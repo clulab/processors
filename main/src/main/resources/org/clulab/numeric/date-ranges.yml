@@ -192,4 +192,4 @@
   example: "The areas sown for this 2021/2022 wintering campaign are. [...] rice yield will increase from 3600 in 2000-2009 [...]"
   action: mkDateRangeMentionOneTokenYearRange
   pattern: |
-    /^([12]\d\d\d)[\-\/]([12]\d\d\d)$/
+    /^(1\d\d\d|20\d\d)[\-\/](1\d\d\d|20\d\d)$/
