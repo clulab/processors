@@ -617,6 +617,7 @@ class CluProcessor protected (
     // numeric entities using our Odin rules
     //
     val numericMentions = numericEntityRecognizer.extractFrom(doc)
+
     setLabelsAndNorms(doc, numericMentions)
   }
 

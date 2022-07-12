@@ -42,7 +42,6 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
   def extractFrom(doc:Document): Seq[Mention] = {
     // dictionaries
     val originalEntities = matchLexiconNer(doc)
-
     // grammars
     var mentions = extractor.extractFrom(doc)
 
