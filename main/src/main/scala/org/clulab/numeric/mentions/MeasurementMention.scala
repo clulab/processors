@@ -17,10 +17,7 @@ class MeasurementMention ( labels: Seq[String],
                            val fromRange: Boolean)
   extends TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments) with Norm {
 
-  println("v: " + value.get.head)
-  println("u: " + unit.get.head)
   override def neNorm: String = {
-    println("here")
     assert(value.nonEmpty)
     assert(unit.nonEmpty)
 
@@ -33,7 +30,6 @@ class MeasurementMention ( labels: Seq[String],
     if(numValueOpt.isEmpty)
       throw new RuntimeException(s"ERROR: could not parse the number [${value.mkString(" ")}] in the measurement ${raw.mkString(" ")}!")
     val unitNorm = UnitNormalizer.norm(unit.get)
-    println("Unit norm: " + unitNorm)
     numValueOpt.get + " " + unitNorm
   }
 
