@@ -12,9 +12,9 @@ Makefile
 .bloop/
 .metals/
 .vscode/
-project/
 
 # sbt specific
+.bsp
 dist/*
 target/
 lib_managed/

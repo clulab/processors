@@ -1,4 +1,7 @@
-+ **8.5.1** - Avoid empty words 
++ **8.5.2** - Processors no longer uses Scala logging nor does it publish its runtime use of logback so that it isn't forced onto clients.  logback is still included in ivy.xml for publishLocal, however.
++ **8.5.1** - Normalize years with relative seasons and one-token numerical ranges
++ **8.5.1** - Avoid empty words from tokenizer, shorten evaluation filenames, add progress bars 
++ **8.5.1** - Recognize date from Month/Month to Month/Month 
 + **8.5.0** - Small parser improvements; added model for case restoration
 + **8.4.9** - Parser improvements: slimmer models; parsing using the Eisner algorithm
 + **8.4.9** - Removed support for embedding spans in Metal
