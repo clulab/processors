@@ -371,7 +371,11 @@ class CluProcessor protected (
     assert(generic.length == custom.length)
     val labels = new Array[String](generic.length)
     for(i <- generic.indices) {
-      if(custom(i) != OUTSIDE) {
+      if(custom(i) != OUTSIDE && generic(i) == OUTSIDE) {
+        // Give priority to whatever is already there in generic unless O.  Otherwise, it
+        // is possible to break up an existing B- I- I- sequence.  It would be possible to
+        // replace the last element of the sequence if custom had higher priority, but
+        // we're not doing that here.
         labels(i) = custom(i)
       } else {
         labels(i) = generic(i)
