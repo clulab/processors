@@ -5,6 +5,7 @@ import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMe
 import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
+import scala.util.control.Breaks._
 
 package object numeric {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
@@ -90,6 +91,29 @@ package object numeric {
     for(mention <- mentions) {
       if(NumericActions.isNumeric(mention) && mention.isInstanceOf[Norm]) {
         addLabelsAndNorms(mention.asInstanceOf[Norm], mention.sentenceObj, mention.tokenInterval)
+      }
+    }
+    removeOneEntityBeforeAnother(doc, "B-LOC", "MEASUREMENT")
+  }
+
+  def removeOneEntityBeforeAnother(doc: Document, triggerEntity: String, toBeRemovedShortened: String): Unit = {
+    // removes entities and norms for unallowable entity sequences, e.g., don't extract 'in' as 'inch' before B-LOC in '... Sahal 108 in Senegal'
+    // toBeRemovedShortened is entity without BIO-
+    for(s <- doc.sentences) {
+      val zippedEntities = s.entities.get.zipWithIndex
+      for ((e, i) <- zippedEntities) {
+        if (i > 0 && e == triggerEntity && s.entities.get(i-1).endsWith(toBeRemovedShortened)) {
+          s.entities.get(i - 1) = "O"
+          // go in reverse replacing indices and norms in the immediate preceding mention
+          breakable {
+            for ((en, j) <- zippedEntities.slice(0, i ).reverse) {
+              if (en.endsWith(toBeRemovedShortened)) {
+                s.entities.get(j) = "O"
+                s.norms.get(j) = ""
+              } else break
+            }
+          }
+        }
       }
     }
   }

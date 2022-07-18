@@ -9,7 +9,7 @@
   example: "Weeding timing ranged from 2 to 17 days"
   action: mkNumberRangeMention
   pattern: |
-    /(?i)(from|between)/ @number1:Number /(?i)(to|and|\-)/ @number2:Number
+    /(?i)(from|between)/ @number1:Number [entity = /MEASUREMENT-UNIT/]* /(?i)(to|and|\-)/ @number2:Number 
 
 - name: number-range-2
   priority: ${rulepriority}

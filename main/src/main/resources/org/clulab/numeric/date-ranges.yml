@@ -184,3 +184,12 @@
   action: mkDateRangeMentionVagueSeason
   pattern: |
     /^(1\d\d\d|2\d\d\d)(WS|DS)$/ | @year:PossibleYear (?<season> [word = /^(WS|DS)$/])
+
+- name: date-one-token-year-range
+  label: Date
+  priority: ${ rulepriority }
+  type: token
+  example: "The areas sown for this 2021/2022 wintering campaign are. [...] rice yield will increase from 3600 in 2000-2009 [...]"
+  action: mkDateRangeMentionOneTokenYearRange
+  pattern: |
+    /^(1\d\d\d|20\d\d)[\-\/](1\d\d\d|20\d\d)$/

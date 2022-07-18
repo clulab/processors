@@ -153,6 +153,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "19:02.", Interval(0, 1), goldEntity= "DATE", goldNorm= "XX19-02-XX")
   }
 
+  it should "recognize one token year ranges" in {
+    ensure(sentence= "2021/2022", Interval(0, 1), goldEntity= "DATE-RANGE", goldNorm= "2021-XX-XX -- 2022-XX-XX")
+    ensure(sentence= "2000-2009", Interval(0, 1), goldEntity= "DATE-RANGE", goldNorm= "2000-XX-XX -- 2009-XX-XX")
+  }
+
   it should "recognize numeric dates of form month of year" in {
     ensure(sentence= "sowing date is best in May of 2020", Interval(5, 8), goldEntity= "DATE", goldNorm= "2020-05-XX")
     ensure(sentence= "sowing date in July of 2020", Interval(3, 6), goldEntity= "DATE", goldNorm= "2020-07-XX")
@@ -168,6 +173,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     ensure(sentence= "Rain will be on April 8 of 2020", Interval(4, 8), goldEntity= "DATE", goldNorm= "2020-04-08")
     ensure(sentence= "December 18 of 2002", Interval(0, 4), goldEntity= "DATE", goldNorm= "2002-12-18")
     ensure(sentence= "February 21 of 1002", Interval(0, 4), goldEntity= "DATE", goldNorm= "1002-02-21")
+  }
+
+  it should "recognize numeric dates of form month date in year" in {
+    ensure("The first sowing dates started on July 1st in 2010 and on July 8th in 2011", Interval(6, 10), "DATE", "2010-07-01")
+    ensure("The first sowing dates started on July 1st in 2010 and on July 8th in 2011", Interval(12, 16), "DATE", "2011-07-08")
   }
 
   it should "recognize dates with ordinal days" in {
@@ -322,6 +332,12 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
   it should "recognize date ranges with vague seasons" in {
     ensure("Seeding dates ranged from 22 August to 26 September in 2011WS.",
       Interval(3, 11), "DATE-RANGE", "2011-08-22 -- 2011-09-26")
+    ensure("The planned timing for the first split was 23 days after sowing (from 3 to 13 August in the 1999WS and from 14 to 25 August in the 2000WS",
+      Interval(13, 21), "DATE-RANGE", "1999-08-03 -- 1999-08-13"
+    )
+    ensure("The planned timing for the first split was 23 days after sowing (from 3 to 13 August in the 1999WS and from 14 to 25 August in the 2000WS",
+      Interval(22, 29), "DATE-RANGE", "2000-08-14 -- 2000-08-25"
+    )
   }
 
   it should "recognize date ranges (month/day) with vague seasons" in {
@@ -438,6 +454,23 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     
     // TODO: not sure what should be the output of such measurement '3 or 4 days'
     ensure(sentence= "and lasted 3 or 4 days in both wet seasons", Interval(4, 6), goldEntity="MEASUREMENT", goldNorm="4.0 d")
+    ensure(sentence= "ranged from 2.7 t ha-1 to 7.1 t ha-1", Interval(1, 9), goldEntity="MEASUREMENT", goldNorm="2.7 -- 7.1 t/ha")
+    ensure(sentence= "yields were between 8.8 t ha-1 and 9.2 t ha-1", Interval(2, 10), goldEntity="MEASUREMENT", goldNorm="8.8 -- 9.2 t/ha")
+  }
+
+  it should "recognize shared units" in {
+    ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(7,8), goldEntity="MEASUREMENT", goldNorm="6.4 t/ha")
+    ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(9,10), goldEntity="MEASUREMENT", goldNorm="7.9 t/ha")
+    ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(12,13), goldEntity="MEASUREMENT", goldNorm="7.1 t/ha")
+    ensure(sentence = "was estimated at 9 and 10 t / ha", Interval(3, 4), goldEntity="MEASUREMENT", goldNorm="9.0 t/ha")
+    ensure(sentence = "was estimated at 9 and 10 t / ha", Interval(5, 9), goldEntity="MEASUREMENT", goldNorm="10.0 t/ha")
+    ensure(sentence = "+ 100 kg ha-1 urea at 20 das + 50 kg ha-1 urea at 50 das", Interval(6, 8), goldEntity="O", goldNorm="")
+    ensure(sentence = "yield will increase from 3600 in 2000-2009 to 4500 kg ha-1 in 2090-2099", Interval(4, 5), goldEntity="MEASUREMENT", goldNorm="3600.0 kg/ha")
+  }
+
+  it should "not recognize preposition `in` as `inch`" in {
+    ensure(sentence = "released as Sahel 108 in Senegal in 1994", Interval(3,5), goldEntity="O", goldNorm="")
+    ensure(sentence = "92% grew Sahel 108 in 2012DS", Interval(3,5), goldEntity="O", goldNorm="")
   }
 
   // TODO: this requires non trivial changes to the tokenizer
@@ -562,16 +595,21 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     println("Entities: " + entities.mkString(", "))
     println("Norms:    " + norms.mkString(", "))
 
-    if(goldEntity.nonEmpty) {
+    if (goldEntity.nonEmpty) {
       var first = true
       for (i <- span.indices) {
-        val prefix = if (first) "B-" else "I-"
-        val label = prefix + goldEntity
+        if (goldEntity == "O") {
+          norms(i) should be(goldNorm)
+        } else {
+          val prefix = if (first) "B-" else "I-"
+          val label = prefix + goldEntity
 
-        entities(i) should be(label)
-        norms(i) should be(goldNorm)
+          entities(i) should be(label)
+          norms(i) should be(goldNorm)
 
-        first = false
+          first = false
+        }
+
       }
     }
   }

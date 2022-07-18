@@ -47,7 +47,7 @@ rules:
     example: "It was May 12 of 2000"
     action: mkDateMention
     pattern: |
-      @month:PossibleMonth ( @day:PossibleDay )? "of"? @year:PossibleYear
+      @month:PossibleMonth ( @day:PossibleDay )? /^(of|in)$/? @year:PossibleYear
 
   # American date format, with mandatory year
   - name: date-4
@@ -76,7 +76,7 @@ rules:
     example: "26 September in 2011WS"
     action: mkDateMention
     pattern: |
-      ( @day:PossibleDay @month:PossibleMonth | @month:PossibleMonth @day:PossibleDay) /^in$/ (?<year> [word = /^(\d\d\d\d)(WS|DS)$/])
+      ( @day:PossibleDay @month:PossibleMonth | @month:PossibleMonth @day:PossibleDay) /^in$/ /^the$/? (?<year> [word = /^(1\d\d\d|20\d\d)(WS|DS)$/])
 
   # Rule for YYYY-MM-DD (accepts -, :, / as separators)
   - name: date-yyyy-mm-dd

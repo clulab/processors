@@ -667,6 +667,7 @@ class CluProcessor protected (
     // numeric entities using our Odin rules
     //
     val numericMentions = numericEntityRecognizer.extractFrom(doc)
+
     setLabelsAndNorms(doc, numericMentions)
   }
 
@@ -772,7 +773,6 @@ class CluProcessor protected (
     for(sent <- doc.sentences) {
       val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
       parserPostProcessing(sent, headsWithLabels)
-      //println("headsWithLabels: " + headsWithLabels.mkString(" "))
 
       val edges = new ListBuffer[Edge[String]]()
       val roots = new mutable.HashSet[Int]()

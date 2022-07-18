@@ -30,7 +30,6 @@ class MeasurementMention ( labels: Seq[String],
     if(numValueOpt.isEmpty)
       throw new RuntimeException(s"ERROR: could not parse the number [${value.mkString(" ")}] in the measurement ${raw.mkString(" ")}!")
     val unitNorm = UnitNormalizer.norm(unit.get)
-
     numValueOpt.get + " " + unitNorm
   }
 
