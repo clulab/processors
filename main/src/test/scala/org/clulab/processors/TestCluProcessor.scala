@@ -196,12 +196,14 @@ class TestCluProcessor extends FatdynetTest {
     sent.norms.get(2) should be ("2021-01-12 -- 2022-02-XX")
   }
 
-  it should "recognize custom names entities" in {
+  it should "recognize custom named entities" in {
     val sent = proc.annotate("Jack Doe and John Doe were friends in yyy zzz.").sentences.head
-    sent.entities.get(0) should be ("B-D")
-    sent.entities.get(1) should be ("I-D")
+    // Even though this is a custom named entity, it is already a person and so it stays that way.
+    sent.entities.get(0) should be ("B-PER") // ("B-D")
+    sent.entities.get(1) should be ("I-PER") // ("I-D")
     sent.entities.get(3) should be ("B-PER")
     sent.entities.get(4) should be ("I-PER")
+    // This is a custom named entity and nothing otherwise, so the values of entities have been changed.
     sent.entities.get(8) should be ("B-D")
     sent.entities.get(9) should be ("I-D")
   }
