@@ -11,7 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
-import org.clulab.sequences.LexiconNER
+import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 
 import java.util.regex.Pattern
@@ -366,22 +366,19 @@ class CluProcessor protected (
     }
   }
 
-  // The custom labels override the generic ones!
   private def mergeNerLabels(generic: IndexedSeq[String], custom: IndexedSeq[String]): Array[String] = {
-    assert(generic.length == custom.length)
-    val labels = new Array[String](generic.length)
-    for(i <- generic.indices) {
-      if(custom(i) != OUTSIDE && generic(i) == OUTSIDE) {
-        // Give priority to whatever is already there in generic unless O.  Otherwise, it
-        // is possible to break up an existing B- I- I- sequence.  It would be possible to
-        // replace the last element of the sequence if custom had higher priority, but
-        // we're not doing that here.
-        labels(i) = custom(i)
-      } else {
-        labels(i) = generic(i)
-      }
+    require(generic.length == custom.length)
+
+    val customNamedEntities = NamedEntity.collect(custom)
+
+    if (customNamedEntities.isEmpty)
+      generic.toArray
+    else {
+      val genericNamedEntities = NamedEntity.collect(generic)
+
+      // The custom labels override the generic ones!
+      NamedEntity.combine(generic.length, genericNamedEntities, customNamedEntities)
     }
-    labels
   }
 
   /** Gets the index of all predicates in this sentence */
