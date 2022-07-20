@@ -370,14 +370,15 @@ class CluProcessor protected (
     require(generic.length == custom.length)
 
     val customNamedEntities = NamedEntity.collect(custom)
+    val result = generic.toArray // A copy of the generic labels is created here.
 
     if (customNamedEntities.isEmpty)
-      generic.toArray
+      result
     else {
       val genericNamedEntities = NamedEntity.collect(generic)
 
       // The custom labels override the generic ones!
-      NamedEntity.combine(generic.length, genericNamedEntities, customNamedEntities)
+      NamedEntity.combine(result, genericNamedEntities, customNamedEntities)
     }
   }
 
