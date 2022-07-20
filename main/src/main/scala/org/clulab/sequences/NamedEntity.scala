@@ -13,6 +13,9 @@ case class NamedEntity(label: String, range: Range) {
       range.drop(1).foreach(bioLabels(_) = inner)
     }
   }
+
+  def isOutside(bioLabels: Array[String]): Boolean =
+      range.forall(bioLabels(_) == NamedEntity.OUTSIDE)
 }
 
 object NamedEntity {
@@ -43,8 +46,9 @@ object NamedEntity {
 
     customNamedEntities.foreach { customNamedEntity =>
       // If there is a matching range in the genericRanges, override the generic one with the
-      // custom NamedEntity there.  Otherwise, stick with the generic one already in the result.
-      if (genericRanges(customNamedEntity.range))
+      // customNamedEntity there.  If the entire range is OUTSIDE, also take the custonNamedEntity.
+      // Otherwise, stick with the generic one already in the bioLabels.
+      if (genericRanges(customNamedEntity.range) || customNamedEntity.isOutside(bioLabels))
         customNamedEntity.fill(bioLabels)
     }
 

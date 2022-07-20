@@ -115,5 +115,10 @@ class TestNamedEntity extends Test {
       "B-2 I-2 I-2 O O",
       "B-0 B-1 I-1 I-1 O"
     )
+    test("14",
+      "B-1 O O O B-3",
+      "B-4 B-2 I-2 I-2 B-6",
+      "B-4 B-2 I-2 I-2 B-6"
+    )
   }
 }
