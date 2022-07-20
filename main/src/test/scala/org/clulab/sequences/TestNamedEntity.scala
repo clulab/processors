@@ -7,10 +7,10 @@ class TestNamedEntity extends Test {
   behavior of "NamedEntity"
 
   {
-    def test(bioTagString: String, expectedNamedEntities: Seq[NamedEntity]): Unit = {
-      it should s"collect properly from $bioTagString" in {
-        val bioTags = bioTagString.split(' ')
-        val actualNamedEntities = NamedEntity.collect(bioTags)
+    def test(bioLabelString: String, expectedNamedEntities: Seq[NamedEntity]): Unit = {
+      it should s"collect properly from $bioLabelString" in {
+        val bioLabels = bioLabelString.split(' ')
+        val actualNamedEntities = NamedEntity.collect(bioLabels)
 
         actualNamedEntities should contain theSameElementsInOrderAs (expectedNamedEntities)
       }
@@ -36,17 +36,17 @@ class TestNamedEntity extends Test {
   }
 
   {
-    def test(id: String, genericBioTagString: String, customBioTagString: String, expectedCombinedBioTagString: String): Unit = {
+    def test(id: String, genericBioLabelString: String, customBioLabelString: String, expectedCombinedBioLabelString: String): Unit = {
       // if (id == "1")
       it should s"combine properly test $id" in {
-        val genericBioTags = genericBioTagString.split(' ')
-        val customBioTags = customBioTagString.split(' ')
-        val genericNamedEntities = NamedEntity.collect(genericBioTags)
-        val customNamedEntities = NamedEntity.collect(customBioTags)
-        val actualCombinedBioTags = NamedEntity.combine(genericBioTags.length, genericNamedEntities, customNamedEntities)
-        val actualCombinedBioTagString = actualCombinedBioTags.mkString(" ")
+        val genericBioLabels = genericBioLabelString.split(' ')
+        val customBioLabels = customBioLabelString.split(' ')
+        val genericNamedEntities = NamedEntity.collect(genericBioLabels)
+        val customNamedEntities = NamedEntity.collect(customBioLabels)
+        val actualCombinedBioLabels = NamedEntity.combine(genericBioLabels, genericNamedEntities, customNamedEntities)
+        val actualCombinedBioLabelString = actualCombinedBioLabels.mkString(" ")
 
-        actualCombinedBioTagString should be(expectedCombinedBioTagString)
+        actualCombinedBioLabelString should be(expectedCombinedBioLabelString)
       }
     }
 
