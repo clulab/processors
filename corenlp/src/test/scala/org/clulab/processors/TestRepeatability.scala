@@ -1,21 +1,16 @@
 package org.clulab.processors
 
 import org.clulab.dynet.Utils
-import org.clulab.processors.examples.ParallelProcessorExample
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
-import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Sourcer.utf8
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
-import scala.collection.mutable
+import java.io.{File, PrintWriter, StringWriter}
 import scala.io.Source
 
-class TestRepeatability extends FlatSpec with Matchers {
+class TestRepeatability extends AnyFlatSpec with Matchers {
   Utils.initializeDyNet()
 
   def printDocument(document: Document): String = {

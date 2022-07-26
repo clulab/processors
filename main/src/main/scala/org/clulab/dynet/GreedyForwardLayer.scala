@@ -56,10 +56,10 @@ class GreedyForwardLayer (parameters:ParameterCollection,
         val score = scoresForPosition(lid)
         labelsAndScores += Tuple2(label, score)
       }
-      labelsWithScores += labelsAndScores.sortBy(- _._2)
+      labelsWithScores += labelsAndScores.sortBy(- _._2).toIndexedSeq
     }
 
-    labelsWithScores
+    labelsWithScores.toIndexedSeq
   }
 }
 

@@ -1,12 +1,13 @@
 package org.clulab.utils
 
 import org.clulab.utils.Closer.AutoCloser
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import java.io.Closeable
 import scala.io.Source
 
-class TestAutoClosing extends FlatSpec with Matchers {
+class TestAutoClosing extends AnyFlatSpec with Matchers {
 
   class Closing(exception: Option[Throwable] = None) extends Closeable {
     var closed: Boolean = false // test

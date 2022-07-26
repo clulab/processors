@@ -1,14 +1,15 @@
 package org.clulab.processors
 
 import org.clulab.processors.clu.tokenizer.OpenDomainEnglishTokenizer
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   *
   * User: mihais
   * Date: 3/15/17
   */
-class TestTokenizer extends FlatSpec with Matchers {
+class TestTokenizer extends AnyFlatSpec with Matchers {
   "the tokenizer" should "provide fundamental tokenization functionality" in {
     var sents = tok("the of $><1/2 1.3 another test.")
     sents(0).size should be (10)

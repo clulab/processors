@@ -5,9 +5,11 @@ import org.clulab.serialization.DocumentSerializer
 import org.clulab.TestUtils.jsonStringToDocument
 import org.json4s._
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class TestJSONSerializer extends FlatSpec with Matchers {
+class TestJSONSerializer extends AnyFlatSpec with Matchers {
 
   val text = "Gonzo married Camilla."
   val doc = jsonStringToDocument(""" {"sentences":[{"raw":["Gonzo","married","Camilla","."], "words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)

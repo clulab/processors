@@ -1,6 +1,9 @@
 package org.clulab.learning
 
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
 import scala.collection.mutable.ArrayBuffer
 import java.io.{OutputStreamWriter, PrintWriter}
 
@@ -9,7 +12,7 @@ import java.io.{OutputStreamWriter, PrintWriter}
  * User: mihais
  * Date: 12/10/13
  */
-class TestPerceptronRankingClassifier extends FlatSpec with Matchers {
+class TestPerceptronRankingClassifier extends AnyFlatSpec with Matchers {
   "PerceptronRankingClassifier" should "have a P@1 > .50 on this dataset" in {
     val dataset = RVFRankingDataset.mkDatasetFromSvmRankResource("org/clulab/learning/ranking_train.txt.gz")
 

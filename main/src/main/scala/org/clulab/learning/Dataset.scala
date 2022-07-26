@@ -12,6 +12,8 @@ import org.slf4j.{Logger, LoggerFactory}
 import RVFDataset._
 import org.clulab.utils.Files
 
+import scala.reflect.ClassTag
+
 /**
  * Parent class for classification datasets
  * User: mihais
@@ -29,9 +31,6 @@ abstract class Dataset[L, F](
 
   def numFeatures: Int = featureLexicon.size
   def numLabels: Int = labelLexicon.size
-
-  /** number of training examples */
-  override def size: Int = labels.size
 
   override def indices: Range = labels.indices
 
@@ -63,7 +62,7 @@ abstract class Dataset[L, F](
  * @tparam L Type of labels
  * @tparam F Type of features
  */
-class BVFDataset[L, F] (
+class BVFDataset[L: ClassTag, F: ClassTag](
   ll:Lexicon[L],
   fl:Lexicon[F],
   ls:ArrayBuffer[Int],
@@ -226,7 +225,7 @@ class BVFDataset[L, F] (
  * @tparam L Type of labels
  * @tparam F Type of features
  */
-class RVFDataset[L, F] (
+class RVFDataset[L: ClassTag, F: ClassTag] (
   ll:Lexicon[L],
   fl:Lexicon[F],
   ls:ArrayBuffer[Int],
@@ -277,8 +276,8 @@ class RVFDataset[L, F] (
   }
 
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
-    def foreach[U](fn: ((F, Double)) => U): Unit = {
-      for(i <- 0 until RVFDataset.this.size) {
+    override def foreach[U](fn: ((F, Double)) => U): Unit = {
+      for(i <- RVFDataset.this.indices) {
         for(j <- features(i).indices) {
           val fi = features(i)(j)
           val v = values(i)(j)
@@ -289,7 +288,7 @@ class RVFDataset[L, F] (
     }
 
     def updateAll(fn: ((F, Double)) => Double): Unit = {
-      for(i <- 0 until RVFDataset.this.size) {
+      for(i <- RVFDataset.this.indices) {
         for(j <- features(i).indices) {
           val fi = features(i)(j)
           val v = values(i)(j)
@@ -298,6 +297,14 @@ class RVFDataset[L, F] (
         }
       }
     }
+
+    override def iterator: Iterator[(F, Double)] =
+      RVFDataset.this.indices.flatMap { i =>
+        features(i).map { j =>
+          val fi = features(i)(j)
+          featureLexicon.get(fi) -> values(i)(j)
+        }
+      }.iterator
   }
 
   override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {

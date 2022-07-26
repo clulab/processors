@@ -6,21 +6,22 @@ import edu.stanford.nlp.util.CoreMap
 import org.clulab.TestUtils
 import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.collection.JavaConverters._
 
-class TestCoreCharacterOffsets extends FlatSpec with Matchers {
+class TestCoreCharacterOffsets extends AnyFlatSpec with Matchers {
   val proc = new ShallowNLPProcessor()
 
   "the tokenizer" should "generate correct character offsets in a single sentence" in {
     val doc = proc.mkDocument("John Doe went to China on January 15th, 2001.", keepText = true)
 
     val docAnnotation = doc.asInstanceOf[CoreNLPDocument].annotation.get
-    val sents:Seq[CoreMap] = docAnnotation.get(classOf[SentencesAnnotation]).asScala
+    val sents:Seq[CoreMap] = docAnnotation.get(classOf[SentencesAnnotation]).asScala.toSeq
     val text = docAnnotation.get(classOf[TextAnnotation])
     for(s <- sents) {
-      val tokens:Seq[CoreLabel] = s.get(classOf[TokensAnnotation]).asScala
+      val tokens:Seq[CoreLabel] = s.get(classOf[TokensAnnotation]).asScala.toSeq
       for(token <- tokens) {
         val word = token.word()
         val wordFromOffsets = text.substring(token.beginPosition(), token.endPosition())

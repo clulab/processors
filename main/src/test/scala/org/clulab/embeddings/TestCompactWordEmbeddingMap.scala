@@ -1,11 +1,12 @@
 package org.clulab.embeddings
 
 import org.clulab.utils.Sourcer
+
 import java.io.File
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-import org.scalatest._
-
-class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
+class TestCompactWordEmbeddingMap extends AnyFlatSpec with Matchers {
 
   protected def matches(array1: IndexedSeq[Float], array2: IndexedSeq[Double], epsilon: Double): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>

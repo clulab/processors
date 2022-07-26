@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-
 import org.clulab.processors.Document
 import org.clulab.processors.Sentence
 import org.clulab.serialization.DocumentSerializer
@@ -14,15 +13,13 @@ import org.clulab.struct.test.ObjectNameDocumentAttachment
 import org.clulab.struct.test.NameDocumentAttachment
 import org.clulab.struct.test.TextNameDocumentAttachment
 import org.clulab.utils.Closer.AutoCloser
-
 import org.json4s.jackson.parseJson
 import org.json4s.jackson.prettyJson
 import org.json4s.jackson.renderJValue
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-
-class TestDocumentAttachment extends FlatSpec with Matchers {
+class TestDocumentAttachment extends AnyFlatSpec with Matchers {
   protected val FIRST_KEY = "first"
   protected val MIDDLE_KEY = "middle"
   protected val LAST_KEY = "last"

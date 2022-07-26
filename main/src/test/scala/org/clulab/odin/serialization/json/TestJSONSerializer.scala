@@ -4,9 +4,11 @@ import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
 import org.json4s._
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class TestJSONSerializer extends FlatSpec with Matchers {
+class TestJSONSerializer extends AnyFlatSpec with Matchers {
 
   val rules =
     """

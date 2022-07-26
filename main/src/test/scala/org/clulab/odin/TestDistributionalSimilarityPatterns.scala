@@ -2,10 +2,10 @@ package org.clulab.odin
 
 import org.clulab.TestUtils._
 import org.clulab.TestUtils.jsonStringToDocument
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-
-class TestDistributionalSimilarityPatterns extends FlatSpec with Matchers {
+class TestDistributionalSimilarityPatterns extends AnyFlatSpec with Matchers {
 
   // the rule file containing the path to the embeddings resources
   val rf = "org/clulab/odin/grammars/embeddings.yml"

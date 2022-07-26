@@ -2,12 +2,12 @@ package org.clulab.embeddings
 
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import java.io.File
 
-class TestWordEmbeddingMap extends FlatSpec with Matchers {
+class TestWordEmbeddingMap extends AnyFlatSpec with Matchers {
   val name = "/test_vectors"
 
   behavior of "ExplicitWordEmbeddingMap"

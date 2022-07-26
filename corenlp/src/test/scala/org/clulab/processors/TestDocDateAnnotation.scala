@@ -1,9 +1,10 @@
 package org.clulab.processors
 
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestDocDateAnnotation extends FlatSpec with Matchers {
+class TestDocDateAnnotation extends AnyFlatSpec with Matchers {
   val proc = new ShallowNLPProcessor()
 
   "ShallowNLPProcessor" should "normalize relative dates correctly when DCT is provided" in {

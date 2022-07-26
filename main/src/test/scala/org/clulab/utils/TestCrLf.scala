@@ -1,15 +1,12 @@
 package org.clulab.utils
 
-import java.io.BufferedInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStreamReader
-
 import org.clulab.utils.Closer.AutoCloser
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-import org.scalatest._
+import java.io.{BufferedInputStream, File, FileInputStream, InputStreamReader}
 
-class TestCrLf extends FlatSpec with Matchers {
+class TestCrLf extends AnyFlatSpec with Matchers {
 
   behavior of "resources"
 

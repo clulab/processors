@@ -9,7 +9,7 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 
 libraryDependencies ++= {
-  val json4sVersion = "3.5.2"
+  val json4sVersion = "4.0.5"
 
   Seq(
     // common tools
@@ -18,7 +18,7 @@ libraryDependencies ++= {
     "jline"                       % "jline"                    % "2.12.1",
     "org.json4s"                 %% "json4s-core"              % json4sVersion,
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion,
-    "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4",
+    "org.scala-lang.modules"     %% "scala-parser-combinators" % "2.1.1",
     "com.io7m.xom"                % "xom"                      % "1.2.10",
     // for machine learning
     "org.clulab"                 %% "fatdynet"                 % "0.4.4",
@@ -36,7 +36,7 @@ libraryDependencies ++= {
     // Local logging is provided here and not published.
     "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // up to 1.2.8; less than 1.2 is vulnerable
     // testing
-    "org.scalatest"              %% "scalatest"                % "3.0.1" % Test,
+    "org.scalatest"              %% "scalatest"                % "3.2.12" % Test,
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
@@ -45,7 +45,7 @@ libraryDependencies ++= {
 
     // for odin
     "org.apache.commons"      % "commons-text"             % "1.1",
-    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+    "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
     "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
     "org.yaml"                % "snakeyaml"                % "1.14",
 

@@ -1,9 +1,10 @@
 package org.clulab.odin
 
 import org.clulab.TestUtils.jsonStringToDocument
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestMention extends FlatSpec with Matchers {
+class TestMention extends AnyFlatSpec with Matchers {
 
   // motivated by changes to the words field that replaced `'m` with `am`
   "mention.text" should "properly reconstruct the original span" in {

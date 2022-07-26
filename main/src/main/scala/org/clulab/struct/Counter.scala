@@ -2,12 +2,9 @@ package org.clulab.struct
 
 import java.io.{Reader, Writer}
 import java.text.DecimalFormat
-
-import scala.collection.breakOut
 import scala.collection.mutable
-import scala.math.Ordering.{ Double => DoubleSortOrder }
-
 import org.clulab.utils.Files
+import org.json4s.jackson.JsonMethods.{compact, render}
 
 /**
  * Counts elements of type T
@@ -117,9 +114,8 @@ class Counter[T] (
 
   /** Sorts counts in descending order, if argument is true. */
   def sorted(descending:Boolean):List[(T, Double)] = {
-    val vs:List[(T,Double)] = keySet.map(k => Tuple2(k, getCount(k)))(breakOut)
-    val sortOrder = if (descending) DoubleSortOrder.reverse else DoubleSortOrder
-    vs.sortBy(_._2)(sortOrder)
+    implicit val sortOrder: Ordering[(T, Double)] = if (descending) Ordering.by[(T,Double), Double](_._2).reverse else Ordering.by[(T,Double), Double](_._2)
+    keySet.map(k => Tuple2(k, getCount(k))).to(List).sorted
   }
 
   override def toString:String = {
@@ -178,10 +174,11 @@ class Counter[T] (
 
   def values: Seq[Double] = toSeq.map(_._2)
 
-  def toJSON: String = scala.util.parsing.json.JSONObject(toSeq.toMap.map(
-  {
-    case (k, v) => k.toString -> v
-  })).toString()
+  def toJSON: String = {
+    import org.json4s.JsonDSL.WithDouble._
+    val value = toSeq.toMap.map { case (k,v) => k.toString -> v }
+    compact(render(value))
+  }
 
   def zipWith(f: (Double,  Double) => Double)(other:Counter[T]): Counter[T] = {
     val out = new Counter[T](defaultReturnValue)

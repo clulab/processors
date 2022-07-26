@@ -1,7 +1,8 @@
 package org.clulab.processors
 
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * Makes sure that we process parentheses correctly
@@ -10,7 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * So, we'll keep parens NOT normalized since this is more common, and normalize them inside the constituent parser
   *     (see CoreNLPProcessor)
   */
-class TestParenthesesInCore extends FlatSpec with Matchers {
+class TestParenthesesInCore extends AnyFlatSpec with Matchers {
   val fast = new FastNLPProcessor()
 
   "CluProcessor" should "tokenize, lemmatize, and POS tag parentheses correctly" in {

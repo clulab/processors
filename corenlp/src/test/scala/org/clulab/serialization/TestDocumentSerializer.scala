@@ -4,12 +4,14 @@ import org.clulab.processors.Processor
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * Author: Mihai Surdeanu and Tom Hicks.
   * Last Modified: Update for fix to text field serialization: add tests of larger, multi-line text.
   */
-class TestDocumentSerializer extends FlatSpec with Matchers {
+class TestDocumentSerializer extends AnyFlatSpec with Matchers {
   val proc: Processor = new CoreNLPProcessor(withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
   val ser = new DocumentSerializer
 

@@ -1,11 +1,11 @@
 package org.clulab.odin
 
-import java.io._
-import java.nio.charset.{ StandardCharsets, MalformedInputException }
-import org.clulab.odin._
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestExtractorEngine extends FlatSpec with Matchers {
+import java.nio.charset.{MalformedInputException, StandardCharsets}
+
+class TestExtractorEngine extends AnyFlatSpec with Matchers {
 
   "ExtractorEngine" should "read utf8 encoded data" in {
     var stream = getClass.getResourceAsStream("/org/clulab/odin/master_utf8.yml")

@@ -1,8 +1,10 @@
 package org.clulab.numeric
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestNumberParser extends FlatSpec with Matchers {
+
+class TestNumberParser extends AnyFlatSpec with Matchers {
 
 	"NumberParser" should "parse digits" in {
 		val text = "1200"

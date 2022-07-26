@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
   * User: mihais
   * Date: 8/26/17
   */
-abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, var leftToRight:Boolean = true) extends SequenceTagger[L, F] {
+abstract class MEMMSequenceTagger[L:ClassTag, F: ClassTag](var order:Int = 1, var leftToRight:Boolean = true) extends SequenceTagger[L, F] {
   var model:Option[Classifier[L, F]] = None
 
   private def mkDataset: Dataset[L, F] = new RVFDataset[L, F]()
@@ -72,13 +72,13 @@ abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, var leftToRi
     for(i <- 0 until sentence.size) {
       val feats = new Counter[F]
       featureExtractor(feats, sentence, i)
-      addHistoryFeatures(feats, order, history, i)
+      addHistoryFeatures(feats, order, history.toIndexedSeq, i)
       val d = mkDatum(null.asInstanceOf[L], feats)
       val label = model.get.classOf(d)
       history += label
     }
 
-    if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
+    if(leftToRight) history.toArray else SeqUtils.revert(history.toIndexedSeq).toArray
   }
 
   override def save(fn:File): Unit = {

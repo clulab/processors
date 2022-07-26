@@ -4,13 +4,15 @@ import org.clulab.dynet.Utils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.scalatest._
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  *
  * User: mihais
  * Date: 1/7/14
  */
-class TestFastNLPProcessor extends FlatSpec with Matchers {
+class TestFastNLPProcessor extends AnyFlatSpec with Matchers {
   Utils.initializeDyNet()
   var proc:Processor = new FastNLPProcessorWithSemanticRoles(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 

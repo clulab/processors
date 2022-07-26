@@ -4,7 +4,7 @@ import org.clulab.processors.Sentence
 import org.clulab.struct.{EntityValidator, TrueEntityValidator}
 
 import java.io.File
-import scala.collection.mutable
+import scala.collection.{IndexedSeqView, mutable}
 
 /**
   * The abstract base class for several concrete child classes used for Named Entity
@@ -72,25 +72,28 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
     }
   }
 
-  def hasCondition(wordsView: mutable.IndexedSeqView[String, Array[String]], condition: Char => Boolean): Boolean =
+  val array = Array[String]()
+  val view = array.view
+
+  def hasCondition(wordsView: IndexedSeq[String], condition: Char => Boolean): Boolean =
     wordsView.exists(_.exists(condition))
 
-  def hasLetter(wordsView: mutable.IndexedSeqView[String, Array[String]]): Boolean =
+  def hasLetter(wordsView: IndexedSeq[String]): Boolean =
     hasCondition(wordsView, Character.isLetter)
 
-  def hasDigit(wordsView: mutable.IndexedSeqView[String, Array[String]]): Boolean =
+  def hasDigit(wordsView: IndexedSeq[String]): Boolean =
     hasCondition(wordsView, Character.isDigit)
 
-  def hasUpperCaseLetters(wordsView: mutable.IndexedSeqView[String, Array[String]]): Boolean =
+  def hasUpperCaseLetters(wordsView: IndexedSeq[String]): Boolean =
     hasCondition(wordsView, Character.isUpperCase)
 
-  def hasSpace(wordsView: mutable.IndexedSeqView[String, Array[String]]): Boolean = wordsView.length > 1
+  def hasSpace(wordsView: IndexedSeq[String]): Boolean = wordsView.length > 1
 
-  def countCharacters(wordsView: mutable.IndexedSeqView[String, Array[String]]): Int =
+  def countCharacters(wordsView: IndexedSeq[String]): Int =
     // Go ahead and calculate them all even though we only need to know if they exceed a value.
     wordsView.foldLeft(0) { (sum, word) => sum + word.length }
 
-  val contentQualifiers: Array[mutable.IndexedSeqView[String, Array[String]] => Boolean] = Array(
+  val contentQualifiers: Array[IndexedSeq[String] => Boolean] = Array(
     // Start with the quick and easy ones.
     hasSpace,
     { wordsView => countCharacters(wordsView) > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH },
@@ -100,7 +103,7 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
   )
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int): Boolean = {
-    val wordsView = sentence.words.view(start, start + length)
+    val wordsView = sentence.words.slice(start, start + length)
     // A valid view/span must have a letter and at least one of the other qualifiers.
     val contentful = hasLetter(wordsView) && contentQualifiers.exists(_(wordsView))
 
@@ -311,7 +314,7 @@ object LexiconNER {
     var upperCaseLetters = 0
     val spaces = math.max(0, end - start - 1) // Spaces are between words, not after them.
 
-    words.view(start, end).foreach { word =>
+    words.slice(start, end).foreach { word =>
       characters += word.length
       word.foreach { c =>
         if (Character.isLetter(c)) letters += 1
@@ -344,7 +347,7 @@ object LexiconNER {
     while (offset < length) {
       val notOutsideCount = countWhile(src, offset, isNotOutside)
       // Check that there is not anything in dst that should not be overwritten.
-      if (!dst.view(offset, offset + notOutsideCount).exists(isNotOutside))
+      if (!dst.slice(offset, offset + notOutsideCount).exists(isNotOutside))
         Array.copy(src, offset, dst, offset, notOutsideCount)
       offset += notOutsideCount
 

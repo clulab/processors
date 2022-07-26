@@ -1,12 +1,13 @@
 package org.clulab.odin
 
-import org.clulab.odin.impl.{OdinCompileException, TokenPattern}
-import org.clulab.struct.Interval
-import org.scalatest._
 import org.clulab.TestUtils.jsonStringToDocument
+import org.clulab.odin.impl.{OdinCompileException, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.struct.Interval
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestTokenPattern extends FlatSpec with Matchers {
+class TestTokenPattern extends AnyFlatSpec with Matchers {
 
   val text1 = "TGFBR2 phosphorylates peri-kappa B and inhibits the ubiquitination of SMAD3."
   val text2 = "TGFBR2 phosphorylates peri-kappa B and peri-kappa C and inhibits the ubiquitination of SMAD3."

@@ -12,7 +12,7 @@ import scala.collection.mutable
 case class Dependency(mod:Int, head:Int, var score:Float, rank: Int, var label:String = "")
 
 class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
-  def this() {
+  def this() = {
     this(List[Dependency](), -1, 0f)
   }
 
@@ -55,7 +55,7 @@ object Span {
       addDep(dep, deps, allNodes, modNodes)
     }
       
-    new Span(deps, head, score)
+    new Span(deps.toSeq, head, score)
   }
 
   private def addDep(dep: Dependency,
@@ -337,7 +337,7 @@ class Eisner {
 
       // generate label probabilities using the label classifier
       val labelScores =
-        mtlLabels.get.predictWithScores(0, sentence, Some(modHeadPairs), constEmbeddings) // these are probs
+        mtlLabels.get.predictWithScores(0, sentence, Some(modHeadPairs.toIndexedSeq), constEmbeddings) // these are probs
       val labelTopScores =
         labelScores.map(x => x.filterNot{case (v, _) => v == Utils.STOP_TAG}.maxBy(_._2)) // keep just the top score for each label that is not STOP
       assert(labelTopScores.size == modHeadPairs.size)

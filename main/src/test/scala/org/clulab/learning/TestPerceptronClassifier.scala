@@ -1,15 +1,16 @@
 package org.clulab.learning
 
 import java.io.File
-
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  *
  * User: mihais
  * Date: 12/15/13
  */
-class TestPerceptronClassifier extends FlatSpec with Matchers {
+class TestPerceptronClassifier extends AnyFlatSpec with Matchers {
   "PerceptronClassifier" should "have an accuracy > .97 on this dataset" in {
     val classifier = new PerceptronClassifier[Int, String](
       epochs = 10,

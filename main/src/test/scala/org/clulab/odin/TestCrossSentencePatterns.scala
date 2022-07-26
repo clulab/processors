@@ -3,9 +3,11 @@ package org.clulab.odin
 import org.scalatest._
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.struct.Interval
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class TestCrossSentencePatterns extends FlatSpec with Matchers {
+class TestCrossSentencePatterns extends AnyFlatSpec with Matchers {
 
   val text1 = "Barack Obama is the 44th President of the United States. He was born on August 4, 1961 in Honolulu, Hawaii."
 

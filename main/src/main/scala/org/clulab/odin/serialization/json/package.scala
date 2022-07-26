@@ -253,14 +253,13 @@ package object json {
   implicit class OdinPathOps(paths: Map[String, Map[Mention, odin.SynPath]]) extends JSONSerialization {
     // simplify paths by ignoring Mentions
     def jsonAST: JValue = {
-      val simplePathMap: Map[String, Map[String, List[JValue]]] = paths.mapValues{ innermap =>
+      paths.view.mapValues{ innermap =>
         val pairs = for {
           (m: Mention, path: odin.SynPath) <- innermap.toList
           edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
         } yield (m.id, edgeAST)
         pairs.toMap
       }
-      simplePathMap
     }
   }
 

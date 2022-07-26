@@ -2,12 +2,9 @@ package org.clulab.struct
 
 import scala.collection.mutable
 
-
-class GraphMap extends mutable.HashMap[String, DirectedGraph[String]] {
-  override def initialSize:Int = 2 // we have very few dependency types, so let's create a small hash to save memory
-}
-
 object GraphMap {
+  def apply(): DepdendencyMap = new mutable.HashMap[Int, DirectedGraph[String]](2,mutable.HashMap.defaultLoadFactor)
+
   val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
   val UNIVERSAL_ENHANCED = "universal-enhanced" // collapsed (or enhanced) Universal dependencies
   val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies

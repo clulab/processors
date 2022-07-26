@@ -4,10 +4,11 @@ import org.clulab.dynet.{Utils => DynetUtils}
 import org.clulab.fatdynet.utils.Utils
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
-import org.clulab.struct.TrueEntityValidator
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class FatdynetTest extends FlatSpec with Matchers with BeforeAndAfterAll {
+class FatdynetTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   // We can't really be debugging without the debug build of dynet.  However,
   // there may as well be a way to activate the shutdown process for when a
   // human is observing the testing.

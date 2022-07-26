@@ -4,9 +4,10 @@ import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.clulab.odin.TextBoundMention
 import org.clulab.struct.Interval
 import org.clulab.openie.IETestUtils.jsonStringToDocument
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestCustomizableRuleBasedEntityFinder extends FlatSpec with Matchers {
+class TestCustomizableRuleBasedEntityFinder extends AnyFlatSpec with Matchers {
 
   behavior of "CustomizableRuleBasedEntityFinder"
 

@@ -6,14 +6,15 @@ import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.SeqOdometer
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
+import scala.collection.mutable
 
-class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
+class TestOldAndNewWordEmbeddingMap extends AnyFlatSpec with Matchers {
   val unused = false
   val fileName = "../glove.840B.300d.10f"
   val resourceName = "/org/clulab/glove/glove.840B.300d.10f"
@@ -84,8 +85,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     override def hasNext: Boolean = odometer.hasNext
 
     override def next(): WordEmbeddingConfig = {
-      val Seq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) = odometer.next()
-
+      val Seq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) = odometer.next().toSeq
       WordEmbeddingConfig(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew)
     }
   }

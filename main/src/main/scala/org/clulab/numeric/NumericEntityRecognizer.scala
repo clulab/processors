@@ -31,7 +31,7 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
       sent.entities = Some(labels)
     }
 
-    originalEntities
+    originalEntities.toSeq
   }
 
   /**

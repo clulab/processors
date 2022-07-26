@@ -2,13 +2,15 @@ package org.clulab.processors
 
 import org.clulab.struct.DebugBooleanHashTrie
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  *
  * User: mihais
  * Date: 5/12/15
  */
-class TestHashTrie extends FlatSpec with Matchers {
+class TestHashTrie extends AnyFlatSpec with Matchers {
   "the trie" should "label the text correctly with BIO labels" in {
     val trie = new DebugBooleanHashTrie("E")
     trie.add(Array("a", "a", "b"))

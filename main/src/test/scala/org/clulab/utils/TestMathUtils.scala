@@ -2,8 +2,10 @@ package org.clulab.utils
 
 import org.clulab.utils.MathUtils._
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestMathUtils extends FlatSpec with Matchers {
+class TestMathUtils extends AnyFlatSpec with Matchers {
   val seq = Seq(0.64819654, 0.31665825, 0.95268787, 0.12137638, 0.12971271)
 
   it should "work with Seq" in {

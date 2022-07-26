@@ -3,6 +3,7 @@ package org.clulab.utils
 import org.clulab.processors.Sentence
 import org.clulab.struct.{DirectedGraph, DirectedGraphIndex, Edge}
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
@@ -111,7 +112,7 @@ object ToEnhancedDependencies {
         toRemove += conj
       }
     }
-    remove(toRemove, dgi)
+    remove(toRemove.toSeq, dgi)
   }
 
   /**
@@ -131,7 +132,7 @@ object ToEnhancedDependencies {
         toRemove += pobj
       }
     }
-    remove(toRemove, dgi)
+    remove(toRemove.toSeq, dgi)
   }
 
   /**
@@ -157,12 +158,12 @@ object ToEnhancedDependencies {
         collapsedNmods += Tuple3(prep.source, prep.destination, s"nmod_$mwe")
       }
     }
-    remove(toRemove, dgi)
-    collapsedNmods
+    remove(toRemove.toSeq, dgi)
+    collapsedNmods.toSeq
   }
 
   def findMultiWord(first: String, firstPos: Int, sentence: Sentence, dgi:DirectedGraphIndex[String]): String = {
-    val buffer = new StringBuilder
+    val buffer = new mutable.StringBuilder
     buffer.append(first)
 
     var head = firstPos

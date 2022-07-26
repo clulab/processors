@@ -122,12 +122,12 @@ class SVMRankingClassifier[F] (
     val weightSet = weights.get
     val lexicon = featureLexicon.get
     pw.println ("SVM Weights: ")
-    println ("weights.size: " + weightSet.size)
+    println ("weights.size: " + weightSet.length)
     println ("featureLexicon.size " + lexicon.size)
-    for (j <- 0 until (weightSet.size - 1)) {
+    for (j <- 0 until (weightSet.length - 1)) {
       val featureName = lexicon.get(j)
-      println ("weight: " + weightSet(j).formatted("%3.5f") + " \t feature: " + featureName + "  (idx:" + j + ")" )
-      pw.println ("weight: " + weightSet(j).formatted("%3.5f") + " \t feature: " + featureName + "  (idx:" + j + ")" )
+      println(f"weight: ${weightSet(j)}%3.5f \t feature: ${featureName} (idx: $j)")
+      pw.println(f"weight: ${weightSet(j)}%3.5f \t feature: ${featureName} (idx: $j)")
     }
     pw.println ("- - - - - - - - - - - - - - - - - - - - - - - - - - - - ")
     pw.println ("")
@@ -137,9 +137,9 @@ class SVMRankingClassifier[F] (
 
   def clipWeights(thresh:Double): Unit = {
     val weightsOrig = weightsOriginal.get
-    val weightsClipped = new Array[Double](weightsOrig.size)
+    val weightsClipped = new Array[Double](weightsOrig.length)
 
-    for (j <- 0 until weightsOrig.size) {
+    for (j <- weightsOrig.indices) {
       val median = weightsOrig(j)
       if (math.abs(median) >= thresh) {
         weightsClipped(j) = median
@@ -155,11 +155,11 @@ class SVMRankingClassifier[F] (
   def clipWeightsRelativeToOneFeature(thresh:Double, feature:F): Unit = {
     // To keep weights that are at least 0.10 of the IR score, for example.
     val weightsOrig = weightsOriginal.get
-    val weightsClipped = new Array[Double](weightsOrig.size)
+    val weightsClipped = new Array[Double](weightsOrig.length)
 
     // Find value of IR feature (this could be cleaned up)
     var irWeight:Double = 1.0
-    for (i <- 0 until (weightsOrig.size-1)) {
+    for (i <- 0 until (weightsOrig.length-1)) {
       if (featureLexicon.get.get(i) == feature) {
         irWeight = weightsOrig(i)
       }
@@ -168,7 +168,7 @@ class SVMRankingClassifier[F] (
     logger.debug ("Reference weight: " + irWeight)
     val newThresh = thresh * irWeight
 
-    for (j <- 0 until weightsOrig.size) {
+    for (j <- weightsOrig.indices) {
       val median = weightsOrig(j)
       if (math.abs(median) >= newThresh) {
         weightsClipped(j) = median
@@ -203,7 +203,7 @@ class SVMRankingClassifier[F] (
     if(numFeats == 0) {
       throw new RuntimeException("ERROR: cannot find the number of features!")
     }
-    if(modelLine == None) {
+    if(modelLine.isEmpty) {
       throw new RuntimeException("ERROR: cannot find model weights!")
     }
 
@@ -213,7 +213,7 @@ class SVMRankingClassifier[F] (
     }
 
     val weights = new Array[Double](numFeats)
-    for(i <- 0 until weights.length) weights(i) = 0.0
+    for(i <- weights.indices) weights(i) = 0.0
     for(i <- 1 until bits.length) {
       val feat = bits(i).split(":")
       // our feature ids start at 0, but svm_rank requires features to start at 1
@@ -248,7 +248,7 @@ class SVMRankingClassifier[F] (
           val fs = d.featuresCounter(i, j)
           val fids = fs.keySet.toList.sorted
 
-          pw.print(l + " qid:" + qid)
+          pw.print(s"$l qid:$qid")
           // our feature ids start at 0, but svm_rank requires features to start at 1
           fids.foreach(fid => pw.print(" " + (fid + 1) + ":" + fs.getCount(fid)))
           pw.println()
@@ -265,7 +265,7 @@ class SVMRankingClassifier[F] (
       val fs = mkDatumVector(d)
       val fids = fs.keySet.toList.sorted
 
-      pw.print(l + " qid:" + qid)
+      pw.print(s"$l qid:$qid")
       // our feature ids start at 0, but svm_rank requires features to start at 1
       fids.foreach(fid => pw.print(" " + (fid + 1) + ":" + fs.getCount(fid)))
       pw.println()
@@ -364,7 +364,7 @@ class SVMRankingClassifier[F] (
     for(i <- 0 until weights.get.size) {
       if(weights.get(i) != 0.0) {
         if(! first) pw.print(" ")
-        pw.print(i + ":" + weights.get(i))
+        pw.print(s"$i:${weights.get(i)}")
         first = false
       }
     }

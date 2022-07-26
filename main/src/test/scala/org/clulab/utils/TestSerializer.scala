@@ -1,10 +1,11 @@
 package org.clulab.utils
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import java.io.PrintWriter
 
-class TestSerializer extends FlatSpec with Matchers {
+class TestSerializer extends AnyFlatSpec with Matchers {
 
   behavior of "Serializer"
 

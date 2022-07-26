@@ -9,11 +9,11 @@ import scala.util.control.Breaks._
 
 package object numeric {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
-    val mentionsBySentence = mentions groupBy (_.sentence) mapValues (_.sortBy(_.start)) withDefaultValue Nil
+    val mentionsBySentence = mentions.groupBy(_.sentence).view.mapValues(_.sortBy(_.start))
     for ((s, i) <- doc.sentences.zipWithIndex) {
       println(s"sentence #$i")
       println(s.getSentenceText)
-      println("Tokens: " + (s.words.indices, s.words, s.tags.get).zipped.mkString(", "))
+      println(s"Tokens: ${(s.words.indices, s.words, s.tags.get).zipped.mkString(", ")}")
       s.tags foreach (x => println("Tags: " + x.mkString(", ")))
       s.entities foreach (x => println("Entities: " + x.mkString(", ")))
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))
@@ -33,9 +33,11 @@ package object numeric {
     val mentionType = mention.getClass.toString.split("""\.""").last
     println(s"\tType => $mentionType")
     println(s"\tInterval => ${mention.tokenInterval}")
-    if(mention.isInstanceOf[Norm]) {
-      println(s"\tNorm => ${mention.asInstanceOf[Norm].neNorm}")
-      println(s"\tNE => ${mention.asInstanceOf[Norm].neLabel}")
+    mention match {
+      case norm: Norm =>
+        println(s"\tNorm => ${norm.neNorm}")
+        println(s"\tNE => ${norm.neLabel}")
+      case _ =>
     }
     println(boundary)
     if (mention.arguments.nonEmpty) {
@@ -110,7 +112,7 @@ package object numeric {
               if (en.endsWith(toBeRemovedShortened)) {
                 s.entities.get(j) = "O"
                 s.norms.get(j) = ""
-              } else break
+              } else break()
             }
           }
         }

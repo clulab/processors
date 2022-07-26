@@ -46,7 +46,7 @@ class DirectedGraphIndex[E](
         edges += Edge(se._1, se._2, label)
       }
     )
-    edges
+    edges.toSeq
   }
 
   def findByHeadAndName(head:Int, label:E): Seq[Edge[E]] = {
@@ -66,7 +66,7 @@ class DirectedGraphIndex[E](
         }
       }
     }
-    edges
+    edges.toSeq
   }
 
   def findByModifierAndPattern(modifier:Int, pattern:Regex): Seq[Edge[E]] = {
@@ -78,7 +78,7 @@ class DirectedGraphIndex[E](
         }
       }
     }
-    edges
+    edges.toSeq
   }
 
   def mkEdges(): List[Edge[E]] = {

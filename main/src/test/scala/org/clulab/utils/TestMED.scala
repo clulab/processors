@@ -1,8 +1,9 @@
 package org.clulab.utils
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestMED extends FlatSpec with Matchers {
+class TestMED extends AnyFlatSpec with Matchers {
   behavior of "MED"
 
   it should "work, substitute = false, transpose = false, capitalize = false" in {

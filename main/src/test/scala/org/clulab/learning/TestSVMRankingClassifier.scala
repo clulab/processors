@@ -2,6 +2,8 @@ package org.clulab.learning
 
 import java.io.{File, PrintWriter}
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
@@ -16,7 +18,7 @@ object NeedsExternalBinary extends Tag("NeedsExternalBinary")
   * Date: 4/25/13
   * Last Modified: Fix compiler issue: import scala.io.Source.
   */
-class TestSVMRankingClassifier extends FlatSpec with Matchers {
+class TestSVMRankingClassifier extends AnyFlatSpec with Matchers {
   // It is assumed that the existence of this one binary implies the existence of the other,
   // svm_rank_learn, which unfortunately requires user input and will wait for it indefinitely.
   val hasExternalBinary = Try("svm_rank_classify -h".! == 0).getOrElse(false)

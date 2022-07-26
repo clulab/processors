@@ -3,20 +3,23 @@ package org.clulab.processors
 import org.clulab.struct.DirectedGraphEdgeIterator
 import org.scalatest._
 import org.clulab.processors.corenlp.CoreNLPProcessor
+
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
-import java.util.concurrent.{TimeUnit, Executors}
+import java.util.concurrent.{Executors, TimeUnit}
 import java.lang.Long
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.TestUtils
 import TestProcessorThreading._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  * Tests that CoreNLPProcessor (and other processors) work in multi-threading mode
  * User: mihais
  * Date: 1/4/14
  */
-class TestProcessorThreading extends FlatSpec with Matchers {
+class TestProcessorThreading extends AnyFlatSpec with Matchers {
   var corenlp:Processor = new CoreNLPProcessor(internStrings = true)
   var fastnlp:Processor = new FastNLPProcessor(internStrings = true)
 

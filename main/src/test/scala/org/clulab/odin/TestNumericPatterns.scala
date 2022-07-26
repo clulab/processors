@@ -2,10 +2,10 @@ package org.clulab.odin
 
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.odin.impl.TokenPattern
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-
-class TestNumericPatterns extends FlatSpec with Matchers {
+class TestNumericPatterns extends AnyFlatSpec with Matchers {
 
   val text = "blah"
   val doc = Document(

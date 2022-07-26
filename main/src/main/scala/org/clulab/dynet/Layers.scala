@@ -163,7 +163,7 @@ object Layers {
         None
       }
 
-    new Layers(initialLayer, intermediateLayers, finalLayer)
+    new Layers(initialLayer, intermediateLayers.toIndexedSeq, finalLayer)
   }
 
   val MAX_INTERMEDIATE_LAYERS = 10
@@ -199,7 +199,7 @@ object Layers {
         None
       }
 
-    new Layers(initialLayer, intermediateLayers, finalLayer)
+    new Layers(initialLayer, intermediateLayers.toIndexedSeq, finalLayer)
   }
 
   def predictJointly(layers: IndexedSeq[Layers],
@@ -232,7 +232,7 @@ object Layers {
       }
     }
 
-    labelsPerTask
+    labelsPerTask.toIndexedSeq
   }
 
   private def forwardForTask(layers: IndexedSeq[Layers],
@@ -310,7 +310,7 @@ object Layers {
       probScores += justLabels.zip(probs)
     }
 
-    probScores
+    probScores.toIndexedSeq
   }
 
   /** Greedy parsing for a MTL model that contains both head and label classifier */
@@ -372,7 +372,7 @@ object Layers {
         for(i <- heads.indices) {
           modHeadPairs += ModifierHeadPair(i, heads(i))
         }
-        val labelStates = layers(2).forwardFrom(sharedStates, Some(modHeadPairs), doDropout = false)
+        val labelStates = layers(2).forwardFrom(sharedStates, Some(modHeadPairs.toIndexedSeq), doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)
         val labels = layers(2).finalLayer.get.inference(emissionScores)
         assert(labels.size == heads.size)
@@ -380,7 +380,7 @@ object Layers {
         heads.zip(labels)
       }
 
-    headsAndLabels
+    headsAndLabels.toIndexedSeq
   }
 
   def loss(layers: IndexedSeq[Layers],

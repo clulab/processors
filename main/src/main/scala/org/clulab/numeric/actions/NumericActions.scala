@@ -25,7 +25,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
           e.printStackTrace()
       }
     }
-    convertedMentions
+    convertedMentions.toSeq
   }
 
   /** Converts a sequence of mentions to new types given the converter function */
@@ -42,7 +42,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
           e.printStackTrace()
       }
     }
-    convertedMentions
+    convertedMentions.toSeq
   }
 
   /** Constructs a NumberRange mention from a token pattern */

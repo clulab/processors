@@ -1,9 +1,10 @@
 package org.clulab.embeddings
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class TestOverlapWordEmbeddingMap extends FlatSpec with Matchers {
+class TestOverlapWordEmbeddingMap extends AnyFlatSpec with Matchers {
+  import scala.collection.parallel.CollectionConverters._
 
   def overlap(): Unit = {
     val compact = Seq(true, true) // False is no longer available.

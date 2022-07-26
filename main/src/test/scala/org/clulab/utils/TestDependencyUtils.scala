@@ -3,13 +3,14 @@ package org.clulab.utils
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.struct.{DirectedGraph, Interval}
 import org.clulab.utils.DependencyUtils._
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
   * Tests dependency utilities such as findHeadStrict
   * Date: 1/25/16
   */
-class TestDependencyUtils extends FlatSpec with Matchers {
+class TestDependencyUtils extends AnyFlatSpec with Matchers {
   val text1 = "Because the substrates of Shp2 are for the most part unknown, we were additionally interested in " +
     "examining the state of EGFR tyrosine phosphorylation following treatment with EGF in order to determine if the " +
     "failure of Gab1 to bind p85, and potentially recruit Shp2, would influence levels of EGFR autophosphorylation."

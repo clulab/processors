@@ -1,19 +1,19 @@
 package org.clulab.learning
 
 import java.io.File
-
 import org.scalatest._
 import org.clulab.struct.Counter
 import de.bwaldvogel.liblinear._
-
 import org.clulab.TestUtils._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /**
  *
  * User: mihais
  * Date: 11/17/13
  */
-class TestLiblinearClassifier extends FlatSpec with Matchers {
+class TestLiblinearClassifier extends AnyFlatSpec with Matchers {
   "LiblinearClassifier" should "work with RVFDataset" in {
     val classifier = new LiblinearClassifier[String, String](bias = false)
     val dataset = new RVFDataset[String, String]()

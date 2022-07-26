@@ -25,7 +25,7 @@ class ActionMirror(actions: Actions) {
     } else if (returnType =:= typeOf[JList[Mention]]) {
       // java.util.List<Mention> action(java.util.List<Mention> mentions, State state)
       (mentions: Seq[Mention], state: State) => {
-        action(mentions.asJava, state).asInstanceOf[JList[Mention]].asScala
+        action(mentions.asJava, state).asInstanceOf[JList[Mention]].asScala.toSeq
       }
     } else {
       sys.error(s"invalid action '$name'")

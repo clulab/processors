@@ -5,11 +5,12 @@ import org.clulab.processors.Sentence
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clu.tokenizer.Tokenizer
 import org.clulab.struct.Interval
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.matching.Regex
 
-class TestNumericEntityRecognition extends FlatSpec with Matchers {
+class TestNumericEntityRecognition extends AnyFlatSpec with Matchers {
 
   class HabitusTokenizer(tokenizer: Tokenizer) extends Tokenizer(tokenizer.lexer, tokenizer.steps, tokenizer.sentenceSplitter) {
     // TODO: Make sure en dash is preserved in raw somehow!

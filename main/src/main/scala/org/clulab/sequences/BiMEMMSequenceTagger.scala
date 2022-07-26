@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
   * User: mihais
   * Date: 8/27/17
   */
-abstract class BiMEMMSequenceTagger[L: ClassTag, F](
+abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
   var order:Int,
   var numFoldsFirstPass:Int, // if < 2, this reverts to a single-layer MEMM
   var leftToRight:Boolean) extends SequenceTagger[L, F] {
@@ -37,7 +37,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     logger.info(s"Training on ${sentences.size} sentences using order $order.")
 
     // count bigrams in the corpus, and keep a set of those that occur > BIGRAM_THRESHOLD times
-    FeatureExtractor.countBigrams(sentences, FeatureExtractor.BIGRAM_THRESHOLD)
+    FeatureExtractor.countBigrams(sentences.toIndexedSeq, FeatureExtractor.BIGRAM_THRESHOLD)
 
     var firstPassLabels:Option[Array[Array[L]]] = None
     var acc = 0.0
@@ -222,13 +222,13 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F](
     val history = new ArrayBuffer[L]()
     for(i <- 0 until sentence.size) {
       val feats = new Counter[F]
-      mkFeatures(feats, sentence, i, history, firstPass)
+      mkFeatures(feats, sentence, i, history.toIndexedSeq, firstPass)
       val d = mkDatum(null.asInstanceOf[L], feats)
       val label = classifier.classOf(d)
       history += label
     }
 
-    if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
+    if(leftToRight) history.toArray else SeqUtils.revert(history.toIndexedSeq).toArray
   }
 
   override def classesOf(sentence: Sentence):Array[L] = {

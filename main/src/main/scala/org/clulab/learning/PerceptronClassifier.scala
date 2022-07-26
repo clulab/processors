@@ -243,8 +243,8 @@ class PerceptronClassifier[L, F] (
     val writer = Files.toPrintWriter(w)
     featureLexicon.saveTo(writer)
     labelLexicon.saveTo(writer)
-    writer.println(avgWeights.size)
-    for(i <- 0 until avgWeights.size) {
+    writer.println(avgWeights.length)
+    for(i <- avgWeights.indices) {
       writer.println(avgWeights(i).mkString(" "))
     }
   }
@@ -255,12 +255,12 @@ class PerceptronClassifier[L, F] (
     pw.println ("Perceptron Classifier Average Weights")
     for (i <- 0 until labelLexicon.size) {
       pw.print("label: " + labelLexicon.get(i) + " \t")
-      for (j <- 0 until avgWeights(i).size) {
-        pw.print (featureLexicon.get(j) + ":" + avgWeights(i)(j) + " \t")
+      for (j <- avgWeights(i).indices) {
+        pw.print(s"${featureLexicon.get(j)}:${avgWeights(i)(j)} \t")
       }
       pw.println ("")
     }
-    pw.println
+    pw.println()
   }
 }
 

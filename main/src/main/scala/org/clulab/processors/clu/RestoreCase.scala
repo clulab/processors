@@ -22,7 +22,7 @@ object RestoreCase extends App {
   saveOutput(pw, doc, sentences)
   pw.close()
 
-  private def saveOutput(pw: PrintWriter, doc: Document, sentences: Array[Array[Row]]) {
+  private def saveOutput(pw: PrintWriter, doc: Document, sentences: Array[Array[Row]]) = {
     assert(doc.sentences.size == sentences.length)
 
     for(i <- doc.sentences.indices) {

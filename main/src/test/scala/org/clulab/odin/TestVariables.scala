@@ -1,12 +1,11 @@
 package org.clulab.odin
 
 import scala.io.Source
-
 import org.clulab.TestUtils._
-import org.scalatest.{ Matchers, FlatSpec }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-
-class TestVariables extends FlatSpec with Matchers {
+class TestVariables extends AnyFlatSpec with Matchers {
 
   def readResource(filename: String): String = {
     val source = Source.fromURL(getClass.getResource(filename))

@@ -327,7 +327,7 @@ class TestLexiconNER extends FatdynetTest {
 class LowerEntityValidator() extends EntityValidator {
 
   override def validMatch(sentence: Sentence, start: Int, end: Int): Boolean = {
-    !sentence.words.view(start, end).exists { word =>
+    !sentence.words.slice(start, end).exists { word =>
       word.exists(_.isUpper) // Make sure there is none of this.
     }
   }
@@ -338,7 +338,7 @@ class LowerEntityValidator() extends EntityValidator {
 class NoAEntityValidator() extends EntityValidator {
 
   override def validMatch(sentence: Sentence, start: Int, end: Int): Boolean = {
-    !sentence.words.view(start, end).contains("a")
+    !sentence.words.slice(start, end).contains("a")
   }
 }
 

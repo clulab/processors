@@ -38,6 +38,8 @@ class CluProcessor protected (
   mtlDepsLabelOpt: Option[Metal]
 ) extends Processor with Configured {
 
+  import scala.collection.parallel.CollectionConverters._
+
   // standard, abbreviated constructor
   def this(
     config: Config = ConfigFactory.load("cluprocessor"),
@@ -398,7 +400,7 @@ class CluProcessor protected (
       }
     }
 
-    predsInSent
+    predsInSent.toIndexedSeq
   }
 
   /** Dependency parsing: old MTL model. Faster but performs worse */
@@ -442,7 +444,7 @@ class CluProcessor protected (
         heads += i + relativeHeads(i)
       }
     }
-    heads
+    heads.toIndexedSeq
   }
 
   /** Dependency parsing with the Eisner algorithm */
@@ -563,7 +565,7 @@ class CluProcessor protected (
       val headPositions = new ArrayBuffer[ModifierHeadPair]()
       for(i <- words.indices) headPositions += ModifierHeadPair(i, pred)
       val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels))
-      val argLabels = mtlSrla.predict(0, annotatedSentence, Some(headPositions), embeddings)
+      val argLabels = mtlSrla.predict(0, annotatedSentence, Some(headPositions.toIndexedSeq), embeddings)
 
       argLabels.zipWithIndex
           .filter { case (argLabel, _) => argLabel != "O" }
@@ -590,7 +592,7 @@ class CluProcessor protected (
     }
 
     // store the index of all predicates as a doc attachment
-    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predsForAllSents))
+    doc.addAttachment(PREDICATE_ATTACHMENT_NAME, new PredicateAttachment(predsForAllSents.toIndexedSeq))
   }
 
   /** POS tag corrections, in place */

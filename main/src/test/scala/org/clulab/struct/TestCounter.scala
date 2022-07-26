@@ -1,16 +1,15 @@
 package org.clulab.struct
 
 import java.io.{BufferedWriter, PrintWriter, StringWriter}
-
 import org.clulab.utils.Files
-import org.scalatest.{Matchers, FlatSpec}
-
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 /**
   * Tests Counter methods
   * User: mihais
   * Date: 10/25/16
   */
-class TestCounter extends FlatSpec with Matchers {
+class TestCounter extends AnyFlatSpec with Matchers {
   "TestCounter" should "serialize content correctly in saveTo " in {
     val sw = new StringWriter()
     val w = Files.toPrintWriter(sw)

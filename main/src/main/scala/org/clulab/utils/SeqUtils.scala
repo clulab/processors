@@ -10,6 +10,6 @@ object SeqUtils {
   def revert[T](orig:Seq[T]): Seq[T] = {
     val reverse = new ListBuffer[T]
     for(o <- orig) reverse.insert(0, o)
-    reverse
+    reverse.toSeq
   }
 }
