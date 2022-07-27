@@ -16,6 +16,8 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
+import scala.collection.BufferedIterator
+
 
 /**
  * Utility methods used by DyNet applications
@@ -883,7 +885,7 @@ object Utils {
   def initializeEmbeddings(w2v: SanitizedWordEmbeddingMap, w2i: Map[String, Int], lookupParameters: LookupParameter): Unit = {
     logger.debug("Initializing DyNet embedding parameters...")
     for (word <- w2v.matrix.keySet) {
-      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word))))
+      lookupParameters.initialize(w2i(word), new FloatVector(ArrayMath.toFloatArray(w2v.matrix(word)).toIndexedSeq))
     }
     logger.debug(s"Completed initializing embedding parameters for a vocabulary of size ${w2v.matrix.size}.")
   }

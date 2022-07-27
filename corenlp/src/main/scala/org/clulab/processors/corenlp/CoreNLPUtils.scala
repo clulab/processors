@@ -108,9 +108,7 @@ object CoreNLPUtils {
    */
   def sentenceToAnnotation(s: Sentence): Annotation = {
 
-    val coreLabels: Seq[CoreLabel] = for {
-      (w: String, i: Int) <- s.words.zipWithIndex
-    } yield {
+    val coreLabels: Seq[CoreLabel] = s.words.toIndexedSeq.zipWithIndex.map { case (w,i) =>
       val crtTok = new CoreLabel()
       // set word
       crtTok.setWord(w)
@@ -143,7 +141,5 @@ object CoreNLPUtils {
   /**
    * Create an Annotation from a Document
    */
-  def docToAnnotations(doc: Document): Seq[Annotation] = for {
-    s <- doc.sentences
-  } yield sentenceToAnnotation(s)
+  def docToAnnotations(doc: Document): Seq[Annotation] = doc.sentences.toIndexedSeq.map(sentenceToAnnotation)
 }

@@ -289,7 +289,7 @@ class CluProcessor protected (
       for (sent <- doc.sentences) {
         // The case restoration model expects lower-case words as input.
         val originalWords = sent.words
-        val loweredWords = originalWords.map(_.toLowerCase)
+        val loweredWords = originalWords.map(_.toLowerCase).toIndexedSeq
         val preLabels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
         val labels = casePostProcessing(loweredWords, preLabels)
         val restoredWords = originalWords.indices.map { index => restoreCaseWord(loweredWords(index), labels(index), originalWords(index)) }
@@ -320,7 +320,7 @@ class CluProcessor protected (
     if (!isStandard)
       originalWord
     else if (label == "UI")
-      Character.toUpperCase(loweredWord(0)) + loweredWord.substring(1)
+      s"${Character.toUpperCase(loweredWord(0))}${loweredWord.substring(1)}"
     else if (label == "UA")
       loweredWord.toUpperCase()
     else
@@ -337,7 +337,7 @@ class CluProcessor protected (
                   embeddings: ConstEmbeddingParameters): (IndexedSeq[String], Option[IndexedSeq[String]]) = {
 
     // NER labels from the statistical model
-    val allLabels = mtlNer.predictJointly(AnnotatedSentence(words), embeddings)
+    val allLabels = mtlNer.predictJointly(AnnotatedSentence(words.toIndexedSeq), embeddings)
 
     // NER labels from the custom NER
     val optionalNERLabels: Option[Array[String]] = optionalNER.map { ner =>
@@ -360,9 +360,9 @@ class CluProcessor protected (
     }
 
     if(optionalNERLabels.isEmpty) {
-      (allLabels(0), None)
+      allLabels(0) -> None
     } else {
-      (mergeNerLabels(allLabels(0), optionalNERLabels.get), None)
+      mergeNerLabels(allLabels(0), optionalNERLabels.get.toIndexedSeq).toIndexedSeq -> None
     }
   }
 
@@ -536,7 +536,7 @@ class CluProcessor protected (
     // TODO: retrain the SRL using numeric entities too, when NumericEntityRecognizer is stable
     val onlyNamedLabels = removeNumericLabels(sent.entities.get)
 
-    srlSentence(sent.words, sent.tags.get, onlyNamedLabels, predicateIndexes, embeddings)
+    srlSentence(sent.words.toIndexedSeq, sent.tags.get.toIndexedSeq, onlyNamedLabels.toIndexedSeq, predicateIndexes, embeddings)
   }
 
   def removeNumericLabels(allLabels: Array[String]): Array[String] = {
@@ -583,7 +583,7 @@ class CluProcessor protected (
     val predsForAllSents = new ArrayBuffer[IndexedSeq[Int]]()
 
     for(sent <- doc.sentences) {
-      val (tags, chunks, preds) = tagSentence(sent.words, embeddings)
+      val (tags, chunks, preds) = tagSentence(sent.words.toIndexedSeq, embeddings)
       sent.tags = Some(postprocessPartOfSpeechTags(sent.words, tags.toArray))
       sent.chunks = Some(chunks.toArray)
       predsForAllSents += getPredicateIndexes(preds)
@@ -773,7 +773,7 @@ class CluProcessor protected (
     val embeddings = getEmbeddings(doc)
 
     for(sent <- doc.sentences) {
-      val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      val headsWithLabels = parseSentenceWithEisner(sent.words.toIndexedSeq, sent.tags.get.toIndexedSeq, sent.entities.get.toIndexedSeq, embeddings)
       parserPostProcessing(sent, headsWithLabels)
 
       val edges = new ListBuffer[Edge[String]]()

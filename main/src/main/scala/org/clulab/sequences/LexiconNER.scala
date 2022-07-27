@@ -104,7 +104,7 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int): Boolean = {
     val wordsView = sentence.words.slice(start, start + length)
     // A valid view/span must have a letter and at least one of the other qualifiers.
-    val contentful = hasLetter(wordsView) && contentQualifiers.exists(_(wordsView))
+    val contentful = hasLetter(wordsView.toIndexedSeq) && contentQualifiers.exists(_(wordsView.toIndexedSeq))
 
     contentful
   }
@@ -283,7 +283,7 @@ object LexiconNER {
       useLemmasForMatching: Boolean,
       caseInsensitiveMatching: Boolean): LexiconNER = {
     val caseInsensitiveMatchings = Array.fill(kbs.length)(caseInsensitiveMatching)
-    this(kbs, overrideKBs, caseInsensitiveMatchings, entityValidator, lexicalVariationEngine,
+    this(kbs, overrideKBs, caseInsensitiveMatchings.toIndexedSeq, entityValidator, lexicalVariationEngine,
         useLemmasForMatching, caseInsensitiveMatching, None)
   }
 

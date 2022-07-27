@@ -145,7 +145,7 @@ class TestAutoClosing extends AnyFlatSpec with Matchers {
 
   it should "work with a plain Source, even in Scala 2.11" in {
     Source.fromString("foo\nbar\n").autoClose { source =>
-      source.getLines.toList
+      source.getLines().toList
     }
   }
 }

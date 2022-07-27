@@ -14,7 +14,7 @@ class CRFChunker(crf: CRFClassifier[CoreLabel]) {
     crf.serializeClassifier(path)
 
   def classify(words: Array[String], tags: Array[String]): Array[String] =
-    classify(mkCoreLabels(words, tags))
+    classify(mkCoreLabels(words, tags).toIndexedSeq)
 
   def classify(labels: Seq[CoreLabel]): Array[String] = {
     val predictions = crf.classify(labels.toBuffer.asJava)

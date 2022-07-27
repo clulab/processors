@@ -259,7 +259,7 @@ class Eisner {
         heads(i) = (head, label)
       }
     }
-    heads
+    heads.toIndexedSeq
   }
 
   /** Converts the top K predictions from an unlabeled parserinto a matrix of Dependency (rows are mods; columns are heads) */

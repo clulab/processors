@@ -67,7 +67,7 @@ class SeparatedLexiconNER(
     seq
   }
 
-  def getLabels: Seq[String] = matchers.map(_.label).distinct
+  def getLabels: Seq[String] = matchers.map(_.label).toIndexedSeq.distinct
 
   /**
     * Finds the longest match across all matchers.

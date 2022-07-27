@@ -16,7 +16,7 @@ object RestoreCase extends App {
   val proc = new CluProcessor
 
   val sentences = ColumnReader.readColumns(inputFileName)
-  val words = sentences.map(_.map(_.tokens(0)).toIterable)
+  val words = sentences.map(_.map(_.tokens(0)).toIndexedSeq)
   val doc = proc.mkDocumentFromTokens(words)
   proc.restoreCase(doc)
   saveOutput(pw, doc, sentences)

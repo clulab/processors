@@ -1,5 +1,6 @@
 package org.clulab.dynet
 
+import scala.collection.BufferedIterator
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
 import ForwardLayer._

@@ -1,14 +1,14 @@
 package org.clulab.embeddings
 
-import java.io._
-import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.Logging
-import org.clulab.utils.Sourcer
+import org.clulab.utils.{ClassLoaderObjectInputStream, Logging, Sourcer}
 
+import java.io._
 import java.nio.charset.StandardCharsets
+import scala.collection.BufferedIterator
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
+
 
 /**
  * Implements an word embedding map, where each embedding is stored as a distinct array
@@ -33,7 +33,7 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
   def compare(left: ExplicitWordEmbeddingMap.ImplMapType, right: ExplicitWordEmbeddingMap.ImplMapType): Boolean = {
     left.keySet == right.keySet && {
       left.keySet.forall { key =>
-        compare(left(key), right(key))
+        compare(left(key).toIndexedSeq, right(key).toIndexedSeq)
       }
     }
   }
@@ -75,7 +75,7 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
     val total = new Array[Float](dim) // automatically initialized to zero
 
     text.foreach { word =>
-      map.get(word).foreach { addend => add(total, addend) }
+      map.get(word).foreach { addend => add(total, addend.toIndexedSeq) }
     }
     WordEmbeddingMap.norm(total)
     total
@@ -86,7 +86,7 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
 
     (text, weights).zipped.foreach { (word, weight) =>
       // This therefore skips the unknown words, which may not be the right strategy.
-      map.get(word).foreach { index => addWeighted(total, index, weight) }
+      map.get(word).foreach { index => addWeighted(total, index.toIndexedSeq, weight) }
     }
     WordEmbeddingMap.norm(total)
     total
@@ -122,7 +122,7 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
           val row2Opt = map.get(text2)
 
           if (row2Opt.isDefined) {
-            sum += WordEmbeddingMap.dotProduct(row1Opt.get, row2Opt.get)
+            sum += WordEmbeddingMap.dotProduct(row1Opt.get.toIndexedSeq, row2Opt.get.toIndexedSeq)
             count += 1
           }
         }

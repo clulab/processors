@@ -190,7 +190,7 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
     * but doesn't exist, a RuntimeException is thrown.
     */
 
-  val fakeResult = new Array[Float](columns)
+  val fakeResult = new Array[Float](columns).toIndexedSeq
   override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
     oldGet(word)
     fakeResult

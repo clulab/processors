@@ -16,6 +16,7 @@ import scala.collection.mutable.ArrayBuffer // IntelliJ doesn't complain about t
 import scala.collection.mutable.{ArrayBuilder => MutableArrayBuilder}
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
+import scala.collection.BufferedIterator
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -89,7 +90,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
       this.dim == that.dim &&
           this.columns == that.columns &&
           this.rows == that.rows &&
-          compare(this.array, that.array) &&
+          compare(this.array.toIndexedSeq, that.array.toIndexedSeq) &&
           compare(this.map, that.map) &&
           compare(this.unkEmbeddingOpt, that.unkEmbeddingOpt)
     }
@@ -100,7 +101,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   def get(word: String): Option[IndexedSeq[Float]] = {
     map.get(word).map { row =>
       val offset = row * columns
-      array.slice(offset, offset + columns)
+      array.slice(offset, offset + columns).toIndexedSeq
     }
   }
 

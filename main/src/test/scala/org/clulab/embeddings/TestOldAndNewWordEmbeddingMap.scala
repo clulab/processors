@@ -76,10 +76,10 @@ class TestOldAndNewWordEmbeddingMap extends AnyFlatSpec with Matchers {
   }
 
   class WordEmbeddingConfigIterator extends Iterator[WordEmbeddingConfig] {
-    val    useFileElseResource: Array[Boolean] = Array(true, false)
-    val          useTxtElseBin: Array[Boolean] = Array(true, false)
-    val useExplicitElseCompact: Array[Boolean] = Array(true, false)
-    val          useOldElseNew: Array[Boolean] = Array(true, false)
+    val    useFileElseResource: Seq[Boolean] = Seq(true, false)
+    val          useTxtElseBin: Seq[Boolean] = Seq(true, false)
+    val useExplicitElseCompact: Seq[Boolean] = Seq(true, false)
+    val          useOldElseNew: Seq[Boolean] = Seq(true, false)
     val odometer = new SeqOdometer[Boolean](Array(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew))
 
     override def hasNext: Boolean = odometer.hasNext

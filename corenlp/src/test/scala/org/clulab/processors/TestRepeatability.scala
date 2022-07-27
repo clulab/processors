@@ -31,7 +31,7 @@ class TestRepeatability extends AnyFlatSpec with Matchers {
     val file = new File(inputDir + "/16_South Sudan - Key Message Update_ Thu, 2018-01-25.txt")
     val text = {
       val source = Source.fromFile(file, utf8)
-      val text = source.mkString.replaceAllLiterally("\r\n", "\n")
+      val text = source.mkString.replace("\r\n", "\n")
 
       source.close()
 

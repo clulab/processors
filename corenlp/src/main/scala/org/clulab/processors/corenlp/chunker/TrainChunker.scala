@@ -22,9 +22,10 @@ object TrainChunker extends App {
     val tp = mutable.Map[String, Double]() withDefaultValue 0.0
     val fp = mutable.Map[String, Double]() withDefaultValue 0.0
     val fn = mutable.Map[String, Double]() withDefaultValue 0.0
-    for (s <- sentences) {
+
+    sentences.foreach { s =>
       val trueChunks = s.map(_.getString(classOf[CoreAnnotations.AnswerAnnotation]))
-      val predChunks = chunker.classify(s)
+      val predChunks = chunker.classify(s.toIndexedSeq)
       for ((trueLabel, predLabel) <- trueChunks zip predChunks) {
         if (trueLabel == predLabel) {
           tp(trueLabel) += 1
@@ -34,6 +35,7 @@ object TrainChunker extends App {
         }
       }
     }
+
     printReport(tp, fp, fn)
   }
 

@@ -12,6 +12,7 @@ import org.clulab.utils.{Configured, Serializer}
 import EmbeddingLayer._
 
 import scala.util.Random
+import scala.collection.BufferedIterator
 
 /**
  * This layer takes a sequence of words and produces a sequence of Expression that stores the words' full embeddings
@@ -83,7 +84,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
           heads(mod) = head
         }
       }
-      Some(heads)
+      Some(heads.toIndexedSeq)
     } else {
       None
     }

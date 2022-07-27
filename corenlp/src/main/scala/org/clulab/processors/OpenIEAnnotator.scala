@@ -40,7 +40,7 @@ trait OpenIEAnnotator {
         None
     }
 
-  override def relationExtraction(doc: Document) {
+  override def relationExtraction(doc: Document): Unit = {
     val annotation = relationExtractionSanityCheck(doc)
     if(annotation.isEmpty) return
 

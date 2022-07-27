@@ -42,7 +42,7 @@ class CoreNLPProcessor(
            withChunks:Boolean = true,
            withRelationExtraction:Boolean = false,
            withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE,
-           maxSentenceLength:Int = 100) {
+           maxSentenceLength:Int = 100) = {
     this(None, internStrings, withChunks, withRelationExtraction, withDiscourse, maxSentenceLength)
   }
 
@@ -73,7 +73,7 @@ class CoreNLPProcessor(
     new StanfordCoreNLP(props, false)
   }
 
-  override def parse(doc:Document) {
+  override def parse(doc:Document): Unit = {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
@@ -189,7 +189,7 @@ class CoreNLPProcessor(
     tree
   }
 
-  override def resolveCoreference(doc:Document) {
+  override def resolveCoreference(doc:Document): Unit = {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 

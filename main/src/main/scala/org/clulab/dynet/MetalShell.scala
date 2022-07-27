@@ -6,8 +6,8 @@ class MetalShell(val mtl: Metal) extends Shell {
 
   override def work(text: String): Unit = {
     val words = text.split("\\s+")
-    val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(words)
-    val labels = mtl.predictJointly(AnnotatedSentence(words), constEmbeddings)
+    val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(words.toIndexedSeq)
+    val labels = mtl.predictJointly(AnnotatedSentence(words.toIndexedSeq), constEmbeddings)
     print(words, labels)
   }
 

@@ -412,7 +412,7 @@ class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder()
     val caseSensitiveBuildState = new FastBuildState(lexicalVariationEngine, caseInsensitive = false, knownCaseInsensitives, labelToIndex)
     addOverrideKBs(overrideKbSourcesOpt, caseInsensitiveBuildState, caseSensitiveBuildState, caseInsensitiveMap)
     addStandardKBs(standardKbSources, caseInsensitiveBuildState, caseSensitiveBuildState, caseInsensitiveMap)
-    val labelsWithOverrides = labelToIndex.toArray.sortBy(_._2).map(_._1)
+    val labelsWithOverrides = labelToIndex.toArray.sortBy(_._2).map(_._1).toIndexedSeq
 
     logger.info("KB loading completed.")
 

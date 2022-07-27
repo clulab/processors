@@ -25,7 +25,7 @@ class TestOpenIE extends AnyFlatSpec with Matchers {
 
   private val deserializedDoc = serializer.load(serialized)
 
-  def openIEBehavior(doc:Document) {
+  def openIEBehavior(doc:Document): Unit = {
     val relations = doc.sentences.map(_.relations).collect{ case Some(triples) => triples }.flatten
 
     it should "have relation extraction annotations" in {

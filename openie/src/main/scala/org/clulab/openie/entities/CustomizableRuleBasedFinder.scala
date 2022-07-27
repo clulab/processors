@@ -85,7 +85,7 @@ class CustomizableRuleBasedFinder(
    */
   def trimEntityEdges(entity: Mention, tagSet: TagSet): Mention = {
     // Check starting tag, get the location of first valid tag
-    val tags = entity.document.sentences(entity.sentence).tags.get
+    val tags = entity.document.sentences(entity.sentence).tags.get.toIndexedSeq
     val startToken = entity.tokenInterval.start
     val startTag = tags(startToken)
     val firstValidStart = if (validEdgeTag(startTag, tagSet)) startToken else firstValid(tags, startToken, tagSet)

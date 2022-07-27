@@ -20,7 +20,7 @@ object CoreNLPSentimentAnalyzer {
 
   /** Get a sentiment score from [[org.clulab.processors.Document Document]] */
   def sentiment(doc: Document): Seq[Int] = for {
-    s <- doc.sentences
+    s <- doc.sentences.toIndexedSeq
   } yield sentiment(s)
 
   /** Create a corenlp pipeline for sentiment analysis */

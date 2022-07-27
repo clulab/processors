@@ -43,7 +43,7 @@ object MathUtils {
     val scoreArray = scoreArrayBuffer.toArray
     val softmaxes = new ArrayBuffer[Float]
 
-    val logSumStatic = logSumFloat(scoreArray)
+    val logSumStatic = logSumFloat(scoreArray.toIndexedSeq)
     for(s <- scores) {
       val logSoftmax = (gamma * s) - logSumStatic
       softmaxes += math.exp(logSoftmax).toFloat
@@ -64,7 +64,7 @@ object MathUtils {
     } yield gamma * v
     else vector
 
-    val logSumStatic = logSum(scoreArray)
+    val logSumStatic = logSum(scoreArray.toIndexedSeq)
     for {
       s <- vector
     } yield math.exp((gamma * s) - logSumStatic)
@@ -82,7 +82,7 @@ object MathUtils {
     } yield gamma * v
     else vector
 
-    val logSumStatic = logSumFloat(scoreArray)
+    val logSumStatic = logSumFloat(scoreArray.toIndexedSeq)
     for {
       s <- vector
     } yield math.exp((gamma * s) - logSumStatic).toFloat

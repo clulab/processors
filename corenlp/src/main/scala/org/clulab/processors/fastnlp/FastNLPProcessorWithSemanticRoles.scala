@@ -29,7 +29,7 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
            withRelationExtraction:Boolean = false,
-           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) {
+           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) = {
     this(None, internStrings, withChunks, withRelationExtraction, withDiscourse)
   }
 
@@ -41,14 +41,14 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
       val lemmas = sent.lemmas
 
       // The SRL model relies on NEs produced by CluProcessor, so run the NER first
-      val (tags, _, preds) = cluProcessor.tagSentence(words, embeddings)
+      val (tags, _, preds) = cluProcessor.tagSentence(words.toIndexedSeq, embeddings)
       val predIndexes = cluProcessor.getPredicateIndexes(preds)
       val tagsAsArray = tags.toArray
       val (entities, _) = cluProcessor.nerSentence(
         words, lemmas, tagsAsArray, sent.startOffsets, sent.endOffsets, docDate, embeddings
       )
       val semanticRoles = cluProcessor.srlSentence(
-        words, tagsAsArray, entities, predIndexes, embeddings
+        words.toIndexedSeq, tagsAsArray.toIndexedSeq, entities, predIndexes, embeddings
       )
 
       sent.graphs += GraphMap.SEMANTIC_ROLES -> semanticRoles

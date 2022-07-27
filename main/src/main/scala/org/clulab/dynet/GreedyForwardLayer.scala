@@ -1,11 +1,11 @@
 package org.clulab.dynet
 
-import java.io.PrintWriter
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
-import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
-import ForwardLayer._
+import edu.cmu.dynet._
+import org.clulab.dynet.ForwardLayer._
+import org.clulab.dynet.Utils._
 
+import java.io.PrintWriter
+import scala.collection.BufferedIterator
 import scala.collection.mutable.ArrayBuffer
 
 class GreedyForwardLayer (parameters:ParameterCollection,
@@ -43,7 +43,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
 
   override def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String] = {
     val labelIds = Utils.greedyPredict(emissionScores)
-    labelIds.map(i2t(_))
+    labelIds.map(i2t(_)).toIndexedSeq
   }
 
   override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] = {

@@ -149,7 +149,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
     // add features from first-pass labels (if any)
     //
     if (firstPassLabels.nonEmpty) {
-      addFirstPassFeatures(features, order, firstPassLabels.get, offset)
+      addFirstPassFeatures(features, order, firstPassLabels.get.toIndexedSeq, offset)
     }
   }
 
@@ -170,12 +170,12 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
       // labels to be learned
       val labels =
         if (leftToRight) labelExtractor(origSentence)
-        else SeqUtils.revert(labelExtractor(origSentence)).toArray
+        else SeqUtils.revert(labelExtractor(origSentence).toIndexedSeq).toArray
       // labels from the first pass (if any)
       val firstPass =
         if(firstPassLabels.nonEmpty) {
           if(leftToRight) Some(firstPassLabels.get(sentOffset))
-          else Some(SeqUtils.revert(firstPassLabels.get(sentOffset)).toArray)
+          else Some(SeqUtils.revert(firstPassLabels.get(sentOffset).toIndexedSeq).toArray)
         } else {
           None
         }
@@ -185,7 +185,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
       for (i <- features.indices) features(i) = new Counter[F]()
       for(i <- 0 until sentence.size) {
         // add all features
-        mkFeatures(features(i), sentence, i, labels, firstPass)
+        mkFeatures(features(i), sentence, i, labels.toIndexedSeq, firstPass)
 
         // add one datum for each word in the sentence
         val d = mkDatum(labels(i), features(i))
@@ -214,7 +214,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
     val firstPass =
       if(firstPassLabels.nonEmpty) {
         if(leftToRight) firstPassLabels
-        else Some(SeqUtils.revert(firstPassLabels.get).toArray)
+        else Some(SeqUtils.revert(firstPassLabels.get.toIndexedSeq).toArray)
       } else {
         None
       }

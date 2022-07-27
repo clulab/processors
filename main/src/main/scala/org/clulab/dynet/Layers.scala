@@ -8,6 +8,7 @@ import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.BufferedIterator
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling

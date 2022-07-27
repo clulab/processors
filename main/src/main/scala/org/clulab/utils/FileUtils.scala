@@ -25,7 +25,7 @@ object FileUtils {
     val children = new Iterable[File] {
       def iterator = if (file.isDirectory) file.listFiles.iterator else Iterator.empty
     }
-    Seq(file) ++: children.flatMap(walkTree(_))
+    Seq(file) ++ children.flatMap(walkTree(_))
   }
 
   def walkTree(filename: String): Iterable[File] = walkTree(new File(filename))
@@ -39,7 +39,7 @@ object FileUtils {
 
     val result = Option(dir.listFiles(filter))
       .getOrElse(throw Sourcer.newFileNotFoundException(collectionDir))
-    result
+    result.toSeq
   }
 
   def getCommentedLinesFromSource(source: Source): Iterator[String] =

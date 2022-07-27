@@ -32,7 +32,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     taskManagerOpt.get
   }
 
-  protected def initialize(): Array[Layers] = {
+  protected def initialize(): IndexedSeq[Layers] = {
     // this should only be called during training, when the task manager should be defined
     require(taskManagerOpt.isDefined)
 
@@ -58,7 +58,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       logger.debug(layersPerTask(i).toString)
     }
 
-    layersPerTask
+    layersPerTask.toIndexedSeq
   }
 
   protected def mkVocabularies(): (Array[Counter[String]], Array[Counter[String]]) = {
@@ -79,7 +79,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     for (tid <- taskManager.indices) {
       for (sentence <- taskManager.tasks(tid).trainSentences) {
-        val annotatedSentences = reader.toAnnotatedSentences(sentence, 0)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence.toIndexedSeq, 0)
 
         for(as <- annotatedSentences) {
           val annotatedSentence = as._1
@@ -144,7 +144,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
         sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
+        val annotatedSentences = reader.toAnnotatedSentences(sentence.toIndexedSeq, insertNegatives)
         assert(annotatedSentences.nonEmpty)
 
         val unweightedLoss = {
@@ -314,7 +314,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     for (sent <- ProgressBar(taskName, sentences)) {
       sentCount += 1
 
-      val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
+      val annotatedSentences = reader.toAnnotatedSentences(sent.toIndexedSeq, insertNegatives)
 
       for(as <- annotatedSentences) {
         val sentence = as._1

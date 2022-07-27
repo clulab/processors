@@ -13,7 +13,7 @@ import scala.io.Source
 object ProcessorFileExample {
   val proc = new FastNLPProcessor()
 
-  def main(args:Array[String]) {
+  def main(args:Array[String]): Unit = {
     val text = FileUtils.getTextFromFile(args(0))
     proc.annotate(text)
   }

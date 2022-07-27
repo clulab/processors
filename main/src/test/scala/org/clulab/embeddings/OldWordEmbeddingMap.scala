@@ -42,11 +42,11 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
 
   val dimensions: Int = matrix.values.head.length
 
-  def saveMatrix(mf: String) {
+  def saveMatrix(mf: String): Unit = {
     val pw = new PrintWriter(mf)
     pw.println(s"${matrix.size}, $dimensions")
     for ((word, vec) <- matrix) {
-      val strRep = vec.map(_.formatted("%.6f")).mkString(" ")
+      val strRep = vec.map(v => f"$v%.6f").mkString(" ")
       pw.println(s"$word $strRep")
     }
     pw.close()
@@ -77,7 +77,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
   }
 
   /** Adds the content of src to dest, in place */
-  private def add(dest:Array[Double], src:Array[Double]) {
+  private def add(dest:Array[Double], src:Array[Double]): Unit = {
     var i = 0
     while(i < dimensions) {
       dest(i) += src(i)
@@ -380,7 +380,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
     */
   // This is the only use used in performance testing.
 
-  val fakeResult = new Array[Float](dimensions)
+  val fakeResult = new Array[Float](dimensions).toIndexedSeq
   override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
     getEmbedding(word) // For the sake of timing
     fakeResult
@@ -413,7 +413,7 @@ object OldWordEmbeddingMap {
   def isNumber(w:String):Boolean = EmbeddingUtils.isNumber(w)
 
   /** Normalizes this vector to length 1, in place */
-  def norm(weights:Array[Double]) {
+  def norm(weights:Array[Double]): Unit = {
     var i = 0
     var len = 0.0
     while (i < weights.length) {
@@ -458,7 +458,7 @@ object OldWordEmbeddingMap {
     caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load embedding matrix from stream ...")
     val src: Source = Source.fromInputStream(is, "iso-8859-1")
-    val lines: Iterator[String] = src.getLines
+    val lines: Iterator[String] = src.getLines()
     val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
     src.close()
     logger.debug("Completed matrix loading.")
@@ -583,7 +583,7 @@ object OldWordEmbeddingMap {
     m.toMap
   }
 
-  def main(args:Array[String]) {
+  def main(args:Array[String]): Unit = {
     val w2v = new OldWordEmbeddingMap(args(0), None)
 
     println("Words most similar to \"house\":")
