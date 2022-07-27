@@ -1,7 +1,6 @@
 val scala11 = "2.11.12" // up to 2.11.12
-val scala12 = "2.12.15" // up to 2.12.15
+val scala12 = "2.12.16" // up to 2.12.16
 val scala13 = "2.13.8"  // up to 2.13.8
-// scala13 is waiting on ai.lum %% common.
 
 ThisBuild / crossScalaVersions := Seq(scala13, scala12, scala11)
 ThisBuild / scalaVersion := crossScalaVersions.value.head

@@ -1,10 +1,6 @@
 package org.clulab.struct
 
-import scala.collection.mutable
-
 object GraphMap {
-  def apply(): DepdendencyMap = new mutable.HashMap[Int, DirectedGraph[String]](2,mutable.HashMap.defaultLoadFactor)
-
   val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
   val UNIVERSAL_ENHANCED = "universal-enhanced" // collapsed (or enhanced) Universal dependencies
   val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies

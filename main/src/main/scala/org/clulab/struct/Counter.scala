@@ -115,7 +115,7 @@ class Counter[T] (
   /** Sorts counts in descending order, if argument is true. */
   def sorted(descending:Boolean):List[(T, Double)] = {
     implicit val sortOrder: Ordering[(T, Double)] = if (descending) Ordering.by[(T,Double), Double](_._2).reverse else Ordering.by[(T,Double), Double](_._2)
-    keySet.map(k => Tuple2(k, getCount(k))).to(List).sorted
+    keySet.map(k => Tuple2(k, getCount(k))).toList.sorted
   }
 
   override def toString:String = {
@@ -125,7 +125,7 @@ class Counter[T] (
     val keys = keySet
     for (key <- keys) {
       if(! first) os.append(", ")
-      os.append (key + ":" + getCount(key).formatted("%3.3f"))
+      os.append(f"$key:${getCount(key)%3.3f}")
       first = false
     }
     os.append ("]")

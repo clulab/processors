@@ -4,7 +4,6 @@ import org.clulab.processors.Sentence
 import org.clulab.struct.{EntityValidator, TrueEntityValidator}
 
 import java.io.File
-import scala.collection.{IndexedSeqView, mutable}
 
 /**
   * The abstract base class for several concrete child classes used for Named Entity

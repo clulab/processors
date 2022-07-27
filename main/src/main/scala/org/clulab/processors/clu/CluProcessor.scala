@@ -3,7 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, HasParallelSupport, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -36,9 +36,7 @@ class CluProcessor protected (
   mtlSrlaOpt: Option[Metal],
   mtlDepsHeadOpt: Option[Metal],
   mtlDepsLabelOpt: Option[Metal]
-) extends Processor with Configured {
-
-  import scala.collection.parallel.CollectionConverters._
+) extends Processor with Configured with HasParallelSupport {
 
   // standard, abbreviated constructor
   def this(
@@ -203,7 +201,7 @@ class CluProcessor protected (
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
   protected lazy val isPreparedToAnnotate: Boolean = {
-    Array(
+    toParArray(Array(
       lazyTokenizer,               // tokenize
       lazyMtlPosChunkSrlp,         // tagPartsOfSpeech
       lazyMtlNer,                  // recognizeNamedEntities
@@ -212,7 +210,7 @@ class CluProcessor protected (
       lazyMtlDepsLabel,            // parse
       lazyLemmatizer,              // lemmatize
       lazyMtlSrla                  // srl
-    ).par.foreach(_.value)
+    )).foreach(_.value)
     true
   }
 

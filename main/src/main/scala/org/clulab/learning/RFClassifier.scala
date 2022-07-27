@@ -1,15 +1,13 @@
 package org.clulab.learning
 
-import java.io.{Serializable, Writer}
+import org.clulab.learning.RFClassifier._
 import org.clulab.struct.{Counter, Lexicon}
-import org.clulab.utils.MathUtils
+import org.clulab.utils.{HasParallelSupport, MathUtils, ThreadUtils}
 import org.slf4j.LoggerFactory
 
+import java.io.{Serializable, Writer}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import RFClassifier._
-import org.clulab.utils.ThreadUtils
-
 import scala.util.Random
 
 /**
@@ -26,7 +24,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
                          numThreads:Int = 0, // 0 means maximum parallelism: use all cores available
                          howManyFeaturesPerNode: Int => Int = RFClassifier.featuresPerNodeSqrt, // how many features to use per node, as a function of total feature count
                          nilLabel:Option[L] = None)
-  extends Classifier[L, F] with Serializable {
+  extends Classifier[L, F] with HasParallelSupport with Serializable {
 
   var trees:Option[Array[RFTree]] = None
 
@@ -86,7 +84,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     logger.debug("Beginning tree building...")
     numThreads match {
       case 0 => // use as many threads as possible
-        val parBags = bags.toSet.par
+        val parBags = toParSet(bags.toSet)
         trees = Some(parBags.map(buildTreeMain).toArray)
       case 1 => // sequential run in the same thread
         trees = Some(bags.map(buildTreeMain).toArray)

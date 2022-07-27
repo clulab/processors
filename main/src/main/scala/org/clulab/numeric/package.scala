@@ -9,7 +9,7 @@ import scala.util.control.Breaks._
 
 package object numeric {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
-    val mentionsBySentence = mentions.groupBy(_.sentence).view.mapValues(_.sortBy(_.start))
+    val mentionsBySentence = mentions.groupBy(_.sentence).mapValues(_.sortBy(_.start))
     for ((s, i) <- doc.sentences.zipWithIndex) {
       println(s"sentence #$i")
       println(s.getSentenceText)
