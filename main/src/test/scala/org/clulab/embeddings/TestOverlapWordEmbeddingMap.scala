@@ -1,10 +1,10 @@
 package org.clulab.embeddings
 
+import org.clulab.utils.HasParallelSupport
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class TestOverlapWordEmbeddingMap extends AnyFlatSpec with Matchers {
-  import scala.collection.parallel.CollectionConverters._
+class TestOverlapWordEmbeddingMap extends AnyFlatSpec with Matchers with HasParallelSupport {
 
   def overlap(): Unit = {
     val compact = Seq(true, true) // False is no longer available.
@@ -14,7 +14,7 @@ class TestOverlapWordEmbeddingMap extends AnyFlatSpec with Matchers {
       WordEmbeddingMapPool.getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", compact)
     }
 
-    compact.par.reverse.foreach { compact =>
+    toParSeq(compact).reverse.foreach { compact =>
       WordEmbeddingMapPool.getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", compact)
     }
   }
