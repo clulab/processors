@@ -210,21 +210,23 @@ class Counter[T] (
   def saveTo(w:Writer): Unit = {
     val writer = Files.toPrintWriter(w)
     writer.println(s"$defaultReturnValue ${counts.size}")
-    if(counts.nonEmpty) {
-      val first = counts.keys.head
-      first match {
-        // TODO: kinda hacky, but don't know how to recover from type erasure in loadFrom()...
-        case i: Int => writer.println("I")
-        case d: Double => writer.println("D")
-        case s: String => writer.println("S")
-        case _ => throw new RuntimeException("ERROR: unknown type in lexicon!")
-      }
-    } else {
-      writer.println("S") // this does not matter
+
+    val keyType = counts.headOption.map {
+      case (_: Int, _) => "I"
+      case (_: Double, _) => "D"
+      case (_: String, _) => "S"
+      case _ => throw new RuntimeException("ERROR: unknown type in lexicon!")
+    } getOrElse ("S")
+
+    writer.println(keyType)
+
+    val keys = keyType match {
+      case "I" => counts.keys.map(_.asInstanceOf[Int]).toSeq.sorted.map(_.asInstanceOf[T])
+      case "D" => counts.keys.map(_.asInstanceOf[Double]).toSeq.sorted.map(_.asInstanceOf[T])
+      case "S" => counts.keys.map(_.asInstanceOf[String]).toSeq.sorted.map(_.asInstanceOf[T])
     }
-    for(k <- counts.keySet) {
-      writer.println(s"${counts(k).value} $k")
-    }
+
+    keys.foreach(k => writer.println(s"${counts(k)} $k"))
   }
 }
 

@@ -47,14 +47,22 @@ object WordEmbeddingMap {
 
   lazy val defaultWordSanitizer = new DefaultWordSanitizer()
 
-  /** Normalize this vector to length 1, in place, if possible. */
-  def norm(array: MutableIndexedSeq[Float]): Unit = {
+
+  /** Normalize this vector to length 1, in place, if possible.
+    *
+    * NOTE:   Scala 2.13 has changed Array.view to be implemented by Array.slice, which creates a copy. The most optimal
+    * way to work with this is to implement the view / slice functionality in the `norm` method, as shown below.
+    *
+    */
+
+  def norm(array: MutableIndexedSeq[Float], from: Int, until: Int): Unit = {
+    require((array.isEmpty && from == 0 && until == 0) || (from >= 0 && from < array.length && until >= from && until <= array.length))
 
     def calcLength(): Float = {
       var len = 0f // optimization
-      var i = 0 // optimization
+      var i = from // optimization
 
-      while (i < array.length) {
+      while (i < until) {
         len += array(i) * array(i)
         i += 1
       }
@@ -62,9 +70,9 @@ object WordEmbeddingMap {
     }
 
     def divide(divisor: Float): Unit = {
-      var i = 0 // optimization
+      var i = from// optimization
 
-      while (i < array.length) {
+      while (i < until) {
         array(i) /= divisor
         i += 1
       }
@@ -74,6 +82,9 @@ object WordEmbeddingMap {
 
     if (length != 0)  divide(length)
   }
+
+  /** Normalize this vector to length 1, in place, if possible. */
+  def norm(array: MutableIndexedSeq[Float]): Unit = norm(array,0,array.length)
 
   def dotProduct(v1: IndexedSeq[Float], v2: IndexedSeq[Float]): Float = {
     require(v1.length == v2.length) //should we always assume that v2 is longer? perhaps set shorter to length of longer...

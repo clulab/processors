@@ -46,7 +46,7 @@ extends IndexedSeq[Int] with Ordered[Interval] with Serializable {
     } else true
 
   override def indices: Range = {
-    start to end
+    start until end
   }
 }
 

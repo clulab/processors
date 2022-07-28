@@ -375,7 +375,7 @@ object CompactWordEmbeddingMap extends Logging {
 
       while (index < length) {
         // Lengths of vectors are generally around 5.  They are _not_ normalized.
-        WordEmbeddingMap.norm(array.slice(index, index + columns))
+        WordEmbeddingMap.norm(array,index,index + columns)
         index += columns
       }
       array
