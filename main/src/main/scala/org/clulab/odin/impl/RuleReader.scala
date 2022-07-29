@@ -235,7 +235,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       val input = readFileOrResource(path)
       val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
       val vars = yaml.load(input).asInstanceOf[JMap[String, Any]]
-      vars.asScala.mapValues(v => processVar(v)).toMap
+      vars.asScala.map { case (k,v) => k -> processVar(v) }.toMap
   }
 
   /**

@@ -21,7 +21,7 @@ object EvalTimeNorm {
         case Array(docId, startSpan, endSpan, startIntervalStr) =>
           (docId, (startSpan, endSpan, startIntervalStr))
       }
-    }).groupBy(t => t._1).mapValues(_.map(_._2))
+    }).groupBy(t => t._1).map { case (k,v) => k -> v.map(_._2) }
     // For each docId in goldTimex keys get parse the document and get the number of
     // gold time expressions, predicted time expressions and the intersection
     val valuesPerDocument = for (docId <- goldTimex.keys.toSeq.sorted) yield {

@@ -240,7 +240,7 @@ object MathUtils {
       val zipped = extendedBounds.zip(extendedBounds.tail)
       zipped(bucket)
     }
-    val countsByBucket = xs.groupBy(getBucket).mapValues(_.size).toMap
+    val countsByBucket = xs.groupBy(getBucket).map { case (k,v) => k -> v.size }
     (for {
       (bucket) <- 0 to boundaries.size
     } yield (getRange(bucket) -> countsByBucket.getOrElse(bucket, 0))).toMap

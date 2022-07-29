@@ -323,7 +323,7 @@ class MED(sourceString: String, targetString: String, allowSubstitute: Boolean =
         .map(_.name)
     val counts = edits
         .groupBy(_.name)
-        .mapValues(_.length)
+         .map { case (k,v) => k -> v.length }
     val headers = keys
         .mkString("\t")
     val values = keys
