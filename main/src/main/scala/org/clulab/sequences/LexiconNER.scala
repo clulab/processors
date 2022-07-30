@@ -72,7 +72,7 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
   }
 
   val array = Array[String]()
-  val view = array.view
+  def view = array.view
 
   def hasCondition(wordsView: IndexedSeq[String], condition: Char => Boolean): Boolean =
     wordsView.exists(_.exists(condition))
