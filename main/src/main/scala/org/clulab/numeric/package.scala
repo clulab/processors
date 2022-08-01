@@ -5,7 +5,7 @@ import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMe
 import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
-import scala.util.control.Breaks._
+import _root_.scala.util.control.Breaks._
 
 package object numeric {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
@@ -110,7 +110,7 @@ package object numeric {
               if (en.endsWith(toBeRemovedShortened)) {
                 s.entities.get(j) = "O"
                 s.norms.get(j) = ""
-              } else break
+              } else break()
             }
           }
         }

@@ -32,9 +32,6 @@ abstract class Dataset[L, F](
   def numFeatures: Int = featureLexicon.size
   def numLabels: Int = labelLexicon.size
 
-  /** number of training examples */
-  override def size: Int = labels.size
-
   override def indices: Range = labels.indices
 
   def featuresCounter(datumOffset:Int):Counter[Int]
@@ -54,7 +51,7 @@ abstract class Dataset[L, F](
   /** Convert this dataset to a CounterDataset */
   def toCounterDataset:CounterDataset[L, F]
 
-  override def length: Int = size
+  override def length: Int = labels.length
 
   override def apply(idx: Int): Datum[L, F] = mkDatum(idx)
 }

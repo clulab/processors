@@ -16,13 +16,13 @@ object RestoreCase extends App {
   val proc = new CluProcessor
 
   val sentences = ColumnReader.readColumns(inputFileName)
-  val words = sentences.map(_.map(_.tokens(0)).toIterable)
+  val words = sentences.map(_.map(_.tokens(0)).toSeq)
   val doc = proc.mkDocumentFromTokens(words)
   proc.restoreCase(doc)
   saveOutput(pw, doc, sentences)
   pw.close()
 
-  private def saveOutput(pw: PrintWriter, doc: Document, sentences: Array[Array[Row]]) {
+  private def saveOutput(pw: PrintWriter, doc: Document, sentences: Array[Array[Row]]): Unit = {
     assert(doc.sentences.size == sentences.length)
 
     for(i <- doc.sentences.indices) {

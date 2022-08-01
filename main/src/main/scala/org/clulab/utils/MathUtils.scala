@@ -1,9 +1,6 @@
 package org.clulab.utils
 
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-
-import scala.util
-import scala.collection.script.Index
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * Math utility methods useful for stats and ML
@@ -23,13 +20,13 @@ object MathUtils {
     for(s <- scores) scoreArray += s * gamma
     val softmaxes = new ArrayBuffer[Double]
 
-    val logSumStatic = logSum(scoreArray)
+    val logSumStatic = logSum(scoreArray.toIndexedSeq)
     for(s <- scores) {
       val logSoftmax = (gamma * s) - logSumStatic
       softmaxes += math.exp(logSoftmax)
     }
 
-    softmaxes
+    softmaxes.toIndexedSeq
   }
 
   /**
@@ -50,7 +47,7 @@ object MathUtils {
       softmaxes += math.exp(logSoftmax).toFloat
     }
 
-    softmaxes
+    softmaxes.toIndexedSeq
   }
 
   /**

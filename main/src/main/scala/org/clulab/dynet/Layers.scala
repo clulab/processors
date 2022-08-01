@@ -313,7 +313,7 @@ object Layers {
       probScores += justLabels.zip(probs)
     }
 
-    probScores
+    probScores.toIndexedSeq
   }
 
   /** Greedy parsing for a MTL model that contains both head and label classifier */
@@ -375,7 +375,7 @@ object Layers {
         for(i <- heads.indices) {
           modHeadPairs += ModifierHeadPair(i, heads(i))
         }
-        val labelStates = layers(2).forwardFrom(sharedStates, Some(modHeadPairs), doDropout = false)
+        val labelStates = layers(2).forwardFrom(sharedStates, Some(modHeadPairs.toIndexedSeq), doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)
         val labels = layers(2).finalLayer.get.inference(emissionScores)
         assert(labels.size == heads.size)

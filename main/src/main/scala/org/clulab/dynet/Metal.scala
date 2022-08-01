@@ -282,7 +282,7 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       }
       preds += bestPred
     }
-    preds
+    preds.toIndexedSeq
   }
 
   /**

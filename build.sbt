@@ -1,8 +1,8 @@
 val scala11 = "2.11.12" // up to 2.11.12
-val scala12 = "2.12.15" // up to 2.12.15
+val scala12 = "2.12.16" // up to 2.12.16
 val scala13 = "2.13.8"  // up to 2.13.8
 
-ThisBuild / crossScalaVersions := Seq(scala13, scala12, scala11) // , scala3)
+ThisBuild / crossScalaVersions := Seq(scala12, scala11, scala13)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))

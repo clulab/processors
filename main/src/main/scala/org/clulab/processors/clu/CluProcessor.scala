@@ -1,20 +1,21 @@
 package org.clulab.processors.clu
 
+import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
+import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
-import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.sequences.{LexiconNER, NamedEntity}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.ThreadUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import CluProcessor._
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
-import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
-import org.clulab.sequences.{LexiconNER, NamedEntity}
-import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
-
 import java.util.regex.Pattern
+
+import CluProcessor._
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -201,7 +202,7 @@ class CluProcessor protected (
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
   protected lazy val isPreparedToAnnotate: Boolean = {
-    Array(
+    ThreadUtils.parallelize(Seq(
       lazyTokenizer,               // tokenize
       lazyMtlPosChunkSrlp,         // tagPartsOfSpeech
       lazyMtlNer,                  // recognizeNamedEntities
@@ -210,7 +211,7 @@ class CluProcessor protected (
       lazyMtlDepsLabel,            // parse
       lazyLemmatizer,              // lemmatize
       lazyMtlSrla                  // srl
-    ).par.foreach(_.value)
+    )).foreach(_.value)
     true
   }
 
@@ -320,7 +321,7 @@ class CluProcessor protected (
     if (!isStandard)
       originalWord
     else if (label == "UI")
-      Character.toUpperCase(loweredWord(0)) + loweredWord.substring(1)
+      Character.toUpperCase(loweredWord(0)).toString + loweredWord.substring(1)
     else if (label == "UA")
       loweredWord.toUpperCase()
     else
@@ -442,7 +443,7 @@ class CluProcessor protected (
         heads += i + relativeHeads(i)
       }
     }
-    heads
+    heads.toIndexedSeq
   }
 
   /** Dependency parsing with the Eisner algorithm */
@@ -563,7 +564,7 @@ class CluProcessor protected (
       val headPositions = new ArrayBuffer[ModifierHeadPair]()
       for(i <- words.indices) headPositions += ModifierHeadPair(i, pred)
       val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels))
-      val argLabels = mtlSrla.predict(0, annotatedSentence, Some(headPositions), embeddings)
+      val argLabels = mtlSrla.predict(0, annotatedSentence, Some(headPositions.toIndexedSeq), embeddings)
 
       argLabels.zipWithIndex
           .filter { case (argLabel, _) => argLabel != "O" }

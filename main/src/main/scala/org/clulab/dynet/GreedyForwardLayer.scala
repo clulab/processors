@@ -6,6 +6,7 @@ import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
+import scala.collection.BufferedIterator
 import scala.collection.mutable.ArrayBuffer
 
 class GreedyForwardLayer (parameters:ParameterCollection,

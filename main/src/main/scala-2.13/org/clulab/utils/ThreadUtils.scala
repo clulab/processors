@@ -7,6 +7,7 @@ import scala.collection.parallel.ForkJoinTaskSupport
 import scala.collection.parallel.ParIterable
 import scala.collection.parallel.ParSeq
 import scala.collection.parallel.ParSet
+import scala.concurrent.{ExecutionContext, Future}
 
 object ThreadUtils {
 
@@ -27,6 +28,8 @@ object ThreadUtils {
     parSeq
   }
 
+  def parallelize[T](seq: Seq[T]): ParSeq[T] = seq.par
+
   def parallelize[T](set: Set[T], threads: Int): ParSet[T] = {
     val parSet = set.par
     parallelize(parSet, threads)
@@ -34,4 +37,23 @@ object ThreadUtils {
   }
 
   def parallelize[T](set: Set[T]): ParSet[T] = set.par
+
+  object NamedFuture {
+
+    def apply[T](name: String)(body: => T)(implicit @deprecatedName("execctx") executor: ExecutionContext): Future[T] = {
+      Future {
+        val thread = Thread.currentThread
+        val oldName = thread.getName
+        val result = try {
+          thread.setName(s"$oldName ($name)")
+          body
+        }
+        finally {
+          thread.setName(oldName)
+        }
+
+        result
+      }(executor)
+    }
+  }
 }

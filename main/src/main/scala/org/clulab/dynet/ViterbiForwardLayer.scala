@@ -5,6 +5,8 @@ import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupPara
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import ForwardLayer._
 
+import scala.collection.BufferedIterator
+
 class ViterbiForwardLayer(parameters:ParameterCollection,
                           inputSize: Int,
                           isDual: Boolean,
@@ -58,7 +60,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
       }
     }
 
-    new FloatVector(transScores)
+    new FloatVector(transScores.toIndexedSeq)
   }
 
   override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label]): Expression = {
@@ -91,7 +93,7 @@ class ViterbiForwardLayer(parameters:ParameterCollection,
       Utils.transitionMatrixToArrays(T, t2i.size)
     val labelsIds = Utils.viterbi(emissionScores,
       transitionMatrix, t2i.size, t2i(START_TAG), t2i(STOP_TAG))
-    labelsIds.map(i2t(_))
+    labelsIds.map(i2t(_)).toIndexedSeq
   }
 
   override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] =
