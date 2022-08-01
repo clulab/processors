@@ -1,0 +1,122 @@
+cff-version: "1.2.0"
+message: "If you use this software, please cite one of the papers among the references below, depending on how you use it."
+authors:
+- family-names: "Surdeanu"
+  given-names: "Mihai"
+- family-names: "Valenzuela-Esc\\'{a}rcega"
+  given-names: "Marco A."
+- family-names: "Hahn-Powell"
+  given-names: "Gustave"
+- family-names: "Jansen"
+  given-names: "Peter"
+- family-names: "Fried"
+  given-names: "Daniel"
+- family-names: "Bell"
+  given-names: "Dane"
+- family-names: "Alcock"
+  given-names: "Keith"
+title: "https://clulab.github.io/processors/"
+references:
+- &ref1
+  type: conference-paper
+  notes: "If you use one of our discourse parsers, please cite this paper:"
+  authors:
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  - family-names: "Hicks"
+    given-names: "Thomas"
+  - family-names: "Valenzuela-Esc\\'{a}rcega"
+    given-names: "Marco A."
+  title: "Two Practical Rhetorical Structure Theory Parsers"
+  collection-type: proceedings
+  collection-title: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
+  year: 2015
+  url: "http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf"
+- &ref2
+  type: conference-paper
+  notes: "If you use Odin, our event extraction framework, please cite this paper:"
+  authors:
+  - family-names: "Valenzuela-Esc\\'{a}rcega"
+    given-names: "Marco A."
+  - family-names: "Hahn-Powell"
+    given-names: "Gustave"
+  - family-names: "Hicks"
+    given-names: "Thomas"
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  title: "A Domain-independent Rule-based Framework for Event Extraction"
+  collection-type: proceedings
+  collection-title: "Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Assian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)"
+  year: 2015
+  url: "http://surdeanu.info/mihai/papers/acl2015.pdf"
+- &ref3
+  type: conference-paper
+  notes: "If you use CoreNLPProcessor, please cite Stanford’s paper:"
+  year: 2014
+  authors:
+  - family-names: "Manning"
+    given-names: "Christopher D."
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  - family-names: "Bauer"
+    given-names: "John"
+  - family-names: "Finkel"
+    given-names: "Jenny"
+  - family-names: "Bethard"
+    given-names: "Steven J."
+  - family-names: "McClosky"
+    given-names: "David"
+  collection-type: proceedings
+  collection-title: "Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (ACL)"
+  title: "The Stanford CoreNLP Natural Language Processing Toolkit"
+  url: "http://surdeanu.info/mihai/papers/acl2014-corenlp.pdf"
+- &ref4
+  type: conference-paper
+  notes: "If you use CluProcessor, please cite this paper:"
+  authors:
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  - family-names: "Manning"
+    given-names: "Christopher D."
+  title: "Ensemble Models for Dependency Parsing: Cheap and Good?"
+  collection-type: proceedings
+  collection-title: "Proceedings of the North American Chapter of the Association for Computational Linguistics Conference (NAACL-2010)"
+  month: 6
+  year: 2010
+  url: "http://surdeanu.info/mihai/papers/naacl10-parsing.pdf"
+- &ref5
+  type: website
+  notes: "If you use anything else in this package, please link to this page."
+  authors:
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  - family-names: "Valenzuela-Esc\\'{a}rcega"
+    given-names: "Marco A."
+  - family-names: "Hahn-Powell"
+    given-names: "Gustave"
+  - family-names: "Jansen"
+    given-names: "Peter"
+  - family-names: "Fried"
+    given-names: "Daniel"
+  - family-names: "Bell"
+    given-names: "Dane"
+  - family-names: "Alcock"
+    given-names: "Keith"
+  url: "https://clulab.github.io/processors/"
+# GitHub apparently can't process variables.
+# preferred-citation: *ref1
+preferred-citation:
+  type: conference-paper
+  notes: "If you use one of our discourse parsers, please cite this paper.  For other uses, please see the notes in the CITATION.cff file."
+  authors:
+  - family-names: "Surdeanu"
+    given-names: "Mihai"
+  - family-names: "Hicks"
+    given-names: "Thomas"
+  - family-names: "Valenzuela-Esc\\'{a}rcega"
+    given-names: "Marco A."
+  title: "Two Practical Rhetorical Structure Theory Parsers"
+  collection-type: proceedings
+  collection-title: "Proceedings of the Conference of the North American Chapter of the Association for Computational Linguistics - Human Language Technologies (NAACL HLT): Software Demonstrations"
+  year: 2015
+  url: "http://surdeanu.info/mihai/papers/naacl2015-discourse.pdf"

@@ -66,12 +66,15 @@ class TokenizerStepNormalization extends TokenizerStep {
 
       // replace common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
       else {
-        output += RawToken(
-          input.raw,
-          input.beginPosition,
-          input.endPosition,
-          scienceUtils.replaceUnicodeWithAscii(input.word)
-        )
+        val word = scienceUtils.replaceUnicodeWithAscii(input.word)
+        // Some strings will have been replaced by empty strings.  They are not allowed in RawTokens.
+        if (word.nonEmpty)
+          output += RawToken(
+            input.raw,
+            input.beginPosition,
+            input.endPosition,
+            word
+          )
       }
     }
 

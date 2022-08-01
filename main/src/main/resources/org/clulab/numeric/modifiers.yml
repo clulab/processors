@@ -1,0 +1,36 @@
+rules:
+  # Date with approx modifier, e.g. "around July"
+  - name: modifier-approx
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifierApprox
+    pattern: |
+      /(?i)(around|about)/ @date:Date
+
+  # Date with start modifier, e.g. "beginning of July", "around beginning of July"
+  - name: modifier-start
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifierStart
+    pattern: |
+        /(?i)(around|about)/? /(?i)the/? /(?i)(beginning|start|early)/ /(?i)of/? @date:Date
+
+  # Date with mid modifier, e.g. "mid-July", "around mid-July"
+  - name: modifier-mid
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifierMid
+    pattern: |
+      /(?i)(around|about)/? /(?i)(the)/? /(?i)(middle|mid)/ /(?i)(of|-)/? @date:Date
+
+  # Date with end modifier, e.g. "end of July", "around end of July"
+  - name: modifier-end
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    action: mkDateMentionWithModifierEnd
+    pattern: |
+      /(?i)(around|about)/? /(?i)(the)/? /(?i)(end|ending|late)/ /(?i)of/? @date:Date

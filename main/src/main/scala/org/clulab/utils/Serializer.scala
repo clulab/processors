@@ -11,8 +11,8 @@ object Serializer {
     try {
       f(resource)
     } finally {
-      resource.close()
-    }
+      Option(resource).map(_.close)
+   }
   }
 
   /** serialize object to output stream */

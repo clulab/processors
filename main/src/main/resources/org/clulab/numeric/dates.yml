@@ -47,7 +47,7 @@ rules:
     example: "It was May 12 of 2000"
     action: mkDateMention
     pattern: |
-      @month:PossibleMonth ( @day:PossibleDay )? "of"? @year:PossibleYear
+      @month:PossibleMonth ( @day:PossibleDay )? /^(of|in)$/? @year:PossibleYear
 
   # American date format, with mandatory year
   - name: date-4
@@ -58,6 +58,25 @@ rules:
     action: mkDateMention
     pattern: |
       @year:PossibleYear ( ","? @month:PossibleMonth )?
+
+  # Date with just a single month name
+  - name: date-5
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was May"
+    action: mkDateMention
+    pattern: |
+        @month:PossibleMonth
+
+  - name: date-with-vague-season
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "26 September in 2011WS"
+    action: mkDateMention
+    pattern: |
+      ( @day:PossibleDay @month:PossibleMonth | @month:PossibleMonth @day:PossibleDay) /^in$/ /^the$/? (?<year> [word = /^(1\d\d\d|20\d\d)(WS|DS)$/])
 
   # Rule for YYYY-MM-DD (accepts -, :, / as separators)
   - name: date-yyyy-mm-dd
@@ -119,3 +138,23 @@ rules:
     action: mkDateMentionYyyyMm
     pattern: |
       [word=/^(1\d\d\d|2\d\d\d)(:|\/|\-)(0?[1-9]|1[012])$/]
+
+  # Rule for "month of X"
+  - name: date-month-of
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was the month of January"
+    action: mkDateMention
+    pattern: |
+      /(?i)^month$/ /(?i)^of$/ @month:PossibleMonth (","? @year:PossibleYear)?
+
+  # Rule for holidays
+  - name: date-holiday
+    label: Date
+    priority: ${ rulepriority }
+    type: token
+    example: "It was Christmas 2021."
+    action: mkDateMentionHoliday
+    pattern: |
+      @holiday:Holiday @year:PossibleYear?

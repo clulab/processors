@@ -1,5 +1,8 @@
 package org.clulab.sequences
 
+import org.clulab.utils.Closer.AutoCloser
+import org.clulab.utils.Sourcer
+
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
@@ -8,8 +11,10 @@ import scala.io.Source
   */
 object ColumnReader {
   def readColumns(fn: String): Array[Array[Row]] = {
-    val source = Source.fromFile(fn)
-    readColumns(source: Source)
+    // That which opens the file should also close it, none other.
+    Sourcer.sourceFromFilename(fn).autoClose { source =>
+      readColumns(source: Source)
+    }
   }
 
   def readColumns(source: Source): Array[Array[Row]] = {
@@ -25,7 +30,7 @@ object ColumnReader {
         }
       } else {
         // within the same sentence
-        val bits = l.split("\\s")
+        val bits = l.split("\\s+")
         if (bits.length < 2)
           throw new RuntimeException(s"ERROR: invalid line [$l]!")
         sentence += Row(bits)
@@ -35,8 +40,6 @@ object ColumnReader {
     if (sentence.nonEmpty) {
       sentences += sentence.toArray
     }
-
-    source.close()
     sentences.toArray
   }
 }
@@ -56,7 +59,5 @@ case class Row(tokens:Array[String]) {
   }
 
   def length = tokens.length
-
-
+  def indices: Range = tokens.indices
 }
-

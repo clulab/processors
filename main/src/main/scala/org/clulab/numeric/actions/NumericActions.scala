@@ -1,11 +1,12 @@
 package org.clulab.numeric.actions
 
+import org.clulab.numeric.SeasonNormalizer
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 
 import scala.collection.mutable.ArrayBuffer
 
-class NumericActions extends Actions {
+class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   //
   // local actions
   //
@@ -15,7 +16,24 @@ class NumericActions extends Actions {
     val convertedMentions = new ArrayBuffer[Mention]()
     for(m <- mentions) {
       try {
-        convertedMentions += converter(m)
+        convertedMentions += converter(m )
+      } catch {
+        case e: Exception =>
+          // sometimes these conversions fail, mainly on broken texts
+          // let's be robust here: report the error and move on
+          System.err.println(s"WARNING: $converterName conversion failed! Recovering and continuing...")
+          e.printStackTrace()
+      }
+    }
+    convertedMentions
+  }
+
+  /** Converts a sequence of mentions to new types given the converter function */
+  private def convertWithOneToManyConverter(mentions: Seq[Mention], converter: Mention => Seq[Mention], converterName: String): Seq[Mention] = {
+    val convertedMentions = new ArrayBuffer[Mention]()
+    for(m <- mentions) {
+      try {
+        convertedMentions ++= converter(m )
       } catch {
         case e: Exception =>
           // sometimes these conversions fail, mainly on broken texts
@@ -37,6 +55,15 @@ class NumericActions extends Actions {
     convert(mentions, toMeasurementMention, "toMeasurementMention")
   }
 
+  /** Constructs a MeasurementMention from a token pattern */
+  def mkSharedMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convertWithOneToManyConverter(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
+  }
+
+  def mkPercentage(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toPercentageMention, "toPercentageMention")
+  }
+
   def mkMeasurementWithRangeMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toMeasurementWithRangeMention, "toMeasurementWithRangeMention")
   }
@@ -44,6 +71,10 @@ class NumericActions extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMention, "toDateRangeMention")
+  }
+
+  def mkDateRangeMentionWithVagueSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithVagueSeason, "toDateRangeMentionWithVagueSeason")
   }
 
   /** Constructs a DateRangeMention from a token pattern */
@@ -64,6 +95,56 @@ class NumericActions extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithUntilRef, "toDateRangeMentionWithUntilRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionBefore(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionBefore, "toDateUnboundRangeMentionBefore")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionAfter(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionAfter, "toDateUnboundRangeMentionAfter")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeason(seasonNormalizer), "toDateRangeMentionWithSeason")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasons(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasons(seasonNormalizer), "toDateRangeMentionWithSeasons")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasonSinceRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasonSinceRef(seasonNormalizer), "toDateRangeMentionWithSeasonSinceRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithSeasonUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithSeasonUntilRef(seasonNormalizer), "toDateRangeMentionWithSeasonUntilRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionWithSeasonBefore(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionWithSeasonBefore(seasonNormalizer), "toDateUnboundRangeMentionBefore")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateUnboundRangeMentionWithSeasonAfter(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateUnboundRangeMentionWithSeasonAfter(seasonNormalizer), "toDateUnboundRangeMentionAfter")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionVagueSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionFromVagueSeason, "mkDateRangeMentionVagueSeason")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionOneTokenYearRange(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionFromOneTokenYearRange, "mkDateRangeMentionOneTokenYearRange")
   }
 
   /** Constructs a DateMention from a token pattern */
@@ -101,6 +182,32 @@ class NumericActions extends Actions {
     convert(mentions, toDateMentionYyMmDd, "toDateMentionYyMmDd")
   }
 
+  /** Constructs a DateMention from the yy-mm single token */
+  def mkDateMentionHoliday(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionHoliday, "toDateMentionHoliday")
+  }
+
+
+  /** Constructs a DateMention from a Date and an Approx Modifier */
+  def mkDateMentionWithModifierApprox(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierApprox, "toDateMentionWithModifierApprox")
+  }
+
+  /** Constructs a DateMention from a Date and a Start Modifier */
+  def mkDateMentionWithModifierStart(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierStart, "toDateMentionWithModifierStart")
+  }
+
+  /** Constructs a DateMention from a Date and a Mid Modifier */
+  def mkDateMentionWithModifierMid(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierMid, "toDateMentionWithModifierMid")
+  }
+
+  /** Constructs a DateMention from a Date and an End Modifier */
+  def mkDateMentionWithModifierEnd(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateMentionWithModifierEnd, "toDateMentionWithModifierEnd")
+  }
+
   //
   // global actions below this points
   //
@@ -110,20 +217,28 @@ class NumericActions extends Actions {
     cleanupAction(mentions)
 
   def cleanupAction(mentions: Seq[Mention]): Seq[Mention] = {
-    val r1 = keepLongestMentions(mentions)
-    r1
-  }
+    if(false) {
+      println("mentions before cleanup:")
+      for (m <- mentions) {
+        println("\t" + m.text)
+      }
+    }
 
-  private def isNumeric(m: Mention): Boolean = {
-    m.isInstanceOf[DateMention] ||
-    m.isInstanceOf[DateRangeMention] ||
-    m.isInstanceOf[MeasurementMention] ||
-    m.isInstanceOf[NumberRangeMention]
+    val r1 = keepLongestMentions(mentions)
+
+    if(false) {
+      println("mentions after cleanup:")
+      for (m <- r1) {
+        println("\t" + m.text)
+      }
+      println()
+    }
+    r1
   }
 
   /** Keeps a date (or date range) mention only if it is not contained in another */
   def keepLongestMentions(mentions: Seq[Mention]): Seq[Mention] = {
-    val (numerics, nonNumerics) = mentions.partition(isNumeric)
+    val (numerics, nonNumerics) = mentions.partition(NumericActions.isNumeric)
     val filteredNumerics = numerics.filterNot { outerNumeric =>
       numerics.exists { innerNumeric =>
         innerNumeric != outerNumeric &&
@@ -133,5 +248,15 @@ class NumericActions extends Actions {
     }
 
     filteredNumerics ++ nonNumerics
+  }
+}
+
+object NumericActions {
+  def isNumeric(m: Mention): Boolean = {
+    m.isInstanceOf[DateMention] ||
+      m.isInstanceOf[DateRangeMention] ||
+      m.isInstanceOf[MeasurementMention] ||
+      m.isInstanceOf[NumberRangeMention] ||
+      m.isInstanceOf[PercentageMention]
   }
 }

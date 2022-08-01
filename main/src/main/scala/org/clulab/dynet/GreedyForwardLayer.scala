@@ -1,10 +1,9 @@
 package org.clulab.dynet
 
 import java.io.PrintWriter
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.clulab.dynet.ForwardLayer.TYPE_GREEDY
-import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, fromIndexToString, save}
-import org.clulab.scala.BufferedIterator
+import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringMapBuilder, fromIndexToString, save}
 import ForwardLayer._
 
 import scala.collection.mutable.ArrayBuffer
@@ -16,13 +15,15 @@ class GreedyForwardLayer (parameters:ParameterCollection,
                           i2t: Array[String],
                           H: Parameter,
                           rootParam: Parameter,
-                          span: Option[Seq[(Int, Int)]],
+                          distanceEmbeddingSize: Int,
+                          distanceLookupParameters: Option[LookupParameter],
                           nonlinearity: Int,
                           dropoutProb: Float)
-  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam, span, nonlinearity, dropoutProb) {
+  extends ForwardLayer(parameters, inputSize, isDual, t2i, i2t, H, rootParam,
+    distanceEmbeddingSize, distanceLookupParameters, nonlinearity, dropoutProb) {
 
-  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[String]): Expression = {
-    val goldLabels = Utils.toIds(goldLabelStrings, t2i)
+  override def loss(finalStates: ExpressionVector, goldLabelStrings: IndexedSeq[Label]): Expression = {
+    val goldLabels = Utils.toIds(goldLabelStrings.map(_.label), t2i)
     Utils.sentenceLossGreedy(finalStates, goldLabels)
   }
 
@@ -30,7 +31,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
     save(printWriter, TYPE_GREEDY, "inferenceType")
     save(printWriter, inputSize, "inputSize")
     save(printWriter, if (isDual) 1 else 0, "isDual")
-    save(printWriter, span.map(spanToString).getOrElse("none"), "span")
+    save(printWriter, distanceEmbeddingSize, "distanceEmbeddingSize")
     save(printWriter, nonlinearity, "nonlinearity")
     save(printWriter, t2i, "t2i")
     save(printWriter, dropoutProb, "dropoutProb")
@@ -71,13 +72,11 @@ object GreedyForwardLayer {
     val byLineIntBuilder = new ByLineIntBuilder()
     val byLineFloatBuilder = new ByLineFloatBuilder()
     val byLineStringMapBuilder = new ByLineStringMapBuilder()
-    val byLineStringBuilder = new ByLineStringBuilder()
 
     val inputSize = byLineIntBuilder.build(x2iIterator, "inputSize")
     val isDualAsInt = byLineIntBuilder.build(x2iIterator, "isDual", DEFAULT_IS_DUAL)
     val isDual = isDualAsInt == 1
-    val spanValue = byLineStringBuilder.build(x2iIterator, "span", "")
-    val span = if(spanValue.isEmpty || spanValue == "none") None else Some(parseSpan(spanValue, inputSize))
+    val distanceEmbeddingSize = byLineIntBuilder.build(x2iIterator, "distanceEmbeddingSize", 0)
     val nonlinearity = byLineIntBuilder.build(x2iIterator, "nonlinearity", ForwardLayer.NONLIN_NONE)
     val t2i = byLineStringMapBuilder.build(x2iIterator, "t2i")
     val i2t = fromIndexToString(t2i)
@@ -86,22 +85,19 @@ object GreedyForwardLayer {
     //
     // make the loadable parameters
     //
-    //println(s"making FF ${t2i.size} x ${2 * inputSize}")
-    //val actualInputSize = if(isDual) 2 * inputSize else inputSize
-    val actualInputSize =
-      if(span.nonEmpty) {
-        val len = ForwardLayer.spanLength(span.get)
-        if(isDual) 2 * len else len
-      } else {
-        if(isDual) 2 * inputSize else inputSize
-      }
+    val actualInputSize = if(isDual) 2 * inputSize + distanceEmbeddingSize else inputSize
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
 
+    val distanceLookupParameters =
+      if(distanceEmbeddingSize > 0) Some(parameters.addLookupParameters(101, Dim(distanceEmbeddingSize)))
+      else None
+
     new GreedyForwardLayer(parameters,
       inputSize, isDual, t2i, i2t, H, rootParam,
-      span, nonlinearity, dropoutProb)
+      distanceEmbeddingSize, distanceLookupParameters,
+      nonlinearity, dropoutProb)
   }
 }
 

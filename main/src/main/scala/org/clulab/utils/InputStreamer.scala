@@ -2,7 +2,6 @@ package org.clulab.utils
 
 import java.io.FileInputStream
 import java.io.InputStream
-
 import scala.util.Failure
 import scala.util.Try
 

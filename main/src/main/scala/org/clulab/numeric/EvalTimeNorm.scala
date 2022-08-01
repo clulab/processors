@@ -52,10 +52,12 @@ object EvalTimeNorm {
   protected def run(): Double = {
     val proc = new CluProcessor() // there are lots of options for this
     val ner = NumericEntityRecognizer()
-    runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
+    test(proc, ner)
   }
 
-  def test(): Double = run()
+  def test(proc: CluProcessor, ner: NumericEntityRecognizer): Double = {
+    runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
+  }
 
   def main(args: Array[String]): Unit = run()
 }

@@ -9,7 +9,7 @@
   example: "Weeding timing ranged from 2 to 17 days"
   action: mkNumberRangeMention
   pattern: |
-    /(?i)(from|between)/ @number1:Number /(?i)(to|and|\-)/ @number2:Number
+    /(?i)(from|between)/ @number1:Number [entity = /MEASUREMENT-UNIT/]* /(?i)(to|and|\-)/ @number2:Number 
 
 - name: number-range-2
   priority: ${rulepriority}
@@ -19,4 +19,13 @@
   action: mkNumberRangeMention
   pattern: |
     @number1:Number /(?i)(to|\-)/ @number2:Number
+
+- name: one-token-number-range
+  priority: ${rulepriority}
+  label: NumberRange
+  type: token
+  example: "irrigated plots with a 2-5 cm depth sheet of water"
+  action: mkNumberRangeMention
+  pattern: |
+    /^\d+\-\d+$/ (?= [entity = /B-MEASUREMENT-UNIT/])
 

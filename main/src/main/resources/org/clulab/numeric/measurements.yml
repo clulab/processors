@@ -1,4 +1,5 @@
 rules:
+
   - name: measurement-1
     label: Measurement
     priority: ${ rulepriority }
@@ -15,3 +16,18 @@ rules:
     pattern: |
       @number:NumberRange @unit:MeasurementUnit
 
+  - name: measurement-3
+    label: Measurement
+    priority: ${ rulepriority }
+    type: token
+    action: mkSharedMeasurementMention
+    pattern: |
+      (@number:Number [!tag = /^NN|LRB/]{0,2} [word = /,|and|to/]*)+ @number:Number @unit:MeasurementUnit
+
+  - name: measurement-percentage
+    label: Percentage
+    priority: ${ rulepriority }
+    type: token
+    action: mkPercentage
+    pattern: |
+      @number:Number [word=/(?i)pct|percent|%/]

@@ -39,6 +39,18 @@ class TestEntityConstraints extends FlatSpec with Matchers {
 
     EntityConstraints.matchingBrackets(entity2) should be (false)
 
+    val doc3 = jsonStringToDocument(""" {"sentences": [{"endOffsets": [3,5,11,13,15,16,25,26,27],"entities": ["O","O","O","O","O","O","O","O","O"],"graphs": {"stanford-basic": {"edges": [{"destination": 0,"relation": "det","source": 2},{"destination": 4,"relation": "dep","source": 2},{"destination": 2,"relation": "nsubj","source": 6}],"roots": [6]},"stanford-collapsed": {"edges": [{"destination": 0,"relation": "det","source": 2},{"destination": 4,"relation": "dep","source": 2},{"destination": 2,"relation": "nsubj","source": 6}],"roots": [6]}},"lemmas": ["the","(","entity","(","be",")","balanced",")","."],"startOffsets": [0,4,5,12,13,15,17,25,26],"tags": ["DT","-LRB-","NN","-LRB-","VBZ","-RRB-","JJ","-RRB-","."],"words": ["The","(","entity",")","is",")","balanced","(","."]}],"text": "The (entity )is) balanced(."} """)
+
+    val entity3 = new TextBoundMention(
+      label = "Entity",
+      tokenInterval = Interval(start = 0, end = doc3.sentences.head.words.length),
+      sentence = 0,
+      document = doc3,
+      keep = true,
+      foundBy = "test-entities"
+    )
+
+    EntityConstraints.matchingBrackets(entity3) should be (false)
   }
 
   "Even parentheses" should "be valid in entities" in {

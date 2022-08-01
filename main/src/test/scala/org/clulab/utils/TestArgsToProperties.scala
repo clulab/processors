@@ -41,4 +41,12 @@ class TestArgsToProperties extends FlatSpec with Matchers {
     p2 should be ("/some/path/subdir/123")
   }
 
+  behavior of "argsToMap"
+
+  it should "deal with plain values" in {
+    val args = Array("in", "inDirectory", "out", "outDirectory")
+    val map = StringUtils.argsToMap(args)
+
+    map should not be (empty)
+  }
 }
