@@ -8,7 +8,13 @@ core/*.iml
 .DS_Store
 Makefile
 
+# VS code
+.bloop/
+.metals/
+.vscode/
+
 # sbt specific
+.bsp
 dist/*
 target/
 lib_managed/
@@ -21,4 +27,7 @@ project/plugins/project/
 
 # testing
 model.dat
+model.ser
+test.dat
+train.dat
 predictions
