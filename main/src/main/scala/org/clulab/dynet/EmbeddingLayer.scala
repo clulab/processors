@@ -84,7 +84,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
           heads(mod) = head
         }
       }
-      Some(heads)
+      Some(heads.toIndexedSeq)
     } else {
       None
     }

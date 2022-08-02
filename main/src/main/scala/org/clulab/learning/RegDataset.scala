@@ -57,7 +57,7 @@ abstract class RegDataset[F](
   * Important note: to encode feature values > 1, simply store the same feature multiple times (equal to feature value)!
   * @tparam F Type of features
   */
-class BVFRegDataset[F: ClassTag] (
+class BVFRegDataset[F: ClassTag](
                          fl:Lexicon[F],
                          ls:ArrayBuffer[Double],
                          val features:ArrayBuffer[Array[Int]]) extends RegDataset[F](fl, ls) {
@@ -269,7 +269,7 @@ class RVFRegDataset[F: ClassTag] (
   }
 
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
-    def foreach[U](fn: ((F, Double)) => U): Unit = {
+    override def foreach[U](fn: ((F, Double)) => U): Unit = {
       for(i <- 0 until RVFRegDataset.this.size) {
         for(j <- features(i).indices) {
           val fi = features(i)(j)
@@ -289,6 +289,15 @@ class RVFRegDataset[F: ClassTag] (
           values(i)(j) = fn((f, v))
         }
       }
+    }
+
+    override def iterator: Iterator[(F, Double)] = {
+      RVFRegDataset.this.indices.flatMap { i =>
+        features(i).indices.map { j =>
+          val fi = features(i)(j)
+          featureLexicon.get(fi) -> values(i)(j)
+        }
+      }.iterator
     }
   }
 

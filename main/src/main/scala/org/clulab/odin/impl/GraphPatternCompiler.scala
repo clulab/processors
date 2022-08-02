@@ -253,7 +253,7 @@ object OutgoingWildcard extends GraphPatternNode with Graph {
     val edges = outgoingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
-        (nextTok, label) <- edges(tok)
+        (nextTok, label) <- edges(tok).toIndexedSeq
         newPath = (tok, nextTok, label) +: path // path is collected in reverse
       } yield (nextTok, newPath)
     } else Nil
@@ -272,7 +272,7 @@ object IncomingWildcard extends GraphPatternNode with Graph {
     val edges = incomingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
-        (nextTok, label) <- edges(tok)
+        (nextTok, label) <- edges(tok).toIndexedSeq
         newPath = (nextTok, tok, label) +: path // path is collected in reverse
       } yield (nextTok, newPath)
     } else Nil
@@ -292,7 +292,7 @@ extends GraphPatternNode with Graph {
     val edges = outgoingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
-        (nextTok, label) <- edges(tok)
+        (nextTok, label) <- edges(tok).toIndexedSeq
         if matcher.matches(label)
         newPath = (tok, nextTok, label) +: path // path is collected in reverse
       } yield (nextTok, newPath)
@@ -313,7 +313,7 @@ extends GraphPatternNode with Graph {
     val edges = incomingEdges(sent, doc, config.graph)
     if (edges isDefinedAt tok) {
       for {
-        (nextTok, label) <- edges(tok)
+        (nextTok, label) <- edges(tok).toIndexedSeq
         if matcher.matches(label)
         newPath = (nextTok, tok, label) +: path // path is collected in reverse
       } yield (nextTok, newPath)

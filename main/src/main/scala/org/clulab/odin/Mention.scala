@@ -100,25 +100,25 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
   def matches(matcher: StringMatcher): Boolean = labels exists matcher.matches
 
   /** returns all raw (original, no processing applied) tokens in mention */
-  def raw: Seq[String] = sentenceObj.raw.slice(start, end)
+  def raw: Seq[String] = sentenceObj.raw.slice(start, end).toIndexedSeq
 
   /** returns all tokens in mention */
-  def words: Seq[String] = sentenceObj.words.slice(start, end)
+  def words: Seq[String] = sentenceObj.words.slice(start, end).toIndexedSeq
 
   /** returns all tags in mention */
-  def tags: Option[Seq[String]] = sentenceObj.tags.map(_.slice(start, end))
+  def tags: Option[Seq[String]] = sentenceObj.tags.map(_.slice(start, end).toIndexedSeq)
 
   /** returns all lemmas in mention */
-  def lemmas: Option[Seq[String]] = sentenceObj.lemmas.map(_.slice(start, end))
+  def lemmas: Option[Seq[String]] = sentenceObj.lemmas.map(_.slice(start, end).toIndexedSeq)
 
   /** returns all entities in mention */
-  def entities: Option[Seq[String]] = sentenceObj.entities.map(_.slice(start, end))
+  def entities: Option[Seq[String]] = sentenceObj.entities.map(_.slice(start, end).toIndexedSeq)
 
   /** returns the norm value of this mention, if available */
-  def norms: Option[Seq[String]] = sentenceObj.norms.map(_.slice(start, end))
+  def norms: Option[Seq[String]] = sentenceObj.norms.map(_.slice(start, end).toIndexedSeq)
 
   /** returns all chunks in mention */
-  def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end))
+  def chunks: Option[Seq[String]] = sentenceObj.chunks.map(_.slice(start, end).toIndexedSeq)
 
   /** returns all syntactic heads */
   def synHeads: Seq[Int] = sentenceObj.dependencies match {

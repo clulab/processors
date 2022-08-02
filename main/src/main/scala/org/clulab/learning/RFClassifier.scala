@@ -729,8 +729,8 @@ class RFJob[L, F](
       labels += new Tuple2(dataset.labels(oobIndices(i)), prediction)
     }
 
-    if(nilLabel.isEmpty) accuracy(labels.toIndexedSeq)
-    else f1(labels.toIndexedSeq, dataset.labelLexicon.get(nilLabel.get).get)
+    if(nilLabel.isEmpty) accuracy(labels.toSeq)
+    else f1(labels.toSeq, dataset.labelLexicon.get(nilLabel.get).get)
   }
 
   private def accuracy(labels:Seq[(Int, Int)]):Double = {

@@ -455,7 +455,7 @@ class DocumentSerializer extends Logging {
     val it = new DirectedGraphEdgeIterator[String](dg)
     while(it.hasNext) {
       val edge = it.next()
-      os.println(edge._1.toString + SEP + edge._2 + SEP + edge._3)
+      os.println(s"${edge._1}$SEP${edge._2}$SEP${edge._3}")
     }
     os.println(END_OF_DEPENDENCIES)
   }
@@ -463,12 +463,7 @@ class DocumentSerializer extends Logging {
   private def saveCoref(cg:CorefChains, os:PrintWriter): Unit = {
     val mentions = cg.getMentions
     for (m <- mentions) {
-      os.println(
-        m.sentenceIndex.toString + SEP +
-        m.headIndex + SEP +
-        m.startOffset + SEP +
-        m.endOffset + SEP +
-        m.chainId)
+      os.println(s"${m.sentenceIndex}$SEP${m.headIndex}$SEP${m.startOffset}$SEP${m.endOffset}$SEP${m.chainId}")
     }
   }
 

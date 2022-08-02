@@ -55,7 +55,7 @@ object Span {
       addDep(dep, deps, allNodes, modNodes)
     }
       
-    new Span(deps.toIndexedSeq, head, score)
+    new Span(deps.toSeq, head, score)
   }
 
   private def addDep(dep: Dependency,
@@ -259,7 +259,7 @@ class Eisner {
         heads(i) = (head, label)
       }
     }
-    heads
+    heads.toIndexedSeq
   }
 
   /** Converts the top K predictions from an unlabeled parserinto a matrix of Dependency (rows are mods; columns are heads) */

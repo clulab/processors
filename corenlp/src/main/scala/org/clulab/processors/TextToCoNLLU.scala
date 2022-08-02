@@ -23,7 +23,7 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
       logger.debug(s"Parsing file $f...")
       try {
         val doc = parseFile(f)
-        val ofn = outDir.toString + "/" + f.getName.substring(0, f.getName.length - 4) + ".conllu"
+        val ofn = s"$outDir/${f.getName.substring(0, f.getName.length - 4)}.conllu"
         val pw = new PrintWriter(ofn)
         toCoNLLU(doc, pw)
         pw.close()

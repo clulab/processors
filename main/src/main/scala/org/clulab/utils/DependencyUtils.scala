@@ -43,7 +43,7 @@ object DependencyUtils {
       case first +: rest if results contains first => followTrail(rest, results)
       case first +: rest =>
         val children: Seq[Int] = try {
-          graph.getOutgoingEdges(first).map(_._1)
+          graph.getOutgoingEdges(first).toIndexedSeq.map(_._1)
         } catch {
           case e: Exception =>
             Nil

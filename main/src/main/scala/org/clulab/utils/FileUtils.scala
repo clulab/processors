@@ -40,7 +40,7 @@ object FileUtils {
 
     val result = Option(dir.listFiles(filter))
       .getOrElse(throw Sourcer.newFileNotFoundException(collectionDir))
-    result
+    result.toSeq
   }
 
   def getCommentedLinesFromSource(source: Source): Iterator[String] =

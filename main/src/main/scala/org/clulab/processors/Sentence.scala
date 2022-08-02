@@ -153,20 +153,20 @@ class Sentence(
   /** Reverts the current sentence */
   def revert():Sentence = {
     val reverted = new Sentence(
-      SeqUtils.revert(raw).toArray,
-      SeqUtils.revert(startOffsets).toArray,
-      SeqUtils.revert(endOffsets).toArray,
-      SeqUtils.revert(words).toArray)
+      SeqUtils.revert(raw.toIndexedSeq).toArray,
+      SeqUtils.revert(startOffsets.toIndexedSeq).toArray,
+      SeqUtils.revert(endOffsets.toIndexedSeq).toArray,
+      SeqUtils.revert(words.toIndexedSeq).toArray)
     if(tags.nonEmpty)
-      reverted.tags = Some(SeqUtils.revert(tags.get).toArray)
+      reverted.tags = Some(SeqUtils.revert(tags.get.toIndexedSeq).toArray)
     if(lemmas.nonEmpty)
-      reverted.lemmas = Some(SeqUtils.revert(lemmas.get).toArray)
+      reverted.lemmas = Some(SeqUtils.revert(lemmas.get.toIndexedSeq).toArray)
     if(entities.nonEmpty)
-      reverted.entities = Some(SeqUtils.revert(entities.get).toArray)
+      reverted.entities = Some(SeqUtils.revert(entities.get.toIndexedSeq).toArray)
     if(norms.nonEmpty)
-      reverted.norms = Some(SeqUtils.revert(norms.get).toArray)
+      reverted.norms = Some(SeqUtils.revert(norms.get.toIndexedSeq).toArray)
     if(chunks.nonEmpty)
-      reverted.chunks = Some(SeqUtils.revert(chunks.get).toArray)
+      reverted.chunks = Some(SeqUtils.revert(chunks.get.toIndexedSeq).toArray)
 
     // TODO: revert syntacticTree and graphs!
 

@@ -44,7 +44,7 @@ class GreedyForwardLayer (parameters:ParameterCollection,
 
   override def inference(emissionScores: Array[Array[Float]]): IndexedSeq[String] = {
     val labelIds = Utils.greedyPredict(emissionScores)
-    labelIds.map(i2t(_))
+    labelIds.map(i2t(_)).toIndexedSeq
   }
 
   override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] = {

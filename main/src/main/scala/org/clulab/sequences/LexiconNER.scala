@@ -282,7 +282,7 @@ object LexiconNER {
       useLemmasForMatching: Boolean,
       caseInsensitiveMatching: Boolean): LexiconNER = {
     val caseInsensitiveMatchings = Array.fill(kbs.length)(caseInsensitiveMatching)
-    this(kbs, overrideKBs, caseInsensitiveMatchings, entityValidator, lexicalVariationEngine,
+    this(kbs, overrideKBs, caseInsensitiveMatchings.toIndexedSeq, entityValidator, lexicalVariationEngine,
         useLemmasForMatching, caseInsensitiveMatching, None)
   }
 

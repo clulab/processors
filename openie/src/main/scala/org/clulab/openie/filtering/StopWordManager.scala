@@ -48,8 +48,8 @@ class StopWordManager(stopWordsPath: String, transparentPath: String, tagSet: Ta
     // method only meaningful if lemmas and tags are in place
     require(s.lemmas.nonEmpty && s.tags.nonEmpty)
 
-    val lemmas = s.lemmas.get.slice(span.start, span.end)
-    val tags = s.tags.get.slice(span.start, span.end)
+    val lemmas = s.lemmas.get.slice(span.start, span.end).toIndexedSeq
+    val tags = s.tags.get.slice(span.start, span.end).toIndexedSeq
     val entities = s.entities.map(_.slice(span.start, span.end))
 
     hasNonStopContent(lemmas, tags, entities)
