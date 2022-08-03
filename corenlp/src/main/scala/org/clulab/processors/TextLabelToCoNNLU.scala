@@ -63,7 +63,7 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
         
         // Generate labels (UI, L, AU)
         val textLabel =
-          if(word.toUpperCase().equals(word) && (word.filter(_.isLetter)).length != 0) "UA"
+          if(word.toUpperCase().equals(word) && word.exists(_.isLetter)) "UA"
           else if (Character.isUpperCase(word.charAt(0))) "UI"
           else "L"
         

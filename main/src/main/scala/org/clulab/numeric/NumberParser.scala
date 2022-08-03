@@ -8,6 +8,8 @@ import scala.collection.mutable.ArrayBuffer
 object NumberParser {
   val numWithOrdinalSuffix = """^\d+(st|nd|rd|th)$""".r
 
+  def parse(words: Array[String]): Option[Double] = parse(words.toSeq)
+  
   def parse(words: Seq[String]): Option[Double] = {
     words match {
       case Seq() =>

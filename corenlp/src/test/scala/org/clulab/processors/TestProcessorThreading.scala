@@ -5,7 +5,7 @@ import org.scalatest._
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
-import java.util.concurrent.{TimeUnit, Executors}
+import java.util.concurrent.{Executors, TimeUnit}
 import java.lang.Long
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.TestUtils

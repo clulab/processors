@@ -9,8 +9,8 @@ class TestNamedEntity extends Test {
   {
     def test(bioLabelString: String, expectedNamedEntities: Seq[NamedEntity]): Unit = {
       it should s"collect properly from $bioLabelString" in {
-        val bioLabels = bioLabelString.split(' ')
-        val actualNamedEntities = NamedEntity.collect(bioLabels.toIndexedSeq)
+        val bioLabels = bioLabelString.split(' ').toIndexedSeq
+        val actualNamedEntities = NamedEntity.collect(bioLabels)
 
         actualNamedEntities should contain theSameElementsInOrderAs (expectedNamedEntities)
       }

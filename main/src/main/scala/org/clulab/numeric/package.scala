@@ -13,7 +13,8 @@ package object numeric {
     for ((s, i) <- doc.sentences.zipWithIndex) {
       println(s"sentence #$i")
       println(s.getSentenceText)
-      println("Tokens: " + s.words.indices.zip(s.words).zip(s.tags.get).mkString(", "))
+      val tokens = s.words.indices.zip(s.words).zip(s.tags.get).mkString(", ")
+      println(s"Tokens: $tokens")
       s.tags foreach (x => println("Tags: " + x.mkString(", ")))
       s.entities foreach (x => println("Entities: " + x.mkString(", ")))
       s.norms foreach (x => println("Norms: " + x.mkString(", ")))
