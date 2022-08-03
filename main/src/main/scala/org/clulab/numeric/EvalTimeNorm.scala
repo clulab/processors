@@ -29,10 +29,9 @@ object EvalTimeNorm {
     val valuesPerDocument = for (docId <- goldTimex.keys.toSeq.sorted) yield {
       val gold = goldTimex(docId).toSet
       val resource = s"$timeNormEvalDir/$docId/$docId"
-      val docStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$docId/$docId")
+      val docStream = getClass.getResourceAsStream(resource)
       val docText = Source.fromInputStream(docStream)(StandardCharsets.UTF_8).autoClose { source =>
-        // This ensures that line endings are LF.
-        // FileUtils.getTextFromResource() will not.
+        // This ensures that line endings are LF.  FileUtils.getTextFromResource() will not.
         source.getLines().mkString("\n")
       }
       val doc = proc.annotate(docText)
