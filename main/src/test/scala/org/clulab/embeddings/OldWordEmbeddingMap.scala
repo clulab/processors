@@ -46,7 +46,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
     val pw = new PrintWriter(mf)
     pw.println(s"${matrix.size}, $dimensions")
     for ((word, vec) <- matrix) {
-      val strRep = vec.map(_.formatted("%.6f")).mkString(" ")
+      val strRep = vec.map(v => f"$v%.6f").mkString(" ")
       pw.println(s"$word $strRep")
     }
     pw.close()
@@ -380,7 +380,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
     */
   // This is the only use used in performance testing.
 
-  val fakeResult = new Array[Float](dimensions)
+  val fakeResult = new Array[Float](dimensions).toIndexedSeq
   override def getOrElseUnknown(word: String): IndexedSeq[Float] = {
     getEmbedding(word) // For the sake of timing
     fakeResult

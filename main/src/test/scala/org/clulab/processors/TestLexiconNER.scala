@@ -170,10 +170,11 @@ class TestLexiconNER extends FatdynetTest {
   behavior of "NERs"
 
   it should "work for all setting combinations" in {
-    val entityValidators = Seq(new TrueEntityValidator, new LowerEntityValidator)
-    val useLemmas = Seq(false, true)
-    val caseInsensitives = Seq(false, true)
-    val odometer = new SeqOdometer(Array(entityValidators, useLemmas, caseInsensitives))
+    val entityValidators: Array[Any] = Array(new TrueEntityValidator, new LowerEntityValidator)
+    val useLemmas: Array[Any] = Array(false, true)
+    val caseInsensitives: Array[Any] = Array(false, true)
+    val args: Array[Array[Any]] = Array(entityValidators, useLemmas, caseInsensitives)
+    val odometer = new SeqOdometer(args)
 
     odometer.foreach {
       case mutable.ArraySeq(entityValidator: EntityValidator, useLemmas: Boolean, caseInsensitive: Boolean) =>

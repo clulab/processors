@@ -43,12 +43,12 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
 
     compactText.knownKeys.foreach { key =>
       val compactResult = compactText.get(key).get
-      val fullsizeResult = fullsizeText.matrix(key)
+      val fullsizeResult = fullsizeText.matrix(key).toIndexedSeq
 
       matches(compactResult, fullsizeResult, epsilon) should be (true)
     }
     if (compactText.unkEmbeddingOpt.isDefined)
-      matches(compactText.unkEmbeddingOpt.get, fullsizeText.matrix(CompactWordEmbeddingMap.UNK), epsilon) should be (true)
+      matches(compactText.unkEmbeddingOpt.get, fullsizeText.matrix(CompactWordEmbeddingMap.UNK).toIndexedSeq, epsilon) should be (true)
   }
 
   it should "be normalized" in {

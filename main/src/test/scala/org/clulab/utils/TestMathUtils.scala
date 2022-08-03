@@ -17,7 +17,7 @@ class TestMathUtils extends FlatSpec with Matchers {
   }
 
 
-  val array: Array[Double] = Array(0.28776269, 0.47035501, 0.17410317, 0.26174649, 0.90075753)
+  val array: IndexedSeq[Double] = Array(0.28776269, 0.47035501, 0.17410317, 0.26174649, 0.90075753).toIndexedSeq
 
   it should "work with Array" in {
     math.abs(array.mean() - 0.4189449) should be < 0.000001
@@ -25,7 +25,7 @@ class TestMathUtils extends FlatSpec with Matchers {
   }
 
   it should "work with any numeric collection" in {
-    val coll = Array(1, 2, 3, 4, 5)
+    val coll = Array(1, 2, 3, 4, 5).toIndexedSeq
     math.abs(coll.map(_.toFloat).mean() - 3) should be < 0.000001
     math.abs(coll.map(_.toFloat).variance() - 2) should be < 0.000001
     math.abs(coll.map(_.toLong).mean() - 3) should be < 0.000001
@@ -34,7 +34,7 @@ class TestMathUtils extends FlatSpec with Matchers {
     math.abs(coll.map(_.toDouble).variance() - 2) should be < 0.000001
   }
 
-  val array2 = Array.fill(1000000) { 100000 }
+  val array2 = Array.fill(1000000) { 100000 }.toIndexedSeq
 
   it should "be reasonably resilient to overflow" in {
     math.abs(array2.mean() - 100000) should be < 0.000001

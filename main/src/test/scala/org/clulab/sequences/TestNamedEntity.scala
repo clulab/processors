@@ -10,7 +10,7 @@ class TestNamedEntity extends Test {
     def test(bioLabelString: String, expectedNamedEntities: Seq[NamedEntity]): Unit = {
       it should s"collect properly from $bioLabelString" in {
         val bioLabels = bioLabelString.split(' ')
-        val actualNamedEntities = NamedEntity.collect(bioLabels)
+        val actualNamedEntities = NamedEntity.collect(bioLabels.toIndexedSeq)
 
         actualNamedEntities should contain theSameElementsInOrderAs (expectedNamedEntities)
       }
@@ -41,8 +41,8 @@ class TestNamedEntity extends Test {
       it should s"combine properly test $id" in {
         val genericBioLabels = genericBioLabelString.split(' ')
         val customBioLabels = customBioLabelString.split(' ')
-        val genericNamedEntities = NamedEntity.collect(genericBioLabels)
-        val customNamedEntities = NamedEntity.collect(customBioLabels)
+        val genericNamedEntities = NamedEntity.collect(genericBioLabels.toIndexedSeq)
+        val customNamedEntities = NamedEntity.collect(customBioLabels.toIndexedSeq)
         val actualCombinedBioLabels = NamedEntity.combine(genericBioLabels, genericNamedEntities, customNamedEntities)
         val actualCombinedBioLabelString = actualCombinedBioLabels.mkString(" ")
 
