@@ -658,8 +658,9 @@ class CluProcessor protected (
         sent.endOffsets,
         docDate,
         embeddings)
+      val patchedLabels = NamedEntity.patch(labels.toArray)
 
-      sent.entities = Some(labels.toArray)
+      sent.entities = Some(patchedLabels)
       if(norms.nonEmpty) {
         sent.norms = Some(norms.get.toArray)
       }

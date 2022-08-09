@@ -54,4 +54,33 @@ object NamedEntity {
 
     bioLabels
   }
+
+  def isValid(bioLabels: Array[String], index: Int): Boolean = {
+    val currBioLabel = bioLabels(index)
+    !currBioLabel.startsWith(INSIDE) || {
+      0 < index && {
+        val prevBioLabel = bioLabels(index - 1)
+        prevBioLabel == currBioLabel || {
+          prevBioLabel == toBegin(currBioLabel)
+        }
+      }
+    }
+  }
+
+  def isValid(bioLabels: Array[String]): Boolean =
+      bioLabels.indices.forall(isValid(bioLabels, _))
+
+  // Only INSIDEs can be invalid and they are made valid by
+  // converting them into a BEGIN.
+  def toBegin(bioLabel: String): String =
+      BEGIN + bioLabel.drop(INSIDE.length)
+
+  // Note that this patches the array in place!
+  def patch(bioLabels: Array[String]): Array[String] = {
+    bioLabels.indices.foreach { index =>
+      if (!isValid(bioLabels, index))
+        bioLabels(index) = toBegin(bioLabels(index))
+    }
+    bioLabels
+  }
 }

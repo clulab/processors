@@ -9,29 +9,14 @@ class TestNamedEntityRecognition extends Test {
 
   val processor = new CluProcessor()
 
-  behavior of "NamedEntity"
-
-  def isValid(entities: Array[String]): Boolean = {
-    entities.indices.forall { index =>
-      val valid = if (index == 0)
-        !entities(index).startsWith("I-")
-      else
-        if (entities(index).startsWith("I-")) {
-          val tail = entities(index).drop(2)
-
-          entities(index - 1) == "B-" + tail || entities(index - 1) == "I-" + tail
-        }
-        else true
-
-      valid
-    }
-  }
+  behavior of "named entity recognition"
 
   it should "use proper BIO notation" in {
     val text = "Table 1 : Results of LBA credit committees ( North Zone ) for the 2022 hot dry season source : Lba / Zone Nord , February 2022 . "
     val doc = processor.annotate(text)
     val namedEntities = doc.sentences.head.entities.get
 
-    isValid(namedEntities) should be (true)
+    // NamedEntity.patch(namedEntities)
+    NamedEntity.isValid(namedEntities) should be (true)
   }
 }
