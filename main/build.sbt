@@ -9,7 +9,7 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
 
 libraryDependencies ++= {
-  val json4sVersion = "3.5.2"
+  val json4sVersion = "3.5.5"
 
   Seq(
     // common tools
@@ -18,7 +18,7 @@ libraryDependencies ++= {
     "jline"                       % "jline"                    % "2.12.1",
     "org.json4s"                 %% "json4s-core"              % json4sVersion,
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion,
-    "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4",
+    "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.1.2",
     "com.io7m.xom"                % "xom"                      % "1.2.10",
     // for machine learning
     "org.clulab"                 %% "fatdynet"                 % "0.3.2", // "0-cuda.2.6-SNAPSHOT"
@@ -29,10 +29,10 @@ libraryDependencies ++= {
     "org.clulab"                  % "lemport"                  % "0.9.10", // Portuguese lemmatizer
     // logging
     "ch.qos.logback"              % "logback-classic"          % "1.0.10",
-    "com.typesafe.scala-logging" %% "scala-logging"            % "3.7.2",
+    "com.typesafe.scala-logging" %% "scala-logging"            % "3.9.4",
     "org.slf4j"                   % "slf4j-api"                % "1.7.10",
     // testing
-    "org.scalatest"              %% "scalatest"                % "3.0.1"  % Test,
+    "org.scalatest"              %% "scalatest"                % "3.0.9"  % Test,
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
