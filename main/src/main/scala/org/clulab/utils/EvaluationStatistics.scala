@@ -61,7 +61,7 @@ object EvaluationStatistics {
   }
 
   def weightedAverage[A](tables: Map[A, Table])(accessor: Table => Double): Double = {
-    val trueCounts: Map[A, Int] = tables.mapValues(_.trueCount)
+    val trueCounts: Map[A, Int] = tables.map { case (key, value) => key -> value.trueCount }
     val N_data = tables.values.head.total
     tables.map({
       case (a, table) => accessor(table) * trueCounts(a).toDouble / N_data

@@ -7,7 +7,9 @@ import org.clulab.struct.Interval
 
 package object numeric {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
-    val mentionsBySentence = mentions groupBy (_.sentence) mapValues (_.sortBy(_.start)) withDefaultValue Nil
+    val mentionsBySentence = mentions.groupBy(_.sentence).map { case (sentence, mentions) =>
+      sentence -> mentions.sortBy(_.start)
+    }.withDefaultValue(Nil)
     for ((s, i) <- doc.sentences.zipWithIndex) {
       println(s"sentence #$i")
       println(s.getSentenceText)
