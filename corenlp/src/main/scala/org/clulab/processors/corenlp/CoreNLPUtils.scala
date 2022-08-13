@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.{ArrayCoreMap, CoreMap}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import org.clulab.processors.clu.tokenizer.TokenizerStepNormalization
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Utilities for manipulating CoreNLP data structures

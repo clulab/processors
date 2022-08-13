@@ -10,7 +10,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 
 object CoreNLPSentimentAnalyzer {

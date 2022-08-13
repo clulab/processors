@@ -29,7 +29,7 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
            withRelationExtraction:Boolean = false,
-           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) {
+           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) = {
     this(None, internStrings, withChunks, withRelationExtraction, withDiscourse)
   }
 

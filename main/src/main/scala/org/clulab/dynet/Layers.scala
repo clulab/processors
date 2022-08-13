@@ -2,11 +2,12 @@ package org.clulab.dynet
 
 import java.io.PrintWriter
 import edu.cmu.dynet.{Expression, ExpressionVector, ParameterCollection}
+import org.clulab.dynet.Utils._
+import org.clulab.fatdynet.utils.Synchronizer
+import org.clulab.scala.BufferedIterator
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
-import org.clulab.dynet.Utils._
-import org.clulab.fatdynet.utils.Synchronizer
 
 import scala.collection.mutable.ArrayBuffer
 

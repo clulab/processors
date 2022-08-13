@@ -229,9 +229,9 @@ object MathUtils {
   def sampleStream[T: Manifest](xs: Iterable[T], howMany: Int) =
     nBest((x:T) => scala.util.Random.nextDouble())(xs, howMany).map(_._1)
 
-  def histogram(xs: Traversable[Double], boundaries: Seq[Double]): Map[(Double, Double), Int] = {
+  def histogram(xs: Iterable[Double], boundaries: Seq[Double]): Map[(Double, Double), Int] = {
     // make sure divisions is monotonically increasing
-    require((boundaries, boundaries.tail).zipped.forall(_ < _), "boundaries must be an ascending sequence")
+    require(boundaries.zip(boundaries.tail).forall { case (a, b) => a < b }, "boundaries must be an ascending sequence")
     // TODO: do a binary search if we have lots of buckets?
     def getBucket(x: Double) = {
       boundaries.zipWithIndex.find({ case (b, i) => b >= x }).map(_._2).getOrElse(boundaries.size)
@@ -241,13 +241,13 @@ object MathUtils {
       val zipped = extendedBounds.zip(extendedBounds.tail)
       zipped(bucket)
     }
-    val countsByBucket = xs.groupBy(getBucket).mapValues(_.size).toMap
+    val countsByBucket = xs.groupBy(getBucket).map { case (k, v) => k -> v.size }
     (for {
       (bucket) <- 0 to boundaries.size
     } yield (getRange(bucket) -> countsByBucket.getOrElse(bucket, 0))).toMap
   }
 
-  def histogram(xs: Traversable[Double], numBuckets: Int): Map[(Double, Double), Int] = {
+  def histogram(xs: Iterable[Double], numBuckets: Int): Map[(Double, Double), Int] = {
     val (min, max) = (xs.min, xs.max)
     val step = (max - min) / numBuckets
     require(step != 0, "xs has all same values")

@@ -1,7 +1,7 @@
 package org.clulab.odin.impl
 
 import java.util.{ List => JList }
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
 import org.clulab.odin._
 import org.clulab.scala.WrappedBuffer._

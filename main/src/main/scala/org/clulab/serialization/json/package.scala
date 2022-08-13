@@ -53,7 +53,7 @@ package object json {
   }
 
   implicit class GraphMapOps(gm: GraphMap) extends JSONSerialization {
-    def jsonAST: JValue = Extraction.decompose(gm.toMap.mapValues(_.jsonAST))
+    def jsonAST: JValue = Extraction.decompose(gm.toMap.map { case (k, v) => k -> v.jsonAST }) // instead of mapValues
   }
 
   /** For Document */

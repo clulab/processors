@@ -12,7 +12,6 @@ import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import ShallowNLPProcessor._
 import edu.stanford.nlp.naturalli.NaturalLogicAnnotations.RelationTriplesAnnotation
@@ -20,7 +19,8 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer, TokenizerStep}
 import org.clulab.struct.Interval
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
+//import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
 /**
@@ -37,7 +37,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
                           val withRelationExtraction:Boolean) extends Processor {
 
   def this(internStrings:Boolean = false,
-           withChunks:Boolean = true, withRelationExtraction:Boolean = false) {
+           withChunks:Boolean = true, withRelationExtraction:Boolean = false) = {
     this(None, internStrings, withChunks, withRelationExtraction)
   }
 
@@ -169,7 +169,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   val LEFT_PARENS: Regex = """^(\-LRB\-)|(\-LSB\-)|(-LCB-)|\(|\[|\{$""".r
   val RIGHT_PARENS: Regex = """^(\-RRB\-)|(\-RSB\-)|(-RCB-)|\)|\]|\}$""".r
 
-  def tagPartsOfSpeech(doc:Document) {
+  def tagPartsOfSpeech(doc:Document): Unit = {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
@@ -191,7 +191,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     }
   }
 
-  def lemmatize(doc:Document) {
+  def lemmatize(doc:Document): Unit = {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
     if (doc.sentences.head.tags.isEmpty)
@@ -222,7 +222,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     annotation
   }
 
-  def recognizeNamedEntities(doc:Document) {
+  def recognizeNamedEntities(doc:Document): Unit = {
     val annotation = namedEntitySanityCheck(doc)
     if(annotation.isEmpty) return
 
@@ -269,7 +269,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     // nothing here; see classes that extend this
   }
 
-  def chunking(doc:Document) {
+  def chunking(doc:Document): Unit = {
     if (withChunks) {
       for (s <- doc.sentences) {
         val words = s.words
@@ -280,11 +280,11 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     }
   }
 
-  def resolveCoreference(doc:Document) {
+  def resolveCoreference(doc:Document): Unit = {
     // nothing here; see classes that extend this
   }
 
-  def discourse(doc:Document) {
+  def discourse(doc:Document): Unit = {
     // nothing here; see classes that extend this
   }
 

@@ -126,8 +126,8 @@ class SVMRankingClassifier[F] (
     println ("featureLexicon.size " + lexicon.size)
     for (j <- 0 until (weightSet.size - 1)) {
       val featureName = lexicon.get(j)
-      println ("weight: " + weightSet(j).formatted("%3.5f") + " \t feature: " + featureName + "  (idx:" + j + ")" )
-      pw.println ("weight: " + weightSet(j).formatted("%3.5f") + " \t feature: " + featureName + "  (idx:" + j + ")" )
+      println ("weight: " + "%3.5f".format(weightSet(j)) + " \t feature: " + featureName + "  (idx:" + j + ")" )
+      pw.println ("weight: " + "%3.5f".format(weightSet(j)) + " \t feature: " + featureName + "  (idx:" + j + ")" )
     }
     pw.println ("- - - - - - - - - - - - - - - - - - - - - - - - - - - - ")
     pw.println ("")
@@ -248,7 +248,7 @@ class SVMRankingClassifier[F] (
           val fs = d.featuresCounter(i, j)
           val fids = fs.keySet.toList.sorted
 
-          pw.print(l + " qid:" + qid)
+          pw.print(l.toString + " qid:" + qid)
           // our feature ids start at 0, but svm_rank requires features to start at 1
           fids.foreach(fid => pw.print(" " + (fid + 1) + ":" + fs.getCount(fid)))
           pw.println()
@@ -265,7 +265,7 @@ class SVMRankingClassifier[F] (
       val fs = mkDatumVector(d)
       val fids = fs.keySet.toList.sorted
 
-      pw.print(l + " qid:" + qid)
+      pw.print(l.toString + " qid:" + qid)
       // our feature ids start at 0, but svm_rank requires features to start at 1
       fids.foreach(fid => pw.print(" " + (fid + 1) + ":" + fs.getCount(fid)))
       pw.println()
@@ -364,7 +364,7 @@ class SVMRankingClassifier[F] (
     for(i <- 0 until weights.get.size) {
       if(weights.get(i) != 0.0) {
         if(! first) pw.print(" ")
-        pw.print(i + ":" + weights.get(i))
+        pw.print(i.toString + ":" + weights.get(i))
         first = false
       }
     }

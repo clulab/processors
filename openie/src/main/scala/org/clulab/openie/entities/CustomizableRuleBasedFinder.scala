@@ -7,7 +7,7 @@ import org.clulab.openie.utils.TagSet
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
 

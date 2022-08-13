@@ -54,6 +54,8 @@ libraryDependencies ++= {
     "org.apache.commons"      % "commons-text"             % "1.1",
     // "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
     "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
+    // See https://docs.scala-lang.org/overviews/core/collections-migration-213.html.
+    "org.scala-lang.modules" %% "scala-collection-compat"  % "2.6.0",
     "org.yaml"                % "snakeyaml"                % "1.14"
   ) ++ parallelLibraries
 }

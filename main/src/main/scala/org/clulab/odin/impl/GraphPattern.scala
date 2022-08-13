@@ -45,7 +45,7 @@ trait GraphPattern {
     } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
 
     // get the paths, resulting in an unserializable MapLike
-    val reqPaths = reqExtractions.mapValues(_.flatten.toMap)
+    val reqPaths = reqExtractions.map { case (k, v) => k -> v.flatten.toMap }
 
     // extract optional arguments
     val optExtractions = extractArguments(optional, tokens, sent, doc, state)
@@ -56,7 +56,7 @@ trait GraphPattern {
     } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
 
     // get the paths, resulting in an unserializable MapLike
-    val optPaths = optExtractions.mapValues(_.flatten.toMap)
+    val optPaths = optExtractions.map { case (k, v) => k -> v.flatten.toMap }
 
     // group the paths together, ensuring the result is a serializable Map
     val paths: Paths = Map.empty ++ reqPaths ++ optPaths
