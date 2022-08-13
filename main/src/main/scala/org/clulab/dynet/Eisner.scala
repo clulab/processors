@@ -12,7 +12,7 @@ import scala.collection.mutable
 case class Dependency(mod:Int, head:Int, var score:Float, rank: Int, var label:String = "")
 
 class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
-  def this() {
+  def this() = {
     this(List[Dependency](), -1, 0f)
   }
 

@@ -6,6 +6,8 @@ import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStrin
 import org.clulab.scala.BufferedIterator
 import ForwardLayer._
 
+import scala.collection.BufferedIterator
+
 class ViterbiForwardLayer(parameters:ParameterCollection,
                           inputSize: Int,
                           isDual: Boolean,

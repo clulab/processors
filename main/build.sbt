@@ -8,10 +8,6 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 // for processors-models
 resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 
-
-//libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.0"
-// import scala.collection.parallel.CollectionConverters._
-
 libraryDependencies ++= {
   val json4sVersion = "3.5.5" // 3.5.5 is lowest supporting Scala 2.13
   // See https://index.scala-lang.org/scala/scala-parallel-collections/scala-parallel-collections.
@@ -56,7 +52,7 @@ libraryDependencies ++= {
 
     // for odin
     "org.apache.commons"      % "commons-text"             % "1.1",
-    // "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
+    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
     "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
     // See https://docs.scala-lang.org/overviews/core/collections-migration-213.html.
     "org.scala-lang.modules" %% "scala-collection-compat"  % "2.6.0",

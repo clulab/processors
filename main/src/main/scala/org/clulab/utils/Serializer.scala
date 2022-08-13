@@ -11,7 +11,7 @@ object Serializer {
     try {
       f(resource)
     } finally {
-      Option(resource).map(_.close)
+      Option(resource).map(_.close())
    }
   }
 

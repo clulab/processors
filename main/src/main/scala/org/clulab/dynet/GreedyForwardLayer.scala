@@ -8,6 +8,7 @@ import org.clulab.scala.BufferedIterator
 import org.clulab.scala.WrappedArrayBuffer._
 import ForwardLayer._
 
+import scala.collection.BufferedIterator
 import scala.collection.mutable.ArrayBuffer
 
 class GreedyForwardLayer (parameters:ParameterCollection,

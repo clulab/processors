@@ -1,9 +1,6 @@
 package org.clulab.utils
 
-import scala.collection.mutable.{ListBuffer, ArrayBuffer}
-
-import scala.util
-import scala.collection.script.Index
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * Math utility methods useful for stats and ML
@@ -50,7 +47,7 @@ object MathUtils {
       softmaxes += math.exp(logSoftmax).toFloat
     }
 
-    softmaxes
+    softmaxes.toIndexedSeq
   }
 
   /**
