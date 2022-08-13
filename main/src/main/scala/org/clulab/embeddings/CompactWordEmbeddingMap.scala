@@ -104,7 +104,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   def get(word: String): Option[IndexedSeq[Float]] = {
     map.get(word).map { row =>
       val offset = row * columns
-      array.view(offset, offset + columns)
+      ArrayView(array, offset, offset + columns)
     }
   }
 
@@ -378,7 +378,7 @@ object CompactWordEmbeddingMap extends Logging {
 
       while (index < length) {
         // Lengths of vectors are generally around 5.  They are _not_ normalized.
-        WordEmbeddingMap.norm(array.view(index, index + columns))
+        WordEmbeddingMap.norm(ArrayView(array, index, index + columns))
         index += columns
       }
       array
