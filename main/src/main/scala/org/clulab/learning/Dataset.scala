@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory
 import RVFDataset._
 import org.clulab.utils.Files
 
+import scala.reflect.ClassTag
+
 /**
  * Parent class for classification datasets
  * User: mihais
@@ -60,7 +62,7 @@ abstract class Dataset[L, F](
  * @tparam L Type of labels
  * @tparam F Type of features
  */
-class BVFDataset[L, F] (
+class BVFDataset[L, F: ClassTag] (
   ll:Lexicon[L],
   fl:Lexicon[F],
   ls:ArrayBuffer[Int],
@@ -222,7 +224,7 @@ class BVFDataset[L, F] (
  * @tparam L Type of labels
  * @tparam F Type of features
  */
-class RVFDataset[L, F] (
+class RVFDataset[L, F: ClassTag] (
   ll:Lexicon[L],
   fl:Lexicon[F],
   ls:ArrayBuffer[Int],

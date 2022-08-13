@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
   * User: mihais
   * Date: 8/27/17
   */
-abstract class BiMEMMSequenceTagger[L: ClassTag, F](
+abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
   var order:Int,
   var numFoldsFirstPass:Int, // if < 2, this reverts to a single-layer MEMM
   var leftToRight:Boolean) extends SequenceTagger[L, F] {

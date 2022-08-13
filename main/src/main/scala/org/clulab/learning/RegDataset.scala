@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory
 import RVFRegDataset._
 import org.clulab.utils.Files
 
+import scala.reflect.ClassTag
+
 /**
   * Parent class for regression datasets. For classification, see [[Dataset]].
   * User: mihais, danebell
@@ -56,7 +58,7 @@ abstract class RegDataset[F](
   * Important note: to encode feature values > 1, simply store the same feature multiple times (equal to feature value)!
   * @tparam F Type of features
   */
-class BVFRegDataset[F] (
+class BVFRegDataset[F: ClassTag] (
                          fl:Lexicon[F],
                          ls:ArrayBuffer[Double],
                          val features:ArrayBuffer[Array[Int]]) extends RegDataset[F](fl, ls) {
@@ -218,7 +220,7 @@ class BVFRegDataset[F] (
   * RegDataset containing only RVFDatums
   * @tparam F Type of features
   */
-class RVFRegDataset[F] (
+class RVFRegDataset[F: ClassTag] (
                          fl:Lexicon[F],
                          ls:ArrayBuffer[Double],
                          fs:ArrayBuffer[Array[Int]],
