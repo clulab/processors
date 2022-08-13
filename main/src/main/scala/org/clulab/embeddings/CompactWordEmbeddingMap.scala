@@ -5,14 +5,14 @@ import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.utils.ArrayView
-
-import java.io._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
+import org.clulab.utils.MutableArrayView
 import org.clulab.utils.Sourcer
 import org.clulab.utils.Timers
 
+import java.io._
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{ArrayBuilder => MutableArrayBuilder}
@@ -378,7 +378,7 @@ object CompactWordEmbeddingMap extends Logging {
 
       while (index < length) {
         // Lengths of vectors are generally around 5.  They are _not_ normalized.
-        WordEmbeddingMap.norm(ArrayView(array, index, index + columns))
+        WordEmbeddingMap.norm(MutableArrayView(array, index, index + columns))
         index += columns
       }
       array

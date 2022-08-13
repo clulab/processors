@@ -8,8 +8,19 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 // for processors-models
 resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
 
+
+//libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.0"
+// import scala.collection.parallel.CollectionConverters._
+
 libraryDependencies ++= {
-  val json4sVersion = "3.5.5"
+  val json4sVersion = "3.5.5" // 3.5.5 is lowest supporting Scala 2.13
+  // See https://index.scala-lang.org/scala/scala-parallel-collections/scala-parallel-collections.
+  val parallelLibraries = {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, major)) if major <= 12 => Seq()
+      case _ => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4") // up to 1.0.4
+    }
+  }
 
   Seq(
     // common tools
@@ -41,8 +52,8 @@ libraryDependencies ++= {
 
     // for odin
     "org.apache.commons"      % "commons-text"             % "1.1",
-    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+    // "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
     "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
     "org.yaml"                % "snakeyaml"                % "1.14"
-  )
+  ) ++ parallelLibraries
 }
