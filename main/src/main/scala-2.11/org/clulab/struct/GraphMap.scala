@@ -2,19 +2,18 @@ package org.clulab.struct
 
 import scala.collection.mutable
 
-
 class GraphMap protected extends mutable.HashMap[String, DirectedGraph[String]] {
-  override def initialSize:Int = 2 // we have very few dependency types, so let's create a small hash to save memory
+  override def initialSize: Int = 2 // we have very few dependency types, so let's create a small hash to save memory
 }
 
 object GraphMap {
-  val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
-  val UNIVERSAL_ENHANCED = "universal-enhanced" // collapsed (or enhanced) Universal dependencies
-  val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies
-  val STANFORD_COLLAPSED = "stanford-collapsed" // collapsed Stanford dependencies
-  val SEMANTIC_ROLES = "semantic-roles" // semantic roles from CoNLL 2008-09, which includes PropBank and NomBank
-  val ENHANCED_SEMANTIC_ROLES = "enhanced-semantic-roles" // enhanced semantic roles
-  val HYBRID_DEPENDENCIES = "hybrid" // graph that merges ENHANCED_SEMANTIC_ROLES and UNIVERSAL_ENHANCED
+  val UNIVERSAL_BASIC: String = GraphMapNames.UNIVERSAL_BASIC
+  val UNIVERSAL_ENHANCED: String = GraphMapNames.UNIVERSAL_ENHANCED
+  val STANFORD_BASIC: String = GraphMapNames.STANFORD_BASIC
+  val STANFORD_COLLAPSED: String = GraphMapNames.STANFORD_COLLAPSED
+  val SEMANTIC_ROLES: String = GraphMapNames.SEMANTIC_ROLES
+  val ENHANCED_SEMANTIC_ROLES: String = GraphMapNames.ENHANCED_SEMANTIC_ROLES
+  val HYBRID_DEPENDENCIES: String = GraphMapNames.HYBRID_DEPENDENCIES
 
   def apply(): GraphMap = new GraphMap()
 
