@@ -44,6 +44,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
                       val dropoutProb: Float) extends InitialLayer {
 
   override def forward(sentence: AnnotatedSentence,
+                       modifierHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                        constEmbeddings: ConstEmbeddingParameters,
                        doDropout: Boolean): ExpressionVector = {
     setCharRnnDropout(doDropout)
@@ -51,7 +52,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     val words = sentence.words
     val tags = sentence.posTags
     val nes = sentence.neTags
-    val headPositions = sentence.headPositions
+    val headPositions = getHeadPositions(modifierHeadPairsOpt, sentence.size)
 
     // const word embeddings such as GloVe
     val constEmbeddingsExpressions = mkConstEmbeddings(words, constEmbeddings)
@@ -70,6 +71,24 @@ class EmbeddingLayer (val parameters:ParameterCollection,
     }
 
     embeddings
+  }
+
+  /** Finds a single head/predicate for each modifier/argument */
+  private def getHeadPositions(modifierHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]], size: Int): Option[IndexedSeq[Int]] = {
+    if(modifierHeadPairsOpt.nonEmpty) {
+      val heads = Array.fill(size)(-1)
+      for(pair <- modifierHeadPairsOpt.get) {
+        val mod = pair.modifier
+        val head = pair.head
+        if(heads(mod) == -1) {
+          heads(mod) = head
+        }
+      }
+      Some(heads)
+    } else {
+      None
+    }
+
   }
 
   private def mkConstEmbeddings(words: IndexedSeq[String],
@@ -153,7 +172,7 @@ class EmbeddingLayer (val parameters:ParameterCollection,
       }
 
     //
-    // Embedding that captures the absolute position of the token in the sentence
+    // Embedding that captures the **absolute position** of the token in the sentence
     //
     val positionEmbedding =
       if(positionLookupParameters.nonEmpty) {

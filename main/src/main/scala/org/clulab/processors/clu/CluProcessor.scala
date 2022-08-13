@@ -3,18 +3,19 @@ package org.clulab.processors.clu
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.utils.{Configured, DependencyUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.scala.WrappedArrayBuffer._
-import org.clulab.sequences.LexiconNER
+import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
-import org.clulab.utils.BeforeAndAfter
+
+import java.util.regex.Pattern
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -34,14 +35,16 @@ class CluProcessor protected (
   mtlPosChunkSrlpOpt: Option[Metal],
   mtlNerOpt: Option[Metal],
   mtlSrlaOpt: Option[Metal],
-  mtlDepsOpt: Option[Metal]
+  mtlDepsHeadOpt: Option[Metal],
+  mtlDepsLabelOpt: Option[Metal]
 ) extends Processor with Configured {
 
   // standard, abbreviated constructor
   def this(
     config: Config = ConfigFactory.load("cluprocessor"),
-    optionalNER: Option[LexiconNER] = None
-  ) = this(config, optionalNER, None, None, None, None, None, None, None, None)
+    optionalNER: Option[LexiconNER] = None,
+    seasonPathOpt: Option[String] = None
+  ) = this(config, optionalNER, CluProcessor.newNumericEntityRecognizerOpt(seasonPathOpt), None, None, None, None, None, None, None, None)
 
   // The strategy here is to use Some(value) to indicate that the copied CluProcessor
   // should use the provided value when the copy is made.  Use None to reuse the value
@@ -57,7 +60,8 @@ class CluProcessor protected (
     mtlPosChunkSrlpOptOpt: Option[Option[Metal]] = None,
     mtlNerOptOpt: Option[Option[Metal]] = None,
     mtlSrlaOptOpt: Option[Option[Metal]] = None,
-    mtlDepsOptOpt: Option[Option[Metal]] = None
+    mtlDepsHeadOptOpt: Option[Option[Metal]] = None,
+    mtlDepsLabelOptOpt: Option[Option[Metal]] = None
   ): CluProcessor = {
     new CluProcessor(
       configOpt.getOrElse(this.config),
@@ -69,7 +73,8 @@ class CluProcessor protected (
       mtlPosChunkSrlpOptOpt.getOrElse(this.mtlPosChunkSrlpOpt),
       mtlNerOptOpt.getOrElse(this.mtlNerOpt),
       mtlSrlaOptOpt.getOrElse(this.mtlSrlaOpt),
-      mtlDepsOptOpt.getOrElse(this.mtlDepsOpt)
+      mtlDepsHeadOptOpt.getOrElse(this.mtlDepsHeadOpt),
+      mtlDepsLabelOptOpt.getOrElse(this.mtlDepsLabelOpt)
     )
   }
 
@@ -85,70 +90,98 @@ class CluProcessor protected (
   // val tokenizer: Tokenizer = new ModifiedTokenizer(super.tokenizer)
   // does not work in a subclass because super.tokenizer is invalid.  Instead it needs to be something like
   // val tokenizer: Tokenizer = new ModifiedTokenizer(localTokenizer)
-  protected lazy val localTokenizer: Tokenizer = localTokenizerOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => new OpenDomainPortugueseTokenizer
-      case "ES" => new OpenDomainSpanishTokenizer
-      case _ => new OpenDomainEnglishTokenizer
+  protected val lazyTokenizer: Lazy[Tokenizer] = Lazy {
+    localTokenizerOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => new OpenDomainPortugueseTokenizer
+        case "ES" => new OpenDomainSpanishTokenizer
+        case _ => new OpenDomainEnglishTokenizer
+      }
     }
   }
 
   // the actual tokenizer
-  lazy val tokenizer: Tokenizer = localTokenizer
+  def tokenizer: Tokenizer = lazyTokenizer.value
 
   // the lemmatizer
-  lazy val lemmatizer: Lemmatizer = lemmatizerOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => new PortugueseLemmatizer
-      case "ES" => new SpanishLemmatizer
-      case _ => new EnglishLemmatizer
+  protected val lazyLemmatizer: Lazy[Lemmatizer] = Lazy {
+    lemmatizerOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => new PortugueseLemmatizer
+        case "ES" => new SpanishLemmatizer
+        case _ => new EnglishLemmatizer
+      }
     }
   }
+
+  def lemmatizer: Lemmatizer = lazyLemmatizer.value
 
   // one of the multi-task learning (MTL) models, which covers: POS, chunking, and SRL (predicates)
-  lazy val mtlPosChunkSrlp: Metal = mtlPosChunkSrlpOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+  protected val lazyMtlPosChunkSrlp: Lazy[Metal] = Lazy {
+    mtlPosChunkSrlpOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-pos-chunk-srlp", Some("mtl-en-pos-chunk-srlp")))
+      }
     }
   }
+
+  def mtlPosChunkSrlp: Metal = lazyMtlPosChunkSrlp.value
 
   // one of the multi-task learning (MTL) models, which covers: NER
-  lazy val mtlNer: Metal = mtlNerOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+  protected val lazyMtlNer: Lazy[Metal] = Lazy {
+    mtlNerOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-ner", Some("mtl-en-ner")))
+      }
     }
   }
+
+  def mtlNer: Metal = lazyMtlNer.value
 
   // recognizes numeric entities using Odin rules
-  lazy val numericEntityRecognizer: NumericEntityRecognizer =
-      numericEntityRecognizerOpt.getOrElse(NumericEntityRecognizer())
+  protected  val lazyNumericEntityRecognizer: Lazy[NumericEntityRecognizer] =
+      Lazy(numericEntityRecognizerOpt.getOrElse(NumericEntityRecognizer()))
+
+  def numericEntityRecognizer: NumericEntityRecognizer = lazyNumericEntityRecognizer.value
 
   // one of the multi-task learning (MTL) models, which covers: SRL (arguments)
-  lazy val mtlSrla: Metal = mtlSrlaOpt.getOrElse {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+  protected val lazyMtlSrla: Lazy[Metal] = Lazy {
+    mtlSrlaOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-srla", Some("mtl-en-srla")))
+      }
     }
   }
 
-  /*
-  lazy val mtlDepsHead: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+  def mtlSrla: Metal = lazyMtlSrla.value
+
+  protected val lazyMtlDepsHead: Lazy[Metal] = Lazy {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+    }
   }
 
-  lazy val mtlDepsLabel: Metal = getArgString(s"$prefix.language", Some("EN")) match {
-    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-    case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+  def mtlDepsHead: Metal = lazyMtlDepsHead.value
+
+  protected val lazyMtlDepsLabel: Lazy[Metal] = Lazy {
+    getArgString(s"$prefix.language", Some("EN")) match {
+      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+      case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+    }
   }
-  */
+
+  def mtlDepsLabel: Metal = lazyMtlDepsLabel.value
+
+  /*
   lazy val mtlDeps: Metal = mtlDepsOpt.getOrElse {
     getArgString(s"$prefix.language", Some("EN")) match {
       case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
@@ -156,12 +189,41 @@ class CluProcessor protected (
       case _ => Metal(getArgString(s"$prefix.mtl-deps", Some("mtl-en-deps")))
     }
   }
+  */
+
+  lazy val mtlCase: Metal = getArgString(s"$prefix.language", Some("EN")) match {
+    case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+    case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+    case _ => Metal(getArgString(s"$prefix.mtl-case", Some("mtl-en-case")))
+  }
 
   // Although this uses no class members, the method is sometimes called from tests
   // and can't easily be moved to a separate class without changing client code.
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
-  override def annotate(doc:Document): Document = {
+  protected lazy val isPreparedToAnnotate: Boolean = {
+    Array(
+      lazyTokenizer,               // tokenize
+      lazyMtlPosChunkSrlp,         // tagPartsOfSpeech
+      lazyMtlNer,                  // recognizeNamedEntities
+      lazyNumericEntityRecognizer, // ditto
+      lazyMtlDepsHead,             // parse
+      lazyMtlDepsLabel,            // parse
+      lazyLemmatizer,              // lemmatize
+      lazyMtlSrla                  // srl
+    ).par.foreach(_.value)
+    true
+  }
+
+  override def annotate(text: String, keepText: Boolean = false): Document = {
+    // This is the most popular entrypoint.  It will force initialization of the lazy
+    // variables above that create components.  By default that would happen serially.
+    // This assertion makes it happen in parallel so that annotation can begin sooner.
+    assert(isPreparedToAnnotate)
+    super.annotate(text, keepText)
+  }
+
+  override def annotate(doc: Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
       tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
       //println("After POS")
@@ -222,6 +284,50 @@ class CluProcessor protected (
     (tags, chunks, preds)
   }
 
+  /** Restores the correct case for all words in a given document */
+  def restoreCase(doc: Document): Unit = {
+    GivenConstEmbeddingsAttachment(doc, true).perform {
+      for (sent <- doc.sentences) {
+        // The case restoration model expects lower-case words as input.
+        val originalWords = sent.words
+        val loweredWords = originalWords.map(_.toLowerCase)
+        val preLabels = mtlCase.predict(0, AnnotatedSentence(loweredWords), None, getEmbeddings(doc))
+        val labels = casePostProcessing(loweredWords, preLabels)
+        val restoredWords = originalWords.indices.map { index => restoreCaseWord(loweredWords(index), labels(index), originalWords(index)) }
+        restoredWords.copyToArray(originalWords)
+      }
+    }                    
+  }
+
+  private def casePostProcessing(loweredWords: IndexedSeq[String], preLabels: IndexedSeq[String]): IndexedSeq[String] = {
+    loweredWords.zip(preLabels).map { case (loweredWord, preLabel) =>
+      // There could be multiple patterns that match, but use only the first.
+      val index = CASE_PATTERNS.indexWhere { case (pattern, _) =>
+        pattern.matcher(loweredWord).matches
+      }
+      if (index >= 0) CASE_PATTERNS(index)._2
+      else preLabel
+    }
+  }
+
+  private def restoreCaseWord(loweredWord: String, label: String, originalWord: String): String = {
+    val alphaCount = originalWord.count(_.isLetter)
+    val upperCount = originalWord.count(_.isUpper)
+    val isStandard =
+        upperCount == 0 || // lower
+        upperCount == alphaCount || // all upper
+        upperCount == 1 && originalWord.head.isUpper // upper initial
+    // We handle three possible labels: L (lower), UI (upper initial), UA (all upper).
+    if (!isStandard)
+      originalWord
+    else if (label == "UI")
+      Character.toUpperCase(loweredWord(0)) + loweredWord.substring(1)
+    else if (label == "UA")
+      loweredWord.toUpperCase()
+    else
+      loweredWord
+  }
+
   /** Produces NE labels for one sentence */
   def nerSentence(words: Array[String],
                   lemmas: Option[Array[String]],
@@ -261,18 +367,20 @@ class CluProcessor protected (
     }
   }
 
-  // The custom labels override the generic ones!
   private def mergeNerLabels(generic: IndexedSeq[String], custom: IndexedSeq[String]): Array[String] = {
-    assert(generic.length == custom.length)
-    val labels = new Array[String](generic.length)
-    for(i <- generic.indices) {
-      if(custom(i) != OUTSIDE) {
-        labels(i) = custom(i)
-      } else {
-        labels(i) = generic(i)
-      }
+    require(generic.length == custom.length)
+
+    val customNamedEntities = NamedEntity.collect(custom)
+    val result = generic.toArray // A copy of the generic labels is created here.
+
+    if (customNamedEntities.isEmpty)
+      result
+    else {
+      val genericNamedEntities = NamedEntity.collect(generic)
+
+      // The custom labels override the generic ones!
+      NamedEntity.combine(result, genericNamedEntities, customNamedEntities)
     }
-    labels
   }
 
   /** Gets the index of all predicates in this sentence */
@@ -294,11 +402,12 @@ class CluProcessor protected (
     predsInSent
   }
 
-  /** Dependency parsing */
-  def parseSentence(words: IndexedSeq[String],
-                    posTags: IndexedSeq[String],
-                    nerLabels: IndexedSeq[String],
-                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+  /** Dependency parsing: old MTL model. Faster but performs worse */
+  /*
+  def parseSentenceMTL(words: IndexedSeq[String],
+                       posTags: IndexedSeq[String],
+                       nerLabels: IndexedSeq[String],
+                       embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
 
     //println(s"Words: ${words.mkString(", ")}")
     //println(s"Tags: ${posTags.mkString(", ")}")
@@ -321,12 +430,56 @@ class CluProcessor protected (
       }
     }
 
-    //
-    // Old algorithm, with separate models for heads and labels
-    //
-    /*
-    val headsAsStringsWithScores = mtlDeps.predictWithScores(0, annotatedSentence, embeddings)
+    new DirectedGraph[String](edges.toList)
+  }
+  */
+
+  private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {
     val heads = new ArrayBuffer[Int]()
+    for(i <- relativeHeads.indices) {
+      if(relativeHeads(i) == 0) {
+        heads += -1
+      } else {
+        heads += i + relativeHeads(i)
+      }
+    }
+    heads
+  }
+
+  /** Dependency parsing with the Eisner algorithm */
+  def parseSentenceWithEisner(words: IndexedSeq[String],
+                              posTags: IndexedSeq[String],
+                              nerLabels: IndexedSeq[String],
+                              embeddings: ConstEmbeddingParameters): Array[(Int, String)] = {
+    val annotatedSentence =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+
+    val eisner = new Eisner
+    val headsWithLabels = eisner.ensembleParser(
+      mtlDepsHead, Some(mtlDepsLabel),
+      annotatedSentence, embeddings,
+      5, 0.6f, false
+    )
+
+    headsWithLabels.toArray
+  }
+
+  /** Dependency parsing - OLD greedy algorithm */
+  /*
+  def parseSentence(words: IndexedSeq[String],
+                    posTags: IndexedSeq[String],
+                    nerLabels: IndexedSeq[String],
+                    embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
+
+    //println(s"Words: ${words.mkString(", ")}")
+    //println(s"Tags: ${posTags.mkString(", ")}")
+    //println(s"NEs: ${nerLabels.mkString(", ")}")
+
+    val annotatedSentence =
+      AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+
+    val headsAsStringsWithScores = mtlDepsHead.predictWithScores(0, annotatedSentence, None, embeddings)
+    val heads = new ArrayBuffer[ModifierHeadPair]()
     for(wi <- headsAsStringsWithScores.indices) {
       val predictionsForThisWord = headsAsStringsWithScores(wi)
 
@@ -336,12 +489,12 @@ class CluProcessor protected (
         try {
           val relativeHead = predictionsForThisWord(hi)._1.toInt
           if (relativeHead == 0) { // this is the root
-            heads += -1
+            heads += ModifierHeadPair(wi, -1)
             done = true
           } else {
             val headPosition = wi + relativeHead
             if (headPosition >= 0 && headPosition < words.size) {
-              heads += headPosition
+              heads += ModifierHeadPair(wi, headPosition)
               done = true
             }
           }
@@ -353,14 +506,11 @@ class CluProcessor protected (
       if(! done) {
         // we should not be here, but let's be safe
         // if nothing good was found, assume root
-        heads += -1
+        heads += ModifierHeadPair(wi, -1)
       }
     }
 
-    val annotatedSentenceWithHeads =
-      AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(heads))
-
-    val labels = mtlDepsLabel.predict(0, annotatedSentenceWithHeads, embeddings)
+    val labels = mtlDepsLabel.predict(0, annotatedSentence, Some(heads), embeddings)
     assert(labels.size == heads.size)
     //println(s"Labels: ${labels.mkString(", ")}")
 
@@ -371,14 +521,14 @@ class CluProcessor protected (
       if(heads(i) == -1) {
         roots += i
       } else {
-        val edge = Edge[String](heads(i), i, labels(i))
+        val edge = Edge[String](heads(i).head, heads(i).modifier, labels(i))
         edges.append(edge)
       }
     }
-    */
 
     new DirectedGraph[String](edges.toList)
   }
+  */
 
   def srlSentence(sent: Sentence,
                   predicateIndexes: IndexedSeq[Int],
@@ -411,9 +561,10 @@ class CluProcessor protected (
                   embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
     val edges = predicateIndexes.flatMap { pred =>
       // SRL needs POS tags and NEs, as well as the position of the predicate
-      val headPositions = Array.fill(words.length)(pred)
-      val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels), Some(headPositions))
-      val argLabels = mtlSrla.predict(0, annotatedSentence, embeddings)
+      val headPositions = new ArrayBuffer[ModifierHeadPair]()
+      for(i <- words.indices) headPositions += ModifierHeadPair(i, pred)
+      val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels))
+      val argLabels = mtlSrla.predict(0, annotatedSentence, Some(headPositions), embeddings)
 
       argLabels.zipWithIndex
           .filter { case (argLabel, _) => argLabel != "O" }
@@ -422,7 +573,7 @@ class CluProcessor protected (
     new DirectedGraph[String](edges.toList, Some(words.length))
   }
 
-  private def getEmbeddings(doc: Document): ConstEmbeddingParameters =
+  def getEmbeddings(doc: Document): ConstEmbeddingParameters =
     doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment].embeddings
 
   /** Part of speech tagging + chunking + SRL (predicates), jointly */
@@ -452,6 +603,10 @@ class CluProcessor protected (
         words(i).equalsIgnoreCase("due") &&
         words(i + 1).equalsIgnoreCase("to")) {
         tags(i) = "IN"
+      }
+
+      else if(VERSUS_PATTERN.findFirstIn(words(i)).nonEmpty) {
+        tags(i) = "CC" // "versus" seems like a CC to me. but maybe not...
       }
     }
 
@@ -504,8 +659,9 @@ class CluProcessor protected (
         sent.endOffsets,
         docDate,
         embeddings)
+      val patchedLabels = NamedEntity.patch(labels.toArray)
 
-      sent.entities = Some(labels.toArray)
+      sent.entities = Some(patchedLabels)
       if(norms.nonEmpty) {
         sent.norms = Some(norms.get.toArray)
       }
@@ -515,6 +671,7 @@ class CluProcessor protected (
     // numeric entities using our Odin rules
     //
     val numericMentions = numericEntityRecognizer.extractFrom(doc)
+
     setLabelsAndNorms(doc, numericMentions)
   }
 
@@ -532,7 +689,7 @@ class CluProcessor protected (
 
     if(sentence.universalBasicDependencies.isEmpty) return origPreds
     if(sentence.tags.isEmpty) return origPreds
-    
+
     val preds = origPreds.toSet
     val newPreds = new mutable.HashSet[Int]()
     newPreds ++= preds
@@ -581,7 +738,7 @@ class CluProcessor protected (
       val sentence = doc.sentences(si)
       //println(s"SENTENCE WORDS: [${sentence.words.mkString("] [")}]")
 
-      val predicateIndexes = 
+      val predicateIndexes =
       	predicateCorrections(predicates(si), sentence)
       val semanticRoles = srlSentence(sentence, predicateIndexes, embeddings)
 
@@ -618,11 +775,40 @@ class CluProcessor protected (
     val embeddings = getEmbeddings(doc)
 
     for(sent <- doc.sentences) {
-      val depGraph = parseSentence(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
+      parserPostProcessing(sent, headsWithLabels)
+
+      val edges = new ListBuffer[Edge[String]]()
+      val roots = new mutable.HashSet[Int]()
+      for(i <- headsWithLabels.indices) {
+        if(headsWithLabels(i)._1 != -1) {
+          val edge = Edge[String](headsWithLabels(i)._1, i, headsWithLabels(i)._2)
+          edges.append(edge)
+        } else {
+          roots += i
+        }
+      }
+      val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
       sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+    }
+  }
+
+  /** Deterministic corrections for dependency parsing */
+  def parserPostProcessing(sentence: Sentence, headsWithLabels: Array[(Int, String)]): Unit = {
+    for(i <- sentence.indices) {
+      // "due to" must be a MWE
+      if(i < sentence.size - 1 && sentence.tags.isDefined &&
+        sentence.words(i).compareToIgnoreCase("due") == 0 &&
+        sentence.tags.get(i) == "IN" &&
+        sentence.words(i + 1).compareToIgnoreCase("to") == 0 &&
+        sentence.tags.get(i + 1) == "TO" &&
+        headsWithLabels(i + 1)._1 != i &&
+        headsWithLabels(i + 1)._2 != "mwe") {
+        headsWithLabels(i + 1) = Tuple2(i, "mwe")
+      }
     }
   }
 
@@ -725,6 +911,21 @@ object CluProcessor {
 
   val CONST_EMBEDDINGS_ATTACHMENT_NAME = "ce"
 
+  //
+  // Patterns for post-processing corrections
+  //
+  val VERSUS_PATTERN = """(?i)^vs\.?$""".r
+
+  //
+  // Patterns to correct case information
+  //
+  val CASE_PATTERNS: Seq[(Pattern, String)] = Seq(
+    // The tuple encodes the pattern and then the label.
+    // At start of sentence some Roman or Arabic numbers possibly followed by separating
+    // period, ), or ] all possibly repeated until the end of the sentence.
+    ("""^([ivx\d]+[\.\)\]]?)+$""".r.pattern, "L") // list item indices are often unnecessarily capitalized
+  )
+
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
                  text:String,
@@ -800,14 +1001,18 @@ object CluProcessor {
     for (_ <- 0 until size) os.append(" ")
     os.toString()
   }
+
+  def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] = {
+    seasonPathOpt.map(NumericEntityRecognizer(_))
+  }
 }
 
 case class EmbeddingsAttachment(embeddings: ConstEmbeddingParameters)
     extends IntermediateDocumentAttachment
 
-class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
+class GivenConstEmbeddingsAttachment(doc: Document, lowerCase: Boolean) extends BeforeAndAfter {
 
-  def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
+  def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc, lowerCase)
 
   def after(): Unit = {
     val attachment = doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
@@ -822,12 +1027,12 @@ class GivenConstEmbeddingsAttachment(doc: Document) extends BeforeAndAfter {
 }
 
 object GivenConstEmbeddingsAttachment {
-  def apply(doc: Document) = new GivenConstEmbeddingsAttachment(doc)
+  def apply(doc: Document, lowerCase: Boolean = false) = new GivenConstEmbeddingsAttachment(doc, lowerCase)
 
   // This is static so that it can be called without an object.
-  def mkConstEmbeddings(doc: Document): Unit = {
+  def mkConstEmbeddings(doc: Document, lowerCase: Boolean = false): Unit = {
     // Fetch the const embeddings from GloVe. All our models need them.
-    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc)
+    val embeddings = ConstEmbeddingsGlove.mkConstLookupParams(doc, lowerCase)
     val attachment = EmbeddingsAttachment(embeddings)
 
     // Now set them as an attachment, so they are available to all downstream methods wo/ changing the API.

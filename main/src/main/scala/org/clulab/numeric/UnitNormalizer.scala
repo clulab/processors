@@ -1,27 +1,25 @@
 package org.clulab.numeric
 
-import org.clulab.utils.FileUtils
+import org.clulab.sequences.CommentedStandardKbSource
+import org.clulab.utils.Closer.AutoCloser
+import org.clulab.utils.Sourcer
 
 import scala.collection.mutable
+import scala.io.Source
 
 object UnitNormalizer {
-  private val COMMENT = "//"
+  private val normMapper = readNormsFromResource("/org/clulab/numeric/MEASUREMENT-UNIT.tsv")
 
-  private val normMapper = readNorms()
+  def readNormsFromResource(path: String): Map[String, String] =
+      Sourcer.sourceFromResource(path).autoClose(readNormsFromSource)
 
-  private def readNorms(): Map[String, String] = {
+  def readNormsFromSource(source: Source): Map[String, String] = {
     val norms = new mutable.HashMap[String, String]()
 
-    for(line <- FileUtils.getCommentedTextSetFromResource("/org/clulab/numeric/MEASUREMENT-UNIT.tsv")) {
-      // the text before the comment (//) is the unit name; the text after is the normalized unit name
-      val commentStart = line.indexOf(COMMENT)
-      assert(commentStart > 0 && commentStart < line.length)
-
-      val unit = line.substring(0, commentStart).trim
-      val norm = line.substring(commentStart + COMMENT.length).trim
-      norms += unit -> norm
+    CommentedStandardKbSource.read(source) { (unit, normOpt) =>
+      assert(normOpt.isDefined) // We're insisting on this.
+      norms += unit -> normOpt.get
     }
-
     norms.toMap
   }
 

@@ -43,7 +43,6 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
   def extractFrom(doc:Document): Seq[Mention] = {
     // dictionaries
     val originalEntities = matchLexiconNer(doc)
-
     // grammars
     var mentions = extractor.extractFrom(doc)
 
@@ -53,28 +52,40 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
     }
 
     // global actions *after* all grammars are done
-    mentions = actions.cleanupAction(mentions)
-
-    mentions
+    actions.cleanupAction(mentions)
   }
 }
 
 object NumericEntityRecognizer {
-  val rulesPath = "/org/clulab/numeric/master.yml"
+  private val rulesPath = "/org/clulab/numeric/master.yml"
+  val resourceDir = {
+    val cwd = new File(System.getProperty("user.dir"))
+    new File(cwd, "src/main/resources")
+  }
+  // For the sake of SeasonNormalizer, this does have a leading /.
+  val seasonPath = "/org/clulab/numeric/SEASON.tsv"
 
   // this matches essential dictionaries such as month names
-  def mkLexiconNer: LexiconNER = LexiconNER(
-    Seq(
+  def mkLexiconNer(seasonsPath: String): LexiconNER = {
+    val kbs = Seq(
+      // These shouldn't start with a leading /.
       "org/clulab/numeric/MONTH.tsv",
-      "org/clulab/numeric/MEASUREMENT-UNIT.tsv"
-    ),
-    Seq(
-      false, // false = case sensitive matching
-      true
-    ),
-    new TrueEntityValidator,
-    useLemmasForMatching = false
-  )
+      "org/clulab/numeric/MEASUREMENT-UNIT.tsv",
+      "org/clulab/numeric/HOLIDAY.tsv",
+      if (seasonsPath.startsWith("/")) seasonsPath.drop(1) else seasonsPath
+    )
+    val isLocal = kbs.forall(new File(resourceDir, _).exists)
+    LexiconNER(
+      kbs,
+      Seq(
+        false, // false = case sensitive matching
+        true,
+        true,
+        true // This should be the case for any seasonsPath.
+      ),
+      baseDirOpt = if (isLocal) Some(resourceDir) else None
+    )
+  }
 
   // this matches the grammars for both atomic and compositional entities
   def mkExtractor(actions: NumericActions): ExtractorEngine = {
@@ -89,11 +100,11 @@ object NumericEntityRecognizer {
     ExtractorEngine(rules, actions, actions.cleanupAction, ruleDir = Some(ruleDir))
   }
 
-  def apply(): NumericEntityRecognizer = {
-    val ner = NumericEntityRecognizer.mkLexiconNer
-    val actions = new NumericActions
-    val extractor = NumericEntityRecognizer.mkExtractor(actions)
+  def apply(seasonPath: String = seasonPath): NumericEntityRecognizer = {
+    val lexiconNer = mkLexiconNer(seasonPath)
+    val numericActions = new NumericActions(new SeasonNormalizer(seasonPath))
+    val extractorEngine = mkExtractor(numericActions)
 
-    new NumericEntityRecognizer(ner, actions, extractor)
+    new NumericEntityRecognizer(lexiconNer, numericActions, extractorEngine)
   }
 }

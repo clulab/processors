@@ -51,6 +51,7 @@ object StringUtils {
         i = i + 1
       } else {
         otherArgs += key
+        i += 1
       }
     }
 

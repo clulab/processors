@@ -1,101 +1,122 @@
 package org.clulab.processors;
 
-
-import org.clulab.processors.fastnlp.FastNLPProcessor;
+import com.typesafe.config.ConfigFactory;
+import org.clulab.processors.clu.CluProcessor;
 import org.clulab.processors.corenlp.CoreNLPProcessor;
+import org.clulab.processors.fastnlp.FastNLPProcessor;
+import org.clulab.sequences.LexiconNER;
 import org.clulab.struct.CorefMention;
 import org.clulab.struct.DirectedGraphEdgeIterator;
+import org.clulab.utils.JavaUtils;
+
+import scala.Option;
+import scala.collection.immutable.HashMap;
+import scala.collection.immutable.Map;
+
+import java.util.Arrays;
+import java.util.Iterator;
 
 public class ProcessorsJavaExample {
+    // These are for the CluProcessor.
+    // final static Option<LexiconNER> noLexiconNER = Option.empty();
+    // final static Option<String> noString = Option.empty();
+    // final static Map<String, Object> emptyMap = new HashMap();
+
     public static void main(String [] args) throws Exception {
-        // create the processor
-        Processor proc = new CoreNLPProcessor(true, true, false, 1, 100);
-        // for much faster processing, use FastNLPProcessor
-        //Processor proc = new FastNLPProcessor(true, false, false, 1);
+        // Create the processor.  Any processor works here!
+        // Try FastNLPProcessor or our own CluProcessor.
+        Processor proc = new CoreNLPProcessor(true, true, false, 0, 100);
 
-        // the actual work is done here
-        Document doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.", false);
+        // Processor proc = new FastNLPProcessor(true, true, false, 0);
 
-        // you are basically done. the rest of this code simply prints out the annotations
+        // org.clulab.fatdynet.utils.Initializer.initialize(emptyMap);
+        // Processor proc = new CluProcessor(ConfigFactory.load("cluprocessor"), noLexiconNER, noString);
 
-        // let's print the sentence-level annotations
-        int sentenceCount = 0;
-        for (Sentence sentence: doc.sentences()) {
-            System.out.println("Sentence #" + sentenceCount + ":");
-            System.out.println("Tokens: " + mkString(sentence.words(), " "));
-            System.out.println("Start character offsets: " + mkString(sentence.startOffsets(), " "));
-            System.out.println("End character offsets: " + mkString(sentence.endOffsets(), " "));
+        // The actual work is done here.
+        Document doc = proc.annotate("John Smith went to China. He visited Beijing on January 10th, 2013.", false);
 
-            // these annotations are optional, so they are stored using Option objects, hence the isDefined checks
-            if(sentence.lemmas().isDefined()){
-                System.out.println("Lemmas: " + mkString(sentence.lemmas().get(), " "));
-            }
-            if(sentence.tags().isDefined()){
-                System.out.println("POS tags: " + mkString(sentence.tags().get(), " "));
-            }
-            if(sentence.chunks().isDefined()){
-                System.out.println("Chunks: " + mkString(sentence.chunks().get(), " "));
-            }
-            if(sentence.entities().isDefined()){
-                System.out.println("Named entities: " + mkString(sentence.entities().get(), " "));
-            }
-            if(sentence.norms().isDefined()){
-                System.out.println("Normalized entities: " + mkString(sentence.norms().get(), " "));
-            }
-            if(sentence.dependencies().isDefined()) {
+        // You are basically done.  The rest of this code simply prints out the annotations.
+
+        // Let's print the sentence-level annotations.
+        for (int sentenceIndex = 0; sentenceIndex < doc.sentences().length; sentenceIndex++) {
+            Sentence sentence = doc.sentences()[sentenceIndex];
+            System.out.println("Sentence #" + sentenceIndex + ":");
+            System.out.println("Tokens: " + mkString(sentence.words()));
+            System.out.println("Start character offsets: " + mkString(sentence.startOffsets()));
+            System.out.println("End character offsets: " + mkString(sentence.endOffsets()));
+
+            // These annotations are optional, so they are stored using Option objects,
+            // hence the isDefined() and get() calls.
+            if (sentence.lemmas().isDefined())
+                System.out.println("Lemmas: " + mkString(sentence.lemmas().get()));
+            if (sentence.tags().isDefined())
+                System.out.println("POS tags: " + mkString(sentence.tags().get()));
+            if (sentence.chunks().isDefined())
+                System.out.println("Chunks: " + mkString(sentence.chunks().get()));
+            if (sentence.entities().isDefined())
+                System.out.println("Named entities: " + mkString(sentence.entities().get()));
+            if (sentence.norms().isDefined())
+                System.out.println("Normalized entities: " + mkString(sentence.norms().get()));
+            if (sentence.dependencies().isDefined()) {
                 System.out.println("Syntactic dependencies:");
-                DirectedGraphEdgeIterator<String> iterator = new
-                    DirectedGraphEdgeIterator<String>(sentence.dependencies().get());
-                while(iterator.hasNext()) {
-                    scala.Tuple3<Object, Object, String> dep = iterator.next();
-                    // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-                    System.out.println(" head:" + dep._1() + " modifier:" + dep._2() + " label:" + dep._3());
+                Iterator<scala.Tuple3<Object, Object, String>> iterator =
+                        JavaUtils.asJava(new DirectedGraphEdgeIterator<>(sentence.dependencies().get()));
+                for (scala.Tuple3<Object, Object, String> dep: iteratorToIterable(iterator)) {
+                    // Note that we use offsets starting at 0 unlike CoreNLP, which uses offsets starting at 1.
+                    System.out.println(" head: " + dep._1() + " modifier: " + dep._2() + " label: " + dep._3());
                 }
             }
-            if(sentence.syntacticTree().isDefined()) {
+            if (sentence.syntacticTree().isDefined()) {
+                // See the org.clulab.utils.Tree class for more information
+                // on syntactic trees, including access to head phrases/words.
                 System.out.println("Constituent tree: " + sentence.syntacticTree().get());
-                // see the org.clulab.struct.Tree class for more information
-                // on syntactic trees, including access to head phrases/words
             }
-
-            sentenceCount += 1;
-            System.out.println("\n");
+            System.out.println();
+            System.out.println();
         }
 
-        // let's print the coreference chains
-        if(doc.coreferenceChains().isDefined()) {
-            // these are scala.collection Iterator and Iterable (not Java!)
-            scala.collection.Iterator<scala.collection.Iterable<CorefMention>> chains = doc.coreferenceChains().get().getChains().iterator();
-            while(chains.hasNext()) {
-                scala.collection.Iterator<CorefMention> chain = chains.next().iterator();
+        // Let's print the coreference chains.
+        if (doc.coreferenceChains().isDefined()) {
+            Iterator<scala.collection.Iterable<CorefMention>> chains =
+                    JavaUtils.asJava(doc.coreferenceChains().get().getChains().iterator());
+            for (scala.collection.Iterable<CorefMention> chain: iteratorToIterable(chains)) {
                 System.out.println("Found one coreference chain containing the following mentions:");
-                while(chain.hasNext()) {
-                    CorefMention mention = chain.next();
-                    // note that all these offsets start at 0 too
-                    System.out.println("\tsentenceIndex:" + mention.sentenceIndex() +
-                        " headIndex:" + mention.headIndex() +
-                        " startTokenOffset:" + mention.startOffset() +
-                        " endTokenOffset:" + mention.endOffset());
+                for (CorefMention mention: iteratorToIterable(JavaUtils.asJava(chain.iterator()))) {
+                    String text = "[" + mkString(Arrays.copyOfRange(
+                            doc.sentences()[mention.sentenceIndex()].words(),
+                            mention.startOffset(), mention.endOffset())) + "]";
+                    // Note that all these offsets start at 0, too.
+                    System.out.println("\tsentenceIndex: " + mention.sentenceIndex() +
+                            " headIndex: " + mention.headIndex() +
+                            " startTokenOffset: " + mention.startOffset() +
+                            " endTokenOffset: " + mention.endOffset() +
+                            " text: " + text);
                 }
             }
         }
-
     }
 
-    public static String mkString(String [] sa, String sep) {
-        StringBuilder os = new StringBuilder();
-        for(int i = 0; i < sa.length; i ++) {
-            if(i > 0) os.append(sep);
-            os.append(sa[i]);
+    public static String mkString(String[] strings, String sep) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < strings.length; i ++) {
+            if (i > 0) stringBuilder.append(sep);
+            stringBuilder.append(strings[i]);
         }
-        return os.toString();
+        return stringBuilder.toString();
     }
-    public static String mkString(int [] sa, String sep) {
-        StringBuilder os = new StringBuilder();
-        for(int i = 0; i < sa.length; i ++) {
-            if(i > 0) os.append(sep);
-            os.append(Integer.toString(sa[i]));
+
+    public static String mkString(String[] strings) { return mkString(strings, " "); }
+
+    public static String mkString(int[] ints, String sep) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < ints.length; i ++) {
+            if (i > 0) stringBuilder.append(sep);
+            stringBuilder.append(ints[i]);
         }
-        return os.toString();
+        return stringBuilder.toString();
     }
+
+    public static String mkString(int[] ints) { return mkString(ints, " "); }
+
+    public static<T> Iterable<T> iteratorToIterable(Iterator<T> iterator) { return () -> iterator; }
 }

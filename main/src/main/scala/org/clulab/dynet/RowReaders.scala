@@ -9,69 +9,76 @@ import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.Row
 
 import scala.collection.mutable.ArrayBuffer
-
 import MetalRowReader._
+
+import scala.util.Random
+import org.clulab.utils.MathUtils
+
+import scala.collection.mutable
 
 case class AnnotatedSentence(words: IndexedSeq[String],
                              posTags: Option[IndexedSeq[String]] = None,
-                             neTags: Option[IndexedSeq[String]] = None,
-                             headPositions: Option[IndexedSeq[Int]] = None) {
+                             neTags: Option[IndexedSeq[String]] = None) {
   def indices: Range = words.indices
   def size: Int = words.size
 }
 
 trait RowReader {
-  /** Converts the tabular format into one or more (AnnotatedSentence, sequence of gold labels) pairs */
-  def toAnnotatedSentences(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])]
+  /** Converts the tabular format into one or more (AnnotatedSentence, sequence of gold heads (optional), sequence of gold labels) pairs */
+  def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int = 0): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])]
 }
 
 class MetalRowReader extends RowReader {
-  override def toAnnotatedSentences(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  override def toAnnotatedSentences(rows: IndexedSeq[Row], insertNegatives: Int = 0): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+
     if (rows.head.length == 2) {
       parseSimple(rows)
     } else if (rows.head.length == 4) {
       parseSimpleExtended(rows)
     } else if (rows.head.length >= 5) {
-      parseFull(rows)
+      parseFull(rows, insertNegatives)
     } else {
       throw new RuntimeException("ERROR: the Metal format expects 2, 4, or 5+ columns!")
     }
   }
 
   /** Parser for the simple format: word, label */
-  def parseSimple(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  def parseSimple(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+
     assert(rows.head.length == 2)
     val words = new ArrayBuffer[String]()
-    val labels = new ArrayBuffer[String]()
+    val labels = new ArrayBuffer[Label]()
 
     for (row <- rows) {
       words += row.get(WORD_POSITION)
-      labels += row.get(WORD_POSITION + 1)
+      labels += PrimalLabel(row.get(WORD_POSITION + 1))
     }
 
     IndexedSeq(Tuple2(AnnotatedSentence(words), labels))
   }
 
   /** Parser for the simple extended format: word, POS tag, NE label, label */
-  def parseSimpleExtended(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  def parseSimpleExtended(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+
     assert(rows.head.length == 4)
     val words = new ArrayBuffer[String]()
     val posTags = new ArrayBuffer[String]()
     val neLabels = new ArrayBuffer[String]()
-    val labels = new ArrayBuffer[String]()
+    val labels = new ArrayBuffer[Label]()
 
     for (row <- rows) {
       words += row.get(WORD_POSITION)
       posTags += row.get(POS_TAG_POSITION)
       neLabels += row.get(NE_LABEL_POSITION)
-      labels += row.get(LABEL_START_OFFSET)
+      labels += PrimalLabel(row.get(LABEL_START_OFFSET))
     }
 
     IndexedSeq(Tuple2(AnnotatedSentence(words, Some(posTags), Some(neLabels)), labels))
   }
 
   /** Parser for the full format: word, POS tag, NE label, (label head)+ */
-  def parseFull(rows: IndexedSeq[Row]): IndexedSeq[(AnnotatedSentence, IndexedSeq[String])] = {
+  def parseFull(rows: IndexedSeq[Row], insertNegatives: Int): IndexedSeq[(AnnotatedSentence, IndexedSeq[Label])] = {
+
     assert(rows.head.length >= 5)
     val numSent = (rows.head.length - 3) / 2
     assert(numSent >= 1)
@@ -101,13 +108,26 @@ class MetalRowReader extends RowReader {
       }
     }
 
-    val sentences = new ArrayBuffer[(AnnotatedSentence, IndexedSeq[String])]()
+    val sentences = new ArrayBuffer[(AnnotatedSentence, IndexedSeq[Label])]()
     for(i <- 0 until numSent) {
-      val annotatedSent = AnnotatedSentence(words,
+      val annotatedSent = AnnotatedSentence(
+        words,
         Some(posTags),
-        Some(neLabels),
-        Some(headPositions(i)))
-      val sentLabels = labels(i)
+        Some(neLabels)
+      )
+      val labelsForThisSentence = labels(i)
+      val headsForThisSentence = headPositions(i)
+      val sentLabels = new ArrayBuffer[Label]()
+      for(j <- labelsForThisSentence.indices) {
+        sentLabels += DualLabel(j, headsForThisSentence(j), labelsForThisSentence(j))
+
+        if(insertNegatives > 0) {
+          val negHeads = mkRandoms(-1 until annotatedSent.size, Set(headsForThisSentence(j)), insertNegatives)
+          for(negHead <- negHeads) {
+            sentLabels += DualLabel(j, negHead, Utils.STOP_TAG)
+          }
+        }
+      }
       sentences += Tuple2(annotatedSent, sentLabels)
     }
 
@@ -120,4 +140,17 @@ object MetalRowReader {
   val POS_TAG_POSITION = 1
   val NE_LABEL_POSITION = 2
   val LABEL_START_OFFSET = 3
+
+  val rand = new Random(1)
+
+  private def mkRandoms(range: Range, exclude: Set[Int], howMany:Int): Set[Int] = {
+    val numbers = MathUtils.randomize(range.toArray, rand)
+    val randoms = new mutable.HashSet[Int]()
+    for(n <- numbers if randoms.size < howMany) {
+      if(! exclude.contains(n)) {
+        randoms += n
+      }
+    }
+    randoms.toSet
+  }
 }

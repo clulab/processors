@@ -837,14 +837,17 @@ object Utils {
   def newSource(filename: String): Source = {
     val f = new File(filename)
     if (f.exists()) {
-      // this file exists on disk
+      // This file exists on disk.
       Source.fromFile(filename, "UTF-8")
     } else {
-      // the file does not exist on disk. let's hope it's in the classpath
-      // this should work for both scala 2.11 and 2.12
-      Source.fromInputStream(getClass.getResourceAsStream("/" + filename))
-      // this only works for scala 2.12, so we can't cross compile with 2.11
+      // The file does not exist on disk.  Let's hope it's in the classpath.
+      // This should work for both scala 2.11 and 2.12.
+      // The resource will be null if it isn't found, so use an Option!
+      val inputStreamOpt = Option(getClass.getResourceAsStream("/" + filename))
+      val sourceOpt = inputStreamOpt.map(Source.fromInputStream)
+      // This only works for scala 2.12, so we can't cross compile with 2.11.
       // Source.fromResource(filename)
+      sourceOpt.getOrElse(throw new FileNotFoundException(s"""Could not find resource "$filename"."""))
     }
   }
 
@@ -900,6 +903,17 @@ object Utils {
       Expression.dropout(expression, dropoutProb)
     } else {
       expression
+    }
+  }
+
+  def getModHeadPairs(labels: IndexedSeq[Label]): Option[IndexedSeq[ModifierHeadPair]] = {
+    if(labels.nonEmpty && labels.head.isInstanceOf[DualLabel]) {
+      Some(labels.map(x => {
+        val dl = x.asInstanceOf[DualLabel]
+        ModifierHeadPair(dl.modifier, dl.head)
+      }))
+    } else {
+      None
     }
   }
 }

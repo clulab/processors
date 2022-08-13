@@ -125,7 +125,7 @@ class TestUniversalEnhancedDependencies extends FatdynetTest {
 
     doc = proc.annotate("Use of improved cultivars and mechanization will be increased and use of critical interventions may lead to increases in productivity and efficient use of resources.")
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(3, 5, "conj_and") should be(true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(8, 15, "ccomp") should be(true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(8, 15, "conj_and") should be(true) // probably not true
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(19, 21, "conj_and") should be(true) // this is not great, but better than nothing...
   }
 

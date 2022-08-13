@@ -3,6 +3,7 @@ package org.clulab.utils
 import scala.collection.mutable.{ListBuffer, ArrayBuffer}
 
 import scala.util
+import scala.collection.script.Index
 
 /**
  * Math utility methods useful for stats and ML
@@ -17,11 +18,10 @@ object MathUtils {
    * @param gamma Indicates how spiked the probability distribution should be
    * @return
    */
-  def softmax(scores:Iterable[Double], gamma:Double = 1.0):List[Double] = {
-    val scoreArrayBuffer = new ArrayBuffer[Double]
-    for(s <- scores) scoreArrayBuffer += s * gamma
-    val scoreArray = scoreArrayBuffer.toArray
-    val softmaxes = new ListBuffer[Double]
+  def softmax(scores:Iterable[Double], gamma:Double = 1.0):IndexedSeq[Double] = {
+    val scoreArray = new ArrayBuffer[Double]
+    for(s <- scores) scoreArray += s * gamma
+    val softmaxes = new ArrayBuffer[Double]
 
     val logSumStatic = logSum(scoreArray)
     for(s <- scores) {
@@ -29,7 +29,7 @@ object MathUtils {
       softmaxes += math.exp(logSoftmax)
     }
 
-    softmaxes.toList
+    softmaxes
   }
 
   /**
@@ -38,19 +38,19 @@ object MathUtils {
    * @param gamma Indicates how spiked the probability distribution should be
    * @return
    */
-  def softmaxFloat(scores:Iterable[Float], gamma:Float = 1.0f):List[Float] = {
+  def softmaxFloat(scores:Iterable[Float], gamma:Float = 1.0f):IndexedSeq[Float] = {
     val scoreArrayBuffer = new ArrayBuffer[Float]
     for(s <- scores) scoreArrayBuffer += s * gamma
     val scoreArray = scoreArrayBuffer.toArray
-    val softmaxes = new ListBuffer[Float]
+    val softmaxes = new ArrayBuffer[Float]
 
-    val logSumStatic = logSum(scoreArray)
+    val logSumStatic = logSumFloat(scoreArray)
     for(s <- scores) {
       val logSoftmax = (gamma * s) - logSumStatic
       softmaxes += math.exp(logSoftmax).toFloat
     }
 
-    softmaxes.toList
+    softmaxes
   }
 
   /**
@@ -83,17 +83,17 @@ object MathUtils {
     } yield gamma * v
     else vector
 
-    val logSumStatic = logSum(scoreArray)
+    val logSumStatic = logSumFloat(scoreArray)
     for {
       s <- vector
     } yield math.exp((gamma * s) - logSumStatic).toFloat
   }
 
-  def logSum(logInputs:Array[Double]):Double =
+  def logSum(logInputs:IndexedSeq[Double]):Double =
     logSum(logInputs, 0, logInputs.length)
 
-  def logSum(logInputs:Array[Float]):Float =
-    logSum(logInputs, 0, logInputs.length)
+  def logSumFloat(logInputs:IndexedSeq[Float]):Float =
+    logSumFloat(logInputs, 0, logInputs.length)
 
   /**
    * Returns the log of the portion between <code>fromIndex</code>, inclusive, and
@@ -110,7 +110,7 @@ object MathUtils {
    * @param toIndex End offset (exclusive)
    * @return log(x1 + ... + xn)
    */
-  def logSum(logInputs:Array[Double], fromIndex:Int, toIndex:Int):Double = {
+  def logSum(logInputs:IndexedSeq[Double], fromIndex:Int, toIndex:Int):Double = {
     if (logInputs.length == 0)
       throw new IllegalArgumentException()
 
@@ -141,7 +141,7 @@ object MathUtils {
     max
   }
 
-  def logSum(logInputs:Array[Float], fromIndex:Int, toIndex:Int):Float = {
+  def logSumFloat(logInputs:IndexedSeq[Float], fromIndex:Int, toIndex:Int):Float = {
     if (logInputs.length == 0)
       throw new IllegalArgumentException()
 

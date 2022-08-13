@@ -1,6 +1,6 @@
 package org.clulab.dynet
 
-import edu.cmu.dynet.{Dim, Expression, ExpressionVector, Parameter, ParameterCollection}
+import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
 import ForwardLayer._
 import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}
@@ -9,8 +9,6 @@ import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
 
-import scala.collection.mutable.ArrayBuffer
-
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,
                              val isDual: Boolean,
@@ -18,26 +16,14 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
                              val i2t: Array[String],
                              val H: Parameter,
                              val rootParam: Parameter,
-                             val spans: Option[Seq[(Int, Int)]],
+                             val distanceEmbeddingSize: Int,
+                             val distanceLookupParameters: Option[LookupParameter],
                              val nonlinearity: Int,
                              val dropoutProb: Float)
   extends FinalLayer {
 
-  def pickSpan(v: Expression): Expression = {
-    if(spans.isEmpty) {
-      v
-    } else {
-      val vs = new ExpressionVector()
-      for(span <- spans.get) {
-        val e = Expression.pickrange(v, span._1, span._2, 0)
-        vs.add(e)
-      }
-      Expression.concatenate(vs)
-    }
-  }
-
   def forward(inputExpressions: ExpressionVector,
-              headPositionsOpt: Option[IndexedSeq[Int]],
+              modifierHeadPairs: Option[IndexedSeq[ModifierHeadPair]],
               doDropout: Boolean): ExpressionVector = {
     val pH = Expression.parameter(H)
     val pRoot = Expression.parameter(rootParam)
@@ -49,8 +35,8 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       //
 
       for (i <- inputExpressions.indices) {
-        // fetch the relevant span from the RNN's hidden state
-        var argExp = pickSpan(inputExpressions(i))
+        // the hidden state for the argument token
+        var argExp = inputExpressions(i)
 
         // dropout on the hidden state
         argExp = Utils.expressionDropout(argExp, dropoutProb, doDropout)
@@ -74,23 +60,30 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
       // dual task
       //
 
-      if(headPositionsOpt.isEmpty) {
+      if (modifierHeadPairs.isEmpty) {
         throw new RuntimeException("ERROR: dual task without information about head positions!")
       }
 
-      for(i <- inputExpressions.indices) {
-        val headPosition = headPositionsOpt.get(i)
+      for (pair <- modifierHeadPairs.get) {
+        val modPosition = pair.modifier
+        val headPosition = pair.head
 
-        val argExp = Utils.expressionDropout(pickSpan(inputExpressions(i)), dropoutProb, doDropout)
-        val predExp = if(headPosition >= 0) {
+        val argExp = Utils.expressionDropout(inputExpressions(modPosition), dropoutProb, doDropout)
+        val predExp = if (headPosition >= 0) {
           // there is an explicit head in the sentence
-          Utils.expressionDropout(pickSpan(inputExpressions(headPosition)), dropoutProb, doDropout)
+          Utils.expressionDropout(inputExpressions(headPosition), dropoutProb, doDropout)
         } else {
-          // the head is root. we used a dedicated Parameter for root
-          Utils.expressionDropout(pickSpan(pRoot), dropoutProb, doDropout)
+          // the head is root. we use a dedicated Parameter for root
+          Utils.expressionDropout(pRoot, dropoutProb, doDropout)
         }
 
-        val ss = Expression.concatenate(argExp, predExp)
+        val ss =
+          if (distanceLookupParameters.nonEmpty) {
+            val distEmbedding = mkRelativePositionEmbedding(modPosition, headPosition)
+            Expression.concatenate(argExp, predExp, distEmbedding)
+          } else {
+            Expression.concatenate(argExp, predExp)
+          }
 
         var l1 = Utils.expressionDropout(pH * ss, dropoutProb, doDropout)
 
@@ -107,7 +100,22 @@ abstract class ForwardLayer (val parameters:ParameterCollection,
     emissionScores
   }
 
-  override def inDim: Int = if(spans.nonEmpty) spanLength(spans.get) else inputSize
+  protected def mkRelativePositionEmbedding(modifier: Int, head: Int): Expression = {
+    val dist =
+      if(head == -1) { // root
+        0
+      } else { // head is an actual token
+        //println(s" head $head modifier $modifier")
+        val fullDist = head - modifier
+        if(fullDist < -50) -50
+        else if(fullDist > 50) 50
+        else fullDist
+      } + 50
+    //println(s"Finding embedding for position $dist")
+    Expression.lookup(distanceLookupParameters.get, dist)
+  }
+
+  override def inDim: Int = inputSize
 
   override def outDim: Int = t2i.size
 }
@@ -140,41 +148,6 @@ object ForwardLayer {
     }
   }
 
-  def parseSpan(spanParam: String, inputSize: Int): Seq[(Int, Int)] = {
-    val spans = new ArrayBuffer[(Int, Int)]()
-    val spanParamTokens = spanParam.split(",")
-    for(spanParamToken <- spanParamTokens) {
-      val spanTokens = spanParamToken.split('-')
-      assert(spanTokens.length == 2)
-      val start = spanTokens(0).toInt // these are actual values, not percentages as in the config file
-      val end = spanTokens(1).toInt
-      spans += Tuple2(start, end)
-    }
-    spans
-  }
-
-  /** Produces a string representation of spans, which can be parsed by parseSpan */
-  def spanToString(spans: Seq[(Int, Int)]): String = {
-    val sb = new StringBuilder
-    var first = true
-    for(span <- spans) {
-      if(! first) sb.append(",")
-      sb.append(span._1)
-      sb.append("-")
-      sb.append(span._2)
-      first = false
-    }
-    sb.toString()
-  }
-
-  def spanLength(spans: Seq[(Int, Int)]): Int = {
-    var sum = 0
-    for(x <- spans) {
-      sum += x._2 - x._1
-    }
-    sum
-  }
-
   def initialize(config: Configured,
                  paramPrefix: String,
                  parameters: ParameterCollection,
@@ -199,24 +172,12 @@ object ForwardLayer {
     val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
     val i2t = fromIndexToString(t2i)
 
-    val spanConfig = config.getArgString(paramPrefix + ".span", Some(""))
-    val span =
-      if(spanConfig.isEmpty) {
-        None
-      } else {
-        val spans = parseSpan(spanConfig, inputSize)
-        // println(s"SPANS = ${spans.mkString(", ")}")
-        Some(spans)
-      }
+    val distanceEmbeddingSize = config.getArgInt(paramPrefix + ".distanceEmbeddingSize", Some(0))
+    val distanceLookupParameters =
+      if(distanceEmbeddingSize > 0) Some(parameters.addLookupParameters(101, Dim(distanceEmbeddingSize)))
+      else None
 
-    val actualInputSize =
-      if(span.nonEmpty) {
-        val len = spanLength(span.get)
-        if(isDual) 2 * len else len
-      } else {
-        if(isDual) 2 * inputSize else inputSize
-      }
-    // println(s"ACTUAL INPUT SIZE: $actualInputSize")
+    val actualInputSize = if(isDual) 2 * inputSize + distanceEmbeddingSize else inputSize
 
     val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
     val rootParam = parameters.addParameters(Dim(inputSize))
@@ -226,13 +187,15 @@ object ForwardLayer {
         Some(new GreedyForwardLayer(parameters,
           inputSize, isDual,
           t2i, i2t, H, rootParam,
-          span, nonlin, dropoutProb))
+          distanceEmbeddingSize, distanceLookupParameters,
+          nonlin, dropoutProb))
       case TYPE_VITERBI_STRING =>
         val T = mkTransitionMatrix(parameters, t2i)
         val layer = new ViterbiForwardLayer(parameters,
           inputSize, isDual,
           t2i, i2t, H, T, rootParam,
-          span, nonlin, dropoutProb)
+          distanceEmbeddingSize, distanceLookupParameters,
+          nonlin, dropoutProb)
         layer.initializeTransitions()
         Some(layer)
       case _ =>
