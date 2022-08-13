@@ -3,9 +3,8 @@ package org.clulab.struct
 import java.io.{Reader, Writer}
 import java.text.DecimalFormat
 
-import scala.collection.breakOut
 import scala.collection.mutable
-import scala.math.Ordering.{ Double => DoubleSortOrder }
+import scala.math.Ordering
 
 import org.clulab.utils.Files
 
@@ -117,8 +116,8 @@ class Counter[T] (
 
   /** Sorts counts in descending order, if argument is true. */
   def sorted(descending:Boolean):List[(T, Double)] = {
-    val vs:List[(T,Double)] = keySet.map(k => Tuple2(k, getCount(k)))(breakOut)
-    val sortOrder = if (descending) DoubleSortOrder.reverse else DoubleSortOrder
+    val vs:List[(T,Double)] = keySet.toList.map(k => Tuple2(k, getCount(k)))
+    val sortOrder = if (descending) Ordering[Double].reverse else Ordering[Double]
     vs.sortBy(_._2)(sortOrder)
   }
 
