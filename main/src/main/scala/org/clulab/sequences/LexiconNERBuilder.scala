@@ -6,6 +6,7 @@
 package org.clulab.sequences
 
 import java.util.function.Consumer
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.BooleanHashTrie
 import org.clulab.struct.DebugBooleanHashTrie
 import org.clulab.struct.EntityValidator
@@ -365,7 +366,7 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
       matchersArray.foreach { matcher =>
         logger.info(s"Loaded OVERRIDE matcher for label ${matcher.label}.  The size of the first layer is ${matcher.entriesSize}.")
       }
-      matchersArray
+      matchersArray: Seq[BooleanHashTrie]
     }.getOrElse(Seq.empty[BooleanHashTrie])
   }
 }

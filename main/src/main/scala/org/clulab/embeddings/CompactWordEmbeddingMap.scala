@@ -3,6 +3,8 @@ package org.clulab.embeddings
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.utils.ArrayView
 
 import java.io._
 import org.clulab.utils.ClassLoaderObjectInputStream
@@ -12,7 +14,7 @@ import org.clulab.utils.Sourcer
 import org.clulab.utils.Timers
 
 import java.nio.charset.StandardCharsets
-import scala.collection.mutable.ArrayBuffer // IntelliJ doesn't complain about this.
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{ArrayBuilder => MutableArrayBuilder}
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
@@ -51,7 +53,9 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   protected val array: Array[Float] = buildType.array // flattened matrix
   val columns: Int = buildType.columns
   val rows: Int = map.size // which is not necessarily the same as array.length / columns
-  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.view)
+  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map { inside =>
+    inside: IndexedSeq[Float]
+  }
 
   /** The dimension of an embedding vector */
   override val dim: Int = columns

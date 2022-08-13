@@ -9,6 +9,7 @@ import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.Initializer
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
+import org.clulab.scala.WrappedArrayBuffer._
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.concurrent.atomic.AtomicBoolean

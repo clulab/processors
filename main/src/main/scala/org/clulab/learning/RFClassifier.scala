@@ -1,6 +1,7 @@
 package org.clulab.learning
 
 import java.io.{Serializable, Writer}
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, Lexicon}
 import org.clulab.utils.MathUtils
 import org.slf4j.LoggerFactory

@@ -1,6 +1,8 @@
 package org.clulab.utils
 
 import org.clulab.processors.Sentence
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.scala.WrappedListBuffer._
 import org.clulab.struct.{DirectedGraph, DirectedGraphIndex, Edge}
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}

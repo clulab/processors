@@ -11,6 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Metal}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.BeforeAndAfter

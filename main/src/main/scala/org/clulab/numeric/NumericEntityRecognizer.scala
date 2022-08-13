@@ -3,6 +3,7 @@ package org.clulab.numeric
 import org.clulab.numeric.actions.NumericActions
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.FileUtils

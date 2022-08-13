@@ -1,5 +1,6 @@
 package org.clulab.utils
 
+import org.clulab.scala.WrappedBuffer._
 import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters._
