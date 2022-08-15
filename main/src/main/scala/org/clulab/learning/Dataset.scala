@@ -225,7 +225,7 @@ class BVFDataset[L, F: ClassTag] (
  * @tparam L Type of labels
  * @tparam F Type of features
  */
-class RVFDataset[L, F: ClassTag] (
+class RVFDataset[L: ClassTag, F: ClassTag] (
   ll:Lexicon[L],
   fl:Lexicon[F],
   ls:ArrayBuffer[Int],
