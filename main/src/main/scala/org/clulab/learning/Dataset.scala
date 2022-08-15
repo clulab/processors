@@ -276,8 +276,8 @@ class RVFDataset[L, F: ClassTag] (
   }
 
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
-    def foreach[U](fn: ((F, Double)) => U): Unit = {
-      for(i <- 0 until RVFDataset.this.size) {
+    override def foreach[U](fn: ((F, Double)) => U): Unit = {
+      for(i <- RVFDataset.this.indices) {
         for(j <- features(i).indices) {
           val fi = features(i)(j)
           val v = values(i)(j)
@@ -288,7 +288,7 @@ class RVFDataset[L, F: ClassTag] (
     }
 
     def updateAll(fn: ((F, Double)) => Double): Unit = {
-      for(i <- 0 until RVFDataset.this.size) {
+      for(i <- RVFDataset.this.indices) {
         for(j <- features(i).indices) {
           val fi = features(i)(j)
           val v = values(i)(j)
@@ -297,6 +297,14 @@ class RVFDataset[L, F: ClassTag] (
         }
       }
     }
+
+    override def iterator: Iterator[(F, Double)] =
+      RVFDataset.this.indices.flatMap { i =>
+        features(i).map { j =>
+          val fi = features(i)(j)
+          featureLexicon.get(fi) -> values(i)(j)
+        }
+      }.iterator
   }
 
   override def keepOnly(featuresToKeep:Set[Int]):Dataset[L, F] = {

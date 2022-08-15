@@ -270,7 +270,7 @@ class RVFRegDataset[F: ClassTag] (
   }
 
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
-    def foreach[U](fn: ((F, Double)) => U): Unit = {
+    override def foreach[U](fn: ((F, Double)) => U): Unit = {
       for(i <- 0 until RVFRegDataset.this.size) {
         for(j <- features(i).indices) {
           val fi = features(i)(j)
@@ -290,6 +290,15 @@ class RVFRegDataset[F: ClassTag] (
           values(i)(j) = fn((f, v))
         }
       }
+    }
+
+    override def iterator: Iterator[(F, Double)] = {
+      RVFRegDataset.this.indices.flatMap { i =>
+        features(i).indices.map { j =>
+          val fi = features(i)(j)
+          featureLexicon.get(fi) -> values(i)(j)
+        }
+      }.iterator
     }
   }
 
