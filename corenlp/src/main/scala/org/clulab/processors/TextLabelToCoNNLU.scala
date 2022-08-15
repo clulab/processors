@@ -38,7 +38,7 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
     }
   }
 
-  def toCoNLLU(doc:Document, pw:PrintWriter) {
+  def toCoNLLU(doc:Document, pw:PrintWriter): Unit = {
     var sentenceCount = 0
     for(sent <- doc.sentences) {
       println(sent)
