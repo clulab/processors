@@ -39,7 +39,7 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
       val features = new Array[Counter[F]](sentence.size)
       for(i <- features.indices) features(i) = new Counter[F]()
 
-      (0 until sentence.size).map(i => featureExtractor(features(i), sentence, i))
+      (0 until sentence.size).foreach(i => featureExtractor(features(i), sentence, i))
 
       //
       // add history features:

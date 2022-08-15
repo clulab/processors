@@ -366,13 +366,13 @@ class CluProcessor protected (
     }
 
     if(optionalNERLabels.isEmpty) {
-      (allLabels(0), None)
+      allLabels(0) -> None
     } else {
-      (mergeNerLabels(allLabels(0), optionalNERLabels.get), None)
+      mergeNerLabels(allLabels(0), optionalNERLabels.get) -> None
     }
   }
 
-  private def mergeNerLabels(generic: IndexedSeq[String], custom: IndexedSeq[String]): Array[String] = {
+  private def mergeNerLabels(generic: IndexedSeq[String], custom: IndexedSeq[String]): IndexedSeq[String] = {
     require(generic.length == custom.length)
 
     val customNamedEntities = NamedEntity.collect(custom)
