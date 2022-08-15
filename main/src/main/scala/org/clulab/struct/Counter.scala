@@ -129,7 +129,7 @@ class Counter[T] (
     val keys = keySet
     for (key <- keys) {
       if(! first) os.append(", ")
-      os.append (key.toString + ":" + "%3.3f".format(getCount(key)))
+      os.append(f"$key:${getCount(key)%3.3f}")
       first = false
     }
     os.append ("]")

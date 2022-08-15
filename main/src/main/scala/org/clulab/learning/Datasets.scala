@@ -225,7 +225,7 @@ object Datasets {
     val features = Datasets.sortFeaturesByInformativeness(dataset, minFreq).sorted.toArray
     logger.debug("Top 20 most informative features:")
     for(i <- 0 until math.min(20, features.length)) {
-      logger.debug(dataset.featureLexicon.get(features(i)._1).toString + "\t" + features(i)._2)
+      logger.debug(s"${dataset.featureLexicon.get(features(i)._1)}\t${features(i)._2}")
     }
 
     var bestScore = Double.MinValue

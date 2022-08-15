@@ -326,7 +326,7 @@ class CluProcessor protected (
     if (!isStandard)
       originalWord
     else if (label == "UI")
-      Character.toUpperCase(loweredWord(0)).toString + loweredWord.substring(1)
+      s"${Character.toUpperCase(loweredWord(0))}${loweredWord.substring(1)}"
     else if (label == "UA")
       loweredWord.toUpperCase()
     else

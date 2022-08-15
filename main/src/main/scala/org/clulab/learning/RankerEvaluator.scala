@@ -64,12 +64,12 @@ object RankerEvaluator {
       qidsBuffer += new Qid(answers.toArray)
     }
     val qids = qidsBuffer.toArray
-    println("Found " + qids.length + " questions.")
+    println(s"Found ${qids.length} questions.")
 
 
     for(qid <- qids) {
       for(a <- qid.answers) {
-        println(a.gold.toString + " " + a.score)
+        println(s"${a.gold} ${a.score}")
       }
       println()
     }

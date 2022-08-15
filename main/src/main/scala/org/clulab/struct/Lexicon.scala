@@ -74,7 +74,7 @@ class Lexicon[T] extends Serializable {
   override def toString:String = {
     val os = new StringBuilder
     for(w <- lexicon.keySet) {
-      os.append(w.toString + " -> " + lexicon.get(w).get + "\n")
+      os.append(s"$w -> ${lexicon.get(w).get}\n")
     }
     os.toString()
   }

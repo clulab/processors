@@ -256,7 +256,7 @@ class PerceptronClassifier[L, F] (
     for (i <- 0 until labelLexicon.size) {
       pw.print("label: " + labelLexicon.get(i) + " \t")
       for (j <- 0 until avgWeights(i).size) {
-        pw.print (featureLexicon.get(j).toString + ":" + avgWeights(i)(j) + " \t")
+        pw.print(s"${featureLexicon.get(j)}:${avgWeights(i)(j)} \t")
       }
       pw.println ("")
     }

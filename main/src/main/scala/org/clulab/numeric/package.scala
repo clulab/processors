@@ -35,9 +35,11 @@ package object numeric {
     val mentionType = mention.getClass.toString.split("""\.""").last
     println(s"\tType => $mentionType")
     println(s"\tInterval => ${mention.tokenInterval}")
-    if(mention.isInstanceOf[Norm]) {
-      println(s"\tNorm => ${mention.asInstanceOf[Norm].neNorm}")
-      println(s"\tNE => ${mention.asInstanceOf[Norm].neLabel}")
+    mention match {
+      case norm: Norm =>
+        println(s"\tNorm => ${norm.neNorm}")
+        println(s"\tNE => ${norm.neLabel}")
+      case _ =>
     }
     println(boundary)
     if (mention.arguments.nonEmpty) {
