@@ -1,5 +1,8 @@
 package org.clulab.utils
 
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
+
 import scala.collection.mutable.ArrayBuffer
 
 /**

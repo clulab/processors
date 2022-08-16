@@ -1,5 +1,6 @@
 package org.clulab.processors.corenlp.chunker
 
+import org.clulab.scala.WrappedArray._
 import java.io.FileInputStream
 import java.util.zip.GZIPInputStream
 import scala.collection.mutable

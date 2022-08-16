@@ -3,6 +3,7 @@ package org.clulab.openie.filtering
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.openie.utils.{EnglishTagSet, TagSet}
 import org.clulab.processors.Sentence
+import org.clulab.scala.WrappedArray._
 import org.clulab.struct.Interval
 import org.clulab.utils.FileUtils
 

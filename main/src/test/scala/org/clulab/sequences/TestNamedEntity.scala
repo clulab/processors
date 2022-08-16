@@ -1,5 +1,6 @@
 package org.clulab.sequences
 
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Test
 
 class TestNamedEntity extends Test {

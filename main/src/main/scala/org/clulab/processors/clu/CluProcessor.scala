@@ -5,6 +5,8 @@ import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbed
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}

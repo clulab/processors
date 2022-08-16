@@ -2,6 +2,7 @@ package org.clulab.embeddings
 
 import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer

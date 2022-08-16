@@ -4,6 +4,7 @@ import java.util.Properties
 
 import org.clulab.processors.corenlp.CoreNLPUtils._
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.WrappedArray._
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
 import edu.stanford.nlp.pipeline.StanfordCoreNLP

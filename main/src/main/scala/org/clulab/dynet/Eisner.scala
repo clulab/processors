@@ -1,5 +1,8 @@
 package org.clulab.dynet
 
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.scala.WrappedListBuffer._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import Eisner._
 

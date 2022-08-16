@@ -15,6 +15,7 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
 import org.clulab.odin._
 import org.clulab.odin.impl.MarkdownGeneration._
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Closer.AutoCloser
 

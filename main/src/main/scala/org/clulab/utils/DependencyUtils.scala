@@ -1,6 +1,7 @@
 package org.clulab.utils
 
 import org.clulab.processors.Sentence
+import org.clulab.scala.WrappedArray._
 import org.clulab.struct.{DirectedGraph, Edge, Interval}
 
 import scala.collection.mutable

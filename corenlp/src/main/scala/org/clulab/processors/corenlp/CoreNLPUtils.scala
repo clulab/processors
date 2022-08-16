@@ -2,6 +2,7 @@ package org.clulab.processors.corenlp
 
 import java.util
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.WrappedArray._
 import org.clulab.struct._
 import edu.stanford.nlp.ling.CoreAnnotations.{IndexAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel

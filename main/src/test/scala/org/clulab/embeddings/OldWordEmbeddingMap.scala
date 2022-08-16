@@ -1,5 +1,7 @@
 package org.clulab.embeddings
 
+import org.clulab.scala.WrappedArray._
+
 import java.io._
 import java.nio.{ByteBuffer, ByteOrder}
 

@@ -4,9 +4,8 @@ import edu.cmu.dynet.Expression.{lookup, randomNormal}
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, FloatVector, LookupParameter, Parameter, ParameterCollection}
 import org.clulab.dynet.Utils.{ByLineFloatBuilder, ByLineIntBuilder, ByLineStringBuilder, ByLineStringMapBuilder, LOG_MIN_VALUE, START_TAG, STOP_TAG, fromIndexToString, mkTransitionMatrix, save}
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
 import ForwardLayer._
-
-import scala.collection.BufferedIterator
 
 class ViterbiForwardLayer(parameters:ParameterCollection,
                           inputSize: Int,

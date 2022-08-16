@@ -6,6 +6,7 @@ import java.nio.file.StandardCopyOption
 import java.nio.file.{Files => JFiles, Path, Paths}
 import java.util.zip.ZipFile
 
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Closer.AutoCloser
 
 

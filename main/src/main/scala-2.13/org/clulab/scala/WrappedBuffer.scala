@@ -13,7 +13,8 @@ class WrappedBuffer[T](buffer: MutableBuffer[T]) extends ImmutableIndexedSeq[T] 
 
 object WrappedBuffer {
 
-  implicit def toIndexedSeq[T](buffer: MutableBuffer[T]): ImmutableIndexedSeq[T] = {
+  // The version without the underscore causes havoc!
+  implicit def _toIndexedSeq[T](buffer: MutableBuffer[T]): ImmutableIndexedSeq[T] = {
     new WrappedBuffer(buffer)
   }
 }

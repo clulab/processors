@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.utils.ArrayView
 import org.clulab.utils.ClassLoaderObjectInputStream

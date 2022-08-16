@@ -4,6 +4,7 @@ import scala.util.matching.Regex
 import scala.util.hashing.MurmurHash3._
 import org.clulab.struct.Interval
 import org.clulab.processors.Document
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.DependencyUtils
 import org.clulab.odin.impl.StringMatcher
 

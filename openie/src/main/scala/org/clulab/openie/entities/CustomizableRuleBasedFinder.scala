@@ -5,6 +5,7 @@ import org.clulab.openie.ResourceUtils
 import org.clulab.odin.{ExtractorEngine, Mention, State, TextBoundMention}
 import org.clulab.openie.utils.TagSet
 import org.clulab.processors.Document
+import org.clulab.scala.WrappedArray._
 import org.clulab.struct.Interval
 
 import scala.jdk.CollectionConverters._

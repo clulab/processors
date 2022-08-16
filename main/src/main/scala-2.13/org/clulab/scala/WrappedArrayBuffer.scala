@@ -14,7 +14,8 @@ class WrappedArrayBuffer[T](arrayBuffer: MutableArrayBuffer[T]) extends Immutabl
 
 object WrappedArrayBuffer {
 
-  implicit def toIndexedSeq[T](arrayBuffer: MutableArrayBuffer[T]): ImmutableIndexedSeq[T] = {
+  // The version without the underscore causes havoc!
+  implicit def _toIndexedSeq[T](arrayBuffer: MutableArrayBuffer[T]): ImmutableIndexedSeq[T] = {
     new WrappedArrayBuffer(arrayBuffer)
   }
 

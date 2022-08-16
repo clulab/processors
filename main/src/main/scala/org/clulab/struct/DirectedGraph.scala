@@ -1,5 +1,7 @@
 package org.clulab.struct
 
+import org.clulab.scala.WrappedArray._
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.hashing.MurmurHash3._

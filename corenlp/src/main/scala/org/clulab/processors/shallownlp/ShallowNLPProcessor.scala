@@ -20,7 +20,6 @@ import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenize
 import org.clulab.struct.Interval
 
 import scala.jdk.CollectionConverters._
-//import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
 /**

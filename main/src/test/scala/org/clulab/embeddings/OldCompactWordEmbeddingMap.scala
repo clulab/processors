@@ -1,6 +1,7 @@
 package org.clulab.embeddings
 
 import java.io._
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
 import org.slf4j.{Logger, LoggerFactory}

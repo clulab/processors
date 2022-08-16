@@ -1,6 +1,7 @@
 package org.clulab.odin.impl
 
 import org.clulab.processors.Document
+import org.clulab.scala.WrappedArray._
 import org.clulab.odin._
 
 

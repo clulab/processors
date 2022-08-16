@@ -8,6 +8,7 @@ import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.{Configured, Serializer}
 
 import EmbeddingLayer._

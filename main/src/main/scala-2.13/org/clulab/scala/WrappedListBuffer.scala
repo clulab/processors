@@ -14,7 +14,8 @@ class WrappedListBuffer[T](listBuffer: MutableListBuffer[T]) extends ImmutableIn
 
 object WrappedListBuffer {
 
-  implicit def toImmutableIndexedSeq[T](listBuffer: MutableListBuffer[T]): ImmutableIndexedSeq[T] = {
+  // The version without the underscore causes havoc!
+  implicit def _toImmutableIndexedSeq[T](listBuffer: MutableListBuffer[T]): ImmutableIndexedSeq[T] = {
     new WrappedListBuffer(listBuffer)
   }
 

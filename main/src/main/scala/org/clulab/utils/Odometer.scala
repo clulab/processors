@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 
 // This AnyRef thing is not absolutely complete.
 // See https://stackoverflow.com/questions/2440134/is-this-the-proper-way-to-initialize-null-references-in-scala.
-class SeqOdometer[T: ClassTag](val sequences: Array[Seq[T]]) extends Iterator[mutable.ArraySeq[T]] {
+class SeqOdometer[T: ClassTag](val sequences: Array[Array[T]]) extends Iterator[mutable.ArraySeq[T]] {
   require(sequences.nonEmpty)
   require(sequences.forall(_.nonEmpty))
 

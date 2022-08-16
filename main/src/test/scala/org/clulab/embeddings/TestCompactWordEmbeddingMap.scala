@@ -1,5 +1,6 @@
 package org.clulab.embeddings
 
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Sourcer
 import java.io.File
 

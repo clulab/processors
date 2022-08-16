@@ -8,6 +8,8 @@ import org.clulab.embeddings.SanitizedWordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.Initializer
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.clulab.scala.WrappedArrayBuffer._

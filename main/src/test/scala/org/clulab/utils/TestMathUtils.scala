@@ -1,5 +1,6 @@
 package org.clulab.utils
 
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.MathUtils._
 import org.scalatest._
 

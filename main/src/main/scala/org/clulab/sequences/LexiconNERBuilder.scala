@@ -6,6 +6,7 @@
 package org.clulab.sequences
 
 import java.util.function.Consumer
+import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.BooleanHashTrie
 import org.clulab.struct.DebugBooleanHashTrie

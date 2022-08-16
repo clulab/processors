@@ -1,5 +1,6 @@
 package org.clulab.numeric
 
+import org.clulab.scala.WrappedArray._
 import org.scalatest.{FlatSpec, Matchers}
 
 class TestNumberParser extends FlatSpec with Matchers {
