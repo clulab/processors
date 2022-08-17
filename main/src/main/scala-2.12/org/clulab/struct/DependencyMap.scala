@@ -7,9 +7,9 @@ class DependencyMap protected extends mutable.HashMap[Int, DirectedGraph[String]
 }
 
 object DependencyMap {
-  val STANFORD_BASIC: Int = DependencyMapIndexes.STANFORD_BASIC
-  val STANFORD_COLLAPSED: Int = DependencyMapIndexes.STANFORD_COLLAPSED
-  val SEMANTIC_ROLES: Int = DependencyMapIndexes.SEMANTIC_ROLES
+  val STANFORD_BASIC: Int = DependencyMapNames.STANFORD_BASIC
+  val STANFORD_COLLAPSED: Int = DependencyMapNames.STANFORD_COLLAPSED
+  val SEMANTIC_ROLES: Int = DependencyMapNames.SEMANTIC_ROLES
 
   def apply(): DependencyMap = new DependencyMap()
 }
