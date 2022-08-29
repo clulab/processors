@@ -14,7 +14,7 @@ class ActionMirror(actions: Actions) {
     val action = instanceMirror.reflectMethod(methodSymbol)
     // handle action based on its return type
     val returnType = methodSymbol.returnType
-    if (returnType =:= typeOf[Action]) {
+    val function = if (returnType =:= typeOf[Action]) {
       // val action: Action
       action().asInstanceOf[Action]
     } else if (returnType =:= typeOf[Seq[Mention]]) {
@@ -29,6 +29,18 @@ class ActionMirror(actions: Actions) {
       }
     } else {
       sys.error(s"invalid action '$name'")
+    }
+    (mentions: Seq[Mention], state: State) => {
+      val keyCount = state.lookUpTable.keys.size
+      val valueCount = state.lookUpTable.values.size
+      val cellCount = state.lookUpTable.values.map(_.length).sum
+
+//      if (mentions.isEmpty)
+        println(s"WARNING: Entering $name with ${mentions.length}.")
+      val result = function(mentions, state)
+//      if (mentions.nonEmpty && result.isEmpty)
+        println(s"WARNING: Exiting $name with ${mentions.length}.")
+      result
     }
   }
 
