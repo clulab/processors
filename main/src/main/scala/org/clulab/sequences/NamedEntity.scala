@@ -42,14 +42,20 @@ object NamedEntity {
   }
 
   def combine(bioLabels: Array[String], genericNamedEntities: Seq[NamedEntity], customNamedEntities: Seq[NamedEntity]): Array[String] = {
-    val genericRanges = genericNamedEntities.map(_.range).toSet
+    // Neither named entity sequence can contain overlapping elements within the sequence.
+    // At most, there is overlap between sequences.  Use is made of that fact.
+    val genericStarts = genericNamedEntities.map(_.range.start).toSet
+    val genericEnds = genericNamedEntities.map(_.range.end).toSet
 
     customNamedEntities.foreach { customNamedEntity =>
       // If there is a matching range in the genericRanges, override the generic one with the
       // customNamedEntity there.  If the entire range is OUTSIDE, also take the custonNamedEntity.
       // Otherwise, stick with the generic one already in the bioLabels.
-      if (genericRanges(customNamedEntity.range) || customNamedEntity.isOutside(bioLabels))
-        customNamedEntity.fill(bioLabels)
+      if (
+        (genericStarts(customNamedEntity.range.start) || bioLabels(customNamedEntity.range.start) == OUTSIDE) &&
+        (genericEnds(customNamedEntity.range.end) || bioLabels(customNamedEntity.range.end - 1) == OUTSIDE)
+      )
+      customNamedEntity.fill(bioLabels)
     }
 
     bioLabels

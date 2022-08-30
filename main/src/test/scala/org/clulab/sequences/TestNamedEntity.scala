@@ -40,14 +40,15 @@ class TestNamedEntity extends Test {
     def test(id: String, genericBioLabelString: String, customBioLabelString: String, expectedCombinedBioLabelString: String): Unit = {
       // if (id == "1")
       it should s"combine properly test $id" in {
-        val genericBioLabels = genericBioLabelString.split(' ')
-        val customBioLabels = customBioLabelString.split(' ')
+        val genericBioLabels = genericBioLabelString.split(" +")
+        val customBioLabels = customBioLabelString.split(" +")
         val genericNamedEntities = NamedEntity.collect(genericBioLabels)
         val customNamedEntities = NamedEntity.collect(customBioLabels)
         val actualCombinedBioLabels = NamedEntity.combine(genericBioLabels, genericNamedEntities, customNamedEntities)
         val actualCombinedBioLabelString = actualCombinedBioLabels.mkString(" ")
+        val formattedExpectedCombinedBioLabelString = expectedCombinedBioLabelString.split(" +").mkString(" ")
 
-        actualCombinedBioLabelString should be(expectedCombinedBioLabelString)
+        actualCombinedBioLabelString should be(formattedExpectedCombinedBioLabelString)
       }
     }
 
@@ -68,17 +69,17 @@ class TestNamedEntity extends Test {
     )
     test("4",
       "B-1 B-2",
-      "O B-3",
+      "O   B-3",
       "B-1 B-3"
     )
     test("5",
       "O B-1 I-1 O",
-      "O B-2 O O",
+      "O B-2 O   O",
       "O B-1 I-1 O"
     )
     test("6",
       "O B-1 I-1 O",
-      "O O B-2 O",
+      "O O   B-2 O",
       "O B-1 I-1 O"
     )
     test("7",
@@ -87,23 +88,23 @@ class TestNamedEntity extends Test {
       "O B-2 I-2 O"
     )
     test("8",
-      "O B-1 I-1 I-1 O",
-      "B-2 I-2 O O O",
-      "O B-1 I-1 I-1 O"
+      "O   B-1 I-1 I-1 O",
+      "B-2 I-2 O   O   O",
+      "O   B-1 I-1 I-1 O"
     )
     test("9",
       "O B-1 I-1 I-1 O",
-      "O B-2 I-2 O O",
+      "O B-2 I-2 O   O",
       "O B-1 I-1 I-1 O"
     )
     test("10",
       "O B-1 I-1 I-1 O",
-      "O O B-2 I-2 O",
+      "O O   B-2 I-2 O",
       "O B-1 I-1 I-1 O"
     )
     test("11",
       "O B-1 I-1 I-1 O",
-      "O O O B-2 I-2",
+      "O O   O   B-2 I-2",
       "O B-1 I-1 I-1 O"
     )
     test("12",
@@ -113,13 +114,43 @@ class TestNamedEntity extends Test {
     )
     test("13",
       "B-0 B-1 I-1 I-1 O",
-      "B-2 I-2 I-2 O O",
+      "B-2 I-2 I-2 O   O",
       "B-0 B-1 I-1 I-1 O"
     )
     test("14",
-      "B-1 O O O B-3",
+      "B-1 O   O   O   B-3",
       "B-4 B-2 I-2 I-2 B-6",
       "B-4 B-2 I-2 I-2 B-6"
+    )
+    test("15",
+      "B-1 O",
+      "B-2 I-2",
+      "B-2 I-2"
+    )
+    test("16",
+      "O   B-1",
+      "B-2 I-2",
+      "B-2 I-2"
+    )
+    test("17",
+      "B-1 B-2",
+      "B-3 I-3",
+      "B-3 I-3"
+    )
+    test("18",
+      "O B-1 O   B-2 O",
+      "O B-3 I-3 I-3 O",
+      "O B-3 I-3 I-3 O"
+    )
+    test("19",
+      "O O   B-1 O   B-2 O",
+      "O B-3 I-3 I-3 I-3 O",
+      "O B-3 I-3 I-3 I-3 O"
+    )
+    test("20",
+      "B-1 O   B-1 O   B-2 O   B-1",
+      "O   B-3 I-3 I-3 I-3 I-3 O",
+      "B-1 B-3 I-3 I-3 I-3 I-3 B-1"
     )
   }
 
