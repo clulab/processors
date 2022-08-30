@@ -9,25 +9,37 @@ class ActionMirror(actions: Actions) {
 
   private val instanceMirror = runtimeMirror(actions.getClass.getClassLoader).reflect(actions)
 
-  def debug(message: String, mentions: Seq[Mention], state: State): Unit = {
+  def debug(name: String, entering: Boolean, mentions: Seq[Mention], state: State): Unit = {
+    val message = s"INFO: ${if (entering) "Entering" else "Exiting"} action $name with ${mentions.length} mentions:"
 
-    def debugMentions(mentions: Seq[Mention]): Unit = {
+    def debugMentions(level: Int, keyOpt: Option[String], mentions: Seq[Mention]): Unit = {
       mentions.foreach { mention =>
         val hash = mention.hashCode
         val foundBy = mention.foundBy
-        val label = mention.label.mkString(" ")
-        val arguments = mention.arguments.keys.toSeq.sorted.mkString(" ")
+        val label = mention.labels.mkString(" ")
+        val tags = mention.sentenceObj.tags.getOrElse(Array.empty).mkString(" ")
+        val norms = mention.sentenceObj.norms.getOrElse(Array.empty).mkString(" ")
+        val chunks = mention.sentenceObj.chunks.getOrElse(Array.empty).mkString(" ")
+        val entities = mention.sentenceObj.entities.getOrElse(Array.empty).mkString(" ")
 
-        println(s"\thash: $hash, foundBy: $foundBy, label: $label, arguments: $arguments")
+        Range(0, level).foreach(_ => print("\t"))
+        println(s"\thash: $hash, key: $keyOpt, foundBy: $foundBy, label: $label, tags: $tags, norms: $norms, chunks: $chunks, entities: $entities")
+
+        mention.arguments.foreach { case(key, value) =>
+          debugMentions(level + 1, Some(key), value)
+        }
       }
     }
 
     def debugState(state: State): Unit = {
+      val message = s"INFO: ${if (entering) "Entering" else "Exiting"} action $name with state:"
 
+      println(message)
+      debugMentions(0, None, state.allMentions)
     }
 
     println(message)
-    debugMentions(mentions)
+    debugMentions(0, None, mentions)
     debugState(state)
     println()
   }
@@ -54,13 +66,9 @@ class ActionMirror(actions: Actions) {
       sys.error(s"invalid action '$name'")
     }
     (mentions: Seq[Mention], state: State) => {
-      val keyCount = state.lookUpTable.keys.size
-      val valueCount = state.lookUpTable.values.size
-      val cellCount = state.lookUpTable.values.map(_.length).sum
-
-      debug(s"INFO: Entering action $name with ${mentions.length} mentions:", mentions, state)
+      debug(name, true, mentions, state)
       val result = function(mentions, state)
-      debug(s"INFO: Exiting action $name with ${mentions.length} mentions:", mentions, state)
+      debug(name, false, result, state)
       result
     }
   }
