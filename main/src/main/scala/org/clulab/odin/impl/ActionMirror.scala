@@ -9,6 +9,29 @@ class ActionMirror(actions: Actions) {
 
   private val instanceMirror = runtimeMirror(actions.getClass.getClassLoader).reflect(actions)
 
+  def debug(message: String, mentions: Seq[Mention], state: State): Unit = {
+
+    def debugMentions(mentions: Seq[Mention]): Unit = {
+      mentions.foreach { mention =>
+        val hash = mention.hashCode
+        val foundBy = mention.foundBy
+        val label = mention.label.mkString(" ")
+        val arguments = mention.arguments.keys.toSeq.sorted.mkString(" ")
+
+        println(s"\thash: $hash, foundBy: $foundBy, label: $label, arguments: $arguments")
+      }
+    }
+
+    def debugState(state: State): Unit = {
+
+    }
+
+    println(message)
+    debugMentions(mentions)
+    debugState(state)
+    println()
+  }
+
   def reflect(name: String): Action = {
     val methodSymbol = instanceMirror.symbol.typeSignature.member(TermName(name)).asMethod
     val action = instanceMirror.reflectMethod(methodSymbol)
@@ -35,11 +58,9 @@ class ActionMirror(actions: Actions) {
       val valueCount = state.lookUpTable.values.size
       val cellCount = state.lookUpTable.values.map(_.length).sum
 
-//      if (mentions.isEmpty)
-        println(s"WARNING: Entering $name with ${mentions.length}.")
+      debug(s"INFO: Entering action $name with ${mentions.length} mentions:", mentions, state)
       val result = function(mentions, state)
-//      if (mentions.nonEmpty && result.isEmpty)
-        println(s"WARNING: Exiting $name with ${mentions.length}.")
+      debug(s"INFO: Exiting action $name with ${mentions.length} mentions:", mentions, state)
       result
     }
   }
