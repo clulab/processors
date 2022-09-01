@@ -12,8 +12,7 @@ import org.clulab.struct.IntHashTrie
   * Case insensitive matching is performed by one matcher and case sensitive by the other.
   * Each can account for multiple KBs.  Each [[org.clulab.struct.IntHashTrie IntHashTrie]]
   * stores Ints which indicate which of the KBs an entry comes from.  The KBs, either from
-  * the kbs or overrideKBs in
-  * [[[org.clulab.sequences.LexiconNER$#apply(kbs:Seq[String],overrideKBs:Option[Seq[String]],caseInsensitiveMatchings:Seq[Boolean],entityValidator:org\.clulab\.struct\.EntityValidator,lexicalVariationEngine:org\.clulab\.sequences\.LexicalVariations,useLemmasForMatching:Boolean,defaultCaseInsensitive:Boolean):org\.clulab\.sequences\.LexiconNER* LexiconNER.apply]]],
+  * the kbs or overrideKBs in the apply methods of [[org.clulab.sequences.LexiconNER\$ LexiconNER]],
   * have priorities, and the one with highest priority is recorded.
   *
   * @param caseInsensitiveMatcher A map of tries to be matched for for case insensitive KBs

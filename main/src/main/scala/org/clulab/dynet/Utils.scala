@@ -870,6 +870,7 @@ object Utils {
 
   def mkX2iFilename(baseFilename: String): String = baseFilename + ".x2i"
 
+  @annotation.nowarn("cat=deprecation")
   def mkWordVocab(w2v: SanitizedWordEmbeddingMap): Map[String, Int] = {
     val commonWords = new ListBuffer[String]
     commonWords += Utils.UNK_WORD // the word at position 0 is reserved for unknown words
@@ -880,6 +881,7 @@ object Utils {
     w2i
   }
 
+  @annotation.nowarn("cat=deprecation")
   def initializeEmbeddings(w2v: SanitizedWordEmbeddingMap, w2i: Map[String, Int], lookupParameters: LookupParameter): Unit = {
     logger.debug("Initializing DyNet embedding parameters...")
     for (word <- w2v.matrix.keySet) {
