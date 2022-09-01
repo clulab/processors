@@ -14,6 +14,7 @@ object ThreadUtils {
     // There seems to be no way other than code generation to avoid the deprecation warning.
     // At least it is limited to one location by being contained in a library method.
     // val forkJoinPool = new JavaForkJoinPool(threads) // For Scala 2.12
+    @annotation.nowarn("cat=deprecation")
     val forkJoinPool = new ScalaForkJoinPool(threads)
     val forkJoinTaskSupport = new ForkJoinTaskSupport(forkJoinPool)
 
