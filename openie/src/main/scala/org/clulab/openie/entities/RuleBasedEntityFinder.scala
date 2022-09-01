@@ -11,7 +11,7 @@ import scala.annotation.tailrec
 
 
 /**
-  * Finds Open IE-style entities from a [[org.clulab.processors.Document]].
+  * Finds Open IE-style entities from a org.clulab.processors.Document
   *
   * @param entityEngine an ExtractorEngine for entities.  Runs AFTER avoidEngine.
   * @param avoidEngine an ExtractorEngine for tokens/spans to be avoided. Runs BEFORE entityEngine.
@@ -54,7 +54,7 @@ class RuleBasedEntityFinder(
   /**
     * Performs rule-based entity extraction with selective expansion along syntactic dependencies.
     * For filtering, see filterEntities.
-    * @param doc a [[org.clulab.processors.Document]]
+    * @param doc a org.clulab.processors.Document
     */
   def extract(doc: Document): Seq[Mention] = {
     // avoid refs, etc.
