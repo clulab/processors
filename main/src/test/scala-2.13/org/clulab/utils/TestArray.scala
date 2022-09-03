@@ -1,11 +1,9 @@
 package org.clulab.utils
 
-import scala.collection.{immutable, mutable}
-import org.clulab.scala.WrappedArray
+import scala.collection.immutable.{ArraySeq => ImmutableArraySeq}
+import scala.collection.mutable.{ArraySeq => MutableArraySeq}
 
 class TestArray extends Test {
-
-  behavior of "Arrays"
 
   def processSeq(seq: Seq[Int]): Seq[Int] = seq
   def processIndexedSeq(indexedSeq: IndexedSeq[Int]): IndexedSeq[Int] = indexedSeq
@@ -18,94 +16,163 @@ class TestArray extends Test {
 
   // new ArrayOps(xs).toIndexedSeq
   // immutable.ArraySeq.unsafeWrapArray(Array.copyOf(xs, xs.length))
-  // This means that a copy is produced.  We should instead way
+  // This means that a copy is produced.  We should instead say
   // ArraySeq.unsafeWrapArray(array) so that no copy is produced.
 
-  it should "work as expected with default conversions" in {
-    val array = Array(1, 2, 3, 4, 5)
+  val standard = "work as expected without import"
+  val custom = "work as expected with import"
+  val array = Array(1, 2, 3, 4, 5)
+
+  behavior of "Array.toSeq"
+  it should standard in {
+    // @`inline` final def ArrayOps.toSeq: immutable.Seq[A] = toIndexedSeq
+    // def ArrayOps.toIndexedSeq: immutable.IndexedSeq[A] =
+    //   immutable.ArraySeq.unsafeWrapArray(Array.copyOf(xs, xs.length))
     val seq = array.toSeq // calls new ArrayOps(xs).toIndexedSeq
-    val indexedSeq = array.toIndexedSeq // calls new ArrayOps(xs).toIndexedSeq
-    val mutableArraySeq = mutable.ArraySeq.from(array)
-    val immutableArraySeq = immutable.ArraySeq.unsafeWrapArray(array) // quick
-    val autoCopySeq1 = processSeq(array) // calls new ArrayOps(xs).toIndexedSeq
-    val autoCopySeq2 = processSeq(immutable.ArraySeq.unsafeWrapArray(array))
-    val autoCopyIndexedSeq1 = processIndexedSeq(array)
-    val autoCopyIndexedSeq2 = processIndexedSeq(immutable.ArraySeq.unsafeWrapArray(array))
-
-    seq should (contain theSameElementsInOrderAs array)
-    indexedSeq should (contain theSameElementsInOrderAs array)
-    mutableArraySeq should (contain theSameElementsInOrderAs array)
-    immutableArraySeq should (contain theSameElementsInOrderAs array)
-    autoCopySeq1 should (contain theSameElementsInOrderAs array)
-    autoCopySeq2 should (contain theSameElementsInOrderAs array)
-    autoCopyIndexedSeq1 should (contain theSameElementsInOrderAs array)
-    autoCopyIndexedSeq1 should (contain theSameElementsInOrderAs array)
-
-    array(1) = 7
-
-    seq should not(contain theSameElementsInOrderAs array)
-    indexedSeq should not(contain theSameElementsInOrderAs array)
-    mutableArraySeq should not(contain theSameElementsInOrderAs array)
-    immutableArraySeq should (contain theSameElementsInOrderAs array) // should!
-    autoCopySeq1 should not (contain theSameElementsInOrderAs array)
-    autoCopySeq2 should (contain theSameElementsInOrderAs array) // should!
-    autoCopyIndexedSeq1 should not (contain theSameElementsInOrderAs array)
-    autoCopyIndexedSeq2 should (contain theSameElementsInOrderAs array) // should!
-
-    val wrapped2a: Seq[Int] = array // processSeq(wrapped2)
-    val wrapped2b: IndexedSeq[Int] = array // processIndexedSeq(wrapped2)
-
-    wrapped2a.toArray.eq(array) should not be (true)
-    wrapped2b.toArray.eq(array) should not be (true)
-
-    val wrapped3 = immutable.ArraySeq.unsafeWrapArray(array)
-    val wrapped3a = wrapped3.unsafeArray
-
-    wrapped3a.eq(array) should be (true)
+    seq shouldNot be theSameInstanceAs array
+    seq shouldBe a [ImmutableArraySeq[_]]
+    seq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
+  }
+  it should custom in {
+    // Call is same as above.
+    import org.clulab.scala.WrappedArray._
+    val seq = array.toSeq
+    seq shouldNot be theSameInstanceAs array
+    seq shouldBe a [ImmutableArraySeq[_]]
+    seq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
   }
 
-  it should "work as expected with custom conversions" in {
-    import org.clulab.scala.WrappedArray._ // add custom conversions
-
-    val array = Array(1, 2, 3, 4, 5)
-    val seq = array.toSeq // calls new ArrayOps(xs).toIndexedSeq
+  behavior of "Array.toIndexedSeq"
+  it should standard in {
+    // def ArrayOps.toIndexedSeq: immutable.IndexedSeq[A] =
+    //   immutable.ArraySeq.unsafeWrapArray(Array.copyOf(xs, xs.length))
+    val indexedSeq = array.toIndexedSeq
+    indexedSeq shouldNot be theSameInstanceAs array
+    indexedSeq shouldBe a [ImmutableArraySeq[_]]
+    indexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
+  }
+  it should custom in {
+    // Call is same as above.
+    import org.clulab.scala.WrappedArray._
     val indexedSeq = array.toIndexedSeq // calls new ArrayOps(xs).toIndexedSeq
-    val mutableArraySeq = mutable.ArraySeq.from(array)
-    val immutableArraySeq = immutable.ArraySeq.unsafeWrapArray(array) // quick
-    val autoCopySeq1 = processSeq(array) // calls new ArrayOps(xs).toIndexedSeq
-    val autoCopySeq2 = processSeq(immutable.ArraySeq.unsafeWrapArray(array))
-    val autoCopyIndexedSeq1 = processIndexedSeq(array)
-    val autoCopyIndexedSeq2 = processIndexedSeq(immutable.ArraySeq.unsafeWrapArray(array))
+    indexedSeq shouldNot be theSameInstanceAs array
+    indexedSeq shouldBe a [ImmutableArraySeq[_]]
+    indexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
+  }
 
-    seq should (contain theSameElementsInOrderAs array)
-    indexedSeq should (contain theSameElementsInOrderAs array)
-    mutableArraySeq should (contain theSameElementsInOrderAs array)
-    immutableArraySeq should (contain theSameElementsInOrderAs array)
-    autoCopySeq1 should (contain theSameElementsInOrderAs array)
-    autoCopySeq2 should (contain theSameElementsInOrderAs array)
-    autoCopyIndexedSeq1 should (contain theSameElementsInOrderAs array)
-    autoCopyIndexedSeq1 should (contain theSameElementsInOrderAs array)
+  behavior of "mutable.ArraySeq.from"
+  it should standard in {
+    val mutableArraySeqArray = MutableArraySeq.from(array).array
+    mutableArraySeqArray shouldNot be theSameInstanceAs array
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    val mutableArraySeqArray = MutableArraySeq.from(array).array
+    mutableArraySeqArray shouldNot be theSameInstanceAs array
+  }
 
-    array(1) = 7
+  behavior of "immutable.ArraySeq.unsafeWrapArray"
+  it should standard in {
+    val immutableArraySeqArray = ImmutableArraySeq.unsafeWrapArray(array).unsafeArray
+    immutableArraySeqArray should be theSameInstanceAs array
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    val immutableArraySeqArray = ImmutableArraySeq.unsafeWrapArray(array).unsafeArray
+    immutableArraySeqArray should be theSameInstanceAs array
+  }
 
-    seq should not(contain theSameElementsInOrderAs array)
-    indexedSeq should not(contain theSameElementsInOrderAs array)
-    mutableArraySeq should not(contain theSameElementsInOrderAs array)
-    immutableArraySeq should (contain theSameElementsInOrderAs array) // should!
-    autoCopySeq1 should (contain theSameElementsInOrderAs array) // should!
-    autoCopySeq2 should (contain theSameElementsInOrderAs array) // should!
-    autoCopyIndexedSeq1 should (contain theSameElementsInOrderAs array) // should!
-    autoCopyIndexedSeq2 should (contain theSameElementsInOrderAs array) // should!
+  behavior of "processSeq(array)"
+  it should standard in {
+    // implicit def LowPriorityImplicits2.copyArrayToImmutableIndexedSeq[T](xs: Array[T]): IndexedSeq[T] =
+    //    if (xs eq null) null
+    //    else new ArrayOps(xs).toIndexedSeq
+    val autoCopySeq = processSeq(array)
+    autoCopySeq shouldNot be theSameInstanceAs array
+    autoCopySeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopySeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
+  }
+  it should custom in {
+    // implicit def WrappedArray.copyArrayToImmutableIndexedSeq[T](xs: Array[T]): IndexedSeq[T]
+    import org.clulab.scala.WrappedArray._
+    val autoCopySeq = processSeq(array)
+    autoCopySeq shouldNot be theSameInstanceAs array
+    autoCopySeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopySeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
 
-    val wrapped2a: Seq[Int] = array // processSeq(wrapped2)
-    val wrapped2b: IndexedSeq[Int] = array // processIndexedSeq(wrapped2)
+  behavior of "processSeq(ImmutableArraySeq.unsafeWrapArray)"
+  it should standard in {
+    val autoCopySeq = processSeq(ImmutableArraySeq.unsafeWrapArray(array))
+    autoCopySeq shouldNot be theSameInstanceAs array
+    autoCopySeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopySeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    val autoCopySeq = processSeq(ImmutableArraySeq.unsafeWrapArray(array))
+    autoCopySeq shouldNot be theSameInstanceAs array
+    autoCopySeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopySeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
 
-    wrapped2a.toArray.eq(array) should not be (true)
-    wrapped2b.toArray.eq(array) should not be (true)
+  behavior of "processIndexedSeq(array)"
+  it should standard in {
+    val autoCopyIndexedSeq = processIndexedSeq(array)
+    autoCopyIndexedSeq shouldNot be theSameInstanceAs array
+    autoCopyIndexedSeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopyIndexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    val autoCopyIndexedSeq = processIndexedSeq(array)
+    autoCopyIndexedSeq shouldNot be theSameInstanceAs array
+    autoCopyIndexedSeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopyIndexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
 
-    val wrapped3 = immutable.ArraySeq.unsafeWrapArray(array)
-    val wrapped3a = wrapped3.unsafeArray
+  behavior of "processIndexedSeq(ImmutableArraySeq.unsafeWrapArray)"
+  it should standard in {
+    val autoCopyIndexedSeq = processIndexedSeq(ImmutableArraySeq.unsafeWrapArray(array))
+    autoCopyIndexedSeq shouldNot be theSameInstanceAs array
+    autoCopyIndexedSeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopyIndexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    val autoCopyIndexedSeq = processIndexedSeq(ImmutableArraySeq.unsafeWrapArray(array))
+    autoCopyIndexedSeq shouldNot be theSameInstanceAs array
+    autoCopyIndexedSeq shouldBe a [ImmutableArraySeq[_]]
+    autoCopyIndexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
 
-    wrapped3a.eq(array) should be(true)
+  behavior of ":Seq[].toArray"
+  it should standard in {
+    val seq: Seq[Int] = array
+    seq.toArray shouldNot be theSameInstanceAs array
+    seq shouldBe a [ImmutableArraySeq[_]]
+    seq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    val seq: Seq[Int] = array
+    seq.toArray shouldNot be theSameInstanceAs array
+    seq shouldBe a [ImmutableArraySeq[_]]
+    seq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
+
+  behavior of ":IndexedSeq[].toArray"
+  it should standard in {
+    val indexedSeq: IndexedSeq[Int] = array
+    indexedSeq.toArray shouldNot be theSameInstanceAs array
+    indexedSeq shouldBe a [ImmutableArraySeq[_]]
+    indexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    val indexedSeq: IndexedSeq[Int] = array
+    indexedSeq.toArray shouldNot be theSameInstanceAs array
+    indexedSeq shouldBe a [ImmutableArraySeq[_]]
+    indexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
   }
 }
