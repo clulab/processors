@@ -28,7 +28,7 @@ class TestArray extends Test {
     // @`inline` final def ArrayOps.toSeq: immutable.Seq[A] = toIndexedSeq
     // def ArrayOps.toIndexedSeq: immutable.IndexedSeq[A] =
     //   immutable.ArraySeq.unsafeWrapArray(Array.copyOf(xs, xs.length))
-    val seq = array.toSeq // calls new ArrayOps(xs).toIndexedSeq
+    val seq = array.toSeq
     seq shouldNot be theSameInstanceAs array
     seq shouldBe a [ImmutableArraySeq[_]]
     seq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
@@ -54,7 +54,7 @@ class TestArray extends Test {
   it should custom in {
     // Call is same as above.
     import org.clulab.scala.WrappedArray._
-    val indexedSeq = array.toIndexedSeq // calls new ArrayOps(xs).toIndexedSeq
+    val indexedSeq = array.toIndexedSeq
     indexedSeq shouldNot be theSameInstanceAs array
     indexedSeq shouldBe a [ImmutableArraySeq[_]]
     indexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray shouldNot be theSameInstanceAs array
@@ -84,6 +84,7 @@ class TestArray extends Test {
 
   behavior of "processSeq(array)"
   it should standard in {
+    @annotation.nowarn("cat=deprecation")
     // implicit def LowPriorityImplicits2.copyArrayToImmutableIndexedSeq[T](xs: Array[T]): IndexedSeq[T] =
     //    if (xs eq null) null
     //    else new ArrayOps(xs).toIndexedSeq
@@ -118,6 +119,7 @@ class TestArray extends Test {
 
   behavior of "processIndexedSeq(array)"
   it should standard in {
+    @annotation.nowarn("cat=deprecation")
     val autoCopyIndexedSeq = processIndexedSeq(array)
     autoCopyIndexedSeq shouldNot be theSameInstanceAs array
     autoCopyIndexedSeq shouldBe a [ImmutableArraySeq[_]]
@@ -146,8 +148,9 @@ class TestArray extends Test {
     autoCopyIndexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
   }
 
-  behavior of ":Seq[].toArray"
+  behavior of ":Seq[]"
   it should standard in {
+    @annotation.nowarn("cat=deprecation")
     val seq: Seq[Int] = array
     seq.toArray shouldNot be theSameInstanceAs array
     seq shouldBe a [ImmutableArraySeq[_]]
@@ -161,8 +164,9 @@ class TestArray extends Test {
     seq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
   }
 
-  behavior of ":IndexedSeq[].toArray"
+  behavior of ":IndexedSeq[]"
   it should standard in {
+    @annotation.nowarn("cat=deprecation")
     val indexedSeq: IndexedSeq[Int] = array
     indexedSeq.toArray shouldNot be theSameInstanceAs array
     indexedSeq shouldBe a [ImmutableArraySeq[_]]
@@ -174,5 +178,39 @@ class TestArray extends Test {
     indexedSeq.toArray shouldNot be theSameInstanceAs array
     indexedSeq shouldBe a [ImmutableArraySeq[_]]
     indexedSeq.asInstanceOf[ImmutableArraySeq[Int]].unsafeArray should be theSameInstanceAs array
+  }
+
+  behavior of "foreach"
+  it should standard in {
+    def foreach[T](array: Array[T]): Unit = {
+      array.foreach { each => () }
+    }
+
+    foreach(array)
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    def foreach[T](array: Array[T]): Unit = {
+      array.foreach { each => () }
+    }
+
+    foreach(array)
+  }
+
+  behavior of "zip"
+  it should standard in {
+    def zip[T](array: Array[T]): Unit = {
+      array zip array
+    }
+
+    zip(array)
+  }
+  it should custom in {
+    import org.clulab.scala.WrappedArray._
+    def zip[T](array: Array[T]): Unit = {
+      array zip array
+    }
+
+    zip(array)
   }
 }
