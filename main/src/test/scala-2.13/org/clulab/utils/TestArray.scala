@@ -200,7 +200,7 @@ class TestArray extends Test {
   behavior of "zip"
   it should standard in {
     def zip[T](array: Array[T]): Unit = {
-      array zip array
+      array.zip(array)
     }
 
     zip(array)
@@ -208,7 +208,7 @@ class TestArray extends Test {
   it should custom in {
     import org.clulab.scala.WrappedArray._
     def zip[T](array: Array[T]): Unit = {
-      array zip array
+      array.zip(array)
     }
 
     zip(array)
