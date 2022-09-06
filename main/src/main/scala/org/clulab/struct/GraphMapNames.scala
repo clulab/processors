@@ -1,6 +1,6 @@
 package org.clulab.struct
 
-object GraphMapNames {
+trait GraphMapNames {
   val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
   val UNIVERSAL_ENHANCED = "universal-enhanced" // collapsed (or enhanced) Universal dependencies
   val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies
