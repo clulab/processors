@@ -12,7 +12,7 @@ object WrappedArray {
   // "Note that implicit conversions are not applicable because they are ambiguous:".
   // foreach and zip seem to need this
   def genericWrapArray[T](xs: Array[T]): MutableArraySeq[T] = {
-    println("This shouldn't happen!")
+    // println("This shouldn't happen!")
     Predef.genericWrapArray(xs)
   }
 
@@ -21,12 +21,12 @@ object WrappedArray {
   // This causes a problem with Array.indices
   // foreach and zip seem to need this
   def genericArrayOps[T](xs: Array[T]): ArrayOps[T] = {
-    println("This shouldn't happen!")
+    // println("This shouldn't happen!")
     Predef.genericArrayOps(xs)
   }
 
   implicit def copyArrayToImmutableIndexedSeq[T](xs: Array[T]): ImmutableIndexedSeq[T] = {
-    println("Custom conversion!")
+    // println("Custom conversion!")
     if (xs eq null) null
     else ImmutableArraySeq.unsafeWrapArray(xs)
   }

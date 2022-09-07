@@ -19,11 +19,11 @@ import sbt.Tests.SubProcess
 
 Test / unmanagedSourceDirectories ++= {
   val sharedSourceDir = (ThisBuild / baseDirectory).value / "main/src/test"
-  println(s"sharedSourceDir: $sharedSourceDir")
+  // println(s"sharedSourceDir: $sharedSourceDir")
   val additionalDirs = CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, 11) | (2, 12)) => Seq(sharedSourceDir / "scala-2.11_2.12")
     case _ => Seq.empty
   }
-  println(s"additionalDirs: $additionalDirs")
+  // println(s"additionalDirs: $additionalDirs")
   additionalDirs
 }
