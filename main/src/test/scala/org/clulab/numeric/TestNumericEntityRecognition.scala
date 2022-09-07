@@ -71,6 +71,11 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
      ensure("It was 2000, May", Interval(2, 5), "DATE", "2000-05-XX")
    }
 
+  // this is to ensure the measurement-3 rule does not capture a preceding year as a value that shares a unit with another value (as in "yields were set to 6.4, 7.9, and 7.1 t/ha")
+  it should "not include a year as as a conjoined value" in {
+    ensure("average yield reached 72 t ha-1 in 1999 and 82 t ha-1 in 2000", Interval(7, 8), "DATE", "1999-XX-XX")
+  }
+
   it should "recognize numeric dates" in {
     // these should be captured by rule date-yyyy-mm-dd
     ensure("It is 2000:05:12", Interval(2, 3), "DATE", "2000-05-12")

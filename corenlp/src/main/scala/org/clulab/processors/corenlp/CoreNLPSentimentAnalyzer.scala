@@ -19,7 +19,7 @@ object CoreNLPSentimentAnalyzer {
   private lazy val proc = new CoreNLPProcessor()
   private lazy val sentimentAnalyzer = mkSentimentAnalyzer
 
-  /** Get a sentiment score from [[org.clulab.processors.Document Document]] */
+  /** Get a sentiment score from org.clulab.processors.Document */
   def sentiment(doc: Document): Seq[Int] = for {
     s <- doc.sentences
   } yield sentiment(s)
@@ -43,7 +43,7 @@ object CoreNLPSentimentAnalyzer {
     doc
   }
 
-  /** Get a sentiment score for a [[org.clulab.processors.Sentence Sentence]] */
+  /** Get a sentiment score for a org.clulab.processors.Sentence */
   def sentiment(s: Sentence): Int = {
 
     val a = sentenceToAnnotation(s)
@@ -62,7 +62,7 @@ object CoreNLPSentimentAnalyzer {
   }
 
   /**
-   * Get a Sentiment score for each [[org.clulab.processors.Sentence Sentence]] in a span of text
+   * Get a Sentiment score for each org.clulab.processors.Sentence in a span of text
    * @param text a String
    */
   def sentiment(text: String): Seq[Int] = {

@@ -166,6 +166,10 @@ class TestLexiconNER extends FatdynetTest {
   val overrideKBs = Seq(
     "org/clulab/processors/overrideKB.tsv"
   )
+  val prioritizedOverrideKBs =
+      Seq("org/clulab/processors/overrideKB0.tsv") ++
+      overrideKBs ++
+      Seq("org/clulab/processors/overrideKB2.tsv")
 
   behavior of "NERs"
 
@@ -277,6 +281,38 @@ class TestLexiconNER extends FatdynetTest {
       "O",   // ivy
       "O"    // .
     ), entityValidator, useLemmas, caseInsensitive)
+  }
+
+  it should "prioritize standard KBs as expected" in {
+    val entityValidator = new TrueEntityValidator()
+    val useLemmas = true
+    val caseInsensitive = true
+    val text = "this abc that"
+
+    testKBsAndNers(kbs, Seq.empty, text, Seq(
+      "O",   // this
+      "B-A", // abc, use the first standard KB
+      "O"    // that
+    ), entityValidator, useLemmas, caseInsensitive)
+  }
+
+  it should "prioritize override KBs as expected" in {
+    val entityValidator = new TrueEntityValidator()
+    val useLemmas = true
+    val caseInsensitive = true
+    val text = "this abc that"
+
+    def test(overrideKBs: Seq[String]): Unit = {
+      testKBsAndNers(kbs, overrideKBs, text, Seq(
+        "O",   // this
+        "B-A", // abc, use the highest priority standard KB
+        "O"    // that
+      ), entityValidator, useLemmas, caseInsensitive)
+    }
+
+    prioritizedOverrideKBs.permutations.foreach { permutatedOverrideKBs =>
+      test(permutatedOverrideKBs)
+    }
   }
 
   it should "support case changes" in {

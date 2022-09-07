@@ -23,7 +23,7 @@ ThisBuild / organization := "org.clulab"
 ThisBuild / organizationHomepage := Some(url("http://clulab.org/"))
 ThisBuild / organizationName := "Computational Language Understanding (CLU) Lab"
 // The sonatype plugin seems to overwrite these two values.
-ThisBuild / pomIncludeRepository := { _ => false }
+// ThisBuild / pomIncludeRepository := { _ => false } // no longer applicable in sbt 1.6.2+
 ThisBuild / pomPostProcess := {
   val logback = DependencyId("ch.qos.logback", "logback-classic")
   val rule = DependencyFilter { dependencyId =>
@@ -32,7 +32,7 @@ ThisBuild / pomPostProcess := {
 
   (node: Node) => new RuleTransformer(rule).transform(node).head
 }
-ThisBuild / publishMavenStyle := true
+// ThisBuild / publishMavenStyle := true // no longer applicable in sbt 1.6.2+
 ThisBuild / publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
