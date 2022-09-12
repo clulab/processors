@@ -116,7 +116,7 @@ trait ResourceKbSource {
   def getLines(resourceName: String): Iterable[String] = {
     var lines: List[String] = Nil
 
-    consume(resourceName, mkConsumer { line: String => lines = line :: lines } )
+    consume(resourceName, mkConsumer((line: String) => lines = line :: lines))
     lines.reverse
   }
 }
@@ -127,7 +127,7 @@ class ResourceStandardKbSource(resourceName: String, caseInsensitiveMatching: Bo
   def getLabel: String = getLabel(resourceName)
 
   def withTokens(f: Array[String] => Unit): Unit = {
-    consume(resourceName, mkConsumer { line: String => processLine(line, f) })
+    consume(resourceName, mkConsumer((line: String) => processLine(line, f)))
   }
 
   def getLines: Iterable[String] = getLines(resourceName)
@@ -155,7 +155,7 @@ trait FileKbSource {
   def getLines(resourceName: String, baseDir: File): Iterable[String] = {
     var lines: List[String] = Nil
 
-    consume(resourceName, baseDir, mkConsumer { line: String => lines = line :: lines } )
+    consume(resourceName, baseDir, mkConsumer((line: String) => lines = line :: lines))
     lines.reverse
   }
 }
@@ -166,7 +166,7 @@ class FileStandardKbSource(resourceName: String, caseInsensitiveMatching: Boolea
   def getLabel: String = getLabel(resourceName)
 
   def withTokens(f: Array[String] => Unit): Unit = {
-    consume(resourceName, baseDir, mkConsumer { line: String => processLine(line, f) })
+    consume(resourceName, baseDir, mkConsumer((line: String) => processLine(line, f)))
   }
 
   def getLines: Iterable[String] = getLines(resourceName, baseDir)
@@ -207,7 +207,7 @@ abstract class OverrideKbSource() extends KbSource {
 class ResourceOverrideKbSource(resourceName: String) extends OverrideKbSource() with ResourceKbSource {
 
   def withLabelAndTokens(f: (String, Array[String]) => Unit): Unit = {
-    consume(resourceName, mkConsumer { line: String => processLine(line, f) })
+    consume(resourceName, mkConsumer((line: String) => processLine(line, f)))
   }
 
   def getLines: Iterable[String] = getLines(resourceName)
@@ -216,7 +216,7 @@ class ResourceOverrideKbSource(resourceName: String) extends OverrideKbSource() 
 class FileOverrideKbSource(resourceName: String, baseDir: File) extends OverrideKbSource() with FileKbSource {
 
   def withLabelAndTokens(f: (String, Array[String]) => Unit): Unit = {
-    consume(resourceName, baseDir, mkConsumer { line: String => processLine(line, f) })
+    consume(resourceName, baseDir, mkConsumer((line: String) => processLine(line, f)))
   }
 
   def getLines: Iterable[String] = getLines(resourceName, baseDir)
@@ -335,7 +335,7 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
       val caseInsensitive = caseInsensitiveMap(label)
       val matcher = newMatcher(label, caseInsensitive)
 
-      standardKbSource.withTokens { tokens: Array[String] =>
+      standardKbSource.withTokens { (tokens: Array[String]) =>
         buildState.addWithLexicalVariations(matcher, tokens)
       }
       logger.info(s"Loaded matcher for label $label. The size of the first layer is ${matcher.entriesSize}.")
@@ -443,7 +443,7 @@ class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder()
       val buildState = if (caseInsensitive) caseInsensitiveBuildState else caseSensitiveBuildState
       val beforeCount = buildState.getCount
 
-      standardKbSource.withTokens { tokens: Array[String] =>
+      standardKbSource.withTokens { (tokens: Array[String]) =>
         buildState.addWithLexicalVariations(label, tokens, caseInsensitive, overwrite = false)
       }
 

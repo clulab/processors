@@ -9,12 +9,20 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 
 libraryDependencies ++= {
-  val json4sVersion = "3.5.5" // 3.5.5 is lowest supporting Scala 2.13
+  val json4sVersion = "4.0.3" // 3.5.5 is lowest supporting Scala 2.13, 4.0.2 is first to support Scala 3
   // See https://index.scala-lang.org/scala/scala-parallel-collections/scala-parallel-collections.
   val parallelLibraries = {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, major)) if major <= 12 => Seq()
       case _ => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4") // up to 1.0.4
+    }
+  }
+  val scala2Libraries = {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq(
+        "org.scala-lang"              % "scala-reflect"            % scalaVersion.value
+      )
+      case _ => Seq.empty
     }
   }
 
@@ -25,10 +33,9 @@ libraryDependencies ++= {
     "jline"                       % "jline"                    % "2.12.1",
     "org.json4s"                 %% "json4s-core"              % json4sVersion,
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion,
-    "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.1.2",
     "com.io7m.xom"                % "xom"                      % "1.2.10",
     // for machine learning
-    "org.clulab"                 %% "fatdynet"                 % "0.4.4",
+    "org.clulab"                 %% "fatdynet"                 % "0.4.5-SNAPSHOT",
     "de.bwaldvogel"               % "liblinear"                % "2.30",
     "tw.edu.ntu.csie"             % "libsvm"                   % "3.23",
     // NLP tools used by CluProcessor
@@ -43,7 +50,7 @@ libraryDependencies ++= {
     // Local logging is provided here and not published.
     "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // up to 1.2.8; less than 1.2 is vulnerable
     // testing
-    "org.scalatest"              %% "scalatest"                % "3.0.9"  % Test,
+    "org.scalatest"              %% "scalatest"                % "3.2.10"  % Test,
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
@@ -51,13 +58,12 @@ libraryDependencies ++= {
     "com.esotericsoftware"        % "kryo"                     % "5.1.1",
 
     // for odin
-    "org.apache.commons"      % "commons-text"             % "1.1",
-    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
-    "org.scala-lang"          % "scala-reflect"            % scalaVersion.value,
+    "org.scala-lang.modules"     %% "scala-parser-combinators" % "2.1.1",
+    "org.apache.commons"          % "commons-text"             % "1.1",
     // See https://docs.scala-lang.org/overviews/core/collections-migration-213.html.
-    "org.scala-lang.modules" %% "scala-collection-compat"  % "2.6.0",
-    "org.yaml"                % "snakeyaml"                % "1.14",
+    "org.scala-lang.modules"     %% "scala-collection-compat"  % "2.6.0",
+    "org.yaml"                    % "snakeyaml"                % "1.14",
     // progress bar for training
-    "me.tongfei"              % "progressbar"              % "0.9.3"
-  ) ++ parallelLibraries
+    "me.tongfei"                  % "progressbar"              % "0.9.3"
+  ) ++ parallelLibraries ++ scala2Libraries
 }

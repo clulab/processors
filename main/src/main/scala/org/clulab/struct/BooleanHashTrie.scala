@@ -109,7 +109,7 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
       stringBuilder.append("*")
       label.foreach(stringBuilder.append)
     }
-    children.foreach { children: ListBuffer[BooleanTrieNode] =>
+    children.foreach { (children: ListBuffer[BooleanTrieNode]) =>
       stringBuilder.append(" (")
       children.zipWithIndex.foreach { case (child: BooleanTrieNode, index: Int) =>
         if (index > 0)

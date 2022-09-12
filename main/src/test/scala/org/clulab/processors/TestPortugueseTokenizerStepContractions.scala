@@ -1,7 +1,8 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.tokenizer.{TokenizerStepPortugueseContractions, RawToken}
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.processors.clu.tokenizer.{RawToken, TokenizerStepPortugueseContractions}
+import org.clulab.utils.Test
+
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -9,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
   * User: gcgbarbosa
   * Date: 8/1/18
   */
-class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
+class TestPortugueseTokenizerStepContractions extends Test {
   "the step contratctions tokenizer component" should "expand contractions correctly" in {
     var sents = getContractedForm("fuja dela")
     sents.size should be (3)

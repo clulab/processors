@@ -16,7 +16,7 @@ import org.json4s.jackson.prettyJson
 /** JSON serialization utilities */
 object JSONSerializer {
 
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   def jsonAST(s: String): JValue = parse(s)
 
@@ -27,7 +27,7 @@ object JSONSerializer {
     (jValue \ DOCUMENT_ATTACHMENTS_KEY) match {
       case jObject: JObject =>
         val keys = jObject.values.keys
-        keys.foreach { key: String =>
+        keys.foreach { (key: String) =>
           (jObject \ key) match {
             case jObject: JObject =>
               val documentAttachmentBuilderFromJsonClassName = (jObject \ DOCUMENT_ATTACHMENTS_BUILDER_KEY).extract[String]

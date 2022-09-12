@@ -55,6 +55,7 @@ object JSONSerializer {
     * A map from doc reference to document json is used to avoid redundancies and reduce file size during serialization.
     * */
   def toMention(mjson: JValue, docMap: Map[String, Document]): Mention = {
+    implicit val formats: DefaultFormats.type = DefaultFormats
 
     val tokInterval = Interval(
       (mjson \ "tokenInterval" \ "start").extract[Int],

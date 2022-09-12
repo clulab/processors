@@ -4,10 +4,10 @@ import org.clulab.odin.{ExtractorEngine, TextBoundMention}
 import org.clulab.struct.Interval
 import org.clulab.openie.IETestUtils._
 import org.clulab.openie.ResourceUtils
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
 
-class TestRuleBasedEntityFinder extends FlatSpec with Matchers {
+class TestRuleBasedEntityFinder extends Test {
 
   "Coordinated entities" should "be split into separate entities" in {
 

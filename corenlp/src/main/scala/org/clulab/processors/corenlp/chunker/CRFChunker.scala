@@ -1,11 +1,13 @@
 package org.clulab.processors.corenlp.chunker
 
-import org.clulab.scala.WrappedArray._
-import java.io.{ File, InputStream }
-import java.util.Properties
-import scala.jdk.CollectionConverters._
 import edu.stanford.nlp.ie.crf.CRFClassifier
 import edu.stanford.nlp.ling.{ CoreLabel, CoreAnnotations }
+import org.clulab.scala.WrappedArray._
+
+import java.io.{ File, InputStream }
+import java.util.Properties
+
+import scala.jdk.CollectionConverters._
 
 class CRFChunker(crf: CRFClassifier[CoreLabel]) {
 

@@ -1,18 +1,17 @@
 package org.clulab.learning
 
-import java.io.File
-
-import org.scalatest._
 import de.bwaldvogel.liblinear._
-
 import org.clulab.TestUtils._
+import org.clulab.utils.Test
+
+import java.io.File
 
 /**
   * Adapted from TestLiblinearClassifier
   * User: mihais, danebell
   * Date: 11/20/17
   */
-class TestLiblinearRegression extends FlatSpec with Matchers {
+class TestLiblinearRegression extends Test {
 
   "LiblinearRegression" should "work with RVFRegDataset" in {
     val regression = new LiblinearRegression[String](bias = false)

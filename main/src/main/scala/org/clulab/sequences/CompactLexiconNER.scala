@@ -258,7 +258,7 @@ class CompactTrie(
 
       // Alphabetize these so that they match IntHashTrie order.
       if (firstChild < lastChild) {
-        val childStringIndexAndTokens: Seq[(Int, String)] = firstChild.until(lastChild).map { childIndex: Int =>
+        val childStringIndexAndTokens: Seq[(Int, String)] = firstChild.until(lastChild).map { (childIndex: Int) =>
           val token: String = strings(childStringIds(childIndex))
           (childIndex, token)
         }

@@ -1,8 +1,11 @@
 package org.clulab
 
-package object scala {
-  type BufferedIterator[T] = _root_.scala.collection.BufferedIterator[T]
+import _root_.scala.collection.{BufferedIterator => GenericBufferedIterator}
+import _root_.scala.collection.immutable.{LazyList => ImmutableLazyList}
 
-  type LazyList[T] = _root_.scala.collection.immutable.LazyList[T]
-  val LazyList = _root_.scala.collection.immutable.LazyList
+package object scala {
+  type BufferedIterator[T] = GenericBufferedIterator[T]
+
+  type LazyList[T] = ImmutableLazyList[T]
+  val LazyList = ImmutableLazyList
 }

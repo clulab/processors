@@ -20,8 +20,8 @@ import org.clulab.utils.Logging
   * Last Modified 06/10/18: Add .raw in sentence serialization
   */
 class DocumentSerializer extends Logging {
-
   import DocumentSerializer._
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   /**
    * This is deprecated! Please use load(r:BufferedReader) instead!
@@ -53,13 +53,13 @@ class DocumentSerializer extends Logging {
     }
 
     var coref:Option[CorefChains] = None
-    do {
+    while ({
       bits = read(r)
       if (bits(0) == START_COREF) {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
-    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT && bits(0) != START_ATTACHMENTS)
-
+      bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT && bits(0) != START_ATTACHMENTS
+    }) ()
     var text: Option[String] = None
     if (bits(0) == START_TEXT) {
       if (bits.length != 2)
@@ -223,7 +223,7 @@ class DocumentSerializer extends Logging {
     var deps = GraphMap()
     var tree:Option[Tree] = None
     var relations:Option[Array[RelationTriple]] = None
-    do {
+    while ({
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
         val dt = bits(1)
@@ -238,7 +238,8 @@ class DocumentSerializer extends Logging {
         val sz = bits(1).toInt
         relations = loadRelations(r, sz)
       }
-    } while(bits(0) != END_OF_SENTENCE)
+      bits(0) != END_OF_SENTENCE
+    }) ()
 
     Sentence(
       rawBuffer.toArray,
@@ -263,14 +264,15 @@ class DocumentSerializer extends Logging {
       roots.add(bits(offset).toInt)
       offset += 1
     }
-    do {
+    while ({
       bits = read(r)
       if (bits(0) != END_OF_DEPENDENCIES) {
         val edge = Edge(source = bits(0).toInt, destination = bits(1).toInt, relation = bits(2))
         //println("adding edge: " + edge)
         edges += edge
       }
-    } while(bits(0) != END_OF_DEPENDENCIES)
+      bits(0) != END_OF_DEPENDENCIES
+    }) ()
     val dg = new DirectedGraph[String](edges.toList, Some(sz))
     //println(dg)
     dg

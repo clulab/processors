@@ -394,7 +394,7 @@ object Utils {
       nonEmptyOuts(nonEmptyOuts.length - 1)
     }
 
-    val charEmbeddings = word.map { c: Char =>
+    val charEmbeddings = word.map { (c: Char) =>
       lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
     }
     val fwOutsLast = safelyTransduceLast1(charEmbeddings, charFwRnnBuilder)

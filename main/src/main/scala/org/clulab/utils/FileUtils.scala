@@ -81,8 +81,8 @@ object FileUtils {
     }
 
   def copyResourceToFile(src: String, dest: File): Unit = {
-    FileUtils.getClass.getResourceAsStream(src).autoClose { is: InputStream =>
-      new FileOutputStream(dest).autoClose { os: FileOutputStream =>
+    FileUtils.getClass.getResourceAsStream(src).autoClose { (is: InputStream) =>
+      new FileOutputStream(dest).autoClose { (os: FileOutputStream) =>
         val buf = new Array[Byte](8192)
 
         def transfer: Boolean = {

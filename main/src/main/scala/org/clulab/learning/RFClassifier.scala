@@ -814,7 +814,7 @@ class RFLeaf(ls:Counter[Int]) extends RFTree {
   def left = None
   def right = None
 
-  override def toString = toString(0)
+  override def toString(): String = toString(0)
 
   override def toString(ind:Int):String = {
     val b = new StringBuilder

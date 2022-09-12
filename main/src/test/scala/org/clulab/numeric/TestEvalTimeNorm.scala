@@ -1,8 +1,9 @@
 package org.clulab.numeric
-import org.clulab.processors.clu.CluProcessor
-import org.scalatest.{FlatSpec, Matchers}
 
-class TestEvalTimeNorm extends FlatSpec with Matchers{
+import org.clulab.processors.clu.CluProcessor
+import org.clulab.utils.Test
+
+class TestEvalTimeNorm extends Test {
 
   behavior of "temporal parser"
 

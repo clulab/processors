@@ -1,13 +1,13 @@
 package org.clulab.struct
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.clulab.utils.Test
 
 /**
   * Tests Lexicon methods
   * User: dane
   * Date: 12/06/2017
   */
-class TestLexicon extends FlatSpec with Matchers {
+class TestLexicon extends Test {
   "Lexicon" should "add and remove items successfully" in {
     val bort = new Lexicon[String]
 

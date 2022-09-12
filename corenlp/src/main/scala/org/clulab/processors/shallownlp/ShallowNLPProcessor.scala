@@ -1,26 +1,26 @@
 package org.clulab.processors.shallownlp
 
+import edu.stanford.nlp.ling.CoreAnnotations._
+import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations.RelationTriplesAnnotation
+import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
+import edu.stanford.nlp.util.CoreMap
+import org.clulab.processors._
+import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer, TokenizerStep}
+import org.clulab.processors.corenlp.CoreNLPDocument
+import org.clulab.processors.corenlp.chunker.CRFChunker
+import org.clulab.struct.Interval
+
 import java.util
 import java.util.Properties
 import java.util.zip.GZIPInputStream
 
-import org.clulab.processors.corenlp.CoreNLPDocument
-import org.clulab.processors.corenlp.chunker.CRFChunker
-import org.clulab.processors._
-import edu.stanford.nlp.ling.CoreAnnotations._
-import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
-import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
-import edu.stanford.nlp.util.CoreMap
-
 import scala.collection.mutable.ArrayBuffer
-import ShallowNLPProcessor._
-import edu.stanford.nlp.naturalli.NaturalLogicAnnotations.RelationTriplesAnnotation
-import org.clulab.processors.clu.CluProcessor
-import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer, TokenizerStep}
-import org.clulab.struct.Interval
-
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
+
+import ShallowNLPProcessor._
 
 /**
   * A Processor using only shallow analysis: tokenization, lemmatization, POS tagging, and NER.

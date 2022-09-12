@@ -41,7 +41,7 @@ trait Tree {
 
   def isUnary:Boolean = children != None && children.get.length == 1
 
-  override def toString = this match {
+  override def toString: String = this match {
     case Terminal(token) => token
     case NonTerminal(tag, children) => s"($tag ${children.map(_.toString).mkString(" ")})"
   }

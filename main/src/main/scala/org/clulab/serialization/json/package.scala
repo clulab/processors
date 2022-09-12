@@ -13,7 +13,7 @@ package object json {
   val DOCUMENT_ATTACHMENTS_BUILDER_KEY = "builder"
   val DOCUMENT_ATTACHMENTS_VALUE_KEY = "value"
 
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   /** Method for debugging json */
   def stringify(json: JValue, pretty: Boolean): String = pretty match {
