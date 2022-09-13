@@ -11,6 +11,7 @@ Makefile
 # VS code
 .bloop/
 .metals/
+metals.sbt
 .vscode/
 
 # sbt specific
