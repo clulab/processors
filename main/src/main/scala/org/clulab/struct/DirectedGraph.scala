@@ -1,5 +1,7 @@
 package org.clulab.struct
 
+import org.clulab.scala.WrappedArray._
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.hashing.MurmurHash3._
@@ -123,7 +125,7 @@ case class DirectedGraph[E](
   // each pair of nodes is guaranteed to have at least one edge, maybe several
   def shortestPath(start: Int, end: Int, ignoreDirection: Boolean = false): Seq[Int] = {
     def neighbors(node: Int): Seq[Int] = {
-      val edges = outgoingEdges(node) ++ (if (ignoreDirection) incomingEdges(node) else Nil)
+      val edges = outgoingEdges(node) ++ (if (ignoreDirection) incomingEdges(node) else Array.empty[(Int, E)])
       edges.map(_._1).distinct
     }
 

@@ -2,6 +2,7 @@ package org.clulab.processors.corenlp
 
 import java.util
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.WrappedArray._
 import org.clulab.struct._
 import edu.stanford.nlp.ling.CoreAnnotations.{IndexAnnotation, TokensAnnotation}
 import edu.stanford.nlp.ling.CoreLabel
@@ -14,7 +15,7 @@ import edu.stanford.nlp.util.{ArrayCoreMap, CoreMap}
 import edu.stanford.nlp.trees.{Tree => StanfordTree}
 import org.clulab.processors.clu.tokenizer.TokenizerStepNormalization
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Utilities for manipulating CoreNLP data structures

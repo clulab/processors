@@ -1,5 +1,7 @@
 package org.clulab.embeddings
 
+import org.clulab.scala.WrappedArray._
+
 import java.io._
 import java.nio.{ByteBuffer, ByteOrder}
 
@@ -42,11 +44,11 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
 
   val dimensions: Int = matrix.values.head.length
 
-  def saveMatrix(mf: String) {
+  def saveMatrix(mf: String): Unit = {
     val pw = new PrintWriter(mf)
     pw.println(s"${matrix.size}, $dimensions")
     for ((word, vec) <- matrix) {
-      val strRep = vec.map(_.formatted("%.6f")).mkString(" ")
+      val strRep = vec.map(v => f"$v%.6f").mkString(" ")
       pw.println(s"$word $strRep")
     }
     pw.close()
@@ -77,7 +79,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
   }
 
   /** Adds the content of src to dest, in place */
-  private def add(dest:Array[Double], src:Array[Double]) {
+  private def add(dest:Array[Double], src:Array[Double]): Unit = {
     var i = 0
     while(i < dimensions) {
       dest(i) += src(i)
@@ -199,7 +201,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
 
   def logMultiplicativeTextSimilarity(t1: Iterable[String],
     t2: Iterable[String],
-    method: Symbol = 'linear,
+    method: Symbol = Symbol("linear"),
     normalize: Boolean = false): Double = {
     val st1 = t1.map(OldWordEmbeddingMap.sanitizeWord(_))
     val st2 = t2.map(OldWordEmbeddingMap.sanitizeWord(_))
@@ -208,7 +210,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
 
   def logMultiplicativeSanitizedTextSimilarity(t1:Iterable[String],
     t2:Iterable[String],
-    method: Symbol = 'linear,
+    method: Symbol = Symbol("linear"),
     normalize: Boolean = false):Double = {
     val t1Vecs = t1.flatMap(getEmbedding) // this will drop any words that don't have vectors
     val t2Vecs = t2.flatMap(getEmbedding)
@@ -217,9 +219,9 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
       v2 <- t2Vecs
       cosSim = OldWordEmbeddingMap.dotProduct(v1, v2)
       toYield = method match {
-        case 'linear => math.log(cosSim + 1)
-        case 'linear_scaled => math.log((cosSim + 1) / 2)
-        case 'angular => math.log(1 - (math.acos(math.min(1, math.max(-1, cosSim))) / math.Pi))
+        case Symbol("linear") => math.log(cosSim + 1)
+        case Symbol("linear_scaled") => math.log((cosSim + 1) / 2)
+        case Symbol("angular") => math.log(1 - (math.acos(math.min(1, math.max(-1, cosSim))) / math.Pi))
         case _ => throw new Exception(s"invalid method $method")
       }
     } yield toYield
@@ -413,7 +415,7 @@ object OldWordEmbeddingMap {
   def isNumber(w:String):Boolean = EmbeddingUtils.isNumber(w)
 
   /** Normalizes this vector to length 1, in place */
-  def norm(weights:Array[Double]) {
+  def norm(weights:Array[Double]): Unit = {
     var i = 0
     var len = 0.0
     while (i < weights.length) {
@@ -458,7 +460,7 @@ object OldWordEmbeddingMap {
     caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load embedding matrix from stream ...")
     val src: Source = Source.fromInputStream(is, "iso-8859-1")
-    val lines: Iterator[String] = src.getLines
+    val lines: Iterator[String] = src.getLines()
     val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
     src.close()
     logger.debug("Completed matrix loading.")
@@ -583,7 +585,7 @@ object OldWordEmbeddingMap {
     m.toMap
   }
 
-  def main(args:Array[String]) {
+  def main(args:Array[String]): Unit = {
     val w2v = new OldWordEmbeddingMap(args(0), None)
 
     println("Words most similar to \"house\":")

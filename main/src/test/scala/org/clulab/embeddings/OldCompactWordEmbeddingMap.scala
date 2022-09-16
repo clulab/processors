@@ -1,6 +1,7 @@
 package org.clulab.embeddings
 
 import java.io._
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
 import org.slf4j.{Logger, LoggerFactory}
@@ -140,7 +141,7 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
   def makeCompositeVectorWeighted(text: Iterable[String], weights:Iterable[Float]): OldCompactWordEmbeddingMap.ArrayType = {
     val total = new OldCompactWordEmbeddingMap.ArrayType(columns)
 
-    (text, weights).zipped.foreach { (word, weight) =>
+    text.zip(weights).foreach { case (word, weight) =>
       map.get(word).foreach { index => addWeighted(total, index, weight) }
     }
 

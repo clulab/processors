@@ -2,6 +2,7 @@ package org.clulab.embeddings
 
 import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
@@ -12,6 +13,7 @@ import org.scalatest.Matchers
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
+import scala.collection.mutable
 
 class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   val unused = false
@@ -84,7 +86,7 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
     override def hasNext: Boolean = odometer.hasNext
 
     override def next(): WordEmbeddingConfig = {
-      val Seq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) = odometer.next()
+      val mutable.ArraySeq(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew) = odometer.next()
 
       WordEmbeddingConfig(useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew)
     }

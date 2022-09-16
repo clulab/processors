@@ -6,7 +6,7 @@ import org.scalatest._
 import java.io.Closeable
 import scala.io.Source
 
-class TestAutoClosing extends FlatSpec with Matchers {
+class TestAutoClosing extends Test {
 
   class Closing(exception: Option[Throwable] = None) extends Closeable {
     var closed: Boolean = false // test
@@ -144,7 +144,7 @@ class TestAutoClosing extends FlatSpec with Matchers {
 
   it should "work with a plain Source, even in Scala 2.11" in {
     Source.fromString("foo\nbar\n").autoClose { source =>
-      source.getLines.toList
+      source.getLines().toList
     }
   }
 }

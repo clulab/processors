@@ -2,6 +2,7 @@ package org.clulab.serialization
 
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.struct.GraphMap._
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson._
@@ -52,7 +53,7 @@ package object json {
   }
 
   implicit class GraphMapOps(gm: GraphMap) extends JSONSerialization {
-    def jsonAST: JValue = Extraction.decompose(gm.toMap.mapValues(_.jsonAST))
+    def jsonAST: JValue = Extraction.decompose(gm.toMap.map { case (k, v) => k -> v.jsonAST }) // instead of mapValues
   }
 
   /** For Document */

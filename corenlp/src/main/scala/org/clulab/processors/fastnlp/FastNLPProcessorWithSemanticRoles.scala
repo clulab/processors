@@ -4,6 +4,7 @@ import org.clulab.dynet.{ConstEmbeddingsGlove, Utils}
 import org.clulab.processors.Document
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.clu.tokenizer.TokenizerStep
+import org.clulab.scala.WrappedArray._
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.GraphMap
 import org.clulab.utils.ToEnhancedSemanticRoles
@@ -29,7 +30,7 @@ class FastNLPProcessorWithSemanticRoles(tokenizerPostProcessor:Option[TokenizerS
   def this(internStrings:Boolean = true,
            withChunks:Boolean = true,
            withRelationExtraction:Boolean = false,
-           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) {
+           withDiscourse:Int = ShallowNLPProcessor.NO_DISCOURSE) = {
     this(None, internStrings, withChunks, withRelationExtraction, withDiscourse)
   }
 

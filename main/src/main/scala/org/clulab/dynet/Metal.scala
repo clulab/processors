@@ -4,6 +4,8 @@ import java.io.{FileWriter, PrintWriter}
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.{ProgressBar, Serializer, StringUtils}

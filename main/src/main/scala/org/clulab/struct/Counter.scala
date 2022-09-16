@@ -2,12 +2,12 @@ package org.clulab.struct
 
 import java.io.{Reader, Writer}
 import java.text.DecimalFormat
-
-import scala.collection.breakOut
 import scala.collection.mutable
-import scala.math.Ordering.{ Double => DoubleSortOrder }
-
+import scala.math.Ordering
 import org.clulab.utils.Files
+import org.json4s.JDouble
+import org.json4s.JObject
+import org.json4s.jackson.prettyJson
 
 /**
  * Counts elements of type T
@@ -117,8 +117,8 @@ class Counter[T] (
 
   /** Sorts counts in descending order, if argument is true. */
   def sorted(descending:Boolean):List[(T, Double)] = {
-    val vs:List[(T,Double)] = keySet.map(k => Tuple2(k, getCount(k)))(breakOut)
-    val sortOrder = if (descending) DoubleSortOrder.reverse else DoubleSortOrder
+    val vs:List[(T,Double)] = keySet.toList.map(k => Tuple2(k, getCount(k)))
+    val sortOrder = if (descending) Ordering[Double].reverse else Ordering[Double]
     vs.sortBy(_._2)(sortOrder)
   }
 
@@ -129,7 +129,7 @@ class Counter[T] (
     val keys = keySet
     for (key <- keys) {
       if(! first) os.append(", ")
-      os.append (key + ":" + getCount(key).formatted("%3.3f"))
+      os.append(f"$key:${getCount(key)%3.3f}")
       first = false
     }
     os.append ("]")
@@ -178,10 +178,10 @@ class Counter[T] (
 
   def values: Seq[Double] = toSeq.map(_._2)
 
-  def toJSON: String = scala.util.parsing.json.JSONObject(toSeq.toMap.map(
-  {
-    case (k, v) => k.toString -> v
-  })).toString()
+  def toJSON: String = {
+    val jObject = new JObject(keySet.toList.map { key => key.toString -> new JDouble(getCount(key)) })
+    prettyJson(jObject)
+  }
 
   def zipWith(f: (Double,  Double) => Double)(other:Counter[T]): Counter[T] = {
     val out = new Counter[T](defaultReturnValue)

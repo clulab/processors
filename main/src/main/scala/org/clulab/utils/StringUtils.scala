@@ -4,7 +4,7 @@ import java.io.{ FileInputStream, BufferedInputStream, PrintWriter, StringWriter
 import java.util.Properties
 import java.util.regex.Pattern
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ListBuffer
 
 /**

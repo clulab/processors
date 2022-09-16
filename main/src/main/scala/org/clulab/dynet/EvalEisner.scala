@@ -1,6 +1,7 @@
 package org.clulab.dynet
 
 import org.clulab.dynet.Utils.initializeDyNet
+import org.clulab.scala.WrappedArray._
 import org.clulab.sequences.ColumnReader
 import org.clulab.utils.StringUtils
 

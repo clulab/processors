@@ -251,10 +251,10 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
   }
 
   def featureUpdater: FeatureUpdater[F, Double] = new FeatureUpdater[F, Double] {
-    def foreach[U](fn: ((F, Double)) => U): Unit = {
+    override def foreach[U](fn: ((F, Double)) => U): Unit = {
       for(i <- 0 until RVFRankingDataset.this.size) // group
-        for(j <- 0 until features(i).size) // datum
-          for (k <- 0 until features(i)(j).size) { // feature
+        for(j <- features(i).indices) // datum
+          for (k <- features(i)(j).indices) { // feature
             val fi = features(i)(j)(k)
             val v = values(i)(j)(k)
             val f = featureLexicon.get(fi)
@@ -264,13 +264,24 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
 
     def updateAll(fn: ((F, Double)) => Double): Unit = {
       for(i <- 0 until RVFRankingDataset.this.size) // group
-        for(j <- 0 until features(i).size) // datum
-          for (k <- 0 until features(i)(j).size) { // feature
+        for(j <- features(i).indices) // datum
+          for (k <- features(i)(j).indices) { // feature
           val fi = features(i)(j)(k)
             val v = values(i)(j)(k)
             val f = featureLexicon.get(fi)
             values(i)(j)(k) = fn((f, v))
           }
+    }
+
+    override def iterator: Iterator[(F, Double)] = {
+      (0 until RVFRankingDataset.this.size).flatMap { i =>
+        features(i).indices.flatMap { j =>
+          features(i)(j).indices.map { k =>
+            val fi = features(i)(j)(k)
+            featureLexicon.get(fi) -> values(i)(j)(k)
+          }
+        }
+      }.iterator
     }
   }
 }

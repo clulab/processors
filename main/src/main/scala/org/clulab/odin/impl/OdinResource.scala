@@ -3,6 +3,7 @@ package org.clulab.odin.impl
 import java.io.InputStream
 
 import org.clulab.embeddings.SanitizedWordEmbeddingMap
+import org.clulab.scala.WrappedArray._
 
 
 trait OdinResource

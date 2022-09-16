@@ -4,6 +4,8 @@ import java.io._
 
 import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.SequenceTaggerLogger._
 import org.clulab.struct.Counter
 import org.clulab.utils.SeqUtils
@@ -16,7 +18,7 @@ import scala.reflect.ClassTag
   * User: mihais
   * Date: 8/26/17
   */
-abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, var leftToRight:Boolean = true) extends SequenceTagger[L, F] {
+abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, var leftToRight:Boolean = true) extends SequenceTagger[L, F] {
   var model:Option[Classifier[L, F]] = None
 
   private def mkDataset: Dataset[L, F] = new RVFDataset[L, F]()
@@ -38,7 +40,7 @@ abstract class MEMMSequenceTagger[L:ClassTag, F](var order:Int = 1, var leftToRi
       val features = new Array[Counter[F]](sentence.size)
       for(i <- features.indices) features(i) = new Counter[F]()
 
-      (0 until sentence.size).map(i => featureExtractor(features(i), sentence, i))
+      (0 until sentence.size).foreach(i => featureExtractor(features(i), sentence, i))
 
       //
       // add history features:

@@ -1,5 +1,6 @@
 package org.clulab.embeddings
 
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Sourcer
 import java.io.File
 
@@ -20,6 +21,8 @@ class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
   }
 
   val filename = "/test_vectors_sanitized.txt"
+
+  @annotation.nowarn("cat=deprecation")
   val fullsizeText = new SanitizedWordEmbeddingMap(Sourcer.sourceFromResource(filename), None, false)
   val compactText: CompactWordEmbeddingMap = CompactWordEmbeddingMap(filename, resource = true, cached = false)
   val tmpFile: File = File.createTempFile("test_vectors.", ".txt")

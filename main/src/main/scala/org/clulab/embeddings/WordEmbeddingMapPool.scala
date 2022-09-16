@@ -3,7 +3,7 @@ package org.clulab.embeddings
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.InputStreamer.StreamResult
-import org.clulab.utils.ThreadUtils.NamedFuture
+import org.clulab.utils.NamedFuture
 
 import scala.collection.mutable
 import scala.concurrent.Await

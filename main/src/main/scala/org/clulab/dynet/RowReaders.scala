@@ -5,6 +5,7 @@
 
 package org.clulab.dynet
 
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.Row
 
 import scala.collection.mutable.ArrayBuffer

@@ -7,6 +7,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.dynet.Utils._
 import org.clulab.utils.Configured
+import org.clulab.scala.BufferedIterator
 
 /**
  * This layer applies a biLSTM over the sequence of Expressions produced by a previous layer

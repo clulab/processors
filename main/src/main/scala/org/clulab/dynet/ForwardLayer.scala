@@ -2,10 +2,13 @@ package org.clulab.dynet
 
 import edu.cmu.dynet.{Dim, Expression, ExpressionVector, LookupParameter, Parameter, ParameterCollection}
 import org.slf4j.{Logger, LoggerFactory}
-import ForwardLayer._
 import org.clulab.dynet.Utils.{ByLineIntBuilder, fromIndexToString, mkTransitionMatrix}
+import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.Counter
 import org.clulab.utils.Configured
+
+import ForwardLayer._
 
 abstract class ForwardLayer (val parameters:ParameterCollection,
                              val inputSize: Int,

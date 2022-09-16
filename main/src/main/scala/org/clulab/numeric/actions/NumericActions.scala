@@ -3,6 +3,7 @@ package org.clulab.numeric.actions
 import org.clulab.numeric.SeasonNormalizer
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
+import org.clulab.scala.WrappedArrayBuffer._
 
 import scala.collection.mutable.ArrayBuffer
 

@@ -1,5 +1,8 @@
 package org.clulab.dynet
 
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.scala.WrappedListBuffer._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import Eisner._
 
@@ -12,7 +15,7 @@ import scala.collection.mutable
 case class Dependency(mod:Int, head:Int, var score:Float, rank: Int, var label:String = "")
 
 class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
-  def this() {
+  def this() = {
     this(List[Dependency](), -1, 0f)
   }
 

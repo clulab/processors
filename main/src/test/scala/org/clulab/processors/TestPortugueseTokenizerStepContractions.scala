@@ -675,7 +675,7 @@ class TestPortugueseTokenizerStepContractions extends FlatSpec with Matchers {
     }
     // use StepContractions PT class to get contractions
     val tokenizer = new TokenizerStepPortugueseContractions()    
-    val processedTokens = tokenizer.process(tokensRaw.to[Array])
+    val processedTokens = tokenizer.process(tokensRaw.toArray)
 
     return(processedTokens)
   }

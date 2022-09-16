@@ -6,7 +6,7 @@ ThisBuild / Compile / scalacOptions ++= Seq(
 ) ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, 11)) => Seq.empty // The deprecation check is disabled.
-    case Some((2, 12)) => Seq("-deprecation")
+    case Some((2, 12) | (2, 13)) => Seq("-deprecation")
     case _ => Seq.empty
   }
 }

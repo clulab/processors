@@ -3,16 +3,20 @@ package org.clulab.embeddings
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
-
-import java.io._
+import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.utils.ArrayView
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
+import org.clulab.utils.MutableArrayView
 import org.clulab.utils.Sourcer
 import org.clulab.utils.Timers
 
+import java.io._
 import java.nio.charset.StandardCharsets
-import scala.collection.mutable.ArrayBuffer // IntelliJ doesn't complain about this.
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{ArrayBuilder => MutableArrayBuilder}
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
@@ -51,7 +55,9 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   protected val array: Array[Float] = buildType.array // flattened matrix
   val columns: Int = buildType.columns
   val rows: Int = map.size // which is not necessarily the same as array.length / columns
-  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map(_.view)
+  val unkEmbeddingOpt: Option[IndexedSeq[Float]] = buildType.unknownArray.map { inside =>
+    inside: IndexedSeq[Float]
+  }
 
   /** The dimension of an embedding vector */
   override val dim: Int = columns
@@ -100,7 +106,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   def get(word: String): Option[IndexedSeq[Float]] = {
     map.get(word).map { row =>
       val offset = row * columns
-      array.view(offset, offset + columns)
+      ArrayView(array, offset, offset + columns)
     }
   }
 
@@ -128,7 +134,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   override def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Array[Float] = {
     val total = new Array[Float](columns) // automatically initialized to zero
 
-    (text, weights).zipped.foreach { (word, weight) =>
+    text.zip(weights).foreach { case (word, weight) =>
       // This therefore skips the unknown words, which may not be the right strategy.
       map.get(word).foreach { index => addWeighted(total, index, weight) }
     }
@@ -374,7 +380,7 @@ object CompactWordEmbeddingMap extends Logging {
 
       while (index < length) {
         // Lengths of vectors are generally around 5.  They are _not_ normalized.
-        WordEmbeddingMap.norm(array.view(index, index + columns))
+        WordEmbeddingMap.norm(MutableArrayView(array, index, index + columns))
         index += columns
       }
       array

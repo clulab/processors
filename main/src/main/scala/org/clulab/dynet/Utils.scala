@@ -3,16 +3,18 @@ package org.clulab.dynet
 import java.io._
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
-import edu.cmu.dynet.ComputationGraph
 import org.clulab.embeddings.SanitizedWordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.Initializer
+import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, MutableNumber}
 import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source

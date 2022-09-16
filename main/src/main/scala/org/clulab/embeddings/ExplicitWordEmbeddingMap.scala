@@ -1,6 +1,8 @@
 package org.clulab.embeddings
 
 import java.io._
+import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
@@ -84,7 +86,7 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
   def makeCompositeVectorWeighted(text: Iterable[String], weights: Iterable[Float]): Array[Float] = {
     val total = new Array[Float](dim) // automatically initialized to zero
 
-    (text, weights).zipped.foreach { (word, weight) =>
+    text.zip(weights).foreach { case (word, weight) =>
       // This therefore skips the unknown words, which may not be the right strategy.
       map.get(word).foreach { index => addWeighted(total, index, weight) }
     }
